@@ -79,6 +79,7 @@ TEST_REQUIREMENTS = (
     "georss_ign_sismologia_client",
     "georss_qld_bushfire_alert_client",
     "getmac",
+    "glances_api",
     "google-api-python-client",
     "gTTS-token",
     "ha-ffmpeg",

@@ -1,8 +1,8 @@
 """Config flow for Glances Client."""
-from glances_api import exceptions
+import glances_api
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant import core, config_entries, exceptions
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -26,6 +26,34 @@ from .const import (
     SUPPORTED_VERSIONS,
 )
 
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
+        vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
+        vol.Optional(CONF_USERNAME): str,
+        vol.Optional(CONF_PASSWORD): str,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Required(CONF_VERSION, default=DEFAULT_VERSION): int,
+        vol.Optional(CONF_SSL, default=False): bool,
+        vol.Optional(CONF_VERIFY_SSL, default=False): bool,
+    }
+)
+
+
+async def validate_input(hass: core.HomeAssistant, data):
+    """Validate the user input allows us to connect."""
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.data[CONF_HOST] == data[CONF_HOST]:
+            raise AlreadyConfigured
+
+    if data[CONF_VERSION] not in SUPPORTED_VERSIONS:
+        raise WrongVersion
+    try:
+        api = GlancesClient(hass, **data)
+        await api.get_data()
+    except glances_api.exceptions.GlancesApiConnectionError:
+        raise CannotConnect
+
 
 class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Glances config flow."""
@@ -39,47 +67,26 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return GlancesOptionsFlowHandler(config_entry)
 
-    def __init__(self):
-        """Initialize the Glances flow."""
-        # self.config = {}
-
     async def async_step_user(self, user_input=None):
-        """Handle a flow initialized by the user."""
+        """Handle the initial step."""
         errors = {}
         if user_input is not None:
+            try:
+                await validate_input(self.hass, user_input)
 
-            for entry in self._async_current_entries():
-                if entry.data[CONF_HOST] == user_input[CONF_HOST]:
-                    return self.async_abort(reason="already_configured")
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME], data=user_input
+                )
 
-            if user_input[CONF_VERSION] not in SUPPORTED_VERSIONS:
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except AlreadyConfigured:
+                errors[CONF_HOST] = "already_configured"
+            except WrongVersion:
                 errors[CONF_VERSION] = "wrong_version"
 
-            if not errors:
-                try:
-                    api = GlancesClient(self.hass, **user_input)
-                    await api.get_data()
-                    return self.async_create_entry(
-                        title=user_input[CONF_NAME], data=user_input
-                    )
-                except exceptions.GlancesApiConnectionError:
-                    errors["base"] = "cannot_connect"
-
         return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
-                    vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
-                    vol.Optional(CONF_USERNAME): str,
-                    vol.Optional(CONF_PASSWORD): str,
-                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-                    vol.Required(CONF_VERSION, default=DEFAULT_VERSION): int,
-                    vol.Optional(CONF_SSL, default=False): bool,
-                    vol.Optional(CONF_VERIFY_SSL, default=False): bool,
-                }
-            ),
-            errors=errors,
+            step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
 
@@ -103,3 +110,15 @@ class GlancesOptionsFlowHandler(config_entries.OptionsFlow):
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+
+
+class CannotConnect(exceptions.HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
+class AlreadyConfigured(exceptions.HomeAssistantError):
+    """Error to indicate host is already configured."""
+
+
+class WrongVersion(exceptions.HomeAssistantError):
+    """Error to indicate the selected version is wrong."""
