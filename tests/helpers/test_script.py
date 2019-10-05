@@ -9,7 +9,9 @@ import jinja2
 import voluptuous as vol
 import pytest
 
+import homeassistant.components.scene as scene
 from homeassistant import exceptions
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
 from homeassistant.core import Context, callback
 
 # Otherwise can't test just this file (import order issue)
@@ -118,6 +120,31 @@ async def test_calling_service(hass):
     assert len(calls) == 1
     assert calls[0].context is context
     assert calls[0].data.get("hello") == "world"
+
+
+async def test_activating_scene(hass):
+    """Test the activation of a scene."""
+    calls = []
+    context = Context()
+
+    @callback
+    def record_call(service):
+        """Add recorded event to set."""
+        calls.append(service)
+
+    hass.services.async_register(scene.DOMAIN, SERVICE_TURN_ON, record_call)
+
+    hass.async_add_job(
+        ft.partial(
+            script.call_from_config, hass, {"scene": "scene.hello"}, context=context
+        )
+    )
+
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].context is context
+    assert calls[0].data.get(ATTR_ENTITY_ID) == "scene.hello"
 
 
 async def test_calling_service_template(hass):
