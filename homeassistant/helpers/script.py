@@ -9,12 +9,15 @@ from typing import Optional, Sequence, Callable, Dict, List, Set, Tuple, Any
 import voluptuous as vol
 
 import homeassistant.components.device_automation as device_automation
+import homeassistant.components.scene as scene
 from homeassistant.core import HomeAssistant, Context, callback, CALLBACK_TYPE
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_TIMEOUT,
+    SERVICE_TURN_ON,
 )
 from homeassistant import exceptions
 from homeassistant.helpers import (
@@ -46,6 +49,7 @@ CONF_EVENT_DATA_TEMPLATE = "event_data_template"
 CONF_DELAY = "delay"
 CONF_WAIT_TEMPLATE = "wait_template"
 CONF_CONTINUE = "continue_on_timeout"
+CONF_SCENE = "scene"
 
 
 ACTION_DELAY = "delay"
@@ -54,6 +58,7 @@ ACTION_CHECK_CONDITION = "condition"
 ACTION_FIRE_EVENT = "event"
 ACTION_CALL_SERVICE = "call_service"
 ACTION_DEVICE_AUTOMATION = "device"
+ACTION_ACTIVATE_SCENE = "scene"
 
 
 def _determine_action(action):
@@ -72,6 +77,9 @@ def _determine_action(action):
 
     if CONF_DEVICE_ID in action:
         return ACTION_DEVICE_AUTOMATION
+
+    if CONF_SCENE in action:
+        return ACTION_ACTIVATE_SCENE
 
     return ACTION_CALL_SERVICE
 
@@ -147,6 +155,7 @@ class Script:
             ACTION_FIRE_EVENT: self._async_fire_event,
             ACTION_CALL_SERVICE: self._async_call_service,
             ACTION_DEVICE_AUTOMATION: self._async_device_automation,
+            ACTION_ACTIVATE_SCENE: self._async_activate_scene,
         }
 
     @property
@@ -360,6 +369,21 @@ class Script:
         )
         await platform.async_call_action_from_config(
             self.hass, action, variables, context
+        )
+
+    async def _async_activate_scene(self, action, variables, context):
+        """Activate the scene specified in the action.
+
+        This method is a coroutine.
+        """
+        self.last_action = action.get(CONF_ALIAS, "activate scene")
+        self._log("Executing step %s" % self.last_action)
+        await self.hass.services.async_call(
+            scene.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: action[CONF_SCENE]},
+            blocking=True,
+            context=context,
         )
 
     async def _async_fire_event(self, action, variables, context):
