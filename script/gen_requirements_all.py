@@ -165,7 +165,6 @@ TEST_REQUIREMENTS = (
     "sleepyq",
     "smhi-pkg",
     "solaredge",
-    "sunwatcher",
     "somecomfort",
     "sqlalchemy",
     "srpenergy",
