@@ -185,6 +185,9 @@ async def test_safe_wait_with_exception(caplog):
     calls = []
 
     async def log_call(param):
+        # To make sure that exceptions are captured first.
+        for i in range(5):
+            await asyncio.sleep(0)
         calls.append(param)
 
     with pytest.raises(ValueError):
