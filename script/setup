@@ -5,7 +5,7 @@
 set -e
 
 cd "$(dirname "$0")/.."
-sh script/bootstrap
+script/bootstrap
 
 pre-commit install
 pip3 install -e .

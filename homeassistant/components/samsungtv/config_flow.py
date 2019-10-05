@@ -1,5 +1,4 @@
 """Config flow to configure Samsung TV."""
-from collections import OrderedDict
 import voluptuous as vol
 
 from homeassistant import config_entries

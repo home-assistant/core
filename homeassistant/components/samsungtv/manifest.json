@@ -9,7 +9,7 @@
   ],
   "ssdp": {
     "device_type": [
-      "urn:samsung.com:device:MainTVServer2:1"
+      "urn:samsung.com:device:RemoteControlReceiver:1"
     ]
   },
   "dependencies": [],

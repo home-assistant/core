@@ -7,7 +7,7 @@ To update, run python3 -m script.hassfest
 
 SSDP = {
     "device_type": {
-        "urn:samsung.com:device:MainTVServer2:1": [
+        "urn:samsung.com:device:RemoteControlReceiver:1": [
             "samsungtv"
         ]
     },
