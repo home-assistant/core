@@ -87,23 +87,19 @@ async def safe_wait(
     all_tasks = list(tasks)
     if not all_tasks:
         return []
-    finished_tasks, _ = await asyncio.wait(all_tasks)
 
-    results: List[Any] = []
-    raise_exception: Optional[BaseException] = None
-    for task in finished_tasks:
-        if task.cancelled():
-            results.append(None)
-        elif task.exception():
-            if logger:
-                logger.exception(task.exception())
-            if not raise_exception:
-                raise_exception = task.exception()
-            results.append(task.exception())
-        else:
-            results.append(task.result())
+    results = await asyncio.gather(*tasks, return_exceptions=True)
 
-    # Raise exception or return results
-    if not return_exceptions and raise_exception:
-        raise raise_exception
+    exception = None
+
+    for result in results:
+        if isinstance(result, Exception):
+            if logger is not None:
+                logger.exception(result)
+            if exception is None:
+                exception = result
+
+    if not return_exceptions and exception:
+        raise exception
+
     return results

@@ -1,5 +1,6 @@
 """Tests for async util methods from Python source."""
 import asyncio
+import logging
 import sys
 from unittest.mock import MagicMock, patch
 from unittest import TestCase
@@ -7,6 +8,8 @@ from unittest import TestCase
 import pytest
 
 from homeassistant.util import async_ as hasync
+
+from tests.common import mock_coro
 
 
 @patch("asyncio.coroutines.iscoroutine")
@@ -170,3 +173,38 @@ class RunThreadsafeTests(TestCase):
         with self.assertRaises(ValueError) as exc_context:
             self.loop.run_until_complete(future)
         self.assertIn("Invalid!", exc_context.exception.args)
+
+
+async def test_safe_wait(loop):
+    """Test safe wait function."""
+    assert await hasync.safe_wait([mock_coro(1), mock_coro(2)]) == [1, 2]
+
+
+async def test_safe_wait_with_exception(loop, caplog):
+    """Test safe wait function."""
+    calls = []
+
+    async def log_call(param):
+        calls.append(param)
+
+    task1 = loop.create_task(log_call(1))
+    task2 = mock_coro(exception=ValueError("test-value-error"))
+    task3 = mock_coro(exception=TypeError("test-type-error"))
+    task4 = loop.create_task(log_call(4))
+
+    with pytest.raises(ValueError):
+        assert await hasync.safe_wait([task1, task2, task3, task4])
+
+    assert calls == [1, 4]
+    assert "test-value-error" not in caplog.text
+    assert "test-type-error" not in caplog.text
+
+
+async def test_safe_wait_logs_errors(loop, caplog):
+    """Test we log errors if we pass logger."""
+    with pytest.raises(ValueError):
+        assert await hasync.safe_wait(
+            [mock_coro(exception=ValueError("mock-broken"))], logger=logging.getLogger()
+        )
+
+    assert "mock-broken" in caplog.text
