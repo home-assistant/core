@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Execute lint to spot code mistakes.
 
 cd "$(dirname "$0")/.."
@@ -8,7 +8,7 @@ echo '================================================='
 echo '=                FILES CHANGED                  ='
 echo '================================================='
 if [ -z "$files" ] ; then
-  echo "No python file changed. Rather use: tox -e lint\n"
+  echo -e "No python file changed. Rather use: tox -e lint\n"
   exit
 fi
 printf "%s\n" $files
@@ -21,8 +21,27 @@ echo "LINT with pylint"
 echo "================"
 pylint_files=$(echo "$files" | grep -v '^tests.*')
 if [ -z "$pylint_files" ] ; then
-  echo "Only test files changed. Skipping\n"
-  exit
+  echo -e "Only test files changed. Skipping pylint\n"
+else
+  pylint $pylint_files
 fi
-pylint $pylint_files
+echo "================"
+echo "TYPING with mypy"
+echo "================"
+readarray -t files_array <<< "$files"
+readarray -t TYPING_FILE_PATTERNS < mypyrc
+declare -a typing_files
+for i in "${files_array[@]}"
+do
+  for j in "${TYPING_FILE_PATTERNS[@]}"
+  do
+    [[ ${i%/*} == ${j%\/*} ]] && typing_files+=("$i")
+  done
+done
+if [ -z "$typing_files" ] ; then
+  echo -e "No typed files changed. Skipping mypy\n"
+else
+  printf '%s\n' "${typing_files[@]}"
+  mypy "${typing_files[@]}"
+fi
 echo
