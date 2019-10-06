@@ -169,6 +169,44 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             "operating_mode",
         ]
 
+    try:
+        status.metersList[0]
+        sensors["import_current_power"] = [
+            "currentPowerimport",
+            "current import Power",
+            POWER_WATT,
+            "mdi:solar-panel",
+            "",
+        ]
+        sensors["export_meter_reading"] = [
+            "totalEnergyimport",
+            "total import Energy",
+            ENERGY_WATT_HOUR,
+            "mdi:solar-panel",
+            "",
+        ]
+    except IndexError:
+        _LOGGER.critical("meter list 0 sensors not created")
+
+    try:
+        status.metersList[1]
+        sensors["export_current_power"] = [
+            "currentPowerexport",
+            "current export Power",
+            POWER_WATT,
+            "mdi:solar-panel",
+            "",
+        ]
+        sensors["export_meter_reading"] = [
+            "totalEnergyexport",
+            "total export Energy",
+            ENERGY_WATT_HOUR,
+            "mdi:solar-panel",
+            "",
+        ]
+    except IndexError:
+        _LOGGER.critical("meter list 1 sensors not created")
+
     # Create solaredge data service which will retrieve and update the data.
     data = SolarEdgeData(hass, api)
 
@@ -306,6 +344,21 @@ class SolarEdgeData:
 
             self.info["optimizers"] = status.optimizersStatus.total
             self.info["invertertemperature"] = INVERTER_MODES[status.status]
+
+            try:
+                status.metersList[0]
+                self.data["currentPowerimport"] = status.metersList[0].currentPower
+                self.data["totalEnergyimport"] = status.metersList[0].totalEnergy
+            except IndexError:
+                _LOGGER.critical("no values send to fronted1")
+
+            try:
+                status.metersList[1]
+                self.data["currentPowerexport"] = status.metersList[1].currentPower
+                self.data["totalEnergyexport"] = status.metersList[1].totalEnergy
+            except IndexError:
+                _LOGGER.critical("no values send to fronted2")
+
         if maintenance.system.name:
             self.data["optimizertemperature"] = round(statistics.mean(temperature), 2)
             self.data["optimizervoltage"] = round(statistics.mean(voltage), 2)
