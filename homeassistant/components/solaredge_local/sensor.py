@@ -85,7 +85,12 @@ SENSOR_TYPES = {
     "current_DC_voltage": ["dcvoltage", "DC Voltage", "V", "mdi:current-dc"],
     "current_frequency": ["gridfrequency", "Grid Frequency", "Hz", "mdi:current-ac"],
     "current_AC_voltage": ["gridvoltage", "Grid Voltage", "V", "mdi:current-ac"],
-    "optimizer_connected": ["optimizers", "Optimizers online", "optimizers", "mdi:solar-panel"],
+    "optimizer_connected": [
+        "optimizers",
+        "Optimizers online",
+        "optimizers",
+        "mdi:solar-panel",
+    ],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
