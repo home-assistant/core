@@ -175,14 +175,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             "currentPowerimport",
             "current import Power",
             POWER_WATT,
-            "mdi:solar-panel",
+            "mdi:arrow-collapse-down",
             "",
         ]
         sensors["export_meter_reading"] = [
             "totalEnergyimport",
             "total import Energy",
             ENERGY_WATT_HOUR,
-            "mdi:solar-panel",
+            "mdi:counter",
             "",
         ]
     except IndexError:
@@ -194,14 +194,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             "currentPowerexport",
             "current export Power",
             POWER_WATT,
-            "mdi:solar-panel",
+            "mdi:arrow-expand-up",
             "",
         ]
         sensors["export_meter_reading"] = [
             "totalEnergyexport",
             "total export Energy",
             ENERGY_WATT_HOUR,
-            "mdi:solar-panel",
+            "mdi:counter",
             "",
         ]
     except IndexError:
