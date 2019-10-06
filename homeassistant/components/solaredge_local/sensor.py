@@ -186,7 +186,7 @@ class SolarEdgeSensor(Entity):
             return {
                 self._data.attr_name[self._json_key]: self._data.info[self._json_key]
             }
-        except: NameError
+        except KeyError:
             return {ATTR_ATTRIBUTION: 0}
 
     @property
