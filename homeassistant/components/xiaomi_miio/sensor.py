@@ -1,5 +1,4 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5)."""
-from enum import Enum
 import logging
 
 import voluptuous as vol
@@ -121,14 +120,6 @@ class XiaomiAirQualityMonitor(Entity):
         self._available = None
         self._state = None
 
-    @staticmethod
-    def _extract_value_from_attribute(state, attribute):
-        value = getattr(state, attribute)
-        if isinstance(value, Enum):
-            return value.value
-
-        return value
-
     @property
     def should_poll(self):
         """Poll the miio device."""
@@ -186,7 +177,7 @@ class XiaomiAirQualityMonitor(Entity):
 
             self._state_attrs.update(
                 {
-                    key: self._extract_value_from_attribute(state, value)
+                    key: getattr(state, value)
                     for key, value in self._available_attributes.items()
                 }
             )
