@@ -14,7 +14,6 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Xiaomi Miio Sensor"
 DATA_KEY = "sensor.xiaomi_miio"
 
-CONF_MODEL = "model"
 MODEL_AIRQUALITYMONITOR_V1 = 'zhimi.airmonitor.v1'
 MODEL_AIRQUALITYMONITOR_S1 = 'cgllc.airmonitor.s1'
 
@@ -23,12 +22,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_MODEL): vol.In(
-            [
-                MODEL_AIRQUALITYMONITOR_V1,
-                MODEL_AIRQUALITYMONITOR_S1,
-            ]
-        ),
     }
 )
 
