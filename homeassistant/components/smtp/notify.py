@@ -81,8 +81,10 @@ def get_service(hass, config, discovery_info=None):
         config.get(CONF_DEBUG),
     )
 
-    mail_service.connection_is_valid()
-    return mail_service
+    if mail_service.connection_is_valid():
+        return mail_service
+
+    return None
 
 
 class MailNotificationService(BaseNotificationService):
@@ -134,19 +136,20 @@ class MailNotificationService(BaseNotificationService):
         server = None
         try:
             server = self.connect()
-        except smtplib.socket.gaierror:
+        except (smtplib.socket.gaierror, ConnectionRefusedError):
             _LOGGER.exception(
-                "SMTP server not found (%s:%s). "
-                "Please check the IP address or hostname of your SMTP server",
+                "SMTP server not found or refused connection (%s:%s). "
+                "Please check the IP address, hostname, and availability of your SMTP server.",
                 self._server,
                 self._port,
             )
 
-        except (smtplib.SMTPAuthenticationError, ConnectionRefusedError):
+        except smtplib.SMTPAuthenticationError:
             _LOGGER.exception(
                 "Login not possible. "
                 "Please check your setting and/or your credentials"
             )
+            return False
 
         finally:
             if server:
