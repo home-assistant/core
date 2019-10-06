@@ -132,7 +132,6 @@ class NeatoConnectedVacuum(StateVacuumDevice):
 
     def __init__(self, hass, robot):
         """Initialize the Neato Connected Vacuum."""
-        super().__init__()
         self.robot = robot
         self.neato = hass.data[NEATO_LOGIN]
         self._name = f"{self.robot.name}"

@@ -42,7 +42,6 @@ class NeatoConnectedSwitch(ToggleEntity):
 
     def __init__(self, hass, robot, switch_type):
         """Initialize the Neato Connected switches."""
-        super().__init__()
         self.type = switch_type
         self.robot = robot
         self.neato = hass.data[NEATO_LOGIN] if NEATO_LOGIN in hass.data else None
