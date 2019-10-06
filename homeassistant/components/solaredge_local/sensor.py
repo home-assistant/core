@@ -26,6 +26,19 @@ DOMAIN = "solaredge_local"
 UPDATE_DELAY = timedelta(seconds=10)
 
 OPTIMIZER_ATTRIBUTE = "Optimizers connected"
+OPERATING_MODE = "mode"
+INVERTER_MODES = (
+    "SHUTTING_DOWN",
+    "ERROR",
+    "STANDBY",
+    "PAIRING",
+    "POWER_PRODUCTION",
+    "AC_CHARGING",
+    "NOT_PAIRED",
+    "NIGHT_MODE",
+    "GRID_MONITORING",
+    "IDLE",
+    )
 
 # Supported sensor types:
 # Key: ['json_key', 'name', unit, icon]
@@ -273,6 +286,8 @@ class SolarEdgeData:
             self.data["optimizers"] = status.optimizersStatus.online
             self.info["optimizers"] = status.optimizersStatus.total
             self.attr_name["optimizers"] = OPTIMIZER_ATTRIBUTE
+            self.info["invertertemperature"] = INVERTER_MODES[status.status]
+            self.attr_name["invertertemperature"] = OPERATING_MODE
         if maintenance.system.name:
             self.data["optimizertemperature"] = round(statistics.mean(temperature), 2)
             self.data["optimizervoltage"] = round(statistics.mean(voltage), 2)
