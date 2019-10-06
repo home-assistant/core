@@ -19,6 +19,7 @@ good-names=id,i,j,k,ex,Run,_,fp
 # abstract-method - with intro of async there are always methods missing
 # inconsistent-return-statements - doesn't handle raise
 # unnecessary-pass - readability for functions which only contain pass
+# import-outside-toplevel - TODO
 disable=
   format,
   abstract-class-little-used,
@@ -26,6 +27,7 @@ disable=
   cyclic-import,
   duplicate-code,
   global-statement,
+  import-outside-toplevel,
   inconsistent-return-statements,
   locally-disabled,
   not-context-manager,
