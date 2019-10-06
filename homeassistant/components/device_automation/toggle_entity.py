@@ -114,6 +114,7 @@ async def async_call_action_from_config(
         CONF_ENTITY_ID: config[CONF_ENTITY_ID],
     }
 
+    service_action = cv.SERVICE_SCHEMA(service_action)
     await service.async_call_from_config(
         hass, service_action, blocking=True, variables=variables, context=context
     )

@@ -83,6 +83,7 @@ async def _execute_service_based_action(
         ATTR_DATA: {ATTR_IEEE: str(zha_device.ieee)},
     }
 
+    service_action = cv.SERVICE_SCHEMA(service_action)
     await service.async_call_from_config(
         hass, service_action, blocking=True, variables=variables, context=context
     )
