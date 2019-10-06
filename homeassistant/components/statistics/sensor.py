@@ -279,7 +279,6 @@ class StatisticsSensor(Entity):
                 self._update_listener()
                 self._update_listener = None
 
-            # @callback
             async def _scheduled_update(now):
                 """Timer callback for sensor update."""
                 _LOGGER.debug("%s: executing scheduled update", self.entity_id)
