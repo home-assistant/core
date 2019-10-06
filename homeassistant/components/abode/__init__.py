@@ -1,5 +1,6 @@
 """Support for the Abode Security System."""
 import logging
+from asyncio import gather
 from copy import deepcopy
 from functools import partial
 from requests.exceptions import HTTPError, ConnectTimeout
@@ -98,7 +99,7 @@ ABODE_PLATFORMS = [
 class AbodeSystem:
     """Abode System class."""
 
-    def __init__(self, abode, username, password, cache, polling):
+    def __init__(self, abode, polling):
         """Initialize the system."""
 
         self.abode = abode
@@ -130,17 +131,11 @@ async def async_setup_entry(hass, config_entry):
 
     try:
         cache = hass.config.path(DEFAULT_CACHEDB)
-        abode = Abode(
-            username,
-            password,
-            auto_login=True,
-            get_devices=True,
-            get_automations=True,
-            cache_path=cache,
+        abode = await hass.async_add_executor_job(
+            Abode, username, password, True, True, True, cache
         )
-        hass.data[DOMAIN] = await hass.async_add_executor_job(
-            AbodeSystem, abode, username, password, cache, polling
-        )
+        hass.data[DOMAIN] = AbodeSystem(abode, polling)
+
     except (AbodeException, ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Abode: %s", str(ex))
         return False
@@ -163,8 +158,14 @@ async def async_unload_entry(hass, config_entry):
     hass.services.async_remove(DOMAIN, SERVICE_CAPTURE_IMAGE)
     hass.services.async_remove(DOMAIN, SERVICE_TRIGGER)
 
+    tasks = []
+
     for platform in ABODE_PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(config_entry, platform)
+        tasks.append(
+            hass.config_entries.async_forward_entry_unload(config_entry, platform)
+        )
+
+    await gather(*tasks)
 
     await hass.async_add_executor_job(hass.data[DOMAIN].abode.events.stop)
     await hass.async_add_executor_job(hass.data[DOMAIN].abode.logout)

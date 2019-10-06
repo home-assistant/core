@@ -5,6 +5,7 @@ from abodepy import Abode
 from abodepy.exceptions import AbodeAuthenticationException
 
 from homeassistant import config_entries
+from homeassistant.core import callback
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN
@@ -20,9 +21,9 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize."""
-        self.data_schema = {}
-        self.data_schema[vol.Required(CONF_USERNAME)] = str
-        self.data_schema[vol.Required(CONF_PASSWORD)] = str
+        self.data_schema = vol.Schema(
+            {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+        )
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -31,7 +32,7 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         if not user_input:
-            return await self._show_form()
+            return self._show_form()
 
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
@@ -41,15 +42,16 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         except AbodeAuthenticationException as error:
             if error.errcode == 400:
-                return await self._show_form({"base": "invalid_credentials"})
-            return await self._show_form({"base": "abode_error"})
+                return self._show_form({"base": "invalid_credentials"})
+            return self._show_form({"base": "abode_error"})
 
         return self.async_create_entry(
             title=user_input[CONF_USERNAME],
             data={CONF_USERNAME: username, CONF_PASSWORD: password},
         )
 
-    async def _show_form(self, errors=None):
+    @callback
+    def _show_form(self, errors=None):
         """Show the form to the user."""
         return self.async_show_form(
             step_id="user",

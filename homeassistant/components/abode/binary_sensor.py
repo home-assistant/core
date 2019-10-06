@@ -19,7 +19,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a sensor for an Abode device."""
     data = hass.data[DOMAIN]
 
@@ -43,7 +43,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
             )
         )
 
-    async_add_devices(devices)
+    async_add_entities(devices)
 
 
 class AbodeBinarySensor(AbodeDevice, BinarySensorDevice):

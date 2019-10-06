@@ -21,7 +21,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a camera for an Abode device."""
 
     data = hass.data[DOMAIN]
@@ -30,7 +30,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     for device in data.abode.get_devices(generic_type=CONST.TYPE_CAMERA):
         devices.append(AbodeCamera(data, device, TIMELINE.CAPTURE_IMAGE))
 
-    async_add_devices(devices)
+    async_add_entities(devices)
 
 
 class AbodeCamera(AbodeDevice, Camera):
