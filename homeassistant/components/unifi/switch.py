@@ -14,7 +14,6 @@ LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Component doesn't support configuration through configuration.yaml."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -231,8 +230,6 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchDevice, RestoreEntity):
         """Return the device state attributes."""
         attributes = {
             "power": self.port.poe_power,
-            "received": self.client.wired_rx_bytes / 1000000,
-            "sent": self.client.wired_tx_bytes / 1000000,
             "switch": self.client.sw_mac,
             "port": self.client.sw_port,
             "poe_mode": self.poe_mode,

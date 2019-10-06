@@ -67,12 +67,18 @@ async def test_controller_setup():
         assert await unifi_controller.async_setup() is True
 
     assert unifi_controller.api is api
-    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 2
+    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == len(
+        controller.SUPPORTED_PLATFORMS
+    )
     assert hass.config_entries.async_forward_entry_setup.mock_calls[0][1] == (
         entry,
         "device_tracker",
     )
     assert hass.config_entries.async_forward_entry_setup.mock_calls[1][1] == (
+        entry,
+        "sensor",
+    )
+    assert hass.config_entries.async_forward_entry_setup.mock_calls[2][1] == (
         entry,
         "switch",
     )
@@ -214,12 +220,16 @@ async def test_reset_unloads_entry_if_setup():
     with patch.object(controller, "get_controller", return_value=mock_coro(api)):
         assert await unifi_controller.async_setup() is True
 
-    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 2
+    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == len(
+        controller.SUPPORTED_PLATFORMS
+    )
 
     hass.config_entries.async_forward_entry_unload.return_value = mock_coro(True)
     assert await unifi_controller.async_reset()
 
-    assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 2
+    assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == len(
+        controller.SUPPORTED_PLATFORMS
+    )
 
 
 async def test_get_controller(hass):
