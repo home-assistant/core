@@ -13,7 +13,8 @@
             }
         },
         "error": {
-            "invalid_credentials": "Invalid credentials"
+            "invalid_credentials": "Invalid credentials",
+            "invalid_vendor": "Invalid vendor"
         },
         "create_entry": {
             "default": "See [Neato documentation]({docs_url})."

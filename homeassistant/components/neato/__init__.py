@@ -11,6 +11,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
 
+from .config_flow import NeatoConfigFlow
 from .const import (
     CONF_VENDOR,
     NEATO_CONFIG,
@@ -62,14 +63,27 @@ async def async_setup(hass, config):
             return True
 
         # The entry is outdated
-        hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-
-    # Create the new entry
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            NEATO_DOMAIN, context={"source": SOURCE_IMPORT}, data=config[NEATO_DOMAIN]
+        error = await hass.async_add_executor_job(
+            NeatoConfigFlow.try_login,
+            conf[CONF_USERNAME],
+            conf[CONF_PASSWORD],
+            conf[CONF_VENDOR],
         )
-    )
+        if error is not None:
+            _LOGGER.error(error)
+            return False
+
+        # Update the entry
+        hass.config_entries.async_update_entry(entry, data=config[NEATO_DOMAIN])
+    else:
+        # Create the new entry
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                NEATO_DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=config[NEATO_DOMAIN],
+            )
+        )
 
     return True
 

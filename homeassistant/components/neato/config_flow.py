@@ -103,6 +103,8 @@ class NeatoConfigFlow(config_entries.ConfigFlow, domain=NEATO_DOMAIN):
             this_vendor = Vorwerk()
         elif vendor == "neato":
             this_vendor = Neato()
+        else:
+            return "invalid_vendor"
 
         try:
             Account(username, password, this_vendor)
