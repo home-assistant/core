@@ -16,7 +16,6 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    ATTR_ATTRIBUTION,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -38,7 +37,7 @@ INVERTER_MODES = (
     "NIGHT_MODE",
     "GRID_MONITORING",
     "IDLE",
-    )
+)
 
 # Supported sensor types:
 # Key: ['json_key', 'name', unit, icon]
