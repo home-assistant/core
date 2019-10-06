@@ -178,7 +178,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 "mdi:arrow-collapse-down",
                 "",
             ]
-            sensors["export_meter_reading"] = [
+            sensors["import_meter_reading"] = [
                 "totalEnergyimport",
                 "total import Energy",
                 ENERGY_WATT_HOUR,
