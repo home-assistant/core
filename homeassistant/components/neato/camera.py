@@ -4,21 +4,30 @@ import logging
 
 from homeassistant.components.camera import Camera
 
-from . import NEATO_LOGIN, NEATO_MAP_DATA, NEATO_ROBOTS
+from .const import NEATO_DOMAIN, NEATO_MAP_DATA, NEATO_ROBOTS, NEATO_LOGIN
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=10)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Neato Camera."""
+    pass
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Neato camera with config entry."""
     dev = []
     for robot in hass.data[NEATO_ROBOTS]:
         if "maps" in robot.traits:
             dev.append(NeatoCleaningMap(hass, robot))
+
+    if not dev:
+        return
+
     _LOGGER.debug("Adding robots for cleaning maps %s", dev)
-    add_entities(dev, True)
+    async_add_entities(dev, True)
 
 
 class NeatoCleaningMap(Camera):
@@ -61,3 +70,8 @@ class NeatoCleaningMap(Camera):
     def unique_id(self):
         """Return unique ID."""
         return self._robot_serial
+
+    @property
+    def device_info(self):
+        """Device info for neato robot."""
+        return {"identifiers": {(NEATO_DOMAIN, self._robot_serial)}}

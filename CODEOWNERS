@@ -187,6 +187,7 @@ homeassistant/components/mpd/* @fabaff
 homeassistant/components/mqtt/* @home-assistant/core
 homeassistant/components/mysensors/* @MartinHjelmare
 homeassistant/components/mystrom/* @fabaff
+homeassistant/components/neato/* @dshokouhi @Santobert
 homeassistant/components/nello/* @pschmitt
 homeassistant/components/ness_alarm/* @nickw444
 homeassistant/components/nest/* @awarecan

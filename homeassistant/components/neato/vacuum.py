@@ -31,12 +31,13 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import extract_entity_ids
 
-from . import (
+from .const import (
     ACTION,
     ALERTS,
     ERRORS,
     MODE,
     NEATO_LOGIN,
+    NEATO_DOMAIN,
     NEATO_MAP_DATA,
     NEATO_PERSISTENT_MAPS,
     NEATO_ROBOTS,
@@ -83,8 +84,13 @@ SERVICE_NEATO_CUSTOM_CLEANING_SCHEMA = vol.Schema(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Neato vacuum."""
+    pass
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Neato vacuum with config entry."""
     dev = []
     for robot in hass.data[NEATO_ROBOTS]:
         dev.append(NeatoConnectedVacuum(hass, robot))
@@ -93,7 +99,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     _LOGGER.debug("Adding vacuums %s", dev)
-    add_entities(dev, True)
+    async_add_entities(dev, True)
 
     def neato_custom_cleaning_service(call):
         """Zone cleaning service that allows user to change options."""
@@ -111,7 +117,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         entities = [entity for entity in dev if entity.entity_id in entity_ids]
         return entities
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN,
         SERVICE_NEATO_CUSTOM_CLEANING,
         neato_custom_cleaning_service,
@@ -144,10 +150,14 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         self._robot_maps = hass.data[NEATO_PERSISTENT_MAPS]
         self._robot_boundaries = {}
         self._robot_has_map = self.robot.has_persistent_maps
+        self._robot_stats = None
 
     def update(self):
         """Update the states of Neato Vacuums."""
         _LOGGER.debug("Running Neato Vacuums update")
+        if self._robot_stats is None:
+            self._robot_stats = self.robot.get_robot_info().json()
+
         self.neato.update_robots()
         try:
             self._state = self.robot.state
@@ -289,6 +299,17 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             data[ATTR_CLEAN_BATTERY_END] = self.clean_battery_end
 
         return data
+
+    @property
+    def device_info(self):
+        """Device info for neato robot."""
+        return {
+            "identifiers": {(NEATO_DOMAIN, self._robot_serial)},
+            "name": self._name,
+            "manufacturer": self._robot_stats["data"]["mfg_name"],
+            "model": self._robot_stats["data"]["modelName"],
+            "sw_version": self._state["meta"]["firmware"],
+        }
 
     def start(self):
         """Start cleaning or resume cleaning."""

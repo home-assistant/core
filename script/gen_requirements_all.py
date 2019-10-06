@@ -122,6 +122,7 @@ TEST_REQUIREMENTS = (
     "py-canary",
     "py17track",
     "pyblackbird",
+    "pybotvac",
     "pychromecast",
     "pydeconz",
     "pydispatcher",
