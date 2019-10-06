@@ -64,10 +64,7 @@ class TradfriBaseDevice(Entity):
             "manufacturer": info.manufacturer,
             "model": info.model_number,
             "name": self._name,
-            "power_source": info.power_source_str,
-            "serial": info.serial,
             "sw_version": info.firmware_version,
-            "battery_level": info.battery_level,
             "via_device": (TRADFRI_DOMAIN, self._gateway_id),
         }
 
