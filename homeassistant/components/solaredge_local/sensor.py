@@ -40,6 +40,15 @@ INVERTER_MODES = (
 # Supported sensor types:
 # Key: ['json_key', 'name', unit, icon, attribute name]
 SENSOR_TYPES = {
+    "current_AC_voltage": ["gridvoltage", "Grid Voltage", "V", "mdi:current-ac", ""],
+    "current_DC_voltage": ["dcvoltage", "DC Voltage", "V", "mdi:current-dc", ""],
+    "current_frequency": [
+        "gridfrequency",
+        "Grid Frequency",
+        "Hz",
+        "mdi:current-ac",
+        "",
+    ],
     "current_power": [
         "currentPower",
         "Current Power",
@@ -73,7 +82,7 @@ SENSOR_TYPES = {
         "Inverter Temperature",
         TEMP_CELSIUS,
         "mdi:thermometer",
-        "Operating mode",
+        "operating_mode",
     ],
     "lifetime_energy": [
         "energyTotal",
@@ -81,6 +90,13 @@ SENSOR_TYPES = {
         ENERGY_WATT_HOUR,
         "mdi:solar-power",
         "",
+    ],
+    "optimizer_connected": [
+        "optimizers",
+        "Optimizers online",
+        "optimizers",
+        "mdi:solar-panel",
+        "optimizers_connected",
     ],
     "optimizer_current": [
         "optimizercurrent",
@@ -109,23 +125,7 @@ SENSOR_TYPES = {
         "V",
         "mdi:solar-panel",
         "",
-    ],
-    "current_DC_voltage": ["dcvoltage", "DC Voltage", "V", "mdi:current-dc", ""],
-    "current_frequency": [
-        "gridfrequency",
-        "Grid Frequency",
-        "Hz",
-        "mdi:current-ac",
-        "",
-    ],
-    "current_AC_voltage": ["gridvoltage", "Grid Voltage", "V", "mdi:current-ac", ""],
-    "optimizer_connected": [
-        "optimizers",
-        "Optimizers online",
-        "optimizers",
-        "mdi:solar-panel",
-        "Optimizers connected",
-    ],
+    ],  
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
