@@ -551,6 +551,19 @@ class Entity:
         """Return the representation."""
         return "<Entity {}: {}>".format(self.name, self.state)
 
+    # call an requests
+    async def async_request_call(self, coro):
+        """Process request batched."""
+
+        if self.parallel_updates:
+            await self.parallel_updates.acquire()
+
+        try:
+            await coro
+        finally:
+            if self.parallel_updates:
+                self.parallel_updates.release()
+
 
 class ToggleEntity(Entity):
     """An abstract class for entities that can be turned on and off."""
