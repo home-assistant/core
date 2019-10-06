@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.components.tradfri.base_class import TradfriBaseDevice
-from homeassistant.const import ATTR_BATTERY_LEVEL
+from homeassistant.const import DEVICE_CLASS_BATTERY
 from . import KEY_API, KEY_GATEWAY
 from .const import CONF_GATEWAY_ID
 
@@ -37,9 +37,9 @@ class TradfriSensor(TradfriBaseDevice):
         self._unique_id = f"{gateway_id}-{device.id}"
 
     @property
-    def device_state_attributes(self):
+    def device_class(self):
         """Return the devices' state attributes."""
-        return {ATTR_BATTERY_LEVEL: self._device.device_info.battery_level}
+        return DEVICE_CLASS_BATTERY
 
     @property
     def state(self):
