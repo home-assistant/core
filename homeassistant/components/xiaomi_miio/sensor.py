@@ -54,7 +54,7 @@ AVAILABLE_ATTRIBUTES_AIRQUALITYMONITOR_S1 = {
     ATTR_BATTERY_LEVEL: "battery",
     ATTR_CO2: "co2",
     ATTR_HUMIDITY: "humidity",
-    ATTR_TEMPERATURE"temperature",
+    ATTR_TEMPERATURE: "temperature",
     ATTR_TVOC: "tvoc",
 }
 
