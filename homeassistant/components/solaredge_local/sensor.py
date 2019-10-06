@@ -170,40 +170,40 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ]
 
     try:
-        status.metersList[0]
-        sensors["import_current_power"] = [
-            "currentPowerimport",
-            "current import Power",
-            POWER_WATT,
-            "mdi:arrow-collapse-down",
-            "",
-        ]
-        sensors["export_meter_reading"] = [
-            "totalEnergyimport",
-            "total import Energy",
-            ENERGY_WATT_HOUR,
-            "mdi:counter",
-            "",
-        ]
+        if status.metersList[0]:
+            sensors["import_current_power"] = [
+                "currentPowerimport",
+                "current import Power",
+                POWER_WATT,
+                "mdi:arrow-collapse-down",
+                "",
+            ]
+            sensors["export_meter_reading"] = [
+                "totalEnergyimport",
+                "total import Energy",
+                ENERGY_WATT_HOUR,
+                "mdi:counter",
+                "",
+            ]
     except IndexError:
         _LOGGER.critical("meter list 0 sensors not created")
 
     try:
-        status.metersList[1]
-        sensors["export_current_power"] = [
-            "currentPowerexport",
-            "current export Power",
-            POWER_WATT,
-            "mdi:arrow-expand-up",
-            "",
-        ]
-        sensors["export_meter_reading"] = [
-            "totalEnergyexport",
-            "total export Energy",
-            ENERGY_WATT_HOUR,
-            "mdi:counter",
-            "",
-        ]
+        if status.metersList[1]:
+            sensors["export_current_power"] = [
+                "currentPowerexport",
+                "current export Power",
+                POWER_WATT,
+                "mdi:arrow-expand-up",
+                "",
+            ]
+            sensors["export_meter_reading"] = [
+                "totalEnergyexport",
+                "total export Energy",
+                ENERGY_WATT_HOUR,
+                "mdi:counter",
+                "",
+            ]
     except IndexError:
         _LOGGER.critical("meter list 1 sensors not created")
 
@@ -346,18 +346,18 @@ class SolarEdgeData:
             self.info["invertertemperature"] = INVERTER_MODES[status.status]
 
             try:
-                status.metersList[1]
-                self.data["currentPowerimport"] = status.metersList[1].currentPower
-                self.data["totalEnergyimport"] = status.metersList[1].totalEnergy
+                if status.metersList[1]:
+                    self.data["currentPowerimport"] = status.metersList[1].currentPower
+                    self.data["totalEnergyimport"] = status.metersList[1].totalEnergy
             except IndexError:
-                _LOGGER.critical("no values send to fronted11")
+                _LOGGER.critical("no values send to fronted")
 
             try:
-                status.metersList[0]
-                self.data["currentPowerexport"] = status.metersList[0].currentPower
-                self.data["totalEnergyexport"] = status.metersList[0].totalEnergy
+                if status.metersList[0]:
+                    self.data["currentPowerexport"] = status.metersList[0].currentPower
+                    self.data["totalEnergyexport"] = status.metersList[0].totalEnergy
             except IndexError:
-                _LOGGER.critical("no values send to fronted21")
+                _LOGGER.critical("no values send to fronted")
 
         if maintenance.system.name:
             self.data["optimizertemperature"] = round(statistics.mean(temperature), 2)
