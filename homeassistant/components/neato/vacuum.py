@@ -325,14 +325,14 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             elif self._state["state"] == 3:
                 self.robot.resume_cleaning()
         except NeatoRobotException as ex:
-            _LOGGER.error("Neato switch connection error: %s", ex)
+            _LOGGER.error("Neato vacuum connection error: %s", ex)
 
     def pause(self):
         """Pause the vacuum."""
         try:
             self.robot.pause_cleaning()
         except NeatoRobotException as ex:
-            _LOGGER.error("Neato switch connection error: %s", ex)
+            _LOGGER.error("Neato vacuum connection error: %s", ex)
 
     def return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
@@ -342,28 +342,28 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             self._clean_state = STATE_RETURNING
             self.robot.send_to_base()
         except NeatoRobotException as ex:
-            _LOGGER.error("Neato switch connection error: %s", ex)
+            _LOGGER.error("Neato vacuum connection error: %s", ex)
 
     def stop(self, **kwargs):
         """Stop the vacuum cleaner."""
         try:
             self.robot.stop_cleaning()
         except NeatoRobotException as ex:
-            _LOGGER.error("Neato switch connection error: %s", ex)
+            _LOGGER.error("Neato vacuum connection error: %s", ex)
 
     def locate(self, **kwargs):
         """Locate the robot by making it emit a sound."""
         try:
             self.robot.locate()
         except NeatoRobotException as ex:
-            _LOGGER.error("Neato switch connection error: %s", ex)
+            _LOGGER.error("Neato vacuum connection error: %s", ex)
 
     def clean_spot(self, **kwargs):
         """Run a spot cleaning starting from the base."""
         try:
             self.robot.start_spot_cleaning()
         except NeatoRobotException as ex:
-            _LOGGER.error("Neato switch connection error: %s", ex)
+            _LOGGER.error("Neato vacuum connection error: %s", ex)
 
     def neato_custom_cleaning(self, mode, navigation, category, zone=None, **kwargs):
         """Zone cleaning service call."""
@@ -382,4 +382,4 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         try:
             self.robot.start_cleaning(mode, navigation, category, boundary_id)
         except NeatoRobotException as ex:
-            _LOGGER.error("Neato switch connection error: %s", ex)
+            _LOGGER.error("Neato vacuum connection error: %s", ex)
