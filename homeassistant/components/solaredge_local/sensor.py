@@ -24,8 +24,6 @@ from homeassistant.util import Throttle
 DOMAIN = "solaredge_local"
 UPDATE_DELAY = timedelta(seconds=10)
 
-OPTIMIZER_ATTRIBUTE = "Optimizers connected"
-OPERATING_MODE = "mode"
 INVERTER_MODES = (
     "SHUTTING_DOWN",
     "ERROR",
@@ -40,71 +38,93 @@ INVERTER_MODES = (
 )
 
 # Supported sensor types:
-# Key: ['json_key', 'name', unit, icon]
+# Key: ['json_key', 'name', unit, icon, attribute name]
 SENSOR_TYPES = {
-    "current_power": ["currentPower", "Current Power", POWER_WATT, "mdi:solar-power"],
+    "current_power": [
+        "currentPower",
+        "Current Power",
+        POWER_WATT,
+        "mdi:solar-power",
+        "",
+    ],
     "energy_this_month": [
         "energyThisMonth",
         "Energy this month",
         ENERGY_WATT_HOUR,
         "mdi:solar-power",
+        "",
     ],
     "energy_this_year": [
         "energyThisYear",
         "Energy this year",
         ENERGY_WATT_HOUR,
         "mdi:solar-power",
+        "",
     ],
     "energy_today": [
         "energyToday",
         "Energy today",
         ENERGY_WATT_HOUR,
         "mdi:solar-power",
+        "",
     ],
     "inverter_temperature": [
         "invertertemperature",
         "Inverter Temperature",
         TEMP_CELSIUS,
         "mdi:thermometer",
+        "Operating mode",
     ],
     "lifetime_energy": [
         "energyTotal",
         "Lifetime energy",
         ENERGY_WATT_HOUR,
         "mdi:solar-power",
+        "",
     ],
     "optimizer_current": [
         "optimizercurrent",
         "Average Optimizer Current",
         "A",
         "mdi:solar-panel",
+        "",
     ],
     "optimizer_power": [
         "optimizerpower",
         "Average Optimizer Power",
         POWER_WATT,
         "mdi:solar-panel",
+        "",
     ],
     "optimizer_temperature": [
         "optimizertemperature",
         "Average Optimizer Temperature",
         TEMP_CELSIUS,
         "mdi:solar-panel",
+        "",
     ],
     "optimizer_voltage": [
         "optimizervoltage",
         "Average Optimizer Voltage",
         "V",
         "mdi:solar-panel",
+        "",
     ],
-    "current_DC_voltage": ["dcvoltage", "DC Voltage", "V", "mdi:current-dc"],
-    "current_frequency": ["gridfrequency", "Grid Frequency", "Hz", "mdi:current-ac"],
-    "current_AC_voltage": ["gridvoltage", "Grid Voltage", "V", "mdi:current-ac"],
+    "current_DC_voltage": ["dcvoltage", "DC Voltage", "V", "mdi:current-dc", ""],
+    "current_frequency": [
+        "gridfrequency",
+        "Grid Frequency",
+        "Hz",
+        "mdi:current-ac",
+        "",
+    ],
+    "current_AC_voltage": ["gridvoltage", "Grid Voltage", "V", "mdi:current-ac", ""],
     "optimizer_connected": [
         "optimizers",
         "Optimizers online",
         "optimizers",
         "mdi:solar-panel",
+        "Optimizers connected",
     ],
 }
 
@@ -146,6 +166,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             "Inverter Temperature",
             TEMP_FAHRENHEIT,
             "mdi:thermometer",
+            "Operating mode",
         ]
 
     # Create solaredge data service which will retrieve and update the data.
@@ -161,6 +182,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             sensor_info[1],
             sensor_info[2],
             sensor_info[3],
+            sensor_info[4],
         )
         entities.append(sensor)
 
@@ -170,7 +192,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SolarEdgeSensor(Entity):
     """Representation of an SolarEdge Monitoring API sensor."""
 
-    def __init__(self, platform_name, data, json_key, name, unit, icon):
+    def __init__(self, platform_name, data, json_key, name, unit, icon, attr):
         """Initialize the sensor."""
         self._platform_name = platform_name
         self._data = data
@@ -180,6 +202,7 @@ class SolarEdgeSensor(Entity):
         self._name = name
         self._unit_of_measurement = unit
         self._icon = icon
+        self._attr = attr
 
     @property
     def name(self):
@@ -195,11 +218,9 @@ class SolarEdgeSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         try:
-            return {
-                self._data.attr_name[self._json_key]: self._data.info[self._json_key]
-            }
+            return {self._attr: self._data.info[self._json_key]}
         except KeyError:
-            return
+            return None
 
     @property
     def icon(self):
@@ -226,7 +247,6 @@ class SolarEdgeData:
         self.api = api
         self.data = {}
         self.info = {}
-        self.attr_name = {}
 
     @Throttle(UPDATE_DELAY)
     def update(self):
@@ -283,10 +303,9 @@ class SolarEdgeData:
             self.data["gridfrequency"] = round(status.frequencyHz, 2)
             self.data["gridvoltage"] = round(status.voltage, 2)
             self.data["optimizers"] = status.optimizersStatus.online
+
             self.info["optimizers"] = status.optimizersStatus.total
-            self.attr_name["optimizers"] = OPTIMIZER_ATTRIBUTE
             self.info["invertertemperature"] = INVERTER_MODES[status.status]
-            self.attr_name["invertertemperature"] = OPERATING_MODE
         if maintenance.system.name:
             self.data["optimizertemperature"] = round(statistics.mean(temperature), 2)
             self.data["optimizervoltage"] = round(statistics.mean(voltage), 2)
