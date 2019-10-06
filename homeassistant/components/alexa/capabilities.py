@@ -716,3 +716,34 @@ class AlexaSecurityPanelController(AlexaCapibility):
         if code_format == FORMAT_NUMBER:
             return {"supportedAuthorizationTypes": [{"type": "FOUR_DIGIT_PIN"}]}
         return []
+
+
+class AlexaChannelController(AlexaCapibility):
+    """Implements Alexa.ChannelController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-channelcontroller.html
+    """
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.ChannelController"
+
+    def properties_supported(self):
+        """Return what properties this entity supports."""
+        return [{"name": "channel"}]
+
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return False
+
+    def properties_retrievable(self):
+        """Return True if properties can be retrieved."""
+        return False
+
+    def get_property(self, name):
+        """Read and return a property."""
+        if name != "channel":
+            raise UnsupportedProperty(name)
+
+        """Return a temporary empty channel property."""
+        return {"number": "1", "callSign": "", "affiliateCallSign": ""}
