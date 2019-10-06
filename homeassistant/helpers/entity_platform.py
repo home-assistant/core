@@ -32,7 +32,6 @@ class EntityPlatform:
         platform,
         scan_interval,
         entity_namespace,
-        async_entities_added_callback,
     ):
         """Initialize the entity platform.
 
@@ -42,7 +41,6 @@ class EntityPlatform:
         platform_name: str
         scan_interval: timedelta
         entity_namespace: str
-        async_entities_added_callback: @callback method
         """
         self.hass = hass
         self.logger = logger
@@ -51,7 +49,6 @@ class EntityPlatform:
         self.platform = platform
         self.scan_interval = scan_interval
         self.entity_namespace = entity_namespace
-        self.async_entities_added_callback = async_entities_added_callback
         self.config_entry = None
         self.entities = {}
         self._tasks = []
@@ -250,7 +247,6 @@ class EntityPlatform:
             return
 
         await asyncio.wait(tasks)
-        self.async_entities_added_callback()
 
         if self._async_unsub_polling is not None or not any(
             entity.should_poll for entity in self.entities.values()

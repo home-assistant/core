@@ -251,8 +251,7 @@ async def test_remove_entry(hass, manager):
 
     # Check entity state got added
     assert hass.states.get("light.test_entity") is not None
-    # Group all_lights, light.test_entity
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 1
 
     # Check entity got added to entity registry
     ent_reg = await hass.helpers.entity_registry.async_get_registry()
@@ -275,8 +274,7 @@ async def test_remove_entry(hass, manager):
 
     # Check that entity state has been removed
     assert hass.states.get("light.test_entity") is None
-    # Just Group all_lights
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all()) == 0
 
     # Check that entity registry entry has been removed
     entity_entry_list = list(ent_reg.entities.values())
