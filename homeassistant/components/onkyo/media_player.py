@@ -79,9 +79,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_MAX_VOLUME, default=SUPPORTED_MAX_VOLUME): vol.All(
             vol.Coerce(int), vol.Range(min=1, max=100)
         ),
-        vol.Optional(CONF_RECEIVER_MAX_VOLUME, default=DEFAULT_RECEIVER_MAX_VOLUME): vol.All(
-            vol.Coerce(int), vol.Range(min=0)
-        ),
+        vol.Optional(
+            CONF_RECEIVER_MAX_VOLUME, default=DEFAULT_RECEIVER_MAX_VOLUME
+        ): vol.All(vol.Coerce(int), vol.Range(min=0)),
         vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES): {cv.string: cv.string},
     }
 )
@@ -169,7 +169,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     config.get(CONF_SOURCES),
                     name=config.get(CONF_NAME),
                     max_volume=config.get(CONF_MAX_VOLUME),
-                    receiver_max_volume=config.get(CONF_RECEIVER_MAX_VOLUME)
+                    receiver_max_volume=config.get(CONF_RECEIVER_MAX_VOLUME),
                 )
             )
             KNOWN_HOSTS.append(host)
@@ -186,7 +186,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                         config.get(CONF_SOURCES),
                         name=f"{config[CONF_NAME]} Zone 2",
                         max_volume=config.get(CONF_MAX_VOLUME),
-                        receiver_max_volume=config.get(CONF_RECEIVER_MAX_VOLUME)
+                        receiver_max_volume=config.get(CONF_RECEIVER_MAX_VOLUME),
                     )
                 )
             # Add Zone3 if available
@@ -199,7 +199,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                         config.get(CONF_SOURCES),
                         name=f"{config[CONF_NAME]} Zone 3",
                         max_volume=config.get(CONF_MAX_VOLUME),
-                        receiver_max_volume=config.get(CONF_RECEIVER_MAX_VOLUME)
+                        receiver_max_volume=config.get(CONF_RECEIVER_MAX_VOLUME),
                     )
                 )
         except OSError:
@@ -282,8 +282,10 @@ class OnkyoDevice(MediaPlayerDevice):
             del self._attributes[ATTR_PRESET]
 
         self._muted = bool(mute_raw[1] == "on")
-#       AMP_VOL/MAX_RECEIVER_VOL*(MAX_VOL/100)
-        self._volume = volume_raw[1] / self._receiver_max_volume * (self._max_volume / 100)
+        #       AMP_VOL/MAX_RECEIVER_VOL*(MAX_VOL/100)
+        self._volume = (
+            volume_raw[1] / self._receiver_max_volume * (self._max_volume / 100)
+        )
 
         if not hdmi_out_raw:
             return
@@ -342,8 +344,10 @@ class OnkyoDevice(MediaPlayerDevice):
         volume in HA will give 80% volume on the receiver. Then we convert
         that to the correct scale for the receiver.
         """
-#        HA_VOL * (MAX VOL / 100) * MAX_RECEIVER_VOL
-        self.command(f"volume {int(volume * (self._max_volume / 100) * self._receiver_max_volume)}")
+        #        HA_VOL * (MAX VOL / 100) * MAX_RECEIVER_VOL
+        self.command(
+            f"volume {int(volume * (self._max_volume / 100) * self._receiver_max_volume)}"
+        )
 
     def volume_up(self):
         """Increase volume by 1 step."""
@@ -436,7 +440,9 @@ class OnkyoDeviceZone(OnkyoDevice):
             del self._attributes[ATTR_PRESET]
         if self._supports_volume:
             # AMP_VOL/MAX_RECEIVER_VOL*(MAX_VOL/100)
-            self._volume = volume_raw[1] / self._receiver_max_volume * (self._max_volume / 100)
+            self._volume = (
+                volume_raw[1] / self._receiver_max_volume * (self._max_volume / 100)
+            )
 
     @property
     def supported_features(self):
@@ -459,7 +465,9 @@ class OnkyoDeviceZone(OnkyoDevice):
         that to the correct scale for the receiver.
         """
         # HA_VOL * (MAX VOL / 100) * MAX_RECEIVER_VOL
-        self.command(f"zone{self._zone}.volume={int(volume * (self._max_volume / 100) * self._receiver_max_volume)}")
+        self.command(
+            f"zone{self._zone}.volume={int(volume * (self._max_volume / 100) * self._receiver_max_volume)}"
+        )
 
     def volume_up(self):
         """Increase volume by 1 step."""
