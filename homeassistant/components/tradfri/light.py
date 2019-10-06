@@ -144,7 +144,7 @@ class TradfriGroup(Light):
         await self._api(self._group.update())
 
 
-class TradfriLight(Light, TradfriBaseDevice):
+class TradfriLight(TradfriBaseDevice, Light):
     """The platform class required by Home Assistant."""
 
     def __init__(self, device, api, gateway_id):
