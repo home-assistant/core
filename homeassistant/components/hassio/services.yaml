@@ -1,5 +1,5 @@
 addon_install:
-  description: Install a HassIO docker add-on.
+  description: Install a Hass.io docker add-on.
   fields:
     addon:
       description: The add-on slug.
@@ -9,42 +9,42 @@ addon_install:
       example: "0.2"
 
 addon_start:
-  description: Start a HassIO docker add-on.
+  description: Start a Hass.io docker add-on.
   fields:
     addon:
       description: The add-on slug.
       example: core_ssh
 
 addon_restart:
-  description: Restart a HassIO docker add-on.
+  description: Restart a Hass.io docker add-on.
   fields:
     addon:
       description: The add-on slug.
       example: core_ssh
 
 addon_stdin:
-  description: Write data to a HassIO docker add-on stdin .
+  description: Write data to a Hass.io docker add-on stdin .
   fields:
     addon:
       description: The add-on slug.
       example: core_ssh
 
 addon_stop:
-  description: Stop a HassIO docker add-on.
+  description: Stop a Hass.io docker add-on.
   fields:
     addon:
       description: The add-on slug.
       example: core_ssh
 
 addon_uninstall:
-  description: Uninstall a HassIO docker add-on.
+  description: Uninstall a Hass.io docker add-on.
   fields:
     addon:
       description: The add-on slug.
       example: core_ssh
 
 addon_update:
-  description: Update a HassIO docker add-on.
+  description: Update a Hass.io docker add-on.
   fields:
     addon:
       description: The add-on slug.
@@ -74,10 +74,10 @@ host_update:
       example: "0.3"
 
 supervisor_reload:
-  description: Reload the HassIO supervisor.
+  description: Reload the Hass.io supervisor.
 
 supervisor_update:
-  description: Update the HassIO supervisor.
+  description: Update the Hass.io supervisor.
   fields:
     version:
       description: Optional or it will be use the latest version.
