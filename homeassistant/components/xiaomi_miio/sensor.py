@@ -1,4 +1,5 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5)."""
+from enum import Enum
 import logging
 
 import voluptuous as vol
