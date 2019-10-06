@@ -122,7 +122,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
         _LOGGER.debug("Discovered device %s (%s - %s)", name, model, hkid)
 
-        # pylint: disable=unsupported-assignment-operation
+        # https://github.com/PyCQA/pylint/issues/3167
+        # pylint: disable=no-member,unsupported-assignment-operation
         self.context["hkid"] = hkid
         self.context["title_placeholders"] = {"name": name}
 
