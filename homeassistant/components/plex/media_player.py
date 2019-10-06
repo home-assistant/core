@@ -680,40 +680,48 @@ class PlexClient(MediaPlayerDevice):
             return
 
         src = json.loads(media_id)
+        library = src.get("library_name")
+        shuffle = src.get("shuffle", 0)
 
         media = None
+
         if media_type == "MUSIC":
-            media = (
-                self.plex_server.library.section(src["library_name"])
-                .get(src["artist_name"])
-                .album(src["album_name"])
-                .get(src["track_name"])
-            )
+            artist = src["artist_name"]
+            album = src.get("album_name")
+            track_name = src.get("track_name")
+            track_number = src.get("track_number")
+
+            media = self.plex_server.library.section(library).get(artist)
+            if album:
+                album = media.album(album)
+                if track_name:
+                    media = album.track(track_name)
+                elif track_number:
+                    for track in album.tracks():
+                        if int(track.index) == int(track_number):
+                            media = track
+                            break
+                else:
+                    media = album
+            elif track_name:
+                media = media.searchTracks(track_name, maxresults=1)
+
         elif media_type == "EPISODE":
             media = self._get_tv_media(
-                src["library_name"],
+                library,
                 src["show_name"],
                 src["season_number"],
-                src["episode_number"],
+                src.get("episode_number"),
             )
         elif media_type == "PLAYLIST":
             media = self.plex_server.playlist(src["playlist_name"])
         elif media_type == "VIDEO":
-            media = self.plex_server.library.section(src["library_name"]).get(
-                src["video_name"]
-            )
+            media = self.plex_server.library.section(library).get(src["video_name"])
 
-        if (
-            media
-            and media_type == "EPISODE"
-            and isinstance(media, plexapi.playlist.Playlist)
-        ):
-            # delete episode playlist after being loaded into a play queue
-            self._client_play_media(
-                media=media, delete=True, shuffle=src.get("shuffle", False)
-            )
-        elif media:
-            self._client_play_media(media=media, shuffle=src.get("shuffle", False))
+        if media:
+            self._client_play_media(media=media, shuffle=shuffle)
+        else:
+            _LOGGER.error("Media could not be found: %s", media_id)
 
     def _get_tv_media(self, library_name, show_name, season_number, episode_number):
         """Find TV media and return a Plex media object."""
@@ -723,8 +731,7 @@ class PlexClient(MediaPlayerDevice):
         show = self.plex_server.library.section(library_name).get(show_name)
 
         if not season_number:
-            playlist_name = f"{self.entity_id} - {show_name} Episodes"
-            return self.plex_server.create_playlist(playlist_name, show.episodes())
+            return show
 
         for season in show.seasons():
             if int(season.seasonNumber) == int(season_number):
@@ -741,12 +748,7 @@ class PlexClient(MediaPlayerDevice):
             )
         else:
             if not episode_number:
-                playlist_name = "{} - {} Season {} Episodes".format(
-                    self.entity_id, show_name, str(season_number)
-                )
-                return self.plex_server.create_playlist(
-                    playlist_name, target_season.episodes()
-                )
+                return target_season
 
             for episode in target_season.episodes():
                 if int(episode.index) == int(episode_number):
@@ -764,13 +766,22 @@ class PlexClient(MediaPlayerDevice):
 
         return target_episode
 
-    def _client_play_media(self, media, delete=False, **params):
+    def _client_play_media(self, media, **params):
         """Instruct Plex client to play a piece of media."""
+        from xml.etree.ElementTree import ParseError
+
         if not (self.device and "playback" in self._device_protocol_capabilities):
             _LOGGER.error("Client cannot play media: %s", self.entity_id)
             return
 
-        self.device.playMedia(media)
+        try:
+            self.device.playMedia(media, params)
+        except ParseError:
+            # Temporary workaround for Plexamp / plexapi issue
+            pass
+        except requests.exceptions.ConnectTimeout:
+            _LOGGER.error("Timed out playing on %s", self.name)
+
         self.update_devices()
 
     @property
