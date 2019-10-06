@@ -1,6 +1,7 @@
 """Support for Abode Security System lights."""
 import logging
 from math import ceil
+
 import abodepy.helpers.constants as CONST
 
 import abodepy.helpers.constants as CONST
@@ -32,14 +33,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Abode light devices."""
-
     data = hass.data[DOMAIN]
-
-    device_types = [CONST.TYPE_LIGHT, CONST.TYPE_SWITCH]
 
     devices = []
 
-    for device in data.abode.get_devices(generic_type=device_types):
+    for device in data.abode.get_devices(generic_type=CONST.TYPE_LIGHT):
         devices.append(AbodeLight(data, device))
 
     async_add_entities(devices)

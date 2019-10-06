@@ -10,6 +10,8 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN
 
+CONF_POLLING = "polling"
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -24,6 +26,7 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.data_schema = {
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
+            vol.Optional(CONF_POLLING, default=False): bool,
         }
 
     async def async_step_user(self, user_input=None):
@@ -37,6 +40,7 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
+        polling = user_input[CONF_POLLING]
 
         try:
             await self.hass.async_add_executor_job(Abode, username, password, True)
@@ -48,7 +52,11 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=user_input[CONF_USERNAME],
-            data={CONF_USERNAME: username, CONF_PASSWORD: password},
+            data={
+                CONF_USERNAME: username,
+                CONF_PASSWORD: password,
+                CONF_POLLING: polling,
+            },
         )
 
     @callback

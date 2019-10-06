@@ -1,17 +1,13 @@
 """Support for the Abode Security System."""
-import logging
 from asyncio import gather
 from copy import deepcopy
 from functools import partial
-from requests.exceptions import HTTPError, ConnectTimeout
+import logging
 
-import abodepy
-import abodepy.helpers.constants as CONST
+from abodepy import Abode
 from abodepy.exceptions import AbodeException
 import abodepy.helpers.timeline as TIMELINE
-
-from abodepy.exceptions import AbodeException
-
+from requests.exceptions import HTTPError, ConnectTimeout
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT

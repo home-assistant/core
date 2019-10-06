@@ -1,5 +1,6 @@
 """Support for Abode Security System switches."""
 import logging
+
 import abodepy.helpers.constants as CONST
 import abodepy.helpers.timeline as TIMELINE
 
