@@ -61,13 +61,14 @@ class TradfriBaseDevice(Entity):
 
         return {
             "identifiers": {(TRADFRI_DOMAIN, self._device.id)},
-            "name": self._name,
-            "serial": info.serial,
             "manufacturer": info.manufacturer,
             "model": info.model_number,
-            "sw_version": info.firmware_version,
-            "via_device": (TRADFRI_DOMAIN, self._gateway_id),
+            "name": self._name,
             "power_source": info.power_source_str,
+            "serial": info.serial,
+            "sw_version": info.firmware_version,
+            "battery_level": info.battery_level,
+            "via_device": (TRADFRI_DOMAIN, self._gateway_id),
         }
 
     @property
