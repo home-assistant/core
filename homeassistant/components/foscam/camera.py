@@ -46,6 +46,17 @@ DIR_TOPRIGHT = "TOP_RIGHT"
 DIR_BOTTOMLEFT = "BOTTOM_LEFT"
 DIR_BOTTOMRIGHT = "BOTTOM_RIGHT"
 
+MOVEMENT_ATTRS = {
+    DIR_UP: "ptz_move_up",
+    DIR_DOWN: "ptz_move_down",
+    DIR_LEFT: "ptz_move_left",
+    DIR_RIGHT: "ptz_move_right",
+    DIR_TOPLEFT: "ptz_move_top_left",
+    DIR_TOPRIGHT: "ptz_move_top_right",
+    DIR_BOTTOMLEFT: "ptz_move_bottom_left",
+    DIR_BOTTOMRIGHT: "ptz_move_bottom_right",
+}
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_IP): cv.string,
@@ -220,16 +231,7 @@ class HassFoscamCamera(Camera):
         """Perform a PTZ action on the camera."""
         _LOGGER.debug("PTZ action '%s' on %s", movement, self._name)
 
-        movement_function = {
-            DIR_UP: self._foscam_session.ptz_move_up,
-            DIR_DOWN: self._foscam_session.ptz_move_down,
-            DIR_LEFT: self._foscam_session.ptz_move_left,
-            DIR_RIGHT: self._foscam_session.ptz_move_right,
-            DIR_TOPLEFT: self._foscam_session.ptz_move_top_left,
-            DIR_TOPRIGHT: self._foscam_session.ptz_move_top_right,
-            DIR_BOTTOMLEFT: self._foscam_session.ptz_move_bottom_left,
-            DIR_BOTTOMRIGHT: self._foscam_session.ptz_move_bottom_right,
-        }[movement]
+        movement_function = getattr(self._foscam_session, MOVEMENT_ATTRS[movement])
 
         ret, _ = await self.hass.async_add_executor_job(movement_function)
 
