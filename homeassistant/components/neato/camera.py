@@ -43,6 +43,7 @@ class NeatoCleaningMap(Camera):
 
     def __init__(self, hass, robot):
         """Initialize Neato cleaning map."""
+        super().__init__()
         self.robot = robot
         self.neato = hass.data[NEATO_LOGIN] if NEATO_LOGIN in hass.data else None
         self._robot_name = f"{self.robot.name} Cleaning Map"
@@ -79,7 +80,7 @@ class NeatoCleaningMap(Camera):
             self._image_url = image_url
 
         except NeatoRobotException as ex:
-            _LOGGER.warning("Neato camera connection error: %s", ex)
+            _LOGGER.error("Neato camera connection error: %s", ex)
             self._image = None
             self._image_url = None
 

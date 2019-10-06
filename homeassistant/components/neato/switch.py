@@ -63,7 +63,7 @@ class NeatoConnectedSwitch(ToggleEntity):
             self.neato.update_robots()
             self._state = self.robot.state
         except NeatoRobotException as ex:
-            _LOGGER.warning("Neato switch connection error: %s", ex)
+            _LOGGER.error("Neato switch connection error: %s", ex)
             self._state = None
             return
 
@@ -107,9 +107,15 @@ class NeatoConnectedSwitch(ToggleEntity):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         if self.type == SWITCH_TYPE_SCHEDULE:
-            self.robot.enable_schedule()
+            try:
+                self.robot.enable_schedule()
+            except NeatoRobotException as ex:
+                _LOGGER.error("Neato switch connection error: %s", ex)
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
         if self.type == SWITCH_TYPE_SCHEDULE:
-            self.robot.disable_schedule()
+            try:
+                self.robot.disable_schedule()
+            except NeatoRobotException as ex:
+                _LOGGER.error("Neato switch connection error: %s", ex)
