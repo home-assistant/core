@@ -36,15 +36,15 @@ ATTR_TRAVELTIME = "travel_time"
 
 DEFAULT_TRAVELTIME = 0.125
 
-DIR_UP = "UP"
-DIR_DOWN = "DOWN"
-DIR_LEFT = "LEFT"
-DIR_RIGHT = "RIGHT"
+DIR_UP = "up"
+DIR_DOWN = "down"
+DIR_LEFT = "left"
+DIR_RIGHT = "right"
 
-DIR_TOPLEFT = "TOP_LEFT"
-DIR_TOPRIGHT = "TOP_RIGHT"
-DIR_BOTTOMLEFT = "BOTTOM_LEFT"
-DIR_BOTTOMRIGHT = "BOTTOM_RIGHT"
+DIR_TOPLEFT = "top_left"
+DIR_TOPRIGHT = "top_right"
+DIR_BOTTOMLEFT = "bottom_left"
+DIR_BOTTOMRIGHT = "bottom_right"
 
 MOVEMENT_ATTRS = {
     DIR_UP: "ptz_move_up",
