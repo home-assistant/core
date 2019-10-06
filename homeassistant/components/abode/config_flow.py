@@ -21,9 +21,10 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize."""
-        self.data_schema = vol.Schema(
-            {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
-        )
+        self.data_schema = {
+            vol.Required(CONF_USERNAME): str,
+            vol.Required(CONF_PASSWORD): str,
+        }
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""

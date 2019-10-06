@@ -22,7 +22,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_USERNAME,
     CONF_PASSWORD,
-    CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.helpers import config_validation as cv
@@ -35,15 +34,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_POLLING = "polling"
 
 DEFAULT_CACHEDB = "./abodepy_cache.pickle"
-
-NOTIFICATION_ID = "abode_notification"
-NOTIFICATION_TITLE = "Abode Security Setup"
-
-EVENT_ABODE_ALARM = "abode_alarm"
-EVENT_ABODE_ALARM_END = "abode_alarm_end"
-EVENT_ABODE_AUTOMATION = "abode_automation"
-EVENT_ABODE_FAULT = "abode_panel_fault"
-EVENT_ABODE_RESTORE = "abode_panel_restore"
 
 SERVICE_SETTINGS = "change_setting"
 SERVICE_CAPTURE_IMAGE = "capture_image"
@@ -68,7 +58,6 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_NAME): cv.string,
                 vol.Optional(CONF_POLLING, default=False): cv.boolean,
             }
         )
