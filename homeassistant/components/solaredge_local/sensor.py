@@ -125,7 +125,7 @@ SENSOR_TYPES = {
         "V",
         "mdi:solar-panel",
         "",
-    ],  
+    ],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
