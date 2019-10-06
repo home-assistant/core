@@ -15,6 +15,7 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
+    CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
@@ -27,6 +28,7 @@ from .const import (
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONTROLLER_ID,
+    DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_BLOCK_CLIENTS,
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
@@ -39,6 +41,8 @@ from .const import (
     UNIFI_WIRELESS_CLIENTS,
 )
 from .errors import AuthenticationRequired, CannotConnect
+
+SUPPORTED_PLATFORMS = ["device_tracker", "sensor", "switch"]
 
 
 class UniFiController:
@@ -75,6 +79,13 @@ class UniFiController:
     def site_role(self):
         """Return the site user role of this controller."""
         return self._site_role
+
+    @property
+    def option_allow_bandwidth_sensors(self):
+        """Config entry option to allow bandwidth sensors."""
+        return self.config_entry.options.get(
+            CONF_ALLOW_BANDWIDTH_SENSORS, DEFAULT_ALLOW_BANDWIDTH_SENSORS
+        )
 
     @property
     def option_block_clients(self):
@@ -225,7 +236,7 @@ class UniFiController:
 
         self.config_entry.add_update_listener(self.async_options_updated)
 
-        for platform in ["device_tracker", "switch"]:
+        for platform in SUPPORTED_PLATFORMS:
             hass.async_create_task(
                 hass.config_entries.async_forward_entry_setup(
                     self.config_entry, platform
@@ -294,7 +305,7 @@ class UniFiController:
         if self.api is None:
             return True
 
-        for platform in ["device_tracker", "switch"]:
+        for platform in SUPPORTED_PLATFORMS:
             await self.hass.config_entries.async_forward_entry_unload(
                 self.config_entry, platform
             )
