@@ -61,6 +61,10 @@ def test_new_version_shows_entity_startup(hass, mock_get_uuid, mock_get_newest_v
     res = yield from async_setup_component(hass, updater.DOMAIN, {updater.DOMAIN: {}})
     assert res, "Updater failed to set up"
 
+    with patch("homeassistant.components.updater.current_version", MOCK_VERSION):
+        async_fire_time_changed(hass, later)
+        yield from hass.async_block_till_done()
+
     yield from hass.async_block_till_done()
     assert hass.states.is_state("binary_sensor.updater", "unavailable")
     assert "newest_version" not in hass.states.get("binary_sensor.updater").attributes

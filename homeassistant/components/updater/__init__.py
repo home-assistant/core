@@ -59,13 +59,13 @@ class Updater:
         update_available: bool,
         newest_version: str,
         release_notes: str,
-        current_version: str,
+        version: str,
     ):
         """Initialize attributes."""
         self.update_available = update_available
         self.release_notes = release_notes
         self.newest_version = newest_version
-        self.current_version = current_version
+        self.current_version = version
 
 
 def _create_uuid(hass, filename=UPDATER_UUID_FILE):
