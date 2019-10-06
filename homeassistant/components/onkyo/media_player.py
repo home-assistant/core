@@ -215,7 +215,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class OnkyoDevice(MediaPlayerDevice):
     """Representation of an Onkyo device."""
 
-    def __init__(self, receiver, sources, name, max_volume, receiver_max_volume):
+    def __init__(self, receiver, sources, name=None, max_volume=SUPPORTED_MAX_VOLUME, receiver_max_volume=DEFAULT_RECEIVER_MAX_VOLUME):
         """Initialize the Onkyo Receiver."""
         self._receiver = receiver
         self._muted = False
@@ -388,7 +388,7 @@ class OnkyoDevice(MediaPlayerDevice):
 class OnkyoDeviceZone(OnkyoDevice):
     """Representation of an Onkyo device's extra zone."""
 
-    def __init__(self, zone, receiver, sources, name, max_volume, receiver_max_volume):
+    def __init__(self, zone, receiver, sources, name=None, max_volume=SUPPORTED_MAX_VOLUME, receiver_max_volume=DEFAULT_RECEIVER_MAX_VOLUME):
         """Initialize the Zone with the zone identifier."""
         self._zone = zone
         self._supports_volume = True
