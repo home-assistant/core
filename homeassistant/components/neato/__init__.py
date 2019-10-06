@@ -3,7 +3,7 @@ import asyncio
 import logging
 from datetime import timedelta
 
-from requests.exceptions import HTTPError, ConnectionError as ConnError
+from pybotvac.exceptions import NeatoException, NeatoLoginException, NeatoRobotException
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -20,6 +20,7 @@ from .const import (
     NEATO_ROBOTS,
     NEATO_PERSISTENT_MAPS,
     NEATO_MAP_DATA,
+    SCAN_INTERVAL_MINUTES,
     VALID_VENDORS,
 )
 
@@ -103,8 +104,13 @@ async def async_setup_entry(hass, entry):
         _LOGGER.debug("Failed to login to Neato API")
         return False
 
-    await hass.async_add_executor_job(hub.update_robots)
-    for component in ("camera", "vacuum", "switch"):
+    try:
+        await hass.async_add_executor_job(hub.update_robots)
+    except NeatoRobotException:
+        _LOGGER.debug("Failed to connect to Neato API")
+        return False
+
+    for component in ("camera", "vacuum", "switch", "sensor"):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
@@ -119,6 +125,7 @@ async def async_unload_entry(hass, entry):
         hass.config_entries.async_forward_entry_unload(entry, "camera"),
         hass.config_entries.async_forward_entry_unload(entry, "vacuum"),
         hass.config_entries.async_forward_entry_unload(entry, "switch"),
+        hass.config_entries.async_forward_entry_unload(entry, "sensor"),
     )
     return True
 
@@ -144,8 +151,11 @@ class NeatoHub:
                 self.config[CONF_USERNAME], self.config[CONF_PASSWORD], self._vendor
             )
             self.logged_in = True
-        except (HTTPError, ConnError):
-            _LOGGER.error("Unable to connect to Neato API")
+        except NeatoException as ex:
+            if isinstance(ex, NeatoLoginException):
+                _LOGGER.error("Invalid credentials")
+            else:
+                _LOGGER.error("Unable to connect to Neato API")
             self.logged_in = False
             return
 
@@ -154,7 +164,7 @@ class NeatoHub:
         self._hass.data[NEATO_PERSISTENT_MAPS] = self.my_neato.persistent_maps
         self._hass.data[NEATO_MAP_DATA] = self.my_neato.maps
 
-    @Throttle(timedelta(seconds=300))
+    @Throttle(timedelta(minutes=SCAN_INTERVAL_MINUTES))
     def update_robots(self):
         """Update the robot states."""
         _LOGGER.debug("Running HUB.update_robots %s", self._hass.data[NEATO_ROBOTS])
