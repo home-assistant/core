@@ -61,6 +61,9 @@ class EsphomeLight(EsphomeEntity, Light):
     def _state(self) -> Optional[LightState]:
         return super()._state
 
+    # https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
+    # pylint: disable=invalid-overridden-method
+
     @esphome_state_property
     def is_on(self) -> Optional[bool]:
         """Return true if the switch is on."""
