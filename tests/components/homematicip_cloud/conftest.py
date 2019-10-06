@@ -25,13 +25,8 @@ def mock_connection_fixture():
     def _rest_call_side_effect(path, body=None):
         return path, body
 
-    def _api_call_side_effect(path, body=None, full_url=False):
-        return True
-
     connection._restCall.side_effect = _rest_call_side_effect  # pylint: disable=W0212
-    connection.api_call.return_value = mock_coro(
-        True
-    )  # side_effect = mock_coro(_api_call_side_effect)  # pylint: disable=W0212
+    connection.api_call.return_value = mock_coro(True)
 
     return connection
 
@@ -63,12 +58,6 @@ def hmip_config_entry_fixture():
     return config_entry
 
 
-@pytest.fixture(name="loop")
-async def loop_fixture(event_loop):
-    """Return the event loop."""
-    return event_loop
-
-
 @pytest.fixture(name="default_mock_hap")
 async def default_mock_hap_fixture(
     hass: HomeAssistant, default_mock_home, hmip_config_entry
@@ -83,6 +72,4 @@ async def default_mock_hap_fixture(
 
     await hass.async_block_till_done()
 
-    yield hap
-
-    await hass.async_block_till_done()
+    return hap
