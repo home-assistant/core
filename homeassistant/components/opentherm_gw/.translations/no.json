@@ -3,8 +3,8 @@
         "step": {
             "init": {
                 "data": {
-                    "device": "Pad of URL",
-                    "id": "ID"
+                    "id": "ID",
+                    "name": "Navn"
                 },
                 "title": "OpenTherm Gateway"
             }
