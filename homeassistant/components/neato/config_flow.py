@@ -3,7 +3,7 @@
 import logging
 
 import voluptuous as vol
-from requests.exceptions import HTTPError, ConnectionError as ConnError
+from pybotvac.exceptions import NeatoLoginException, NeatoRobotException
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -106,7 +106,9 @@ class NeatoConfigFlow(config_entries.ConfigFlow, domain=NEATO_DOMAIN):
 
         try:
             Account(username, password, this_vendor)
-        except (HTTPError, ConnError):
+        except NeatoLoginException:
             return "invalid_credentials"
+        except NeatoRobotException:
+            return "unexpected_error"
 
         return None
