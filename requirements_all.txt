@@ -1396,7 +1396,7 @@ pypjlink2==1.2.0
 pypoint==1.1.1
 
 # homeassistant.components.ps4
-pyps4-homeassistant==0.8.7
+pyps4-2ndscreen==1.0.1
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.93
