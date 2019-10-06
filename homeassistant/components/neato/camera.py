@@ -46,7 +46,7 @@ class NeatoCleaningMap(Camera):
         """Initialize Neato cleaning map."""
         super().__init__()
         self.robot = robot
-        self.neato = hass.data[NEATO_LOGIN] if NEATO_LOGIN in hass.data else None
+        self.neato = hass.data.get(NEATO_LOGIN)
         self._available = self.neato.logged_in if self.neato is not None else False
         self._robot_name = f"{self.robot.name} Cleaning Map"
         self._robot_serial = self.robot.serial

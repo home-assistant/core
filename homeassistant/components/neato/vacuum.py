@@ -134,7 +134,7 @@ class NeatoConnectedVacuum(StateVacuumDevice):
     def __init__(self, hass, robot):
         """Initialize the Neato Connected Vacuum."""
         self.robot = robot
-        self.neato = hass.data[NEATO_LOGIN] if NEATO_LOGIN in hass.data else None
+        self.neato = hass.data.get(NEATO_LOGIN)
         self._available = self.neato.logged_in if self.neato is not None else False
         self._name = f"{self.robot.name}"
         self._status_state = None
