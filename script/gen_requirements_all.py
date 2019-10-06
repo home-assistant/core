@@ -141,7 +141,7 @@ TEST_REQUIREMENTS = (
     "pyopenuv",
     "pyotgw",
     "pyotp",
-    "pyps4-homeassistant",
+    "pyps4-2ndscreen",
     "pyqwikswitch",
     "PyRMVtransport",
     "pysma",
