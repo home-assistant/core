@@ -115,6 +115,7 @@ class HomematicipAccesspointStatus(HomematicipGenericDevice):
 
     def __init__(self, home: AsyncHome) -> None:
         """Initialize access point device."""
+        home.modelType = "HmIP-HAP"
         super().__init__(home, home)
 
     @property
