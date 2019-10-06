@@ -264,7 +264,7 @@ async def setup_unifi_integration(
 
     async def mock_request(self, method, path, json=None):
         mock_requests.append({"method": method, "path": path, "json": json})
-        print(mock_requests, mock_client_responses, mock_device_responses)
+
         if path == "s/{site}/stat/sta" and mock_client_responses:
             return mock_client_responses.popleft()
         if path == "s/{site}/stat/device" and mock_device_responses:
@@ -386,8 +386,6 @@ async def test_switches(hass):
     assert switch_1 is not None
     assert switch_1.state == "on"
     assert switch_1.attributes["power"] == "2.56"
-    assert switch_1.attributes["received"] == 1234
-    assert switch_1.attributes["sent"] == 5678
     assert switch_1.attributes["switch"] == "00:00:00:00:01:01"
     assert switch_1.attributes["port"] == 1
     assert switch_1.attributes["poe_mode"] == "auto"
