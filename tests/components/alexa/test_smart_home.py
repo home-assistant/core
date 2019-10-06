@@ -435,6 +435,7 @@ async def test_media_player(hass):
         "Alexa.StepSpeaker",
         "Alexa.PlaybackController",
         "Alexa.EndpointHealth",
+        "Alexa.ChannelController",
     )
 
     await assert_power_controller_works(
@@ -585,6 +586,7 @@ async def test_media_player_power(hass):
         "Alexa.Speaker",
         "Alexa.StepSpeaker",
         "Alexa.PlaybackController",
+        "Alexa.ChannelController",
         "Alexa.EndpointHealth",
     )
 
