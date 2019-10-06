@@ -166,7 +166,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             "Inverter Temperature",
             TEMP_FAHRENHEIT,
             "mdi:thermometer",
-            "Operating mode",
+            "operating_mode",
         ]
 
     # Create solaredge data service which will retrieve and update the data.
