@@ -5,7 +5,7 @@ ptz:
       description: Name(s) of entities to move.
       example: 'camera.living_room_camera'
     movement:
-      description: "Direction of the movement. Allowed values: UP, DOWN, LEFT, RIGHT, TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT."
+      description: "Direction of the movement. Allowed values: up, down, left, right, top_left, top_right, bottom_left, bottom_right."
       example: 'UP'
     travel_time:
       description: "(Optional) Travel time in seconds. Allowed values: float from 0 to 1. Default: 0.125"
