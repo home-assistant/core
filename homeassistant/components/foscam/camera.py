@@ -2,6 +2,8 @@
 import logging
 from asyncio import sleep
 
+from libpyfoscam import FoscamCamera
+
 import voluptuous as vol
 
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA, SUPPORT_STREAM
@@ -14,8 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_extract_entity_ids
-
-from libpyfoscam import FoscamCamera
 
 
 _LOGGER = logging.getLogger(__name__)
