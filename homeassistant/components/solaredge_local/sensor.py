@@ -350,14 +350,18 @@ class SolarEdgeData:
                 self.data["currentPowerimport"] = status.metersList[0].currentPower
                 self.data["totalEnergyimport"] = status.metersList[0].totalEnergy
             except IndexError:
-                _LOGGER.critical("no values send to fronted1")
+                _LOGGER.critical("no values send to fronted11")
+            except:
+                _LOGGER.critical("no values send to fronted12")
 
             try:
                 status.metersList[1]
                 self.data["currentPowerexport"] = status.metersList[1].currentPower
                 self.data["totalEnergyexport"] = status.metersList[1].totalEnergy
             except IndexError:
-                _LOGGER.critical("no values send to fronted2")
+                _LOGGER.critical("no values send to fronted21")
+            except:
+                _LOGGER.critical("no values send to fronted22")
 
         if maintenance.system.name:
             self.data["optimizertemperature"] = round(statistics.mean(temperature), 2)
