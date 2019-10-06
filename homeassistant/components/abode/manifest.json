@@ -2,7 +2,7 @@
   "domain": "abode",
   "name": "Abode",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/abode",
+  "documentation": "https://www.home-assistant.io/integrations/abode",
   "requirements": [
     "abodepy==0.15.0"
   ],
