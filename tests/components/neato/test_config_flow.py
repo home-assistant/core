@@ -103,11 +103,11 @@ async def test_abort_if_already_setup(hass, account):
 
 async def test_abort_on_invalid_credentials(hass):
     """Test when we have invalid credentials."""
-    from requests.exceptions import HTTPError
+    from pybotvac.exceptions import NeatoLoginException
 
     flow = init_config_flow(hass)
 
-    with patch("pybotvac.Account", side_effect=HTTPError()):
+    with patch("pybotvac.Account", side_effect=NeatoLoginException()):
         result = await flow.async_step_user(
             {
                 CONF_USERNAME: USERNAME,
@@ -127,3 +127,31 @@ async def test_abort_on_invalid_credentials(hass):
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "invalid_credentials"
+
+
+async def test_abort_on_unexpected_error(hass):
+    """Test when we have an unexpected error."""
+    from pybotvac.exceptions import NeatoRobotException
+
+    flow = init_config_flow(hass)
+
+    with patch("pybotvac.Account", side_effect=NeatoRobotException()):
+        result = await flow.async_step_user(
+            {
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+                CONF_VENDOR: VENDOR_NEATO,
+            }
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {"base": "unexpected_error"}
+
+        result = await flow.async_step_import(
+            {
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+                CONF_VENDOR: VENDOR_NEATO,
+            }
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "unexpected_error"
