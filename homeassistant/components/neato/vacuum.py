@@ -2,7 +2,8 @@
 from datetime import timedelta
 import logging
 
-import requests
+from pybotvac.exceptions import NeatoRobotException
+
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
@@ -41,11 +42,12 @@ from .const import (
     NEATO_MAP_DATA,
     NEATO_PERSISTENT_MAPS,
     NEATO_ROBOTS,
+    SCAN_INTERVAL_MINUTES,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=SCAN_INTERVAL_MINUTES)
 
 SUPPORT_NEATO = (
     SUPPORT_BATTERY
@@ -130,6 +132,7 @@ class NeatoConnectedVacuum(StateVacuumDevice):
 
     def __init__(self, hass, robot):
         """Initialize the Neato Connected Vacuum."""
+        super().__init__()
         self.robot = robot
         self.neato = hass.data[NEATO_LOGIN]
         self._name = f"{self.robot.name}"
@@ -154,22 +157,26 @@ class NeatoConnectedVacuum(StateVacuumDevice):
 
     def update(self):
         """Update the states of Neato Vacuums."""
-        _LOGGER.debug("Running Neato Vacuums update")
-        if self._robot_stats is None:
-            self._robot_stats = self.robot.get_robot_info().json()
-
-        self.neato.update_robots()
-        try:
-            self._state = self.robot.state
-            self._available = True
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.HTTPError,
-        ) as ex:
-            _LOGGER.warning("Neato connection error: %s", ex)
+        if self.neato is None:
+            _LOGGER.error("Error while updating vacuum")
             self._state = None
             self._available = False
             return
+
+        try:
+            _LOGGER.debug("Running Neato Vacuums update")
+            if self._robot_stats is None:
+                self._robot_stats = self.robot.get_robot_info().json()
+            self.neato.update_robots()
+            self._state = self.robot.state
+            self._available = True
+        except NeatoRobotException as ex:
+            if self._available:  # print only once when available
+                _LOGGER.warning("Neato vacuum connection error: %s", ex)
+            self._state = None
+            self._available = False
+            return
+
         _LOGGER.debug("self._state=%s", self._state)
         if "alert" in self._state:
             robot_alert = ALERTS.get(self._state["alert"])
