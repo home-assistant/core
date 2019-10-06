@@ -29,11 +29,7 @@ async def test_one_config_allowed(hass):
 
     MockConfigEntry(
         domain="abode",
-        data={
-            CONF_USERNAME: "user@email.com",
-            CONF_PASSWORD: "password",
-            CONF_POLLING: False,
-        },
+        data={CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"},
     ).add_to_hass(hass)
 
     result = await flow.async_step_user()
@@ -45,18 +41,14 @@ async def test_one_config_allowed(hass):
 async def test_invalid_credentials(hass):
     """Test that invalid credentials throws an error."""
 
-    conf = {
-        CONF_USERNAME: "user@email.com",
-        CONF_PASSWORD: "password",
-        CONF_POLLING: False,
-    }
+    conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
     flow = config_flow.AbodeFlowHandler()
     flow.hass = hass
 
     with patch(
         "homeassistant.components.abode.config_flow.Abode",
-        side_effect=AbodeAuthenticationException((400, "error")),
+        side_effect=AbodeAuthenticationException((400, "auth error")),
     ):
         result = await flow.async_step_user(user_input=conf)
         assert result["errors"] == {"base": "invalid_credentials"}
@@ -65,18 +57,14 @@ async def test_invalid_credentials(hass):
 async def test_abode_server_error(hass):
     """Test other than invalid credentials throws an error."""
 
-    conf = {
-        CONF_USERNAME: "user@email.com",
-        CONF_PASSWORD: "password",
-        CONF_POLLING: False,
-    }
+    conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
     flow = config_flow.AbodeFlowHandler()
     flow.hass = hass
 
     with patch(
         "homeassistant.components.abode.config_flow.Abode",
-        side_effect=AbodeAuthenticationException((500, "error")),
+        side_effect=AbodeAuthenticationException((500, "server error")),
     ):
         result = await flow.async_step_user(user_input=conf)
         assert result["errors"] == {"base": "abode_error"}
@@ -107,11 +95,7 @@ async def test_step_import(hass):
 
 async def test_step_user(hass):
     """Test that the user step works."""
-    conf = {
-        CONF_USERNAME: "user@email.com",
-        CONF_PASSWORD: "password",
-        CONF_POLLING: False,
-    }
+    conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
     flow = config_flow.AbodeFlowHandler()
     flow.hass = hass

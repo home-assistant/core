@@ -8,7 +8,7 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import DOMAIN
+from .const import DOMAIN  # pylint: disable=W0611
 
 CONF_POLLING = "polling"
 
@@ -26,7 +26,6 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.data_schema = {
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
-            vol.Optional(CONF_POLLING, default=False): bool,
         }
 
     async def async_step_user(self, user_input=None):
@@ -40,7 +39,7 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
-        polling = user_input[CONF_POLLING]
+        polling = user_input[CONF_POLLING] if CONF_POLLING in user_input else False
 
         try:
             await self.hass.async_add_executor_job(Abode, username, password, True)
