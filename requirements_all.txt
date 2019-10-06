@@ -1102,7 +1102,7 @@ pyblackbird==0.5
 # pybluez==0.22
 
 # homeassistant.components.neato
-pybotvac==0.0.15
+pybotvac==0.0.16
 
 # homeassistant.components.nissan_leaf
 pycarwings2==2.9

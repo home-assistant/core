@@ -2,16 +2,16 @@
 from datetime import timedelta
 import logging
 
-import requests
+from pybotvac.exceptions import NeatoRobotException
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import ToggleEntity
 
-from .const import NEATO_DOMAIN, NEATO_LOGIN, NEATO_ROBOTS
+from .const import NEATO_DOMAIN, NEATO_LOGIN, NEATO_ROBOTS, SCAN_INTERVAL_MINUTES
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=10)
+SCAN_INTERVAL = timedelta(minutes=SCAN_INTERVAL_MINUTES)
 
 SWITCH_TYPE_SCHEDULE = "schedule"
 
@@ -44,8 +44,8 @@ class NeatoConnectedSwitch(ToggleEntity):
         """Initialize the Neato Connected switches."""
         self.type = switch_type
         self.robot = robot
-        self.neato = hass.data[NEATO_LOGIN]
-        self._robot_name = "{} {}".format(self.robot.name, SWITCH_TYPES[self.type][0])
+        self.neato = hass.data[NEATO_LOGIN] if NEATO_LOGIN in hass.data else None
+        self._robot_name = f"{self.robot.name} {SWITCH_TYPES[self.type][0]}"
         self._state = None
         self._schedule_state = None
         self._clean_state = None
@@ -53,17 +53,20 @@ class NeatoConnectedSwitch(ToggleEntity):
 
     def update(self):
         """Update the states of Neato switches."""
-        _LOGGER.debug("Running switch update")
-        self.neato.update_robots()
-        try:
-            self._state = self.robot.state
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.HTTPError,
-        ) as ex:
-            _LOGGER.warning("Neato connection error: %s", ex)
+        if self.neato is None:
+            _LOGGER.error("Error while updating switches")
             self._state = None
             return
+
+        _LOGGER.debug("Running switch update")
+        try:
+            self.neato.update_robots()
+            self._state = self.robot.state
+        except NeatoRobotException as ex:
+            _LOGGER.error("Neato switch connection error: %s", ex)
+            self._state = None
+            return
+
         _LOGGER.debug("self._state=%s", self._state)
         if self.type == SWITCH_TYPE_SCHEDULE:
             _LOGGER.debug("State: %s", self._state)
@@ -104,9 +107,15 @@ class NeatoConnectedSwitch(ToggleEntity):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         if self.type == SWITCH_TYPE_SCHEDULE:
-            self.robot.enable_schedule()
+            try:
+                self.robot.enable_schedule()
+            except NeatoRobotException as ex:
+                _LOGGER.error("Neato switch connection error: %s", ex)
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
         if self.type == SWITCH_TYPE_SCHEDULE:
-            self.robot.disable_schedule()
+            try:
+                self.robot.disable_schedule()
+            except NeatoRobotException as ex:
+                _LOGGER.error("Neato switch connection error: %s", ex)
