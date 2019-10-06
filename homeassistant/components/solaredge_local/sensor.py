@@ -16,6 +16,7 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    ATTR_ATTRIBUTION,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -175,7 +176,15 @@ class SolarEdgeSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
-
+    
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        try:
+            return {ATTR_ATTRIBUTION: self._data.info[self._json_key]}
+        except:
+            return {ATTR_ATTRIBUTION: 0}
+        
     @property
     def icon(self):
         """Return the sensor icon."""
