@@ -306,9 +306,9 @@ async def async_setup(hass, config):
                 preprocess_turn_on_alternatives(pars)
                 turn_light_off, off_pars = preprocess_turn_off(pars)
             if turn_light_off:
-                task = light.async_request_call(light.async_turn_off, **off_pars)
+                task = light.async_request_call(light.async_turn_off(**off_pars))
             else:
-                task = light.async_request_call(light.async_turn_on, **pars)
+                task = light.async_request_call(light.async_turn_on(**pars))
 
             change_tasks.append(task)
 

@@ -552,14 +552,14 @@ class Entity:
         return "<Entity {}: {}>".format(self.name, self.state)
 
     # call an requests
-    async def async_request_call(self, coro, *args, **kwargs):
+    async def async_request_call(self, coro):
         """Process request batched."""
 
         if self.parallel_updates:
             await self.parallel_updates.acquire()
 
         try:
-            await coro(*args, **kwargs)
+            await coro
         finally:
             if self.parallel_updates:
                 self.parallel_updates.release()

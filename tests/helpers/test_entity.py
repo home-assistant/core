@@ -241,23 +241,17 @@ async def test_async_async_request_call_without_lock(hass):
             self.entity_id = entity_id
             self.hass = hass
 
-        def testhelper(self, count):
+        async def testhelper(self, count):
             """Helper function."""
             updates.append(count)
 
     ent_1 = AsyncEntity("light.test_1")
     ent_2 = AsyncEntity("light.test_2")
-
     try:
-        job1 = ent_1.async_request_call(ent_1.testhelper, 1)
-        job2 = ent_2.async_request_call(ent_2.testhelper, 2)
+        job1 = ent_1.async_request_call(ent_1.testhelper(1))
+        job2 = ent_2.async_request_call(ent_2.testhelper(2))
 
-        assert len(updates) == 0
-        assert updates == []
-
-        hass.async_create_task(job1)
-        hass.async_create_task(job2)
-
+        await asyncio.wait([job1, job2])
         while True:
             if len(updates) >= 2:
                 break
@@ -283,7 +277,7 @@ async def test_async_async_request_call_with_lock(hass):
             self.hass = hass
             self.parallel_updates = lock
 
-        def testhelper(self, count):
+        async def testhelper(self, count):
             """Helper function."""
             updates.append(count)
 
@@ -295,13 +289,11 @@ async def test_async_async_request_call_with_lock(hass):
         await test_semaphore.acquire()
         assert test_semaphore.locked()
 
-        job1 = ent_1.async_request_call(ent_1.testhelper, 1)
-        job2 = ent_2.async_request_call(ent_2.testhelper, 2)
+        job1 = ent_1.async_request_call(ent_1.testhelper(1))
+        job2 = ent_2.async_request_call(ent_2.testhelper(2))
 
         hass.async_create_task(job1)
         hass.async_create_task(job2)
-
-        await asyncio.sleep(0)
 
         assert len(updates) == 0
         assert updates == []
