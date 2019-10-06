@@ -1,9 +1,9 @@
 {
-    "domain": "Flume",
+    "domain": "flume",
     "name": "Flume, Chris Mandich",
     "documentation": "https://www.home-assistant.io/integrations/flume/",
     "dependencies": [],
     "codeowners": ["@ChrisMandich"],
-    "requirements": ["pytz"]
+    "requirements": ["pytz==2019.2"]
   }
   
