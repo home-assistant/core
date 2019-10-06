@@ -1,9 +1,11 @@
 """Tests for Met.no config flow."""
 from unittest.mock import patch
 
-from tests.common import mock_coro
+from tests.common import MockConfigEntry, mock_coro
 from homeassistant import config_entries, setup
+from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.components.glances.config_flow import (
+    GlancesFlowHandler,
     CannotConnect,
     WrongVersion,
     AlreadyConfigured,
@@ -113,3 +115,21 @@ async def test_form_already_configured(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"host": "already_configured"}
+
+
+async def test_options(hass):
+    """Test options for Glances."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=DEMO_USER_INPUT, options={CONF_SCAN_INTERVAL: 60}
+    )
+    flow = GlancesFlowHandler
+    flow.hass = hass
+    options_flow = flow.async_get_options_flow(entry)
+
+    result = await options_flow.async_step_init()
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+
+    result2 = await options_flow.async_step_init({CONF_SCAN_INTERVAL: 10})
+    assert result2["type"] == "create_entry"
+    assert result2["data"][CONF_SCAN_INTERVAL] == 10
