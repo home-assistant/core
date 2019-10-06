@@ -372,8 +372,7 @@ class ZHADevice(LogMixin):
     @callback
     def async_unsub_dispatcher(self):
         """Unsubscribe the dispatcher."""
-        if self._unsub:
-            self._unsub()
+        self._unsub()
 
     @callback
     def async_update_last_seen(self, last_seen):
