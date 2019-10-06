@@ -7,7 +7,7 @@ import requests
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import ToggleEntity
 
-from . import NEATO_LOGIN, NEATO_ROBOTS
+from .const import NEATO_DOMAIN, NEATO_LOGIN, NEATO_ROBOTS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,14 +18,23 @@ SWITCH_TYPE_SCHEDULE = "schedule"
 SWITCH_TYPES = {SWITCH_TYPE_SCHEDULE: ["Schedule"]}
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Neato switches."""
+    pass
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Neato switch with config entry."""
     dev = []
     for robot in hass.data[NEATO_ROBOTS]:
         for type_name in SWITCH_TYPES:
             dev.append(NeatoConnectedSwitch(hass, robot, type_name))
+
+    if not dev:
+        return
+
     _LOGGER.debug("Adding switches %s", dev)
-    add_entities(dev)
+    async_add_entities(dev, True)
 
 
 class NeatoConnectedSwitch(ToggleEntity):
@@ -37,14 +46,7 @@ class NeatoConnectedSwitch(ToggleEntity):
         self.robot = robot
         self.neato = hass.data[NEATO_LOGIN]
         self._robot_name = "{} {}".format(self.robot.name, SWITCH_TYPES[self.type][0])
-        try:
-            self._state = self.robot.state
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.HTTPError,
-        ) as ex:
-            _LOGGER.warning("Neato connection error: %s", ex)
-            self._state = None
+        self._state = None
         self._schedule_state = None
         self._clean_state = None
         self._robot_serial = self.robot.serial
@@ -93,6 +95,11 @@ class NeatoConnectedSwitch(ToggleEntity):
             if self._schedule_state == STATE_ON:
                 return True
             return False
+
+    @property
+    def device_info(self):
+        """Device info for neato robot."""
+        return {"identifiers": {(NEATO_DOMAIN, self._robot_serial)}}
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""

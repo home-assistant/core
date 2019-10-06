@@ -296,6 +296,9 @@ pyMetno==0.4.6
 # homeassistant.components.blackbird
 pyblackbird==0.5
 
+# homeassistant.components.neato
+pybotvac==0.0.15
+
 # homeassistant.components.cast
 pychromecast==4.0.1
 
