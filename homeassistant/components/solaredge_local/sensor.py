@@ -25,6 +25,8 @@ from homeassistant.util import Throttle
 DOMAIN = "solaredge_local"
 UPDATE_DELAY = timedelta(seconds=10)
 
+OPTIMIZER_ATTRIBUTE = "Optimizers connected"
+
 # Supported sensor types:
 # Key: ['json_key', 'name', unit, icon]
 SENSOR_TYPES = {
@@ -176,15 +178,17 @@ class SolarEdgeSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
-    
+
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         try:
-            return {ATTR_ATTRIBUTION: self._data.info[self._json_key]}
+            return {
+                self._data.attr_name[self._json_key]: self._data.info[self._json_key]
+            }
         except:
             return {ATTR_ATTRIBUTION: 0}
-        
+
     @property
     def icon(self):
         """Return the sensor icon."""
@@ -209,6 +213,8 @@ class SolarEdgeData:
         self.hass = hass
         self.api = api
         self.data = {}
+        self.info = {}
+        self.attr_name = {}
 
     @Throttle(UPDATE_DELAY)
     def update(self):
@@ -265,6 +271,8 @@ class SolarEdgeData:
             self.data["gridfrequency"] = round(status.frequencyHz, 2)
             self.data["gridvoltage"] = round(status.voltage, 2)
             self.data["optimizers"] = status.optimizersStatus.online
+            self.info["optimizers"] = status.optimizersStatus.total
+            self.attr_name["optimizers"] = OPTIMIZER_ATTRIBUTE
         if maintenance.system.name:
             self.data["optimizertemperature"] = round(statistics.mean(temperature), 2)
             self.data["optimizervoltage"] = round(statistics.mean(voltage), 2)
