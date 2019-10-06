@@ -82,6 +82,10 @@ SENSOR_TYPES = {
         "V",
         "mdi:solar-panel",
     ],
+    "current_DC_voltage": ["dcvoltage", "DC Voltage", "V", "mdi:current-dc"],
+    "current_frequency": ["gridfrequency", "Grid Frequency", "Hz", "mdi:current-ac"],
+    "current_AC_voltage": ["gridvoltage", "Grid Voltage", "V", "mdi:current-ac"],
+    "optimizer_connected": ["optimizers", "Optimizers online", "optimizers", "mdi:solar-panel"],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -243,6 +247,10 @@ class SolarEdgeData:
             self.data["invertertemperature"] = round(
                 status.inverters.primary.temperature.value, 2
             )
+            self.data["dcvoltage"] = round(status.inverters.primary.voltage, 2)
+            self.data["gridfrequency"] = round(status.frequencyHz, 2)
+            self.data["gridvoltage"] = round(status.voltage, 2)
+            self.data["optimizers"] = status.optimizersStatus.online
         if maintenance.system.name:
             self.data["optimizertemperature"] = round(statistics.mean(temperature), 2)
             self.data["optimizervoltage"] = round(statistics.mean(voltage), 2)
