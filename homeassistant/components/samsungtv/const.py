@@ -6,3 +6,5 @@ DOMAIN = "samsungtv"
 
 CONF_MANUFACTURER = "manufacturer"
 CONF_MODEL = "model"
+
+SERVICE_SEND_KEY = "send_key"
