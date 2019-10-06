@@ -419,6 +419,8 @@ class LgWebOSDevice(MediaPlayerDevice):
 
             return
 
+        self._client.launch_app_with_content_id(media_type, media_id)
+
     def media_play(self):
         """Send play command."""
         self._playing = True
