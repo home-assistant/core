@@ -87,14 +87,17 @@ TRIGGER_SCHEMA = vol.All(
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     numeric_state_config = {
+        numeric_state_automation.CONF_PLATFORM: "numeric_state",
         numeric_state_automation.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        numeric_state_automation.CONF_ABOVE: config.get(CONF_ABOVE),
-        numeric_state_automation.CONF_BELOW: config.get(CONF_BELOW),
-        numeric_state_automation.CONF_FOR: config.get(CONF_FOR),
     }
+    if CONF_ABOVE in config:
+        numeric_state_config[numeric_state_automation.CONF_ABOVE] = config[CONF_ABOVE]
+    if CONF_BELOW in config:
+        numeric_state_config[numeric_state_automation.CONF_BELOW] = config[CONF_BELOW]
     if CONF_FOR in config:
         numeric_state_config[CONF_FOR] = config[CONF_FOR]
 
+    numeric_state_config = numeric_state_automation.TRIGGER_SCHEMA(numeric_state_config)
     return await numeric_state_automation.async_attach_trigger(
         hass, numeric_state_config, action, automation_info, platform_type="device"
     )

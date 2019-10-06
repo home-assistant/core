@@ -191,6 +191,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
         to_state = "off"
 
     state_config = {
+        state_automation.CONF_PLATFORM: "state",
         state_automation.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
         state_automation.CONF_FROM: from_state,
         state_automation.CONF_TO: to_state,
@@ -198,6 +199,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
     if CONF_FOR in config:
         state_config[CONF_FOR] = config[CONF_FOR]
 
+    state_config = state_automation.TRIGGER_SCHEMA(state_config)
     return await state_automation.async_attach_trigger(
         hass, state_config, action, automation_info, platform_type="device"
     )
