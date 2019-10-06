@@ -174,7 +174,6 @@ async def test_jewish_calendar_sensor(
                     "name": "test",
                     "language": language,
                     "diaspora": diaspora,
-                    "time_format": "%c",
                 }
             },
         )
@@ -184,7 +183,7 @@ async def test_jewish_calendar_sensor(
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    result = result.strftime("%c") if isinstance(result, dt) else result
+    result = time_zone.localize(result) if isinstance(result, dt) else result
 
     assert hass.states.get(f"sensor.test_{sensor}").state == str(result)
 
@@ -527,14 +526,8 @@ async def test_shabbat_times_sensor(
 
         sensor_type = sensor_type.replace(f"{language}_", "")
 
-        result_value = (
-            result_value.strftime("%H:%M")
-            if isinstance(result_value, dt)
-            else result_value
-        )
-
-        assert (
-            hass.states.get(f"sensor.test_{sensor_type}").state == result_value
+        assert hass.states.get(f"sensor.test_{sensor_type}").state == str(
+            result_value
         ), f"Value for {sensor_type}"
 
 

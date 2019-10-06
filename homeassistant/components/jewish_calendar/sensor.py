@@ -43,7 +43,6 @@ class JewishCalendarSensor(Entity):
         self._candle_lighting_offset = data["candle_lighting_offset"]
         self._havdalah_offset = data["havdalah_offset"]
         self._diaspora = data["diaspora"]
-        self._time_format = data["time_format"]
         self._state = None
 
     @property
@@ -129,11 +128,7 @@ class JewishCalendarTimeSensor(JewishCalendarSensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return (
-            self._state.strftime(self._time_format)
-            if self._state is not None
-            else self._state
-        )
+        return self._state
 
     @property
     def device_class(self):
