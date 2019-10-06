@@ -316,7 +316,7 @@ async def async_setup(hass, config):
                 poll_lights.append(light)
 
         if change_tasks:
-            await asyncio.gather(*change_tasks)
+            await asyncio.wait(change_tasks)
 
         if poll_lights:
             await asyncio.wait(
