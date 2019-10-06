@@ -1070,3 +1070,51 @@ async def test_pattern_entity_state(hass, requests_mock_truck_response, caplog):
 
     assert len(caplog.records) == 1
     assert "is not a valid set of coordinates" in caplog.text
+
+
+async def test_endless_loop_is_caught(hass, requests_mock_truck_response, caplog):
+    """Test that pattern matching the state of an entity works."""
+    caplog.set_level(logging.ERROR)
+    hass.states.async_set("sensor.origin", "sensor.origin_1")
+    hass.states.async_set("sensor.origin_1", "sensor.origin_2")
+    hass.states.async_set("sensor.origin_2", "sensor.origin")
+
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin_entity_id": "sensor.origin",
+            "destination_latitude": TRUCK_DESTINATION_LATITUDE,
+            "destination_longitude": TRUCK_DESTINATION_LONGITUDE,
+            "app_id": APP_ID,
+            "app_code": APP_CODE,
+            "mode": TRAVEL_MODE_TRUCK,
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+
+    assert len(caplog.records) == 1
+    assert "Circular Reference detected" in caplog.text
+
+
+async def test_self_reference_is_caught(hass, requests_mock_truck_response, caplog):
+    """Test that pattern matching the state of an entity works."""
+    caplog.set_level(logging.ERROR)
+    hass.states.async_set("sensor.origin", "sensor.origin")
+
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin_entity_id": "sensor.origin",
+            "destination_latitude": TRUCK_DESTINATION_LATITUDE,
+            "destination_longitude": TRUCK_DESTINATION_LONGITUDE,
+            "app_id": APP_ID,
+            "app_code": APP_CODE,
+            "mode": TRAVEL_MODE_TRUCK,
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+
+    assert len(caplog.records) == 1
+    assert "Circular Reference detected" in caplog.text
