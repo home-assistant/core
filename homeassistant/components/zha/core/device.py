@@ -348,7 +348,6 @@ class ZHADevice(LogMixin):
         zdo_task = None
         for channel in channels:
             if channel.name == CHANNEL_ZDO:
-                # pylint: disable=E1111
                 if zdo_task is None:  # We only want to do this once
                     zdo_task = self._async_create_task(
                         semaphore, channel, task_name, *args

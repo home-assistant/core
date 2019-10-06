@@ -83,8 +83,7 @@ class FlowHandler(config_entries.ConfigFlow):
         """Handle zeroconf discovery."""
         host = user_input["host"]
 
-        # https://github.com/PyCQA/pylint/issues/3167
-        # pylint: disable=no-member,unsupported-assignment-operation
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["host"] = host
 
         if any(host == flow["context"]["host"] for flow in self._async_in_progress()):
