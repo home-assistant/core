@@ -57,8 +57,8 @@ class HMLight(HMDevice, Light):
         features = SUPPORT_BRIGHTNESS
         if "COLOR" in self._hmdevice.WRITENODE:
             features |= SUPPORT_COLOR
-            if "PROGRAM" in self._hmdevice.WRITENODE:
-                features |= SUPPORT_EFFECT
+        if "PROGRAM" in self._hmdevice.WRITENODE:
+            features |= SUPPORT_EFFECT
         return features
 
     @property
