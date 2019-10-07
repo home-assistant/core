@@ -25,7 +25,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Neato sensor using config entry."""
     dev = []
     for robot in hass.data[NEATO_ROBOTS]:
-        dev.append(NeatoSensor(hass, robot))
+        neato = hass.data.get(NEATO_LOGIN)
+        dev.append(NeatoSensor(neato, robot))
 
     if not dev:
         return
@@ -37,10 +38,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class NeatoSensor(Entity):
     """Neato sensor."""
 
-    def __init__(self, hass, robot):
+    def __init__(self, neato, robot):
         """Initialize Neato sensor."""
         self.robot = robot
-        self.neato = hass.data.get(NEATO_LOGIN)
+        self.neato = neato
         self._available = self.neato.logged_in if self.neato is not None else False
         self._robot_name = f"{self.robot.name} {BATTERY}"
         self._robot_serial = self.robot.serial
