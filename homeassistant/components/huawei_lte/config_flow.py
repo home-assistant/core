@@ -91,15 +91,10 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         # See if we already have a router configured with this URL
-        existing_urls = [  # existing entries
+        existing_urls = {  # existing entries
             url_normalize(entry.data[CONF_URL], default_scheme="http")
             for entry in self._async_current_entries()
-        ]
-        if DOMAIN in self.hass.data:
-            existing_urls.extend(  # yaml configs
-                url_normalize(x, default_scheme="http")
-                for x in self.hass.data[DOMAIN].routers
-            )
+        }
         if user_input[CONF_URL] in existing_urls:
             return self.async_abort(reason="already_configured")
 
