@@ -198,7 +198,10 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
         def _async_startup(event):
             """Init on startup."""
             sensor_state = self.hass.states.get(self.sensor_entity_id)
-            if sensor_state and sensor_state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            if sensor_state and sensor_state.state not in (
+                STATE_UNAVAILABLE,
+                STATE_UNKNOWN,
+            ):
                 self._async_update_temp(sensor_state)
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_startup)
