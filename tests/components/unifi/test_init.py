@@ -4,11 +4,7 @@ from unittest.mock import Mock, patch
 from homeassistant.components import unifi
 from homeassistant.components.unifi import config_flow
 from homeassistant.setup import async_setup_component
-from homeassistant.components.unifi.const import (
-    CONF_CONTROLLER,
-    CONF_SITE_ID,
-    CONTROLLER_ID as CONF_CONTROLLER_ID,
-)
+from homeassistant.components.unifi.const import CONF_CONTROLLER, CONF_SITE_ID
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -117,8 +113,7 @@ async def test_controller_fail_setup(hass):
         mock_cntrlr.return_value.async_setup.return_value = mock_coro(False)
         assert await unifi.async_setup_entry(hass, entry) is False
 
-    controller_id = CONF_CONTROLLER_ID.format(host="0.0.0.0", site="default")
-    assert controller_id in hass.data[unifi.DOMAIN]
+    assert hass.data[unifi.DOMAIN] == {}
 
 
 async def test_controller_no_mac(hass):
