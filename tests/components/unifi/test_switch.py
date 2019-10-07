@@ -298,7 +298,51 @@ async def test_switches(hass):
     assert unblocked.state == "on"
 
 
-async def test_new_client_discovered(hass):
+async def test_new_client_discovered_on_block_control(hass):
+    """Test if 2nd update has a new client."""
+    controller = await setup_unifi_integration(
+        hass,
+        ENTRY_CONFIG,
+        options={
+            unifi.CONF_BLOCK_CLIENT: [BLOCKED["mac"]],
+            unifi.const.CONF_TRACK_CLIENTS: False,
+            unifi.const.CONF_TRACK_DEVICES: False,
+        },
+        sites=SITES,
+        clients_response=[],
+        devices_response=[],
+        clients_all_response=[BLOCKED],
+    )
+
+    assert len(controller.mock_requests) == 3
+    assert len(hass.states.async_all()) == 4
+
+    controller.mock_client_all_responses.append([BLOCKED])
+
+    # Calling a service will trigger the updates to run
+    await hass.services.async_call(
+        "switch", "turn_off", {"entity_id": "switch.block_client_1"}, blocking=True
+    )
+    assert len(controller.mock_requests) == 7
+    assert len(hass.states.async_all()) == 4
+    assert controller.mock_requests[3] == {
+        "json": {"mac": "00:00:00:00:01:01", "cmd": "block-sta"},
+        "method": "post",
+        "path": "s/{site}/cmd/stamgr/",
+    }
+
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": "switch.block_client_1"}, blocking=True
+    )
+    assert len(controller.mock_requests) == 11
+    assert controller.mock_requests[7] == {
+        "json": {"mac": "00:00:00:00:01:01", "cmd": "unblock-sta"},
+        "method": "post",
+        "path": "s/{site}/cmd/stamgr/",
+    }
+
+
+async def test_new_client_discovered_on_poe_control(hass):
     """Test if 2nd update has a new client."""
     controller = await setup_unifi_integration(
         hass,

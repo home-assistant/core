@@ -260,10 +260,13 @@ async def test_reset_after_successful_setup(hass):
         clients_all_response=[],
     )
 
+    assert len(controller.listeners) == 5
+
     result = await controller.async_reset()
     await hass.async_block_till_done()
 
     assert result is True
+    assert len(controller.listeners) == 0
 
 
 async def test_failed_update_failed_login(hass):

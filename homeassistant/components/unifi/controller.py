@@ -57,6 +57,7 @@ class UniFiController:
         self.progress = None
         self.wireless_clients = None
 
+        self.listeners = []
         self._site_name = None
         self._site_role = None
 
@@ -307,6 +308,10 @@ class UniFiController:
             await self.hass.config_entries.async_forward_entry_unload(
                 self.config_entry, platform
             )
+
+        for unsub_dispatcher in self.listeners:
+            unsub_dispatcher()
+        self.listeners = []
 
         return True
 
