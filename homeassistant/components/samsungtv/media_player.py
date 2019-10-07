@@ -202,8 +202,8 @@ class SamsungTVDevice(MediaPlayerDevice):
                     LOGGER.info("found working config: %s", self._config)
                     break
                 except Exception as err:
-                    self._config["method"] = None
                     LOGGER.debug("failing config: %s error was: %s", self._config, err)
+                    self._config["method"] = None
 
             # Unable to find working connection
             if self._config["method"] is None:
