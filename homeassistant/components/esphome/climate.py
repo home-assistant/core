@@ -126,6 +126,9 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
             features |= SUPPORT_PRESET_MODE
         return features
 
+    # https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
+    # pylint: disable=invalid-overridden-method
+
     @esphome_state_property
     def hvac_mode(self) -> Optional[str]:
         """Return current operation ie. heat, cool, idle."""

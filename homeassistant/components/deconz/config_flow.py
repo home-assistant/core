@@ -187,7 +187,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ):
             return self.async_abort(reason="already_in_progress")
 
-        # pylint: disable=unsupported-assignment-operation
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context[CONF_BRIDGEID] = bridgeid
 
         self.deconz_config = {
