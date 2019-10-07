@@ -2,9 +2,9 @@
   "name": "Home Assistant Dev",
   "context": "..",
   "dockerFile": "../Dockerfile.dev",
-  "postCreateCommand": "mkdir -p config && pip3 install -e .",
+  "postCreateCommand": "mkdir -p config && pip3 install --find-links \"${WHEELS_LINKS}\" -e .",
   "appPort": 8123,
-  "runArgs": ["-e", "GIT_EDITOR=code --wait"],
+  "runArgs": ["-e", "GIT_EDITOR=\"code --wait\""],
   "extensions": [
     "ms-python.python",
     "visualstudioexptteam.vscodeintellicode",
