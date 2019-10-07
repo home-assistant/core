@@ -92,17 +92,17 @@ class AlexaCapibility:
 
     @staticmethod
     def instance():
-        """Applicable to ToggleController, RangeController, and ModeController interfaces"""
+        """Applicable to ToggleController, RangeController, and ModeController interfaces."""
         return None
 
     @staticmethod
     def capability_resources():
-        """Applicable to ToggleController, RangeController, and ModeController interfaces"""
+        """Applicable to ToggleController, RangeController, and ModeController interfaces."""
         return None
 
     @staticmethod
     def configuration():
-        """Configuration object"""
+        """Spits out the Configuration object. (It spits since pydocstyle requires imperative mood)."""
         return None
 
     def serialize_discovery(self):
@@ -164,8 +164,7 @@ class AlexaCapibility:
                 yield result
 
     def serialize_capability_resources(self):
-        """Return capabilityResources friendlyNames serialized for an API response.
-        """
+        """Return capabilityResources friendlyNames serialized for an API response."""
         resources = self.capability_resources()
         if resources is not None:
             return {"friendlyNames": self.serialize_friendly_names(resources)}
@@ -174,9 +173,7 @@ class AlexaCapibility:
 
     @staticmethod
     def serialize_friendly_names(resources):
-        """Return capabilityResources, ModeResources, or presetResources friendlyNames
-        serialized for an API response.
-        """
+        """Return capabilityResources, ModeResources, or presetResources friendlyNames serialized for an API response."""
         friendly_names = []
         for resource in resources:
             if resource["type"] == Catalog.LABEL_ASSET:
@@ -826,21 +823,21 @@ class AlexaModeController(AlexaCapibility):
         return None
 
     def configuration(self):
-        """Return configuration"""
+        """Return configuration."""
         configuration = self.serialize_mode_resources()
         if configuration is not None:
             return configuration
         return None
 
     def capability_resources(self):
-        """Return capabilityResources object"""
+        """Return capabilityResources object."""
         if self.instance() == fan.ATTR_DIRECTION:
             return [{"type": Catalog.LABEL_ASSET, "value": Catalog.SETTING_DIRECTION}]
 
         return None
 
     def mode_resources(self):
-        """Return modeResources object"""
+        """Return modeResources object."""
         mode_resources = None
         if self.instance() == fan.ATTR_DIRECTION:
             mode_resources = {
@@ -864,8 +861,7 @@ class AlexaModeController(AlexaCapibility):
         return mode_resources
 
     def serialize_mode_resources(self):
-        """Return ModeResources, friendlyNames serialized for an API response.
-        """
+        """Return ModeResources, friendlyNames serialized for an API response."""
         mode_resources = []
         resources = self.mode_resources()
         ordered = resources["ordered"]
@@ -923,21 +919,21 @@ class AlexaRangeController(AlexaCapibility):
         return None
 
     def configuration(self):
-        """Return configuration"""
+        """Return configuration."""
         configuration = self.serialize_preset_resources()
         if configuration is not None:
             return configuration
         return None
 
     def capability_resources(self):
-        """Return capabilityResources object"""
+        """Return capabilityResources object."""
         if self.instance() == fan.ATTR_SPEED:
             return [{"type": Catalog.LABEL_ASSET, "value": Catalog.SETTING_FANSPEED}]
 
         return None
 
     def preset_resources(self):
-        """Return presetResources object"""
+        """Return presetResources object."""
         preset_resources = None
 
         if self.instance() == fan.ATTR_SPEED:
@@ -978,8 +974,7 @@ class AlexaRangeController(AlexaCapibility):
         return preset_resources
 
     def serialize_preset_resources(self):
-        """Return PresetResources, friendlyNames serialized for an API response.
-        """
+        """Return PresetResources, friendlyNames serialized for an API response."""
         preset_resources = []
         resources = self.preset_resources()
         for preset in resources["presets"]:
@@ -1041,7 +1036,7 @@ class AlexaToggleController(AlexaCapibility):
         return None
 
     def capability_resources(self):
-        """Return capabilityResources object"""
+        """Return capabilityResources object."""
         if self.instance() == fan.ATTR_OSCILLATING:
             return [
                 {"type": Catalog.LABEL_ASSET, "value": Catalog.SETTING_OSCILLATE},

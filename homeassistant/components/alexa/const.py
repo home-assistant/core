@@ -114,7 +114,7 @@ class Cause:
 
 
 class Catalog:
-    """The Global Alexa catalog
+    """The Global Alexa catalog.
 
     https://developer.amazon.com/docs/device-apis/resources-and-assets.html#global-alexa-catalog
 
@@ -218,7 +218,7 @@ class Catalog:
 
 
 class Unit:
-    """Alexa Units of Measure
+    """Alexa Units of Measure.
 
     https://developer.amazon.com/docs/device-apis/alexa-property-schemas.html#units-of-measure
     """

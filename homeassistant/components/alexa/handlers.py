@@ -947,6 +947,7 @@ async def async_api_set_mode(hass, config, directive, context):
 @HANDLERS.register(("Alexa.ModeController", "AdjustMode"))
 async def async_api_adjust_mode(hass, config, directive, context):
     """Process a AdjustMode request.
+
     Requires modeResources to be ordered.
     Only modes that are ordered support the adjustMode directive.
     """
