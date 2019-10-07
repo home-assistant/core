@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nom de l'int\u00e9gration"
+                }
+            }
+        }
+    }
+}
