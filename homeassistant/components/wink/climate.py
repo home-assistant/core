@@ -283,10 +283,6 @@ class WinkThermostat(WinkDevice, ClimateDevice):
                 target_temp_high = target_temp
             if self.hvac_mode == HVAC_MODE_HEAT:
                 target_temp_low = target_temp
-        if target_temp_low is not None:
-            target_temp_low = target_temp_low
-        if target_temp_high is not None:
-            target_temp_high = target_temp_high
         self.wink.set_temperature(target_temp_low, target_temp_high)
 
     def set_hvac_mode(self, hvac_mode):
