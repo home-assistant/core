@@ -107,3 +107,4 @@ def get_scanner(*args, **kwargs):
         "Loading and configuring as a platform is no longer supported or "
         "required, convert to enabling/disabling available entities"
     )
+    return None
