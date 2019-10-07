@@ -72,14 +72,13 @@ async def async_setup_platform(
         return
 
     broker = hass.data[DOMAIN]["broker"]
-    loc_idx = broker.params[CONF_LOCATION_IDX]
 
     _LOGGER.debug(
         "Found the Location/Controller (%s), id=%s, name=%s (location_idx=%s)",
         broker.tcs.modelType,
         broker.tcs.systemId,
         broker.tcs.location.name,
-        loc_idx,
+        broker.params[CONF_LOCATION_IDX],
     )
 
     # special case of RoundModulation/RoundWireless (is a single zone system)
@@ -148,9 +147,12 @@ class EvoZone(EvoChild, EvoClimateDevice):
         self._name = evo_device.name
         self._icon = "mdi:radiator"
 
-        self._precision = self._evo_device.setpointCapabilities["valueResolution"]
         self._supported_features = SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
         self._preset_modes = list(HA_PRESET_TO_EVO)
+        if evo_broker.client_v1:
+            self._precision = PRECISION_TENTHS
+        else:
+            self._precision = self._evo_device.setpointCapabilities["valueResolution"]
 
     @property
     def hvac_mode(self) -> str:
