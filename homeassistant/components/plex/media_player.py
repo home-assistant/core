@@ -685,7 +685,7 @@ class PlexClient(MediaPlayerDevice):
         media = None
 
         if media_type == "MUSIC":
-            media = self._get_music_choice(library, src)
+            media = self._get_music_media(library, src)
         elif media_type == "EPISODE":
             media = self._get_tv_media(library, src)
         elif media_type == "PLAYLIST":
@@ -708,7 +708,8 @@ class PlexClient(MediaPlayerDevice):
 
         self.update_devices()
 
-    def _get_music_choice(self, library_name, src):
+    def _get_music_media(self, library_name, src):
+        """Find music media and return a Plex media object."""
         artist_name = src["artist_name"]
         album_name = src.get("album_name")
         track_name = src.get("track_name")
