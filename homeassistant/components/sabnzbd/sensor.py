@@ -49,6 +49,7 @@ class SabnzbdSensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
+    @property
     def should_poll(self):
         """Don't poll. Will be updated by dispatcher signal."""
         return False

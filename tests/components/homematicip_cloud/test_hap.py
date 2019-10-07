@@ -3,9 +3,9 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from homeassistant.components.homematicip_cloud import const, errors, hap as hmipc
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.components.homematicip_cloud import hap as hmipc
-from homeassistant.components.homematicip_cloud import const, errors
+
 from tests.common import mock_coro, mock_coro_func
 
 
@@ -94,8 +94,8 @@ async def test_hap_setup_connection_error():
     ), pytest.raises(ConfigEntryNotReady):
         await hap.async_setup()
 
-    assert len(hass.async_add_job.mock_calls) == 0
-    assert len(hass.config_entries.flow.async_init.mock_calls) == 0
+    assert not hass.async_add_job.mock_calls
+    assert not hass.config_entries.flow.async_init.mock_calls
 
 
 async def test_hap_reset_unloads_entry_if_setup():
@@ -114,7 +114,7 @@ async def test_hap_reset_unloads_entry_if_setup():
         assert await hap.async_setup() is True
 
     assert hap.home is home
-    assert len(hass.services.async_register.mock_calls) == 0
+    assert not hass.services.async_register.mock_calls
     assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 8
 
     hass.config_entries.async_forward_entry_unload.return_value = mock_coro(True)

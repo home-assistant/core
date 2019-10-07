@@ -157,7 +157,7 @@ class RMVDepartureSensor(Entity):
         """Return the state attributes."""
         try:
             return {
-                "next_departures": [val for val in self.data.departures[1:]],
+                "next_departures": self.data.departures[1:],
                 "direction": self.data.departures[0].get("direction"),
                 "line": self.data.departures[0].get("line"),
                 "minutes": self.data.departures[0].get("minutes"),

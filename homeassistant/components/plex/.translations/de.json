@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Fahren Sie mit der Autorisierung unter plex.tv fort oder konfigurieren Sie einen Server manuell."
+            }
+        }
+    }
+}

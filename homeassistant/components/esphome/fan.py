@@ -92,6 +92,9 @@ class EsphomeFan(EsphomeEntity, FanEntity):
             key=self._static_info.key, oscillating=oscillating
         )
 
+    # https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
+    # pylint: disable=invalid-overridden-method
+
     @esphome_state_property
     def is_on(self) -> Optional[bool]:
         """Return true if the entity is on."""

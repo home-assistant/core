@@ -56,7 +56,7 @@ homeassistant.helpers.data_entry_flow module
 homeassistant.helpers.deprecation module
 ----------------------------------------
 
-.. automodule:: homeassistant.helpers.depracation
+.. automodule:: homeassistant.helpers.deprecation
     :members:
     :undoc-members:
     :show-inheritance:

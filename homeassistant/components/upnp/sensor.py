@@ -164,7 +164,6 @@ class PerSecondUPnPIGDSensor(UpnpSensor):
         """Get unit we are measuring in."""
         raise NotImplementedError()
 
-    @property
     def _async_fetch_value(self):
         """Fetch a value from the IGD."""
         raise NotImplementedError()

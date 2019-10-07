@@ -1,0 +1,20 @@
+{
+    "config": {
+        "error": {
+            "auth": "Api Schl\u00ebssel ass net korrekt.",
+            "name_exists": "Numm g\u00ebtt et schonn"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Airly API Schl\u00ebssel",
+                    "latitude": "Breedegrad",
+                    "longitude": "L\u00e4ngegrad",
+                    "name": "Numm vun der Installatioun"
+                },
+                "title": "Airly"
+            }
+        },
+        "title": "Airly"
+    }
+}
