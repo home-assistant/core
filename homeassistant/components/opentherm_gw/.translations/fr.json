@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "init": {
+                "data": {
+                    "device": "Chemin ou URL",
+                    "id": "ID",
+                    "name": "Nom"
+                }
+            }
+        }
+    }
+}
