@@ -17,6 +17,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=SCAN_INTERVAL_MINUTES)
+ATTR_GENERATED_AT = "generated_at"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -45,9 +46,11 @@ class NeatoCleaningMap(Camera):
         """Initialize Neato cleaning map."""
         super().__init__()
         self.robot = robot
-        self.neato = hass.data[NEATO_LOGIN] if NEATO_LOGIN in hass.data else None
+        self.neato = hass.data.get(NEATO_LOGIN)
+        self._available = self.neato.logged_in if self.neato is not None else False
         self._robot_name = f"{self.robot.name} Cleaning Map"
         self._robot_serial = self.robot.serial
+        self._generated_at = None
         self._image_url = None
         self._image = None
 
@@ -62,6 +65,7 @@ class NeatoCleaningMap(Camera):
             _LOGGER.error("Error while updating camera")
             self._image = None
             self._image_url = None
+            self._available = False
             return
 
         _LOGGER.debug("Running camera update")
@@ -78,11 +82,14 @@ class NeatoCleaningMap(Camera):
             image = self.neato.download_map(image_url)
             self._image = image.read()
             self._image_url = image_url
-
+            self._generated_at = (map_data["generated_at"].strip("Z")).replace("T", " ")
+            self._available = True
         except NeatoRobotException as ex:
-            _LOGGER.error("Neato camera connection error: %s", ex)
+            if self._available:  # Print only once when available
+                _LOGGER.error("Neato camera connection error: %s", ex)
             self._image = None
             self._image_url = None
+            self._available = False
 
     @property
     def name(self):
@@ -95,6 +102,21 @@ class NeatoCleaningMap(Camera):
         return self._robot_serial
 
     @property
+    def available(self):
+        """Return if the robot is available."""
+        return self._available
+
+    @property
     def device_info(self):
         """Device info for neato robot."""
         return {"identifiers": {(NEATO_DOMAIN, self._robot_serial)}}
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the vacuum cleaner."""
+        data = {}
+
+        if self._generated_at is not None:
+            data[ATTR_GENERATED_AT] = self._generated_at
+
+        return data
