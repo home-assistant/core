@@ -75,6 +75,12 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+async def options_updated(hass, entry):
+    """Handle options update."""
+    gateway = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][entry.data[CONF_ID]]
+    async_dispatcher_send(hass, gateway.options_update_signal, entry)
+
+
 async def async_setup_entry(hass, config_entry):
     """Set up the OpenTherm Gateway component."""
     if DATA_OPENTHERM_GW not in hass.data:
@@ -82,6 +88,8 @@ async def async_setup_entry(hass, config_entry):
 
     gateway = OpenThermGatewayDevice(hass, config_entry)
     hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]] = gateway
+
+    config_entry.add_update_listener(options_updated)
 
     # Schedule directly on the loop to avoid blocking HA startup.
     hass.loop.create_task(gateway.connect_and_subscribe())
@@ -348,6 +356,7 @@ class OpenThermGatewayDevice:
         self.climate_config = config_entry.options
         self.status = {}
         self.update_signal = f"{DATA_OPENTHERM_GW}_{self.gw_id}_update"
+        self.options_update_signal = f"{DATA_OPENTHERM_GW}_{self.gw_id}_options_update"
         self.gateway = pyotgw.pyotgw()
 
     async def connect_and_subscribe(self):

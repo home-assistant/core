@@ -19,5 +19,16 @@
             }
         },
         "title": "OpenTherm Gateway"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "description": "Options for the OpenTherm Gateway",
+                "data": {
+                      "floor_temperature": "Floor Temperature",
+                      "precision": "Precision"
+                }
+            }
+        }
     }
 }

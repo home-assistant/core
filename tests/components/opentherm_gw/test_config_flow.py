@@ -3,12 +3,16 @@ import asyncio
 from serial import SerialException
 from unittest.mock import patch
 
-from homeassistant import config_entries, setup
-from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_NAME
-from homeassistant.components.opentherm_gw.const import DOMAIN
+from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_NAME, PRECISION_HALVES
+from homeassistant.components.opentherm_gw.const import (
+    DOMAIN,
+    CONF_FLOOR_TEMP,
+    CONF_PRECISION,
+)
 
 from pyotgw import OTGW_ABOUT
-from tests.common import mock_coro
+from tests.common import mock_coro, MockConfigEntry
 
 
 async def test_form_user(hass):
@@ -161,3 +165,45 @@ async def test_form_connection_error(hass):
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "serial_error"}
     assert len(mock_connect.mock_calls) == 1
+
+
+async def test_options_form(hass):
+    """Test the options form."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Mock Gateway",
+        data={
+            CONF_NAME: "Mock Gateway",
+            CONF_DEVICE: "/dev/null",
+            CONF_ID: "mock_gateway",
+        },
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.flow.async_init(
+        entry.entry_id, context={"source": "test"}, data=None
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_FLOOR_TEMP: True, CONF_PRECISION: PRECISION_HALVES},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"][CONF_PRECISION] == PRECISION_HALVES
+    assert result["data"][CONF_FLOOR_TEMP] is True
+
+    result = await hass.config_entries.options.flow.async_init(
+        entry.entry_id, context={"source": "test"}, data=None
+    )
+
+    result = await hass.config_entries.options.flow.async_configure(
+        result["flow_id"], user_input={CONF_PRECISION: 0}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"][CONF_PRECISION] is None
+    assert result["data"][CONF_FLOOR_TEMP] is True
