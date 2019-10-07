@@ -74,7 +74,7 @@ async def test_connection_error(hass, requests_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {CONF_URL: "connection_failed"}
+    assert result["errors"] == {CONF_URL: "unknown_connection_error"}
 
 
 @pytest.fixture

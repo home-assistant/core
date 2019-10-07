@@ -10,7 +10,8 @@
             "incorrect_username_or_password": "Incorrect username or password",
             "invalid_url": "Invalid URL",
             "login_attempts_exceeded": "Maximum login attempts exceeded, please try again later",
-            "response_error": "Unknown error from device"
+            "response_error": "Unknown error from device",
+            "unknown_connection_error": "Unknown error connecting to device"
         },
         "step": {
             "user": {

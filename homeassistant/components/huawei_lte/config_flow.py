@@ -146,8 +146,8 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.warning("Response error", exc_info=True)
             errors["base"] = "response_error"
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.warning("Connection error", exc_info=True)
-            errors[CONF_URL] = "connection_failed"
+            _LOGGER.warning("Unknown error connecting to device", exc_info=True)
+            errors[CONF_URL] = "unknown_connection_error"
         if errors:
             logout()
             return await self._async_show_user_form(
