@@ -1,28 +1,28 @@
 """Support for the Xiaomi IR Remote (Chuangmi IR)."""
 import asyncio
+from datetime import timedelta
 import logging
 import time
 
-from datetime import timedelta
-
+from miio import ChuangmiIr, DeviceException
 import voluptuous as vol
 
 from homeassistant.components.remote import (
-    PLATFORM_SCHEMA,
-    DOMAIN,
-    ATTR_NUM_REPEATS,
     ATTR_DELAY_SECS,
+    ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
+    DOMAIN,
+    PLATFORM_SCHEMA,
     RemoteDevice,
 )
 from homeassistant.const import (
-    CONF_NAME,
-    CONF_HOST,
-    CONF_TOKEN,
-    CONF_TIMEOUT,
     ATTR_ENTITY_ID,
     ATTR_HIDDEN,
     CONF_COMMAND,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_TIMEOUT,
+    CONF_TOKEN,
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -73,7 +73,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Xiaomi IR Remote (Chuangmi IR) platform."""
-    from miio import ChuangmiIr, DeviceException
 
     host = config.get(CONF_HOST)
     token = config.get(CONF_TOKEN)
@@ -226,7 +225,6 @@ class XiaomiMiioRemote(RemoteDevice):
     @property
     def is_on(self):
         """Return False if device is unreachable, else True."""
-        from miio import DeviceException
 
         try:
             self.device.info()
@@ -262,7 +260,6 @@ class XiaomiMiioRemote(RemoteDevice):
 
     def _send_command(self, payload):
         """Send a command."""
-        from miio import DeviceException
 
         _LOGGER.debug("Sending payload: '%s'", payload)
         try:

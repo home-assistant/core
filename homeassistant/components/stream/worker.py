@@ -3,6 +3,9 @@ from fractions import Fraction
 import io
 import logging
 
+import av
+from av import AudioFrame
+
 from .const import AUDIO_SAMPLE_RATE
 from .core import Segment, StreamBuffer
 
@@ -11,7 +14,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def generate_audio_frame():
     """Generate a blank audio frame."""
-    from av import AudioFrame
 
     audio_frame = AudioFrame(format="dbl", layout="mono", samples=1024)
     # audio_bytes = b''.join(b'\x00\x00\x00\x00\x00\x00\x00\x00'
@@ -25,7 +27,6 @@ def generate_audio_frame():
 
 def create_stream_buffer(stream_output, video_stream, audio_frame):
     """Create a new StreamBuffer."""
-    import av
 
     a_packet = None
     segment = io.BytesIO()
@@ -45,7 +46,6 @@ def create_stream_buffer(stream_output, video_stream, audio_frame):
 
 def stream_worker(hass, stream, quit_event):
     """Handle consuming streams."""
-    import av
 
     container = av.open(stream.source, options=stream.options)
     try:

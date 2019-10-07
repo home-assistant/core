@@ -1,15 +1,16 @@
 """Support for the Netatmo cameras."""
 import logging
 
+import pyatmo
 import requests
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera, SUPPORT_STREAM
+from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.helpers import config_validation as cv
 
-from .const import DATA_NETATMO_AUTH
 from . import CameraData
+from .const import DATA_NETATMO_AUTH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +39,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     home = config.get(CONF_HOME)
     verify_ssl = config.get(CONF_VERIFY_SSL, True)
     quality = config.get(CONF_QUALITY, DEFAULT_QUALITY)
-    import pyatmo
 
     auth = hass.data[DATA_NETATMO_AUTH]
 

@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+import pylacrosse
+from serial import SerialException
 import voluptuous as vol
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
@@ -61,8 +63,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LaCrosse sensors."""
-    import pylacrosse
-    from serial import SerialException
 
     usb_device = config.get(CONF_DEVICE)
     baud = int(config.get(CONF_BAUD))

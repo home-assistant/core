@@ -1,17 +1,18 @@
 """Support for Mopar vehicles."""
-import logging
 from datetime import timedelta
+import logging
 
+import motorparts
 import voluptuous as vol
 
 from homeassistant.components.lock import DOMAIN as LOCK
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.const import (
-    CONF_USERNAME,
     CONF_PASSWORD,
     CONF_PIN,
     CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -53,7 +54,6 @@ SERVICE_HORN_SCHEMA = vol.Schema({vol.Required(ATTR_VEHICLE_INDEX): cv.positive_
 
 def setup(hass, config):
     """Set up the Mopar component."""
-    import motorparts
 
     conf = config[DOMAIN]
     cookie = hass.config.path(COOKIE_FILE)
@@ -101,7 +101,6 @@ class MoparData:
 
     def update(self, now, **kwargs):
         """Update data."""
-        import motorparts
 
         _LOGGER.debug("Updating vehicle data")
         try:
@@ -123,7 +122,6 @@ class MoparData:
     @property
     def attribution(self):
         """Get the attribution string from Mopar."""
-        import motorparts
 
         return motorparts.ATTRIBUTION
 
@@ -136,7 +134,6 @@ class MoparData:
 
     def actuate(self, command, index):
         """Run a command on the specified Mopar vehicle."""
-        import motorparts
 
         try:
             response = getattr(motorparts, command)(self._session, index)

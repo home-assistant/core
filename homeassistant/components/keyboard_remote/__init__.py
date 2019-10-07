@@ -1,14 +1,15 @@
 """Receive signals from a keyboard and use it as a remote control."""
 # pylint: disable=import-error
-import threading
 import logging
 import os
+import threading
 import time
 
+from evdev import InputDevice, categorize, ecodes, list_devices
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,7 +94,6 @@ class KeyboardRemoteThread(threading.Thread):
             id_folder = "/dev/input/by-id/"
 
             if os.path.isdir(id_folder):
-                from evdev import InputDevice, list_devices
 
                 device_names = [
                     InputDevice(file_name).name for file_name in list_devices()
@@ -112,7 +112,6 @@ class KeyboardRemoteThread(threading.Thread):
 
     def _get_keyboard_device(self):
         """Get the keyboard device."""
-        from evdev import InputDevice, list_devices
 
         if self.device_name:
             devices = [InputDevice(file_name) for file_name in list_devices()]
@@ -130,7 +129,6 @@ class KeyboardRemoteThread(threading.Thread):
 
     def run(self):
         """Run the loop of the KeyboardRemote."""
-        from evdev import categorize, ecodes
 
         if self.dev is not None:
             self.dev.grab()

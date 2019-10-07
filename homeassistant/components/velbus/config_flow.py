@@ -1,9 +1,10 @@
 """Config flow for the Velbus platform."""
+# if the velbus import is already in the config
 import velbus
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PORT, CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
@@ -80,7 +81,6 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         user_input[CONF_NAME] = "Velbus Import"
         prt = user_input[CONF_PORT]
         if self._prt_in_configuration_exists(prt):
-            # if the velbus import is already in the config
             # we should not proceed the import
             return self.async_abort(reason="port_exists")
         return await self.async_step_user(user_input)

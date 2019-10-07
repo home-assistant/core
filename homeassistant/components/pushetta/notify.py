@@ -1,10 +1,8 @@
 """Pushetta platform for notify component."""
 import logging
 
+from pushetta import Pushetta, exceptions
 import voluptuous as vol
-
-from homeassistant.const import CONF_API_KEY
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import (
     ATTR_TITLE,
@@ -12,6 +10,8 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONF_API_KEY
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +44,6 @@ class PushettaNotificationService(BaseNotificationService):
 
     def __init__(self, api_key, channel_name, send_test_msg):
         """Initialize the service."""
-        from pushetta import Pushetta
 
         self._api_key = api_key
         self._channel_name = channel_name
@@ -56,7 +55,6 @@ class PushettaNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        from pushetta import exceptions
 
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 

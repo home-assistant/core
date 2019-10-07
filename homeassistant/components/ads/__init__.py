@@ -1,12 +1,13 @@
 """Support for Automation Device Specification (ADS)."""
-import threading
-import struct
-import logging
-import ctypes
-from collections import namedtuple
 import asyncio
-import async_timeout
+from collections import namedtuple
+import ctypes
+import logging
+import struct
+import threading
 
+import async_timeout
+import pyads
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -78,7 +79,6 @@ SCHEMA_SERVICE_WRITE_DATA_BY_NAME = vol.Schema(
 
 def setup(hass, config):
     """Set up the ADS component."""
-    import pyads
 
     conf = config[DOMAIN]
 
@@ -161,7 +161,6 @@ class AdsHub:
 
     def shutdown(self, *args, **kwargs):
         """Shutdown ADS connection."""
-        import pyads
 
         _LOGGER.debug("Shutting down ADS")
         for notification_item in self._notification_items.values():
@@ -187,7 +186,6 @@ class AdsHub:
 
     def write_by_name(self, name, value, plc_datatype):
         """Write a value to the device."""
-        import pyads
 
         with self._lock:
             try:
@@ -197,7 +195,6 @@ class AdsHub:
 
     def read_by_name(self, name, plc_datatype):
         """Read a value from the device."""
-        import pyads
 
         with self._lock:
             try:
@@ -207,7 +204,6 @@ class AdsHub:
 
     def add_device_notification(self, name, plc_datatype, callback):
         """Add a notification to the ADS devices."""
-        import pyads
 
         attr = pyads.NotificationAttrib(ctypes.sizeof(plc_datatype))
 

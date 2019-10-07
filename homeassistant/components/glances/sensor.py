@@ -2,18 +2,20 @@
 from datetime import timedelta
 import logging
 
+from glances_api import Glances
+from glances_api.exceptions import GlancesApiError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
-    CONF_PORT,
-    CONF_USERNAME,
     CONF_PASSWORD,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
+    CONF_PORT,
     CONF_RESOURCES,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
     STATE_UNAVAILABLE,
     TEMP_CELSIUS,
 )
@@ -75,7 +77,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Glances sensors."""
-    from glances_api import Glances
 
     name = config[CONF_NAME]
     host = config[CONF_HOST]
@@ -262,7 +263,6 @@ class GlancesData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest data from the Glances REST API."""
-        from glances_api.exceptions import GlancesApiError
 
         try:
             await self.api.get_data()

@@ -1,7 +1,9 @@
 """Support for AirVisual air quality sensors."""
-from logging import getLogger
 from datetime import timedelta
+from logging import getLogger
 
+from pyairvisual import Client
+from pyairvisual.errors import AirVisualError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -14,8 +16,8 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_SCAN_INTERVAL,
-    CONF_STATE,
     CONF_SHOW_ON_MAP,
+    CONF_STATE,
 )
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -97,7 +99,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Configure the platform and add the sensors."""
-    from pyairvisual import Client
 
     city = config.get(CONF_CITY)
     state = config.get(CONF_STATE)
@@ -249,7 +250,6 @@ class AirVisualData:
 
     async def _async_update(self):
         """Update AirVisual data."""
-        from pyairvisual.errors import AirVisualError
 
         try:
             if self.city and self.state and self.country:

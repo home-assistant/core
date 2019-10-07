@@ -2,6 +2,9 @@
 from datetime import datetime, timedelta
 import logging
 
+from august.activity import ActivityType
+from august.lock import LockDoorStatus
+
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from . import DATA_AUGUST
@@ -26,7 +29,6 @@ def _retrieve_online_state(data, doorbell):
 
 
 def _retrieve_motion_state(data, doorbell):
-    from august.activity import ActivityType
 
     return _activity_time_based_state(
         data, doorbell, [ActivityType.DOORBELL_MOTION, ActivityType.DOORBELL_DING]
@@ -34,7 +36,6 @@ def _retrieve_motion_state(data, doorbell):
 
 
 def _retrieve_ding_state(data, doorbell):
-    from august.activity import ActivityType
 
     return _activity_time_based_state(data, doorbell, [ActivityType.DOORBELL_DING])
 
@@ -64,8 +65,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the August binary sensors."""
     data = hass.data[DATA_AUGUST]
     devices = []
-
-    from august.lock import LockDoorStatus
 
     for door in data.locks:
         for sensor_type in SENSOR_TYPES_DOOR:
@@ -135,8 +134,6 @@ class AugustDoorBinarySensor(BinarySensorDevice):
         state_provider = SENSOR_TYPES_DOOR[self._sensor_type][2]
         self._state = state_provider(self._data, self._door)
         self._available = self._state is not None
-
-        from august.lock import LockDoorStatus
 
         self._state = self._state == LockDoorStatus.OPEN
 

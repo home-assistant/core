@@ -2,6 +2,7 @@
 import datetime
 import logging
 
+from pyeconet.api import PyEcoNet
 import voluptuous as vol
 
 from homeassistant.components.water_heater import (
@@ -74,7 +75,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the EcoNet water heaters."""
-    from pyeconet.api import PyEcoNet
 
     hass.data[ECONET_DATA] = {}
     hass.data[ECONET_DATA]["water_heaters"] = []

@@ -1,7 +1,9 @@
 """Config flow for OwnTracks."""
+import nacl  # noqa pylint: disable=unused-import
+
 from homeassistant import config_entries
-from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.auth.util import generate_secret
+from homeassistant.const import CONF_WEBHOOK_ID
 
 CONF_SECRET = "secret"
 CONF_CLOUDHOOK = "cloudhook"
@@ -10,7 +12,6 @@ CONF_CLOUDHOOK = "cloudhook"
 def supports_encryption():
     """Test if we support encryption."""
     try:
-        import nacl  # noqa pylint: disable=unused-import
 
         return True
     except OSError:

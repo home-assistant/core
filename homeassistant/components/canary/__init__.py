@@ -1,13 +1,14 @@
 """Support for Canary devices."""
-import logging
 from datetime import timedelta
+import logging
 
-import voluptuous as vol
+from canary.api import Api
 from requests import ConnectTimeout, HTTPError
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT
+from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,7 +68,6 @@ class CanaryData:
 
     def __init__(self, username, password, timeout):
         """Init the Canary data object."""
-        from canary.api import Api
 
         self._api = Api(username, password, timeout)
 

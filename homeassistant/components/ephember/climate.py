@@ -1,23 +1,25 @@
 """Support for the EPH Controls Ember themostats."""
-import logging
 from datetime import timedelta
+import logging
+
+from pyephember.pyephember import EphEmber, ZoneMode
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    SUPPORT_AUX_HEAT,
-    SUPPORT_TARGET_TEMPERATURE,
-    HVAC_MODE_OFF,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_OFF,
+    SUPPORT_AUX_HEAT,
+    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    TEMP_CELSIUS,
-    CONF_USERNAME,
     CONF_PASSWORD,
+    CONF_USERNAME,
+    TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -43,7 +45,6 @@ HA_STATE_TO_EPH = {value: key for key, value in EPH_TO_HA_STATE.items()}
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ephember thermostat."""
-    from pyephember.pyephember import EphEmber
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -117,7 +118,6 @@ class EphEmberThermostat(ClimateDevice):
     @property
     def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
-        from pyephember.pyephember import ZoneMode
 
         mode = ZoneMode(self._zone["mode"])
         return self.map_mode_eph_hass(mode)
@@ -191,7 +191,6 @@ class EphEmberThermostat(ClimateDevice):
     @staticmethod
     def map_mode_hass_eph(operation_mode):
         """Map from home assistant mode to eph mode."""
-        from pyephember.pyephember import ZoneMode
 
         return getattr(ZoneMode, HA_STATE_TO_EPH.get(operation_mode), None)
 

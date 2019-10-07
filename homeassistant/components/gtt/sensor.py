@@ -1,13 +1,14 @@
 """Sensor to get GTT's timetable for a stop."""
+from datetime import datetime, timedelta
 import logging
-from datetime import timedelta, datetime
 
+from pygtt import PyGTT
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +79,6 @@ class GttData:
 
     def __init__(self, stop, bus_name):
         """Initialize the GttData class."""
-        from pygtt import PyGTT
 
         self._pygtt = PyGTT()
         self._stop = stop

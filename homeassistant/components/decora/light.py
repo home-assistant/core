@@ -1,18 +1,20 @@
 """Support for Decora dimmers."""
+from functools import wraps
 import importlib
 import logging
-from functools import wraps
 import time
 
+import bluepy
+import decora
 import voluptuous as vol
 
-from homeassistant.const import CONF_API_KEY, CONF_DEVICES, CONF_NAME
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     Light,
-    PLATFORM_SCHEMA,
 )
+from homeassistant.const import CONF_API_KEY, CONF_DEVICES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,8 +37,6 @@ def retry(method):
     def wrapper_retry(device, *args, **kwargs):
         """Try send command and retry on error."""
         # pylint: disable=import-error, no-member
-        import decora
-        import bluepy
 
         initial = time.monotonic()
         while True:

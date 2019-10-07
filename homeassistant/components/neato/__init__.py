@@ -1,8 +1,9 @@
 """Support for Neato botvac connected vacuum cleaners."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
+from pybotvac import Account, Neato, Vorwerk
 from pybotvac.exceptions import NeatoException, NeatoLoginException, NeatoRobotException
 import voluptuous as vol
 
@@ -17,9 +18,9 @@ from .const import (
     NEATO_CONFIG,
     NEATO_DOMAIN,
     NEATO_LOGIN,
-    NEATO_ROBOTS,
-    NEATO_PERSISTENT_MAPS,
     NEATO_MAP_DATA,
+    NEATO_PERSISTENT_MAPS,
+    NEATO_ROBOTS,
     SCAN_INTERVAL_MINUTES,
     VALID_VENDORS,
 )
@@ -91,7 +92,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up config entry."""
-    from pybotvac import Account, Neato, Vorwerk
 
     if entry.data[CONF_VENDOR] == "neato":
         hass.data[NEATO_LOGIN] = NeatoHub(hass, entry.data, Account, Neato)

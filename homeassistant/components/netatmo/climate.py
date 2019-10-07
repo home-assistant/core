@@ -1,33 +1,34 @@
 """Support for Netatmo Smart thermostats."""
 from datetime import timedelta
 import logging
-from typing import Optional, List
+from typing import List, Optional
 
+import pyatmo
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    DEFAULT_MIN_TEMP,
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_BOOST,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_PRESET_MODE,
-    DEFAULT_MIN_TEMP,
+    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
-    TEMP_CELSIUS,
+    ATTR_BATTERY_LEVEL,
     ATTR_TEMPERATURE,
     CONF_NAME,
     PRECISION_HALVES,
     STATE_OFF,
-    ATTR_BATTERY_LEVEL,
+    TEMP_CELSIUS,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 from .const import DATA_NETATMO_AUTH
@@ -103,7 +104,6 @@ NA_VALVE = "NRV"
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NetAtmo Thermostat."""
-    import pyatmo
 
     homes_conf = config.get(CONF_HOMES)
 
@@ -365,7 +365,6 @@ class HomeData:
 
     def setup(self):
         """Retrieve HomeData by NetAtmo API."""
-        import pyatmo
 
         try:
             self.homedata = pyatmo.HomeData(self.auth)
@@ -408,7 +407,6 @@ class ThermostatData:
 
     def setup(self):
         """Retrieve HomeData and HomeStatus by NetAtmo API."""
-        import pyatmo
 
         try:
             self.homedata = pyatmo.HomeData(self.auth)
@@ -423,7 +421,6 @@ class ThermostatData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Call the NetAtmo API to update the data."""
-        import pyatmo
 
         try:
             self.homestatus = pyatmo.HomeStatus(self.auth, home_id=self.home_id)

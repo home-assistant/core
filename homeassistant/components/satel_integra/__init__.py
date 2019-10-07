@@ -2,9 +2,10 @@
 import collections
 import logging
 
+from satel_integra.satel_integra import AsyncSatel
 import voluptuous as vol
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -101,8 +102,6 @@ async def async_setup(hass, config):
     host = conf.get(CONF_HOST)
     port = conf.get(CONF_PORT)
     partitions = conf.get(CONF_DEVICE_PARTITIONS)
-
-    from satel_integra.satel_integra import AsyncSatel
 
     monitored_outputs = collections.OrderedDict(
         list(outputs.items()) + list(switchable_outputs.items())

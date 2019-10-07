@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+from coinbase.wallet.client import Client
+from coinbase.wallet.error import AuthenticationError
 import voluptuous as vol
 
 from homeassistant.const import CONF_API_KEY
@@ -79,7 +81,6 @@ class CoinbaseData:
 
     def __init__(self, api_key, api_secret):
         """Init the coinbase data object."""
-        from coinbase.wallet.client import Client
 
         self.client = Client(api_key, api_secret)
         self.update()
@@ -87,7 +88,6 @@ class CoinbaseData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from coinbase."""
-        from coinbase.wallet.error import AuthenticationError
 
         try:
             self.accounts = self.client.get_accounts()

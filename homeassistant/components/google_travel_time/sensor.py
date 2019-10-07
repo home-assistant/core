@@ -1,25 +1,25 @@
 """Support for Google travel time sensors."""
+from datetime import datetime, timedelta
 import logging
-from datetime import datetime
-from datetime import timedelta
 
+import googlemaps
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_NAME,
-    EVENT_HOMEASSISTANT_START,
+    ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    ATTR_ATTRIBUTION,
+    CONF_API_KEY,
     CONF_MODE,
+    CONF_NAME,
+    EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.helpers import location
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -202,8 +202,6 @@ class GoogleTravelTimeSensor(Entity):
             self._destination_entity_id = destination
         else:
             self._destination = destination
-
-        import googlemaps
 
         self._client = googlemaps.Client(api_key, timeout=10)
         try:

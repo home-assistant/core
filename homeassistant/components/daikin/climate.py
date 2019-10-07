@@ -1,6 +1,7 @@
 """Support for the Daikin HVAC."""
 import logging
 
+from pydaikin import appliance
 import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
@@ -91,7 +92,6 @@ class DaikinClimate(ClimateDevice):
 
     def __init__(self, api):
         """Initialize the climate device."""
-        from pydaikin import appliance
 
         self._api = api
         self._list = {

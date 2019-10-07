@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+import gitlab
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -141,7 +142,6 @@ class GitLabData:
 
     def __init__(self, gitlab_id, priv_token, interval, url):
         """Fetch data from GitLab API for most recent CI job."""
-        import gitlab
 
         self._gitlab_id = gitlab_id
         self._gitlab = gitlab.Gitlab(url, private_token=priv_token, per_page=1)

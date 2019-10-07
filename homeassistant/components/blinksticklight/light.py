@@ -1,15 +1,16 @@
 """Support for Blinkstick lights."""
 import logging
 
+from blinkstick import blinkstick
 import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
+    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     Light,
-    PLATFORM_SCHEMA,
 )
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
@@ -33,7 +34,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Blinkstick device specified by serial number."""
-    from blinkstick import blinkstick
 
     name = config.get(CONF_NAME)
     serial = config.get(CONF_SERIAL)

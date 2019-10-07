@@ -1,9 +1,11 @@
 """Support for interfacing with Monoprice 6 zone home audio controller."""
 import logging
 
+from pymonoprice import get_monoprice
+from serial import SerialException
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     DOMAIN,
     SUPPORT_SELECT_SOURCE,
@@ -70,9 +72,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Monoprice 6-zone amplifier platform."""
     port = config.get(CONF_PORT)
-
-    from serial import SerialException
-    from pymonoprice import get_monoprice
 
     try:
         monoprice = get_monoprice(port)

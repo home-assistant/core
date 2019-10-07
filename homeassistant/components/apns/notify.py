@@ -1,13 +1,10 @@
 """APNS Notification platform."""
 import logging
 
+from apns2.client import APNsClient
+from apns2.errors import Unregistered
+from apns2.payload import Payload
 import voluptuous as vol
-
-from homeassistant.config import load_yaml_config_file
-from homeassistant.const import ATTR_NAME, CONF_NAME, CONF_PLATFORM
-from homeassistant.helpers import template as template_helper
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import track_state_change
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -16,6 +13,11 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.config import load_yaml_config_file
+from homeassistant.const import ATTR_NAME, CONF_NAME, CONF_PLATFORM
+from homeassistant.helpers import template as template_helper
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import track_state_change
 
 APNS_DEVICES = "apns.yaml"
 CONF_CERTFILE = "cert_file"
@@ -213,9 +215,6 @@ class ApnsNotificationService(BaseNotificationService):
 
     def send_message(self, message=None, **kwargs):
         """Send push message to registered devices."""
-        from apns2.client import APNsClient
-        from apns2.payload import Payload
-        from apns2.errors import Unregistered
 
         apns = APNsClient(
             self.certificate, use_sandbox=self.sandbox, use_alternative_port=False

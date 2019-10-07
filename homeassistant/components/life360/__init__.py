@@ -1,4 +1,5 @@
 """Life360 integration."""
+# But if the config entry was created by import and the account no longer
 import logging
 
 import voluptuous as vol
@@ -165,7 +166,6 @@ def setup(hass, config):
     # Check existing config entries. For any that correspond to an entry in
     # configuration.yaml, and whose password has not changed, nothing needs to
     # be done with that config entry or that account from configuration.yaml.
-    # But if the config entry was created by import and the account no longer
     # exists in configuration.yaml, or if the password has changed, then delete
     # that out-of-date config entry.
     already_configured = []

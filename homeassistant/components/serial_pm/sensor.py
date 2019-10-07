@@ -1,6 +1,7 @@
 """Support for particulate matter sensors connected to a serial port."""
 import logging
 
+from pmsensor import serial_pm as pm
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -24,7 +25,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available PM sensors."""
-    from pmsensor import serial_pm as pm
 
     try:
         coll = pm.PMDataCollector(

@@ -1,11 +1,13 @@
 """Support for X10 switch over Mochad."""
 import logging
 
+from pymochad import device
+from pymochad.exceptions import MochadException
 import voluptuous as vol
 
 from homeassistant.components import mochad
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import CONF_NAME, CONF_DEVICES, CONF_PLATFORM, CONF_ADDRESS
+from homeassistant.const import CONF_ADDRESS, CONF_DEVICES, CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +39,6 @@ class MochadSwitch(SwitchDevice):
 
     def __init__(self, hass, ctrl, dev):
         """Initialize a Mochad Switch Device."""
-        from pymochad import device
 
         self._controller = ctrl
         self._address = dev[CONF_ADDRESS]
@@ -58,7 +59,6 @@ class MochadSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        from pymochad.exceptions import MochadException
 
         _LOGGER.debug("Reconnect %s:%s", self._controller.server, self._controller.port)
         with mochad.REQ_LOCK:
@@ -75,7 +75,6 @@ class MochadSwitch(SwitchDevice):
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        from pymochad.exceptions import MochadException
 
         _LOGGER.debug("Reconnect %s:%s", self._controller.server, self._controller.port)
         with mochad.REQ_LOCK:

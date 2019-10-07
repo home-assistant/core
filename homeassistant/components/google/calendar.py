@@ -3,6 +3,8 @@ import copy
 from datetime import timedelta
 import logging
 
+from httplib2 import ServerNotFoundError
+
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
     CalendarEventDevice,
@@ -127,7 +129,6 @@ class GoogleCalendarData:
 
     def _prepare_query(self):
         # pylint: disable=import-error
-        from httplib2 import ServerNotFoundError
 
         try:
             service = self.calendar_service.get()

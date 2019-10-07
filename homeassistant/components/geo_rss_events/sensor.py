@@ -8,21 +8,23 @@ and grouped by category.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.geo_rss_events/
 """
-import logging
 from datetime import timedelta
+import logging
 
+import georss_client
+from georss_client.generic_feed import GenericFeed
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_UNIT_OF_MEASUREMENT,
-    CONF_NAME,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    CONF_NAME,
     CONF_RADIUS,
+    CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -108,7 +110,6 @@ class GeoRssServiceSensor(Entity):
         self._state = None
         self._state_attributes = None
         self._unit_of_measurement = unit_of_measurement
-        from georss_client.generic_feed import GenericFeed
 
         self._feed = GenericFeed(
             coordinates,
@@ -146,7 +147,6 @@ class GeoRssServiceSensor(Entity):
 
     def update(self):
         """Update this sensor from the GeoRSS service."""
-        import georss_client
 
         status, feed_entries = self._feed.update()
         if status == georss_client.UPDATE_OK:

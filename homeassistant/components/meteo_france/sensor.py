@@ -1,6 +1,8 @@
 """Support for Meteo-France raining forecast sensor."""
 import logging
 
+from vigilancemeteo import DepartmentWeatherAlert
+
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.entity import Entity
 
@@ -8,11 +10,11 @@ from .const import (
     ATTRIBUTION,
     CONF_CITY,
     DATA_METEO_FRANCE,
-    SENSOR_TYPES,
+    SENSOR_TYPE_CLASS,
     SENSOR_TYPE_ICON,
     SENSOR_TYPE_NAME,
     SENSOR_TYPE_UNIT,
-    SENSOR_TYPE_CLASS,
+    SENSOR_TYPES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,8 +32,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     monitored_conditions = discovery_info[CONF_MONITORED_CONDITIONS]
     client = hass.data[DATA_METEO_FRANCE][city]
     weather_alert_client = hass.data[DATA_METEO_FRANCE]["weather_alert_client"]
-
-    from vigilancemeteo import DepartmentWeatherAlert
 
     alert_watcher = None
     if "weather_alert" in monitored_conditions:

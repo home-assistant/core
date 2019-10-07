@@ -1,9 +1,10 @@
 """Add support for the Xiaomi TVs."""
 import logging
 
+from pymitv import TV, Discover
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
@@ -29,7 +30,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Xiaomi TV platform."""
-    from pymitv import Discover
 
     # If a hostname is set. Discovery is skipped.
     host = config.get(CONF_HOST)
@@ -53,7 +53,6 @@ class XiaomiTV(MediaPlayerDevice):
     def __init__(self, ip, name):
         """Receive IP address and name to construct class."""
         # Import pymitv library.
-        from pymitv import TV
 
         # Initialize the Xiaomi TV.
         self._tv = TV(ip)

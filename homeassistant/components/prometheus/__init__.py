@@ -3,24 +3,25 @@ import logging
 import string
 
 from aiohttp import web
+import prometheus_client
 import voluptuous as vol
 
 from homeassistant import core as hacore
 from homeassistant.components.climate.const import ATTR_CURRENT_TEMPERATURE
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
-    ATTR_DEVICE_CLASS,
     CONTENT_TYPE_TEXT_PLAIN,
     EVENT_STATE_CHANGED,
-    TEMP_FAHRENHEIT,
     TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
 )
 from homeassistant.helpers import entityfilter, state as state_helper
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.temperature import fahrenheit_to_celsius
 from homeassistant.helpers.entity_values import EntityValues
+from homeassistant.util.temperature import fahrenheit_to_celsius
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +65,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Activate Prometheus component."""
-    import prometheus_client
 
     hass.http.register_view(PrometheusView(prometheus_client))
 

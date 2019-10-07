@@ -1,11 +1,11 @@
 """Support for Dark Sky weather service."""
-import logging
 from datetime import timedelta
+import logging
 
-import voluptuous as vol
+import forecastio
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -14,9 +14,10 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
-    UNIT_UV_INDEX,
     CONF_SCAN_INTERVAL,
+    UNIT_UV_INDEX,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -797,7 +798,6 @@ class DarkSkyData:
 
     def _update(self):
         """Get the latest data from Dark Sky."""
-        import forecastio
 
         try:
             self.data = forecastio.load_forecast(

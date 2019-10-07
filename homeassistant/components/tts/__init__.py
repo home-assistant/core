@@ -11,24 +11,24 @@ import re
 from typing import Optional
 
 from aiohttp import web
+import mutagen
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
+    DOMAIN as DOMAIN_MP,
     MEDIA_TYPE_MUSIC,
     SERVICE_PLAY_MEDIA,
 )
-from homeassistant.components.media_player.const import DOMAIN as DOMAIN_MP
-from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, CONF_PLATFORM
+from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, ENTITY_MATCH_ALL
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_prepare_setup_platform
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -433,7 +433,6 @@ class SpeechManager:
 
         Async friendly.
         """
-        import mutagen
 
         data_bytes = io.BytesIO(data)
         data_bytes.name = filename

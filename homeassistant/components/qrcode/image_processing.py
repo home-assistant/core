@@ -1,11 +1,16 @@
 """Support for the QR image processing."""
-from homeassistant.core import split_entity_id
+import io
+
+from PIL import Image
+from pyzbar import pyzbar
+
 from homeassistant.components.image_processing import (
-    ImageProcessingEntity,
-    CONF_SOURCE,
     CONF_ENTITY_ID,
     CONF_NAME,
+    CONF_SOURCE,
+    ImageProcessingEntity,
 )
+from homeassistant.core import split_entity_id
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -49,9 +54,6 @@ class QrEntity(ImageProcessingEntity):
 
     def process_image(self, image):
         """Process image."""
-        import io
-        from pyzbar import pyzbar
-        from PIL import Image
 
         stream = io.BytesIO(image)
         img = Image.open(stream)

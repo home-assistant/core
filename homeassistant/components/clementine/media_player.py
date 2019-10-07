@@ -3,9 +3,10 @@ from datetime import timedelta
 import logging
 import time
 
+from clementineremote import ClementineRemote
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_NEXT_TRACK,
@@ -56,7 +57,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Clementine platform."""
-    from clementineremote import ClementineRemote
 
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)

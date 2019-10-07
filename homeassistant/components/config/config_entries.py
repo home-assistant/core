@@ -1,6 +1,7 @@
 """Http views to control the config manager."""
 import aiohttp.web_exceptions
 import voluptuous as vol
+import voluptuous_serialize
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES
@@ -40,8 +41,6 @@ def _prepare_json(result):
     """Convert result for JSON."""
     if result["type"] != data_entry_flow.RESULT_TYPE_FORM:
         return result
-
-    import voluptuous_serialize
 
     data = result.copy()
 

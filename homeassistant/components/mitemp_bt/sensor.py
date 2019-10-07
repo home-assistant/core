@@ -1,21 +1,24 @@
 """Support for Xiaomi Mi Temp BLE environmental sensor."""
 import logging
 
+import bluepy.btle  # noqa: F401 pylint: disable=unused-import
+from btlewrap import BluepyBackend, GatttoolBackend
+from btlewrap.base import BluetoothBackendException
+from mitemp_bt import mitemp_bt_poller
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_FORCE_UPDATE,
+    CONF_MAC,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
-    CONF_MAC,
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_BATTERY,
 )
-
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,15 +63,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the MiTempBt sensor."""
-    from mitemp_bt import mitemp_bt_poller
 
     try:
-        import bluepy.btle  # noqa: F401 pylint: disable=unused-import
-        from btlewrap import BluepyBackend
 
         backend = BluepyBackend
     except ImportError:
-        from btlewrap import GatttoolBackend
 
         backend = GatttoolBackend
     _LOGGER.debug("MiTempBt is using %s backend.", backend.__name__)
@@ -152,7 +151,6 @@ class MiTempBtSensor(Entity):
 
         This uses a rolling median over 3 values to filter out outliers.
         """
-        from btlewrap.base import BluetoothBackendException
 
         try:
             _LOGGER.debug("Polling data for %s", self.name)

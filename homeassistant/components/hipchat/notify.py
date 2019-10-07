@@ -1,10 +1,8 @@
 """HipChat platform for notify component."""
 import logging
 
+from hipnotify import Room
 import voluptuous as vol
-
-from homeassistant.const import CONF_HOST, CONF_ROOM, CONF_TOKEN
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -12,6 +10,8 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONF_HOST, CONF_ROOM, CONF_TOKEN
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,7 +70,6 @@ class HipchatNotificationService(BaseNotificationService):
 
     def _get_room(self, room):
         """Get Room object, creating it if necessary."""
-        from hipnotify import Room
 
         if room not in self._rooms:
             self._rooms[room] = Room(

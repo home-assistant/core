@@ -2,11 +2,14 @@
 from datetime import timedelta
 import logging
 
+import haphilipsjs
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
+    SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
@@ -14,8 +17,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
-    MEDIA_TYPE_CHANNEL,
-    SUPPORT_PLAY_MEDIA,
 )
 from homeassistant.const import (
     CONF_API_VERSION,
@@ -70,7 +71,6 @@ def _inverted(data):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Philips TV platform."""
-    import haphilipsjs
 
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)

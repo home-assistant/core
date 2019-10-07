@@ -1,6 +1,7 @@
 """Config flow to configure the Luftdaten component."""
 from collections import OrderedDict
 
+from luftdaten import Luftdaten, exceptions
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -60,7 +61,6 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
-        from luftdaten import Luftdaten, exceptions
 
         if not user_input:
             return self._show_form()

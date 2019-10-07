@@ -2,19 +2,20 @@
 import logging
 import re
 
+from haffmpeg.tools import FFVersion
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_send,
-    async_dispatcher_connect,
-)
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
 
 DOMAIN = "ffmpeg"
@@ -105,7 +106,6 @@ class FFmpegManager:
 
     async def async_get_version(self):
         """Return ffmpeg version."""
-        from haffmpeg.tools import FFVersion
 
         ffversion = FFVersion(self._bin, self.hass.loop)
         self._version = await ffversion.get_version()

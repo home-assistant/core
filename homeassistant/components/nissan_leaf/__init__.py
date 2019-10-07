@@ -1,9 +1,11 @@
 """Support for the Nissan Leaf Carwings/Nissan Connect API."""
-from datetime import datetime, timedelta
 import asyncio
+from datetime import datetime, timedelta
 import logging
 import sys
 
+import pycarwings2
+from pycarwings2 import CarwingsError
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -95,7 +97,6 @@ START_CHARGE_LEAF_SCHEMA = vol.Schema({vol.Required(ATTR_VIN): cv.string})
 
 def setup(hass, config):
     """Set up the Nissan Leaf component."""
-    import pycarwings2
 
     async def async_handle_update(service):
         """Handle service to update leaf data from Nissan servers."""
@@ -274,7 +275,6 @@ class LeafDataStore:
 
     async def async_refresh_data(self, now):
         """Refresh the leaf data and update the datastore."""
-        from pycarwings2 import CarwingsError
 
         if self.request_in_progress:
             _LOGGER.debug("Refresh currently in progress for %s", self.leaf.nickname)
@@ -339,7 +339,6 @@ class LeafDataStore:
 
     async def async_get_battery(self):
         """Request battery update from Nissan servers."""
-        from pycarwings2 import CarwingsError
 
         try:
             # Request battery update from the car
@@ -389,7 +388,6 @@ class LeafDataStore:
 
     async def async_get_climate(self):
         """Request climate data from Nissan servers."""
-        from pycarwings2 import CarwingsError
 
         try:
             return await self.hass.async_add_executor_job(

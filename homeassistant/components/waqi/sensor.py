@@ -1,20 +1,21 @@
 """Support for the World Air Quality Index service."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
 import aiohttp
 import voluptuous as vol
+import waqiasync
 
-from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    ATTR_TIME,
     ATTR_TEMPERATURE,
+    ATTR_TIME,
     CONF_TOKEN,
 )
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 
@@ -60,7 +61,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the requested World Air Quality Index locations."""
-    import waqiasync
 
     token = config.get(CONF_TOKEN)
     station_filter = config.get(CONF_STATIONS)

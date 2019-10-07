@@ -1,20 +1,31 @@
 """HTML5 Push Messaging notification service."""
 from datetime import datetime, timedelta
-
 from functools import partial
-from urllib.parse import urlparse
 import json
 import logging
 import time
+from urllib.parse import urlparse
 import uuid
 
 from aiohttp.hdrs import AUTHORIZATION
+import jwt
+from py_vapid import Vapid
+from pywebpush import WebPusher
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant.components import websocket_api
 from homeassistant.components.frontend import add_manifest_json_key
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.notify import (
+    ATTR_DATA,
+    ATTR_TARGET,
+    ATTR_TITLE,
+    ATTR_TITLE_DEFAULT,
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 from homeassistant.const import (
     HTTP_BAD_REQUEST,
     HTTP_INTERNAL_SERVER_ERROR,
@@ -25,16 +36,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import ensure_unique_string
 from homeassistant.util.json import load_json, save_json
-
-from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_TARGET,
-    ATTR_TITLE,
-    ATTR_TITLE_DEFAULT,
-    DOMAIN,
-    PLATFORM_SCHEMA,
-    BaseNotificationService,
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -311,7 +312,6 @@ class HTML5PushCallbackView(HomeAssistantView):
 
     def decode_jwt(self, token):
         """Find the registration that signed this JWT and return it."""
-        import jwt
 
         # 1.  Check claims w/o verifying to see if a target is in there.
         # 2.  If target in claims, attempt to verify against the given name.
@@ -335,7 +335,6 @@ class HTML5PushCallbackView(HomeAssistantView):
     # https://auth0.com/docs/quickstart/backend/python
     def check_authorization_header(self, request):
         """Check the authorization header."""
-        import jwt
 
         auth = request.headers.get(AUTHORIZATION, None)
         if not auth:
@@ -491,7 +490,6 @@ class HTML5NotificationService(BaseNotificationService):
 
     def _push_message(self, payload, **kwargs):
         """Send the message."""
-        from pywebpush import WebPusher
 
         timestamp = int(time.time())
         ttl = int(kwargs.get(ATTR_TTL, DEFAULT_TTL))
@@ -550,7 +548,6 @@ class HTML5NotificationService(BaseNotificationService):
 
 def add_jwt(timestamp, target, tag, jwt_secret):
     """Create JWT json to put into payload."""
-    import jwt
 
     jwt_exp = datetime.fromtimestamp(timestamp) + timedelta(days=JWT_VALID_DAYS)
     jwt_claims = {
@@ -565,7 +562,6 @@ def add_jwt(timestamp, target, tag, jwt_secret):
 
 def create_vapid_headers(vapid_email, subscription_info, vapid_private_key):
     """Create encrypted headers to send to WebPusher."""
-    from py_vapid import Vapid
 
     if vapid_email and vapid_private_key and ATTR_ENDPOINT in subscription_info:
         url = urlparse(subscription_info.get(ATTR_ENDPOINT))

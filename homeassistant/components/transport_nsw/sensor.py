@@ -2,12 +2,13 @@
 from datetime import timedelta
 import logging
 
+import TransportNSW
 import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_MODE, CONF_API_KEY, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_MODE, CONF_NAME, CONF_API_KEY, ATTR_ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,7 +121,6 @@ class PublicTransportData:
 
     def __init__(self, stop_id, route, destination, api_key):
         """Initialize the data object."""
-        import TransportNSW
 
         self._stop_id = stop_id
         self._route = route

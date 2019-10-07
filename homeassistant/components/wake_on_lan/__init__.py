@@ -3,6 +3,7 @@ from functools import partial
 import logging
 
 import voluptuous as vol
+import wakeonlan
 
 from homeassistant.const import CONF_MAC
 import homeassistant.helpers.config_validation as cv
@@ -22,7 +23,6 @@ WAKE_ON_LAN_SEND_MAGIC_PACKET_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the wake on LAN component."""
-    import wakeonlan
 
     async def send_magic_packet(call):
         """Send magic packet to wake up a device."""

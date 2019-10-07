@@ -2,18 +2,19 @@
 import logging
 
 import voluptuous as vol
+import zengge
 
-from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
     ATTR_WHITE_VALUE,
+    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_WHITE_VALUE,
     Light,
-    PLATFORM_SCHEMA,
 )
+from homeassistant.const import CONF_DEVICES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
@@ -47,7 +48,6 @@ class ZenggeLight(Light):
 
     def __init__(self, device):
         """Initialize the light."""
-        import zengge
 
         self._name = device["name"]
         self._address = device["address"]

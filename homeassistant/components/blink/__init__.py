@@ -1,22 +1,24 @@
 """Support for Blink Home Camera System."""
-import logging
 from datetime import timedelta
+import logging
+
+from blinkpy import blinkpy
 import voluptuous as vol
 
-from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.const import (
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_NAME,
-    CONF_SCAN_INTERVAL,
     CONF_BINARY_SENSORS,
-    CONF_SENSORS,
     CONF_FILENAME,
-    CONF_MONITORED_CONDITIONS,
     CONF_MODE,
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
     CONF_OFFSET,
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_SENSORS,
+    CONF_USERNAME,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.helpers import config_validation as cv, discovery
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,7 +99,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up Blink System."""
-    from blinkpy import blinkpy
 
     conf = config[BLINK_DATA]
     username = conf[CONF_USERNAME]

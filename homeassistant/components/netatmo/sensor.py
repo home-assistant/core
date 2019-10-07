@@ -1,25 +1,28 @@
 """Support for the Netatmo Weather Service."""
+from datetime import timedelta
 import logging
 import threading
-from datetime import timedelta
 from time import time
 
+import pyatmo
+from pyatmo import NoDevice
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME,
     CONF_MODE,
-    TEMP_CELSIUS,
+    CONF_NAME,
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_BATTERY,
+    TEMP_CELSIUS,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import call_later
 from homeassistant.util import Throttle
+
 from .const import DATA_NETATMO_AUTH
 
 _LOGGER = logging.getLogger(__name__)
@@ -173,8 +176,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 )
             if _dev:
                 add_entities(_dev, True)
-
-        import pyatmo
 
         for data_class in [pyatmo.WeatherStationData, pyatmo.HomeCoachData]:
             try:
@@ -512,7 +513,6 @@ class NetatmoPublicData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Request an update from the Netatmo API."""
-        import pyatmo
 
         data = pyatmo.PublicData(
             self.auth,
@@ -559,7 +559,6 @@ class NetatmoData:
         if time() < self._next_update or not self._update_in_progress.acquire(False):
             return
         try:
-            from pyatmo import NoDevice
 
             try:
                 self.station_data = self.data_class(self.auth)

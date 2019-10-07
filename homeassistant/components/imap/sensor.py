@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+import aioimaplib
 import async_timeout
 import voluptuous as vol
 
@@ -107,7 +108,6 @@ class ImapSensor(Entity):
 
     async def connection(self):
         """Return a connection to the server, establishing it if necessary."""
-        import aioimaplib
 
         if self._connection is None:
             try:
@@ -123,7 +123,6 @@ class ImapSensor(Entity):
 
     async def idle_loop(self):
         """Wait for data pushed from server."""
-        import aioimaplib
 
         while True:
             try:
@@ -143,7 +142,6 @@ class ImapSensor(Entity):
 
     async def async_update(self):
         """Periodic polling of state."""
-        import aioimaplib
 
         try:
             if await self.connection():

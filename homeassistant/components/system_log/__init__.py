@@ -4,12 +4,13 @@ import logging
 import re
 import traceback
 
+from netdisco import __path__ as netdisco_path
 import voluptuous as vol
 
 from homeassistant import __path__ as HOMEASSISTANT_PATH
 from homeassistant.components.http import HomeAssistantView
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+import homeassistant.helpers.config_validation as cv
 
 CONF_MAX_ENTRIES = "max_entries"
 CONF_FIRE_EVENT = "fire_event"
@@ -57,7 +58,6 @@ def _figure_out_source(record, call_stack, hass):
     paths = [HOMEASSISTANT_PATH[0], hass.config.config_dir]
     try:
         # If netdisco is installed check its path too.
-        from netdisco import __path__ as netdisco_path
 
         paths.append(netdisco_path[0])
     except ImportError:

@@ -1,11 +1,12 @@
 """Bitcoin information service that uses blockchain.info."""
-import logging
 from datetime import timedelta
+import logging
 
+from blockchain import exchangerates, statistics
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_DISPLAY_OPTIONS, ATTR_ATTRIBUTION, CONF_CURRENCY
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_CURRENCY, CONF_DISPLAY_OPTIONS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -55,7 +56,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Bitcoin sensors."""
-    from blockchain import exchangerates
 
     currency = config.get(CONF_CURRENCY)
 
@@ -169,7 +169,6 @@ class BitcoinData:
 
     def update(self):
         """Get the latest data from blockchain.info."""
-        from blockchain import statistics, exchangerates
 
         self.stats = statistics.get()
         self.ticker = exchangerates.get_ticker()

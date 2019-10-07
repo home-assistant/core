@@ -2,13 +2,14 @@
 import asyncio
 import json
 import logging
+import socket
 import urllib.parse
 
 import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     DOMAIN,
@@ -100,7 +101,6 @@ SERVICE_TO_METHOD = {
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the squeezebox platform."""
-    import socket
 
     known_servers = hass.data.get(KNOWN_SERVERS)
     if known_servers is None:

@@ -1,12 +1,15 @@
 """Support for MyQ-Enabled Garage Doors."""
 import logging
+
+from pymyq import login
+from pymyq.errors import MyQError, UnsupportedBrandError
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-    CoverDevice,
     PLATFORM_SCHEMA,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
+    CoverDevice,
 )
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -39,8 +42,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the platform."""
-    from pymyq import login
-    from pymyq.errors import MyQError, UnsupportedBrandError
 
     websession = aiohttp_client.async_get_clientsession(hass)
 

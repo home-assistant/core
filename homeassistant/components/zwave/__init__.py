@@ -5,60 +5,62 @@ from importlib import import_module
 import logging
 from pprint import pprint
 
+from openzwave.group import ZWaveGroup
+from openzwave.network import ZWaveNetwork
+from openzwave.option import ZWaveOption
+from pydispatch import dispatcher
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import callback, CoreState
-from homeassistant.helpers import discovery
-from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
-from homeassistant.helpers.entity_platform import EntityPlatform
-from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.helpers.entity_values import EntityValues
-from homeassistant.helpers.event import async_track_time_change
-from homeassistant.util import convert
-import homeassistant.util.dt as dt_util
+from homeassistant.core import CoreState, callback
+from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
+from homeassistant.helpers.entity_platform import EntityPlatform
+from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers.entity_values import EntityValues
+from homeassistant.helpers.event import async_track_time_change
+from homeassistant.util import convert
+import homeassistant.util.dt as dt_util
 
-from . import const
 from . import config_flow  # noqa pylint: disable=unused-import
-from . import websocket_api as wsapi
+from . import const, websocket_api as wsapi, workaround
 from .const import (
     CONF_AUTOHEAL,
+    CONF_CONFIG_PATH,
     CONF_DEBUG,
+    CONF_NETWORK_KEY,
     CONF_POLLING_INTERVAL,
     CONF_USB_STICK_PATH,
-    CONF_CONFIG_PATH,
-    CONF_NETWORK_KEY,
+    DATA_DEVICES,
+    DATA_ENTITY_VALUES,
+    DATA_NETWORK,
+    DATA_ZWAVE_CONFIG,
     DEFAULT_CONF_AUTOHEAL,
     DEFAULT_CONF_USB_STICK_PATH,
-    DEFAULT_POLLING_INTERVAL,
     DEFAULT_DEBUG,
+    DEFAULT_POLLING_INTERVAL,
     DOMAIN,
-    DATA_DEVICES,
-    DATA_NETWORK,
-    DATA_ENTITY_VALUES,
-    DATA_ZWAVE_CONFIG,
 )
-from .node_entity import ZWaveBaseEntity, ZWaveNodeEntity
-from . import workaround
 from .discovery_schemas import DISCOVERY_SCHEMAS
+from .node_entity import ZWaveBaseEntity, ZWaveNodeEntity
 from .util import (
+    check_has_unique_id,
     check_node_schema,
     check_value_schema,
-    node_name,
-    check_has_unique_id,
     is_node_parsed,
     node_device_id_and_name,
+    node_name,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -331,12 +333,8 @@ async def async_setup_entry(hass, config_entry):
 
     Will automatically load components to support devices found on the network.
     """
-    from pydispatch import dispatcher
 
     # pylint: disable=import-error
-    from openzwave.option import ZWaveOption
-    from openzwave.network import ZWaveNetwork
-    from openzwave.group import ZWaveGroup
 
     # Merge config entry and yaml config
     config = config_entry.data
@@ -1173,8 +1171,6 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         """Initialize the z-Wave device."""
         # pylint: disable=import-error
         super().__init__()
-        from openzwave.network import ZWaveNetwork
-        from pydispatch import dispatcher
 
         self.values = values
         self.node = values.primary.node

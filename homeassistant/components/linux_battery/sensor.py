@@ -2,6 +2,7 @@
 import logging
 import os
 
+import batinfo
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -72,7 +73,6 @@ class LinuxBatterySensor(Entity):
 
     def __init__(self, name, battery_id, system):
         """Initialize the battery sensor."""
-        import batinfo
 
         self._battery = batinfo.Batteries()
 

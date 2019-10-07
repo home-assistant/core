@@ -2,9 +2,10 @@
 from datetime import timedelta
 import logging
 
+import panacotta
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -53,7 +54,6 @@ class PanasonicBluRay(MediaPlayerDevice):
 
     def __init__(self, ip, name):
         """Initialize the Panasonic Blue-ray device."""
-        import panacotta
 
         self._device = panacotta.PanasonicBD(ip)
         self._name = name

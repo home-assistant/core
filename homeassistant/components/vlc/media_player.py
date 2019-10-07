@@ -1,9 +1,10 @@
 """Provide functionality to interact with vlc devices on the network."""
 import logging
 
+import vlc
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_PAUSE,
@@ -51,7 +52,6 @@ class VlcDevice(MediaPlayerDevice):
 
     def __init__(self, name, arguments):
         """Initialize the vlc device."""
-        import vlc
 
         self._instance = vlc.Instance(arguments)
         self._vlc = self._instance.media_player_new()
@@ -65,7 +65,6 @@ class VlcDevice(MediaPlayerDevice):
 
     def update(self):
         """Get the latest details from the device."""
-        import vlc
 
         status = self._vlc.get_state()
         if status == vlc.State.Playing:

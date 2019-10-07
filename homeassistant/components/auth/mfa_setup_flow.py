@@ -2,10 +2,11 @@
 import logging
 
 import voluptuous as vol
+import voluptuous_serialize
 
 from homeassistant import data_entry_flow
 from homeassistant.components import websocket_api
-from homeassistant.core import callback, HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 WS_TYPE_SETUP_MFA = "auth/setup_mfa"
 SCHEMA_WS_SETUP_MFA = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
@@ -133,8 +134,6 @@ def _prepare_result_json(result):
 
     if result["type"] != data_entry_flow.RESULT_TYPE_FORM:
         return result
-
-    import voluptuous_serialize
 
     data = result.copy()
 

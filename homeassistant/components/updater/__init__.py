@@ -1,8 +1,7 @@
 """Support to check for available updates."""
+# pylint: disable=import-error,no-name-in-module
 import asyncio
 from datetime import timedelta
-
-# pylint: disable=import-error,no-name-in-module
 from distutils.version import StrictVersion
 import json
 import logging
@@ -10,14 +9,14 @@ import uuid
 
 import aiohttp
 import async_timeout
+import distro
 import voluptuous as vol
 
 from homeassistant.const import __version__ as current_version
-from homeassistant.helpers import event
+from homeassistant.helpers import discovery, event
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers import discovery
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -144,8 +143,6 @@ async def get_newest_version(hass, huuid, include_components):
 
         if include_components:
             info_object["components"] = list(hass.config.components)
-
-        import distro
 
         linux_dist = await hass.async_add_executor_job(distro.linux_distribution, False)
         info_object["distribution"] = linux_dist[0]

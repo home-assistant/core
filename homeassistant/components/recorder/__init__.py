@@ -5,12 +5,18 @@ import concurrent.futures
 from datetime import datetime, timedelta
 import logging
 import queue
+from sqlite3 import Connection
 import threading
 import time
 from typing import Any, Dict, Optional
 
+from sqlalchemy import create_engine, event, exc
+from sqlalchemy.engine import Engine
+from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.pool import StaticPool
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DOMAINS,
@@ -29,8 +35,9 @@ from homeassistant.helpers.entityfilter import generate_filter
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
-from . import migration, purge
+from . import migration, models, purge
 from .const import DATA_INSTANCE
+from .models import Events, RecorderRuns, States
 from .util import session_scope
 
 _LOGGER = logging.getLogger(__name__)
@@ -100,7 +107,6 @@ def run_information(hass, point_in_time: Optional[datetime] = None):
 
     There is also the run that covers point_in_time.
     """
-    from . import models
 
     ins = hass.data[DATA_INSTANCE]
 
@@ -208,9 +214,6 @@ class Recorder(threading.Thread):
 
     def run(self):
         """Start processing events to save."""
-        from .models import States, Events
-        from homeassistant.components import persistent_notification
-        from sqlalchemy import exc
 
         tries = 1
         connected = False
@@ -393,13 +396,6 @@ class Recorder(threading.Thread):
 
     def _setup_connection(self):
         """Ensure database is ready to fly."""
-        from sqlalchemy import create_engine, event
-        from sqlalchemy.engine import Engine
-        from sqlalchemy.orm import scoped_session
-        from sqlalchemy.orm import sessionmaker
-        from sqlite3 import Connection
-
-        from . import models
 
         kwargs = {}
 
@@ -416,7 +412,6 @@ class Recorder(threading.Thread):
                 dbapi_connection.isolation_level = old_isolation
 
         if self.db_url == "sqlite://" or ":memory:" in self.db_url:
-            from sqlalchemy.pool import StaticPool
 
             kwargs["connect_args"] = {"check_same_thread": False}
             kwargs["poolclass"] = StaticPool
@@ -439,7 +434,6 @@ class Recorder(threading.Thread):
 
     def _setup_run(self):
         """Log the start of the current run."""
-        from .models import RecorderRuns
 
         with session_scope(session=self.get_session()) as session:
             for run in session.query(RecorderRuns).filter_by(end=None):
