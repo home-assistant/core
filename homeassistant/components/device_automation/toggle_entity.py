@@ -3,7 +3,10 @@ from typing import Any, Dict, List
 import voluptuous as vol
 
 from homeassistant.core import Context, HomeAssistant, CALLBACK_TYPE
-from homeassistant.components.automation import state, AutomationActionType
+from homeassistant.components.automation import (
+    state as state_automation,
+    AutomationActionType,
+)
 from homeassistant.components.device_automation.const import (
     CONF_IS_OFF,
     CONF_IS_ON,
@@ -152,14 +155,16 @@ async def async_attach_trigger(
         from_state = "on"
         to_state = "off"
     state_config = {
-        state.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        state.CONF_FROM: from_state,
-        state.CONF_TO: to_state,
+        state_automation.CONF_PLATFORM: "state",
+        state_automation.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+        state_automation.CONF_FROM: from_state,
+        state_automation.CONF_TO: to_state,
     }
     if CONF_FOR in config:
         state_config[CONF_FOR] = config[CONF_FOR]
 
-    return await state.async_attach_trigger(
+    state_config = state_automation.TRIGGER_SCHEMA(state_config)
+    return await state_automation.async_attach_trigger(
         hass, state_config, action, automation_info, platform_type="device"
     )
 
