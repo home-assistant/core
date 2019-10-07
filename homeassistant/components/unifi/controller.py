@@ -57,6 +57,7 @@ class UniFiController:
         self.progress = None
         self.wireless_clients = None
 
+        self.listeners = []
         self._site_name = None
         self._site_role = None
 
@@ -258,13 +259,14 @@ class UniFiController:
 
     def import_configuration(self):
         """Import configuration to config entry options."""
-        unifi_config = {}
+        import_config = {}
+
         for config in self.hass.data[UNIFI_CONFIG]:
             if (
                 self.host == config[CONF_HOST]
                 and self.site_name == config[CONF_SITE_ID]
             ):
-                unifi_config = config
+                import_config = config
                 break
 
         old_options = dict(self.config_entry.options)
@@ -278,16 +280,17 @@ class UniFiController:
             (CONF_DETECTION_TIME, CONF_DETECTION_TIME),
             (CONF_SSID_FILTER, CONF_SSID_FILTER),
         ):
-            if config in unifi_config:
-                if config == option and unifi_config[
+            if config in import_config:
+                print(config)
+                if config == option and import_config[
                     config
                 ] != self.config_entry.options.get(option):
-                    new_options[option] = unifi_config[config]
+                    new_options[option] = import_config[config]
                 elif config != option and (
                     option not in self.config_entry.options
-                    or unifi_config[config] == self.config_entry.options.get(option)
+                    or import_config[config] == self.config_entry.options.get(option)
                 ):
-                    new_options[option] = not unifi_config[config]
+                    new_options[option] = not import_config[config]
 
         if new_options:
             options = {**old_options, **new_options}
@@ -301,14 +304,14 @@ class UniFiController:
         Will cancel any scheduled setup retry and will unload
         the config entry.
         """
-        # If the authentication was wrong.
-        if self.api is None:
-            return True
-
         for platform in SUPPORTED_PLATFORMS:
             await self.hass.config_entries.async_forward_entry_unload(
                 self.config_entry, platform
             )
+
+        for unsub_dispatcher in self.listeners:
+            unsub_dispatcher()
+        self.listeners = []
 
         return True
 

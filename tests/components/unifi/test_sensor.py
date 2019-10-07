@@ -1,28 +1,12 @@
 """UniFi sensor platform tests."""
-from collections import deque
 from copy import deepcopy
 
-from asynctest import patch
-
-from homeassistant import config_entries
 from homeassistant.components import unifi
-from homeassistant.components.unifi.const import (
-    CONF_CONTROLLER,
-    CONF_SITE_ID,
-    CONTROLLER_ID as CONF_CONTROLLER_ID,
-    UNIFI_CONFIG,
-    UNIFI_WIRELESS_CLIENTS,
-)
 from homeassistant.setup import async_setup_component
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-)
 
 import homeassistant.components.sensor as sensor
+
+from .test_controller import ENTRY_CONFIG, SITES, setup_unifi_integration
 
 CLIENTS = [
     {
@@ -53,85 +37,6 @@ CLIENTS = [
     },
 ]
 
-CONTROLLER_DATA = {
-    CONF_HOST: "mock-host",
-    CONF_USERNAME: "mock-user",
-    CONF_PASSWORD: "mock-pswd",
-    CONF_PORT: 1234,
-    CONF_SITE_ID: "mock-site",
-    CONF_VERIFY_SSL: False,
-}
-
-ENTRY_CONFIG = {CONF_CONTROLLER: CONTROLLER_DATA}
-
-CONTROLLER_ID = CONF_CONTROLLER_ID.format(host="mock-host", site="mock-site")
-
-SITES = {"Site name": {"desc": "Site name", "name": "mock-site", "role": "admin"}}
-
-
-async def setup_unifi_integration(
-    hass,
-    config,
-    options,
-    sites,
-    clients_response,
-    devices_response,
-    clients_all_response,
-):
-    """Create the UniFi controller."""
-    hass.data[UNIFI_CONFIG] = []
-    hass.data[UNIFI_WIRELESS_CLIENTS] = unifi.UnifiWirelessClients(hass)
-    config_entry = config_entries.ConfigEntry(
-        version=1,
-        domain=unifi.DOMAIN,
-        title="Mock Title",
-        data=config,
-        source="test",
-        connection_class=config_entries.CONN_CLASS_LOCAL_POLL,
-        system_options={},
-        options=options,
-        entry_id=1,
-    )
-
-    mock_client_responses = deque()
-    mock_client_responses.append(clients_response)
-
-    mock_device_responses = deque()
-    mock_device_responses.append(devices_response)
-
-    mock_client_all_responses = deque()
-    mock_client_all_responses.append(clients_all_response)
-
-    mock_requests = []
-
-    async def mock_request(self, method, path, json=None):
-        mock_requests.append({"method": method, "path": path, "json": json})
-
-        if path == "s/{site}/stat/sta" and mock_client_responses:
-            return mock_client_responses.popleft()
-        if path == "s/{site}/stat/device" and mock_device_responses:
-            return mock_device_responses.popleft()
-        if path == "s/{site}/rest/user" and mock_client_all_responses:
-            return mock_client_all_responses.popleft()
-        return {}
-
-    with patch("aiounifi.Controller.login", return_value=True), patch(
-        "aiounifi.Controller.sites", return_value=sites
-    ), patch("aiounifi.Controller.request", new=mock_request):
-        await unifi.async_setup_entry(hass, config_entry)
-    await hass.async_block_till_done()
-    hass.config_entries._entries.append(config_entry)
-
-    controller_id = unifi.get_controller_id_from_config_entry(config_entry)
-    controller = hass.data[unifi.DOMAIN][controller_id]
-
-    controller.mock_client_responses = mock_client_responses
-    controller.mock_device_responses = mock_device_responses
-    controller.mock_client_all_responses = mock_client_all_responses
-    controller.mock_requests = mock_requests
-
-    return controller
-
 
 async def test_platform_manually_configured(hass):
     """Test that we do not discover anything or try to set up a controller."""
@@ -160,7 +65,7 @@ async def test_no_clients(hass):
     assert len(hass.states.async_all()) == 2
 
 
-async def test_switches(hass):
+async def test_sensors(hass):
     """Test the update_items function with some clients."""
     controller = await setup_unifi_integration(
         hass,
