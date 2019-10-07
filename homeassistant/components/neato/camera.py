@@ -28,9 +28,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Neato camera with config entry."""
     dev = []
+    neato = hass.data.get(NEATO_LOGIN)
     for robot in hass.data[NEATO_ROBOTS]:
         if "maps" in robot.traits:
-            dev.append(NeatoCleaningMap(hass, robot))
+            dev.append(NeatoCleaningMap(neato, robot))
 
     if not dev:
         return
@@ -42,11 +43,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class NeatoCleaningMap(Camera):
     """Neato cleaning map for last clean."""
 
-    def __init__(self, hass, robot):
+    def __init__(self, neato, robot):
         """Initialize Neato cleaning map."""
         super().__init__()
         self.robot = robot
-        self.neato = hass.data.get(NEATO_LOGIN)
+        self.neato = neato
         self._available = self.neato.logged_in if self.neato is not None else False
         self._robot_name = f"{self.robot.name} Cleaning Map"
         self._robot_serial = self.robot.serial
