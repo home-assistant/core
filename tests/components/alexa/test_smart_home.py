@@ -524,7 +524,7 @@ async def test_direction_fan(hass):
 
 
 async def test_fan_range(hass):
-    """Test fan discovery.
+    """Test fan discovery with range controller.
 
     This one has variable speed.
     """
@@ -582,8 +582,7 @@ async def test_fan_range(hass):
 
 
 async def test_fan_range_off(hass):
-    """Test fan range 0 turns_off.
-    """
+    """Test fan range controller 0 turns_off fan."""
     device = (
         "fan.test_6",
         "off",
@@ -594,7 +593,7 @@ async def test_fan_range_off(hass):
             "speed": "high",
         },
     )
-    appliance = await discovery_test(device, hass)
+    await discovery_test(device, hass)
 
     call, _ = await assert_request_calls_service(
         "Alexa.RangeController",
