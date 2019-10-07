@@ -1,20 +1,18 @@
 {
     "config": {
         "error": {
-            "name_exists": "Ort existiert bereits"
+            "name_exists": "Name existiert bereits"
         },
         "step": {
             "user": {
                 "data": {
-                    "elevation": "H\u00f6he",
                     "latitude": "Breitengrad",
                     "longitude": "L\u00e4ngengrad",
-                    "name": "Name"
+                    "name": "Name der Integration"
                 },
-                "description": "Meteorologisches Institut",
-                "title": "Standort"
+                "title": "Airly"
             }
         },
-        "title": "Met.no"
+        "title": "Airly"
     }
 }
