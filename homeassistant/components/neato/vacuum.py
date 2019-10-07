@@ -95,8 +95,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Neato vacuum with config entry."""
     dev = []
+    neato = hass.data.get(NEATO_LOGIN)
+    mapdata = hass.data.get(NEATO_MAP_DATA)
+    persistent_maps = hass.data.get(NEATO_PERSISTENT_MAPS)
     for robot in hass.data[NEATO_ROBOTS]:
-        dev.append(NeatoConnectedVacuum(hass, robot))
+        dev.append(NeatoConnectedVacuum(neato, robot, mapdata, persistent_maps))
 
     if not dev:
         return
@@ -134,16 +137,19 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class NeatoConnectedVacuum(StateVacuumDevice):
     """Representation of a Neato Connected Vacuum."""
 
-    def __init__(self, hass, robot):
+    def __init__(self, neato, robot, mapdata, persistent_maps):
         """Initialize the Neato Connected Vacuum."""
         self.robot = robot
-        self.neato = hass.data.get(NEATO_LOGIN)
+        self.neato = neato
         self._available = self.neato.logged_in if self.neato is not None else False
+        self._mapdata = mapdata
         self._name = f"{self.robot.name}"
+        self._robot_has_map = self.robot.has_persistent_maps
+        self._robot_maps = persistent_maps
+        self._robot_serial = self.robot.serial
         self._status_state = None
         self._clean_state = None
         self._state = None
-        self._mapdata = hass.data[NEATO_MAP_DATA]
         self._clean_time_start = None
         self._clean_time_stop = None
         self._clean_area = None
@@ -155,10 +161,7 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         self._clean_error_time = None
         self._launched_from = None
         self._battery_level = None
-        self._robot_serial = self.robot.serial
-        self._robot_maps = hass.data[NEATO_PERSISTENT_MAPS]
         self._robot_boundaries = {}
-        self._robot_has_map = self.robot.has_persistent_maps
         self._robot_stats = None
 
     def update(self):
