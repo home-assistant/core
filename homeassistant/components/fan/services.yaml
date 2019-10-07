@@ -42,7 +42,7 @@ toggle:
   fields:
     entity_id:
       description: Name(s) of the entities to toggle
-      exampl: 'fan.living_room'
+      example: 'fan.living_room'
 
 set_direction:
   description: Set the fan rotation.
