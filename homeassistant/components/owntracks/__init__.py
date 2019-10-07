@@ -3,6 +3,7 @@ from collections import defaultdict
 import json
 import logging
 import re
+import time
 
 from aiohttp.web import json_response
 import voluptuous as vol
@@ -12,6 +13,8 @@ from homeassistant.components import mqtt
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
 from homeassistant.setup import async_when_setup
 
 from .config_flow import CONF_SECRET
@@ -26,6 +29,7 @@ CONF_WAYPOINT_WHITELIST = "waypoint_whitelist"
 CONF_MQTT_TOPIC = "mqtt_topic"
 CONF_REGION_MAPPING = "region_mapping"
 CONF_EVENTS_ONLY = "events_only"
+CONF_FRIENDS = "friends"
 BEACON_DEV_ID = "beacon"
 
 DEFAULT_OWNTRACKS_TOPIC = "owntracks/#"
@@ -74,6 +78,7 @@ async def async_setup_entry(hass, entry):
     region_mapping = config.get(CONF_REGION_MAPPING)
     events_only = config.get(CONF_EVENTS_ONLY)
     mqtt_topic = config.get(CONF_MQTT_TOPIC)
+    friends = config.get(CONF_FRIENDS)
 
     context = OwnTracksContext(
         hass,
@@ -84,6 +89,7 @@ async def async_setup_entry(hass, entry):
         region_mapping,
         events_only,
         mqtt_topic,
+        friends,
     )
 
     webhook_id = config.get(CONF_WEBHOOK_ID) or entry.data[CONF_WEBHOOK_ID]
@@ -180,7 +186,47 @@ async def handle_webhook(hass, webhook_id, request):
             return json_response([])
 
     hass.helpers.dispatcher.async_dispatcher_send(DOMAIN, hass, context, message)
-    return json_response([])
+
+    response = []
+
+    if context.friends:
+        persons = hass.data[PERSON_DOMAIN].storage_persons + [
+            dict(hass.data[PERSON_DOMAIN].config_persons[0])
+        ]
+
+        for person in persons:
+            person_location = {"lat": "", "lon": "", "tid": "", "tst": ""}
+
+            if person["device_trackers"]:
+                if len(person["device_trackers"]) > 1:
+                    # Get location of person from device trackers
+                    for device_tracker_id in person["device_trackers"]:
+                        device_tracker_entity = hass.data[
+                            DEVICE_TRACKER_DOMAIN
+                        ].get_entity(device_tracker_id)
+
+                        if (
+                            not person_location["lat"]
+                            or not person_location["lon"]
+                            or device_tracker_entity.source_type == "gps"
+                        ):
+                            person_location["lat"] = device_tracker_entity.latitude
+                            person_location["lon"] = device_tracker_entity.longitude
+                            person_location["tid"] = device_tracker_entity.name[0:2]
+                            person_location["tst"] = time.time()
+
+                else:
+                    device_tracker_entity = hass.data[DEVICE_TRACKER_DOMAIN].get_entity(
+                        person["device_trackers"][0]
+                    )
+                    person_location["lat"] = device_tracker_entity.latitude
+                    person_location["lon"] = device_tracker_entity.longitude
+                    person_location["tid"] = device_tracker_entity.name[0:2]
+                    person_location["tst"] = time.time()
+
+                response.append(person_location)
+
+    return json_response(response)
 
 
 class OwnTracksContext:
@@ -196,6 +242,7 @@ class OwnTracksContext:
         region_mapping,
         events_only,
         mqtt_topic,
+        friends,
     ):
         """Initialize an OwnTracks context."""
         self.hass = hass
@@ -208,6 +255,7 @@ class OwnTracksContext:
         self.region_mapping = region_mapping
         self.events_only = events_only
         self.mqtt_topic = mqtt_topic
+        self.friends = friends
         self._pending_msg = []
 
     @callback
