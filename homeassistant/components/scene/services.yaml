@@ -12,3 +12,11 @@ reload:
 
 apply:
   description: Activate a scene. Takes same data as the entities field from a single scene in the config.
+  fields:
+    entities:
+      description: The entities and the state that they need to be.
+      example:
+        light.kitchen: "on"
+        light.ceiling:
+          state: "on"
+          brightness: 80

@@ -119,11 +119,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async def apply_service(call):
         """Apply a scene."""
         await async_reproduce_state(
-            hass, call.data.values(), blocking=True, context=call.context
+            hass, call.data[CONF_ENTITIES].values(), blocking=True, context=call.context
         )
 
     hass.services.async_register(
-        SCENE_DOMAIN, SERVICE_APPLY, apply_service, STATES_SCHEMA
+        SCENE_DOMAIN,
+        SERVICE_APPLY,
+        apply_service,
+        vol.Schema({vol.Required(CONF_ENTITIES): STATES_SCHEMA}),
     )
 
 

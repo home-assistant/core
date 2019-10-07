@@ -36,7 +36,7 @@ async def test_apply_service(hass):
     assert await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
 
     assert await hass.services.async_call(
-        "scene", "apply", {"light.bed_light": "off"}, blocking=True
+        "scene", "apply", {"entities": {"light.bed_light": "off"}}, blocking=True
     )
 
     assert hass.states.get("light.bed_light").state == "off"
@@ -44,7 +44,7 @@ async def test_apply_service(hass):
     assert await hass.services.async_call(
         "scene",
         "apply",
-        {"light.bed_light": {"state": "on", "brightness": 50}},
+        {"entities": {"light.bed_light": {"state": "on", "brightness": 50}}},
         blocking=True,
     )
 
