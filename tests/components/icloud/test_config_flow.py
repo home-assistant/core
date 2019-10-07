@@ -29,14 +29,6 @@ MAX_INTERVAL = 15
 GPS_ACCURACY_THRESHOLD = 250
 
 
-@pytest.fixture(name="service")
-def mock_controller_service():
-    """Mock a successful service."""
-    with patch("pyicloud.base.PyiCloudService") as mock_service:
-        mock_service.return_value.authenticate.return_value = None
-        yield mock_service
-
-
 @pytest.fixture(name="session")
 def mock_controller_session():
     """Mock a successful session."""
@@ -44,50 +36,48 @@ def mock_controller_session():
         yield
 
 
-@pytest.fixture(name="requires_2fa")
-def mock_controller_requires_2fa():
-    """Mock a successful requires_2fa."""
-    with patch("pyicloud.PyiCloudService.requires_2fa", return_value=True):
-        yield
+@pytest.fixture(name="service")
+def mock_controller_service():
+    """Mock a successful service."""
+    with patch("pyicloud.base.PyiCloudService") as mock_service:
+        mock_service.return_value.authenticate.return_value = None
+        mock_service.return_value.requires_2fa.return_value = True
+        mock_service.return_value.send_verification_code.return_value = True
+        mock_service.return_value.validate_verification_code.return_value = True
+        yield mock_service
 
 
-@pytest.fixture(name="not_requires_2fa")
-def mock_controller_not_requires_2fa():
-    """Mock a successful not requires_2fa."""
-    with patch("pyicloud.PyiCloudService.requires_2fa", return_value=False):
-        yield
+@pytest.fixture(name="service_with_cookie")
+def mock_controller_service_with_cookie():
+    """Mock a successful service while already authenticate."""
+    with patch("pyicloud.base.PyiCloudService") as mock_service:
+        mock_service.return_value.authenticate.return_value = None
+        mock_service.return_value.requires_2fa.return_value = False
+        mock_service.return_value.send_verification_code.return_value = False
+        mock_service.return_value.validate_verification_code.return_value = False
+        yield mock_service
 
 
-@pytest.fixture(name="send_verification_code")
-def mock_controller_send_verification_code():
-    """Mock a successful send_verification_code."""
-    with patch("pyicloud.PyiCloudService.send_verification_code", return_value=True):
-        yield
+@pytest.fixture(name="service_send_verification_code_failed")
+def mock_controller_service_send_verification_code_failed():
+    """Mock a failed service during sending verification code step."""
+    with patch("pyicloud.base.PyiCloudService") as mock_service:
+        mock_service.return_value.authenticate.return_value = None
+        mock_service.return_value.requires_2fa.return_value = False
+        mock_service.return_value.send_verification_code.return_value = False
+        mock_service.return_value.validate_verification_code.return_value = False
+        yield mock_service
 
 
-@pytest.fixture(name="send_verification_code_failed")
-def mock_controller_send_verification_code_failed():
-    """Mock a successful send_verification_code failed."""
-    with patch("pyicloud.PyiCloudService.send_verification_code", return_value=False):
-        yield
-
-
-@pytest.fixture(name="validate_verification_code")
-def mock_controller_validate_verification_code():
-    """Mock a successful validate_verification_code."""
-    with patch(
-        "pyicloud.PyiCloudService.validate_verification_code", return_value=True
-    ):
-        yield
-
-
-@pytest.fixture(name="validate_verification_code_failed")
-def mock_controller_validate_verification_code_failed():
-    """Mock a successful validate_verification_code failed."""
-    with patch(
-        "pyicloud.PyiCloudService.validate_verification_code", return_value=False
-    ):
-        yield
+@pytest.fixture(name="service_validate_verification_code_failed")
+def mock_controller_service_validate_verification_code_failed():
+    """Mock a failed service during validation of verification code step."""
+    with patch("pyicloud.base.PyiCloudService") as mock_service:
+        mock_service.return_value.authenticate.return_value = None
+        mock_service.return_value.requires_2fa.return_value = False
+        mock_service.return_value.send_verification_code.return_value = True
+        mock_service.return_value.validate_verification_code.return_value = False
+        yield mock_service
 
 
 def init_config_flow(hass):
@@ -97,7 +87,7 @@ def init_config_flow(hass):
     return flow
 
 
-async def test_user(hass, service, session, requires_2fa):
+async def test_user(hass, session, service):
     """Test user config."""
     flow = init_config_flow(hass)
 
@@ -113,7 +103,7 @@ async def test_user(hass, service, session, requires_2fa):
     assert result["step_id"] == "trusted_device"
 
 
-async def test_user_with_cookie(hass, service, session, not_requires_2fa):
+async def test_user_with_cookie(hass, session, service_with_cookie):
     """Test user config with presence of a cookie."""
     flow = init_config_flow(hass)
 
@@ -131,7 +121,7 @@ async def test_user_with_cookie(hass, service, session, not_requires_2fa):
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
 
-async def test_import(hass, service, session, requires_2fa):
+async def test_import(hass, session, service):
     """Test import step."""
     flow = init_config_flow(hass)
 
@@ -158,14 +148,7 @@ async def test_import(hass, service, session, requires_2fa):
     assert result["step_id"] == "trusted_device"
 
 
-async def test_import_with_cookie(
-    hass,
-    service,
-    session,
-    not_requires_2fa,
-    send_verification_code,
-    validate_verification_code,
-):
+async def test_import_with_cookie(hass, session, service_with_cookie):
     """Test import step with presence of a cookie."""
     flow = init_config_flow(hass)
 
@@ -262,26 +245,29 @@ async def test_abort_on_login_failed(hass):
         assert result["errors"] == {CONF_USERNAME: "login"}
 
 
-async def test_abort_on_fetch_failed(hass, service, session, not_requires_2fa):
-    """Test when we have errors during fetch."""
+async def test_abort_on_send_verification_code_failed(
+    hass, session, service_send_verification_code_failed
+):
+    """Test when we have errors during send_verification_code."""
     flow = init_config_flow(hass)
 
-    with patch(
-        "pyicloud.base.PyiCloudService.send_verification_code", side_effect=False
-    ):
-        result = await flow.async_step_user(
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
-        )
-        _LOGGER.info(result)
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {CONF_TRUSTED_DEVICE: "send_verification_code"}
+    result = await flow.async_step_trusted_device(
+        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+    )
+    _LOGGER.info(result)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {CONF_TRUSTED_DEVICE: "send_verification_code"}
 
-    with patch(
-        "pyicloud.base.PyiCloudService.validate_verification_code", side_effect=False
-    ):
-        result = await flow.async_step_user(
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
-        )
-        _LOGGER.info(result)
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "validate_verification_code"}
+
+async def test_abort_on_validate_verification_code_failed(
+    hass, session, service_validate_verification_code_failed
+):
+    """Test when we have errors during validate_verification_code."""
+    flow = init_config_flow(hass)
+
+    result = await flow.async_step_verification_code(
+        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+    )
+    _LOGGER.info(result)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "validate_verification_code"}
