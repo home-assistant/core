@@ -1,6 +1,5 @@
 """Support for Todoist task management (https://todoist.com)."""
 from datetime import datetime, timedelta
-from typing import Union
 import logging
 
 import voluptuous as vol
