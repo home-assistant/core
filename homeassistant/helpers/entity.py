@@ -148,7 +148,8 @@ class Entity:
     def state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes.
 
-        Implemented by component base class.
+        Implemented by component base class. Convention for attribute names
+        is lowercase snake_case.
         """
         return None
 
@@ -156,7 +157,8 @@ class Entity:
     def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return device specific state attributes.
 
-        Implemented by platform classes.
+        Implemented by platform classes. Convention for attribute names
+        is lowercase snake_case.
         """
         return None
 
