@@ -94,10 +94,10 @@ CONFIG_SCHEMA = vol.Schema(
 class Router:
     """Class for router state."""
 
-    hass: HomeAssistantType = attr.ib()
     connection: Connection = attr.ib()
     url: str = attr.ib()
     mac: str = attr.ib()
+    signal_update: Callable[[], None] = attr.ib()
 
     data: Dict[str, Any] = attr.ib(init=False, factory=dict)
     subscriptions: Dict[str, Set[str]] = attr.ib(
@@ -154,7 +154,7 @@ class Router:
         )
         get_data(KEY_WLAN_HOST_LIST, self.client.wlan.host_list)
 
-        dispatcher_send(self.hass, UPDATE_SIGNAL, self.url)
+        self.signal_update()
 
     def cleanup(self, *_) -> None:
         """Clean up resources."""
@@ -275,8 +275,12 @@ def _setup_lte(hass: HomeAssistantType, config_entry: ConfigEntry) -> None:
     else:
         connection = Connection(url)
 
+    def signal_update() -> None:
+        """Signal updates to data."""
+        dispatcher_send(hass, UPDATE_SIGNAL, url)
+
     # Set up router and store reference to it
-    router = Router(hass, connection, url, mac)
+    router = Router(connection, url, mac, signal_update)
     hass.data[DOMAIN].routers[url] = router
 
     # Do initial data update
@@ -359,7 +363,7 @@ class HuaweiLteBaseEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Connect to router update signal."""
         self._disconnect_dispatcher = async_dispatcher_connect(
-            self.router.hass, UPDATE_SIGNAL, self._async_maybe_update
+            self.hass, UPDATE_SIGNAL, self._async_maybe_update
         )
 
     async def _async_maybe_update(self, url: str) -> None:
