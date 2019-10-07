@@ -196,12 +196,14 @@ class SamsungTVDevice(MediaPlayerDevice):
             for method in AVAILABLE_METHODS:
                 try:
                     self._config["method"] = method
+                    LOGGER.debug("try config: %s", self._config)
                     self._remote = Remote(self._config.copy())
                     self._state = STATE_ON
-                    LOGGER.debug("found working config: %s", self._config)
+                    LOGGER.info("found working config: %s", self._config)
                     break
-                except Exception:
+                except Exception as err:
                     self._config["method"] = None
+                    LOGGER.debug("failing config: %s error was: %s", self._config, err)
 
             # Unable to find working connection
             if self._config["method"] is None:
@@ -216,6 +218,7 @@ class SamsungTVDevice(MediaPlayerDevice):
 
         # We need to create a new instance to reconnect
         if self._remote is None:
+            LOGGER.debug("(re)connect with config: %s", self._config)
             try:
                 self._remote = Remote(self._config)
                 self._state = STATE_ON
