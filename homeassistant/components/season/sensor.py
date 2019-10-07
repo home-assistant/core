@@ -1,13 +1,14 @@
 """Support for tracking which astronomical or meteorological season it is."""
-import logging
 from datetime import datetime
+import logging
 
+import ephem
 import voluptuous as vol
 
+from homeassistant import util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_TYPE
 from homeassistant.helpers.entity import Entity
-from homeassistant import util
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,7 +68,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 def get_season(date, hemisphere, season_tracking_type):
     """Calculate the current season."""
-    import ephem
 
     if hemisphere == "equator":
         return None

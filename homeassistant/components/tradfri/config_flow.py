@@ -1,19 +1,23 @@
 """Config flow for Tradfri."""
+# But we still allow specifying import group via config yaml.
+# We don't ask for import group anymore as group state
 import asyncio
 from collections import OrderedDict
 from uuid import uuid4
 
 import async_timeout
+from pytradfri import Gateway, RequestError
+from pytradfri.api.aiocoap_api import APIFactory
 import voluptuous as vol
 
 from homeassistant import config_entries
 
 from .const import (
-    CONF_IMPORT_GROUPS,
-    CONF_IDENTITY,
-    CONF_HOST,
-    CONF_KEY,
     CONF_GATEWAY_ID,
+    CONF_HOST,
+    CONF_IDENTITY,
+    CONF_IMPORT_GROUPS,
+    CONF_KEY,
 )
 
 KEY_SECURITY_CODE = "security_code"
@@ -55,9 +59,7 @@ class FlowHandler(config_entries.ConfigFlow):
                     self.hass, host, user_input[KEY_SECURITY_CODE]
                 )
 
-                # We don't ask for import group anymore as group state
                 # is not reliable, don't want to show that to the user.
-                # But we still allow specifying import group via config yaml.
                 auth[CONF_IMPORT_GROUPS] = self._import_groups
 
                 return await self._entry_from_data(auth)
@@ -152,8 +154,6 @@ class FlowHandler(config_entries.ConfigFlow):
 
 async def authenticate(hass, host, security_code):
     """Authenticate with a Tradfri hub."""
-    from pytradfri.api.aiocoap_api import APIFactory
-    from pytradfri import RequestError
 
     identity = uuid4().hex
 
@@ -172,8 +172,6 @@ async def authenticate(hass, host, security_code):
 
 async def get_gateway_info(hass, host, identity, key):
     """Return info for the gateway."""
-    from pytradfri.api.aiocoap_api import APIFactory
-    from pytradfri import Gateway, RequestError
 
     try:
         factory = APIFactory(host, psk_id=identity, psk=key, loop=hass.loop)

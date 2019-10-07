@@ -3,33 +3,34 @@ import asyncio
 from functools import wraps
 import logging
 
-import attr
 import aiohttp
 import async_timeout
+import attr
+from hass_nabucasa import Cloud, auth
+from hass_nabucasa.const import STATE_DISCONNECTED
 import voluptuous as vol
-from hass_nabucasa import Cloud
 
-from homeassistant.core import callback
-from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api import const as ws_const
 from homeassistant.components.alexa import (
     entities as alexa_entities,
     errors as alexa_errors,
 )
 from homeassistant.components.google_assistant import helpers as google_helpers
+from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.components.websocket_api import const as ws_const
+from homeassistant.core import callback
 
 from .const import (
     DOMAIN,
-    REQUEST_TIMEOUT,
+    PREF_ALEXA_REPORT_STATE,
     PREF_ENABLE_ALEXA,
     PREF_ENABLE_GOOGLE,
+    PREF_GOOGLE_REPORT_STATE,
     PREF_GOOGLE_SECURE_DEVICES_PIN,
+    REQUEST_TIMEOUT,
     InvalidTrustedNetworks,
     InvalidTrustedProxies,
-    PREF_ALEXA_REPORT_STATE,
-    PREF_GOOGLE_REPORT_STATE,
     RequireRelink,
 )
 
@@ -103,8 +104,6 @@ async def async_setup(hass):
     hass.http.register_view(CloudRegisterView)
     hass.http.register_view(CloudResendConfirmView)
     hass.http.register_view(CloudForgotPasswordView)
-
-    from hass_nabucasa import auth
 
     _CLOUD_ERRORS.update(
         {
@@ -320,7 +319,6 @@ def _require_cloud_login(handler):
 @websocket_api.async_response
 async def websocket_subscription(hass, connection, msg):
     """Handle request for account info."""
-    from hass_nabucasa.const import STATE_DISCONNECTED
 
     cloud = hass.data[DOMAIN]
 
@@ -417,7 +415,6 @@ async def websocket_hook_delete(hass, connection, msg):
 
 def _account_data(cloud):
     """Generate the auth data JSON response."""
-    from hass_nabucasa.const import STATE_DISCONNECTED
 
     if not cloud.is_logged_in:
         return {"logged_in": False, "cloud": STATE_DISCONNECTED}

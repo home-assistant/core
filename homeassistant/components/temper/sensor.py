@@ -1,5 +1,7 @@
 """Support for getting temperature from TEMPer devices."""
 import logging
+
+from temperusb.temper import TemperHandler
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -24,7 +26,6 @@ TEMPER_SENSORS = []
 
 def get_temper_devices():
     """Scan the Temper devices from temperusb."""
-    from temperusb.temper import TemperHandler
 
     return TemperHandler().get_devices()
 

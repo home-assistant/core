@@ -2,17 +2,18 @@
 import logging
 import threading
 
+import pyflic
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
 from homeassistant.const import (
+    CONF_DISCOVERY,
     CONF_HOST,
     CONF_PORT,
-    CONF_DISCOVERY,
     CONF_TIMEOUT,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.components.binary_sensor import BinarySensorDevice, PLATFORM_SCHEMA
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +50,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the flic platform."""
-    import pyflic
 
     # Initialize flic client responsible for
     # connecting to buttons and retrieving events
@@ -88,7 +88,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 def start_scanning(config, add_entities, client):
     """Start a new flic client for scanning and connecting to new buttons."""
-    import pyflic
 
     scan_wizard = pyflic.ScanWizard()
 
@@ -123,7 +122,6 @@ class FlicButton(BinarySensorDevice):
 
     def __init__(self, hass, client, address, timeout, ignored_click_types):
         """Initialize the flic button."""
-        import pyflic
 
         self._hass = hass
         self._address = address
@@ -142,7 +140,6 @@ class FlicButton(BinarySensorDevice):
 
     def _create_channel(self):
         """Create a new connection channel to the button."""
-        import pyflic
 
         channel = pyflic.ButtonConnectionChannel(self._address)
         channel.on_button_up_or_down = self._on_up_down
@@ -212,7 +209,6 @@ class FlicButton(BinarySensorDevice):
 
     def _on_up_down(self, channel, click_type, was_queued, time_diff):
         """Update device state, if event was not queued."""
-        import pyflic
 
         if was_queued and self._queued_event_check(click_type, time_diff):
             return
@@ -243,7 +239,6 @@ class FlicButton(BinarySensorDevice):
 
     def _connection_status_changed(self, channel, connection_status, disconnect_reason):
         """Remove device, if button disconnects."""
-        import pyflic
 
         if connection_status == pyflic.ConnectionStatus.Disconnected:
             _LOGGER.warning(

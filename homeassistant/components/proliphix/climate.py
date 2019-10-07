@@ -1,7 +1,8 @@
 """Support for Proliphix NT10e Thermostats."""
+import proliphix
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
@@ -9,12 +10,12 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
+    ATTR_TEMPERATURE,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_USERNAME,
     PRECISION_TENTHS,
     TEMP_FAHRENHEIT,
-    ATTR_TEMPERATURE,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -34,8 +35,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     host = config.get(CONF_HOST)
-
-    import proliphix
 
     pdp = proliphix.PDP(host, username, password)
 

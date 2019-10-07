@@ -3,6 +3,9 @@ import logging
 import threading
 from uuid import UUID
 
+import pygatt
+from pygatt.backends import Characteristic
+from pygatt.exceptions import BLEError, NotConnectedError, NotificationTimeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -133,9 +136,6 @@ class Monitor(threading.Thread):
     def run(self):
         """Thread that keeps connection alive."""
         # pylint: disable=import-error
-        import pygatt
-        from pygatt.backends import Characteristic
-        from pygatt.exceptions import BLEError, NotConnectedError, NotificationTimeout
 
         cached_char = Characteristic(BLE_TEMP_UUID, BLE_TEMP_HANDLE)
         adapter = pygatt.backends.GATTToolBackend()

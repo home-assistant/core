@@ -1,6 +1,8 @@
 """Support for Apple TV media player."""
 import logging
 
+from pyatv import const
+
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
@@ -112,7 +114,6 @@ class AppleTvDevice(MediaPlayerDevice):
             return STATE_OFF
 
         if self._playing:
-            from pyatv import const
 
             state = self._playing.play_state
             if state in (
@@ -156,7 +157,6 @@ class AppleTvDevice(MediaPlayerDevice):
     def media_content_type(self):
         """Content type of current playing media."""
         if self._playing:
-            from pyatv import const
 
             media_type = self._playing.media_type
             if media_type == const.MEDIA_TYPE_VIDEO:

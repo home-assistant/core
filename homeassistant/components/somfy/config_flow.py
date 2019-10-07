@@ -2,11 +2,14 @@
 import asyncio
 import logging
 
+from aiohttp import web_response
 import async_timeout
+from pymfy.api.somfy_api import SomfyApi
 
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import callback
+
 from .const import CLIENT_ID, CLIENT_SECRET, DOMAIN
 
 AUTH_CALLBACK_PATH = "/auth/somfy/callback"
@@ -69,7 +72,6 @@ class SomfyFlowHandler(config_entries.ConfigFlow):
 
     async def _get_authorization_url(self):
         """Get Somfy authorization url."""
-        from pymfy.api.somfy_api import SomfyApi
 
         client_id = self.hass.data[DOMAIN][CLIENT_ID]
         client_secret = self.hass.data[DOMAIN][CLIENT_SECRET]
@@ -93,7 +95,6 @@ class SomfyFlowHandler(config_entries.ConfigFlow):
         client_id = self.hass.data[DOMAIN][CLIENT_ID]
         client_secret = self.hass.data[DOMAIN][CLIENT_SECRET]
         code = self.code
-        from pymfy.api.somfy_api import SomfyApi
 
         redirect_uri = f"{self.hass.config.api.base_url}{AUTH_CALLBACK_PATH}"
         api = SomfyApi(client_id, client_secret, redirect_uri)
@@ -121,7 +122,6 @@ class SomfyAuthCallbackView(HomeAssistantView):
     @staticmethod
     async def get(request):
         """Receive authorization code."""
-        from aiohttp import web_response
 
         if "code" not in request.query or "state" not in request.query:
             return web_response.Response(

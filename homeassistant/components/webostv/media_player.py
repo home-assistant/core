@@ -2,13 +2,15 @@
 import asyncio
 from datetime import timedelta
 import logging
-from urllib.parse import urlparse
 from typing import Dict
+from urllib.parse import urlparse
 
+from pylgtv import PyLGTVPairException, WebOsClient
 import voluptuous as vol
+from websockets.exceptions import ConnectionClosed
 
 from homeassistant import util
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
@@ -108,9 +110,6 @@ def setup_tv(
     host, name, customize, config, timeout, hass, add_entities, turn_on_action
 ):
     """Set up a LG WebOS TV based on host parameter."""
-    from pylgtv import WebOsClient
-    from pylgtv import PyLGTVPairException
-    from websockets.exceptions import ConnectionClosed
 
     client = WebOsClient(host, config, timeout)
 
@@ -185,7 +184,6 @@ class LgWebOSDevice(MediaPlayerDevice):
 
     def __init__(self, host, name, customize, config, timeout, hass, on_action):
         """Initialize the webos device."""
-        from pylgtv import WebOsClient
 
         self._client = WebOsClient(host, config, timeout)
         self._on_script = Script(hass, on_action) if on_action else None
@@ -208,7 +206,6 @@ class LgWebOSDevice(MediaPlayerDevice):
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Retrieve the latest data."""
-        from websockets.exceptions import ConnectionClosed
 
         try:
             current_input = self._client.get_input()
@@ -331,7 +328,6 @@ class LgWebOSDevice(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn off media player."""
-        from websockets.exceptions import ConnectionClosed
 
         self._state = STATE_OFF
         try:

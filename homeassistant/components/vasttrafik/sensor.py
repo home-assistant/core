@@ -2,11 +2,12 @@
 from datetime import timedelta
 import logging
 
+import vasttrafik
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.dt import now
@@ -54,7 +55,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the departure sensor."""
-    import vasttrafik
 
     planner = vasttrafik.JournyPlanner(config.get(CONF_KEY), config.get(CONF_SECRET))
     sensors = []

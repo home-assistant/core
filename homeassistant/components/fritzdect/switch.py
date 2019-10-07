@@ -1,20 +1,21 @@
 """Support for FRITZ!DECT Switches."""
 import logging
 
-from requests.exceptions import RequestException, HTTPError
-
+from fritzhome.fritz import FritzBox
+from requests.exceptions import HTTPError, RequestException
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
+    ATTR_TEMPERATURE,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_USERNAME,
-    POWER_WATT,
     ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
+    TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +43,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Add all switches connected to Fritz Box."""
-    from fritzhome.fritz import FritzBox
 
     host = config.get(CONF_HOST)
     username = config.get(CONF_USERNAME)

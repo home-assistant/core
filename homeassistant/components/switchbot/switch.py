@@ -2,11 +2,12 @@
 import logging
 from typing import Any, Dict
 
+import switchbot
 import voluptuous as vol
 
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.const import CONF_MAC, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_MAC
 from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +35,6 @@ class SwitchBot(SwitchDevice, RestoreEntity):
     def __init__(self, mac, name) -> None:
         """Initialize the Switchbot."""
         # pylint: disable=import-error, no-member
-        import switchbot
 
         self._state = None
         self._last_run_success = None

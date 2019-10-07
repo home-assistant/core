@@ -2,6 +2,7 @@
 from collections import defaultdict
 import logging
 
+from teslajsonpy import Controller as teslaAPI, TeslaException
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -10,8 +11,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import discovery
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
@@ -52,7 +52,6 @@ TESLA_COMPONENTS = [
 
 def setup(hass, base_config):
     """Set up of Tesla component."""
-    from teslajsonpy import Controller as teslaAPI, TeslaException
 
     config = base_config.get(DOMAIN)
 

@@ -1,22 +1,23 @@
 """The matrix bot component."""
+from functools import partial
 import logging
 import os
-from functools import partial
 
+from matrix_client.client import MatrixClient, MatrixRequestError
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.notify import ATTR_TARGET, ATTR_MESSAGE
+from homeassistant.components.notify import ATTR_MESSAGE, ATTR_TARGET
 from homeassistant.const import (
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_VERIFY_SSL,
     CONF_NAME,
-    EVENT_HOMEASSISTANT_STOP,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.util.json import load_json, save_json
 from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.config_validation as cv
+from homeassistant.util.json import load_json, save_json
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,7 +77,6 @@ SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
 
 def setup(hass, config):
     """Set up the Matrix bot component."""
-    from matrix_client.client import MatrixRequestError
 
     config = config[DOMAIN]
 
@@ -249,7 +249,6 @@ class MatrixBot:
 
     def _join_rooms(self):
         """Join the rooms that we listen for commands in."""
-        from matrix_client.client import MatrixRequestError
 
         for room_id in self._listening_rooms:
             try:
@@ -287,7 +286,6 @@ class MatrixBot:
 
     def _login(self):
         """Login to the matrix homeserver and return the client instance."""
-        from matrix_client.client import MatrixRequestError
 
         # Attempt to generate a valid client using either of the two possible
         # login methods:
@@ -328,7 +326,6 @@ class MatrixBot:
 
     def _login_by_token(self):
         """Login using authentication token and return the client."""
-        from matrix_client.client import MatrixClient
 
         return MatrixClient(
             base_url=self._homeserver,
@@ -339,7 +336,6 @@ class MatrixBot:
 
     def _login_by_password(self):
         """Login using password authentication and return the client."""
-        from matrix_client.client import MatrixClient
 
         _client = MatrixClient(
             base_url=self._homeserver, valid_cert_check=self._verify_tls
@@ -353,7 +349,6 @@ class MatrixBot:
 
     def _send_message(self, message, target_rooms):
         """Send the message to the matrix server."""
-        from matrix_client.client import MatrixRequestError
 
         for target_room in target_rooms:
             try:

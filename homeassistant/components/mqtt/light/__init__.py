@@ -15,7 +15,9 @@ from homeassistant.components.mqtt.discovery import (
     clear_discovery_hash,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+
+from . import schema_basic, schema_json, schema_template
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,9 +26,6 @@ CONF_SCHEMA = "schema"
 
 def validate_mqtt_light(value):
     """Validate MQTT light schema."""
-    from . import schema_basic
-    from . import schema_json
-    from . import schema_template
 
     schemas = {
         "basic": schema_basic.PLATFORM_SCHEMA_BASIC,
@@ -81,9 +80,6 @@ async def _async_setup_entity(
     config, async_add_entities, config_entry=None, discovery_hash=None
 ):
     """Set up a MQTT Light."""
-    from . import schema_basic
-    from . import schema_json
-    from . import schema_template
 
     setup_entity = {
         "basic": schema_basic.async_setup_entity_basic,

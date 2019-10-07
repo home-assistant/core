@@ -1,6 +1,8 @@
 """Support for controlling GPIO pins of a Beaglebone Black."""
 import logging
 
+from Adafruit_BBIO import GPIO
+
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 
 _LOGGER = logging.getLogger(__name__)
@@ -11,7 +13,6 @@ DOMAIN = "bbb_gpio"
 def setup(hass, config):
     """Set up the BeagleBone Black GPIO component."""
     # pylint: disable=import-error
-    from Adafruit_BBIO import GPIO
 
     def cleanup_gpio(event):
         """Stuff to do before stopping."""
@@ -28,7 +29,6 @@ def setup(hass, config):
 def setup_output(pin):
     """Set up a GPIO as output."""
     # pylint: disable=import-error
-    from Adafruit_BBIO import GPIO
 
     GPIO.setup(pin, GPIO.OUT)
 
@@ -36,7 +36,6 @@ def setup_output(pin):
 def setup_input(pin, pull_mode):
     """Set up a GPIO as input."""
     # pylint: disable=import-error
-    from Adafruit_BBIO import GPIO
 
     GPIO.setup(pin, GPIO.IN, GPIO.PUD_DOWN if pull_mode == "DOWN" else GPIO.PUD_UP)
 
@@ -44,7 +43,6 @@ def setup_input(pin, pull_mode):
 def write_output(pin, value):
     """Write a value to a GPIO."""
     # pylint: disable=import-error
-    from Adafruit_BBIO import GPIO
 
     GPIO.output(pin, value)
 
@@ -52,7 +50,6 @@ def write_output(pin, value):
 def read_input(pin):
     """Read a value from a GPIO."""
     # pylint: disable=import-error
-    from Adafruit_BBIO import GPIO
 
     return GPIO.input(pin) is GPIO.HIGH
 
@@ -60,6 +57,5 @@ def read_input(pin):
 def edge_detect(pin, event_callback, bounce):
     """Add detection for RISING and FALLING events."""
     # pylint: disable=import-error
-    from Adafruit_BBIO import GPIO
 
     GPIO.add_event_detect(pin, GPIO.BOTH, callback=event_callback, bouncetime=bounce)

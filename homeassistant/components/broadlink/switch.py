@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 import socket
 
+import broadlink
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -23,8 +24,8 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle, slugify
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util import Throttle, slugify
 
 from . import async_setup_service, data_packet
 
@@ -91,7 +92,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Broadlink switches."""
-    import broadlink
 
     devices = config.get(CONF_SWITCHES)
     slots = config.get("slots", {})

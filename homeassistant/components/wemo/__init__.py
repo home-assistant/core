@@ -1,15 +1,14 @@
 """Support for WeMo device discovery."""
 import logging
 
+import pywemo
 import requests
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.discovery import SERVICE_WEMO
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import discovery
-
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.helpers import config_validation as cv, discovery
 
 DOMAIN = "wemo"
 
@@ -87,7 +86,6 @@ def setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up a wemo config entry."""
-    import pywemo
 
     config = hass.data[DOMAIN]
 

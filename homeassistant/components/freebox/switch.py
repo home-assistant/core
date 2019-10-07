@@ -1,6 +1,8 @@
 """Support for Freebox Delta, Revolution and Mini 4K."""
 import logging
 
+from aiofreepybox.exceptions import InsufficientPermissionsError
+
 from homeassistant.components.switch import SwitchDevice
 
 from . import DATA_FREEBOX
@@ -35,7 +37,6 @@ class FbxWifiSwitch(SwitchDevice):
 
     async def _async_set_state(self, enabled):
         """Turn the switch on or off."""
-        from aiofreepybox.exceptions import InsufficientPermissionsError
 
         wifi_config = {"enabled": enabled}
         try:

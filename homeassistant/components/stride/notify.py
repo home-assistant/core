@@ -1,10 +1,8 @@
 """Stride platform for notify component."""
 import logging
 
+from stride import Stride
 import voluptuous as vol
-
-from homeassistant.const import CONF_ROOM, CONF_TOKEN
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -12,6 +10,8 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONF_ROOM, CONF_TOKEN
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,8 +48,6 @@ class StrideNotificationService(BaseNotificationService):
         self._default_room = default_room
         self._default_panel = default_panel
         self._cloudid = cloudid
-
-        from stride import Stride
 
         self._stride = Stride(self._cloudid, access_token=self._token)
 

@@ -7,11 +7,14 @@ import socket
 import urllib
 
 import aiohttp
+import jsonrpc_async
+import jsonrpc_base
+import jsonrpc_websocket
 import voluptuous as vol
 
 from homeassistant.components.kodi import SERVICE_CALL_METHOD
 from homeassistant.components.kodi.const import DOMAIN
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MOVIE,
@@ -48,12 +51,11 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import script
+from homeassistant.helpers import config_validation as cv, script
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.template import Template
-from homeassistant.util.yaml import dump
 import homeassistant.util.dt as dt_util
+from homeassistant.util.yaml import dump
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -231,7 +233,6 @@ def cmd(func):
     @wraps(func)
     async def wrapper(obj, *args, **kwargs):
         """Wrap all command methods."""
-        import jsonrpc_base
 
         try:
             await func(obj, *args, **kwargs)
@@ -268,8 +269,6 @@ class KodiDevice(MediaPlayerDevice):
         unique_id=None,
     ):
         """Initialize the Kodi device."""
-        import jsonrpc_async
-        import jsonrpc_websocket
 
         self.hass = hass
         self._name = name
@@ -389,7 +388,6 @@ class KodiDevice(MediaPlayerDevice):
 
     async def _get_players(self):
         """Return the active player objects or None."""
-        import jsonrpc_base
 
         try:
             return await self.server.Player.GetActivePlayers()
@@ -420,7 +418,6 @@ class KodiDevice(MediaPlayerDevice):
 
     async def async_ws_connect(self):
         """Connect to Kodi via websocket protocol."""
-        import jsonrpc_base
 
         try:
             ws_loop_future = await self._ws_server.ws_connect()
@@ -801,7 +798,6 @@ class KodiDevice(MediaPlayerDevice):
 
     async def async_call_method(self, method, **kwargs):
         """Run Kodi JSONRPC API method with params."""
-        import jsonrpc_base
 
         _LOGGER.debug("Run API method %s, kwargs=%s", method, kwargs)
         result_ok = False
@@ -850,7 +846,6 @@ class KodiDevice(MediaPlayerDevice):
         All the albums of an artist can be added with
         media_name="ALL"
         """
-        import jsonrpc_base
 
         params = {"playlistid": 0}
         if media_type == "SONG":

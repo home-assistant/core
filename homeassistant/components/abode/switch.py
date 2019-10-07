@@ -1,6 +1,9 @@
 """Support for Abode Security System switches."""
 import logging
 
+import abodepy.helpers.constants as CONST
+import abodepy.helpers.timeline as TIMELINE
+
 from homeassistant.components.switch import SwitchDevice
 
 from . import DOMAIN as ABODE_DOMAIN, AbodeAutomation, AbodeDevice
@@ -10,8 +13,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Abode switch devices."""
-    import abodepy.helpers.constants as CONST
-    import abodepy.helpers.timeline as TIMELINE
 
     data = hass.data[ABODE_DOMAIN]
 

@@ -2,14 +2,15 @@
 import asyncio
 import logging
 
+from pyenvisalink import EnvisalinkAlarmPanel
 import voluptuous as vol
 
+from homeassistant.const import CONF_HOST, CONF_TIMEOUT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_TIMEOUT, CONF_HOST
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,7 +99,6 @@ SERVICE_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up for Envisalink devices."""
-    from pyenvisalink import EnvisalinkAlarmPanel
 
     conf = config.get(DOMAIN)
 

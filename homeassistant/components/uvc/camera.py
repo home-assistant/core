@@ -3,12 +3,14 @@ import logging
 import socket
 
 import requests
+from uvcclient import camera as uvc_camera, nvr
+from uvcclient.nvr import NvrError
 import voluptuous as vol
 
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.const import CONF_PORT, CONF_SSL
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,8 +40,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     password = config[CONF_PASSWORD]
     port = config[CONF_PORT]
     ssl = config[CONF_SSL]
-
-    from uvcclient import nvr
 
     try:
         # Exceptions may be raised in all method calls to the nvr library.
@@ -118,7 +118,6 @@ class UnifiVideoCamera(Camera):
 
     def _login(self):
         """Login to the camera."""
-        from uvcclient import camera as uvc_camera
 
         caminfo = self._nvr.get_camera(self._uuid)
         if self._connect_addr:
@@ -160,7 +159,6 @@ class UnifiVideoCamera(Camera):
 
     def camera_image(self):
         """Return the image of this camera."""
-        from uvcclient import camera as uvc_camera
 
         if not self._camera:
             if not self._login():
@@ -182,7 +180,6 @@ class UnifiVideoCamera(Camera):
 
     def set_motion_detection(self, mode):
         """Set motion detection on or off."""
-        from uvcclient.nvr import NvrError
 
         if mode is True:
             set_mode = "motion"

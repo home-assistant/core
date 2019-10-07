@@ -7,23 +7,25 @@ https://www.hydroquebec.com/portail/en/group/clientele/portrait-de-consommation
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.hydroquebec/
 """
-import logging
 from datetime import timedelta
+import logging
 
+from pyhydroquebec import HydroQuebecClient
+from pyhydroquebec.client import PyHydroQuebecError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    ENERGY_KILO_WATT_HOUR,
-    CONF_NAME,
     CONF_MONITORED_VARIABLES,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    ENERGY_KILO_WATT_HOUR,
     TEMP_CELSIUS,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -193,7 +195,6 @@ class HydroquebecData:
 
     def __init__(self, username, password, httpsession, contract=None):
         """Initialize the data object."""
-        from pyhydroquebec import HydroQuebecClient
 
         self.client = HydroQuebecClient(
             username, password, REQUESTS_TIMEOUT, httpsession
@@ -212,7 +213,6 @@ class HydroquebecData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def _fetch_data(self):
         """Fetch latest data from HydroQuebec."""
-        from pyhydroquebec.client import PyHydroQuebecError
 
         try:
             await self.client.fetch_data()

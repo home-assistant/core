@@ -6,13 +6,21 @@ from functools import partial
 import logging
 from math import ceil
 
+from miio import (
+    Ceil,
+    Device,
+    DeviceException,
+    PhilipsBulb,
+    PhilipsEyecare,
+    PhilipsMoonlight,
+)
 import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_HS_COLOR,
     ATTR_COLOR_TEMP,
     ATTR_ENTITY_ID,
+    ATTR_HS_COLOR,
     DOMAIN,
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
@@ -116,7 +124,6 @@ SERVICE_TO_METHOD = {
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the light from config."""
-    from miio import Device, DeviceException
 
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
@@ -147,7 +154,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             raise PlatformNotReady
 
     if model == "philips.light.sread1":
-        from miio import PhilipsEyecare
 
         light = PhilipsEyecare(host, token)
         primary_device = XiaomiPhilipsEyecareLamp(name, light, model, unique_id)
@@ -161,14 +167,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         # The ambient light doesn't expose additional services.
         # A hass.data[DATA_KEY] entry isn't needed.
     elif model in ["philips.light.ceiling", "philips.light.zyceiling"]:
-        from miio import Ceil
 
         light = Ceil(host, token)
         device = XiaomiPhilipsCeilingLamp(name, light, model, unique_id)
         devices.append(device)
         hass.data[DATA_KEY][host] = device
     elif model == "philips.light.moonlight":
-        from miio import PhilipsMoonlight
 
         light = PhilipsMoonlight(host, token)
         device = XiaomiPhilipsMoonlightLamp(name, light, model, unique_id)
@@ -180,14 +184,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         "philips.light.candle2",
         "philips.light.downlight",
     ]:
-        from miio import PhilipsBulb
 
         light = PhilipsBulb(host, token)
         device = XiaomiPhilipsBulb(name, light, model, unique_id)
         devices.append(device)
         hass.data[DATA_KEY][host] = device
     elif model == "philips.light.mono1":
-        from miio import PhilipsBulb
 
         light = PhilipsBulb(host, token)
         device = XiaomiPhilipsGenericLight(name, light, model, unique_id)
@@ -297,7 +299,6 @@ class XiaomiPhilipsAbstractLight(Light):
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a light command handling error messages."""
-        from miio import DeviceException
 
         try:
             result = await self.hass.async_add_executor_job(
@@ -337,7 +338,6 @@ class XiaomiPhilipsAbstractLight(Light):
 
     async def async_update(self):
         """Fetch state from the device."""
-        from miio import DeviceException
 
         try:
             state = await self.hass.async_add_executor_job(self._light.status)
@@ -363,7 +363,6 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
 
     async def async_update(self):
         """Fetch state from the device."""
-        from miio import DeviceException
 
         try:
             state = await self.hass.async_add_executor_job(self._light.status)
@@ -521,7 +520,6 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
 
     async def async_update(self):
         """Fetch state from the device."""
-        from miio import DeviceException
 
         try:
             state = await self.hass.async_add_executor_job(self._light.status)
@@ -580,7 +578,6 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
 
     async def async_update(self):
         """Fetch state from the device."""
-        from miio import DeviceException
 
         try:
             state = await self.hass.async_add_executor_job(self._light.status)
@@ -626,7 +623,6 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
 
     async def async_update(self):
         """Fetch state from the device."""
-        from miio import DeviceException
 
         try:
             state = await self.hass.async_add_executor_job(self._light.status)
@@ -769,7 +765,6 @@ class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
 
     async def async_update(self):
         """Fetch state from the device."""
-        from miio import DeviceException
 
         try:
             state = await self.hass.async_add_executor_job(self._light.status)
@@ -925,7 +920,6 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
 
     async def async_update(self):
         """Fetch state from the device."""
-        from miio import DeviceException
 
         try:
             state = await self.hass.async_add_executor_job(self._light.status)

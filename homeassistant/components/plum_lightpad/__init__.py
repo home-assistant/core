@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+from plumlightpad import Plum
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
@@ -30,7 +31,6 @@ PLUM_DATA = "plum"
 
 async def async_setup(hass, config):
     """Plum Lightpad Platform initialization."""
-    from plumlightpad import Plum
 
     conf = config[DOMAIN]
     plum = Plum(conf[CONF_USERNAME], conf[CONF_PASSWORD])

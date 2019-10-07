@@ -1,10 +1,10 @@
 """Common code for tplink."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 from typing import Any, Callable, List
 
-from pyHS100 import SmartBulb, SmartDevice, SmartPlug, SmartDeviceException
+from pyHS100 import Discover, SmartBulb, SmartDevice, SmartDeviceException, SmartPlug
 
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -49,7 +49,6 @@ class SmartDevices:
 
 async def async_get_discoverable_devices(hass):
     """Return if there are devices that can be discovered."""
-    from pyHS100 import Discover
 
     def discover():
         devs = Discover.discover()

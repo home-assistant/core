@@ -1,7 +1,9 @@
 """Axis network device abstraction."""
-
 import asyncio
+
 import async_timeout
+import axis
+from axis.streammanager import SIGNAL_PLAYING
 
 from homeassistant.const import (
     CONF_DEVICE,
@@ -18,7 +20,6 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import CONF_CAMERA, CONF_EVENTS, CONF_MODEL, DOMAIN, LOGGER
-
 from .errors import AuthenticationRequired, CannotConnect
 
 
@@ -140,7 +141,6 @@ class AxisNetworkDevice:
         This is called on every RTSP keep-alive message.
         Only signal state change if state change is true.
         """
-        from axis.streammanager import SIGNAL_PLAYING
 
         if self.available != (status == SIGNAL_PLAYING):
             self.available = not self.available
@@ -198,7 +198,6 @@ class AxisNetworkDevice:
 
 async def get_device(hass, config):
     """Create a Axis device."""
-    import axis
 
     device = axis.AxisDevice(
         loop=hass.loop,

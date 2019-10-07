@@ -1,12 +1,13 @@
 """Support for APCUPSd sensors."""
 import logging
 
+from apcaccess.status import ALL_UNITS
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components import apcupsd
-from homeassistant.const import TEMP_CELSIUS, CONF_RESOURCES, POWER_WATT
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_RESOURCES, POWER_WATT, TEMP_CELSIUS
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -135,7 +136,6 @@ def infer_unit(value):
     Split the unit off the end of the value and return the value, unit tuple
     pair. Else return the original value and None as the unit.
     """
-    from apcaccess.status import ALL_UNITS
 
     for unit in ALL_UNITS:
         if value.endswith(unit):

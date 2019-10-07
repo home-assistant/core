@@ -1,9 +1,10 @@
 """Support for AquaLogic devices."""
 from datetime import timedelta
 import logging
-import time
 import threading
+import time
 
+from aqualogic.core import AquaLogic
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -71,7 +72,6 @@ class AquaLogicProcessor(threading.Thread):
 
     def run(self):
         """Event thread."""
-        from aqualogic.core import AquaLogic
 
         while True:
             self._panel = AquaLogic()

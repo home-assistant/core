@@ -8,13 +8,15 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.vacuum import DOMAIN
 from homeassistant.components.mqtt import ATTR_DISCOVERY_HASH
 from homeassistant.components.mqtt.discovery import (
     MQTT_DISCOVERY_NEW,
     clear_discovery_hash,
 )
+from homeassistant.components.vacuum import DOMAIN
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import schema_legacy, schema_state
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,8 +27,6 @@ STATE = "state"
 
 def validate_mqtt_vacuum(value):
     """Validate MQTT vacuum schema."""
-    from . import schema_legacy
-    from . import schema_state
 
     schemas = {
         LEGACY: schema_legacy.PLATFORM_SCHEMA_LEGACY,
@@ -95,8 +95,6 @@ async def _async_setup_entity(
     config, async_add_entities, config_entry, discovery_hash=None
 ):
     """Set up the MQTT vacuum."""
-    from . import schema_legacy
-    from . import schema_state
 
     setup_entity = {
         LEGACY: schema_legacy.async_setup_entity_legacy,

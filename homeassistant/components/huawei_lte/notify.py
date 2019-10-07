@@ -1,20 +1,19 @@
 """Support for Huawei LTE router notifications."""
-
 import logging
 
-import voluptuous as vol
 import attr
+from huawei_lte_api.exceptions import ResponseErrorException
+import voluptuous as vol
 
 from homeassistant.components.notify import (
-    BaseNotificationService,
     ATTR_TARGET,
     PLATFORM_SCHEMA,
+    BaseNotificationService,
 )
 from homeassistant.const import CONF_RECIPIENT, CONF_URL
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +39,6 @@ class HuaweiLteSmsNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send message to target numbers."""
-        from huawei_lte_api.exceptions import ResponseErrorException
 
         targets = kwargs.get(ATTR_TARGET, self.config.get(CONF_RECIPIENT))
         if not targets or not message:

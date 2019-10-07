@@ -2,6 +2,7 @@
 import logging
 from typing import Optional
 
+from pysupla import SuplaAPI
 import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -40,7 +41,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, base_config):
     """Set up the Supla component."""
-    from pysupla import SuplaAPI
 
     server_confs = base_config[DOMAIN][CONF_SERVERS]
 

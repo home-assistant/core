@@ -1,6 +1,7 @@
 """Support for Lutron Homeworks Series 4 and 8 systems."""
 import logging
 
+from pyhomeworks.pyhomeworks import HW_BUTTON_PRESSED, HW_BUTTON_RELEASED, Homeworks
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -65,7 +66,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, base_config):
     """Start Homeworks controller."""
-    from pyhomeworks.pyhomeworks import Homeworks
 
     def hw_callback(msg_type, values):
         """Dispatch state changes."""
@@ -138,7 +138,6 @@ class HomeworksKeypadEvent:
     @callback
     def _update_callback(self, msg_type, values):
         """Fire events if button is pressed or released."""
-        from pyhomeworks.pyhomeworks import HW_BUTTON_PRESSED, HW_BUTTON_RELEASED
 
         if msg_type == HW_BUTTON_PRESSED:
             event = EVENT_BUTTON_PRESS

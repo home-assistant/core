@@ -1,6 +1,7 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5)."""
 import logging
 
+from miio import AirQualityMonitor, DeviceException
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -37,7 +38,6 @@ SUCCESS = ["ok"]
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the sensor from config."""
-    from miio import AirQualityMonitor, DeviceException
 
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
@@ -135,7 +135,6 @@ class XiaomiAirQualityMonitor(Entity):
 
     async def async_update(self):
         """Fetch state from the miio device."""
-        from miio import DeviceException
 
         try:
             state = await self.hass.async_add_executor_job(self._device.status)

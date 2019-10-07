@@ -4,13 +4,15 @@ Support for Somfy Covers.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.somfy/
 """
+from pymfy.api.devices.blind import Blind
+from pymfy.api.devices.category import Category
 
 from homeassistant.components.cover import (
-    CoverDevice,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    CoverDevice,
 )
-from homeassistant.components.somfy import DOMAIN, SomfyEntity, DEVICES, API
+from homeassistant.components.somfy import API, DEVICES, DOMAIN, SomfyEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -18,7 +20,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     def get_covers():
         """Retrieve covers."""
-        from pymfy.api.devices.category import Category
 
         categories = {
             Category.ROLLER_SHUTTER.value,
@@ -51,14 +52,12 @@ class SomfyCover(SomfyEntity, CoverDevice):
 
     def __init__(self, device, api):
         """Initialize the Somfy device."""
-        from pymfy.api.devices.blind import Blind
 
         super().__init__(device, api)
         self.cover = Blind(self.device, self.api)
 
     async def async_update(self):
         """Update the device with the latest data."""
-        from pymfy.api.devices.blind import Blind
 
         await super().async_update()
         self.cover = Blind(self.device, self.api)

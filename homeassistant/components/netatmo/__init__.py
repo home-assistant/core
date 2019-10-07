@@ -1,23 +1,24 @@
 """Support for the Netatmo devices."""
-import logging
 from datetime import timedelta
+import logging
 from urllib.error import HTTPError
 
+import pyatmo
 import voluptuous as vol
 
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_PASSWORD,
-    CONF_USERNAME,
     CONF_DISCOVERY,
+    CONF_PASSWORD,
     CONF_URL,
+    CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-from .const import DOMAIN, DATA_NETATMO_AUTH
+from .const import DATA_NETATMO_AUTH, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,7 +90,6 @@ SCHEMA_SERVICE_DROPWEBHOOK = vol.Schema({})
 
 def setup(hass, config):
     """Set up the Netatmo devices."""
-    import pyatmo
 
     hass.data[DATA_PERSONS] = {}
     try:
@@ -254,7 +254,6 @@ class CameraData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Call the Netatmo API to update the data."""
-        import pyatmo
 
         self.camera_data = pyatmo.CameraData(self.auth, size=100)
 

@@ -1,10 +1,12 @@
 """Pushbullet platform for sensor component."""
 import logging
+import threading
 
+from pushbullet import InvalidKeyError, Listener, PushBullet
 import voluptuous as vol
 
-from homeassistant.const import CONF_API_KEY, CONF_MONITORED_CONDITIONS
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_API_KEY, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -35,8 +37,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Pushbullet Sensor platform."""
-    from pushbullet import PushBullet
-    from pushbullet import InvalidKeyError
 
     try:
         pushbullet = PushBullet(config.get(CONF_API_KEY))
@@ -95,7 +95,6 @@ class PushBulletNotificationProvider:
 
     def __init__(self, pb):
         """Start to retrieve pushes from the given Pushbullet instance."""
-        import threading
 
         self.pushbullet = pb
         self._data = None
@@ -123,7 +122,6 @@ class PushBulletNotificationProvider:
 
         Spawn a new Listener and links it to self.on_push.
         """
-        from pushbullet import Listener
 
         self.listener = Listener(account=self.pushbullet, on_push=self.on_push)
         _LOGGER.debug("Getting pushes")

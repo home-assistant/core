@@ -2,13 +2,14 @@
 import datetime
 import logging
 
+from concord232 import client as concord232_client
 import requests
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice,
-    PLATFORM_SCHEMA,
     DEVICE_CLASSES,
+    PLATFORM_SCHEMA,
+    BinarySensorDevice,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
@@ -42,7 +43,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Concord232 binary sensor platform."""
-    from concord232 import client as concord232_client
 
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)

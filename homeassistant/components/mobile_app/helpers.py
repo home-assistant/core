@@ -1,9 +1,12 @@
 """Helpers for mobile_app."""
-import logging
 import json
+import logging
 from typing import Callable, Dict, Tuple
 
-from aiohttp.web import json_response, Response
+from aiohttp.web import Response, json_response
+import nacl  # noqa pylint: disable=unused-import
+from nacl.encoding import Base64Encoder
+from nacl.secret import SecretBox
 
 from homeassistant.core import Context
 from homeassistant.helpers.json import JSONEncoder
@@ -13,8 +16,8 @@ from .const import (
     ATTR_APP_DATA,
     ATTR_APP_ID,
     ATTR_APP_NAME,
-    ATTR_DEVICE_ID,
     ATTR_APP_VERSION,
+    ATTR_DEVICE_ID,
     ATTR_DEVICE_NAME,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
@@ -36,8 +39,6 @@ def setup_decrypt() -> Tuple[int, Callable]:
 
     Async friendly.
     """
-    from nacl.secret import SecretBox
-    from nacl.encoding import Base64Encoder
 
     def decrypt(ciphertext, key):
         """Decrypt ciphertext using key."""
@@ -51,8 +52,6 @@ def setup_encrypt() -> Tuple[int, Callable]:
 
     Async friendly.
     """
-    from nacl.secret import SecretBox
-    from nacl.encoding import Base64Encoder
 
     def encrypt(ciphertext, key):
         """Encrypt ciphertext using key."""
@@ -113,7 +112,6 @@ def error_response(
 def supports_encryption() -> bool:
     """Test if we support encryption."""
     try:
-        import nacl  # noqa pylint: disable=unused-import
 
         return True
     except OSError:

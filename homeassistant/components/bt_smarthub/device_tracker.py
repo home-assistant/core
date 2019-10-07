@@ -1,15 +1,16 @@
 """Support for BT Smart Hub (Sometimes referred to as BT Home Hub 6)."""
 import logging
 
+import btsmarthub_devicelist
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN,
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,7 +75,6 @@ class BTSmartHubScanner(DeviceScanner):
 
     def get_bt_smarthub_data(self):
         """Retrieve data from BT Smart Hub and return parsed result."""
-        import btsmarthub_devicelist
 
         # Request data from bt smarthub into a list of dicts.
         data = btsmarthub_devicelist.get_devicelist(

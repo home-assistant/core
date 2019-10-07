@@ -5,6 +5,9 @@ import logging
 import os
 import time
 
+from aiohttp import web
+from pubnubsubhandler import PubNubSubscriptionHandler
+import pywink
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
@@ -279,8 +282,6 @@ def _request_oauth_completion(hass, config):
 
 def setup(hass, config):
     """Set up the Wink component."""
-    import pywink
-    from pubnubsubhandler import PubNubSubscriptionHandler
 
     if hass.data.get(DOMAIN) is None:
         hass.data[DOMAIN] = {
@@ -689,7 +690,6 @@ class WinkAuthCallbackView(HomeAssistantView):
     @callback
     def get(self, request):
         """Finish OAuth callback request."""
-        from aiohttp import web
 
         hass = request.app["hass"]
         data = request.query

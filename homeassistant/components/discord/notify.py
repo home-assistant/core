@@ -2,10 +2,8 @@
 import logging
 import os.path
 
+import discord
 import voluptuous as vol
-
-from homeassistant.const import CONF_TOKEN
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -13,6 +11,8 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONF_TOKEN
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +44,6 @@ class DiscordNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message, **kwargs):
         """Login to Discord, send message to channel(s) and log out."""
-        import discord
 
         discord.VoiceClient.warn_nacl = False
         discord_bot = discord.Client()

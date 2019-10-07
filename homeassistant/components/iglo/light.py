@@ -2,6 +2,7 @@
 import logging
 import math
 
+from iglo import Lamp
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -9,11 +10,11 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP,
-    SUPPORT_COLOR,
-    SUPPORT_EFFECT,
     PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
+    SUPPORT_EFFECT,
     Light,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
@@ -47,7 +48,6 @@ class IGloLamp(Light):
 
     def __init__(self, name, host, port):
         """Initialize the light."""
-        from iglo import Lamp
 
         self._name = name
         self._lamp = Lamp(0, host, port)

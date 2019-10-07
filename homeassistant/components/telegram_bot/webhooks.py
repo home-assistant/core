@@ -2,6 +2,8 @@
 import datetime as dt
 import logging
 
+import telegram
+
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.const import KEY_REAL_IP
 from homeassistant.const import (
@@ -26,7 +28,6 @@ REMOVE_HANDLER_URL = ""
 
 async def async_setup_platform(hass, config):
     """Set up the Telegram webhooks platform."""
-    import telegram
 
     bot = initialize_bot(config)
 

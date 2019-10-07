@@ -1,4 +1,6 @@
 """Config flow to configure the Ambient PWS component."""
+from aioambient import Client
+from aioambient.errors import AmbientError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -40,8 +42,6 @@ class AmbientStationFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
-        from aioambient import Client
-        from aioambient.errors import AmbientError
 
         if not user_input:
             return await self._show_form()

@@ -1,4 +1,12 @@
 """Support for control of ElkM1 sensors."""
+from elkm1_lib.const import (
+    SettingFormat,
+    ZoneLogicalStatus,
+    ZonePhysicalStatus,
+    ZoneType,
+)
+from elkm1_lib.util import pretty_const, username
+
 from . import DOMAIN as ELK_DOMAIN, ElkEntity, create_elk_entities
 
 
@@ -79,7 +87,6 @@ class ElkKeypad(ElkSensor):
     @property
     def device_state_attributes(self):
         """Attributes of the sensor."""
-        from elkm1_lib.util import username
 
         attrs = self.initial_attrs()
         attrs["area"] = self._element.area + 1
@@ -140,7 +147,6 @@ class ElkSetting(ElkSensor):
     @property
     def device_state_attributes(self):
         """Attributes of the sensor."""
-        from elkm1_lib.const import SettingFormat
 
         attrs = self.initial_attrs()
         attrs["value_format"] = SettingFormat(self._element.value_format).name.lower()
@@ -153,7 +159,6 @@ class ElkZone(ElkSensor):
     @property
     def icon(self):
         """Icon to use in the frontend."""
-        from elkm1_lib.const import ZoneType
 
         zone_icons = {
             ZoneType.FIRE_ALARM.value: "fire",
@@ -181,7 +186,6 @@ class ElkZone(ElkSensor):
     @property
     def device_state_attributes(self):
         """Attributes of the sensor."""
-        from elkm1_lib.const import ZoneLogicalStatus, ZonePhysicalStatus, ZoneType
 
         attrs = self.initial_attrs()
         attrs["physical_status"] = ZonePhysicalStatus(
@@ -199,7 +203,6 @@ class ElkZone(ElkSensor):
     @property
     def temperature_unit(self):
         """Return the temperature unit."""
-        from elkm1_lib.const import ZoneType
 
         if self._element.definition == ZoneType.TEMPERATURE.value:
             return self._temperature_unit
@@ -208,7 +211,6 @@ class ElkZone(ElkSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        from elkm1_lib.const import ZoneType
 
         if self._element.definition == ZoneType.TEMPERATURE.value:
             return self._temperature_unit
@@ -217,8 +219,6 @@ class ElkZone(ElkSensor):
         return None
 
     def _element_changed(self, element, changeset):
-        from elkm1_lib.const import ZoneLogicalStatus, ZoneType
-        from elkm1_lib.util import pretty_const
 
         if self._element.definition == ZoneType.TEMPERATURE.value:
             self._state = temperature_to_state(self._element.temperature, -60)

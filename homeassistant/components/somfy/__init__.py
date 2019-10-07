@@ -4,17 +4,20 @@ Support for Somfy hubs.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/somfy/
 """
-import logging
 from datetime import timedelta
 from functools import partial
+import logging
 
+from oauthlib.oauth2 import TokenExpiredError
+from pymfy.api.somfy_api import SomfyApi
+from requests import HTTPError
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
 from homeassistant.components.somfy import config_flow
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
@@ -82,7 +85,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         hass.add_job(update_entry, entry)
 
     # Force token update.
-    from pymfy.api.somfy_api import SomfyApi
 
     hass.data[DOMAIN][API] = SomfyApi(
         entry.data["refresh_args"]["client_id"],
@@ -155,8 +157,6 @@ class SomfyEntity(Entity):
 @Throttle(SCAN_INTERVAL)
 async def update_all_devices(hass):
     """Update all the devices."""
-    from requests import HTTPError
-    from oauthlib.oauth2 import TokenExpiredError
 
     try:
         data = hass.data[DOMAIN]

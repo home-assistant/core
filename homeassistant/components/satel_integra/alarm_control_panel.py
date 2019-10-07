@@ -1,7 +1,9 @@
 """Support for Satel Integra alarm, using ETHM module."""
 import asyncio
-import logging
 from collections import OrderedDict
+import logging
+
+from satel_integra.satel_integra import AlarmState
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.const import (
@@ -17,8 +19,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import (
     CONF_ARM_HOME_MODE,
     CONF_DEVICE_PARTITIONS,
-    DATA_SATEL,
     CONF_ZONE_NAME,
+    DATA_SATEL,
     SIGNAL_PANEL_MESSAGE,
 )
 
@@ -78,7 +80,6 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
 
     def _read_alarm_state(self):
         """Read current status of the alarm and translate it into HA status."""
-        from satel_integra.satel_integra import AlarmState
 
         # Default - disarmed:
         hass_alarm_status = STATE_ALARM_DISARMED

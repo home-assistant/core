@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+from influxdb import InfluxDBClient, exceptions
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -94,7 +95,6 @@ class InfluxSensor(Entity):
 
     def __init__(self, hass, influx_conf, query):
         """Initialize the sensor."""
-        from influxdb import InfluxDBClient, exceptions
 
         self._name = query.get(CONF_NAME)
         self._unit_of_measurement = query.get(CONF_UNIT_OF_MEASUREMENT)

@@ -1,6 +1,8 @@
 """Support for IKEA Tradfri."""
 import logging
 
+from pytradfri import Gateway, RequestError  # pylint: disable=import-error
+from pytradfri.api.aiocoap_api import APIFactory
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -8,15 +10,14 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json
 
-from .const import (
-    CONF_IMPORT_GROUPS,
-    CONF_IDENTITY,
-    CONF_HOST,
-    CONF_KEY,
-    CONF_GATEWAY_ID,
-)
-
 from . import config_flow  # noqa  pylint_disable=unused-import
+from .const import (
+    CONF_GATEWAY_ID,
+    CONF_HOST,
+    CONF_IDENTITY,
+    CONF_IMPORT_GROUPS,
+    CONF_KEY,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,8 +92,6 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, entry):
     """Create a gateway."""
     # host, identity, key, allow_tradfri_groups
-    from pytradfri import Gateway, RequestError  # pylint: disable=import-error
-    from pytradfri.api.aiocoap_api import APIFactory
 
     factory = APIFactory(
         entry.data[CONF_HOST],

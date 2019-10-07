@@ -1,9 +1,11 @@
 """Support for Nest devices."""
+from datetime import datetime, timedelta
 import logging
 import socket
-from datetime import datetime, timedelta
 import threading
 
+from nest import Nest
+from nest.nest import APIError, AuthorizationError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -18,11 +20,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import dispatcher_send, async_dispatcher_connect
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
 from . import local_auth
+from .const import DOMAIN
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -142,7 +144,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up Nest from a config entry."""
-    from nest import Nest
 
     nest = Nest(access_token=entry.data["tokens"]["access_token"])
 
@@ -286,7 +287,6 @@ class NestDevice:
 
     def initialize(self):
         """Initialize Nest."""
-        from nest.nest import AuthorizationError, APIError
 
         try:
             # Do not optimize next statement, it is here for initialize
@@ -302,7 +302,6 @@ class NestDevice:
 
     def structures(self):
         """Generate a list of structures."""
-        from nest.nest import AuthorizationError, APIError
 
         try:
             for structure in self.nest.structures:
@@ -332,7 +331,6 @@ class NestDevice:
 
     def _devices(self, device_type):
         """Generate a list of Nest devices."""
-        from nest.nest import AuthorizationError, APIError
 
         try:
             for structure in self.nest.structures:

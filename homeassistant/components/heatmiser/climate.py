@@ -1,16 +1,17 @@
 """Support for the PRT Heatmiser themostats using the V3 protocol."""
 import logging
 
+from heatmiserV3 import connection, heatmiser
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import SUPPORT_TARGET_TEMPERATURE
 from homeassistant.const import (
-    TEMP_CELSIUS,
     ATTR_TEMPERATURE,
-    CONF_PORT,
-    CONF_NAME,
     CONF_ID,
+    CONF_NAME,
+    CONF_PORT,
+    TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -34,7 +35,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the heatmiser thermostat."""
-    from heatmiserV3 import heatmiser, connection
 
     ipaddress = config.get(CONF_IPADDRESS)
     port = str(config.get(CONF_PORT))

@@ -1,12 +1,13 @@
 """Sensor to indicate whether the current day is a workday."""
-import logging
 from datetime import datetime, timedelta
+import logging
 
+import holidays
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, WEEKDAYS
-from homeassistant.components.binary_sensor import BinarySensorDevice
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -141,7 +142,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Workday sensor."""
-    import holidays
 
     sensor_name = config.get(CONF_NAME)
     country = config.get(CONF_COUNTRY)

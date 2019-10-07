@@ -3,6 +3,8 @@ import asyncio
 import logging
 from typing import Sequence, TypeVar, Union
 
+import pyatv
+from pyatv import exceptions
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_APPLE_TV
@@ -80,7 +82,6 @@ def request_configuration(hass, config, atv, credentials):
 
     async def configuration_callback(callback_data):
         """Handle the submitted configuration."""
-        from pyatv import exceptions
 
         pin = callback_data.get("pin")
 
@@ -114,7 +115,6 @@ def request_configuration(hass, config, atv, credentials):
 
 async def scan_for_apple_tvs(hass):
     """Scan for devices and present a notification of the ones found."""
-    import pyatv
 
     atvs = await pyatv.scan_for_apple_tvs(hass.loop, timeout=3)
 
@@ -207,7 +207,6 @@ async def async_setup(hass, config):
 
 async def _setup_atv(hass, hass_config, atv_config):
     """Set up an Apple TV."""
-    import pyatv
 
     name = atv_config.get(CONF_NAME)
     host = atv_config.get(CONF_HOST)

@@ -1,17 +1,19 @@
 """Support for SolarEdge Monitoring API."""
 import logging
-import solaredge
 
-from requests.exceptions import HTTPError, ConnectTimeout
+from requests.exceptions import ConnectTimeout, HTTPError
+import solaredge
+from stringcase import snakecase
+
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 from .const import (
     CONF_SITE_ID,
-    OVERVIEW_UPDATE_DELAY,
     DETAILS_UPDATE_DELAY,
     INVENTORY_UPDATE_DELAY,
+    OVERVIEW_UPDATE_DELAY,
     POWER_FLOW_UPDATE_DELAY,
     SENSOR_TYPES,
 )
@@ -262,7 +264,6 @@ class SolarEdgeDetailsDataService(SolarEdgeDataService):
     @Throttle(DETAILS_UPDATE_DELAY)
     def update(self):
         """Update the data from the SolarEdge Monitoring API."""
-        from stringcase import snakecase
 
         try:
             data = self.api.get_details(self.site_id)

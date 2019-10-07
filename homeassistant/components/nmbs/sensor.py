@@ -1,6 +1,7 @@
 """Get ride details and liveboard details for NMBS (Belgian railway)."""
 import logging
 
+from pyrail import iRail
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -64,7 +65,6 @@ def get_ride_duration(departure_time, arrival_time, delay=0):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NMBS sensor with iRail API."""
-    from pyrail import iRail
 
     api_client = iRail()
 

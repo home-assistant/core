@@ -1,6 +1,7 @@
 """Support for IBM Watson TTS integration."""
 import logging
 
+from ibm_watson import TextToSpeechV1
 import voluptuous as vol
 
 from homeassistant.components.tts import PLATFORM_SCHEMA, Provider
@@ -92,7 +93,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_engine(hass, config):
     """Set up IBM Watson TTS component."""
-    from ibm_watson import TextToSpeechV1
 
     service = TextToSpeechV1(url=config[CONF_URL], iam_apikey=config[CONF_APIKEY])
 

@@ -1,25 +1,26 @@
 """Support for Flux lights."""
 import logging
-import socket
 import random
+import socket
 
+import flux_led
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PROTOCOL, ATTR_MODE
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_HS_COLOR,
     ATTR_EFFECT,
+    ATTR_HS_COLOR,
     ATTR_WHITE_VALUE,
     EFFECT_COLORLOOP,
     EFFECT_RANDOM,
+    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
-    SUPPORT_EFFECT,
     SUPPORT_COLOR,
+    SUPPORT_EFFECT,
     SUPPORT_WHITE_VALUE,
     Light,
-    PLATFORM_SCHEMA,
 )
+from homeassistant.const import ATTR_MODE, CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
@@ -135,7 +136,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Flux lights."""
-    import flux_led
 
     lights = []
     light_ips = []
@@ -187,7 +187,6 @@ class FluxLight(Light):
 
     def _connect(self):
         """Connect to Flux light."""
-        import flux_led
 
         self._bulb = flux_led.WifiLedBulb(self._ipaddr, timeout=5)
         if self._protocol:

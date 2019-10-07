@@ -4,6 +4,8 @@ import queue
 import threading
 import time
 
+import ibmiotf
+from ibmiotf import gateway
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -67,7 +69,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the Watson IoT Platform component."""
-    from ibmiotf import gateway
 
     conf = config[DOMAIN]
 
@@ -190,7 +191,6 @@ class WatsonIOTThread(threading.Thread):
 
     def write_to_watson(self, events):
         """Write preprocessed events to watson."""
-        import ibmiotf
 
         for event in events:
             for retry in range(MAX_TRIES + 1):

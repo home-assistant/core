@@ -3,6 +3,8 @@ import json
 import logging
 import os
 
+import rtmapi
+from rtmapi import Rtm
 import voluptuous as vol
 
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME, CONF_TOKEN, STATE_OK
@@ -102,7 +104,6 @@ def _create_instance(
 def _register_new_account(
     hass, account_name, api_key, shared_secret, stored_rtm_config, component
 ):
-    from rtmapi import Rtm
 
     request_id = None
     configurator = hass.components.configurator
@@ -240,7 +241,6 @@ class RememberTheMilk(Entity):
 
     def __init__(self, name, api_key, shared_secret, token, rtm_config):
         """Create new instance of Remember The Milk component."""
-        import rtmapi
 
         self._name = name
         self._api_key = api_key
@@ -277,7 +277,6 @@ class RememberTheMilk(Entity):
         e.g. "my task #some_tag ^today" will add tag "some_tag" and set the
         due date to today.
         """
-        import rtmapi
 
         try:
             task_name = call.data.get(CONF_NAME)
@@ -327,7 +326,6 @@ class RememberTheMilk(Entity):
 
     def complete_task(self, call):
         """Complete a task that was previously created by this component."""
-        import rtmapi
 
         hass_id = call.data.get(CONF_ID)
         rtm_id = self._rtm_config.get_rtm_id(self._name, hass_id)

@@ -1,24 +1,25 @@
 """Support for WeMo humidifier."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
-import requests
 import async_timeout
+from pywemo import discovery
+import requests
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.fan import (
     DOMAIN,
-    SUPPORT_SET_SPEED,
-    FanEntity,
-    SPEED_OFF,
+    SPEED_HIGH,
     SPEED_LOW,
     SPEED_MEDIUM,
-    SPEED_HIGH,
+    SPEED_OFF,
+    SUPPORT_SET_SPEED,
+    FanEntity,
 )
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.exceptions import PlatformNotReady
+import homeassistant.helpers.config_validation as cv
 
 from . import SUBSCRIPTION_REGISTRY
 
@@ -96,7 +97,6 @@ RESET_FILTER_LIFE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_i
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up discovered WeMo humidifiers."""
-    from pywemo import discovery
 
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}

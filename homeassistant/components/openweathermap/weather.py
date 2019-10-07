@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+import pyowm
+from pyowm.exceptions.api_call_error import APICallError
 import voluptuous as vol
 
 from homeassistant.components.weather import (
@@ -71,7 +73,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the OpenWeatherMap weather platform."""
-    import pyowm
 
     longitude = config.get(CONF_LONGITUDE, round(hass.config.longitude, 5))
     latitude = config.get(CONF_LATITUDE, round(hass.config.latitude, 5))
@@ -225,7 +226,6 @@ class OpenWeatherMapWeather(WeatherEntity):
 
     def update(self):
         """Get the latest data from OWM and updates the states."""
-        from pyowm.exceptions.api_call_error import APICallError
 
         try:
             self._owm.update()
@@ -263,7 +263,6 @@ class WeatherData:
     @Throttle(MIN_TIME_BETWEEN_FORECAST_UPDATES)
     def update_forecast(self):
         """Get the latest forecast from OpenWeatherMap."""
-        from pyowm.exceptions.api_call_error import APICallError
 
         try:
             if self._mode == "daily":

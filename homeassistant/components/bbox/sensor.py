@@ -1,13 +1,14 @@
 """Support for Bbox Bouygues Modem Router."""
-import logging
 from datetime import timedelta
+import logging
 
+import pybbox
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_MONITORED_VARIABLES, ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_VARIABLES, CONF_NAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -136,7 +137,6 @@ class BboxData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from the Bbox."""
-        import pybbox
 
         try:
             box = pybbox.Bbox()

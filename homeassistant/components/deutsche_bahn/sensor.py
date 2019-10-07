@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+import schiene
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -89,7 +90,6 @@ class SchieneData:
 
     def __init__(self, start, goal, offset, only_direct):
         """Initialize the sensor."""
-        import schiene
 
         self.start = start
         self.goal = goal

@@ -1,9 +1,9 @@
 """Support for Xiaomi Gateways."""
+from datetime import timedelta
 import logging
 
-from datetime import timedelta
-
 import voluptuous as vol
+from xiaomi_gateway import XiaomiGatewayDiscovery
 
 from homeassistant.components.discovery import SERVICE_XIAOMI_GW
 from homeassistant.const import (
@@ -134,8 +134,6 @@ def setup(hass, config):
         # component, and then its own discovery process kicks in.
 
     discovery.listen(hass, SERVICE_XIAOMI_GW, xiaomi_gw_discovered)
-
-    from xiaomi_gateway import XiaomiGatewayDiscovery
 
     xiaomi = hass.data[PY_XIAOMI_GATEWAY] = XiaomiGatewayDiscovery(
         hass.add_job, gateways, interface

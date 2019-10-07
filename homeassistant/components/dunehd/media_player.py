@@ -1,7 +1,8 @@
 """DuneHD implementation of the media player."""
+from pdunehd import DuneHDPlayer
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -46,7 +47,6 @@ DUNEHD_PLAYER_SUPPORT = (
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DuneHD media player platform."""
-    from pdunehd import DuneHDPlayer
 
     sources = config.get(CONF_SOURCES, {})
     host = config.get(CONF_HOST)

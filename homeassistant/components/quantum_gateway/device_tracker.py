@@ -1,6 +1,7 @@
 """Support for Verizon FiOS Quantum Gateways."""
 import logging
 
+from quantum_gateway import QuantumGatewayScanner
 from requests.exceptions import RequestException
 import voluptuous as vol
 
@@ -37,7 +38,6 @@ class QuantumGatewayDeviceScanner(DeviceScanner):
 
     def __init__(self, config):
         """Initialize the scanner."""
-        from quantum_gateway import QuantumGatewayScanner
 
         self.host = config[CONF_HOST]
         self.password = config[CONF_PASSWORD]
