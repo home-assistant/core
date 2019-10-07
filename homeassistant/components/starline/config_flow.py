@@ -1,4 +1,5 @@
 """Config flow to configure StarLine component."""
+from starline import StarlineAuth
 from typing import Optional
 import voluptuous as vol
 
@@ -6,7 +7,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.core import callback
 
-from .api import StarlineAuth
 from .const import (
     DOMAIN,
     CONF_APP_ID,
@@ -36,7 +36,6 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._password: Optional[str] = None
         self._mfa_code: Optional[str] = None
 
-        self._auth = None
         self._app_code = None
         self._app_token = None
         self._user_slid = None
@@ -47,6 +46,8 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._captcha_sid = None
         self._captcha_code = None
         self._phone_number = None
+
+        self._auth = StarlineAuth()
 
     @staticmethod
     @callback
@@ -60,7 +61,6 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_init(self, user_input=None):
         """Handle a flow initialized by the user."""
-        self._auth = StarlineAuth(self.hass)
         return await self.async_step_auth_app(user_input)
 
     async def async_step_auth_app(self, user_input=None, error=None):

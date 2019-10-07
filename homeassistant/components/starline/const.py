@@ -19,18 +19,3 @@ ERROR_AUTH_USER = "error_auth_user"
 ERROR_AUTH_MFA = "error_auth_mfa"
 
 SERVICE_UPDATE_STATE = "update_state"
-
-BATTERY_LEVEL_MIN = 11.8
-BATTERY_LEVEL_MAX = 13.0
-
-GSM_LEVEL_MIN = 1
-GSM_LEVEL_MAX = 30
-
-ENCODING = "utf-8"
-GET = "GET"
-POST = "POST"
-CONNECT_TIMEOUT = 5  # in seconds
-TOTAL_TIMEOUT = 120  # in seconds
-
-DEVICE_FUNCTION_POSITION = "position"
-DEVICE_FUNCTION_STATE = "state"

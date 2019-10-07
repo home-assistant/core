@@ -2,7 +2,7 @@
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level, icon_for_signal_level
-from .api import StarlineApi, StarlineDevice
+from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
 
 SENSOR_TYPES = {
@@ -16,11 +16,11 @@ SENSOR_TYPES = {
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the StarLine sensors."""
-    api: StarlineApi = hass.data[DOMAIN]
+    account: StarlineAccount = hass.data[DOMAIN]
     entities = []
-    for device_id, device in api.devices.items():
+    for device_id, device in account.api.devices.items():
         for key, value in SENSOR_TYPES.items():
-            entities.append(StarlineSensor(api, device, key, *value))
+            entities.append(StarlineSensor(account, device, key, *value))
     async_add_entities(entities)
     return True
 
@@ -30,7 +30,7 @@ class StarlineSensor(Entity):
 
     def __init__(
         self,
-        api: StarlineApi,
+        account: StarlineAccount,
         device: StarlineDevice,
         key: str,
         sensor_name: str,
@@ -38,7 +38,7 @@ class StarlineSensor(Entity):
         icon: str,
     ):
         """Constructor."""
-        self._api = api
+        self._account = account
         self._device = device
         self._key = key
         self._sensor_name = sensor_name
@@ -90,7 +90,7 @@ class StarlineSensor(Entity):
     @property
     def device_info(self):
         """Return the device info."""
-        return self._device.device_info
+        return self._account.device_info(self._device)
 
     @property
     def unit_of_measurement(self):
@@ -103,9 +103,9 @@ class StarlineSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         if self._key == "balance":
-            return self._device.balance_attrs
+            return self._account.balance_attrs(self._device)
         elif self._key == "gsm_lvl":
-            return self._device.gsm_attrs
+            return self._account.gsm_attrs(self._device)
         return None
 
     def update(self):
@@ -115,4 +115,4 @@ class StarlineSensor(Entity):
     async def async_added_to_hass(self):
         """Call when entity about to be added to Home Assistant."""
         await super().async_added_to_hass()
-        self._api.add_update_listener(self.update)
+        self._account.api.add_update_listener(self.update)

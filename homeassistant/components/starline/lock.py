@@ -1,17 +1,17 @@
 """Support for StarLine lock."""
 from homeassistant.components.lock import LockDevice
-from .api import StarlineApi, StarlineDevice
+from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the StarLine lock."""
 
-    api: StarlineApi = hass.data[DOMAIN]
+    account: StarlineAccount = hass.data[DOMAIN]
     entities = []
-    for device_id, device in api.devices.items():
+    for device_id, device in account.api.devices.items():
         if device.support_state:
-            entities.append(StarlineLock(api, device))
+            entities.append(StarlineLock(account, device))
     async_add_entities(entities)
     return True
 
@@ -19,9 +19,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class StarlineLock(LockDevice):
     """Representation of a StarLine lock."""
 
-    def __init__(self, api: StarlineApi, device: StarlineDevice):
+    def __init__(self, account: StarlineAccount, device: StarlineDevice):
         """Initialize the lock."""
-        self._api = api
+        self._account = account
         self._device = device
 
     @property
@@ -63,16 +63,16 @@ class StarlineLock(LockDevice):
 
     async def async_lock(self, **kwargs):
         """Lock the car."""
-        await self._api.set_car_state(self._device.device_id, "arm", True)
+        await self._account.api.set_car_state(self._device.device_id, "arm", True)
 
     async def async_unlock(self, **kwargs):
         """Unlock the car."""
-        await self._api.set_car_state(self._device.device_id, "arm", False)
+        await self._account.api.set_car_state(self._device.device_id, "arm", False)
 
     @property
     def device_info(self):
         """Return the device info."""
-        return self._device.device_info
+        return self._account.device_info(self._device)
 
     def update(self):
         """Update state of the lock."""
@@ -81,4 +81,4 @@ class StarlineLock(LockDevice):
     async def async_added_to_hass(self):
         """Call when entity about to be added to Home Assistant."""
         await super().async_added_to_hass()
-        self._api.add_update_listener(self.update)
+        self._account.api.add_update_listener(self.update)

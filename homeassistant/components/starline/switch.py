@@ -1,6 +1,6 @@
 """Support for StarLine switch."""
 from homeassistant.components.switch import SwitchDevice
-from .api import StarlineApi, StarlineDevice
+from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
 
 SWITCH_TYPES = {
@@ -16,12 +16,12 @@ SWITCH_TYPES = {
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the StarLine switch."""
-    api: StarlineApi = hass.data[DOMAIN]
+    account: StarlineAccount = hass.data[DOMAIN]
     entities = []
-    for device_id, device in api.devices.items():
+    for device_id, device in account.api.devices.items():
         if device.support_state:
             for key, value in SWITCH_TYPES.items():
-                entities.append(StarlineSwitch(api, device, key, *value))
+                entities.append(StarlineSwitch(account, device, key, *value))
     async_add_entities(entities)
     return True
 
@@ -31,7 +31,7 @@ class StarlineSwitch(SwitchDevice):
 
     def __init__(
         self,
-        api: StarlineApi,
+        account: StarlineAccount,
         device: StarlineDevice,
         key: str,
         switch_name: str,
@@ -39,7 +39,7 @@ class StarlineSwitch(SwitchDevice):
         icon_off: str,
     ):
         """Initialize the switch."""
-        self._api = api
+        self._account = account
         self._device = device
         self._key = key
         self._switch_name = switch_name
@@ -70,7 +70,7 @@ class StarlineSwitch(SwitchDevice):
     def device_state_attributes(self):
         """Return the state attributes of the switch."""
         if self._key == "ign":
-            return self._device.engine_attrs
+            return self._account.engine_attrs(self._device)
         return None
 
     @property
@@ -90,16 +90,16 @@ class StarlineSwitch(SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-        await self._api.set_car_state(self._device.device_id, self._key, True)
+        await self._account.api.set_car_state(self._device.device_id, self._key, True)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
-        await self._api.set_car_state(self._device.device_id, self._key, False)
+        await self._account.api.set_car_state(self._device.device_id, self._key, False)
 
     @property
     def device_info(self):
         """Return the device info."""
-        return self._device.device_info
+        return self._account.device_info(self._device)
 
     def update(self):
         """Update state of the switch."""
@@ -108,4 +108,4 @@ class StarlineSwitch(SwitchDevice):
     async def async_added_to_hass(self):
         """Call when entity about to be added to Home Assistant."""
         await super().async_added_to_hass()
-        self._api.add_update_listener(self.update)
+        self._account.api.add_update_listener(self.update)

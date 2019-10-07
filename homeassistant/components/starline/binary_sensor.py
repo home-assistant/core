@@ -6,7 +6,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PROBLEM,
     DEVICE_CLASS_POWER,
 )
-from .api import StarlineApi, StarlineDevice
+from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
 
 SENSOR_TYPES = {
@@ -25,12 +25,12 @@ SENSOR_TYPES = {
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the StarLine sensors."""
-    api: StarlineApi = hass.data[DOMAIN]
+    account: StarlineAccount = hass.data[DOMAIN]
     entities = []
-    for device_id, device in api.devices.items():
+    for device_id, device in account.api.devices.items():
         for key, value in SENSOR_TYPES.items():
             if key in device.car_state:
-                entities.append(StarlineSensor(api, device, key, *value))
+                entities.append(StarlineSensor(account, device, key, *value))
     async_add_entities(entities)
     return True
 
@@ -40,7 +40,7 @@ class StarlineSensor(BinarySensorDevice):
 
     def __init__(
         self,
-        api: StarlineApi,
+        account: StarlineAccount,
         device: StarlineDevice,
         key: str,
         sensor_name: str,
@@ -49,7 +49,7 @@ class StarlineSensor(BinarySensorDevice):
         icon_off: str,
     ):
         """Constructor."""
-        self._api = api
+        self._account = account
         self._device = device
         self._key = key
         self._sensor_name = sensor_name
@@ -90,7 +90,7 @@ class StarlineSensor(BinarySensorDevice):
     @property
     def device_info(self):
         """Return the device info."""
-        return self._device.device_info
+        return self._account.device_info(self._device)
 
     def update(self):
         """Read new state data."""
@@ -99,4 +99,4 @@ class StarlineSensor(BinarySensorDevice):
     async def async_added_to_hass(self):
         """Call when entity about to be added to Home Assistant."""
         await super().async_added_to_hass()
-        self._api.add_update_listener(self.update)
+        self._account.api.add_update_listener(self.update)

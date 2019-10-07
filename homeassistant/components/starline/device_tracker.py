@@ -2,17 +2,17 @@
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_GPS
 from homeassistant.helpers.restore_state import RestoreEntity
-from .api import StarlineApi, StarlineDevice
+from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up StarLine entry."""
-    api: StarlineApi = hass.data[DOMAIN]
+    account: StarlineAccount = hass.data[DOMAIN]
     entities = []
-    for device_id, device in api.devices.items():
+    for device_id, device in account.api.devices.items():
         if device.support_position:
-            entities.append(StarlineDeviceTracker(api, device))
+            entities.append(StarlineDeviceTracker(account, device))
     async_add_entities(entities)
     return True
 
@@ -20,9 +20,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class StarlineDeviceTracker(TrackerEntity, RestoreEntity):
     """StarLine device tracker."""
 
-    def __init__(self, api: StarlineApi, device: StarlineDevice):
+    def __init__(self, account: StarlineAccount, device: StarlineDevice):
         """Set up StarLine entity."""
-        self._api = api
+        self._account = account
         self._device = device
 
     @property
@@ -38,7 +38,7 @@ class StarlineDeviceTracker(TrackerEntity, RestoreEntity):
     @property
     def device_state_attributes(self):
         """Return device specific attributes."""
-        return self._device.gps_attrs
+        return self._account.gps_attrs(self._device)
 
     @property
     def battery_level(self):
@@ -73,7 +73,7 @@ class StarlineDeviceTracker(TrackerEntity, RestoreEntity):
     @property
     def device_info(self):
         """Return the device info."""
-        return self._device.device_info
+        return self._account.device_info(self._device)
 
     @property
     def icon(self):
@@ -87,4 +87,4 @@ class StarlineDeviceTracker(TrackerEntity, RestoreEntity):
     async def async_added_to_hass(self):
         """Call when entity about to be added to Home Assistant."""
         await super().async_added_to_hass()
-        self._api.add_update_listener(self.update)
+        self._account.api.add_update_listener(self.update)

@@ -2,7 +2,7 @@
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Config, HomeAssistant
 
-from .api import StarlineApi
+from .account import StarlineAccount
 from .const import (
     DOMAIN,
     PLATFORMS,
@@ -19,17 +19,15 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the StarLine device from a config entry."""
-    api = StarlineApi(
-        hass, config_entry.data["user_id"], config_entry.data["slnet_token"]
-    )
+    account = StarlineAccount(hass, config_entry)
     # TODO: raise PlatformNotReady if not ready
-    await api.update()
-    hass.data[DOMAIN] = api
+    await account.api.update()
+    hass.data[DOMAIN] = account
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
-    for device_id, device in api.devices.items():
+    for device_id, device in account.api.devices.items():
         device_registry.async_get_or_create(
-            config_entry_id=config_entry.entry_id, **device.device_info
+            config_entry_id=config_entry.entry_id, **account.device_info(device)
         )
 
     for domain in PLATFORMS:
@@ -37,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             hass.config_entries.async_forward_entry_setup(config_entry, domain)
         )
 
-    hass.services.async_register(DOMAIN, SERVICE_UPDATE_STATE, api.update)
+    hass.services.async_register(DOMAIN, SERVICE_UPDATE_STATE, account.api.update)
 
     config_entry.add_update_listener(async_options_updated)
     await async_options_updated(hass, config_entry)
@@ -50,15 +48,15 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     for domain in PLATFORMS:
         await hass.config_entries.async_forward_entry_unload(config_entry, domain)
 
-    api: StarlineApi = hass.data[DOMAIN]
-    api.unload()
+    account: StarlineAccount = hass.data[DOMAIN]
+    account.unload()
     return True
 
 
 async def async_options_updated(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Triggered by config entry options updates."""
-    api: StarlineApi = hass.data[DOMAIN]
+    account: StarlineAccount = hass.data[DOMAIN]
     update_timeout = config_entry.options.get(
         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
     )
-    api.set_update_interval(hass, update_timeout)
+    account.set_update_interval(hass, update_timeout)
