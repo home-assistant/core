@@ -745,5 +745,5 @@ class AlexaChannelController(AlexaCapibility):
         if name != "channel":
             raise UnsupportedProperty(name)
 
-        """Return a temporary empty channel property."""
+        # Return a temporary empty channel property.
         return {"number": "1", "callSign": "", "affiliateCallSign": ""}
