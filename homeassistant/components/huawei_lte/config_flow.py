@@ -2,6 +2,7 @@
 
 from collections import OrderedDict
 import logging
+from typing import Optional
 
 from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
 from huawei_lte_api.Client import Client
@@ -107,9 +108,8 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.debug("Could not logout", exc_info=True)
 
-        username = user_input.get(CONF_USERNAME)
-        password = user_input.get(CONF_PASSWORD)
-        try:
+        def try_connect(username: Optional[str], password: Optional[str]) -> Connection:
+            """Try connecting with given credentials."""
             if username or password:
                 conn = AuthorizedConnection(
                     user_input[CONF_URL], username=username, password=password
@@ -129,6 +129,33 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     conn = Connection(user_input[CONF_URL])
                     del user_input[CONF_USERNAME]
                     del user_input[CONF_PASSWORD]
+            return conn
+
+        def get_router_title(conn: Connection) -> str:
+            """Get title for router."""
+            title = None
+            client = Client(conn)
+            try:
+                info = client.device.basic_information()
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.debug("Could not get device.basic_information", exc_info=True)
+            else:
+                title = info.get("devicename")
+            if not title:
+                try:
+                    info = client.device.information()
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.debug("Could not get device.information", exc_info=True)
+                else:
+                    title = info.get("DeviceName")
+            return title or DEFAULT_DEVICE_NAME
+
+        username = user_input.get(CONF_USERNAME)
+        password = user_input.get(CONF_PASSWORD)
+        try:
+            conn = await self.hass.async_add_executor_job(
+                try_connect, username, password
+            )
         except LoginErrorUsernameWrongException:
             errors[CONF_USERNAME] = "incorrect_username"
         except LoginErrorPasswordWrongException:
@@ -144,34 +171,16 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.warning("Unknown error connecting to device", exc_info=True)
             errors[CONF_URL] = "unknown_connection_error"
         if errors:
-            logout()
+            await self.hass.async_add_executor_job(logout)
             return await self._async_show_user_form(
                 user_input=user_input, errors=errors
             )
 
-        title = None
-        client = Client(conn)
-        try:
-            info = client.device.basic_information()
-            title = info["devicename"]
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.debug(
-                "Could not get device.basic_information[devicename]", exc_info=True
-            )
-        if not title:
-            try:
-                info = client.device.information()
-                title = info["DeviceName"]
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.debug(
-                    "Could not get device.information[DeviceName]", exc_info=True
-                )
-        logout()
+        title = await self.hass.async_add_executor_job(get_router_title, conn)
+        await self.hass.async_add_executor_job(logout)
 
         return self.async_create_entry(
-            title=title or DEFAULT_DEVICE_NAME,
-            data=user_input,
-            system_options={"disable_new_entities": True},
+            title=title, data=user_input, system_options={"disable_new_entities": True}
         )
 
 
