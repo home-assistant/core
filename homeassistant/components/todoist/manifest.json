@@ -6,5 +6,5 @@
     "todoist-python==8.0.0"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@boralyl"]
 }
