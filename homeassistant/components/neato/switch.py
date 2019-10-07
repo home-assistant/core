@@ -65,7 +65,6 @@ class NeatoConnectedSwitch(ToggleEntity):
         try:
             self.neato.update_robots()
             self._state = self.robot.state
-            self._available = True
         except NeatoRobotException as ex:
             if self._available:  # Print only once when available
                 _LOGGER.error("Neato switch connection error: %s", ex)
@@ -73,6 +72,7 @@ class NeatoConnectedSwitch(ToggleEntity):
             self._available = False
             return
 
+        self._available = True
         _LOGGER.debug("self._state=%s", self._state)
         if self.type == SWITCH_TYPE_SCHEDULE:
             _LOGGER.debug("State: %s", self._state)

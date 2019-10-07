@@ -166,13 +166,12 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             self._available = False
             return
 
+        _LOGGER.debug("Running Neato Vacuums update")
         try:
-            _LOGGER.debug("Running Neato Vacuums update")
             if self._robot_stats is None:
                 self._robot_stats = self.robot.get_robot_info().json()
             self.neato.update_robots()
             self._state = self.robot.state
-            self._available = True
         except NeatoRobotException as ex:
             if self._available:  # print only once when available
                 _LOGGER.error("Neato vacuum connection error: %s", ex)
@@ -180,6 +179,7 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             self._available = False
             return
 
+        self._available = True
         _LOGGER.debug("self._state=%s", self._state)
         if "alert" in self._state:
             robot_alert = ALERTS.get(self._state["alert"])
