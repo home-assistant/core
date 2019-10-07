@@ -46,7 +46,6 @@ from .const import (
 )
 from .entities import async_get_entities
 from .errors import (
-    AlexaAlreadyInOperationError,
     AlexaInvalidDirectiveError,
     AlexaInvalidValueError,
     AlexaSecurityPanelAuthorizationRequired,
@@ -947,19 +946,23 @@ async def async_api_set_mode(hass, config, directive, context):
 
 @HANDLERS.register(("Alexa.ModeController", "AdjustMode"))
 async def async_api_adjust_mode(hass, config, directive, context):
-    """Process a next request."""
+    """Process a AdjustMode request.
+    Requires modeResources to be ordered.
+    Only modes that are ordered support the adjustMode directive.
+    """
     entity = directive.entity
     instance = directive.instance
     domain = entity.domain
-    data = {ATTR_ENTITY_ID: entity.entity_id}
-    mode_delta = int(directive.payload["modeDelta"])
 
     if domain != fan.DOMAIN:
         msg = "Entity does not support directive"
         raise AlexaInvalidDirectiveError(msg)
 
-    if instance == fan.ATTR_DIRECTION:
-        service = fan.SERVICE_SET_DIRECTION
+    if instance is None:
+        msg = "Entity does not support directive"
+        raise AlexaInvalidDirectiveError(msg)
+
+    # No modeResources are currently ordered to support this request.
 
     return directive.response()
 

@@ -840,7 +840,7 @@ class AlexaModeController(AlexaCapibility):
         return None
 
     def mode_resources(self):
-        """Return capabilityResources object"""
+        """Return modeResources object"""
         mode_resources = None
         if self.instance() == fan.ATTR_DIRECTION:
             mode_resources = {
