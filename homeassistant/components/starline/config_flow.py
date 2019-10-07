@@ -178,7 +178,9 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_authenticate_app(self, error=None):
         """Authenticate application."""
         try:
-            self._app_code = await self._auth.get_app_code(self._app_id, self._app_secret)
+            self._app_code = await self._auth.get_app_code(
+                self._app_id, self._app_secret
+            )
             self._app_token = await self._auth.get_app_token(
                 self._app_id, self._app_secret, self._app_code
             )
@@ -221,7 +223,9 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_get_entry(self):
         """Create entry."""
-        self._slnet_token, self._slnet_token_expires, self._user_id = await self._auth.get_user_id(self._user_slid)
+        self._slnet_token, self._slnet_token_expires, self._user_id = await self._auth.get_user_id(
+            self._user_slid
+        )
 
         return self.async_create_entry(
             title="Application " + self._app_id,

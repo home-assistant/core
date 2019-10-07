@@ -12,6 +12,7 @@ from .const import DOMAIN, LOGGER, DEFAULT_SCAN_INTERVAL
 
 class StarlineAccount:
     """StarLine Account class."""
+
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry):
         """Constructor."""
         self._hass: HomeAssistant = hass
@@ -19,13 +20,15 @@ class StarlineAccount:
         self._update_listeners: List[Callable] = []
         self._update_interval: int = DEFAULT_SCAN_INTERVAL
         self._unsubscribe_auto_updater: Optional[Callable] = None
-        self._api: StarlineApi = StarlineApi(config_entry.data["user_id"], config_entry.data["slnet_token"])
+        self._api: StarlineApi = StarlineApi(
+            config_entry.data["user_id"], config_entry.data["slnet_token"]
+        )
 
     @property
     def api(self) -> StarlineApi:
         return self._api
 
-    def set_update_interval(self, hass:HomeAssistant, interval: int) -> None:
+    def set_update_interval(self, hass: HomeAssistant, interval: int) -> None:
         """Set StarLine API update interval."""
         LOGGER.debug("Setting update interval: %ds", interval)
         self._update_interval = interval
