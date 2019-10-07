@@ -26,9 +26,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Neato switch with config entry."""
     dev = []
+    neato = hass.data.get(NEATO_LOGIN)
     for robot in hass.data[NEATO_ROBOTS]:
         for type_name in SWITCH_TYPES:
-            dev.append(NeatoConnectedSwitch(hass, robot, type_name))
+            dev.append(NeatoConnectedSwitch(neato, robot, type_name))
 
     if not dev:
         return
@@ -40,11 +41,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class NeatoConnectedSwitch(ToggleEntity):
     """Neato Connected Switches."""
 
-    def __init__(self, hass, robot, switch_type):
+    def __init__(self, neato, robot, switch_type):
         """Initialize the Neato Connected switches."""
         self.type = switch_type
         self.robot = robot
-        self.neato = hass.data.get(NEATO_LOGIN)
+        self.neato = neato
         self._available = self.neato.logged_in if self.neato is not None else False
         self._robot_name = f"{self.robot.name} {SWITCH_TYPES[self.type][0]}"
         self._state = None
@@ -64,7 +65,6 @@ class NeatoConnectedSwitch(ToggleEntity):
         try:
             self.neato.update_robots()
             self._state = self.robot.state
-            self._available = True
         except NeatoRobotException as ex:
             if self._available:  # Print only once when available
                 _LOGGER.error("Neato switch connection error: %s", ex)
@@ -72,6 +72,7 @@ class NeatoConnectedSwitch(ToggleEntity):
             self._available = False
             return
 
+        self._available = True
         _LOGGER.debug("self._state=%s", self._state)
         if self.type == SWITCH_TYPE_SCHEDULE:
             _LOGGER.debug("State: %s", self._state)
