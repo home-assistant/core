@@ -222,13 +222,14 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
     event_id = deconz_event.serial
 
-    state_config = {
+    event_config = {
         event.CONF_EVENT_TYPE: CONF_DECONZ_EVENT,
         event.CONF_EVENT_DATA: {CONF_UNIQUE_ID: event_id, CONF_EVENT: trigger},
     }
 
+    event_config = event.TRIGGER_SCHEMA(event_config)
     return await event.async_attach_trigger(
-        hass, state_config, action, automation_info, platform_type="device"
+        hass, event_config, action, automation_info, platform_type="device"
     )
 
 
