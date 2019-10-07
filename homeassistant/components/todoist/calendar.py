@@ -1,8 +1,10 @@
 """Support for Todoist task management (https://todoist.com)."""
 from datetime import datetime, timedelta
+from typing import Union
 import logging
 
 import voluptuous as vol
+from dateutil.parser import parse as dt_parse
 
 from homeassistant.components.calendar import (
     DOMAIN,
@@ -11,6 +13,7 @@ from homeassistant.components.calendar import (
 )
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.util import Throttle, dt
 
@@ -36,6 +39,7 @@ CONTENT = "content"
 DESCRIPTION = "description"
 # Calendar Platform: Used in the '_get_date()' method
 DATETIME = "dateTime"
+DUE = "due"
 # Service Call: When is this task due (in natural language)?
 DUE_DATE_STRING = "due_date_string"
 # Service Call: The language of DUE_DATE_STRING
@@ -206,7 +210,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         project_id = project_id_lookup[project_name]
 
         # Create the task
-        item = api.items.add(call.data[CONTENT], project_id)
+        item = api.items.add(call.data[CONTENT], project_id=project_id)
 
         if LABELS in call.data:
             task_labels = call.data[LABELS]
@@ -216,11 +220,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if PRIORITY in call.data:
             item.update(priority=call.data[PRIORITY])
 
+        _due: dict = {}
         if DUE_DATE_STRING in call.data:
-            item.update(date_string=call.data[DUE_DATE_STRING])
+            _due["string"] = call.data[DUE_DATE_STRING]
 
         if DUE_DATE_LANG in call.data:
-            item.update(date_lang=call.data[DUE_DATE_LANG])
+            _due["lang"] = call.data[DUE_DATE_LANG]
 
         if DUE_DATE in call.data:
             due_date = dt.parse_datetime(call.data[DUE_DATE])
@@ -231,7 +236,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             due_date = dt.as_utc(due_date)
             date_format = "%Y-%m-%dT%H:%M"
             due_date = datetime.strftime(due_date, date_format)
-            item.update(due_date_utc=due_date)
+            _due["date"] = due_date
+
+        if _due:
+            item.update(due=_due)
+
         # Commit changes
         api.commit()
         _LOGGER.debug("Created Todoist task: %s", call.data[CONTENT])
@@ -381,6 +390,16 @@ class TodoistProjectData:
         else:
             self._project_id_whitelist = []
 
+    def _parse_due_date(self, data: dict) -> datetime:
+        """Parse the due date dict into a datetime object."""
+        # Add time information to date only strings.
+        if len(data["date"]) == 10:
+            data["date"] += "T00:00:00"
+        # If there is no timezone provided, use UTC.
+        if data["timezone"] is None:
+            data["date"] += "Z"
+        return dt_util.parse_datetime(data["date"])
+
     def create_todoist_task(self, data):
         """
         Create a dictionary based on a Task passed from the Todoist API.
@@ -412,16 +431,8 @@ class TodoistProjectData:
         # complete the task.
         # Generally speaking, that means right now.
         task[START] = dt.utcnow()
-        if data[DUE_DATE_UTC] is not None:
-            due_date = data[DUE_DATE_UTC]
-
-            # Due dates are represented in RFC3339 format, in UTC.
-            # Home Assistant exclusively uses UTC, so it'll
-            # handle the conversion.
-            time_format = "%a %d %b %Y %H:%M:%S %z"
-            # HASS' built-in parse time function doesn't like
-            # Todoist's time format; strptime has to be used.
-            task[END] = datetime.strptime(due_date, time_format)
+        if data[DUE] is not None:
+            task[END] = self._parse_due_date(data[DUE])
 
             if self._latest_due_date is not None and (
                 task[END] > self._latest_due_date
@@ -540,9 +551,8 @@ class TodoistProjectData:
             project_task_data = project_data[TASKS]
 
         events = []
-        time_format = "%a %d %b %Y %H:%M:%S %z"
         for task in project_task_data:
-            due_date = datetime.strptime(task["due_date_utc"], time_format)
+            due_date = self._parse_due_date(task["due"])
             if start_date < due_date < end_date:
                 event = {
                     "uid": task["id"],
