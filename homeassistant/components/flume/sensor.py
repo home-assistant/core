@@ -19,7 +19,6 @@ DEFAULT_NAME = "Flume Sensor"
 
 CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
-CONF_TIME_ZONE = "time_zone"
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -30,7 +29,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_CLIENT_ID): cv.string,
         vol.Required(CONF_CLIENT_SECRET): cv.string,
-        vol.Required(CONF_TIME_ZONE): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
@@ -42,15 +40,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     password = config.get(CONF_PASSWORD)
     client_id = config.get(CONF_CLIENT_ID)
     client_secret = config.get(CONF_CLIENT_SECRET)
-    time_zone = config.get(CONF_TIME_ZONE)
+    time_zone = str(hass.config.time_zone)
     name = config.get(CONF_NAME)
 
-    FlumeDeviceList = FlumeDevice(username, password, client_id, client_secret)
+    flume_devices = FlumeAuth(username, password, client_id, client_secret)
 
     try:
-        for device in FlumeDeviceList._devices:
+        for device in flume_devices._devices:
             if device["type"] == 2:
-                Flume = FlumeData(
+                flume = FlumeData(
                     username,
                     password,
                     client_id,
@@ -60,7 +58,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     SCAN_INTERVAL,
                 )
                 sensor_name = name + " " + device["id"]
-                add_entities([FlumeSensor(Flume, sensor_name)], True)
+                add_entities([FlumeSensor(flume, sensor_name)], True)
     except Exception as error:
         _LOGGER.error("Unable to setup Flume Devices: %s", error)
         return False
@@ -97,8 +95,8 @@ class FlumeSensor(Entity):
         self._state = self.Flume.value
 
 
-class FlumeDevice:
-    """Get the latest data and update the states."""
+class FlumeAuth:
+    """Get the Authentication Bearer, User ID and list of devices from Flume API."""
 
     def __init__(self, username, password, client_id, client_secret):
         """Initialize the data object."""
@@ -192,53 +190,13 @@ class FlumeData:
         self._device_id = device_id
         self._scan_interval = scan_interval
         self._time_zone = time_zone
-        self._token = self.getToken()
-        self._user_id = self.getUserId()
-        self._bearer = self.getBearer()
         self.value = None
 
+        flume_auth = FlumeAuth(username, password, client_id, client_secret)
+
+        self._user_id = flume_auth._user_id
+        self._bearer = flume_auth._bearer
         self.update()
-
-    def getToken(self):
-        """Return authorization token for session."""
-        url = "https://api.flumetech.com/oauth/token"
-        payload = (
-            '{"grant_type":"password","client_id":"'
-            + self._client_id
-            + '","client_secret":"'
-            + self._client_secret
-            + '","username":"'
-            + self._username
-            + '","password":"'
-            + self._password
-            + '"}'
-        )
-        headers = {"content-type": "application/json"}
-
-        response = requests.request("POST", url, data=payload, headers=headers)
-
-        _LOGGER.debug("Token Payload: %s", payload)
-        _LOGGER.debug("Token Response: %s", response.text)
-
-        if response.status_code == 200:
-            return json.loads(response.text)["data"]
-        else:
-            raise Exception(
-                "getToken Response Code not Successful. Returned {}".format(
-                    response.status_code
-                )
-            )
-
-    def getUserId(self):
-        """Return User ID for authorized user."""
-        json_token_data = self._token[0]
-        return json.loads(
-            base64.b64decode(json_token_data["access_token"].split(".")[1])
-        )["user_id"]
-
-    def getBearer(self):
-        """Return Bearer for Authorized session."""
-        return self._token[0]["access_token"]
 
     def update(self):
         """Return updated value for session."""
