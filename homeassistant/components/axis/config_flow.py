@@ -171,7 +171,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if discovery_info[CONF_HOST].startswith("169.254"):
             return self.async_abort(reason="link_local_address")
 
-        # pylint: disable=unsupported-assignment-operation
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["macaddress"] = serialnumber
 
         if any(

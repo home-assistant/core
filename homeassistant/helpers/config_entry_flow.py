@@ -38,7 +38,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         if user_input is None:
             return self.async_show_form(step_id="confirm")
 
-        if (
+        if (  # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
             self.context
             and self.context.get("source") != config_entries.SOURCE_DISCOVERY
         ):

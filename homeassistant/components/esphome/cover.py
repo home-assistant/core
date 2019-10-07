@@ -70,6 +70,9 @@ class EsphomeCover(EsphomeEntity, CoverDevice):
     def _state(self) -> Optional[CoverState]:
         return super()._state
 
+    # https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
+    # pylint: disable=invalid-overridden-method
+
     @esphome_state_property
     def is_closed(self) -> Optional[bool]:
         """Return if the cover is closed or not."""
