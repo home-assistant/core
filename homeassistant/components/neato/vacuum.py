@@ -7,8 +7,6 @@ from pybotvac.exceptions import NeatoRobotException
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
-    ATTR_BATTERY_ICON,
-    ATTR_BATTERY_LEVEL,
     ATTR_STATUS,
     DOMAIN,
     STATE_CLEANING,
@@ -68,6 +66,9 @@ ATTR_CLEAN_BATTERY_START = "battery_level_at_clean_start"
 ATTR_CLEAN_BATTERY_END = "battery_level_at_clean_end"
 ATTR_CLEAN_SUSP_COUNT = "clean_suspension_count"
 ATTR_CLEAN_SUSP_TIME = "clean_suspension_time"
+ATTR_CLEAN_PAUSE_TIME = "clean_pause_time"
+ATTR_CLEAN_ERROR_TIME = "clean_error_time"
+ATTR_LAUNCHED_FROM = "launched_from"
 
 ATTR_NAVIGATION = "navigation"
 ATTR_CATEGORY = "category"
@@ -133,20 +134,23 @@ class NeatoConnectedVacuum(StateVacuumDevice):
     def __init__(self, hass, robot):
         """Initialize the Neato Connected Vacuum."""
         self.robot = robot
-        self.neato = hass.data[NEATO_LOGIN]
+        self.neato = hass.data.get(NEATO_LOGIN)
+        self._available = self.neato.logged_in if self.neato is not None else False
         self._name = f"{self.robot.name}"
         self._status_state = None
         self._clean_state = None
         self._state = None
         self._mapdata = hass.data[NEATO_MAP_DATA]
-        self.clean_time_start = None
-        self.clean_time_stop = None
-        self.clean_area = None
-        self.clean_battery_start = None
-        self.clean_battery_end = None
-        self.clean_suspension_charge_count = None
-        self.clean_suspension_time = None
-        self._available = False
+        self._clean_time_start = None
+        self._clean_time_stop = None
+        self._clean_area = None
+        self._clean_battery_start = None
+        self._clean_battery_end = None
+        self._clean_susp_charge_count = None
+        self._clean_susp_time = None
+        self._clean_pause_time = None
+        self._clean_error_time = None
+        self._launched_from = None
         self._battery_level = None
         self._robot_serial = self.robot.serial
         self._robot_maps = hass.data[NEATO_PERSISTENT_MAPS]
@@ -218,25 +222,18 @@ class NeatoConnectedVacuum(StateVacuumDevice):
 
         if not self._mapdata.get(self._robot_serial, {}).get("maps", []):
             return
-        self.clean_time_start = (
-            self._mapdata[self._robot_serial]["maps"][0]["start_at"].strip("Z")
-        ).replace("T", " ")
-        self.clean_time_stop = (
-            self._mapdata[self._robot_serial]["maps"][0]["end_at"].strip("Z")
-        ).replace("T", " ")
-        self.clean_area = self._mapdata[self._robot_serial]["maps"][0]["cleaned_area"]
-        self.clean_suspension_charge_count = self._mapdata[self._robot_serial]["maps"][
-            0
-        ]["suspended_cleaning_charging_count"]
-        self.clean_suspension_time = self._mapdata[self._robot_serial]["maps"][0][
-            "time_in_suspended_cleaning"
-        ]
-        self.clean_battery_start = self._mapdata[self._robot_serial]["maps"][0][
-            "run_charge_at_start"
-        ]
-        self.clean_battery_end = self._mapdata[self._robot_serial]["maps"][0][
-            "run_charge_at_end"
-        ]
+
+        mapdata = self._mapdata[self._robot_serial]["maps"][0]
+        self._clean_time_start = (mapdata["start_at"].strip("Z")).replace("T", " ")
+        self._clean_time_stop = (mapdata["end_at"].strip("Z")).replace("T", " ")
+        self._clean_area = mapdata["cleaned_area"]
+        self._clean_susp_charge_count = mapdata["suspended_cleaning_charging_count"]
+        self._clean_susp_time = mapdata["time_in_suspended_cleaning"]
+        self._clean_pause_time = mapdata["time_in_pause"]
+        self._clean_error_time = mapdata["time_in_error"]
+        self._clean_battery_start = mapdata["run_charge_at_start"]
+        self._clean_battery_end = mapdata["run_charge_at_end"]
+        self._launched_from = mapdata["launched_from"]
 
         if self._robot_has_map:
             if self._state["availableServices"]["maps"] != "basic-1":
@@ -268,6 +265,11 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         return self._available
 
     @property
+    def icon(self):
+        """Return neato specific icon."""
+        return "mdi:robot-vacuum-variant"
+
+    @property
     def state(self):
         """Return the status of the vacuum cleaner."""
         return self._clean_state
@@ -284,25 +286,26 @@ class NeatoConnectedVacuum(StateVacuumDevice):
 
         if self._status_state is not None:
             data[ATTR_STATUS] = self._status_state
-
-        if self.battery_level is not None:
-            data[ATTR_BATTERY_LEVEL] = self.battery_level
-            data[ATTR_BATTERY_ICON] = self.battery_icon
-
-        if self.clean_time_start is not None:
-            data[ATTR_CLEAN_START] = self.clean_time_start
-        if self.clean_time_stop is not None:
-            data[ATTR_CLEAN_STOP] = self.clean_time_stop
-        if self.clean_area is not None:
-            data[ATTR_CLEAN_AREA] = self.clean_area
-        if self.clean_suspension_charge_count is not None:
-            data[ATTR_CLEAN_SUSP_COUNT] = self.clean_suspension_charge_count
-        if self.clean_suspension_time is not None:
-            data[ATTR_CLEAN_SUSP_TIME] = self.clean_suspension_time
-        if self.clean_battery_start is not None:
-            data[ATTR_CLEAN_BATTERY_START] = self.clean_battery_start
-        if self.clean_battery_end is not None:
-            data[ATTR_CLEAN_BATTERY_END] = self.clean_battery_end
+        if self._clean_time_start is not None:
+            data[ATTR_CLEAN_START] = self._clean_time_start
+        if self._clean_time_stop is not None:
+            data[ATTR_CLEAN_STOP] = self._clean_time_stop
+        if self._clean_area is not None:
+            data[ATTR_CLEAN_AREA] = self._clean_area
+        if self._clean_susp_charge_count is not None:
+            data[ATTR_CLEAN_SUSP_COUNT] = self._clean_susp_charge_count
+        if self._clean_susp_time is not None:
+            data[ATTR_CLEAN_SUSP_TIME] = self._clean_susp_time
+        if self._clean_pause_time is not None:
+            data[ATTR_CLEAN_PAUSE_TIME] = self._clean_pause_time
+        if self._clean_error_time is not None:
+            data[ATTR_CLEAN_ERROR_TIME] = self._clean_error_time
+        if self._clean_battery_start is not None:
+            data[ATTR_CLEAN_BATTERY_START] = self._clean_battery_start
+        if self._clean_battery_end is not None:
+            data[ATTR_CLEAN_BATTERY_END] = self._clean_battery_end
+        if self._launched_from is not None:
+            data[ATTR_LAUNCHED_FROM] = self._launched_from
 
         return data
 
