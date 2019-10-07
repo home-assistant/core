@@ -1,6 +1,7 @@
 """The StarLine component."""
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Config, HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .account import StarlineAccount
 from .const import (
@@ -20,8 +21,9 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the StarLine device from a config entry."""
     account = StarlineAccount(hass, config_entry)
-    # TODO: raise PlatformNotReady if not ready
-    await account.api.update()
+    if not await account.api.update():
+        raise ConfigEntryNotReady
+
     hass.data[DOMAIN] = account
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
