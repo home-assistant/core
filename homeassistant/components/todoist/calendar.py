@@ -4,7 +4,6 @@ from typing import Union
 import logging
 
 import voluptuous as vol
-from dateutil.parser import parse as dt_parse
 
 from homeassistant.components.calendar import (
     DOMAIN,
