@@ -112,7 +112,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 navigation = call.data.get(ATTR_NAVIGATION)
                 category = call.data.get(ATTR_CATEGORY)
                 zone = call.data.get(ATTR_ZONE)
-                robot.neato_custom_cleaning(mode, navigation, category, zone)
+                try:
+                    robot.neato_custom_cleaning(mode, navigation, category, zone)
+                except NeatoRobotException as ex:
+                    _LOGGER.error("Neato vacuum connection error: %s", ex)
 
     def service_to_entities(call):
         """Return the known devices that a service call mentions."""
@@ -235,14 +238,20 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         self._clean_battery_end = mapdata["run_charge_at_end"]
         self._launched_from = mapdata["launched_from"]
 
-        if self._robot_has_map:
-            if self._state["availableServices"]["maps"] != "basic-1":
-                if self._robot_maps[self._robot_serial]:
-                    allmaps = self._robot_maps[self._robot_serial]
-                    for maps in allmaps:
-                        self._robot_boundaries = self.robot.get_map_boundaries(
-                            maps["id"]
-                        ).json()
+        if (
+            self._robot_has_map
+            and self._state["availableServices"]["maps"] != "basic-1"
+            and self._robot_maps[self._robot_serial]
+        ):
+            allmaps = self._robot_maps[self._robot_serial]
+            for maps in allmaps:
+                try:
+                    self._robot_boundaries = self.robot.get_map_boundaries(
+                        maps["id"]
+                    ).json()
+                except NeatoRobotException as ex:
+                    _LOGGER.error("Could not fetch map boundaries: %s", ex)
+                    self._robot_boundaries = {}
 
     @property
     def name(self):
