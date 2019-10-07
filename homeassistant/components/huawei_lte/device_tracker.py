@@ -2,9 +2,11 @@
 
 import asyncio
 import logging
+import re
 from typing import Any, Dict
 
 import attr
+from stringcase import snakecase
 
 from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
@@ -29,6 +31,21 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for host in (x for x in hosts if x.get("MacAddress")):
         entities.append(HuaweiLteScannerEntity(router, host["MacAddress"]))
     async_add_entities(entities)
+
+
+def _better_snakecase(s: str) -> str:
+    if s == s.upper():
+        # All uppercase to all lowercase to get http for HTTP, not h_t_t_p
+        s = s.lower()
+    else:
+        # Three or more consecutive uppercase with middle part lowercased
+        # to get http_response for HTTPResponse, not h_t_t_p_response
+        s = re.sub(
+            r"([A-Z])([A-Z]+)([A-Z](?:[^A-Z]|$))",
+            lambda match: f"{match.group(1)}{match.group(2).lower()}{match.group(3)}",
+            s,
+        )
+    return snakecase(s)
 
 
 @attr.s
@@ -83,7 +100,9 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
         if self._is_connected:
             self._name = host.get("HostName", self.mac)
             self._device_state_attributes = {
-                k: v for k, v in host.items() if k not in ("MacAddress", "HostName")
+                _better_snakecase(k): v
+                for k, v in host.items()
+                if k not in ("MacAddress", "HostName")
             }
 
 

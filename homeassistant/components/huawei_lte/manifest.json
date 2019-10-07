@@ -6,6 +6,7 @@
   "requirements": [
     "getmac==0.8.1",
     "huawei-lte-api==1.4.3",
+    "stringcase==1.2.0",
     "url-normalize==1.4.1"
   ],
   "dependencies": [],
