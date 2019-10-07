@@ -29,9 +29,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Neato camera with config entry."""
     dev = []
     neato = hass.data.get(NEATO_LOGIN)
+    mapdata = hass.data.get(NEATO_MAP_DATA)
     for robot in hass.data[NEATO_ROBOTS]:
         if "maps" in robot.traits:
-            dev.append(NeatoCleaningMap(neato, robot))
+            dev.append(NeatoCleaningMap(neato, robot, mapdata))
 
     if not dev:
         return
@@ -43,11 +44,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class NeatoCleaningMap(Camera):
     """Neato cleaning map for last clean."""
 
-    def __init__(self, neato, robot):
+    def __init__(self, neato, robot, mapdata):
         """Initialize Neato cleaning map."""
         super().__init__()
         self.robot = robot
         self.neato = neato
+        self._mapdata = mapdata
         self._available = self.neato.logged_in if self.neato is not None else False
         self._robot_name = f"{self.robot.name} Cleaning Map"
         self._robot_serial = self.robot.serial
@@ -81,7 +83,7 @@ class NeatoCleaningMap(Camera):
             return
 
         image_url = None
-        map_data = self.hass.data[NEATO_MAP_DATA][self._robot_serial]["maps"][0]
+        map_data = self._mapdata[self._robot_serial]["maps"][0]
         image_url = map_data["url"]
         if image_url == self._image_url:
             _LOGGER.debug("The map image_url is the same as old")
