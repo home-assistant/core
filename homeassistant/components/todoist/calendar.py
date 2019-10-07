@@ -11,7 +11,6 @@ from homeassistant.components.calendar import (
 )
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.util import Throttle, dt
 
@@ -248,6 +247,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
+def _parse_due_date(data: dict) -> datetime:
+    """Parse the due date dict into a datetime object."""
+    # Add time information to date only strings.
+    if len(data["date"]) == 10:
+        data["date"] += "T00:00:00"
+    # If there is no timezone provided, use UTC.
+    if data["timezone"] is None:
+        data["date"] += "Z"
+    return dt.parse_datetime(data["date"])
+
+
 class TodoistProjectDevice(CalendarEventDevice):
     """A device for getting the next Task from a Todoist Project."""
 
@@ -388,16 +398,6 @@ class TodoistProjectData:
         else:
             self._project_id_whitelist = []
 
-    def _parse_due_date(self, data: dict) -> datetime:
-        """Parse the due date dict into a datetime object."""
-        # Add time information to date only strings.
-        if len(data["date"]) == 10:
-            data["date"] += "T00:00:00"
-        # If there is no timezone provided, use UTC.
-        if data["timezone"] is None:
-            data["date"] += "Z"
-        return dt_util.parse_datetime(data["date"])
-
     def create_todoist_task(self, data):
         """
         Create a dictionary based on a Task passed from the Todoist API.
@@ -430,7 +430,7 @@ class TodoistProjectData:
         # Generally speaking, that means right now.
         task[START] = dt.utcnow()
         if data[DUE] is not None:
-            task[END] = self._parse_due_date(data[DUE])
+            task[END] = _parse_due_date(data[DUE])
 
             if self._latest_due_date is not None and (
                 task[END] > self._latest_due_date
@@ -550,7 +550,7 @@ class TodoistProjectData:
 
         events = []
         for task in project_task_data:
-            due_date = self._parse_due_date(task["due"])
+            due_date = _parse_due_date(task["due"])
             if start_date < due_date < end_date:
                 event = {
                     "uid": task["id"],
