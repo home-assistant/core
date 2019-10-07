@@ -61,11 +61,12 @@ class WebSocketHandler:
                 message = await self._to_write.get()
                 if message is None:
                     break
+
                 self._logger.debug("Sending %s", message)
 
                 if isinstance(message, str):
                     await self.wsock.send_str(message)
-                    return
+                    continue
 
                 try:
                     dumped = JSON_DUMP(message)
@@ -78,7 +79,7 @@ class WebSocketHandler:
                             message["id"], ERR_UNKNOWN_ERROR, "Invalid JSON in response"
                         )
                     )
-                    return
+                    continue
 
                 await self.wsock.send_str(dumped)
 
