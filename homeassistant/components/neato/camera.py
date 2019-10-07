@@ -28,9 +28,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Neato camera with config entry."""
     dev = []
+    neato = hass.data.get(NEATO_LOGIN)
+    mapdata = hass.data.get(NEATO_MAP_DATA)
     for robot in hass.data[NEATO_ROBOTS]:
         if "maps" in robot.traits:
-            dev.append(NeatoCleaningMap(hass, robot))
+            dev.append(NeatoCleaningMap(neato, robot, mapdata))
 
     if not dev:
         return
@@ -42,11 +44,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class NeatoCleaningMap(Camera):
     """Neato cleaning map for last clean."""
 
-    def __init__(self, hass, robot):
+    def __init__(self, neato, robot, mapdata):
         """Initialize Neato cleaning map."""
         super().__init__()
         self.robot = robot
-        self.neato = hass.data.get(NEATO_LOGIN)
+        self.neato = neato
+        self._mapdata = mapdata
         self._available = self.neato.logged_in if self.neato is not None else False
         self._robot_name = f"{self.robot.name} Cleaning Map"
         self._robot_serial = self.robot.serial
@@ -71,25 +74,35 @@ class NeatoCleaningMap(Camera):
         _LOGGER.debug("Running camera update")
         try:
             self.neato.update_robots()
-
-            image_url = None
-            map_data = self.hass.data[NEATO_MAP_DATA][self._robot_serial]["maps"][0]
-            image_url = map_data["url"]
-            if image_url == self._image_url:
-                _LOGGER.debug("The map image_url is the same as old")
-                return
-
-            image = self.neato.download_map(image_url)
-            self._image = image.read()
-            self._image_url = image_url
-            self._generated_at = (map_data["generated_at"].strip("Z")).replace("T", " ")
-            self._available = True
         except NeatoRobotException as ex:
             if self._available:  # Print only once when available
                 _LOGGER.error("Neato camera connection error: %s", ex)
             self._image = None
             self._image_url = None
             self._available = False
+            return
+
+        image_url = None
+        map_data = self._mapdata[self._robot_serial]["maps"][0]
+        image_url = map_data["url"]
+        if image_url == self._image_url:
+            _LOGGER.debug("The map image_url is the same as old")
+            return
+
+        try:
+            image = self.neato.download_map(image_url)
+        except NeatoRobotException as ex:
+            if self._available:  # Print only once when available
+                _LOGGER.error("Neato camera connection error: %s", ex)
+            self._image = None
+            self._image_url = None
+            self._available = False
+            return
+
+        self._image = image.read()
+        self._image_url = image_url
+        self._generated_at = (map_data["generated_at"].strip("Z")).replace("T", " ")
+        self._available = True
 
     @property
     def name(self):
