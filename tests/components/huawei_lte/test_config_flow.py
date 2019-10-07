@@ -94,8 +94,22 @@ def login_requests_mock(requests_mock):
     return requests_mock
 
 
-async def _test_login_error(hass, req_mock, code, error_key, error_value):
-    req_mock.request(
+@pytest.mark.parametrize(
+    ("code", "errors"),
+    (
+        (LoginErrorEnum.USERNAME_WRONG, {CONF_USERNAME: "incorrect_username"}),
+        (LoginErrorEnum.PASSWORD_WRONG, {CONF_PASSWORD: "incorrect_password"}),
+        (
+            LoginErrorEnum.USERNAME_PWD_WRONG,
+            {CONF_USERNAME: "incorrect_username_or_password"},
+        ),
+        (LoginErrorEnum.USERNAME_PWD_ORERRUN, {"base": "login_attempts_exceeded"}),
+        (ResponseCodeEnum.ERROR_SYSTEM_UNKNOWN, {"base": "response_error"}),
+    ),
+)
+async def test_login_error(hass, login_requests_mock, code, errors):
+    """Test we show user form with appropriate error on response failure."""
+    login_requests_mock.request(
         ANY,
         f"{FIXTURE_USER_INPUT[CONF_URL]}api/user/login",
         text=f"<error><code>{code}</code><message/></error>",
@@ -106,29 +120,7 @@ async def _test_login_error(hass, req_mock, code, error_key, error_value):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {error_key: error_value}
-
-
-async def test_incorrect_credentials(hass, login_requests_mock):
-    """Test we show user form on invalid credentials."""
-    await _test_login_error(
-        hass,
-        login_requests_mock,
-        LoginErrorEnum.USERNAME_PWD_WRONG,
-        CONF_USERNAME,
-        "incorrect_username_or_password",
-    )
-
-
-async def test_response_error(hass, login_requests_mock):
-    """Test we show user form on generic response error."""
-    await _test_login_error(
-        hass,
-        login_requests_mock,
-        ResponseCodeEnum.ERROR_SYSTEM_UNKNOWN,
-        "base",
-        "response_error",
-    )
+    assert result["errors"] == errors
 
 
 async def test_success(hass, login_requests_mock):
