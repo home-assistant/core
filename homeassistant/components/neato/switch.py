@@ -44,7 +44,8 @@ class NeatoConnectedSwitch(ToggleEntity):
         """Initialize the Neato Connected switches."""
         self.type = switch_type
         self.robot = robot
-        self.neato = hass.data[NEATO_LOGIN] if NEATO_LOGIN in hass.data else None
+        self.neato = hass.data.get(NEATO_LOGIN)
+        self._available = self.neato.logged_in if self.neato is not None else False
         self._robot_name = f"{self.robot.name} {SWITCH_TYPES[self.type][0]}"
         self._state = None
         self._schedule_state = None
@@ -56,15 +57,19 @@ class NeatoConnectedSwitch(ToggleEntity):
         if self.neato is None:
             _LOGGER.error("Error while updating switches")
             self._state = None
+            self._available = False
             return
 
         _LOGGER.debug("Running switch update")
         try:
             self.neato.update_robots()
             self._state = self.robot.state
+            self._available = True
         except NeatoRobotException as ex:
-            _LOGGER.error("Neato switch connection error: %s", ex)
+            if self._available:  # Print only once when available
+                _LOGGER.error("Neato switch connection error: %s", ex)
             self._state = None
+            self._available = False
             return
 
         _LOGGER.debug("self._state=%s", self._state)
@@ -84,7 +89,7 @@ class NeatoConnectedSwitch(ToggleEntity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._state
+        return self._available
 
     @property
     def unique_id(self):
