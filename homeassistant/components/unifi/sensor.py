@@ -31,7 +31,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Update the values of the controller."""
         update_items(controller, async_add_entities, sensors)
 
-    async_dispatcher_connect(hass, controller.signal_update, update_controller)
+    controller.listeners.append(
+        async_dispatcher_connect(hass, controller.signal_update, update_controller)
+    )
 
     @callback
     def update_disable_on_entities():
@@ -46,8 +48,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 entity.registry_entry.entity_id, disabled_by=disabled_by
             )
 
-    async_dispatcher_connect(
-        hass, controller.signal_options_update, update_disable_on_entities
+    controller.listeners.append(
+        async_dispatcher_connect(
+            hass, controller.signal_options_update, update_disable_on_entities
+        )
     )
 
     update_controller()
