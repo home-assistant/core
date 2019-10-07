@@ -136,7 +136,7 @@ class JewishCalendarTimeSensor(JewishCalendarSensor):
         return "timestamp"
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes."""
         attrs = {}
 
