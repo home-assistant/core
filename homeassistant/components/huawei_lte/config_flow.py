@@ -25,8 +25,7 @@ from .const import DEFAULT_DEVICE_NAME, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class ConfigFlowHandler(config_entries.ConfigFlow):
+class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle Huawei LTE config flow."""
 
     VERSION = 1
