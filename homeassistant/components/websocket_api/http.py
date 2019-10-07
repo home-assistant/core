@@ -62,11 +62,13 @@ class WebSocketHandler:
                 if message is None:
                     break
                 self._logger.debug("Sending %s", message)
+
+                if isinstance(message, str):
+                    await self.wsock.send_str(message)
+                    return
+
                 try:
-                    if isinstance(message, str):
-                        await self.wsock.send_str(message)
-                    else:
-                        await self.wsock.send_json(message, dumps=JSON_DUMP)
+                    dumped = JSON_DUMP(message)
                 except (ValueError, TypeError) as err:
                     self._logger.error(
                         "Unable to serialize to JSON: %s\n%s", err, message
@@ -76,6 +78,9 @@ class WebSocketHandler:
                             message["id"], ERR_UNKNOWN_ERROR, "Invalid JSON in response"
                         )
                     )
+                    return
+
+                await self.wsock.send_str(dumped)
 
     @callback
     def _send_message(self, message):
