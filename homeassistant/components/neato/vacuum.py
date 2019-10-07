@@ -95,8 +95,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Neato vacuum with config entry."""
     dev = []
+    neato = hass.data.get(NEATO_LOGIN)
+    mapdata = hass.data.get(NEATO_MAP_DATA)
+    persistent_maps = hass.data.get(NEATO_PERSISTENT_MAPS)
     for robot in hass.data[NEATO_ROBOTS]:
-        dev.append(NeatoConnectedVacuum(hass, robot))
+        dev.append(NeatoConnectedVacuum(neato, robot, mapdata, persistent_maps))
 
     if not dev:
         return
@@ -112,7 +115,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 navigation = call.data.get(ATTR_NAVIGATION)
                 category = call.data.get(ATTR_CATEGORY)
                 zone = call.data.get(ATTR_ZONE)
-                robot.neato_custom_cleaning(mode, navigation, category, zone)
+                try:
+                    robot.neato_custom_cleaning(mode, navigation, category, zone)
+                except NeatoRobotException as ex:
+                    _LOGGER.error("Neato vacuum connection error: %s", ex)
 
     def service_to_entities(call):
         """Return the known devices that a service call mentions."""
@@ -131,16 +137,19 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class NeatoConnectedVacuum(StateVacuumDevice):
     """Representation of a Neato Connected Vacuum."""
 
-    def __init__(self, hass, robot):
+    def __init__(self, neato, robot, mapdata, persistent_maps):
         """Initialize the Neato Connected Vacuum."""
         self.robot = robot
-        self.neato = hass.data.get(NEATO_LOGIN)
+        self.neato = neato
         self._available = self.neato.logged_in if self.neato is not None else False
+        self._mapdata = mapdata
         self._name = f"{self.robot.name}"
+        self._robot_has_map = self.robot.has_persistent_maps
+        self._robot_maps = persistent_maps
+        self._robot_serial = self.robot.serial
         self._status_state = None
         self._clean_state = None
         self._state = None
-        self._mapdata = hass.data[NEATO_MAP_DATA]
         self._clean_time_start = None
         self._clean_time_stop = None
         self._clean_area = None
@@ -152,10 +161,7 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         self._clean_error_time = None
         self._launched_from = None
         self._battery_level = None
-        self._robot_serial = self.robot.serial
-        self._robot_maps = hass.data[NEATO_PERSISTENT_MAPS]
         self._robot_boundaries = {}
-        self._robot_has_map = self.robot.has_persistent_maps
         self._robot_stats = None
 
     def update(self):
@@ -166,13 +172,12 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             self._available = False
             return
 
+        _LOGGER.debug("Running Neato Vacuums update")
         try:
-            _LOGGER.debug("Running Neato Vacuums update")
             if self._robot_stats is None:
                 self._robot_stats = self.robot.get_robot_info().json()
             self.neato.update_robots()
             self._state = self.robot.state
-            self._available = True
         except NeatoRobotException as ex:
             if self._available:  # print only once when available
                 _LOGGER.error("Neato vacuum connection error: %s", ex)
@@ -180,6 +185,7 @@ class NeatoConnectedVacuum(StateVacuumDevice):
             self._available = False
             return
 
+        self._available = True
         _LOGGER.debug("self._state=%s", self._state)
         if "alert" in self._state:
             robot_alert = ALERTS.get(self._state["alert"])
@@ -235,14 +241,20 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         self._clean_battery_end = mapdata["run_charge_at_end"]
         self._launched_from = mapdata["launched_from"]
 
-        if self._robot_has_map:
-            if self._state["availableServices"]["maps"] != "basic-1":
-                if self._robot_maps[self._robot_serial]:
-                    allmaps = self._robot_maps[self._robot_serial]
-                    for maps in allmaps:
-                        self._robot_boundaries = self.robot.get_map_boundaries(
-                            maps["id"]
-                        ).json()
+        if (
+            self._robot_has_map
+            and self._state["availableServices"]["maps"] != "basic-1"
+            and self._robot_maps[self._robot_serial]
+        ):
+            allmaps = self._robot_maps[self._robot_serial]
+            for maps in allmaps:
+                try:
+                    self._robot_boundaries = self.robot.get_map_boundaries(
+                        maps["id"]
+                    ).json()
+                except NeatoRobotException as ex:
+                    _LOGGER.error("Could not fetch map boundaries: %s", ex)
+                    self._robot_boundaries = {}
 
     @property
     def name(self):
