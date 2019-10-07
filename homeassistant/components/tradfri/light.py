@@ -16,8 +16,9 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     Light,
 )
+from homeassistant.components.tradfri.base_class import TradfriBaseDevice
 from homeassistant.core import callback
-from . import DOMAIN as TRADFRI_DOMAIN, KEY_API, KEY_GATEWAY
+from . import KEY_API, KEY_GATEWAY
 from .const import CONF_GATEWAY_ID, CONF_IMPORT_GROUPS
 
 _LOGGER = logging.getLogger(__name__)
@@ -143,66 +144,27 @@ class TradfriGroup(Light):
         await self._api(self._group.update())
 
 
-class TradfriLight(Light):
+class TradfriLight(TradfriBaseDevice, Light):
     """The platform class required by Home Assistant."""
 
-    def __init__(self, light, api, gateway_id):
+    def __init__(self, device, api, gateway_id):
         """Initialize a Light."""
-        self._api = api
-        self._unique_id = f"light-{gateway_id}-{light.id}"
-        self._light = None
-        self._light_control = None
-        self._light_data = None
-        self._name = None
+        super().__init__(device, api, gateway_id)
+        self._unique_id = f"light-{gateway_id}-{device.id}"
         self._hs_color = None
         self._features = SUPPORTED_FEATURES
-        self._available = True
-        self._gateway_id = gateway_id
 
-        self._refresh(light)
-
-    @property
-    def unique_id(self):
-        """Return unique ID for light."""
-        return self._unique_id
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        info = self._light.device_info
-
-        return {
-            "identifiers": {(TRADFRI_DOMAIN, self._light.id)},
-            "name": self._name,
-            "manufacturer": info.manufacturer,
-            "model": info.model_number,
-            "sw_version": info.firmware_version,
-            "via_device": (TRADFRI_DOMAIN, self._gateway_id),
-        }
+        self._refresh(device)
 
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
-        return self._light_control.min_mireds
+        return self._device_control.min_mireds
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
-        return self._light_control.max_mireds
-
-    async def async_added_to_hass(self):
-        """Start thread when added to hass."""
-        self._async_start_observe()
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._available
-
-    @property
-    def should_poll(self):
-        """No polling needed for tradfri light."""
-        return False
+        return self._device_control.max_mireds
 
     @property
     def supported_features(self):
@@ -210,32 +172,27 @@ class TradfriLight(Light):
         return self._features
 
     @property
-    def name(self):
-        """Return the display name of this light."""
-        return self._name
-
-    @property
     def is_on(self):
         """Return true if light is on."""
-        return self._light_data.state
+        return self._device_data.state
 
     @property
     def brightness(self):
         """Return the brightness of the light."""
-        return self._light_data.dimmer
+        return self._device_data.dimmer
 
     @property
     def color_temp(self):
         """Return the color temp value in mireds."""
-        return self._light_data.color_temp
+        return self._device_data.color_temp
 
     @property
     def hs_color(self):
         """HS color of the light."""
-        if self._light_control.can_set_color:
-            hsbxy = self._light_data.hsb_xy_color
-            hue = hsbxy[0] / (self._light_control.max_hue / 360)
-            sat = hsbxy[1] / (self._light_control.max_saturation / 100)
+        if self._device_control.can_set_color:
+            hsbxy = self._device_data.hsb_xy_color
+            hue = hsbxy[0] / (self._device_control.max_hue / 360)
+            sat = hsbxy[1] / (self._device_control.max_saturation / 100)
             if hue is not None and sat is not None:
                 return hue, sat
 
@@ -248,9 +205,9 @@ class TradfriLight(Light):
             transition_time = int(kwargs[ATTR_TRANSITION]) * 10
 
             dimmer_data = {ATTR_DIMMER: 0, ATTR_TRANSITION_TIME: transition_time}
-            await self._api(self._light_control.set_dimmer(**dimmer_data))
+            await self._api(self._device_control.set_dimmer(**dimmer_data))
         else:
-            await self._api(self._light_control.set_state(False))
+            await self._api(self._device_control.set_state(False))
 
     async def async_turn_on(self, **kwargs):
         """Instruct the light to turn on."""
@@ -267,32 +224,32 @@ class TradfriLight(Light):
                 ATTR_DIMMER: brightness,
                 ATTR_TRANSITION_TIME: transition_time,
             }
-            dimmer_command = self._light_control.set_dimmer(**dimmer_data)
+            dimmer_command = self._device_control.set_dimmer(**dimmer_data)
             transition_time = None
         else:
-            dimmer_command = self._light_control.set_state(True)
+            dimmer_command = self._device_control.set_state(True)
 
         color_command = None
-        if ATTR_HS_COLOR in kwargs and self._light_control.can_set_color:
-            hue = int(kwargs[ATTR_HS_COLOR][0] * (self._light_control.max_hue / 360))
+        if ATTR_HS_COLOR in kwargs and self._device_control.can_set_color:
+            hue = int(kwargs[ATTR_HS_COLOR][0] * (self._device_control.max_hue / 360))
             sat = int(
-                kwargs[ATTR_HS_COLOR][1] * (self._light_control.max_saturation / 100)
+                kwargs[ATTR_HS_COLOR][1] * (self._device_control.max_saturation / 100)
             )
             color_data = {
                 ATTR_HUE: hue,
                 ATTR_SAT: sat,
                 ATTR_TRANSITION_TIME: transition_time,
             }
-            color_command = self._light_control.set_hsb(**color_data)
+            color_command = self._device_control.set_hsb(**color_data)
             transition_time = None
 
         temp_command = None
         if ATTR_COLOR_TEMP in kwargs and (
-            self._light_control.can_set_temp or self._light_control.can_set_color
+            self._device_control.can_set_temp or self._device_control.can_set_color
         ):
             temp = kwargs[ATTR_COLOR_TEMP]
             # White Spectrum bulb
-            if self._light_control.can_set_temp:
+            if self._device_control.can_set_temp:
                 if temp > self.max_mireds:
                     temp = self.max_mireds
                 elif temp < self.min_mireds:
@@ -301,21 +258,21 @@ class TradfriLight(Light):
                     ATTR_COLOR_TEMP: temp,
                     ATTR_TRANSITION_TIME: transition_time,
                 }
-                temp_command = self._light_control.set_color_temp(**temp_data)
+                temp_command = self._device_control.set_color_temp(**temp_data)
                 transition_time = None
             # Color bulb (CWS)
             # color_temp needs to be set with hue/saturation
-            elif self._light_control.can_set_color:
+            elif self._device_control.can_set_color:
                 temp_k = color_util.color_temperature_mired_to_kelvin(temp)
                 hs_color = color_util.color_temperature_to_hs(temp_k)
-                hue = int(hs_color[0] * (self._light_control.max_hue / 360))
-                sat = int(hs_color[1] * (self._light_control.max_saturation / 100))
+                hue = int(hs_color[0] * (self._device_control.max_hue / 360))
+                sat = int(hs_color[1] * (self._device_control.max_saturation / 100))
                 color_data = {
                     ATTR_HUE: hue,
                     ATTR_SAT: sat,
                     ATTR_TRANSITION_TIME: transition_time,
                 }
-                color_command = self._light_control.set_hsb(**color_data)
+                color_command = self._device_control.set_hsb(**color_data)
                 transition_time = None
 
         # HSB can always be set, but color temp + brightness is bulb dependant
@@ -325,7 +282,7 @@ class TradfriLight(Light):
         else:
             command = color_command
 
-        if self._light_control.can_combine_commands:
+        if self._device_control.can_combine_commands:
             await self._api(command + temp_command)
         else:
             if temp_command is not None:
@@ -333,46 +290,18 @@ class TradfriLight(Light):
             if command is not None:
                 await self._api(command)
 
-    @callback
-    def _async_start_observe(self, exc=None):
-        """Start observation of light."""
-
-        if exc:
-            self._available = False
-            self.async_schedule_update_ha_state()
-            _LOGGER.warning("Observation failed for %s", self._name, exc_info=exc)
-
-        try:
-            cmd = self._light.observe(
-                callback=self._observe_update,
-                err_callback=self._async_start_observe,
-                duration=0,
-            )
-            self.hass.async_create_task(self._api(cmd))
-        except PytradfriError as err:
-            _LOGGER.warning("Observation failed, trying again", exc_info=err)
-            self._async_start_observe()
-
-    def _refresh(self, light):
+    def _refresh(self, device):
         """Refresh the light data."""
-        self._light = light
+        super()._refresh(device)
 
         # Caching of LightControl and light object
-        self._available = light.reachable
-        self._light_control = light.light_control
-        self._light_data = light.light_control.lights[0]
-        self._name = light.name
+        self._device_control = device.light_control
+        self._device_data = device.light_control.lights[0]
         self._features = SUPPORTED_FEATURES
 
-        if light.light_control.can_set_dimmer:
+        if device.light_control.can_set_dimmer:
             self._features |= SUPPORT_BRIGHTNESS
-        if light.light_control.can_set_color:
+        if device.light_control.can_set_color:
             self._features |= SUPPORT_COLOR
-        if light.light_control.can_set_temp:
+        if device.light_control.can_set_temp:
             self._features |= SUPPORT_COLOR_TEMP
-
-    @callback
-    def _observe_update(self, tradfri_device):
-        """Receive new state data for this light."""
-        self._refresh(tradfri_device)
-        self.async_schedule_update_ha_state()
