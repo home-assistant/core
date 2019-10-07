@@ -36,7 +36,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._password: Optional[str] = None
         self._mfa_code: Optional[str] = None
 
-        self._auth = StarlineAuth(self.hass)
+        self._auth = None
         self._app_code = None
         self._app_token = None
         self._user_slid = None
@@ -59,6 +59,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_init(self, user_input=None):
         """Handle a flow initialized by the user."""
+        self._auth = StarlineAuth(self.hass)
         return await self.async_step_auth_app(user_input)
 
     async def async_step_auth_app(self, user_input=None, error=None):
@@ -66,7 +67,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._app_id = user_input[CONF_APP_ID]
             self._app_secret = user_input[CONF_APP_SECRET]
-            return self._async_authenticate_app(error)
+            return await self._async_authenticate_app(error)
         return self._async_form_auth_app(error)
 
     async def async_step_auth_user(self, user_input=None, error=None):
@@ -74,21 +75,21 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._username = user_input[CONF_USERNAME]
             self._password = user_input[CONF_PASSWORD]
-            return self._async_authenticate_user(error)
+            return await self._async_authenticate_user(error)
         return self._async_form_auth_user(error)
 
     async def async_step_auth_mfa(self, user_input=None, error=None):
         """Authenticate mfa step."""
         if user_input is not None:
             self._mfa_code = user_input[CONF_MFA_CODE]
-            return self._async_authenticate_user(error)
+            return await self._async_authenticate_user(error)
         return self._async_form_auth_mfa(error)
 
     async def async_step_auth_captcha(self, user_input=None, error=None):
         """Captcha verification step."""
         if user_input is not None:
             self._captcha_code = user_input[CONF_CAPTCHA_CODE]
-            return self._async_authenticate_user(error)
+            return await self._async_authenticate_user(error)
         return self._async_form_auth_captcha(error)
 
     def _async_form_auth_app(self, error=None):
@@ -173,11 +174,11 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    def _async_authenticate_app(self, error=None):
+    async def _async_authenticate_app(self, error=None):
         """Authenticate application."""
         try:
-            self._app_code = self._auth.get_app_code(self._app_id, self._app_secret)
-            self._app_token = self._auth.get_app_token(
+            self._app_code = await self._auth.get_app_code(self._app_id, self._app_secret)
+            self._app_token = await self._auth.get_app_token(
                 self._app_id, self._app_secret, self._app_code
             )
             return self._async_form_auth_user(error)
@@ -185,10 +186,10 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             LOGGER.error("Error auth StarLine: " + str(e))
             return self._async_form_auth_app(ERROR_AUTH_APP)
 
-    def _async_authenticate_user(self, error=None):
+    async def _async_authenticate_user(self, error=None):
         """Authenticate user."""
         try:
-            state, data = self._auth.get_slid_user_token(
+            state, data = await self._auth.get_slid_user_token(
                 self._app_token,
                 self._username,
                 self._password,
@@ -199,7 +200,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             if state == 1:
                 self._user_slid = data["user_token"]
-                return self._async_get_entry()
+                return await self._async_get_entry()
 
             if "phone" in data:
                 self._phone_number = data["phone"]
@@ -217,9 +218,9 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             LOGGER.error("Error auth user: " + str(e))
             return self._async_form_auth_user(ERROR_AUTH_USER)
 
-    def _async_get_entry(self):
+    async def _async_get_entry(self):
         """Create entry."""
-        self._slnet_token, self._user_id = self._auth.get_user_id(self._user_slid)
+        self._slnet_token, self._user_id = await self._auth.get_user_id(self._user_slid)
 
         return self.async_create_entry(
             title="Application " + self._app_id,
