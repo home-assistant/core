@@ -78,6 +78,7 @@ class NeatoCleaningMap(Camera):
             self._image = None
             self._image_url = None
             self._available = False
+            return
 
         image_url = None
         map_data = self.hass.data[NEATO_MAP_DATA][self._robot_serial]["maps"][0]
@@ -94,6 +95,7 @@ class NeatoCleaningMap(Camera):
             self._image = None
             self._image_url = None
             self._available = False
+            return
 
         self._image = image.read()
         self._image_url = image_url
