@@ -24,8 +24,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Neato sensor using config entry."""
     dev = []
+    neato = hass.data.get(NEATO_LOGIN)
     for robot in hass.data[NEATO_ROBOTS]:
-        neato = hass.data.get(NEATO_LOGIN)
         dev.append(NeatoSensor(neato, robot))
 
     if not dev:
@@ -58,13 +58,14 @@ class NeatoSensor(Entity):
         try:
             self.neato.update_robots()
             self._state = self.robot.state
-            self._available = True
         except NeatoRobotException as ex:
             if self._available:
                 _LOGGER.error("Neato sensor connection error: %s", ex)
             self._state = None
             self._available = False
             return
+
+        self._available = True
         _LOGGER.debug("self._state=%s", self._state)
 
     @property
