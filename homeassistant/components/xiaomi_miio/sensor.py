@@ -14,8 +14,8 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Xiaomi Miio Sensor"
 DATA_KEY = "sensor.xiaomi_miio"
 
-MODEL_AIRQUALITYMONITOR_V1 = "zhimi.airmonitor.v1"
-MODEL_AIRQUALITYMONITOR_S1 = "cgllc.airmonitor.s1"
+MODEL_AIR_QUALITY_MONITOR_V1 = "zhimi.airmonitor.v1"
+MODEL_AIR_QUALITY_MONITOR_S1 = "cgllc.airmonitor.s1"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -104,7 +104,7 @@ class XiaomiAirQualityMonitor(Entity):
         self._model = model
         self._unique_id = unique_id
 
-        if self._model == MODEL_AIRQUALITYMONITOR_S1:
+        if self._model == MODEL_AIR_QUALITY_MONITOR_S1:
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRQUALITYMONITOR_S1
             self._unit_of_measurement = "µg/m3"
         else:
@@ -170,7 +170,7 @@ class XiaomiAirQualityMonitor(Entity):
 
             self._available = True
 
-            if self._model == MODEL_AIRQUALITYMONITOR_S1:
+            if self._model == MODEL_AIR_QUALITY_MONITOR_S1:
                 self._state = state.pm25
             else:
                 self._state = state.aqi
