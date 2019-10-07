@@ -32,7 +32,7 @@ def _convert_states(states):
     result = {}
 
     for entity_id in states:
-        cv.entity_id(entity_id)
+        entity_id = cv.entity_id(entity_id)
 
         if isinstance(states[entity_id], dict):
             entity_attrs = states[entity_id].copy()
@@ -49,7 +49,7 @@ def _convert_states(states):
         elif not isinstance(state, str):
             raise vol.Invalid(f"State for {entity_id} should be a string")
 
-        result[entity_id.lower()] = State(entity_id, state, attributes)
+        result[entity_id] = State(entity_id, state, attributes)
 
     return result
 
