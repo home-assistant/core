@@ -110,7 +110,7 @@ async def async_setup_entry(hass, entry):
         _LOGGER.debug("Failed to connect to Neato API")
         return False
 
-    for component in ("camera", "vacuum", "switch"):
+    for component in ("camera", "vacuum", "switch", "sensor"):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
@@ -125,6 +125,7 @@ async def async_unload_entry(hass, entry):
         hass.config_entries.async_forward_entry_unload(entry, "camera"),
         hass.config_entries.async_forward_entry_unload(entry, "vacuum"),
         hass.config_entries.async_forward_entry_unload(entry, "switch"),
+        hass.config_entries.async_forward_entry_unload(entry, "sensor"),
     )
     return True
 
