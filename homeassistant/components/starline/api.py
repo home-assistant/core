@@ -17,7 +17,7 @@ from .const import (
     POST,
     CONNECT_TIMEOUT,
     TOTAL_TIMEOUT,
-    DEFAULT_UPDATE_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
 )
 
 
@@ -180,11 +180,12 @@ class StarlineApi(BaseApi):
         self._slnet_token = slnet_token
         self._devices: Dict[str, StarlineDevice] = {}
         self._update_listeners: List[Callable] = []
-        self._update_interval: int = DEFAULT_UPDATE_INTERVAL
+        self._update_interval: int = DEFAULT_SCAN_INTERVAL
         self._unsubscribe_auto_updater: Optional[Callable] = None
 
     def add_update_listener(self, listener: Callable) -> None:
         """Add a listener for update notifications."""
+        # TODO: переехать на async_dispatcher_send и async_dispatcher_connect
         self._update_listeners.append(listener)
 
     def _call_listeners(self) -> None:

@@ -14,8 +14,8 @@ from .const import (
     CONF_MFA_CODE,
     CONF_CAPTCHA_CODE,
     LOGGER,
-    CONF_UPDATE_INTERVAL,
-    DEFAULT_UPDATE_INTERVAL,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
     ERROR_AUTH_APP,
     ERROR_AUTH_USER,
     ERROR_AUTH_MFA,
@@ -242,7 +242,7 @@ class StarlineOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_settings(self, user_input=None):
         """Manage the StarLine options."""
         if user_input is not None:
-            self.options[CONF_UPDATE_INTERVAL] = user_input[CONF_UPDATE_INTERVAL]
+            self.options[CONF_SCAN_INTERVAL] = user_input[CONF_SCAN_INTERVAL]
             return self.async_create_entry(title="", data=self.options)
 
         return self.async_show_form(
@@ -250,9 +250,9 @@ class StarlineOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_UPDATE_INTERVAL,
+                        CONF_SCAN_INTERVAL,
                         default=self.config_entry.options.get(
-                            CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
+                            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                         ),
                     ): vol.All(vol.Coerce(int), vol.Range(min=10))
                 }

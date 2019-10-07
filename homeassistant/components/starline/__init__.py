@@ -7,8 +7,8 @@ from .const import (
     DOMAIN,
     PLATFORMS,
     SERVICE_UPDATE_STATE,
-    CONF_UPDATE_INTERVAL,
-    DEFAULT_UPDATE_INTERVAL,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
 )
 
 
@@ -22,6 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     api = StarlineApi(
         hass, config_entry.data["user_id"], config_entry.data["slnet_token"]
     )
+    # TODO: raise PlatformNotReady if not ready
     await api.update()
     hass.data[DOMAIN] = api
 
@@ -58,6 +59,6 @@ async def async_options_updated(hass: HomeAssistant, config_entry: ConfigEntry) 
     """Triggered by config entry options updates."""
     api: StarlineApi = hass.data[DOMAIN]
     update_timeout = config_entry.options.get(
-        CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
+        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
     )
     api.set_update_interval(hass, update_timeout)

@@ -43,7 +43,7 @@
         "step": {
             "settings": {
                 "data": {
-                    "update_interval": "Update frequency (in seconds)"
+                    "scan_interval": "Update frequency (in seconds)"
                 }
             }
         }
