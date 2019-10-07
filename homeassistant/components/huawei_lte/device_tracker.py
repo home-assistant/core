@@ -1,6 +1,5 @@
 """Support for device tracking of Huawei LTE routers."""
 
-import asyncio
 import logging
 import re
 from typing import Any, Dict
@@ -30,7 +29,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     for host in (x for x in hosts if x.get("MacAddress")):
         entities.append(HuaweiLteScannerEntity(router, host["MacAddress"]))
-    async_add_entities(entities)
+    async_add_entities(entities, True)
 
 
 def _better_snakecase(s: str) -> str:
@@ -57,10 +56,6 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
     _is_connected: bool = attr.ib(init=False, default=False)
     _name: str = attr.ib(init=False, default="device")
     _device_state_attributes: Dict[str, Any] = attr.ib(init=False, factory=dict)
-
-    def __attrs_post_init__(self):
-        """Set up internal state on init."""
-        asyncio.run_coroutine_threadsafe(self.async_update(), self.router.hass.loop)
 
     @property
     def _entity_name(self) -> str:
