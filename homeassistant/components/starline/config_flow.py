@@ -42,6 +42,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._user_slid = None
         self._user_id = None
         self._slnet_token = None
+        self._slnet_token_expires = None
         self._captcha_image = None
         self._captcha_sid = None
         self._captcha_code = None
@@ -220,7 +221,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_get_entry(self):
         """Create entry."""
-        self._slnet_token, self._user_id = await self._auth.get_user_id(self._user_slid)
+        self._slnet_token, self._slnet_token_expires, self._user_id = await self._auth.get_user_id(self._user_slid)
 
         return self.async_create_entry(
             title="Application " + self._app_id,

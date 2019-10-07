@@ -1,8 +1,9 @@
 """StarLine API."""
 import aiohttp
 import hashlib
+import re
 
-from datetime import timedelta
+from datetime import timedelta, datetime
 from typing import Dict, List, Callable, Optional, Any
 
 from homeassistant.core import HomeAssistant
@@ -156,18 +157,33 @@ class StarlineAuth(BaseApi):
             return state, response["desc"]
         raise Exception(response)
 
-    async def get_user_id(self, slid_token: str) -> (str, str):
+    async def get_user_id(self, slid_token: str) -> (str, float, str):
         """Authenticate user by StarLineID token."""
+        # TODO: check response code
 
         url = "https://developer.starline.ru/json/v2/auth.slid"
         data = {"slid_token": slid_token}
         response = await self.request(POST, url, json=data)
         json = await response.json(content_type=None)
 
-        # TODO: check response code
-        slnet_token = response.cookies["slnet"]
+        # Read cookie from headers because of bug https://gitlab.com/starline/openapi/issues/3
+        cookie_header = response.headers.get("Set-Cookie")
+        slnet = re.search("slnet=([^;]+);", cookie_header)
+        expires = re.search("expires=([^;]+);", cookie_header)
+        if slnet is None:
+            raise Exception(response)
+
+        slnet_token = slnet.group(1)
+        expires_time = None
+
+        if expires is not None:
+            try:
+                expires_time = datetime.strptime(expires.group(1), '%A, %d-%b-%y %H:%M:%S %Z').timestamp()
+            except:
+                pass
+
         LOGGER.debug("SLnet token: {}".format(slnet_token))
-        return slnet_token, json["user_id"]
+        return slnet_token, expires_time, json["user_id"]
 
 
 class StarlineApi(BaseApi):
