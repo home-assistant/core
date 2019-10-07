@@ -2,6 +2,7 @@
 
 from collections import defaultdict
 from datetime import timedelta
+from functools import partial
 from urllib.parse import urlparse
 import ipaddress
 import logging
@@ -33,7 +34,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 from .const import (
     ALL_KEYS,
@@ -182,7 +183,7 @@ class HuaweiLteData:
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
     """Set up Huawei LTE component from config entry."""
-    await hass.async_add_executor_job(_setup_lte, hass, config_entry)
+    await _async_setup_lte(hass, config_entry)
     return True
 
 
@@ -228,7 +229,7 @@ async def async_setup(hass: HomeAssistantType, config) -> bool:
     return True
 
 
-def _setup_lte(hass: HomeAssistantType, config_entry: ConfigEntry) -> None:
+async def _async_setup_lte(hass: HomeAssistantType, config_entry: ConfigEntry) -> None:
     """Set up Huawei LTE router."""
     url = config_entry.data[CONF_URL]
 
@@ -272,26 +273,34 @@ def _setup_lte(hass: HomeAssistantType, config_entry: ConfigEntry) -> None:
             mode = "ip"
     except ValueError:
         mode = "hostname"
-    mac = get_mac_address(**{mode: host})
+    mac = await hass.async_add_executor_job(partial(get_mac_address, **{mode: host}))
 
-    # Set up a connection: authorized one if username/pass specified (even if empty), unauthorized one otherwise
-    username = config_entry.data.get(CONF_USERNAME)
-    password = config_entry.data.get(CONF_PASSWORD)
-    if username or password:
-        connection = AuthorizedConnection(url, username=username, password=password)
-    else:
-        connection = Connection(url)
+    def get_connection() -> Connection:
+        """
+        Set up a connection.
+
+        Authorized one if username/pass specified (even if empty), unauthorized one otherwise.
+        """
+        username = config_entry.data.get(CONF_USERNAME)
+        password = config_entry.data.get(CONF_PASSWORD)
+        if username or password:
+            connection = AuthorizedConnection(url, username=username, password=password)
+        else:
+            connection = Connection(url)
+        return connection
 
     def signal_update() -> None:
         """Signal updates to data."""
         dispatcher_send(hass, UPDATE_SIGNAL, url)
+
+    connection = await hass.async_add_executor_job(get_connection)
 
     # Set up router and store reference to it
     router = Router(connection, url, mac, signal_update)
     hass.data[DOMAIN].routers[url] = router
 
     # Do initial data update
-    router.update()
+    await hass.async_add_executor_job(router.update)
 
     # Clear all subscriptions, enabled entities will push back theirs
     router.subscriptions.clear()
@@ -302,7 +311,7 @@ def _setup_lte(hass: HomeAssistantType, config_entry: ConfigEntry) -> None:
             hass.config_entries.async_forward_entry_setup(config_entry, domain)
         )
     # Notify doesn't support config entry setup yet, load with discovery for now
-    discovery.load_platform(
+    await discovery.async_load_platform(
         hass,
         NOTIFY_DOMAIN,
         DOMAIN,
@@ -319,10 +328,10 @@ def _setup_lte(hass: HomeAssistantType, config_entry: ConfigEntry) -> None:
         router.update()
 
     # Set up periodic update
-    track_time_interval(hass, _update_router, SCAN_INTERVAL)
+    async_track_time_interval(hass, _update_router, SCAN_INTERVAL)
 
     # Clean up at end
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, router.cleanup)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, router.cleanup)
 
 
 @attr.s
