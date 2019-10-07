@@ -190,8 +190,15 @@ async def async_unload_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry
 ) -> bool:
     """Unload config entry."""
+
+    # Forward config entry unload to platforms
+    for domain in (DEVICE_TRACKER_DOMAIN, SENSOR_DOMAIN):
+        await hass.config_entries.async_forward_entry_unload(config_entry, domain)
+
+    # Forget about the router and invoke its cleanup
     router = hass.data[DOMAIN].routers.pop(config_entry.data[CONF_URL])
     await hass.async_add_executor_job(router.cleanup)
+
     return True
 
 
