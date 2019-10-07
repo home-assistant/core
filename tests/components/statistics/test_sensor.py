@@ -249,21 +249,14 @@ class TestStatisticsSensor(unittest.TestCase):
                 self.hass.block_till_done()
                 # insert the next value 30 seconds later
                 mock_data["return_time"] += timedelta(seconds=30)
-                # fire_time_changed(self.hass, mock_data["return_time"])
-                # self.hass.block_till_done()
 
             state = self.hass.states.get("sensor.test")
 
             assert 3.8 == state.attributes.get("min_value")
             assert 15.2 == state.attributes.get("max_value")
 
-            # wait for 2 * 2 minutes (longer than max_age).
-            mock_data["return_time"] += timedelta(minutes=2)
-            _LOGGER.error("fire_time_changed %s", mock_data["return_time"])
-            fire_time_changed(self.hass, mock_data["return_time"])
-            self.hass.block_till_done()
-
-            mock_data["return_time"] += timedelta(minutes=2)
+            # wait for 3 minutes (max_age).
+            mock_data["return_time"] += timedelta(minutes=3)
             _LOGGER.error("fire_time_changed %s", mock_data["return_time"])
             fire_time_changed(self.hass, mock_data["return_time"])
             self.hass.block_till_done()
