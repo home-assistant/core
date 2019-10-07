@@ -119,9 +119,7 @@ async def async_call_action_from_config(
     )
 
 
-def async_condition_from_config(
-    config: ConfigType, config_validation: bool
-) -> condition.ConditionCheckerType:
+def async_condition_from_config(config: ConfigType) -> condition.ConditionCheckerType:
     """Evaluate state based on configuration."""
     condition_type = config[CONF_TYPE]
     if condition_type == CONF_IS_ON:
@@ -136,7 +134,7 @@ def async_condition_from_config(
     if CONF_FOR in config:
         state_config[CONF_FOR] = config[CONF_FOR]
 
-    return condition.state_from_config(state_config, config_validation)
+    return condition.state_from_config(state_config)
 
 
 async def async_attach_trigger(
