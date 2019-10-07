@@ -2,10 +2,9 @@
 from datetime import timedelta
 import json
 import logging
+from xml.etree.ElementTree import ParseError
 
 import plexapi.exceptions
-import plexapi.playlist
-import plexapi.playqueue
 import requests.exceptions
 
 from homeassistant.components.media_player import MediaPlayerDevice
@@ -686,45 +685,60 @@ class PlexClient(MediaPlayerDevice):
         media = None
 
         if media_type == "MUSIC":
-            artist = src["artist_name"]
-            album = src.get("album_name")
-            track_name = src.get("track_name")
-            track_number = src.get("track_number")
-
-            media = self.plex_server.library.section(library).get(artist)
-            if album:
-                album = media.album(album)
-                if track_name:
-                    media = album.track(track_name)
-                elif track_number:
-                    for track in album.tracks():
-                        if int(track.index) == int(track_number):
-                            media = track
-                            break
-                else:
-                    media = album
-            elif track_name:
-                media = media.searchTracks(track_name, maxresults=1)
-
+            media = self._get_music_choice(library, src)
         elif media_type == "EPISODE":
-            media = self._get_tv_media(
-                library,
-                src["show_name"],
-                src["season_number"],
-                src.get("episode_number"),
-            )
+            media = self._get_tv_media(library, src)
         elif media_type == "PLAYLIST":
             media = self.plex_server.playlist(src["playlist_name"])
         elif media_type == "VIDEO":
             media = self.plex_server.library.section(library).get(src["video_name"])
 
-        if media:
-            self._client_play_media(media=media, shuffle=shuffle)
-        else:
+        if media is None:
             _LOGGER.error("Media could not be found: %s", media_id)
+            return
 
-    def _get_tv_media(self, library_name, show_name, season_number, episode_number):
+        playqueue = self.plex_server.create_playqueue(media, shuffle=shuffle)
+        try:
+            self.device.playMedia(playqueue)
+        except ParseError:
+            # Temporary workaround for Plexamp / plexapi issue
+            pass
+        except requests.exceptions.ConnectTimeout:
+            _LOGGER.error("Timed out playing on %s", self.name)
+
+        self.update_devices()
+
+    def _get_music_choice(self, library_name, src):
+        artist_name = src["artist_name"]
+        album_name = src.get("album_name")
+        track_name = src.get("track_name")
+        track_number = src.get("track_number")
+
+        artist = self.plex_server.library.section(library_name).get(artist_name)
+
+        if album_name:
+            album = artist.album(album_name)
+
+            if track_name:
+                return album.track(track_name)
+
+            if track_number:
+                for track in album.tracks():
+                    if int(track.index) == int(track_number):
+                        return track
+                return None
+
+            return album
+
+        if track_name:
+            return artist.searchTracks(track_name, maxresults=1)
+        return artist
+
+    def _get_tv_media(self, library_name, src):
         """Find TV media and return a Plex media object."""
+        show_name = src["show_name"]
+        season_number = src.get("season_number")
+        episode_number = src.get("episode_number")
         target_season = None
         target_episode = None
 
@@ -765,24 +779,6 @@ class PlexClient(MediaPlayerDevice):
                 )
 
         return target_episode
-
-    def _client_play_media(self, media, **params):
-        """Instruct Plex client to play a piece of media."""
-        from xml.etree.ElementTree import ParseError
-
-        if not (self.device and "playback" in self._device_protocol_capabilities):
-            _LOGGER.error("Client cannot play media: %s", self.entity_id)
-            return
-
-        try:
-            self.device.playMedia(media, params)
-        except ParseError:
-            # Temporary workaround for Plexamp / plexapi issue
-            pass
-        except requests.exceptions.ConnectTimeout:
-            _LOGGER.error("Timed out playing on %s", self.name)
-
-        self.update_devices()
 
     @property
     def device_state_attributes(self):

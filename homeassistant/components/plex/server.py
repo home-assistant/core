@@ -1,5 +1,6 @@
 """Shared class to maintain Plex server instances."""
 import plexapi.myplex
+import plexapi.playqueue
 import plexapi.server
 from requests import Session
 
@@ -119,10 +120,6 @@ class PlexServer:
         """Return playlist from server object."""
         return self._plex_server.playlist(title)
 
-    def create_playlist(
-        self, title, items=None, section=None, limit=None, smart=None, **kwargs
-    ):
-        """Create playlist using server object."""
-        return self._plex_server.createPlaylist(
-            title, items=items, section=section, limit=limit, smart=smart, **kwargs
-        )
+    def create_playqueue(self, media, **kwargs):
+        """Create playqueue on Plex server."""
+        return plexapi.playqueue.PlayQueue.create(self._plex_server, media, **kwargs)
