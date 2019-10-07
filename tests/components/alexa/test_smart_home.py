@@ -399,7 +399,7 @@ async def test_variable_fan(hass):
 
     await assert_percentage_changes(
         hass,
-        [("high", "-5"), ("high", "5"), ("low", "-80")],
+        [("high", "-5"), ("medium", "-50"), ("low", "-80")],
         "Alexa.PowerLevelController",
         "AdjustPowerLevel",
         "fan#test_2",
@@ -445,6 +445,28 @@ async def test_oscillating_fan(hass):
         "@type": "asset",
         "value": {"assetId": "Alexa.Setting.Oscillate"},
     } in capability_resources["friendlyNames"]
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.ToggleController",
+        "TurnOn",
+        "fan#test_3",
+        "fan.oscillate",
+        hass,
+        payload={},
+        instance="oscillating",
+    )
+    assert call.data["oscillating"]
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.ToggleController",
+        "TurnOff",
+        "fan#test_3",
+        "fan.oscillate",
+        hass,
+        payload={},
+        instance="oscillating",
+    )
+    assert not call.data["oscillating"]
 
 
 async def test_direction_fan(hass):
@@ -521,6 +543,19 @@ async def test_direction_fan(hass):
         instance="direction",
     )
     assert call.data["direction"] == "reverse"
+
+    # Test for AdjustMode instance=None Error coverage
+    with pytest.raises(AssertionError):
+        call, _ = await assert_request_calls_service(
+            "Alexa.ModeController",
+            "AdjustMode",
+            "fan#test_4",
+            "fan.set_direction",
+            hass,
+            payload={},
+            instance=None,
+        )
+        assert call.data
 
 
 async def test_fan_range(hass):
