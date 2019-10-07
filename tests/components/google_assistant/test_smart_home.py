@@ -466,8 +466,8 @@ async def test_serialize_input_boolean(hass):
     }
 
 
-async def test_unavailable_state_doesnt_sync(hass):
-    """Test that an unavailable entity does not sync over."""
+async def test_unavailable_state_syncs(hass):
+    """Test that an unavailable entity syncs over."""
     light = DemoLight(None, "Demo Light", state=False)
     light.hass = hass
     light.entity_id = "light.demo_light"
@@ -483,7 +483,29 @@ async def test_unavailable_state_doesnt_sync(hass):
 
     assert result == {
         "requestId": REQ_ID,
-        "payload": {"agentUserId": "test-agent", "devices": []},
+        "payload": {
+            "agentUserId": "test-agent",
+            "devices": [
+                {
+                    "attributes": {
+                        "colorModel": "hsv",
+                        "colorTemperatureRange": {
+                            "temperatureMaxK": 6535,
+                            "temperatureMinK": 2000,
+                        },
+                    },
+                    "id": "light.demo_light",
+                    "name": {"name": "Demo Light"},
+                    "traits": [
+                        "action.devices.traits.Brightness",
+                        "action.devices.traits.OnOff",
+                        "action.devices.traits.ColorSetting",
+                    ],
+                    "type": "action.devices.types.LIGHT",
+                    "willReportState": False,
+                }
+            ],
+        },
     }
 
 
