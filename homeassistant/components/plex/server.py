@@ -57,7 +57,7 @@ class PlexServer:
                 raise ServerNotSpecified(available_servers)
 
             server_choice = (
-                self._server_name if self._server_name else available_servers[0]
+                self._server_name if self._server_name else available_servers[0][0]
             )
             connections = account.resource(server_choice).connections
             local_url = [x.httpuri for x in connections if x.local]
