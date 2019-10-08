@@ -36,7 +36,7 @@ from .errors import UnsupportedProperty
 _LOGGER = logging.getLogger(__name__)
 
 
-class AlexaCapibility:
+class AlexaCapability:
     """Base class for Alexa capability interfaces.
 
     The Smart Home Skills API defines a number of "capability interfaces",
@@ -47,7 +47,7 @@ class AlexaCapibility:
     """
 
     def __init__(self, entity):
-        """Initialize an Alexa capibility."""
+        """Initialize an Alexa capability."""
         self.entity = entity
 
     def name(self):
@@ -194,7 +194,7 @@ class AlexaCapibility:
         return friendly_names
 
 
-class AlexaEndpointHealth(AlexaCapibility):
+class AlexaEndpointHealth(AlexaCapability):
     """Implements Alexa.EndpointHealth.
 
     https://developer.amazon.com/docs/smarthome/state-reporting-for-a-smart-home-skill.html#report-state-when-alexa-requests-it
@@ -231,7 +231,7 @@ class AlexaEndpointHealth(AlexaCapibility):
         return {"value": "OK"}
 
 
-class AlexaPowerController(AlexaCapibility):
+class AlexaPowerController(AlexaCapability):
     """Implements Alexa.PowerController.
 
     https://developer.amazon.com/docs/device-apis/alexa-powercontroller.html
@@ -267,7 +267,7 @@ class AlexaPowerController(AlexaCapibility):
         return "ON" if is_on else "OFF"
 
 
-class AlexaLockController(AlexaCapibility):
+class AlexaLockController(AlexaCapability):
     """Implements Alexa.LockController.
 
     https://developer.amazon.com/docs/device-apis/alexa-lockcontroller.html
@@ -301,7 +301,7 @@ class AlexaLockController(AlexaCapibility):
         return "JAMMED"
 
 
-class AlexaSceneController(AlexaCapibility):
+class AlexaSceneController(AlexaCapability):
     """Implements Alexa.SceneController.
 
     https://developer.amazon.com/docs/device-apis/alexa-scenecontroller.html
@@ -317,7 +317,7 @@ class AlexaSceneController(AlexaCapibility):
         return "Alexa.SceneController"
 
 
-class AlexaBrightnessController(AlexaCapibility):
+class AlexaBrightnessController(AlexaCapability):
     """Implements Alexa.BrightnessController.
 
     https://developer.amazon.com/docs/device-apis/alexa-brightnesscontroller.html
@@ -348,7 +348,7 @@ class AlexaBrightnessController(AlexaCapibility):
         return 0
 
 
-class AlexaColorController(AlexaCapibility):
+class AlexaColorController(AlexaCapability):
     """Implements Alexa.ColorController.
 
     https://developer.amazon.com/docs/device-apis/alexa-colorcontroller.html
@@ -380,7 +380,7 @@ class AlexaColorController(AlexaCapibility):
         }
 
 
-class AlexaColorTemperatureController(AlexaCapibility):
+class AlexaColorTemperatureController(AlexaCapability):
     """Implements Alexa.ColorTemperatureController.
 
     https://developer.amazon.com/docs/device-apis/alexa-colortemperaturecontroller.html
@@ -409,7 +409,7 @@ class AlexaColorTemperatureController(AlexaCapibility):
         return None
 
 
-class AlexaPercentageController(AlexaCapibility):
+class AlexaPercentageController(AlexaCapability):
     """Implements Alexa.PercentageController.
 
     https://developer.amazon.com/docs/device-apis/alexa-percentagecontroller.html
@@ -443,7 +443,7 @@ class AlexaPercentageController(AlexaCapibility):
         return 0
 
 
-class AlexaSpeaker(AlexaCapibility):
+class AlexaSpeaker(AlexaCapability):
     """Implements Alexa.Speaker.
 
     https://developer.amazon.com/docs/device-apis/alexa-speaker.html
@@ -454,7 +454,7 @@ class AlexaSpeaker(AlexaCapibility):
         return "Alexa.Speaker"
 
 
-class AlexaStepSpeaker(AlexaCapibility):
+class AlexaStepSpeaker(AlexaCapability):
     """Implements Alexa.StepSpeaker.
 
     https://developer.amazon.com/docs/device-apis/alexa-stepspeaker.html
@@ -465,7 +465,7 @@ class AlexaStepSpeaker(AlexaCapibility):
         return "Alexa.StepSpeaker"
 
 
-class AlexaPlaybackController(AlexaCapibility):
+class AlexaPlaybackController(AlexaCapability):
     """Implements Alexa.PlaybackController.
 
     https://developer.amazon.com/docs/device-apis/alexa-playbackcontroller.html
@@ -476,7 +476,7 @@ class AlexaPlaybackController(AlexaCapibility):
         return "Alexa.PlaybackController"
 
 
-class AlexaInputController(AlexaCapibility):
+class AlexaInputController(AlexaCapability):
     """Implements Alexa.InputController.
 
     https://developer.amazon.com/docs/device-apis/alexa-inputcontroller.html
@@ -487,7 +487,7 @@ class AlexaInputController(AlexaCapibility):
         return "Alexa.InputController"
 
 
-class AlexaTemperatureSensor(AlexaCapibility):
+class AlexaTemperatureSensor(AlexaCapability):
     """Implements Alexa.TemperatureSensor.
 
     https://developer.amazon.com/docs/device-apis/alexa-temperaturesensor.html
@@ -537,7 +537,7 @@ class AlexaTemperatureSensor(AlexaCapibility):
         return {"value": temp, "scale": API_TEMP_UNITS[unit]}
 
 
-class AlexaContactSensor(AlexaCapibility):
+class AlexaContactSensor(AlexaCapability):
     """Implements Alexa.ContactSensor.
 
     The Alexa.ContactSensor interface describes the properties and events used
@@ -579,7 +579,7 @@ class AlexaContactSensor(AlexaCapibility):
         return "NOT_DETECTED"
 
 
-class AlexaMotionSensor(AlexaCapibility):
+class AlexaMotionSensor(AlexaCapability):
     """Implements Alexa.MotionSensor.
 
     https://developer.amazon.com/docs/device-apis/alexa-motionsensor.html
@@ -616,7 +616,7 @@ class AlexaMotionSensor(AlexaCapibility):
         return "NOT_DETECTED"
 
 
-class AlexaThermostatController(AlexaCapibility):
+class AlexaThermostatController(AlexaCapability):
     """Implements Alexa.ThermostatController.
 
     https://developer.amazon.com/docs/device-apis/alexa-thermostatcontroller.html
@@ -696,7 +696,7 @@ class AlexaThermostatController(AlexaCapibility):
         return {"value": temp, "scale": API_TEMP_UNITS[unit]}
 
 
-class AlexaPowerLevelController(AlexaCapibility):
+class AlexaPowerLevelController(AlexaCapability):
     """Implements Alexa.PowerLevelController.
 
     https://developer.amazon.com/docs/device-apis/alexa-powerlevelcontroller.html
@@ -731,7 +731,7 @@ class AlexaPowerLevelController(AlexaCapibility):
         return None
 
 
-class AlexaSecurityPanelController(AlexaCapibility):
+class AlexaSecurityPanelController(AlexaCapability):
     """Implements Alexa.SecurityPanelController.
 
     https://developer.amazon.com/docs/device-apis/alexa-securitypanelcontroller.html
@@ -783,7 +783,7 @@ class AlexaSecurityPanelController(AlexaCapibility):
         return None
 
 
-class AlexaModeController(AlexaCapibility):
+class AlexaModeController(AlexaCapability):
     """Implements Alexa.ModeController.
 
     https://developer.amazon.com/docs/device-apis/alexa-modecontroller.html
@@ -877,7 +877,7 @@ class AlexaModeController(AlexaCapibility):
         return {"ordered": ordered, "supportedModes": mode_resources}
 
 
-class AlexaRangeController(AlexaCapibility):
+class AlexaRangeController(AlexaCapability):
     """Implements Alexa.RangeController.
 
     https://developer.amazon.com/docs/device-apis/alexa-rangecontroller.html
@@ -995,7 +995,7 @@ class AlexaRangeController(AlexaCapibility):
         }
 
 
-class AlexaToggleController(AlexaCapibility):
+class AlexaToggleController(AlexaCapability):
     """Implements Alexa.ToggleController.
 
     https://developer.amazon.com/docs/device-apis/alexa-togglecontroller.html
