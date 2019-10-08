@@ -1072,6 +1072,27 @@ async def test_pattern_entity_state(hass, requests_mock_truck_response, caplog):
     assert "is not a valid set of coordinates" in caplog.text
 
 
+async def test_pattern_entity_state_with_space(hass, requests_mock_truck_response):
+    """Test that pattern matching the state including a space of an entity works."""
+    hass.states.async_set(
+        "sensor.origin", ", ".join([TRUCK_ORIGIN_LATITUDE, TRUCK_ORIGIN_LONGITUDE])
+    )
+
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin_entity_id": "sensor.origin",
+            "destination_latitude": TRUCK_DESTINATION_LATITUDE,
+            "destination_longitude": TRUCK_DESTINATION_LONGITUDE,
+            "app_id": APP_ID,
+            "app_code": APP_CODE,
+            "mode": TRAVEL_MODE_TRUCK,
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+
+
 async def test_endless_loop_is_caught(hass, requests_mock_truck_response, caplog):
     """Test that pattern matching the state of an entity works."""
     caplog.set_level(logging.ERROR)
