@@ -26,7 +26,8 @@ from .const import (
 )
 
 
-class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+@config_entries.HANDLERS.register(DOMAIN)
+class StarlineFlowHandler(config_entries.ConfigFlow):
     """Handle a StarLine config flow."""
 
     VERSION = 1
