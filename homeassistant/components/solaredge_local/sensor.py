@@ -187,7 +187,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 None,
             ]
     except IndexError:
-        _LOGGER.info("Import meter sensors are not created.")
+        _LOGGER.debug("Import meter sensors are not created")
 
     try:
         if status.metersList[1]:
@@ -206,7 +206,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 None,
             ]
     except IndexError:
-        _LOGGER.info("Export meter sensors are not created.")
+        _LOGGER.debug("Export meter sensors are not created")
 
     # Create solaredge data service which will retrieve and update the data.
     data = SolarEdgeData(hass, api)
