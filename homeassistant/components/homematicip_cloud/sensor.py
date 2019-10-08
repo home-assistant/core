@@ -115,7 +115,6 @@ class HomematicipAccesspointStatus(HomematicipGenericDevice):
 
     def __init__(self, home: AsyncHome) -> None:
         """Initialize access point device."""
-        home.modelType = "HmIP-HAP"
         super().__init__(home, home)
 
     @property
@@ -152,7 +151,12 @@ class HomematicipAccesspointStatus(HomematicipGenericDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the access point."""
-        return {ATTR_MODEL_TYPE: self._device.modelType, ATTR_IS_GROUP: False}
+        state_attr = super().device_state_attributes
+
+        state_attr[ATTR_MODEL_TYPE] = "HmIP-HAP"
+        state_attr[ATTR_IS_GROUP] = False
+
+        return state_attr
 
 
 class HomematicipHeatingThermostat(HomematicipGenericDevice):
@@ -316,7 +320,7 @@ class HomematicipWindspeedSensor(HomematicipGenericDevice):
         state_attr = super().device_state_attributes
 
         wind_direction = getattr(self._device, "windDirection", None)
-        if wind_direction:
+        if wind_direction is not None:
             state_attr[ATTR_WIND_DIRECTION] = _get_wind_direction(wind_direction)
 
         wind_direction_variation = getattr(self._device, "windDirectionVariation", None)

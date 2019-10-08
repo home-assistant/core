@@ -123,7 +123,7 @@ class HomematicipHomeWeather(HomematicipGenericDevice, WeatherEntity):
 
     def __init__(self, home: AsyncHome) -> None:
         """Initialize the home weather."""
-        home.weather.modelType = "HmIP-Home-Weather"
+        home.modelType = "HmIP-Home-Weather"
         super().__init__(home, home)
 
     @property
