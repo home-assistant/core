@@ -1,0 +1,6 @@
+dominos_order:
+  description: Order one of your specified orders from configuration.yaml
+  fields:
+    order_entity_id:
+      description: Name of entity to order
+      example: "dominos.medium_pan"
