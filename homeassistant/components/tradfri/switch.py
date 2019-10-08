@@ -1,6 +1,6 @@
 """Support for IKEA Tradfri switches."""
 from homeassistant.components.switch import SwitchDevice
-from . import KEY_API, KEY_GATEWAY
+from homeassistant.components.tradfri import KEY_GATEWAY, KEY_API
 from .base_class import TradfriBaseDevice
 from .const import CONF_GATEWAY_ID
 

@@ -11,7 +11,11 @@ from homeassistant.components.cover import (
     SUPPORT_SET_POSITION,
 )
 from homeassistant.core import callback
-from . import DOMAIN as TRADFRI_DOMAIN, KEY_API, KEY_GATEWAY
+from homeassistant.components.tradfri import (
+    DOMAIN as TRADFRI_DOMAIN,
+    KEY_GATEWAY,
+    KEY_API,
+)
 from .const import CONF_GATEWAY_ID
 
 _LOGGER = logging.getLogger(__name__)

@@ -9,28 +9,25 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    SUPPORT_TRANSITION,
     Light,
 )
 from homeassistant.components.tradfri.base_class import TradfriBaseDevice
+from homeassistant.components.tradfri.const import (
+    ATTR_DIMMER,
+    ATTR_HUE,
+    ATTR_SAT,
+    ATTR_TRANSITION_TIME,
+    SUPPORTED_LIGHT_FEATURES,
+    SUPPORTED_GROUP_FEATURES,
+)
 from homeassistant.core import callback
-from . import KEY_API, KEY_GATEWAY
+from homeassistant.components.tradfri import KEY_GATEWAY, KEY_API
 from .const import CONF_GATEWAY_ID, CONF_IMPORT_GROUPS
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_DIMMER = "dimmer"
-ATTR_HUE = "hue"
-ATTR_SAT = "saturation"
-ATTR_TRANSITION_TIME = "transition_time"
-PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA
-TRADFRI_LIGHT_MANAGER = "Tradfri Light Manager"
-SUPPORTED_FEATURES = SUPPORT_TRANSITION
-SUPPORTED_GROUP_FEATURES = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -152,7 +149,7 @@ class TradfriLight(TradfriBaseDevice, Light):
         super().__init__(device, api, gateway_id)
         self._unique_id = f"light-{gateway_id}-{device.id}"
         self._hs_color = None
-        self._features = SUPPORTED_FEATURES
+        self._features = SUPPORTED_LIGHT_FEATURES
 
         self._refresh(device)
 
@@ -297,7 +294,7 @@ class TradfriLight(TradfriBaseDevice, Light):
         # Caching of LightControl and light object
         self._device_control = device.light_control
         self._device_data = device.light_control.lights[0]
-        self._features = SUPPORTED_FEATURES
+        self._features = SUPPORTED_LIGHT_FEATURES
 
         if device.light_control.can_set_dimmer:
             self._features |= SUPPORT_BRIGHTNESS
