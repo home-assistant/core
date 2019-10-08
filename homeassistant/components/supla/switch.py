@@ -8,7 +8,12 @@ from homeassistant.components.supla import SuplaChannel
 _LOGGER = logging.getLogger(__name__)
 
 
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    async_add_devices([SuplaSwitch(device) for device in config_entry.data])
+
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
+    _LOGGER.warning("Loading SUPLA via platform config is deprecated")
     """Set up the Supla switches."""
     if discovery_info is None:
         return

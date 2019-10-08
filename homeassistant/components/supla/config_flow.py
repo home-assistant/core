@@ -56,6 +56,7 @@ class SuplaFlowHandler(config_entries.ConfigFlow):
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
         errors = {}
+        description_placeholders = {"error_info": ""}
         if user_input is not None:
             # Test connection
             server = SuplaAPI(user_input[CONF_SERVER], user_input[CONF_ACCESS_TOKEN])
@@ -72,6 +73,7 @@ class SuplaFlowHandler(config_entries.ConfigFlow):
                     srv_info,
                 )
                 errors = {CONF_SERVER: "supla_no_connection"}
+                description_placeholders = {"error_info": str(srv_info)}
 
         return self.async_show_form(
             step_id="init",
@@ -79,4 +81,5 @@ class SuplaFlowHandler(config_entries.ConfigFlow):
                 {vol.Required(CONF_SERVER): str, vol.Required(CONF_ACCESS_TOKEN): str}
             ),
             errors=errors,
+            description_placeholders=description_placeholders,
         )

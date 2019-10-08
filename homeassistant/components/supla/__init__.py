@@ -101,7 +101,17 @@ async def async_discover_devices(hass, config_entry):
 
     # Load discovered devices
     for component_name, channel in component_configs.items():
-        load_platform(hass, component_name, "supla", channel, config_entry.data)
+        # load_platform(hass, component_name, "supla", channel, config_entry.data)
+        _LOGGER.error("------------------------")
+        _LOGGER.error("------------------------")
+        _LOGGER.error("channel: " + str(channel))
+        _LOGGER.error("------------------------")
+        _LOGGER.error("------------------------")
+        channel_function = channel["function"]["name"]
+        component_name = SUPLA_FUNCTION_HA_CMP_MAP.get(channel_function)
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, component_name)
+        )
 
 
 class SuplaChannel(Entity):
