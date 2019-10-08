@@ -151,6 +151,7 @@ class NeatoHub:
                 self.config[CONF_USERNAME], self.config[CONF_PASSWORD], self._vendor
             )
             self.logged_in = True
+            _LOGGER.debug("Successfully connected to Neato API")
         except NeatoException as ex:
             if isinstance(ex, NeatoLoginException):
                 _LOGGER.error("Invalid credentials")
