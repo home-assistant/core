@@ -24,6 +24,7 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
+from .device import ATTR_GROUP_ID, ATTR_ID, ATTR_IS_GROUP, ATTR_MODEL_TYPE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -148,6 +149,20 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._device.maxTemperature
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the switch-group."""
+        state_attr = super().device_state_attributes
+
+        # Reassign state_attr if climate is based on a device instead of a group.
+        if self._simple_heating:
+            del state_attr[ATTR_GROUP_ID]
+            state_attr[ATTR_MODEL_TYPE] = self._simple_heating.modelType
+            state_attr[ATTR_ID] = self._simple_heating.id
+            state_attr[ATTR_IS_GROUP] = False
+
+        return state_attr
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""

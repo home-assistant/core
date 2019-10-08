@@ -19,7 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
-from .device import ATTR_GROUP_MEMBER_UNREACHABLE, ATTR_IS_GROUP
+from .device import ATTR_GROUP_MEMBER_UNREACHABLE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -113,9 +113,11 @@ class HomematicipGroupSwitch(HomematicipGenericDevice, SwitchDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the switch-group."""
-        state_attr = {ATTR_IS_GROUP: True}
+        state_attr = super().device_state_attributes
+
         if self._device.unreach:
             state_attr[ATTR_GROUP_MEMBER_UNREACHABLE] = True
+
         return state_attr
 
     async def async_turn_on(self, **kwargs):
