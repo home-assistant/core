@@ -53,9 +53,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     disconnect_dispatcher = async_dispatcher_connect(
         hass, UPDATE_SIGNAL, _async_maybe_add_new_entities
     )
-    router.signal_handlers[
-        f"{DEVICE_TRACKER_DOMAIN}_disconnect"
-    ] = disconnect_dispatcher
+    router.unload_handlers.append(disconnect_dispatcher)
 
     # Add new entities waiting to be added from initial scan
     await async_add_new_entities(hass, router.url, async_add_entities, tracked)
@@ -78,19 +76,6 @@ async def async_add_new_entities(hass, router_url, async_add_entities, tracked):
         tracked.add(entity.unique_id)
         new_entities.append(entity)
     async_add_entities(new_entities, True)
-
-
-async def async_unload_entry(hass, config_entry):
-    """Unload config entry."""
-    router = hass.data[DOMAIN].routers[config_entry.data[CONF_URL]]
-    router.subscriptions[KEY_WLAN_HOST_LIST].discard(
-        f"{DEVICE_TRACKER_DOMAIN}/{_NEW_DEVICE_SCAN}"
-    )
-    disconnect_dispatcher = router.signal_handlers.pop(
-        f"{DEVICE_TRACKER_DOMAIN}_disconnect", None
-    )
-    if disconnect_dispatcher is not None:
-        disconnect_dispatcher()
 
 
 def _better_snakecase(s: str) -> str:

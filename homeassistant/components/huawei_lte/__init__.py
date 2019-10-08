@@ -6,7 +6,7 @@ from functools import partial
 from urllib.parse import urlparse
 import ipaddress
 import logging
-from typing import Any, Callable, Dict, Set
+from typing import Any, Callable, Dict, List, Set
 
 import voluptuous as vol
 import attr
@@ -31,6 +31,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import CALLBACK_TYPE
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
@@ -97,13 +98,13 @@ class Router:
     connection: Connection = attr.ib()
     url: str = attr.ib()
     mac: str = attr.ib()
-    signal_update: Callable[[], None] = attr.ib()
+    signal_update: CALLBACK_TYPE = attr.ib()
 
     data: Dict[str, Any] = attr.ib(init=False, factory=dict)
     subscriptions: Dict[str, Set[str]] = attr.ib(
         init=False, default=defaultdict(set, ((x, {"initial_scan"}) for x in ALL_KEYS))
     )
-    signal_handlers: Dict[str, Callable] = attr.ib(init=False, factory=dict)
+    unload_handlers: List[CALLBACK_TYPE] = attr.ib(init=False, factory=list)
 
     def __attrs_post_init__(self):
         """Set up internal state on init."""
@@ -159,6 +160,13 @@ class Router:
 
     def cleanup(self, *_) -> None:
         """Clean up resources."""
+
+        self.subscriptions.clear()
+
+        for handler in self.unload_handlers:
+            handler()
+        self.unload_handlers.clear()
+
         if not isinstance(self.connection, AuthorizedConnection):
             return
         try:
