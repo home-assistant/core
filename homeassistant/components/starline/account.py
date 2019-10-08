@@ -26,7 +26,7 @@ class StarlineAccount:
 
     @property
     def api(self) -> StarlineApi:
-        """API class instance."""
+        """Return the instance of the API."""
         return self._api
 
     def set_update_interval(self, hass: HomeAssistant, interval: int) -> None:
