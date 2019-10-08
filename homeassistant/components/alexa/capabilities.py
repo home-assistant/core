@@ -817,8 +817,6 @@ class AlexaModeController(AlexaCapibility):
 
         if self.instance() == fan.ATTR_DIRECTION:
             return self.entity.attributes.get(fan.ATTR_DIRECTION)
-        if self.instance() == fan.ATTR_OSCILLATING:
-            return self.entity.attributes.get(fan.ATTR_OSCILLATING)
 
         return None
 
@@ -1029,6 +1027,7 @@ class AlexaToggleController(AlexaCapibility):
         """Read and return a property."""
         if name != "toggleState":
             raise UnsupportedProperty(name)
+
         if self.instance() == fan.ATTR_OSCILLATING:
             is_on = bool(self.entity.attributes.get(fan.ATTR_OSCILLATING))
             return "ON" if is_on else "OFF"
