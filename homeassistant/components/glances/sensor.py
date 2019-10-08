@@ -13,20 +13,18 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Glances sensors is done through async_setup_entry."""
-    return True
+    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Glances sensors."""
 
-    glances_api = hass.data[DOMAIN][config_entry.entry_id]
-    client_name = config_entry.data[CONF_NAME]
+    glances_data = hass.data[DOMAIN][config_entry.entry_id]
+    name = config_entry.data[CONF_NAME]
     dev = []
     for sensor_type in SENSOR_TYPES:
         dev.append(
-            GlancesSensor(
-                glances_api, client_name, SENSOR_TYPES[sensor_type][0], sensor_type
-            )
+            GlancesSensor(glances_data, name, SENSOR_TYPES[sensor_type][0], sensor_type)
         )
 
     async_add_entities(dev, True)
@@ -35,11 +33,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class GlancesSensor(Entity):
     """Implementation of a Glances sensor."""
 
-    def __init__(self, glances_api, client_name, sensor_name, sensor_type):
+    def __init__(self, glances_data, name, sensor_name, sensor_type):
         """Initialize the sensor."""
-        self.glances_api = glances_api
-        self._name = sensor_name
-        self.client_name = client_name
+        self.glances_data = glances_data
+        self._sensor_name = sensor_name
+        self._name = name
         self.type = sensor_type
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
@@ -47,12 +45,12 @@ class GlancesSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self.client_name} {self._name}"
+        return f"{self._name} {self._sensor_name}"
 
     @property
     def unique_id(self):
         """Set unique_id for sensor."""
-        return f"{self.glances_api.host}-{self.name}"
+        return f"{self.glances_data.host}-{self.name}"
 
     @property
     def icon(self):
@@ -67,7 +65,7 @@ class GlancesSensor(Entity):
     @property
     def available(self):
         """Could the device be accessed during the last update call."""
-        return self.glances_api.available
+        return self.glances_data.available
 
     @property
     def state(self):
@@ -91,7 +89,7 @@ class GlancesSensor(Entity):
 
     async def async_update(self):
         """Get the latest data from REST API."""
-        value = self.glances_api.api.data
+        value = self.glances_data.api.data
 
         if value is not None:
             if self.type == "disk_use_percent":

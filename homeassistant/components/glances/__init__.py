@@ -1,23 +1,71 @@
 """The Glances component."""
 from datetime import timedelta
 import logging
+import voluptuous as vol
 
 from glances_api import Glances, exceptions
 
-from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_HOST,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_SCAN_INTERVAL,
+    CONF_VERIFY_SSL,
+)
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import Config, HomeAssistant
+import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import DATA_UPDATED, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    DATA_UPDATED,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    DEFAULT_HOST,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    CONF_VERSION,
+    DEFAULT_VERSION,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+GLANCES_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_USERNAME): cv.string,
+            vol.Optional(CONF_PASSWORD): cv.string,
+            vol.Optional(CONF_SSL, default=False): cv.boolean,
+            vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+            vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.In([2, 3]),
+        }
+    )
+)
+
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.All(cv.ensure_list, [GLANCES_SCHEMA])}, extra=vol.ALLOW_EXTRA
+)
 
 
 async def async_setup(hass: HomeAssistant, config: Config) -> bool:
     """Configure Glances using config flow only."""
+    if DOMAIN in config:
+        for entry in config[DOMAIN]:
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
+                )
+            )
+
     return True
 
 
@@ -39,10 +87,10 @@ async def async_unload_entry(hass, config_entry):
 
 
 class GlancesData:
-    """Represents Glances Data."""
+    """Get the latest data from Glances api."""
 
     def __init__(self, hass, config_entry):
-        """Initialize the Glances client."""
+        """Initialize the Glances data."""
         self.hass = hass
         self.config_entry = config_entry
         self.api = None
@@ -68,7 +116,7 @@ class GlancesData:
     async def async_setup(self):
         """Set up the Glances client."""
         try:
-            self.api = GlancesClient(self.hass, **self.config_entry.data)
+            self.api = get_api(self.hass, self.config_entry.data)
             await self.api.get_data()
             self.available = True
             _LOGGER.debug("Successfully connected to Glances")
@@ -117,30 +165,39 @@ class GlancesData:
         )
 
 
-class GlancesClient(Glances):
-    """Represents a Glance client."""
+def get_api(hass, entry):
+    """Return the api from glances_api."""
+    params = entry.copy()
+    params.pop(CONF_NAME)
+    verify_ssl = params.pop(CONF_VERIFY_SSL)
+    session = async_get_clientsession(hass, verify_ssl)
+    return Glances(hass.loop, session, **params)
 
-    def __init__(
-        self,
-        hass,
-        name,
-        host,
-        port,
-        version,
-        ssl,
-        verify_ssl,
-        username=None,
-        password=None,
-    ):
-        """Initialize Glances api."""
-        session = async_get_clientsession(hass, verify_ssl)
-        super().__init__(
-            hass.loop,
-            session,
-            host=host,
-            port=port,
-            version=version,
-            username=username,
-            password=password,
-            ssl=ssl,
-        )
+
+# class GlancesClient(Glances):
+#     """Represents a Glance client."""
+
+#     def __init__(
+#         self,
+#         hass,
+#         name,
+#         host,
+#         port,
+#         version,
+#         ssl,
+#         verify_ssl,
+#         username=None,
+#         password=None,
+#     ):
+#         """Initialize Glances api."""
+#         session = async_get_clientsession(hass, verify_ssl)
+#         super().__init__(
+#             hass.loop,
+#             session,
+#             host=host,
+#             port=port,
+#             version=version,
+#             username=username,
+#             password=password,
+#             ssl=ssl,
+#         )

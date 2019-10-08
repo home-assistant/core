@@ -3,7 +3,7 @@
         "title": "Glances",
         "step": {
             "user": {
-                "title": "Setup Glances Client",
+                "title": "Setup Glances",
                 "data": {
                     "name": "Name",
                     "host": "Host",
@@ -17,8 +17,7 @@
             }
         },
         "error": {
-            "cannot_connect": "Unable to Connect to host",
-            "already_configured": "Host is already configured",
+            "cannot_connect": "Unable to connect to host",
             "wrong_version": "Version not supported (2 or 3 only)"
         },
         "abort": {

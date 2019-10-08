@@ -1,16 +1,13 @@
-"""Tests for Met.no config flow."""
+"""Tests for Glances config flow."""
 from unittest.mock import patch
 
-from tests.common import MockConfigEntry, mock_coro
-from homeassistant import config_entries, setup
-from homeassistant.const import CONF_SCAN_INTERVAL
-from homeassistant.components.glances.config_flow import (
-    GlancesFlowHandler,
-    CannotConnect,
-    WrongVersion,
-    AlreadyConfigured,
-)
+from glances_api import Glances
+
+from homeassistant.components.glances import config_flow
 from homeassistant.components.glances.const import DOMAIN
+from homeassistant.const import CONF_SCAN_INTERVAL
+
+from tests.common import MockConfigEntry, mock_coro
 
 NAME = "Glances"
 HOST = "0.0.0.0"
@@ -32,89 +29,63 @@ DEMO_USER_INPUT = {
 }
 
 
+def init_config_flow(hass):
+    """Init a configuration flow."""
+    flow = config_flow.GlancesFlowHandler()
+    flow.hass = hass
+    return flow
+
+
 async def test_form(hass):
-    """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == "form"
-    assert result["errors"] == {}
+    """Test config entry configured successfully."""
+    flow = init_config_flow(hass)
 
-    with patch(
-        "homeassistant.components.glances.config_flow.validate_input",
-        return_value=mock_coro(),
-    ), patch(
-        "homeassistant.components.glances.async_setup", return_value=mock_coro(True)
-    ) as mock_setup, patch(
-        "homeassistant.components.glances.async_setup_entry",
-        return_value=mock_coro(True),
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], DEMO_USER_INPUT
-        )
+    with patch("glances_api.Glances"), patch.object(
+        Glances, "get_data", return_value=mock_coro()
+    ):
 
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == NAME
-    assert result2["data"] == DEMO_USER_INPUT
+        result = await flow.async_step_user(DEMO_USER_INPUT)
 
-    await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert result["type"] == "create_entry"
+    assert result["title"] == NAME
+    assert result["data"] == DEMO_USER_INPUT
 
 
 async def test_form_cannot_connect(hass):
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    """Test to return error if we cannot connect."""
+    flow = init_config_flow(hass)
 
-    with patch(
-        "homeassistant.components.glances.config_flow.validate_input",
-        side_effect=CannotConnect,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], DEMO_USER_INPUT
-        )
+    with patch("glances_api.Glances"):
+        result = await flow.async_step_user(DEMO_USER_INPUT)
 
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_wrong_version(hass):
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    """Test to check if wrong version is entered."""
+    flow = init_config_flow(hass)
 
-    with patch(
-        "homeassistant.components.glances.config_flow.validate_input",
-        side_effect=WrongVersion,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], DEMO_USER_INPUT
-        )
+    user_input = DEMO_USER_INPUT.copy()
+    user_input.update(version=1)
+    result = await flow.async_step_user(user_input)
 
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"version": "wrong_version"}
+    assert result["type"] == "form"
+    assert result["errors"] == {"version": "wrong_version"}
 
 
 async def test_form_already_configured(hass):
     """Test host is already configured."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=DEMO_USER_INPUT, options={CONF_SCAN_INTERVAL: 60}
     )
+    entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.glances.config_flow.validate_input",
-        side_effect=AlreadyConfigured,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], DEMO_USER_INPUT
-        )
+    flow = init_config_flow(hass)
+    result = await flow.async_step_user(DEMO_USER_INPUT)
 
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"host": "already_configured"}
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
 
 
 async def test_options(hass):
@@ -122,14 +93,10 @@ async def test_options(hass):
     entry = MockConfigEntry(
         domain=DOMAIN, data=DEMO_USER_INPUT, options={CONF_SCAN_INTERVAL: 60}
     )
-    flow = GlancesFlowHandler
-    flow.hass = hass
+    entry.add_to_hass(hass)
+    flow = init_config_flow(hass)
     options_flow = flow.async_get_options_flow(entry)
 
-    result = await options_flow.async_step_init()
-    assert result["type"] == "form"
-    assert result["step_id"] == "init"
-
-    result2 = await options_flow.async_step_init({CONF_SCAN_INTERVAL: 10})
-    assert result2["type"] == "create_entry"
-    assert result2["data"][CONF_SCAN_INTERVAL] == 10
+    result = await options_flow.async_step_init({CONF_SCAN_INTERVAL: 10})
+    assert result["type"] == "create_entry"
+    assert result["data"][CONF_SCAN_INTERVAL] == 10

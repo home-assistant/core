@@ -1,4 +1,4 @@
-"""Config flow for Glances Client."""
+"""Config flow for Glances."""
 import glances_api
 import voluptuous as vol
 
@@ -15,13 +15,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
-from . import GlancesClient
+from . import get_api
 from .const import (
     CONF_VERSION,
     DEFAULT_HOST,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_VERSION,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     SUPPORTED_VERSIONS,
 )
@@ -49,7 +50,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     if data[CONF_VERSION] not in SUPPORTED_VERSIONS:
         raise WrongVersion
     try:
-        api = GlancesClient(hass, **data)
+        api = get_api(hass, data)
         await api.get_data()
     except glances_api.exceptions.GlancesApiConnectionError:
         raise CannotConnect
@@ -73,21 +74,24 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await validate_input(self.hass, user_input)
-
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input
                 )
-
+            except AlreadyConfigured:
+                return self.async_abort(reason="already_configured")
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except AlreadyConfigured:
-                errors[CONF_HOST] = "already_configured"
             except WrongVersion:
                 errors[CONF_VERSION] = "wrong_version"
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_import(self, import_config):
+        """Import from Glances sensor config."""
+
+        return await self.async_step_user(user_input=import_config)
 
 
 class GlancesOptionsFlowHandler(config_entries.OptionsFlow):
@@ -105,7 +109,9 @@ class GlancesOptionsFlowHandler(config_entries.OptionsFlow):
         options = {
             vol.Optional(
                 CONF_SCAN_INTERVAL,
-                default=self.config_entry.options.get(CONF_SCAN_INTERVAL),
+                default=self.config_entry.options.get(
+                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                ),
             ): int
         }
 
