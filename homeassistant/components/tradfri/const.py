@@ -24,4 +24,3 @@ ATTR_TRADFRI_GATEWAY_MODEL = "E1526"
 
 TRADFRI_DEVICE_TYPES = ["cover", "light", "sensor", "switch"]
 KEY_SECURITY_CODE = "security_code"
-KEY_IMPORT_GROUPS = "import_groups"
