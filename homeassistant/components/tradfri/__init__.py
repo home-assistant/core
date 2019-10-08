@@ -5,6 +5,9 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.util.json import load_json
+from . import config_flow  # noqa  pylint_disable=unused-import
 from .const import (
     DOMAIN,
     CONFIG_FILE,
@@ -22,9 +25,6 @@ from .const import (
     CONF_KEY,
     CONF_GATEWAY_ID,
 )
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.util.json import load_json
-from . import config_flow  # noqa  pylint_disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
