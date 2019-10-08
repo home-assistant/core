@@ -1,10 +1,9 @@
 """Support for IKEA Tradfri sensors."""
 import logging
 
-from homeassistant.components.tradfri.base_class import TradfriBaseDevice
+from .base_class import TradfriBaseDevice
 from homeassistant.const import DEVICE_CLASS_BATTERY
-from homeassistant.components.tradfri import KEY_GATEWAY, KEY_API
-from .const import CONF_GATEWAY_ID
+from .const import KEY_GATEWAY, KEY_API, CONF_GATEWAY_ID
 
 _LOGGER = logging.getLogger(__name__)
 

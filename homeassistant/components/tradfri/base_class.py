@@ -5,7 +5,7 @@ from pytradfri.error import PytradfriError
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.tradfri.const import DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

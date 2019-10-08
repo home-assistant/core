@@ -1,8 +1,7 @@
 """Support for IKEA Tradfri switches."""
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.tradfri import KEY_GATEWAY, KEY_API
+from .const import KEY_GATEWAY, KEY_API, CONF_GATEWAY_ID
 from .base_class import TradfriBaseDevice
-from .const import CONF_GATEWAY_ID
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

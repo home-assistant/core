@@ -5,7 +5,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
-from homeassistant.components.tradfri.const import (
+from .const import (
     DOMAIN,
     CONFIG_FILE,
     KEY_GATEWAY,
@@ -16,17 +16,15 @@ from homeassistant.components.tradfri.const import (
     ATTR_TRADFRI_MANUFACTURER,
     ATTR_TRADFRI_GATEWAY,
     ATTR_TRADFRI_GATEWAY_MODEL,
-)
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.util.json import load_json
-from . import config_flow  # noqa  pylint_disable=unused-import
-from .const import (
     CONF_IMPORT_GROUPS,
     CONF_IDENTITY,
     CONF_HOST,
     CONF_KEY,
     CONF_GATEWAY_ID,
 )
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.util.json import load_json
+from . import config_flow  # noqa  pylint_disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
