@@ -40,42 +40,42 @@ INVERTER_MODES = (
 # Supported sensor types:
 # Key: ['json_key', 'name', unit, icon, attribute name]
 SENSOR_TYPES = {
-    "current_AC_voltage": ["gridvoltage", "Grid Voltage", "V", "mdi:current-ac", ""],
-    "current_DC_voltage": ["dcvoltage", "DC Voltage", "V", "mdi:current-dc", ""],
+    "current_AC_voltage": ["gridvoltage", "Grid Voltage", "V", "mdi:current-ac", None],
+    "current_DC_voltage": ["dcvoltage", "DC Voltage", "V", "mdi:current-dc", None],
     "current_frequency": [
         "gridfrequency",
         "Grid Frequency",
         "Hz",
         "mdi:current-ac",
-        "",
+        None,
     ],
     "current_power": [
         "currentPower",
         "Current Power",
         POWER_WATT,
         "mdi:solar-power",
-        "",
+        None,
     ],
     "energy_this_month": [
         "energyThisMonth",
-        "Energy this month",
+        "Energy This Month",
         ENERGY_WATT_HOUR,
         "mdi:solar-power",
-        "",
+        None,
     ],
     "energy_this_year": [
         "energyThisYear",
-        "Energy this year",
+        "Energy This Year",
         ENERGY_WATT_HOUR,
         "mdi:solar-power",
-        "",
+        None,
     ],
     "energy_today": [
         "energyToday",
-        "Energy today",
+        "Energy Today",
         ENERGY_WATT_HOUR,
         "mdi:solar-power",
-        "",
+        None,
     ],
     "inverter_temperature": [
         "invertertemperature",
@@ -86,14 +86,14 @@ SENSOR_TYPES = {
     ],
     "lifetime_energy": [
         "energyTotal",
-        "Lifetime energy",
+        "Lifetime Energy",
         ENERGY_WATT_HOUR,
         "mdi:solar-power",
-        "",
+        None,
     ],
     "optimizer_connected": [
         "optimizers",
-        "Optimizers online",
+        "Optimizers Online",
         "optimizers",
         "mdi:solar-panel",
         "optimizers_connected",
@@ -103,28 +103,28 @@ SENSOR_TYPES = {
         "Average Optimizer Current",
         "A",
         "mdi:solar-panel",
-        "",
+        None,
     ],
     "optimizer_power": [
         "optimizerpower",
         "Average Optimizer Power",
         POWER_WATT,
         "mdi:solar-panel",
-        "",
+        None,
     ],
     "optimizer_temperature": [
         "optimizertemperature",
         "Average Optimizer Temperature",
         TEMP_CELSIUS,
         "mdi:solar-panel",
-        "",
+        None,
     ],
     "optimizer_voltage": [
         "optimizervoltage",
         "Average Optimizer Voltage",
         "V",
         "mdi:solar-panel",
-        "",
+        None,
     ],
 }
 
@@ -167,6 +167,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             TEMP_FAHRENHEIT,
             "mdi:thermometer",
             "operating_mode",
+            None,
         ]
 
     try:
@@ -176,17 +177,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 "current import Power",
                 POWER_WATT,
                 "mdi:arrow-collapse-down",
-                "",
+                None,
             ]
             sensors["import_meter_reading"] = [
                 "totalEnergyimport",
                 "total import Energy",
                 ENERGY_WATT_HOUR,
                 "mdi:counter",
-                "",
+                None,
             ]
     except IndexError:
-        _LOGGER.critical("meter list 0 sensors not created")
+        _LOGGER.info("Import meter sensors are not created.")
 
     try:
         if status.metersList[1]:
@@ -195,17 +196,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 "current export Power",
                 POWER_WATT,
                 "mdi:arrow-expand-up",
-                "",
+                None,
             ]
             sensors["export_meter_reading"] = [
                 "totalEnergyexport",
                 "total export Energy",
                 ENERGY_WATT_HOUR,
                 "mdi:counter",
-                "",
+                None,
             ]
     except IndexError:
-        _LOGGER.critical("meter list 1 sensors not created")
+        _LOGGER.info("Export meter sensors are not created.")
 
     # Create solaredge data service which will retrieve and update the data.
     data = SolarEdgeData(hass, api)
@@ -350,14 +351,14 @@ class SolarEdgeData:
                     self.data["currentPowerimport"] = status.metersList[1].currentPower
                     self.data["totalEnergyimport"] = status.metersList[1].totalEnergy
             except IndexError:
-                _LOGGER.critical("no values send to fronted")
+                pass
 
             try:
                 if status.metersList[0]:
                     self.data["currentPowerexport"] = status.metersList[0].currentPower
                     self.data["totalEnergyexport"] = status.metersList[0].totalEnergy
             except IndexError:
-                _LOGGER.critical("no values send to fronted")
+                pass
 
         if maintenance.system.name:
             self.data["optimizertemperature"] = round(statistics.mean(temperature), 2)
