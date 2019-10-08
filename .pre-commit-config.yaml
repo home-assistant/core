@@ -13,3 +13,7 @@ repos:
         additional_dependencies:
           - flake8-docstrings==1.3.1
           - pydocstyle==4.0.0
+-   repo: https://github.com/pre-commit/mirrors-mypy.git
+    rev: v0.730
+    hooks:
+    -   id: mypy
