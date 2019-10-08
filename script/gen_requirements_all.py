@@ -173,6 +173,7 @@ TEST_REQUIREMENTS = (
     "vultr",
     "wakeonlan",
     "warrant",
+    "withings-api",
     "YesssSMS",
     "zeroconf",
     "zigpy-homeassistant",
