@@ -18,6 +18,7 @@
                     "username": "Brukernavn",
                     "vendor": "Leverand\u00f8r"
                 },
+                "description": "Se [Neato dokumentasjon]({docs_url}).",
                 "title": "Neato kontoinformasjon"
             }
         },

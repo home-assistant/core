@@ -2,7 +2,8 @@
     "config": {
         "error": {
             "auth": "Api Schl\u00ebssel ass net korrekt.",
-            "name_exists": "Numm g\u00ebtt et schonn"
+            "name_exists": "Numm g\u00ebtt et schonn",
+            "wrong_location": "Keng Airly Moos Statioun an d\u00ebsem Ber\u00e4ich"
         },
         "step": {
             "user": {
@@ -12,6 +13,7 @@
                     "longitude": "L\u00e4ngegrad",
                     "name": "Numm vun der Installatioun"
                 },
+                "description": "Airly Loft Qualit\u00e9it Integratioun ariichten. Fir een API Schl\u00ebssel z'erstelle gitt op https://developer.airly.eu/register",
                 "title": "Airly"
             }
         },
