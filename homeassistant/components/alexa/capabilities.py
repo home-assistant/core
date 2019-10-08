@@ -810,7 +810,7 @@ class AlexaModeController(AlexaCapability):
         if name != "mode":
             raise UnsupportedProperty(name)
 
-        if self.instance == fan.ATTR_DIRECTION:
+        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
             return self.entity.attributes.get(fan.ATTR_DIRECTION)
 
         return None
@@ -824,7 +824,7 @@ class AlexaModeController(AlexaCapability):
 
     def capability_resources(self):
         """Return capabilityResources object."""
-        if self.instance == fan.ATTR_DIRECTION:
+        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
             return [{"type": Catalog.LABEL_ASSET, "value": Catalog.SETTING_DIRECTION}]
 
         return None
@@ -832,7 +832,7 @@ class AlexaModeController(AlexaCapability):
     def mode_resources(self):
         """Return modeResources object."""
         mode_resources = None
-        if self.instance == fan.ATTR_DIRECTION:
+        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
             mode_resources = {
                 "ordered": False,
                 "resources": [
@@ -904,7 +904,7 @@ class AlexaRangeController(AlexaCapability):
         if name != "rangeValue":
             raise UnsupportedProperty(name)
 
-        if self.instance == fan.ATTR_SPEED:
+        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
             speed = self.entity.attributes.get(fan.ATTR_SPEED)
             return RANGE_FAN_MAP.get(speed, 0)
 
@@ -919,7 +919,7 @@ class AlexaRangeController(AlexaCapability):
 
     def capability_resources(self):
         """Return capabilityResources object."""
-        if self.instance == fan.ATTR_SPEED:
+        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
             return [{"type": Catalog.LABEL_ASSET, "value": Catalog.SETTING_FANSPEED}]
 
         return None
@@ -928,7 +928,7 @@ class AlexaRangeController(AlexaCapability):
         """Return presetResources object."""
         preset_resources = None
 
-        if self.instance == fan.ATTR_SPEED:
+        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
             preset_resources = {
                 "minimumValue": 1,
                 "maximumValue": 3,
@@ -1021,7 +1021,7 @@ class AlexaToggleController(AlexaCapability):
         if name != "toggleState":
             raise UnsupportedProperty(name)
 
-        if self.instance == fan.ATTR_OSCILLATING:
+        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}":
             is_on = bool(self.entity.attributes.get(fan.ATTR_OSCILLATING))
             return "ON" if is_on else "OFF"
 
@@ -1029,7 +1029,7 @@ class AlexaToggleController(AlexaCapability):
 
     def capability_resources(self):
         """Return capabilityResources object."""
-        if self.instance == fan.ATTR_OSCILLATING:
+        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}":
             return [
                 {"type": Catalog.LABEL_ASSET, "value": Catalog.SETTING_OSCILLATE},
                 {"type": Catalog.LABEL_TEXT, "value": "Rotate"},

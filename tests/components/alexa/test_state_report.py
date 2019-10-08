@@ -79,7 +79,7 @@ async def test_report_state_instance(hass, aioclient_mock):
     for report in change_reports:
         if report["name"] == "toggleState":
             assert report["value"] == "ON"
-            assert report["instance"] == "oscillating"
+            assert report["instance"] == "fan.oscillating"
             assert report["namespace"] == "Alexa.ToggleController"
 
     assert call_json["event"]["endpoint"]["endpointId"] == "fan#test_fan"

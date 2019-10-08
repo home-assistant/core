@@ -931,7 +931,7 @@ async def async_api_set_mode(hass, config, directive, context):
         msg = "Entity does not support directive"
         raise AlexaInvalidDirectiveError(msg)
 
-    if instance == fan.ATTR_DIRECTION:
+    if instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
         mode, direction = mode.split(".")
         if direction in [fan.DIRECTION_REVERSE, fan.DIRECTION_FORWARD]:
             service = fan.SERVICE_SET_DIRECTION
@@ -981,7 +981,7 @@ async def async_api_toggle_on(hass, config, directive, context):
         msg = "Entity does not support directive"
         raise AlexaInvalidDirectiveError(msg)
 
-    if instance == fan.ATTR_OSCILLATING:
+    if instance == f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}":
         service = fan.SERVICE_OSCILLATE
         data[fan.ATTR_OSCILLATING] = True
 
@@ -1005,7 +1005,7 @@ async def async_api_toggle_off(hass, config, directive, context):
         msg = "Entity does not support directive"
         raise AlexaInvalidDirectiveError(msg)
 
-    if instance == fan.ATTR_OSCILLATING:
+    if instance == f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}":
         service = fan.SERVICE_OSCILLATE
         data[fan.ATTR_OSCILLATING] = False
 
@@ -1030,7 +1030,7 @@ async def async_api_set_range(hass, config, directive, context):
         msg = "Entity does not support directive"
         raise AlexaInvalidDirectiveError(msg)
 
-    if instance == fan.ATTR_SPEED:
+    if instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
         service = fan.SERVICE_SET_SPEED
         speed = RANGE_FAN_MAP.get(range_value, None)
 
@@ -1064,7 +1064,7 @@ async def async_api_adjust_range(hass, config, directive, context):
         msg = "Entity does not support directive"
         raise AlexaInvalidDirectiveError(msg)
 
-    if instance == fan.ATTR_SPEED:
+    if instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
         service = fan.SERVICE_SET_SPEED
 
         # adjust range

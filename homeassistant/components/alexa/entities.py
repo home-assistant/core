@@ -351,12 +351,18 @@ class FanCapabilities(AlexaEntity):
         if supported & fan.SUPPORT_SET_SPEED:
             yield AlexaPercentageController(self.entity)
             yield AlexaPowerLevelController(self.entity)
-            yield AlexaRangeController(self.entity, instance=fan.ATTR_SPEED)
+            yield AlexaRangeController(
+                self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_SPEED}"
+            )
 
         if supported & fan.SUPPORT_OSCILLATE:
-            yield AlexaToggleController(self.entity, instance=fan.ATTR_OSCILLATING)
+            yield AlexaToggleController(
+                self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}"
+            )
         if supported & fan.SUPPORT_DIRECTION:
-            yield AlexaModeController(self.entity, instance=fan.ATTR_DIRECTION)
+            yield AlexaModeController(
+                self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}"
+            )
 
         yield AlexaEndpointHealth(self.hass, self.entity)
 

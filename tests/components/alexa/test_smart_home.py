@@ -350,7 +350,7 @@ async def test_variable_fan(hass):
 
     range_capability = get_capability(capabilities, "Alexa.RangeController")
     assert range_capability is not None
-    assert range_capability["instance"] == "speed"
+    assert range_capability["instance"] == "fan.speed"
 
     properties = range_capability["properties"]
     assert properties["nonControllable"] is False
@@ -433,7 +433,7 @@ async def test_oscillating_fan(hass):
 
     toggle_capability = get_capability(capabilities, "Alexa.ToggleController")
     assert toggle_capability is not None
-    assert toggle_capability["instance"] == "oscillating"
+    assert toggle_capability["instance"] == "fan.oscillating"
 
     properties = toggle_capability["properties"]
     assert properties["nonControllable"] is False
@@ -453,7 +453,7 @@ async def test_oscillating_fan(hass):
         "fan.oscillate",
         hass,
         payload={},
-        instance="oscillating",
+        instance="fan.oscillating",
     )
     assert call.data["oscillating"]
 
@@ -464,7 +464,7 @@ async def test_oscillating_fan(hass):
         "fan.oscillate",
         hass,
         payload={},
-        instance="oscillating",
+        instance="fan.oscillating",
     )
     assert not call.data["oscillating"]
 
@@ -497,7 +497,7 @@ async def test_direction_fan(hass):
 
     mode_capability = get_capability(capabilities, "Alexa.ModeController")
     assert mode_capability is not None
-    assert mode_capability["instance"] == "direction"
+    assert mode_capability["instance"] == "fan.direction"
 
     properties = mode_capability["properties"]
     assert properties["nonControllable"] is False
@@ -540,7 +540,7 @@ async def test_direction_fan(hass):
         "fan.set_direction",
         hass,
         payload={"mode": "direction.reverse"},
-        instance="direction",
+        instance="fan.direction",
     )
     assert call.data["direction"] == "reverse"
 
@@ -590,7 +590,7 @@ async def test_fan_range(hass):
 
     range_capability = get_capability(capabilities, "Alexa.RangeController")
     assert range_capability is not None
-    assert range_capability["instance"] == "speed"
+    assert range_capability["instance"] == "fan.speed"
 
     call, _ = await assert_request_calls_service(
         "Alexa.RangeController",
@@ -599,7 +599,7 @@ async def test_fan_range(hass):
         "fan.set_speed",
         hass,
         payload={"rangeValue": "1"},
-        instance="speed",
+        instance="fan.speed",
     )
     assert call.data["speed"] == "low"
 
@@ -612,7 +612,7 @@ async def test_fan_range(hass):
         False,
         "fan.set_speed",
         "speed",
-        instance="speed",
+        instance="fan.speed",
     )
 
 
@@ -637,7 +637,7 @@ async def test_fan_range_off(hass):
         "fan.turn_off",
         hass,
         payload={"rangeValue": "0"},
-        instance="speed",
+        instance="fan.speed",
     )
     assert call.data["speed"] == "off"
 
@@ -650,7 +650,7 @@ async def test_fan_range_off(hass):
         False,
         "fan.turn_off",
         "speed",
-        instance="speed",
+        instance="fan.speed",
     )
 
 
