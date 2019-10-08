@@ -1,6 +1,4 @@
 """ZHA device automation trigger tests."""
-from unittest.mock import patch
-
 import pytest
 
 import homeassistant.components.automation as automation
@@ -197,7 +195,7 @@ async def test_if_fires_on_event(hass, config_entry, zha_gateway, calls):
     assert calls[0].data["message"] == "service called"
 
 
-async def test_exception_no_triggers(hass, config_entry, zha_gateway, calls):
+async def test_exception_no_triggers(hass, config_entry, zha_gateway, calls, caplog):
     """Test for exception on event triggers firing."""
     from zigpy.zcl.clusters.general import OnOff, Basic
 
@@ -219,33 +217,32 @@ async def test_exception_no_triggers(hass, config_entry, zha_gateway, calls):
     ha_device_registry = await async_get_registry(hass)
     reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
 
-    with patch("logging.Logger.error") as mock:
-        await async_setup_component(
-            hass,
-            automation.DOMAIN,
-            {
-                automation.DOMAIN: [
-                    {
-                        "trigger": {
-                            "device_id": reg_device.id,
-                            "domain": "zha",
-                            "platform": "device",
-                            "type": "junk",
-                            "subtype": "junk",
-                        },
-                        "action": {
-                            "service": "test.automation",
-                            "data": {"message": "service called"},
-                        },
-                    }
-                ]
-            },
-        )
-        await hass.async_block_till_done()
-        mock.assert_called_with("Error setting up trigger %s", "automation 0")
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "device_id": reg_device.id,
+                        "domain": "zha",
+                        "platform": "device",
+                        "type": "junk",
+                        "subtype": "junk",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data": {"message": "service called"},
+                    },
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    assert "Invalid config for [automation]" in caplog.text
 
 
-async def test_exception_bad_trigger(hass, config_entry, zha_gateway, calls):
+async def test_exception_bad_trigger(hass, config_entry, zha_gateway, calls, caplog):
     """Test for exception on event triggers firing."""
     from zigpy.zcl.clusters.general import OnOff, Basic
 
@@ -275,27 +272,26 @@ async def test_exception_bad_trigger(hass, config_entry, zha_gateway, calls):
     ha_device_registry = await async_get_registry(hass)
     reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
 
-    with patch("logging.Logger.error") as mock:
-        await async_setup_component(
-            hass,
-            automation.DOMAIN,
-            {
-                automation.DOMAIN: [
-                    {
-                        "trigger": {
-                            "device_id": reg_device.id,
-                            "domain": "zha",
-                            "platform": "device",
-                            "type": "junk",
-                            "subtype": "junk",
-                        },
-                        "action": {
-                            "service": "test.automation",
-                            "data": {"message": "service called"},
-                        },
-                    }
-                ]
-            },
-        )
-        await hass.async_block_till_done()
-        mock.assert_called_with("Error setting up trigger %s", "automation 0")
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "device_id": reg_device.id,
+                        "domain": "zha",
+                        "platform": "device",
+                        "type": "junk",
+                        "subtype": "junk",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data": {"message": "service called"},
+                    },
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    assert "Invalid config for [automation]" in caplog.text
