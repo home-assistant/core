@@ -64,6 +64,7 @@
             "remote_button_quadruple_press": "Bouton \"{subtype}\" quadruple cliqu\u00e9",
             "remote_button_quintuple_press": "Bouton \"{subtype}\" quintuple cliqu\u00e9",
             "remote_button_rotated": "Bouton \"{subtype}\" tourn\u00e9",
+            "remote_button_rotation_stopped": "La rotation du bouton \" {subtype} \" s'est arr\u00eat\u00e9e",
             "remote_button_short_press": "Bouton \"{subtype}\" appuy\u00e9",
             "remote_button_short_release": "Bouton \"{subtype}\" rel\u00e2ch\u00e9",
             "remote_button_triple_press": "Bouton \"{subtype}\" triple cliqu\u00e9",
