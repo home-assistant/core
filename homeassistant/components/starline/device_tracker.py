@@ -4,6 +4,7 @@ from homeassistant.components.device_tracker.const import SOURCE_TYPE_GPS
 from homeassistant.helpers.restore_state import RestoreEntity
 from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
+from .entity import StarlineEntity
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -17,23 +18,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
     return True
 
 
-class StarlineDeviceTracker(TrackerEntity, RestoreEntity):
+class StarlineDeviceTracker(StarlineEntity, TrackerEntity, RestoreEntity):
     """StarLine device tracker."""
 
     def __init__(self, account: StarlineAccount, device: StarlineDevice):
         """Set up StarLine entity."""
-        self._account = account
-        self._device = device
-
-    @property
-    def unique_id(self):
-        """Return the unique ID."""
-        return f"starline-location-{self._device.device_id}"
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return f"{self._device.name} Location"
+        super().__init__(account, device, "location", "Location")
 
     @property
     def device_state_attributes(self):
@@ -61,30 +51,11 @@ class StarlineDeviceTracker(TrackerEntity, RestoreEntity):
         return self._device.position["y"]
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def source_type(self):
         """Return the source type, eg gps or router, of the device."""
         return SOURCE_TYPE_GPS
 
     @property
-    def device_info(self):
-        """Return the device info."""
-        return self._account.device_info(self._device)
-
-    @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return "mdi:map-marker-outline"
-
-    def update(self):
-        """Mark the device as seen."""
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self):
-        """Call when entity about to be added to Home Assistant."""
-        await super().async_added_to_hass()
-        self._account.api.add_update_listener(self.update)

@@ -8,6 +8,7 @@ from homeassistant.components.binary_sensor import (
 )
 from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
+from .entity import StarlineEntity
 
 SENSOR_TYPES = {
     "hbrake": [
@@ -35,7 +36,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     return True
 
 
-class StarlineSensor(BinarySensorDevice):
+class StarlineSensor(StarlineEntity, BinarySensorDevice):
     """Representation of a StarLine binary sensor."""
 
     def __init__(
@@ -43,34 +44,16 @@ class StarlineSensor(BinarySensorDevice):
         account: StarlineAccount,
         device: StarlineDevice,
         key: str,
-        sensor_name: str,
+        name: str,
         device_class: str,
         icon_on: str,
         icon_off: str,
     ):
         """Constructor."""
-        self._account = account
-        self._device = device
-        self._key = key
-        self._sensor_name = sensor_name
+        super().__init__(account, device, key, name)
         self._device_class = device_class
         self._icon_on = icon_on
         self._icon_off = icon_off
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the binary sensor."""
-        return f"starline-{self._key}-{self._device.device_id}"
-
-    @property
-    def name(self):
-        """Return the name of the binary sensor."""
-        return f"{self._device.name} {self._sensor_name}"
 
     @property
     def icon(self):
@@ -86,17 +69,3 @@ class StarlineSensor(BinarySensorDevice):
     def is_on(self):
         """Return the state of the binary sensor."""
         return self._device.car_state[self._key]
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return self._account.device_info(self._device)
-
-    def update(self):
-        """Read new state data."""
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self):
-        """Call when entity about to be added to Home Assistant."""
-        await super().async_added_to_hass()
-        self._account.api.add_update_listener(self.update)

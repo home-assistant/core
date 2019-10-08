@@ -2,6 +2,7 @@
 from homeassistant.components.switch import SwitchDevice
 from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
+from .entity import StarlineEntity
 
 SWITCH_TYPES = {
     "ign": ["Engine", "mdi:engine-outline", "mdi:engine-off-outline"],
@@ -26,7 +27,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     return True
 
 
-class StarlineSwitch(SwitchDevice):
+class StarlineSwitch(StarlineEntity, SwitchDevice):
     """Representation of a StarLine switch."""
 
     def __init__(
@@ -34,37 +35,19 @@ class StarlineSwitch(SwitchDevice):
         account: StarlineAccount,
         device: StarlineDevice,
         key: str,
-        switch_name: str,
+        name: str,
         icon_on: str,
         icon_off: str,
     ):
         """Initialize the switch."""
-        self._account = account
-        self._device = device
-        self._key = key
-        self._switch_name = switch_name
+        super().__init__(account, device, key, name)
         self._icon_on = icon_on
         self._icon_off = icon_off
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the switch."""
-        return f"starline-{self._key}-{self._device.device_id}"
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return f"{self._device.name} {self._switch_name}"
-
-    @property
-    def available(self) -> bool:
+    def available(self):
         """Return True if entity is available."""
-        return self._device.online
+        return super().available and self._device.online
 
     @property
     def device_state_attributes(self):
@@ -95,17 +78,3 @@ class StarlineSwitch(SwitchDevice):
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
         await self._account.api.set_car_state(self._device.device_id, self._key, False)
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return self._account.device_info(self._device)
-
-    def update(self):
-        """Update state of the switch."""
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self):
-        """Call when entity about to be added to Home Assistant."""
-        await super().async_added_to_hass()
-        self._account.api.add_update_listener(self.update)

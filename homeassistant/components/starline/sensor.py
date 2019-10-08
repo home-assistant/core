@@ -4,6 +4,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level, icon_for_signal_level
 from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
+from .entity import StarlineEntity
 
 SENSOR_TYPES = {
     "battery": ["Battery", "V", "mdi:battery"],
@@ -25,7 +26,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     return True
 
 
-class StarlineSensor(Entity):
+class StarlineSensor(StarlineEntity, Entity):
     """Representation of a StarLine sensor."""
 
     def __init__(
@@ -33,32 +34,14 @@ class StarlineSensor(Entity):
         account: StarlineAccount,
         device: StarlineDevice,
         key: str,
-        sensor_name: str,
+        name: str,
         unit: str,
         icon: str,
     ):
         """Constructor."""
-        self._account = account
-        self._device = device
-        self._key = key
-        self._sensor_name = sensor_name
+        super().__init__(account, device, key, name)
         self._unit = unit
         self._icon = icon
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the sensor."""
-        return f"starline-{self._key}-{self._device.device_id}"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._device.name} {self._sensor_name}"
 
     @property
     def icon(self):
@@ -88,11 +71,6 @@ class StarlineSensor(Entity):
         return None
 
     @property
-    def device_info(self):
-        """Return the device info."""
-        return self._account.device_info(self._device)
-
-    @property
     def unit_of_measurement(self):
         """Get the unit of measurement."""
         if self._key == "balance":
@@ -107,12 +85,3 @@ class StarlineSensor(Entity):
         elif self._key == "gsm_lvl":
             return self._account.gsm_attrs(self._device)
         return None
-
-    def update(self):
-        """Read new state data."""
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self):
-        """Call when entity about to be added to Home Assistant."""
-        await super().async_added_to_hass()
-        self._account.api.add_update_listener(self.update)

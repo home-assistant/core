@@ -21,7 +21,8 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the StarLine device from a config entry."""
     account = StarlineAccount(hass, config_entry)
-    if not await account.api.update():
+    await account.api.update()
+    if not account.api.available:
         raise ConfigEntryNotReady
 
     hass.data[DOMAIN] = account

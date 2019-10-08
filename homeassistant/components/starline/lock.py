@@ -2,6 +2,7 @@
 from homeassistant.components.lock import LockDevice
 from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
+from .entity import StarlineEntity
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -16,33 +17,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
     return True
 
 
-class StarlineLock(LockDevice):
+class StarlineLock(StarlineEntity, LockDevice):
     """Representation of a StarLine lock."""
 
     def __init__(self, account: StarlineAccount, device: StarlineDevice):
         """Initialize the lock."""
-        self._account = account
-        self._device = device
+        super().__init__(account, device, "lock", "Security")
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the lock."""
-        return f"starline-lock-{self._device.device_id}"
-
-    @property
-    def name(self):
-        """Return the name of the lock."""
-        return f"{self._device.name} Security"
-
-    @property
-    def available(self) -> bool:
+    def available(self):
         """Return True if entity is available."""
-        return self._device.online
+        return super().available and self._device.online
 
     @property
     def device_state_attributes(self):
@@ -68,17 +53,3 @@ class StarlineLock(LockDevice):
     async def async_unlock(self, **kwargs):
         """Unlock the car."""
         await self._account.api.set_car_state(self._device.device_id, "arm", False)
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return self._account.device_info(self._device)
-
-    def update(self):
-        """Update state of the lock."""
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self):
-        """Call when entity about to be added to Home Assistant."""
-        await super().async_added_to_hass()
-        self._account.api.add_update_listener(self.update)
