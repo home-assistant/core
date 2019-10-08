@@ -105,6 +105,7 @@ homeassistant/components/fronius/* @nielstron
 homeassistant/components/frontend/* @home-assistant/frontend
 homeassistant/components/gearbest/* @HerrHofrat
 homeassistant/components/geniushub/* @zxdavb
+homeassistant/components/geo_rss_events/* @exxamalte
 homeassistant/components/geonetnz_quakes/* @exxamalte
 homeassistant/components/gitter/* @fabaff
 homeassistant/components/glances/* @fabaff
