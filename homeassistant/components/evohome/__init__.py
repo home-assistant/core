@@ -157,11 +157,8 @@ def _handle_exception(err) -> bool:
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Create a (EMEA/EU-based) Honeywell evohome system."""
 
-    def load_auth_tokens(app_storage={}) -> Tuple[Dict, Optional[Dict]]:
-        # if app_storage is None:
-        #     app_storage = {}
-
-        tokens = dict(app_storage)
+    def load_auth_tokens(app_storage) -> Tuple[Dict, Optional[Dict]]:
+        tokens = dict(app_storage if app_storage else {})
 
         if tokens.pop(CONF_USERNAME, None) != config[DOMAIN][CONF_USERNAME]:
             return ({}, None)  # any tokens wont be valid
@@ -180,6 +177,13 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     app_storage = await store.async_load()
 
     tokens, user_data = load_auth_tokens(app_storage)
+    # if tokens == {}:
+    #     # there is a chance that the store is corrupt, so...
+    #     await store.async_save({})
+
+    # tokens[REFRESH_TOKEN] = "AAA"  # TODO: remove
+    # tokens[ACCESS_TOKEN] = "AAA"
+    # tokens.pop(ACCESS_TOKEN_EXPIRES)
 
     client_v2 = evohomeasync2.EvohomeClient(
         config[DOMAIN][CONF_USERNAME],
@@ -254,7 +258,7 @@ class EvoBroker:
             ._gateways[0]
             ._control_systems[0]
         )
-        self._temps = None  # TODO: client_v1.temperatures()
+        self.temps = None  # TODO: client_v1.temperatures()
 
         self.hass.add_job(self._save_auth_tokens())
 
@@ -303,11 +307,11 @@ class EvoBroker:
                 )
                 self.client_v1 = None
             else:
-                if self._temps is None:
+                if self.temps is None:
                     await self._save_auth_tokens()
-                self._temps = {str(i["id"]): i["temp"] for i in temps}
+                self.temps = {str(i["id"]): i["temp"] for i in temps}
 
-            _LOGGER.debug("Temperatures = %s", self._temps)
+            _LOGGER.debug("Temperatures = %s", self.temps)
 
     async def _update_v2(self, *args, **kwargs) -> None:
         """Get the latest modes, temperatures, setpoints of a Location."""
@@ -351,9 +355,8 @@ class EvoDevice(Entity):
         self._evo_broker = evo_broker
         self._evo_tcs = evo_broker.tcs
 
-        self._name = self._icon = self._precision = None
+        self._unique_id = self._name = self._icon = self._precision = None
         self._supported_features = None
-
         self._device_state_attrs = {}
 
     @callback
@@ -443,8 +446,8 @@ class EvoChild(EvoDevice):
         if not self._evo_device.temperatureStatus["isAvailable"]:
             return None
 
-        if self._evo_broker._temps:
-            return self._evo_broker._temps[self._evo_device.zoneId]
+        if self._evo_broker.temps:
+            return self._evo_broker.temps[self._evo_device.zoneId]
 
         return self._evo_device.temperatureStatus["temperature"]
 
