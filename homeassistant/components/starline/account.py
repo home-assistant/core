@@ -66,9 +66,6 @@ class StarlineAccount:
 
     def set_update_interval(self, hass: HomeAssistant, interval: int) -> None:
         """Set StarLine API update interval."""
-        if self._update_interval == interval:
-            return
-
         LOGGER.debug("Setting update interval: %ds", interval)
         self._update_interval = interval
         if self._unsubscribe_auto_updater is not None:
