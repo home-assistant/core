@@ -1,7 +1,7 @@
 """StarLine Account."""
 from datetime import timedelta, datetime
-from starline import StarlineApi, StarlineDevice
 from typing import List, Callable, Optional, Dict, Any
+from starline import StarlineApi, StarlineDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -48,7 +48,8 @@ class StarlineAccount:
             self._unsubscribe_auto_updater()
             self._unsubscribe_auto_updater = None
 
-    def device_info(self, device: StarlineDevice) -> Dict[str, Any]:
+    @staticmethod
+    def device_info(device: StarlineDevice) -> Dict[str, Any]:
         """Device information for entities."""
         return {
             "identifiers": {(DOMAIN, device.device_id)},
@@ -58,14 +59,16 @@ class StarlineAccount:
             "model": device.typename,
         }
 
-    def gps_attrs(self, device: StarlineDevice) -> Dict[str, Any]:
+    @staticmethod
+    def gps_attrs(device: StarlineDevice) -> Dict[str, Any]:
         """Attributes for device tracker."""
         return {
             "updated": datetime.utcfromtimestamp(device.position["ts"]).isoformat(),
             "online": device.online,
         }
 
-    def balance_attrs(self, device: StarlineDevice) -> Dict[str, Any]:
+    @staticmethod
+    def balance_attrs(device: StarlineDevice) -> Dict[str, Any]:
         """Attributes for balance sensor."""
         return {
             "operator": device.balance["operator"],
@@ -73,7 +76,8 @@ class StarlineAccount:
             "updated": device.balance["ts"],
         }
 
-    def gsm_attrs(self, device: StarlineDevice) -> Dict[str, Any]:
+    @staticmethod
+    def gsm_attrs(device: StarlineDevice) -> Dict[str, Any]:
         """Attributes for GSM sensor."""
         return {
             "raw": device.gsm_level,
@@ -82,7 +86,8 @@ class StarlineAccount:
             "online": device.online,
         }
 
-    def engine_attrs(self, device: StarlineDevice) -> Dict[str, Any]:
+    @staticmethod
+    def engine_attrs(device: StarlineDevice) -> Dict[str, Any]:
         """Attributes for engine switch."""
         return {
             "autostart": device.car_state["r_start"],

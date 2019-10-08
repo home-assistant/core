@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data[DOMAIN] = account
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
-    for device_id, device in account.api.devices.items():
+    for device in account.api.devices.values():
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id, **account.device_info(device)
         )

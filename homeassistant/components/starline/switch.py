@@ -19,7 +19,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the StarLine switch."""
     account: StarlineAccount = hass.data[DOMAIN]
     entities = []
-    for device_id, device in account.api.devices.items():
+    for device in account.api.devices.values():
         if device.support_state:
             for key, value in SWITCH_TYPES.items():
                 entities.append(StarlineSwitch(account, device, key, *value))

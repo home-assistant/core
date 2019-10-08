@@ -1,6 +1,6 @@
 """Config flow to configure StarLine component."""
-from starline import StarlineAuth
 from typing import Optional
+from starline import StarlineAuth
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -185,8 +185,8 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self._app_id, self._app_secret, self._app_code
             )
             return self._async_form_auth_user(error)
-        except Exception as e:
-            LOGGER.error("Error auth StarLine: " + str(e))
+        except Exception as err:  # pylint: disable=broad-except
+            LOGGER.error("Error auth StarLine: %s", err)
             return self._async_form_auth_app(ERROR_AUTH_APP)
 
     async def _async_authenticate_user(self, error=None):
@@ -217,8 +217,8 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self._async_form_auth_captcha(error)
 
             raise Exception(data)
-        except Exception as e:
-            LOGGER.error("Error auth user: " + str(e))
+        except Exception as err:  # pylint: disable=broad-except
+            LOGGER.error("Error auth user: %s", err)
             return self._async_form_auth_user(ERROR_AUTH_USER)
 
     async def _async_get_entry(self):

@@ -11,7 +11,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up StarLine entry."""
     account: StarlineAccount = hass.data[DOMAIN]
     entities = []
-    for device_id, device in account.api.devices.items():
+    for device in account.api.devices.values():
         if device.support_position:
             entities.append(StarlineDeviceTracker(account, device))
     async_add_entities(entities)

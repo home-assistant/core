@@ -28,7 +28,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the StarLine sensors."""
     account: StarlineAccount = hass.data[DOMAIN]
     entities = []
-    for device_id, device in account.api.devices.items():
+    for device in account.api.devices.values():
         for key, value in SENSOR_TYPES.items():
             if key in device.car_state:
                 entities.append(StarlineSensor(account, device, key, *value))

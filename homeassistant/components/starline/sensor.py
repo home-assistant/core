@@ -19,7 +19,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the StarLine sensors."""
     account: StarlineAccount = hass.data[DOMAIN]
     entities = []
-    for device_id, device in account.api.devices.items():
+    for device in account.api.devices.values():
         for key, value in SENSOR_TYPES.items():
             entities.append(StarlineSensor(account, device, key, *value))
     async_add_entities(entities)
@@ -51,7 +51,7 @@ class StarlineSensor(StarlineEntity, Entity):
                 battery_level=self._device.battery_level_percent,
                 charging=self._device.car_state["ign"],
             )
-        elif self._key == "gsm_lvl":
+        if self._key == "gsm_lvl":
             return icon_for_signal_level(signal_level=self._device.gsm_level_percent)
         return self._icon
 
@@ -60,13 +60,13 @@ class StarlineSensor(StarlineEntity, Entity):
         """Return the state of the sensor."""
         if self._key == "battery":
             return self._device.battery_level
-        elif self._key == "balance":
+        if self._key == "balance":
             return self._device.balance["value"]
-        elif self._key == "ctemp":
+        if self._key == "ctemp":
             return self._device.temp_inner
-        elif self._key == "etemp":
+        if self._key == "etemp":
             return self._device.temp_engine
-        elif self._key == "gsm_lvl":
+        if self._key == "gsm_lvl":
             return self._device.gsm_level_percent
         return None
 
@@ -82,6 +82,6 @@ class StarlineSensor(StarlineEntity, Entity):
         """Return the state attributes of the sensor."""
         if self._key == "balance":
             return self._account.balance_attrs(self._device)
-        elif self._key == "gsm_lvl":
+        if self._key == "gsm_lvl":
             return self._account.gsm_attrs(self._device)
         return None
