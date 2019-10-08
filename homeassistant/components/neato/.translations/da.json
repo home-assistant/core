@@ -5,7 +5,8 @@
             "invalid_credentials": "Ugyldige legitimationsoplysninger"
         },
         "error": {
-            "invalid_credentials": "Ugyldige legitimationsoplysninger"
+            "invalid_credentials": "Ugyldige legitimationsoplysninger",
+            "unexpected_error": "Uventet fejl"
         },
         "step": {
             "user": {
