@@ -10,6 +10,9 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     Light,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
 )
 from homeassistant.core import callback
 from .base_class import TradfriBaseDevice
@@ -293,3 +296,11 @@ class TradfriLight(TradfriBaseDevice, Light):
         # Caching of LightControl and light object
         self._device_control = device.light_control
         self._device_data = device.light_control.lights[0]
+
+        self._features = SUPPORTED_LIGHT_FEATURES
+        if device.light_control.can_set_dimmer:
+            self._features |= SUPPORT_BRIGHTNESS
+        if device.light_control.can_set_color:
+            self._features |= SUPPORT_COLOR
+        if device.light_control.can_set_temp:
+            self._features |= SUPPORT_COLOR_TEMP
