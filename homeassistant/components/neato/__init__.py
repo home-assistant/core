@@ -145,28 +145,26 @@ class NeatoHub:
 
     def login(self):
         """Login to My Neato."""
+        _LOGGER.debug("Trying to connect to Neato API")
         try:
-            _LOGGER.debug("Trying to connect to Neato API")
             self.my_neato = self._neato(
                 self.config[CONF_USERNAME], self.config[CONF_PASSWORD], self._vendor
             )
-            self.logged_in = True
-
-            _LOGGER.debug("Successfully connected to Neato API")
-            self._hass.data[NEATO_ROBOTS] = self.my_neato.robots
-            self._hass.data[NEATO_PERSISTENT_MAPS] = self.my_neato.persistent_maps
-            self._hass.data[NEATO_MAP_DATA] = self.my_neato.maps
         except NeatoException as ex:
             if isinstance(ex, NeatoLoginException):
                 _LOGGER.error("Invalid credentials")
             else:
                 _LOGGER.error("Unable to connect to Neato API")
             self.logged_in = False
+            return
+
+        self.logged_in = True
+        _LOGGER.debug("Successfully connected to Neato API")
 
     @Throttle(timedelta(minutes=SCAN_INTERVAL_MINUTES))
     def update_robots(self):
         """Update the robot states."""
-        _LOGGER.debug("Running HUB.update_robots %s", self._hass.data[NEATO_ROBOTS])
+        _LOGGER.debug("Running HUB.update_robots %s", self._hass.data.get(NEATO_ROBOTS))
         self._hass.data[NEATO_ROBOTS] = self.my_neato.robots
         self._hass.data[NEATO_PERSISTENT_MAPS] = self.my_neato.persistent_maps
         self._hass.data[NEATO_MAP_DATA] = self.my_neato.maps
