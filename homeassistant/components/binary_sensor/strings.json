@@ -59,7 +59,7 @@
       "no_light": "{entity_name} stopped detecting light",
       "locked": "{entity_name} locked",
       "not_locked": "{entity_name} unlocked",
-      "moist§": "{entity_name} became moist",
+      "moist": "{entity_name} became moist",
       "not_moist": "{entity_name} became dry",
       "motion": "{entity_name} started detecting motion",
       "no_motion": "{entity_name} stopped detecting motion",
@@ -84,7 +84,7 @@
       "vibration": "{entity_name} started detecting vibration",
       "no_vibration": "{entity_name} stopped detecting vibration",
       "opened": "{entity_name} opened",
-      "closed": "{entity_name} closed",
+      "not_opened": "{entity_name} closed",
       "turned_on": "{entity_name} turned on",
       "turned_off": "{entity_name} turned off"
 
