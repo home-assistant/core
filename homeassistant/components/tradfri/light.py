@@ -22,10 +22,12 @@ from homeassistant.components.tradfri.const import (
     ATTR_TRANSITION_TIME,
     SUPPORTED_LIGHT_FEATURES,
     SUPPORTED_GROUP_FEATURES,
+    CONF_GATEWAY_ID,
+    CONF_IMPORT_GROUPS,
+    KEY_GATEWAY,
+    KEY_API,
 )
 from homeassistant.core import callback
-from homeassistant.components.tradfri import KEY_GATEWAY, KEY_API
-from .const import CONF_GATEWAY_ID, CONF_IMPORT_GROUPS
 
 _LOGGER = logging.getLogger(__name__)
 
