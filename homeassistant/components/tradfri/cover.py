@@ -10,8 +10,8 @@ from homeassistant.components.cover import (
     SUPPORT_CLOSE,
     SUPPORT_SET_POSITION,
 )
-from .const import DOMAIN, KEY_GATEWAY, KEY_API, CONF_GATEWAY_ID
 from homeassistant.core import callback
+from .const import DOMAIN, KEY_GATEWAY, KEY_API, CONF_GATEWAY_ID
 
 _LOGGER = logging.getLogger(__name__)
 
