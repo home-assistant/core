@@ -1,0 +1,13 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_battery_level": "{entity_name} raven baterije",
+            "is_humidity": "{entity_name} vla\u017enost",
+            "is_illuminance": "{entity_name} osvetlitev",
+            "is_power": "{entity_name} mo\u010d",
+            "is_pressure": "{entity_name} pritisk",
+            "is_signal_strength": "{entity_name} jakost signala",
+            "is_temperature": "{entity_name} temperatura"
+        }
+    }
+}

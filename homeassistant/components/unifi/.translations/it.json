@@ -38,6 +38,11 @@
                     "one": "uno",
                     "other": "altro"
                 }
+            },
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "Creare sensori di utilizzo della larghezza di banda per i client di rete"
+                }
             }
         }
     }
