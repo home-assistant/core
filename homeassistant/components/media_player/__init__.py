@@ -18,10 +18,12 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.const import (
+    SERVICE_MEDIA_NEXT_CHANNEL,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PLAY_PAUSE,
+    SERVICE_MEDIA_PREVIOUS_CHANNEL,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_SEEK,
     SERVICE_MEDIA_STOP,
@@ -81,10 +83,12 @@ from .const import (
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
     SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_NEXT_CHANNEL,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_CHANNEL,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SEEK,
     SUPPORT_SELECT_SOUND_MODE,
@@ -272,6 +276,18 @@ async def async_setup(hass, config):
         ENTITY_SERVICE_SCHEMA,
         "async_media_previous_track",
         [SUPPORT_PREVIOUS_TRACK],
+    )
+    component.async_register_entity_service(
+        SERVICE_MEDIA_NEXT_CHANNEL,
+        ENTITY_SERVICE_SCHEMA,
+        "async_media_next_channel",
+        [SUPPORT_NEXT_CHANNEL],
+    )
+    component.async_register_entity_service(
+        SERVICE_MEDIA_PREVIOUS_CHANNEL,
+        ENTITY_SERVICE_SCHEMA,
+        "async_media_previous_channel",
+        [SUPPORT_PREVIOUS_CHANNEL],
     )
     component.async_register_entity_service(
         SERVICE_CLEAR_PLAYLIST,
@@ -619,6 +635,28 @@ class MediaPlayerDevice(Entity):
         """
         return self.hass.async_add_job(self.media_next_track)
 
+    def media_previous_channel(self):
+        """Send previous channel command."""
+        raise NotImplementedError()
+
+    def async_media_previous_channel(self):
+        """Send previous channel command.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(self.media_previous_channel)
+
+    def media_next_channel(self):
+        """Send next channel command."""
+        raise NotImplementedError()
+
+    def async_media_next_channel(self):
+        """Send next channel command.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(self.media_next_channel)
+
     def media_seek(self, position):
         """Send seek command."""
         raise NotImplementedError()
@@ -727,6 +765,16 @@ class MediaPlayerDevice(Entity):
     def support_next_track(self):
         """Boolean if next track command supported."""
         return bool(self.supported_features & SUPPORT_NEXT_TRACK)
+
+    @property
+    def support_previous_channel(self):
+        """Boolean if previous channel command supported."""
+        return bool(self.supported_features & SUPPORT_PREVIOUS_CHANNEL)
+
+    @property
+    def support_next_channel(self):
+        """Boolean if next channel command supported."""
+        return bool(self.supported_features & SUPPORT_NEXT_CHANNEL)
 
     @property
     def support_play_media(self):

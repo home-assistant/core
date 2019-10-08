@@ -417,7 +417,7 @@ async def test_media_player(hass):
         "off",
         {
             "friendly_name": "Test media player",
-            "supported_features": 0x59BD,
+            "supported_features": 0x359BD,
             "volume_level": 0.75,
         },
     )
@@ -569,7 +569,7 @@ async def test_media_player_power(hass):
         "off",
         {
             "friendly_name": "Test media player",
-            "supported_features": 0xFA3F,
+            "supported_features": 0x3FA3F,
             "volume_level": 0.75,
         },
     )

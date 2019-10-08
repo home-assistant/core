@@ -15,9 +15,11 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_NIGHT,
     SERVICE_ALARM_DISARM,
     SERVICE_LOCK,
+    SERVICE_MEDIA_NEXT_CHANNEL,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_CHANNEL,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_STOP,
     SERVICE_SET_COVER_POSITION,
@@ -924,3 +926,35 @@ async def async_api_disarm(hass, config, directive, context):
     )
 
     return response
+
+
+@HANDLERS.register(("Alexa.ChannelController", "SkipChannels"))
+async def async_api_skip_channels(hass, config, directive, context):
+    """Process a skip channel request."""
+    # media_player channel up/down service does not support specifying steps
+    # each component handles it differently e.g. via config.
+    # For now we use the channelCount returned to figure out if we
+    # should step up/down
+    channel_count = directive.payload["channelCount"]
+    entity = directive.entity
+
+    data = {ATTR_ENTITY_ID: entity.entity_id}
+
+    if channel_count > 0:
+        await hass.services.async_call(
+            entity.domain,
+            SERVICE_MEDIA_NEXT_CHANNEL,
+            data,
+            blocking=False,
+            context=context,
+        )
+    elif channel_count < 0:
+        await hass.services.async_call(
+            entity.domain,
+            SERVICE_MEDIA_PREVIOUS_CHANNEL,
+            data,
+            blocking=False,
+            context=context,
+        )
+
+    return directive.response()

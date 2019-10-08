@@ -406,8 +406,8 @@ class MediaPlayerCapabilities(AlexaEntity):
             yield AlexaInputController(self.entity)
 
         changechannel_features = (
-            media_player.const.SUPPORT_NEXT_TRACK
-            | media_player.const.SUPPORT_PREVIOUS_TRACK
+            media_player.const.SUPPORT_NEXT_CHANNEL
+            | media_player.const.SUPPORT_PREVIOUS_CHANNEL
         )
         if supported & changechannel_features:
             yield AlexaChannelController(self.entity)
