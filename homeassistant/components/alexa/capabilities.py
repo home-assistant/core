@@ -102,7 +102,7 @@ class AlexaCapibility:
 
     @staticmethod
     def configuration():
-        """Spits out the Configuration object. (It spits since pydocstyle requires imperative mood)."""
+        """Return the Configuration object."""
         return None
 
     def serialize_discovery(self):
