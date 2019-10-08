@@ -102,7 +102,7 @@ class Router:
 
     data: Dict[str, Any] = attr.ib(init=False, factory=dict)
     subscriptions: Dict[str, Set[str]] = attr.ib(
-        init=False, default=defaultdict(set, ((x, {"init"}) for x in ALL_KEYS))
+        init=False, default=defaultdict(set, ((x, {"initial_scan"}) for x in ALL_KEYS))
     )
 
     def __attrs_post_init__(self):

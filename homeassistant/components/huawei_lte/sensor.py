@@ -7,7 +7,10 @@ from typing import Optional
 import attr
 
 from homeassistant.const import CONF_URL, STATE_UNKNOWN
-from homeassistant.components.sensor import DEVICE_CLASS_SIGNAL_STRENGTH
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_SIGNAL_STRENGTH,
+    DOMAIN as SENSOR_DOMAIN,
+)
 from homeassistant.helpers import entity_registry
 
 from . import HuaweiLteBaseEntity
@@ -171,12 +174,12 @@ class HuaweiLteSensor(HuaweiLteBaseEntity):
     async def async_added_to_hass(self):
         """Subscribe to needed data on add."""
         await super().async_added_to_hass()
-        self.router.subscriptions[self.key].add(self.item)
+        self.router.subscriptions[self.key].add(f"{SENSOR_DOMAIN}/{self.item}")
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe from needed data on remove."""
         await super().async_will_remove_from_hass()
-        self.router.subscriptions[self.key].remove(self.item)
+        self.router.subscriptions[self.key].remove(f"{SENSOR_DOMAIN}/{self.item}")
 
     @property
     def _entity_name(self) -> str:
