@@ -152,6 +152,16 @@ class TradfriLight(TradfriBaseDevice, Light):
         self._unique_id = f"light-{gateway_id}-{device.id}"
         self._hs_color = None
 
+        # Calculate supported features
+        _features = SUPPORTED_LIGHT_FEATURES
+        if device.light_control.can_set_dimmer:
+            _features |= SUPPORT_BRIGHTNESS
+        if device.light_control.can_set_color:
+            _features |= SUPPORT_COLOR
+        if device.light_control.can_set_temp:
+            _features |= SUPPORT_COLOR_TEMP
+        self._features = _features
+
         self._refresh(device)
 
     @property
@@ -167,7 +177,7 @@ class TradfriLight(TradfriBaseDevice, Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return self._get_supported_features(self._device)
+        return self._features
 
     @property
     def is_on(self):
@@ -193,18 +203,6 @@ class TradfriLight(TradfriBaseDevice, Light):
             sat = hsbxy[1] / (self._device_control.max_saturation / 100)
             if hue is not None and sat is not None:
                 return hue, sat
-
-    def _get_supported_features(self, device):
-        """Get the supported features for the device."""
-        _features = SUPPORTED_LIGHT_FEATURES
-        if device.light_control.can_set_dimmer:
-            _features |= SUPPORT_BRIGHTNESS
-        if device.light_control.can_set_color:
-            _features |= SUPPORT_COLOR
-        if device.light_control.can_set_temp:
-            _features |= SUPPORT_COLOR_TEMP
-
-        return _features
 
     async def async_turn_off(self, **kwargs):
         """Instruct the light to turn off."""
