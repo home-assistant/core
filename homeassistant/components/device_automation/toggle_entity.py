@@ -17,6 +17,7 @@ from homeassistant.components.device_automation.const import (
     CONF_TURNED_ON,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_CONDITION,
     CONF_ENTITY_ID,
     CONF_FOR,
@@ -24,7 +25,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.helpers.entity_registry import async_entries_for_device
-from homeassistant.helpers import condition, config_validation as cv, service
+from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from . import TRIGGER_BASE_SCHEMA
 
@@ -112,13 +113,10 @@ async def async_call_action_from_config(
     else:
         action = "toggle"
 
-    service_action = {
-        service.CONF_SERVICE: "{}.{}".format(domain, action),
-        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-    }
+    service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
 
-    await service.async_call_from_config(
-        hass, service_action, blocking=True, variables=variables, context=context
+    await hass.services.async_call(
+        domain, action, service_data, blocking=True, context=context
     )
 
 
