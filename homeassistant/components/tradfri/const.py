@@ -3,7 +3,7 @@ from homeassistant.components.light import SUPPORT_TRANSITION, SUPPORT_BRIGHTNES
 from homeassistant.const import CONF_HOST  # noqa pylint: disable=unused-import
 
 ATTR_DIMMER = "dimmer"
-ATTR_HUE = "hue" "E1526"
+ATTR_HUE = "hue"
 ATTR_SAT = "saturation"
 ATTR_TRADFRI_GATEWAY = "Gateway"
 ATTR_TRADFRI_GATEWAY_MODEL = "E1526"
