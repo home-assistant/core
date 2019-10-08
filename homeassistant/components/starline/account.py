@@ -7,7 +7,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import DOMAIN, LOGGER, DEFAULT_SCAN_INTERVAL, DATA_USER_ID, DATA_SLNET_TOKEN, DATA_SLID_TOKEN, DATA_EXPIRES
+from .const import (
+    DOMAIN,
+    LOGGER,
+    DEFAULT_SCAN_INTERVAL,
+    DATA_USER_ID,
+    DATA_SLNET_TOKEN,
+    DATA_SLID_TOKEN,
+    DATA_EXPIRES,
+)
 
 
 class StarlineAccount:
@@ -38,7 +46,9 @@ class StarlineAccount:
         slid_token = self._config_entry.data[DATA_SLID_TOKEN]
 
         try:
-            slnet_token, slnet_token_expires, user_id = await self._api.get_user_id(slid_token)
+            slnet_token, slnet_token_expires, user_id = await self._api.get_user_id(
+                slid_token
+            )
             self._api.set_slnet_token(slnet_token)
             self._api.set_user_id(user_id)
             self._hass.config_entries.async_update_entry(
@@ -47,7 +57,7 @@ class StarlineAccount:
                     **self._config_entry.data,
                     DATA_SLNET_TOKEN: slnet_token,
                     DATA_EXPIRES: slnet_token_expires,
-                    DATA_USER_ID: user_id
+                    DATA_USER_ID: user_id,
                 },
             )
         except Exception as err:  # pylint: disable=broad-except
