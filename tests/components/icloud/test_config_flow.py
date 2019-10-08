@@ -6,7 +6,10 @@ from pyicloud.exceptions import PyiCloudFailedLoginException
 
 from homeassistant import data_entry_flow
 from homeassistant.components.icloud import config_flow
-from homeassistant.components.icloud.config_flow import CONF_TRUSTED_DEVICE
+from homeassistant.components.icloud.config_flow import (
+    CONF_TRUSTED_DEVICE,
+    CONF_VERIFICATION_CODE,
+)
 from homeassistant.components.icloud.const import (
     DOMAIN,
     CONF_ACCOUNT_NAME,
@@ -42,6 +45,7 @@ def mock_controller_service():
     with patch("pyicloud.base.PyiCloudService") as mock_service:
         mock_service.return_value.authenticate.return_value = None
         mock_service.return_value.requires_2fa.return_value = True
+        mock_service.return_value.trusted_devices.return_value = "[{'deviceType': 'SMS', 'areaCode': '', 'phoneNumber': '*******58', 'deviceId': '1'}]"
         mock_service.return_value.send_verification_code.return_value = True
         mock_service.return_value.validate_verification_code.return_value = True
         yield mock_service
@@ -53,8 +57,6 @@ def mock_controller_service_with_cookie():
     with patch("pyicloud.base.PyiCloudService") as mock_service:
         mock_service.return_value.authenticate.return_value = None
         mock_service.return_value.requires_2fa.return_value = False
-        mock_service.return_value.send_verification_code.return_value = False
-        mock_service.return_value.validate_verification_code.return_value = False
         yield mock_service
 
 
@@ -64,6 +66,7 @@ def mock_controller_service_send_verification_code_failed():
     with patch("pyicloud.base.PyiCloudService") as mock_service:
         mock_service.return_value.authenticate.return_value = None
         mock_service.return_value.requires_2fa.return_value = False
+        mock_service.return_value.trusted_devices.return_value = "[{'deviceType': 'SMS', 'areaCode': '', 'phoneNumber': '*******58', 'deviceId': '1'}]"
         mock_service.return_value.send_verification_code.return_value = False
         mock_service.return_value.validate_verification_code.return_value = False
         yield mock_service
@@ -75,6 +78,7 @@ def mock_controller_service_validate_verification_code_failed():
     with patch("pyicloud.base.PyiCloudService") as mock_service:
         mock_service.return_value.authenticate.return_value = None
         mock_service.return_value.requires_2fa.return_value = False
+        mock_service.return_value.trusted_devices.return_value = "[{'deviceType': 'SMS', 'areaCode': '', 'phoneNumber': '*******58', 'deviceId': '1'}]"
         mock_service.return_value.send_verification_code.return_value = True
         mock_service.return_value.validate_verification_code.return_value = False
         yield mock_service
@@ -100,7 +104,7 @@ async def test_user(hass, session, service):
         {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "trusted_device"
+    assert result["step_id"] == CONF_TRUSTED_DEVICE
 
 
 async def test_user_with_cookie(hass, session, service_with_cookie):
@@ -207,7 +211,6 @@ async def test_abort_if_already_setup(hass):
             CONF_ACCOUNT_NAME: ACCOUNT_NAME_FROM_USERNAME,
         }
     )
-    _LOGGER.info(result)
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "username_exists"
 
@@ -217,17 +220,6 @@ async def test_abort_if_already_setup(hass):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {CONF_USERNAME: "username_exists"}
-
-    # Should fail, same ACCOUNT_NAME (flow)
-    result = await flow.async_step_user(
-        {
-            CONF_USERNAME: "other_username@icloud.com",
-            CONF_PASSWORD: PASSWORD,
-            CONF_ACCOUNT_NAME: ACCOUNT_NAME_FROM_USERNAME,
-        }
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["reason"] == {CONF_USERNAME: "username_exists"}
 
 
 async def test_abort_on_login_failed(hass):
@@ -245,18 +237,36 @@ async def test_abort_on_login_failed(hass):
         assert result["errors"] == {CONF_USERNAME: "login"}
 
 
+async def test_trusted_device(hass, session, service):
+    """Test trusted_device step."""
+    flow = init_config_flow(hass)
+
+    result = await flow.async_step_trusted_device()
+    _LOGGER.info(result)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == CONF_TRUSTED_DEVICE
+
+
 async def test_abort_on_send_verification_code_failed(
     hass, session, service_send_verification_code_failed
 ):
     """Test when we have errors during send_verification_code."""
     flow = init_config_flow(hass)
 
-    result = await flow.async_step_trusted_device(
-        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
-    )
+    result = await flow.async_step_trusted_device({CONF_TRUSTED_DEVICE: 0})
     _LOGGER.info(result)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {CONF_TRUSTED_DEVICE: "send_verification_code"}
+
+
+async def test_verification_code(hass, session, service):
+    """Test verification_code step."""
+    flow = init_config_flow(hass)
+
+    result = await flow.async_step_verification_code()
+    _LOGGER.info(result)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == CONF_VERIFICATION_CODE
 
 
 async def test_abort_on_validate_verification_code_failed(
@@ -265,9 +275,8 @@ async def test_abort_on_validate_verification_code_failed(
     """Test when we have errors during validate_verification_code."""
     flow = init_config_flow(hass)
 
-    result = await flow.async_step_verification_code(
-        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
-    )
+    result = await flow.async_step_verification_code({CONF_VERIFICATION_CODE: 0})
     _LOGGER.info(result)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == CONF_TRUSTED_DEVICE
     assert result["errors"] == {"base": "validate_verification_code"}
