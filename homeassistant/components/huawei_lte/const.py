@@ -4,6 +4,8 @@ DOMAIN = "huawei_lte"
 
 DEFAULT_DEVICE_NAME = "LTE"
 
+UPDATE_SIGNAL = f"{DOMAIN}_update"
+
 KEY_DEVICE_BASIC_INFORMATION = "device_basic_information"
 KEY_DEVICE_INFORMATION = "device_information"
 KEY_DEVICE_SIGNAL = "device_signal"

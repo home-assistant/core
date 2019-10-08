@@ -45,6 +45,7 @@ from .const import (
     KEY_DEVICE_SIGNAL,
     KEY_MONITORING_TRAFFIC_STATISTICS,
     KEY_WLAN_HOST_LIST,
+    UPDATE_SIGNAL,
 )
 
 
@@ -55,8 +56,6 @@ _LOGGER = logging.getLogger(__name__)
 logging.getLogger("dicttoxml").setLevel(logging.WARNING)
 
 DEFAULT_NAME_TEMPLATE = "Huawei {} {}"
-
-UPDATE_SIGNAL = f"{DOMAIN}_update"
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
@@ -104,6 +103,7 @@ class Router:
     subscriptions: Dict[str, Set[str]] = attr.ib(
         init=False, default=defaultdict(set, ((x, {"initial_scan"}) for x in ALL_KEYS))
     )
+    signal_handlers: Dict[str, Callable] = attr.ib(init=False, factory=dict)
 
     def __attrs_post_init__(self):
         """Set up internal state on init."""
