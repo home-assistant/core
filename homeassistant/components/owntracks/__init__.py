@@ -16,10 +16,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
 from homeassistant.setup import async_when_setup
+from homeassistant.util import slugify
 
 from .config_flow import CONF_SECRET
 from .const import DOMAIN
-from .messages import async_handle_message
+from .messages import async_handle_message, encrypt_message, _parse_topic
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +50,7 @@ CONFIG_SCHEMA = vol.Schema(
             ),
             vol.Optional(CONF_REGION_MAPPING, default={}): dict,
             vol.Optional(CONF_WEBHOOK_ID): cv.string,
+            vol.Optional(CONF_FRIENDS): cv.boolean,
         }
     },
     extra=vol.ALLOW_EXTRA,
@@ -160,6 +162,7 @@ async def handle_webhook(hass, webhook_id, request):
     Android does not set a topic but adds headers to the request.
     """
     context = hass.data[DOMAIN]["context"]
+    topic_base = re.sub("/#$", "", context.mqtt_topic)
 
     try:
         message = await request.json()
@@ -174,7 +177,6 @@ async def handle_webhook(hass, webhook_id, request):
         device = headers.get("X-Limit-D", user)
 
         if user:
-            topic_base = re.sub("/#$", "", context.mqtt_topic)
             message["topic"] = f"{topic_base}/{user}/{device}"
 
         elif message["_type"] != "encrypted":
@@ -193,40 +195,64 @@ async def handle_webhook(hass, webhook_id, request):
         persons = hass.data[PERSON_DOMAIN].storage_persons + [
             dict(hass.data[PERSON_DOMAIN].config_persons[0])
         ]
+        user, device = _parse_topic(message["topic"], context.mqtt_topic)
+        dev_id = "device_tracker." + slugify(f"{user}_{device}")
 
         for person in persons:
-            person_location = {"lat": "", "lon": "", "tid": "", "tst": ""}
+            person_location = {
+                "_type": "location",
+                "lat": "",
+                "lon": "",
+                "tid": "",
+                "tst": int(time.time()),
+            }
 
             if person["device_trackers"]:
-                if len(person["device_trackers"]) > 1:
-                    # Get location of person from device trackers
-                    for device_tracker_id in person["device_trackers"]:
-                        device_tracker_entity = hass.data[
-                            DEVICE_TRACKER_DOMAIN
-                        ].get_entity(device_tracker_id)
+                # Check whether this is the same person as the poster and skip it
+                if dev_id in person["device_trackers"]:
+                    continue
 
-                        if (
-                            not person_location["lat"]
-                            or not person_location["lon"]
-                            or device_tracker_entity.source_type == "gps"
-                        ):
-                            person_location["lat"] = device_tracker_entity.latitude
-                            person_location["lon"] = device_tracker_entity.longitude
-                            person_location["tid"] = device_tracker_entity.name[0:2]
-                            person_location["tst"] = time.time()
-
-                else:
+                # Get location of person from device trackers
+                for device_tracker_id in person["device_trackers"]:
                     device_tracker_entity = hass.data[DEVICE_TRACKER_DOMAIN].get_entity(
-                        person["device_trackers"][0]
+                        device_tracker_id
                     )
-                    person_location["lat"] = device_tracker_entity.latitude
-                    person_location["lon"] = device_tracker_entity.longitude
-                    person_location["tid"] = device_tracker_entity.name[0:2]
-                    person_location["tst"] = time.time()
 
-                response.append(person_location)
+                    if hasattr(device_tracker_entity, "latitude") and hasattr(
+                        device_tracker_entity, "longitude"
+                    ):
+                        person_location["lat"] = device_tracker_entity.latitude
+                        person_location["lon"] = device_tracker_entity.longitude
 
-    return json_response(response)
+                        # If tracker ID can be extracted, set it
+                        try:
+                            person_location[
+                                "tid"
+                            ] = device_tracker_entity.device_state_attributes["tid"]
+                        except TypeError:
+                            pass
+
+                    # Fallback if none of the device trackers has a TID
+                    if not person_location["tid"]:
+                        try:
+                            person_location["tid"] = device_tracker_entity.name[0:2]
+                        except AttributeError:
+                            pass
+
+                if person_location["lat"] and person_location["lon"]:
+                    response.append(person_location)
+
+    if message["_type"] == "encrypted" and context.secret:
+        return json_response(
+            {
+                "_type": "encrypted",
+                "data": encrypt_message(
+                    context.secret, message["topic"], json.dumps(response)
+                ),
+            }
+        )
+    else:
+        return json_response(response)
 
 
 class OwnTracksContext:
