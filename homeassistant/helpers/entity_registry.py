@@ -160,7 +160,8 @@ class EntityRegistry:
 
         if unique_id:
             entity_id = self.async_get_entity_id(domain, platform, unique_id)
-        else:
+
+        if entity_id is None:
             entity_id = self.async_generate_entity_id(
                 domain,
                 suggested_object_id or f"{platform}_{unique_id}",
