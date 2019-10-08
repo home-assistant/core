@@ -1,0 +1,33 @@
+soundtouch_play_everywhere:
+  description: Create a multi-room (zone) from a master and play same content on all other devices (slaves)
+  fields:
+    master:
+      description: Name of the master device
+      example: "media_player.soundtouch_living_room"
+soundtouch_create_zone:
+  description: Create a multi-room (zone) from a master and play on selected slaves
+  fields:
+    master:
+      description: Name of the master device
+      example: "media_player.soundtouch_living_room"
+    slaves:
+      description: List of slaves entity_id
+      example: "media_player.soundtouch_kitchen,media_player.soundtouch_hall"
+soundtouch_add_zone_slave:
+  description: Add slave(s) to an existing zone
+  fields:
+    master:
+      description: Name of the master device
+      example: "media_player.soundtouch_living_room"
+    slaves:
+      description: List of slaves entity_id to add
+      example: "media_player.soundtouch_kitchen,media_player.soundtouch_hall"
+soundtouch_remove_zone_slave:
+  description: Remove slave(s) from an existing zone. Removing the last slave will destroy the zone. You will need to create a new zone in order to be able to add slave(s) again
+  fields:
+    master:
+      description: Name of the master device
+      example: "media_player.soundtouch_living_room"
+    slaves:
+      description: List of slaves entity_id to remove
+      example: "media_player.soundtouch_kitchen,media_player.soundtouch_hall"
