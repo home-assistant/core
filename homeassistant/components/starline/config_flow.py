@@ -19,6 +19,10 @@ from .const import (
     ERROR_AUTH_APP,
     ERROR_AUTH_USER,
     ERROR_AUTH_MFA,
+    DATA_USER_ID,
+    DATA_SLNET_TOKEN,
+    DATA_SLID_TOKEN,
+    DATA_EXPIRES,
 )
 
 
@@ -230,9 +234,10 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title="Application " + self._app_id,
             data={
-                "user_id": self._user_id,
-                "slnet_token": self._slnet_token,
-                "expires": self._slnet_token_expires,
+                DATA_USER_ID: self._user_id,
+                DATA_SLNET_TOKEN: self._slnet_token,
+                DATA_SLID_TOKEN: self._user_slid,
+                DATA_EXPIRES: self._slnet_token_expires,
             },
         )
 

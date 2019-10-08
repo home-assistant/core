@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import DOMAIN, LOGGER, DEFAULT_SCAN_INTERVAL
+from .const import DOMAIN, LOGGER, DEFAULT_SCAN_INTERVAL, DATA_USER_ID, DATA_SLNET_TOKEN, DATA_SLID_TOKEN, DATA_EXPIRES
 
 
 class StarlineAccount:
@@ -20,17 +20,55 @@ class StarlineAccount:
         self._update_listeners: List[Callable] = []
         self._update_interval: int = DEFAULT_SCAN_INTERVAL
         self._unsubscribe_auto_updater: Optional[Callable] = None
+        self._slnet_token_expires = self._config_entry.data[DATA_EXPIRES]
         self._api: StarlineApi = StarlineApi(
-            config_entry.data["user_id"], config_entry.data["slnet_token"]
+            config_entry.data[DATA_USER_ID], config_entry.data[DATA_SLNET_TOKEN]
         )
+
+    async def _check_slnet_token(self) -> None:
+        """Check SLNet token expiration and update if needed."""
+        now = datetime.now().timestamp()
+        slnet_token_expires = self._config_entry.data[DATA_EXPIRES]
+
+        if now + self._update_interval > slnet_token_expires:
+            await self._update_slnet_token()
+
+    async def _update_slnet_token(self) -> None:
+        """Update SLNet token."""
+        slid_token = self._config_entry.data[DATA_SLID_TOKEN]
+
+        try:
+            slnet_token, slnet_token_expires, user_id = await self._api.get_user_id(slid_token)
+            self._api.set_slnet_token(slnet_token)
+            self._api.set_user_id(user_id)
+            self._hass.config_entries.async_update_entry(
+                self._config_entry,
+                data={
+                    **self._config_entry.data,
+                    DATA_SLNET_TOKEN: slnet_token,
+                    DATA_EXPIRES: slnet_token_expires,
+                    DATA_USER_ID: user_id
+                },
+            )
+        except Exception as err:  # pylint: disable=broad-except
+            LOGGER.error("Error updating SLNet token: %s", err)
+            pass
 
     @property
     def api(self) -> StarlineApi:
         """Return the instance of the API."""
         return self._api
 
+    async def update(self, unused=None):
+        """Update StarLine data."""
+        await self._check_slnet_token()
+        await self._api.update()
+
     def set_update_interval(self, hass: HomeAssistant, interval: int) -> None:
         """Set StarLine API update interval."""
+        if self._update_interval == interval:
+            return
+
         LOGGER.debug("Setting update interval: %ds", interval)
         self._update_interval = interval
         if self._unsubscribe_auto_updater is not None:
@@ -38,7 +76,7 @@ class StarlineAccount:
 
         delta = timedelta(seconds=interval)
         self._unsubscribe_auto_updater = async_track_time_interval(
-            hass, self._api.update, delta
+            hass, self.update, delta
         )
 
     def unload(self):

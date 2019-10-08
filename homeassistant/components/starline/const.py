@@ -18,4 +18,9 @@ ERROR_AUTH_APP = "error_auth_app"
 ERROR_AUTH_USER = "error_auth_user"
 ERROR_AUTH_MFA = "error_auth_mfa"
 
+DATA_USER_ID = "user_id"
+DATA_SLNET_TOKEN = "slnet_token"
+DATA_SLID_TOKEN = "slid_token"
+DATA_EXPIRES = "expires"
+
 SERVICE_UPDATE_STATE = "update_state"

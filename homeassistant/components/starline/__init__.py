@@ -21,7 +21,7 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the StarLine device from a config entry."""
     account = StarlineAccount(hass, config_entry)
-    await account.api.update()
+    await account.update()
     if not account.api.available:
         raise ConfigEntryNotReady
 
@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             hass.config_entries.async_forward_entry_setup(config_entry, domain)
         )
 
-    hass.services.async_register(DOMAIN, SERVICE_UPDATE_STATE, account.api.update)
+    hass.services.async_register(DOMAIN, SERVICE_UPDATE_STATE, account.update)
 
     config_entry.add_update_listener(async_options_updated)
     await async_options_updated(hass, config_entry)
@@ -59,5 +59,5 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 async def async_options_updated(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Triggered by config entry options updates."""
     account: StarlineAccount = hass.data[DOMAIN]
-    update_timeout = config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-    account.set_update_interval(hass, update_timeout)
+    scan_interval = config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    account.set_update_interval(hass, scan_interval)
