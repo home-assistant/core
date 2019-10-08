@@ -121,7 +121,7 @@ class AlexaCapibility:
         # pylint: disable=assignment-from-none
         non_controllable = self.properties_non_controllable()
         if non_controllable is not None:
-            result["properties"].update({"nonControllable": non_controllable})
+            result["properties"]["nonControllable"] = non_controllable
 
         # pylint: disable=assignment-from-none
         supports_deactivation = self.supports_deactivation()
