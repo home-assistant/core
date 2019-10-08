@@ -129,6 +129,9 @@ class ProxmoxClient:
         self._password = password
         self._verify_ssl = verify_ssl
 
+        self._proxmox = None
+        self._connection_start_time = None
+
     def build_client(self):
         """Construct the ProxmoxAPI client."""
 
