@@ -229,7 +229,11 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title="Application " + self._app_id,
-            data={"user_id": self._user_id, "slnet_token": self._slnet_token},
+            data={
+                "user_id": self._user_id,
+                "slnet_token": self._slnet_token,
+                "expires": self._slnet_token_expires,
+            },
         )
 
 
