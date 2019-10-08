@@ -9,7 +9,7 @@ from .entity import StarlineEntity
 SENSOR_TYPES = {
     "battery": ["Battery", "V", "mdi:battery"],
     "balance": ["Balance", "$", "mdi:cash-multiple"],
-    "ctemp": ["Inner Temperature", TEMP_CELSIUS, "mdi:thermometer"],
+    "ctemp": ["Interior Temperature", TEMP_CELSIUS, "mdi:thermometer"],
     "etemp": ["Engine Temperature", TEMP_CELSIUS, "mdi:thermometer"],
     "gsm_lvl": ["GSM Signal", "%", "mdi:signal"],
 }
