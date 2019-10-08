@@ -1,6 +1,6 @@
 {
     "domain": "flume",
-    "name": "Flume, Chris Mandich",
+    "name": "Flume",
     "documentation": "https://www.home-assistant.io/integrations/flume/",
     "dependencies": [],
     "codeowners": ["@ChrisMandich"],

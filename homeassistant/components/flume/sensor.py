@@ -19,6 +19,7 @@ DEFAULT_NAME = "Flume Sensor"
 
 CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
+FLUME_TYPE_SENSOR = 2
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -47,7 +48,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         for device in flume_devices._devices:
-            if device["type"] == 2:
+            if device["type"] == FLUME_TYPE_SENSOR:
                 flume = FlumeData(
                     username,
                     password,
@@ -57,8 +58,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     time_zone,
                     SCAN_INTERVAL,
                 )
-                sensor_name = name + " " + device["id"]
-                add_entities([FlumeSensor(flume, sensor_name)], True)
+                add_entities([FlumeSensor(flume, f"{name} {device['id']}")], True)
     except Exception as error:
         _LOGGER.error("Unable to setup Flume Devices: %s", error)
         return False
@@ -67,9 +67,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class FlumeSensor(Entity):
     """Representation of the Flume sensor."""
 
-    def __init__(self, Flume, name):
+    def __init__(self, flume, name):
         """Initialize the Flume sensor."""
-        self.Flume = Flume
+        self.flume = flume
         self._name = name
         self._state = None
         self._unit_of_measurement = "GALLONS"
@@ -84,15 +84,10 @@ class FlumeSensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
-
     def update(self):
         """Get the latest data and updates the states."""
-        self.Flume.update()
-        self._state = self.Flume.value
+        self.flume.update()
+        self._state = self.flume.value
 
 
 class FlumeAuth:
@@ -134,8 +129,8 @@ class FlumeAuth:
             return json.loads(response.text)["data"]
         else:
             raise Exception(
-                "getToken Response Code not Successful. Returned {}".format(
-                    response.status_code
+                "Can't get token for user {}. Response code returned : {}".format(
+                    self._username, response.status_code
                 )
             )
 
@@ -163,7 +158,7 @@ class FlumeAuth:
             return json.loads(response.text)["data"]
         else:
             raise Exception(
-                "getDevices Response Code not Successful. Returned {}".format(
+                "Impossible to retreive devices. Response code returned : {}".format(
                     response.status_code
                 )
             )
@@ -184,9 +179,6 @@ class FlumeData:
     ):
         """Initialize the data object."""
         self._username = username
-        self._password = password
-        self._client_id = client_id
-        self._client_secret = client_secret
         self._device_id = device_id
         self._scan_interval = scan_interval
         self._time_zone = time_zone
@@ -240,7 +232,7 @@ class FlumeData:
             self.value = json.loads(response.text)["data"][0]["update"][0]["value"]
         else:
             raise Exception(
-                "getDevices Response Code not Successful. Returned {}".format(
-                    response.status_code
+                "Can't update flume data for user id {}. Response code returned : {}".format(
+                    self._username, response.status_code
                 )
             )
