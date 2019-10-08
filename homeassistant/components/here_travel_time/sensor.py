@@ -1,7 +1,6 @@
 """Support for HERE travel time sensors."""
 from datetime import datetime, timedelta
 import logging
-import re
 from typing import Callable, Dict, Optional, Union
 
 import herepy
@@ -374,6 +373,17 @@ class HERETravelTimeSensor(Entity):
             entity.state,
         )
         return None
+
+    @staticmethod
+    def _entity_state_is_valid_coordinate_set(state: str) -> bool:
+        """Check that the given string is a valid set of coordinates."""
+        schema = vol.Schema(cv.gps)
+        try:
+            coordinates = state.split(",")
+            schema(coordinates)
+            return True
+        except (vol.MultipleInvalid):
+            return False
 
     @staticmethod
     def _get_location_from_attributes(entity: State) -> str:
