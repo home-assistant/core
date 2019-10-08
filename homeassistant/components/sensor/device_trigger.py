@@ -147,7 +147,6 @@ async def async_get_triggers(hass, device_id):
 
 async def async_get_trigger_capabilities(hass, config):
     """List trigger capabilities."""
-    config = TRIGGER_SCHEMA(config)
     state = hass.states.get(config[CONF_ENTITY_ID])
     unit_of_measurement = (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) if state else ""
