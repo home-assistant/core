@@ -21,6 +21,7 @@ from .const import (
     PREF_ALEXA_REPORT_STATE,
     DEFAULT_ALEXA_REPORT_STATE,
     PREF_GOOGLE_REPORT_STATE,
+    PREF_GOOGLE_LOCAL_WEBHOOK_ID,
     DEFAULT_GOOGLE_REPORT_STATE,
     InvalidTrustedNetworks,
     InvalidTrustedProxies,
@@ -59,6 +60,14 @@ class CloudPreferences:
 
         self._prefs = prefs
 
+        if PREF_GOOGLE_LOCAL_WEBHOOK_ID not in self._prefs:
+            await self._save_prefs(
+                {
+                    **self._prefs,
+                    PREF_GOOGLE_LOCAL_WEBHOOK_ID: self._hass.components.webhook.async_generate_id(),
+                }
+            )
+
     @callback
     def async_listen_updates(self, listener):
         """Listen for updates to the preferences."""
@@ -79,6 +88,8 @@ class CloudPreferences:
         google_report_state=_UNDEF,
     ):
         """Update user preferences."""
+        prefs = {**self._prefs}
+
         for key, value in (
             (PREF_ENABLE_GOOGLE, google_enabled),
             (PREF_ENABLE_ALEXA, alexa_enabled),
@@ -92,20 +103,17 @@ class CloudPreferences:
             (PREF_GOOGLE_REPORT_STATE, google_report_state),
         ):
             if value is not _UNDEF:
-                self._prefs[key] = value
+                prefs[key] = value
 
         if remote_enabled is True and self._has_local_trusted_network:
-            self._prefs[PREF_ENABLE_REMOTE] = False
+            prefs[PREF_ENABLE_REMOTE] = False
             raise InvalidTrustedNetworks
 
         if remote_enabled is True and self._has_local_trusted_proxies:
-            self._prefs[PREF_ENABLE_REMOTE] = False
+            prefs[PREF_ENABLE_REMOTE] = False
             raise InvalidTrustedProxies
 
-        await self._store.async_save(self._prefs)
-
-        for listener in self._listeners:
-            self._hass.async_create_task(async_create_catching_coro(listener(self)))
+        await self._save_prefs(prefs)
 
     async def async_update_google_entity_config(
         self,
@@ -217,6 +225,11 @@ class CloudPreferences:
         return self._prefs.get(PREF_GOOGLE_ENTITY_CONFIGS, {})
 
     @property
+    def google_local_webhook_id(self):
+        """Return Google webhook ID to receive local messages."""
+        return self._prefs[PREF_GOOGLE_LOCAL_WEBHOOK_ID]
+
+    @property
     def alexa_entity_configs(self):
         """Return Alexa Entity configurations."""
         return self._prefs.get(PREF_ALEXA_ENTITY_CONFIGS, {})
@@ -262,3 +275,11 @@ class CloudPreferences:
             return True
 
         return False
+
+    async def _save_prefs(self, prefs):
+        """Save preferences to disk."""
+        self._prefs = prefs
+        await self._store.async_save(self._prefs)
+
+        for listener in self._listeners:
+            self._hass.async_create_task(async_create_catching_coro(listener(self)))

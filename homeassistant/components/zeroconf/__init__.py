@@ -11,7 +11,11 @@ import voluptuous as vol
 from zeroconf import ServiceBrowser, ServiceInfo, ServiceStateChange, Zeroconf
 
 from homeassistant import util
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, __version__
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP,
+    EVENT_HOMEASSISTANT_START,
+    __version__,
+)
 from homeassistant.generated.zeroconf import ZEROCONF, HOMEKIT
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,6 +37,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 def setup(hass, config):
     """Set up Zeroconf and make Home Assistant discoverable."""
+    zeroconf = Zeroconf()
     zeroconf_name = f"{hass.config.location_name}.{ZEROCONF_TYPE}"
 
     params = {
@@ -58,9 +63,15 @@ def setup(hass, config):
         properties=params,
     )
 
-    zeroconf = Zeroconf()
+    def zeroconf_hass_start(_event):
+        """Expose Home Assistant on zeroconf when it starts.
 
-    zeroconf.register_service(info)
+        Wait till started or otherwise HTTP is not up and running.
+        """
+        _LOGGER.info("Starting Zeroconf broadcast")
+        zeroconf.register_service(info)
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, zeroconf_hass_start)
 
     def service_update(zeroconf, service_type, name, state_change):
         """Service state changed."""
