@@ -19,20 +19,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         sensors = []
 
         for node in entry[CONF_NODES]:
-            for vm in node[CONF_VMS]:
+            for virtual_machine in node[CONF_VMS]:
                 sensors.append(
                     ProxmoxBinarySensor(
-                        PROXMOX_CLIENTS[f"{entry[CONF_HOST]}:{str(port)}"],
+                        hass.data[PROXMOX_CLIENTS][f"{entry[CONF_HOST]}:{str(port)}"],
                         node["node"],
                         ProxmoxItemType.qemu,
-                        vm,
+                        virtual_machine,
                     )
                 )
 
             for container in node[CONF_CONTAINERS]:
                 sensors.append(
                     ProxmoxBinarySensor(
-                        PROXMOX_CLIENTS[f"{entry[CONF_HOST]}:{str(port)}"],
+                        hass.data[PROXMOX_CLIENTS][f"{entry[CONF_HOST]}:{str(port)}"],
                         node["node"],
                         ProxmoxItemType.lxc,
                         container,
@@ -47,19 +47,13 @@ class ProxmoxBinarySensor(BinarySensorDevice):
 
     def __init__(self, proxmox_client, item_node, item_type, item_id):
         """Initialize the binary sensor."""
-
         self._proxmox_client = proxmox_client
         self._item_node = item_node
         self._item_type = item_type
         self._item_id = item_id
 
-        item = self.poll_item()
-
-        if item is None:
-            _LOGGER.warning("Couldn't find VM/Container with the ID %s", self._item_id)
-
-        self._vmname = item["name"]
-        self._name = f"{self._item_node} {self._vmname} running"
+        self._vmname = None
+        self._name = None
 
         self._state = None
 
@@ -86,7 +80,13 @@ class ProxmoxBinarySensor(BinarySensorDevice):
 
     def update(self):
         """Check if the VM/Container is running."""
-        self._state = self.poll_item()["status"] == "running"
+        item = self.poll_item()
+
+        if item is None:
+            _LOGGER.warning("Failed to poll VM/container %s", self._item_id)
+            return
+
+        self._state = item["status"] == "running"
 
     def poll_item(self):
         """Find the VM/Container with the set item_id."""
@@ -98,5 +98,14 @@ class ProxmoxBinarySensor(BinarySensorDevice):
         item = next(
             (item for item in items if item["vmid"] == str(self._item_id)), None
         )
+
+        if self._vmname is None:
+            self._vmname = item["name"]
+
+        if self._name is None:
+            self._name = f"{self._item_node} {self._vmname} running"
+
+        if item is None:
+            _LOGGER.warning("Couldn't find VM/Container with the ID %s", self._item_id)
 
         return item

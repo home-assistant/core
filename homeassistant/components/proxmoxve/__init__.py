@@ -17,10 +17,10 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
-PROXMOX_CLIENTS = {}
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "proxmoxve"
+PROXMOX_CLIENTS = "proxmox_clients"
 CONF_REALM = "realm"
 CONF_NODE = "node"
 CONF_NODES = "nodes"
@@ -90,14 +90,17 @@ def setup(hass, config):
             proxmox_client = ProxmoxClient(
                 host, port, user, realm, password, verify_ssl
             )
+            proxmox_client.build_client()
         except AuthenticationError:
             _LOGGER.warning("Invalid credentials")
+            return False
 
         if proxmox_client is None:
             _LOGGER.warning("Failed to connect to proxmox")
             return False
 
-        PROXMOX_CLIENTS[f"{host}:{str(port)}"] = proxmox_client
+        hass.data[PROXMOX_CLIENTS] = {}
+        hass.data[PROXMOX_CLIENTS][f"{host}:{str(port)}"] = proxmox_client
 
     hass.helpers.discovery.load_platform(
         "binary_sensor", DOMAIN, {"entries": config[DOMAIN]}, config
@@ -126,8 +129,6 @@ class ProxmoxClient:
         self._password = password
         self._verify_ssl = verify_ssl
 
-        self.build_client()
-
     def build_client(self):
         """Construct the ProxmoxAPI client."""
 
@@ -142,7 +143,7 @@ class ProxmoxClient:
         self._connection_start_time = time.time()
 
     def get_api_client(self):
-        """Return the ProxmoxAPI client (and rebuilds it if required)."""
+        """Return the ProxmoxAPI client and rebuild it if necessary."""
 
         connection_age = time.time() - self._connection_start_time
 
