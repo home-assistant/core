@@ -130,7 +130,12 @@ class TransmissionSensor(Entity):
         if self.type == "completed_torrents":
             self._state = self._tm_client.api.get_completed_torrent_count()
         elif self.type == "started_torrents":
+<<<<<<< HEAD
             self._state = self._tm_client.api.get_started_torrent_count()
+=======
+            self._state = self._transmission_api.get_started_torrent_count()
+            self._torrent_info = self._transmission_api.started_torrent_dict
+>>>>>>> Remove transmission_downloading, give started_torrents the info.
 
         if self.type == "current_status":
             if self._data:
@@ -162,6 +167,3 @@ class TransmissionSensor(Entity):
                 self._state = self._data.pausedTorrentCount
             elif self.type == "total_torrents":
                 self._state = self._data.torrentCount
-            elif self.type == "started_torrent_info":
-                self._state = self._transmission_api.get_started_torrent_info()
-                self._torrent_info = self._transmission_api.started_torrent_dict

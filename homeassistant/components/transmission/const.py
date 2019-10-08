@@ -10,7 +10,6 @@ SENSOR_TYPES = {
     "upload_speed": ["Up Speed", "MB/s", None],
     "completed_torrents": ["Completed Torrents", None, None],
     "started_torrents": ["Started Torrents", None, None],
-    "started_torrent_info": ["Torrent Info", None, None],
 }
 SWITCH_TYPES = {"on_off": "Switch", "turtle_mode": "Turtle Mode"}
 
