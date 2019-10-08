@@ -150,12 +150,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.desc = next(iter(self.sites.values()))["desc"]
             return await self.async_step_site(user_input={})
 
-        if self.desc is not None:
-            for site in self.sites.values():
-                if self.desc == site["name"]:
-                    self.desc = site["desc"]
-                    return await self.async_step_site(user_input={})
-
         sites = []
         for site in self.sites.values():
             sites.append(site["desc"])
