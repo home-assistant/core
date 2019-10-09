@@ -3,11 +3,12 @@ import asyncio
 import json
 import os
 
-from aiohue.discovery import discover_nupnp
 import async_timeout
 import voluptuous as vol
+from aiohue.discovery import discover_nupnp
 
 from homeassistant import config_entries
+from homeassistant.components.ssdp import ATTR_MANUFACTURERURL
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
@@ -133,7 +134,6 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         This flow is triggered by the SSDP component. It will check if the
         host is already configured and delegate to the import step if not.
         """
-        from homeassistant.components.ssdp import ATTR_MANUFACTURERURL
 
         if discovery_info[ATTR_MANUFACTURERURL] != HUE_MANUFACTURERURL:
             return self.async_abort(reason="not_hue_bridge")

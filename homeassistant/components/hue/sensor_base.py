@@ -11,6 +11,14 @@ from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
+import aiohue
+from .binary_sensor import HuePresence, PRESENCE_NAME_FORMAT
+from .sensor import (
+    HueLightLevel,
+    HueTemperature,
+    LIGHT_LEVEL_NAME_FORMAT,
+    TEMPERATURE_NAME_FORMAT,
+)
 
 CURRENT_SENSORS = "current_sensors"
 SENSOR_MANAGER_FORMAT = "{}_sensor_manager"
@@ -52,14 +60,6 @@ class SensorManager:
 
     def __init__(self, hass, bridge):
         """Initialize the sensor manager."""
-        import aiohue
-        from .binary_sensor import HuePresence, PRESENCE_NAME_FORMAT
-        from .sensor import (
-            HueLightLevel,
-            HueTemperature,
-            LIGHT_LEVEL_NAME_FORMAT,
-            TEMPERATURE_NAME_FORMAT,
-        )
 
         self.hass = hass
         self.bridge = bridge
@@ -115,7 +115,6 @@ class SensorManager:
 
     async def async_update_items(self):
         """Update sensors from the bridge."""
-        import aiohue
 
         api = self.bridge.api.sensors
 
