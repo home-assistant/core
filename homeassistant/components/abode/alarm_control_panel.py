@@ -73,8 +73,3 @@ class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanel):
             "battery_backup": self._device.battery,
             "cellular_backup": self._device.is_cellular,
         }
-
-    @property
-    def unique_id(self):
-        """Return a unique ID to use for this device."""
-        return f"{self._device.name} {self._device.device_id}"
