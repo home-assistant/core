@@ -300,7 +300,7 @@ pybotvac==0.0.16
 pychromecast==4.0.1
 
 # homeassistant.components.deconz
-pydeconz==63
+pydeconz==64
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
