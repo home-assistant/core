@@ -1,6 +1,6 @@
 """StarLine Account."""
 from datetime import timedelta, datetime
-from typing import List, Callable, Optional, Dict, Any
+from typing import Callable, Optional, Dict, Any
 from starline import StarlineApi, StarlineDevice
 
 from homeassistant.config_entries import ConfigEntry
