@@ -11,6 +11,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from rflink.parser import UNITS, PACKET_FIELDS
 
 from . import (
     CONF_ALIASES,
@@ -66,8 +67,6 @@ def lookup_unit_for_sensor_type(sensor_type):
 
     Async friendly.
     """
-    from rflink.parser import UNITS, PACKET_FIELDS
-
     field_abbrev = {v: k for k, v in PACKET_FIELDS.items()}
 
     return UNITS.get(field_abbrev.get(sensor_type))
