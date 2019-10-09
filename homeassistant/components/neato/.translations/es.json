@@ -8,7 +8,8 @@
             "default": "Ver [documentaci\u00f3n Neato]({docs_url})."
         },
         "error": {
-            "invalid_credentials": "Credenciales no v\u00e1lidas"
+            "invalid_credentials": "Credenciales no v\u00e1lidas",
+            "unexpected_error": "Error inesperado"
         },
         "step": {
             "user": {
