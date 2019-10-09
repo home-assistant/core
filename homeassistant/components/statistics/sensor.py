@@ -218,6 +218,15 @@ class StatisticsSensor(Entity):
             self.ages.popleft()
             self.states.popleft()
 
+    def _next_to_purge_timestamp(self):
+        """Find the timestamp when the next purge would occur."""
+        if self.ages and self._max_age:
+            # Take the oldest entry from the ages list and add the configured max_age.
+            # If executed after purging old states, the result is the next timestamp
+            # in the future when the oldest state will expire.
+            return self.ages[0] + self._max_age
+        return None
+
     async def async_update(self):
         """Get the latest data and updates the states."""
         _LOGGER.debug("%s: updating statistics.", self.entity_id)
@@ -272,9 +281,11 @@ class StatisticsSensor(Entity):
         self.async_schedule_update_ha_state()
 
         # If max_age is set, ensure to update again after the defined interval.
-        if self._max_age is not None:
-            now = dt_util.utcnow()
-            _LOGGER.debug("%s: scheduling update in %s.", self.entity_id, self._max_age)
+        next_to_purge_timestamp = self._next_to_purge_timestamp()
+        if next_to_purge_timestamp:
+            _LOGGER.debug(
+                "%s: scheduling update at %s.", self.entity_id, next_to_purge_timestamp
+            )
             if self._update_listener:
                 self._update_listener()
                 self._update_listener = None
@@ -283,10 +294,9 @@ class StatisticsSensor(Entity):
                 """Timer callback for sensor update."""
                 _LOGGER.debug("%s: executing scheduled update", self.entity_id)
                 await self.async_update()
-                _LOGGER.debug("%s: executed scheduled update", self.entity_id)
 
             self._update_listener = async_track_point_in_utc_time(
-                self.hass, _scheduled_update, now + self._max_age
+                self.hass, _scheduled_update, next_to_purge_timestamp
             )
 
     async def _async_initialize_from_database(self):
