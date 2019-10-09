@@ -16,6 +16,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_VALUE_TEMPLATE,
     CONF_ICON_TEMPLATE,
+    CONF_ICON_COLOR_TEMPLATE
     CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_SENSORS,
     CONF_DEVICE_CLASS,
@@ -38,6 +39,7 @@ SENSOR_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+        vol.Optional(CONF_ICON_COLOR_TEMPLATE): cv.template,
         vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
         vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
         vol.Optional(CONF_ATTRIBUTE_TEMPLATES): vol.Schema({cv.string: cv.template}),
@@ -61,6 +63,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     for device, device_config in config[CONF_SENSORS].items():
         value_template = device_config[CONF_VALUE_TEMPLATE]
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
+        icon_color_template = device_config.get(CONF_ICON_COLOR_TEMPLATE)
         entity_picture_template = device_config.get(CONF_ENTITY_PICTURE_TEMPLATE)
         availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
         entity_ids = set()
@@ -72,6 +75,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         templates = {
             CONF_VALUE_TEMPLATE: value_template,
             CONF_ICON_TEMPLATE: icon_template,
+            (CONF_ICON_COLOR_TEMPLATE, icon_color_template),
             CONF_ENTITY_PICTURE_TEMPLATE: entity_picture_template,
             CONF_AVAILABILITY_TEMPLATE: availability_template,
         }
@@ -120,6 +124,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 device_class,
                 value_template,
                 icon_template,
+                icon_color_template
                 entity_picture_template,
                 availability_template,
                 entity_ids,
@@ -147,6 +152,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         device_class,
         value_template,
         icon_template,
+        icon_color_template
         entity_picture_template,
         availability_template,
         entity_ids,
@@ -162,9 +168,11 @@ class BinarySensorTemplate(BinarySensorDevice):
         self._template = value_template
         self._state = None
         self._icon_template = icon_template
+        self._icon_color_template = icon_color_template
         self._availability_template = availability_template
         self._entity_picture_template = entity_picture_template
         self._icon = None
+        self._icon_color = None
         self._entity_picture = None
         self._entities = entity_ids
         self._delay_on = delay_on
@@ -205,6 +213,11 @@ class BinarySensorTemplate(BinarySensorDevice):
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return self._icon
+
+    @property
+    def icon_color(self):
+        """Return the icon to use in the frontend, if any."""
+        return self._icon_color
 
     @property
     def entity_picture(self):
@@ -264,6 +277,7 @@ class BinarySensorTemplate(BinarySensorDevice):
 
         templates = {
             "_icon": self._icon_template,
+            '_icon_color': self._icon_template,
             "_entity_picture": self._entity_picture_template,
             "_available": self._availability_template,
         }

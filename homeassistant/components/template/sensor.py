@@ -16,6 +16,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     CONF_ICON_TEMPLATE,
+    CONF_ICON_COLOR_TEMPLATE
     CONF_ENTITY_PICTURE_TEMPLATE,
     ATTR_ENTITY_ID,
     CONF_SENSORS,
@@ -39,6 +40,7 @@ SENSOR_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+        vol.Optional(CONF_ICON_COLOR_TEMPLATE): cv.template,
         vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
         vol.Optional(CONF_FRIENDLY_NAME_TEMPLATE): cv.template,
         vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
@@ -64,6 +66,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     for device, device_config in config[CONF_SENSORS].items():
         state_template = device_config[CONF_VALUE_TEMPLATE]
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
+        icon_color_template = device_config.get(CONF_ICON_COLOR_TEMPLATE)
         entity_picture_template = device_config.get(CONF_ENTITY_PICTURE_TEMPLATE)
         availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
@@ -79,6 +82,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         templates = {
             CONF_VALUE_TEMPLATE: state_template,
             CONF_ICON_TEMPLATE: icon_template,
+            CONF_ICON_COLOR_TEMPLATE: icon_color_template,
             CONF_ENTITY_PICTURE_TEMPLATE: entity_picture_template,
             CONF_FRIENDLY_NAME_TEMPLATE: friendly_name_template,
             CONF_AVAILABILITY_TEMPLATE: availability_template,
@@ -124,6 +128,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 unit_of_measurement,
                 state_template,
                 icon_template,
+                icon_color_template,
                 entity_picture_template,
                 availability_template,
                 entity_ids,
@@ -147,6 +152,7 @@ class SensorTemplate(Entity):
         unit_of_measurement,
         state_template,
         icon_template,
+        icon_color_template,
         entity_picture_template,
         availability_template,
         entity_ids,
@@ -164,9 +170,11 @@ class SensorTemplate(Entity):
         self._template = state_template
         self._state = None
         self._icon_template = icon_template
+        self._icon_color_template = icon_color_template
         self._entity_picture_template = entity_picture_template
         self._availability_template = availability_template
         self._icon = None
+        self._icon_color = None
         self._entity_picture = None
         self._entities = entity_ids
         self._device_class = device_class
@@ -211,6 +219,11 @@ class SensorTemplate(Entity):
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return self._icon
+
+    @property
+    def icon_color(self):
+        """Return the icon color to use in the frontend, if any."""
+        return self._icon_color
 
     @property
     def device_class(self) -> Optional[str]:
@@ -271,6 +284,7 @@ class SensorTemplate(Entity):
 
         templates = {
             "_icon": self._icon_template,
+            "_icon_color": self._icon_color_template,
             "_entity_picture": self._entity_picture_template,
             "_name": self._friendly_name_template,
             "_available": self._availability_template,
