@@ -316,6 +316,7 @@ async def test_fan(hass):
 
     power_capability = get_capability(capabilities, "Alexa.PowerController")
     assert "capabilityResources" not in power_capability
+    assert "configuration" not in power_capability
 
 
 async def test_variable_fan(hass):

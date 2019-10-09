@@ -99,7 +99,7 @@ class AlexaCapability:
     @staticmethod
     def configuration():
         """Return the Configuration object."""
-        return None
+        return []
 
     def serialize_discovery(self):
         """Serialize according to the Discovery API."""
@@ -129,7 +129,7 @@ class AlexaCapability:
             result["capabilityResources"] = capability_resources
 
         configuration = self.configuration()
-        if configuration is not None:
+        if configuration:
             result["configuration"] = configuration
 
         # pylint: disable=assignment-from-none
@@ -771,7 +771,7 @@ class AlexaSecurityPanelController(AlexaCapability):
         return "DISARMED"
 
     def configuration(self):
-        """Return supported authorization types."""
+        """Return configuration object with supported authorization types."""
         code_format = self.entity.attributes.get(ATTR_CODE_FORMAT)
 
         if code_format == FORMAT_NUMBER:
@@ -816,11 +816,8 @@ class AlexaModeController(AlexaCapability):
         return None
 
     def configuration(self):
-        """Return configuration."""
-        configuration = self.serialize_mode_resources()
-        if configuration is not None:
-            return configuration
-        return None
+        """Return configuration with modeResources."""
+        return self.serialize_mode_resources()
 
     def capability_resources(self):
         """Return capabilityResources object."""
@@ -911,11 +908,8 @@ class AlexaRangeController(AlexaCapability):
         return None
 
     def configuration(self):
-        """Return configuration."""
-        configuration = self.serialize_preset_resources()
-        if configuration is not None:
-            return configuration
-        return None
+        """Return configuration with presetResources."""
+        return self.serialize_preset_resources()
 
     def capability_resources(self):
         """Return capabilityResources object."""
@@ -926,7 +920,7 @@ class AlexaRangeController(AlexaCapability):
 
     def preset_resources(self):
         """Return presetResources object."""
-        preset_resources = None
+        preset_resources = []
 
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
             preset_resources = {
