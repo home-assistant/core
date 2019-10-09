@@ -9,10 +9,24 @@ from pydoods import PyDOODS
 
 from homeassistant.const import CONF_TIMEOUT
 from homeassistant.components.image_processing import (
+    ATTR_MATCHES,
+    ATTR_SUMMARY,
+    ATTR_TOTAL_MATCHES,
+    CONF_AREA,
+    CONF_AUTH_KEY,
+    CONF_BOTTOM,
     CONF_CONFIDENCE,
+    CONF_COVERS,
+    CONF_DETECTOR,
     CONF_ENTITY_ID,
+    CONF_FILE_OUT,
+    CONF_LABELS,
+    CONF_LEFT,
     CONF_NAME,
+    CONF_RIGHT,
     CONF_SOURCE,
+    CONF_TOP,
+    CONF_URL,
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
     draw_box,
@@ -23,21 +37,6 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_MATCHES = "matches"
-ATTR_SUMMARY = "summary"
-ATTR_TOTAL_MATCHES = "total_matches"
-
-CONF_URL = "url"
-CONF_AUTH_KEY = "auth_key"
-CONF_DETECTOR = "detector"
-CONF_LABELS = "labels"
-CONF_AREA = "area"
-CONF_COVERS = "covers"
-CONF_TOP = "top"
-CONF_BOTTOM = "bottom"
-CONF_RIGHT = "right"
-CONF_LEFT = "left"
-CONF_FILE_OUT = "file_out"
 
 AREA_SCHEMA = vol.Schema(
     {

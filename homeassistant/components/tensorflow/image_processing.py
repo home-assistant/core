@@ -6,10 +6,25 @@ import sys
 import voluptuous as vol
 
 from homeassistant.components.image_processing import (
+    ATTR_MATCHES,
+    ATTR_SUMMARY,
+    ATTR_TOTAL_MATCHES,
+    CONF_AREA,
+    CONF_BOTTOM,
+    CONF_CATEGORY,
+    CONF_CATEGORIES,
     CONF_CONFIDENCE,
     CONF_ENTITY_ID,
+    CONF_FILE_OUT,
+    CONF_GRAPH,
+    CONF_LABELS,
+    CONF_LEFT,
+    CONF_MODEL,
+    CONF_MODEL_DIR,
     CONF_NAME,
+    CONF_RIGHT,
     CONF_SOURCE,
+    CONF_TOP,
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
     draw_box,
@@ -20,22 +35,6 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_MATCHES = "matches"
-ATTR_SUMMARY = "summary"
-ATTR_TOTAL_MATCHES = "total_matches"
-
-CONF_AREA = "area"
-CONF_BOTTOM = "bottom"
-CONF_CATEGORIES = "categories"
-CONF_CATEGORY = "category"
-CONF_FILE_OUT = "file_out"
-CONF_GRAPH = "graph"
-CONF_LABELS = "labels"
-CONF_LEFT = "left"
-CONF_MODEL = "model"
-CONF_MODEL_DIR = "model_dir"
-CONF_RIGHT = "right"
-CONF_TOP = "top"
 
 AREA_SCHEMA = vol.Schema(
     {
