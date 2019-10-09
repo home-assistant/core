@@ -4,6 +4,7 @@ import logging
 import voluptuous as vol
 
 from rflink.parser import UNITS, PACKET_FIELDS
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,

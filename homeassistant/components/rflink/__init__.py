@@ -7,6 +7,8 @@ import serial
 
 import voluptuous as vol
 
+from rflink.protocol import create_rflink_connection
+
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_COMMAND,
@@ -25,7 +27,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
-from rflink.protocol import create_rflink_connection
 
 _LOGGER = logging.getLogger(__name__)
 
