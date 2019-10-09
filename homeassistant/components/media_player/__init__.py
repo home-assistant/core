@@ -18,6 +18,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.const import (
+    SERVICE_MEDIA_CHANNEL_SET,
     SERVICE_MEDIA_NEXT_CHANNEL,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
@@ -59,6 +60,7 @@ from .const import (
     ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_ARTIST,
     ATTR_MEDIA_CHANNEL,
+    ATTR_MEDIA_CHANNEL_NAME,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_DURATION,
@@ -83,6 +85,7 @@ from .const import (
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
     SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_CHANNEL_SET,
     SUPPORT_NEXT_CHANNEL,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -130,6 +133,13 @@ DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 # Service call validation schemas
 MEDIA_PLAYER_SET_VOLUME_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
     {vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float}
+)
+
+MEDIA_PLAYER_CHANNEL_SET_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+    {
+        vol.Required(ATTR_MEDIA_CHANNEL): cv.positive_int,
+        vol.Optional(ATTR_MEDIA_CHANNEL_NAME): cv.string,
+    }
 )
 
 MEDIA_PLAYER_MUTE_VOLUME_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
@@ -288,6 +298,15 @@ async def async_setup(hass, config):
         ENTITY_SERVICE_SCHEMA,
         "async_media_previous_channel",
         [SUPPORT_PREVIOUS_CHANNEL],
+    )
+    component.async_register_entity_service(
+        SERVICE_MEDIA_CHANNEL_SET,
+        MEDIA_PLAYER_CHANNEL_SET_SCHEMA,
+        lambda entity, call: entity.async_media_channel_set(
+            media_channel=call.data[ATTR_MEDIA_CHANNEL],
+            media_channel_name=call.data.get(ATTR_MEDIA_CHANNEL_NAME),
+        ),
+        [SUPPORT_CHANNEL_SET],
     )
     component.async_register_entity_service(
         SERVICE_CLEAR_PLAYLIST,
@@ -657,6 +676,19 @@ class MediaPlayerDevice(Entity):
         """
         return self.hass.async_add_job(self.media_next_channel)
 
+    def media_channel_set(self, media_channel, media_channel_name):
+        """Send channel set command."""
+        raise NotImplementedError()
+
+    def async_media_channel_set(self, media_channel, media_channel_name):
+        """Set channel number, positive integer.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(
+            self.media_channel_set, media_channel, media_channel_name
+        )
+
     def media_seek(self, position):
         """Send seek command."""
         raise NotImplementedError()
@@ -775,6 +807,11 @@ class MediaPlayerDevice(Entity):
     def support_next_channel(self):
         """Boolean if next channel command supported."""
         return bool(self.supported_features & SUPPORT_NEXT_CHANNEL)
+
+    @property
+    def support_channel_set(self):
+        """Boolean if channel set command supported."""
+        return bool(self.supported_features & SUPPORT_CHANNEL_SET)
 
     @property
     def support_play_media(self):

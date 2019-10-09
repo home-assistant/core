@@ -15,6 +15,7 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_NIGHT,
     SERVICE_ALARM_DISARM,
     SERVICE_LOCK,
+    SERVICE_MEDIA_CHANNEL_SET,
     SERVICE_MEDIA_NEXT_CHANNEL,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
@@ -956,5 +957,37 @@ async def async_api_skip_channels(hass, config, directive, context):
             blocking=False,
             context=context,
         )
+
+    return directive.response()
+
+
+@HANDLERS.register(("Alexa.ChannelController", "ChangeChannel"))
+async def async_api_change_channel(hass, config, directive, context):
+    """Process a change channel request."""
+    # media_player channel service service does not support
+    # specifying channel name but only number
+
+    channel = directive.payload["channel"]
+    channel_number = 0
+    channel_name = ""
+
+    if "number" in channel:
+        channel_number = int(channel["number"])
+    elif "callSign" in channel:
+        channel_name = channel["callSign"]
+    elif "alternateCallSign" in channel:
+        channel_name = channel["alternateCallSign"]
+
+    entity = directive.entity
+
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id,
+        media_player.const.ATTR_MEDIA_CHANNEL: int(channel_number),
+        media_player.const.ATTR_MEDIA_CHANNEL_NAME: channel_name,
+    }
+
+    await hass.services.async_call(
+        entity.domain, SERVICE_MEDIA_CHANNEL_SET, data, blocking=False, context=context
+    )
 
     return directive.response()

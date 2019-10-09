@@ -408,6 +408,7 @@ class MediaPlayerCapabilities(AlexaEntity):
         changechannel_features = (
             media_player.const.SUPPORT_NEXT_CHANNEL
             | media_player.const.SUPPORT_PREVIOUS_CHANNEL
+            | media_player.const.SUPPORT_CHANNEL_SET
         )
         if supported & changechannel_features:
             yield AlexaChannelController(self.entity)
