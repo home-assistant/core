@@ -41,158 +41,7 @@ COMMENT_REQUIREMENTS = (
     "VL53L1X2",
 )
 
-TEST_REQUIREMENTS = (
-    "adguardhome",
-    "aio_geojson_geonetnz_quakes",
-    "aioambient",
-    "aioautomatic",
-    "aiobotocore",
-    "aioesphomeapi",
-    "aiohttp_cors",
-    "aiohue",
-    "aionotion",
-    "aioswitcher",
-    "aiounifi",
-    "aiowwlln",
-    "airly",
-    "ambiclimate",
-    "androidtv",
-    "apns2",
-    "aprslib",
-    "av",
-    "axis",
-    "bellows-homeassistant",
-    "caldav",
-    "coinmarketcap",
-    "defusedxml",
-    "dsmr_parser",
-    "eebrightbox",
-    "emulated_roku",
-    "enocean",
-    "ephem",
-    "evohomeclient",
-    "feedparser-homeassistant",
-    "foobot_async",
-    "geojson_client",
-    "geopy",
-    "georss_generic_client",
-    "georss_ign_sismologia_client",
-    "georss_qld_bushfire_alert_client",
-    "getmac",
-    "google-api-python-client",
-    "gTTS-token",
-    "ha-ffmpeg",
-    "hangups",
-    "HAP-python",
-    "hass-nabucasa",
-    "haversine",
-    "hbmqtt",
-    "hdate",
-    "herepy",
-    "hole",
-    "holidays",
-    "home-assistant-frontend",
-    "homekit[IP]",
-    "homematicip",
-    "httplib2",
-    "huawei-lte-api",
-    "iaqualink",
-    "influxdb",
-    "jsonpath",
-    "libpurecool",
-    "libsoundtouch",
-    "luftdaten",
-    "mbddns",
-    "mficlient",
-    "minio",
-    "netdisco",
-    "numpy",
-    "oauth2client",
-    "paho-mqtt",
-    "pexpect",
-    "pilight",
-    "pillow",
-    "plexapi",
-    "plexauth",
-    "pmsensor",
-    "prometheus_client",
-    "ptvsd",
-    "pushbullet.py",
-    "py-canary",
-    "py17track",
-    "pyblackbird",
-    "pybotvac",
-    "pychromecast",
-    "pydeconz",
-    "pydispatcher",
-    "pyheos",
-    "pyhomematic",
-    "pyHS100",
-    "pyiqvia",
-    "pylinky",
-    "pylitejet",
-    "pyMetno",
-    "pymfy",
-    "pymonoprice",
-    "PyNaCl",
-    "pynws",
-    "pynx584",
-    "pyopenuv",
-    "pyotgw",
-    "pyotp",
-    "pyps4-2ndscreen",
-    "pyqwikswitch",
-    "PyRMVtransport",
-    "pysma",
-    "pysmartapp",
-    "pysmartthings",
-    "pysoma",
-    "pysonos",
-    "pyspcwebgw",
-    "python_awair",
-    "python-ecobee-api",
-    "python-forecastio",
-    "python-izone",
-    "python-nest",
-    "python-velbus",
-    "pythonwhois",
-    "pytradfri[async]",
-    "PyTransportNSW",
-    "pyunifi",
-    "pyupnp-async",
-    "pyvesync",
-    "pywebpush",
-    "regenmaschine",
-    "restrictedpython",
-    "rflink",
-    "ring_doorbell",
-    "ruamel.yaml",
-    "rxv",
-    "simplisafe-python",
-    "sleepyq",
-    "smhi-pkg",
-    "solaredge",
-    "somecomfort",
-    "sqlalchemy",
-    "srpenergy",
-    "statsd",
-    "toonapilib",
-    "transmissionrpc",
-    "twentemilieu",
-    "uvcclient",
-    "vsure",
-    "vultr",
-    "wakeonlan",
-    "warrant",
-    "withings-api",
-    "YesssSMS",
-    "zeroconf",
-    "zigpy-homeassistant",
-)
-
 IGNORE_PIN = ("colorlog>2.1,<3", "keyring>=9.3,<10.0", "urllib3")
-
-IGNORE_REQ = ("colorama<=1",)  # Windows only requirement in check_config
 
 URL_PIN = (
     "https://developers.home-assistant.io/docs/"
@@ -211,10 +60,19 @@ enum34==1000000000.0.0
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
-
-# Contains code to modify Home Assistant to work around our rules
-python-systemair-savecair==1000000000.0.0
 """
+
+
+def has_tests(module: str):
+    """Test if a module has tests.
+
+    Module format: homeassistant.components.hue
+    Test if exists: tests/components/hue
+    """
+
+    return pathlib.Path(
+        module.replace(".", "/").replace("homeassistant", "tests")
+    ).exists()
 
 
 def explore_module(package, explore_children):
@@ -319,8 +177,6 @@ def gather_requirements_from_modules(errors, reqs):
 def process_requirements(errors, module_requirements, package, reqs):
     """Process all of the requirements."""
     for req in module_requirements:
-        if req in IGNORE_REQ:
-            continue
         if "://" in req:
             errors.append(f"{package}[Only pypi dependencies are allowed: {req}]")
         if req.partition("==")[1] == "" and req not in IGNORE_PIN:
@@ -362,13 +218,11 @@ def requirements_test_output(reqs):
     with open("requirements_test.txt") as test_file:
         output.append(test_file.read())
     output.append("\n")
+
     filtered = {
-        key: value
-        for key, value in reqs.items()
-        if any(
-            re.search(r"(^|#){}($|[=><])".format(re.escape(ign)), key) is not None
-            for ign in TEST_REQUIREMENTS
-        )
+        requirement: modules
+        for requirement, modules in reqs.items()
+        if any(has_tests(mdl) for mdl in modules)
     }
     output.append(generate_requirements_list(filtered))
 
