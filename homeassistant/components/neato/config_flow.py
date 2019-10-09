@@ -2,7 +2,8 @@
 
 import logging
 
-import pybotvac
+from pybotvac import Account, Neato, Vorwerk
+from pybotvac.exceptions import NeatoLoginException, NeatoRobotException
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -97,15 +98,15 @@ class NeatoConfigFlow(config_entries.ConfigFlow, domain=NEATO_DOMAIN):
         """Try logging in to device and return any errors."""
         this_vendor = None
         if vendor == "vorwerk":
-            this_vendor = pybotvac.Vorwerk()
+            this_vendor = Vorwerk()
         else:  # Neato
-            this_vendor = pybotvac.Neato()
+            this_vendor = Neato()
 
         try:
-            pybotvac.Account(username, password, this_vendor)
-        except pybotvac.exceptions.NeatoLoginException:
+            Account(username, password, this_vendor)
+        except NeatoLoginException:
             return "invalid_credentials"
-        except pybotvac.exceptions.NeatoRobotException:
+        except NeatoRobotException:
             return "unexpected_error"
 
         return None
