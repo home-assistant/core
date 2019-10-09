@@ -22,10 +22,6 @@ from .const import (
     _LOGGER,
 )
 
-ATTR_FORECAST_PRESSURE = "pressure"
-ATTR_FORECAST_VISIBILITY = "visibility"
-ATTR_FORECAST_HUMIDITY = "humidity"
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up the ecobee weather platform."""
@@ -209,13 +205,6 @@ class EcobeeWeather(WeatherEntity):
                 forecast[ATTR_FORECAST_WIND_BEARING] = int(json["windBearing"])
             if json["windSpeed"] != ECOBEE_STATE_UNKNOWN:
                 forecast[ATTR_FORECAST_WIND_SPEED] = int(json["windSpeed"])
-
-            if json["pressure"] != ECOBEE_STATE_UNKNOWN:
-                forecast[ATTR_FORECAST_PRESSURE] = int(json["pressure"])
-            if json["visibility"] != ECOBEE_STATE_UNKNOWN:
-                forecast[ATTR_FORECAST_VISIBILITY] = int(json["visibility"]) / 1000
-            if json["relativeHumidity"] != ECOBEE_STATE_UNKNOWN:
-                forecast[ATTR_FORECAST_HUMIDITY] = int(json["relativeHumidity"])
 
         except (ValueError, IndexError, KeyError):
             return None
