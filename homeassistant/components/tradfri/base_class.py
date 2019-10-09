@@ -5,7 +5,7 @@ from pytradfri.error import PytradfriError
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
-from . import DOMAIN as TRADFRI_DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,12 +60,12 @@ class TradfriBaseDevice(Entity):
         info = self._device.device_info
 
         return {
-            "identifiers": {(TRADFRI_DOMAIN, self._device.id)},
+            "identifiers": {(DOMAIN, self._device.id)},
             "manufacturer": info.manufacturer,
             "model": info.model_number,
             "name": self._name,
             "sw_version": info.firmware_version,
-            "via_device": (TRADFRI_DOMAIN, self._gateway_id),
+            "via_device": (DOMAIN, self._gateway_id),
         }
 
     @property
