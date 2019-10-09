@@ -1725,3 +1725,41 @@ async def test_alarm_control_panel_code_arm_required(hass):
         {"friendly_name": "Test Alarm Control Panel 3", "code_arm_required": True},
     )
     await discovery_test(device, hass, expected_endpoints=0)
+
+
+async def test_range_unsupported_domain(hass):
+    """Test rangeController with unsupported domain."""
+    device = ("switch.test", "on", {"friendly_name": "Test switch"})
+    await discovery_test(device, hass)
+
+    context = Context()
+    request = get_new_request("Alexa.RangeController", "SetRangeValue", "switch#test")
+    request["directive"]["payload"] = {"rangeValue": "1"}
+    request["directive"]["header"]["instance"] = "switch.speed"
+
+    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request, context)
+
+    assert "event" in msg
+    msg = msg["event"]
+    assert msg["header"]["name"] == "ErrorResponse"
+    assert msg["header"]["namespace"] == "Alexa"
+    assert msg["payload"]["type"] == "INVALID_DIRECTIVE"
+
+
+async def test_mode_unsupported_domain(hass):
+    """Test modeController with unsupported domain."""
+    device = ("switch.test", "on", {"friendly_name": "Test switch"})
+    await discovery_test(device, hass)
+
+    context = Context()
+    request = get_new_request("Alexa.ModeController", "SetMode", "switch#test")
+    request["directive"]["payload"] = {"mode": "testMode"}
+    request["directive"]["header"]["instance"] = "switch.direction"
+
+    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request, context)
+
+    assert "event" in msg
+    msg = msg["event"]
+    assert msg["header"]["name"] == "ErrorResponse"
+    assert msg["header"]["namespace"] == "Alexa"
+    assert msg["payload"]["type"] == "INVALID_DIRECTIVE"
