@@ -3,6 +3,7 @@ import time
 from unittest.mock import Mock, patch
 
 from asynctest import CoroutineMock
+from zigpy.types.named import EUI64
 
 from homeassistant.components.zha.core.const import (
     DATA_ZHA,
@@ -10,7 +11,6 @@ from homeassistant.components.zha.core.const import (
     DATA_ZHA_CONFIG,
     DATA_ZHA_DISPATCHERS,
 )
-from homeassistant.components.zha.core.helpers import convert_ieee
 from homeassistant.util import slugify
 
 from tests.common import mock_coro
@@ -21,7 +21,7 @@ class FakeApplication:
 
     def __init__(self):
         """Init fake application."""
-        self.ieee = convert_ieee("00:15:8d:00:02:32:4f:32")
+        self.ieee = EUI64.convert("00:15:8d:00:02:32:4f:32")
         self.nwk = 0x087D
 
 
@@ -83,7 +83,7 @@ class FakeDevice:
     def __init__(self, ieee, manufacturer, model):
         """Init fake device."""
         self._application = APPLICATION
-        self.ieee = convert_ieee(ieee)
+        self.ieee = EUI64.convert(ieee)
         self.nwk = 0xB79C
         self.zdo = Mock()
         self.endpoints = {0: self.zdo}

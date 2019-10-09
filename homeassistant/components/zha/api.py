@@ -4,6 +4,7 @@ import asyncio
 import logging
 
 import voluptuous as vol
+from zigpy.types.named import EUI64
 
 from homeassistant.components import websocket_api
 from homeassistant.core import callback
@@ -44,7 +45,7 @@ from .core.const import (
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
 )
-from .core.helpers import async_is_bindable_target, convert_ieee, get_matched_clusters
+from .core.helpers import async_is_bindable_target, get_matched_clusters
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,16 +77,16 @@ IEEE_SERVICE = "ieee_based_service"
 SERVICE_SCHEMAS = {
     SERVICE_PERMIT: vol.Schema(
         {
-            vol.Optional(ATTR_IEEE_ADDRESS, default=None): convert_ieee,
+            vol.Optional(ATTR_IEEE_ADDRESS, default=None): EUI64.convert,
             vol.Optional(ATTR_DURATION, default=60): vol.All(
                 vol.Coerce(int), vol.Range(0, 254)
             ),
         }
     ),
-    IEEE_SERVICE: vol.Schema({vol.Required(ATTR_IEEE_ADDRESS): convert_ieee}),
+    IEEE_SERVICE: vol.Schema({vol.Required(ATTR_IEEE_ADDRESS): EUI64.convert}),
     SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE: vol.Schema(
         {
-            vol.Required(ATTR_IEEE): convert_ieee,
+            vol.Required(ATTR_IEEE): EUI64.convert,
             vol.Required(ATTR_ENDPOINT_ID): cv.positive_int,
             vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
             vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
@@ -96,7 +97,7 @@ SERVICE_SCHEMAS = {
     ),
     SERVICE_WARNING_DEVICE_SQUAWK: vol.Schema(
         {
-            vol.Required(ATTR_IEEE): convert_ieee,
+            vol.Required(ATTR_IEEE): EUI64.convert,
             vol.Optional(
                 ATTR_WARNING_DEVICE_MODE, default=WARNING_DEVICE_SQUAWK_MODE_ARMED
             ): cv.positive_int,
@@ -110,7 +111,7 @@ SERVICE_SCHEMAS = {
     ),
     SERVICE_WARNING_DEVICE_WARN: vol.Schema(
         {
-            vol.Required(ATTR_IEEE): convert_ieee,
+            vol.Required(ATTR_IEEE): EUI64.convert,
             vol.Optional(
                 ATTR_WARNING_DEVICE_MODE, default=WARNING_DEVICE_MODE_EMERGENCY
             ): cv.positive_int,
@@ -131,7 +132,7 @@ SERVICE_SCHEMAS = {
     ),
     SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND: vol.Schema(
         {
-            vol.Required(ATTR_IEEE): convert_ieee,
+            vol.Required(ATTR_IEEE): EUI64.convert,
             vol.Required(ATTR_ENDPOINT_ID): cv.positive_int,
             vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
             vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
@@ -149,7 +150,7 @@ SERVICE_SCHEMAS = {
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "zha/devices/permit",
-        vol.Optional(ATTR_IEEE, default=None): convert_ieee,
+        vol.Optional(ATTR_IEEE, default=None): EUI64.convert,
         vol.Optional(ATTR_DURATION, default=60): vol.All(
             vol.Coerce(int), vol.Range(0, 254)
         ),
@@ -200,7 +201,7 @@ async def websocket_get_devices(hass, connection, msg):
 @websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command(
-    {vol.Required(TYPE): "zha/device", vol.Required(ATTR_IEEE): convert_ieee}
+    {vol.Required(TYPE): "zha/device", vol.Required(ATTR_IEEE): EUI64.convert}
 )
 async def websocket_get_device(hass, connection, msg):
     """Get ZHA devices."""
@@ -252,7 +253,7 @@ def async_get_device_info(hass, device, ha_device_registry=None):
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/devices/reconfigure",
-        vol.Required(ATTR_IEEE): convert_ieee,
+        vol.Required(ATTR_IEEE): EUI64.convert,
     }
 )
 async def websocket_reconfigure_node(hass, connection, msg):
@@ -267,7 +268,7 @@ async def websocket_reconfigure_node(hass, connection, msg):
 @websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command(
-    {vol.Required(TYPE): "zha/devices/clusters", vol.Required(ATTR_IEEE): convert_ieee}
+    {vol.Required(TYPE): "zha/devices/clusters", vol.Required(ATTR_IEEE): EUI64.convert}
 )
 async def websocket_device_clusters(hass, connection, msg):
     """Return a list of device clusters."""
@@ -305,7 +306,7 @@ async def websocket_device_clusters(hass, connection, msg):
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/devices/clusters/attributes",
-        vol.Required(ATTR_IEEE): convert_ieee,
+        vol.Required(ATTR_IEEE): EUI64.convert,
         vol.Required(ATTR_ENDPOINT_ID): int,
         vol.Required(ATTR_CLUSTER_ID): int,
         vol.Required(ATTR_CLUSTER_TYPE): str,
@@ -346,7 +347,7 @@ async def websocket_device_cluster_attributes(hass, connection, msg):
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/devices/clusters/commands",
-        vol.Required(ATTR_IEEE): convert_ieee,
+        vol.Required(ATTR_IEEE): EUI64.convert,
         vol.Required(ATTR_ENDPOINT_ID): int,
         vol.Required(ATTR_CLUSTER_ID): int,
         vol.Required(ATTR_CLUSTER_TYPE): str,
@@ -400,7 +401,7 @@ async def websocket_device_cluster_commands(hass, connection, msg):
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/devices/clusters/attributes/value",
-        vol.Required(ATTR_IEEE): convert_ieee,
+        vol.Required(ATTR_IEEE): EUI64.convert,
         vol.Required(ATTR_ENDPOINT_ID): int,
         vol.Required(ATTR_CLUSTER_ID): int,
         vol.Required(ATTR_CLUSTER_TYPE): str,
@@ -444,7 +445,7 @@ async def websocket_read_zigbee_cluster_attributes(hass, connection, msg):
 @websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command(
-    {vol.Required(TYPE): "zha/devices/bindable", vol.Required(ATTR_IEEE): convert_ieee}
+    {vol.Required(TYPE): "zha/devices/bindable", vol.Required(ATTR_IEEE): EUI64.convert}
 )
 async def websocket_get_bindable_devices(hass, connection, msg):
     """Directly bind devices."""
@@ -472,8 +473,8 @@ async def websocket_get_bindable_devices(hass, connection, msg):
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/devices/bind",
-        vol.Required(ATTR_SOURCE_IEEE): convert_ieee,
-        vol.Required(ATTR_TARGET_IEEE): convert_ieee,
+        vol.Required(ATTR_SOURCE_IEEE): EUI64.convert,
+        vol.Required(ATTR_TARGET_IEEE): EUI64.convert,
     }
 )
 async def websocket_bind_devices(hass, connection, msg):
@@ -494,8 +495,8 @@ async def websocket_bind_devices(hass, connection, msg):
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/devices/unbind",
-        vol.Required(ATTR_SOURCE_IEEE): convert_ieee,
-        vol.Required(ATTR_TARGET_IEEE): convert_ieee,
+        vol.Required(ATTR_SOURCE_IEEE): EUI64.convert,
+        vol.Required(ATTR_TARGET_IEEE): EUI64.convert,
     }
 )
 async def websocket_unbind_devices(hass, connection, msg):
