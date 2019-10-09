@@ -24,8 +24,8 @@ def configured_supla_hosts(hass):
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class SuplaFlowHandler(config_entries.ConfigFlow):
-    """Supla config flow."""
+class AisSuplaFlowHandler(config_entries.ConfigFlow):
+    """AIS Supla config flow."""
 
     VERSION = 1
 
@@ -35,16 +35,14 @@ class SuplaFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_import(self, import_config):
         """Import the supla server as config entry."""
-        _LOGGER.warning("import_config " + str(import_config))
-        if import_config[CONF_SERVER] in configured_supla_hosts(self.hass):
-            _LOGGER.warning("Account in configuration.yaml is already configured")
-            return await self._show_form({CONF_SERVER: "identifier_exists"})
         _LOGGER.warning("Go to async_step_user")
-        return await self.async_step_user(user_input=import_config)
+        return await self.async_step_init(user_input=import_config)
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        return await self.async_step_init(user_input)
+        if user_input is not None:
+            return await self.async_step_init(user_input=None)
+        return self.async_show_form(step_id="confirm")
 
     async def async_step_confirm(self, user_input=None):
         """Handle a flow start."""
@@ -64,7 +62,7 @@ class SuplaFlowHandler(config_entries.ConfigFlow):
             if srv_info.get("authenticated"):
                 """Finish config flow"""
                 return self.async_create_entry(
-                    title=user_input[CONF_SERVER], data=user_input
+                    title="AIS " + user_input[CONF_SERVER], data=user_input
                 )
             else:
                 _LOGGER.error(
