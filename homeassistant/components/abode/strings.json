@@ -3,7 +3,7 @@
     "title": "Abode",
     "step": {
       "user": {
-        "title": "Fill in your login information",
+        "title": "Fill in your Abode login information",
         "data": {
           "username": "Email Address",
           "password": "Password"
@@ -13,7 +13,7 @@
     "error": {
       "identifier_exists": "Account already registered.",
       "invalid_credentials": "Invalid credentials.",
-      "abode_error": "Error occured with Abode server."
+      "connection_error": "Unable to connect to Abode."
     },
     "abort": {
       "single_instance_allowed": "Only a single configuration of Abode is allowed."

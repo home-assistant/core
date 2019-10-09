@@ -40,7 +40,6 @@ async def test_one_config_allowed(hass):
 
 async def test_invalid_credentials(hass):
     """Test that invalid credentials throws an error."""
-
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
     flow = config_flow.AbodeFlowHandler()
@@ -54,9 +53,8 @@ async def test_invalid_credentials(hass):
         assert result["errors"] == {"base": "invalid_credentials"}
 
 
-async def test_abode_server_error(hass):
+async def test_connection_error(hass):
     """Test other than invalid credentials throws an error."""
-
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
     flow = config_flow.AbodeFlowHandler()
@@ -64,10 +62,10 @@ async def test_abode_server_error(hass):
 
     with patch(
         "homeassistant.components.abode.config_flow.Abode",
-        side_effect=AbodeAuthenticationException((500, "server error")),
+        side_effect=AbodeAuthenticationException((500, "connection error")),
     ):
         result = await flow.async_step_user(user_input=conf)
-        assert result["errors"] == {"base": "abode_error"}
+        assert result["errors"] == {"base": "connection_error"}
 
 
 async def test_step_import(hass):

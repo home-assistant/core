@@ -7,23 +7,23 @@ import logging
 from abodepy import Abode
 from abodepy.exceptions import AbodeException
 import abodepy.helpers.timeline as TIMELINE
-from requests.exceptions import HTTPError, ConnectTimeout
+from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DATE,
-    ATTR_TIME,
     ATTR_ENTITY_ID,
-    CONF_USERNAME,
+    ATTR_TIME,
     CONF_PASSWORD,
+    CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, ATTRIBUTION
+from .const import ATTRIBUTION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -155,6 +155,7 @@ async def async_unload_entry(hass, config_entry):
     await hass.async_add_executor_job(hass.data[DOMAIN].abode.events.stop)
     await hass.async_add_executor_job(hass.data[DOMAIN].abode.logout)
 
+    hass.data[DOMAIN].logout_listener()
     hass.data.pop(DOMAIN)
 
     return True
@@ -226,7 +227,9 @@ async def setup_hass_events(hass):
     if not hass.data[DOMAIN].polling:
         await hass.async_add_executor_job(hass.data[DOMAIN].abode.events.start)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, logout)
+    hass.data[DOMAIN].logout_listener = hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, logout
+    )
 
 
 def setup_abode_events(hass):
@@ -285,7 +288,7 @@ class AbodeDevice(Entity):
         return self._data.polling
 
     def update(self):
-        """Update automation state."""
+        """Update device and automation states."""
         self._device.refresh()
 
     @property
@@ -307,7 +310,7 @@ class AbodeDevice(Entity):
     @property
     def unique_id(self):
         """Return a unique ID to use for this device."""
-        return self._device.device_id
+        return self._device.device_uuid
 
     @property
     def device_info(self):

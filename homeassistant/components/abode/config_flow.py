@@ -1,12 +1,14 @@
 """Config flow for the Abode Security System component."""
 import logging
-import voluptuous as vol
+
 from abodepy import Abode
-from abodepy.exceptions import AbodeAuthenticationException
+from abodepy.exceptions import AbodeException
+from requests.exceptions import ConnectTimeout, HTTPError
+import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import callback
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
 
 from .const import DOMAIN  # pylint: disable=W0611
 
@@ -39,15 +41,16 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
-        polling = user_input[CONF_POLLING] if CONF_POLLING in user_input else False
+        polling = user_input.get(CONF_POLLING, False)
 
         try:
             await self.hass.async_add_executor_job(Abode, username, password, True)
 
-        except AbodeAuthenticationException as error:
-            if error.errcode == 400:
+        except (AbodeException, ConnectTimeout, HTTPError) as ex:
+            _LOGGER.error("Unable to connect to Abode: %s", str(ex))
+            if ex.errcode == 400:
                 return self._show_form({"base": "invalid_credentials"})
-            return self._show_form({"base": "abode_error"})
+            return self._show_form({"base": "connection_error"})
 
         return self.async_create_entry(
             title=user_input[CONF_USERNAME],

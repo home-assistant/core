@@ -1,10 +1,10 @@
 """Support for Abode Security System cameras."""
 from datetime import timedelta
 import logging
-import requests
 
 import abodepy.helpers.constants as CONST
 import abodepy.helpers.timeline as TIMELINE
+import requests
 
 from homeassistant.components.camera import Camera
 from homeassistant.util import Throttle

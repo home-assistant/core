@@ -10,7 +10,7 @@ from homeassistant.const import (
 )
 
 from . import AbodeDevice
-from .const import DOMAIN, ATTRIBUTION
+from .const import ATTRIBUTION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,8 +27,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     data = hass.data[DOMAIN]
 
     async_add_entities(
-        [AbodeAlarm(data, await hass.async_add_executor_job(data.abode.get_alarm))],
-        True,
+        [AbodeAlarm(data, await hass.async_add_executor_job(data.abode.get_alarm))]
     )
 
 
@@ -74,3 +73,8 @@ class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanel):
             "battery_backup": self._device.battery,
             "cellular_backup": self._device.is_cellular,
         }
+
+    @property
+    def unique_id(self):
+        """Return a unique ID to use for this device."""
+        return f"{self._device.name} {self._device.device_id}"
