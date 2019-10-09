@@ -4,7 +4,6 @@ from typing import Awaitable
 
 from homematicip.aio.device import AsyncHeatingThermostat, AsyncHeatingThermostatCompact
 from homematicip.aio.group import AsyncHeatingGroup
-from homematicip.aio.home import AsyncHome
 from homematicip.base.enums import AbsenceType
 from homematicip.functionalHomes import IndoorClimateHome
 
@@ -24,6 +23,7 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
+from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,11 +41,11 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP climate from a config entry."""
-    home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
+    hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
     devices = []
-    for device in home.groups:
+    for device in hap.home.groups:
         if isinstance(device, AsyncHeatingGroup):
-            devices.append(HomematicipHeatingGroup(home, device))
+            devices.append(HomematicipHeatingGroup(hap, device))
 
     if devices:
         async_add_entities(devices)
@@ -54,13 +54,13 @@ async def async_setup_entry(
 class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
     """Representation of a HomematicIP heating group."""
 
-    def __init__(self, home: AsyncHome, device) -> None:
+    def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize heating group."""
         device.modelType = "Group-Heating"
         self._simple_heating = None
         if device.actualTemperature is None:
             self._simple_heating = _get_first_heating_thermostat(device)
-        super().__init__(home, device)
+        super().__init__(hap, device)
 
     @property
     def temperature_unit(self) -> str:
