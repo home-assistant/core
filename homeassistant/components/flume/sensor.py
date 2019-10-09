@@ -72,7 +72,6 @@ class FlumeSensor(Entity):
         self.flume = flume
         self._name = name
         self._state = None
-        self._unit_of_measurement = "GALLONS"
 
     @property
     def name(self):
@@ -83,6 +82,11 @@ class FlumeSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return "gal"
 
     def update(self):
         """Get the latest data and updates the states."""
