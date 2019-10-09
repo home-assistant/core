@@ -70,8 +70,20 @@ def has_tests(module: str):
     Module format: homeassistant.components.hue
     Test if exists: tests/components/hue
     """
+    path = Path(module.replace(".", "/").replace("homeassistant", "tests"))
+    if not path.exists():
+        return False
 
-    return Path(module.replace(".", "/").replace("homeassistant", "tests")).exists()
+    if not path.is_dir():
+        return True
+
+    # Dev environments might have stale directories around
+    # from removed tests. Check for that.
+    content = [f.name for f in path.glob("*")]
+
+    # Directories need to contain more than `__pycache__`
+    # to exist in Git and so be seen by CI.
+    return content != ["__pycache__"]
 
 
 def explore_module(package, explore_children):
