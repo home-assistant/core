@@ -3,7 +3,7 @@
 import difflib
 import importlib
 import os
-import pathlib
+from pathlib import Path
 import pkgutil
 import re
 import sys
@@ -71,9 +71,7 @@ def has_tests(module: str):
     Test if exists: tests/components/hue
     """
 
-    return pathlib.Path(
-        module.replace(".", "/").replace("homeassistant", "tests")
-    ).exists()
+    return Path(module.replace(".", "/").replace("homeassistant", "tests")).exists()
 
 
 def explore_module(package, explore_children):
@@ -96,8 +94,9 @@ def explore_module(package, explore_children):
 
 def core_requirements():
     """Gather core requirements out of setup.py."""
-    with open("setup.py") as inp:
-        reqs_raw = re.search(r"REQUIRES = \[(.*?)\]", inp.read(), re.S).group(1)
+    reqs_raw = re.search(
+        r"REQUIRES = \[(.*?)\]", Path("setup.py").read_text(), re.S
+    ).group(1)
     return [x[1] for x in re.findall(r"(['\"])(.*?)\1", reqs_raw)]
 
 
@@ -107,7 +106,7 @@ def gather_recursive_requirements(domain, seen=None):
         seen = set()
 
     seen.add(domain)
-    integration = Integration(pathlib.Path(f"homeassistant/components/{domain}"))
+    integration = Integration(Path(f"homeassistant/components/{domain}"))
     integration.load_manifest()
     reqs = set(integration.manifest["requirements"])
     for dep_domain in integration.manifest["dependencies"]:
@@ -142,7 +141,7 @@ def gather_modules():
 
 def gather_requirements_from_manifests(errors, reqs):
     """Gather all of the requirements from manifests."""
-    integrations = Integration.load_dir(pathlib.Path("homeassistant/components"))
+    integrations = Integration.load_dir(Path("homeassistant/components"))
     for domain in sorted(integrations):
         integration = integrations[domain]
 
@@ -216,8 +215,7 @@ def requirements_test_output(reqs):
     output = []
     output.append("# Home Assistant test")
     output.append("\n")
-    with open("requirements_test.txt") as test_file:
-        output.append(test_file.read())
+    output.append(Path("requirements_test.txt").read_text())
     output.append("\n")
 
     filtered = {
@@ -244,29 +242,11 @@ def gather_constraints():
     )
 
 
-def write_requirements_file(data):
-    """Write the modules to the requirements_all.txt."""
-    with open("requirements_all.txt", "w+", newline="\n") as req_file:
-        req_file.write(data)
-
-
-def write_test_requirements_file(data):
-    """Write the modules to the requirements_test_all.txt."""
-    with open("requirements_test_all.txt", "w+", newline="\n") as req_file:
-        req_file.write(data)
-
-
-def write_constraints_file(data):
-    """Write constraints to a file."""
-    with open(CONSTRAINT_PATH, "w+", newline="\n") as req_file:
-        req_file.write(data)
-
-
 def diff_file(filename, content):
     """Diff a file."""
     return list(
         difflib.context_diff(
-            [line + "\n" for line in pathlib.Path(filename).read_text().split("\n")],
+            [line + "\n" for line in Path(filename).read_text().split("\n")],
             [line + "\n" for line in content.split("\n")],
             filename,
             "generated",
@@ -289,14 +269,16 @@ def main(validate):
     reqs_test_file = requirements_test_output(data)
     constraints = gather_constraints()
 
+    files = (
+        ("requirements_all.txt", reqs_file),
+        ("requirements_test_all.txt", reqs_test_file),
+        ("homeassistant/package_constraints.txt", constraints),
+    )
+
     if validate:
         errors = []
 
-        for filename, content in (
-            ("requirements_all.txt", reqs_file),
-            ("requirements_test_all.txt", reqs_test_file),
-            ("homeassistant/package_constraints.txt", constraints),
-        ):
+        for filename, content in files:
             diff = diff_file(filename, content)
             if diff:
                 errors.append("".join(diff))
@@ -312,9 +294,9 @@ def main(validate):
 
         return 0
 
-    write_requirements_file(reqs_file)
-    write_test_requirements_file(reqs_test_file)
-    write_constraints_file(constraints)
+    for filename, content in files:
+        Path(filename).write_text(content)
+
     return 0
 
 
