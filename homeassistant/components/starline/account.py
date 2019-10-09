@@ -25,10 +25,8 @@ class StarlineAccount:
         """Constructor."""
         self._hass: HomeAssistant = hass
         self._config_entry: ConfigEntry = config_entry
-        self._update_listeners: List[Callable] = []
         self._update_interval: int = DEFAULT_SCAN_INTERVAL
         self._unsubscribe_auto_updater: Optional[Callable] = None
-        self._slnet_token_expires = self._config_entry.data[DATA_EXPIRES]
         self._api: StarlineApi = StarlineApi(
             config_entry.data[DATA_USER_ID], config_entry.data[DATA_SLNET_TOKEN]
         )
