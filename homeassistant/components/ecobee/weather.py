@@ -188,9 +188,8 @@ class EcobeeWeather(WeatherEntity):
 
     def _process_forecast(self, json):
         """Process a single ecobee API forecast to return expected values."""
+        forecast = dict()
         try:
-            forecast = dict()
-
             forecast[ATTR_FORECAST_TIME] = datetime.strptime(
                 json["dateTime"], "%Y-%m-%d %H:%M:%S"
             ).isoformat()
@@ -208,4 +207,5 @@ class EcobeeWeather(WeatherEntity):
 
         except (ValueError, IndexError, KeyError):
             return None
+
         return forecast
