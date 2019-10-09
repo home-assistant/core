@@ -30,6 +30,9 @@ HAP-python==2.6.0
 # homeassistant.components.owntracks
 PyNaCl==1.3.0
 
+# homeassistant.auth.mfa_modules.totp
+PyQRCode==1.2.1
+
 # homeassistant.components.rmvtransport
 PyRMVtransport==0.1.3
 
@@ -131,10 +134,16 @@ caldav==0.6.1
 # homeassistant.components.coinmarketcap
 coinmarketcap==5.0.3
 
+# homeassistant.scripts.check_config
+colorlog==4.0.2
+
 # homeassistant.components.eddystone_temperature
 # homeassistant.components.eq3btsmart
 # homeassistant.components.xiaomi_miio
 construct==2.9.45
+
+# homeassistant.scripts.credstash
+# credstash==1.15.0
 
 # homeassistant.components.datadog
 datadog==0.15.0
@@ -250,6 +259,12 @@ influxdb==5.2.3
 
 # homeassistant.components.verisure
 jsonpath==0.75
+
+# homeassistant.scripts.keyring
+keyring==17.1.1
+
+# homeassistant.scripts.keyring
+keyrings.alt==3.1.1
 
 # homeassistant.components.dyson
 libpurecool==0.5.0
@@ -451,6 +466,11 @@ pyopenuv==1.0.9
 
 # homeassistant.components.opentherm_gw
 pyotgw==0.5b0
+
+# homeassistant.auth.mfa_modules.notify
+# homeassistant.auth.mfa_modules.totp
+# homeassistant.components.otp
+pyotp==2.3.0
 
 # homeassistant.components.point
 pypoint==1.1.1

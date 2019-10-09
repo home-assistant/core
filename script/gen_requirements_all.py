@@ -233,7 +233,13 @@ def requirements_test_output(reqs):
     filtered = {
         requirement: modules
         for requirement, modules in reqs.items()
-        if any(has_tests(mdl) for mdl in modules)
+        if any(
+            # Always install requirements that are not part of integrations
+            not mdl.startswith("homeassistant.components.") or
+            # Install tests for integrations that have tests
+            has_tests(mdl)
+            for mdl in modules
+        )
     }
     output.append(generate_requirements_list(filtered))
 
