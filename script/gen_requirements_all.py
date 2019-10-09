@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate an updated requirements_all.txt."""
+import difflib
 import importlib
 import os
 import pathlib
@@ -231,11 +232,15 @@ def requirements_test_output(reqs):
 
 def gather_constraints():
     """Construct output for constraint file."""
-    return "\n".join(
-        sorted(
-            core_requirements() + list(gather_recursive_requirements("default_config"))
+    return (
+        "\n".join(
+            sorted(
+                core_requirements()
+                + list(gather_recursive_requirements("default_config"))
+            )
+            + [""]
         )
-        + [""]
+        + CONSTRAINT_BASE
     )
 
 
@@ -254,25 +259,19 @@ def write_test_requirements_file(data):
 def write_constraints_file(data):
     """Write constraints to a file."""
     with open(CONSTRAINT_PATH, "w+", newline="\n") as req_file:
-        req_file.write(data + CONSTRAINT_BASE)
+        req_file.write(data)
 
 
-def validate_requirements_file(data):
-    """Validate if requirements_all.txt is up to date."""
-    with open("requirements_all.txt", "r") as req_file:
-        return data == req_file.read()
-
-
-def validate_requirements_test_file(data):
-    """Validate if requirements_test_all.txt is up to date."""
-    with open("requirements_test_all.txt", "r") as req_file:
-        return data == req_file.read()
-
-
-def validate_constraints_file(data):
-    """Validate if constraints is up to date."""
-    with open(CONSTRAINT_PATH, "r") as req_file:
-        return data + CONSTRAINT_BASE == req_file.read()
+def diff_file(filename, content):
+    """Diff a file."""
+    return list(
+        difflib.context_diff(
+            [line + "\n" for line in pathlib.Path(filename).read_text().split("\n")],
+            [line + "\n" for line in content.split("\n")],
+            filename,
+            "generated",
+        )
+    )
 
 
 def main(validate):
@@ -286,25 +285,28 @@ def main(validate):
     if data is None:
         return 1
 
-    constraints = gather_constraints()
-
     reqs_file = requirements_all_output(data)
     reqs_test_file = requirements_test_output(data)
+    constraints = gather_constraints()
 
     if validate:
         errors = []
-        if not validate_requirements_file(reqs_file):
-            errors.append("requirements_all.txt is not up to date")
 
-        if not validate_requirements_test_file(reqs_test_file):
-            errors.append("requirements_test_all.txt is not up to date")
-
-        if not validate_constraints_file(constraints):
-            errors.append("home-assistant/package_constraints.txt is not up to date")
+        for filename, content in (
+            ("requirements_all.txt", reqs_file),
+            ("requirements_test_all.txt", reqs_test_file),
+            ("homeassistant/package_constraints.txt", constraints),
+        ):
+            diff = diff_file(filename, content)
+            if diff:
+                errors.append("".join(diff))
 
         if errors:
-            print("******* ERROR")
-            print("\n".join(errors))
+            print("ERROR - FOUND THE FOLLOWING DIFFERENCES")
+            print()
+            print()
+            print("\n\n".join(errors))
+            print()
             print("Please run script/gen_requirements_all.py")
             return 1
 
