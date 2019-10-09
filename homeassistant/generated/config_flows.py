@@ -11,6 +11,7 @@ FLOWS = [
     "ais_drives_service",
     "ais_host",
     "ais_spotify_service",
+    "ais_supla",
     "ais_wifi_service",
     "ambiclimate",
     "ambient_station",

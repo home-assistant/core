@@ -8,8 +8,6 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
-from homeassistant.config_entries import SOURCE_IMPORT
-from pysupla import SuplaAPI
 
 REQUIREMENTS = ["pysupla==0.0.3"]
 
@@ -22,7 +20,6 @@ CONF_SERVERS = "servers"
 SUPLA_FUNCTION_HA_CMP_MAP = {
     "CONTROLLINGTHEROLLERSHUTTER": "cover",
     "LIGHTSWITCH": "switch",
-    "POWERSWITCH": "switch",
 }
 SUPLA_CHANNELS = "supla_channels"
 SUPLA_SERVERS = "supla_servers"
@@ -41,39 +38,45 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+def setup(hass, base_config):
     """Set up the Supla component."""
+    from pysupla import SuplaAPI
+
+    server_confs = base_config[DOMAIN][CONF_SERVERS]
+
     hass.data[SUPLA_SERVERS] = {}
     hass.data[SUPLA_CHANNELS] = {}
 
-    if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
-        server_confs = config[DOMAIN][CONF_SERVERS]
+    for server_conf in server_confs:
 
-        for server_conf in server_confs:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=server_conf
+        server_address = server_conf[CONF_SERVER]
+
+        server = SuplaAPI(server_address, server_conf[CONF_ACCESS_TOKEN])
+
+        # Test connection
+        try:
+            srv_info = server.get_server_info()
+            if srv_info.get("authenticated"):
+                hass.data[SUPLA_SERVERS][server_conf[CONF_SERVER]] = server
+            else:
+                _LOGGER.error(
+                    "Server: %s not configured. API call returned: %s",
+                    server_address,
+                    srv_info,
                 )
+                return False
+        except OSError:
+            _LOGGER.exception(
+                "Server: %s not configured. Error on Supla API access: ", server_address
             )
+            return False
+
+    discover_devices(hass, base_config)
 
     return True
 
 
-async def async_setup_entry(hass, config_entry):
-    """Set up supla as config entry."""
-    _LOGGER.info("supla async_setup_entry")
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-
-    server_address = config_entry.data[CONF_SERVER]
-    supla_server = SuplaAPI(server_address, config_entry.data[CONF_ACCESS_TOKEN])
-    hass.data[SUPLA_SERVERS][config_entry.data[CONF_SERVER]] = supla_server
-    hass.async_create_task(async_discover_devices(hass, config_entry))
-
-    return True
-
-
-async def async_discover_devices(hass, config_entry):
+def discover_devices(hass, hass_config):
     """
     Run periodically to discover new devices.
 
@@ -100,17 +103,7 @@ async def async_discover_devices(hass, config_entry):
 
     # Load discovered devices
     for component_name, channel in component_configs.items():
-        # load_platform(hass, component_name, "supla", channel, config_entry.data)
-        _LOGGER.error("------------------------")
-        _LOGGER.error("------------------------")
-        _LOGGER.error("channel: " + str(channel))
-        _LOGGER.error("------------------------")
-        _LOGGER.error("------------------------")
-        channel_function = channel["function"]["name"]
-        component_name = SUPLA_FUNCTION_HA_CMP_MAP.get(channel_function)
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component_name)
-        )
+        load_platform(hass, component_name, "supla", channel, hass_config)
 
 
 class SuplaChannel(Entity):
@@ -120,11 +113,6 @@ class SuplaChannel(Entity):
         """Channel data -- raw channel information from PySupla."""
         self.server_name = channel_data["server_name"]
         self.channel_data = channel_data
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return "mdi:cloud"
 
     @property
     def server(self):
@@ -142,13 +130,7 @@ class SuplaChannel(Entity):
     @property
     def name(self) -> Optional[str]:
         """Return the name of the device."""
-        if self.channel_data["caption"]:
-            return self.channel_data["caption"]
-        elif "iodevice" in self.channel_data:
-            return "supla: " + self.channel_data["iodevice"]["name"]
-        elif "type" in self.channel_data:
-            return "supla: " + self.channel_data["type"]["caption"]
-        return ""
+        return self.channel_data["caption"]
 
     def action(self, action, **add_pars):
         """

@@ -1,21 +1,22 @@
-"""Support for Supla cover - curtains, rollershutters etc."""
+"""Support for Supla switch"""
 import logging
-from pprint import pformat
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.supla import SuplaChannel
+from homeassistant.components.ais_supla import SuplaChannel
+from .const import DOMAIN, CONF_SERVER, CONF_CHANNELS
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Supla switches."""
-    if discovery_info is None:
-        return
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up an SUPLA switch based on existing config."""
+    pass
 
-    _LOGGER.debug("Discovery: %s", pformat(discovery_info))
 
-    add_entities([SuplaSwitch(device) for device in discovery_info])
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    server = hass.data[DOMAIN][CONF_SERVER][config_entry.entry_id]
+    channels = hass.data[DOMAIN][CONF_CHANNELS]["switch"]
+    async_add_entities([SuplaSwitch(device, server) for device in channels])
 
 
 class SuplaSwitch(SuplaChannel, SwitchDevice):

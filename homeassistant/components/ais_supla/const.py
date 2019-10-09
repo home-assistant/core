@@ -2,4 +2,3 @@
 DOMAIN = "supla"
 CONF_SERVER = "server"
 CONF_SERVERS = "servers"
-CONF_ACCESS_TOKEN = "access_token"

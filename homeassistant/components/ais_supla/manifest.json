@@ -1,0 +1,13 @@
+{
+  "domain": "ais_supla",
+  "name": "AIS Supla",
+  "documentation": "https://www.home-assistant.io/components/supla",
+  "config_flow": true,
+  "requirements": [
+    "pysupla==0.0.3"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@araczkowski"
+  ]
+}

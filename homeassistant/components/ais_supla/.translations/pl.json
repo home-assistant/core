@@ -7,7 +7,7 @@
                 "description": "W tej chwili nie można dodawać pojedynczych urządzeń - wszystkie są wykrywane z serwerów Supla Cloud lub Twojego serwera Supla.\n\n [Szczeg\u00F3\u0142y w dokumentacji](https://www.home-assistant.io/components/supla/).\n\n {error_info} ",
                 "data": {
                      "host": "Serwer",
-                    "token": "Token"
+                     "token": "Token"
                 }
             },
            "confirm": {

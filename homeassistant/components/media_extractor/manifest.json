@@ -8,5 +8,5 @@
   "dependencies": [
     "media_player"
   ],
-  "codeowners": ["ais-dom remember to have > in requirements"]
+  "codeowners": []
 }
