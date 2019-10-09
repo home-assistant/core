@@ -185,7 +185,7 @@ hole==0.5.0
 holidays==0.9.11
 
 # homeassistant.components.frontend
-home-assistant-frontend==20191002.1
+home-assistant-frontend==20191002.2
 
 # homeassistant.components.homekit_controller
 homekit[IP]==0.15.0
