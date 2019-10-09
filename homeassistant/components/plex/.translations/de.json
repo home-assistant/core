@@ -1,8 +1,25 @@
 {
     "config": {
+        "abort": {
+            "discovery_no_file": "Es wurde keine alte Konfigurationsdatei gefunden"
+        },
         "step": {
+            "manual_setup": {
+                "title": "Plex Server"
+            },
+            "start_website_auth": {
+                "description": "Weiter zur Autorisierung unter plex.tv.",
+                "title": "Plex Server verbinden"
+            },
             "user": {
                 "description": "Fahren Sie mit der Autorisierung unter plex.tv fort oder konfigurieren Sie einen Server manuell."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "description": "Optionen f\u00fcr Plex-Media-Player"
             }
         }
     }
