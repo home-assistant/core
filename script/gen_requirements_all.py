@@ -289,7 +289,7 @@ def main(validate):
             print()
             print("\n\n".join(errors))
             print()
-            print("Please run script/gen_requirements_all.py")
+            print("Please run python3 -m script.gen_requirements_all")
             return 1
 
         return 0
