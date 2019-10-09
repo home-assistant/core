@@ -59,9 +59,6 @@ class Device:
         factory = UpnpFactory(requester, disable_state_variable_validation=True)
         upnp_device = await factory.async_create_device(ssdp_description)
 
-        # wrap with async_upnp_client.IgdDevice
-        from async_upnp_client.profiles.igd import IgdDevice
-
         igd_device = IgdDevice(upnp_device, None)
 
         return cls(igd_device)
