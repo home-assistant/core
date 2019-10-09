@@ -2,6 +2,7 @@
 import logging
 from datetime import datetime, timedelta
 
+import holidays
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -141,8 +142,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Workday sensor."""
-    import holidays
-
     sensor_name = config.get(CONF_NAME)
     country = config.get(CONF_COUNTRY)
     province = config.get(CONF_PROVINCE)
