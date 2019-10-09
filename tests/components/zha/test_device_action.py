@@ -41,7 +41,7 @@ async def test_get_actions(hass, config_entry, zha_gateway):
         zha_gateway,
     )
 
-    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+    await hass.config_entries.async_forward_entry_setup(config_entry, "binary_sensor")
     await hass.async_block_till_done()
     hass.config_entries._entries.append(config_entry)
 
