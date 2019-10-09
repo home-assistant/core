@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONF_BELOW,
     CONF_ENTITY_ID,
     CONF_TYPE,
+    CONF_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
@@ -139,3 +140,26 @@ def async_condition_from_config(
         numeric_state_config[condition.CONF_BELOW] = config[CONF_BELOW]
 
     return condition.async_numeric_state_from_config(numeric_state_config)
+
+
+async def async_get_condition_capabilities(hass, config):
+    """List condition capabilities."""
+    state = hass.states.get(config[CONF_ENTITY_ID])
+    unit_of_measurement = (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) if state else ""
+    )
+
+    return {
+        "extra_fields": vol.Schema(
+            {
+                vol.Optional(
+                    CONF_ABOVE,
+                    description={CONF_UNIT_OF_MEASUREMENT: unit_of_measurement},
+                ): vol.Coerce(float),
+                vol.Optional(
+                    CONF_BELOW,
+                    description={CONF_UNIT_OF_MEASUREMENT: unit_of_measurement},
+                ): vol.Coerce(float),
+            }
+        )
+    }
