@@ -3,6 +3,7 @@ import logging
 
 import voluptuous as vol
 
+from rflink.parser import UNITS, PACKET_FIELDS
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -11,7 +12,6 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from rflink.parser import UNITS, PACKET_FIELDS
 
 from . import (
     CONF_ALIASES,
