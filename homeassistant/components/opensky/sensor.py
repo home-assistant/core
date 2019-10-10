@@ -28,16 +28,23 @@ CONF_ALTITUDE = "altitude"
 
 ATTR_CALLSIGN = "callsign"
 ATTR_ALTITUDE = "altitude"
+ATTR_HEADING ="heading"
+ATTR_LATITUDE = "latitude"
+ATTR_LONGITUDE = "longitude"
 ATTR_ON_GROUND = "on_ground"
+ATTR_ORIGIN_COUNTRY ="origin_country"
 ATTR_SENSOR = "sensor"
 ATTR_STATES = "states"
+ATTR_VELOCITY = "velocity"
 
 DOMAIN = "opensky"
 
 DEFAULT_ALTITUDE = 0
 
+EVENT_OPENSKY_CURRENT = f"{DOMAIN}_current"
 EVENT_OPENSKY_ENTRY = f"{DOMAIN}_entry"
 EVENT_OPENSKY_EXIT = f"{DOMAIN}_exit"
+
 SCAN_INTERVAL = timedelta(seconds=12)  # opensky public limit is 10 seconds
 
 OPENSKY_ATTRIBUTION = (
@@ -47,15 +54,15 @@ OPENSKY_API_URL = "https://opensky-network.org/api/states/all"
 OPENSKY_API_FIELDS = [
     "icao24",
     ATTR_CALLSIGN,
-    "origin_country",
+    ATTR_ORIGIN_COUNTRY,
     "time_position",
     "time_velocity",
     ATTR_LONGITUDE,
     ATTR_LATITUDE,
     ATTR_ALTITUDE,
     ATTR_ON_GROUND,
-    "velocity",
-    "heading",
+    ATTR_VELOCITY,
+    ATTR_HEADING,
     "vertical_rate",
     "sensors",
 ]
@@ -121,14 +128,25 @@ class OpenSkySensor(Entity):
         for flight in flights:
             if flight in metadata:
                 altitude = metadata[flight].get(ATTR_ALTITUDE)
+                heading = metadata[flight].get(ATTR_HEADING)
+                latitude = metadata[flight].get(ATTR_LATITUDE)
+                longitude = metadata[flight].get(ATTR_LONGITUDE) 
+                origin_country = metadata[flight].get(ATTR_ORIGIN_COUNTRY)
+                velocity = metadata[flight].get(ATTR_VELOCITY)
             else:
                 # Assume Flight has landed if missing.
                 altitude = 0
+                
 
             data = {
                 ATTR_CALLSIGN: flight,
                 ATTR_ALTITUDE: altitude,
                 ATTR_SENSOR: self._name,
+                ATTR_LATITUDE: latitude,
+                ATTR_LONGITUDE: longitude,
+                ATTR_ORIGIN_COUNTRY: origin_country,
+                ATTR_HEADING: heading,
+                ATTR_VELOCITY: velocity,
             }
             self._hass.bus.fire(event, data)
 
@@ -140,8 +158,14 @@ class OpenSkySensor(Entity):
         for state in states:
             flight = dict(zip(OPENSKY_API_FIELDS, state))
             callsign = flight[ATTR_CALLSIGN].strip()
+            heading = flight[ATTR_HEADING]
+            latitude = flight[ATTR_LATITUDE]
+            longitude = flight[ATTR_LONGITUDE]
+            origin_country = flight[ATTR_ORIGIN_COUNTRY].strip()
+            velocity = flight[ATTR_VELOCITY]
             if callsign != "":
                 flight_metadata[callsign] = flight
+
             else:
                 continue
             missing_location = (
@@ -168,6 +192,7 @@ class OpenSkySensor(Entity):
             exits = self._previously_tracked - currently_tracked
             self._handle_boundary(entries, EVENT_OPENSKY_ENTRY, flight_metadata)
             self._handle_boundary(exits, EVENT_OPENSKY_EXIT, flight_metadata)
+            self._handle_boundary(currently_tracked, EVENT_OPENSKY_CURRENT, flight_metadata)
         self._state = len(currently_tracked)
         self._previously_tracked = currently_tracked
 
@@ -185,3 +210,4 @@ class OpenSkySensor(Entity):
     def icon(self):
         """Return the icon."""
         return "mdi:airplane"
+
