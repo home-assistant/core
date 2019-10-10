@@ -687,6 +687,9 @@ homekit[IP]==0.15.0
 # homeassistant.components.homematicip_cloud
 homematicip==0.10.15
 
+# homeassistant.components.home_panel
+homepanelapi==1.0.5
+
 # homeassistant.components.horizon
 horimote==0.4.1
 

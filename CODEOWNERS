@@ -142,6 +142,7 @@ homeassistant/components/hisense_aehw4a1/* @bannhead
 homeassistant/components/history/* @home-assistant/core
 homeassistant/components/history_graph/* @andrey-git
 homeassistant/components/hive/* @Rendili @KJonline
+homeassistant/components/home_panel/* @timmo001
 homeassistant/components/homeassistant/* @home-assistant/core
 homeassistant/components/homekit_controller/* @Jc2k
 homeassistant/components/homematic/* @pvizeli @danielperna84

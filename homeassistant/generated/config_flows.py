@@ -33,6 +33,7 @@ FLOWS = [
     "hangouts",
     "heos",
     "hisense_aehw4a1",
+    "home_panel",
     "homekit_controller",
     "homematicip_cloud",
     "huawei_lte",

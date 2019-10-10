@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "existing_instance_updated": "Updated existing configuration.",
+            "single_instance_allowed": "Only a single configuration of Home Panel is allowed."
+        },
+        "error": {
+            "connection_error": "Failed to connect."
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Do you want to configure Home Assistant to connect to the Home Panel provided by the Hass.io add-on: {addon}?",
+                "title": "Home Panel via Hass.io add-on"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "ssl": "Home Panel uses an SSL certificate",
+                    "username": "Username"
+                },
+                "description": "Set up your Home Panel instance to allow controlling the interface.",
+                "title": "Link to Home Panel"
+            }
+        },
+        "title": "Home Panel"
+    }
+}

@@ -1,0 +1,12 @@
+send_command:
+  description: Send a command to Home Panel.
+  fields:
+    page:
+      description: The page id/name in Home Panel.
+      example: Home
+    card:
+      description: The card id/name.
+      example: My Camera
+    command:
+      description: The command to send. (show, expand, unexpand)
+      example: expand

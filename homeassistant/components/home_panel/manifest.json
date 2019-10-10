@@ -1,0 +1,9 @@
+{
+  "domain": "home_panel",
+  "name": "Home Panel",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/home_panel",
+  "requirements": ["homepanelapi==1.0.5"],
+  "dependencies": [],
+  "codeowners": ["@timmo001"]
+}
