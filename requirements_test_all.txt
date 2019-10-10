@@ -422,7 +422,7 @@ vultr==0.1.2
 wakeonlan==1.1.6
 
 # homeassistant.components.withings
-withings-api==2.0.0b7
+withings-api==2.0.0b8
 
 # homeassistant.components.zeroconf
 zeroconf==0.23.0
