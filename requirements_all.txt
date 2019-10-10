@@ -1231,9 +1231,6 @@ pyhomematic==0.1.60
 # homeassistant.components.homeworks
 pyhomeworks==0.0.6
 
-# homeassistant.components.hydroquebec
-pyhydroquebec==2.2.2
-
 # homeassistant.components.ialarm
 pyialarm==0.3
 
