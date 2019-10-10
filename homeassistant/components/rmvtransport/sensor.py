@@ -3,6 +3,8 @@ import asyncio
 import logging
 from datetime import timedelta
 
+from RMVtransport import RMVtransport
+from RMVtransport.rmvtransport import RMVtransportApiConnectionError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -208,8 +210,6 @@ class RMVDepartureData:
         timeout,
     ):
         """Initialize the sensor."""
-        from RMVtransport import RMVtransport
-
         self.station = None
         self._station_id = station_id
         self._destinations = destinations
@@ -224,8 +224,6 @@ class RMVDepartureData:
     @Throttle(SCAN_INTERVAL)
     async def async_update(self):
         """Update the connection data."""
-        from RMVtransport.rmvtransport import RMVtransportApiConnectionError
-
         try:
             _data = await self.rmv.get_departures(
                 self._station_id,
