@@ -234,7 +234,7 @@ def _build_multipart_msg(message, images):
 
                 cid = f"image{hashlib.sha1(file_bytes).hexdigest()}"
                 body_text.append(f'<img src="cid:{cid}"><br>')
-                
+
                 try:
                     attachment = MIMEImage(file_bytes)
                     msg.attach(attachment)
