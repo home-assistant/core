@@ -39,10 +39,6 @@ class TradfriCover(TradfriBaseDevice, CoverDevice):
         """Flag supported features."""
         return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
-    async def async_added_to_hass(self):
-        """Start thread when added to hass."""
-        self._async_start_observe()
-
     @property
     def current_cover_position(self):
         """Return current position of cover.
