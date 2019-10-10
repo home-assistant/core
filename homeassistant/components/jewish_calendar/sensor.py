@@ -63,7 +63,7 @@ class JewishCalendarSensor(Entity):
     async def async_update(self):
         """Update the state of the sensor."""
         now = dt_util.now()
-        _LOGGER.debug("Now: %s Timezone = %s", now, now.tzinfo)
+        _LOGGER.debug("Now: %s Location: %r", now, self._location)
 
         today = now.date()
         sunset = dt_util.as_local(
@@ -91,7 +91,7 @@ class JewishCalendarSensor(Entity):
             after_tzais_date = date.next_day
 
         self._state = self.get_state(after_shkia_date, after_tzais_date)
-        _LOGGER.debug("New value: %s", self._state)
+        _LOGGER.debug("New value for %s: %s", self._type, self._state)
 
     def make_zmanim(self, date):
         """Create a Zmanim object."""
@@ -128,7 +128,7 @@ class JewishCalendarTimeSensor(JewishCalendarSensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        return dt_util.as_utc(self._state) if self._state is not None else None
 
     @property
     def device_class(self):
