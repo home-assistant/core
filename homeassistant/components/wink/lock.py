@@ -1,6 +1,7 @@
 """Support for Wink locks."""
 import logging
 
+import pywink
 import voluptuous as vol
 
 from homeassistant.components.lock import LockDevice
@@ -70,7 +71,6 @@ ADD_KEY_SCHEMA = vol.Schema(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink platform."""
-    import pywink
 
     for lock in pywink.get_locks():
         _id = lock.object_id() + lock.name()
