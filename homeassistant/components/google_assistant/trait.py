@@ -1427,18 +1427,33 @@ class VolumeTrait(_Trait):
     async def _execute_volume_relative(self, data, params):
         # This could also support up/down commands using relativeSteps
         relative = params["volumeRelativeLevel"]
-        current = self.state.attributes.get(media_player.ATTR_MEDIA_VOLUME_LEVEL)
 
-        await self.hass.services.async_call(
-            media_player.DOMAIN,
-            media_player.SERVICE_VOLUME_SET,
-            {
-                ATTR_ENTITY_ID: self.state.entity_id,
-                media_player.ATTR_MEDIA_VOLUME_LEVEL: current + relative / 100,
-            },
-            blocking=True,
-            context=data.context,
-        )
+        # if we have access to current volume level, do a single 'set' call
+        if media_player.ATTR_MEDIA_VOLUME_LEVEL in self.state.attributes:
+            current = self.state.attributes.get(media_player.ATTR_MEDIA_VOLUME_LEVEL)
+
+            await self.hass.services.async_call(
+                media_player.DOMAIN,
+                media_player.SERVICE_VOLUME_SET,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    media_player.ATTR_MEDIA_VOLUME_LEVEL: current + relative / 100,
+                },
+                blocking=True,
+                context=data.context,
+            )
+        # otherwise do multiple 'up' or 'down' calls
+        else:
+            for _ in range(abs(relative)):
+                await self.hass.services.async_call(
+                    media_player.DOMAIN,
+                    media_player.SERVICE_VOLUME_UP
+                    if relative > 0
+                    else media_player.SERVICE_VOLUME_DOWN,
+                    {ATTR_ENTITY_ID: self.state.entity_id},
+                    blocking=True,
+                    context=data.context,
+                )
 
     async def execute(self, command, data, params, challenge):
         """Execute a brightness command."""
