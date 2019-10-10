@@ -3,6 +3,7 @@ import logging
 import os
 import socket
 
+import psutil
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -134,8 +135,6 @@ class SystemMonitorSensor(Entity):
 
     def update(self):
         """Get the latest system information."""
-        import psutil
-
         if self.type == "disk_use_percent":
             self._state = psutil.disk_usage(self.argument).percent
         elif self.type == "disk_use":
