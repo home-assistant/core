@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 
 import requests
+import xmltodict
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -101,7 +102,6 @@ class ZestimateDataSensor(Entity):
 
     def update(self):
         """Get the latest data and update the states."""
-        import xmltodict
 
         try:
             response = requests.get(_RESOURCE, params=self.params, timeout=5)
