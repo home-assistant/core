@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 from time import monotonic
 
+import aiohue
 import async_timeout
 
 from homeassistant.components import hue
@@ -11,7 +12,6 @@ from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-import aiohue
 from .binary_sensor import HuePresence, PRESENCE_NAME_FORMAT
 from .sensor import (
     HueLightLevel,
