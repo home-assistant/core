@@ -228,6 +228,9 @@ minio==4.0.9
 # homeassistant.components.ssdp
 netdisco==2.6.0
 
+# homeassistant.components.withings
+nokia==1.2.0
+
 # homeassistant.components.iqvia
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
