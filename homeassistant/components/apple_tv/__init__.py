@@ -3,6 +3,8 @@ import asyncio
 import logging
 from typing import Sequence, TypeVar, Union
 
+from pyatv import AppleTVDevice, connect_to_apple_tv, scan_for_apple_tvs
+from pyatv.exceptions import DeviceAuthenticationError
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -10,8 +12,6 @@ from homeassistant.components.discovery import SERVICE_APPLE_TV
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from pyatv import AppleTVDevice, connect_to_apple_tv, scan_for_apple_tvs
-from pyatv.exceptions import DeviceAuthenticationError
 
 _LOGGER = logging.getLogger(__name__)
 
