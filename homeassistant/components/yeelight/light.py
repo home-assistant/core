@@ -2,8 +2,25 @@
 import logging
 
 import voluptuous as vol
+import yeelight
 from yeelight import RGBTransition, SleepTransition, Flow, BulbException
 from yeelight.enums import PowerMode, LightType, BulbType, SceneClass
+from yeelight.transitions import (
+    disco,
+    temp,
+    strobe,
+    pulse,
+    strobe_color,
+    alarm,
+    police,
+    police2,
+    christmas,
+    rgb,
+    randomloop,
+    lsd,
+    slowdown,
+)
+
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service import extract_entity_ids
 import homeassistant.helpers.config_validation as cv
@@ -190,8 +207,6 @@ SERVICE_SCHEMA_SET_AUTO_DELAY_OFF = YEELIGHT_SERVICE_SCHEMA.extend(
 
 def _transitions_config_parser(transitions):
     """Parse transitions config into initialized objects."""
-    import yeelight
-
     transition_objects = []
     for transition_config in transitions:
         transition, params = list(transition_config.items())[0]
@@ -652,22 +667,6 @@ class YeelightGenericLight(Light):
     def set_effect(self, effect) -> None:
         """Activate effect."""
         if effect:
-            from yeelight.transitions import (
-                disco,
-                temp,
-                strobe,
-                pulse,
-                strobe_color,
-                alarm,
-                police,
-                police2,
-                christmas,
-                rgb,
-                randomloop,
-                lsd,
-                slowdown,
-            )
-
             if effect == EFFECT_STOP:
                 self._bulb.stop_flow(light_type=self.light_type)
                 return
