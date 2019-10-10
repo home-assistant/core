@@ -1,6 +1,8 @@
 """Support for Wink switches."""
 import logging
 
+import pywink
+
 from homeassistant.helpers.entity import ToggleEntity
 
 from . import DOMAIN, WinkDevice
@@ -10,7 +12,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink platform."""
-    import pywink
 
     for switch in pywink.get_switches():
         _id = switch.object_id() + switch.name()
