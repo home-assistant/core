@@ -2,8 +2,8 @@
 import logging
 import platform
 import subprocess as sp
-
 import voluptuous as vol
+import wakeonlan
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -48,8 +48,6 @@ class WOLSwitch(SwitchDevice):
 
     def __init__(self, hass, name, host, mac_address, off_action, broadcast_address):
         """Initialize the WOL switch."""
-        import wakeonlan
-
         self._hass = hass
         self._name = name
         self._host = host
