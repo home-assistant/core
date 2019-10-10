@@ -4,7 +4,7 @@ import logging
 from typing import Optional
 
 import aiohttp
-import withings_api as withings
+import nokia
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
@@ -75,7 +75,7 @@ class WithingsFlowHandler(config_entries.ConfigFlow):
             profile,
         )
 
-        return withings.WithingsAuth(
+        return nokia.NokiaAuth(
             client_id,
             client_secret,
             callback_uri,
