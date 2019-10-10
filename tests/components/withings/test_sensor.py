@@ -2,12 +2,7 @@
 from unittest.mock import MagicMock, patch
 
 import asynctest
-from withings_api import (
-    WithingsApi,
-    WithingsMeasures,
-    WithingsSleep,
-    WithingsSleepSummary,
-)
+from nokia import NokiaApi, NokiaMeasures, NokiaSleep, NokiaSleepSummary
 import pytest
 
 from homeassistant.components.withings import DOMAIN
@@ -20,7 +15,7 @@ from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
 
-from .common import withings_sleep_response
+from .common import nokia_sleep_response
 from .conftest import WithingsFactory, WithingsFactoryConfig
 
 
@@ -125,9 +120,9 @@ async def test_health_sensor_state_none(
     data = await withings_factory(
         WithingsFactoryConfig(
             measures=measure,
-            withings_measures_response=None,
-            withings_sleep_response=None,
-            withings_sleep_summary_response=None,
+            nokia_measures_response=None,
+            nokia_sleep_response=None,
+            nokia_sleep_summary_response=None,
         )
     )
 
@@ -158,9 +153,9 @@ async def test_health_sensor_state_empty(
     data = await withings_factory(
         WithingsFactoryConfig(
             measures=measure,
-            withings_measures_response=WithingsMeasures({"measuregrps": []}),
-            withings_sleep_response=WithingsSleep({"series": []}),
-            withings_sleep_summary_response=WithingsSleepSummary({"series": []}),
+            nokia_measures_response=NokiaMeasures({"measuregrps": []}),
+            nokia_sleep_response=NokiaSleep({"series": []}),
+            nokia_sleep_summary_response=NokiaSleepSummary({"series": []}),
         )
     )
 
@@ -206,8 +201,7 @@ async def test_sleep_state_throttled(
 
     data = await withings_factory(
         WithingsFactoryConfig(
-            measures=[measure],
-            withings_sleep_response=withings_sleep_response(sleep_states),
+            measures=[measure], nokia_sleep_response=nokia_sleep_response(sleep_states)
         )
     )
 
@@ -263,16 +257,16 @@ async def test_async_setup_entry_credentials_saver(hass: HomeAssistantType):
         "expires_in": "2",
     }
 
-    original_withings_api = WithingsApi
-    withings_api_instance = None
+    original_nokia_api = NokiaApi
+    nokia_api_instance = None
 
-    def new_withings_api(*args, **kwargs):
-        nonlocal withings_api_instance
-        withings_api_instance = original_withings_api(*args, **kwargs)
-        withings_api_instance.request = MagicMock()
-        return withings_api_instance
+    def new_nokia_api(*args, **kwargs):
+        nonlocal nokia_api_instance
+        nokia_api_instance = original_nokia_api(*args, **kwargs)
+        nokia_api_instance.request = MagicMock()
+        return nokia_api_instance
 
-    withings_api_patch = patch("withings_api.WithingsApi", side_effect=new_withings_api)
+    nokia_api_patch = patch("nokia.NokiaApi", side_effect=new_nokia_api)
     session_patch = patch("requests_oauthlib.OAuth2Session")
     client_patch = patch("oauthlib.oauth2.WebApplicationClient")
     update_entry_patch = patch.object(
@@ -281,7 +275,7 @@ async def test_async_setup_entry_credentials_saver(hass: HomeAssistantType):
         wraps=hass.config_entries.async_update_entry,
     )
 
-    with session_patch, client_patch, withings_api_patch, update_entry_patch:
+    with session_patch, client_patch, nokia_api_patch, update_entry_patch:
         async_add_entities = MagicMock()
         hass.config_entries.async_update_entry = MagicMock()
         config_entry = ConfigEntry(
@@ -304,7 +298,7 @@ async def test_async_setup_entry_credentials_saver(hass: HomeAssistantType):
 
         await async_setup_entry(hass, config_entry, async_add_entities)
 
-        withings_api_instance.set_token(expected_creds)
+        nokia_api_instance.set_token(expected_creds)
 
         new_creds = config_entry.data[const.CREDENTIALS]
         assert new_creds["access_token"] == "my_access_token2"
