@@ -1,6 +1,8 @@
 """Support for Yamaha MusicCast Receivers."""
 import logging
 
+import socket
+import pymusiccast
 import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
@@ -61,8 +63,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yamaha MusicCast platform."""
-    import socket
-    import pymusiccast
 
     known_hosts = hass.data.get(KNOWN_HOSTS_KEY)
     if known_hosts is None:
