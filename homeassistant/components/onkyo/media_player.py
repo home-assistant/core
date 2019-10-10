@@ -3,6 +3,8 @@ import logging
 from typing import List
 
 import voluptuous as vol
+import eiscp
+from eiscp import eISCP
 
 from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
@@ -133,9 +135,6 @@ def determine_zones(receiver):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Onkyo platform."""
-    import eiscp
-    from eiscp import eISCP
-
     host = config.get(CONF_HOST)
     hosts = []
 
