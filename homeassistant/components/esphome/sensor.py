@@ -37,6 +37,10 @@ async def async_setup_entry(
     )
 
 
+# https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
+# pylint: disable=invalid-overridden-method
+
+
 class EsphomeSensor(EsphomeEntity):
     """A sensor implementation for esphome."""
 

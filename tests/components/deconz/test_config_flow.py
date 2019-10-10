@@ -387,7 +387,7 @@ async def test_hassio_confirm(hass):
 
 
 async def test_option_flow(hass):
-    """Test config flow selection of one of two bridges."""
+    """Test config flow options."""
     entry = MockConfigEntry(domain=config_flow.DOMAIN, data={}, options=None)
     hass.config_entries._entries.append(entry)
 

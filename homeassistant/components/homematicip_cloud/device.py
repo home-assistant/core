@@ -3,6 +3,7 @@ import logging
 from typing import Optional
 
 from homematicip.aio.device import AsyncDevice
+from homematicip.aio.group import AsyncGroup
 from homematicip.aio.home import AsyncHome
 
 from homeassistant.components import homematicip_cloud
@@ -13,6 +14,7 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MODEL_TYPE = "model_type"
+ATTR_GROUP_ID = "group_id"
 ATTR_ID = "id"
 ATTR_IS_GROUP = "is_group"
 # RSSI HAP -> Device
@@ -35,14 +37,16 @@ DEVICE_ATTRIBUTE_ICONS = {
 
 DEVICE_ATTRIBUTES = {
     "modelType": ATTR_MODEL_TYPE,
-    "id": ATTR_ID,
     "sabotage": ATTR_SABOTAGE,
     "rssiDeviceValue": ATTR_RSSI_DEVICE,
     "rssiPeerValue": ATTR_RSSI_PEER,
     "deviceOverheated": ATTR_DEVICE_OVERHEATED,
     "deviceOverloaded": ATTR_DEVICE_OVERLOADED,
     "deviceUndervoltage": ATTR_DEVICE_UNTERVOLTAGE,
+    "id": ATTR_ID,
 }
+
+GROUP_ATTRIBUTES = {"modelType": ATTR_MODEL_TYPE, "id": ATTR_GROUP_ID}
 
 
 class HomematicipGenericDevice(Entity):
@@ -173,6 +177,7 @@ class HomematicipGenericDevice(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the generic device."""
         state_attr = {}
+
         if isinstance(self._device, AsyncDevice):
             for attr, attr_key in DEVICE_ATTRIBUTES.items():
                 attr_value = getattr(self._device, attr, None)
@@ -180,5 +185,13 @@ class HomematicipGenericDevice(Entity):
                     state_attr[attr_key] = attr_value
 
             state_attr[ATTR_IS_GROUP] = False
+
+        if isinstance(self._device, AsyncGroup):
+            for attr, attr_key in GROUP_ATTRIBUTES.items():
+                attr_value = getattr(self._device, attr, None)
+                if attr_value:
+                    state_attr[attr_key] = attr_value
+
+            state_attr[ATTR_IS_GROUP] = True
 
         return state_attr

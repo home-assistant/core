@@ -3,14 +3,12 @@ from typing import List
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
-import homeassistant.components.automation.numeric_state as numeric_state_automation
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ABOVE,
     CONF_BELOW,
     CONF_ENTITY_ID,
-    CONF_FOR,
     CONF_TYPE,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
@@ -132,12 +130,12 @@ def async_condition_from_config(
     if config_validation:
         config = CONDITION_SCHEMA(config)
     numeric_state_config = {
-        numeric_state_automation.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        numeric_state_automation.CONF_ABOVE: config.get(CONF_ABOVE),
-        numeric_state_automation.CONF_BELOW: config.get(CONF_BELOW),
-        numeric_state_automation.CONF_FOR: config.get(CONF_FOR),
+        condition.CONF_CONDITION: "numeric_state",
+        condition.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
     }
+    if CONF_ABOVE in config:
+        numeric_state_config[condition.CONF_ABOVE] = config[CONF_ABOVE]
+    if CONF_BELOW in config:
+        numeric_state_config[condition.CONF_BELOW] = config[CONF_BELOW]
 
-    return condition.async_numeric_state_from_config(
-        numeric_state_config, config_validation
-    )
+    return condition.async_numeric_state_from_config(numeric_state_config)

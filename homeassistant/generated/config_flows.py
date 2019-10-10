@@ -44,6 +44,7 @@ FLOWS = [
     "met",
     "mobile_app",
     "mqtt",
+    "neato",
     "nest",
     "notion",
     "opentherm_gw",

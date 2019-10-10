@@ -12,6 +12,7 @@ from homeassistant.const import (
 )
 
 from .const import (
+    CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
     CONF_SITE_ID,
@@ -19,6 +20,7 @@ from .const import (
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
     CONTROLLER_ID,
+    DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
@@ -148,12 +150,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.desc = next(iter(self.sites.values()))["desc"]
             return await self.async_step_site(user_input={})
 
-        if self.desc is not None:
-            for site in self.sites.values():
-                if self.desc == site["name"]:
-                    self.desc = site["desc"]
-                    return await self.async_step_site(user_input={})
-
         sites = []
         for site in self.sites.values():
             sites.append(site["desc"])
@@ -171,6 +167,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry):
         """Initialize UniFi options flow."""
         self.config_entry = config_entry
+        self.options = dict(config_entry.options)
 
     async def async_step_init(self, user_input=None):
         """Manage the UniFi options."""
@@ -179,7 +176,8 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_device_tracker(self, user_input=None):
         """Manage the device tracker options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            self.options.update(user_input)
+            return await self.async_step_statistics_sensors()
 
         return self.async_show_form(
             step_id="device_tracker",
@@ -212,3 +210,28 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                 }
             ),
         )
+
+    async def async_step_statistics_sensors(self, user_input=None):
+        """Manage the statistics sensors options."""
+        if user_input is not None:
+            self.options.update(user_input)
+            return await self._update_options()
+
+        return self.async_show_form(
+            step_id="statistics_sensors",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_ALLOW_BANDWIDTH_SENSORS,
+                        default=self.config_entry.options.get(
+                            CONF_ALLOW_BANDWIDTH_SENSORS,
+                            DEFAULT_ALLOW_BANDWIDTH_SENSORS,
+                        ),
+                    ): bool
+                }
+            ),
+        )
+
+    async def _update_options(self):
+        """Update config entry options."""
+        return self.async_create_entry(title="", data=self.options)

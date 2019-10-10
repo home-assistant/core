@@ -248,7 +248,7 @@ def async_condition_from_config(
     if CONF_FOR in config:
         state_config[CONF_FOR] = config[CONF_FOR]
 
-    return condition.state_from_config(state_config, config_validation)
+    return condition.state_from_config(state_config)
 
 
 async def async_get_condition_capabilities(hass: HomeAssistant, config: dict) -> dict:

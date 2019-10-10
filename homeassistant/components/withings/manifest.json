@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/withings",
   "requirements": [
-    "nokia==1.2.0"
+    "withings-api==2.0.0b7"
   ],
   "dependencies": [
     "api",

@@ -186,7 +186,9 @@ class HomeAssistant:
         self.data: dict = {}
         self.state = CoreState.not_running
         self.exit_code = 0
-        self.config_entries: Optional[ConfigEntries] = None
+        self.config_entries: Optional[
+            ConfigEntries  # pylint: disable=used-before-assignment
+        ] = None
         # If not None, use to signal end-of-loop
         self._stopped: Optional[asyncio.Event] = None
 
