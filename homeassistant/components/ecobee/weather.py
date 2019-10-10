@@ -171,10 +171,10 @@ class EcobeeWeather(WeatherEntity):
 
         forecasts = list()
         for day in range(1, 5):
-            fc = self._process_forecast(self.weather["forecasts"][day])
-            if fc is None:
+            forecast = _process_forecast(self.weather["forecasts"][day])
+            if forecast is None:
                 continue
-            forecasts.append(fc)
+            forecasts.append(forecast)
 
         if forecasts:
             return forecasts
@@ -186,26 +186,29 @@ class EcobeeWeather(WeatherEntity):
         thermostat = self.data.ecobee.get_thermostat(self._index)
         self.weather = thermostat.get("weather", None)
 
-    def _process_forecast(self, json):
-        """Process a single ecobee API forecast to return expected values."""
-        forecast = dict()
-        try:
-            forecast[ATTR_FORECAST_TIME] = datetime.strptime(
-                json["dateTime"], "%Y-%m-%d %H:%M:%S"
-            ).isoformat()
-            forecast[ATTR_FORECAST_CONDITION] = ECOBEE_WEATHER_SYMBOL_TO_HASS[
-                json["weatherSymbol"]
-            ]
-            if json["tempHigh"] != ECOBEE_STATE_UNKNOWN:
-                forecast[ATTR_FORECAST_TEMP] = float(json["tempHigh"]) / 10
-            if json["tempLow"] != ECOBEE_STATE_UNKNOWN:
-                forecast[ATTR_FORECAST_TEMP_LOW] = float(json["tempLow"]) / 10
-            if json["windBearing"] != ECOBEE_STATE_UNKNOWN:
-                forecast[ATTR_FORECAST_WIND_BEARING] = int(json["windBearing"])
-            if json["windSpeed"] != ECOBEE_STATE_UNKNOWN:
-                forecast[ATTR_FORECAST_WIND_SPEED] = int(json["windSpeed"])
 
-        except (ValueError, IndexError, KeyError):
-            return None
+def _process_forecast(json):
+    """Process a single ecobee API forecast to return expected values."""
+    forecast = dict()
+    try:
+        forecast[ATTR_FORECAST_TIME] = datetime.strptime(
+            json["dateTime"], "%Y-%m-%d %H:%M:%S"
+        ).isoformat()
+        forecast[ATTR_FORECAST_CONDITION] = ECOBEE_WEATHER_SYMBOL_TO_HASS[
+            json["weatherSymbol"]
+        ]
+        if json["tempHigh"] != ECOBEE_STATE_UNKNOWN:
+            forecast[ATTR_FORECAST_TEMP] = float(json["tempHigh"]) / 10
+        if json["tempLow"] != ECOBEE_STATE_UNKNOWN:
+            forecast[ATTR_FORECAST_TEMP_LOW] = float(json["tempLow"]) / 10
+        if json["windBearing"] != ECOBEE_STATE_UNKNOWN:
+            forecast[ATTR_FORECAST_WIND_BEARING] = int(json["windBearing"])
+        if json["windSpeed"] != ECOBEE_STATE_UNKNOWN:
+            forecast[ATTR_FORECAST_WIND_SPEED] = int(json["windSpeed"])
 
+    except (ValueError, IndexError, KeyError):
+        return None
+
+    if forecast:
         return forecast
+    return None
