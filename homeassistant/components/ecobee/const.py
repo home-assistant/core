@@ -28,7 +28,8 @@ MANUFACTURER = "ecobee"
 # Translates ecobee API weatherSymbol to HASS usable names
 # https://www.ecobee.com/home/developer/api/documentation/v1/objects/WeatherForecast.shtml
 ECOBEE_WEATHER_SYMBOL_TO_HASS = {
-    1: "sunny",
+    0: "sunny",
+    1: "partlycloudy",
     2: "partlycloudy",
     3: "cloudy",
     4: "cloudy",
