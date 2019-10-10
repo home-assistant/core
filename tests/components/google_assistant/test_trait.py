@@ -1599,35 +1599,6 @@ async def test_volume_media_player_relative(hass):
     }
 
 
-async def test_volume_media_player_relative_no_vol_lvl(hass):
-    """Test volume trait support for media player domain."""
-    trt = trait.VolumeTrait(
-        hass, State("media_player.bla", media_player.STATE_PLAYING, {}), BASIC_CONFIG
-    )
-
-    assert trt.sync_attributes() == {}
-
-    assert trt.query_attributes() == {}
-
-    up_calls = async_mock_service(
-        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_UP
-    )
-
-    await trt.execute(
-        trait.COMMAND_VOLUME_RELATIVE, BASIC_DATA, {"volumeRelativeLevel": 2}, {}
-    )
-    assert len(up_calls) == 2
-
-    down_calls = async_mock_service(
-        hass, media_player.DOMAIN, media_player.SERVICE_VOLUME_DOWN
-    )
-
-    await trt.execute(
-        trait.COMMAND_VOLUME_RELATIVE, BASIC_DATA, {"volumeRelativeLevel": -2}, {}
-    )
-    assert len(down_calls) == 2
-
-
 async def test_temperature_setting_sensor(hass):
     """Test TemperatureSetting trait support for temperature sensor."""
     assert (
