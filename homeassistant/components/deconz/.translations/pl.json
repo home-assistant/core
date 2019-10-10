@@ -64,6 +64,7 @@
             "remote_button_quadruple_press": "przycisk \"{subtype}\" czterokrotnie naci\u015bni\u0119ty",
             "remote_button_quintuple_press": "przycisk \"{subtype}\" pi\u0119ciokrotnie naci\u015bni\u0119ty",
             "remote_button_rotated": "przycisk obr\u00f3cony \"{subtype}\"",
+            "remote_button_rotation_stopped": "obr\u00f3t przycisku \"{subtype}\" zatrzymany",
             "remote_button_short_press": "przycisk \"{subtype}\" naci\u015bni\u0119ty",
             "remote_button_short_release": "przycisk \"{subtype}\" zwolniony",
             "remote_button_triple_press": "przycisk \"{subtype}\" trzykrotnie naci\u015bni\u0119ty",

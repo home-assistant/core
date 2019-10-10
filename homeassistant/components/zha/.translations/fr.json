@@ -38,6 +38,7 @@
             "turn_on": "Allumer"
         },
         "trigger_type": {
+            "device_dropped": "Appareil tomb\u00e9",
             "device_shaken": "Appareil secou\u00e9",
             "device_tilted": "Dispositif inclin\u00e9",
             "remote_button_short_release": "Bouton \" {subtype} \" est rel\u00e2ch\u00e9",
