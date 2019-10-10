@@ -18,9 +18,6 @@ async def async_validate_trigger_config(hass, config):
     platform = await async_get_device_automation_platform(
         hass, config[CONF_DOMAIN], "trigger"
     )
-    if hasattr(platform, "async_validate_trigger_config"):
-        return await getattr(platform, "async_validate_trigger_config")(hass, config)
-
     return platform.TRIGGER_SCHEMA(config)
 
 
