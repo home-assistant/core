@@ -1,7 +1,7 @@
 {
   "domain": "zengge",
   "name": "Zengge",
-  "documentation": "https://www.home-assistant.io/components/zengge",
+  "documentation": "https://www.home-assistant.io/integrations/zengge",
   "requirements": [
     "zengge==0.2"
   ],

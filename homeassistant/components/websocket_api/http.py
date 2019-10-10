@@ -25,6 +25,9 @@ from .error import Disconnect
 from .messages import error_message
 
 
+# mypy: allow-untyped-calls, allow-untyped-defs
+
+
 class WebsocketAPIView(HomeAssistantView):
     """View to serve a websockets endpoint."""
 
@@ -45,7 +48,7 @@ class WebSocketHandler:
         self.hass = hass
         self.request = request
         self.wsock = None
-        self._to_write = asyncio.Queue(maxsize=MAX_PENDING_MSG)
+        self._to_write: asyncio.Queue = asyncio.Queue(maxsize=MAX_PENDING_MSG)
         self._handle_task = None
         self._writer_task = None
         self._logger = logging.getLogger("{}.connection.{}".format(__name__, id(self)))
@@ -58,12 +61,15 @@ class WebSocketHandler:
                 message = await self._to_write.get()
                 if message is None:
                     break
+
                 self._logger.debug("Sending %s", message)
+
+                if isinstance(message, str):
+                    await self.wsock.send_str(message)
+                    continue
+
                 try:
-                    if isinstance(message, str):
-                        await self.wsock.send_str(message)
-                    else:
-                        await self.wsock.send_json(message, dumps=JSON_DUMP)
+                    dumped = JSON_DUMP(message)
                 except (ValueError, TypeError) as err:
                     self._logger.error(
                         "Unable to serialize to JSON: %s\n%s", err, message
@@ -73,6 +79,9 @@ class WebSocketHandler:
                             message["id"], ERR_UNKNOWN_ERROR, "Invalid JSON in response"
                         )
                     )
+                    continue
+
+                await self.wsock.send_str(dumped)
 
     @callback
     def _send_message(self, message):
@@ -106,7 +115,7 @@ class WebSocketHandler:
         # Py3.7+
         if hasattr(asyncio, "current_task"):
             # pylint: disable=no-member
-            self._handle_task = asyncio.current_task()
+            self._handle_task = asyncio.current_task()  # type: ignore
         else:
             self._handle_task = asyncio.Task.current_task()
 
@@ -144,13 +153,13 @@ class WebSocketHandler:
                 raise Disconnect
 
             try:
-                msg = msg.json()
+                msg_data = msg.json()
             except ValueError:
                 disconnect_warn = "Received invalid JSON."
                 raise Disconnect
 
-            self._logger.debug("Received %s", msg)
-            connection = await auth.async_handle(msg)
+            self._logger.debug("Received %s", msg_data)
+            connection = await auth.async_handle(msg_data)
             self.hass.data[DATA_CONNECTIONS] = (
                 self.hass.data.get(DATA_CONNECTIONS, 0) + 1
             )
@@ -165,18 +174,18 @@ class WebSocketHandler:
                 if msg.type in (WSMsgType.CLOSE, WSMsgType.CLOSING):
                     break
 
-                elif msg.type != WSMsgType.TEXT:
+                if msg.type != WSMsgType.TEXT:
                     disconnect_warn = "Received non-Text message."
                     break
 
                 try:
-                    msg = msg.json()
+                    msg_data = msg.json()
                 except ValueError:
                     disconnect_warn = "Received invalid JSON."
                     break
 
-                self._logger.debug("Received %s", msg)
-                connection.async_handle(msg)
+                self._logger.debug("Received %s", msg_data)
+                connection.async_handle(msg_data)
 
         except asyncio.CancelledError:
             self._logger.info("Connection closed by client")

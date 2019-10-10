@@ -172,7 +172,7 @@ class ZigBeeDigitalInConfig(ZigBeePinConfig):
 
     def __init__(self, config):
         """Initialise the Zigbee Digital input config."""
-        super(ZigBeeDigitalInConfig, self).__init__(config)
+        super().__init__(config)
         self._bool2state, self._state2bool = self.boolean_maps
 
     @property
@@ -216,7 +216,7 @@ class ZigBeeDigitalOutConfig(ZigBeePinConfig):
 
     def __init__(self, config):
         """Initialize the Zigbee Digital out."""
-        super(ZigBeeDigitalOutConfig, self).__init__(config)
+        super().__init__(config)
         self._bool2state, self._state2bool = self.boolean_maps
         self._should_poll = config.get("poll", False)
 

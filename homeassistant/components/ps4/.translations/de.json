@@ -5,7 +5,7 @@
             "devices_configured": "Alle gefundenen Ger\u00e4te sind bereits konfiguriert.",
             "no_devices_found": "Es wurden keine PlayStation 4 im Netzwerk gefunden.",
             "port_987_bind_error": "Bind to Port 987 nicht m\u00f6glich.",
-            "port_997_bind_error": "Bind to Port 997 nicht m\u00f6glich. Weitere Informationen finden Sie in der [documentation](https://www.home-assistant.io/components/ps4/)"
+            "port_997_bind_error": "Bind to Port 997 nicht m\u00f6glich. Weitere Informationen finden Sie in der [Dokumentation](https://www.home-assistant.io/components/ps4/)"
         },
         "error": {
             "credential_timeout": "Zeit\u00fcberschreitung beim Warten auf den Anmeldedienst. Klicken zum Neustarten auf Senden.",

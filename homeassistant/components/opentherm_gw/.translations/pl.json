@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "init": {
+                "data": {
+                    "device": "\u015acie\u017cka lub adres URL",
+                    "name": "Nazwa"
+                }
+            }
+        }
+    }
+}

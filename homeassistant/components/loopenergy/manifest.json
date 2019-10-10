@@ -1,7 +1,7 @@
 {
   "domain": "loopenergy",
   "name": "Loopenergy",
-  "documentation": "https://www.home-assistant.io/components/loopenergy",
+  "documentation": "https://www.home-assistant.io/integrations/loopenergy",
   "requirements": [
     "pyloopenergy==0.1.3"
   ],

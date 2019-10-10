@@ -34,6 +34,7 @@ from .const import (
     CONF_REMOTE_API_URL,
     CONF_SUBSCRIPTION_INFO_URL,
     CONF_USER_POOL_ID,
+    CONF_GOOGLE_ACTIONS_REPORT_STATE_URL,
     DOMAIN,
     MODE_DEV,
     MODE_PROD,
@@ -96,7 +97,8 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_ACME_DIRECTORY_SERVER): vol.Url(),
                 vol.Optional(CONF_ALEXA): ALEXA_SCHEMA,
                 vol.Optional(CONF_GOOGLE_ACTIONS): GACTIONS_SCHEMA,
-                vol.Optional(CONF_ALEXA_ACCESS_TOKEN_URL): str,
+                vol.Optional(CONF_ALEXA_ACCESS_TOKEN_URL): vol.Url(),
+                vol.Optional(CONF_GOOGLE_ACTIONS_REPORT_STATE_URL): vol.Url(),
             }
         )
     },

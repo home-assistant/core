@@ -1,7 +1,7 @@
 {
     "domain": "google_cloud",
     "name": "Google Cloud Platform",
-    "documentation": "https://www.home-assistant.io/components/google_cloud",
+    "documentation": "https://www.home-assistant.io/integrations/google_cloud",
     "requirements": [
         "google-cloud-texttospeech==0.4.0"
     ],

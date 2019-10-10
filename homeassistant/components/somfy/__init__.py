@@ -2,7 +2,7 @@
 Support for Somfy hubs.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/somfy/
+https://home-assistant.io/integrations/somfy/
 """
 import logging
 from datetime import timedelta

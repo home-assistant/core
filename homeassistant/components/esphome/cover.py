@@ -91,11 +91,11 @@ class EsphomeCover(EsphomeEntity, CoverDevice):
         return self._state.current_operation == CoverOperation.IS_CLOSING
 
     @esphome_state_property
-    def current_cover_position(self) -> Optional[float]:
+    def current_cover_position(self) -> Optional[int]:
         """Return current position of cover. 0 is closed, 100 is open."""
         if not self._static_info.supports_position:
             return None
-        return self._state.position * 100.0
+        return round(self._state.position * 100.0)
 
     @esphome_state_property
     def current_cover_tilt_position(self) -> Optional[float]:

@@ -2,7 +2,7 @@
 Virtual gateway for Zigbee Home Automation.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zha/
+https://home-assistant.io/integrations/zha/
 """
 
 import asyncio
@@ -310,7 +310,7 @@ class ZHAGateway:
 
     @callback
     def async_device_became_available(
-        self, sender, is_reply, profile, cluster, src_ep, dst_ep, tsn, command_id, args
+        self, sender, profile, cluster, src_ep, dst_ep, message
     ):
         """Handle tasks when a device becomes available."""
         self.async_update_device(sender)

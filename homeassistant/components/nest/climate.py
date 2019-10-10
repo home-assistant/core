@@ -192,7 +192,10 @@ class NestThermostat(ClimateDevice):
     def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         if self._mode == NEST_MODE_ECO:
-            # We assume the first operation in operation list is the main one
+            if self.device.previous_mode in MODE_NEST_TO_HASS:
+                return MODE_NEST_TO_HASS[self.device.previous_mode]
+
+            # previous_mode not supported so return the first compatible mode
             return self._operation_list[0]
 
         return MODE_NEST_TO_HASS[self._mode]
@@ -270,7 +273,7 @@ class NestThermostat(ClimateDevice):
         if self._mode == NEST_MODE_ECO:
             return PRESET_ECO
 
-        return None
+        return PRESET_NONE
 
     @property
     def preset_modes(self):
@@ -294,7 +297,7 @@ class NestThermostat(ClimateDevice):
             if need_eco:
                 self.device.mode = NEST_MODE_ECO
             else:
-                self.device.mode = MODE_HASS_TO_NEST[self._operation_list[0]]
+                self.device.mode = self.device.previous_mode
 
     @property
     def fan_mode(self):

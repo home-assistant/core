@@ -8,8 +8,6 @@ import threading
 import traceback
 from typing import Any, Callable, Coroutine, Optional
 
-from .async_ import run_coroutine_threadsafe
-
 
 class HideSensitiveDataFilter(logging.Filter):
     """Filter API password calls."""
@@ -83,7 +81,9 @@ class AsyncHandler:
     def _process(self) -> None:
         """Process log in a thread."""
         while True:
-            record = run_coroutine_threadsafe(self._queue.get(), self.loop).result()
+            record = asyncio.run_coroutine_threadsafe(
+                self._queue.get(), self.loop
+            ).result()
 
             if record is None:
                 self.handler.close()
@@ -130,7 +130,7 @@ def catch_log_exception(
     """Decorate a callback to catch and log exceptions."""
 
     def log_exception(*args: Any) -> None:
-        module_name = inspect.getmodule(inspect.trace()[1][0]).__name__
+        module_name = inspect.getmodule(inspect.trace()[1][0]).__name__  # type: ignore
         # Do not print the wrapper in the traceback
         frames = len(inspect.trace()) - 1
         exc_msg = traceback.format_exc(-frames)
@@ -178,7 +178,9 @@ def catch_log_coro_exception(
         try:
             return await target
         except Exception:  # pylint: disable=broad-except
-            module_name = inspect.getmodule(inspect.trace()[1][0]).__name__
+            module_name = inspect.getmodule(  # type: ignore
+                inspect.trace()[1][0]
+            ).__name__
             # Do not print the wrapper in the traceback
             frames = len(inspect.trace()) - 1
             exc_msg = traceback.format_exc(-frames)

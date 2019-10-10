@@ -9,6 +9,7 @@ PREF_GOOGLE_SECURE_DEVICES_PIN = "google_secure_devices_pin"
 PREF_CLOUDHOOKS = "cloudhooks"
 PREF_CLOUD_USER = "cloud_user"
 PREF_GOOGLE_ENTITY_CONFIGS = "google_entity_configs"
+PREF_GOOGLE_REPORT_STATE = "google_report_state"
 PREF_ALEXA_ENTITY_CONFIGS = "alexa_entity_configs"
 PREF_ALEXA_REPORT_STATE = "alexa_report_state"
 PREF_OVERRIDE_NAME = "override_name"
@@ -18,6 +19,7 @@ PREF_SHOULD_EXPOSE = "should_expose"
 DEFAULT_SHOULD_EXPOSE = True
 DEFAULT_DISABLE_2FA = False
 DEFAULT_ALEXA_REPORT_STATE = False
+DEFAULT_GOOGLE_REPORT_STATE = False
 
 CONF_ALEXA = "alexa"
 CONF_ALIASES = "aliases"
@@ -33,6 +35,7 @@ CONF_CLOUDHOOK_CREATE_URL = "cloudhook_create_url"
 CONF_REMOTE_API_URL = "remote_api_url"
 CONF_ACME_DIRECTORY_SERVER = "acme_directory_server"
 CONF_ALEXA_ACCESS_TOKEN_URL = "alexa_access_token_url"
+CONF_GOOGLE_ACTIONS_REPORT_STATE_URL = "google_actions_report_state_url"
 
 MODE_DEV = "development"
 MODE_PROD = "production"

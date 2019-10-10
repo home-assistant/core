@@ -4,12 +4,15 @@ import logging
 from homeassistant.core import callback
 from homeassistant import setup
 from homeassistant.components.light import ATTR_BRIGHTNESS
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNAVAILABLE
 
 from tests.common import get_test_home_assistant, assert_setup_component
 from tests.components.light import common
 
 _LOGGER = logging.getLogger(__name__)
+
+# Represent for light's availability
+_STATE_AVAILABILITY_BOOLEAN = "availability_boolean.state"
 
 
 class TestTemplateLight:
@@ -774,3 +777,92 @@ class TestTemplateLight:
         state = self.hass.states.get("light.test_template_light")
 
         assert state.attributes["entity_picture"] == "/local/light.png"
+
+
+async def test_available_template_with_entities(hass):
+    """Test availability templates with values from other entities."""
+
+    await setup.async_setup_component(
+        hass,
+        "light",
+        {
+            "light": {
+                "platform": "template",
+                "lights": {
+                    "test_template_light": {
+                        "availability_template": "{{ is_state('availability_boolean.state', 'on') }}",
+                        "turn_on": {
+                            "service": "light.turn_on",
+                            "entity_id": "light.test_state",
+                        },
+                        "turn_off": {
+                            "service": "light.turn_off",
+                            "entity_id": "light.test_state",
+                        },
+                        "set_level": {
+                            "service": "light.turn_on",
+                            "data_template": {
+                                "entity_id": "light.test_state",
+                                "brightness": "{{brightness}}",
+                            },
+                        },
+                    }
+                },
+            }
+        },
+    )
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    # When template returns true..
+    hass.states.async_set(_STATE_AVAILABILITY_BOOLEAN, STATE_ON)
+    await hass.async_block_till_done()
+
+    # Device State should not be unavailable
+    assert hass.states.get("light.test_template_light").state != STATE_UNAVAILABLE
+
+    # When Availability template returns false
+    hass.states.async_set(_STATE_AVAILABILITY_BOOLEAN, STATE_OFF)
+    await hass.async_block_till_done()
+
+    # device state should be unavailable
+    assert hass.states.get("light.test_template_light").state == STATE_UNAVAILABLE
+
+
+async def test_invalid_availability_template_keeps_component_available(hass, caplog):
+    """Test that an invalid availability keeps the device available."""
+    await setup.async_setup_component(
+        hass,
+        "light",
+        {
+            "light": {
+                "platform": "template",
+                "lights": {
+                    "test_template_light": {
+                        "availability_template": "{{ x - 12 }}",
+                        "turn_on": {
+                            "service": "light.turn_on",
+                            "entity_id": "light.test_state",
+                        },
+                        "turn_off": {
+                            "service": "light.turn_off",
+                            "entity_id": "light.test_state",
+                        },
+                        "set_level": {
+                            "service": "light.turn_on",
+                            "data_template": {
+                                "entity_id": "light.test_state",
+                                "brightness": "{{brightness}}",
+                            },
+                        },
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.test_template_light").state != STATE_UNAVAILABLE
+    assert ("UndefinedError: 'x' is undefined") in caplog.text

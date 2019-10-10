@@ -1,13 +1,14 @@
 """Helpers to execute scripts."""
-
+import asyncio
 import logging
 from contextlib import suppress
 from datetime import datetime
 from itertools import islice
-from typing import Optional, Sequence, Callable, Dict, List, Set, Tuple
+from typing import Optional, Sequence, Callable, Dict, List, Set, Tuple, Any
 
 import voluptuous as vol
 
+import homeassistant.components.device_automation as device_automation
 from homeassistant.core import HomeAssistant, Context, callback, CALLBACK_TYPE
 from homeassistant.const import (
     CONF_CONDITION,
@@ -27,13 +28,11 @@ from homeassistant.helpers.event import (
     async_track_template,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_integration
 import homeassistant.util.dt as date_util
-from homeassistant.util.async_ import run_coroutine_threadsafe, run_callback_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 
 
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
-# mypy: no-check-untyped-defs
+# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,6 +86,26 @@ def call_from_config(
     Script(hass, cv.SCRIPT_SCHEMA(config)).run(variables, context)
 
 
+async def async_validate_action_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate config."""
+    action_type = _determine_action(config)
+
+    if action_type == ACTION_DEVICE_AUTOMATION:
+        platform = await device_automation.async_get_device_automation_platform(
+            hass, config[CONF_DOMAIN], "action"
+        )
+        config = platform.ACTION_SCHEMA(config)  # type: ignore
+    if action_type == ACTION_CHECK_CONDITION and config[CONF_CONDITION] == "device":
+        platform = await device_automation.async_get_device_automation_platform(
+            hass, config[CONF_DOMAIN], "condition"
+        )
+        config = platform.CONDITION_SCHEMA(config)  # type: ignore
+
+    return config
+
+
 class _StopScript(Exception):
     """Throw if script needs to stop."""
 
@@ -101,9 +120,9 @@ class Script:
     def __init__(
         self,
         hass: HomeAssistant,
-        sequence,
+        sequence: Sequence[Dict[str, Any]],
         name: Optional[str] = None,
-        change_listener=None,
+        change_listener: Optional[Callable[..., Any]] = None,
     ) -> None:
         """Initialize the script."""
         self.hass = hass
@@ -137,7 +156,7 @@ class Script:
 
     def run(self, variables=None, context=None):
         """Run script."""
-        run_coroutine_threadsafe(
+        asyncio.run_coroutine_threadsafe(
             self.async_run(variables, context), self.hass.loop
         ).result()
 
@@ -336,8 +355,9 @@ class Script:
         """
         self.last_action = action.get(CONF_ALIAS, "device automation")
         self._log("Executing step %s" % self.last_action)
-        integration = await async_get_integration(self.hass, action[CONF_DOMAIN])
-        platform = integration.get_platform("device_automation")
+        platform = await device_automation.async_get_device_automation_platform(
+            self.hass, action[CONF_DOMAIN], "action"
+        )
         await platform.async_call_action_from_config(
             self.hass, action, variables, context
         )

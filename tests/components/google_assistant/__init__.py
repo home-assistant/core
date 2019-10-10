@@ -6,9 +6,15 @@ class MockConfig(helpers.AbstractConfig):
     """Fake config that always exposes everything."""
 
     def __init__(
-        self, *, secure_devices_pin=None, should_expose=None, entity_config=None
+        self,
+        *,
+        secure_devices_pin=None,
+        should_expose=None,
+        entity_config=None,
+        hass=None,
     ):
         """Initialize config."""
+        super().__init__(hass)
         self._should_expose = should_expose
         self._secure_devices_pin = secure_devices_pin
         self._entity_config = entity_config or {}
@@ -228,6 +234,13 @@ DEMO_DEVICES = [
         "name": {"name": "Openable Lock"},
         "traits": ["action.devices.traits.LockUnlock"],
         "type": "action.devices.types.LOCK",
+        "willReportState": False,
+    },
+    {
+        "id": "alarm_control_panel.alarm",
+        "name": {"name": "Alarm"},
+        "traits": ["action.devices.traits.ArmDisarm"],
+        "type": "action.devices.types.SECURITYSYSTEM",
         "willReportState": False,
     },
 ]

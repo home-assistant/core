@@ -1,16 +1,19 @@
 """Offer state listening automation rules."""
+from datetime import timedelta
 import logging
+from typing import Dict
 
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, CALLBACK_TYPE, callback
 from homeassistant.const import MATCH_ALL, CONF_PLATFORM, CONF_FOR
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.event import async_track_state_change, async_track_same_state
 
 
-# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
+# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +40,14 @@ TRIGGER_SCHEMA = vol.All(
 )
 
 
-async def async_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass: HomeAssistant,
+    config,
+    action,
+    automation_info,
+    *,
+    platform_type: str = "state",
+) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
     from_state = config.get(CONF_FROM, MATCH_ALL)
@@ -46,7 +56,7 @@ async def async_trigger(hass, config, action, automation_info):
     template.attach(hass, time_delta)
     match_all = from_state == MATCH_ALL and to_state == MATCH_ALL
     unsub_track_same = {}
-    period = {}
+    period: Dict[str, timedelta] = {}
 
     @callback
     def state_automation_listener(entity, from_s, to_s):
@@ -59,7 +69,7 @@ async def async_trigger(hass, config, action, automation_info):
                 action(
                     {
                         "trigger": {
-                            "platform": "state",
+                            "platform": platform_type,
                             "entity_id": entity,
                             "from_state": from_s,
                             "to_state": to_s,

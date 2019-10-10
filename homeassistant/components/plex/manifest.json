@@ -1,11 +1,15 @@
 {
   "domain": "plex",
   "name": "Plex",
-  "documentation": "https://www.home-assistant.io/components/plex",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/plex",
   "requirements": [
-    "plexapi==3.0.6"
+    "plexapi==3.0.6",
+    "plexauth==0.0.4"
   ],
-  "dependencies": ["configurator"],
+  "dependencies": [
+    "http"
+  ],
   "codeowners": [
     "@jjlawren"
   ]
