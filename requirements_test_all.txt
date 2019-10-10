@@ -419,9 +419,6 @@ pyheos==0.6.0
 # homeassistant.components.homematic
 pyhomematic==0.1.60
 
-# homeassistant.components.hydroquebec
-pyhydroquebec==2.2.2
-
 # homeassistant.components.ipma
 pyipma==1.2.1
 
