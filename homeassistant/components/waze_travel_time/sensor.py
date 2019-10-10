@@ -4,6 +4,7 @@ import logging
 import re
 
 import voluptuous as vol
+from WazeRouteCalculator import WazeRouteCalculator, WRCError
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -237,9 +238,6 @@ class WazeTravelTimeData:
         vehicle_type,
     ):
         """Set up WazeRouteCalculator."""
-        import WazeRouteCalculator
-
-        self._calc = WazeRouteCalculator
 
         self.origin = origin
         self.destination = destination
@@ -263,7 +261,7 @@ class WazeTravelTimeData:
         """Update WazeRouteCalculator Sensor."""
         if self.origin is not None and self.destination is not None:
             try:
-                params = self._calc.WazeRouteCalculator(
+                params = WazeRouteCalculator(
                     self.origin,
                     self.destination,
                     self.region,
@@ -297,7 +295,7 @@ class WazeTravelTimeData:
                     self.distance = distance
 
                 self.route = route
-            except self._calc.WRCError as exp:
+            except WRCError as exp:
                 _LOGGER.warning("Error on retrieving data: %s", exp)
                 return
             except KeyError:
