@@ -627,9 +627,6 @@ herepy==0.6.3.1
 # homeassistant.components.hikvisioncam
 hikvision==0.4
 
-# homeassistant.components.hipchat
-hipnotify==1.0.8
-
 # homeassistant.components.harman_kardon_avr
 hkavr==0.0.5
 
