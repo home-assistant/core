@@ -6,8 +6,8 @@ from homeassistant.setup import async_setup_component
 BASE_COMPONENT = "notify"
 
 
-async def test_apprise_config_load_fail(hass):
-    """Test apprise configuration failures."""
+async def test_apprise_config_load_fail01(hass):
+    """Test apprise configuration failures 1."""
 
     config = {
         BASE_COMPONENT: {"name": "test", "platform": "apprise", "config": "/path/"}
@@ -17,8 +17,16 @@ async def test_apprise_config_load_fail(hass):
         assert await async_setup_component(hass, BASE_COMPONENT, config)
         await hass.async_block_till_done()
 
-    with patch("apprise.AppriseConfig.add", return_value=True):
-        with patch("apprise.Apprise.add", return_value=False):
+
+async def test_apprise_config_load_fail02(hass):
+    """Test apprise configuration failures 2."""
+
+    config = {
+        BASE_COMPONENT: {"name": "test", "platform": "apprise", "config": "/path/"}
+    }
+
+    with patch("apprise.Apprise.add", return_value=False):
+        with patch("apprise.AppriseConfig.add", return_value=True):
             assert await async_setup_component(hass, BASE_COMPONENT, config)
             await hass.async_block_till_done()
 
