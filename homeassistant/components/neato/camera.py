@@ -8,9 +8,9 @@ from homeassistant.components.camera import Camera
 
 from .const import (
     NEATO_DOMAIN,
+    NEATO_LOGIN,
     NEATO_MAP_DATA,
     NEATO_ROBOTS,
-    NEATO_LOGIN,
     SCAN_INTERVAL_MINUTES,
 )
 

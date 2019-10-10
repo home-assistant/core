@@ -2,7 +2,7 @@
 import pytest
 from unittest.mock import patch
 
-from homeassistant.components.neato.const import NEATO_DOMAIN, CONF_VENDOR
+from homeassistant.components.neato.const import CONF_VENDOR, NEATO_DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 
@@ -30,7 +30,7 @@ INVALID_CONFIG = {
 @pytest.fixture(name="account")
 def mock_controller_login():
     """Mock a successful login."""
-    with patch("pybotvac.Account", return_value=True):
+    with patch("homeassistant.components.neato.config_flow.Account", return_value=True):
         yield
 
 

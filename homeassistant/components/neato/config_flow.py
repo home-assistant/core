@@ -2,15 +2,15 @@
 
 import logging
 
-import voluptuous as vol
+from pybotvac import Account, Neato, Vorwerk
 from pybotvac.exceptions import NeatoLoginException, NeatoRobotException
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 # pylint: disable=unused-import
 from .const import CONF_VENDOR, NEATO_DOMAIN, VALID_VENDORS
-
 
 DOCS_URL = "https://www.home-assistant.io/components/neato"
 DEFAULT_VENDOR = "neato"
@@ -96,8 +96,6 @@ class NeatoConfigFlow(config_entries.ConfigFlow, domain=NEATO_DOMAIN):
     @staticmethod
     def try_login(username, password, vendor):
         """Try logging in to device and return any errors."""
-        from pybotvac import Account, Neato, Vorwerk
-
         this_vendor = None
         if vendor == "vorwerk":
             this_vendor = Vorwerk()
