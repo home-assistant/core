@@ -1,7 +1,7 @@
 {
   "domain": "fints",
   "name": "Fints",
-  "documentation": "https://www.home-assistant.io/components/fints",
+  "documentation": "https://www.home-assistant.io/integrations/fints",
   "requirements": [
     "fints==1.0.1"
   ],

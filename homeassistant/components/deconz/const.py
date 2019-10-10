@@ -5,13 +5,15 @@ _LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "deconz"
 
+CONF_BRIDGEID = "bridgeid"
+CONF_UUID = "uuid"
+
 DEFAULT_PORT = 80
 DEFAULT_ALLOW_CLIP_SENSOR = False
 DEFAULT_ALLOW_DECONZ_GROUPS = True
 
 CONF_ALLOW_CLIP_SENSOR = "allow_clip_sensor"
 CONF_ALLOW_DECONZ_GROUPS = "allow_deconz_groups"
-CONF_BRIDGEID = "bridgeid"
 CONF_MASTER_GATEWAY = "master"
 
 SUPPORTED_PLATFORMS = [

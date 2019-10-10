@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_allowed": "Nur eine einzige Instanz ist notwendig."
+        },
+        "error": {
+            "cannot_connect": "Verbindung zum Host nicht m\u00f6glich",
+            "wrong_credentials": "Falscher Benutzername oder Kennwort"
+        },
+        "step": {
+            "options": {
+                "data": {
+                    "scan_interval": "Aktualisierungsfrequenz"
+                },
+                "title": "Konfigurationsoptionen"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "username": "Benutzername"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Aktualisierungsfrequenz"
+                }
+            }
+        }
+    }
+}

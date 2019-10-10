@@ -5,7 +5,7 @@
             "one_instance_allowed": "Solo una instancia es necesaria."
         },
         "create_entry": {
-            "default": "Para enviar eventos a Home Assistant, necesitas configurar [Integracion de flujos de dialogo de webhook]({dialogflow_url}).\n\nRellena la siguiente informaci\u00f3n:\n\n- URL: `{webhook_url}`\n- Method: POST\n- Content Type: application/json\n\nVer [Documentaci\u00f3n]({docs_url}) para mas detalles."
+            "default": "Para enviar eventos a Home Assistant, necesitas configurar [Integraci\u00f3n de flujos de dialogo de webhook]({dialogflow_url}).\n\nRellena la siguiente informaci\u00f3n:\n\n- URL: `{webhook_url}`\n- Method: POST\n- Content Type: application/json\n\nVer [Documentaci\u00f3n]({docs_url}) para m\u00e1s detalles."
         },
         "step": {
             "user": {

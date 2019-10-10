@@ -1,5 +1,4 @@
 """Alexa capabilities."""
-from datetime import datetime
 import logging
 
 from homeassistant.const import (
@@ -16,6 +15,7 @@ from homeassistant.const import (
 import homeassistant.components.climate.const as climate
 from homeassistant.components import light, fan, cover
 import homeassistant.util.color as color_util
+import homeassistant.util.dt as dt_util
 
 from .const import (
     API_TEMP_UNITS,
@@ -109,7 +109,7 @@ class AlexaCapibility:
                     "name": prop_name,
                     "namespace": self.name(),
                     "value": prop_value,
-                    "timeOfSample": datetime.now().strftime(DATE_FORMAT),
+                    "timeOfSample": dt_util.utcnow().strftime(DATE_FORMAT),
                     "uncertaintyInMilliseconds": 0,
                 }
 
@@ -326,7 +326,7 @@ class AlexaColorTemperatureController(AlexaCapibility):
             return color_util.color_temperature_mired_to_kelvin(
                 self.entity.attributes["color_temp"]
             )
-        return 0
+        return None
 
 
 class AlexaPercentageController(AlexaCapibility):
@@ -445,7 +445,7 @@ class AlexaTemperatureSensor(AlexaCapibility):
             unit = self.hass.config.units.temperature_unit
             temp = self.entity.attributes.get(climate.ATTR_CURRENT_TEMPERATURE)
 
-        if temp in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+        if temp in (STATE_UNAVAILABLE, STATE_UNKNOWN, None):
             return None
 
         try:
@@ -572,6 +572,9 @@ class AlexaThermostatController(AlexaCapibility):
 
     def get_property(self, name):
         """Read and return a property."""
+        if self.entity.state == STATE_UNAVAILABLE:
+            return None
+
         if name == "thermostatMode":
             preset = self.entity.attributes.get(climate.ATTR_PRESET_MODE)
 

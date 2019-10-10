@@ -38,6 +38,11 @@
                     "one": "uno",
                     "other": "otro"
                 }
+            },
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "Crear sensores para monitorizar uso de ancho de banda de clientes de red"
+                }
             }
         }
     }

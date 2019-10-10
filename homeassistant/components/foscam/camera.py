@@ -41,7 +41,7 @@ class FoscamCam(Camera):
         """Initialize a Foscam camera."""
         from libpyfoscam import FoscamCamera
 
-        super(FoscamCam, self).__init__()
+        super().__init__()
 
         ip_address = device_info.get(CONF_IP)
         port = device_info.get(CONF_PORT)

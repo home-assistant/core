@@ -1,11 +1,16 @@
 """Connection session."""
 import asyncio
+from typing import Any, Callable, Dict, Hashable
+
 import voluptuous as vol
 
 from homeassistant.core import callback, Context
 from homeassistant.exceptions import Unauthorized
 
 from . import const, messages
+
+
+# mypy: allow-untyped-calls, allow-untyped-defs
 
 
 class ActiveConnection:
@@ -22,7 +27,7 @@ class ActiveConnection:
         else:
             self.refresh_token_id = None
 
-        self.subscriptions = {}
+        self.subscriptions: Dict[Hashable, Callable[[], Any]] = {}
         self.last_id = 0
 
     def context(self, msg):

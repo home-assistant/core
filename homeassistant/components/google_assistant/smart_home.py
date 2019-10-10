@@ -193,11 +193,12 @@ async def handle_devices_execute(hass, data, payload):
 
 
 @HANDLERS.register("action.devices.DISCONNECT")
-async def async_devices_disconnect(hass, data, payload):
+async def async_devices_disconnect(hass, data: RequestData, payload):
     """Handle action.devices.DISCONNECT request.
 
     https://developers.google.com/actions/smarthome/create#actiondevicesdisconnect
     """
+    await data.config.async_deactivate_report_state()
     return None
 
 
