@@ -7,6 +7,7 @@ import email.utils
 import logging
 import os
 import smtplib
+import hashlib
 
 import voluptuous as vol
 
@@ -227,11 +228,13 @@ def _build_multipart_msg(message, images):
     body_text = [f"<p>{message}</p><br>"]
 
     for atch_num, atch_name in enumerate(images):
-        cid = f"image{atch_num}"
-        body_text.append(f'<img src="cid:{cid}"><br>')
         try:
             with open(atch_name, "rb") as attachment_file:
                 file_bytes = attachment_file.read()
+
+                cid = f"image{hashlib.sha1(file_bytes).hexdigest()}"
+                body_text.append(f'<img src="cid:{cid}"><br>')
+                
                 try:
                     attachment = MIMEImage(file_bytes)
                     msg.attach(attachment)
