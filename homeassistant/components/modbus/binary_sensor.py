@@ -14,6 +14,9 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_COIL = "coil"
 CONF_COILS = "coils"
+CONF_REGISTER_TYPE = "register_type"
+REGISTER_TYPE_COIL = "coil"
+REGISTER_TYPE_DISCRETE_INPUT = "discrete_input"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -23,6 +26,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 vol.Required(CONF_NAME): cv.string,
                 vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
                 vol.Optional(CONF_SLAVE): cv.positive_int,
+                vol.Optional(CONF_REGISTER_TYPE, default=REGISTER_TYPE_COIL): vol.In(
+                    [REGISTER_TYPE_COIL, REGISTER_TYPE_DISCRETE_INPUT]
+                ),
             }
         ]
     }
@@ -36,7 +42,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         hub = hass.data[MODBUS_DOMAIN][coil.get(CONF_HUB)]
         sensors.append(
             ModbusCoilSensor(
-                hub, coil.get(CONF_NAME), coil.get(CONF_SLAVE), coil.get(CONF_COIL)
+                hub,
+                coil.get(CONF_NAME),
+                coil.get(CONF_SLAVE),
+                coil.get(CONF_COIL),
+                coil.get(CONF_REGISTER_TYPE),
             )
         )
 
@@ -46,13 +56,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ModbusCoilSensor(BinarySensorDevice):
     """Modbus coil sensor."""
 
-    def __init__(self, hub, name, slave, coil):
+    def __init__(self, hub, name, slave, coil, register_type):
         """Initialize the Modbus coil sensor."""
         self._hub = hub
         self._name = name
         self._slave = int(slave) if slave else None
         self._coil = int(coil)
         self._value = None
+        self._register_type = register_type
 
     @property
     def name(self):
@@ -66,13 +77,17 @@ class ModbusCoilSensor(BinarySensorDevice):
 
     def update(self):
         """Update the state of the sensor."""
-        result = self._hub.read_coils(self._slave, self._coil, 1)
+        if self._register_type == REGISTER_TYPE_COIL:
+            result = self._hub.read_coils(self._slave, self._coil, 1)
+        else:
+            result = self._hub.read_discrete_inputs(self._slave, self._coil, 1)
         try:
             self._value = result.bits[0]
         except AttributeError:
             _LOGGER.error(
-                "No response from hub %s, slave %s, coil %s",
+                "No response from hub %s, slave %s, coil %s, register_type %s",
                 self._hub.name,
                 self._slave,
                 self._coil,
+                self._register_type,
             )
