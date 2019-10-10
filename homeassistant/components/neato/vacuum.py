@@ -3,7 +3,6 @@ from datetime import timedelta
 import logging
 
 from pybotvac.exceptions import NeatoRobotException
-
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
@@ -35,8 +34,8 @@ from .const import (
     ALERTS,
     ERRORS,
     MODE,
-    NEATO_LOGIN,
     NEATO_DOMAIN,
+    NEATO_LOGIN,
     NEATO_MAP_DATA,
     NEATO_PERSISTENT_MAPS,
     NEATO_ROBOTS,
