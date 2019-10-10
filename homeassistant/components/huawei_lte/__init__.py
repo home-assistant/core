@@ -191,54 +191,6 @@ class HuaweiLteData:
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
     """Set up Huawei LTE component from config entry."""
-    await _async_setup_lte(hass, config_entry)
-    return True
-
-
-async def async_unload_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry
-) -> bool:
-    """Unload config entry."""
-
-    # Forward config entry unload to platforms
-    for domain in (DEVICE_TRACKER_DOMAIN, SENSOR_DOMAIN):
-        await hass.config_entries.async_forward_entry_unload(config_entry, domain)
-
-    # Forget about the router and invoke its cleanup
-    router = hass.data[DOMAIN].routers.pop(config_entry.data[CONF_URL])
-    await hass.async_add_executor_job(router.cleanup)
-
-    return True
-
-
-async def async_setup(hass: HomeAssistantType, config) -> bool:
-    """Set up Huawei LTE component."""
-
-    # Arrange our YAML config to dict with normalized URLs as keys
-    domain_config = {}
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = HuaweiLteData(hass_config=config, config=domain_config)
-    for router_config in config.get(DOMAIN, []):
-        domain_config[url_normalize(router_config.pop(CONF_URL))] = router_config
-
-    for url, router_config in domain_config.items():
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={
-                    CONF_URL: url,
-                    CONF_USERNAME: router_config.get(CONF_USERNAME),
-                    CONF_PASSWORD: router_config.get(CONF_PASSWORD),
-                },
-            )
-        )
-
-    return True
-
-
-async def _async_setup_lte(hass: HomeAssistantType, config_entry: ConfigEntry) -> None:
-    """Set up Huawei LTE router."""
     url = config_entry.data[CONF_URL]
 
     # Override settings from YAML config, but only if they're changed in it
@@ -340,6 +292,50 @@ async def _async_setup_lte(hass: HomeAssistantType, config_entry: ConfigEntry) -
 
     # Clean up at end
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, router.cleanup)
+
+    return True
+
+
+async def async_unload_entry(
+    hass: HomeAssistantType, config_entry: ConfigEntry
+) -> bool:
+    """Unload config entry."""
+
+    # Forward config entry unload to platforms
+    for domain in (DEVICE_TRACKER_DOMAIN, SENSOR_DOMAIN):
+        await hass.config_entries.async_forward_entry_unload(config_entry, domain)
+
+    # Forget about the router and invoke its cleanup
+    router = hass.data[DOMAIN].routers.pop(config_entry.data[CONF_URL])
+    await hass.async_add_executor_job(router.cleanup)
+
+    return True
+
+
+async def async_setup(hass: HomeAssistantType, config) -> bool:
+    """Set up Huawei LTE component."""
+
+    # Arrange our YAML config to dict with normalized URLs as keys
+    domain_config = {}
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = HuaweiLteData(hass_config=config, config=domain_config)
+    for router_config in config.get(DOMAIN, []):
+        domain_config[url_normalize(router_config.pop(CONF_URL))] = router_config
+
+    for url, router_config in domain_config.items():
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={
+                    CONF_URL: url,
+                    CONF_USERNAME: router_config.get(CONF_USERNAME),
+                    CONF_PASSWORD: router_config.get(CONF_PASSWORD),
+                },
+            )
+        )
+
+    return True
 
 
 @attr.s
