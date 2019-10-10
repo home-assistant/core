@@ -1,6 +1,7 @@
 """Provide the functionality to group entities."""
 import asyncio
 import logging
+from typing import Any, Iterable, List, Optional, cast
 
 import voluptuous as vol
 
@@ -32,8 +33,10 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
-from homeassistant.util.async_ import run_coroutine_threadsafe
+from homeassistant.helpers.typing import HomeAssistantType
 
+
+# mypy: allow-untyped-calls, allow-untyped-defs
 
 DOMAIN = "group"
 
@@ -143,12 +146,12 @@ def is_on(hass, entity_id):
 
 
 @bind_hass
-def expand_entity_ids(hass, entity_ids):
+def expand_entity_ids(hass: HomeAssistantType, entity_ids: Iterable[Any]) -> List[str]:
     """Return entity_ids with group entity ids replaced by their members.
 
     Async friendly.
     """
-    found_ids = []
+    found_ids: List[str] = []
     for entity_id in entity_ids:
         if not isinstance(entity_id, str):
             continue
@@ -182,7 +185,9 @@ def expand_entity_ids(hass, entity_ids):
 
 
 @bind_hass
-def get_entity_ids(hass, entity_id, domain_filter=None):
+def get_entity_ids(
+    hass: HomeAssistantType, entity_id: str, domain_filter: Optional[str] = None
+) -> List[str]:
     """Get members of this group.
 
     Async friendly.
@@ -194,7 +199,7 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
 
     entity_ids = group.attributes[ATTR_ENTITY_ID]
     if not domain_filter:
-        return entity_ids
+        return cast(List[str], entity_ids)
 
     domain_filter = domain_filter.lower() + "."
 
@@ -424,7 +429,7 @@ class Group(Entity):
         mode=None,
     ):
         """Initialize a group."""
-        return run_coroutine_threadsafe(
+        return asyncio.run_coroutine_threadsafe(
             Group.async_create_group(
                 hass,
                 name,
@@ -540,7 +545,7 @@ class Group(Entity):
 
     def update_tracked_entity_ids(self, entity_ids):
         """Update the member entity IDs."""
-        run_coroutine_threadsafe(
+        asyncio.run_coroutine_threadsafe(
             self.async_update_tracked_entity_ids(entity_ids), self.hass.loop
         ).result()
 

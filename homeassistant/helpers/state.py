@@ -44,7 +44,6 @@ from homeassistant.const import (
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.core import Context, State, DOMAIN as HASS_DOMAIN
-from homeassistant.util.async_ import run_coroutine_threadsafe
 from .typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
@@ -122,7 +121,7 @@ def reproduce_state(
     blocking: bool = False,
 ) -> None:
     """Reproduce given state."""
-    return run_coroutine_threadsafe(  # type: ignore
+    return asyncio.run_coroutine_threadsafe(
         async_reproduce_state(hass, states, blocking), hass.loop
     ).result()
 

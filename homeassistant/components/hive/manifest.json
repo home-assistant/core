@@ -1,9 +1,9 @@
 {
   "domain": "hive",
   "name": "Hive",
-  "documentation": "https://www.home-assistant.io/components/hive",
+  "documentation": "https://www.home-assistant.io/integrations/hive",
   "requirements": [
-    "pyhiveapi==0.2.18.1"
+    "pyhiveapi==0.2.19.3"
   ],
   "dependencies": [],
   "codeowners": [

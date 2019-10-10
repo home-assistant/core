@@ -54,7 +54,15 @@ def get_deprecated(
     and a warning is issued to the user.
     """
     if old_name in config:
-        module_name = inspect.getmodule(inspect.stack()[1][0]).__name__
+        module = inspect.getmodule(inspect.stack()[1][0])
+        if module is not None:
+            module_name = module.__name__
+        else:
+            # If Python is unable to access the sources files, the call stack frame
+            # will be missing information, so let's guard.
+            # https://github.com/home-assistant/home-assistant/issues/24982
+            module_name = __name__
+
         logger = logging.getLogger(module_name)
         logger.warning(
             "'%s' is deprecated. Please rename '%s' to '%s' in your "

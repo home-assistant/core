@@ -1,6 +1,7 @@
 """Support for the Netatmo cameras."""
 import logging
 
+from pyatmo import NoDevice
 import requests
 import voluptuous as vol
 
@@ -38,7 +39,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     home = config.get(CONF_HOME)
     verify_ssl = config.get(CONF_VERIFY_SSL, True)
     quality = config.get(CONF_QUALITY, DEFAULT_QUALITY)
-    import pyatmo
 
     auth = hass.data[DATA_NETATMO_AUTH]
 
@@ -60,7 +60,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 ]
             )
         data.get_persons()
-    except pyatmo.NoDevice:
+    except NoDevice:
         return None
 
 
@@ -69,7 +69,7 @@ class NetatmoCamera(Camera):
 
     def __init__(self, data, camera_name, home, camera_type, verify_ssl, quality):
         """Set up for access to the Netatmo camera images."""
-        super(NetatmoCamera, self).__init__()
+        super().__init__()
         self._data = data
         self._camera_name = camera_name
         self._verify_ssl = verify_ssl

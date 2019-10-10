@@ -1,7 +1,7 @@
 {
   "domain": "splunk",
   "name": "Splunk",
-  "documentation": "https://www.home-assistant.io/components/splunk",
+  "documentation": "https://www.home-assistant.io/integrations/splunk",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

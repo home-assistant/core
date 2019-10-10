@@ -1,7 +1,7 @@
 {
   "domain": "dht",
   "name": "Dht",
-  "documentation": "https://www.home-assistant.io/components/dht",
+  "documentation": "https://www.home-assistant.io/integrations/dht",
   "requirements": [
     "Adafruit-DHT==1.4.0"
   ],

@@ -1,7 +1,7 @@
 {
   "domain": "foursquare",
   "name": "Foursquare",
-  "documentation": "https://www.home-assistant.io/components/foursquare",
+  "documentation": "https://www.home-assistant.io/integrations/foursquare",
   "requirements": [],
   "dependencies": [
     "http"

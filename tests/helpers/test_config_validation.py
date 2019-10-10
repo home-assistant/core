@@ -494,7 +494,10 @@ def test_deprecated_with_no_optionals(caplog, schema):
     test_data = {"mars": True}
     output = deprecated_schema(test_data.copy())
     assert len(caplog.records) == 1
-    assert caplog.records[0].name == __name__
+    assert caplog.records[0].name in [
+        __name__,
+        "homeassistant.helpers.config_validation",
+    ]
     assert (
         "The 'mars' option (with value 'True') is deprecated, "
         "please remove it from your configuration"

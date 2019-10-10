@@ -14,7 +14,6 @@ LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Component doesn't support configuration through configuration.yaml."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -54,7 +53,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Update the values of the controller."""
         update_items(controller, async_add_entities, switches, switches_off)
 
-    async_dispatcher_connect(hass, controller.signal_update, update_controller)
+    controller.listeners.append(
+        async_dispatcher_connect(hass, controller.signal_update, update_controller)
+    )
 
     update_controller()
     switches_off.clear()
@@ -88,7 +89,7 @@ def update_items(controller, async_add_entities, switches, switches_off):
         new_switches.append(switches[block_client_id])
         LOGGER.debug("New UniFi Block switch %s (%s)", client.hostname, client.mac)
 
-    # control poe
+    # control POE
     for client_id in controller.api.clients:
 
         poe_client_id = f"poe-{client_id}"
@@ -108,9 +109,10 @@ def update_items(controller, async_add_entities, switches, switches_off):
             pass
         # Network device with active POE
         elif (
-            not client.is_wired
+            client_id in controller.wireless_clients
             or client.sw_mac not in devices
             or not devices[client.sw_mac].ports[client.sw_port].port_poe
+            or not devices[client.sw_mac].ports[client.sw_port].poe_enable
             or controller.mac == client.mac
         ):
             continue
@@ -230,8 +232,6 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchDevice, RestoreEntity):
         """Return the device state attributes."""
         attributes = {
             "power": self.port.poe_power,
-            "received": self.client.wired_rx_bytes / 1000000,
-            "sent": self.client.wired_tx_bytes / 1000000,
             "switch": self.client.sw_mac,
             "port": self.client.sw_port,
             "poe_mode": self.poe_mode,

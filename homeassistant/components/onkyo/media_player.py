@@ -3,6 +3,8 @@ import logging
 from typing import List
 
 import voluptuous as vol
+import eiscp
+from eiscp import eISCP
 
 from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
@@ -133,9 +135,6 @@ def determine_zones(receiver):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Onkyo platform."""
-    import eiscp
-    from eiscp import eISCP
-
     host = config.get(CONF_HOST)
     hosts = []
 
@@ -264,8 +263,7 @@ class OnkyoDevice(MediaPlayerDevice):
             if source in self._source_mapping:
                 self._current_source = self._source_mapping[source]
                 break
-            else:
-                self._current_source = "_".join([i for i in current_source_tuples[1]])
+            self._current_source = "_".join(current_source_tuples[1])
         if preset_raw and self._current_source.lower() == "radio":
             self._attributes[ATTR_PRESET] = preset_raw[1]
         elif ATTR_PRESET in self._attributes:
@@ -374,7 +372,7 @@ class OnkyoDeviceZone(OnkyoDevice):
         """Initialize the Zone with the zone identifier."""
         self._zone = zone
         self._supports_volume = True
-        super(OnkyoDeviceZone, self).__init__(receiver, sources, name)
+        super().__init__(receiver, sources, name)
 
     def update(self):
         """Get the latest state from the device."""
@@ -414,8 +412,7 @@ class OnkyoDeviceZone(OnkyoDevice):
             if source in self._source_mapping:
                 self._current_source = self._source_mapping[source]
                 break
-            else:
-                self._current_source = "_".join([i for i in current_source_tuples[1]])
+            self._current_source = "_".join(current_source_tuples[1])
         self._muted = bool(mute_raw[1] == "on")
         if preset_raw and self._current_source.lower() == "radio":
             self._attributes[ATTR_PRESET] = preset_raw[1]

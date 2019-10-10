@@ -1,7 +1,5 @@
 """The cert_expiry component."""
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_START
-from homeassistant.core import callback
 from homeassistant.helpers.typing import HomeAssistantType
 
 
@@ -13,13 +11,15 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Load the saved entities."""
 
-    @callback
-    def async_start(_):
-        """Load the entry after the start event."""
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, "sensor")
-        )
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(entry, "sensor")
+    )
+    return True
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, async_start)
 
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_unload(entry, "sensor")
+    )
     return True

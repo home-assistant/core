@@ -1,7 +1,7 @@
 {
   "domain": "netatmo",
   "name": "Netatmo",
-  "documentation": "https://www.home-assistant.io/components/netatmo",
+  "documentation": "https://www.home-assistant.io/integrations/netatmo",
   "requirements": [
     "pyatmo==2.2.1"
   ],

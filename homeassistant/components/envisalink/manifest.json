@@ -1,9 +1,9 @@
 {
   "domain": "envisalink",
   "name": "Envisalink",
-  "documentation": "https://www.home-assistant.io/components/envisalink",
+  "documentation": "https://www.home-assistant.io/integrations/envisalink",
   "requirements": [
-    "pyenvisalink==3.8"
+    "pyenvisalink==4.0"
   ],
   "dependencies": [],
   "codeowners": []

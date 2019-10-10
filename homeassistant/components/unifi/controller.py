@@ -15,6 +15,7 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
+    CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
@@ -27,6 +28,7 @@ from .const import (
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONTROLLER_ID,
+    DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_BLOCK_CLIENTS,
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
@@ -36,8 +38,11 @@ from .const import (
     DOMAIN,
     LOGGER,
     UNIFI_CONFIG,
+    UNIFI_WIRELESS_CLIENTS,
 )
 from .errors import AuthenticationRequired, CannotConnect
+
+SUPPORTED_PLATFORMS = ["device_tracker", "sensor", "switch"]
 
 
 class UniFiController:
@@ -50,7 +55,9 @@ class UniFiController:
         self.available = True
         self.api = None
         self.progress = None
+        self.wireless_clients = None
 
+        self.listeners = []
         self._site_name = None
         self._site_role = None
 
@@ -73,6 +80,13 @@ class UniFiController:
     def site_role(self):
         """Return the site user role of this controller."""
         return self._site_role
+
+    @property
+    def option_allow_bandwidth_sensors(self):
+        """Config entry option to allow bandwidth sensors."""
+        return self.config_entry.options.get(
+            CONF_ALLOW_BANDWIDTH_SENSORS, DEFAULT_ALLOW_BANDWIDTH_SENSORS
+        )
 
     @property
     def option_block_clients(self):
@@ -128,6 +142,22 @@ class UniFiController:
         """Event specific per UniFi entry to signal new options."""
         return f"unifi-options-{CONTROLLER_ID.format(host=self.host, site=self.site)}"
 
+    def update_wireless_clients(self):
+        """Update set of known to be wireless clients."""
+        new_wireless_clients = set()
+
+        for client_id in self.api.clients:
+            if (
+                client_id not in self.wireless_clients
+                and not self.api.clients[client_id].is_wired
+            ):
+                new_wireless_clients.add(client_id)
+
+        if new_wireless_clients:
+            self.wireless_clients |= new_wireless_clients
+            unifi_wireless_clients = self.hass.data[UNIFI_WIRELESS_CLIENTS]
+            unifi_wireless_clients.update_data(self.wireless_clients, self.config_entry)
+
     async def request_update(self):
         """Request an update."""
         if self.progress is not None:
@@ -170,6 +200,8 @@ class UniFiController:
             LOGGER.info("Reconnected to controller %s", self.host)
             self.available = True
 
+        self.update_wireless_clients()
+
         async_dispatcher_send(self.hass, self.signal_update)
 
     async def async_setup(self):
@@ -197,11 +229,15 @@ class UniFiController:
             LOGGER.error("Unknown error connecting with UniFi controller: %s", err)
             return False
 
+        wireless_clients = hass.data[UNIFI_WIRELESS_CLIENTS]
+        self.wireless_clients = wireless_clients.get_data(self.config_entry)
+        self.update_wireless_clients()
+
         self.import_configuration()
 
         self.config_entry.add_update_listener(self.async_options_updated)
 
-        for platform in ["device_tracker", "switch"]:
+        for platform in SUPPORTED_PLATFORMS:
             hass.async_create_task(
                 hass.config_entries.async_forward_entry_setup(
                     self.config_entry, platform
@@ -223,13 +259,14 @@ class UniFiController:
 
     def import_configuration(self):
         """Import configuration to config entry options."""
-        unifi_config = {}
+        import_config = {}
+
         for config in self.hass.data[UNIFI_CONFIG]:
             if (
                 self.host == config[CONF_HOST]
                 and self.site_name == config[CONF_SITE_ID]
             ):
-                unifi_config = config
+                import_config = config
                 break
 
         old_options = dict(self.config_entry.options)
@@ -243,16 +280,17 @@ class UniFiController:
             (CONF_DETECTION_TIME, CONF_DETECTION_TIME),
             (CONF_SSID_FILTER, CONF_SSID_FILTER),
         ):
-            if config in unifi_config:
-                if config == option and unifi_config[
+            if config in import_config:
+                print(config)
+                if config == option and import_config[
                     config
                 ] != self.config_entry.options.get(option):
-                    new_options[option] = unifi_config[config]
+                    new_options[option] = import_config[config]
                 elif config != option and (
                     option not in self.config_entry.options
-                    or unifi_config[config] == self.config_entry.options.get(option)
+                    or import_config[config] == self.config_entry.options.get(option)
                 ):
-                    new_options[option] = not unifi_config[config]
+                    new_options[option] = not import_config[config]
 
         if new_options:
             options = {**old_options, **new_options}
@@ -266,14 +304,14 @@ class UniFiController:
         Will cancel any scheduled setup retry and will unload
         the config entry.
         """
-        # If the authentication was wrong.
-        if self.api is None:
-            return True
-
-        for platform in ["device_tracker", "switch"]:
+        for platform in SUPPORTED_PLATFORMS:
             await self.hass.config_entries.async_forward_entry_unload(
                 self.config_entry, platform
             )
+
+        for unsub_dispatcher in self.listeners:
+            unsub_dispatcher()
+        self.listeners = []
 
         return True
 

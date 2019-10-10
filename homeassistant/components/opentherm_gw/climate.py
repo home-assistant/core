@@ -5,15 +5,19 @@ from pyotgw import vars as gw_vars
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     SUPPORT_TARGET_TEMPERATURE,
     PRESET_AWAY,
+    PRESET_NONE,
     SUPPORT_PRESET_MODE,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    CONF_ID,
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
@@ -30,12 +34,16 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the opentherm_gw device."""
-    gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][discovery_info]
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up an OpenTherm Gateway climate entity."""
+    ents = []
+    ents.append(
+        OpenThermClimate(
+            hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]]
+        )
+    )
 
-    gateway = OpenThermClimate(gw_dev)
-    async_add_entities([gateway])
+    async_add_entities(ents)
 
 
 class OpenThermClimate(ClimateDevice):
@@ -45,10 +53,11 @@ class OpenThermClimate(ClimateDevice):
         """Initialize the device."""
         self._gateway = gw_dev
         self.friendly_name = gw_dev.name
-        self.floor_temp = gw_dev.climate_config[CONF_FLOOR_TEMP]
+        self.floor_temp = gw_dev.climate_config.get(CONF_FLOOR_TEMP)
         self.temp_precision = gw_dev.climate_config.get(CONF_PRECISION)
-        self._current_operation = HVAC_MODE_OFF
+        self._current_operation = None
         self._current_temperature = None
+        self._hvac_mode = HVAC_MODE_HEAT
         self._new_target_temperature = None
         self._target_temperature = None
         self._away_mode_a = None
@@ -58,7 +67,7 @@ class OpenThermClimate(ClimateDevice):
 
     async def async_added_to_hass(self):
         """Connect to the OpenTherm Gateway device."""
-        _LOGGER.debug("Added device %s", self.friendly_name)
+        _LOGGER.debug("Added OpenTherm Gateway climate device %s", self.friendly_name)
         async_dispatcher_connect(
             self.hass, self._gateway.update_signal, self.receive_report
         )
@@ -70,11 +79,13 @@ class OpenThermClimate(ClimateDevice):
         flame_on = status.get(gw_vars.DATA_SLAVE_FLAME_ON)
         cooling_active = status.get(gw_vars.DATA_SLAVE_COOLING_ACTIVE)
         if ch_active and flame_on:
-            self._current_operation = HVAC_MODE_HEAT
+            self._current_operation = CURRENT_HVAC_HEAT
+            self._hvac_mode = HVAC_MODE_HEAT
         elif cooling_active:
-            self._current_operation = HVAC_MODE_COOL
+            self._current_operation = CURRENT_HVAC_COOL
+            self._hvac_mode = HVAC_MODE_COOL
         else:
-            self._current_operation = HVAC_MODE_OFF
+            self._current_operation = CURRENT_HVAC_IDLE
 
         self._current_temperature = status.get(gw_vars.DATA_ROOM_TEMP)
         temp_upd = status.get(gw_vars.DATA_ROOM_SETPOINT)
@@ -139,14 +150,23 @@ class OpenThermClimate(ClimateDevice):
         return TEMP_CELSIUS
 
     @property
+    def hvac_action(self):
+        """Return current HVAC operation."""
+        return self._current_operation
+
+    @property
     def hvac_mode(self):
         """Return current HVAC mode."""
-        return self._current_operation
+        return self._hvac_mode
 
     @property
     def hvac_modes(self):
         """Return available HVAC modes."""
         return []
+
+    def set_hvac_mode(self, hvac_mode):
+        """Set the HVAC mode."""
+        _LOGGER.warning("Changing HVAC mode is not supported")
 
     @property
     def current_temperature(self):
@@ -176,6 +196,7 @@ class OpenThermClimate(ClimateDevice):
         """Return current preset mode."""
         if self._away_state_a or self._away_state_b:
             return PRESET_AWAY
+        return PRESET_NONE
 
     @property
     def preset_modes(self):

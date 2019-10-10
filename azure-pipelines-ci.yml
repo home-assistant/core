@@ -112,6 +112,8 @@ stages:
           # Find offending deps with `pipdeptree -r -p typing`
           pip uninstall -y typing
     - script: |
+        set -e
+
         . venv/bin/activate
         pytest --timeout=9 --durations=10 -qq -o console_output_style=count -p no:sugar tests
         script/check_dirty
@@ -164,9 +166,6 @@ stages:
         pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
       displayName: 'Setup Env'
     - script: |
-        TYPING_FILES=$(cat mypyrc)
-        echo -e "Run mypy on: \n$TYPING_FILES"
-
         . venv/bin/activate
-        mypy $TYPING_FILES
+        mypy homeassistant
       displayName: 'Run mypy'

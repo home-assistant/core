@@ -39,7 +39,7 @@ from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceDataType
 from homeassistant.loader import bind_hass
-from homeassistant.util.async_ import run_callback_threadsafe, run_coroutine_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.logging import catch_log_exception
 
 # Loading the config flow file will register the flow
@@ -463,7 +463,7 @@ def subscribe(
     encoding: str = "utf-8",
 ) -> Callable[[], None]:
     """Subscribe to an MQTT topic."""
-    async_remove = run_coroutine_threadsafe(
+    async_remove = asyncio.run_coroutine_threadsafe(
         async_subscribe(hass, topic, msg_callback, qos, encoding), hass.loop
     ).result()
 
@@ -776,7 +776,9 @@ class MQTT:
         self._mqttc.on_message = self._mqtt_on_message
 
         if will_message is not None:
-            self._mqttc.will_set(*attr.astuple(will_message))
+            self._mqttc.will_set(  # pylint: disable=no-value-for-parameter
+                *attr.astuple(will_message)
+            )
 
     async def async_publish(
         self, topic: str, payload: PublishPayloadType, qos: int, retain: bool
@@ -909,7 +911,11 @@ class MQTT:
             self.hass.add_job(self._async_perform_subscription, topic, max_qos)
 
         if self.birth_message:
-            self.hass.add_job(self.async_publish(*attr.astuple(self.birth_message)))
+            self.hass.add_job(
+                self.async_publish(  # pylint: disable=no-value-for-parameter
+                    *attr.astuple(self.birth_message)
+                )
+            )
 
     def _mqtt_on_message(self, _mqttc, _userdata, msg) -> None:
         """Message received callback."""

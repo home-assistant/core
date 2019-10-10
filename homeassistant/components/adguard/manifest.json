@@ -2,7 +2,7 @@
     "domain": "adguard",
     "name": "AdGuard Home",
     "config_flow": true,
-    "documentation": "https://www.home-assistant.io/components/adguard",
+    "documentation": "https://www.home-assistant.io/integrations/adguard",
     "requirements": [
         "adguardhome==0.2.1"
     ],

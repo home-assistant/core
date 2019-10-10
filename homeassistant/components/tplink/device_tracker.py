@@ -102,7 +102,7 @@ class TplinkDeviceScanner(DeviceScanner):
 
             self.success_init = self._update_info()
         except requests.exceptions.RequestException:
-            _LOGGER.debug("RequestException in %s", __class__.__name__)
+            _LOGGER.debug("RequestException in %s", self.__class__.__name__)
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -150,7 +150,7 @@ class Tplink1DeviceScanner(DeviceScanner):
         try:
             self.success_init = self._update_info()
         except requests.exceptions.RequestException:
-            _LOGGER.debug("RequestException in %s", __class__.__name__)
+            _LOGGER.debug("RequestException in %s", self.__class__.__name__)
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -245,7 +245,7 @@ class Tplink3DeviceScanner(Tplink1DeviceScanner):
         """Initialize the scanner."""
         self.stok = ""
         self.sysauth = ""
-        super(Tplink3DeviceScanner, self).__init__(config)
+        super().__init__(config)
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -365,7 +365,7 @@ class Tplink4DeviceScanner(Tplink1DeviceScanner):
         """Initialize the scanner."""
         self.credentials = ""
         self.token = ""
-        super(Tplink4DeviceScanner, self).__init__(config)
+        super().__init__(config)
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""

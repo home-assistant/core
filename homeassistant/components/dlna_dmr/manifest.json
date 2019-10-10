@@ -1,7 +1,7 @@
 {
   "domain": "dlna_dmr",
   "name": "Dlna dmr",
-  "documentation": "https://www.home-assistant.io/components/dlna_dmr",
+  "documentation": "https://www.home-assistant.io/integrations/dlna_dmr",
   "requirements": [
     "async-upnp-client==0.14.11"
   ],

@@ -97,17 +97,6 @@ async def async_from_config_dict(
     stop = time()
     _LOGGER.info("Home Assistant initialized in %.2fs", stop - start)
 
-    if sys.version_info[:3] < (3, 6, 1):
-        msg = (
-            "Python 3.6.0 support is deprecated and will "
-            "be removed in the first release after October 2. Please "
-            "upgrade Python to 3.6.1 or higher."
-        )
-        _LOGGER.warning(msg)
-        hass.components.persistent_notification.async_create(
-            msg, "Python version", "python_version"
-        )
-
     return hass
 
 

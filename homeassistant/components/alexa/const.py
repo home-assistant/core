@@ -62,7 +62,12 @@ API_THERMOSTAT_MODES = OrderedDict(
 )
 API_THERMOSTAT_PRESETS = {climate.PRESET_ECO: "ECO"}
 
-PERCENTAGE_FAN_MAP = {fan.SPEED_LOW: 33, fan.SPEED_MEDIUM: 66, fan.SPEED_HIGH: 100}
+PERCENTAGE_FAN_MAP = {
+    fan.SPEED_OFF: 0,
+    fan.SPEED_LOW: 33,
+    fan.SPEED_MEDIUM: 66,
+    fan.SPEED_HIGH: 100,
+}
 
 
 class Cause:

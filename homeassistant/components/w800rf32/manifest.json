@@ -1,7 +1,7 @@
 {
   "domain": "w800rf32",
   "name": "W800rf32",
-  "documentation": "https://www.home-assistant.io/components/w800rf32",
+  "documentation": "https://www.home-assistant.io/integrations/w800rf32",
   "requirements": [
     "pyW800rf32==0.1"
   ],

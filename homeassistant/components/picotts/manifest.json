@@ -1,7 +1,7 @@
 {
   "domain": "picotts",
   "name": "Picotts",
-  "documentation": "https://www.home-assistant.io/components/picotts",
+  "documentation": "https://www.home-assistant.io/integrations/picotts",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

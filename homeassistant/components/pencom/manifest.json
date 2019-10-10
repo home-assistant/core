@@ -1,7 +1,7 @@
 {
   "domain": "pencom",
   "name": "Pencom",
-  "documentation": "https://www.home-assistant.io/components/pencom",
+  "documentation": "https://www.home-assistant.io/integrations/pencom",
   "requirements": [
     "pencompy==0.0.3"
   ],
