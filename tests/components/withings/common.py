@@ -1,7 +1,7 @@
 """Common data for for the withings component tests."""
 import time
 
-import withings_api as withings
+import nokia
 
 import homeassistant.components.withings.const as const
 
@@ -92,7 +92,7 @@ def new_measure(type_str, value, unit):
     }
 
 
-def withings_sleep_response(states):
+def nokia_sleep_response(states):
     """Create a sleep response based on states."""
     data = []
     for state in states:
@@ -104,10 +104,10 @@ def withings_sleep_response(states):
             )
         )
 
-    return withings.WithingsSleep(new_sleep_data("aa", data))
+    return nokia.NokiaSleep(new_sleep_data("aa", data))
 
 
-WITHINGS_MEASURES_RESPONSE = withings.WithingsMeasures(
+NOKIA_MEASURES_RESPONSE = nokia.NokiaMeasures(
     {
         "updatetime": "",
         "timezone": "",
@@ -174,7 +174,7 @@ WITHINGS_MEASURES_RESPONSE = withings.WithingsMeasures(
 )
 
 
-WITHINGS_SLEEP_RESPONSE = withings_sleep_response(
+NOKIA_SLEEP_RESPONSE = nokia_sleep_response(
     [
         const.MEASURE_TYPE_SLEEP_STATE_AWAKE,
         const.MEASURE_TYPE_SLEEP_STATE_LIGHT,
@@ -183,7 +183,7 @@ WITHINGS_SLEEP_RESPONSE = withings_sleep_response(
     ]
 )
 
-WITHINGS_SLEEP_SUMMARY_RESPONSE = withings.WithingsSleepSummary(
+NOKIA_SLEEP_SUMMARY_RESPONSE = nokia.NokiaSleepSummary(
     {
         "series": [
             new_sleep_summary(

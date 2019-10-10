@@ -181,7 +181,7 @@ TEST_REQUIREMENTS = (
     "vultr",
     "wakeonlan",
     "warrant",
-    "withings-api",
+    "nokia",
     "YesssSMS",
     "zeroconf",
     "zigpy-homeassistant",
