@@ -564,7 +564,7 @@ somecomfort==0.5.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.3.9
+sqlalchemy==1.3.10
 
 # homeassistant.components.statsd
 statsd==3.2.1
