@@ -143,12 +143,6 @@ class JewishCalendarTimeSensor(JewishCalendarSensor):
         if self._state is None:
             return attrs
 
-        attrs["year"] = self._state.year
-        attrs["month"] = self._state.month
-        attrs["day"] = self._state.day
-        attrs["hour"] = self._state.hour
-        attrs["minute"] = self._state.minute
-        attrs["second"] = self._state.second
         attrs["timestamp"] = self._state.timestamp()
 
         return attrs
