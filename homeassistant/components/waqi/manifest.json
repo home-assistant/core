@@ -1,7 +1,7 @@
 {
   "domain": "waqi",
   "name": "Waqi",
-  "documentation": "https://www.home-assistant.io/components/waqi",
+  "documentation": "https://www.home-assistant.io/integrations/waqi",
   "requirements": [
     "waqiasync==1.0.0"
   ],

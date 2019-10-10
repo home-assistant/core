@@ -1,7 +1,7 @@
 {
   "domain": "trend",
   "name": "Trend",
-  "documentation": "https://www.home-assistant.io/components/trend",
+  "documentation": "https://www.home-assistant.io/integrations/trend",
   "requirements": [
     "numpy==1.17.1"
   ],

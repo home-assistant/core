@@ -1,7 +1,7 @@
 {
   "domain": "lovelace",
   "name": "Lovelace",
-  "documentation": "https://www.home-assistant.io/components/lovelace",
+  "documentation": "https://www.home-assistant.io/integrations/lovelace",
   "requirements": [],
   "dependencies": [],
   "codeowners": [

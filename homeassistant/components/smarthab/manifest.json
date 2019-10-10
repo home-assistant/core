@@ -1,7 +1,7 @@
 {
   "domain": "smarthab",
   "name": "SmartHab",
-  "documentation": "https://www.home-assistant.io/components/smarthab",
+  "documentation": "https://www.home-assistant.io/integrations/smarthab",
   "requirements": [
     "smarthab==0.20"
   ],

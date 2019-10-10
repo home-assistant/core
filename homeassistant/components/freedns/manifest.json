@@ -1,7 +1,7 @@
 {
   "domain": "freedns",
   "name": "Freedns",
-  "documentation": "https://www.home-assistant.io/components/freedns",
+  "documentation": "https://www.home-assistant.io/integrations/freedns",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

@@ -30,4 +30,4 @@ matrix:
 cache: pip
 install: pip install -U tox
 language: python
-script: travis_wait 40 tox --develop
+script: travis_wait 50 tox --develop

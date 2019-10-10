@@ -60,7 +60,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_PERSISTENT_ERRORS = "bootstrap_persistent_errors"
 RE_YAML_ERROR = re.compile(r"homeassistant\.util\.yaml")
 RE_ASCII = re.compile(r"\033\[[^m]*m")
-HA_COMPONENT_URL = "[{}](https://home-assistant.io/components/{}/)"
+HA_COMPONENT_URL = "[{}](https://home-assistant.io/integrations/{}/)"
 YAML_CONFIG_FILE = "configuration.yaml"
 VERSION_FILE = ".HA_VERSION"
 CONFIG_DIR_NAME = ".homeassistant"
@@ -416,7 +416,7 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
 
 @callback
 def async_log_exception(
-    ex: vol.Invalid, domain: str, config: Dict, hass: HomeAssistant
+    ex: Exception, domain: str, config: Dict, hass: HomeAssistant
 ) -> None:
     """Log an error for configuration validation.
 
@@ -428,23 +428,26 @@ def async_log_exception(
 
 
 @callback
-def _format_config_error(ex: vol.Invalid, domain: str, config: Dict) -> str:
+def _format_config_error(ex: Exception, domain: str, config: Dict) -> str:
     """Generate log exception for configuration validation.
 
     This method must be run in the event loop.
     """
     message = f"Invalid config for [{domain}]: "
-    if "extra keys not allowed" in ex.error_message:
-        message += (
-            "[{option}] is an invalid option for [{domain}]. "
-            "Check: {domain}->{path}.".format(
-                option=ex.path[-1],
-                domain=domain,
-                path="->".join(str(m) for m in ex.path),
+    if isinstance(ex, vol.Invalid):
+        if "extra keys not allowed" in ex.error_message:
+            message += (
+                "[{option}] is an invalid option for [{domain}]. "
+                "Check: {domain}->{path}.".format(
+                    option=ex.path[-1],
+                    domain=domain,
+                    path="->".join(str(m) for m in ex.path),
+                )
             )
-        )
+        else:
+            message += "{}.".format(humanize_error(config, ex))
     else:
-        message += "{}.".format(humanize_error(config, ex))
+        message += str(ex)
 
     try:
         domain_config = config.get(domain, config)
@@ -459,7 +462,7 @@ def _format_config_error(ex: vol.Invalid, domain: str, config: Dict) -> str:
     if domain != CONF_CORE:
         message += (
             "Please check the docs at "
-            "https://home-assistant.io/components/{}/".format(domain)
+            "https://home-assistant.io/integrations/{}/".format(domain)
         )
 
     return message
@@ -717,6 +720,24 @@ async def async_process_component_config(
         _LOGGER.error("Unable to import %s: %s", domain, ex)
         return None
 
+    # Check if the integration has a custom config validator
+    config_validator = None
+    try:
+        config_validator = integration.get_platform("config")
+    except ImportError:
+        pass
+    if config_validator is not None and hasattr(
+        config_validator, "async_validate_config"
+    ):
+        try:
+            return await config_validator.async_validate_config(  # type: ignore
+                hass, config
+            )
+        except (vol.Invalid, HomeAssistantError) as ex:
+            async_log_exception(ex, domain, config, hass)
+            return None
+
+    # No custom config validator, proceed with schema validation
     if hasattr(component, "CONFIG_SCHEMA"):
         try:
             return component.CONFIG_SCHEMA(config)  # type: ignore

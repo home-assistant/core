@@ -1,7 +1,7 @@
 {
   "domain": "epson",
   "name": "Epson",
-  "documentation": "https://www.home-assistant.io/components/epson",
+  "documentation": "https://www.home-assistant.io/integrations/epson",
   "requirements": [
     "epson-projector==0.1.3"
   ],

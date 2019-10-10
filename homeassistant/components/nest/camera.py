@@ -34,7 +34,7 @@ class NestCamera(Camera):
 
     def __init__(self, structure, device):
         """Initialize a Nest Camera."""
-        super(NestCamera, self).__init__()
+        super().__init__()
         self.structure = structure
         self.device = device
         self._location = None

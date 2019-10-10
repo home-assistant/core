@@ -1,6 +1,6 @@
 """Tests for the Withings component."""
 from asynctest import MagicMock
-import nokia
+import withings_api as withings
 from oauthlib.oauth2.rfc6749.errors import MissingTokenError
 import pytest
 from requests_oauthlib import TokenUpdated
@@ -13,19 +13,19 @@ from homeassistant.components.withings.common import (
 from homeassistant.exceptions import PlatformNotReady
 
 
-@pytest.fixture(name="nokia_api")
-def nokia_api_fixture():
-    """Provide nokia api."""
-    nokia_api = nokia.NokiaApi.__new__(nokia.NokiaApi)
-    nokia_api.get_measures = MagicMock()
-    nokia_api.get_sleep = MagicMock()
-    return nokia_api
+@pytest.fixture(name="withings_api")
+def withings_api_fixture():
+    """Provide withings api."""
+    withings_api = withings.WithingsApi.__new__(withings.WithingsApi)
+    withings_api.get_measures = MagicMock()
+    withings_api.get_sleep = MagicMock()
+    return withings_api
 
 
 @pytest.fixture(name="data_manager")
-def data_manager_fixture(hass, nokia_api: nokia.NokiaApi):
+def data_manager_fixture(hass, withings_api: withings.WithingsApi):
     """Provide data manager."""
-    return WithingsDataManager(hass, "My Profile", nokia_api)
+    return WithingsDataManager(hass, "My Profile", withings_api)
 
 
 def test_print_service():

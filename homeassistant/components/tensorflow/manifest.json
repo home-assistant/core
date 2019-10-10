@@ -1,11 +1,10 @@
 {
   "domain": "tensorflow",
   "name": "Tensorflow",
-  "documentation": "https://www.home-assistant.io/components/tensorflow",
+  "documentation": "https://www.home-assistant.io/integrations/tensorflow",
   "requirements": [
     "tensorflow==1.13.2",
     "numpy==1.17.1",
-    "pillow==6.1.0",
     "protobuf==3.6.1"
   ],
   "dependencies": [],

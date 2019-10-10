@@ -1,4 +1,5 @@
 """Tracking for bluetooth low energy devices."""
+import asyncio
 import logging
 
 from homeassistant.helpers.event import track_point_in_utc_time
@@ -14,7 +15,6 @@ from homeassistant.components.device_tracker.const import (
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 import homeassistant.util.dt as dt_util
-from homeassistant.util.async_ import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
     # Load all known devices.
     # We just need the devices so set consider_home and home range
     # to 0
-    for device in run_coroutine_threadsafe(
+    for device in asyncio.run_coroutine_threadsafe(
         async_load_config(yaml_path, hass, 0), hass.loop
     ).result():
         # check if device is a valid bluetooth device

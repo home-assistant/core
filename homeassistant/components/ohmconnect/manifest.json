@@ -1,7 +1,7 @@
 {
   "domain": "ohmconnect",
   "name": "Ohmconnect",
-  "documentation": "https://www.home-assistant.io/components/ohmconnect",
+  "documentation": "https://www.home-assistant.io/integrations/ohmconnect",
   "requirements": [
     "defusedxml==0.6.0"
   ],

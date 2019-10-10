@@ -10,6 +10,7 @@ CONF_CONTROLLER = "controller"
 CONF_SITE_ID = "site"
 
 UNIFI_CONFIG = "unifi_config"
+UNIFI_WIRELESS_CLIENTS = "unifi_wireless_clients"
 
 CONF_BLOCK_CLIENT = "block_client"
 CONF_DETECTION_TIME = "detection_time"

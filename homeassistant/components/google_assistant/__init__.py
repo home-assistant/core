@@ -83,6 +83,13 @@ async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
         try:
             with async_timeout.timeout(15):
                 agent_user_id = call.data.get("agent_user_id") or call.context.user_id
+
+                if agent_user_id is None:
+                    _LOGGER.warning(
+                        "No agent_user_id supplied for request_sync. Call as a user or pass in user id as agent_user_id."
+                    )
+                    return
+
                 res = await websession.post(
                     REQUEST_SYNC_BASE_URL,
                     params={"key": api_key},

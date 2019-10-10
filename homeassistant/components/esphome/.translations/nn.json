@@ -1,9 +1,14 @@
 {
     "config": {
+        "flow_title": "ESPHome: {name}",
         "step": {
             "discovery_confirm": {
                 "title": "Fann ESPhome node"
+            },
+            "user": {
+                "title": "ESPHome"
             }
-        }
+        },
+        "title": "ESPHome"
     }
 }

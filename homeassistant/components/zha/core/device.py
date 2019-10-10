@@ -2,7 +2,7 @@
 Device for Zigbee Home Automation.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zha/
+https://home-assistant.io/integrations/zha/
 """
 import asyncio
 from datetime import timedelta
@@ -186,6 +186,13 @@ class ZHADevice(LogMixin):
     def all_channels(self):
         """Return cluster channels and relay channels for device."""
         return self._all_channels
+
+    @property
+    def device_automation_triggers(self):
+        """Return the device automation triggers for this device."""
+        if hasattr(self._zigpy_device, "device_automation_triggers"):
+            return self._zigpy_device.device_automation_triggers
+        return None
 
     @property
     def available_signal(self):
