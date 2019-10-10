@@ -3,7 +3,7 @@ import asyncio
 from functools import wraps
 import logging
 
-from aiohttp import CookieJar
+from aiohttp import ClientTimeout
 import voluptuous as vol
 
 from iaqualink import (
@@ -85,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> None
     sensors = hass.data[DOMAIN][SENSOR_DOMAIN] = []
     switches = hass.data[DOMAIN][SWITCH_DOMAIN] = []
 
-    session = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
+    session = async_create_clientsession(hass, timeout=ClientTimeout(total=5))
     aqualink = AqualinkClient(username, password, session)
     try:
         await aqualink.login()
