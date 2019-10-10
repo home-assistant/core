@@ -297,9 +297,6 @@ nessclient==0.9.15
 # homeassistant.components.ssdp
 netdisco==2.6.0
 
-# homeassistant.components.withings
-nokia==1.2.0
-
 # homeassistant.components.nsw_fuel_station
 nsw-fuel-api-client==1.0.10
 
@@ -617,6 +614,9 @@ watchdog==0.8.3
 
 # homeassistant.components.webostv
 websockets==6.0
+
+# homeassistant.components.withings
+withings-api==2.0.0b8
 
 # homeassistant.components.bluesound
 # homeassistant.components.startca
