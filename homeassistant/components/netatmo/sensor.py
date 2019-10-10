@@ -4,6 +4,7 @@ import threading
 from datetime import timedelta
 from time import time
 
+import pyatmo
 import requests
 import voluptuous as vol
 
@@ -173,8 +174,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 )
             if _dev:
                 add_entities(_dev, True)
-
-        import pyatmo
 
         for data_class in [pyatmo.WeatherStationData, pyatmo.HomeCoachData]:
             try:
@@ -512,8 +511,6 @@ class NetatmoPublicData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Request an update from the Netatmo API."""
-        import pyatmo
-
         data = pyatmo.PublicData(
             self.auth,
             LAT_NE=self.lat_ne,
@@ -559,12 +556,10 @@ class NetatmoData:
         if time() < self._next_update or not self._update_in_progress.acquire(False):
             return
         try:
-            from pyatmo import NoDevice
-
             try:
                 self.station_data = self.data_class(self.auth)
                 _LOGGER.debug("%s detected!", str(self.data_class.__name__))
-            except NoDevice:
+            except pyatmo.NoDevice:
                 _LOGGER.warning(
                     "No Weather or HomeCoach devices found for %s", str(self.station)
                 )
