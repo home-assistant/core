@@ -4,6 +4,14 @@ import logging
 from collections import OrderedDict
 
 import voluptuous as vol
+from songpal import (
+    Device,
+    SongpalException,
+    VolumeChange,
+    ContentChange,
+    PowerChange,
+    ConnectChange,
+)
 
 from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
@@ -24,15 +32,6 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-
-from songpal import (
-    Device,
-    SongpalException,
-    VolumeChange,
-    ContentChange,
-    PowerChange,
-    ConnectChange,
-)
 
 _LOGGER = logging.getLogger(__name__)
 
