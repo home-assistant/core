@@ -172,32 +172,3 @@ def get_api(hass, entry):
     verify_ssl = params.pop(CONF_VERIFY_SSL)
     session = async_get_clientsession(hass, verify_ssl)
     return Glances(hass.loop, session, **params)
-
-
-# class GlancesClient(Glances):
-#     """Represents a Glance client."""
-
-#     def __init__(
-#         self,
-#         hass,
-#         name,
-#         host,
-#         port,
-#         version,
-#         ssl,
-#         verify_ssl,
-#         username=None,
-#         password=None,
-#     ):
-#         """Initialize Glances api."""
-#         session = async_get_clientsession(hass, verify_ssl)
-#         super().__init__(
-#             hass.loop,
-#             session,
-#             host=host,
-#             port=port,
-#             version=version,
-#             username=username,
-#             password=password,
-#             ssl=ssl,
-#         )
