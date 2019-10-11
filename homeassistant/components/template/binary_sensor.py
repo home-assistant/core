@@ -75,7 +75,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         templates = {
             CONF_VALUE_TEMPLATE: value_template,
             CONF_ICON_TEMPLATE: icon_template,
-            (CONF_ICON_COLOR_TEMPLATE, icon_color_template),
+            CONF_ICON_COLOR_TEMPLATE: icon_color_template,
             CONF_ENTITY_PICTURE_TEMPLATE: entity_picture_template,
             CONF_AVAILABILITY_TEMPLATE: availability_template,
         }
