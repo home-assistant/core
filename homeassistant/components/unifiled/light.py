@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-# Import the device class from the component that you want to support
+from unifiled import unifiled
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
@@ -12,7 +12,6 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
-from unifiled import unifiled
 
 _LOGGER = logging.getLogger(__name__)
 
