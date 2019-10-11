@@ -34,6 +34,7 @@
                 "title": "S\u00e9lectionnez le serveur Plex"
             },
             "start_website_auth": {
+                "description": "Continuer d'autoriser sur plex.tv.",
                 "title": "Connecter un serveur Plex"
             },
             "user": {
