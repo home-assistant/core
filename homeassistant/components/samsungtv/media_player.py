@@ -85,6 +85,8 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
         model = discovery_info.get("model_name")
         host = discovery_info.get("host")
         name = f"{tv_name} ({model})"
+        if name.startswith("[TV]"):
+            name = name[4:]
         port = None
         timeout = DEFAULT_TIMEOUT
         mac = None
@@ -101,9 +103,9 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     if ip_addr not in known_devices:
         known_devices.add(ip_addr)
         add_entities([SamsungTVDevice(host, port, name, timeout, mac, uuid)])
-        LOGGER.info(f"Samsung TV {host}:{port} added as '{name}'")
+        LOGGER.info("Samsung TV %s added as '%s'", host, name)
     else:
-        LOGGER.info(f"Ignoring duplicate Samsung TV {host}:{port}")
+        LOGGER.info("Ignoring duplicate Samsung TV %s", host)
 
 
 class SamsungTVDevice(MediaPlayerDevice):
@@ -166,13 +168,13 @@ class SamsungTVDevice(MediaPlayerDevice):
             for method in METHODS:
                 try:
                     self._config["method"] = method
-                    LOGGER.debug(f"try config: {self._config}")
+                    LOGGER.debug("try config: %s", self._config)
                     self._remote = self._remote_class(self._config.copy())
                     self._state = STATE_ON
-                    LOGGER.info(f"found working config: {self._config}")
+                    LOGGER.info("found working config: %s", self._config)
                     break
                 except Exception as err:
-                    LOGGER.debug(f"failing config: {self._config} error was:{err}")
+                    LOGGER.debug("failing config: %s error was: %s", self._config, err)
                     self._config["method"] = None
 
             # Unable to find working connection
@@ -190,7 +192,7 @@ class SamsungTVDevice(MediaPlayerDevice):
     def send_key(self, key):
         """Send a key to the tv and handles exceptions."""
         if self._power_off_in_progress() and key not in ("KEY_POWER", "KEY_POWEROFF"):
-            LOGGER.info(f"TV is powering off, not sending command: {key}")
+            LOGGER.info("TV is powering off, not sending command: %s", key)
             return
         try:
             # recreate connection if connection was dead
@@ -213,7 +215,7 @@ class SamsungTVDevice(MediaPlayerDevice):
             # We got a response so it's on.
             self._state = STATE_ON
             self._remote = None
-            LOGGER.debug(f"Failed sending command {key}", exc_info=True)
+            LOGGER.debug("Failed sending command %s", key, exc_info=True)
             return
         except OSError:
             self._state = STATE_OFF
