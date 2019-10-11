@@ -926,9 +926,6 @@ panacotta==0.1
 # homeassistant.components.panasonic_viera
 panasonic_viera==0.3.2
 
-# homeassistant.components.pcf8574
-pcf8574==0.0.5
-
 # homeassistant.components.dunehd
 pdunehd==1.3
 
