@@ -152,7 +152,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         device_class,
         value_template,
         icon_template,
-        icon_color_template
+        icon_color_template,
         entity_picture_template,
         availability_template,
         entity_ids,
