@@ -3,6 +3,6 @@
   "name": "Unifi LED",
   "documentation": "https://www.home-assistant.io/components/unifiled",
   "dependencies": [],
-  "codeowners": ['@florisvdk'],
+  "codeowners": ["@florisvdk"],
   "requirements": ["unifiled==0.10"]
 }
