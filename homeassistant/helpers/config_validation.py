@@ -386,6 +386,7 @@ def remove_falsy(value: List[T]) -> List[T]:
 def service(value):
     """Validate service."""
     # Services use same format as entities so we can use same helper.
+    value = string(value).lower()
     if valid_entity_id(value):
         return value
     raise vol.Invalid("Service {} does not match format <domain>.<name>".format(value))
