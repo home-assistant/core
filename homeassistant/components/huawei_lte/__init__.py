@@ -288,7 +288,9 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         router.update()
 
     # Set up periodic update
-    async_track_time_interval(hass, _update_router, SCAN_INTERVAL)
+    router.unload_handlers.append(
+        async_track_time_interval(hass, _update_router, SCAN_INTERVAL)
+    )
 
     # Clean up at end
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, router.cleanup)
