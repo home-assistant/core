@@ -60,7 +60,7 @@ class PlexServer:
                 self._server_name if self._server_name else available_servers[0][0]
             )
             connections = account.resource(server_choice).connections
-            local_url = [x.httpuri for x in connections if x.local]
+            local_url = [x.uri for x in connections if x.local]
             remote_url = [x.uri for x in connections if not x.local]
             self._url = local_url[0] if local_url else remote_url[0]
 
