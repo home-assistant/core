@@ -142,14 +142,7 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
 
     async def async_update(self) -> None:
         """Update state."""
-        try:
-            hosts = self.router.data[KEY_WLAN_HOST_LIST]["Hosts"]["Host"]
-        except KeyError:
-            _LOGGER.debug("%s[Hosts][Host] not in data", self.key)
-            self._available = False
-            return
-        self._available = True
-
+        hosts = self.router.data[KEY_WLAN_HOST_LIST]["Hosts"]["Host"]
         host = next((x for x in hosts if x.get("MacAddress") == self.mac), None)
         self._is_connected = host is not None
         if self._is_connected:
