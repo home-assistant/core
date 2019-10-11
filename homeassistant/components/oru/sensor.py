@@ -59,12 +59,13 @@ class RealTimeEnergyUsageSensor(Entity):
         try:
             last_read = self.meter.last_read()
 
-            _LOGGER.info(
-                "Oru meter last_read = %s %s", last_read, self.unit_of_measurement
-            )
-
             self._state = last_read
             self._available = True
+
+            _LOGGER.info(
+                "%s state = %s %s", self.name, self._state, self.unit_of_measurement
+            )
         except MeterError as err:
             self._available = False
+
             _LOGGER.error("Unexpected oru meter error: %s", str(err))
