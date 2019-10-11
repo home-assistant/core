@@ -1,0 +1,12 @@
+{
+  "domain": "aten_pe",
+  "name": "ATEN eco PDUs",
+  "documentation": "https://www.home-assistant.io/components/aten_pe",
+  "requirements": [
+    "atenpdu==0.1.2"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@mtdcr"
+  ]
+}
