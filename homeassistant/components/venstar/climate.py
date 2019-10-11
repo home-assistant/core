@@ -1,6 +1,7 @@
 """Support for Venstar WiFi Thermostats."""
 import logging
 
+from venstarcolortouch import VenstarColorTouch
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
@@ -71,7 +72,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Venstar thermostat."""
-    import venstarcolortouch
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -84,7 +84,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     else:
         proto = "http"
 
-    client = venstarcolortouch.VenstarColorTouch(
+    client = VenstarColorTouch(
         addr=host, timeout=timeout, user=username, password=password, proto=proto
     )
 
