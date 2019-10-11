@@ -1,6 +1,8 @@
 """Support for BT Home Hub 5."""
 import logging
 
+import bthomehub5_devicelist
+
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -32,7 +34,6 @@ class BTHomeHub5DeviceScanner(DeviceScanner):
 
     def __init__(self, config):
         """Initialise the scanner."""
-        import bthomehub5_devicelist
 
         _LOGGER.info("Initialising BT Home Hub 5")
         self.host = config[CONF_HOST]
@@ -61,7 +62,6 @@ class BTHomeHub5DeviceScanner(DeviceScanner):
 
     def update_info(self):
         """Ensure the information from the BT Home Hub 5 is up to date."""
-        import bthomehub5_devicelist
 
         _LOGGER.info("Scanning")
 
