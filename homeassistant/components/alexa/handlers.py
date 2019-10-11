@@ -978,6 +978,15 @@ async def async_api_change_channel(hass, config, directive, context):
     elif "alternateCallSign" in channel:
         channel_name = channel["alternateCallSign"]
 
+    if (
+        channel_number == 0
+        and not channel_name
+        and "channelMetadata" in directive.payload
+    ):
+        channel_metadata = directive.payload["channelMetadata"]
+        if "name" in channel_metadata:
+            channel_name = channel_metadata["name"]
+
     entity = directive.entity
 
     data = {
