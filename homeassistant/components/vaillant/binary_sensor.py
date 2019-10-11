@@ -7,7 +7,9 @@ from vr900connector.model import Room, Circulation, Device, BoilerStatus, \
     SystemErrorMessage
 
 from homeassistant.components.binary_sensor import BinarySensorDevice, DOMAIN
-from homeassistant.const import DEVICE_CLASS_POWER, DEVICE_CLASS_BATTERY
+from homeassistant.const import DEVICE_CLASS_POWER, DEVICE_CLASS_BATTERY, \
+    CONF_SCAN_INTERVAL
+from homeassistant.util import Throttle
 from . import CONF_BINARY_SENSOR_BOILER_ERROR, \
     CONF_BINARY_SENSOR_CIRCULATION, \
     CONF_BINARY_SENSOR_SYSTEM_ONLINE, CONF_BINARY_SENSOR_SYSTEM_UPDATE, \
@@ -60,9 +62,11 @@ async def async_setup_platform(hass, config, async_add_entities,
                         VaillantRoomDeviceConnectivityBinarySensor(device,
                                                                    room))
         if hub.config[CONF_BINARY_SENSOR_SYSTEM_ERRORS]:
-            for error in hub.system.errors:
-                sensors.append(VaillantSystemErrorBinarySensor(error))
-
+            handler = \
+                VaillantSystemBinarySensorHandler(
+                    hub, hass,  async_add_entities,
+                    hub.config[CONF_SCAN_INTERVAL])
+            await handler.update()
 
     _LOGGER.info("Adding %s binary sensor entities", len(sensors))
 
@@ -313,6 +317,29 @@ class VaillantBoilerErrorBinarySensor(BaseVaillantSystemBinarySensor):
         }
 
 
+class VaillantSystemBinarySensorHandler:
+
+    def __init__(self, hub, hass, async_add_entities, scan_interval) -> None:
+        self.hub = hub
+        self._hass = hass
+        self._async_add_entities = async_add_entities
+        self.update = Throttle(scan_interval)(self._update)
+
+    async def _update(self):
+        if self.hub.system.errors:
+            reg = await self._hass.helpers.entity_registry.async_get_registry()
+
+            sensors = []
+            for error in self.hub.system.errors:
+                binary_sensor = \
+                    VaillantSystemErrorBinarySensor(error)
+                if not reg.async_is_registered(binary_sensor.entity_id):
+                    sensors.append(binary_sensor)
+
+            if sensors:
+                self._async_add_entities(sensors)
+
+
 class VaillantSystemErrorBinarySensor(BaseVaillantEntity, BinarySensorDevice):
     """Check if there is any error message from system."""
 
@@ -335,7 +362,7 @@ class VaillantSystemErrorBinarySensor(BaseVaillantEntity, BinarySensorDevice):
     async def vaillant_update(self):
         errors = {e.status_code: e for e in self.hub.system.errors}
 
-        if self.error.status_code in [e.status_code for e in errors]:
+        if self.error.status_code in [e.status_code for e in errors.values()]:
             self.error = errors.get(self.error.status_code)
         else:
             self.hass.async_create_task(self._remove())
