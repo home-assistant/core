@@ -12,7 +12,7 @@ async def test_reproducing_states(hass, caplog):
         {
             "input_number": {
                 "testint": {"min": "0", "max": "100", "initial": "19"},
-                "testfloat": {"min": "0", "max": "100", "initial": "19.0"},
+                "testfloat": {"min": "0", "max": "100", "initial": "5.77"},
             }
         },
     )
