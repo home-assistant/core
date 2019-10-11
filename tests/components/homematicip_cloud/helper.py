@@ -1,6 +1,6 @@
 """Helper for HomematicIP Cloud Tests."""
 import json
-from unittest.mock import Mock
+from asynctest import Mock
 
 from homematicip.aio.class_maps import (
     TYPE_CLASS_MAP,
@@ -104,30 +104,6 @@ class HomeTemplate(Home):
         for group in self.groups:
             mock_groups.append(_get_mock(group))
         self.groups = mock_groups
-
-    async def activate_absence_with_duration(self, duration):
-        """Async wrapper for activate_absence_with_duration."""
-        return True
-
-    async def activate_absence_with_period(self, endtime):
-        """Async wrapper for activate_absence_with_period."""
-        return True
-
-    async def deactivate_absence(self):
-        """Async wrapper for deactivate_absence."""
-        return True
-
-    async def activate_vacation(self, endtime, temperature):
-        """Async wrapper for activate_vacation."""
-        return True
-
-    async def deactivate_vacation(self):
-        """Async wrapper for deactivate_vacation."""
-        return True
-
-    async def set_security_zones_activation(self, internal=True, external=True):
-        """Async wrapper for set_security_zones_activation."""
-        return True
 
     def get_async_home_mock(self):
         """
