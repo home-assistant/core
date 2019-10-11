@@ -215,6 +215,7 @@ async def async_validate_trigger_config(hass, config):
 
     if device.model not in REMOTES or trigger not in REMOTES[device.model]:
         raise InvalidDeviceAutomationConfig
+
     return config
 
 
