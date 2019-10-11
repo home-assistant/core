@@ -2,6 +2,7 @@
 import logging
 
 from oru import Meter
+from oru import MeterError
 from homeassistant.const import ENERGY_WATT_HOUR
 from homeassistant.helpers.entity import Entity
 
@@ -15,7 +16,6 @@ COMPONENT_ICON = "mdi:counter"
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
-    global meter_id
 
     meter_id = str(config.get(CONF_METER, None))
     meter = Meter(meter_id)
@@ -31,6 +31,7 @@ class RealTimeEnergyUsageSensor(Entity):
     def __init__(self, meter):
         """Initialize the sensor."""
         self._state = None
+        self._available = None
         self.meter = meter
 
     @property
@@ -55,8 +56,15 @@ class RealTimeEnergyUsageSensor(Entity):
 
     def update(self):
         """Fetch new state data for the sensor."""
-        last_read = self.meter.last_read()
+        try:
+            last_read = self.meter.last_read()
 
-        _LOGGER.info("Oru meter last_read = %s %s", last_read, self.unit_of_measurement)
+            _LOGGER.info(
+                "Oru meter last_read = %s %s", last_read, self.unit_of_measurement
+            )
 
-        self._state = last_read
+            self._state = last_read
+            self._available = True
+        except MeterError as err:
+            self._available = False
+            _LOGGER.error("Unexpected oru meter error: %s", str(err))
