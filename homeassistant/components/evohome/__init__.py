@@ -10,8 +10,7 @@ from typing import Any, Dict, Optional, Tuple
 import aiohttp.client_exceptions
 import voluptuous as vol
 import evohomeasync2
-import evohomeclient as evohomeasync  # TODO: evohomeasync
-import requests.exceptions  # TODO: remove me
+import evohomeasync
 
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -135,15 +134,6 @@ def _handle_exception(err) -> bool:
             return False
 
         if err.status == HTTP_TOO_MANY_REQUESTS:
-            _LOGGER.warning(
-                "The vendor's API rate limit has been exceeded. "
-                "If this message persists, consider increasing the %s.",
-                CONF_SCAN_INTERVAL,
-            )
-            return False
-
-    except requests.exceptions.HTTPError:  # TODO: needs checking
-        if err.response.status_code == HTTP_TOO_MANY_REQUESTS:
             _LOGGER.warning(
                 "The vendor's API rate limit has been exceeded. "
                 "If this message persists, consider increasing the %s.",
@@ -291,8 +281,8 @@ class EvoBroker:
         loc_idx = self.params[CONF_LOCATION_IDX]
 
         try:
-            temps = list(self.client_v1.temperatures(force_refresh=True))
-        except requests.exceptions.HTTPError as err:
+            temps = list(await self.client_v1.temperatures(force_refresh=True))
+        except aiohttp.ClientError as err:
             _handle_exception(err)
         else:
             if (
