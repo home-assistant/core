@@ -56,7 +56,7 @@ PyISY==1.1.2
 PyMVGLive==1.1.4
 
 # homeassistant.components.arduino
-PyMata==2.14
+PyMata==2.20
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
