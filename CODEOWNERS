@@ -81,6 +81,7 @@ homeassistant/components/doorbird/* @oblogic7
 homeassistant/components/dweet/* @fabaff
 homeassistant/components/ecobee/* @marthoc
 homeassistant/components/ecovacs/* @OverloadUT
+homeassistant/components/edl21/* @mtdcr
 homeassistant/components/egardia/* @jeroenterheerdt
 homeassistant/components/eight_sleep/* @mezz64
 homeassistant/components/elv/* @majuss
