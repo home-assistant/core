@@ -2,7 +2,6 @@
 import logging
 
 from homematicip.aio.group import AsyncSecurityZoneGroup
-from homematicip.aio.home import AsyncHome
 from homematicip.base.enums import WindowState
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
@@ -16,6 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID
+from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,15 +31,15 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP alrm control panel from a config entry."""
-    home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
+    hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
     devices = []
     security_zones = []
-    for group in home.groups:
+    for group in hap.home.groups:
         if isinstance(group, AsyncSecurityZoneGroup):
             security_zones.append(group)
 
     if security_zones:
-        devices.append(HomematicipAlarmControlPanel(home, security_zones))
+        devices.append(HomematicipAlarmControlPanel(hap, security_zones))
 
     if devices:
         async_add_entities(devices)
@@ -48,9 +48,9 @@ async def async_setup_entry(
 class HomematicipAlarmControlPanel(AlarmControlPanel):
     """Representation of an alarm control panel."""
 
-    def __init__(self, home: AsyncHome, security_zones) -> None:
+    def __init__(self, hap: HomematicipHAP, security_zones) -> None:
         """Initialize the alarm control panel."""
-        self._home = home
+        self._home = hap.home
         self.alarm_state = STATE_ALARM_DISARMED
 
         for security_zone in security_zones:

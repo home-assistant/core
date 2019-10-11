@@ -4,17 +4,17 @@ from typing import Optional
 
 from homematicip.aio.device import AsyncDevice
 from homematicip.aio.group import AsyncGroup
-from homematicip.aio.home import AsyncHome
 
 from homeassistant.components import homematicip_cloud
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import Entity
 
+from .hap import HomematicipHAP
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MODEL_TYPE = "model_type"
-ATTR_GROUP_ID = "group_id"
 ATTR_ID = "id"
 ATTR_IS_GROUP = "is_group"
 # RSSI HAP -> Device
@@ -46,15 +46,16 @@ DEVICE_ATTRIBUTES = {
     "id": ATTR_ID,
 }
 
-GROUP_ATTRIBUTES = {"modelType": ATTR_MODEL_TYPE, "id": ATTR_GROUP_ID}
+GROUP_ATTRIBUTES = {"modelType": ATTR_MODEL_TYPE}
 
 
 class HomematicipGenericDevice(Entity):
     """Representation of an HomematicIP generic device."""
 
-    def __init__(self, home: AsyncHome, device, post: Optional[str] = None) -> None:
+    def __init__(self, hap: HomematicipHAP, device, post: Optional[str] = None) -> None:
         """Initialize the generic device."""
-        self._home = home
+        self._hap = hap
+        self._home = hap.home
         self._device = device
         self.post = post
         # Marker showing that the HmIP device hase been removed.
@@ -81,6 +82,7 @@ class HomematicipGenericDevice(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
+        self._hap.hmip_device_by_entity_id[self.entity_id] = self._device
         self._device.on_update(self._async_device_changed)
         self._device.on_remove(self._async_device_removed)
 
@@ -104,6 +106,7 @@ class HomematicipGenericDevice(Entity):
         # Only go further if the device/entity should be removed from registries
         # due to a removal of the HmIP device.
         if self.hmip_device_removed:
+            del self._hap.hmip_device_by_entity_id[self.entity_id]
             await self.async_remove_from_registries()
 
     async def async_remove_from_registries(self) -> None:
