@@ -3,6 +3,8 @@ import asyncio
 import logging
 from collections import OrderedDict
 
+import aiobotocore
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -151,7 +153,6 @@ async def async_setup_entry(hass, entry):
 
 async def _validate_aws_credentials(hass, credential):
     """Validate AWS credential config."""
-    import aiobotocore
 
     aws_config = credential.copy()
     del aws_config[CONF_NAME]
