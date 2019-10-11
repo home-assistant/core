@@ -7,17 +7,14 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
-
 from .const import (
     CONF_IMPORT_GROUPS,
     CONF_IDENTITY,
     CONF_HOST,
     CONF_KEY,
     CONF_GATEWAY_ID,
+    KEY_SECURITY_CODE,
 )
-
-KEY_SECURITY_CODE = "security_code"
-KEY_IMPORT_GROUPS = "import_groups"
 
 
 class AuthError(Exception):

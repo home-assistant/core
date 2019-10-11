@@ -1,5 +1,4 @@
 """Allow users to set and activate scenes."""
-import asyncio
 import importlib
 import logging
 
@@ -7,7 +6,6 @@ import voluptuous as vol
 
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.const import CONF_PLATFORM, SERVICE_TURN_ON
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.state import HASS_DOMAIN
@@ -69,20 +67,7 @@ async def async_setup(hass, config):
         HA_DOMAIN, {"platform": "homeasistant", STATES: []}
     )
 
-    async def async_handle_scene_service(service):
-        """Handle calls to the switch services."""
-        target_scenes = await component.async_extract_from_service(service)
-
-        tasks = [scene.async_activate() for scene in target_scenes]
-        if tasks:
-            await asyncio.wait(tasks)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_TURN_ON,
-        async_handle_scene_service,
-        schema=ENTITY_SERVICE_SCHEMA,
-    )
+    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_activate")
 
     return True
 

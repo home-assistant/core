@@ -8,7 +8,8 @@
             "default": "Siehe [Neato-Dokumentation]({docs_url})."
         },
         "error": {
-            "invalid_credentials": "Ung\u00fcltige Anmeldeinformationen"
+            "invalid_credentials": "Ung\u00fcltige Anmeldeinformationen",
+            "unexpected_error": "Unerwarteter Fehler"
         },
         "step": {
             "user": {

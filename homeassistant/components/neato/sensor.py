@@ -1,13 +1,13 @@
 """Support for Neato sensors."""
+from datetime import timedelta
 import logging
 
-from datetime import timedelta
 from pybotvac.exceptions import NeatoRobotException
 
 from homeassistant.components.sensor import DEVICE_CLASS_BATTERY
 from homeassistant.helpers.entity import Entity
 
-from .const import NEATO_ROBOTS, NEATO_LOGIN, NEATO_DOMAIN, SCAN_INTERVAL_MINUTES
+from .const import NEATO_DOMAIN, NEATO_LOGIN, NEATO_ROBOTS, SCAN_INTERVAL_MINUTES
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -64,6 +64,7 @@
             "remote_button_quadruple_press": "\"{subtype}\" gumb \u0161tirikrat kliknjen",
             "remote_button_quintuple_press": "\"{subtype}\" gumb petkrat kliknjen",
             "remote_button_rotated": "Gumb \"{subtype}\" zasukan",
+            "remote_button_rotation_stopped": "Vrtenje \"{subtype}\" gumba se je ustavilo",
             "remote_button_short_press": "Pritisnjen \"{subtype}\" gumb",
             "remote_button_short_release": "Gumb \"{subtype}\" spro\u0161\u010den",
             "remote_button_triple_press": "Gumb \"{subtype}\" trikrat kliknjen",

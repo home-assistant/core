@@ -2,6 +2,7 @@
 import logging
 
 import voluptuous as vol
+from wunderpy2 import WunderApi
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME, CONF_ACCESS_TOKEN
@@ -59,9 +60,7 @@ class Wunderlist:
 
     def __init__(self, access_token, client_id):
         """Create new instance of Wunderlist component."""
-        import wunderpy2
-
-        api = wunderpy2.WunderApi()
+        api = WunderApi()
         self._client = api.get_client(access_token, client_id)
 
         _LOGGER.debug("Instance created")
