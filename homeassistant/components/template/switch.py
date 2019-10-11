@@ -62,6 +62,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         state_template = device_config[CONF_VALUE_TEMPLATE]
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
+        icon_color_template = device_config.get(CONF_ICON_COLOR_TEMPLATE)
         entity_picture_template = device_config.get(CONF_ENTITY_PICTURE_TEMPLATE)
         availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
         on_action = device_config[ON_ACTION]
