@@ -739,7 +739,7 @@ libpyfoscam==1.0
 libpyvivotek==0.2.2
 
 # homeassistant.components.mikrotik
-librouteros==2.3.0
+librouteros==2.3.1
 
 # homeassistant.components.soundtouch
 libsoundtouch==0.7.2
