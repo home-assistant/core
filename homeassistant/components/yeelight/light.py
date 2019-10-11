@@ -3,23 +3,8 @@ import logging
 
 import voluptuous as vol
 import yeelight
-from yeelight import RGBTransition, SleepTransition, Flow, BulbException
+from yeelight import RGBTransition, SleepTransition, Flow, BulbException, transitions
 from yeelight.enums import PowerMode, LightType, BulbType, SceneClass
-from yeelight.transitions import (
-    disco,
-    temp,
-    strobe,
-    pulse,
-    strobe_color,
-    alarm,
-    police,
-    police2,
-    christmas,
-    rgb,
-    randomloop,
-    lsd,
-    slowdown,
-)
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service import extract_entity_ids
@@ -672,18 +657,18 @@ class YeelightGenericLight(Light):
                 return
 
             effects_map = {
-                EFFECT_DISCO: disco,
-                EFFECT_TEMP: temp,
-                EFFECT_STROBE: strobe,
-                EFFECT_STROBE_COLOR: strobe_color,
-                EFFECT_ALARM: alarm,
-                EFFECT_POLICE: police,
-                EFFECT_POLICE2: police2,
-                EFFECT_CHRISTMAS: christmas,
-                EFFECT_RGB: rgb,
-                EFFECT_RANDOM_LOOP: randomloop,
-                EFFECT_LSD: lsd,
-                EFFECT_SLOWDOWN: slowdown,
+                EFFECT_DISCO: transitions.disco,
+                EFFECT_TEMP: transitions.temp,
+                EFFECT_STROBE: transitions.strobe,
+                EFFECT_STROBE_COLOR: transitions.strobe_color,
+                EFFECT_ALARM: transitions.alarm,
+                EFFECT_POLICE: transitions.police,
+                EFFECT_POLICE2: transitions.police2,
+                EFFECT_CHRISTMAS: transitions.christmas,
+                EFFECT_RGB: transitions.rgb,
+                EFFECT_RANDOM_LOOP: transitions.randomloop,
+                EFFECT_LSD: transitions.lsd,
+                EFFECT_SLOWDOWN: transitions.slowdown,
             }
 
             if effect in self.custom_effects_names:
@@ -691,13 +676,13 @@ class YeelightGenericLight(Light):
             elif effect in effects_map:
                 flow = Flow(count=0, transitions=effects_map[effect]())
             elif effect == EFFECT_FAST_RANDOM_LOOP:
-                flow = Flow(count=0, transitions=randomloop(duration=250))
+                flow = Flow(count=0, transitions=transitions.randomloop(duration=250))
             elif effect == EFFECT_WHATSAPP:
-                flow = Flow(count=2, transitions=pulse(37, 211, 102))
+                flow = Flow(count=2, transitions=transitions.pulse(37, 211, 102))
             elif effect == EFFECT_FACEBOOK:
-                flow = Flow(count=2, transitions=pulse(59, 89, 152))
+                flow = Flow(count=2, transitions=transitions.pulse(59, 89, 152))
             elif effect == EFFECT_TWITTER:
-                flow = Flow(count=2, transitions=pulse(0, 172, 237))
+                flow = Flow(count=2, transitions=transitions.pulse(0, 172, 237))
 
             try:
                 self._bulb.start_flow(flow, light_type=self.light_type)
