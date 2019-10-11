@@ -124,7 +124,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 device_class,
                 value_template,
                 icon_template,
-                icon_color_template
+                icon_color_template,
                 entity_picture_template,
                 availability_template,
                 entity_ids,
