@@ -279,6 +279,8 @@ class EvoBroker:
         """Get the latest (high-precision) temperatures of the default Location."""
         loc_idx = self.params[CONF_LOCATION_IDX]
 
+        self.temps = None
+
         try:
             temps = list(await self.client_v1.temperatures(force_refresh=True))
         except aiohttp.ClientError as err:
@@ -298,7 +300,7 @@ class EvoBroker:
             else:
                 self.temps = {str(i["id"]): i["temp"] for i in temps}
 
-            _LOGGER.debug("Temperatures = %s", self.temps)
+        _LOGGER.debug("Temperatures = %s", self.temps)
 
     async def _update_v2(self, *args, **kwargs) -> None:
         """Get the latest modes, temperatures, setpoints of a Location."""
