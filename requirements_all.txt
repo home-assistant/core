@@ -1010,9 +1010,6 @@ pubnubsub-handler==1.0.8
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
 
-# homeassistant.components.pushetta
-pushetta==1.0.15
-
 # homeassistant.components.rpi_gpio_pwm
 pwmled==1.4.1
 
