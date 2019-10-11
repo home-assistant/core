@@ -2,6 +2,7 @@
 import logging
 
 import voluptuous as vol
+import W800rf32 as w800
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
@@ -104,9 +105,8 @@ class W800rf32BinarySensor(BinarySensorDevice):
     @callback
     def binary_sensor_update(self, event):
         """Call for control updates from the w800rf32 gateway."""
-        import W800rf32 as w800rf32mod
 
-        if not isinstance(event, w800rf32mod.W800rf32Event):
+        if not isinstance(event, w800.W800rf32Event):
             return
 
         dev_id = event.device

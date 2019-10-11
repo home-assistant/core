@@ -2,6 +2,7 @@
 import logging
 
 import voluptuous as vol
+import W800rf32 as w800
 
 from homeassistant.const import (
     CONF_DEVICE,
@@ -26,8 +27,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the w800rf32 component."""
-    # Try to load the W800rf32 module.
-    import W800rf32 as w800
 
     # Declare the Handle event
     def handle_receive(event):
