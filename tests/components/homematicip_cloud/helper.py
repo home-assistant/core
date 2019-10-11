@@ -28,19 +28,19 @@ def get_and_check_entity_basics(
     hass, default_mock_hap, entity_id, entity_name, device_model
 ):
     """Get and test basic device."""
-    ha_entity = hass.states.get(entity_id)
-    assert ha_entity is not None
+    ha_state = hass.states.get(entity_id)
+    assert ha_state is not None
     if device_model:
-        assert ha_entity.attributes[ATTR_MODEL_TYPE] == device_model
-    assert ha_entity.name == entity_name
+        assert ha_state.attributes[ATTR_MODEL_TYPE] == device_model
+    assert ha_state.name == entity_name
 
-    hmip_device = default_mock_hap.hmip_device_by_entity_id.get(entity_id.lower())
+    hmip_device = default_mock_hap.hmip_device_by_entity_id.get(entity_id)
     if hmip_device:
         if isinstance(hmip_device, AsyncDevice):
-            assert ha_entity.attributes[ATTR_IS_GROUP] is False
+            assert ha_state.attributes[ATTR_IS_GROUP] is False
         elif isinstance(hmip_device, AsyncGroup):
-            assert ha_entity.attributes[ATTR_IS_GROUP] is True
-    return ha_entity, hmip_device
+            assert ha_state.attributes[ATTR_IS_GROUP] is True
+    return ha_state, hmip_device
 
 
 async def async_manipulate_test_data(
