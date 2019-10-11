@@ -14,7 +14,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_URL,
 )
 from homeassistant.components.samsungtv.media_player import (
-    setup_platform,
+    async_setup_platform,
     CONF_TIMEOUT,
     SamsungTVDevice,
     SUPPORT_SAMSUNGTV,
@@ -77,28 +77,30 @@ class TestSamsungTv(unittest.TestCase):
 
     @MockDependency("samsungctl")
     @MockDependency("wakeonlan")
-    def test_setup(self, samsung_mock, wol_mock):
-        """Testing setup of platform."""
+    async def async_test_setup(self, samsung_mock, wol_mock):
+        """Test setup of platform."""
         with mock.patch("homeassistant.components.samsungtv.media_player.socket"):
             add_entities = mock.Mock()
-            setup_platform(self.hass, WORKING_CONFIG, add_entities)
+            await async_setup_platform(self.hass, WORKING_CONFIG, add_entities)
 
     @MockDependency("samsungctl")
     @MockDependency("wakeonlan")
-    def test_setup_discovery(self, samsung_mock, wol_mock):
-        """Testing setup of platform with discovery."""
+    async def async_test_setup_discovery(self, samsung_mock, wol_mock):
+        """Test setup of platform with discovery."""
         with mock.patch("homeassistant.components.samsungtv.media_player.socket"):
             add_entities = mock.Mock()
-            setup_platform(self.hass, {}, add_entities, discovery_info=DISCOVERY_INFO)
+            await async_setup_platform(
+                self.hass, {}, add_entities, discovery_info=DISCOVERY_INFO
+            )
 
     @MockDependency("samsungctl")
     @MockDependency("wakeonlan")
     @mock.patch("homeassistant.components.samsungtv.media_player.LOGGER.warning")
-    def test_setup_none(self, samsung_mock, wol_mock, mocked_warn):
-        """Testing setup of platform with no data."""
+    async def async_test_setup_none(self, samsung_mock, wol_mock, mocked_warn):
+        """Test setup of platform with no data."""
         with mock.patch("homeassistant.components.samsungtv.media_player.socket"):
             add_entities = mock.Mock()
-            setup_platform(self.hass, {}, add_entities, discovery_info=None)
+            await async_setup_platform(self.hass, {}, add_entities, discovery_info=None)
             mocked_warn.assert_called_once_with("Cannot determine device")
             add_entities.assert_not_called()
 
