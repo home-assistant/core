@@ -144,11 +144,11 @@ class SamsungTVDevice(MediaPlayerDevice):
             "timeout": timeout,
         }
 
-        try:
-            self.get_remote()
-        except Exception:
-            # Ignore as device could be off
-            pass
+        # Select method by port number, mainly for fallback
+        if self._config["port"] in (8001, 8002):
+            self._config["method"] = "websocket"
+        elif self._config["port"] == 55000:
+            self._config["method"] = "legacy"
 
     def update(self):
         """Update state of device."""
@@ -157,14 +157,8 @@ class SamsungTVDevice(MediaPlayerDevice):
     def get_remote(self):
         """Create or return a remote control instance."""
 
-        # Select method by port number, mainly for fallback
-        if self._config["port"] in (8001, 8002):
-            self._config["method"] = "websocket"
-        elif self._config["port"] == 55000:
-            self._config["method"] = "legacy"
-
         # Try to find correct method automatically
-        elif self._config["method"] not in METHODS:
+        if self._config["method"] not in METHODS:
             for method in METHODS:
                 try:
                     self._config["method"] = method
