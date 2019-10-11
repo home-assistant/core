@@ -1,7 +1,6 @@
 """Support for interface with an Samsung TV."""
 import asyncio
 from datetime import timedelta
-import logging
 import socket
 
 import voluptuous as vol
@@ -28,18 +27,19 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
 
-_LOGGER = logging.getLogger(__name__)
+from .const import LOGGER
 
 DEFAULT_NAME = "Samsung TV Remote"
-DEFAULT_PORT = 55000
 DEFAULT_TIMEOUT = 1
 
 KEY_PRESS_TIMEOUT = 1.2
 KNOWN_DEVICES_KEY = "samsungtv_known_devices"
+METHODS = ("websocket", "legacy")
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
 
 SUPPORT_SAMSUNGTV = (
@@ -58,14 +58,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_MAC): cv.string,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Samsung TV platform."""
     known_devices = hass.data.get(KNOWN_DEVICES_KEY)
     if known_devices is None:
@@ -85,14 +85,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         model = discovery_info.get("model_name")
         host = discovery_info.get("host")
         name = f"{tv_name} ({model})"
-        port = DEFAULT_PORT
+        port = None
         timeout = DEFAULT_TIMEOUT
         mac = None
         udn = discovery_info.get("udn")
         if udn and udn.startswith("uuid:"):
             uuid = udn[len("uuid:") :]
     else:
-        _LOGGER.warning("Cannot determine device")
+        LOGGER.warning("Cannot determine device")
         return
 
     # Only add a device once, so discovered devices do not override manual
@@ -101,9 +101,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if ip_addr not in known_devices:
         known_devices.add(ip_addr)
         add_entities([SamsungTVDevice(host, port, name, timeout, mac, uuid)])
-        _LOGGER.info("Samsung TV %s:%d added as '%s'", host, port, name)
+        LOGGER.info(f"Samsung TV {host}:{port} added as '{name}'")
     else:
-        _LOGGER.info("Ignoring duplicate Samsung TV %s:%d", host, port)
+        LOGGER.info(f"Ignoring duplicate Samsung TV {host}:{port}")
 
 
 class SamsungTVDevice(MediaPlayerDevice):
@@ -136,15 +136,17 @@ class SamsungTVDevice(MediaPlayerDevice):
             "name": "HomeAssistant",
             "description": name,
             "id": "ha.component.samsung",
+            "method": None,
             "port": port,
             "host": host,
             "timeout": timeout,
         }
 
-        if self._config["port"] in (8001, 8002):
-            self._config["method"] = "websocket"
-        else:
-            self._config["method"] = "legacy"
+        try:
+            self.get_remote()
+        except Exception:
+            # Ignore as device could be off
+            pass
 
     def update(self):
         """Update state of device."""
@@ -152,16 +154,43 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def get_remote(self):
         """Create or return a remote control instance."""
+
+        # Select method by port number, mainly for fallback
+        if self._config["port"] in (8001, 8002):
+            self._config["method"] = "websocket"
+        elif self._config["port"] == 55000:
+            self._config["method"] = "legacy"
+
+        # Try to find correct method automatically
+        elif self._config["method"] not in METHODS:
+            for method in METHODS:
+                try:
+                    self._config["method"] = method
+                    LOGGER.debug(f"try config: {self._config}")
+                    self._remote = self._remote_class(self._config.copy())
+                    self._state = STATE_ON
+                    LOGGER.info(f"found working config: {self._config}")
+                    break
+                except Exception as err:
+                    LOGGER.debug(f"failing config: {self._config} error was:{err}")
+                    self._config["method"] = None
+
+            # Unable to find working connection
+            if self._config["method"] is None:
+                self._remote = None
+                self._state = STATE_UNKNOWN
+                return None
+
         if self._remote is None:
             # We need to create a new instance to reconnect.
-            self._remote = self._remote_class(self._config)
+            self._remote = self._remote_class(self._config.copy())
 
         return self._remote
 
     def send_key(self, key):
         """Send a key to the tv and handles exceptions."""
         if self._power_off_in_progress() and key not in ("KEY_POWER", "KEY_POWEROFF"):
-            _LOGGER.info("TV is powering off, not sending command: %s", key)
+            LOGGER.info(f"TV is powering off, not sending command: {key}")
             return
         try:
             # recreate connection if connection was dead
@@ -174,6 +203,9 @@ class SamsungTVDevice(MediaPlayerDevice):
                     # BrokenPipe can occur when the commands is sent to fast
                     self._remote = None
             self._state = STATE_ON
+        except AttributeError:
+            # Auto-detect could not find working config yet
+            pass
         except (
             self._exceptions_class.UnhandledResponse,
             self._exceptions_class.AccessDenied,
@@ -181,7 +213,7 @@ class SamsungTVDevice(MediaPlayerDevice):
             # We got a response so it's on.
             self._state = STATE_ON
             self._remote = None
-            _LOGGER.debug("Failed sending command %s", key, exc_info=True)
+            LOGGER.debug(f"Failed sending command {key}", exc_info=True)
             return
         except OSError:
             self._state = STATE_OFF
@@ -240,7 +272,7 @@ class SamsungTVDevice(MediaPlayerDevice):
             self.get_remote().close()
             self._remote = None
         except OSError:
-            _LOGGER.debug("Could not establish connection.")
+            LOGGER.debug("Could not establish connection.")
 
     def volume_up(self):
         """Volume up the media player."""
@@ -282,14 +314,14 @@ class SamsungTVDevice(MediaPlayerDevice):
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Support changing a channel."""
         if media_type != MEDIA_TYPE_CHANNEL:
-            _LOGGER.error("Unsupported media type")
+            LOGGER.error("Unsupported media type")
             return
 
         # media_id should only be a channel number
         try:
             cv.positive_int(media_id)
         except vol.Invalid:
-            _LOGGER.error("Media ID must be positive integer")
+            LOGGER.error("Media ID must be positive integer")
             return
 
         for digit in media_id:
@@ -307,7 +339,7 @@ class SamsungTVDevice(MediaPlayerDevice):
     async def async_select_source(self, source):
         """Select input source."""
         if source not in SOURCES:
-            _LOGGER.error("Unsupported source")
+            LOGGER.error("Unsupported source")
             return
 
         await self.hass.async_add_job(self.send_key, SOURCES[source])
