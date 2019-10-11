@@ -107,9 +107,9 @@ def _handle_exception(err) -> bool:
 
     except evohomeasync2.AuthenticationError:
         _LOGGER.error(
-            "Failed to (re)authenticate with the vendor's server. "
+            "Failed to authenticate with the vendor's server. "
             "Check your network and the vendor's service status page. "
-            "Check that your username and password are correct. "
+            "Also check that your username and password are correct. "
             "Message is: %s",
             err,
         )
@@ -167,13 +167,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     app_storage = await store.async_load()
 
     tokens, user_data = load_auth_tokens(app_storage)
-    # if tokens == {}:
-    #     # there is a chance that the store is corrupt, so...
-    #     await store.async_save({})
-
-    # tokens[REFRESH_TOKEN] = "AAA"  # TODO: remove
-    # tokens[ACCESS_TOKEN] = "AAA"
-    # tokens.pop(ACCESS_TOKEN_EXPIRES)
 
     client_v2 = evohomeasync2.EvohomeClient(
         config[DOMAIN][CONF_USERNAME],
@@ -185,8 +178,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     try:
         await client_v2.login()
     except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
-        if not _handle_exception(err):
-            return False
+        _handle_exception(err)
+        return False
     finally:
         config[DOMAIN][CONF_PASSWORD] = "REDACTED"
 
@@ -205,9 +198,15 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
     _LOGGER.debug("Config = %s", loc_config)
 
-    client_v1 = evohomeasync.EvohomeClient(
-        client_v2.username, client_v2.password, user_data=user_data
-    )
+    if config[DOMAIN][CONF_HIGH_PRECISION]:
+        client_v1 = evohomeasync.EvohomeClient(
+            client_v2.username,
+            client_v2.password,
+            user_data=user_data,
+            session=async_get_clientsession(hass),
+        )
+    else:
+        client_v1 = None
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]["broker"] = broker = EvoBroker(
@@ -248,7 +247,7 @@ class EvoBroker:
             ._gateways[0]
             ._control_systems[0]
         )
-        self.temps = None  # TODO: client_v1.temperatures()
+        self.temps = None
 
         self.hass.add_job(self._save_auth_tokens())
 
@@ -261,7 +260,7 @@ class EvoBroker:
         app_storage[ACCESS_TOKEN] = self.client.access_token
         app_storage[ACCESS_TOKEN_EXPIRES] = access_token_expires.isoformat()
 
-        if getattr(self.client_v1, USER_DATA):
+        if self.client_v1 and self.client_v1.user_data:
             app_storage[USER_DATA] = {
                 "userInfo": {"userID": self.client_v1.user_data["userInfo"]["userID"]},
                 "sessionId": self.client_v1.user_data["sessionId"],
@@ -297,8 +296,6 @@ class EvoBroker:
                 )
                 self.client_v1 = None
             else:
-                if self.temps is None:
-                    await self._save_auth_tokens()
                 self.temps = {str(i["id"]): i["temp"] for i in temps}
 
             _LOGGER.debug("Temperatures = %s", self.temps)
