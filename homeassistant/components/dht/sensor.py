@@ -12,6 +12,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PIN = "pin"
