@@ -250,7 +250,7 @@ class BayesianBinarySensor(BinarySensorDevice):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
-            ATTR_OBSERVATIONS: [val for val in self.current_obs.values()],
+            ATTR_OBSERVATIONS: list(self.current_obs.values()),
             ATTR_PROBABILITY: round(self.probability, 2),
             ATTR_PROBABILITY_THRESHOLD: self._probability_threshold,
         }

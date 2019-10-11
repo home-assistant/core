@@ -40,7 +40,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
-from .device import ATTR_GROUP_MEMBER_UNREACHABLE, ATTR_IS_GROUP, ATTR_MODEL_TYPE
+from .device import ATTR_GROUP_MEMBER_UNREACHABLE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +60,6 @@ ATTR_WINDOW_STATE = "window_state"
 
 GROUP_ATTRIBUTES = {
     "lowBat": ATTR_LOW_BATTERY,
-    "modelType": ATTR_MODEL_TYPE,
     "moistureDetected": ATTR_MOISTURE_DETECTED,
     "motionDetected": ATTR_MOTION_DETECTED,
     "powerMainsFailure": ATTR_POWER_MAINS_FAILURE,
@@ -353,7 +352,7 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice, BinarySensorD
     @property
     def device_state_attributes(self):
         """Return the state attributes of the security zone group."""
-        state_attr = {ATTR_MODEL_TYPE: self._device.modelType, ATTR_IS_GROUP: True}
+        state_attr = super().device_state_attributes
 
         for attr, attr_key in GROUP_ATTRIBUTES.items():
             attr_value = getattr(self._device, attr, None)

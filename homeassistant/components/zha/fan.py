@@ -43,7 +43,7 @@ SPEED_LIST = [
     SPEED_SMART,
 ]
 
-VALUE_TO_SPEED = {i: speed for i, speed in enumerate(SPEED_LIST)}
+VALUE_TO_SPEED = dict(enumerate(SPEED_LIST))
 SPEED_TO_VALUE = {speed: i for i, speed in enumerate(SPEED_LIST)}
 
 

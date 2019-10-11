@@ -3,7 +3,7 @@ import time
 from typing import Awaitable, Callable, List
 
 import asynctest
-import nokia
+import withings_api as withings
 import pytest
 
 import homeassistant.components.api as api
@@ -15,9 +15,9 @@ from homeassistant.const import CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_METRIC
 from homeassistant.setup import async_setup_component
 
 from .common import (
-    NOKIA_MEASURES_RESPONSE,
-    NOKIA_SLEEP_RESPONSE,
-    NOKIA_SLEEP_SUMMARY_RESPONSE,
+    WITHINGS_MEASURES_RESPONSE,
+    WITHINGS_SLEEP_RESPONSE,
+    WITHINGS_SLEEP_SUMMARY_RESPONSE,
 )
 
 
@@ -34,17 +34,17 @@ class WithingsFactoryConfig:
         measures: List[str] = None,
         unit_system: str = None,
         throttle_interval: int = const.THROTTLE_INTERVAL,
-        nokia_request_response="DATA",
-        nokia_measures_response: nokia.NokiaMeasures = NOKIA_MEASURES_RESPONSE,
-        nokia_sleep_response: nokia.NokiaSleep = NOKIA_SLEEP_RESPONSE,
-        nokia_sleep_summary_response: nokia.NokiaSleepSummary = NOKIA_SLEEP_SUMMARY_RESPONSE,
+        withings_request_response="DATA",
+        withings_measures_response: withings.WithingsMeasures = WITHINGS_MEASURES_RESPONSE,
+        withings_sleep_response: withings.WithingsSleep = WITHINGS_SLEEP_RESPONSE,
+        withings_sleep_summary_response: withings.WithingsSleepSummary = WITHINGS_SLEEP_SUMMARY_RESPONSE,
     ) -> None:
         """Constructor."""
         self._throttle_interval = throttle_interval
-        self._nokia_request_response = nokia_request_response
-        self._nokia_measures_response = nokia_measures_response
-        self._nokia_sleep_response = nokia_sleep_response
-        self._nokia_sleep_summary_response = nokia_sleep_summary_response
+        self._withings_request_response = withings_request_response
+        self._withings_measures_response = withings_measures_response
+        self._withings_sleep_response = withings_sleep_response
+        self._withings_sleep_summary_response = withings_sleep_summary_response
         self._withings_config = {
             const.CLIENT_ID: "my_client_id",
             const.CLIENT_SECRET: "my_client_secret",
@@ -103,24 +103,24 @@ class WithingsFactoryConfig:
         return self._throttle_interval
 
     @property
-    def nokia_request_response(self):
+    def withings_request_response(self):
         """Request response."""
-        return self._nokia_request_response
+        return self._withings_request_response
 
     @property
-    def nokia_measures_response(self) -> nokia.NokiaMeasures:
+    def withings_measures_response(self) -> withings.WithingsMeasures:
         """Measures response."""
-        return self._nokia_measures_response
+        return self._withings_measures_response
 
     @property
-    def nokia_sleep_response(self) -> nokia.NokiaSleep:
+    def withings_sleep_response(self) -> withings.WithingsSleep:
         """Sleep response."""
-        return self._nokia_sleep_response
+        return self._withings_sleep_response
 
     @property
-    def nokia_sleep_summary_response(self) -> nokia.NokiaSleepSummary:
+    def withings_sleep_summary_response(self) -> withings.WithingsSleepSummary:
         """Sleep summary response."""
-        return self._nokia_sleep_summary_response
+        return self._withings_sleep_summary_response
 
 
 class WithingsFactoryData:
@@ -130,21 +130,21 @@ class WithingsFactoryData:
         self,
         hass,
         flow_id,
-        nokia_auth_get_credentials_mock,
-        nokia_api_request_mock,
-        nokia_api_get_measures_mock,
-        nokia_api_get_sleep_mock,
-        nokia_api_get_sleep_summary_mock,
+        withings_auth_get_credentials_mock,
+        withings_api_request_mock,
+        withings_api_get_measures_mock,
+        withings_api_get_sleep_mock,
+        withings_api_get_sleep_summary_mock,
         data_manager_get_throttle_interval_mock,
     ):
         """Constructor."""
         self._hass = hass
         self._flow_id = flow_id
-        self._nokia_auth_get_credentials_mock = nokia_auth_get_credentials_mock
-        self._nokia_api_request_mock = nokia_api_request_mock
-        self._nokia_api_get_measures_mock = nokia_api_get_measures_mock
-        self._nokia_api_get_sleep_mock = nokia_api_get_sleep_mock
-        self._nokia_api_get_sleep_summary_mock = nokia_api_get_sleep_summary_mock
+        self._withings_auth_get_credentials_mock = withings_auth_get_credentials_mock
+        self._withings_api_request_mock = withings_api_request_mock
+        self._withings_api_get_measures_mock = withings_api_get_measures_mock
+        self._withings_api_get_sleep_mock = withings_api_get_sleep_mock
+        self._withings_api_get_sleep_summary_mock = withings_api_get_sleep_summary_mock
         self._data_manager_get_throttle_interval_mock = (
             data_manager_get_throttle_interval_mock
         )
@@ -160,29 +160,29 @@ class WithingsFactoryData:
         return self._flow_id
 
     @property
-    def nokia_auth_get_credentials_mock(self):
+    def withings_auth_get_credentials_mock(self):
         """Get auth credentials mock."""
-        return self._nokia_auth_get_credentials_mock
+        return self._withings_auth_get_credentials_mock
 
     @property
-    def nokia_api_request_mock(self):
+    def withings_api_request_mock(self):
         """Get request mock."""
-        return self._nokia_api_request_mock
+        return self._withings_api_request_mock
 
     @property
-    def nokia_api_get_measures_mock(self):
+    def withings_api_get_measures_mock(self):
         """Get measures mock."""
-        return self._nokia_api_get_measures_mock
+        return self._withings_api_get_measures_mock
 
     @property
-    def nokia_api_get_sleep_mock(self):
+    def withings_api_get_sleep_mock(self):
         """Get sleep mock."""
-        return self._nokia_api_get_sleep_mock
+        return self._withings_api_get_sleep_mock
 
     @property
-    def nokia_api_get_sleep_summary_mock(self):
+    def withings_api_get_sleep_summary_mock(self):
         """Get sleep summary mock."""
-        return self._nokia_api_get_sleep_summary_mock
+        return self._withings_api_get_sleep_summary_mock
 
     @property
     def data_manager_get_throttle_interval_mock(self):
@@ -243,9 +243,9 @@ def withings_factory_fixture(request, hass) -> WithingsFactory:
         assert await async_setup_component(hass, http.DOMAIN, config.hass_config)
         assert await async_setup_component(hass, api.DOMAIN, config.hass_config)
 
-        nokia_auth_get_credentials_patch = asynctest.patch(
-            "nokia.NokiaAuth.get_credentials",
-            return_value=nokia.NokiaCredentials(
+        withings_auth_get_credentials_patch = asynctest.patch(
+            "withings_api.WithingsAuth.get_credentials",
+            return_value=withings.WithingsCredentials(
                 access_token="my_access_token",
                 token_expiry=time.time() + 600,
                 token_type="my_token_type",
@@ -255,28 +255,33 @@ def withings_factory_fixture(request, hass) -> WithingsFactory:
                 consumer_secret=config.withings_config.get(const.CLIENT_SECRET),
             ),
         )
-        nokia_auth_get_credentials_mock = nokia_auth_get_credentials_patch.start()
+        withings_auth_get_credentials_mock = withings_auth_get_credentials_patch.start()
 
-        nokia_api_request_patch = asynctest.patch(
-            "nokia.NokiaApi.request", return_value=config.nokia_request_response
+        withings_api_request_patch = asynctest.patch(
+            "withings_api.WithingsApi.request",
+            return_value=config.withings_request_response,
         )
-        nokia_api_request_mock = nokia_api_request_patch.start()
+        withings_api_request_mock = withings_api_request_patch.start()
 
-        nokia_api_get_measures_patch = asynctest.patch(
-            "nokia.NokiaApi.get_measures", return_value=config.nokia_measures_response
+        withings_api_get_measures_patch = asynctest.patch(
+            "withings_api.WithingsApi.get_measures",
+            return_value=config.withings_measures_response,
         )
-        nokia_api_get_measures_mock = nokia_api_get_measures_patch.start()
+        withings_api_get_measures_mock = withings_api_get_measures_patch.start()
 
-        nokia_api_get_sleep_patch = asynctest.patch(
-            "nokia.NokiaApi.get_sleep", return_value=config.nokia_sleep_response
+        withings_api_get_sleep_patch = asynctest.patch(
+            "withings_api.WithingsApi.get_sleep",
+            return_value=config.withings_sleep_response,
         )
-        nokia_api_get_sleep_mock = nokia_api_get_sleep_patch.start()
+        withings_api_get_sleep_mock = withings_api_get_sleep_patch.start()
 
-        nokia_api_get_sleep_summary_patch = asynctest.patch(
-            "nokia.NokiaApi.get_sleep_summary",
-            return_value=config.nokia_sleep_summary_response,
+        withings_api_get_sleep_summary_patch = asynctest.patch(
+            "withings_api.WithingsApi.get_sleep_summary",
+            return_value=config.withings_sleep_summary_response,
         )
-        nokia_api_get_sleep_summary_mock = nokia_api_get_sleep_summary_patch.start()
+        withings_api_get_sleep_summary_mock = (
+            withings_api_get_sleep_summary_patch.start()
+        )
 
         data_manager_get_throttle_interval_patch = asynctest.patch(
             "homeassistant.components.withings.common.WithingsDataManager"
@@ -295,11 +300,11 @@ def withings_factory_fixture(request, hass) -> WithingsFactory:
 
         patches.extend(
             [
-                nokia_auth_get_credentials_patch,
-                nokia_api_request_patch,
-                nokia_api_get_measures_patch,
-                nokia_api_get_sleep_patch,
-                nokia_api_get_sleep_summary_patch,
+                withings_auth_get_credentials_patch,
+                withings_api_request_patch,
+                withings_api_get_measures_patch,
+                withings_api_get_sleep_patch,
+                withings_api_get_sleep_summary_patch,
                 data_manager_get_throttle_interval_patch,
                 get_measures_patch,
             ]
@@ -328,11 +333,11 @@ def withings_factory_fixture(request, hass) -> WithingsFactory:
         return WithingsFactoryData(
             hass,
             flow_id,
-            nokia_auth_get_credentials_mock,
-            nokia_api_request_mock,
-            nokia_api_get_measures_mock,
-            nokia_api_get_sleep_mock,
-            nokia_api_get_sleep_summary_mock,
+            withings_auth_get_credentials_mock,
+            withings_api_request_mock,
+            withings_api_get_measures_mock,
+            withings_api_get_sleep_mock,
+            withings_api_get_sleep_summary_mock,
             data_manager_get_throttle_interval_mock,
         )
 

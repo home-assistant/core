@@ -11,8 +11,7 @@ from homeassistant.components.cover import (
     SUPPORT_SET_POSITION,
 )
 from homeassistant.core import callback
-from . import DOMAIN as TRADFRI_DOMAIN, KEY_API, KEY_GATEWAY
-from .const import CONF_GATEWAY_ID
+from .const import DOMAIN, KEY_GATEWAY, KEY_API, CONF_GATEWAY_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,12 +61,12 @@ class TradfriCover(CoverDevice):
         info = self._cover.device_info
 
         return {
-            "identifiers": {(TRADFRI_DOMAIN, self._cover.id)},
+            "identifiers": {(DOMAIN, self._cover.id)},
             "name": self._name,
             "manufacturer": info.manufacturer,
             "model": info.model_number,
             "sw_version": info.firmware_version,
-            "via_device": (TRADFRI_DOMAIN, self._gateway_id),
+            "via_device": (DOMAIN, self._gateway_id),
         }
 
     async def async_added_to_hass(self):

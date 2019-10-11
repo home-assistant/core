@@ -224,6 +224,7 @@ omit =
     homeassistant/components/fortios/device_tracker.py
     homeassistant/components/fortigate/*
     homeassistant/components/foscam/camera.py
+    homeassistant/components/foscam/const.py
     homeassistant/components/foursquare/*
     homeassistant/components/free_mobile/notify.py
     homeassistant/components/freebox/*
@@ -274,7 +275,6 @@ omit =
     homeassistant/components/heatmiser/climate.py
     homeassistant/components/hikvision/binary_sensor.py
     homeassistant/components/hikvisioncam/switch.py
-    homeassistant/components/hipchat/notify.py
     homeassistant/components/hitron_coda/device_tracker.py
     homeassistant/components/hive/*
     homeassistant/components/hlk_sw16/*
@@ -420,7 +420,10 @@ omit =
     homeassistant/components/n26/*
     homeassistant/components/nad/media_player.py
     homeassistant/components/nanoleaf/light.py
-    homeassistant/components/neato/*
+    homeassistant/components/neato/camera.py
+    homeassistant/components/neato/sensor.py
+    homeassistant/components/neato/switch.py
+    homeassistant/components/neato/vacuum.py
     homeassistant/components/nederlandse_spoorwegen/sensor.py
     homeassistant/components/nello/lock.py
     homeassistant/components/nest/*
@@ -682,6 +685,7 @@ omit =
     homeassistant/components/tradfri/*
     homeassistant/components/tradfri/light.py
     homeassistant/components/tradfri/cover.py
+    homeassistant/components/tradfri/base_class.py
     homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/sensor.py
     homeassistant/components/transmission/__init__.py

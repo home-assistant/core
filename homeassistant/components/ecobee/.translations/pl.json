@@ -5,7 +5,7 @@
         },
         "error": {
             "pin_request_failed": "B\u0142\u0105d podczas \u017c\u0105dania kodu PIN od ecobee; sprawd\u017a, czy klucz API jest poprawny.",
-            "token_request_failed": "B\u0142\u0105d podczas \u017c\u0105dania token\u00f3w od ecobee; prosz\u0119 spr\u00f3buj ponownie."
+            "token_request_failed": "B\u0142\u0105d podczas \u017c\u0105dania token\u00f3w od ecobee. Spr\u00f3buj ponownie."
         },
         "step": {
             "authorize": {

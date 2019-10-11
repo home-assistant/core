@@ -12,7 +12,7 @@ from homeassistant.const import (
     STATE_OFF,
 )
 from homeassistant.core import HomeAssistant, CALLBACK_TYPE
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.components.automation import state, AutomationActionType
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
@@ -22,7 +22,10 @@ from . import DOMAIN
 TRIGGER_TYPES = {"turned_on", "turned_off"}
 
 TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
-    {vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES)}
+    {
+        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
+    }
 )
 
 
@@ -87,14 +90,13 @@ async def async_attach_trigger(
         from_state = STATE_ON
         to_state = STATE_OFF
 
-    return state.async_attach_trigger(
-        hass,
-        {
-            CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-            state.CONF_FROM: from_state,
-            state.CONF_TO: to_state,
-        },
-        action,
-        automation_info,
-        platform_type="device",
+    state_config = {
+        state.CONF_PLATFORM: "state",
+        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+        state.CONF_FROM: from_state,
+        state.CONF_TO: to_state,
+    }
+    state_config = state.TRIGGER_SCHEMA(state_config)
+    return await state.async_attach_trigger(
+        hass, state_config, action, automation_info, platform_type="device"
     )

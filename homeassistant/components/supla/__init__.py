@@ -9,8 +9,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ["pysupla==0.0.3"]
-
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "supla"
 

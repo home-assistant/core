@@ -1,36 +1,22 @@
 """The tests for the UniFi device tracker platform."""
-from collections import deque
 from copy import copy
-
 from datetime import timedelta
-
-from asynctest import patch
 
 from homeassistant import config_entries
 from homeassistant.components import unifi
 from homeassistant.components.unifi.const import (
-    CONF_CONTROLLER,
-    CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
-    CONTROLLER_ID as CONF_CONTROLLER_ID,
-    UNIFI_CONFIG,
-    UNIFI_WIRELESS_CLIENTS,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 
 import homeassistant.components.device_tracker as device_tracker
 import homeassistant.util.dt as dt_util
+
+from .test_controller import ENTRY_CONFIG, SITES, setup_unifi_integration
 
 DEFAULT_DETECTION_TIME = timedelta(seconds=300)
 
@@ -88,77 +74,6 @@ DEVICE_2 = {
     "version": "4.0.42.10433",
 }
 
-CONTROLLER_DATA = {
-    CONF_HOST: "mock-host",
-    CONF_USERNAME: "mock-user",
-    CONF_PASSWORD: "mock-pswd",
-    CONF_PORT: 1234,
-    CONF_SITE_ID: "mock-site",
-    CONF_VERIFY_SSL: False,
-}
-
-ENTRY_CONFIG = {CONF_CONTROLLER: CONTROLLER_DATA}
-
-CONTROLLER_ID = CONF_CONTROLLER_ID.format(host="mock-host", site="mock-site")
-
-
-async def setup_unifi_integration(
-    hass, config, options, clients_response, devices_response, clients_all_response
-):
-    """Create the UniFi controller."""
-    hass.data[UNIFI_CONFIG] = []
-    hass.data[UNIFI_WIRELESS_CLIENTS] = unifi.UnifiWirelessClients(hass)
-    config_entry = config_entries.ConfigEntry(
-        version=1,
-        domain=unifi.DOMAIN,
-        title="Mock Title",
-        data=config,
-        source="test",
-        connection_class=config_entries.CONN_CLASS_LOCAL_POLL,
-        system_options={},
-        options=options,
-        entry_id=1,
-    )
-
-    sites = {"Site name": {"desc": "Site name", "name": "mock-site", "role": "viewer"}}
-
-    mock_client_responses = deque()
-    mock_client_responses.append(clients_response)
-
-    mock_device_responses = deque()
-    mock_device_responses.append(devices_response)
-
-    mock_client_all_responses = deque()
-    mock_client_all_responses.append(clients_all_response)
-
-    mock_requests = []
-
-    async def mock_request(self, method, path, json=None):
-        mock_requests.append({"method": method, "path": path, "json": json})
-        if path == "s/{site}/stat/sta" and mock_client_responses:
-            return mock_client_responses.popleft()
-        if path == "s/{site}/stat/device" and mock_device_responses:
-            return mock_device_responses.popleft()
-        if path == "s/{site}/rest/user" and mock_client_all_responses:
-            return mock_client_all_responses.popleft()
-        return {}
-
-    with patch("aiounifi.Controller.login", return_value=True), patch(
-        "aiounifi.Controller.sites", return_value=sites
-    ), patch("aiounifi.Controller.request", new=mock_request):
-        await unifi.async_setup_entry(hass, config_entry)
-    await hass.async_block_till_done()
-    hass.config_entries._entries.append(config_entry)
-
-    controller_id = unifi.get_controller_id_from_config_entry(config_entry)
-    controller = hass.data[unifi.DOMAIN][controller_id]
-
-    controller.mock_client_responses = mock_client_responses
-    controller.mock_device_responses = mock_device_responses
-    controller.mock_client_all_responses = mock_client_all_responses
-
-    return controller
-
 
 async def test_platform_manually_configured(hass):
     """Test that nothing happens when configuring unifi through device tracker platform."""
@@ -177,9 +92,10 @@ async def test_no_clients(hass):
         hass,
         ENTRY_CONFIG,
         options={},
-        clients_response={},
-        devices_response={},
-        clients_all_response={},
+        sites=SITES,
+        clients_response=[],
+        devices_response=[],
+        clients_all_response=[],
     )
 
     assert len(hass.states.async_all()) == 2
@@ -191,6 +107,7 @@ async def test_tracked_devices(hass):
         hass,
         ENTRY_CONFIG,
         options={CONF_SSID_FILTER: ["ssid"]},
+        sites=SITES,
         clients_response=[CLIENT_1, CLIENT_2, CLIENT_3],
         devices_response=[DEVICE_1, DEVICE_2],
         clients_all_response={},
@@ -267,9 +184,10 @@ async def test_wireless_client_go_wired_issue(hass):
         hass,
         ENTRY_CONFIG,
         options={},
+        sites=SITES,
         clients_response=[client_1_client],
-        devices_response={},
-        clients_all_response={},
+        devices_response=[],
+        clients_all_response=[],
     )
     assert len(hass.states.async_all()) == 3
 
@@ -316,14 +234,14 @@ async def test_restoring_client(hass):
     registry.async_get_or_create(
         device_tracker.DOMAIN,
         unifi.DOMAIN,
-        "{}-mock-site".format(CLIENT_1["mac"]),
+        "{}-site_id".format(CLIENT_1["mac"]),
         suggested_object_id=CLIENT_1["hostname"],
         config_entry=config_entry,
     )
     registry.async_get_or_create(
         device_tracker.DOMAIN,
         unifi.DOMAIN,
-        "{}-mock-site".format(CLIENT_2["mac"]),
+        "{}-site_id".format(CLIENT_2["mac"]),
         suggested_object_id=CLIENT_2["hostname"],
         config_entry=config_entry,
     )
@@ -332,8 +250,9 @@ async def test_restoring_client(hass):
         hass,
         ENTRY_CONFIG,
         options={unifi.CONF_BLOCK_CLIENT: True},
+        sites=SITES,
         clients_response=[CLIENT_2],
-        devices_response={},
+        devices_response=[],
         clients_all_response=[CLIENT_1],
     )
     assert len(hass.states.async_all()) == 4
@@ -348,9 +267,10 @@ async def test_dont_track_clients(hass):
         hass,
         ENTRY_CONFIG,
         options={unifi.controller.CONF_TRACK_CLIENTS: False},
+        sites=SITES,
         clients_response=[CLIENT_1],
         devices_response=[DEVICE_1],
-        clients_all_response={},
+        clients_all_response=[],
     )
     assert len(hass.states.async_all()) == 3
 
@@ -368,9 +288,10 @@ async def test_dont_track_devices(hass):
         hass,
         ENTRY_CONFIG,
         options={unifi.controller.CONF_TRACK_DEVICES: False},
+        sites=SITES,
         clients_response=[CLIENT_1],
         devices_response=[DEVICE_1],
-        clients_all_response={},
+        clients_all_response=[],
     )
     assert len(hass.states.async_all()) == 3
 
@@ -388,9 +309,10 @@ async def test_dont_track_wired_clients(hass):
         hass,
         ENTRY_CONFIG,
         options={unifi.controller.CONF_TRACK_WIRED_CLIENTS: False},
+        sites=SITES,
         clients_response=[CLIENT_1, CLIENT_2],
-        devices_response={},
-        clients_all_response={},
+        devices_response=[],
+        clients_all_response=[],
     )
     assert len(hass.states.async_all()) == 3
 

@@ -12,7 +12,7 @@
         },
         "error": {
             "linking": "Wyst\u0105pi\u0142 nieznany b\u0142\u0105d w trakcie \u0142\u0105czenia.",
-            "register_failed": "Nie uda\u0142o si\u0119 zarejestrowa\u0107. Prosz\u0119 spr\u00f3bowa\u0107 ponownie."
+            "register_failed": "Nie uda\u0142o si\u0119 zarejestrowa\u0107. Spr\u00f3buj ponownie."
         },
         "step": {
             "init": {

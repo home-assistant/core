@@ -183,6 +183,11 @@ class GoogleEntity:
         return self._traits
 
     @callback
+    def should_expose(self):
+        """If entity should be exposed."""
+        return self.config.should_expose(self.state)
+
+    @callback
     def is_supported(self) -> bool:
         """Return if the entity is supported by Google."""
         return self.state.state != STATE_UNAVAILABLE and bool(self.traits())

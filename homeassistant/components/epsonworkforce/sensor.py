@@ -10,8 +10,6 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ["epsonprinter==0.0.9"]
-
 _LOGGER = logging.getLogger(__name__)
 MONITORED_CONDITIONS = {
     "black": ["Ink level Black", "%", "mdi:water"],

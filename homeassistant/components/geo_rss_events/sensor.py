@@ -12,6 +12,8 @@ import logging
 from datetime import timedelta
 
 import voluptuous as vol
+from georss_client import UPDATE_OK, UPDATE_OK_NO_DATA
+from georss_client.generic_feed import GenericFeed
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -108,7 +110,6 @@ class GeoRssServiceSensor(Entity):
         self._state = None
         self._state_attributes = None
         self._unit_of_measurement = unit_of_measurement
-        from georss_client.generic_feed import GenericFeed
 
         self._feed = GenericFeed(
             coordinates,
@@ -146,10 +147,9 @@ class GeoRssServiceSensor(Entity):
 
     def update(self):
         """Update this sensor from the GeoRSS service."""
-        import georss_client
 
         status, feed_entries = self._feed.update()
-        if status == georss_client.UPDATE_OK:
+        if status == UPDATE_OK:
             _LOGGER.debug(
                 "Adding events to sensor %s: %s", self.entity_id, feed_entries
             )
@@ -159,7 +159,7 @@ class GeoRssServiceSensor(Entity):
             for entry in feed_entries:
                 matrix[entry.title] = f"{entry.distance_to_home:.0f}km"
             self._state_attributes = matrix
-        elif status == georss_client.UPDATE_OK_NO_DATA:
+        elif status == UPDATE_OK_NO_DATA:
             _LOGGER.debug("Update successful, but no data received from %s", self._feed)
             # Don't change the state or state attributes.
         else:

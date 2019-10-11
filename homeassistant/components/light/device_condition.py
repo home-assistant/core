@@ -21,7 +21,7 @@ def async_condition_from_config(
     """Evaluate state based on configuration."""
     if config_validation:
         config = CONDITION_SCHEMA(config)
-    return toggle_entity.async_condition_from_config(config, config_validation)
+    return toggle_entity.async_condition_from_config(config)
 
 
 async def async_get_conditions(hass: HomeAssistant, device_id: str) -> List[dict]:
