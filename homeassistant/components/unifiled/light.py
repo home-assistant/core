@@ -10,13 +10,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     Light,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_ID,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +22,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_PORT, default="20443"): cv.string,
-        vol.Optional(CONF_ID): cv.string,
     }
 )
 
