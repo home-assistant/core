@@ -68,6 +68,7 @@ associate with an credential if "type" set to "link_user" in
 """
 from aiohttp import web
 import voluptuous as vol
+import voluptuous_serialize
 
 from homeassistant import data_entry_flow
 from homeassistant.components.http import KEY_REAL_IP
@@ -119,8 +120,6 @@ def _prepare_result_json(result):
 
     if result["type"] != data_entry_flow.RESULT_TYPE_FORM:
         return result
-
-    import voluptuous_serialize
 
     data = result.copy()
 
