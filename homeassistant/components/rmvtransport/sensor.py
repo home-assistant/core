@@ -230,8 +230,8 @@ class RMVDepartureData:
             _data = await self.rmv.get_departures(
                 self._station_id,
                 products=self._products,
-                directionId=self._direction,
-                maxJourneys=50,
+                direction_id=self._direction,
+                max_journeys=50,
             )
         except RMVtransportApiConnectionError:
             self.departures = []
