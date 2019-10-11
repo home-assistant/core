@@ -1,1 +1,1 @@
-"""Example Lights integration."""
+"""Unifi LED Lights integration."""

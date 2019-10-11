@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_USERNAME, default="ubnt"): cv.string,
+        vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_PORT, default="20443"): cv.string,
         vol.Optional(CONF_ID): cv.string,
