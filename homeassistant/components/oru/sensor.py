@@ -8,21 +8,21 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_METER = "meter"
+CONF_METER_NUMBER = "meter_number"
 
-COMPONENT_NAME = "Real Time Energy Usage"
+COMPONENT_NAME = "Orange and Rockland Utility Real Time Energy Usage"
 COMPONENT_ICON = "mdi:counter"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
 
-    meter_id = str(config.get(CONF_METER, None))
-    meter = Meter(meter_id)
+    meter_number = str(config.get(CONF_METER_NUMBER, None))
+    meter = Meter(meter_number)
 
     add_entities([RealTimeEnergyUsageSensor(meter)])
 
-    _LOGGER.debug("meter_id = %s", meter_id)
+    _LOGGER.debug("meter_number = %s", meter_number)
 
 
 class RealTimeEnergyUsageSensor(Entity):
