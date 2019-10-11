@@ -3,6 +3,8 @@ import logging
 import threading
 from datetime import timedelta
 
+from jsonpath import jsonpath
+import verisure
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -71,10 +73,8 @@ CAPTURE_IMAGE_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_SERIAL): cv.string})
 
 def setup(hass, config):
     """Set up the Verisure component."""
-    import verisure
-
     global HUB
-    HUB = VerisureHub(config[DOMAIN], verisure)
+    HUB = VerisureHub(config[DOMAIN])
     HUB.update_overview = Throttle(config[DOMAIN][CONF_SCAN_INTERVAL])(
         HUB.update_overview
     )
@@ -109,13 +109,12 @@ def setup(hass, config):
 class VerisureHub:
     """A Verisure hub wrapper class."""
 
-    def __init__(self, domain_config, verisure):
+    def __init__(self, domain_config):
         """Initialize the Verisure hub."""
         self.overview = {}
         self.imageseries = {}
 
         self.config = domain_config
-        self._verisure = verisure
 
         self._lock = threading.Lock()
 
@@ -125,15 +124,11 @@ class VerisureHub:
 
         self.giid = domain_config.get(CONF_GIID)
 
-        import jsonpath
-
-        self.jsonpath = jsonpath.jsonpath
-
     def login(self):
         """Login to Verisure."""
         try:
             self.session.login()
-        except self._verisure.Error as ex:
+        except verisure.Error as ex:
             _LOGGER.error("Could not log in to verisure, %s", ex)
             return False
         if self.giid:
@@ -144,7 +139,7 @@ class VerisureHub:
         """Logout from Verisure."""
         try:
             self.session.logout()
-        except self._verisure.Error as ex:
+        except verisure.Error as ex:
             _LOGGER.error("Could not log out from verisure, %s", ex)
             return False
         return True
@@ -153,7 +148,7 @@ class VerisureHub:
         """Set installation GIID."""
         try:
             self.session.set_giid(self.giid)
-        except self._verisure.Error as ex:
+        except verisure.Error as ex:
             _LOGGER.error("Could not set installation GIID, %s", ex)
             return False
         return True
@@ -162,7 +157,7 @@ class VerisureHub:
         """Update the overview."""
         try:
             self.overview = self.session.get_overview()
-        except self._verisure.ResponseError as ex:
+        except verisure.ResponseError as ex:
             _LOGGER.error("Could not read overview, %s", ex)
             if ex.status_code == 503:  # Service unavailable
                 _LOGGER.info("Trying to log in again")
@@ -182,7 +177,7 @@ class VerisureHub:
 
     def get(self, jpath, *args):
         """Get values from the overview that matches the jsonpath."""
-        res = self.jsonpath(self.overview, jpath % args)
+        res = jsonpath(self.overview, jpath % args)
         return res if res else []
 
     def get_first(self, jpath, *args):
@@ -192,5 +187,5 @@ class VerisureHub:
 
     def get_image_info(self, jpath, *args):
         """Get values from the imageseries that matches the jsonpath."""
-        res = self.jsonpath(self.imageseries, jpath % args)
+        res = jsonpath(self.imageseries, jpath % args)
         return res if res else []
