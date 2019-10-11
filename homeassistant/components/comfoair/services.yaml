@@ -1,0 +1,9 @@
+virtualkey:
+  description: Press a virtual key from CC-Ease.
+  fields:
+    mask:
+      description: Mask of keys to press (1=fan, 2=mode, 4=clock, 8=temp, 16=plus, 32=minus)
+      example: 1
+    type:
+      description: Event to send i.e. PRESS_LONG, PRESS_SHORT.
+      example: PRESS_SHORT
