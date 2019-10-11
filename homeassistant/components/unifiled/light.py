@@ -12,6 +12,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
+from unifiled import unifiled
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,14 +30,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Unifi LED platform."""
 
-    from unifiled import unifiled
-
     # Assign configuration variables.
     # The configuration check takes care they are present.
     _ip = config[CONF_HOST]
     _port = config[CONF_PORT]
     _username = config[CONF_USERNAME]
-    _password = config.get(CONF_PASSWORD)
+    _password = config[CONF_PASSWORD]
 
     api = unifiled(_ip, _port, username=_username, password=_password)
 
@@ -46,21 +45,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     # Add devices
-    add_entities(
-        UnifiLedLight(light, _ip, _port, _username, _password)
-        for light in api.getlights()
-    )
+    add_entities(UnifiLedLight(light, api) for light in api.getlights())
 
 
 class UnifiLedLight(Light):
     """Representation of an unifiled Light."""
 
-    def __init__(self, light, ip, port, username, password):
+    def __init__(self, light, api):
         """Init Unifi LED Light."""
 
-        from unifiled import unifiled
-
-        self._api = unifiled(ip, port, username=username, password=password)
+        self._api = api
         self._light = light
         self._name = light["name"]
         self._unique_id = light["id"]
