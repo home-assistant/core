@@ -216,7 +216,7 @@ class BinarySensorTemplate(BinarySensorDevice):
 
     @property
     def icon_color(self):
-        """Return the icon to use in the frontend, if any."""
+        """Return the icon color to use in the frontend, if any."""
         return self._icon_color
 
     @property
@@ -277,7 +277,7 @@ class BinarySensorTemplate(BinarySensorDevice):
 
         templates = {
             "_icon": self._icon_template,
-            '_icon_color': self._icon_template,
+            "_icon_color": self._icon_template,
             "_entity_picture": self._entity_picture_template,
             "_available": self._availability_template,
         }

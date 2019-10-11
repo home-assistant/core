@@ -27,6 +27,7 @@ from homeassistant.const import (
     MATCH_ALL,
     CONF_VALUE_TEMPLATE,
     CONF_ICON_TEMPLATE,
+    CONF_ICON_COLOR_TEMPLATE
     CONF_DEVICE_CLASS,
     CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_OPTIMISTIC,
@@ -79,6 +80,7 @@ COVER_SCHEMA = vol.Schema(
         vol.Optional(CONF_POSITION_TEMPLATE): cv.template,
         vol.Optional(CONF_TILT_TEMPLATE): cv.template,
         vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+        vol.Optional(CONF_ICON_COLOR_TEMPLATE): cv.template,
         vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_OPTIMISTIC): cv.boolean,
@@ -105,6 +107,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         position_template = device_config.get(CONF_POSITION_TEMPLATE)
         tilt_template = device_config.get(CONF_TILT_TEMPLATE)
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
+        icon_color_template = device_config.get(CONF_ICON_COLOR_TEMPLATE)
         availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
         entity_picture_template = device_config.get(CONF_ENTITY_PICTURE_TEMPLATE)
         device_class = device_config.get(CONF_DEVICE_CLASS)
@@ -142,6 +145,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             if str(temp_ids) != MATCH_ALL:
                 template_entity_ids |= set(temp_ids)
 
+        if icon_color_template is not None:
+            temp_ids = icon_color_template.extract_entities()
+            if str(temp_ids) != MATCH_ALL:
+                template_entity_ids |= set(temp_ids)
+
         if entity_picture_template is not None:
             temp_ids = entity_picture_template.extract_entities()
             if str(temp_ids) != MATCH_ALL:
@@ -167,6 +175,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 position_template,
                 tilt_template,
                 icon_template,
+                icon_color_template,
                 entity_picture_template,
                 availability_template,
                 open_action,
@@ -200,6 +209,7 @@ class CoverTemplate(CoverDevice):
         position_template,
         tilt_template,
         icon_template,
+        icon_color_template,
         entity_picture_template,
         availability_template,
         open_action,
@@ -221,6 +231,7 @@ class CoverTemplate(CoverDevice):
         self._position_template = position_template
         self._tilt_template = tilt_template
         self._icon_template = icon_template
+        self._icon_color_template = icon_color_template
         self._device_class = device_class
         self._entity_picture_template = entity_picture_template
         self._availability_template = availability_template
@@ -242,6 +253,7 @@ class CoverTemplate(CoverDevice):
         self._optimistic = optimistic or (not state_template and not position_template)
         self._tilt_optimistic = tilt_optimistic or not tilt_template
         self._icon = None
+        self._icon_color = None
         self._entity_picture = None
         self._position = None
         self._tilt_value = None
@@ -256,6 +268,8 @@ class CoverTemplate(CoverDevice):
             self._tilt_template.hass = self.hass
         if self._icon_template is not None:
             self._icon_template.hass = self.hass
+        if self._icon_color_template is not None:
+            self._icon_color_template.hass = self.hass
         if self._entity_picture_template is not None:
             self._entity_picture_template.hass = self.hass
         if self._availability_template is not None:
@@ -314,6 +328,11 @@ class CoverTemplate(CoverDevice):
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return self._icon
+
+    @property
+    def icon_color(self):
+        """Return the icon color to use in the frontend, if any."""
+        return self._icon_color
 
     @property
     def entity_picture(self):
@@ -469,6 +488,7 @@ class CoverTemplate(CoverDevice):
 
         for property_name, template in (
             ("_icon", self._icon_template),
+            ('_icon_color', self._icon_color_template),
             ("_entity_picture", self._entity_picture_template),
             ("_available", self._availability_template),
         ):

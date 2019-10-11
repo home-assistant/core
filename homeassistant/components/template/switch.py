@@ -13,6 +13,7 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     CONF_VALUE_TEMPLATE,
     CONF_ICON_TEMPLATE,
+    CONF_ICON_COLOR_TEMPLATE
     CONF_ENTITY_PICTURE_TEMPLATE,
     STATE_OFF,
     STATE_ON,
@@ -38,6 +39,7 @@ SWITCH_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+        vol.Optional(CONF_ICON_COLOR_TEMPLATE): cv.template,
         vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
         vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
         vol.Required(ON_ACTION): cv.SCRIPT_SCHEMA,
@@ -70,6 +72,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         templates = {
             CONF_VALUE_TEMPLATE: state_template,
             CONF_ICON_TEMPLATE: icon_template,
+            CONF_ICON_COLOR_TEMPLATE: icon_color_template,
             CONF_ENTITY_PICTURE_TEMPLATE: entity_picture_template,
             CONF_AVAILABILITY_TEMPLATE: availability_template,
         }
@@ -110,6 +113,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 friendly_name,
                 state_template,
                 icon_template,
+                icon_color_template,
                 entity_picture_template,
                 availability_template,
                 on_action,
@@ -135,6 +139,7 @@ class SwitchTemplate(SwitchDevice):
         friendly_name,
         state_template,
         icon_template,
+        icon_color_template,
         entity_picture_template,
         availability_template,
         on_action,
@@ -152,9 +157,11 @@ class SwitchTemplate(SwitchDevice):
         self._off_script = Script(hass, off_action)
         self._state = False
         self._icon_template = icon_template
+        self._icon_color_template = icon_color_template
         self._entity_picture_template = entity_picture_template
         self._availability_template = availability_template
         self._icon = None
+        self._icon_color = None
         self._entity_picture = None
         self._entities = entity_ids
         self._available = True
@@ -201,6 +208,11 @@ class SwitchTemplate(SwitchDevice):
         return self._icon
 
     @property
+    def icon_color(self):
+        """Return the icon color to use in the frontend, if any."""
+        return self._icon_color
+
+    @property
     def entity_picture(self):
         """Return the entity_picture to use in the frontend, if any."""
         return self._entity_picture
@@ -239,6 +251,7 @@ class SwitchTemplate(SwitchDevice):
 
         for property_name, template in (
             ("_icon", self._icon_template),
+            ('_icon_color', self._icon_color_template),
             ("_entity_picture", self._entity_picture_template),
             ("_available", self._availability_template),
         ):
