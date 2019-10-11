@@ -4,6 +4,7 @@ from collections import defaultdict
 import logging
 import async_timeout
 import serial
+
 import voluptuous as vol
 
 from rflink.protocol import create_rflink_connection
