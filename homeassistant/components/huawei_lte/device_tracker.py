@@ -78,19 +78,19 @@ async def async_add_new_entities(hass, router_url, async_add_entities, tracked):
     async_add_entities(new_entities, True)
 
 
-def _better_snakecase(s: str) -> str:
-    if s == s.upper():
+def _better_snakecase(text: str) -> str:
+    if text == text.upper():
         # All uppercase to all lowercase to get http for HTTP, not h_t_t_p
-        s = s.lower()
+        text = text.lower()
     else:
         # Three or more consecutive uppercase with middle part lowercased
         # to get http_response for HTTPResponse, not h_t_t_p_response
-        s = re.sub(
+        text = re.sub(
             r"([A-Z])([A-Z]+)([A-Z](?:[^A-Z]|$))",
             lambda match: f"{match.group(1)}{match.group(2).lower()}{match.group(3)}",
-            s,
+            text,
         )
-    return snakecase(s)
+    return snakecase(text)
 
 
 @attr.s
@@ -167,4 +167,3 @@ def get_scanner(*args, **kwargs):
         "Loading and configuring as a platform is no longer supported or "
         "required, convert to enabling/disabling available entities"
     )
-    return None

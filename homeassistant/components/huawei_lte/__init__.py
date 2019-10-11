@@ -106,6 +106,7 @@ class Router:
         factory=lambda: defaultdict(set, ((x, {"initial_scan"}) for x in ALL_KEYS)),
     )
     unload_handlers: List[CALLBACK_TYPE] = attr.ib(init=False, factory=list)
+    client: Client
 
     def __attrs_post_init__(self):
         """Set up internal state on init."""
