@@ -40,12 +40,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Assign configuration variables.
     # The configuration check takes care they are present.
-    ip = config[CONF_HOST]
-    port = config[CONF_PORT]
-    username = config[CONF_USERNAME]
-    password = config.get(CONF_PASSWORD)
+    _ip = config[CONF_HOST]
+    _port = config[CONF_PORT]
+    _username = config[CONF_USERNAME]
+    _password = config.get(CONF_PASSWORD)
 
-    api = unifiled(ip, port, username=username, password=password)
+    api = unifiled(_ip, _port, username=_username, password=_password)
 
     # Verify that passed in configuration works
     if not api.getloginstate():
@@ -54,11 +54,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Add devices
     add_entities(
-        unifiledlight(light, ip, port, username, password) for light in api.getlights()
+        UnifiLedLight(light, _ip, _port, _username, _password)
+        for light in api.getlights()
     )
 
 
-class unifiledlight(Light):
+class UnifiLedLight(Light):
     """Representation of an unifiled Light."""
 
     def __init__(self, light, ip, port, username, password):
