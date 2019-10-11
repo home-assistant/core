@@ -4,6 +4,9 @@ from asyncio.futures import CancelledError
 from datetime import timedelta
 import logging
 
+import xmltodict
+from urllib import parse
+
 import aiohttp
 from aiohttp.client_exceptions import ClientError
 from aiohttp.hdrs import CONNECTION, KEEP_ALIVE
@@ -329,7 +332,6 @@ class BluesoundPlayer(MediaPlayerDevice):
         self, method, raise_timeout=False, allow_offline=False
     ):
         """Send command to the player."""
-        import xmltodict
 
         if not self._is_online and not allow_offline:
             return
@@ -370,7 +372,6 @@ class BluesoundPlayer(MediaPlayerDevice):
 
     async def async_update_status(self):
         """Use the poll session to always get the status of the player."""
-        import xmltodict
 
         response = None
 
@@ -690,7 +691,6 @@ class BluesoundPlayer(MediaPlayerDevice):
     @property
     def source(self):
         """Name of the current input source."""
-        from urllib import parse
 
         if self._status is None or (self.is_grouped and not self.is_master):
             return None
