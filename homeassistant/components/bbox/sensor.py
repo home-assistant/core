@@ -3,6 +3,8 @@ import logging
 from datetime import timedelta
 
 import requests
+import pybbox
+
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -136,7 +138,6 @@ class BboxData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from the Bbox."""
-        import pybbox
 
         try:
             box = pybbox.Bbox()
