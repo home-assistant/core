@@ -1,7 +1,8 @@
 """Support for UpCloud."""
-import logging
 from datetime import timedelta
+import logging
 
+import upcloud_api
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -60,8 +61,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the UpCloud component."""
-    import upcloud_api
-
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
