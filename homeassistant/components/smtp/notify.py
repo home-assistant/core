@@ -227,7 +227,7 @@ def _build_multipart_msg(message, images):
     msg_alt.attach(body_txt)
     body_text = [f"<p>{message}</p><br>"]
 
-    for atch_num, atch_name in enumerate(images):
+    for atch_name in images:
         try:
             with open(atch_name, "rb") as attachment_file:
                 file_bytes = attachment_file.read()
@@ -267,15 +267,17 @@ def _build_html_msg(text, html, images):
     alternative.attach(MIMEText(html, ATTR_HTML, _charset="utf-8"))
     msg.attach(alternative)
 
-    for atch_num, atch_name in enumerate(images):
+    for atch_name in images:
         name = os.path.basename(atch_name)
         try:
             with open(atch_name, "rb") as attachment_file:
-                attachment = MIMEImage(attachment_file.read(), filename=name)
+                attachment_file.read()
+                attachment = MIMEImage(file_bytes, filename=name)
+                cid = f"image{hashlib.sha1(file_bytes).hexdigest()}"
             msg.attach(attachment)
-            attachment.add_header("Content-ID", f"<{name}>")
+            attachment.add_header("Content-ID", f"<{cid}>")
         except FileNotFoundError:
             _LOGGER.warning(
-                "Attachment %s [#%s] not found. Skipping", atch_name, atch_num
+                "Attachment %s not found. Skipping", atch_name
             )
     return msg
