@@ -1,5 +1,6 @@
 """Support for Tikteck lights."""
 import logging
+import tikteck
 
 import voluptuous as vol
 
@@ -48,7 +49,6 @@ class TikteckLight(Light):
 
     def __init__(self, device):
         """Initialize the light."""
-        import tikteck
 
         self._name = device["name"]
         self._address = device["address"]
