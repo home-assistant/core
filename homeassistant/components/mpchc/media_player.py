@@ -81,6 +81,7 @@ class MpcHcDevice(MediaPlayerDevice):
                 self._player_variables[var[0]] = var[1].lower()
         except requests.exceptions.RequestException:
             _LOGGER.error("Could not connect to MPC-HC at: %s", self._url)
+            self._player_variables = dict()
 
     def _send_command(self, command_id):
         """Send a command to MPC-HC via its window message ID."""
