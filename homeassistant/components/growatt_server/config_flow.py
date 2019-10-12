@@ -1,4 +1,4 @@
-"""Config flow for growatt server integration"""
+"""Config flow for growatt server integration."""
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -8,7 +8,8 @@ from .const import DOMAIN, CONF_PLANT_ID, DEFAULT_NAME
 
 @config_entries.HANDLERS.register(DOMAIN)
 class GrowattServerConfigFlow(config_entries.ConfigFlow):
-    """Config flow class"""
+    """Config flow class."""
+
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 

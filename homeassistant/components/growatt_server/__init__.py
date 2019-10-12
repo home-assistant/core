@@ -2,8 +2,6 @@
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DOMAIN
-
 
 async def async_setup(hass, config):
     """Platform setup, do nothing."""

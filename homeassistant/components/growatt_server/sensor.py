@@ -104,7 +104,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 async def async_setup_entry(hass, config, add_entities):
-    """Set up growatt server from Config Flow"""
+    """Set up growatt server from Config Flow."""
     setup_platform(hass, config.data, add_entities)
 
 
