@@ -296,11 +296,6 @@ class EvoBroker:
         _LOGGER.debug("Temperatures = %s", self.temps)
 
         if session_id != get_session_id(self.client_v1):
-            _LOGGER.warn(
-                "_update_v1() \n\nold = %s, \n\nnew = %s",
-                session_id,
-                get_session_id(self.client_v1),
-            )
             await self._save_auth_tokens()
 
     async def _update_v2(self, *args, **kwargs) -> None:
