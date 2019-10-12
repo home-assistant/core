@@ -6,6 +6,7 @@ import hashlib
 import io
 import logging
 import mimetypes
+import mutagen
 import os
 import re
 from typing import Optional
@@ -433,7 +434,6 @@ class SpeechManager:
 
         Async friendly.
         """
-        import mutagen
 
         data_bytes = io.BytesIO(data)
         data_bytes.name = filename
