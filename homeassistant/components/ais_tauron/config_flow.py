@@ -1,23 +1,14 @@
-"""Config flow to configure Supla component."""
+"""Config flow to configure TAURON component."""
 
 import voluptuous as vol
-import datetime
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.util import slugify
-import requests
 import logging
+from . import TauronAmiplusSensor
 
-from .const import (
-    DOMAIN,
-    CONF_URL_LOGIN,
-    CONF_REQUEST_HEADERS,
-    CONF_REQUEST_PAYLOAD_CHARTS,
-    CONF_URL_CHARTS,
-    CONF_METER_ID,
-)
+from .const import DOMAIN, CONF_METER_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,19 +17,18 @@ _LOGGER = logging.getLogger(__name__)
 def configured_tauron_connectoin(hass):
     """Return a set of the configured supla hosts."""
     return set(
-        (slugify(entry.data[CONF_SERVER]))
-        for entry in hass.config_entries.async_entries(DOMAIN)
+        entry.data.get(CONF_NAME) for entry in hass.config_entries.async_entries(DOMAIN)
     )
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class AisSuplaFlowHandler(config_entries.ConfigFlow):
-    """AIS Supla config flow."""
+class AisTauronFlowHandler(config_entries.ConfigFlow):
+    """AIS TAURON config flow."""
 
     VERSION = 1
 
     def __init__(self):
-        """Initialize Supla configuration flow."""
+        """Initialize TAURON configuration flow."""
         pass
 
     async def async_step_import(self, import_config):
@@ -48,6 +38,8 @@ class AisSuplaFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
         if user_input is not None:
             return await self.async_step_init(user_input=None)
         return self.async_show_form(step_id="confirm")
@@ -65,55 +57,22 @@ class AisSuplaFlowHandler(config_entries.ConfigFlow):
         description_placeholders = {"error_info": ""}
         if user_input is not None:
             try:
-                # Test connection
-                payload_login = {
-                    "username": user_input[CONF_USERNAME],
-                    "password": user_input[CONF_PASSWORD],
-                    "service": CONF_URL_LOGIN,
-                }
-                session = requests.session()
-                response = session.request(
-                    "POST",
-                    CONF_URL_LOGIN,
-                    data=payload_login,
-                    headers=CONF_REQUEST_HEADERS,
+                # Test the connection
+                test = TauronAmiplusSensor(
+                    "Test",
+                    user_input[CONF_USERNAME],
+                    user_input[CONF_PASSWORD],
+                    user_input[CONF_METER_ID],
+                    "zone",
+                    1,
+                    None,
                 )
-                session.request(
-                    "POST",
-                    CONF_URL_LOGIN,
-                    data=payload_login,
-                    headers=CONF_REQUEST_HEADERS,
-                )
-
-                if response.status_code != 200:
-                    _LOGGER.warning(
-                        "Invalid status_code from TAURON: %s (%s)", response.status_code
-                    )
-                    errors = {CONF_METER_ID: "server_no_connection"}
-                    description_placeholders = {"error_info": str(response)}
-
-                else:
+                _LOGGER.info("AIS TAURON " + str(test.mode))
+                if test.mode is not None:
                     """Finish config flow"""
-                    days_before = 2
-                    config_date = datetime.datetime.now() - datetime.timedelta(
-                        days_before
-                    )
-                    payload = {
-                        "dane[chartDay]": config_date.strftime("%d.%m.%Y"),
-                        "dane[paramType]": "day",
-                        "dane[smartNr]": user_input[CONF_METER_ID],
-                        "dane[chartType]": 1,
-                    }
-                    response = session.request(
-                        "POST",
-                        CONF_URL_CHARTS,
-                        data={**CONF_REQUEST_PAYLOAD_CHARTS, **payload},
-                        headers=CONF_REQUEST_HEADERS,
-                    )
-                    json_data = response.json()
-                    zones = json_data["dane"]["zone"]
-                    _LOGGER.info("TAURON zones %s", zones)
-                    return self.async_create_entry(title="AIS TAURON", data=user_input)
+                    return self.async_create_entry(title="eLicznik", data=user_input)
+                errors = {CONF_METER_ID: "server_no_connection"}
+                description_placeholders = {"error_info": str(test)}
             except Exception as e:
                 errors = {CONF_METER_ID: "server_no_connection"}
                 description_placeholders = {"error_info": str(e)}

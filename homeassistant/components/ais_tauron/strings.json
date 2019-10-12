@@ -18,6 +18,9 @@
         },
         "error": {
             "server_no_connection": "Cannot connect to TAURON eLicznik server."
+        },
+       "abort": {
+            "single_instance_allowed": "You have already set up integration TAURON eLicznik.\n\n If you want to reconfigure, first remove the current integration with TAURON eLicznik."
         }
     }
 }

@@ -4,6 +4,7 @@ import logging
 from datetime import timedelta
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import SOURCE_IMPORT
 import requests
 import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -24,25 +25,18 @@ from .const import (
     CONF_URL_CHARTS,
     CONF_REQUEST_HEADERS,
     CONF_REQUEST_PAYLOAD_CHARTS,
-    ZONE,
-    CONSUMPTION_DAILY,
-    CONSUMPTION_MONTHLY,
-    CONSUMPTION_YEARLY,
+    TYPE_ZONE,
+    TYPE_CONSUMPTION_DAILY,
+    TYPE_CONSUMPTION_MONTHLY,
+    TYPE_CONSUMPTION_YEARLY,
     TARIFF_G12,
+    DATA_TAURON_CLIENT,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(seconds=600)
-
-
-SENSOR_TYPES = {
-    ZONE: [timedelta(minutes=1), None],
-    CONSUMPTION_DAILY: [timedelta(hours=1), "kWh"],
-    CONSUMPTION_MONTHLY: [timedelta(hours=1), "kWh"],
-    CONSUMPTION_YEARLY: [timedelta(hours=1), "kWh"],
-}
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -58,53 +52,32 @@ async def async_setup(hass, config):
     """Set up the TAURON component."""
     hass.data[DOMAIN] = {}
 
-    # if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
-    #     server_confs = config[DOMAIN][CONF_SERVERS]
-    #
-    #     for server_conf in server_confs:
-    #         hass.async_create_task(
-    #             hass.config_entries.flow.async_init(
-    #                 DOMAIN, context={"source": SOURCE_IMPORT}, data=server_conf
-    #             )
-    #         )
+    if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
+            )
+        )
 
     return True
 
 
 async def async_setup_entry(hass, config_entry):
-    """Set up SUPLA as config entry."""
+    """Set up TAURON as config entry."""
     _LOGGER.info("TAURON async_setup_entry")
-    # if DOMAIN not in hass.data:
-    #     hass.data[DOMAIN] = {}
-    # hass.async_create_task(async_discover_devices(hass, config_entry))
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
+    )
     return True
 
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    # TODO await hass.config_entries.async_forward_entry_unload(config_entry, "xxx")
+    await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
     return True
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    name = config.get(CONF_NAME)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    meter_id = config.get(CONF_METER_ID)
-    dev = []
-    for variable in config[CONF_MONITORED_VARIABLES]:
-        dev.append(
-            TauronAmiplusSensor(
-                name,
-                username,
-                password,
-                meter_id,
-                variable,
-                SENSOR_TYPES[variable][1],
-                SENSOR_TYPES[variable][0],
-            )
-        )
-    add_entities(dev, True)
 
 
 def calculate_configuration(username, password, meter_id, days_before=2):
@@ -174,8 +147,24 @@ class TauronAmiplusSensor(Entity):
         self.update = Throttle(interval)(self._update)
 
     @property
+    def device_info(self):
+        return {
+            "identifiers": {(DOMAIN, "ais-dom-elicznik")},
+            "name": "eLicznik",
+            "manufacturer": "TAURON",
+            "model": "Taryfa dystrybucyjna: " + self.mode,
+            "sw_version": self.meter_id,
+            "via_device": None,
+        }
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return "tauron-{}-{}".format(self.mode.lower(), self.sensor_type.lower())
+
+    @property
     def name(self):
-        return "{} {}".format(self.client_name, self.sensor_type)
+        return "{}".format(self.client_name)
 
     @property
     def state(self):
@@ -200,13 +189,13 @@ class TauronAmiplusSensor(Entity):
 
     def _update(self):
         self.update_configuration()
-        if self.sensor_type == ZONE:
+        if self.sensor_type == TYPE_ZONE:
             self.update_zone()
-        elif self.sensor_type == CONSUMPTION_DAILY:
+        elif self.sensor_type == TYPE_CONSUMPTION_DAILY:
             self.update_consumption_daily()
-        elif self.sensor_type == CONSUMPTION_MONTHLY:
+        elif self.sensor_type == TYPE_CONSUMPTION_MONTHLY:
             self.update_consumption_monthly()
-        elif self.sensor_type == CONSUMPTION_YEARLY:
+        elif self.sensor_type == TYPE_CONSUMPTION_YEARLY:
             self.update_consumption_yearly()
 
     def get_session(self):
@@ -379,111 +368,3 @@ class TauronAmiplusSensor(Entity):
                 sum_z1 = round(sum(float(val["tariff1"]) for val in z1), 3)
                 sum_z2 = round(sum(float(val["tariff2"]) for val in z2), 3)
                 self.params = {"zone1": sum_z1, "zone2": sum_z2}
-
-
-# sadsadsad
-
-
-#
-#
-# async def async_discover_devices(hass, config_entry):
-#     """
-#     Run periodically to discover new devices.
-#
-#     Currently it's only run at startup.
-#     """
-#
-#     server = SuplaAPI(
-#         config_entry.data[CONF_SERVER], config_entry.data[CONF_ACCESS_TOKEN]
-#     )
-#
-#     hass.data[DOMAIN][CONF_SERVER][config_entry.entry_id] = server
-#     component_configs = {}
-#
-#     for channel in server.get_channels(include=["iodevice"]):
-#         channel_function = channel["function"]["name"]
-#         component_name = SUPLA_FUNCTION_HA_CMP_MAP.get(channel_function)
-#
-#         if component_name is None:
-#             _LOGGER.warning(
-#                 "Unsupported function: %s, channel id: %s",
-#                 channel_function,
-#                 channel["id"],
-#             )
-#             continue
-#
-#         component_configs.setdefault(component_name, []).append(channel)
-#
-#     for component_name, channel in component_configs.items():
-#         hass.data[DOMAIN][CONF_CHANNELS][component_name] = channel
-#         hass.async_create_task(
-#             hass.config_entries.async_forward_entry_setup(config_entry, component_name)
-#         )
-#
-#
-# class SuplaChannel(Entity):
-#     """Base class of a Supla Channel (an equivalent of HA's Entity)."""
-#
-#     def __init__(self, channel_data, supla_server):
-#         """Channel data -- raw channel information from PySupla."""
-#         self.channel_data = channel_data
-#         self.supla_server = supla_server
-#
-#     @property
-#     def device_info(self):
-#         return {
-#             "identifiers": {(DOMAIN, self.channel_data["iodevice"]["gUIDString"])},
-#             "name": "SUPLA",
-#             "manufacturer": "ZAMEL Sp. z oo",
-#             "model": self.channel_data["function"]["name"],
-#             "sw_version": self.channel_data["iodevice"]["softwareVersion"],
-#             "via_device": None,
-#         }
-#
-#     @property
-#     def server(self):
-#         """Return PySupla's server component associated with entity."""
-#         return self.supla_server
-#
-#     @property
-#     def unique_id(self) -> str:
-#         """Return a unique ID."""
-#         return "supla-{}-{}".format(
-#             self.channel_data["iodevice"]["gUIDString"].lower(),
-#             self.channel_data["channelNumber"],
-#         )
-#
-#     @property
-#     def name(self) -> Optional[str]:
-#         """Return the name of the device."""
-#         if "iodevice" in self.channel_data:
-#             if "comment" in self.channel_data["iodevice"]:
-#                 return self.channel_data["iodevice"]["comment"]
-#             if "name" in self.channel_data["iodevice"]:
-#                 return "supla: " + self.channel_data["iodevice"]["name"]
-#         if "caption" in self.channel_data:
-#             return self.channel_data["caption"]
-#         if "type" in self.channel_data:
-#             return "supla: " + self.channel_data["type"]["caption"]
-#         return ""
-#
-#     def action(self, action, **add_pars):
-#         """
-#         Run server action.
-#
-#         Actions are currently hardcoded in components.
-#         Supla's API enables autodiscovery
-#         """
-#         _LOGGER.debug(
-#             "Executing action %s on channel %d, params: %s",
-#             action,
-#             self.channel_data["id"],
-#             add_pars,
-#         )
-#         self.server.execute_action(self.channel_data["id"], action, **add_pars)
-#
-#     def update(self):
-#         """Call to update state."""
-#         self.channel_data = self.server.get_channel(
-#             self.channel_data["id"], include=["connected", "state"]
-#         )

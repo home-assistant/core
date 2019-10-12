@@ -18,6 +18,9 @@
         },
         "error": {
             "server_no_connection": "Nie można połączyć się z serwerem TAURON eLicznik."
+        },
+      "abort": {
+            "single_instance_allowed": "Masz już skonfigurowaną integrację TAURON eLicznik.\n\n Jeśli chcesz skonfigurować ponownie to najpierw usuń bieżącą integrację z  TAURON eLicznik."
         }
     }
 }
