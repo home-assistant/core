@@ -1,6 +1,8 @@
 """Support for Abode Security System locks."""
 import logging
 
+import abodepy.helpers.constants as CONST
+
 from homeassistant.components.lock import LockDevice
 
 from . import DOMAIN as ABODE_DOMAIN, AbodeDevice
@@ -10,7 +12,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Abode lock devices."""
-    import abodepy.helpers.constants as CONST
 
     data = hass.data[ABODE_DOMAIN]
 

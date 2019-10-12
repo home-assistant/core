@@ -2,6 +2,8 @@
 import logging
 from math import ceil
 
+import abodepy.helpers.constants as CONST
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -23,7 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Abode light devices."""
-    import abodepy.helpers.constants as CONST
 
     data = hass.data[ABODE_DOMAIN]
 
