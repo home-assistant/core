@@ -1,6 +1,8 @@
 """Reads vehicle status from BMW connected drive portal."""
 import logging
 
+from bimmer_connected.state import ChargingState, LockState
+
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import LENGTH_KILOMETERS
 
@@ -141,9 +143,6 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
 
     def update(self):
         """Read new state data from the library."""
-        from bimmer_connected.state import LockState
-        from bimmer_connected.state import ChargingState
-
         vehicle_state = self._vehicle.state
 
         # device class opening: On means open, Off means closed
