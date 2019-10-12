@@ -271,7 +271,7 @@ def _build_html_msg(text, html, images):
         name = os.path.basename(atch_name)
         try:
             with open(atch_name, "rb") as attachment_file:
-                attachment_file.read()
+                file_bytes = attachment_file.read()
                 attachment = MIMEImage(file_bytes, filename=name)
                 cid = f"image{hashlib.sha1(file_bytes).hexdigest()}"
             msg.attach(attachment)
