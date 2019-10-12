@@ -37,7 +37,6 @@ ACCESS_TOKEN_EXPIRES = "access_token_expires"
 REFRESH_TOKEN = "refresh_token"
 USER_DATA = "user_data"
 
-CONF_HIGH_PRECISION = "high_precision"
 CONF_LOCATION_IDX = "location_idx"
 
 SCAN_INTERVAL_DEFAULT = timedelta(seconds=300)
@@ -49,7 +48,6 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_HIGH_PRECISION, default=False): bool,
                 vol.Optional(CONF_LOCATION_IDX, default=0): cv.positive_int,
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=SCAN_INTERVAL_DEFAULT
@@ -198,15 +196,12 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
     _LOGGER.debug("Config = %s", loc_config)
 
-    if config[DOMAIN][CONF_HIGH_PRECISION]:
-        client_v1 = evohomeasync.EvohomeClient(
-            client_v2.username,
-            client_v2.password,
-            user_data=user_data,
-            session=async_get_clientsession(hass),
-        )
-    else:
-        client_v1 = None
+    client_v1 = evohomeasync.EvohomeClient(
+        client_v2.username,
+        client_v2.password,
+        user_data=user_data,
+        session=async_get_clientsession(hass),
+    )
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]["broker"] = broker = EvoBroker(
@@ -215,6 +210,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
     if _LOGGER.isEnabledFor(logging.DEBUG):  # don't do an I/O unless required
         await broker.update()  # includes: _LOGGER.debug("Status = %s"...
+
+    await hass.async_add_job(broker.save_auth_tokens())
 
     hass.async_create_task(async_load_platform(hass, "climate", DOMAIN, {}, config))
     if broker.tcs.hotwater:
@@ -249,9 +246,8 @@ class EvoBroker:
         )
         self.temps = None
 
-        self.hass.add_job(self._save_auth_tokens())
-
-    async def _save_auth_tokens(self, *args) -> None:
+    async def save_auth_tokens(self, *args) -> None:
+        """Save access tokens and session IDs to the store for later use."""
         # evohomeasync2 uses naive/local datetimes
         access_token_expires = _local_dt_to_aware(self.client.access_token_expires)
 
@@ -271,7 +267,7 @@ class EvoBroker:
         await self._store.async_save(app_storage)
 
         self.hass.helpers.event.async_track_point_in_utc_time(
-            self._save_auth_tokens,
+            self.save_auth_tokens,
             access_token_expires + self.params[CONF_SCAN_INTERVAL],
         )
 
@@ -293,9 +289,8 @@ class EvoBroker:
             ):
                 _LOGGER.warning(
                     "The v2 API's configured location doesn't match "
-                    "the v1 API's default location (there is more than one location). "
-                    "The '%s' feature will be disabled.",
-                    CONF_HIGH_PRECISION,
+                    "the v1 API's default location (there is more than one location), "
+                    "the high-precision feature will be disabled"
                 )
                 self.client_v1 = self.temps = None
             else:
