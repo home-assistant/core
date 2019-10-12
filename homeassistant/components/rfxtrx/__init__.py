@@ -1,7 +1,8 @@
 """Support for RFXtrx devices."""
 from collections import OrderedDict
+import binascii
 import logging
-
+import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -113,9 +114,6 @@ def setup(hass, config):
         for subscriber in RECEIVED_EVT_SUBSCRIBERS:
             subscriber(event)
 
-    # Try to load the RFXtrx module.
-    import RFXtrx as rfxtrxmod
-
     device = config[DOMAIN][ATTR_DEVICE]
     debug = config[DOMAIN][ATTR_DEBUG]
     dummy_connection = config[DOMAIN][ATTR_DUMMY]
@@ -144,8 +142,6 @@ def setup(hass, config):
 
 def get_rfx_object(packetid):
     """Return the RFXObject with the packetid."""
-    import RFXtrx as rfxtrxmod
-
     try:
         binarypacket = bytearray.fromhex(packetid)
     except ValueError:
@@ -167,7 +163,6 @@ def get_pt2262_deviceid(device_id, nb_data_bits):
     """Extract and return the address bits from a Lighting4/PT2262 packet."""
     if nb_data_bits is None:
         return
-    import binascii
 
     try:
         data = bytearray.fromhex(device_id)

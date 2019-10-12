@@ -1,7 +1,8 @@
 """Support for RFXtrx sensors."""
 import logging
-
 import voluptuous as vol
+
+from RFXtrx import SensorEvent
 
 from homeassistant.components import rfxtrx
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -43,8 +44,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RFXtrx platform."""
-    from RFXtrx import SensorEvent
-
     sensors = []
     for packet_id, entity_info in config[CONF_DEVICES].items():
         event = rfxtrx.get_rfx_object(packet_id)

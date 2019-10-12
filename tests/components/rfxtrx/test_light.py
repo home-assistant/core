@@ -1,7 +1,7 @@
 """The tests for the Rfxtrx light platform."""
 import unittest
-
 import pytest
+import RFXtrx as rfxtrxmod
 
 from homeassistant.setup import setup_component
 from homeassistant.components import rfxtrx as rfxtrx_core
@@ -108,8 +108,6 @@ class TestLightRfxtrx(unittest.TestCase):
                 }
             },
         )
-
-        import RFXtrx as rfxtrxmod
 
         rfxtrx_core.RFXOBJECT = rfxtrxmod.Core(
             "", transport_protocol=rfxtrxmod.DummyTransport
