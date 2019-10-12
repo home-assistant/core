@@ -2,6 +2,10 @@
 import logging
 from functools import partial
 from requests.exceptions import HTTPError, ConnectTimeout
+import abodepy
+import abodepy.helpers.constants as CONST
+from abodepy.exceptions import AbodeException
+import abodepy.helpers.timeline as TIMELINE
 
 import voluptuous as vol
 
@@ -98,7 +102,6 @@ class AbodeSystem:
 
     def __init__(self, username, password, cache, name, polling, exclude, lights):
         """Initialize the system."""
-        import abodepy
 
         self.abode = abodepy.Abode(
             username,
@@ -124,7 +127,6 @@ class AbodeSystem:
 
     def is_light(self, device):
         """Check if a switch device is configured as a light."""
-        import abodepy.helpers.constants as CONST
 
         return device.generic_type == CONST.TYPE_LIGHT or (
             device.generic_type == CONST.TYPE_SWITCH and device.device_id in self.lights
@@ -133,7 +135,6 @@ class AbodeSystem:
 
 def setup(hass, config):
     """Set up Abode component."""
-    from abodepy.exceptions import AbodeException
 
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
@@ -172,7 +173,6 @@ def setup(hass, config):
 
 def setup_hass_services(hass):
     """Home assistant services."""
-    from abodepy.exceptions import AbodeException
 
     def change_setting(call):
         """Change an Abode system setting."""
@@ -246,7 +246,6 @@ def setup_hass_events(hass):
 
 def setup_abode_events(hass):
     """Event callbacks."""
-    import abodepy.helpers.timeline as TIMELINE
 
     def event_callback(event, event_json):
         """Handle an event callback from Abode."""
