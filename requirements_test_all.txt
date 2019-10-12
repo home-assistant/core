@@ -40,7 +40,7 @@ PyRMVtransport==0.2.9
 PyTransportNSW==0.1.1
 
 # homeassistant.components.remember_the_milk
-RtmAPI==0.7.0
+RtmAPI==0.7.2
 
 # homeassistant.components.yessssms
 YesssSMS==0.4.1

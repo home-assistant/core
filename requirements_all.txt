@@ -85,7 +85,7 @@ PyXiaomiGateway==0.12.4
 # RPi.GPIO==0.6.5
 
 # homeassistant.components.remember_the_milk
-RtmAPI==0.7.0
+RtmAPI==0.7.2
 
 # homeassistant.components.travisci
 TravisPy==0.3.5
