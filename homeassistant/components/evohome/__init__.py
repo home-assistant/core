@@ -208,6 +208,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         hass, client_v2, client_v1, store, config[DOMAIN]
     )
 
+    await broker.save_auth_tokens()
     await broker.update()  # get initial state
 
     hass.async_create_task(async_load_platform(hass, "climate", DOMAIN, {}, config))
@@ -243,7 +244,7 @@ class EvoBroker:
         )
         self.temps = None
 
-    async def _save_auth_tokens(self, *args) -> None:
+    async def save_auth_tokens(self, *args) -> None:
         """Save access tokens and session IDs to the store for later use."""
         # evohomeasync2 uses naive/local datetimes
         access_token_expires = _local_dt_to_aware(self.client.access_token_expires)
@@ -277,7 +278,7 @@ class EvoBroker:
 
         except aiohttp.ClientError as err:
             _handle_exception(err)
-            self.temps = None
+            self.temps = None  # these are now stale, will fall back to v2 temps
 
         else:
             if (
@@ -296,7 +297,7 @@ class EvoBroker:
         _LOGGER.debug("Temperatures = %s", self.temps)
 
         if session_id != get_session_id(self.client_v1):
-            await self._save_auth_tokens()
+            await self.save_auth_tokens()
 
     async def _update_v2(self, *args, **kwargs) -> None:
         """Get the latest modes, temperatures, setpoints of a Location."""
@@ -313,12 +314,7 @@ class EvoBroker:
             _LOGGER.debug("Status = %s", status[GWS][0][TCS][0])
 
         if access_token != self.client.access_token:
-            _LOGGER.warn(
-                "_update_v2(access_token) \n\nold = %s, \n\nnew = %s",
-                access_token,
-                self.client.access_token,
-            )
-            await self._save_auth_tokens()
+            await self.save_auth_tokens()
 
     async def update(self, *args, **kwargs) -> None:
         """Get the latest state data of an entire evohome Location.
