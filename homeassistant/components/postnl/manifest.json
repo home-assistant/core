@@ -6,5 +6,7 @@
     "postnl_api==1.2.2"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@peternijssen"
+  ]
 }
