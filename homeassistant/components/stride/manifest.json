@@ -1,7 +1,7 @@
 {
   "domain": "stride",
   "name": "Stride",
-  "documentation": "https://www.home-assistant.io/components/stride",
+  "documentation": "https://www.home-assistant.io/integrations/stride",
   "requirements": [
     "pystride==0.1.7"
   ],

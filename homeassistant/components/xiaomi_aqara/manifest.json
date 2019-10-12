@@ -1,7 +1,7 @@
 {
   "domain": "xiaomi_aqara",
   "name": "Xiaomi aqara",
-  "documentation": "https://www.home-assistant.io/components/xiaomi_aqara",
+  "documentation": "https://www.home-assistant.io/integrations/xiaomi_aqara",
   "requirements": [
     "PyXiaomiGateway==0.12.4"
   ],

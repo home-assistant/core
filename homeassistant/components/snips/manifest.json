@@ -1,7 +1,7 @@
 {
   "domain": "snips",
   "name": "Snips",
-  "documentation": "https://www.home-assistant.io/components/snips",
+  "documentation": "https://www.home-assistant.io/integrations/snips",
   "requirements": [],
   "dependencies": [
     "mqtt"

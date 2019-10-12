@@ -2,7 +2,7 @@
   "domain": "somfy",
   "name": "Somfy Open API",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/somfy",
+  "documentation": "https://www.home-assistant.io/integrations/somfy",
   "dependencies": [],
   "codeowners": [
     "@tetienne"

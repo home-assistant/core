@@ -2,8 +2,6 @@
 import logging
 from typing import Optional
 
-from iaqualink import AqualinkSensor
-
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -29,10 +27,6 @@ async def async_setup_entry(
 
 class HassAqualinkSensor(AqualinkEntity):
     """Representation of a sensor."""
-
-    def __init__(self, dev: AqualinkSensor):
-        """Initialize the sensor."""
-        self.dev = dev
 
     @property
     def name(self) -> str:

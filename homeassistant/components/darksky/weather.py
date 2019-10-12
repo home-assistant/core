@@ -1,5 +1,5 @@
 """Support for retrieving meteorological data from Dark Sky."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
@@ -29,6 +29,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
+from homeassistant.util.dt import utc_from_timestamp
 from homeassistant.util.pressure import convert as convert_pressure
 
 _LOGGER = logging.getLogger(__name__)
@@ -178,7 +179,7 @@ class DarkSkyWeather(WeatherEntity):
         if self._mode == "daily":
             data = [
                 {
-                    ATTR_FORECAST_TIME: datetime.fromtimestamp(
+                    ATTR_FORECAST_TIME: utc_from_timestamp(
                         entry.d.get("time")
                     ).isoformat(),
                     ATTR_FORECAST_TEMP: entry.d.get("temperatureHigh"),
@@ -195,7 +196,7 @@ class DarkSkyWeather(WeatherEntity):
         else:
             data = [
                 {
-                    ATTR_FORECAST_TIME: datetime.fromtimestamp(
+                    ATTR_FORECAST_TIME: utc_from_timestamp(
                         entry.d.get("time")
                     ).isoformat(),
                     ATTR_FORECAST_TEMP: entry.d.get("temperature"),

@@ -4,6 +4,9 @@ from homeassistant.loader import bind_hass
 
 from . import commands, connection, const, decorators, http, messages
 
+
+# mypy: allow-untyped-calls, allow-untyped-defs
+
 DOMAIN = const.DOMAIN
 
 DEPENDENCIES = ("http",)

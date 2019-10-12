@@ -24,10 +24,10 @@ class DeconzBase:
     @property
     def serial(self):
         """Return a serial number for this device."""
-        if self.unique_id is None or self.unique_id.count(":") != 7:
+        if self._device.uniqueid is None or self._device.uniqueid.count(":") != 7:
             return None
 
-        return self.unique_id.split("-", 1)[0]
+        return self._device.uniqueid.split("-", 1)[0]
 
     @property
     def device_info(self):

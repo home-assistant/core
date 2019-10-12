@@ -1,7 +1,7 @@
 {
   "domain": "shopping_list",
   "name": "Shopping list",
-  "documentation": "https://www.home-assistant.io/components/shopping_list",
+  "documentation": "https://www.home-assistant.io/integrations/shopping_list",
   "requirements": [],
   "dependencies": [
     "http"

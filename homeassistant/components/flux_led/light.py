@@ -5,7 +5,7 @@ import random
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
+from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PROTOCOL, ATTR_MODE
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
@@ -30,7 +30,6 @@ CONF_CUSTOM_EFFECT = "custom_effect"
 CONF_COLORS = "colors"
 CONF_SPEED_PCT = "speed_pct"
 CONF_TRANSITION = "transition"
-ATTR_MODE = "mode"
 
 DOMAIN = "flux_led"
 

@@ -121,20 +121,23 @@ def validate_child(gateway, node_id, child, value_type=None):
     child_type_name = next(
         (member.name for member in pres if member.value == child.type), None
     )
-    value_types = [value_type] if value_type else [*child.values]
-    value_type_names = [
+    value_types = {value_type} if value_type else {*child.values}
+    value_type_names = {
         member.name for member in set_req if member.value in value_types
-    ]
+    }
     platforms = TYPE_TO_PLATFORMS.get(child_type_name, [])
     if not platforms:
         _LOGGER.warning("Child type %s is not supported", child.type)
         return validated
 
     for platform in platforms:
-        v_names = FLAT_PLATFORM_TYPES[platform, child_type_name]
-        if not isinstance(v_names, list):
-            v_names = [v_names]
-        v_names = [v_name for v_name in v_names if v_name in value_type_names]
+        platform_v_names = FLAT_PLATFORM_TYPES[platform, child_type_name]
+        v_names = platform_v_names & value_type_names
+        if not v_names:
+            child_value_names = {
+                member.name for member in set_req if member.value in child.values
+            }
+            v_names = platform_v_names & child_value_names
 
         for v_name in v_names:
             child_schema_gen = SCHEMAS.get((platform, v_name), default_schema)

@@ -1,7 +1,7 @@
 {
   "domain": "panel_custom",
   "name": "Panel custom",
-  "documentation": "https://www.home-assistant.io/components/panel_custom",
+  "documentation": "https://www.home-assistant.io/integrations/panel_custom",
   "requirements": [],
   "dependencies": [
     "frontend"
