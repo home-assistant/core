@@ -6,11 +6,11 @@ import upcloud_api
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_USERNAME,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
-    STATE_ON,
+    CONF_USERNAME,
     STATE_OFF,
+    STATE_ON,
     STATE_PROBLEM,
 )
 from homeassistant.core import callback
