@@ -279,12 +279,13 @@ class EvoBroker:
         """Get the latest (high-precision) temperatures of the default Location."""
         loc_idx = self.params[CONF_LOCATION_IDX]
 
-        self.temps = None
-
         try:
             temps = list(await self.client_v1.temperatures(force_refresh=True))
+
         except aiohttp.ClientError as err:
             _handle_exception(err)
+            self.temps = None
+
         else:
             if (
                 str(self.client_v1.location_id)
@@ -296,7 +297,7 @@ class EvoBroker:
                     "The '%s' feature will be disabled.",
                     CONF_HIGH_PRECISION,
                 )
-                self.client_v1 = None
+                self.client_v1 = self.temps = None
             else:
                 self.temps = {str(i["id"]): i["temp"] for i in temps}
 
