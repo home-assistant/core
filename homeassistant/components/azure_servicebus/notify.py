@@ -12,6 +12,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONTENT_TYPE_JSON
 import homeassistant.helpers.config_validation as cv
 
 CONF_CONNECTION_STRING = "connection_string"
@@ -81,5 +82,5 @@ class ServiceBusNotificationService(BaseNotificationService):
             dto.update(data)
 
         queue_message = Message(json.dumps(dto))
-        queue_message.properties.content_type = "application/json"
+        queue_message.properties.content_type = CONTENT_TYPE_JSON
         await self._client.send(queue_message)
