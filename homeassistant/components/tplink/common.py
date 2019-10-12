@@ -1,10 +1,10 @@
 """Common code for tplink."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 from typing import Any, Callable, List
 
-from pyHS100 import Discover, SmartBulb, SmartDevice, SmartPlug, SmartDeviceException
+from pyHS100 import Discover, SmartBulb, SmartDevice, SmartDeviceException, SmartPlug
 
 from homeassistant.helpers.typing import HomeAssistantType
 
