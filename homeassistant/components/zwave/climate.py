@@ -87,6 +87,15 @@ MODE_SETPOINT_MAPPINGS = {
     "cool econ": ("setpoint_eco_cooling",),
     "away": ("setpoint_away_heating", "setpoint_away_cooling"),
     "full power": ("setpoint_full_power",),
+    # aliases found in xml configs
+    "comfort": ("setpoint_heating",),
+    "heat mode": ("setpoint_heating",),
+    "heat (default)": ("setpoint_heating",),
+    "dry floor": ("setpoint_dry_air",),
+    "heat eco": ("setpoint_eco_heating",),
+    "energy saving": ("setpoint_eco_heating",),
+    "energy heat": ("setpoint_eco_heating",),
+    "vacation": ("setpoint_away_heating", "setpoint_away_cooling"),
     # for tests
     "heat_cool": ("setpoint_heating", "setpoint_cooling"),
 }
