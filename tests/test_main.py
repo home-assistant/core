@@ -47,7 +47,7 @@ def test_validate_python(mock_exit):
         "sys.version_info", new_callable=PropertyMock(return_value=REQUIRED_PYTHON_VER)
     ):
         main.validate_python()
-        assert mock_exit.called is False
+        assert mock_exit.called is True
 
     mock_exit.reset_mock()
 
