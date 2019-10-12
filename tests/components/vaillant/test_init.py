@@ -2,7 +2,7 @@
 
 import mock
 import pytest
-from vr900connector.api import ApiError
+from pymultimatic.api import ApiError
 
 from homeassistant.components import vaillant
 from homeassistant.components.vaillant import DOMAIN

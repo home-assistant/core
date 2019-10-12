@@ -1,7 +1,7 @@
 """Tests for the vaillant sensor."""
 
 import pytest
-from vr900connector.model import System
+from pymultimatic.model import System
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 import homeassistant.components.vaillant as vaillant
@@ -50,7 +50,7 @@ async def test_empty_system(hass):
     """Test setup with empty system."""
     assert await _setup(hass, system=System(None, None, None, None,
                                             None, None, None, None,
-                                            None))
+                                            None, None))
     assert not hass.states.async_entity_ids()
 
 
@@ -68,8 +68,8 @@ async def test_state_update(hass):
 
     system = SystemManagerMock.system
     system.outdoor_temperature = 21
-    system.get_room(1).current_temperature = 30
-    system.get_zone('zone_1').current_temperature = 31
+    system.rooms[0].current_temperature = 30
+    system.zones[0].current_temperature = 31
     system.boiler_status.water_pressure = 1.6
     system.boiler_status.current_temperature = 32
     system.hot_water.current_temperature = 66

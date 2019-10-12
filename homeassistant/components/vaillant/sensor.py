@@ -2,7 +2,7 @@
 import logging
 from abc import ABC
 
-from vr900connector.model import BoilerStatus, Room, Component
+from pymultimatic.model import BoilerStatus, Room, Component
 
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE, DOMAIN, \

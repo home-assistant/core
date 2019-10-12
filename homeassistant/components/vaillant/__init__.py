@@ -106,10 +106,6 @@ ATTR_VAILLANT_MODE = 'vaillant_mode'
 async def async_setup(hass, config):
     """Set up vaillant component."""
     hub = VaillantHub(config[DOMAIN])
-
-    hub.update_system = Throttle(
-        config[DOMAIN][CONF_SCAN_INTERVAL])(hub.update_system)
-
     hass.data[HUB] = hub
 
     for platform in PLATFORMS:
@@ -126,8 +122,8 @@ class VaillantHub:
 
     def __init__(self, config):
         """Initialize hub."""
-        from vr900connector.systemmanager import SystemManager
-        from vr900connector.model import System
+        from pymultimatic.model import System
+        from pymultimatic.systemmanager import SystemManager
 
         self._manager = SystemManager(config[CONF_USERNAME],
                                       config[CONF_PASSWORD],
@@ -137,19 +133,13 @@ class VaillantHub:
         self.system: System = self._manager.get_system()
         self._quick_veto_duration = config[CONF_QUICK_VETO_DURATION]
         self.config = config
+        self.update_system = Throttle(
+            config[CONF_SCAN_INTERVAL])(self._update_system)
 
-    def update_system(self):
+    def _update_system(self):
         """Fetch vaillant system."""
-        from vr900connector.api import ApiError
-
         try:
             self._manager.request_hvac_update()
-        except ApiError:
-            _LOGGER.debug("Error while requesting hvac update", exc_info=True)
-            # Sometimes the API returns HTTP 409 and the connector throws an
-            # error, it will prevent update_system to work correctly.
-
-        try:
             self.system = self._manager.get_system()
             _LOGGER.debug("update_system successfully fetched")
         # pylint: disable=broad-except
@@ -161,12 +151,14 @@ class VaillantHub:
 
     def find_component(self, comp):
         """Find a component in the system with the given id, no IO is done."""
-        from vr900connector.model import Zone, Room, HotWater, Circulation
+        from pymultimatic.model import Zone, Room, HotWater, Circulation
 
         if isinstance(comp, Zone):
-            return self.system.get_zone(comp.id)
+            return [zone for zone in self.system.zones
+                    if zone.id == comp.id][0]
         if isinstance(comp, Room):
-            return self.system.get_room(comp.id)
+            return [room for room in self.system.rooms
+                    if room.id == comp.id][0]
         if isinstance(comp, HotWater):
             if self.system.hot_water and self.system.hot_water.id == comp.id:
                 return self.system.hot_water
@@ -190,104 +182,100 @@ class VaillantHub:
     def set_hot_water_target_temperature(self, entity, hot_water,
                                          target_temperature):
         """Set hot water target temperature."""
-        updated = self._manager\
-            .set_hot_water_setpoint_temperature(hot_water, target_temperature)
+        self._manager\
+            .set_hot_water_setpoint_temperature(hot_water.id,
+                                                target_temperature)
 
-        if updated:
-            self.system.hot_water = self._manager.get_hot_water(hot_water)
-            entity.async_schedule_update_ha_state(True)
+        self.system.hot_water = self._manager.get_hot_water(hot_water.id)
+        entity.async_schedule_update_ha_state(True)
 
     def set_room_target_temperature(self, entity, room, target_temperature):
-        """Set target temperature for a room."""
-        from vr900connector.model import HeatingMode, QuickVeto
+        """Set target temperature for a room.
+
+        If the room is in MANUAL mode, simply modify the target temperature,
+        if the room is not in MANUAL mode, create à quick veto. Changing target
+        temperature while not on MANUAL mode, will result in switching the room
+        to manual mode indefinitely."""
+        from pymultimatic.model import OperatingModes, QuickVeto
 
         mode = self.system.get_active_mode_room(room)
 
-        if mode.current_mode != HeatingMode.MANUAL:
+        if mode.current_mode != OperatingModes.MANUAL:
             veto = QuickVeto(self._quick_veto_duration, target_temperature)
-            updated = self._manager.set_room_quick_veto(room, veto)
+            self._manager.set_room_quick_veto(room.id, veto)
         else:
-            updated = self._manager\
-                .set_room_setpoint_temperature(room, target_temperature)
+            self._manager\
+                .set_room_setpoint_temperature(room.id, target_temperature)
 
-        if updated:
-            self.system.set_room(room.id, self._manager.get_room(room))
-            entity.async_schedule_update_ha_state(True)
+        self.system.set_room(room.id, self._manager.get_room(room))
+        entity.async_schedule_update_ha_state(True)
 
     def set_zone_target_temperature(self, entity, zone, target_temperature):
-        """Set target temperature for a zone."""
-        from vr900connector.model import HeatingMode, QuickVeto
+        """Set target temperature for a zone.
+        If the zone is running DAY mode (= fixed target temperature), simply
+        change the target temperature.
+        Otherwise, create a quick veto."""
+        from pymultimatic.model import OperatingModes, QuickVeto
 
         mode = self.system.get_active_mode_zone(zone)
 
-        if mode.current_mode != HeatingMode.DAY:
+        if mode.current_mode != OperatingModes.DAY:
             veto = QuickVeto(self._quick_veto_duration, target_temperature)
-            updated = self._manager.set_zone_quick_veto(zone, veto)
-        elif mode.current_mode == HeatingMode.NIGHT:
-            updated = self._manager\
-                .set_zone_setback_temperature(zone, target_temperature)
+            self._manager.set_zone_quick_veto(zone.id, veto)
         else:
-            updated = self._manager\
-                .set_zone_setpoint_temperature(zone, target_temperature)
+            self._manager\
+                .set_zone_setpoint_temperature(zone.id, target_temperature)
 
-        if updated:
-            self.system.set_zone(zone.id, self._manager.get_zone(zone))
-            entity.async_schedule_update_ha_state(True)
+        self.system.set_zone(zone.id, self._manager.get_zone(zone))
+        entity.async_schedule_update_ha_state(True)
 
     def set_zone_target_high_temperature(self, entity, zone, temperature):
-        """Set high temperature for a zone."""
-        updated = self._manager.set_zone_setpoint_temperature(zone,
-                                                              temperature)
-        if updated:
-            entity.async_schedule_update_ha_state(True)
+        """Set high target temperature for a zone."""
+        self._manager.set_zone_setpoint_temperature(zone.id, temperature)
+        self.system.set_zone(zone.id, self._manager.get_zone(zone))
+        entity.async_schedule_update_ha_state(True)
 
     def set_zone_target_low_temperature(self, entity, zone, temperature):
         """Set low temperature for a zone."""
-        updated = self._manager.set_zone_setback_temperature(zone, temperature)
-        if updated:
-            entity.async_schedule_update_ha_state(True)
+        self._manager.set_zone_setback_temperature(zone.id, temperature)
+        self.system.set_zone(zone.id, self._manager.get_zone(zone.id))
+        entity.async_schedule_update_ha_state(True)
 
-    def set_hot_water_operation_mode(self, entity, hot_water, mode):
+    def set_hot_water_operating_mode(self, entity, hot_water, mode):
         """Set hot water operation mode."""
         was_quick_mode = self._set_quick_mode(mode)
 
         if not was_quick_mode:
-            updated = self._manager.set_hot_water_operation_mode(hot_water,
-                                                                 mode)
-            if updated:
-                self.system.hot_water = self._manager.get_hot_water(hot_water)
-                entity.async_schedule_update_ha_state(True)
+            self._manager.set_hot_water_operating_mode(hot_water.id, mode)
+            self.system.hot_water = self._manager.get_hot_water(hot_water.id)
+            entity.async_schedule_update_ha_state(True)
 
-    def set_room_operation_mode(self, entity, room, mode):
+    def set_room_operating_mode(self, entity, room, mode):
         """Set room operation mode."""
         was_quick_mode = self._set_quick_mode(mode)
 
         if not was_quick_mode:
-            updated = self._manager.set_room_operation_mode(room, mode)
-            if updated:
-                self.system.set_room(room.id, self._manager.get_room(room))
-                entity.async_schedule_update_ha_state(True)
+            self._manager.set_room_operating_mode(room.id, mode)
+            self.system.set_room(room.id, self._manager.get_room(room.id))
+            entity.async_schedule_update_ha_state(True)
 
-    def set_zone_operation_mode(self, entity, zone, mode):
+    def set_zone_operating_mode(self, entity, zone, mode):
         """Set zone operation mode."""
         was_quick_mode = self._set_quick_mode(mode)
+
         if not was_quick_mode:
-            updated = self._manager.set_zone_operation_mode(zone, mode)
-            if updated:
-                self.system.set_zone(zone.id, self._manager.get_zone(zone))
-                entity.async_schedule_update_ha_state(True)
+            self._manager.set_zone_operating_mode(zone.id, mode)
+            self.system.set_zone(zone.id, self._manager.get_zone(zone.id))
+            entity.async_schedule_update_ha_state(True)
 
     def _set_quick_mode(self, quick_mode):
         """Set quick mode, it may impact the whole system."""
-        from vr900connector.model import QuickMode
+        from pymultimatic.model import QuickMode
 
         if isinstance(quick_mode, QuickMode):
             _LOGGER.debug('Mode %s is a quick mode', quick_mode)
-            updated = self._manager.set_quick_mode(self.system.quick_mode,
-                                                   quick_mode)
-            if updated:
-                _LOGGER.debug("Set quick mode successfully")
-                self._refresh_listening_entities()
+            self._manager.set_quick_mode(quick_mode)
+            self._refresh_listening_entities()
             return True
         return False
 

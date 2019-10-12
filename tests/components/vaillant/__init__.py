@@ -2,18 +2,20 @@
 import datetime
 
 import mock
-from vr900connector.model import (
+from pymultimatic.model import (
     System,
     BoilerStatus,
     Zone,
-    HeatingMode,
+    OperatingModes,
+    SettingModes,
     Room,
     Device,
     HotWater,
     Circulation,
-    TimeProgramDaySetting,
+    TimePeriodSetting,
     TimeProgramDay,
     TimeProgram,
+    SystemStatus
 )
 
 from homeassistant.components.vaillant import DOMAIN
@@ -38,9 +40,10 @@ class SystemManagerMock:
         cls.instance = None
 
     @classmethod
-    def time_program(cls, heating_mode=HeatingMode.OFF, temp=20):
+    def time_program(cls, heating_mode=SettingModes.OFF, temp=20):
         """Create a default time program."""
-        timeprogram_day_setting = TimeProgramDaySetting("00:00", temp, heating_mode)
+        timeprogram_day_setting = \
+            TimePeriodSetting("00:00", temp, heating_mode)
         timeprogram_day = TimeProgramDay([timeprogram_day_setting])
         timeprogram_days = {
             "monday": timeprogram_day,
@@ -59,16 +62,16 @@ class SystemManagerMock:
         holiday_mode = None
         boiler_status = BoilerStatus(
             "boiler",
-            "Long description",
             "short description",
             "S.31",
-            "hint",
+            "Long description",
             datetime.datetime.now(),
-            "ONLINE",
-            "UPDATE_NOT_PENDING",
+            "hint",
             1.4,
             20,
         )
+
+        system_status = SystemStatus('ONLINE', 'UPDATE_NOT_PENDING')
 
         zone = Zone(
             "zone_1",
@@ -76,7 +79,7 @@ class SystemManagerMock:
             cls.time_program(temp=27),
             25,
             30,
-            HeatingMode.AUTO,
+            OperatingModes.AUTO,
             None,
             22,
             "heating",
@@ -85,12 +88,12 @@ class SystemManagerMock:
 
         room_device = Device("Device 1", "123456789", "VALVE", False, False)
         room = Room(
-            1,
+            '1',
             "Room 1",
             cls.time_program(),
             22,
             24,
-            HeatingMode.AUTO,
+            OperatingModes.AUTO,
             None,
             False,
             False,
@@ -103,18 +106,19 @@ class SystemManagerMock:
             cls.time_program(temp=None),
             45,
             40,
-            HeatingMode.AUTO,
+            OperatingModes.AUTO,
         )
 
         circulation = Circulation(
-            "circulation", "Circulation", cls.time_program(), HeatingMode.AUTO
-        )
+            "circulation", "Circulation", cls.time_program(),
+            OperatingModes.AUTO)
 
         outdoor_temp = 18
         quick_mode = None
 
         return System(
             holiday_mode,
+            system_status,
             boiler_status,
             [zone],
             [room],
@@ -122,8 +126,7 @@ class SystemManagerMock:
             circulation,
             outdoor_temp,
             quick_mode,
-            [],
-        )
+            [])
 
     @classmethod
     def _init_mocks_function(cls):
@@ -131,19 +134,15 @@ class SystemManagerMock:
         if not cls.system:
             cls.system = cls.get_default_system()
 
-        cls.instance.set_hot_water_setpoint_temperature = mock.MagicMock(
-            return_value=True
-        )
-        cls.instance.set_hot_water_operation_mode = mock.MagicMock(return_value=True)
-        cls.instance.set_hot_water_operation_mode = mock.MagicMock()
+        cls.instance.set_hot_water_setpoint_temperature = mock.MagicMock()
+        cls.instance.set_hot_water_operating_mode = mock.MagicMock()
         cls.instance.set_quick_mode = mock.MagicMock()
         cls.instance.get_hot_water = mock.MagicMock()
-        cls.instance.request_hvac_update = mock.MagicMock(return_value=True)
+        cls.instance.request_hvac_update = mock.MagicMock()
         cls.instance.get_system = mock.MagicMock(return_value=cls.system)
 
-    def __init__(
-        self, user: str, password: str, smart_phone_id: str, file_path: str = None
-    ):
+    def __init__(self, user: str, password: str, smart_phone_id: str,
+                 file_path: str = None):
         """Mock the constructor."""
         SystemManagerMock.instance = self
         self._init_mocks_function()

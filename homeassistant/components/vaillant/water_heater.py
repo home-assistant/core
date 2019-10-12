@@ -1,7 +1,8 @@
 """Interfaces with Vaillant water heater."""
 import logging
 
-from vr900connector.model import System, HotWater, QuickMode, HeatingMode
+from pymultimatic.model import System, HotWater, OperatingModes,\
+    QuickModes
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.components.water_heater import (
     WaterHeaterDevice,
@@ -21,10 +22,10 @@ ATTR_CURRENT_TEMPERATURE = "current_temperature"
 ATTR_TIME_PROGRAM = "time_program"
 
 AWAY_MODES = [
-    HeatingMode.OFF,
-    QuickMode.QM_HOLIDAY,
-    QuickMode.QM_ONE_DAY_AWAY,
-    QuickMode.QM_SYSTEM_OFF,
+    OperatingModes.OFF,
+    QuickModes.HOLIDAY,
+    QuickModes.ONE_DAY_AWAY,
+    QuickModes.SYSTEM_OFF,
 ]
 
 
@@ -53,8 +54,8 @@ class VaillantWaterHeater(BaseVaillantEntity, WaterHeaterDevice):
                          system.hot_water.name)
         self._system = None
         self._active_mode = None
-        mode_list = HotWater.MODES + QuickMode.for_hot_water()
-        mode_list.remove(QuickMode.QM_HOLIDAY)
+        mode_list = HotWater.MODES + QuickModes.for_dhw()
+        mode_list.remove(QuickModes.HOLIDAY)
         self._operation_list = [mode.name for mode in mode_list]
         self._operation_list_to_mode = {mode.name: mode for mode in mode_list}
         self._refresh(system)
@@ -127,12 +128,12 @@ class VaillantWaterHeater(BaseVaillantEntity, WaterHeaterDevice):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return HotWater.MIN_TEMP
+        return HotWater.MIN_TARGET_TEMP
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return HotWater.MAX_TEMP
+        return HotWater.MAX_TARGET_TEMP
 
     @property
     def current_operation(self):
@@ -166,21 +167,21 @@ class VaillantWaterHeater(BaseVaillantEntity, WaterHeaterDevice):
         # HUB will call sync update
         if operation_mode in self._operation_list:
             mode = self._operation_list_to_mode[operation_mode]
-            self.hub.set_hot_water_operation_mode(self, self._system.hot_water,
+            self.hub.set_hot_water_operating_mode(self, self._system.hot_water,
                                                   mode)
         else:
             _LOGGER.debug("Operation mode is unknown")
 
     def turn_away_mode_on(self):
         """Turn away mode on."""
-        self.hub.set_hot_water_operation_mode(
-            self, self._system.hot_water, HeatingMode.OFF
+        self.hub.set_hot_water_operating_mode(
+            self, self._system.hot_water, OperatingModes.OFF
         )
 
     def turn_away_mode_off(self):
         """Turn away mode off."""
-        self.hub.set_hot_water_operation_mode(
-            self, self._system.hot_water, HeatingMode.AUTO
+        self.hub.set_hot_water_operating_mode(
+            self, self._system.hot_water, OperatingModes.AUTO
         )
 
     async def vaillant_update(self):
@@ -193,7 +194,7 @@ class VaillantWaterHeater(BaseVaillantEntity, WaterHeaterDevice):
         self._active_mode = self._system.get_active_mode_hot_water()
 
         if self._system.holiday_mode and \
-                self._system.holiday_mode.is_currently_active:
-            self._operation_list.append(QuickMode.QM_HOLIDAY.name)
-        elif QuickMode.QM_HOLIDAY.name in self._operation_list:
-            self._operation_list.remove(QuickMode.QM_HOLIDAY.name)
+                self._system.holiday_mode.is_applied:
+            self._operation_list.append(QuickModes.HOLIDAY.name)
+        elif QuickModes.HOLIDAY.name in self._operation_list:
+            self._operation_list.remove(QuickModes.HOLIDAY.name)

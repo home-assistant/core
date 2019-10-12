@@ -3,12 +3,13 @@
 import logging
 from abc import ABC
 
-from vr900connector.model import Room, Circulation, Device, BoilerStatus, \
-    SystemErrorMessage
+from pymultimatic.model import Room, Circulation, Device, BoilerStatus, Error,\
+    SystemStatus
 
-from homeassistant.components.binary_sensor import BinarySensorDevice, DOMAIN
-from homeassistant.const import DEVICE_CLASS_POWER, DEVICE_CLASS_BATTERY, \
-    CONF_SCAN_INTERVAL
+from homeassistant.components.binary_sensor import BinarySensorDevice, DOMAIN, \
+    DEVICE_CLASS_WINDOW, DEVICE_CLASS_LOCK, DEVICE_CLASS_CONNECTIVITY,\
+    DEVICE_CLASS_PROBLEM, DEVICE_CLASS_POWER, DEVICE_CLASS_BATTERY
+from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.util import Throttle
 from . import CONF_BINARY_SENSOR_BOILER_ERROR, \
     CONF_BINARY_SENSOR_CIRCULATION, \
@@ -19,11 +20,6 @@ from . import CONF_BINARY_SENSOR_BOILER_ERROR, \
     CONF_BINARY_SENSOR_SYSTEM_ERRORS
 
 _LOGGER = logging.getLogger(__name__)
-
-DEVICE_CLASS_WINDOW = 'window'
-DEVICE_CLASS_LOCK = 'lock'
-DEVICE_CLASS_CONNECTIVITY = 'connectivity'
-DEVICE_CLASS_PROBLEM = 'problem'
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -41,12 +37,14 @@ async def async_setup_platform(hass, config, async_add_entities,
             if hub.config[CONF_BINARY_SENSOR_BOILER_ERROR]:
                 sensors.append(
                     VaillantBoilerErrorBinarySensor(hub.system.boiler_status))
+
+        if hub.system.system_status:
             if hub.config[CONF_BINARY_SENSOR_SYSTEM_ONLINE]:
                 sensors.append(
-                    VaillantBoxOnlineBinarySensor(hub.system.boiler_status))
+                    VaillantBoxOnlineBinarySensor(hub.system.system_status))
             if hub.config[CONF_BINARY_SENSOR_SYSTEM_UPDATE]:
                 sensors.append(
-                    VaillantBoxUpdateBinarySensor(hub.system.boiler_status))
+                    VaillantBoxUpdateBinarySensor(hub.system.system_status))
 
         for room in hub.system.rooms:
             if hub.config[CONF_BINARY_SENSOR_ROOM_WINDOW]:
@@ -86,12 +84,12 @@ class VaillantCirculationBinarySensor(BaseVaillantEntity, BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        from vr900connector.model import HeatingMode, QuickMode
+        from pymultimatic.model import OperatingModes, SettingModes, QuickModes
 
         active_mode = self._circulation.active_mode
-        return active_mode.current_mode == HeatingMode.ON \
-            or active_mode.sub_mode == HeatingMode.ON \
-            or active_mode == QuickMode.QM_HOTWATER_BOOST
+        return active_mode.current_mode == OperatingModes.ON \
+            or active_mode.sub_mode == SettingModes.ON \
+            or active_mode == QuickModes.HOTWATER_BOOST
 
     @property
     def available(self):
@@ -244,63 +242,67 @@ class VaillantRoomDeviceConnectivityBinarySensor\
 class BaseVaillantSystemBinarySensor(BaseVaillantEntity, BinarySensorDevice):
     """Base class for system wide binary sensor."""
 
-    def __init__(self, device_class, boiler_status: BoilerStatus):
+    def __init__(self, device_class, system_status: SystemStatus):
         """Initialize entity."""
-        super().__init__(DOMAIN, device_class, boiler_status.device_name,
-                         boiler_status.device_name)
-        self._boiler_status = boiler_status
+        super().__init__(DOMAIN, device_class, 'system', 'system')
+        self._system_status = system_status
 
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._boiler_status is not None
+        return self._system_status is not None
 
     async def vaillant_update(self):
         """Update specific for vaillant."""
-        boiler_status: BoilerStatus = self.hub.system.boiler_status
+        system_status: SystemStatus = self.hub.system.system_status
 
-        if boiler_status:
+        if system_status:
             _LOGGER.debug(
-                "Found new boiler status error? %s, "
-                "online? %s, up to date? %s", boiler_status.is_error,
-                boiler_status.is_online, boiler_status.is_up_to_date)
+                "Found new system status "
+                "online? %s, up to date? %s", system_status.is_online,
+                system_status.is_up_to_date)
         else:
             _LOGGER.debug("Boiler status doesn't exist anymore")
-        self._boiler_status = boiler_status
+        self._system_status = system_status
 
 
 class VaillantBoxUpdateBinarySensor(BaseVaillantSystemBinarySensor):
     """Update binary sensor."""
 
-    def __init__(self, boiler_status: BoilerStatus):
+    def __init__(self, system_status: SystemStatus):
         """Return True if entity is available."""
-        super().__init__(DEVICE_CLASS_POWER, boiler_status)
+        super().__init__(DEVICE_CLASS_POWER, system_status)
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return not self._boiler_status.is_up_to_date
+        return not self._system_status.is_up_to_date
 
 
 class VaillantBoxOnlineBinarySensor(BaseVaillantSystemBinarySensor):
     """Check if box is online."""
 
-    def __init__(self, boiler_status: BoilerStatus):
+    def __init__(self, system_status: SystemStatus):
         """Return True if entity is available."""
-        super().__init__(DEVICE_CLASS_CONNECTIVITY, boiler_status)
+        super().__init__(DEVICE_CLASS_CONNECTIVITY, system_status)
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return self._boiler_status.is_online
+        return self._system_status.is_online
 
 
-class VaillantBoilerErrorBinarySensor(BaseVaillantSystemBinarySensor):
+class VaillantBoilerErrorBinarySensor(BaseVaillantEntity, BinarySensorDevice):
     """Check if there is some error."""
+
+    async def vaillant_update(self):
+        self._boiler_status = self.hub.system.boiler_status
 
     def __init__(self, boiler_status: BoilerStatus):
         """Initialize entity."""
-        super().__init__(DEVICE_CLASS_PROBLEM, boiler_status)
+        super().__init__(DOMAIN, DEVICE_CLASS_PROBLEM,
+                         boiler_status.device_name, boiler_status.device_name)
+        self._boiler_status = boiler_status
 
     @property
     def is_on(self):
@@ -311,13 +313,17 @@ class VaillantBoilerErrorBinarySensor(BaseVaillantSystemBinarySensor):
     def state_attributes(self):
         """Return the state attributes."""
         return {
-            'code': self._boiler_status.code,
+            'status_code': self._boiler_status.status_code,
             'title': self._boiler_status.title,
-            'last_update': self._boiler_status.last_update
+            'timestamp': self._boiler_status.timestamp
         }
 
 
 class VaillantSystemBinarySensorHandler:
+    """This is not a sensor in itself since error are meant to appear and 
+    disappear. This handler is responsible for creating dynamically 
+    VaillantSystemErrorBinarySensor
+    """
 
     def __init__(self, hub, hass, async_add_entities, scan_interval) -> None:
         self.hub = hub
@@ -343,8 +349,8 @@ class VaillantSystemBinarySensorHandler:
 class VaillantSystemErrorBinarySensor(BaseVaillantEntity, BinarySensorDevice):
     """Check if there is any error message from system."""
 
-    def __init__(self, error: SystemErrorMessage):
-        self.error = error
+    def __init__(self, error: Error):
+        self._error = error
         super().__init__(DOMAIN, DEVICE_CLASS_PROBLEM, error.status_code,
                          error.title)
 
@@ -352,18 +358,21 @@ class VaillantSystemErrorBinarySensor(BaseVaillantEntity, BinarySensorDevice):
     def state_attributes(self):
         """Return the state attributes."""
         return {
-            'status_code': self.error.status_code,
-            'title': self.error.title,
-            'timestamp': self.error.timestamp,
-            'description': self.error.description,
-            'device_name': self.error.device_name
+            'status_code': self._error.status_code,
+            'title': self._error.title,
+            'timestamp': self._error.timestamp,
+            'description': self._error.description,
+            'device_name': self._error.device_name
         }
 
     async def vaillant_update(self):
+        """Special attention during the update, the entity can remove itself
+        from registry if the error disappear from vaillant system."""
         errors = {e.status_code: e for e in self.hub.system.errors}
 
-        if self.error.status_code in [e.status_code for e in errors.values()]:
-            self.error = errors.get(self.error.status_code)
+        if self._error.status_code in [e.status_code for e in
+                                       list(errors.values())]:
+            self._error = errors.get(self._error.status_code)
         else:
             self.hass.async_create_task(self._remove())
 

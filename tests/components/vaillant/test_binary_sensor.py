@@ -1,7 +1,8 @@
 """Tests for the vaillant sensor."""
 
 import pytest
-from vr900connector.model import HeatingMode, Room, Device, Circulation, System
+from pymultimatic.model import OperatingModes, Room, Device, Circulation,\
+    System, SettingModes
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 import homeassistant.components.vaillant as vaillant
@@ -53,7 +54,7 @@ async def test_empty_system(hass):
     """Test setup with empty system."""
     assert await _setup(hass, system=System(None, None, None, None,
                                             None, None, None, None,
-                                            None))
+                                            None, None))
     assert not hass.states.async_entity_ids()
 
 
@@ -68,27 +69,27 @@ async def test_state_update(hass):
     assert hass.states.is_state('binary_sensor.vaillant_room_1_lock', 'on')
     assert hass.states.is_state(
         'binary_sensor.vaillant_123456789_battery', 'off')
-    assert hass.states.is_state('binary_sensor.vaillant_boiler_power', 'off')
+    assert hass.states.is_state('binary_sensor.vaillant_boiler_problem', 'off')
     assert hass.states.is_state(
         'binary_sensor.vaillant_123456789_connectivity', 'on')
     assert hass.states.is_state(
-        'binary_sensor.vaillant_boiler_problem', 'off')
+        'binary_sensor.vaillant_system_power', 'off')
     assert hass.states.is_state(
-        'binary_sensor.vaillant_boiler_connectivity', 'on')
+        'binary_sensor.vaillant_system_connectivity', 'on')
 
     system = SystemManagerMock.system
     system.circulation = Circulation(
         'circulation', 'Circulation',
-        SystemManagerMock.time_program(HeatingMode.ON), HeatingMode.AUTO)
+        SystemManagerMock.time_program(SettingModes.ON), OperatingModes.AUTO)
 
     room_device = Device('Device 1', '123456789', 'VALVE', True, True)
-    system.set_room(1, Room(1, 'Room 1', SystemManagerMock.time_program(), 22,
-                            24, HeatingMode.AUTO, None, True, True,
+    system.set_room('1', Room('1', 'Room 1', SystemManagerMock.time_program(),
+                            22, 24, OperatingModes.AUTO, None, True, True,
                             [room_device]))
 
-    system.boiler_status.code = 'F11'
-    system.boiler_status.online_status = 'OFFLINE'
-    system.boiler_status.update_status = 'UPDATE_PENDING'
+    system.boiler_status.status_code = 'F11'
+    system.system_status.online_status = 'OFFLINE'
+    system.system_status.update_status = 'UPDATE_PENDING'
     SystemManagerMock.system = system
 
     await _goto_future(hass)
@@ -100,10 +101,10 @@ async def test_state_update(hass):
     assert hass.states.is_state('binary_sensor.vaillant_room_1_lock', 'off')
     assert hass.states.is_state(
         'binary_sensor.vaillant_123456789_battery', 'on')
-    assert hass.states.is_state('binary_sensor.vaillant_boiler_power', 'on')
+    assert hass.states.is_state('binary_sensor.vaillant_boiler_problem', 'on')
     assert hass.states.is_state(
         'binary_sensor.vaillant_123456789_connectivity', 'off')
     assert hass.states.is_state(
-        'binary_sensor.vaillant_boiler_problem', 'on')
+        'binary_sensor.vaillant_system_power', 'on')
     assert hass.states.is_state(
-        'binary_sensor.vaillant_boiler_connectivity', 'off')
+        'binary_sensor.vaillant_system_connectivity', 'off')

@@ -28,16 +28,8 @@ vaillant:
 - 1 temperature sensor for water_heater
 - 1 sensor for water pressure in boiler
 - 1 temperature sensor for water temperature in boiler
-<<<<<<< HEAD
-- list of errors coming from the system
 
-## Todo's
-- remove quick_mode if there is any when setting a new mode ? (creating a new set of services ?)
-=======
 
 ##Todo's
-- handling error messages
 - remove quick_mode if there is any when setting a new mode ? (creating a new set of services ?)
-- add operation mode in state attr for climate and water_heater
->>>>>>> origin/vaillant
 - tests

@@ -3,7 +3,7 @@
   "name": "Vaillant",
   "documentation": "https://www.home-assistant.io/components/vaillant",
   "requirements": [
-    "vr900-connector==0.3.4"
+    "pymultimatic==0.0.1"
   ],
   "dependencies": [],
   "codeowners": [

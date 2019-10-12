@@ -1309,6 +1309,9 @@ pymodbus==1.5.2
 # homeassistant.components.monoprice
 pymonoprice==0.3
 
+# homeassistant.components.vaillant
+pymultimatic==0.0.1
+
 # homeassistant.components.yamaha_musiccast
 pymusiccast==0.1.6
 
@@ -1931,9 +1934,6 @@ volkszaehler==0.1.2
 
 # homeassistant.components.volvooncall
 volvooncall==0.8.7
-
-# homeassistant.components.vaillant
-vr900-connector==0.3.4
 
 # homeassistant.components.verisure
 vsure==1.5.2

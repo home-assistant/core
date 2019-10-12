@@ -2,8 +2,8 @@
 import datetime
 
 import pytest
-from vr900connector.model import System, HeatingMode, QuickMode, HolidayMode, \
-    Room, Zone
+from pymultimatic.model import System, OperatingModes, QuickModes,\
+    HolidayMode, Room, Zone, SettingModes
 
 from homeassistant.components.climate.const import (
     PRESET_COMFORT,
@@ -40,8 +40,8 @@ def _assert_room_state(hass, mode, hvac, preset, temp, current_temp):
     assert hass.states.is_state("climate.vaillant_room_1", hvac)
     assert state.attributes["current_temperature"] == current_temp
     assert state.attributes["preset_mode"] == preset
-    assert state.attributes["max_temp"] == Room.MAX_TEMP
-    assert state.attributes["min_temp"] == Room.MIN_TEMP
+    assert state.attributes["max_temp"] == Room.MAX_TARGET_TEMP
+    assert state.attributes["min_temp"] == Room.MIN_TARGET_TEMP
     assert state.attributes["temperature"] == temp
     assert set(state.attributes["hvac_modes"]) == {
         HVAC_MODE_HEAT,
@@ -67,8 +67,8 @@ def _assert_zone_state(hass, mode, hvac, preset, target_high, target_low,
     assert hass.states.is_state("climate.vaillant_zone_1", hvac)
     assert state.attributes["current_temperature"] == current_temp
     assert state.attributes["preset_mode"] == preset
-    assert state.attributes["max_temp"] == Zone.MAX_TEMP
-    assert state.attributes["min_temp"] == Zone.MIN_TEMP
+    assert state.attributes["max_temp"] == Zone.MAX_TARGET_TEMP
+    assert state.attributes["min_temp"] == Zone.MIN_TARGET_TEMP
     assert state.attributes["target_temp_high"] == target_high
     assert state.attributes["target_temp_low"] == target_low
     assert set(state.attributes["hvac_modes"]) == {
@@ -102,10 +102,10 @@ async def test_valid_config(hass):
     """Test setup with valid config."""
     assert await _setup(hass)
     assert len(hass.states.async_entity_ids()) == 2
-    _assert_room_state(hass, HeatingMode.AUTO, HVAC_MODE_AUTO, PRESET_COMFORT,
-                       20, 22)
-    _assert_zone_state(hass, HeatingMode.AUTO, HVAC_MODE_AUTO, PRESET_COMFORT,
-                       27, 22, 25)
+    _assert_room_state(hass, OperatingModes.AUTO, HVAC_MODE_AUTO,
+                       PRESET_COMFORT, 20, 22)
+    _assert_zone_state(hass, OperatingModes.AUTO, HVAC_MODE_AUTO,
+                       PRESET_COMFORT, 27, 22, 25)
 
 
 async def test_valid_config_all_disabled(hass):
@@ -117,7 +117,8 @@ async def test_valid_config_all_disabled(hass):
 async def test_empty_system(hass):
     """Test setup with empty system."""
     assert await _setup(
-        hass, system=System(None, None, None, None, None, None, None, None, None)
+        hass, system=System(None, None, None, None, None, None, None, None,
+                            None, None)
     )
     assert not hass.states.async_entity_ids()
 
@@ -125,50 +126,50 @@ async def test_empty_system(hass):
 async def test_state_update_room(hass):
     """Test room climate is updated accordingly to data."""
     assert await _setup(hass)
-    _assert_room_state(hass, HeatingMode.AUTO, HVAC_MODE_AUTO, PRESET_COMFORT,
-                       20, 22)
+    _assert_room_state(hass, OperatingModes.AUTO, HVAC_MODE_AUTO,
+                       PRESET_COMFORT, 20, 22)
 
     system = SystemManagerMock.system
-    system.get_room(1).current_temperature = 25
-    system.get_room(1).target_temperature = 30
-    system.get_room(1).time_program = \
-        SystemManagerMock.time_program(HeatingMode.ON, 30)
+    room = system.rooms[0]
+    room.current_temperature = 25
+    room.target_temperature = 30
+    room.time_program = SystemManagerMock.time_program(SettingModes.ON, 30)
     await _goto_future(hass)
 
-    _assert_room_state(hass, HeatingMode.AUTO, HVAC_MODE_AUTO, PRESET_COMFORT,
-                       30, 25)
+    _assert_room_state(hass, OperatingModes.AUTO, HVAC_MODE_AUTO,
+                       PRESET_COMFORT, 30, 25)
 
 
 async def test_room_heating_off(hass):
     """Test water heater is updated accordingly to data."""
     system = SystemManagerMock.get_default_system()
-    system.get_room(1).operation_mode = HeatingMode.OFF
+    system.rooms[0].operating_mode = OperatingModes.OFF
 
     assert await _setup(hass, system=system)
-    _assert_room_state(hass, HeatingMode.OFF, HVAC_MODE_OFF, PRESET_SLEEP,
-                       Room.MIN_TEMP, 22)
+    _assert_room_state(hass, OperatingModes.OFF, HVAC_MODE_OFF, PRESET_SLEEP,
+                       Room.MIN_TARGET_TEMP, 22)
 
 
 async def test_room_heating_manual(hass):
     """Test water heater is updated accordingly to data."""
     system = SystemManagerMock.get_default_system()
-    system.get_room(1).operation_mode = HeatingMode.MANUAL
+    system.rooms[0].operating_mode = OperatingModes.MANUAL
 
     assert await _setup(hass, system=system)
-    _assert_room_state(hass, HeatingMode.MANUAL, HVAC_MODE_HEAT,
+    _assert_room_state(hass, OperatingModes.MANUAL, HVAC_MODE_HEAT,
                        PRESET_COMFORT, 24, 22)
 
 
 async def test_holiday_mode(hass):
     """Test holiday mode."""
     system = SystemManagerMock.get_default_system()
-    system.quick_mode = QuickMode.QM_HOLIDAY
+    system.quick_mode = QuickModes.HOLIDAY
     system.holiday_mode = HolidayMode(
         True, datetime.date.today(), datetime.date.today(), 15
     )
 
     assert await _setup(hass, system=system)
-    _assert_room_state(hass, QuickMode.QM_HOLIDAY, HVAC_MODE_OFF, PRESET_AWAY,
+    _assert_room_state(hass, QuickModes.HOLIDAY, HVAC_MODE_OFF, PRESET_AWAY,
                        15, 22)
 
     #
@@ -187,7 +188,7 @@ async def test_holiday_mode(hass):
     # async def test_away_mode(hass):
     #     """Test away mode."""
     #     system = SystemManagerMock.get_default_system()
-    #     system.hot_water.operation_mode = HeatingMode.OFF
+    #     system.hot_water.operating_mode = HeatingMode.OFF
     #
     #     assert await _setup(hass, system=system)
     #     _assert_state(hass, HeatingMode.OFF, HotWater.MIN_TEMP, 45, 'on')
@@ -226,7 +227,7 @@ async def test_holiday_mode(hass):
     #     assert await _setup(hass)
     #
     #     hot_water = SystemManagerMock.system.hot_water
-    #     hot_water.operation_mode = HeatingMode.OFF
+    #     hot_water.operating_mode = HeatingMode.OFF
     #     SystemManagerMock.instance.get_hot_water.return_value = hot_water
     #
     #     await hass.services.async_call('water_heater',
@@ -238,7 +239,7 @@ async def test_holiday_mode(hass):
     #                                    })
     #     await hass.async_block_till_done()
     #
-    #     SystemManagerMock.instance.set_hot_water_operation_mode.\
+    #     SystemManagerMock.instance.set_hot_water_operating_mode.\
     #         assert_called_once_with(ANY, HeatingMode.OFF)
     #     _assert_state(hass, HeatingMode.OFF, HotWater.MIN_TEMP, 45, 'on')
     #
@@ -248,7 +249,7 @@ async def test_holiday_mode(hass):
     #     assert await _setup(hass)
     #
     #     hot_water = SystemManagerMock.system.hot_water
-    #     hot_water.operation_mode = HeatingMode.AUTO
+    #     hot_water.operating_mode = HeatingMode.AUTO
     #     SystemManagerMock.instance.get_hot_water.return_value = hot_water
     #
     #     await hass.services.async_call('water_heater',
@@ -260,48 +261,48 @@ async def test_holiday_mode(hass):
     #                                    })
     #     await hass.async_block_till_done()
     #
-    #     SystemManagerMock.instance.set_hot_water_operation_mode.\
+    #     SystemManagerMock.instance.set_hot_water_operating_mode.\
     #         assert_called_once_with(ANY, HeatingMode.AUTO)
     #
     #     _assert_state(hass, HeatingMode.AUTO, HotWater.MIN_TEMP, 45, 'off')
     #
     #
-    # async def test_set_operation_mode(hass):
+    # async def test_set_operating_mode(hass):
     #     """Test set operation mode."""
     #     assert await _setup(hass)
     #
     #     hot_water = SystemManagerMock.system.hot_water
-    #     hot_water.operation_mode = HeatingMode.ON
+    #     hot_water.operating_mode = HeatingMode.ON
     #     SystemManagerMock.instance.get_hot_water.return_value = hot_water
     #
     #     await hass.services.async_call('water_heater',
-    #                                    'set_operation_mode',
+    #                                    'set_operating_mode',
     #                                    {
     #                                        'entity_id':
     #                                            'water_heater.vaillant_hot_water',
-    #                                        'operation_mode': 'ON'
+    #                                        'operating_mode': 'ON'
     #                                    })
     #     await hass.async_block_till_done()
     #
-    #     SystemManagerMock.instance.set_hot_water_operation_mode\
+    #     SystemManagerMock.instance.set_hot_water_operating_mode\
     #         .assert_called_once_with(ANY, HeatingMode.ON)
     #     _assert_state(hass, HeatingMode.ON, 40, 45, 'off')
     #
     #
-    # async def test_set_operation_mode_wrong(hass):
+    # async def test_set_operating_mode_wrong(hass):
     #     """Test set operation mode with wrong mode."""
     #     assert await _setup(hass)
     #
     #     await hass.services.async_call('water_heater',
-    #                                    'set_operation_mode',
+    #                                    'set_operating_mode',
     #                                    {
     #                                        'entity_id':
     #                                            'water_heater.vaillant_hot_water',
-    #                                        'operation_mode': 'wrong'
+    #                                        'operating_mode': 'wrong'
     #                                    })
     #     await hass.async_block_till_done()
     #
-    #     SystemManagerMock.instance.set_hot_water_operation_mode\
+    #     SystemManagerMock.instance.set_hot_water_operating_mode\
     #         .assert_not_called()
     #     _assert_state(hass, HeatingMode.AUTO, HotWater.MIN_TEMP, 45, 'off')
     #
@@ -309,7 +310,7 @@ async def test_holiday_mode(hass):
     # async def test_set_temperature(hass):
     #     """Test set target temperature."""
     #     system = SystemManagerMock.get_default_system()
-    #     system.hot_water.operation_mode = HeatingMode.ON
+    #     system.hot_water.operating_mode = HeatingMode.ON
     #     assert await _setup(hass, system=system)
     #
     #     SystemManagerMock.system.hot_water.target_temperature = 50
