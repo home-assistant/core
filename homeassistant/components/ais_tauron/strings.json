@@ -1,0 +1,23 @@
+{
+    "config": {
+        "title": "AIS TAURON",
+        "step": {
+            "init": {
+                "title": "Enter the connection parameters to the TAURON eLicznik.",
+                "description": "We will add sensors to get energy usage data from TAURON eLicznik.\n\n {error_info} ",
+                "data": {
+                     "username": "Username used to login at eLicznik",
+                     "password": "Password used to login at eLicznik",
+                     "energy_meter_id": "ID of energy meter"
+                }
+            },
+           "confirm": {
+                "description": "![Tauron logo](/static/icons/tauron_elicznik_logo.png)\n\nThis sensor uses unofficial API to get energy usage data from TAURON eLicznik. Do you want to continue?\n",
+                "title": "Tauron AMIplus sensors"
+           }
+        },
+        "error": {
+            "server_no_connection": "Cannot connect to TAURON eLicznik server."
+        }
+    }
+}

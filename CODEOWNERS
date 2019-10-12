@@ -16,6 +16,7 @@ homeassistant/scripts/check_config.py @kellerza
 homeassistant/components/adguard/* @frenck
 homeassistant/components/airvisual/* @bachya
 homeassistant/components/ais_supla/* @araczkowski
+homeassistant/components/ais_tauron/* @araczkowski
 homeassistant/components/alarm_control_panel/* @colinodell
 homeassistant/components/alpha_vantage/* @fabaff
 homeassistant/components/amazon_polly/* @robbiet480

@@ -4,19 +4,19 @@
         "step": {
             "init": {
                 "title": "Podaj parametry połączenia z serwerem Supla",
-                "description": "Wykryjemy Toje urządzenia na serwerze Supla Cloud lub na Twoim serwerze Supla.\n\n {error_info} ",
+                "description": "Wykryjemy Twoje urządzenia na serwerze Supla Cloud lub na Twoim serwerze Supla.\n\n {error_info} ",
                 "data": {
                      "server": "Serwer",
                      "access_token": "Token"
                 }
             },
            "confirm": {
-                "description": "![Supla logo](https://www.supla.org/assets/img/supla-cloud.svg)\n\nCzy chcesz połączyć się z serwerem Supla by wykryć swoje urządzenia?",
+                "description": "![Supla logo](/static/icons/supla_zamel_logo.png)\n\nCzy chcesz połączyć się z serwerem Supla by wykryć swoje urządzenia?",
                 "title": "Połączenie z Supla Cloud"
            }
         },
         "error": {
-            "supla_no_connection": "Nie można połączyć"
+            "supla_no_connection": "Nie można połączyć z Supla Cloud"
         }
     }
 }

@@ -60,7 +60,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up SUPLA as config entry."""
-    _LOGGER.info("supla async_setup_entry")
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
     hass.async_create_task(async_discover_devices(hass, config_entry))

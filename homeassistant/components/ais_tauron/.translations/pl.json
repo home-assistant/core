@@ -1,0 +1,23 @@
+{
+    "config": {
+        "title": "AIS TAURON",
+        "step": {
+            "init": {
+                "title": "Wprowadź parametry połączenia do TAURON eLicznik.",
+                "description": "Dodamy czujniki, aby uzyskać dane dotyczące zużycia energii od TAURON eLicznik.\n\n {error_info} ",
+                "data": {
+                     "username": "Nazwa użytkownika używana do logowania w eLicznik",
+                     "password": "Hasło używane do logowania w eLiczniku",
+                     "energy_meter_id": "Punkt poboru"
+                }
+            },
+           "confirm": {
+                "description": "![Tauron logo](/static/icons/tauron_elicznik_logo.png)\n\nTa integracja używa nieoficjalnego API do pobierania danych o zużyciu energii z TAURON eLicznik. Czy chcesz kontynuować?\n\n",
+                "title": "Tauron AMIplus sensors"
+           }
+        },
+        "error": {
+            "server_no_connection": "Nie można połączyć się z serwerem TAURON eLicznik."
+        }
+    }
+}

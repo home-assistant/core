@@ -1,0 +1,11 @@
+{
+  "domain": "ais_tauron",
+  "name": "AIS TAURON",
+  "documentation": "https://www.ai-speaker.com",
+  "config_flow": true,
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@araczkowski"
+  ]
+}
