@@ -32,6 +32,7 @@ CONF_QUADRUPLE_PRESS = "remote_button_quadruple_press"
 CONF_QUINTUPLE_PRESS = "remote_button_quintuple_press"
 CONF_ROTATED = "remote_button_rotated"
 CONF_ROTATION_STOPPED = "remote_button_rotation_stopped"
+CONF_AWAKE = "remote_awakened"
 CONF_PUSH = "remote_pushed"
 CONF_DOUBLE_TAP = "remote_double_tap"
 CONF_SHAKE = "remote_gyro_activated"
@@ -189,6 +190,7 @@ AQARA_CUBE = {
     (CONF_DOUBLE_TAP, CONF_SIDE_4): 4004,
     (CONF_DOUBLE_TAP, CONF_SIDE_5): 1001,
     (CONF_DOUBLE_TAP, CONF_SIDE_6): 5005,
+    (CONF_AWAKE, ""): 7000,
     (CONF_DROP, ""): 7008,
     (CONF_SHAKE, ""): 7007,
 }
