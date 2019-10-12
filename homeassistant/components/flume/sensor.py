@@ -37,24 +37,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Flume sensor."""
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    client_id = config.get(CONF_CLIENT_ID)
-    client_secret = config.get(CONF_CLIENT_SECRET)
+    _username = config[CONF_USERNAME]
+    _password = config[CONF_PASSWORD]
+    _client_id = config[CONF_CLIENT_ID]
+    _client_secret = config[CONF_CLIENT_SECRET]
     time_zone = str(hass.config.time_zone)
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
 
-    flume_devices = FlumeAuth(username, password, client_id, client_secret)
+    flume_devices = FlumeAuth(_username, _password, _client_id, _client_secret)
 
     try:
 
         for device in flume_devices.device_list:
             if device["type"] == FLUME_TYPE_SENSOR:
                 flume = FlumeData(
-                    username,
-                    password,
-                    client_id,
-                    client_secret,
+                    _username,
+                    _password,
+                    _client_id,
+                    _client_secret,
                     device["id"],
                     time_zone,
                     SCAN_INTERVAL,
