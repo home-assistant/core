@@ -282,7 +282,7 @@ bimmer_connected==0.6.0
 bizkaibus==0.1.1
 
 # homeassistant.components.blink
-blinkpy==0.14.1
+blinkpy==0.14.2
 
 # homeassistant.components.blinksticklight
 blinkstick==1.1.8
