@@ -7,3 +7,12 @@ play_playlist:
     random_song:
       description: True to select random song at start, False to start from beginning.
       example: true
+search:
+  description: Start a search request on Spotify.
+  fields:
+    media_type:
+      description: The type of media to search for (track, artist, album or playlist).
+      example: 'track'
+    search_query:
+      description: The search query.
+      example: 'Adele'
