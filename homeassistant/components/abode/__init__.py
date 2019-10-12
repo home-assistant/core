@@ -93,7 +93,7 @@ class AbodeSystem:
 
 
 async def async_setup(hass, config):
-    """Set up Abode component."""
+    """Set up Abode platform."""
     if DOMAIN not in config:
         return True
 
@@ -109,7 +109,7 @@ async def async_setup(hass, config):
 
 
 async def async_setup_entry(hass, config_entry):
-    """Set up Abode component via config entry (Integrations UI)."""
+    """Set up Abode platform from a config entry."""
     username = config_entry.data.get(CONF_USERNAME)
     password = config_entry.data.get(CONF_PASSWORD)
     polling = config_entry.data.get(CONF_POLLING)
@@ -270,16 +270,22 @@ class AbodeDevice(Entity):
     """Representation of an Abode device."""
 
     def __init__(self, data, device):
-        """Initialize a sensor for Abode device."""
+        """Initialize Abode device."""
         self._data = data
         self._device = device
 
     async def async_added_to_hass(self):
-        """Subscribe Abode events."""
+        """Subscribe to device events."""
         self.hass.async_add_job(
             self._data.abode.events.add_device_callback,
             self._device.device_id,
             self._update_callback,
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe from device events."""
+        self.hass.async_add_job(
+            self._data.abode.events.remove_device_all_callbacks, self._device.device_id
         )
 
     @property
@@ -293,7 +299,7 @@ class AbodeDevice(Entity):
 
     @property
     def name(self):
-        """Return the name of the sensor."""
+        """Return the name of the device."""
         return self._device.name
 
     @property
@@ -356,7 +362,7 @@ class AbodeAutomation(Entity):
 
     @property
     def name(self):
-        """Return the name of the sensor."""
+        """Return the name of the automation."""
         return self._automation.name
 
     @property
@@ -370,6 +376,6 @@ class AbodeAutomation(Entity):
         }
 
     def _update_callback(self, device):
-        """Update the device state."""
+        """Update the automation state."""
         self._automation.refresh()
         self.schedule_update_ha_state()
