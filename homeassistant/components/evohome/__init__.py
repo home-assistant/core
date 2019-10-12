@@ -157,9 +157,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
                 dt_util.parse_datetime(tokens[ACCESS_TOKEN_EXPIRES])
             )
 
-        session_data = tokens.pop(USER_DATA, None)
+        user_data = tokens.pop(USER_DATA, None)
 
-        return (tokens, session_data)
+        return (tokens, user_data)
 
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
     app_storage = await store.async_load()
@@ -208,10 +208,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         hass, client_v2, client_v1, store, config[DOMAIN]
     )
 
-    if _LOGGER.isEnabledFor(logging.DEBUG):  # don't do an I/O unless required
-        await broker.update()  # includes: _LOGGER.debug("Status = %s"...
-
-    await hass.async_add_job(broker.save_auth_tokens())
+    await broker.update()  # get initial state
 
     hass.async_create_task(async_load_platform(hass, "climate", DOMAIN, {}, config))
     if broker.tcs.hotwater:
@@ -246,7 +243,7 @@ class EvoBroker:
         )
         self.temps = None
 
-    async def save_auth_tokens(self, *args) -> None:
+    async def _save_auth_tokens(self, *args) -> None:
         """Save access tokens and session IDs to the store for later use."""
         # evohomeasync2 uses naive/local datetimes
         access_token_expires = _local_dt_to_aware(self.client.access_token_expires)
@@ -266,14 +263,14 @@ class EvoBroker:
 
         await self._store.async_save(app_storage)
 
-        self.hass.helpers.event.async_track_point_in_utc_time(
-            self.save_auth_tokens,
-            access_token_expires + self.params[CONF_SCAN_INTERVAL],
-        )
-
     async def _update_v1(self, *args, **kwargs) -> None:
-        """Get the latest (high-precision) temperatures of the default Location."""
-        loc_idx = self.params[CONF_LOCATION_IDX]
+        """Get the latest high-precision temperatures of the default Location."""
+
+        def get_session_id(client_v1) -> Optional[str]:
+            user_data = client_v1.user_data if client_v1 else None
+            return user_data.get("sessionId") if user_data else None
+
+        session_id = get_session_id(self.client_v1)
 
         try:
             temps = list(await self.client_v1.temperatures(force_refresh=True))
@@ -285,12 +282,12 @@ class EvoBroker:
         else:
             if (
                 str(self.client_v1.location_id)
-                != self.client.locations[loc_idx].locationId
+                != self.client.locations[self.params[CONF_LOCATION_IDX]].locationId
             ):
                 _LOGGER.warning(
                     "The v2 API's configured location doesn't match "
                     "the v1 API's default location (there is more than one location), "
-                    "the high-precision feature will be disabled"
+                    "so the high-precision feature will be disabled"
                 )
                 self.client_v1 = self.temps = None
             else:
@@ -298,10 +295,19 @@ class EvoBroker:
 
         _LOGGER.debug("Temperatures = %s", self.temps)
 
+        if session_id != get_session_id(self.client_v1):
+            _LOGGER.warn(
+                "_update_v1() \n\nold = %s, \n\nnew = %s",
+                session_id,
+                get_session_id(self.client_v1),
+            )
+            await self._save_auth_tokens()
+
     async def _update_v2(self, *args, **kwargs) -> None:
         """Get the latest modes, temperatures, setpoints of a Location."""
-        loc_idx = self.params[CONF_LOCATION_IDX]
+        access_token = self.client.access_token
 
+        loc_idx = self.params[CONF_LOCATION_IDX]
         try:
             status = await self.client.locations[loc_idx].status()
         except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
@@ -310,6 +316,14 @@ class EvoBroker:
             self.hass.helpers.dispatcher.async_dispatcher_send(DOMAIN)
 
             _LOGGER.debug("Status = %s", status[GWS][0][TCS][0])
+
+        if access_token != self.client.access_token:
+            _LOGGER.warn(
+                "_update_v2(access_token) \n\nold = %s, \n\nnew = %s",
+                access_token,
+                self.client.access_token,
+            )
+            await self._save_auth_tokens()
 
     async def update(self, *args, **kwargs) -> None:
         """Get the latest state data of an entire evohome Location.
@@ -433,6 +447,8 @@ class EvoChild(EvoDevice):
 
         if self._evo_broker.temps:
             return self._evo_broker.temps[self._evo_device.zoneId]
+
+        _LOGGER.warn("current_temperature() no temps!")  # TODO: delete me
 
         return self._evo_device.temperatureStatus["temperature"]
 
