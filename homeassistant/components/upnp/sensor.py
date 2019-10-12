@@ -95,7 +95,7 @@ class UpnpSensor(Entity):
         """Get device info."""
         return {
             "connections": {(dr.CONNECTION_UPNP, self._device.udn)},
-            "identifiers": {(DOMAIN_UPNP, self.unique_id)},
+            "identifiers": {(DOMAIN_UPNP, self._device.udn)},
             "name": self._device.name,
             "manufacturer": self._device.manufacturer,
             "model": self._device.model_name,
