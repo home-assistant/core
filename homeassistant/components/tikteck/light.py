@@ -1,18 +1,18 @@
 """Support for Tikteck lights."""
 import logging
-import tikteck
 
+import tikteck
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PASSWORD
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
+    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     Light,
-    PLATFORM_SCHEMA,
 )
+from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
