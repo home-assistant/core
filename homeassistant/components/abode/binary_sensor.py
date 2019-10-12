@@ -1,6 +1,9 @@
 """Support for Abode Security System binary sensors."""
 import logging
 
+import abodepy.helpers.constants as CONST
+import abodepy.helpers.timeline as TIMELINE
+
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from . import DOMAIN as ABODE_DOMAIN, AbodeAutomation, AbodeDevice
@@ -10,8 +13,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a sensor for an Abode device."""
-    import abodepy.helpers.constants as CONST
-    import abodepy.helpers.timeline as TIMELINE
 
     data = hass.data[ABODE_DOMAIN]
 

@@ -3,6 +3,8 @@ from datetime import timedelta
 import logging
 
 import requests
+import abodepy.helpers.constants as CONST
+import abodepy.helpers.timeline as TIMELINE
 
 from homeassistant.components.camera import Camera
 from homeassistant.util import Throttle
@@ -16,8 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Abode camera devices."""
-    import abodepy.helpers.constants as CONST
-    import abodepy.helpers.timeline as TIMELINE
 
     data = hass.data[ABODE_DOMAIN]
 
