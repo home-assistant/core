@@ -41,7 +41,6 @@ async def async_get_conditions(hass: HomeAssistant, device_id: str) -> List[dict
             continue
 
         # Add conditions for each entity that belongs to this integration
-        # TODO add your own conditions.
         conditions.append(
             {
                 CONF_CONDITION: "device",
