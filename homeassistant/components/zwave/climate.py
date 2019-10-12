@@ -19,6 +19,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_OFF,
+    PRESET_AWAY,
     PRESET_BOOST,
     PRESET_NONE,
     SUPPORT_AUX_HEAT,
@@ -72,6 +73,24 @@ HVAC_STATE_MAPPINGS = {
     "auto changeover": HVAC_MODE_HEAT_COOL,
 }
 
+MODE_SETPOINT_MAPPINGS = {
+    "off": (),
+    "heat": ("setpoint_heating",),
+    "cool": ("setpoint_cooling",),
+    "auto": ("setpoint_heating", "setpoint_cooling"),
+    "aux heat": ("setpoint_heating",),
+    "furnace": ("setpoint_furnace",),
+    "dry air": ("setpoint_dry_air",),
+    "moist air": ("setpoint_moist_air",),
+    "auto changeover": ("setpoint_auto_changeover",),
+    "heat econ": ("setpoint_eco_heating",),
+    "cool econ": ("setpoint_eco_cooling",),
+    "away": ("setpoint_away_heating", "setpoint_away_cooling"),
+    "full power": ("setpoint_full_power",),
+    # for tests
+    "heat_cool": ("setpoint_heating", "setpoint_cooling"),
+}
+
 HVAC_CURRENT_MAPPINGS = {
     "idle": CURRENT_HVAC_IDLE,
     "heat": CURRENT_HVAC_HEAT,
@@ -86,6 +105,7 @@ HVAC_CURRENT_MAPPINGS = {
 }
 
 PRESET_MAPPINGS = {
+    "away": PRESET_AWAY,
     "full power": PRESET_BOOST,
     "manufacturer specific": PRESET_MANUFACTURER_SPECIFIC,
 }
@@ -162,24 +182,17 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         self.update_properties()
 
     def _current_mode_setpoints(self):
-        if self.hvac_mode == HVAC_MODE_OFF:
-            return ()
-        if self.hvac_mode == HVAC_MODE_HEAT:
-            return (self.values.setpoint_heating,)
-        if self.hvac_mode == HVAC_MODE_COOL:
-            return (self.values.setpoint_cooling,)
-        if self.hvac_mode == HVAC_MODE_HEAT_COOL:
-            return (self.values.setpoint_heating, self.values.setpoint_cooling)
-        return ()
+        current_mode = str(self.values.primary.data).lower()
+        setpoints_names = MODE_SETPOINT_MAPPINGS.get(current_mode, ())
+        return tuple(getattr(self.values, name, None) for name in setpoints_names)
 
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        support = 0
-        current_setpoints = self._current_mode_setpoints()
-        if len(current_setpoints) == 1:
-            support |= SUPPORT_TARGET_TEMPERATURE
-        elif len(current_setpoints) == 2:
+        support = SUPPORT_TARGET_TEMPERATURE
+        if HVAC_MODE_HEAT_COOL in self._hvac_list:
+            support |= SUPPORT_TARGET_TEMPERATURE_RANGE
+        if PRESET_AWAY in self._preset_list:
             support |= SUPPORT_TARGET_TEMPERATURE_RANGE
 
         if self.values.fan_mode:
@@ -338,6 +351,8 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
     def _update_target_temp(self):
         """Update target temperature."""
         current_setpoints = self._current_mode_setpoints()
+        self._target_temperature = None
+        self._target_temperature_range = (None, None)
         if len(current_setpoints) == 1:
             (setpoint,) = current_setpoints
             if setpoint is not None:
