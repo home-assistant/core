@@ -99,7 +99,7 @@ def convert_dict(dictionary: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _handle_exception(err) -> bool:
-    """Return False if the."""
+    """Return False if the exception can't be ignored."""
     try:
         raise err
 
@@ -145,14 +145,17 @@ def _handle_exception(err) -> bool:
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Create a (EMEA/EU-based) Honeywell evohome system."""
 
-    def load_auth_tokens(app_storage) -> Tuple[Dict, Optional[Dict]]:
+    async def load_auth_tokens(store) -> Tuple[Dict, Optional[Dict]]:
+        app_storage = await store.async_load()
+
         tokens = dict(app_storage if app_storage else {})
 
         if tokens.pop(CONF_USERNAME, None) != config[DOMAIN][CONF_USERNAME]:
+            await store.async_save({})
             return ({}, None)  # any tokens wont be valid
 
         # evohomeasync2 requires naive/local datetimes as strings
-        if tokens[ACCESS_TOKEN_EXPIRES] is not None:
+        if tokens.get(ACCESS_TOKEN_EXPIRES) is not None:
             tokens[ACCESS_TOKEN_EXPIRES] = _dt_to_local_naive(
                 dt_util.parse_datetime(tokens[ACCESS_TOKEN_EXPIRES])
             )
@@ -162,9 +165,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         return (tokens, user_data)
 
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
-    app_storage = await store.async_load()
-
-    tokens, user_data = load_auth_tokens(app_storage)
+    tokens, user_data = await load_auth_tokens(store)
 
     client_v2 = evohomeasync2.EvohomeClient(
         config[DOMAIN][CONF_USERNAME],
@@ -244,12 +245,14 @@ class EvoBroker:
         )
         self.temps = None
 
-    async def save_auth_tokens(self, *args) -> None:
+    async def save_auth_tokens(self) -> None:
         """Save access tokens and session IDs to the store for later use."""
         # evohomeasync2 uses naive/local datetimes
         access_token_expires = _local_dt_to_aware(self.client.access_token_expires)
 
-        app_storage = {CONF_USERNAME: self.client.username}
+        app_storage = await self._store.async_load()
+
+        app_storage[CONF_USERNAME] = self.client.username
         app_storage[REFRESH_TOKEN] = self.client.refresh_token
         app_storage[ACCESS_TOKEN] = self.client.access_token
         app_storage[ACCESS_TOKEN_EXPIRES] = access_token_expires.isoformat()
@@ -259,6 +262,7 @@ class EvoBroker:
                 "userInfo": {"userID": self.client_v1.user_data["userInfo"]["userID"]},
                 "sessionId": self.client_v1.user_data["sessionId"],
             }
+
         else:
             app_storage[USER_DATA] = None
 
