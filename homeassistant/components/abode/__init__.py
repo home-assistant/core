@@ -285,7 +285,7 @@ class AbodeDevice(Entity):
     async def async_will_remove_from_hass(self):
         """Unsubscribe from device events."""
         self.hass.async_add_job(
-            self._data.abode.events.remove_device_all_callbacks, self._device.device_id
+            self._data.abode.events.remove_all_device_callbacks, self._device.device_id
         )
 
     @property
