@@ -1,10 +1,10 @@
 """Support for tracking the online status of a UPS."""
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import BinarySensorDevice, PLATFORM_SCHEMA
+from homeassistant.components import apcupsd
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components import apcupsd
 
 DEFAULT_NAME = "UPS Online Status"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
