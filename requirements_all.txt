@@ -1202,7 +1202,7 @@ pyfttt==0.3
 
 # homeassistant.components.bluetooth_le_tracker
 # homeassistant.components.skybeacon
-pygatt[GATTTOOL]==4.0.1
+pygatt[GATTTOOL]==4.0.5
 
 # homeassistant.components.gogogate2
 pygogogate2==0.1.1
