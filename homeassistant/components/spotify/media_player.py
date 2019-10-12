@@ -316,6 +316,20 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
             position = random.randint(0, results["total"] - 1)
             kwargs["offset"] = {"position": position}
         self._player.start_playback(**kwargs)
+        
+    def search(self, media_type, search_query, **kwargs):
+        """Search spotify."""
+        if media_type not in ['album', 'artist', 'playlist', 'track']:
+            _LOGGER.error("media type %s is not supported by spotify search api", media_type)
+        try:
+            search_result = self._player.search(q=search_query, type=media_type)[media_type + 's']['items'][0]
+        except IndexError:
+            _LOGGER.error("no result found for search query %s", search_query)
+            return
+        except:
+            _LOGGER.error("an error occured while calling the spotify search api")
+            return
+        return search_result
 
     @property
     def name(self):
