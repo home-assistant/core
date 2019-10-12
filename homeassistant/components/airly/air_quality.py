@@ -148,6 +148,9 @@ class AirlyAirQuality(AirQualityEntity):
         """Get the data from Airly."""
         await self.airly.async_update()
 
+        if self.airly.data:
+            self.data = self.airly.data
+
         self._pm_10 = self.data[ATTR_API_PM10]
         self._pm_2_5 = self.data[ATTR_API_PM25]
         self._aqi = self.data[ATTR_API_CAQI]
