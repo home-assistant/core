@@ -2,7 +2,7 @@
   "domain": "withings",
   "name": "Withings",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/withings",
+  "documentation": "https://www.home-assistant.io/integrations/withings",
   "requirements": [
     "nokia==1.2.0"
   ],

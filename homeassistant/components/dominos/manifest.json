@@ -1,7 +1,7 @@
 {
   "domain": "dominos",
   "name": "Dominos",
-  "documentation": "https://www.home-assistant.io/components/dominos",
+  "documentation": "https://www.home-assistant.io/integrations/dominos",
   "requirements": [
     "pizzapi==0.0.3"
   ],

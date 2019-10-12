@@ -22,7 +22,7 @@ from . import (
     SetupFlow,
 )
 
-REQUIREMENTS = ["pyotp==2.2.7"]
+REQUIREMENTS = ["pyotp==2.3.0"]
 
 CONF_MESSAGE = "message"
 
@@ -251,8 +251,10 @@ class NotifyAuthModule(MultiFactorAuthModule):
             _LOGGER.error("Cannot find user %s", user_id)
             return
 
-        await self.async_notify(  # type: ignore
-            code, notify_setting.notify_service, notify_setting.target
+        await self.async_notify(
+            code,
+            notify_setting.notify_service,  # type: ignore
+            notify_setting.target,
         )
 
     async def async_notify(

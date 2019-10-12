@@ -1,7 +1,9 @@
 """Device automation helpers for toggle entity."""
+from typing import Any, Dict, List
 import voluptuous as vol
 
-import homeassistant.components.automation.state as state
+from homeassistant.core import Context, HomeAssistant, CALLBACK_TYPE
+from homeassistant.components.automation import state, AutomationActionType
 from homeassistant.components.device_automation.const import (
     CONF_IS_OFF,
     CONF_IS_ON,
@@ -11,17 +13,20 @@ from homeassistant.components.device_automation.const import (
     CONF_TURNED_OFF,
     CONF_TURNED_ON,
 )
-from homeassistant.core import split_entity_id
 from homeassistant.const import (
     CONF_CONDITION,
-    CONF_DEVICE_ID,
-    CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_FOR,
     CONF_PLATFORM,
     CONF_TYPE,
 )
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers import condition, config_validation as cv, service
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+from . import TRIGGER_BASE_SCHEMA
+
+
+# mypy: allow-untyped-calls, allow-untyped-defs
 
 ENTITY_ACTIONS = [
     {
@@ -64,43 +69,37 @@ ENTITY_TRIGGERS = [
     },
 ]
 
-ACTION_SCHEMA = vol.Schema(
+ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_DEVICE_ID): str,
-        vol.Required(CONF_DOMAIN): str,
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In([CONF_TOGGLE, CONF_TURN_OFF, CONF_TURN_ON]),
     }
 )
 
-CONDITION_SCHEMA = vol.Schema(
+CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_CONDITION): "device",
-        vol.Required(CONF_DEVICE_ID): str,
-        vol.Required(CONF_DOMAIN): str,
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In([CONF_IS_OFF, CONF_IS_ON]),
     }
 )
 
-TRIGGER_SCHEMA = vol.Schema(
+TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): "device",
-        vol.Required(CONF_DEVICE_ID): str,
-        vol.Required(CONF_DOMAIN): str,
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In([CONF_TURNED_OFF, CONF_TURNED_ON]),
+        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
 
-def _is_domain(entity, domain):
-    return split_entity_id(entity.entity_id)[0] == domain
-
-
-async def async_call_action_from_config(hass, config, variables, context, domain):
+async def async_call_action_from_config(
+    hass: HomeAssistant,
+    config: ConfigType,
+    variables: TemplateVarsType,
+    context: Context,
+    domain: str,
+) -> None:
     """Change state based on configuration."""
-    config = ACTION_SCHEMA(config)
     action_type = config[CONF_TYPE]
     if action_type == CONF_TURN_ON:
         action = "turn_on"
@@ -119,7 +118,9 @@ async def async_call_action_from_config(hass, config, variables, context, domain
     )
 
 
-def async_condition_from_config(config, config_validation):
+def async_condition_from_config(
+    config: ConfigType, config_validation: bool
+) -> condition.ConditionCheckerType:
     """Evaluate state based on configuration."""
     condition_type = config[CONF_TYPE]
     if condition_type == CONF_IS_ON:
@@ -135,7 +136,12 @@ def async_condition_from_config(config, config_validation):
     return condition.state_from_config(state_config, config_validation)
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: AutomationActionType,
+    automation_info: dict,
+) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     trigger_type = config[CONF_TYPE]
     if trigger_type == CONF_TURNED_ON:
@@ -149,38 +155,68 @@ async def async_attach_trigger(hass, config, action, automation_info):
         state.CONF_FROM: from_state,
         state.CONF_TO: to_state,
     }
+    if CONF_FOR in config:
+        state_config[CONF_FOR] = config[CONF_FOR]
 
-    return await state.async_trigger(hass, state_config, action, automation_info)
+    return await state.async_attach_trigger(
+        hass, state_config, action, automation_info, platform_type="device"
+    )
 
 
-async def _async_get_automations(hass, device_id, automation_templates, domain):
+async def _async_get_automations(
+    hass: HomeAssistant, device_id: str, automation_templates: List[dict], domain: str
+) -> List[dict]:
     """List device automations."""
-    automations = []
+    automations: List[Dict[str, Any]] = []
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
-    entities = async_entries_for_device(entity_registry, device_id)
-    domain_entities = [x for x in entities if _is_domain(x, domain)]
-    for entity in domain_entities:
-        for automation in automation_templates:
-            automation = dict(automation)
-            automation.update(
-                device_id=device_id, entity_id=entity.entity_id, domain=domain
+    entries = [
+        entry
+        for entry in async_entries_for_device(entity_registry, device_id)
+        if entry.domain == domain
+    ]
+
+    for entry in entries:
+        automations.extend(
+            (
+                {
+                    **template,
+                    "device_id": device_id,
+                    "entity_id": entry.entity_id,
+                    "domain": domain,
+                }
+                for template in automation_templates
             )
-            automations.append(automation)
+        )
 
     return automations
 
 
-async def async_get_actions(hass, device_id, domain):
+async def async_get_actions(
+    hass: HomeAssistant, device_id: str, domain: str
+) -> List[dict]:
     """List device actions."""
     return await _async_get_automations(hass, device_id, ENTITY_ACTIONS, domain)
 
 
-async def async_get_conditions(hass, device_id, domain):
+async def async_get_conditions(
+    hass: HomeAssistant, device_id: str, domain: str
+) -> List[dict]:
     """List device conditions."""
     return await _async_get_automations(hass, device_id, ENTITY_CONDITIONS, domain)
 
 
-async def async_get_triggers(hass, device_id, domain):
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str, domain: str
+) -> List[dict]:
     """List device triggers."""
     return await _async_get_automations(hass, device_id, ENTITY_TRIGGERS, domain)
+
+
+async def async_get_trigger_capabilities(hass: HomeAssistant, trigger: dict) -> dict:
+    """List trigger capabilities."""
+    return {
+        "extra_fields": vol.Schema(
+            {vol.Optional(CONF_FOR): cv.positive_time_period_dict}
+        )
+    }

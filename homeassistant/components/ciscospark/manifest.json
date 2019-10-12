@@ -1,7 +1,7 @@
 {
   "domain": "ciscospark",
   "name": "Ciscospark",
-  "documentation": "https://www.home-assistant.io/components/ciscospark",
+  "documentation": "https://www.home-assistant.io/integrations/ciscospark",
   "requirements": [
     "ciscosparkapi==0.4.2"
   ],

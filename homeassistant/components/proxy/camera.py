@@ -9,7 +9,6 @@ from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_MODE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.util.async_ import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -220,7 +219,7 @@ class ProxyCamera(Camera):
 
     def camera_image(self):
         """Return camera image."""
-        return run_coroutine_threadsafe(
+        return asyncio.run_coroutine_threadsafe(
             self.async_camera_image(), self.hass.loop
         ).result()
 

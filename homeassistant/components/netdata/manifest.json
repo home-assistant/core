@@ -1,7 +1,7 @@
 {
   "domain": "netdata",
   "name": "Netdata",
-  "documentation": "https://www.home-assistant.io/components/netdata",
+  "documentation": "https://www.home-assistant.io/integrations/netdata",
   "requirements": [
     "netdata==0.1.2"
   ],

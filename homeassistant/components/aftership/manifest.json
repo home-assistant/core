@@ -1,7 +1,7 @@
 {
   "domain": "aftership",
   "name": "Aftership",
-  "documentation": "https://www.home-assistant.io/components/aftership",
+  "documentation": "https://www.home-assistant.io/integrations/aftership",
   "requirements": [
     "pyaftership==0.1.2"
   ],

@@ -6,6 +6,8 @@
             "turn_on": "Vklopite {entity_name}"
         },
         "condition_type": {
+            "is_off": "{entity_name} je izklopljen",
+            "is_on": "{entity_name} je vklopljen",
             "turn_off": "{entity_name} izklopljen",
             "turn_on": "{entity_name} vklopljen"
         },

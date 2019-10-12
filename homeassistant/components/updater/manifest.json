@@ -1,7 +1,7 @@
 {
   "domain": "updater",
   "name": "Updater",
-  "documentation": "https://www.home-assistant.io/components/updater",
+  "documentation": "https://www.home-assistant.io/integrations/updater",
   "requirements": [
     "distro==1.4.0"
   ],

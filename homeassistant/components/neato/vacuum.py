@@ -27,7 +27,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumDevice,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import extract_entity_ids
 
@@ -66,7 +66,6 @@ ATTR_CLEAN_BATTERY_END = "battery_level_at_clean_end"
 ATTR_CLEAN_SUSP_COUNT = "clean_suspension_count"
 ATTR_CLEAN_SUSP_TIME = "clean_suspension_time"
 
-ATTR_MODE = "mode"
 ATTR_NAVIGATION = "navigation"
 ATTR_CATEGORY = "category"
 ATTR_ZONE = "zone"

@@ -1,8 +1,9 @@
 """This platform allows several lights to be grouped into one light."""
+import asyncio
 from collections import Counter
 import itertools
 import logging
-from typing import Any, Callable, Iterator, List, Optional, Tuple
+from typing import Any, Callable, Iterator, List, Optional, Tuple, cast
 
 import voluptuous as vol
 
@@ -19,6 +20,7 @@ from homeassistant.core import State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.util import color as color_util
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -40,6 +42,9 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
 )
+
+
+# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +72,9 @@ async def async_setup_platform(
     hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ) -> None:
     """Initialize light.group platform."""
-    async_add_entities([LightGroup(config.get(CONF_NAME), config[CONF_ENTITIES])])
+    async_add_entities(
+        [LightGroup(cast(str, config.get(CONF_NAME)), config[CONF_ENTITIES])]
+    )
 
 
 class LightGroup(light.Light):
@@ -179,6 +186,7 @@ class LightGroup(light.Light):
     async def async_turn_on(self, **kwargs):
         """Forward the turn_on command to all lights in the light group."""
         data = {ATTR_ENTITY_ID: self._entity_ids}
+        emulate_color_temp_entity_ids = []
 
         if ATTR_BRIGHTNESS in kwargs:
             data[ATTR_BRIGHTNESS] = kwargs[ATTR_BRIGHTNESS]
@@ -188,6 +196,23 @@ class LightGroup(light.Light):
 
         if ATTR_COLOR_TEMP in kwargs:
             data[ATTR_COLOR_TEMP] = kwargs[ATTR_COLOR_TEMP]
+
+            # Create a new entity list to mutate
+            updated_entities = list(self._entity_ids)
+
+            # Walk through initial entity ids, split entity lists by support
+            for entity_id in self._entity_ids:
+                state = self.hass.states.get(entity_id)
+                if not state:
+                    continue
+                support = state.attributes.get(ATTR_SUPPORTED_FEATURES)
+                # Only pass color temperature to supported entity_ids
+                if bool(support & SUPPORT_COLOR) and not bool(
+                    support & SUPPORT_COLOR_TEMP
+                ):
+                    emulate_color_temp_entity_ids.append(entity_id)
+                    updated_entities.remove(entity_id)
+                    data[ATTR_ENTITY_ID] = updated_entities
 
         if ATTR_WHITE_VALUE in kwargs:
             data[ATTR_WHITE_VALUE] = kwargs[ATTR_WHITE_VALUE]
@@ -201,8 +226,32 @@ class LightGroup(light.Light):
         if ATTR_FLASH in kwargs:
             data[ATTR_FLASH] = kwargs[ATTR_FLASH]
 
-        await self.hass.services.async_call(
-            light.DOMAIN, light.SERVICE_TURN_ON, data, blocking=True
+        if not emulate_color_temp_entity_ids:
+            await self.hass.services.async_call(
+                light.DOMAIN, light.SERVICE_TURN_ON, data, blocking=True
+            )
+            return
+
+        emulate_color_temp_data = data.copy()
+        temp_k = color_util.color_temperature_mired_to_kelvin(
+            emulate_color_temp_data[ATTR_COLOR_TEMP]
+        )
+        hs_color = color_util.color_temperature_to_hs(temp_k)
+        emulate_color_temp_data[ATTR_HS_COLOR] = hs_color
+        del emulate_color_temp_data[ATTR_COLOR_TEMP]
+
+        emulate_color_temp_data[ATTR_ENTITY_ID] = emulate_color_temp_entity_ids
+
+        await asyncio.gather(
+            self.hass.services.async_call(
+                light.DOMAIN, light.SERVICE_TURN_ON, data, blocking=True
+            ),
+            self.hass.services.async_call(
+                light.DOMAIN,
+                light.SERVICE_TURN_ON,
+                emulate_color_temp_data,
+                blocking=True,
+            ),
         )
 
     async def async_turn_off(self, **kwargs):
@@ -219,7 +268,7 @@ class LightGroup(light.Light):
     async def async_update(self):
         """Query all members and determine the light group state."""
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
-        states = list(filter(None, all_states))
+        states: List[State] = list(filter(None, all_states))
         on_states = [state for state in states if state.state == STATE_ON]
 
         self._is_on = len(on_states) > 0

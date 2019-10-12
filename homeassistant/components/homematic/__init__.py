@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     ATTR_NAME,
     CONF_HOST,
     CONF_HOSTS,
@@ -47,7 +48,6 @@ ATTR_VALUE_TYPE = "value_type"
 ATTR_INTERFACE = "interface"
 ATTR_ERRORCODE = "error"
 ATTR_MESSAGE = "message"
-ATTR_MODE = "mode"
 ATTR_TIME = "time"
 ATTR_UNIQUE_ID = "unique_id"
 ATTR_PARAMSET_KEY = "paramset_key"

@@ -197,18 +197,20 @@ class GlancesSensor(Entity):
             elif self.type == "cpu_temp":
                 for sensor in value["sensors"]:
                     if sensor["label"] in [
-                        "CPU",
-                        "CPU Temperature",
-                        "Package id 0",
-                        "Physical id 0",
-                        "cpu_thermal 1",
-                        "cpu-thermal 1",
-                        "exynos-therm 1",
-                        "soc_thermal 1",
-                        "soc-thermal 1",
+                        "amdgpu 1",
                         "aml_thermal",
                         "Core 0",
                         "Core 1",
+                        "CPU Temperature",
+                        "CPU",
+                        "cpu-thermal 1",
+                        "cpu_thermal 1",
+                        "exynos-therm 1",
+                        "Package id 0",
+                        "Physical id 0",
+                        "radeon 1",
+                        "soc-thermal 1",
+                        "soc_thermal 1",
                     ]:
                         self._state = sensor["value"]
             elif self.type == "docker_active":

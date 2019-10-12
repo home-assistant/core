@@ -18,7 +18,7 @@ from homeassistant.util.yaml import dump
 from .const import KEY_REAL_IP
 
 
-# mypy: allow-incomplete-defs, allow-untyped-defs, no-check-untyped-defs
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -165,7 +165,7 @@ class IpBan:
         self.banned_at = banned_at or datetime.utcnow()
 
 
-async def async_load_ip_bans_config(hass: HomeAssistant, path: str):
+async def async_load_ip_bans_config(hass: HomeAssistant, path: str) -> List[IpBan]:
     """Load list of banned IPs from config file."""
     ip_list: List[IpBan] = []
 
@@ -188,7 +188,7 @@ async def async_load_ip_bans_config(hass: HomeAssistant, path: str):
     return ip_list
 
 
-def update_ip_bans_config(path: str, ip_ban: IpBan):
+def update_ip_bans_config(path: str, ip_ban: IpBan) -> None:
     """Update config file with new banned IP address."""
     with open(path, "a") as out:
         ip_ = {

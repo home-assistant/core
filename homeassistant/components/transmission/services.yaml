@@ -3,4 +3,4 @@ add_torrent:
   fields:
     torrent:
       description: URL, magnet link or Base64 encoded file.
-      example: http://releases.ubuntu.com/19.04/ubuntu-19.04-desktop-amd64.iso.torrent}
+      example: http://releases.ubuntu.com/19.04/ubuntu-19.04-desktop-amd64.iso.torrent

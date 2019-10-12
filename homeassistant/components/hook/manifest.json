@@ -1,7 +1,7 @@
 {
   "domain": "hook",
   "name": "Hook",
-  "documentation": "https://www.home-assistant.io/components/hook",
+  "documentation": "https://www.home-assistant.io/integrations/hook",
   "requirements": [],
   "dependencies": [],
   "codeowners": []
