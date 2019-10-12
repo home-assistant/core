@@ -47,7 +47,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     flume_devices = FlumeAuth(_username, _password, _client_id, _client_secret)
 
     try:
-
         for device in flume_devices.device_list:
             if device["type"] == FLUME_TYPE_SENSOR:
                 flume = FlumeData(
@@ -60,6 +59,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     SCAN_INTERVAL,
                 )
                 add_entities([FlumeSensor(flume, f"{name} {device['id']}")], True)
+    except KeyError:
+        _LOGGER.exception("No Flume Devices Returned of Type: %s", FLUME_TYPE_SENSOR)
+        return False
     except Exception as error:
         _LOGGER.exception("Unable to setup Flume Devices: %s", error)
         return False
@@ -136,8 +138,8 @@ class FlumeAuth:
                     self._username, response.status_code
                 )
             )
-        else:
-            return json.loads(response.text)["data"]
+
+        return json.loads(response.text)["data"]
 
     def get_userid(self):
         """Return User ID for authorized user."""
@@ -159,14 +161,14 @@ class FlumeAuth:
 
         _LOGGER.debug("get_devices Response: %s", response.text)
 
-        if response.status_code == 200:
-            return json.loads(response.text)["data"]
-        else:
+        if response.status_code != 200:
             raise Exception(
                 "Impossible to retreive devices. Response code returned : {}".format(
                     response.status_code
                 )
             )
+
+        return json.loads(response.text)["data"]
 
 
 class FlumeData:
@@ -239,5 +241,5 @@ class FlumeData:
                     self._username, response.status_code
                 )
             )
-        else:
-            self.value = json.loads(response.text)["data"][0]["update"][0]["value"]
+
+        self.value = json.loads(response.text)["data"][0]["update"][0]["value"]
