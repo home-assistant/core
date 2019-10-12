@@ -18,6 +18,7 @@ from aiohttp.hdrs import (
     ACCEPT_ENCODING,
     ACCEPT_LANGUAGE,
 )
+from tplink.tplink import TpLinkClient
 import requests
 import voluptuous as vol
 
@@ -88,7 +89,6 @@ class TplinkDeviceScanner(DeviceScanner):
 
     def __init__(self, config):
         """Initialize the scanner."""
-        from tplink.tplink import TpLinkClient
 
         host = config[CONF_HOST]
         password = config[CONF_PASSWORD]
