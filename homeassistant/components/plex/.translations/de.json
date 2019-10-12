@@ -5,6 +5,11 @@
         },
         "step": {
             "manual_setup": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "ssl": "SSL verwenden"
+                },
                 "title": "Plex Server"
             },
             "start_website_auth": {
@@ -12,6 +17,9 @@
                 "title": "Plex Server verbinden"
             },
             "user": {
+                "data": {
+                    "manual_setup": "Manuelle Einrichtung"
+                },
                 "description": "Fahren Sie mit der Autorisierung unter plex.tv fort oder konfigurieren Sie einen Server manuell."
             }
         }
