@@ -93,7 +93,7 @@ class AbodeSystem:
 
 
 async def async_setup(hass, config):
-    """Set up Abode platform."""
+    """Set up Abode integration."""
     if DOMAIN not in config:
         return True
 
@@ -109,7 +109,7 @@ async def async_setup(hass, config):
 
 
 async def async_setup_entry(hass, config_entry):
-    """Set up Abode platform from a config entry."""
+    """Set up Abode integration from a config entry."""
     username = config_entry.data.get(CONF_USERNAME)
     password = config_entry.data.get(CONF_PASSWORD)
     polling = config_entry.data.get(CONF_POLLING)
