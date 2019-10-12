@@ -443,8 +443,6 @@ class EvoChild(EvoDevice):
         if self._evo_broker.temps:
             return self._evo_broker.temps[self._evo_device.zoneId]
 
-        _LOGGER.warn("current_temperature() no temps!")  # TODO: delete me
-
         return self._evo_device.temperatureStatus["temperature"]
 
     @property
