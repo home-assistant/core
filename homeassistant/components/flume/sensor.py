@@ -47,7 +47,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     flume_devices = FlumeAuth(username, password, client_id, client_secret)
 
     try:
-        for device in flume_devices._devices:
+
+        for device in flume_devices.device_list:
             if device["type"] == FLUME_TYPE_SENSOR:
                 flume = FlumeData(
                     username,
@@ -60,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 )
                 add_entities([FlumeSensor(flume, f"{name} {device['id']}")], True)
     except Exception as error:
-        _LOGGER.error("Unable to setup Flume Devices: %s", error)
+        _LOGGER.exception("Unable to setup Flume Devices: %s", error)
         return False
 
 
@@ -103,12 +104,12 @@ class FlumeAuth:
         self._password = password
         self._client_id = client_id
         self._client_secret = client_secret
-        self._token = self.getToken()
-        self._user_id = self.getUserId()
-        self._bearer = self.getBearer()
-        self._devices = self.getDevices()
+        self._token = self.get_token()
+        self._user_id = self.get_userid()
+        self._bearer = self.get_bearer()
+        self.device_list = self.get_devices()
 
-    def getToken(self):
+    def get_token(self):
         """Return authorization token for session."""
         url = "https://api.flumetech.com/oauth/token"
         payload = (
@@ -129,34 +130,34 @@ class FlumeAuth:
         _LOGGER.debug("Token Payload: %s", payload)
         _LOGGER.debug("Token Response: %s", response.text)
 
-        if response.status_code == 200:
-            return json.loads(response.text)["data"]
-        else:
+        if response.status_code != 200:
             raise Exception(
                 "Can't get token for user {}. Response code returned : {}".format(
                     self._username, response.status_code
                 )
             )
+        else:
+            return json.loads(response.text)["data"]
 
-    def getUserId(self):
+    def get_userid(self):
         """Return User ID for authorized user."""
         json_token_data = self._token[0]
         return json.loads(
             base64.b64decode(json_token_data["access_token"].split(".")[1])
         )["user_id"]
 
-    def getBearer(self):
+    def get_bearer(self):
         """Return Bearer for Authorized session."""
         return self._token[0]["access_token"]
 
-    def getDevices(self):
+    def get_devices(self):
         """Return all available devices from Flume API."""
         url = "https://api.flumetech.com/users/" + str(self._user_id) + "/devices"
         querystring = {"user": "false", "location": "false"}
         headers = {"authorization": "Bearer " + self._bearer + ""}
         response = requests.request("GET", url, headers=headers, params=querystring)
 
-        _LOGGER.debug("getDevices Response: %s", response.text)
+        _LOGGER.debug("get_devices Response: %s", response.text)
 
         if response.status_code == 200:
             return json.loads(response.text)["data"]
@@ -212,7 +213,7 @@ class FlumeData:
         )
         until_datetime = time_zone_now.strftime("%Y-%m-%d %H:%M:00")
 
-        queryDict = {
+        query_dict = {
             "queries": [
                 {
                     "since_datetime": since_datetime,
@@ -225,18 +226,18 @@ class FlumeData:
         }
 
         headers = {"authorization": "Bearer " + self._bearer + ""}
-        response = requests.post(url, json=queryDict, headers=headers)
+        response = requests.post(url, json=query_dict, headers=headers)
 
         _LOGGER.debug("Update URL: %s", url)
         _LOGGER.debug("Update headers: %s", headers)
-        _LOGGER.debug("Update queryDict: %s", queryDict)
+        _LOGGER.debug("Update query_dict: %s", query_dict)
         _LOGGER.debug("Update Response: %s", response.text)
 
-        if response.status_code == 200:
-            self.value = json.loads(response.text)["data"][0]["update"][0]["value"]
-        else:
+        if response.status_code != 200:
             raise Exception(
                 "Can't update flume data for user id {}. Response code returned : {}".format(
                     self._username, response.status_code
                 )
             )
+        else:
+            self.value = json.loads(response.text)["data"][0]["update"][0]["value"]
