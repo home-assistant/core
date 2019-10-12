@@ -1,13 +1,19 @@
 """Google Report State implementation."""
+import logging
+
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.const import MATCH_ALL
 from homeassistant.helpers.event import async_call_later
 
 from .helpers import AbstractConfig, GoogleEntity, async_get_entities
+from .error import SmartHomeError
 
 # Time to wait until the homegraph updates
 # https://github.com/actions-on-google/smart-home-nodejs/issues/196#issuecomment-439156639
 INITIAL_REPORT_DELAY = 60
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -26,7 +32,11 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
         if not entity.is_supported():
             return
 
-        entity_data = entity.query_serialize()
+        try:
+            entity_data = entity.query_serialize()
+        except SmartHomeError as err:
+            _LOGGER.debug("Not reporting state for %s: %s", changed_entity, err.code)
+            return
 
         if old_state:
             old_entity = GoogleEntity(hass, google_config, old_state)
