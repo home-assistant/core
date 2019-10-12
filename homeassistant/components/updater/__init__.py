@@ -10,6 +10,7 @@ import uuid
 
 import aiohttp
 import async_timeout
+from distro import linux_distribution
 import voluptuous as vol
 
 from homeassistant.const import __version__ as current_version
@@ -145,9 +146,7 @@ async def get_newest_version(hass, huuid, include_components):
         if include_components:
             info_object["components"] = list(hass.config.components)
 
-        import distro
-
-        linux_dist = await hass.async_add_executor_job(distro.linux_distribution, False)
+        linux_dist = await hass.async_add_executor_job(linux_distribution, False)
         info_object["distribution"] = linux_dist[0]
         info_object["os_version"] = linux_dist[1]
 
