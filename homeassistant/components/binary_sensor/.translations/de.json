@@ -1,0 +1,7 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "plugged_in": "{entity_name} eingesteckt"
+        }
+    }
+}
