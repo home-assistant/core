@@ -4,8 +4,6 @@ from math import ceil
 
 import abodepy.helpers.constants as CONST
 
-import abodepy.helpers.constants as CONST
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,

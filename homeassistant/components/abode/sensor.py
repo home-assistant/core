@@ -3,8 +3,6 @@ import logging
 
 import abodepy.helpers.constants as CONST
 
-import abodepy.helpers.constants as CONST
-
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,

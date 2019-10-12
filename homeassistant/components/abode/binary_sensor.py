@@ -4,9 +4,6 @@ import logging
 import abodepy.helpers.constants as CONST
 import abodepy.helpers.timeline as TIMELINE
 
-import abodepy.helpers.constants as CONST
-import abodepy.helpers.timeline as TIMELINE
-
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from . import AbodeAutomation, AbodeDevice

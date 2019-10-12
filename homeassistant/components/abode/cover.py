@@ -3,8 +3,6 @@ import logging
 
 import abodepy.helpers.constants as CONST
 
-import abodepy.helpers.constants as CONST
-
 from homeassistant.components.cover import CoverDevice
 
 from . import AbodeDevice
