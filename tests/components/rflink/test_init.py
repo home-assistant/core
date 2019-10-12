@@ -46,7 +46,9 @@ async def mock_rflink(
             return transport, protocol
 
     mock_create = Mock(wraps=create_rflink_connection)
-    monkeypatch.setattr("rflink.protocol.create_rflink_connection", mock_create)
+    monkeypatch.setattr(
+        "homeassistant.components.rflink.create_rflink_connection", mock_create
+    )
 
     await async_setup_component(hass, "rflink", config)
     await async_setup_component(hass, domain, config)
