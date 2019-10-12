@@ -186,20 +186,15 @@ class SnmpSwitch(SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Turn on the switch."""
-        from pyasn1.type.univ import Integer
-
-        await self._set(Integer(self._command_payload_on))
+        await self._set(self._command_payload_on)
 
     async def async_turn_off(self, **kwargs):
         """Turn off the switch."""
-        from pyasn1.type.univ import Integer
-
-        await self._set(Integer(self._command_payload_off))
+        await self._set(self._command_payload_off)
 
     async def async_update(self):
         """Update the state."""
         from pysnmp.hlapi.asyncio import getCmd, ObjectType, ObjectIdentity
-        from pyasn1.type.univ import Integer
 
         errindication, errstatus, errindex, restable = await getCmd(
             *self._request_args, ObjectType(ObjectIdentity(self._baseoid))
@@ -215,9 +210,9 @@ class SnmpSwitch(SwitchDevice):
             )
         else:
             for resrow in restable:
-                if resrow[-1] == Integer(self._payload_on):
+                if resrow[-1] == self._payload_on:
                     self._state = True
-                elif resrow[-1] == Integer(self._payload_off):
+                elif resrow[-1] == self._payload_off:
                     self._state = False
                 else:
                     self._state = None
