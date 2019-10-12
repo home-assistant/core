@@ -98,6 +98,25 @@ class BasicChannel(ZigbeeChannel):
         )
         await super().async_initialize(from_cache)
 
+    @callback
+    def attribute_updated(self, attrid, value):
+        """Handle an attribute updated on this cluster."""
+        if attrid == 0x0005:
+            """0x0005 = model attribute.
+            Some devices, like xiaomi sensors, send the model attribute when their reset
+            button is pressed quickly."""
+            self.zha_send_event(
+                self._cluster,
+                SIGNAL_ATTR_UPDATED,
+                {
+                    "attribute_id": attrid,
+                    "attribute_name": self._cluster.attributes.get(attrid, ["Unknown"])[
+                        0
+                    ],
+                    "value": value,
+                },
+            )
+
     def get_power_source(self):
         """Get the power source."""
         return self._power_source
