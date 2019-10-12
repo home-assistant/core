@@ -75,6 +75,7 @@
             "remote_button_short_release": "\"{subtype}\" button released",
             "remote_button_triple_press": "\"{subtype}\" button triple clicked",
             "remote_double_tap": "Device \"{subtype}\" double tapped",
+            "remote_dropped": "Remoted dropped",
             "remote_gyro_activated": "Device shaken",
             "remote_pushed": "Device pushed with \"{subtype}\" up",
             "remote_rotate_from_side_1": "Device rotated from \"side 1\" to \"{subtype}\"",
