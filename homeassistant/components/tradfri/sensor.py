@@ -1,11 +1,8 @@
 """Support for IKEA Tradfri sensors."""
-import logging
 
 from homeassistant.const import DEVICE_CLASS_BATTERY
 from .base_class import TradfriBaseDevice
 from .const import KEY_GATEWAY, KEY_API, CONF_GATEWAY_ID
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
