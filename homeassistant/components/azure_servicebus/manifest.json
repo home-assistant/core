@@ -1,0 +1,10 @@
+{
+  "domain": "azure_servicebus",
+  "name": "Azure Service Bus",
+  "documentation": "https://www.home-assistant.io/components/azure_servicebus",
+  "requirements": [
+    "azure-servicebus==0.50.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}
