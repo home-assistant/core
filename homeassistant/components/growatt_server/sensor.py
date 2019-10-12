@@ -12,12 +12,10 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_USERNAME, CONF_PASSWORD
+from .const import CONF_PLANT_ID, DEFAULT_PLANT_ID, DEFAULT_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PLANT_ID = "plant_id"
-DEFAULT_PLANT_ID = "0"
-DEFAULT_NAME = "Growatt"
 SCAN_INTERVAL = datetime.timedelta(minutes=5)
 
 TOTAL_SENSOR_TYPES = {
@@ -103,6 +101,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             )
 
     add_entities(entities, True)
+
+
+async def async_setup_entry(hass, config, add_entities):
+    """Set up growatt server from Config Flow"""
+    setup_platform(hass, config.data, add_entities)
 
 
 class GrowattInverter(Entity):

@@ -1,0 +1,20 @@
+{
+  "config": {
+    "title": "Growatt Server",
+    "step": {
+      "init": {
+        "title": "Enter your growatt information",
+        "data": {
+          "username": "Username",
+          "password": "Password",
+          "plant_id": "Plant Id",
+          "name": "Name"
+        }
+      }
+    },
+    "error": {
+      "multiple_plants": "Multiple plants have been found on this account, please enter a plant id.",
+      "auth_error": "Username or password is incorrect"
+    }
+  }
+}
