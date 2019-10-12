@@ -3,12 +3,10 @@ import asyncio
 from collections import defaultdict
 import logging
 import async_timeout
-import serial
-
 import voluptuous as vol
 
 from rflink.protocol import create_rflink_connection
-
+from serial import SerialException
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_COMMAND,
@@ -121,7 +119,6 @@ def identify_event_type(event):
 
 async def async_setup(hass, config):
     """Set up the Rflink component."""
-
     # Allow entities to register themselves by device_id to be looked up when
     # new rflink events arrive to be handled
     hass.data[DATA_ENTITY_LOOKUP] = {
@@ -240,7 +237,7 @@ async def async_setup(hass, config):
                 transport, protocol = await connection
 
         except (
-            serial.serialutil.SerialException,
+            SerialException,
             ConnectionRefusedError,
             TimeoutError,
             OSError,
