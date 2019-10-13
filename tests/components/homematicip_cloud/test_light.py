@@ -1,14 +1,31 @@
 """Tests for HomematicIP Cloud light."""
 from homematicip.base.enums import RGBColorState
 
+from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.components.homematicip_cloud.light import (
     ATTR_ENERGY_COUNTER,
     ATTR_POWER_CONSUMPTION,
 )
-from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_NAME
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_NAME,
+    DOMAIN as LIGHT_DOMAIN,
+)
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.setup import async_setup_component
 
 from .helper import async_manipulate_test_data, get_and_check_entity_basics
+
+
+async def test_manually_configured_platform(hass):
+    """Test that we do not set up an access point."""
+    assert (
+        await async_setup_component(
+            hass, LIGHT_DOMAIN, {LIGHT_DOMAIN: {"platform": HMIPC_DOMAIN}}
+        )
+        is True
+    )
+    assert not hass.data.get(HMIPC_DOMAIN)
 
 
 async def test_hmip_light(hass, default_mock_hap):
@@ -114,6 +131,11 @@ async def test_hmip_notification_light(hass, default_mock_hap):
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_OFF
 
+    await async_manipulate_test_data(hass, hmip_device, "dimLevel", None, 2)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_OFF
+    assert not ha_state.attributes.get(ATTR_BRIGHTNESS)
+
 
 async def test_hmip_dimmer(hass, default_mock_hap):
     """Test HomematicipDimmer."""
@@ -157,6 +179,11 @@ async def test_hmip_dimmer(hass, default_mock_hap):
     await async_manipulate_test_data(hass, hmip_device, "dimLevel", 0)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_OFF
+
+    await async_manipulate_test_data(hass, hmip_device, "dimLevel", None)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_OFF
+    assert not ha_state.attributes.get(ATTR_BRIGHTNESS)
 
 
 async def test_hmip_light_measuring(hass, default_mock_hap):

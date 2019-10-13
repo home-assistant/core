@@ -290,7 +290,6 @@ omit =
     homeassistant/components/homematic/climate.py
     homeassistant/components/homematic/cover.py
     homeassistant/components/homematic/notify.py
-    homeassistant/components/homematicip_cloud/*
     homeassistant/components/homeworks/*
     homeassistant/components/honeywell/climate.py
     homeassistant/components/hook/switch.py
