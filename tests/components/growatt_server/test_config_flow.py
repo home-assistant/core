@@ -71,7 +71,7 @@ async def test_multiple_plants(hass):
     with patch("growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE):
         with patch(
             "growattServer.GrowattApi.plant_list",
-            return_value=GROWATT_PLANT_LIST_RESPONSE,
+            return_value=growatt_list_response_more_plants,
         ):
             result = await flow.async_step_user(user_input=FIXTURE_USER_INPUT)
             assert result["errors"] == {"base": "multiple_plants"}
@@ -94,9 +94,5 @@ async def test_full_flow_implementation(hass):
             assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
             assert result["title"] == FIXTURE_USER_INPUT[CONF_NAME]
             assert result["data"][CONF_NAME] == FIXTURE_USER_INPUT[CONF_NAME]
-            assert (
-                result["data"][CONF_PLANT_ID]
-                == GROWATT_PLANT_LIST_RESPONSE["data"][0]["plantId"]
-            )
             assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
             assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
