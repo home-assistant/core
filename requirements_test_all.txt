@@ -208,6 +208,9 @@ google-api-python-client==1.6.4
 # homeassistant.components.google_pubsub
 google-cloud-pubsub==0.39.1
 
+# homeassistant.components.growatt_server
+growattServer==0.0.1
+
 # homeassistant.components.ffmpeg
 ha-ffmpeg==2.0
 
