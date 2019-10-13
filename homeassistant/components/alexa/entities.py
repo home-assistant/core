@@ -34,6 +34,7 @@ from homeassistant.components import (
 from .const import CONF_DESCRIPTION, CONF_DISPLAY_CATEGORIES
 from .capabilities import (
     AlexaBrightnessController,
+    AlexaChannelController,
     AlexaColorController,
     AlexaColorTemperatureController,
     AlexaContactSensor,
@@ -50,8 +51,7 @@ from .capabilities import (
     AlexaSpeaker,
     AlexaStepSpeaker,
     AlexaTemperatureSensor,
-    AlexaThermostatController,
-    AlexaChannelController
+    AlexaThermostatController
 )
 
 ENTITY_ADAPTERS = Registry()

@@ -720,10 +720,10 @@ class AlexaSecurityPanelController(AlexaCapibility):
 
 class AlexaChannelController(AlexaCapibility):
     """Implements Alexa.ChannelController.
-    
-    https://developer.amazon.com/docs/device-apis/alexa-channelcontroller.html 
-    """
 
+    https://developer.amazon.com/docs/device-apis/alexa-channelcontroller.html
+    """
+    
     def name(self):
-        return 'Alexa.ChannelController'  
+        return 'Alexa.ChannelController'
         
