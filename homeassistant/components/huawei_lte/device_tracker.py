@@ -154,9 +154,10 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
             }
 
 
-def get_scanner(*args, **kwargs):
+def get_scanner(*args, **kwargs):  # pylint: disable=useless-return
     """Old no longer used way to set up Huawei LTE device tracker."""
     _LOGGER.warning(
         "Loading and configuring as a platform is no longer supported or "
         "required, convert to enabling/disabling available entities"
     )
+    return None
