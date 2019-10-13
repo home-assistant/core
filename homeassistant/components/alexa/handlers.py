@@ -539,7 +539,7 @@ async def async_api_adjust_volume_step(hass, config, directive, context):
             volume_int = -defaultSteps   # the default is 10 which is too much
         else:
             volume_int = defaultSteps
-  
+
     if volume_int != 0:
         data = {
             ATTR_ENTITY_ID: entity.entity_id
@@ -972,7 +972,7 @@ async def async_api_changechannel(hass, config, directive, context):
         entity.domain, media_player.const.SERVICE_PLAY_MEDIA,
         data, blocking=False, context=context)
 
-     return directive.response()
+    return directive.response()
 
 
 @HANDLERS.register(('Alexa.ChannelController', 'SkipChannels'))
@@ -981,19 +981,20 @@ async def async_api_skipchannel(hass, config, directive, context):
 
     channel = int(directive.payload['channelCount'])
     entity = directive.entity
-      
+ 
     data = {
         ATTR_ENTITY_ID: entity.entity_id
     }
 
     if channel > 0:
         await hass.services.async_call(
-          entity.domain, SERVICE_MEDIA_NEXT_TRACK,
-          data, blocking=False, context=context)
-          
+            entity.domain, SERVICE_MEDIA_NEXT_TRACK,
+            data, blocking=False, context=context)
+
     if channel < 0:
         await hass.services.async_call(
-          entity.domain, SERVICE_MEDIA_PREVIOUS_TRACK,
-          data, blocking=False, context=context)
+            entity.domain, SERVICE_MEDIA_PREVIOUS_TRACK,
+            data, blocking=False, context=context)
 
     return directive.response()
+    
