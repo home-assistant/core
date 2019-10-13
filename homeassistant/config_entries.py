@@ -599,7 +599,7 @@ class ConfigEntries:
             title=result["title"],
             data=result["data"],
             options={},
-            system_options={},
+            system_options=result.get("system_options") or {},
             source=flow.context["source"],
             connection_class=flow.CONNECTION_CLASS,
         )
