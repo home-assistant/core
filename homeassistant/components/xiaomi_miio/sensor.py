@@ -22,6 +22,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+MODEL_AIRQUALITYMONITOR_B1 = "cgllc.airmonitor.b1"
 ATTR_POWER = "power"
 ATTR_CHARGING = "charging"
 ATTR_BATTERY_LEVEL = "battery_level"
@@ -78,18 +79,10 @@ class XiaomiAirQualityMonitor(Entity):
         self._unique_id = unique_id
 
         self._icon = "mdi:cloud"
-        self._unit_of_measurement = "AQI"
+        self._unit_of_measurement = None
         self._available = None
         self._state = None
         self._state_attrs = {
-            ATTR_POWER: None,
-            ATTR_BATTERY_LEVEL: None,
-            ATTR_CHARGING: None,
-            ATTR_DISPLAY_CLOCK: None,
-            ATTR_NIGHT_MODE: None,
-            ATTR_NIGHT_TIME_BEGIN: None,
-            ATTR_NIGHT_TIME_END: None,
-            ATTR_SENSOR_STATE: None,
             ATTR_MODEL: self._model,
         }
 
@@ -142,19 +135,29 @@ class XiaomiAirQualityMonitor(Entity):
             _LOGGER.debug("Got new state: %s", state)
 
             self._available = True
-            self._state = state.aqi
-            self._state_attrs.update(
-                {
-                    ATTR_POWER: state.power,
-                    ATTR_CHARGING: state.usb_power,
-                    ATTR_BATTERY_LEVEL: state.battery,
-                    ATTR_DISPLAY_CLOCK: state.display_clock,
-                    ATTR_NIGHT_MODE: state.night_mode,
-                    ATTR_NIGHT_TIME_BEGIN: state.night_time_begin,
-                    ATTR_NIGHT_TIME_END: state.night_time_end,
-                    ATTR_SENSOR_STATE: state.sensor_state,
-                }
-            )
+            if self._model != MODEL_AIRQUALITYMONITOR_B1:
+                self._state = state.aqi
+                self._unit_of_measurement = 'AQI'
+
+                self._state_attrs.update(
+                    {
+                        ATTR_POWER: state.power,
+                        ATTR_CHARGING: state.usb_power,
+                        ATTR_BATTERY_LEVEL: state.battery,
+                        ATTR_DISPLAY_CLOCK: state.display_clock,
+                        ATTR_NIGHT_MODE: state.night_mode,
+                        ATTR_NIGHT_TIME_BEGIN: state.night_time_begin,
+                        ATTR_NIGHT_TIME_END: state.night_time_end,
+                        ATTR_SENSOR_STATE: state.sensor_state,
+                    }
+                )
+            else:
+                """ As AQI is not available, temperature will be the state value
+                    TVOC is always in µg/m³, no matter the settings in the device
+                """
+                self._state = state.temperature
+                self._unit_of_measurement = '°C'
+                self._state_attrs.update(state.data)
 
         except DeviceException as ex:
             self._available = False
