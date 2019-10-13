@@ -1,3 +1,4 @@
+"""The Sector Alarm Integration."""
 import logging
 from datetime import timedelta
 from homeassistant.components.sector_alarm import DOMAIN as SECTOR_DOMAIN

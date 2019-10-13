@@ -1,3 +1,4 @@
+"""The Sector Alarm Integration."""
 import logging
 from homeassistant.components.sector_alarm import DOMAIN as SECTOR_DOMAIN
 import homeassistant.components.alarm_control_panel as alarm
@@ -31,6 +32,7 @@ class SectorAlarmPanel(alarm.AlarmControlPanel):
     """Get the alarm status, and arm/disarm alarm."""
 
     def __init__(self, sectorConnect, alarmId, code):
+        """Initialize the service."""
         self._alarmid = alarmId
         self._code = code
         self._sectorconnect = sectorConnect
