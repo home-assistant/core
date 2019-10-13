@@ -17,13 +17,9 @@ from .const import (
     CONF_AREA_CREATE_AUTO,
     DEFAULT_NAME,
     DEFAULT_PORT,
-    DEFAULT_LOGGING,
 )
 
 from dynalite_devices_lib import (
-    CONF_CHANNEL,
-    CONF_AREA,
-    CONF_PRESET,
     CONF_FACTOR,
     CONF_CHANNELTYPE,
     CONF_HIDDENENTITY,
@@ -38,6 +34,12 @@ from dynalite_devices_lib import (
     DEFAULT_CHANNELTYPE,
     CONF_TEMPLATEOVERRIDE,
     CONF_TRIGGER,
+)
+
+from dynalite_lib import (
+    CONF_CHANNEL,
+    CONF_AREA,
+    CONF_PRESET,
     CONF_NODEFAULT,
     CONF_LOGLEVEL,
     CONF_FADE,
@@ -170,7 +172,7 @@ BRIDGE_CONFIG_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_LOGLEVEL, default=DEFAULT_LOGGING): cv.string,
+        vol.Optional(CONF_LOGLEVEL): cv.string,
         vol.Optional(CONF_AUTODISCOVER, default=True): cv.boolean,
         vol.Optional(CONF_AREACREATE, default=CONF_AREA_CREATE_MANUAL): vol.Any(
             CONF_AREA_CREATE_MANUAL, CONF_AREA_CREATE_ASSIGN, CONF_AREA_CREATE_AUTO
