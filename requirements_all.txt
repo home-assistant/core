@@ -890,7 +890,7 @@ oauth2client==4.0.0
 oemthermostat==1.1
 
 # homeassistant.components.onkyo
-onkyo-eiscp==1.2.4
+onkyo-eiscp==1.2.7
 
 # homeassistant.components.onvif
 onvif-zeep-async==0.2.0
