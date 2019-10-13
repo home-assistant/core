@@ -230,7 +230,6 @@ def get_test_instance_port():
     return _TEST_INSTANCE_PORT
 
 
-@ha.callback
 def async_mock_service(hass, domain, service, schema=None):
     """Set up a fake service & return a calls log list to this service."""
     calls = []
