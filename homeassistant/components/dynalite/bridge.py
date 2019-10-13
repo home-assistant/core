@@ -16,8 +16,8 @@ from .const import (
     CONF_AREA_CREATE_AUTO,
     ENTITY_CATEGORIES,
 )
-
-from dynalite_devices_lib import DynaliteDevices, CONF_ALL, DOMAIN as DYNDOMAIN
+from dynalite_devices_lib import DynaliteDevices, DOMAIN as DYNDOMAIN
+from dynalite_lib import CONF_ALL
 
 from .light import DynaliteLight
 from .switch import DynaliteSwitch
@@ -118,6 +118,10 @@ class DynaliteBridge:
     def updateDevice(self, device):
         """Call when a device or all devices should be updated."""
         if device == CONF_ALL:
+            if self._dynalite_devices.available:
+                LOGGER.info("Connected to dynalite host")
+            else:
+                LOGGER.info("Disconnected from dynalite host")
             for uid in self.all_entities:
                 self.all_entities[uid].try_schedule_ha()
         else:
