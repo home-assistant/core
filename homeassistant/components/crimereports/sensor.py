@@ -5,6 +5,7 @@ import logging
 
 import voluptuous as vol
 
+import crimereports
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_INCLUDE,
@@ -65,7 +66,6 @@ class CrimeReportsSensor(Entity):
 
     def __init__(self, hass, name, latitude, longitude, radius, include, exclude):
         """Initialize the Crime Reports sensor."""
-        import crimereports
 
         self._hass = hass
         self._name = name
@@ -113,7 +113,6 @@ class CrimeReportsSensor(Entity):
 
     def update(self):
         """Update device state."""
-        import crimereports
 
         incident_counts = defaultdict(int)
         incidents = self._crimereports.get_incidents(
