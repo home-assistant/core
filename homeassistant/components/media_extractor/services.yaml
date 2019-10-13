@@ -1,9 +1,3 @@
-turn_on:
-  description: Turn a light on.
-  fields:
-    entity_id:
-      description: Name(s) of entities to turn on
-      example: "light.kitchen"
 play_media:
   description: Downloads file from given url.
   fields:
