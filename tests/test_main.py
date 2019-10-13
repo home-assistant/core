@@ -39,7 +39,7 @@ def test_validate_python(mock_exit):
         ),
     ):
         main.validate_python()
-        assert mock_exit.called is True
+        assert mock_exit.called is False
 
     mock_exit.reset_mock()
 
