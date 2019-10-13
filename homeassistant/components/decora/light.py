@@ -5,6 +5,8 @@ from functools import wraps
 import time
 
 import voluptuous as vol
+import decora
+import bluepy
 
 from homeassistant.const import CONF_API_KEY, CONF_DEVICES, CONF_NAME
 from homeassistant.components.light import (
@@ -35,8 +37,6 @@ def retry(method):
     def wrapper_retry(device, *args, **kwargs):
         """Try send command and retry on error."""
         # pylint: disable=import-error, no-member
-        import decora
-        import bluepy
 
         initial = time.monotonic()
         while True:

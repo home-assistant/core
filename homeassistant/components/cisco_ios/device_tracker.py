@@ -2,6 +2,8 @@
 import logging
 
 import voluptuous as vol
+from pexpect import pxssh
+import re
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
@@ -100,8 +102,6 @@ class CiscoDeviceScanner(DeviceScanner):
 
     def _get_arp_data(self):
         """Open connection to the router and get arp entries."""
-        from pexpect import pxssh
-        import re
 
         try:
             cisco_ssh = pxssh.pxssh()

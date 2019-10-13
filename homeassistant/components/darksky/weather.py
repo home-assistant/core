@@ -4,6 +4,7 @@ import logging
 
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 import voluptuous as vol
+import forecastio
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -244,7 +245,6 @@ class DarkSkyData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Dark Sky."""
-        import forecastio
 
         try:
             self.data = forecastio.load_forecast(

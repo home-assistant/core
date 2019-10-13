@@ -4,6 +4,7 @@ from datetime import timedelta
 
 import voluptuous as vol
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
+import forecastio
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -797,7 +798,6 @@ class DarkSkyData:
 
     def _update(self):
         """Get the latest data from Dark Sky."""
-        import forecastio
 
         try:
             self.data = forecastio.load_forecast(

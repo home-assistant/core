@@ -5,6 +5,10 @@ import logging
 from time import time, sleep
 
 import voluptuous as vol
+import threading
+
+from smbus import SMBus  # pylint: disable=import-error
+
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
@@ -121,7 +125,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 def _setup_bme680(config):
     """Set up and configure the BME680 sensor."""
-    from smbus import SMBus  # pylint: disable=import-error
 
     bme680 = importlib.import_module("bme680")
 
@@ -224,8 +227,6 @@ class BME680Handler:
         self._gas_baseline = None
 
         if gas_measurement:
-            import threading
-
             threading.Thread(
                 target=self._run_gas_sensor,
                 kwargs={"burn_in_time": burn_in_time},

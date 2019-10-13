@@ -2,6 +2,7 @@
 import logging
 
 import voluptuous as vol
+import btsmarthub_devicelist
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
@@ -74,7 +75,6 @@ class BTSmartHubScanner(DeviceScanner):
 
     def get_bt_smarthub_data(self):
         """Retrieve data from BT Smart Hub and return parsed result."""
-        import btsmarthub_devicelist
 
         # Request data from bt smarthub into a list of dicts.
         data = btsmarthub_devicelist.get_devicelist(

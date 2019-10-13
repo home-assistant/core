@@ -2,6 +2,7 @@
 import logging
 
 import voluptuous as vol
+import CO2Signal
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
@@ -97,7 +98,6 @@ class CO2Sensor(Entity):
 
     def update(self):
         """Get the latest data and updates the states."""
-        import CO2Signal
 
         _LOGGER.debug("Update data for %s", self._friendly_name)
 
