@@ -32,10 +32,21 @@ async def test_one_config_allowed(hass):
         data={CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"},
     ).add_to_hass(hass)
 
-    result = await flow.async_step_user()
+    step_user_result = await flow.async_step_user()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert step_user_result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert step_user_result["reason"] == "single_instance_allowed"
+
+    conf = {
+        CONF_USERNAME: "user@email.com",
+        CONF_PASSWORD: "password",
+        CONF_POLLING: False,
+    }
+
+    import_config_result = await flow.async_step_import(conf)
+
+    assert import_config_result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert import_config_result["reason"] == "single_instance_allowed"
 
 
 async def test_invalid_credentials(hass):
