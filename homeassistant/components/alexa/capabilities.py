@@ -717,7 +717,7 @@ class AlexaSecurityPanelController(AlexaCapibility):
             return {"supportedAuthorizationTypes": [{"type": "FOUR_DIGIT_PIN"}]}
         return []
         
-class AlexaChannelController(_AlexaInterface):
+class AlexaChannelController(AlexaCapibility):
     """Implements Alexa.ChannelController.
 
     https://developer.amazon.com/docs/device-apis/alexa-channelcontroller.html
