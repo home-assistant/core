@@ -1,4 +1,4 @@
-"""P2PCamera integration"""
+"""P2PCamera integration."""
 import logging
 
 import voluptuous as vol
@@ -21,7 +21,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Register camera"""
+    """Register camera."""
     async_add_entities([P2PCam(hass, config)])
 
 
@@ -53,7 +53,7 @@ class P2PCam(Camera):
 
 
 def get_host_ip():
-    """Get the host ip"""
+    """Get the host ip."""
     import socket
 
     return [
