@@ -18,6 +18,7 @@ class TradfriBaseClass(Entity):
 
     def __init__(self, device, api, gateway_id):
         """Initialize a device."""
+        self._available = True
         self._api = api
         self._device = None
         self._device_control = None
@@ -87,7 +88,6 @@ class TradfriBaseDevice(TradfriBaseClass):
     def __init__(self, device, api, gateway_id):
         """Initialize a device."""
         super().__init__(device, api, gateway_id)
-        self._available = True
 
     @property
     def device_info(self):
