@@ -90,6 +90,7 @@ class AbodeSystem:
         self.abode = abode
         self.polling = polling
         self.devices = []
+        self.logout_listener = None
 
 
 async def async_setup(hass, config):
