@@ -5,6 +5,7 @@ import logging
 
 import voluptuous as vol
 
+import crimereports
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_INCLUDE,
@@ -24,8 +25,6 @@ from homeassistant.util import slugify
 from homeassistant.util.distance import convert
 from homeassistant.util.dt import now
 import homeassistant.helpers.config_validation as cv
-
-import crimereports
 
 _LOGGER = logging.getLogger(__name__)
 
