@@ -3,4 +3,4 @@ browse_url:
   fields:
     url:
       description: The URL to open.
-      example: "http://www.google.com"
+      example: "https://www.home-assistant.io"
