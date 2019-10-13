@@ -554,7 +554,7 @@ async def async_api_adjust_volume_step(hass, config, directive, context):
                 await hass.services.async_call(
                     entity.domain, SERVICE_VOLUME_DOWN,
                     data, blocking=False, context=context)
- 
+
     return directive.response()
 
 
@@ -981,7 +981,7 @@ async def async_api_skipchannel(hass, config, directive, context):
 
     channel = int(directive.payload['channelCount'])
     entity = directive.entity
- 
+
     data = {
         ATTR_ENTITY_ID: entity.entity_id
     }
@@ -997,4 +997,3 @@ async def async_api_skipchannel(hass, config, directive, context):
             data, blocking=False, context=context)
 
     return directive.response()
-    
