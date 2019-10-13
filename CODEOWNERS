@@ -13,6 +13,7 @@ homeassistant/util/* @home-assistant/core
 homeassistant/scripts/check_config.py @kellerza
 
 # Integrations
+homeassistant/components/abode/* @shred86
 homeassistant/components/adguard/* @frenck
 homeassistant/components/airly/* @bieniu
 homeassistant/components/airvisual/* @bachya
