@@ -9,6 +9,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
+import schiene
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DESTINATION = "to"
@@ -89,7 +91,6 @@ class SchieneData:
 
     def __init__(self, start, goal, offset, only_direct):
         """Initialize the sensor."""
-        import schiene
 
         self.start = start
         self.goal = goal
