@@ -8,7 +8,6 @@ from homeassistant.const import CONF_NAME, CONF_USERNAME, CONF_PASSWORD
 
 FIXTURE_USER_INPUT = {
     CONF_NAME: DEFAULT_NAME,
-    CONF_PLANT_ID: None,
     CONF_USERNAME: "username",
     CONF_PASSWORD: "password",
 }
