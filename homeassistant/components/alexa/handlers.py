@@ -527,25 +527,25 @@ async def async_api_adjust_volume_step(hass, config, directive, context):
     entity = directive.entity
     volume_int = int(directive.payload['volumeSteps'])
     isDefault = bool(directive.payload['volumeStepsDefault'])
-    defaultSteps=5
+    defaultSteps = 5
 
     try:
         defaultSteps = int(entity.attributes['volume_steps_default'])
     except Exception:   # if the attribute is not setup in the media_player attributes or is  invalid we use this default
-        defaultSteps=5
+        defaultSteps = 5
 
     if isDefault:
         if volume_int < 0:
             volume_int = -defaultSteps   # the default is 10 which is too much
         else:
             volume_int = defaultSteps
-            
-    if volume_int != 0:  
+  
+    if volume_int != 0:
         data = {
             ATTR_ENTITY_ID: entity.entity_id
-        }   
-        
-        for _ in range(0,abs(volume_int)):
+        }
+
+        for _ in range(0, abs(volume_int)):
             if volume_int > 0:
                 await hass.services.async_call(
                     entity.domain, SERVICE_VOLUME_UP,
@@ -554,7 +554,7 @@ async def async_api_adjust_volume_step(hass, config, directive, context):
                 await hass.services.async_call(
                     entity.domain, SERVICE_VOLUME_DOWN,
                     data, blocking=False, context=context)
-                    
+ 
     return directive.response()
 
 
@@ -947,20 +947,21 @@ async def async_api_disarm(hass, config, directive, context):
     )
 
     return response
-    
-@HANDLERS.register(('Alexa.ChannelController','ChangeChannel'))
+
+
+@HANDLERS.register(('Alexa.ChannelController', 'ChangeChannel'))
 async def async_api_changechannel(hass, config, directive, context):
     """Process a change channel request."""
-    channel=0
-    entity=directive.entity
-    
+    channel = 0
+    entity = directive.entity
+
     if 'number' in directive.payload['channel'].keys():
-        channel=directive.payload['channel']['number']
+        channel = directive.payload['channel']['number']
     elif 'callSign' in directive.payload['channel'].keys():
-        channel=directive.payload['channel']['callSign']
+        channel = directive.payload['channel']['callSign']
     elif 'name' in directive.payload['channelMetadata'].keys():
-        channel=directive.payload['channelMetadata']['name']
-      
+        channel = directive.payload['channelMetadata']['name']
+
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
         media_player.const.ATTR_MEDIA_CONTENT_ID: channel,
@@ -971,19 +972,20 @@ async def async_api_changechannel(hass, config, directive, context):
         entity.domain, media_player.const.SERVICE_PLAY_MEDIA,
         data, blocking=False, context=context)
 
-    return directive.response()
+     return directive.response()
 
-@HANDLERS.register(('Alexa.ChannelController','SkipChannels'))
+
+@HANDLERS.register(('Alexa.ChannelController', 'SkipChannels'))
 async def async_api_skipchannel(hass, config, directive, context):
     """Process a change channel request."""
-    
-    channel=int(directive.payload['channelCount'])
-    entity=directive.entity
-    
+
+    channel = int(directive.payload['channelCount'])
+    entity = directive.entity
+      
     data = {
-            ATTR_ENTITY_ID: entity.entity_id
-     }   
-     
+        ATTR_ENTITY_ID: entity.entity_id
+    }
+
     if channel > 0:
         await hass.services.async_call(
           entity.domain, SERVICE_MEDIA_NEXT_TRACK,
@@ -995,5 +997,3 @@ async def async_api_skipchannel(hass, config, directive, context):
           data, blocking=False, context=context)
 
     return directive.response()
-
-
