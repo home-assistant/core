@@ -92,10 +92,7 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up config entry."""
-    if entry.data[CONF_VENDOR] == "neato":
-        hass.data[NEATO_LOGIN] = NeatoHub(hass, entry.data, Account, Neato)
-    elif entry.data[CONF_VENDOR] == "vorwerk":
-        hass.data[NEATO_LOGIN] = NeatoHub(hass, entry.data, Account, Vorwerk)
+    hass.data[NEATO_LOGIN] = NeatoHub(hass, entry.data, Account)
 
     hub = hass.data[NEATO_LOGIN]
     await hass.async_add_executor_job(hub.login)
@@ -132,12 +129,16 @@ async def async_unload_entry(hass, entry):
 class NeatoHub:
     """A My Neato hub wrapper class."""
 
-    def __init__(self, hass, domain_config, neato, vendor):
+    def __init__(self, hass, domain_config, neato):
         """Initialize the Neato hub."""
         self.config = domain_config
         self._neato = neato
         self._hass = hass
-        self._vendor = vendor
+
+        if self.config[CONF_VENDOR] == "vorwerk":
+            self._vendor = Vorwerk()
+        else:  # Neato
+            self._vendor = Neato()
 
         self.my_neato = None
         self.logged_in = False
