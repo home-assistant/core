@@ -74,7 +74,7 @@ class EcobeeSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._state in [ECOBEE_STATE_CALIBRATING, ECOBEE_STATE_UNKNOWN]:
+        if self._state in [ECOBEE_STATE_CALIBRATING, ECOBEE_STATE_UNKNOWN, "unknown"]:
             return None
 
         if self.type == "temperature":
@@ -91,6 +91,10 @@ class EcobeeSensor(Entity):
         """Get the latest state of the sensor."""
         await self.data.update()
         for sensor in self.data.ecobee.get_remote_sensors(self.index):
+            if sensor["name"] != self.sensor_name:
+                continue
             for item in sensor["capability"]:
-                if item["type"] == self.type and self.sensor_name == sensor["name"]:
-                    self._state = item["value"]
+                if item["type"] != self.type:
+                    continue
+                self._state = item["value"]
+                break
