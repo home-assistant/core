@@ -28,10 +28,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class P2PCam(Camera):
     """P2PCamera entity."""
 
-
     def __init__(self, hass, config):
         """Init of the P2PCamera."""
-        super().__init__();
+        super().__init__()
         import p2pcam as p2pcam_req
 
         if CONF_HOST not in config:
