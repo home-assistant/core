@@ -107,7 +107,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             "https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/installation.md"
         )  # noqa
         return
-    
+
     if cv2 is None:
         _LOGGER.warning(
             "No OpenCV library found. TensorFlow will process image with "
