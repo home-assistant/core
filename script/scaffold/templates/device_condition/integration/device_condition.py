@@ -29,7 +29,7 @@ CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_conditions(hass: HomeAssistant, device_id: str) -> List[str]:
+async def async_get_conditions(hass: HomeAssistant, device_id: str) -> List[dict]:
     """List device conditions for NEW_NAME devices."""
     registry = await entity_registry.async_get_registry(hass)
     conditions = []

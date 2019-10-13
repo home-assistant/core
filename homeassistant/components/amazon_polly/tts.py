@@ -1,5 +1,6 @@
 """Support for the Amazon Polly text to speech service."""
 import logging
+import boto3
 
 import voluptuous as vol
 
@@ -155,8 +156,6 @@ def get_engine(hass, config):
         return None
 
     config[CONF_SAMPLE_RATE] = sample_rate
-
-    import boto3
 
     profile = config.get(CONF_PROFILE_NAME)
 

@@ -3,6 +3,8 @@ import binascii
 import logging
 from datetime import timedelta
 
+import broadlink
+
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -128,7 +130,6 @@ class BroadlinkData:
             _LOGGER.warning("Failed to connect to device")
 
     def _connect(self):
-        import broadlink
 
         self._device = broadlink.a1((self.ip_addr, 80), self.mac_addr, None)
         self._device.timeout = self.timeout

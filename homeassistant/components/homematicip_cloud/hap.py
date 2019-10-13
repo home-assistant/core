@@ -79,6 +79,7 @@ class HomematicipHAP:
         self._retry_task = None
         self._tries = 0
         self._accesspoint_connected = True
+        self.hmip_device_by_entity_id = {}
 
     async def async_setup(self, tries: int = 0):
         """Initialize connection."""
@@ -219,6 +220,7 @@ class HomematicipHAP:
             await self.hass.config_entries.async_forward_entry_unload(
                 self.config_entry, component
             )
+        self.hmip_device_by_entity_id = {}
         return True
 
     async def get_hap(
