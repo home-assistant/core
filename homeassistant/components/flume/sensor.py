@@ -46,7 +46,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     flume_devices = FlumeAuth(_username, _password, _client_id, _client_secret)
 
-    # noinspection PyBroadException
     try:
         for device in flume_devices.device_list:
             if device["type"] == FLUME_TYPE_SENSOR:
@@ -63,8 +62,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except KeyError:
         _LOGGER.error("No Flume Devices Returned of Type: %s", FLUME_TYPE_SENSOR)
         return False
-    except Exception as error:
-        _LOGGER.error("Unable to setup Flume Devices: %s", error)
+    except AttributeError as attr_error:
+        _LOGGER.error("Unable to setup Flume Devices: %s", attr_error)
         return False
 
 
