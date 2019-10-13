@@ -1,5 +1,6 @@
 """Support for RFXtrx switches."""
 import logging
+
 import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
