@@ -1,7 +1,7 @@
 """Test Google report state."""
 from unittest.mock import patch
 
-from homeassistant.components.google_assistant import report_state
+from homeassistant.components.google_assistant import report_state, error
 from homeassistant.util.dt import utcnow
 
 from . import BASIC_CONFIG
@@ -10,7 +10,7 @@ from . import BASIC_CONFIG
 from tests.common import mock_coro, async_fire_time_changed
 
 
-async def test_report_state(hass):
+async def test_report_state(hass, caplog):
     """Test report state works."""
     hass.states.async_set("light.ceiling", "off")
     hass.states.async_set("switch.ac", "on")
@@ -55,6 +55,19 @@ async def test_report_state(hass):
         )
         await hass.async_block_till_done()
 
+    assert len(mock_report.mock_calls) == 0
+
+    # Test that entities that we can't query don't report a state
+    with patch.object(
+        BASIC_CONFIG, "async_report_state", side_effect=mock_coro
+    ) as mock_report, patch(
+        "homeassistant.components.google_assistant.report_state.GoogleEntity.query_serialize",
+        side_effect=error.SmartHomeError("mock-error", "mock-msg"),
+    ):
+        hass.states.async_set("light.kitchen", "off")
+        await hass.async_block_till_done()
+
+    assert "Not reporting state for light.kitchen: mock-error"
     assert len(mock_report.mock_calls) == 0
 
     unsub()
