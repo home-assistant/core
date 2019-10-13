@@ -2,6 +2,8 @@
 import pytest
 from unittest.mock import patch
 
+from pybotvac.exceptions import NeatoLoginException
+
 from homeassistant.components.neato.const import CONF_VENDOR, NEATO_DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import async_setup_component
@@ -102,8 +104,8 @@ async def test_config_entries_not_in_sync_error(hass):
 
     assert hass.config_entries.async_entries(NEATO_DOMAIN)
     with patch(
-        "homeassistant.components.neato.config_flow.NeatoConfigFlow.try_login",
-        return_value="custom_error",
+        "homeassistant.components.neato.config_flow.Account",
+        side_effect=NeatoLoginException(),
     ):
         assert not await async_setup_component(
             hass, NEATO_DOMAIN, {NEATO_DOMAIN: DIFFERENT_CONFIG}
