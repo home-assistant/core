@@ -83,6 +83,7 @@ CONF_PAYLOAD_NOT_AVAILABLE = "payload_not_available"
 CONF_JSON_ATTRS_TOPIC = "json_attributes_topic"
 CONF_JSON_ATTRS_TEMPLATE = "json_attributes_template"
 CONF_QOS = "qos"
+CONF_SOURCE_TYPE = "source_type"
 CONF_RETAIN = "retain"
 
 CONF_UNIQUE_ID = "unique_id"

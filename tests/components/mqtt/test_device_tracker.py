@@ -156,3 +156,45 @@ async def test_multi_level_wildcard_topic_not_matching(hass, mock_device_tracker
     async_fire_mqtt_message(hass, topic, location)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id) is None
+
+
+async def test_default_source_type(hass, mock_device_tracker_conf):
+    """Test the default source type."""
+    dev_id = "paulus"
+    entity_id = ENTITY_ID_FORMAT.format(dev_id)
+    topic = "/location/paulus"
+    location = "work"
+
+    hass.config.components = set(["mqtt", "zone"])
+    assert await async_setup_component(
+        hass,
+        device_tracker.DOMAIN,
+        {device_tracker.DOMAIN: {CONF_PLATFORM: "mqtt", "devices": {dev_id: topic}}},
+    )
+    async_fire_mqtt_message(hass, topic, location)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).attributes.get("source_type") == "gps"
+
+
+async def test_valid_source_type(hass, mock_device_tracker_conf):
+    """Test the setting of a valid source type."""
+    dev_id = "paulus"
+    entity_id = ENTITY_ID_FORMAT.format(dev_id)
+    topic = "/location/paulus"
+    location = "work"
+
+    hass.config.components = set(["mqtt", "zone"])
+    assert await async_setup_component(
+        hass,
+        device_tracker.DOMAIN,
+        {
+            device_tracker.DOMAIN: {
+                CONF_PLATFORM: "mqtt",
+                "devices": {dev_id: topic},
+                "source_type": "router",
+            }
+        },
+    )
+    async_fire_mqtt_message(hass, topic, location)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).attributes.get("source_type") == "router"
