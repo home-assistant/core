@@ -14,7 +14,7 @@ except ImportError:
 
 try:
     # Verify that the TensorFlow Object Detection API is pre-installed
-    import tensorflow as tf # noqa
+    import tensorflow as tf  # noqa
     from object_detection.utils import label_map_util  # noqa
 except ImportError:
     label_map_util = None
