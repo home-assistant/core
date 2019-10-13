@@ -25,6 +25,8 @@ from homeassistant.util.distance import convert
 from homeassistant.util.dt import now
 import homeassistant.helpers.config_validation as cv
 
+import crimereports
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "crimereports"
@@ -65,7 +67,6 @@ class CrimeReportsSensor(Entity):
 
     def __init__(self, hass, name, latitude, longitude, radius, include, exclude):
         """Initialize the Crime Reports sensor."""
-        import crimereports
 
         self._hass = hass
         self._name = name
@@ -113,7 +114,6 @@ class CrimeReportsSensor(Entity):
 
     def update(self):
         """Update device state."""
-        import crimereports
 
         incident_counts = defaultdict(int)
         incidents = self._crimereports.get_incidents(
