@@ -33,7 +33,7 @@ INVALID_CONFIG = {
 }
 
 
-@pytest.fixture(name="account")
+@pytest.fixture(name="configflow")
 def mock_config_flow_login():
     """Mock a successful login."""
     with patch("homeassistant.components.neato.config_flow.Account", return_value=True):
@@ -53,7 +53,7 @@ async def test_no_config_entry(hass):
     assert res is True
 
 
-async def test_create_valid_config_entry(hass, account, hub):
+async def test_create_valid_config_entry(hass, configflow, hub):
     """There is something in configuration.yaml."""
     assert hass.config_entries.async_entries(NEATO_DOMAIN) == []
     assert await async_setup_component(hass, NEATO_DOMAIN, {NEATO_DOMAIN: VALID_CONFIG})
@@ -81,7 +81,7 @@ async def test_config_entries_in_sync(hass, hub):
     assert entries[0].data[CONF_VENDOR] == VENDOR_NEATO
 
 
-async def test_config_entries_not_in_sync(hass, account, hub):
+async def test_config_entries_not_in_sync(hass, configflow, hub):
     """The config entry and configuration.yaml are not in sync."""
     MockConfigEntry(domain=NEATO_DOMAIN, data=DIFFERENT_CONFIG).add_to_hass(hass)
 
