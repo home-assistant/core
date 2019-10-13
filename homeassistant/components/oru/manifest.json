@@ -4,5 +4,5 @@
     "documentation": "https://www.home-assistant.io/components/",
     "dependencies": [],
     "codeowners": ["@bvlaicu"],
-    "requirements": ["oru==0.1.4"]
+    "requirements": ["oru==0.1.6"]
 }

@@ -109,6 +109,7 @@ TEST_REQUIREMENTS = (
     "nokia",
     "numpy",
     "oauth2client",
+    "oru",
     "paho-mqtt",
     "pexpect",
     "pilight",
