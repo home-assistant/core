@@ -723,7 +723,7 @@ class AlexaChannelController(AlexaCapibility):
 
     https://developer.amazon.com/docs/device-apis/alexa-channelcontroller.html
     """
-    
+
     def name(self):
+        """Return the Alexa API name of this interface."""
         return 'Alexa.ChannelController'
-        
