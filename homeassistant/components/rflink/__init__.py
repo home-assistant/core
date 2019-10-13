@@ -2,8 +2,10 @@
 import asyncio
 from collections import defaultdict
 import logging
-import async_timeout
 
+import async_timeout
+from rflink.protocol import create_rflink_connection
+from serial import SerialException
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -11,18 +13,18 @@ from homeassistant.const import (
     CONF_COMMAND,
     CONF_HOST,
     CONF_PORT,
-    STATE_ON,
     EVENT_HOMEASSISTANT_STOP,
+    STATE_ON,
 )
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.deprecation import get_deprecated
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_send,
     async_dispatcher_connect,
+    async_dispatcher_send,
 )
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -118,9 +120,6 @@ def identify_event_type(event):
 
 async def async_setup(hass, config):
     """Set up the Rflink component."""
-    from rflink.protocol import create_rflink_connection
-    import serial
-
     # Allow entities to register themselves by device_id to be looked up when
     # new rflink events arrive to be handled
     hass.data[DATA_ENTITY_LOOKUP] = {
@@ -239,7 +238,7 @@ async def async_setup(hass, config):
                 transport, protocol = await connection
 
         except (
-            serial.serialutil.SerialException,
+            SerialException,
             ConnectionRefusedError,
             TimeoutError,
             OSError,
