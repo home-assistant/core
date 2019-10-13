@@ -38,7 +38,7 @@ Adafruit-SHT31==1.0.2
 HAP-python==2.6.0
 
 # homeassistant.components.mastodon
-Mastodon.py==1.4.6
+Mastodon.py==1.5.0
 
 # homeassistant.components.orangepi_gpio
 OPi.GPIO==0.3.6
@@ -103,7 +103,7 @@ WazeRouteCalculator==0.10
 YesssSMS==0.4.1
 
 # homeassistant.components.abode
-abodepy==0.15.0
+abodepy==0.16.5
 
 # homeassistant.components.mcp23017
 adafruit-blinka==1.2.1
@@ -194,7 +194,7 @@ aladdin_connect==0.3
 alarmdecoder==1.13.2
 
 # homeassistant.components.alpha_vantage
-alpha_vantage==2.1.0
+alpha_vantage==2.1.1
 
 # homeassistant.components.ambiclimate
 ambiclimate==0.2.1
@@ -953,7 +953,7 @@ pilight==0.1.1
 # homeassistant.components.image_processing
 # homeassistant.components.proxy
 # homeassistant.components.qrcode
-pillow==6.1.0
+pillow==6.2.0
 
 # homeassistant.components.dominos
 pizzapi==0.0.3
