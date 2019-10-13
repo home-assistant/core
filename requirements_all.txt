@@ -865,9 +865,6 @@ niko-home-control==0.2.1
 # homeassistant.components.nilu
 niluclient==0.1.2
 
-# homeassistant.components.withings
-nokia==1.2.0
-
 # homeassistant.components.nederlandse_spoorwegen
 nsapi==2.7.4
 
@@ -1558,7 +1555,7 @@ python-ripple-api==0.0.3
 python-sochain-api==0.0.2
 
 # homeassistant.components.songpal
-python-songpal==0.0.9.1
+python-songpal==0.11.1
 
 # homeassistant.components.synologydsm
 python-synology==0.2.0
@@ -1972,6 +1969,9 @@ websockets==6.0
 
 # homeassistant.components.wirelesstag
 wirelesstagpy==0.4.0
+
+# homeassistant.components.withings
+withings-api==2.0.0b8
 
 # homeassistant.components.wunderlist
 wunderpy2==0.1.6
