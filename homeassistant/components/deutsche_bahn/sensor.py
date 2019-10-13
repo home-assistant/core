@@ -4,12 +4,12 @@ import logging
 
 import voluptuous as vol
 
+import schiene
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
-
-import schiene
 
 _LOGGER = logging.getLogger(__name__)
 
