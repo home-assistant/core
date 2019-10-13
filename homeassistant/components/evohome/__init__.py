@@ -251,6 +251,7 @@ class EvoBroker:
         access_token_expires = _local_dt_to_aware(self.client.access_token_expires)
 
         app_storage = await self._store.async_load()
+        app_storage = {} if not app_storage else app_storage
 
         app_storage[CONF_USERNAME] = self.client.username
         app_storage[REFRESH_TOKEN] = self.client.refresh_token
