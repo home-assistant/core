@@ -53,6 +53,11 @@ class TradfriBaseClass(Entity):
         self._async_start_observe()
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
+
+    @property
     def name(self):
         """Return the display name of this device."""
         return self._name
@@ -85,10 +90,6 @@ class TradfriBaseDevice(TradfriBaseClass):
     All devices should inherit from this class.
     """
 
-    def __init__(self, device, api, gateway_id):
-        """Initialize a device."""
-        super().__init__(device, api, gateway_id)
-
     @property
     def device_info(self):
         """Return the device info."""
@@ -102,11 +103,6 @@ class TradfriBaseDevice(TradfriBaseClass):
             "sw_version": info.firmware_version,
             "via_device": (DOMAIN, self._gateway_id),
         }
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._available
 
     def _refresh(self, device):
         """Refresh the device data."""
