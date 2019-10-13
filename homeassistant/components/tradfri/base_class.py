@@ -10,12 +10,14 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class TradfriBaseDevice(Entity):
-    """Base class for a TRADFRI device."""
+class TradfriBaseClass(Entity):
+    """Base class for IKEA TRADFRI.
+
+    All devices and groups should inherit from this class.
+    """
 
     def __init__(self, device, api, gateway_id):
         """Initialize a device."""
-        self._available = True
         self._api = api
         self._device = None
         self._device_control = None
@@ -50,25 +52,6 @@ class TradfriBaseDevice(Entity):
         self._async_start_observe()
 
     @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._available
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        info = self._device.device_info
-
-        return {
-            "identifiers": {(DOMAIN, self._device.id)},
-            "manufacturer": info.manufacturer,
-            "model": info.model_number,
-            "name": self._name,
-            "sw_version": info.firmware_version,
-            "via_device": (DOMAIN, self._gateway_id),
-        }
-
-    @property
     def name(self):
         """Return the display name of this device."""
         return self._name
@@ -93,4 +76,39 @@ class TradfriBaseDevice(Entity):
         """Refresh the device data."""
         self._device = device
         self._name = device.name
+
+
+class TradfriBaseDevice(TradfriBaseClass):
+    """Base class for a TRADFRI device.
+
+    All devices should inherit from this class.
+    """
+
+    def __init__(self, device, api, gateway_id):
+        """Initialize a device."""
+        super().__init__(device, api, gateway_id)
+        self._available = True
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        info = self._device.device_info
+
+        return {
+            "identifiers": {(DOMAIN, self._device.id)},
+            "manufacturer": info.manufacturer,
+            "model": info.model_number,
+            "name": self._name,
+            "sw_version": info.firmware_version,
+            "via_device": (DOMAIN, self._gateway_id),
+        }
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
+
+    def _refresh(self, device):
+        """Refresh the device data."""
+        super()._refresh(device)
         self._available = device.reachable
