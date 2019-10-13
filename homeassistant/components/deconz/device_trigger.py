@@ -33,10 +33,10 @@ CONF_QUINTUPLE_PRESS = "remote_button_quintuple_press"
 CONF_ROTATED = "remote_button_rotated"
 CONF_ROTATION_STOPPED = "remote_button_rotation_stopped"
 CONF_AWAKE = "remote_awakened"
-CONF_PUSH = "remote_pushed"
+CONF_MOVE = "remote_moved"
 CONF_DOUBLE_TAP = "remote_double_tap"
 CONF_SHAKE = "remote_gyro_activated"
-CONF_DROP = "remote_dropped"
+CONF_FREE_FALL = "remote_falling"
 CONF_ROTATE_FROM_SIDE_1 = "remote_rotate_from_side_1"
 CONF_ROTATE_FROM_SIDE_2 = "remote_rotate_from_side_2"
 CONF_ROTATE_FROM_SIDE_3 = "remote_rotate_from_side_3"
@@ -178,12 +178,12 @@ AQARA_CUBE = {
     (CONF_ROTATE_FROM_SIDE_6, CONF_SIDE_3): 3005,
     (CONF_ROTATE_FROM_SIDE_6, CONF_SIDE_4): 4005,
     (CONF_ROTATE_FROM_SIDE_6, CONF_SIDE_5): 1005,
-    (CONF_PUSH, CONF_SIDE_1): 2000,
-    (CONF_PUSH, CONF_SIDE_2): 6000,
-    (CONF_PUSH, CONF_SIDE_3): 3000,
-    (CONF_PUSH, CONF_SIDE_4): 4000,
-    (CONF_PUSH, CONF_SIDE_5): 1000,
-    (CONF_PUSH, CONF_SIDE_6): 5000,
+    (CONF_MOVE, CONF_SIDE_1): 2000,
+    (CONF_MOVE, CONF_SIDE_2): 6000,
+    (CONF_MOVE, CONF_SIDE_3): 3000,
+    (CONF_MOVE, CONF_SIDE_4): 4000,
+    (CONF_MOVE, CONF_SIDE_5): 1000,
+    (CONF_MOVE, CONF_SIDE_6): 5000,
     (CONF_DOUBLE_TAP, CONF_SIDE_1): 2002,
     (CONF_DOUBLE_TAP, CONF_SIDE_2): 6002,
     (CONF_DOUBLE_TAP, CONF_SIDE_3): 3003,
@@ -191,7 +191,7 @@ AQARA_CUBE = {
     (CONF_DOUBLE_TAP, CONF_SIDE_5): 1001,
     (CONF_DOUBLE_TAP, CONF_SIDE_6): 5005,
     (CONF_AWAKE, ""): 7000,
-    (CONF_DROP, ""): 7008,
+    (CONF_FREE_FALL, ""): 7008,
     (CONF_SHAKE, ""): 7007,
 }
 
