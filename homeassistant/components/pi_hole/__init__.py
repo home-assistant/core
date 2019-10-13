@@ -122,22 +122,22 @@ async def async_setup(hass, config):
                 raise vol.Invalid(
                     "Pi-hole '{}' not found. Check your configuration.".format(name)
                 )
-            else:
-                pi_hole = hass.data[DOMAIN][slug]
-                if pi_hole.api.api_token is None:
-                    raise vol.Invalid(
-                        "Pi-hole '{}' must have an api_key provided in configuration to be disabled.".format(
-                            pi_hole.name
-                        )
+
+            pi_hole = hass.data[DOMAIN][slug]
+            if pi_hole.api.api_token is None:
+                raise vol.Invalid(
+                    "Pi-hole '{}' must have an api_key provided in configuration to be disabled.".format(
+                        pi_hole.name
                     )
-                else:
-                    LOGGER.debug(
-                        "Disabling Pi-hole '%s' (%s) for %d seconds",
-                        name,
-                        pi_hole.api.host,
-                        duration,
-                    )
-                    await pi_hole.api.disable(duration)
+                )
+
+            LOGGER.debug(
+                "Disabling Pi-hole '%s' (%s) for %d seconds",
+                name,
+                pi_hole.api.host,
+                duration,
+            )
+            await pi_hole.api.disable(duration)
 
         if name is not None:
             await do_disable(name)
@@ -157,17 +157,17 @@ async def async_setup(hass, config):
                 raise vol.Invalid(
                     "Pi-hole '{}' not found. Check your configuration.".format(name)
                 )
-            else:
-                pi_hole = hass.data[DOMAIN][slug]
-                if pi_hole.api.api_token is None:
-                    raise vol.Invalid(
-                        "Pi-hole '{}' must have an api_key provided in configuration to be enabled.".format(
-                            pi_hole.name
-                        )
+
+            pi_hole = hass.data[DOMAIN][slug]
+            if pi_hole.api.api_token is None:
+                raise vol.Invalid(
+                    "Pi-hole '{}' must have an api_key provided in configuration to be enabled.".format(
+                        pi_hole.name
                     )
-                else:
-                    LOGGER.debug("Enabling Pi-hole '%s' (%s)", name, pi_hole.api.host)
-                    await pi_hole.api.enable()
+                )
+
+            LOGGER.debug("Enabling Pi-hole '%s' (%s)", name, pi_hole.api.host)
+            await pi_hole.api.enable()
 
         if name is not None:
             await do_enable(name)
