@@ -13,7 +13,6 @@
       }
     },
     "error": {
-      "multiple_plants": "Multiple plants have been found on this account, please enter a plant id.",
       "auth_error": "Username or password is incorrect"
     }
   }

@@ -52,8 +52,6 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow):
 
         if CONF_PLANT_ID not in user_input:
             plant_info = api.plant_list(user_id)
-            if len(plant_info["data"]) > 1:
-                return await self._show_form({CONF_PLANT_ID: "multiple_plants"})
             user_input[CONF_PLANT_ID] = plant_info["data"][0]["plantId"]
 
         return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
