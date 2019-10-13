@@ -47,7 +47,7 @@ OPi.GPIO==0.3.6
 PyEssent==0.13
 
 # homeassistant.components.github
-PyGithub==1.43.5
+PyGithub==1.43.8
 
 # homeassistant.components.isy994
 PyISY==1.1.2
@@ -85,7 +85,7 @@ PyXiaomiGateway==0.12.4
 # RPi.GPIO==0.6.5
 
 # homeassistant.components.remember_the_milk
-RtmAPI==0.7.0
+RtmAPI==0.7.2
 
 # homeassistant.components.travisci
 TravisPy==0.3.5
@@ -103,7 +103,7 @@ WazeRouteCalculator==0.10
 YesssSMS==0.4.1
 
 # homeassistant.components.abode
-abodepy==0.15.0
+abodepy==0.16.5
 
 # homeassistant.components.mcp23017
 adafruit-blinka==1.2.1
@@ -194,7 +194,7 @@ aladdin_connect==0.3
 alarmdecoder==1.13.2
 
 # homeassistant.components.alpha_vantage
-alpha_vantage==2.1.0
+alpha_vantage==2.1.1
 
 # homeassistant.components.ambiclimate
 ambiclimate==0.2.1
@@ -282,7 +282,7 @@ bimmer_connected==0.6.0
 bizkaibus==0.1.1
 
 # homeassistant.components.blink
-blinkpy==0.14.1
+blinkpy==0.14.2
 
 # homeassistant.components.blinksticklight
 blinkstick==1.1.8
@@ -890,7 +890,7 @@ oauth2client==4.0.0
 oemthermostat==1.1
 
 # homeassistant.components.onkyo
-onkyo-eiscp==1.2.4
+onkyo-eiscp==1.2.7
 
 # homeassistant.components.onvif
 onvif-zeep-async==0.2.0
@@ -953,7 +953,7 @@ pilight==0.1.1
 # homeassistant.components.image_processing
 # homeassistant.components.proxy
 # homeassistant.components.qrcode
-pillow==6.1.0
+pillow==6.2.0
 
 # homeassistant.components.dominos
 pizzapi==0.0.3
@@ -1465,7 +1465,7 @@ pysuez==0.1.17
 pysupla==0.0.3
 
 # homeassistant.components.syncthru
-pysyncthru==0.4.3
+pysyncthru==0.5.0
 
 # homeassistant.components.tautulli
 pytautulli==0.5.0

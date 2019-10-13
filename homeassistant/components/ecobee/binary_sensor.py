@@ -105,6 +105,10 @@ class EcobeeBinarySensor(BinarySensorDevice):
         """Get the latest state of the sensor."""
         await self.data.update()
         for sensor in self.data.ecobee.get_remote_sensors(self.index):
+            if sensor["name"] != self.sensor_name:
+                continue
             for item in sensor["capability"]:
-                if item["type"] == "occupancy" and self.sensor_name == sensor["name"]:
-                    self._state = item["value"]
+                if item["type"] != "occupancy":
+                    continue
+                self._state = item["value"]
+                break

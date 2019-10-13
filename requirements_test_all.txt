@@ -40,10 +40,13 @@ PyRMVtransport==0.2.9
 PyTransportNSW==0.1.1
 
 # homeassistant.components.remember_the_milk
-RtmAPI==0.7.0
+RtmAPI==0.7.2
 
 # homeassistant.components.yessssms
 YesssSMS==0.4.1
+
+# homeassistant.components.abode
+abodepy==0.16.5
 
 # homeassistant.components.androidtv
 adb-shell==0.0.4
@@ -328,7 +331,7 @@ pilight==0.1.1
 # homeassistant.components.image_processing
 # homeassistant.components.proxy
 # homeassistant.components.qrcode
-pillow==6.1.0
+pillow==6.2.0
 
 # homeassistant.components.plex
 plexapi==3.0.6

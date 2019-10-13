@@ -220,6 +220,7 @@ class HomematicipHAP:
             await self.hass.config_entries.async_forward_entry_unload(
                 self.config_entry, component
             )
+        self.hmip_device_by_entity_id = {}
         return True
 
     async def get_hap(
