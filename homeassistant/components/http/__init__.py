@@ -128,6 +128,7 @@ class ApiConfig:
         """Initialize a new API config object."""
         self.host = host
         self.port = port
+        self.use_ssl = use_ssl
 
         host = host.rstrip("/")
         if host.startswith(("http://", "https://")):
