@@ -281,7 +281,13 @@ class EvoBroker:
             temps = list(await self.client_v1.temperatures(force_refresh=True))
 
         except aiohttp.ClientError as err:
-            _handle_exception(err)
+            _LOGGER.warning(
+                "Unable to obtain the latest high-precision temperatures. "
+                "Check your network and the vendor's service status page. "
+                "Proceeding with low-precision temperatures. "
+                "Message is: %s",
+                err,
+            )
             self.temps = None  # these are now stale, will fall back to v2 temps
 
         else:
