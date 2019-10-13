@@ -48,27 +48,27 @@
             "button_2": "drugi przycisk",
             "button_3": "trzeci przycisk",
             "button_4": "czwarty przycisk",
-            "close": "zamkni\u0119cie",
-            "dim_down": "zmniejszenie jasno\u015bci",
-            "dim_up": "zwi\u0119kszenie jasno\u015bci",
+            "close": "nast\u0105pi zamkni\u0119cie",
+            "dim_down": "nast\u0105pi zmniejszenie jasno\u015bci",
+            "dim_up": "nast\u0105pi zwi\u0119kszenie jasno\u015bci",
             "left": "w lewo",
             "open": "otwarcie",
             "right": "w prawo",
-            "turn_off": "wy\u0142\u0105czenie",
-            "turn_on": "wy\u0142\u0105czenie"
+            "turn_off": "nast\u0105pi wy\u0142\u0105czenie",
+            "turn_on": "nast\u0105pi w\u0142\u0105czenie"
         },
         "trigger_type": {
-            "remote_button_double_press": "przycisk \"{subtype}\" podw\u00f3jnie naci\u015bni\u0119ty",
-            "remote_button_long_press": "przycisk \"{subtype}\" naci\u015bni\u0119ty w spos\u00f3b ci\u0105g\u0142y",
-            "remote_button_long_release": "przycisk \"{subtype}\" zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
-            "remote_button_quadruple_press": "przycisk \"{subtype}\" czterokrotnie naci\u015bni\u0119ty",
-            "remote_button_quintuple_press": "przycisk \"{subtype}\" pi\u0119ciokrotnie naci\u015bni\u0119ty",
-            "remote_button_rotated": "przycisk obr\u00f3cony \"{subtype}\"",
-            "remote_button_rotation_stopped": "obr\u00f3t przycisku \"{subtype}\" zatrzymany",
-            "remote_button_short_press": "przycisk \"{subtype}\" naci\u015bni\u0119ty",
-            "remote_button_short_release": "przycisk \"{subtype}\" zwolniony",
-            "remote_button_triple_press": "przycisk \"{subtype}\" trzykrotnie naci\u015bni\u0119ty",
-            "remote_gyro_activated": "potrz\u0105\u015bni\u0119cie urz\u0105dzeniem"
+            "remote_button_double_press": "przycisk \"{subtype}\" zostanie podw\u00f3jnie naci\u015bni\u0119ty",
+            "remote_button_long_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty w spos\u00f3b ci\u0105g\u0142y",
+            "remote_button_long_release": "przycisk \"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
+            "remote_button_quadruple_press": "przycisk \"{subtype}\" zostanie czterokrotnie naci\u015bni\u0119ty",
+            "remote_button_quintuple_press": "przycisk \"{subtype}\" zostanie pi\u0119ciokrotnie naci\u015bni\u0119ty",
+            "remote_button_rotated": "przycisk zostanie obr\u00f3cony \"{subtype}\"",
+            "remote_button_rotation_stopped": "nast\u0105pi zatrzymanie obrotu przycisku \"{subtype}\"",
+            "remote_button_short_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty",
+            "remote_button_short_release": "przycisk \"{subtype}\" zostanie zwolniony",
+            "remote_button_triple_press": "przycisk \"{subtype}\" zostanie trzykrotnie naci\u015bni\u0119ty",
+            "remote_gyro_activated": "nast\u0105pi potrz\u0105\u015bni\u0119cie urz\u0105dzeniem"
         }
     },
     "options": {
