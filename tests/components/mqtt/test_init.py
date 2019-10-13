@@ -733,7 +733,7 @@ def test_birth_message(hass):
     mqtt_client.publish.side_effect = lambda *args: calls.append(args)
     hass.data["mqtt"]._mqtt_on_connect(None, None, 0, 0)
     yield from hass.async_block_till_done()
-    assert calls[-1] == ("birth", "birth", 0, False)
+    assert calls[-1] == ("birth", "birth", 0, True)
 
 
 @asyncio.coroutine

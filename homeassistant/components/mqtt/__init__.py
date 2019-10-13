@@ -101,6 +101,7 @@ DEFAULT_PORT = 1883
 DEFAULT_KEEPALIVE = 60
 DEFAULT_QOS = 0
 DEFAULT_RETAIN = False
+DEFAULT_WILL_BIRTH_RETAIN = True
 DEFAULT_PROTOCOL = PROTOCOL_311
 DEFAULT_DISCOVERY_PREFIX = "homeassistant"
 DEFAULT_TLS_PROTOCOL = "auto"
@@ -195,7 +196,7 @@ MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
         vol.Required(ATTR_TOPIC): valid_publish_topic,
         vol.Required(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
         vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
-        vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        vol.Optional(ATTR_RETAIN, default=DEFAULT_WILL_BIRTH_RETAIN): cv.boolean,
     },
     required=True,
 )
