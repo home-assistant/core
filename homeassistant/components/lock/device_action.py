@@ -4,6 +4,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     CONF_DOMAIN,
     CONF_TYPE,
     CONF_DEVICE_ID,
@@ -15,9 +16,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, Context
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
-from . import DOMAIN
+from . import DOMAIN, SUPPORT_OPEN
 
-# TODO specify your supported action types.
 ACTION_TYPES = {"lock", "unlock", "open"}
 
 ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
@@ -55,14 +55,19 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
                 CONF_TYPE: "unlock",
             }
         )
-        actions.append(
-            {
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "open",
-            }
-        )
+
+        state = hass.states.get(entry.entity_id)
+        if state:
+            features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            if features & (SUPPORT_OPEN):
+                actions.append(
+                    {
+                        CONF_DEVICE_ID: device_id,
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_ENTITY_ID: entry.entity_id,
+                        CONF_TYPE: "open",
+                    }
+                )
 
     return actions
 

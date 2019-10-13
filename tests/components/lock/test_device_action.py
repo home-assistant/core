@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.components.lock import DOMAIN
+from homeassistant.const import CONF_PLATFORM
 from homeassistant.setup import async_setup_component
 import homeassistant.components.automation as automation
 from homeassistant.helpers import device_registry
@@ -28,33 +29,80 @@ def entity_reg(hass):
     return mock_registry(hass)
 
 
-async def test_get_actions(hass, device_reg, entity_reg):
-    """Test we get the expected actions from a lock."""
+async def test_get_actions_support_open(hass, device_reg, entity_reg):
+    """Test we get the expected actions from a lock which supports open."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
     device_entry = device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        platform.ENTITIES["support_open"].unique_id,
+        device_id=device_entry.id,
+    )
+
     expected_actions = [
         {
             "domain": DOMAIN,
             "type": "lock",
             "device_id": device_entry.id,
-            "entity_id": "lock.test_5678",
+            "entity_id": "lock.support_open_lock",
         },
         {
             "domain": DOMAIN,
             "type": "unlock",
             "device_id": device_entry.id,
-            "entity_id": "lock.test_5678",
+            "entity_id": "lock.support_open_lock",
         },
         {
             "domain": DOMAIN,
             "type": "open",
             "device_id": device_entry.id,
-            "entity_id": "lock.test_5678",
+            "entity_id": "lock.support_open_lock",
+        },
+    ]
+    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    assert_lists_same(actions, expected_actions)
+
+
+async def test_get_actions_not_support_open(hass, device_reg, entity_reg):
+    """Test we get the expected actions from a lock which doesn't support open."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        platform.ENTITIES["no_support_open"].unique_id,
+        device_id=device_entry.id,
+    )
+
+    expected_actions = [
+        {
+            "domain": DOMAIN,
+            "type": "lock",
+            "device_id": device_entry.id,
+            "entity_id": "lock.no_support_open_lock",
+        },
+        {
+            "domain": DOMAIN,
+            "type": "unlock",
+            "device_id": device_entry.id,
+            "entity_id": "lock.no_support_open_lock",
         },
     ]
     actions = await async_get_device_automations(hass, "action", device_entry.id)
