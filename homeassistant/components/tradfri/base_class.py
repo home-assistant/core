@@ -82,6 +82,7 @@ class TradfriBaseClass(Entity):
         """Refresh the device data."""
         self._device = device
         self._name = device.name
+        self._available = device.reachable
 
 
 class TradfriBaseDevice(TradfriBaseClass):
@@ -103,8 +104,3 @@ class TradfriBaseDevice(TradfriBaseClass):
             "sw_version": info.firmware_version,
             "via_device": (DOMAIN, self._gateway_id),
         }
-
-    def _refresh(self, device):
-        """Refresh the device data."""
-        super()._refresh(device)
-        self._available = device.reachable
