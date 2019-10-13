@@ -14,6 +14,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SEND_KEY,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
@@ -47,6 +48,7 @@ SUPPORT_SAMSUNGTV = (
     | SUPPORT_VOLUME_STEP
     | SUPPORT_VOLUME_MUTE
     | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_SEND_KEY
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_NEXT_TRACK
     | SUPPORT_TURN_OFF
@@ -265,6 +267,10 @@ class SamsungTVDevice(MediaPlayerDevice):
         """Send play command."""
         self._playing = True
         self.send_key("KEY_PLAY")
+
+    def media_send_key(self, media_key):
+        """Send key command."""
+        self.send_key("KEY_" + media_key)
 
     def media_pause(self):
         """Send media pause command to media player."""
