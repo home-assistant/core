@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 class TradfriBaseClass(Entity):
     """Base class for IKEA TRADFRI.
 
-    All devices and groups should inherit from this class.
+    All devices and groups should ultimately inherit from this class.
     """
 
     def __init__(self, device, api, gateway_id):
