@@ -24,6 +24,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_PLAY_PAUSE,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_SEEK,
+    SERVICE_MEDIA_SEND_KEY,
     SERVICE_MEDIA_STOP,
     SERVICE_SHUFFLE_SET,
     SERVICE_TOGGLE,
@@ -62,6 +63,7 @@ from .const import (
     ATTR_MEDIA_DURATION,
     ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_EPISODE,
+    ATTR_MEDIA_KEY,
     ATTR_MEDIA_PLAYLIST,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT,
@@ -76,6 +78,7 @@ from .const import (
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
     DOMAIN,
+    MEDIA_KEYS,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
@@ -86,6 +89,7 @@ from .const import (
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SEND_KEY,
     SUPPORT_SEEK,
     SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_SELECT_SOURCE,
@@ -154,6 +158,10 @@ MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
         vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
         vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
     }
+)
+
+MEDIA_PLAYER_SEND_KEY_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+    {vol.Required(ATTR_MEDIA_KEY): vol.In(MEDIA_KEYS)}
 )
 
 MEDIA_PLAYER_SET_SHUFFLE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
@@ -324,6 +332,14 @@ async def async_setup(hass, config):
             enqueue=call.data.get(ATTR_MEDIA_ENQUEUE),
         ),
         [SUPPORT_PLAY_MEDIA],
+    )
+    component.async_register_entity_service(
+        SERVICE_MEDIA_SEND_KEY,
+        MEDIA_PLAYER_SEND_KEY_SCHEMA,
+        lambda entity, call: entity.async_media_send_key(
+            media_key=call.data[ATTR_MEDIA_KEY]
+        ),
+        [SUPPORT_SEND_KEY],
     )
     component.async_register_entity_service(
         SERVICE_SHUFFLE_SET,
@@ -575,6 +591,17 @@ class MediaPlayerDevice(Entity):
         """
         return self.hass.async_add_job(self.media_play)
 
+    def media_send_key(self, media_key):
+        """Send media key."""
+        raise NotImplementedError()
+
+    def async_media_send_key(self, media_key):
+        """Send media key.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(self.media_send_key, media_key)
+
     def media_pause(self):
         """Send pause command."""
         raise NotImplementedError()
@@ -732,6 +759,11 @@ class MediaPlayerDevice(Entity):
     def support_play_media(self):
         """Boolean if play media command supported."""
         return bool(self.supported_features & SUPPORT_PLAY_MEDIA)
+
+    @property
+    def support_send_key(self):
+        """Boolean if send key command supported."""
+        return bool(self.supported_features & SUPPORT_SEND_KEY)
 
     @property
     def support_select_source(self):

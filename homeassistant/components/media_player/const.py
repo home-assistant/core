@@ -13,6 +13,7 @@ ATTR_MEDIA_CONTENT_TYPE = "media_content_type"
 ATTR_MEDIA_DURATION = "media_duration"
 ATTR_MEDIA_ENQUEUE = "enqueue"
 ATTR_MEDIA_EPISODE = "media_episode"
+ATTR_MEDIA_KEY = "media_key"
 ATTR_MEDIA_PLAYLIST = "media_playlist"
 ATTR_MEDIA_POSITION = "media_position"
 ATTR_MEDIA_POSITION_UPDATED_AT = "media_position_updated_at"
@@ -52,7 +53,7 @@ SUPPORT_VOLUME_SET = 4
 SUPPORT_VOLUME_MUTE = 8
 SUPPORT_PREVIOUS_TRACK = 16
 SUPPORT_NEXT_TRACK = 32
-
+SUPPORT_SEND_KEY = 64
 SUPPORT_TURN_ON = 128
 SUPPORT_TURN_OFF = 256
 SUPPORT_PLAY_MEDIA = 512
@@ -63,3 +64,40 @@ SUPPORT_CLEAR_PLAYLIST = 8192
 SUPPORT_PLAY = 16384
 SUPPORT_SHUFFLE_SET = 32768
 SUPPORT_SELECT_SOUND_MODE = 65536
+
+MEDIA_KEYS = [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "RED",  # A / Red
+    "GREEN",  # B / Green
+    "YELLOW",  # C / Yellow
+    "BLUE",  # D / Blue
+    "UP",  # Up
+    "DOWN",  # Down
+    "LEFT",  # Left
+    "RIGHT",  # Right
+    "POWER",  # Power Toggle
+    "POWEROFF",  # Power Off
+    "POWERON",  # Power On
+    "CHUP",  # P Up
+    "CHDOWN",  # P Down
+    "ENTER",  # Enter
+    "RETURN",  # Return
+    "CH_LIST",  # Channel List
+    "MENU ",  # Menu
+    "SOURCE",  # Source
+    "GUIDE",  # Guide
+    "TOOLS",  # Tools
+    "INFO",  # Info
+    "VOLUP",  # Volume Up
+    "VOLDOWN",  # Volume Down
+    "MUTE",  # Mute
+]
