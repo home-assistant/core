@@ -522,20 +522,34 @@ async def async_api_adjust_volume_step(hass, config, directive, context):
     # each component handles it differently e.g. via config.
     # For now we use the volumeSteps returned to figure out if we
     # should step up/down
-    volume_step = directive.payload["volumeSteps"]
+    
     entity = directive.entity
+    volume_int = int(directive.payload['volumeSteps'])
+    isDefault = bool(directive.payload['volumeStepsDefault'])
+    defaultSteps=5
 
-    data = {ATTR_ENTITY_ID: entity.entity_id}
+    if hasattr(entity,'volume_default_steps'):
+      defaultSteps=getattr(entity,'volume_default_steps')
 
-    if volume_step > 0:
-        await hass.services.async_call(
-            entity.domain, SERVICE_VOLUME_UP, data, blocking=False, context=context
-        )
-    elif volume_step < 0:
-        await hass.services.async_call(
-            entity.domain, SERVICE_VOLUME_DOWN, data, blocking=False, context=context
-        )
-
+    if isDefault:
+        if volume_int < 0:
+            volume_int=-defaultSteps # the default is 10 which is too much
+        else:
+            volume_int=defaultSteps
+    if volume_int != 0:    
+        _LOGGER.debug("Processing Stepspeaker ajustvolume adjust volume: %s", volume_int)
+        data = {
+            ATTR_ENTITY_ID: entity.entity_id
+        }   
+        for step in range(0,abs(volume_int)):
+            if volume_int > 0:
+                await hass.services.async_call(
+                    entity.domain, SERVICE_VOLUME_UP,
+                    data, blocking=False, context=context)
+            elif volume_int < 0:
+                await hass.services.async_call(
+                    entity.domain, SERVICE_VOLUME_DOWN,
+                    data, blocking=False, context=context)
     return directive.response()
 
 
@@ -928,3 +942,54 @@ async def async_api_disarm(hass, config, directive, context):
     )
 
     return response
+    
+@HANDLERS.register(('Alexa.ChannelController','ChangeChannel'))
+async def async_api_changechannel(hass, config, directive, context):
+    """Process a change channel request."""
+    channel=0
+    if 'number' in directive.payload['channel'].keys():
+        channel=directive.payload['channel']['number']
+        _LOGGER.debug("Received Alexa Channel number %s",channel )
+    elif 'callSign' in directive.payload['channel'].keys():
+        channel=directive.payload['channel']['callSign']
+        _LOGGER.debug("Received Alexa Callsign Channel %s",channel )
+    elif 'name' in directive.payload['channelMetadata'].keys():
+        channel=directive.payload['channelMetadata']['name']
+        _LOGGER.debug("Received Alexa Metadataname Channel request %s",channel )
+
+    _LOGGER.debug("Received Alexa Smart Home Channel request: %s",channel )
+
+    entity=directive.entity
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id,
+        media_player.const.ATTR_MEDIA_CONTENT_ID: channel,
+        media_player.const.ATTR_MEDIA_CONTENT_TYPE: 'channel'
+    }
+
+    await hass.services.async_call(
+        entity.domain, media_player.const.SERVICE_PLAY_MEDIA,
+        data, blocking=False, context=context)
+
+    return directive.response()
+
+@HANDLERS.register(('Alexa.ChannelController','SkipChannels'))
+async def async_api_skipchannel(hass, config, directive, context):
+    """Process a change channel request."""
+    channel=int(directive.payload['channelCount'])
+    entity=directive.entity
+    data = {
+            ATTR_ENTITY_ID: entity.entity_id
+     }   
+    if channel > 0:
+        await hass.services.async_call(
+          entity.domain, SERVICE_MEDIA_NEXT_TRACK,
+          data, blocking=False, context=context)
+    if channel < 0:
+        await hass.services.async_call(
+          entity.domain, SERVICE_MEDIA_PREVIOUS_TRACK,
+          data, blocking=False, context=context)
+        
+
+    return directive.response()
+
+
