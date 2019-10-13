@@ -520,25 +520,23 @@ async def async_api_adjust_volume_step(hass, config, directive, context):
     # When no steps are called in the request, Alexa sends a default of 10 steps which for most
     # purposes is too high.  A device_state_attribute can be set in the media player to set this to a new default
     # The default without the attribute is lowered to 5 in this case.
-    
     entity = directive.entity
     volume_int = int(directive.payload['volumeSteps'])
     isDefault = bool(directive.payload['volumeStepsDefault'])
     defaultSteps=5
 
     try:
-        defaultSteps=int(entity.attributes['volume_steps_default'])
-    except Exception as e: #if the attribute is not setup in the media_player attributes or is  invalid we use this default
+        defaultSteps = int(entity.attributes['volume_steps_default'])
+    except Exception:   # if the attribute is not setup in the media_player attributes or is  invalid we use this default
         defaultSteps=5
 
     if isDefault:
         if volume_int < 0:
-            volume_int=-defaultSteps # the default is 10 which is too much
+            volume_int = -defaultSteps   # the default is 10 which is too much
         else:
-            volume_int=defaultSteps
+            volume_int = defaultSteps
             
     if volume_int != 0:  
-    
         data = {
             ATTR_ENTITY_ID: entity.entity_id
         }   
