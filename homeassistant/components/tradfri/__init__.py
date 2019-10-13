@@ -2,6 +2,8 @@
 import logging
 
 import voluptuous as vol
+from pytradfri import Gateway, RequestError
+from pytradfri.api.aiocoap_api import APIFactory
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
@@ -91,8 +93,6 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, entry):
     """Create a gateway."""
     # host, identity, key, allow_tradfri_groups
-    from pytradfri import Gateway, RequestError  # pylint: disable=import-error
-    from pytradfri.api.aiocoap_api import APIFactory
 
     factory = APIFactory(
         entry.data[CONF_HOST],
