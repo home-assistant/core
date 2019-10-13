@@ -1794,6 +1794,9 @@ schiene==0.23
 # homeassistant.components.scsgate
 scsgate==0.1.0
 
+# homeassistant.components.sector_alarm
+sectoralarmlib==0.8
+
 # homeassistant.components.sendgrid
 sendgrid==6.1.0
 

@@ -285,6 +285,7 @@ homeassistant/components/scene/* @home-assistant/core
 homeassistant/components/scrape/* @fabaff
 homeassistant/components/script/* @home-assistant/core
 homeassistant/components/search/* @home-assistant/core
+homeassistant/components/sector_alarm/* @peroyvind
 homeassistant/components/sense/* @kbickar
 homeassistant/components/sensibo/* @andrey-git
 homeassistant/components/sentry/* @dcramer
