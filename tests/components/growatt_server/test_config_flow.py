@@ -74,7 +74,7 @@ async def test_multiple_plants(hass):
             return_value=growatt_list_response_more_plants,
         ):
             result = await flow.async_step_user(user_input=FIXTURE_USER_INPUT)
-            assert result["errors"] == {"base": "multiple_plants"}
+            assert result["errors"] == {CONF_PLANT_ID: "multiple_plants"}
 
 
 async def test_full_flow_implementation(hass):
