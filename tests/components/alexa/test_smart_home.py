@@ -403,11 +403,19 @@ async def test_lock(hass):
         "Alexa.LockController", "Lock", "lock#test", "lock.lock", hass
     )
 
-    # always return LOCKED for now
     properties = msg["context"]["properties"][0]
     assert properties["name"] == "lockState"
     assert properties["namespace"] == "Alexa.LockController"
     assert properties["value"] == "LOCKED"
+
+    _, msg = await assert_request_calls_service(
+        "Alexa.LockController", "Unlock", "lock#test", "lock.unlock", hass
+    )
+
+    properties = msg["context"]["properties"][0]
+    assert properties["name"] == "lockState"
+    assert properties["namespace"] == "Alexa.LockController"
+    assert properties["value"] == "UNLOCKED"
 
 
 async def test_media_player(hass):
