@@ -223,75 +223,6 @@ class TestSamsungTv(unittest.TestCase):
         self.device.turn_off()
         mocked_debug.assert_called_once_with("Could not establish connection.")
 
-    def test_volume_up(self):
-        """Test for volume_up."""
-        self.device.send_key = mock.Mock()
-        self.device.volume_up()
-        self.device.send_key.assert_called_once_with("KEY_VOLUP")
-
-    def test_volume_down(self):
-        """Test for volume_down."""
-        self.device.send_key = mock.Mock()
-        self.device.volume_down()
-        self.device.send_key.assert_called_once_with("KEY_VOLDOWN")
-
-    def test_mute_volume(self):
-        """Test for mute_volume."""
-        self.device.send_key = mock.Mock()
-        self.device.mute_volume(True)
-        self.device.send_key.assert_called_once_with("KEY_MUTE")
-
-    def test_media_play_pause(self):
-        """Test for media_next_track."""
-        self.device.send_key = mock.Mock()
-        self.device._playing = False
-        self.device.media_play_pause()
-        self.device.send_key.assert_called_once_with("KEY_PLAY")
-        assert self.device._playing
-        self.device.send_key = mock.Mock()
-        self.device.media_play_pause()
-        self.device.send_key.assert_called_once_with("KEY_PAUSE")
-        assert not self.device._playing
-
-    def test_media_play(self):
-        """Test for media_play."""
-        self.device.send_key = mock.Mock()
-        self.device._playing = False
-        self.device.media_play()
-        self.device.send_key.assert_called_once_with("KEY_PLAY")
-        assert self.device._playing
-
-    def test_media_pause(self):
-        """Test for media_pause."""
-        self.device.send_key = mock.Mock()
-        self.device._playing = True
-        self.device.media_pause()
-        self.device.send_key.assert_called_once_with("KEY_PAUSE")
-        assert not self.device._playing
-
-    def test_media_next_track(self):
-        """Test for media_next_track."""
-        self.device.send_key = mock.Mock()
-        self.device.media_next_track()
-        self.device.send_key.assert_called_once_with("KEY_FF")
-
-    def test_media_previous_track(self):
-        """Test for media_previous_track."""
-        self.device.send_key = mock.Mock()
-        self.device.media_previous_track()
-        self.device.send_key.assert_called_once_with("KEY_REWIND")
-
-    def test_turn_on(self):
-        """Test turn on."""
-        self.device.send_key = mock.Mock()
-        self.device._mac = None
-        self.device.turn_on()
-        self.device.send_key.assert_called_once_with("KEY_POWERON")
-        self.device._wol.send_magic_packet = mock.Mock()
-        self.device._mac = "fake"
-        self.device.turn_on()
-        self.device._wol.send_magic_packet.assert_called_once_with("fake")
-
 
 @pytest.fixture
 def samsung_mock():
@@ -299,6 +230,93 @@ def samsung_mock():
     with patch.dict("sys.modules", {"samsungctl": MagicMock()}):
         yield
 
+
+def test_volume_up(self, samsung_mock):
+    """Test for volume_up."""
+    device = SamsungTVDevice(**WORKING_CONFIG)
+    device.hass = hass
+    device.send_key = mock.Mock()
+    device.volume_up()
+    device.send_key.assert_called_once_with("KEY_VOLUP")
+
+def test_volume_down(self, samsung_mock):
+    """Test for volume_down."""
+    device = SamsungTVDevice(**WORKING_CONFIG)
+    device.hass = hass
+    device.send_key = mock.Mock()
+    device.volume_down()
+    device.send_key.assert_called_once_with("KEY_VOLDOWN")
+
+def test_mute_volume(self, samsung_mock):
+    """Test for mute_volume."""
+    device = SamsungTVDevice(**WORKING_CONFIG)
+    device.hass = hass
+    device.send_key = mock.Mock()
+    device.mute_volume(True)
+    device.send_key.assert_called_once_with("KEY_MUTE")
+
+def test_media_play_pause(self, samsung_mock):
+    """Test for media_next_track."""
+    device = SamsungTVDevice(**WORKING_CONFIG)
+    device.hass = hass
+    device.send_key = mock.Mock()
+    device._playing = False
+    device.media_play_pause()
+    device.send_key.assert_called_once_with("KEY_PLAY")
+    assert device._playing
+    device.send_key = mock.Mock()
+    device.media_play_pause()
+    device.send_key.assert_called_once_with("KEY_PAUSE")
+    assert not device._playing
+
+def test_media_play(self, samsung_mock):
+    """Test for media_play."""
+    device = SamsungTVDevice(**WORKING_CONFIG)
+    device.hass = hass
+    device.send_key = mock.Mock()
+    device._playing = False
+    device.media_play()
+    device.send_key.assert_called_once_with("KEY_PLAY")
+    assert device._playing
+
+def test_media_pause(self, samsung_mock):
+    """Test for media_pause."""
+    device = SamsungTVDevice(**WORKING_CONFIG)
+    device.hass = hass
+    device.send_key = mock.Mock()
+    device._playing = True
+    device.media_pause()
+    device.send_key.assert_called_once_with("KEY_PAUSE")
+    assert not device._playing
+
+def test_media_next_track(self, samsung_mock):
+    """Test for media_next_track."""
+    device = SamsungTVDevice(**WORKING_CONFIG)
+    device.hass = hass
+    device.send_key = mock.Mock()
+    device.media_next_track()
+    device.send_key.assert_called_once_with("KEY_FF")
+
+def test_media_previous_track(self, samsung_mock):
+    """Test for media_previous_track."""
+    device = SamsungTVDevice(**WORKING_CONFIG)
+    device.hass = hass
+    device.send_key = mock.Mock()
+    device.media_previous_track()
+    device.send_key.assert_called_once_with("KEY_REWIND")
+
+def test_turn_on(self, samsung_mock):
+    """Test turn on."""
+    device = SamsungTVDevice(**WORKING_CONFIG)
+    device.hass = hass
+    device.send_key = mock.Mock()
+    device._mac = None
+    device.turn_on()
+    device.send_key.assert_called_once_with("KEY_POWERON")
+    device._wol.send_magic_packet = mock.Mock()
+    device._mac = "fake"
+    device.turn_on()
+    device._wol.send_magic_packet.assert_called_once_with("fake")
 
 async def test_play_media(hass, samsung_mock):
     """Test for play_media."""
