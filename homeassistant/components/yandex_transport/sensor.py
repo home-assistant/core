@@ -83,7 +83,12 @@ class DiscoverMoscowYandexTransport(Entity):
                 if self._routes and route not in self._routes:
                     # skip unnecessary route info
                     continue
-                if "Events" in thread["BriefSchedule"]:
+                if "Events" not in thread["BriefSchedule"]:
+                   continue
+               
+               for event in thread["BriefSchedule"]["Events"]:
+                   if "Estimated" not in event:
+                       continue
                     for event in thread["BriefSchedule"]["Events"]:
                         if "Estimated" in event:
                             posix_time_next = int(event["Estimated"]["value"])
