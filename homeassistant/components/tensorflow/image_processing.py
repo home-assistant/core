@@ -282,11 +282,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
     def process_image(self, image):
         """Process the image."""
 
-        try:
-            img = cv2.imdecode(np.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
-            inp = img[:, :, [2, 1, 0]]  # BGR->RGB
-            inp_expanded = inp.reshape(1, inp.shape[0], inp.shape[1], 3)
-        except ImportError:
+        if cv2 is None:
             img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
             img.thumbnail((460, 460), Image.ANTIALIAS)
             img_width, img_height = img.size
@@ -296,6 +292,10 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
                 .astype(np.uint8)
             )
             inp_expanded = np.expand_dims(inp, axis=0)
+        else:
+            img = cv2.imdecode(np.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
+            inp = img[:, :, [2, 1, 0]]  # BGR->RGB
+            inp_expanded = inp.reshape(1, inp.shape[0], inp.shape[1], 3)
 
         image_tensor = self._graph.get_tensor_by_name("image_tensor:0")
         boxes = self._graph.get_tensor_by_name("detection_boxes:0")
