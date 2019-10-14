@@ -106,5 +106,43 @@ async def test_apprise_notification(hass):
         # Validate calls were made under the hood correctly
         obj.add.assert_called_once_with([config[BASE_COMPONENT]["url"]])
         obj.notify.assert_called_once_with(
-            **{"body": data["message"], "title": data["title"]}
+            **{"body": data["message"], "title": data["title"], "tag": None}
+        )
+
+
+async def test_apprise_notification_with_target(hass, tmp_path):
+    """Test apprise notification with a target."""
+
+    # Test cases where our URL is invalid
+    d = tmp_path / "apprise-config"
+    d.mkdir()
+    f = d / "apprise"
+
+    # Write 2 config entries each assigned to different tags
+    f.write_text("devops=mailto://user:pass@example.com/\r\n")
+    f.write_text("system,alert=syslog://\r\n")
+
+    config = {BASE_COMPONENT: {"name": "test", "platform": "apprise", "config": str(f)}}
+
+    # Our Message, only notify the services tagged with "devops"
+    data = {"title": "Test Title", "message": "Test Message", "target": ["devops"]}
+
+    with patch("apprise.Apprise") as mock_apprise:
+        obj = MagicMock()
+        obj.add.return_value = True
+        obj.notify.return_value = True
+        mock_apprise.return_value = obj
+        assert await async_setup_component(hass, BASE_COMPONENT, config)
+        await hass.async_block_till_done()
+
+        # Test the existance of our service
+        assert hass.services.has_service(BASE_COMPONENT, "test") is True
+
+        # Test the call to our underlining notify() call
+        await hass.services.async_call(BASE_COMPONENT, "test", data)
+        await hass.async_block_till_done()
+
+        # Validate calls were made under the hood correctly
+        obj.notify.assert_called_once_with(
+            **{"body": data["message"], "title": data["title"], "tag": data["target"]}
         )
