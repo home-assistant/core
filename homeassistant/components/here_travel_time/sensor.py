@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
+    EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import location
@@ -172,7 +173,12 @@ async def async_setup_platform(
         name, origin, destination, origin_entity_id, destination_entity_id, here_data
     )
 
-    async_add_entities([sensor], True)
+    def delayed_sensor_update(event):
+        """Update sensor after homeassistant started."""
+        sensor.async_schedule_update_ha_state(True)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, delayed_sensor_update)
+    async_add_entities([sensor])
 
 
 def _are_valid_client_credentials(here_client: herepy.RoutingApi) -> bool:
