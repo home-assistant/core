@@ -726,4 +726,4 @@ class AlexaChannelController(AlexaCapibility):
 
     def name(self):
         """Return the Alexa API name of this interface."""
-        return 'Alexa.ChannelController'
+        return "Alexa.ChannelController"

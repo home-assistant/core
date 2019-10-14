@@ -522,19 +522,19 @@ async def async_api_adjust_volume_step(hass, config, directive, context):
     # The default without the attribute is lowered to 5 in this case.
     entity = directive.entity
     volume_int = int(directive.payload["volumeSteps"])
-    isDefault = bool(directive.payload["volumeStepsDefault"])
-    defaultSteps = 1
+    is_default = bool(directive.payload["volumeStepsDefault"])
+    default_steps = 1
 
     try:
-        defaultSteps = int(entity.attributes["volume_steps_default"])
-    except Exception:   # if the attribute is not setup in the media_player attributes or is  invalid we use this default
-        defaultSteps = 1
+        default_steps = int(entity.attributes["volume_steps_default"])
+    except Exception:   
+        default_steps = 1
 
-    if isDefault:
+    if is_default:
         if volume_int < 0:
-            volume_int = (-defaultSteps)   # the default is 10 which is too much
+            volume_int = (-default_steps)   
         else:
-            volume_int = defaultSteps
+            volume_int = default_steps
 
     if volume_int != 0:
         data = {ATTR_ENTITY_ID: entity.entity_id}
