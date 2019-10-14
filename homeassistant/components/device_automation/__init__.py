@@ -215,7 +215,7 @@ async def websocket_device_automation_list_triggers(hass, connection, msg):
 @websocket_api.async_response
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "device_automation/ation/capabilities",
+        vol.Required("type"): "device_automation/action/capabilities",
         vol.Required("action"): dict,
     }
 )

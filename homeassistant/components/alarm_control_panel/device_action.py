@@ -10,6 +10,11 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_TYPE,
+    SERVICE_ALARM_ARM_AWAY,
+    SERVICE_ALARM_ARM_HOME,
+    SERVICE_ALARM_ARM_NIGHT,
+    SERVICE_ALARM_DISARM,
+    SERVICE_ALARM_TRIGGER,
 )
 from homeassistant.core import HomeAssistant, Context
 from homeassistant.helpers import entity_registry
@@ -22,6 +27,7 @@ ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(ACTION_TYPES),
         vol.Required(CONF_ENTITY_ID): cv.entity_domain(DOMAIN),
+        vol.Optional(CONF_CODE): cv.string,
     }
 )
 
@@ -92,15 +98,15 @@ async def async_call_action_from_config(
         service_data[ATTR_CODE] = config[CONF_CODE]
 
     if config[CONF_TYPE] == "arm_away":
-        service = "arm_away"  # SERVICE_ALARM_ARM_AWAY
+        service = SERVICE_ALARM_ARM_AWAY
     elif config[CONF_TYPE] == "arm_home":
-        service = "arm_home"  # SERVICE_ALARM_ARM_HOME
+        service = SERVICE_ALARM_ARM_HOME
     elif config[CONF_TYPE] == "arm_night":
-        service = "arm_night"  # SERVICE_ALARM_ARM_NIGHT
+        service = SERVICE_ALARM_ARM_NIGHT
     elif config[CONF_TYPE] == "disarm":
-        service = "disarm"  # SERVICE_ALARM_DISARM
+        service = SERVICE_ALARM_DISARM
     elif config[CONF_TYPE] == "trigger":
-        service = "trigger"  # SERVICE_ALARM_TRIGGER
+        service = SERVICE_ALARM_TRIGGER
 
     await hass.services.async_call(
         DOMAIN, service, service_data, blocking=True, context=context
