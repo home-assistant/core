@@ -1,5 +1,5 @@
 """Provides device automations for NEW_NAME."""
-from typing import List
+from typing import Dict, List
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -29,7 +29,9 @@ CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_conditions(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_conditions(
+    hass: HomeAssistant, device_id: str
+) -> List[Dict[str, str]]:
     """List device conditions for NEW_NAME devices."""
     registry = await entity_registry.async_get_registry(hass)
     conditions = []
