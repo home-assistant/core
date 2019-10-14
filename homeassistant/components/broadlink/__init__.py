@@ -50,6 +50,7 @@ def async_setup_service(hass, host, device):
             for retry in range(DEFAULT_RETRY):
                 try:
                     await hass.async_add_executor_job(device.enter_learning)
+                    break
                 except (socket.timeout, ValueError):
                     try:
                         await hass.async_add_executor_job(device.auth)
