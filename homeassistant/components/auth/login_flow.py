@@ -72,7 +72,11 @@ import voluptuous_serialize
 
 from homeassistant import data_entry_flow
 from homeassistant.components.http import KEY_REAL_IP
-from homeassistant.components.http.ban import process_wrong_login, log_invalid_auth
+from homeassistant.components.http.ban import (
+    process_wrong_login,
+    process_success_login,
+    log_invalid_auth,
+)
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from . import indieauth
@@ -185,6 +189,7 @@ class LoginFlowIndexView(HomeAssistantView):
             return self.json_message("Handler does not support init", 400)
 
         if result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+            await process_success_login(request)
             result.pop("data")
             result["result"] = self._store_result(data["client_id"], result["result"])
             return self.json(result)

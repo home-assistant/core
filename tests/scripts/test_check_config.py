@@ -92,8 +92,8 @@ def test_secrets(isfile_patch, loop):
 
     files = {
         get_test_config_dir(YAML_CONFIG_FILE): BASE_CONFIG
-        + ("http:\n" "  api_password: !secret http_pw"),
-        secrets_path: ("logger: debug\n" "http_pw: abc123"),
+        + ("http:\n" "  cors_allowed_origins: !secret http_pw"),
+        secrets_path: ("logger: debug\n" "http_pw: http://google.com"),
     }
 
     with patch_yaml_files(files):
@@ -103,17 +103,15 @@ def test_secrets(isfile_patch, loop):
         assert res["except"] == {}
         assert res["components"].keys() == {"homeassistant", "http"}
         assert res["components"]["http"] == {
-            "api_password": "abc123",
-            "cors_allowed_origins": ["https://cast.home-assistant.io"],
+            "cors_allowed_origins": ["http://google.com"],
             "ip_ban_enabled": True,
             "login_attempts_threshold": -1,
             "server_host": "0.0.0.0",
             "server_port": 8123,
-            "trusted_networks": [],
             "ssl_profile": "modern",
         }
-        assert res["secret_cache"] == {secrets_path: {"http_pw": "abc123"}}
-        assert res["secrets"] == {"http_pw": "abc123"}
+        assert res["secret_cache"] == {secrets_path: {"http_pw": "http://google.com"}}
+        assert res["secrets"] == {"http_pw": "http://google.com"}
         assert normalize_yaml_files(res) == [
             ".../configuration.yaml",
             ".../secrets.yaml",
