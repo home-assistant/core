@@ -1,8 +1,8 @@
 {
     "device_automation": {
         "condition_type": {
-            "is_closed": "{entity_name} er lukket",
-            "is_closing": "{entity_name} lukker",
+            "is_closed": "{entity_name} er stengt",
+            "is_closing": "{entity_name} stenges",
             "is_open": "{entity_name} er \u00e5pen",
             "is_opening": "{entity_name} \u00e5pnes"
         }
