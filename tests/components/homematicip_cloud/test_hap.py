@@ -15,7 +15,7 @@ from homeassistant.components.homematicip_cloud.hap import (
     HomematicipAuth,
     HomematicipHAP,
 )
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .helper import HAPID, HAPPIN
 
@@ -173,20 +173,17 @@ async def test_hap_create_exception(hass, hmip_config_entry, simple_mock_home):
     hass.config.components.add(HMIPC_DOMAIN)
     hap = HomematicipHAP(hass, hmip_config_entry)
     assert hap
-    try:
-        with patch.object(hap, "get_hap", side_effect=HmipConnectionError):
-            await hap.async_setup()
-    except HmipConnectionError as ex:
-        assert isinstance(ex, HmipConnectionError)
 
-    try:
-        simple_mock_home.init.side_effect = HmipConnectionError
-        with patch.object(
-            hap, "_create_home", return_value=mock_coro(simple_mock_home)
-        ):
-            await hap.async_setup()
-    except HomeAssistantError as ex:
-        assert isinstance(ex, ConfigEntryNotReady)
+    with patch.object(hap, "get_hap", side_effect=HmipConnectionError), pytest.raises(
+        HmipConnectionError
+    ):
+        await hap.async_setup()
+
+    simple_mock_home.init.side_effect = HmipConnectionError
+    with patch.object(
+        hap, "_create_home", return_value=mock_coro(simple_mock_home)
+    ), pytest.raises(ConfigEntryNotReady):
+        await hap.async_setup()
 
 
 async def test_auth_create(hass, simple_mock_auth):
