@@ -33,11 +33,6 @@ from homeassistant.const import (
 from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import SECRET_YAML
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.config.group import CONFIG_PATH as GROUP_CONFIG_PATH
-from homeassistant.components.config.automation import (
-    CONFIG_PATH as AUTOMATIONS_CONFIG_PATH,
-)
-from homeassistant.components.config.script import CONFIG_PATH as SCRIPTS_CONFIG_PATH
 import homeassistant.helpers.check_config as check_config
 
 from tests.common import get_test_config_dir, patch_yaml_files
@@ -46,9 +41,9 @@ CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
 SECRET_PATH = os.path.join(CONFIG_DIR, SECRET_YAML)
 VERSION_PATH = os.path.join(CONFIG_DIR, config_util.VERSION_FILE)
-GROUP_PATH = os.path.join(CONFIG_DIR, GROUP_CONFIG_PATH)
-AUTOMATIONS_PATH = os.path.join(CONFIG_DIR, AUTOMATIONS_CONFIG_PATH)
-SCRIPTS_PATH = os.path.join(CONFIG_DIR, SCRIPTS_CONFIG_PATH)
+GROUP_PATH = os.path.join(CONFIG_DIR, config_util.GROUP_CONFIG_PATH)
+AUTOMATIONS_PATH = os.path.join(CONFIG_DIR, config_util.AUTOMATION_CONFIG_PATH)
+SCRIPTS_PATH = os.path.join(CONFIG_DIR, config_util.SCRIPT_CONFIG_PATH)
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 
 
