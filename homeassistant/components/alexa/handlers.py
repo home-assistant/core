@@ -532,7 +532,7 @@ async def async_api_adjust_volume_step(hass, config, directive, context):
 
     if isDefault:
         if volume_int < 0:
-            volume_int = -defaultSteps   # the default is 10 which is too much
+            volume_int = (-defaultSteps)   # the default is 10 which is too much
         else:
             volume_int = defaultSteps
 
@@ -1002,9 +1002,7 @@ async def async_api_skipchannel(hass, config, directive, context):
     channel = int(directive.payload["channelCount"])
     entity = directive.entity
 
-    data = {
-        ATTR_ENTITY_ID: entity.entity_id,
-    }
+    data = {ATTR_ENTITY_ID: entity.entity_id}
 
     for _ in range(0, abs(channel)):
         if channel > 0:
