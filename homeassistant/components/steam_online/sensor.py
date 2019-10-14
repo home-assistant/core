@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-import steam as steamod
+import steam
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -40,11 +40,11 @@ BASE_INTERVAL = timedelta(minutes=1)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Steam platform."""
 
-    steamod.api.key.set(config.get(CONF_API_KEY))
+    steam.api.key.set(config.get(CONF_API_KEY))
     # Initialize steammods app list before creating sensors
     # to benefit from internal caching of the list.
-    hass.data[APP_LIST_KEY] = steamod.apps.app_list()
-    entities = [SteamSensor(account, steamod) for account in config.get(CONF_ACCOUNTS)]
+    hass.data[APP_LIST_KEY] = steam.apps.app_list()
+    entities = [SteamSensor(account, steam) for account in config.get(CONF_ACCOUNTS)]
     if not entities:
         return
     add_entities(entities, True)
