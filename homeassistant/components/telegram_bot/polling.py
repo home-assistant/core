@@ -30,17 +30,17 @@ async def async_setup_platform(hass, config):
     return True
 
 
-def process_error(bot, update, error):
+def process_error(bot, update, context):
     """Telegram bot error handler."""
     from telegram.error import TelegramError, TimedOut, NetworkError, RetryAfter
 
     try:
-        raise error
+        raise context.error
     except (TimedOut, NetworkError, RetryAfter):
         # Long polling timeout or connection problem. Nothing serious.
         pass
     except TelegramError:
-        _LOGGER.error('Update "%s" caused error "%s"', update, error)
+        _LOGGER.error('Update "%s" caused error "%s"', update, context.error)
 
 
 def message_handler(handler):
@@ -76,7 +76,7 @@ class TelegramPoll(BaseTelegramBotEntity):
 
         BaseTelegramBotEntity.__init__(self, hass, allowed_chat_ids)
 
-        self.updater = Updater(bot=bot, workers=4)
+        self.updater = Updater(bot=bot, workers=4, use_context=True)
         self.dispatcher = self.updater.dispatcher
 
         self.dispatcher.add_handler(message_handler(self.process_update))
@@ -90,6 +90,6 @@ class TelegramPoll(BaseTelegramBotEntity):
         """Stop the polling task."""
         self.updater.stop()
 
-    def process_update(self, bot, update):
+    def process_update(self, bot, update, context):
         """Process incoming message."""
         self.process_message(update.to_dict())
