@@ -976,12 +976,13 @@ async def async_api_changechannel(hass, config, directive, context):
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
         media_player.const.ATTR_MEDIA_CONTENT_ID: channel,
-        media_player.const.ATTR_MEDIA_CONTENT_TYPE: "channel"
+        media_player.const.ATTR_MEDIA_CONTENT_TYPE: "channel",
     }
 
     await hass.services.async_call(
         entity.domain, media_player.const.SERVICE_PLAY_MEDIA,
-        data, blocking=False, context=context)
+        data, blocking=False, context=context
+    )
 
     response = directive.response()
 
@@ -1011,12 +1012,14 @@ async def async_api_skipchannel(hass, config, directive, context):
         if channel > 0:
             await hass.services.async_call(
                 entity.domain, SERVICE_MEDIA_NEXT_TRACK,
-                data, blocking=False, context=context)
+                data, blocking=False, context=context
+            )
 
         if channel < 0:
             await hass.services.async_call(
                 entity.domain, SERVICE_MEDIA_PREVIOUS_TRACK,
-                data, blocking=False, context=context)
+                data, blocking=False, context=context
+            )
 
     response = directive.response()
 
