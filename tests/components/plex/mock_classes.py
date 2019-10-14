@@ -29,32 +29,10 @@ class MockResource:
         ]
         self.provides = ["server"]
         self._mock_plex_server = MockPlexServer(index)
-        self._connections = []
-        for connection in range(2):
-            self._connections.append(MockConnection(connection))
-
-    @property
-    def connections(self):
-        """Mock the resource connection listing method."""
-        return self._connections
 
     def connect(self):
         """Mock the resource connect method."""
         return self._mock_plex_server
-
-
-class MockConnection:  # pylint: disable=too-few-public-methods
-    """Mock a single account resource connection object."""
-
-    def __init__(self, index, ssl=True):
-        """Initialize the object."""
-        prefix = "https" if ssl else "http"
-        self.httpuri = (
-            f"http://{MOCK_SERVERS[index][CONF_HOST]}:{MOCK_SERVERS[index][CONF_PORT]}"
-        )
-        self.uri = f"{prefix}://{MOCK_SERVERS[index][CONF_HOST]}:{MOCK_SERVERS[index][CONF_PORT]}"
-        # Only first server is local
-        self.local = not bool(index)
 
 
 class MockPlexAccount:
