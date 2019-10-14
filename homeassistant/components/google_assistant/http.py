@@ -1,5 +1,8 @@
 """Support for Google Actions Smart Home Control."""
+from datetime import timedelta
 import logging
+import jwt
+from uuid import uuid4
 
 from aiohttp.web import Request, Response
 
@@ -7,6 +10,8 @@ from aiohttp.web import Request, Response
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import callback
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util import dt as dt_util
 
 from .const import (
     GOOGLE_ASSISTANT_API_ENDPOINT,
@@ -14,7 +19,14 @@ from .const import (
     CONF_EXPOSED_DOMAINS,
     CONF_ENTITY_CONFIG,
     CONF_EXPOSE,
+    CONF_REPORT_STATE,
     CONF_SECURE_DEVICES_PIN,
+    CONF_SERVICE_ACCOUNT,
+    CONF_CLIENT_EMAIL,
+    CONF_PRIVATE_KEY,
+    HOMEGRAPH_AUDIENCE,
+    HOMEGRAPH_SCOPE,
+    REPORT_STATE_BASE_URL,
 )
 from .smart_home import async_handle_message
 from .helpers import AbstractConfig
@@ -38,7 +50,7 @@ class GoogleConfig(AbstractConfig):
     @property
     def agent_user_id(self):
         """Return Agent User Id to use for query responses."""
-        return None
+        return self._config.get("agent_user_id")
 
     @property
     def entity_config(self):
@@ -49,6 +61,12 @@ class GoogleConfig(AbstractConfig):
     def secure_devices_pin(self):
         """Return entity config."""
         return self._config.get(CONF_SECURE_DEVICES_PIN)
+
+    @property
+    def should_report_state(self):
+        """Return if states should be proactively reported."""
+        # pylint: disable=no-self-use
+        return self._config.get(CONF_REPORT_STATE)
 
     def should_expose(self, state) -> bool:
         """Return if entity should be exposed."""
@@ -78,6 +96,53 @@ class GoogleConfig(AbstractConfig):
     def should_2fa(self, state):
         """If an entity should have 2FA checked."""
         return True
+
+    def _async_get_jwt(self):
+        now = dt_util.utcnow()
+
+        if CONF_SERVICE_ACCOUNT not in self._config:
+            raise Exception("No service account defined in config")
+
+        jwt_raw = {
+            "iss": self._config[CONF_SERVICE_ACCOUNT][CONF_CLIENT_EMAIL],
+            "scope": HOMEGRAPH_SCOPE,
+            "aud": HOMEGRAPH_AUDIENCE,
+            "ist": now.timestamp(),
+            "exp": (now + timedelta(hours=1)).timestamp(),
+        }
+        private_key = self._config[CONF_SERVICE_ACCOUNT][CONF_PRIVATE_KEY]
+        return jwt.encode(jwt_raw, private_key).decode("utf-8")
+
+    async def _async_get_access_token(self):
+
+        jwt_signed = self._async_get_jwt()
+        headers = {"Authorization": "Bearer {}".format(jwt_signed)}
+
+        session = async_get_clientsession(self.hass)
+        async with session.post(HOMEGRAPH_AUDIENCE, headers=headers) as res:
+            res.raise_for_status()
+            return res.text()
+
+    async def async_report_state(self, message):
+        """Send a state report to Google."""
+        access_token = await self._async_get_access_token()
+
+        headers = {
+            "Authorization": "Bearer {}".format(access_token),
+            "X-GFE-SSL": "yes",
+        }
+
+        data = {
+            "requestId": uuid4().hex,
+            "agentUserId": self.agent_user_id,
+            "payload": message,
+        }
+
+        session = async_get_clientsession(self.hass)
+        async with session.post(
+            REPORT_STATE_BASE_URL, headers=headers, json=data
+        ) as res:
+            res.raise_for_status()
 
 
 @callback

@@ -32,6 +32,7 @@ from .const import (
     CONF_ROOM_HINT,
     CONF_ALLOW_UNLOCK,
     CONF_SECURE_DEVICES_PIN,
+    CONF_SERVICE_ACCOUNT,
 )
 from .const import EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED  # noqa: F401
 from .const import EVENT_QUERY_RECEIVED  # noqa: F401
@@ -46,6 +47,11 @@ ENTITY_SCHEMA = vol.Schema(
         vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_ROOM_HINT): cv.string,
     }
+)
+
+GOOGLE_SERVICE_ACCOUNT = vol.Schema(
+    {vol.Required("private_key"): cv.string, vol.Required("client_email"): cv.string},
+    extra=vol.ALLOW_EXTRA,
 )
 
 GOOGLE_ASSISTANT_SCHEMA = vol.All(
@@ -65,6 +71,9 @@ GOOGLE_ASSISTANT_SCHEMA = vol.All(
             # str on purpose, makes sure it is configured correctly.
             vol.Optional(CONF_SECURE_DEVICES_PIN): str,
             vol.Optional(CONF_REPORT_STATE, default=False): cv.boolean,
+            vol.Optional(CONF_SERVICE_ACCOUNT): GOOGLE_SERVICE_ACCOUNT,
+            # temporary measure to get the user_id setup
+            vol.Optional("agent_user_id"): str,
         },
         extra=vol.PREVENT_EXTRA,
     ),
