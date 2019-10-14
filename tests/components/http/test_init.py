@@ -133,7 +133,7 @@ async def test_not_log_password(hass, aiohttp_client, caplog, legacy_auth):
 
     resp = await client.get("/api/", params={"api_password": "test-password"})
 
-    assert resp.status == 200
+    assert resp.status == 401
     logs = caplog.text
 
     # Ensure we don't log API passwords

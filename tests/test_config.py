@@ -5,7 +5,6 @@ import copy
 import os
 import unittest.mock as mock
 from collections import OrderedDict
-from ipaddress import ip_network
 
 import asynctest
 import pytest
@@ -874,48 +873,6 @@ async def test_auth_provider_config_default(hass):
     assert hass.auth.auth_providers[0].type == "homeassistant"
     assert len(hass.auth.auth_mfa_modules) == 1
     assert hass.auth.auth_mfa_modules[0].id == "totp"
-
-
-async def test_auth_provider_config_default_api_password(hass):
-    """Test loading default auth provider config with api password."""
-    core_config = {
-        "latitude": 60,
-        "longitude": 50,
-        "elevation": 25,
-        "name": "Huis",
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
-        "time_zone": "GMT",
-    }
-    if hasattr(hass, "auth"):
-        del hass.auth
-    await config_util.async_process_ha_core_config(hass, core_config, "pass")
-
-    assert len(hass.auth.auth_providers) == 2
-    assert hass.auth.auth_providers[0].type == "homeassistant"
-    assert hass.auth.auth_providers[1].type == "legacy_api_password"
-    assert hass.auth.auth_providers[1].api_password == "pass"
-
-
-async def test_auth_provider_config_default_trusted_networks(hass):
-    """Test loading default auth provider config with trusted networks."""
-    core_config = {
-        "latitude": 60,
-        "longitude": 50,
-        "elevation": 25,
-        "name": "Huis",
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
-        "time_zone": "GMT",
-    }
-    if hasattr(hass, "auth"):
-        del hass.auth
-    await config_util.async_process_ha_core_config(
-        hass, core_config, trusted_networks=["192.168.0.1"]
-    )
-
-    assert len(hass.auth.auth_providers) == 2
-    assert hass.auth.auth_providers[0].type == "homeassistant"
-    assert hass.auth.auth_providers[1].type == "trusted_networks"
-    assert hass.auth.auth_providers[1].trusted_networks[0] == ip_network("192.168.0.1")
 
 
 async def test_disallowed_auth_provider_config(hass):

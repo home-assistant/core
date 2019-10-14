@@ -103,7 +103,7 @@ def test_auth_code_store_expiration():
 
 async def test_ws_current_user(hass, hass_ws_client, hass_access_token):
     """Test the current user command with homeassistant creds."""
-    assert await async_setup_component(hass, "auth", {"http": {"api_password": "bla"}})
+    assert await async_setup_component(hass, "auth", {})
 
     refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
     user = refresh_token.user

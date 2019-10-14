@@ -468,12 +468,7 @@ def _format_config_error(ex: Exception, domain: str, config: Dict) -> str:
     return message
 
 
-async def async_process_ha_core_config(
-    hass: HomeAssistant,
-    config: Dict,
-    api_password: Optional[str] = None,
-    trusted_networks: Optional[Any] = None,
-) -> None:
+async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> None:
     """Process the [homeassistant] section from the configuration.
 
     This method is a coroutine.
@@ -486,14 +481,6 @@ async def async_process_ha_core_config(
 
         if auth_conf is None:
             auth_conf = [{"type": "homeassistant"}]
-            if api_password:
-                auth_conf.append(
-                    {"type": "legacy_api_password", "api_password": api_password}
-                )
-            if trusted_networks:
-                auth_conf.append(
-                    {"type": "trusted_networks", "trusted_networks": trusted_networks}
-                )
 
         mfa_conf = config.get(
             CONF_AUTH_MFA_MODULES,
