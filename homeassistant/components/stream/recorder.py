@@ -1,10 +1,13 @@
 """Provide functionality to record stream."""
+
 import threading
 from typing import List
 
+import av
+
 from homeassistant.core import callback
 
-from .core import Segment, StreamOutput, PROVIDERS
+from .core import PROVIDERS, Segment, StreamOutput
 
 
 @callback
@@ -14,8 +17,6 @@ def async_setup_recorder(hass):
 
 def recorder_save_worker(file_out: str, segments: List[Segment]):
     """Handle saving stream."""
-    import av
-
     output = av.open(file_out, "w", options={"movflags": "frag_keyframe"})
     output_v = None
 
