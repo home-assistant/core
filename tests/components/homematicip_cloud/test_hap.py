@@ -207,10 +207,6 @@ async def test_auth_create(hass, simple_mock_auth):
         assert hmip_auth.auth.pin == HAPPIN
 
 
-@patch(
-    "homematicip.aio.auth.AsyncAuth.connectionRequest",
-    Mock(side_effect=HmipConnectionError),
-)
 async def test_auth_create_exception(hass, simple_mock_auth):
     """Mock AsyncAuth to execute get_auth."""
     config = {
@@ -219,9 +215,16 @@ async def test_auth_create_exception(hass, simple_mock_auth):
         const.HMIPC_NAME: "hmip",
     }
     hmip_auth = HomematicipAuth(hass, config)
+    simple_mock_auth.connectionRequest.side_effect = HmipConnectionError
     assert hmip_auth
     with patch.object(
         hmip_auth, "_create_auth", return_value=mock_coro(simple_mock_auth)
     ):
         assert await hmip_auth.async_setup() is True
         await hass.async_block_till_done()
+        assert hmip_auth.auth is False
+
+    with patch.object(
+        hmip_auth, "_create_auth", return_value=mock_coro(simple_mock_auth)
+    ):
+        assert await hmip_auth.get_auth(hass, HAPID, HAPPIN) is False
