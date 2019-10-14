@@ -128,10 +128,10 @@ async def test_apprise_notification_with_target(hass, tmp_path):
     data = {"title": "Test Title", "message": "Test Message", "target": ["devops"]}
 
     with patch("apprise.Apprise") as mock_apprise:
-        obj = MagicMock()
-        obj.add.return_value = True
-        obj.notify.return_value = True
-        mock_apprise.return_value = obj
+        apprise_obj = MagicMock()
+        apprise_obj.add.return_value = True
+        apprise_obj.notify.return_value = True
+        mock_apprise.return_value = apprise_obj
         assert await async_setup_component(hass, BASE_COMPONENT, config)
         await hass.async_block_till_done()
 
@@ -143,6 +143,6 @@ async def test_apprise_notification_with_target(hass, tmp_path):
         await hass.async_block_till_done()
 
         # Validate calls were made under the hood correctly
-        obj.notify.assert_called_once_with(
+        apprise_obj.notify.assert_called_once_with(
             **{"body": data["message"], "title": data["title"], "tag": data["target"]}
         )
