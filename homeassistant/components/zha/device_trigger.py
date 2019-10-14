@@ -25,14 +25,14 @@ async def async_validate_trigger_config(hass, config):
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
-    trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
-    zha_device = await async_get_zha_device(hass, config[CONF_DEVICE_ID])
-
-    if (
-        zha_device.device_automation_triggers is None
-        or trigger not in zha_device.device_automation_triggers
-    ):
-        raise InvalidDeviceAutomationConfig
+    if "zha" in hass.config.components:
+        trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
+        zha_device = await async_get_zha_device(hass, config[CONF_DEVICE_ID])
+        if (
+            zha_device.device_automation_triggers is None
+            or trigger not in zha_device.device_automation_triggers
+        ):
+            raise InvalidDeviceAutomationConfig
 
     return config
 
