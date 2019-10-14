@@ -85,33 +85,35 @@ class TestTemplateSensor:
     def test_icon_color_template(self):
         """Test icon color template."""
         with assert_setup_component(1):
-            assert setup_component(self.hass, 'sensor', {
-                'sensor': {
-                    'platform': 'template',
-                    'sensors': {
-                        'test_template_sensor': {
-                            'value_template':
-                                "{{ states.sensor.test_state.state }}",
-                            'icon_color_template':
-                                "{% if states.sensor.test_state.state == "
+            assert setup_component(
+                self.hass,
+                "sensor",
+                {
+                    "sensor": {
+                        "platform": "template",
+                        "sensors": {
+                            "test_template_sensor": {
+                                "value_template": "{{ states.sensor.test_state.state }}",
+                                "icon_color_template": "{% if states.sensor.test_state.state == "
                                 "'Works' %}"
                                 "rgb(253, 216, 53)"
-                                "{% endif %}"
-                        }
+                                "{% endif %}",
+                            }
+                        },
                     }
-                }
-            })
+                },
+            )
 
         self.hass.start()
         self.hass.block_till_done()
 
-        state = self.hass.states.get('sensor.test_template_sensor')
-        assert state.attributes.get('icon_color') == ''
+        state = self.hass.states.get("sensor.test_template_sensor")
+        assert state.attributes.get("icon_color") == ""
 
-        self.hass.states.set('sensor.test_state', 'Works')
+        self.hass.states.set("sensor.test_state", "Works")
         self.hass.block_till_done()
-        state = self.hass.states.get('sensor.test_template_sensor')
-        assert state.attributes['icon_color'] == 'rgb(253, 216, 53)'
+        state = self.hass.states.get("sensor.test_template_sensor")
+        assert state.attributes["icon_color"] == "rgb(253, 216, 53)"
 
     def test_entity_picture_template(self):
         """Test entity_picture template."""
