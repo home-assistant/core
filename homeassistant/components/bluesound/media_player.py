@@ -4,8 +4,8 @@ from asyncio.futures import CancelledError
 from datetime import timedelta
 import logging
 
-import xmltodict
 from urllib import parse
+import xmltodict
 
 import aiohttp
 from aiohttp.client_exceptions import ClientError
