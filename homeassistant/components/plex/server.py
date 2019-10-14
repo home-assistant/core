@@ -39,6 +39,7 @@ class PlexServer:
         self._server_name = server_config.get(CONF_SERVER)
         self._verify_ssl = server_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
         self.options = options
+        self.server_choice = None
 
     def connect(self):
         """Connect to a Plex server directly, obtaining direct URL if necessary."""
@@ -56,10 +57,10 @@ class PlexServer:
             if not self._server_name and len(available_servers) > 1:
                 raise ServerNotSpecified(available_servers)
 
-            server_choice = (
+            self.server_choice = (
                 self._server_name if self._server_name else available_servers[0][0]
             )
-            self._plex_server = account.resource(server_choice).connect()
+            self._plex_server = account.resource(self.server_choice).connect()
 
         def _connect_with_url():
             session = None
