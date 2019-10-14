@@ -1,6 +1,5 @@
 # linters such as flake8 and pylint should be pinned, as new releases
-# make new things fail. Manually update these pins when pulling in a
-# new version
+# make new things fail. Manually update these pins when pulling in a new version
 
 # When updating this file, update .pre-commit-config.yaml too
 asynctest==0.13.0
