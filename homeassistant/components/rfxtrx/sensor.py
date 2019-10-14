@@ -1,8 +1,8 @@
 """Support for RFXtrx sensors."""
 import logging
-import voluptuous as vol
 
 from RFXtrx import SensorEvent
+import voluptuous as vol
 
 from homeassistant.components import rfxtrx
 from homeassistant.components.sensor import PLATFORM_SCHEMA
