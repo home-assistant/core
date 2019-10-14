@@ -11,6 +11,7 @@ from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
+from .helpers import get_removed_devices
 
 CURRENT_SENSORS = "current_sensors"
 SENSOR_MANAGER_FORMAT = "{}_sensor_manager"
@@ -34,7 +35,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities, binary=False
     sm_key = SENSOR_MANAGER_FORMAT.format(config_entry.data["host"])
     manager = hass.data[hue.DOMAIN].get(sm_key)
     if manager is None:
-        manager = SensorManager(hass, bridge)
+        manager = SensorManager(hass, bridge, config_entry)
         hass.data[hue.DOMAIN][sm_key] = manager
 
     manager.register_component(binary, async_add_entities)
@@ -50,7 +51,7 @@ class SensorManager:
     SCAN_INTERVAL = timedelta(seconds=5)
     sensor_config_map = {}
 
-    def __init__(self, hass, bridge):
+    def __init__(self, hass, bridge, config_entry):
         """Initialize the sensor manager."""
         import aiohue
         from .binary_sensor import HuePresence, PRESENCE_NAME_FORMAT
@@ -63,6 +64,7 @@ class SensorManager:
 
         self.hass = hass
         self.bridge = bridge
+        self.config_entry = config_entry
         self._component_add_entities = {}
         self._started = False
 
@@ -194,12 +196,22 @@ class SensorManager:
             else:
                 new_sensors.append(current[api[item_id].uniqueid])
 
+        removed_items = await get_removed_devices(
+            self.hass,
+            self.config_entry,
+            [value.uniqueid for value in api.values()],
+            current,
+        )
+
         async_add_sensor_entities = self._component_add_entities.get(False)
         async_add_binary_entities = self._component_add_entities.get(True)
         if new_sensors and async_add_sensor_entities:
             async_add_sensor_entities(new_sensors)
         if new_binary_sensors and async_add_binary_entities:
             async_add_binary_entities(new_binary_sensors)
+
+        for item_id in removed_items:
+            del current[item_id]
 
 
 class GenericHueSensor:
