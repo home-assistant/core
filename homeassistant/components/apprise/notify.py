@@ -66,7 +66,7 @@ class AppriseNotificationService(BaseNotificationService):
 
         If no target/tags are specified, then services are notified as is
         However, if any tags are specified, then they will be applied
-        to the notification causing filtering (if set up that way)
+        to the notification causing filtering (if set up that way).
         """
         targets = kwargs.get(ATTR_TARGET)
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
