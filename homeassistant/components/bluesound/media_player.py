@@ -3,17 +3,16 @@ import asyncio
 from asyncio.futures import CancelledError
 from datetime import timedelta
 import logging
-
 from urllib import parse
-import xmltodict
 
 import aiohttp
 from aiohttp.client_exceptions import ClientError
 from aiohttp.hdrs import CONNECTION, KEEP_ALIVE
 import async_timeout
 import voluptuous as vol
+import xmltodict
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     DOMAIN,
