@@ -1,19 +1,22 @@
 """Support for Decora dimmers."""
+from functools import wraps
 import importlib
 import logging
-from functools import wraps
 import time
 
+from bluepy.btle import BTLEException  # pylint: disable=import-error, no-member
 import voluptuous as vol
 
-from homeassistant.const import CONF_API_KEY, CONF_DEVICES, CONF_NAME
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     Light,
-    PLATFORM_SCHEMA,
 )
+from homeassistant.const import CONF_API_KEY, CONF_DEVICES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+
+DECORA = importlib.import_module("decora")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,9 +37,6 @@ def retry(method):
     @wraps(method)
     def wrapper_retry(device, *args, **kwargs):
         """Try send command and retry on error."""
-        # pylint: disable=import-error, no-member
-        import decora
-        import bluepy
 
         initial = time.monotonic()
         while True:
@@ -44,7 +44,7 @@ def retry(method):
                 return None
             try:
                 return method(device, *args, **kwargs)
-            except (decora.decoraException, AttributeError, bluepy.btle.BTLEException):
+            except (DECORA.decoraException, AttributeError, BTLEException):
                 _LOGGER.warning(
                     "Decora connect error for device %s. " "Reconnecting...",
                     device.name,
@@ -74,13 +74,11 @@ class DecoraLight(Light):
 
     def __init__(self, device):
         """Initialize the light."""
-        # pylint: disable=no-member
-        decora = importlib.import_module("decora")
 
         self._name = device["name"]
         self._address = device["address"]
         self._key = device["key"]
-        self._switch = decora.decora(self._address, self._key)
+        self._switch = DECORA.decora(self._address, self._key)
         self._brightness = 0
         self._state = False
 
