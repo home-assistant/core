@@ -189,6 +189,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context[CONF_BRIDGEID] = bridgeid
+        self.context["title_placeholders"] = {"host": discovery_info[CONF_HOST]}
 
         self.deconz_config = {
             CONF_HOST: discovery_info[CONF_HOST],
