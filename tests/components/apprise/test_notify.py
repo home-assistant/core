@@ -1,5 +1,6 @@
 """The tests for the apprise notification platform."""
 from unittest.mock import patch
+from unittest.mock import MagicMock
 
 from homeassistant.setup import async_setup_component
 
@@ -76,10 +77,19 @@ async def test_apprise_notification(hass):
     data = {"title": "Test Title", "message": "Test Message"}
 
     with patch("apprise.Apprise") as mock_apprise:
-        mock_apprise.notify.return_value = True
+        obj = MagicMock()
+        obj.add.return_value = True
+        obj.notify.return_value = True
+        mock_apprise.return_value = obj
         assert await async_setup_component(hass, BASE_COMPONENT, config)
         await hass.async_block_till_done()
 
         # Test the call to our underlining notify() call
         await hass.services.async_call(BASE_COMPONENT, "test", data)
         await hass.async_block_till_done()
+
+        # Validate calls were made under the hood correctly
+        obj.add.assert_called_once_with([config[BASE_COMPONENT]["url"]])
+        obj.notify.assert_called_once_with(
+            **{"body": data["message"], "title": data["title"]}
+        )
