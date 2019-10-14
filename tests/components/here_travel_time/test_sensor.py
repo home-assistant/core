@@ -999,7 +999,13 @@ async def test_sensor_state_is_entity(hass, requests_mock_truck_response):
             "mode": TRAVEL_MODE_TRUCK,
         }
     }
+    assert await async_setup_component(hass, "input_text", input_text_config)
+    assert await async_setup_component(hass, "zone", zone_config)
     assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
     sensor = hass.states.get("sensor.test")
     _assert_truck_sensor(sensor)
 
@@ -1022,8 +1028,6 @@ async def test_input_select_is_entity(hass, requests_mock_truck_response):
             "origin": {"options": ["zone.origin"], "initial": "zone.origin"}
         }
     }
-    assert await async_setup_component(hass, "input_select", input_select_config)
-    assert await async_setup_component(hass, "zone", zone_config)
     config = {
         DOMAIN: {
             "platform": PLATFORM,
@@ -1037,6 +1041,10 @@ async def test_input_select_is_entity(hass, requests_mock_truck_response):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
     sensor = hass.states.get("sensor.test")
     _assert_truck_sensor(sensor)
 
@@ -1055,8 +1063,6 @@ async def test_input_text_is_entity(hass, requests_mock_truck_response):
         ]
     }
     input_text_config = {"input_text": {"origin": {"initial": "zone.origin"}}}
-    assert await async_setup_component(hass, "input_text", input_text_config)
-    assert await async_setup_component(hass, "zone", zone_config)
     config = {
         DOMAIN: {
             "platform": PLATFORM,
@@ -1068,7 +1074,13 @@ async def test_input_text_is_entity(hass, requests_mock_truck_response):
             "mode": TRAVEL_MODE_TRUCK,
         }
     }
+    assert await async_setup_component(hass, "input_select", input_select_config)
+    assert await async_setup_component(hass, "zone", zone_config)
     assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
     sensor = hass.states.get("sensor.test")
     _assert_truck_sensor(sensor)
 
