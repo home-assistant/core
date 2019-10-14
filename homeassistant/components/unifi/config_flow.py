@@ -16,6 +16,7 @@ from .const import (
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
     CONF_SITE_ID,
+    CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
@@ -25,6 +26,7 @@ from .const import (
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
     DEFAULT_DETECTION_TIME,
+    DEFAULT_SSID_FILTER,
     DOMAIN,
     LOGGER,
 )
@@ -177,7 +179,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the device tracker options."""
         if user_input is not None:
             self.options.update(user_input)
-            return await self.async_step_statistics_sensors()
+            return await self.async_step_device_tracker_ssid_filter()
 
         return self.async_show_form(
             step_id="device_tracker",
@@ -209,6 +211,25 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                     ): int,
                 }
             ),
+        )
+
+    async def async_step_device_tracker_ssid_filter(self, user_input=None):
+        """Manage the device tracker ssid filter option."""
+        if user_input is not None:
+            self.options.update(user_input)
+            return await self.async_step_statistics_sensors()
+
+        controller = get_controller_from_config_entry(self.hass, self.config_entry)
+
+        current_ssid_filter = self.config_entry.options.get(
+            CONF_SSID_FILTER, DEFAULT_SSID_FILTER
+        )
+        ssid_filter = {}
+        for wlan in controller.api.wlans:
+            ssid_filter[vol.Optional(wlan, default=wlan in current_ssid_filter)] = bool
+
+        return self.async_show_form(
+            step_id="device_tracker_ssid_filter", data_schema=vol.Schema(ssid_filter)
         )
 
     async def async_step_statistics_sensors(self, user_input=None):
