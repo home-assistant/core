@@ -2,16 +2,14 @@
 import importlib
 import logging
 import threading
+from time import sleep, time
 
 from smbus import SMBus  # pylint: disable=import-error
-
-from time import time, sleep
-
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, TEMP_FAHRENHEIT
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import TEMP_FAHRENHEIT, CONF_NAME, CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
