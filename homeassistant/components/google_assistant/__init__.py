@@ -72,8 +72,6 @@ GOOGLE_ASSISTANT_SCHEMA = vol.All(
             vol.Optional(CONF_SECURE_DEVICES_PIN): str,
             vol.Optional(CONF_REPORT_STATE, default=False): cv.boolean,
             vol.Optional(CONF_SERVICE_ACCOUNT): GOOGLE_SERVICE_ACCOUNT,
-            # temporary measure to get the user_id setup
-            vol.Optional("agent_user_id"): str,
         },
         extra=vol.PREVENT_EXTRA,
     ),

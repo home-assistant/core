@@ -50,7 +50,7 @@ class GoogleConfig(AbstractConfig):
     @property
     def agent_user_id(self):
         """Return Agent User Id to use for query responses."""
-        return self._config.get("agent_user_id")
+        return None
 
     @property
     def entity_config(self):
@@ -134,7 +134,7 @@ class GoogleConfig(AbstractConfig):
 
         data = {
             "requestId": uuid4().hex,
-            "agentUserId": self.agent_user_id,
+            "agentUserId": (await self.hass.auth.async_get_owner()).id,
             "payload": message,
         }
 
