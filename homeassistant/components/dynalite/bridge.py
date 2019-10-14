@@ -1,13 +1,13 @@
 """Code to handle a Dynalite bridge."""
 import pprint
 
+from dynalite_devices_lib import DynaliteDevices
+from dynalite_lib import CONF_ALL
+
 from homeassistant.core import callback
 from homeassistant.const import CONF_HOST
 
 from .const import DOMAIN, DATA_CONFIGS, LOGGER
-from dynalite_devices_lib import DynaliteDevices
-from dynalite_lib import CONF_ALL
-
 from .light import DynaliteLight
 
 
@@ -16,6 +16,7 @@ class BridgeError(Exception):
 
     def __init__(self, message):
         """Initialize the exception."""
+        super().__init__()
         self.message = message
 
 
@@ -30,6 +31,8 @@ class DynaliteBridge:
         self.async_add_entities = None
         self.waiting_entities = []
         self.all_entities = {}
+        self._dynalite_devices = None
+        self.config = None
 
     @property
     def host(self):
@@ -41,10 +44,10 @@ class DynaliteBridge:
         host = self.host
         hass = self.hass
         LOGGER.debug(
-            "component bridge async_setup - %s" % pprint.pformat(self.config_entry.data)
+            "component bridge async_setup - %s", pprint.pformat(self.config_entry.data)
         )
         if host not in hass.data[DOMAIN][DATA_CONFIGS]:
-            LOGGER.info("invalid host - %s" % host)
+            LOGGER.info("invalid host - %s", host)
             return False
 
         self.config = hass.data[DOMAIN][DATA_CONFIGS][host]
@@ -53,8 +56,8 @@ class DynaliteBridge:
         self._dynalite_devices = DynaliteDevices(
             config=self.config,
             loop=hass.loop,
-            newDeviceFunc=self.addDevices,
-            updateDeviceFunc=self.updateDevice,
+            newDeviceFunc=self.add_devices,
+            updateDeviceFunc=self.update_device,
         )
         await self._dynalite_devices.async_setup()
 
@@ -65,7 +68,7 @@ class DynaliteBridge:
         return True
 
     @callback
-    def addDevices(self, devices):
+    def add_devices(self, devices):
         """Call when devices should be added to home assistant."""
         added_entities = []
 
@@ -82,7 +85,7 @@ class DynaliteBridge:
             self.add_entities_when_registered(added_entities)
 
     @callback
-    def updateDevice(self, device):
+    def update_device(self, device):
         """Call when a device or all devices should be updated."""
         if device == CONF_ALL:
             # This is used to signal connection or disconnection, so all devices may become available or not.

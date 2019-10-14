@@ -1,14 +1,13 @@
 """Support for the Dynalite networks."""
 import voluptuous as vol
 
+from dynalite_devices_lib import BRIDGE_CONFIG_SCHEMA
+
 from homeassistant import config_entries
 from homeassistant.helpers import config_validation as cv
 from homeassistant.const import CONF_HOST
 
 from .const import DOMAIN, CONF_BRIDGES, DATA_CONFIGS, LOGGER
-
-from dynalite_devices_lib import BRIDGE_CONFIG_SCHEMA
-
 from .bridge import DynaliteBridge
 
 # Loading the config flow file will register the flow
@@ -51,13 +50,13 @@ async def async_setup(hass, config):
 
     for bridge_conf in bridges:
         host = bridge_conf[CONF_HOST]
-        LOGGER.debug("async_setup host=%s conf=%s" % (host, bridge_conf))
+        LOGGER.debug("async_setup host=%s conf=%s", host, bridge_conf)
 
         # Store config in hass.data so the config entry can find it
         hass.data[DOMAIN][DATA_CONFIGS][host] = bridge_conf
 
         if host in configured:
-            LOGGER.debug("async_setup host=%s already configured" % host)
+            LOGGER.debug("async_setup host=%s already configured", host)
             continue
 
         hass.async_create_task(
