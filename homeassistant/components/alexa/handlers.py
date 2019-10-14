@@ -985,9 +985,7 @@ async def async_api_changechannel(hass, config, directive, context):
         {
             "namespace": "Alexa.ChannelController",
             "name": "channel",
-            "value": {
-                payload_name: channel,
-            }
+            "value": {payload_name: channel},
         }
     )
 
@@ -1022,9 +1020,7 @@ async def async_api_skipchannel(hass, config, directive, context):
         {
             "namespace": "Alexa.ChannelController",
             "name": "channel",
-            "value": {
-                "number": "",
-            }
+            "value": {"number": ""},
         }
     )
 
