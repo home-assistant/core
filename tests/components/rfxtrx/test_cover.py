@@ -1,10 +1,11 @@
 """The tests for the Rfxtrx cover platform."""
 import unittest
-import pytest
-import RFXtrx as rfxtrxmod
 
-from homeassistant.setup import setup_component
+import RFXtrx as rfxtrxmod
+import pytest
+
 from homeassistant.components import rfxtrx as rfxtrx_core
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant, mock_component
 
