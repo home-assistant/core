@@ -66,8 +66,6 @@ VERSION_FILE = ".HA_VERSION"
 CONFIG_DIR_NAME = ".homeassistant"
 DATA_CUSTOMIZE = "hass_customize"
 
-FILE_MIGRATION = (("ios.conf", ".ios.conf"),)
-
 GROUP_CONFIG_PATH = "groups.yaml"
 AUTOMATION_CONFIG_PATH = "automations.yaml"
 SCRIPT_CONFIG_PATH = "scripts.yaml"
@@ -404,12 +402,6 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
 
     with open(version_path, "wt") as outp:
         outp.write(__version__)
-
-    _LOGGER.debug("Migrating old system configuration files to new locations")
-    for oldf, newf in FILE_MIGRATION:
-        if os.path.isfile(hass.config.path(oldf)):
-            _LOGGER.info("Migrating %s to %s", oldf, newf)
-            os.rename(hass.config.path(oldf), hass.config.path(newf))
 
 
 @callback
