@@ -1,4 +1,5 @@
 """The StarLine component."""
+import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Config, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -8,6 +9,7 @@ from .const import (
     DOMAIN,
     PLATFORMS,
     SERVICE_UPDATE_STATE,
+    SERVICE_SET_SCAN_INTERVAL,
     CONF_SCAN_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
 )
@@ -38,7 +40,25 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             hass.config_entries.async_forward_entry_setup(config_entry, domain)
         )
 
+    async def async_set_scan_interval(call):
+        """Service for set scan interval."""
+        options = dict(config_entry.options)
+        options[CONF_SCAN_INTERVAL] = call.data[CONF_SCAN_INTERVAL]
+        hass.config_entries.async_update_entry(entry=config_entry, options=options)
+
     hass.services.async_register(DOMAIN, SERVICE_UPDATE_STATE, account.update)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_SCAN_INTERVAL,
+        async_set_scan_interval,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_SCAN_INTERVAL): vol.All(
+                    vol.Coerce(int), vol.Range(min=10)
+                )
+            }
+        ),
+    )
 
     config_entry.add_update_listener(async_options_updated)
     await async_options_updated(hass, config_entry)
