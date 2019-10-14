@@ -11,10 +11,8 @@ from homeassistant.auth.providers import trusted_networks
 from homeassistant.components.http.auth import setup_auth, async_sign_path
 from homeassistant.components.http.const import KEY_AUTHENTICATED
 from homeassistant.components.http.real_ip import setup_real_ip
-from homeassistant.const import HTTP_HEADER_HA_AUTH
 from homeassistant.setup import async_setup_component
-from . import mock_real_ip
-
+from . import mock_real_ip, HTTP_HEADER_HA_AUTH
 
 API_PASSWORD = "test-password"
 
