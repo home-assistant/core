@@ -525,12 +525,12 @@ async def async_api_adjust_volume_step(hass, config, directive, context):
     # purposes is too high.  A device_state_attribute can be set in the media player to set this to a new default
     # The default without the attribute is lowered to 5 in this case.
     entity = directive.entity
-    volume_int = int(directive.payload['volumeSteps'])
-    isDefault = bool(directive.payload['volumeStepsDefault'])
+    volume_int = int(directive.payload["volumeSteps"])
+    isDefault = bool(directive.payload["volumeStepsDefault"])
     defaultSteps = 1
 
     try:
-        defaultSteps = int(entity.attributes['volume_steps_default'])
+        defaultSteps = int(entity.attributes["volume_steps_default"])
     except Exception:   # if the attribute is not setup in the media_player attributes or is  invalid we use this default
         defaultSteps = 1
 
@@ -949,34 +949,34 @@ async def async_api_disarm(hass, config, directive, context):
     return response
 
 
-@HANDLERS.register(('Alexa.ChannelController', 'ChangeChannel'))
+@HANDLERS.register(("Alexa.ChannelController", "ChangeChannel"))
 async def async_api_changechannel(hass, config, directive, context):
     """Process a change channel request."""
-    channel = 0
+    channel = "0"
     entity = directive.entity
-    payload = directive.payload['channel']
-    payload_name = "channel"
+    payload = directive.payload["channel"]
+    payload_name = "number"
 
-    if 'number' in payload:
-        channel = payload['number']
-        payload_name = 'number'
-    elif 'callSign' in payload:
-        channel = payload['callSign']
-        payload_name = 'callSign'
-    elif 'affiliateCallSign' in payload:
-        channel = payload['affiliateCallSign']
-        payload_name = 'affiliateCallSign'
-    elif 'uri' in payload:
-        channel = payload['uri']
-        payload_name = 'uri'
-    elif 'name' in payload:
-        channel = payload['name']
-        payload_name = 'name'
+    if "number" in payload:
+        channel = payload["number"]
+        payload_name = "number"
+    elif "callSign" in payload:
+        channel = payload["callSign"]
+        payload_name = "callSign"
+    elif "affiliateCallSign" in payload:
+        channel = payload["affiliateCallSign"]
+        payload_name = "affiliateCallSign"
+    elif "uri" in payload:
+        channel = payload["uri"]
+        payload_name = "uri"
+    elif "name" in payload:
+        channel = payload["name"]
+        payload_name = "name"
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
         media_player.const.ATTR_MEDIA_CONTENT_ID: channel,
-        media_player.const.ATTR_MEDIA_CONTENT_TYPE: 'channel'
+        media_player.const.ATTR_MEDIA_CONTENT_TYPE: "channel"
     }
 
     await hass.services.async_call(
@@ -996,11 +996,11 @@ async def async_api_changechannel(hass, config, directive, context):
     return response
 
 
-@HANDLERS.register(('Alexa.ChannelController', 'SkipChannels'))
+@HANDLERS.register(("Alexa.ChannelController", "SkipChannels"))
 async def async_api_skipchannel(hass, config, directive, context):
     """Process a change channel request."""
 
-    channel = int(directive.payload['channelCount'])
+    channel = int(directive.payload["channelCount"])
     entity = directive.entity
 
     data = {
