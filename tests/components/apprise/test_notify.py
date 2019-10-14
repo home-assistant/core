@@ -18,6 +18,9 @@ async def test_apprise_config_load_fail01(hass):
         assert await async_setup_component(hass, BASE_COMPONENT, config)
         await hass.async_block_till_done()
 
+        # Test that our service failed to load
+        assert hass.services.has_service(BASE_COMPONENT, "test") is False
+
 
 async def test_apprise_config_load_fail02(hass):
     """Test apprise configuration failures 2."""
@@ -30,6 +33,9 @@ async def test_apprise_config_load_fail02(hass):
         with patch("apprise.AppriseConfig.add", return_value=True):
             assert await async_setup_component(hass, BASE_COMPONENT, config)
             await hass.async_block_till_done()
+
+            # Test that our service failed to load
+            assert hass.services.has_service(BASE_COMPONENT, "test") is False
 
 
 async def test_apprise_config_load_okay(hass, tmp_path):
@@ -46,6 +52,9 @@ async def test_apprise_config_load_okay(hass, tmp_path):
     assert await async_setup_component(hass, BASE_COMPONENT, config)
     await hass.async_block_till_done()
 
+    # Valid configuration was loaded; our service is good
+    assert hass.services.has_service(BASE_COMPONENT, "test") is True
+
 
 async def test_apprise_url_load_fail(hass):
     """Test apprise url failure."""
@@ -60,6 +69,9 @@ async def test_apprise_url_load_fail(hass):
     with patch("apprise.Apprise.add", return_value=False):
         assert await async_setup_component(hass, BASE_COMPONENT, config)
         await hass.async_block_till_done()
+
+        # Test that our service failed to load
+        assert hass.services.has_service(BASE_COMPONENT, "test") is False
 
 
 async def test_apprise_notification(hass):
@@ -83,6 +95,9 @@ async def test_apprise_notification(hass):
         mock_apprise.return_value = obj
         assert await async_setup_component(hass, BASE_COMPONENT, config)
         await hass.async_block_till_done()
+
+        # Test the existance of our service
+        assert hass.services.has_service(BASE_COMPONENT, "test") is True
 
         # Test the call to our underlining notify() call
         await hass.services.async_call(BASE_COMPONENT, "test", data)
