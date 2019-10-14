@@ -1,0 +1,8 @@
+{
+  "domain": "gardena",
+  "name": "Gardena Smart System",
+  "documentation": "https://www.home-assistant.io/integration/gardena",
+  "dependencies": [],
+  "codeowners": ["@grm"],
+  "requirements": ["py-smart-gardena==0.6.16"]
+}
