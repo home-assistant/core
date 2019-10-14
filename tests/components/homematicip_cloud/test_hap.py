@@ -152,29 +152,6 @@ async def test_hap_reset_unloads_entry_if_setup():
     assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 8
 
 
-@patch("homematicip.aio.home.AsyncHome.__init__", Mock(return_value=None))
-@patch("homematicip.aio.home.AsyncHome.init", Mock(return_value=mock_coro(None)))
-@patch(
-    "homematicip.aio.home.AsyncHome.get_current_state",
-    Mock(return_value=mock_coro(None)),
-)
-@patch(
-    "homematicip.aio.home.AsyncHome.download_configuration",
-    Mock(return_value=mock_coro("")),
-)
-@patch(
-    "homematicip.aio.home.AsyncHome.set_auth_token", Mock(return_value=mock_coro(None))
-)
-@patch("homematicip.aio.home.AsyncHome.on_update", Mock())
-@patch("homematicip.aio.home.AsyncHome.on_create", Mock())
-@patch("homematicip.aio.home.AsyncHome.on_remove", Mock())
-@patch("homematicip.aio.home.AsyncHome.devices", new=[], create=True)
-@patch("homematicip.aio.home.AsyncHome.groups", new=[], create=True)
-@patch("homematicip.aio.home.AsyncHome.location", Mock(), create=True)
-@patch("homematicip.aio.home.AsyncHome.weather", Mock(), create=True)
-@patch("homematicip.aio.home.AsyncHome.id", Mock(), create=True)
-@patch("homematicip.aio.home.AsyncHome.connected", Mock(), create=True)
-@patch("homematicip.aio.home.AsyncHome.dutyCycle", Mock(), create=True)
 @patch("homeassistant.helpers.temperature.display_temp", Mock(return_value=12))
 @patch("homeassistant.components.weather.WeatherEntity.state_attributes", new={})
 @patch(
@@ -185,49 +162,68 @@ async def test_hap_reset_unloads_entry_if_setup():
     "homeassistant.helpers.storage.Store._async_handle_write_data",
     Mock(return_value=mock_coro(None)),
 )
-async def test_hap_create(hass, hmip_config_entry):
+async def test_hap_create(hass, hmip_config_entry, simple_mock_home):
     """Mock AsyncHome to execute get_hap."""
     hass.config.components.add(HMIPC_DOMAIN)
     hap = HomematicipHAP(hass, hmip_config_entry)
     assert hap
-    hap.async_connect = Mock(return_value=mock_coro(None))
+    with patch.object(
+        hap, "_create_home", return_value=mock_coro(simple_mock_home)
+    ), patch.object(hap, "async_connect", return_value=mock_coro(None)):
+        assert await hap.async_setup() is True
+
     hass.data[HMIPC_DOMAIN] = {HAPID: hap}
-    assert await hap.async_setup()
     await hass.async_block_till_done()
 
 
-@patch("homematicip.aio.auth.AsyncAuth.__init__", Mock(return_value=None))
-@patch("homematicip.aio.auth.AsyncAuth.init", Mock(return_value=mock_coro(None)))
-@patch("homematicip.aio.auth.AsyncAuth.pin", Mock(), create=True)
-@patch(
-    "homematicip.aio.auth.AsyncAuth.connectionRequest",
-    Mock(return_value=mock_coro(None)),
-)
-async def test_auth_create(hass, hmip_config):
+async def test_hap_create_exception(hass, hmip_config_entry):
+    """Mock AsyncHome to execute get_hap."""
+    hass.config.components.add(HMIPC_DOMAIN)
+    hap = HomematicipHAP(hass, hmip_config_entry)
+    assert hap
+    try:
+        with patch.object(hap, "get_hap", side_effect=HmipConnectionError):
+            await hap.async_setup()
+    except HmipConnectionError as ex:
+        assert isinstance(ex, HmipConnectionError)
+
+
+async def test_auth_create(hass, simple_mock_auth):
     """Mock AsyncAuth to execute get_auth."""
-    auth = HomematicipAuth(hass, hmip_config)
-    assert auth
-    assert await auth.async_setup()
+    config = {
+        const.HMIPC_HAPID: HAPID,
+        const.HMIPC_PIN: HAPPIN,
+        const.HMIPC_NAME: "hmip",
+    }
+    hmip_auth = HomematicipAuth(hass, config)
+    assert hmip_auth
 
-    await hass.async_block_till_done()
+    with patch.object(
+        hmip_auth, "_create_auth", return_value=mock_coro(simple_mock_auth)
+    ):
+        assert await hmip_auth.async_setup() is True
+        await hass.async_block_till_done()
+        assert hmip_auth.auth.pin == HAPPIN
 
-    res = await auth.get_auth(hass, HAPID, HAPPIN)
-    assert res.pin == HAPPIN
 
-
-@patch("homematicip.aio.auth.AsyncAuth.__init__", Mock(return_value=None))
-@patch("homematicip.aio.auth.AsyncAuth.init", Mock(return_value=mock_coro(None)))
-@patch("homematicip.aio.auth.AsyncAuth.pin", Mock(), create=True)
 @patch(
     "homematicip.aio.auth.AsyncAuth.connectionRequest",
     Mock(side_effect=HmipConnectionError),
 )
-async def test_auth_create_exception(hass, hmip_config):
+async def test_auth_create_exception(hass, simple_mock_auth):
     """Mock AsyncAuth to execute get_auth."""
-    auth = HomematicipAuth(hass, hmip_config)
-    assert auth
-    assert await auth.async_setup()
+    config = {
+        const.HMIPC_HAPID: HAPID,
+        const.HMIPC_PIN: HAPPIN,
+        const.HMIPC_NAME: "hmip",
+    }
+    hmip_auth = HomematicipAuth(hass, config)
+    assert hmip_auth
+    with patch.object(
+        hmip_auth, "_create_auth", return_value=mock_coro(simple_mock_auth)
+    ):
+        assert await hmip_auth.async_setup() is True
+        await hass.async_block_till_done()
+        assert hmip_auth.auth.pin == HAPPIN
 
-    await hass.async_block_till_done()
-
-    assert not await auth.get_auth(hass, HAPID, HAPPIN)
+    assert not await hmip_auth.get_auth(hass, HAPID, HAPPIN)

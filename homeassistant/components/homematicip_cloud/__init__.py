@@ -217,7 +217,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if hap:
             return hap.home
 
-        _LOGGER.info("No matching access point found for access point id %s.", hapid)
+        _LOGGER.info("No matching access point found for access point id %s", hapid)
         return None
 
     return True

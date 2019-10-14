@@ -1,7 +1,8 @@
 """Initializer helpers for HomematicIP fake server."""
-from unittest.mock import MagicMock, patch
-
+from asynctest import MagicMock, Mock, patch
+from homematicip.aio.auth import AsyncAuth
 from homematicip.aio.connection import AsyncConnection
+from homematicip.aio.home import AsyncHome
 import pytest
 
 from homeassistant import config_entries
@@ -13,7 +14,7 @@ from homeassistant.components.homematicip_cloud import (
 )
 from homeassistant.core import HomeAssistant
 
-from .helper import AUTH_TOKEN, HAPID, HomeTemplate
+from .helper import AUTH_TOKEN, HAPID, HAPPIN, HomeTemplate
 
 from tests.common import MockConfigEntry, mock_coro
 
@@ -40,7 +41,7 @@ def hmip_config_entry_fixture():
         hmipc.HMIPC_HAPID: HAPID,
         hmipc.HMIPC_AUTHTOKEN: AUTH_TOKEN,
         hmipc.HMIPC_NAME: "",
-        hmipc.HMIPC_PIN: "1234",
+        hmipc.HMIPC_PIN: HAPPIN,
     }
     config_entry = MockConfigEntry(
         version=1,
@@ -53,6 +54,12 @@ def hmip_config_entry_fixture():
     )
 
     return config_entry
+
+
+@pytest.fixture(name="default_mock_home")
+def default_mock_home_fixture(mock_connection):
+    """Create a fake homematic async home."""
+    return HomeTemplate(connection=mock_connection).init_home().get_async_home_mock()
 
 
 @pytest.fixture(name="default_mock_hap")
@@ -93,7 +100,7 @@ def hmip_config_fixture():
         hmipc.HMIPC_HAPID: HAPID,
         hmipc.HMIPC_AUTHTOKEN: AUTH_TOKEN,
         hmipc.HMIPC_NAME: "",
-        hmipc.HMIPC_PIN: HAPID,
+        hmipc.HMIPC_PIN: HAPPIN,
     }
 
     return {HMIPC_DOMAIN: [entry_data]}
@@ -114,3 +121,24 @@ async def mock_hap_with_service_fixture(
     await hass.async_block_till_done()
     hass.data[HMIPC_DOMAIN] = {HAPID: default_mock_hap}
     return default_mock_hap
+
+
+@pytest.fixture(name="simple_mock_home")
+async def simple_mock_home_fixture():
+    """Return a simple AsyncHome Mock."""
+    return Mock(
+        spec=AsyncHome,
+        devices=[],
+        groups=[],
+        location=Mock(),
+        weather=Mock(create=True),
+        id=42,
+        dutyCycle=88,
+        connected=True,
+    )
+
+
+@pytest.fixture(name="simple_mock_auth")
+async def simple_mock_auth_fixture():
+    """Return a simple AsyncAuth Mock."""
+    return Mock(spec=AsyncAuth, pin=HAPPIN, create=True)
