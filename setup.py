@@ -4,6 +4,7 @@ from datetime import datetime as dt
 from setuptools import setup, find_packages
 
 import homeassistant.const as hass_const
+#all above is files that to be imported
 
 PROJECT_NAME = "Home Assistant"
 PROJECT_PACKAGE_NAME = "homeassistant"
