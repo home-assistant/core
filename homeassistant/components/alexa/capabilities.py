@@ -94,7 +94,7 @@ class AlexaCapability:
     @staticmethod
     def capability_resources():
         """Applicable to ToggleController, RangeController, and ModeController interfaces."""
-        return None
+        return []
 
     @staticmethod
     def configuration():
@@ -125,7 +125,7 @@ class AlexaCapability:
             result["supportsDeactivation"] = supports_deactivation
 
         capability_resources = self.serialize_capability_resources()
-        if capability_resources is not None:
+        if capability_resources:
             result["capabilityResources"] = capability_resources
 
         configuration = self.configuration()
@@ -162,7 +162,7 @@ class AlexaCapability:
     def serialize_capability_resources(self):
         """Return capabilityResources friendlyNames serialized for an API response."""
         resources = self.capability_resources()
-        if resources is not None:
+        if resources:
             return {"friendlyNames": self.serialize_friendly_names(resources)}
 
         return None
@@ -821,10 +821,14 @@ class AlexaModeController(AlexaCapability):
 
     def capability_resources(self):
         """Return capabilityResources object."""
-        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
-            return [{"type": Catalog.LABEL_ASSET, "value": Catalog.SETTING_DIRECTION}]
+        capability_resources = []
 
-        return None
+        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
+            capability_resources = [
+                {"type": Catalog.LABEL_ASSET, "value": Catalog.SETTING_DIRECTION}
+            ]
+
+        return capability_resources
 
     def mode_resources(self):
         """Return modeResources object."""
@@ -913,10 +917,12 @@ class AlexaRangeController(AlexaCapability):
 
     def capability_resources(self):
         """Return capabilityResources object."""
+        capability_resources = []
+
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
             return [{"type": Catalog.LABEL_ASSET, "value": Catalog.SETTING_FANSPEED}]
 
-        return None
+        return capability_resources
 
     def preset_resources(self):
         """Return presetResources object."""
@@ -1023,11 +1029,13 @@ class AlexaToggleController(AlexaCapability):
 
     def capability_resources(self):
         """Return capabilityResources object."""
+        capability_resources = []
+
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}":
-            return [
+            capability_resources = [
                 {"type": Catalog.LABEL_ASSET, "value": Catalog.SETTING_OSCILLATE},
                 {"type": Catalog.LABEL_TEXT, "value": "Rotate"},
                 {"type": Catalog.LABEL_TEXT, "value": "Rotation"},
             ]
 
-        return None
+        return capability_resources

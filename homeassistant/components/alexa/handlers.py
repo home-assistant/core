@@ -1058,20 +1058,14 @@ async def async_api_adjust_range(hass, config, directive, context):
     domain = entity.domain
     service = None
     data = {ATTR_ENTITY_ID: entity.entity_id}
-    range_value_delta = int(directive.payload["rangeValueDelta"])
-
-    if domain != fan.DOMAIN:
-        msg = "Entity does not support directive"
-        raise AlexaInvalidDirectiveError(msg)
+    range_delta = int(directive.payload["rangeValueDelta"])
 
     if instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
         service = fan.SERVICE_SET_SPEED
 
         # adjust range
         current_range = RANGE_FAN_MAP.get(entity.attributes.get(fan.ATTR_SPEED), 0)
-        speed = RANGE_FAN_MAP.get(
-            max(0, range_value_delta + current_range), fan.SPEED_OFF
-        )
+        speed = RANGE_FAN_MAP.get(max(0, range_delta + current_range), fan.SPEED_OFF)
 
         if speed == fan.SPEED_OFF:
             service = fan.SERVICE_TURN_OFF
