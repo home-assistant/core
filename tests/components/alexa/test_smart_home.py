@@ -417,7 +417,7 @@ async def test_media_player(hass):
         "off",
         {
             "friendly_name": "Test media player",
-            "supported_features": 0x59BD,
+            "supported_features": 0x59BD | 512,
             "volume_level": 0.75,
         },
     )
@@ -435,6 +435,7 @@ async def test_media_player(hass):
         "Alexa.StepSpeaker",
         "Alexa.PlaybackController",
         "Alexa.EndpointHealth",
+        "Alexa.ChannelController",
     )
 
     await assert_power_controller_works(
@@ -548,7 +549,7 @@ async def test_media_player(hass):
         "media_player#test",
         "media_player.volume_up",
         hass,
-        payload={"volumeSteps": 20},
+        payload={"volumeSteps": 20, "volumeStepsDefault": False},
     )
 
     call, _ = await assert_request_calls_service(
@@ -557,7 +558,24 @@ async def test_media_player(hass):
         "media_player#test",
         "media_player.volume_down",
         hass,
-        payload={"volumeSteps": -20},
+        payload={"volumeSteps": -20, "volumeStepsDefault": False},
+    )
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.StepSpeaker",
+        "AdjustVolume",
+        "media_player#test",
+        "media_player.volume_up",
+        hass,
+        payload={"volumeSteps": 10, "volumeStepsDefault": True},
+    )
+    call, _ = await assert_request_calls_service(
+        "Alexa.ChannelController",
+        "ChangeChannel",
+        "media_player#test",
+        "media_player.play_media",
+        hass,
+        payload={"channel": {"number": 24}},
     )
 
 
@@ -586,6 +604,7 @@ async def test_media_player_power(hass):
         "Alexa.StepSpeaker",
         "Alexa.PlaybackController",
         "Alexa.EndpointHealth",
+        "Alexa.ChannelController",
     )
 
     await assert_request_calls_service(
