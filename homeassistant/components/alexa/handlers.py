@@ -537,9 +537,7 @@ async def async_api_adjust_volume_step(hass, config, directive, context):
             volume_int = defaultSteps
 
     if volume_int != 0:
-        data = {
-            ATTR_ENTITY_ID: entity.entity_id,
-        }
+        data = {ATTR_ENTITY_ID: entity.entity_id}
 
         for _ in range(0, abs(volume_int)):
             if volume_int > 0:
