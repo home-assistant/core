@@ -15,7 +15,7 @@ from homeassistant.components.homematicip_cloud.hap import (
     HomematicipAuth,
     HomematicipHAP,
 )
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 
 from .helper import HAPID, HAPPIN
 
@@ -152,19 +152,11 @@ async def test_hap_reset_unloads_entry_if_setup():
     assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 8
 
 
-@patch("homeassistant.helpers.temperature.display_temp", Mock(return_value=12))
-@patch("homeassistant.components.weather.WeatherEntity.state_attributes", new={})
-@patch(
-    "homeassistant.helpers.storage.Store._async_callback_stop_write",
-    Mock(return_value=mock_coro(None)),
-)
-@patch(
-    "homeassistant.helpers.storage.Store._async_handle_write_data",
-    Mock(return_value=mock_coro(None)),
-)
 async def test_hap_create(hass, hmip_config_entry, simple_mock_home):
     """Mock AsyncHome to execute get_hap."""
     hass.config.components.add(HMIPC_DOMAIN)
+    # One platform should be enough.
+    const.COMPONENTS = {"binary_sensor"}
     hap = HomematicipHAP(hass, hmip_config_entry)
     assert hap
     with patch.object(
@@ -176,7 +168,7 @@ async def test_hap_create(hass, hmip_config_entry, simple_mock_home):
     await hass.async_block_till_done()
 
 
-async def test_hap_create_exception(hass, hmip_config_entry):
+async def test_hap_create_exception(hass, hmip_config_entry, simple_mock_home):
     """Mock AsyncHome to execute get_hap."""
     hass.config.components.add(HMIPC_DOMAIN)
     hap = HomematicipHAP(hass, hmip_config_entry)
@@ -186,6 +178,15 @@ async def test_hap_create_exception(hass, hmip_config_entry):
             await hap.async_setup()
     except HmipConnectionError as ex:
         assert isinstance(ex, HmipConnectionError)
+
+    try:
+        simple_mock_home.init.side_effect = HmipConnectionError
+        with patch.object(
+            hap, "_create_home", return_value=mock_coro(simple_mock_home)
+        ):
+            await hap.async_setup()
+    except HomeAssistantError as ex:
+        assert isinstance(ex, ConfigEntryNotReady)
 
 
 async def test_auth_create(hass, simple_mock_auth):
@@ -224,6 +225,3 @@ async def test_auth_create_exception(hass, simple_mock_auth):
     ):
         assert await hmip_auth.async_setup() is True
         await hass.async_block_till_done()
-        assert hmip_auth.auth.pin == HAPPIN
-
-    assert not await hmip_auth.get_auth(hass, HAPID, HAPPIN)
