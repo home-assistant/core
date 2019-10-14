@@ -8,20 +8,21 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import BinarySensorDevice, PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
 from homeassistant.const import CONF_FRIENDLY_NAME, CONF_ICON
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
+
 from . import (
-    CONF_SENSORS,
+    CONF_CALCULATIONS,
+    CONF_GROUP,
     CONF_ID,
+    CONF_INVERT_STATE,
+    CONF_PARAMETERS,
+    CONF_SENSORS,
+    CONF_VISIBILITIES,
     DATA_LUXTRONIK,
     ENTITY_ID_FORMAT,
-    CONF_INVERT_STATE,
-    CONF_GROUP,
-    CONF_PARAMETERS,
-    CONF_CALCULATIONS,
-    CONF_VISIBILITIES,
 )
 
 _LOGGER = logging.getLogger(__name__)

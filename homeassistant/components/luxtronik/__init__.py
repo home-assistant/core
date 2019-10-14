@@ -1,12 +1,16 @@
 """Support for Luxtronik heatpump controllers."""
-import logging
 from datetime import timedelta
+import logging
 
+from luxtronik import LOGGER as LuxLogger, Luxtronik as Lux
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
+
+LuxLogger.setLevel(level="WARNING")
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,11 +89,6 @@ class Luxtronik:
 
     def __init__(self, host, port, safe=True):
         """Initialize the Luxtronik connection."""
-        from luxtronik import Luxtronik as Lux
-
-        from luxtronik import LOGGER as LuxLogger
-
-        LuxLogger.setLevel(level="WARNING")
 
         self._host = host
         self._port = port

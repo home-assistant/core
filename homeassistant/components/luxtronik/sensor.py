@@ -9,16 +9,17 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_FRIENDLY_NAME, CONF_ICON
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
+
 from . import (
-    CONF_SENSORS,
-    CONF_ID,
-    CONF_GROUP,
-    CONF_PARAMETERS,
     CONF_CALCULATIONS,
+    CONF_GROUP,
+    CONF_ID,
+    CONF_PARAMETERS,
+    CONF_SENSORS,
     CONF_VISIBILITIES,
     DATA_LUXTRONIK,
     ENTITY_ID_FORMAT,
