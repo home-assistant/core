@@ -25,6 +25,8 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
+    # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+
     def __init__(self):
         """Initialize the Dynalite flow."""
         self.host = None
@@ -46,13 +48,13 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_info):
         """Import a new bridge as a config entry."""
-        LOGGER.debug("async_step_import - %s" % pprint.pformat(import_info))
+        LOGGER.debug("async_step_import - %s", pprint.pformat(import_info))
         host = self.context[CONF_HOST] = import_info[CONF_HOST]
         return await self._entry_from_bridge(host)
 
     async def _entry_from_bridge(self, host):
         """Return a config entry from an initialized bridge."""
-        LOGGER.debug("entry_from_bridge - %s" % pprint.pformat(host))
+        LOGGER.debug("entry_from_bridge - %s", pprint.pformat(host))
         # Remove all other entries of hubs with same ID or host
 
         same_hub_entries = [
@@ -62,7 +64,7 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ]
 
         LOGGER.debug(
-            "entry_from_bridge same_hub - %s" % pprint.pformat(same_hub_entries)
+            "entry_from_bridge same_hub - %s", pprint.pformat(same_hub_entries)
         )
 
         if same_hub_entries:
