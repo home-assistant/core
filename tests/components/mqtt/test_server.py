@@ -57,12 +57,7 @@ class TestMQTT:
 
         self.hass.config.api = MagicMock(api_password="api_password")
         assert setup_component(
-            self.hass,
-            mqtt.DOMAIN,
-            {
-                "http": {"api_password": "http_secret"},
-                mqtt.DOMAIN: {CONF_PASSWORD: password},
-            },
+            self.hass, mqtt.DOMAIN, {mqtt.DOMAIN: {CONF_PASSWORD: password}}
         )
         self.hass.block_till_done()
         assert mock_mqtt.called
