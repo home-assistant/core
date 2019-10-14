@@ -53,7 +53,7 @@ class WinkToggleDevice(WinkDevice, ToggleEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attributes = super(WinkToggleDevice, self).device_state_attributes
+        attributes = super().device_state_attributes
         try:
             event = self.wink.last_event()
             if event is not None:

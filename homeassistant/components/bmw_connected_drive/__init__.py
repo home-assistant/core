@@ -1,5 +1,4 @@
 """Reads vehicle status from BMW connected drive portal."""
-import datetime
 import logging
 
 import voluptuous as vol
@@ -8,6 +7,7 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import discovery
 from homeassistant.helpers.event import track_utc_time_change
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,7 +100,7 @@ def setup_account(account_config: dict, hass, name: str) -> "BMWConnectedDriveAc
 
     # update every UPDATE_INTERVAL minutes, starting now
     # this should even out the load on the servers
-    now = datetime.datetime.now()
+    now = dt_util.utcnow()
     track_utc_time_change(
         hass,
         cd_account.update,

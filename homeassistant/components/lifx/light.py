@@ -33,7 +33,7 @@ from homeassistant.components.light import (
     Light,
     preprocess_turn_on_alternatives,
 )
-from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
@@ -77,7 +77,6 @@ SERVICE_EFFECT_COLORLOOP = "lifx_effect_colorloop"
 SERVICE_EFFECT_STOP = "lifx_effect_stop"
 
 ATTR_POWER_ON = "power_on"
-ATTR_MODE = "mode"
 ATTR_PERIOD = "period"
 ATTR_CYCLES = "cycles"
 ATTR_SPREAD = "spread"

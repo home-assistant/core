@@ -79,7 +79,9 @@ async def _test_reconnect(hass, caplog, config):
     else:
         entity_id = "media_player.fire_tv"
 
-    with patchers.patch_connect(True)[patch_key], patchers.patch_shell("")[patch_key]:
+    with patchers.PATCH_ADB_DEVICE, patchers.patch_connect(True)[
+        patch_key
+    ], patchers.patch_shell("")[patch_key]:
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.helpers.entity_component.async_update_entity(entity_id)
         state = hass.states.get(entity_id)
@@ -151,7 +153,9 @@ async def _test_adb_shell_returns_none(hass, config):
     else:
         entity_id = "media_player.fire_tv"
 
-    with patchers.patch_connect(True)[patch_key], patchers.patch_shell("")[patch_key]:
+    with patchers.PATCH_ADB_DEVICE, patchers.patch_connect(True)[
+        patch_key
+    ], patchers.patch_shell("")[patch_key]:
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.helpers.entity_component.async_update_entity(entity_id)
         state = hass.states.get(entity_id)

@@ -48,7 +48,7 @@ async def test_send_add_or_update_message(hass, aioclient_mock):
     )
 
     await state_report.async_send_add_or_update_message(
-        hass, DEFAULT_CONFIG, ["binary_sensor.test_contact"]
+        hass, DEFAULT_CONFIG, ["binary_sensor.test_contact", "zwave.bla"]
     )
 
     assert len(aioclient_mock.mock_calls) == 1
@@ -75,7 +75,7 @@ async def test_send_delete_message(hass, aioclient_mock):
     )
 
     await state_report.async_send_delete_message(
-        hass, DEFAULT_CONFIG, ["binary_sensor.test_contact"]
+        hass, DEFAULT_CONFIG, ["binary_sensor.test_contact", "zwave.bla"]
     )
 
     assert len(aioclient_mock.mock_calls) == 1

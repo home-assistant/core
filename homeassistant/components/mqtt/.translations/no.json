@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Kun en enkelt konfigurasjon av MQTT er tillatt."
+            "single_instance_allowed": "Kun en konfigurasjon av MQTT er tillatt."
         },
         "error": {
             "cannot_connect": "Kan ikke koble til megleren."

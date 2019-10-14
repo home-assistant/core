@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "existing_instance_updated": "Oppdatert eksisterende konfigurasjon.",
-            "single_instance_allowed": "Kun \u00e9n enkelt konfigurasjon av AdGuard Hjemer tillatt."
+            "single_instance_allowed": "Kun en konfigurasjon av AdGuard Hjemer tillatt."
         },
         "error": {
             "connection_error": "Tilkobling mislyktes."

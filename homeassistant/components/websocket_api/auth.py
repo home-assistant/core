@@ -2,12 +2,16 @@
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
+from homeassistant.auth.models import RefreshToken, User
 from homeassistant.auth.providers import legacy_api_password
 from homeassistant.components.http.ban import process_wrong_login, process_success_login
 from homeassistant.const import __version__
 
 from .connection import ActiveConnection
 from .error import Disconnect
+
+
+# mypy: allow-untyped-calls, allow-untyped-defs
 
 TYPE_AUTH = "auth"
 TYPE_AUTH_INVALID = "auth_invalid"
@@ -87,7 +91,9 @@ class AuthPhase:
         await process_wrong_login(self._request)
         raise Disconnect
 
-    async def _async_finish_auth(self, user, refresh_token) -> ActiveConnection:
+    async def _async_finish_auth(
+        self, user: User, refresh_token: RefreshToken
+    ) -> ActiveConnection:
         """Create an active connection."""
         self._logger.debug("Auth OK")
         await process_success_login(self._request)

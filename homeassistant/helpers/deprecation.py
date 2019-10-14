@@ -54,7 +54,7 @@ def get_deprecated(
     and a warning is issued to the user.
     """
     if old_name in config:
-        module_name = inspect.getmodule(inspect.stack()[1][0]).__name__
+        module_name = inspect.getmodule(inspect.stack()[1][0]).__name__  # type: ignore
         logger = logging.getLogger(module_name)
         logger.warning(
             "'%s' is deprecated. Please rename '%s' to '%s' in your "

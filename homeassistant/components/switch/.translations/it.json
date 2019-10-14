@@ -6,6 +6,8 @@
             "turn_on": "Attivare {entity_name}"
         },
         "condition_type": {
+            "is_off": "{entity_name} \u00e8 disattivato",
+            "is_on": "{entity_name} \u00e8 attivo",
             "turn_off": "{entity_name} disattivato",
             "turn_on": "{entity_name} attivato"
         },

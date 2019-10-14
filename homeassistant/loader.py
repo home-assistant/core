@@ -307,7 +307,7 @@ class IntegrationNotFound(LoaderError):
 
     def __init__(self, domain: str) -> None:
         """Initialize a component not found error."""
-        super().__init__(f"Integration {domain} not found.")
+        super().__init__(f"Integration '{domain}' not found.")
         self.domain = domain
 
 

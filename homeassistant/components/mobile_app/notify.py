@@ -1,6 +1,5 @@
 """Support for mobile_app push notifications."""
 import asyncio
-from datetime import datetime, timezone
 import logging
 
 import async_timeout
@@ -60,7 +59,7 @@ def log_rate_limits(hass, device_name, resp, level=logging.INFO):
 
     rate_limits = resp[ATTR_PUSH_RATE_LIMITS]
     resetsAt = rate_limits[ATTR_PUSH_RATE_LIMITS_RESETS_AT]
-    resetsAtTime = dt_util.parse_datetime(resetsAt) - datetime.now(timezone.utc)
+    resetsAtTime = dt_util.parse_datetime(resetsAt) - dt_util.utcnow()
     rate_limit_msg = (
         "mobile_app push notification rate limits for %s: "
         "%d sent, %d allowed, %d errors, "

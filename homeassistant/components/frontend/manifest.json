@@ -14,5 +14,7 @@
     "system_log",
     "websocket_api"
   ],
-  "codeowners": ["@home-assistant/frontend"]
+  "codeowners": [
+    "@home-assistant/frontend"
+  ]
 }

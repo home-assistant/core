@@ -2,13 +2,7 @@
 import logging
 from typing import List, Optional
 
-from iaqualink import (
-    AqualinkState,
-    AqualinkHeater,
-    AqualinkPump,
-    AqualinkSensor,
-    AqualinkThermostat,
-)
+from iaqualink import AqualinkHeater, AqualinkPump, AqualinkSensor, AqualinkState
 from iaqualink.const import (
     AQUALINK_TEMP_CELSIUS_HIGH,
     AQUALINK_TEMP_CELSIUS_LOW,
@@ -45,12 +39,8 @@ async def async_setup_entry(
     async_add_entities(devs, True)
 
 
-class HassAqualinkThermostat(ClimateDevice, AqualinkEntity):
+class HassAqualinkThermostat(AqualinkEntity, ClimateDevice):
     """Representation of a thermostat."""
-
-    def __init__(self, dev: AqualinkThermostat):
-        """Initialize the thermostat."""
-        self.dev = dev
 
     @property
     def name(self) -> str:

@@ -8,6 +8,7 @@ from homeassistant.components.unifi.const import (
     CONF_CONTROLLER,
     CONF_SITE_ID,
     UNIFI_CONFIG,
+    UNIFI_WIRELESS_CLIENTS,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -49,7 +50,8 @@ async def test_controller_setup():
                 controller.CONF_DETECTION_TIME: 30,
                 controller.CONF_SSID_FILTER: ["ssid"],
             }
-        ]
+        ],
+        UNIFI_WIRELESS_CLIENTS: Mock(),
     }
     entry = Mock()
     entry.data = ENTRY_CONFIG
@@ -57,6 +59,7 @@ async def test_controller_setup():
     api = Mock()
     api.initialize.return_value = mock_coro(True)
     api.sites.return_value = mock_coro(CONTROLLER_SITES)
+    api.clients = []
 
     unifi_controller = controller.UniFiController(hass, entry)
 
@@ -100,7 +103,8 @@ async def test_controller_site():
 async def test_controller_mac():
     """Test that it is possible to identify controller mac."""
     hass = Mock()
-    hass.data = {UNIFI_CONFIG: {}}
+    hass.data = {UNIFI_CONFIG: {}, UNIFI_WIRELESS_CLIENTS: Mock()}
+    hass.data[UNIFI_WIRELESS_CLIENTS].get_data.return_value = set()
     entry = Mock()
     entry.data = ENTRY_CONFIG
     entry.options = {}
@@ -123,7 +127,7 @@ async def test_controller_mac():
 async def test_controller_no_mac():
     """Test that it works to not find the controllers mac."""
     hass = Mock()
-    hass.data = {UNIFI_CONFIG: {}}
+    hass.data = {UNIFI_CONFIG: {}, UNIFI_WIRELESS_CLIENTS: Mock()}
     entry = Mock()
     entry.data = ENTRY_CONFIG
     entry.options = {}
@@ -133,6 +137,7 @@ async def test_controller_no_mac():
     api.initialize.return_value = mock_coro(True)
     api.clients = {"client1": client}
     api.sites.return_value = mock_coro(CONTROLLER_SITES)
+    api.clients = {}
 
     unifi_controller = controller.UniFiController(hass, entry)
 
@@ -195,13 +200,14 @@ async def test_reset_if_entry_had_wrong_auth():
 async def test_reset_unloads_entry_if_setup():
     """Calling reset when the entry has been setup."""
     hass = Mock()
-    hass.data = {UNIFI_CONFIG: {}}
+    hass.data = {UNIFI_CONFIG: {}, UNIFI_WIRELESS_CLIENTS: Mock()}
     entry = Mock()
     entry.data = ENTRY_CONFIG
     entry.options = {}
     api = Mock()
     api.initialize.return_value = mock_coro(True)
     api.sites.return_value = mock_coro(CONTROLLER_SITES)
+    api.clients = []
 
     unifi_controller = controller.UniFiController(hass, entry)
 

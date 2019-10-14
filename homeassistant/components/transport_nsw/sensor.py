@@ -7,7 +7,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_API_KEY, ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_MODE, CONF_NAME, CONF_API_KEY, ATTR_ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +17,6 @@ ATTR_DUE_IN = "due"
 ATTR_DELAY = "delay"
 ATTR_REAL_TIME = "real_time"
 ATTR_DESTINATION = "destination"
-ATTR_MODE = "mode"
 
 ATTRIBUTION = "Data provided by Transport NSW"
 

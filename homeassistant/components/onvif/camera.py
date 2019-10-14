@@ -23,7 +23,7 @@ from homeassistant.components.camera.const import DOMAIN
 from homeassistant.components.ffmpeg import DATA_FFMPEG, CONF_EXTRA_ARGUMENTS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
-from homeassistant.helpers.service import extract_entity_ids
+from homeassistant.helpers.service import async_extract_entity_ids
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -88,7 +88,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         tilt = service.data.get(ATTR_TILT, None)
         zoom = service.data.get(ATTR_ZOOM, None)
         all_cameras = hass.data[ONVIF_DATA][ENTITIES]
-        entity_ids = extract_entity_ids(hass, service)
+        entity_ids = await async_extract_entity_ids(hass, service)
         target_cameras = []
         if not entity_ids:
             target_cameras = all_cameras
@@ -156,7 +156,7 @@ class ONVIFHassCamera(Camera):
         Initializes the camera by obtaining the input uri and connecting to
         the camera. Also retrieves the ONVIF profiles.
         """
-        from aiohttp.client_exceptions import ClientConnectorError
+        from aiohttp.client_exceptions import ClientConnectionError
         from homeassistant.exceptions import PlatformNotReady
         from zeep.exceptions import Fault
 
@@ -167,7 +167,7 @@ class ONVIFHassCamera(Camera):
             await self.async_check_date_and_time()
             await self.async_obtain_input_uri()
             self.setup_ptz()
-        except ClientConnectorError as err:
+        except ClientConnectionError as err:
             _LOGGER.warning(
                 "Couldn't connect to camera '%s', but will " "retry later. Error: %s",
                 self._name,
@@ -282,7 +282,7 @@ class ONVIFHassCamera(Camera):
         """Set up PTZ if available."""
         _LOGGER.debug("Setting up the ONVIF PTZ service")
         if self._camera.get_service("ptz", create=False) is None:
-            _LOGGER.warning("PTZ is not available on this camera")
+            _LOGGER.debug("PTZ is not available")
         else:
             self._ptz_service = self._camera.create_ptz_service()
             _LOGGER.debug("Completed set up of the ONVIF camera component")

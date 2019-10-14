@@ -306,7 +306,7 @@ class Volumio(MediaPlayerDevice):
     def async_set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
         return self.send_volumio_msg(
-            "commands", params={"cmd": "random", "value": str(shuffle)}
+            "commands", params={"cmd": "random", "value": str(shuffle).lower()}
         )
 
     def async_select_source(self, source):
