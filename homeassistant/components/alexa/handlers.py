@@ -527,7 +527,6 @@ async def async_api_adjust_volume_step(hass, config, directive, context):
     entity = directive.entity
     volume_int = int(directive.payload["volumeSteps"])
     is_default = bool(directive.payload["volumeStepsDefault"])
-    is_default = True
     default_steps = 1
     if "volume_steps_default" in entity.attributes:
         try:
