@@ -112,7 +112,10 @@ class TestDarkSkySetup(unittest.TestCase):
         self.hass.stop()
 
     @MockDependency("forecastio")
-    @patch("forecastio.load_forecast", new=load_forecastMock)
+    @patch(
+        "homeassistant.components.darksky.sensor.forecastio.load_forecast",
+        new=load_forecastMock,
+    )
     def test_setup_with_config(self, mock_forecastio):
         """Test the platform setup with configuration."""
         setup_component(self.hass, "sensor", VALID_CONFIG_MINIMAL)
@@ -130,7 +133,10 @@ class TestDarkSkySetup(unittest.TestCase):
         assert state is None
 
     @MockDependency("forecastio")
-    @patch("forecastio.load_forecast", new=load_forecastMock)
+    @patch(
+        "homeassistant.components.darksky.sensor.forecastio.load_forecast",
+        new=load_forecastMock,
+    )
     def test_setup_with_language_config(self, mock_forecastio):
         """Test the platform setup with language configuration."""
         setup_component(self.hass, "sensor", VALID_CONFIG_LANG_DE)
@@ -164,7 +170,10 @@ class TestDarkSkySetup(unittest.TestCase):
         assert not response
 
     @MockDependency("forecastio")
-    @patch("forecastio.load_forecast", new=load_forecastMock)
+    @patch(
+        "homeassistant.components.darksky.sensor.forecastio.load_forecast",
+        new=load_forecastMock,
+    )
     def test_setup_with_alerts_config(self, mock_forecastio):
         """Test the platform setup with alert configuration."""
         setup_component(self.hass, "sensor", VALID_CONFIG_ALERTS)
