@@ -1,7 +1,7 @@
 {
   "domain": "thomson",
   "name": "Thomson",
-  "documentation": "https://www.home-assistant.io/components/thomson",
+  "documentation": "https://www.home-assistant.io/integrations/thomson",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

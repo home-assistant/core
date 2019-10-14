@@ -40,7 +40,9 @@ TRIGGER_SCHEMA = vol.All(
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass, config, action, automation_info, *, platform_type="numeric_state"
+):
     """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
     below = config.get(CONF_BELOW)
@@ -84,7 +86,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
                 action(
                     {
                         "trigger": {
-                            "platform": "numeric_state",
+                            "platform": platform_type,
                             "entity_id": entity,
                             "below": below,
                             "above": above,

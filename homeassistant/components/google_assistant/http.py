@@ -25,9 +25,15 @@ _LOGGER = logging.getLogger(__name__)
 class GoogleConfig(AbstractConfig):
     """Config for manual setup of Google."""
 
-    def __init__(self, config):
+    def __init__(self, hass, config):
         """Initialize the config."""
+        super().__init__(hass)
         self._config = config
+
+    @property
+    def enabled(self):
+        """Return if Google is enabled."""
+        return True
 
     @property
     def agent_user_id(self):
@@ -77,7 +83,7 @@ class GoogleConfig(AbstractConfig):
 @callback
 def async_register_http(hass, cfg):
     """Register HTTP views for Google Assistant."""
-    hass.http.register_view(GoogleAssistantView(GoogleConfig(cfg)))
+    hass.http.register_view(GoogleAssistantView(GoogleConfig(hass, cfg)))
 
 
 class GoogleAssistantView(HomeAssistantView):

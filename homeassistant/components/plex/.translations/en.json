@@ -4,7 +4,9 @@
             "all_configured": "All linked servers already configured",
             "already_configured": "This Plex server is already configured",
             "already_in_progress": "Plex is being configured",
+            "discovery_no_file": "No legacy config file found",
             "invalid_import": "Imported configuration is invalid",
+            "token_request_timeout": "Timed out obtaining token",
             "unknown": "Failed for unknown reason"
         },
         "error": {
@@ -31,12 +33,16 @@
                 "description": "Multiple servers available, select one:",
                 "title": "Select Plex server"
             },
+            "start_website_auth": {
+                "description": "Continue to authorize at plex.tv.",
+                "title": "Connect Plex server"
+            },
             "user": {
                 "data": {
                     "manual_setup": "Manual setup",
                     "token": "Plex token"
                 },
-                "description": "Enter a Plex token for automatic setup or manually configure a server.",
+                "description": "Continue to authorize at plex.tv or manually configure a server.",
                 "title": "Connect Plex server"
             }
         },

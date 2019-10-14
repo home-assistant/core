@@ -20,7 +20,7 @@
                     "name": "Name",
                     "password": "Password",
                     "port": "Port",
-                    "username": "User name"
+                    "username": "Username"
                 },
                 "title": "Setup Transmission Client"
             }

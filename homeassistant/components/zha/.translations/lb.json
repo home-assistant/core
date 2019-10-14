@@ -18,6 +18,10 @@
         "title": "ZHA"
     },
     "device_automation": {
+        "action_type": {
+            "squawk": "Mellen",
+            "warn": "Warnen"
+        },
         "trigger_subtype": {
             "both_buttons": "B\u00e9id Kn\u00e4ppchen",
             "button_1": "\u00c9ischte Kn\u00e4ppchen",

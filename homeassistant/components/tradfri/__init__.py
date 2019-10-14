@@ -2,13 +2,25 @@
 import logging
 
 import voluptuous as vol
+from pytradfri import Gateway, RequestError
+from pytradfri.api.aiocoap_api import APIFactory
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json
-
+from . import config_flow  # noqa  pylint_disable=unused-import
 from .const import (
+    DOMAIN,
+    CONFIG_FILE,
+    KEY_GATEWAY,
+    KEY_API,
+    CONF_ALLOW_TRADFRI_GROUPS,
+    DEFAULT_ALLOW_TRADFRI_GROUPS,
+    TRADFRI_DEVICE_TYPES,
+    ATTR_TRADFRI_MANUFACTURER,
+    ATTR_TRADFRI_GATEWAY,
+    ATTR_TRADFRI_GATEWAY_MODEL,
     CONF_IMPORT_GROUPS,
     CONF_IDENTITY,
     CONF_HOST,
@@ -16,17 +28,7 @@ from .const import (
     CONF_GATEWAY_ID,
 )
 
-from . import config_flow  # noqa  pylint_disable=unused-import
-
 _LOGGER = logging.getLogger(__name__)
-
-
-DOMAIN = "tradfri"
-CONFIG_FILE = ".tradfri_psk.conf"
-KEY_GATEWAY = "tradfri_gateway"
-KEY_API = "tradfri_api"
-CONF_ALLOW_TRADFRI_GROUPS = "allow_tradfri_groups"
-DEFAULT_ALLOW_TRADFRI_GROUPS = False
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -91,8 +93,6 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, entry):
     """Create a gateway."""
     # host, identity, key, allow_tradfri_groups
-    from pytradfri import Gateway, RequestError  # pylint: disable=import-error
-    from pytradfri.api.aiocoap_api import APIFactory
 
     factory = APIFactory(
         entry.data[CONF_HOST],
@@ -124,24 +124,16 @@ async def async_setup_entry(hass, entry):
         config_entry_id=entry.entry_id,
         connections=set(),
         identifiers={(DOMAIN, entry.data[CONF_GATEWAY_ID])},
-        manufacturer="IKEA",
-        name="Gateway",
+        manufacturer=ATTR_TRADFRI_MANUFACTURER,
+        name=ATTR_TRADFRI_GATEWAY,
         # They just have 1 gateway model. Type is not exposed yet.
-        model="E1526",
+        model=ATTR_TRADFRI_GATEWAY_MODEL,
         sw_version=gateway_info.firmware_version,
     )
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "cover")
-    )
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "light")
-    )
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "sensor")
-    )
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "switch")
-    )
+    for device in TRADFRI_DEVICE_TYPES:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, device)
+        )
 
     return True

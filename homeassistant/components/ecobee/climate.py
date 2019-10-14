@@ -36,7 +36,8 @@ from homeassistant.const import (
 from homeassistant.util.temperature import convert
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, _LOGGER
+from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER, _LOGGER
+from .util import ecobee_date, ecobee_time
 
 ATTR_COOL_TEMP = "cool_temp"
 ATTR_END_DATE = "end_date"
@@ -106,13 +107,17 @@ DTGROUP_INCLUSIVE_MSG = (
 CREATE_VACATION_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_VACATION_NAME): cv.string,
+        vol.Required(ATTR_VACATION_NAME): vol.All(cv.string, vol.Length(max=12)),
         vol.Required(ATTR_COOL_TEMP): vol.Coerce(float),
         vol.Required(ATTR_HEAT_TEMP): vol.Coerce(float),
-        vol.Inclusive(ATTR_START_DATE, "dtgroup", msg=DTGROUP_INCLUSIVE_MSG): cv.string,
-        vol.Inclusive(ATTR_START_TIME, "dtgroup", msg=DTGROUP_INCLUSIVE_MSG): cv.string,
-        vol.Inclusive(ATTR_END_DATE, "dtgroup", msg=DTGROUP_INCLUSIVE_MSG): cv.string,
-        vol.Inclusive(ATTR_END_TIME, "dtgroup", msg=DTGROUP_INCLUSIVE_MSG): cv.string,
+        vol.Inclusive(
+            ATTR_START_DATE, "dtgroup", msg=DTGROUP_INCLUSIVE_MSG
+        ): ecobee_date,
+        vol.Inclusive(
+            ATTR_START_TIME, "dtgroup", msg=DTGROUP_INCLUSIVE_MSG
+        ): ecobee_time,
+        vol.Inclusive(ATTR_END_DATE, "dtgroup", msg=DTGROUP_INCLUSIVE_MSG): ecobee_date,
+        vol.Inclusive(ATTR_END_TIME, "dtgroup", msg=DTGROUP_INCLUSIVE_MSG): ecobee_time,
         vol.Optional(ATTR_FAN_MODE, default="auto"): vol.Any("auto", "on"),
         vol.Optional(ATTR_FAN_MIN_ON_TIME, default=0): vol.All(
             int, vol.Range(min=0, max=60)
@@ -123,7 +128,7 @@ CREATE_VACATION_SCHEMA = vol.Schema(
 DELETE_VACATION_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_VACATION_NAME): cv.string,
+        vol.Required(ATTR_VACATION_NAME): vol.All(cv.string, vol.Length(max=12)),
     }
 )
 
@@ -259,6 +264,7 @@ class Thermostat(ClimateDevice):
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
         self._name = self.thermostat["name"]
         self.vacation = None
+        self._last_active_hvac_mode = HVAC_MODE_AUTO
 
         self._operation_list = []
         if self.thermostat["settings"]["heatStages"]:
@@ -284,6 +290,8 @@ class Thermostat(ClimateDevice):
         else:
             await self.data.update()
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
+        if self.hvac_mode is not HVAC_MODE_OFF:
+            self._last_active_hvac_mode = self.hvac_mode
 
     @property
     def available(self):
@@ -299,6 +307,34 @@ class Thermostat(ClimateDevice):
     def name(self):
         """Return the name of the Ecobee Thermostat."""
         return self.thermostat["name"]
+
+    @property
+    def unique_id(self):
+        """Return a unique identifier for this ecobee thermostat."""
+        return self.thermostat["identifier"]
+
+    @property
+    def device_info(self):
+        """Return device information for this ecobee thermostat."""
+        try:
+            model = f"{ECOBEE_MODEL_TO_NAME[self.thermostat['modelNumber']]} Thermostat"
+        except KeyError:
+            _LOGGER.error(
+                "Model number for ecobee thermostat %s not recognized. "
+                "Please visit this link and provide the following information: "
+                "https://github.com/home-assistant/home-assistant/issues/27172 "
+                "Unrecognized model number: %s",
+                self.name,
+                self.thermostat["modelNumber"],
+            )
+            return None
+
+        return {
+            "identifiers": {(DOMAIN, self.thermostat["identifier"])},
+            "name": self.name,
+            "manufacturer": MANUFACTURER,
+            "model": model,
+        }
 
     @property
     def temperature_unit(self):
@@ -667,3 +703,12 @@ class Thermostat(ClimateDevice):
             vacation_name,
         )
         self.data.ecobee.delete_vacation(self.thermostat_index, vacation_name)
+
+    def turn_on(self):
+        """Set the thermostat to the last active HVAC mode."""
+        _LOGGER.debug(
+            "Turning on ecobee thermostat %s in %s mode",
+            self.name,
+            self._last_active_hvac_mode,
+        )
+        self.set_hvac_mode(self._last_active_hvac_mode)

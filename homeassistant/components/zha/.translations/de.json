@@ -16,5 +16,15 @@
             }
         },
         "title": "ZHA"
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "close": "Schlie\u00dfen",
+            "left": "Links",
+            "open": "Offen",
+            "right": "Rechts",
+            "turn_off": "Ausschalten",
+            "turn_on": "Einschalten"
+        }
     }
 }

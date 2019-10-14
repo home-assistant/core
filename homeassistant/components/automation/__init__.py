@@ -7,9 +7,6 @@ from typing import Any, Awaitable, Callable
 
 import voluptuous as vol
 
-from homeassistant.components.device_automation.exceptions import (
-    InvalidDeviceAutomationConfig,
-)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
@@ -476,10 +473,7 @@ async def _async_process_trigger(hass, config, trigger_configs, name, action):
     for conf in trigger_configs:
         platform = importlib.import_module(".{}".format(conf[CONF_PLATFORM]), __name__)
 
-        try:
-            remove = await platform.async_attach_trigger(hass, conf, action, info)
-        except InvalidDeviceAutomationConfig:
-            remove = False
+        remove = await platform.async_attach_trigger(hass, conf, action, info)
 
         if not remove:
             _LOGGER.error("Error setting up trigger %s", name)

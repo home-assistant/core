@@ -215,8 +215,9 @@ class TotpSetupFlow(SetupFlow):
 
         else:
             hass = self._auth_module.hass
-            self._ota_secret, self._url, self._image = await hass.async_add_executor_job(  # type: ignore
-                _generate_secret_and_qr_code, str(self._user.name)
+            self._ota_secret, self._url, self._image = await hass.async_add_executor_job(
+                _generate_secret_and_qr_code,  # type: ignore
+                str(self._user.name),
             )
 
         return self.async_show_form(

@@ -2,13 +2,22 @@
 import logging
 import threading
 
+from tellcore.constants import (
+    TELLSTICK_DIM,
+    TELLSTICK_TURNOFF,
+    TELLSTICK_TURNON,
+    TELLSTICK_UP,
+)
+from tellcore.library import TelldusError
+from tellcore.telldus import AsyncioCallbackDispatcher, TelldusCore
+from tellcorenet import TellCoreClient
 import voluptuous as vol
 
-from homeassistant.helpers import discovery
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PORT
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,10 +82,6 @@ def _discover(hass, config, component_name, found_tellcore_devices):
 
 def setup(hass, config):
     """Set up the Tellstick component."""
-    from tellcore.constants import TELLSTICK_DIM, TELLSTICK_UP
-    from tellcore.telldus import AsyncioCallbackDispatcher
-    from tellcore.telldus import TelldusCore
-    from tellcorenet import TellCoreClient
 
     conf = config.get(DOMAIN, {})
     net_host = conf.get(CONF_HOST)
@@ -219,7 +224,6 @@ class TellstickDevice(Entity):
 
     def _send_repeated_command(self):
         """Send a tellstick command once and decrease the repeat count."""
-        from tellcore.library import TelldusError
 
         with TELLSTICK_LOCK:
             if self._repeats_left > 0:
@@ -259,11 +263,6 @@ class TellstickDevice(Entity):
 
     def _update_model_from_command(self, tellcore_command, tellcore_data):
         """Update the model, from a sent tellcore command and data."""
-        from tellcore.constants import (
-            TELLSTICK_TURNON,
-            TELLSTICK_TURNOFF,
-            TELLSTICK_DIM,
-        )
 
         if tellcore_command not in [TELLSTICK_TURNON, TELLSTICK_TURNOFF, TELLSTICK_DIM]:
             _LOGGER.debug("Unhandled tellstick command: %d", tellcore_command)
@@ -289,12 +288,6 @@ class TellstickDevice(Entity):
 
     def _update_from_tellcore(self):
         """Read the current state of the device from the tellcore library."""
-        from tellcore.library import TelldusError
-        from tellcore.constants import (
-            TELLSTICK_TURNON,
-            TELLSTICK_TURNOFF,
-            TELLSTICK_DIM,
-        )
 
         with TELLSTICK_LOCK:
             try:

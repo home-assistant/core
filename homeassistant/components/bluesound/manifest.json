@@ -1,7 +1,7 @@
 {
   "domain": "bluesound",
   "name": "Bluesound",
-  "documentation": "https://www.home-assistant.io/components/bluesound",
+  "documentation": "https://www.home-assistant.io/integrations/bluesound",
   "requirements": [
     "xmltodict==0.12.0"
   ],

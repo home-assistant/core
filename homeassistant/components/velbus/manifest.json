@@ -1,7 +1,7 @@
 {
   "domain": "velbus",
   "name": "Velbus",
-  "documentation": "https://www.home-assistant.io/components/velbus",
+  "documentation": "https://www.home-assistant.io/integrations/velbus",
   "requirements": [
     "python-velbus==2.0.27"
   ],

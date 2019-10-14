@@ -58,7 +58,7 @@ class OwnTracksFlow(config_entries.ConfigFlow):
                 "android_url": "https://play.google.com/store/apps/details?"
                 "id=org.owntracks.android",
                 "ios_url": "https://itunes.apple.com/us/app/owntracks/id692424691?mt=8",
-                "docs_url": "https://www.home-assistant.io/components/owntracks/",
+                "docs_url": "https://www.home-assistant.io/integrations/owntracks/",
             },
         )
 

@@ -121,7 +121,7 @@ async def async_setup_entry(hass, entry):
     ) as error:
         _LOGGER.error(
             "Login to %s failed, verify token and SSL settings: [%s]",
-            server_config[CONF_SERVER],
+            entry.data[CONF_SERVER],
             error,
         )
         return False

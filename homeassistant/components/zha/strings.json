@@ -18,6 +18,10 @@
     }
   },
   "device_automation": {
+    "action_type": {
+      "squawk": "Squawk",
+      "warn": "Warn"
+    },
     "trigger_type": {
       "remote_button_short_press": "\"{subtype}\" button pressed",
       "remote_button_short_release": "\"{subtype}\" button released",

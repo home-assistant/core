@@ -10,7 +10,15 @@ omit =
     homeassistant/util/async.py
 
     # omit pieces of code that rely on external devices being present
-    homeassistant/components/abode/*
+    homeassistant/components/abode/__init__.py
+    homeassistant/components/abode/alarm_control_panel.py
+    homeassistant/components/abode/binary_sensor.py
+    homeassistant/components/abode/camera.py
+    homeassistant/components/abode/cover.py
+    homeassistant/components/abode/light.py
+    homeassistant/components/abode/lock.py
+    homeassistant/components/abode/sensor.py
+    homeassistant/components/abode/switch.py
     homeassistant/components/acer_projector/switch.py
     homeassistant/components/actiontec/device_tracker.py
     homeassistant/components/adguard/__init__.py
@@ -19,6 +27,9 @@ omit =
     homeassistant/components/adguard/switch.py
     homeassistant/components/ads/*
     homeassistant/components/aftership/sensor.py
+    homeassistant/components/airly/__init__.py
+    homeassistant/components/airly/air_quality.py
+    homeassistant/components/airly/const.py
     homeassistant/components/airvisual/sensor.py
     homeassistant/components/aladdin_connect/cover.py
     homeassistant/components/alarm_control_panel/manual_mqtt.py
@@ -221,6 +232,7 @@ omit =
     homeassistant/components/fortios/device_tracker.py
     homeassistant/components/fortigate/*
     homeassistant/components/foscam/camera.py
+    homeassistant/components/foscam/const.py
     homeassistant/components/foursquare/*
     homeassistant/components/free_mobile/notify.py
     homeassistant/components/freebox/*
@@ -271,7 +283,6 @@ omit =
     homeassistant/components/heatmiser/climate.py
     homeassistant/components/hikvision/binary_sensor.py
     homeassistant/components/hikvisioncam/switch.py
-    homeassistant/components/hipchat/notify.py
     homeassistant/components/hitron_coda/device_tracker.py
     homeassistant/components/hive/*
     homeassistant/components/hlk_sw16/*
@@ -417,7 +428,10 @@ omit =
     homeassistant/components/n26/*
     homeassistant/components/nad/media_player.py
     homeassistant/components/nanoleaf/light.py
-    homeassistant/components/neato/*
+    homeassistant/components/neato/camera.py
+    homeassistant/components/neato/sensor.py
+    homeassistant/components/neato/switch.py
+    homeassistant/components/neato/vacuum.py
     homeassistant/components/nederlandse_spoorwegen/sensor.py
     homeassistant/components/nello/lock.py
     homeassistant/components/nest/*
@@ -461,7 +475,10 @@ omit =
     homeassistant/components/openhome/media_player.py
     homeassistant/components/opensensemap/air_quality.py
     homeassistant/components/opensky/sensor.py
-    homeassistant/components/opentherm_gw/*
+    homeassistant/components/opentherm_gw/__init__.py
+    homeassistant/components/opentherm_gw/binary_sensor.py
+    homeassistant/components/opentherm_gw/climate.py
+    homeassistant/components/opentherm_gw/sensor.py
     homeassistant/components/openuv/__init__.py
     homeassistant/components/openuv/binary_sensor.py
     homeassistant/components/openuv/sensor.py
@@ -558,6 +575,7 @@ omit =
     homeassistant/components/russound_rio/media_player.py
     homeassistant/components/russound_rnet/media_player.py
     homeassistant/components/sabnzbd/*
+    homeassistant/components/saj/sensor.py
     homeassistant/components/satel_integra/*
     homeassistant/components/scrape/sensor.py
     homeassistant/components/scsgate/*
@@ -599,6 +617,8 @@ omit =
     homeassistant/components/solaredge/sensor.py
     homeassistant/components/solaredge_local/sensor.py
     homeassistant/components/solax/sensor.py
+    homeassistant/components/soma/cover.py
+    homeassistant/components/soma/__init__.py
     homeassistant/components/somfy/*
     homeassistant/components/somfy_mylink/*
     homeassistant/components/sonarr/sensor.py
@@ -674,6 +694,7 @@ omit =
     homeassistant/components/tradfri/*
     homeassistant/components/tradfri/light.py
     homeassistant/components/tradfri/cover.py
+    homeassistant/components/tradfri/base_class.py
     homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/sensor.py
     homeassistant/components/transmission/__init__.py

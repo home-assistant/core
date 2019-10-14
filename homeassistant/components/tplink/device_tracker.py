@@ -7,18 +7,19 @@ import re
 
 from aiohttp.hdrs import (
     ACCEPT,
-    COOKIE,
-    PRAGMA,
-    REFERER,
-    CONNECTION,
-    KEEP_ALIVE,
-    USER_AGENT,
-    CONTENT_TYPE,
-    CACHE_CONTROL,
     ACCEPT_ENCODING,
     ACCEPT_LANGUAGE,
+    CACHE_CONTROL,
+    CONNECTION,
+    CONTENT_TYPE,
+    COOKIE,
+    KEEP_ALIVE,
+    PRAGMA,
+    REFERER,
+    USER_AGENT,
 )
 import requests
+from tplink.tplink import TpLinkClient
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -88,7 +89,6 @@ class TplinkDeviceScanner(DeviceScanner):
 
     def __init__(self, config):
         """Initialize the scanner."""
-        from tplink.tplink import TpLinkClient
 
         host = config[CONF_HOST]
         password = config[CONF_PASSWORD]
@@ -102,7 +102,7 @@ class TplinkDeviceScanner(DeviceScanner):
 
             self.success_init = self._update_info()
         except requests.exceptions.RequestException:
-            _LOGGER.debug("RequestException in %s", __class__.__name__)
+            _LOGGER.debug("RequestException in %s", self.__class__.__name__)
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -150,7 +150,7 @@ class Tplink1DeviceScanner(DeviceScanner):
         try:
             self.success_init = self._update_info()
         except requests.exceptions.RequestException:
-            _LOGGER.debug("RequestException in %s", __class__.__name__)
+            _LOGGER.debug("RequestException in %s", self.__class__.__name__)
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""

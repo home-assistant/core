@@ -9,7 +9,6 @@ from homematicip.aio.device import (
     AsyncFullFlushDimmer,
     AsyncPluggableDimmer,
 )
-from homematicip.aio.home import AsyncHome
 from homematicip.base.enums import RGBColorState
 from homematicip.base.functionalChannels import NotificationLightChannel
 
@@ -25,6 +24,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
+from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,26 +41,26 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP Cloud lights from a config entry."""
-    home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
+    hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
     devices = []
-    for device in home.devices:
+    for device in hap.home.devices:
         if isinstance(device, AsyncBrandSwitchMeasuring):
-            devices.append(HomematicipLightMeasuring(home, device))
+            devices.append(HomematicipLightMeasuring(hap, device))
         elif isinstance(device, AsyncBrandSwitchNotificationLight):
-            devices.append(HomematicipLight(home, device))
+            devices.append(HomematicipLight(hap, device))
             devices.append(
-                HomematicipNotificationLight(home, device, device.topLightChannelIndex)
+                HomematicipNotificationLight(hap, device, device.topLightChannelIndex)
             )
             devices.append(
                 HomematicipNotificationLight(
-                    home, device, device.bottomLightChannelIndex
+                    hap, device, device.bottomLightChannelIndex
                 )
             )
         elif isinstance(
             device,
             (AsyncDimmer, AsyncPluggableDimmer, AsyncBrandDimmer, AsyncFullFlushDimmer),
         ):
-            devices.append(HomematicipDimmer(home, device))
+            devices.append(HomematicipDimmer(hap, device))
 
     if devices:
         async_add_entities(devices)
@@ -69,9 +69,9 @@ async def async_setup_entry(
 class HomematicipLight(HomematicipGenericDevice, Light):
     """Representation of a HomematicIP Cloud light device."""
 
-    def __init__(self, home: AsyncHome, device) -> None:
+    def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the light device."""
-        super().__init__(home, device)
+        super().__init__(hap, device)
 
     @property
     def is_on(self) -> bool:
@@ -107,9 +107,9 @@ class HomematicipLightMeasuring(HomematicipLight):
 class HomematicipDimmer(HomematicipGenericDevice, Light):
     """Representation of HomematicIP Cloud dimmer light device."""
 
-    def __init__(self, home: AsyncHome, device) -> None:
+    def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the dimmer light device."""
-        super().__init__(home, device)
+        super().__init__(hap, device)
 
     @property
     def is_on(self) -> bool:
@@ -143,13 +143,13 @@ class HomematicipDimmer(HomematicipGenericDevice, Light):
 class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     """Representation of HomematicIP Cloud dimmer light device."""
 
-    def __init__(self, home: AsyncHome, device, channel: int) -> None:
+    def __init__(self, hap: HomematicipHAP, device, channel: int) -> None:
         """Initialize the dimmer light device."""
         self.channel = channel
         if self.channel == 2:
-            super().__init__(home, device, "Top")
+            super().__init__(hap, device, "Top")
         else:
-            super().__init__(home, device, "Bottom")
+            super().__init__(hap, device, "Bottom")
 
         self._color_switcher = {
             RGBColorState.WHITE: [0.0, 0.0],

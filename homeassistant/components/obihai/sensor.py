@@ -111,6 +111,25 @@ class ObihaiServiceSensors(Entity):
             return DEVICE_CLASS_TIMESTAMP
         return None
 
+    @property
+    def icon(self):
+        """Return an icon."""
+        if self._service_name == "Call Direction":
+            if self._state == "No Active Calls":
+                return "mdi:phone-off"
+            if self._state == "Inbound Call":
+                return "mdi:phone-incoming"
+            return "mdi:phone-outgoing"
+        if "Caller Info" in self._service_name:
+            return "mdi:phone-log"
+        if "Port" in self._service_name:
+            if self._state == "Ringing":
+                return "mdi:phone-ring"
+            if self._state == "Off Hook":
+                return "mdi:phone-in-talk"
+            return "mdi:phone-hangup"
+        return "mdi:phone"
+
     def update(self):
         """Update the sensor."""
         services = self._pyobihai.get_state()

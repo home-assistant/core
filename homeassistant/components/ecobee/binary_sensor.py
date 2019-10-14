@@ -4,7 +4,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_OCCUPANCY,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER, _LOGGER
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -44,6 +44,54 @@ class EcobeeBinarySensor(BinarySensorDevice):
         return self._name.rstrip()
 
     @property
+    def unique_id(self):
+        """Return a unique identifier for this sensor."""
+        for sensor in self.data.ecobee.get_remote_sensors(self.index):
+            if sensor["name"] == self.sensor_name:
+                if "code" in sensor:
+                    return f"{sensor['code']}-{self.device_class}"
+                thermostat = self.data.ecobee.get_thermostat(self.index)
+                return f"{thermostat['identifier']}-{sensor['id']}-{self.device_class}"
+
+    @property
+    def device_info(self):
+        """Return device information for this sensor."""
+        identifier = None
+        model = None
+        for sensor in self.data.ecobee.get_remote_sensors(self.index):
+            if sensor["name"] != self.sensor_name:
+                continue
+            if "code" in sensor:
+                identifier = sensor["code"]
+                model = "ecobee Room Sensor"
+            else:
+                thermostat = self.data.ecobee.get_thermostat(self.index)
+                identifier = thermostat["identifier"]
+                try:
+                    model = (
+                        f"{ECOBEE_MODEL_TO_NAME[thermostat['modelNumber']]} Thermostat"
+                    )
+                except KeyError:
+                    _LOGGER.error(
+                        "Model number for ecobee thermostat %s not recognized. "
+                        "Please visit this link and provide the following information: "
+                        "https://github.com/home-assistant/home-assistant/issues/27172 "
+                        "Unrecognized model number: %s",
+                        thermostat["name"],
+                        thermostat["modelNumber"],
+                    )
+            break
+
+        if identifier is not None and model is not None:
+            return {
+                "identifiers": {(DOMAIN, identifier)},
+                "name": self.sensor_name,
+                "manufacturer": MANUFACTURER,
+                "model": model,
+            }
+        return None
+
+    @property
     def is_on(self):
         """Return the status of the sensor."""
         return self._state == "true"
@@ -57,6 +105,10 @@ class EcobeeBinarySensor(BinarySensorDevice):
         """Get the latest state of the sensor."""
         await self.data.update()
         for sensor in self.data.ecobee.get_remote_sensors(self.index):
+            if sensor["name"] != self.sensor_name:
+                continue
             for item in sensor["capability"]:
-                if item["type"] == "occupancy" and self.sensor_name == sensor["name"]:
-                    self._state = item["value"]
+                if item["type"] != "occupancy":
+                    continue
+                self._state = item["value"]
+                break

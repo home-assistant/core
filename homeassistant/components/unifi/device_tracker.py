@@ -1,9 +1,8 @@
 """Track devices using UniFi controllers."""
 import logging
-import voluptuous as vol
 
 from homeassistant.components.unifi.config_flow import get_controller_from_config_entry
-from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
 from homeassistant.core import callback
@@ -27,7 +26,6 @@ DEVICE_ATTRIBUTES = [
     "ip",
     "is_11r",
     "is_guest",
-    "is_wired",
     "mac",
     "name",
     "noted",
@@ -38,13 +36,6 @@ DEVICE_ATTRIBUTES = [
     "site_id",
     "vlan",
 ]
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
-
-
-async def async_setup_scanner(hass, config, sync_see, discovery_info):
-    """Set up the Unifi integration."""
-    return True
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -59,7 +50,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         if (
             entity.config_entry_id == config_entry.entry_id
-            and entity.domain == DOMAIN
+            and entity.domain == DEVICE_TRACKER_DOMAIN
             and "-" in entity.unique_id
         ):
 
@@ -76,7 +67,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Update the values of the controller."""
         update_items(controller, async_add_entities, tracked)
 
-    async_dispatcher_connect(hass, controller.signal_update, update_controller)
+    controller.listeners.append(
+        async_dispatcher_connect(hass, controller.signal_update, update_controller)
+    )
 
     @callback
     def update_disable_on_entities():
@@ -91,8 +84,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 entity.registry_entry.entity_id, disabled_by=disabled_by
             )
 
-    async_dispatcher_connect(
-        hass, controller.signal_options_update, update_disable_on_entities
+    controller.listeners.append(
+        async_dispatcher_connect(
+            hass, controller.signal_options_update, update_disable_on_entities
+        )
     )
 
     update_controller()
@@ -129,6 +124,7 @@ class UniFiClientTracker(ScannerEntity):
         """Set up tracked client."""
         self.client = client
         self.controller = controller
+        self.is_wired = self.client.mac not in controller.wireless_clients
 
     @property
     def entity_registry_enabled_default(self):
@@ -137,13 +133,13 @@ class UniFiClientTracker(ScannerEntity):
             return False
 
         if (
-            not self.client.is_wired
+            not self.is_wired
             and self.controller.option_ssid_filter
             and self.client.essid not in self.controller.option_ssid_filter
         ):
             return False
 
-        if not self.controller.option_track_wired_clients and self.client.is_wired:
+        if not self.controller.option_track_wired_clients and self.is_wired:
             return False
 
         return True
@@ -153,18 +149,31 @@ class UniFiClientTracker(ScannerEntity):
         LOGGER.debug("New UniFi client tracker %s (%s)", self.name, self.client.mac)
 
     async def async_update(self):
-        """Synchronize state with controller."""
+        """Synchronize state with controller.
+
+        Make sure to update self.is_wired if client is wireless, there is an issue when clients go offline that they get marked as wired.
+        """
         LOGGER.debug(
             "Updating UniFi tracked client %s (%s)", self.entity_id, self.client.mac
         )
         await self.controller.request_update()
 
+        if self.is_wired and self.client.mac in self.controller.wireless_clients:
+            self.is_wired = False
+
     @property
     def is_connected(self):
-        """Return true if the client is connected to the network."""
-        if (
-            dt_util.utcnow() - dt_util.utc_from_timestamp(float(self.client.last_seen))
-        ) < self.controller.option_detection_time:
+        """Return true if the client is connected to the network.
+
+        If is_wired and client.is_wired differ it means that the device is offline and UniFi bug shows device as wired.
+        """
+        if self.is_wired == self.client.is_wired and (
+            (
+                dt_util.utcnow()
+                - dt_util.utc_from_timestamp(float(self.client.last_seen))
+            )
+            < self.controller.option_detection_time
+        ):
             return True
 
         return False
@@ -202,6 +211,8 @@ class UniFiClientTracker(ScannerEntity):
         for variable in DEVICE_ATTRIBUTES:
             if variable in self.client.raw:
                 attributes[variable] = self.client.raw[variable]
+
+        attributes["is_wired"] = self.is_wired
 
         return attributes
 

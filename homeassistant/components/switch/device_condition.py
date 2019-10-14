@@ -19,10 +19,16 @@ def async_condition_from_config(
     config: ConfigType, config_validation: bool
 ) -> ConditionCheckerType:
     """Evaluate state based on configuration."""
-    config = CONDITION_SCHEMA(config)
-    return toggle_entity.async_condition_from_config(config, config_validation)
+    if config_validation:
+        config = CONDITION_SCHEMA(config)
+    return toggle_entity.async_condition_from_config(config)
 
 
 async def async_get_conditions(hass: HomeAssistant, device_id: str) -> List[dict]:
     """List device conditions."""
     return await toggle_entity.async_get_conditions(hass, device_id, DOMAIN)
+
+
+async def async_get_condition_capabilities(hass: HomeAssistant, config: dict) -> dict:
+    """List condition capabilities."""
+    return await toggle_entity.async_get_condition_capabilities(hass, config)

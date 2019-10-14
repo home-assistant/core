@@ -1,8 +1,7 @@
 """Tests for HomematicIP Cloud config flow."""
 from unittest.mock import patch
 
-from homeassistant.components.homematicip_cloud import hap as hmipc
-from homeassistant.components.homematicip_cloud import config_flow, const
+from homeassistant.components.homematicip_cloud import config_flow, const, hap as hmipc
 
 from tests.common import MockConfigEntry, mock_coro
 

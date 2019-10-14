@@ -102,6 +102,11 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorDevice):
         if not data:
             return
 
+        for key in ("from_time", "to_time", "from_uv", "to_uv"):
+            if not data.get(key):
+                _LOGGER.info("Skipping update due to missing data: %s", key)
+                return
+
         if self._sensor_type == TYPE_PROTECTION_WINDOW:
             self._state = (
                 parse_datetime(data["from_time"])

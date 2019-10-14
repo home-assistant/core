@@ -1,5 +1,5 @@
 """Helpers to execute scripts."""
-
+import asyncio
 import logging
 from contextlib import suppress
 from datetime import datetime
@@ -8,12 +8,16 @@ from typing import Optional, Sequence, Callable, Dict, List, Set, Tuple, Any
 
 import voluptuous as vol
 
+import homeassistant.components.device_automation as device_automation
+import homeassistant.components.scene as scene
 from homeassistant.core import HomeAssistant, Context, callback, CALLBACK_TYPE
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_TIMEOUT,
+    SERVICE_TURN_ON,
 )
 from homeassistant import exceptions
 from homeassistant.helpers import (
@@ -27,9 +31,8 @@ from homeassistant.helpers.event import (
     async_track_template,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_integration
 import homeassistant.util.dt as date_util
-from homeassistant.util.async_ import run_coroutine_threadsafe, run_callback_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
@@ -46,6 +49,7 @@ CONF_EVENT_DATA_TEMPLATE = "event_data_template"
 CONF_DELAY = "delay"
 CONF_WAIT_TEMPLATE = "wait_template"
 CONF_CONTINUE = "continue_on_timeout"
+CONF_SCENE = "scene"
 
 
 ACTION_DELAY = "delay"
@@ -54,6 +58,7 @@ ACTION_CHECK_CONDITION = "condition"
 ACTION_FIRE_EVENT = "event"
 ACTION_CALL_SERVICE = "call_service"
 ACTION_DEVICE_AUTOMATION = "device"
+ACTION_ACTIVATE_SCENE = "scene"
 
 
 def _determine_action(action):
@@ -73,6 +78,9 @@ def _determine_action(action):
     if CONF_DEVICE_ID in action:
         return ACTION_DEVICE_AUTOMATION
 
+    if CONF_SCENE in action:
+        return ACTION_ACTIVATE_SCENE
+
     return ACTION_CALL_SERVICE
 
 
@@ -84,6 +92,26 @@ def call_from_config(
 ) -> None:
     """Call a script based on a config entry."""
     Script(hass, cv.SCRIPT_SCHEMA(config)).run(variables, context)
+
+
+async def async_validate_action_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate config."""
+    action_type = _determine_action(config)
+
+    if action_type == ACTION_DEVICE_AUTOMATION:
+        platform = await device_automation.async_get_device_automation_platform(
+            hass, config[CONF_DOMAIN], "action"
+        )
+        config = platform.ACTION_SCHEMA(config)  # type: ignore
+    if action_type == ACTION_CHECK_CONDITION and config[CONF_CONDITION] == "device":
+        platform = await device_automation.async_get_device_automation_platform(
+            hass, config[CONF_DOMAIN], "condition"
+        )
+        config = platform.CONDITION_SCHEMA(config)  # type: ignore
+
+    return config
 
 
 class _StopScript(Exception):
@@ -127,6 +155,7 @@ class Script:
             ACTION_FIRE_EVENT: self._async_fire_event,
             ACTION_CALL_SERVICE: self._async_call_service,
             ACTION_DEVICE_AUTOMATION: self._async_device_automation,
+            ACTION_ACTIVATE_SCENE: self._async_activate_scene,
         }
 
     @property
@@ -136,7 +165,7 @@ class Script:
 
     def run(self, variables=None, context=None):
         """Run script."""
-        run_coroutine_threadsafe(
+        asyncio.run_coroutine_threadsafe(
             self.async_run(variables, context), self.hass.loop
         ).result()
 
@@ -335,10 +364,26 @@ class Script:
         """
         self.last_action = action.get(CONF_ALIAS, "device automation")
         self._log("Executing step %s" % self.last_action)
-        integration = await async_get_integration(self.hass, action[CONF_DOMAIN])
-        platform = integration.get_platform("device_action")
+        platform = await device_automation.async_get_device_automation_platform(
+            self.hass, action[CONF_DOMAIN], "action"
+        )
         await platform.async_call_action_from_config(
             self.hass, action, variables, context
+        )
+
+    async def _async_activate_scene(self, action, variables, context):
+        """Activate the scene specified in the action.
+
+        This method is a coroutine.
+        """
+        self.last_action = action.get(CONF_ALIAS, "activate scene")
+        self._log("Executing step %s" % self.last_action)
+        await self.hass.services.async_call(
+            scene.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: action[CONF_SCENE]},
+            blocking=True,
+            context=context,
         )
 
     async def _async_fire_event(self, action, variables, context):
