@@ -1,4 +1,4 @@
-"""The tests for the Rfxtrx switch platform."""
+"""The tests for the RFXtrx switch platform."""
 import unittest
 
 import RFXtrx as rfxtrxmod
@@ -12,7 +12,7 @@ from tests.common import get_test_home_assistant, mock_component
 
 @pytest.mark.skipif("os.environ.get('RFXTRX') != 'RUN'")
 class TestSwitchRfxtrx(unittest.TestCase):
-    """Test the Rfxtrx switch platform."""
+    """Test the RFXtrx switch platform."""
 
     def setUp(self):
         """Set up things to be run when tests are started."""
