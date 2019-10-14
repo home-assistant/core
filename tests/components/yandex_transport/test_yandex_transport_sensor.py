@@ -38,14 +38,14 @@ TEST_CONFIG = {
 }
 
 FILTERED_ATTRS = {
-    "т36": ["21:43", "21:47", "22:02"],
-    "т47": ["21:40", "22:01"],
-    "м10": ["21:48", "22:00"],
+    "т36": ["16:10", "16:17", "16:26"],
+    "т47": ["16:09", "16:10"],
+    "м10": ["16:12", "16:20"],
     "stop_name": "7-й автобусный парк",
     "attribution": "Data provided by maps.yandex.ru",
 }
 
-RESULT_STATE = dt_util.utc_from_timestamp(1568659253).isoformat(timespec="seconds")
+RESULT_STATE = dt_util.utc_from_timestamp(1570972183).isoformat(timespec="seconds")
 
 
 async def assert_setup_sensor(hass, config, count=1):
