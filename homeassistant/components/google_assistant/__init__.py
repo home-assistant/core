@@ -28,6 +28,7 @@ from .const import (
     CONF_ENTITY_CONFIG,
     CONF_EXPOSE,
     CONF_ALIASES,
+    CONF_REPORT_STATE,
     CONF_ROOM_HINT,
     CONF_ALLOW_UNLOCK,
     CONF_SECURE_DEVICES_PIN,
@@ -63,6 +64,7 @@ GOOGLE_ASSISTANT_SCHEMA = vol.All(
             vol.Optional(CONF_ALLOW_UNLOCK): cv.boolean,
             # str on purpose, makes sure it is configured correctly.
             vol.Optional(CONF_SECURE_DEVICES_PIN): str,
+            vol.Optional(CONF_REPORT_STATE, default=False): cv.boolean,
         },
         extra=vol.PREVENT_EXTRA,
     ),

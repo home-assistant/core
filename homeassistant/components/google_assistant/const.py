@@ -32,6 +32,7 @@ CONF_API_KEY = "api_key"
 CONF_ROOM_HINT = "room"
 CONF_ALLOW_UNLOCK = "allow_unlock"
 CONF_SECURE_DEVICES_PIN = "secure_devices_pin"
+CONF_REPORT_STATE = "report_state"
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
