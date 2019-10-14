@@ -479,7 +479,9 @@ class EsphomeEntity(Entity):
         }
         self._remove_callbacks.append(
             async_dispatcher_connect(
-                self.hass, DISPATCHER_UPDATE_ENTITY.format(**kwargs), self._on_update
+                self.hass,
+                DISPATCHER_UPDATE_ENTITY.format(**kwargs),
+                self._on_state_update,
             )
         )
 
@@ -493,12 +495,21 @@ class EsphomeEntity(Entity):
             async_dispatcher_connect(
                 self.hass,
                 DISPATCHER_ON_DEVICE_UPDATE.format(**kwargs),
-                self.async_schedule_update_ha_state,
+                self._on_device_update,
             )
         )
 
-    async def _on_update(self) -> None:
+    async def _on_state_update(self) -> None:
         """Update the entity state when state or static info changed."""
+        self.async_schedule_update_ha_state()
+
+    async def _on_device_update(self) -> None:
+        """Update the entity state when device info has changed."""
+        if self._entry_data.available:
+            # Don't update the HA state yet when the device comes online.
+            # Only update the HA state when the full state arrives
+            # through the next entity state packet.
+            return
         self.async_schedule_update_ha_state()
 
     async def async_will_remove_from_hass(self) -> None:
