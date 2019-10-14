@@ -51,7 +51,7 @@ from .capabilities import (
     AlexaSpeaker,
     AlexaStepSpeaker,
     AlexaTemperatureSensor,
-    AlexaThermostatController
+    AlexaThermostatController,
 )
 
 ENTITY_ADAPTERS = Registry()
