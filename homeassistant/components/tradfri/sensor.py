@@ -18,7 +18,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for dev in all_devices
         if not dev.has_light_control
         and not dev.has_socket_control
-        and not dev.has_blind_control
+        
     )
     if devices:
         async_add_entities(TradfriSensor(device, api, gateway_id) for device in devices)
