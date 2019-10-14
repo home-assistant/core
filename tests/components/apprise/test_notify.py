@@ -19,7 +19,7 @@ async def test_apprise_config_load_fail01(hass):
         await hass.async_block_till_done()
 
         # Test that our service failed to load
-        assert hass.services.has_service(BASE_COMPONENT, "test") is False
+        assert not hass.services.has_service(BASE_COMPONENT, "test")
 
 
 async def test_apprise_config_load_fail02(hass):
@@ -35,7 +35,7 @@ async def test_apprise_config_load_fail02(hass):
             await hass.async_block_till_done()
 
             # Test that our service failed to load
-            assert hass.services.has_service(BASE_COMPONENT, "test") is False
+            assert not hass.services.has_service(BASE_COMPONENT, "test")
 
 
 async def test_apprise_config_load_okay(hass, tmp_path):
@@ -53,7 +53,7 @@ async def test_apprise_config_load_okay(hass, tmp_path):
     await hass.async_block_till_done()
 
     # Valid configuration was loaded; our service is good
-    assert hass.services.has_service(BASE_COMPONENT, "test") is True
+    assert hass.services.has_service(BASE_COMPONENT, "test")
 
 
 async def test_apprise_url_load_fail(hass):
@@ -71,7 +71,7 @@ async def test_apprise_url_load_fail(hass):
         await hass.async_block_till_done()
 
         # Test that our service failed to load
-        assert hass.services.has_service(BASE_COMPONENT, "test") is False
+        assert not hass.services.has_service(BASE_COMPONENT, "test")
 
 
 async def test_apprise_notification(hass):
@@ -97,7 +97,7 @@ async def test_apprise_notification(hass):
         await hass.async_block_till_done()
 
         # Test the existance of our service
-        assert hass.services.has_service(BASE_COMPONENT, "test") is True
+        assert hass.services.has_service(BASE_COMPONENT, "test")
 
         # Test the call to our underlining notify() call
         await hass.services.async_call(BASE_COMPONENT, "test", data)
@@ -136,7 +136,7 @@ async def test_apprise_notification_with_target(hass, tmp_path):
         await hass.async_block_till_done()
 
         # Test the existance of our service
-        assert hass.services.has_service(BASE_COMPONENT, "test") is True
+        assert hass.services.has_service(BASE_COMPONENT, "test")
 
         # Test the call to our underlining notify() call
         await hass.services.async_call(BASE_COMPONENT, "test", data)
