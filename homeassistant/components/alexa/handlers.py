@@ -515,7 +515,7 @@ async def async_api_adjust_volume(hass, config, directive, context):
     return directive.response()
 
 
-@HANDLERS.register(("Alexa.sSpeaker", "AdjustVolume"))
+@HANDLERS.register(("Alexa.StepSpeaker", "AdjustVolume"))
 async def async_api_adjust_volume_step(hass, config, directive, context):
     """Process an adjust volume step request."""
     # media_player volume up/down service does not support specifying steps
@@ -542,18 +542,20 @@ async def async_api_adjust_volume_step(hass, config, directive, context):
 
     if volume_int != 0:
         data = {
-            ATTR_ENTITY_ID: entity.entity_id
+            ATTR_ENTITY_ID: entity.entity_id,
         }
 
         for _ in range(0, abs(volume_int)):
             if volume_int > 0:
                 await hass.services.async_call(
                     entity.domain, SERVICE_VOLUME_UP,
-                    data, blocking=False, context=context)
+                    data, blocking=False, context=context
+                )
             elif volume_int < 0:
                 await hass.services.async_call(
                     entity.domain, SERVICE_VOLUME_DOWN,
-                    data, blocking=False, context=context)
+                    data, blocking=False, context=context
+                )
 
     return directive.response()
 
@@ -1005,7 +1007,7 @@ async def async_api_skipchannel(hass, config, directive, context):
     entity = directive.entity
 
     data = {
-        ATTR_ENTITY_ID: entity.entity_id
+        ATTR_ENTITY_ID: entity.entity_id,
     }
 
     for _ in range(0, abs(channel)):
