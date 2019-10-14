@@ -1996,7 +1996,7 @@ xmltodict==0.12.0
 xs1-api-client==2.3.5
 
 # homeassistant.components.yandex_transport
-ya_ma==0.3.7
+ya_ma==0.3.8
 
 # homeassistant.components.yweather
 yahooweather==0.10
