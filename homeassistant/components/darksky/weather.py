@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+import forecastio
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 import voluptuous as vol
 
@@ -244,8 +245,6 @@ class DarkSkyData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Dark Sky."""
-        import forecastio
-
         try:
             self.data = forecastio.load_forecast(
                 self._api_key, self.latitude, self.longitude, units=self.requested_units
