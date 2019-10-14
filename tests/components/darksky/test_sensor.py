@@ -123,9 +123,7 @@ class TestDarkSkySetup(unittest.TestCase):
         state = self.hass.states.get("sensor.dark_sky_summary")
         assert state is not None
 
-    @MockDependency("forecastio")
-    @patch("forecastio.load_forecast", new=load_forecastMock)
-    def test_setup_with_invalid_config(self, mock_forecastio):
+    def test_setup_with_invalid_config(self):
         """Test the platform setup with invalid configuration."""
         setup_component(self.hass, "sensor", INVALID_CONFIG_MINIMAL)
 
@@ -144,9 +142,7 @@ class TestDarkSkySetup(unittest.TestCase):
         state = self.hass.states.get("sensor.dark_sky_summary")
         assert state is not None
 
-    @MockDependency("forecastio")
-    @patch("forecastio.load_forecast", new=load_forecastMock)
-    def test_setup_with_invalid_language_config(self, mock_forecastio):
+    def test_setup_with_invalid_language_config(self):
         """Test the platform setup with language configuration."""
         setup_component(self.hass, "sensor", INVALID_CONFIG_LANG)
 
