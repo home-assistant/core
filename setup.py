@@ -29,6 +29,8 @@ PROJECT_URLS = {
     "Forum": "https://community.home-assistant.io/",
 }
 
+#project details has been added above
+
 PACKAGES = find_packages(exclude=["tests", "tests.*"])
 
 REQUIRES = [
