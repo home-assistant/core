@@ -90,13 +90,12 @@ class DiscoverMoscowYandexTransport(Entity):
                    if "Estimated" not in event:
                        continue
                     for event in thread["BriefSchedule"]["Events"]:
-                        if "Estimated" in event:
-                            posix_time_next = int(event["Estimated"]["value"])
-                            if closer_time is None or closer_time > posix_time_next:
-                                closer_time = posix_time_next
-                            if route not in attrs:
-                                attrs[route] = []
-                            attrs[route].append(event["Estimated"]["text"])
+                        posix_time_next = int(event["Estimated"]["value"])
+                        if closer_time is None or closer_time > posix_time_next:
+                            closer_time = posix_time_next
+                        if route not in attrs:
+                            attrs[route] = []
+                        attrs[route].append(event["Estimated"]["text"])
         attrs[STOP_NAME] = stop_name
         attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
         if closer_time is None:
