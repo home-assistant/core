@@ -1,7 +1,6 @@
 """Test reproduce state for Input select."""
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
-from tests.common import async_mock_service
 
 VALID_OPTION1 = "Option A"
 VALID_OPTION2 = "Option B"
@@ -63,17 +62,11 @@ async def test_reproducing_states(hass, caplog):
     # The entity state should be unchanged
     assert hass.states.get(ENTITY).state == VALID_OPTION3
 
-    # Test setting a different set of options
-    set_options_calls = async_mock_service(hass, "input_select", "set_options")
-    select_option_calls = async_mock_service(hass, "input_select", "select_option")
-
+    # Test setting a different option set
     await hass.helpers.state.async_reproduce_state(
         [State(ENTITY, VALID_OPTION5, {"options": VALID_OPTION_SET2})], blocking=True
     )
 
-    # Test that both set_options and select_option were called
-    assert len(select_option_calls) == 1
-    assert select_option_calls[0].data == {"entity_id": ENTITY, "option": VALID_OPTION5}
-
-    assert len(set_options_calls) == 1
-    assert set_options_calls[0].data == {"entity_id": ENTITY, "option": VALID_OPTION5}
+    # These should fail if options weren't changed to VALID_OPTION_SET2
+    assert hass.states.get(ENTITY).attributes == {"options": VALID_OPTION_SET2}
+    assert hass.states.get(ENTITY).state == VALID_OPTION5
