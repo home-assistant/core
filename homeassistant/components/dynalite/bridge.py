@@ -35,6 +35,7 @@ class DynaliteBridge:
         self.host = config_entry.data[CONF_HOST]
         if self.host not in hass.data[DOMAIN][DATA_CONFIGS]:
             LOGGER.info("invalid host - %s", self.host)
+            raise BridgeError("invalid host - " + self.host)
         self.config = hass.data[DOMAIN][DATA_CONFIGS][self.host]
         # Configure the dynalite devices
         self._dynalite_devices = DynaliteDevices(
