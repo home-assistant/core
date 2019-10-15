@@ -38,9 +38,10 @@ CONF_NOTIFIERS = "notifiers"
 CONF_REPEAT = "repeat"
 CONF_SKIP_FIRST = "skip_first"
 CONF_ALERT_MESSAGE = "message"
+CONF_ALERT_DATA = "data"
 CONF_DONE_MESSAGE = "done_message"
+CONF_DONE_DATA = "done_data"
 CONF_TITLE = "title"
-CONF_DATA = "data"
 
 DEFAULT_CAN_ACK = True
 DEFAULT_SKIP_FIRST = False
@@ -54,9 +55,10 @@ ALERT_SCHEMA = vol.Schema(
         vol.Required(CONF_CAN_ACK, default=DEFAULT_CAN_ACK): cv.boolean,
         vol.Required(CONF_SKIP_FIRST, default=DEFAULT_SKIP_FIRST): cv.boolean,
         vol.Optional(CONF_ALERT_MESSAGE): cv.template,
+        vol.Optional(CONF_ALERT_DATA): dict,
         vol.Optional(CONF_DONE_MESSAGE): cv.template,
+        vol.Optional(CONF_DONE_DATA): dict,
         vol.Optional(CONF_TITLE): cv.template,
-        vol.Optional(CONF_DATA): dict,
         vol.Required(CONF_NOTIFIERS): cv.ensure_list,
     }
 )
@@ -91,7 +93,8 @@ async def async_setup(hass, config):
         notifiers = cfg.get(CONF_NOTIFIERS)
         can_ack = cfg.get(CONF_CAN_ACK)
         title_template = cfg.get(CONF_TITLE)
-        data = cfg.get(CONF_DATA)
+        data = cfg.get(CONF_ALERT_DATA)
+        done_data = cfg.get(CONF_DONE_DATA)
 
         entities.append(
             Alert(
@@ -108,6 +111,7 @@ async def async_setup(hass, config):
                 can_ack,
                 title_template,
                 data,
+                done_data,
             )
         )
 
@@ -170,6 +174,7 @@ class Alert(ToggleEntity):
         can_ack,
         title_template,
         data,
+        done_data,
     ):
         """Initialize the alert."""
         self.hass = hass
@@ -177,6 +182,7 @@ class Alert(ToggleEntity):
         self._alert_state = state
         self._skip_first = skip_first
         self._data = data
+        self._done_data = done_data
 
         self._message_template = message_template
         if self._message_template is not None:
@@ -285,7 +291,7 @@ class Alert(ToggleEntity):
             else:
                 message = self._name
 
-            await self._send_notification_message(message)
+            await self._send_notification_message(message, self._data)
         await self._schedule_notify()
 
     async def _notify_done_message(self, *args):
@@ -298,17 +304,17 @@ class Alert(ToggleEntity):
 
         message = self._done_message_template.async_render()
 
-        await self._send_notification_message(message)
+        await self._send_notification_message(message, self._done_data)
 
-    async def _send_notification_message(self, message):
+    async def _send_notification_message(self, message, data):
 
         msg_payload = {ATTR_MESSAGE: message}
 
         if self._title_template is not None:
             title = self._title_template.async_render()
             msg_payload.update({ATTR_TITLE: title})
-        if self._data:
-            msg_payload.update({ATTR_DATA: self._data})
+        if data:
+            msg_payload.update({ATTR_DATA: data})
 
         _LOGGER.debug(msg_payload)
 

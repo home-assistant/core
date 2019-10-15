@@ -31,6 +31,9 @@ TEST_ENTITY = "sensor.test"
 TITLE = "{{ states.sensor.test.entity_id }}"
 TEST_TITLE = "sensor.test"
 TEST_DATA = {"data": {"inline_keyboard": ["Close garage:/close_garage"]}}
+TEST_DONE_DATA = {
+    "done_data": {"inline_keyboard": ["Ack garage closed:/ack_close_garage"]}
+}
 TEST_CONFIG = {
     alert.DOMAIN: {
         NAME: {
@@ -42,7 +45,8 @@ TEST_CONFIG = {
             alert.CONF_SKIP_FIRST: False,
             alert.CONF_NOTIFIERS: [NOTIFIER],
             alert.CONF_TITLE: TITLE,
-            alert.CONF_DATA: {},
+            alert.CONF_ALERT_DATA: {},
+            alert.CONF_DONE_DATA: {},
         }
     }
 }
@@ -57,6 +61,7 @@ TEST_NOACK = [
     None,
     NOTIFIER,
     False,
+    None,
     None,
     None,
 ]
@@ -327,7 +332,7 @@ class TestAlert(unittest.TestCase):
         events = self._setup_notify()
 
         config = deepcopy(TEST_CONFIG)
-        config[alert.DOMAIN][NAME][alert.CONF_DATA] = TEST_DATA
+        config[alert.DOMAIN][NAME][alert.CONF_ALERT_DATA] = TEST_DATA
         assert setup_component(self.hass, alert.DOMAIN, config)
 
         self.hass.states.set(TEST_ENTITY, STATE_ON)
@@ -335,6 +340,22 @@ class TestAlert(unittest.TestCase):
         self.assertEqual(1, len(events))
         last_event = events[-1]
         self.assertEqual(last_event.data[notify.ATTR_DATA], TEST_DATA)
+
+    def test_sending_done_data_notification(self):
+        """Test notifications."""
+        events = self._setup_notify()
+
+        config = deepcopy(TEST_CONFIG)
+        config[alert.DOMAIN][NAME][alert.CONF_DONE_DATA] = TEST_DONE_DATA
+        assert setup_component(self.hass, alert.DOMAIN, config)
+
+        self.hass.states.set(TEST_ENTITY, STATE_ON)
+        self.hass.block_till_done()
+        self.hass.states.set(TEST_ENTITY, STATE_OFF)
+        self.hass.block_till_done()
+        self.assertEqual(2, len(events))
+        last_event = events[-1]
+        self.assertEqual(last_event.data[notify.ATTR_DATA], TEST_DONE_DATA)
 
     def test_skipfirst(self):
         """Test skipping first notification."""
