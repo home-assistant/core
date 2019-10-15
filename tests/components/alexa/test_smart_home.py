@@ -695,6 +695,7 @@ async def test_media_player(hass):
             "friendly_name": "Test media player",
             "supported_features": 0x59BD | 16384 | 4096 | 512 | 32 | 16 | 1,
             "volume_level": 0.75,
+            "volume_steps_default": "INVALID",
         },
     )
     appliance = await discovery_test(device, hass)
