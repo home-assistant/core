@@ -18,6 +18,7 @@ async def _async_reproduce_state(
     """Reproduce a single state."""
     cur_state = hass.states.get(state.entity_id)
 
+    # Return if we can't find the entity
     if cur_state is None:
         _LOGGER.warning("Unable to find entity %s", state.entity_id)
         return
@@ -26,6 +27,7 @@ async def _async_reproduce_state(
     if cur_state.state == state.state:
         return
 
+    # Call service
     service = SERVICE_SET_VALUE
     service_data = {ATTR_ENTITY_ID: state.entity_id, ATTR_VALUE: state.state}
 

@@ -11,6 +11,7 @@ INVALID_TEXT2 = "Short"
 async def test_reproducing_states(hass, caplog):
     """Test reproducing Input text states."""
 
+    # Setup entity for testing
     assert await async_setup_component(
         hass,
         "input_text",
@@ -31,9 +32,10 @@ async def test_reproducing_states(hass, caplog):
         blocking=True,
     )
 
+    # Test that entity is in desired state
     assert hass.states.get("input_text.test_text").state == VALID_TEXT1
 
-    # Test reproducing with different state
+    # Try reproducing with different state
     await hass.helpers.state.async_reproduce_state(
         [
             State("input_text.test_text", VALID_TEXT2),
@@ -43,6 +45,7 @@ async def test_reproducing_states(hass, caplog):
         blocking=True,
     )
 
+    # Test that the state was changed
     assert hass.states.get("input_text.test_text").state == VALID_TEXT2
 
     # Test setting state to invalid state (length too long)
