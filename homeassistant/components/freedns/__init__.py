@@ -1,49 +1,38 @@
-"""
-Integrate with FreeDNS Dynamic DNS service at freedns.afraid.org.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/freedns/
-"""
+"""Integrate with FreeDNS Dynamic DNS service at freedns.afraid.org."""
 import asyncio
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
 import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.const import (CONF_URL, CONF_ACCESS_TOKEN,
-                                 CONF_UPDATE_INTERVAL, CONF_SCAN_INTERVAL,
-                                 CONF_UPDATE_INTERVAL_INVALIDATION_VERSION)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_SCAN_INTERVAL, CONF_URL
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'freedns'
+DOMAIN = "freedns"
 
 DEFAULT_INTERVAL = timedelta(minutes=10)
 
 TIMEOUT = 10
-UPDATE_URL = 'https://freedns.afraid.org/dynamic/update.php'
+UPDATE_URL = "https://freedns.afraid.org/dynamic/update.php"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(
-        vol.Schema({
-            vol.Exclusive(CONF_URL, DOMAIN): cv.string,
-            vol.Exclusive(CONF_ACCESS_TOKEN, DOMAIN): cv.string,
-            vol.Optional(CONF_UPDATE_INTERVAL):
-                vol.All(cv.time_period, cv.positive_timedelta),
-            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL):
-                vol.All(cv.time_period, cv.positive_timedelta),
-        }),
-        cv.deprecated(
-            CONF_UPDATE_INTERVAL,
-            replacement_key=CONF_SCAN_INTERVAL,
-            invalidation_version=CONF_UPDATE_INTERVAL_INVALIDATION_VERSION,
-            default=DEFAULT_INTERVAL
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Exclusive(CONF_URL, DOMAIN): cv.string,
+                vol.Exclusive(CONF_ACCESS_TOKEN, DOMAIN): cv.string,
+                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL): vol.All(
+                    cv.time_period, cv.positive_timedelta
+                ),
+            }
         )
-    )
-}, extra=vol.ALLOW_EXTRA)
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass, config):
@@ -55,8 +44,7 @@ async def async_setup(hass, config):
 
     session = hass.helpers.aiohttp_client.async_get_clientsession()
 
-    result = await _update_freedns(
-        hass, session, url, auth_token)
+    result = await _update_freedns(hass, session, url, auth_token)
 
     if result is False:
         return False
@@ -66,7 +54,8 @@ async def async_setup(hass, config):
         await _update_freedns(hass, session, url, auth_token)
 
     hass.helpers.event.async_track_time_interval(
-        update_domain_callback, update_interval)
+        update_domain_callback, update_interval
+    )
 
     return True
 
@@ -83,7 +72,7 @@ async def _update_freedns(hass, session, url, auth_token):
         params[auth_token] = ""
 
     try:
-        with async_timeout.timeout(TIMEOUT, loop=hass.loop):
+        with async_timeout.timeout(TIMEOUT):
             resp = await session.get(url, params=params)
             body = await resp.text()
 

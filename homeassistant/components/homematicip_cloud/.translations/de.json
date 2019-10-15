@@ -18,7 +18,7 @@
                     "name": "Name (optional, wird als Pr\u00e4fix f\u00fcr alle Ger\u00e4te verwendet)",
                     "pin": "PIN Code (optional)"
                 },
-                "title": "HometicIP Accesspoint ausw\u00e4hlen"
+                "title": "HomematicIP Accesspoint ausw\u00e4hlen"
             },
             "link": {
                 "description": "Dr\u00fccke den blauen Taster auf dem Accesspoint, sowie den Senden Button um HomematicIP mit Home Assistant zu verbinden.\n\n![Position des Tasters auf dem AP](/static/images/config_flows/config_homematicip_cloud.png)",

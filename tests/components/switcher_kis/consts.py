@@ -1,0 +1,33 @@
+"""Constants for the Switcher integration tests."""
+
+from homeassistant.components.switcher_kis import (
+    CONF_DEVICE_ID,
+    CONF_DEVICE_PASSWORD,
+    CONF_PHONE_ID,
+    DOMAIN,
+)
+
+DUMMY_AUTO_OFF_SET = "01:30:00"
+DUMMY_DEVICE_ID = "a123bc"
+DUMMY_DEVICE_NAME = "Device Name"
+DUMMY_DEVICE_PASSWORD = "12345678"
+DUMMY_DEVICE_STATE = "on"
+DUMMY_ELECTRIC_CURRENT = 12.8
+DUMMY_ICON = "mdi:dummy-icon"
+DUMMY_IP_ADDRESS = "192.168.100.157"
+DUMMY_MAC_ADDRESS = "A1:B2:C3:45:67:D8"
+DUMMY_NAME = "boiler"
+DUMMY_PHONE_ID = "1234"
+DUMMY_POWER_CONSUMPTION = 2780
+DUMMY_REMAINING_TIME = "01:29:32"
+
+# Adjust if any modification were made to DUMMY_DEVICE_NAME
+SWITCH_ENTITY_ID = "switch.switcher_kis_device_name"
+
+MANDATORY_CONFIGURATION = {
+    DOMAIN: {
+        CONF_PHONE_ID: DUMMY_PHONE_ID,
+        CONF_DEVICE_ID: DUMMY_DEVICE_ID,
+        CONF_DEVICE_PASSWORD: DUMMY_DEVICE_PASSWORD,
+    }
+}

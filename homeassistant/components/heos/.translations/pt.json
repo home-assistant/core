@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Servidor"
+                }
+            }
+        },
+        "title": "Heos"
+    }
+}

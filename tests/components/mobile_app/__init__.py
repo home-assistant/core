@@ -1,1 +1,1 @@
-"""Tests for mobile_app component."""
+"""Tests for the mobile app integration."""

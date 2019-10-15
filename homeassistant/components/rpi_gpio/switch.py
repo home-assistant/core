@@ -11,22 +11,20 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['rpi_gpio']
-
-CONF_PULL_MODE = 'pull_mode'
-CONF_PORTS = 'ports'
-CONF_INVERT_LOGIC = 'invert_logic'
+CONF_PULL_MODE = "pull_mode"
+CONF_PORTS = "ports"
+CONF_INVERT_LOGIC = "invert_logic"
 
 DEFAULT_INVERT_LOGIC = False
 
-_SWITCHES_SCHEMA = vol.Schema({
-    cv.positive_int: cv.string,
-})
+_SWITCHES_SCHEMA = vol.Schema({cv.positive_int: cv.string})
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PORTS): _SWITCHES_SCHEMA,
-    vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_PORTS): _SWITCHES_SCHEMA,
+        vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

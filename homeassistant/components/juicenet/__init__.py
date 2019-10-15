@@ -8,17 +8,14 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-juicenet==0.0.5']
-
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'juicenet'
+DOMAIN = "juicenet"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_ACCESS_TOKEN): cv.string,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.Schema({vol.Required(CONF_ACCESS_TOKEN): cv.string})},
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
@@ -28,9 +25,9 @@ def setup(hass, config):
     hass.data[DOMAIN] = {}
 
     access_token = config[DOMAIN].get(CONF_ACCESS_TOKEN)
-    hass.data[DOMAIN]['api'] = pyjuicenet.Api(access_token)
+    hass.data[DOMAIN]["api"] = pyjuicenet.Api(access_token)
 
-    discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
+    discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
     return True
 
 

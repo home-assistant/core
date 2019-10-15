@@ -7,7 +7,8 @@
             "token_already_setup": "\u017deton je \u017ee nastavljen.",
             "token_forbidden": "\u017deton nima zahtevanih OAuth obsegov.",
             "token_invalid_format": "\u017deton mora biti v formatu UID / GUID",
-            "token_unauthorized": "\u017deton ni veljaven ali ni ve\u010d poobla\u0161\u010den."
+            "token_unauthorized": "\u017deton ni veljaven ali ni ve\u010d poobla\u0161\u010den.",
+            "webhook_error": "SmartThings ni mogel potrditi kon\u010dne to\u010dke nastavljene v 'base_url`. Prosimo, preglejte zahteve komponente."
         },
         "step": {
             "user": {

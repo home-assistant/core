@@ -1,0 +1,12 @@
+{
+  "domain": "nsw_rural_fire_service_feed",
+  "name": "Nsw rural fire service feed",
+  "documentation": "https://www.home-assistant.io/integrations/nsw_rural_fire_service_feed",
+  "requirements": [
+    "geojson_client==0.4"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@exxamalte"
+  ]
+}

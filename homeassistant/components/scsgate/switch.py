@@ -4,24 +4,20 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import scsgate
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_STATE, CONF_NAME, CONF_DEVICES)
+from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_STATE, CONF_NAME, CONF_DEVICES
 import homeassistant.helpers.config_validation as cv
 
-ATTR_SCENARIO_ID = 'scenario_id'
+ATTR_SCENARIO_ID = "scenario_id"
 
-DEPENDENCIES = ['scsgate']
+CONF_TRADITIONAL = "traditional"
+CONF_SCENARIO = "scenario"
 
-CONF_TRADITIONAL = 'traditional'
-CONF_SCENARIO = 'scenario'
+CONF_SCS_ID = "scs_id"
 
-CONF_SCS_ID = 'scs_id'
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICES):
-        cv.schema_with_slug_keys(scsgate.SCSGATE_SCHEMA),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_DEVICES): cv.schema_with_slug_keys(scsgate.SCSGATE_SCHEMA)}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -29,7 +25,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     logger = logging.getLogger(__name__)
 
     _setup_traditional_switches(
-        logger=logger, config=config, add_entities_callback=add_entities)
+        logger=logger, config=config, add_entities_callback=add_entities
+    )
 
     _setup_scenario_switches(logger=logger, config=config, hass=hass)
 
@@ -71,7 +68,8 @@ def _setup_scenario_switches(logger, config, hass):
             logger.info("Adding %s scsgate.scenario_switch", name)
 
             switch = SCSGateScenarioSwitch(
-                name=name, scs_id=scs_id, logger=logger, hass=hass)
+                name=name, scs_id=scs_id, logger=logger, hass=hass
+            )
             scsgate.SCSGATE.add_device(switch)
 
 
@@ -109,8 +107,7 @@ class SCSGateSwitch(SwitchDevice):
         """Turn the device on."""
         from scsgate.tasks import ToggleStatusTask
 
-        scsgate.SCSGATE.append_task(
-            ToggleStatusTask(target=self._scs_id, toggled=True))
+        scsgate.SCSGATE.append_task(ToggleStatusTask(target=self._scs_id, toggled=True))
 
         self._toggled = True
         self.schedule_update_ha_state()
@@ -120,7 +117,8 @@ class SCSGateSwitch(SwitchDevice):
         from scsgate.tasks import ToggleStatusTask
 
         scsgate.SCSGATE.append_task(
-            ToggleStatusTask(target=self._scs_id, toggled=False))
+            ToggleStatusTask(target=self._scs_id, toggled=False)
+        )
 
         self._toggled = False
         self.schedule_update_ha_state()
@@ -130,7 +128,9 @@ class SCSGateSwitch(SwitchDevice):
         if self._toggled == message.toggled:
             self._logger.info(
                 "Switch %s, ignoring message %s because state already active",
-                self._scs_id, message)
+                self._scs_id,
+                message,
+            )
             # Nothing changed, ignoring
             return
 
@@ -142,9 +142,7 @@ class SCSGateSwitch(SwitchDevice):
             command = "on"
 
         self.hass.bus.fire(
-            'button_pressed', {
-                ATTR_ENTITY_ID: self._scs_id,
-                ATTR_STATE: command}
+            "button_pressed", {ATTR_ENTITY_ID: self._scs_id, ATTR_STATE: command}
         )
 
 
@@ -181,13 +179,10 @@ class SCSGateScenarioSwitch:
         elif isinstance(message, ScenarioTriggeredMessage):
             scenario_id = message.scenario
         else:
-            self._logger.warn("Scenario switch: received unknown message %s",
-                              message)
+            self._logger.warn("Scenario switch: received unknown message %s", message)
             return
 
         self._hass.bus.fire(
-            'scenario_switch_triggered', {
-                ATTR_ENTITY_ID: int(self._scs_id),
-                ATTR_SCENARIO_ID: int(scenario_id, 16)
-            }
+            "scenario_switch_triggered",
+            {ATTR_ENTITY_ID: int(self._scs_id), ATTR_SCENARIO_ID: int(scenario_id, 16)},
         )

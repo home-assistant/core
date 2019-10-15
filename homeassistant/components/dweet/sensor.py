@@ -8,23 +8,27 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_VALUE_TEMPLATE, CONF_UNIT_OF_MEASUREMENT, CONF_DEVICE)
+    CONF_NAME,
+    CONF_VALUE_TEMPLATE,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_DEVICE,
+)
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['dweepy==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Dweet.io Sensor'
+DEFAULT_NAME = "Dweet.io Sensor"
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICE): cv.string,
-    vol.Required(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_DEVICE): cv.string,
+        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -39,12 +43,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         value_template.hass = hass
 
     try:
-        content = json.dumps(dweepy.get_latest_dweet_for(device)[0]['content'])
+        content = json.dumps(dweepy.get_latest_dweet_for(device)[0]["content"])
     except dweepy.DweepyError:
         _LOGGER.error("Device/thing %s could not be found", device)
         return
 
-    if value_template.render_with_possible_json_value(content) == '':
+    if value_template.render_with_possible_json_value(content) == "":
         _LOGGER.error("%s was not found", value_template)
         return
 
@@ -87,9 +91,10 @@ class DweetSensor(Entity):
         if self.dweet.data is None:
             self._state = None
         else:
-            values = json.dumps(self.dweet.data[0]['content'])
+            values = json.dumps(self.dweet.data[0]["content"])
             self._state = self._value_template.render_with_possible_json_value(
-                values, None)
+                values, None
+            )
 
 
 class DweetData:

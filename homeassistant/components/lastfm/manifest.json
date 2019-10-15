@@ -1,0 +1,10 @@
+{
+  "domain": "lastfm",
+  "name": "Lastfm",
+  "documentation": "https://www.home-assistant.io/integrations/lastfm",
+  "requirements": [
+    "pylast==3.1.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

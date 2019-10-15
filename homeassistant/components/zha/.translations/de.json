@@ -12,10 +12,19 @@
                     "radio_type": "Radio-Type",
                     "usb_path": "USB-Ger\u00e4te-Pfad"
                 },
-                "description": "Leer",
                 "title": "ZHA"
             }
         },
         "title": "ZHA"
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "close": "Schlie\u00dfen",
+            "left": "Links",
+            "open": "Offen",
+            "right": "Rechts",
+            "turn_off": "Ausschalten",
+            "turn_on": "Einschalten"
+        }
     }
 }

@@ -1,0 +1,13 @@
+{
+  "domain": "unifi",
+  "name": "Unifi",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/unifi",
+  "requirements": [
+    "aiounifi==11"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@kane610"
+  ]
+}

@@ -28,6 +28,7 @@ mkdir -p ${LOCAL_DIR}
 
 docker run \
      -v ${LOCAL_DIR}:/opt/dest/locale \
+     --rm \
      lokalise/lokalise-cli@sha256:b8329d20280263cad04f65b843e54b9e8e6909a348a678eac959550b5ef5c75f lokalise \
      --token ${LOKALISE_TOKEN} \
      export ${PROJECT_ID} \

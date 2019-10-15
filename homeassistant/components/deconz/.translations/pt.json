@@ -12,13 +12,13 @@
             "init": {
                 "data": {
                     "host": "Servidor",
-                    "port": "Porta (por omiss\u00e3o: '80')"
+                    "port": "Porta"
                 },
                 "title": "Defina o gateway deCONZ"
             },
             "link": {
                 "description": "Desbloqueie o seu gateway deCONZ para se registar no Home Assistant. \n\n 1. V\u00e1 para as configura\u00e7\u00f5es do sistema deCONZ \n 2. Pressione o bot\u00e3o \"Desbloquear Gateway\"",
-                "title": "Link com deCONZ"
+                "title": "Liga\u00e7\u00e3o com deCONZ"
             },
             "options": {
                 "data": {

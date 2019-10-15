@@ -1,0 +1,10 @@
+{
+  "domain": "raincloud",
+  "name": "Raincloud",
+  "documentation": "https://www.home-assistant.io/integrations/raincloud",
+  "requirements": [
+    "raincloudy==0.0.7"
+  ],
+  "dependencies": [],
+  "codeowners": ["@vanstinator"]
+}

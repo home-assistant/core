@@ -8,6 +8,7 @@
             "invalid_password": "\uc798\ubabb\ub41c \ube44\ubc00\ubc88\ud638",
             "resolve_error": "ESP \uc758 \uc8fc\uc18c\ub97c \ud655\uc778\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4. \uc774 \uc624\ub958\uac00 \uacc4\uc18d \ubc1c\uc0dd\ud558\uba74 \uace0\uc815 IP \uc8fc\uc18c\ub97c \uc124\uc815\ud574\uc8fc\uc138\uc694: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
+        "flow_title": "ESPHome: {name}",
         "step": {
             "authenticate": {
                 "data": {

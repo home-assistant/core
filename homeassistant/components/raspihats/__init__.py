@@ -3,28 +3,30 @@ import logging
 import threading
 import time
 
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
-
-REQUIREMENTS = ['raspihats==2.2.3', 'smbus-cffi==0.5.1']
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'raspihats'
+DOMAIN = "raspihats"
 
-CONF_I2C_HATS = 'i2c_hats'
-CONF_BOARD = 'board'
-CONF_CHANNELS = 'channels'
-CONF_INDEX = 'index'
-CONF_INVERT_LOGIC = 'invert_logic'
-CONF_INITIAL_STATE = 'initial_state'
+CONF_I2C_HATS = "i2c_hats"
+CONF_BOARD = "board"
+CONF_CHANNELS = "channels"
+CONF_INDEX = "index"
+CONF_INVERT_LOGIC = "invert_logic"
+CONF_INITIAL_STATE = "initial_state"
 
 I2C_HAT_NAMES = [
-    'Di16', 'Rly10', 'Di6Rly6',
-    'DI16ac', 'DQ10rly', 'DQ16oc', 'DI6acDQ6rly'
+    "Di16",
+    "Rly10",
+    "Di6Rly6",
+    "DI16ac",
+    "DQ10rly",
+    "DQ16oc",
+    "DI6acDQ6rly",
 ]
 
-I2C_HATS_MANAGER = 'I2CH_MNG'
+I2C_HATS_MANAGER = "I2CH_MNG"
 
 
 def setup(hass, config):
@@ -87,7 +89,7 @@ class I2CHatsDIScanner:
             digital_inputs = getattr(i2c_hat, self._DIGITAL_INPUTS)
             callbacks = getattr(digital_inputs, self._CALLBACKS)
             old_value = getattr(digital_inputs, self._OLD_VALUE)
-            value = digital_inputs.value    # i2c data transfer
+            value = digital_inputs.value  # i2c data transfer
             if old_value is not None and value != old_value:
                 for channel in range(0, len(digital_inputs.channels)):
                     state = (value >> channel) & 0x01
@@ -120,6 +122,7 @@ class I2CHatsManager(threading.Thread):
             if i2c_hat is None:
                 # pylint: disable=import-error,no-name-in-module
                 import raspihats.i2c_hats as module
+
                 constructor = getattr(module, board)
                 i2c_hat = constructor(address)
                 setattr(i2c_hat, self._CALLBACKS, {})
@@ -131,8 +134,7 @@ class I2CHatsManager(threading.Thread):
                 self._di_scanner.setup(i2c_hat)
                 self._i2c_hats[address] = i2c_hat
                 status_word = i2c_hat.status  # read status_word to reset bits
-                _LOGGER.info(
-                    log_message(self, i2c_hat, "registered", status_word))
+                _LOGGER.info(log_message(self, i2c_hat, "registered", status_word))
 
     def run(self):
         """Keep alive for I2C-HATs."""
@@ -160,9 +162,7 @@ class I2CHatsManager(threading.Thread):
                                 callback()
                     except ResponseException as ex:
                         if not hasattr(i2c_hat, self._EXCEPTION):
-                            _LOGGER.error(
-                                log_message(self, i2c_hat, ex)
-                            )
+                            _LOGGER.error(log_message(self, i2c_hat, ex))
                         setattr(i2c_hat, self._EXCEPTION, ex)
             time.sleep(0.05)
         _LOGGER.info(log_message(self, "exiting"))

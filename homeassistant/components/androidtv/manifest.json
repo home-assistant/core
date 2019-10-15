@@ -1,0 +1,11 @@
+{
+  "domain": "androidtv",
+  "name": "Androidtv",
+  "documentation": "https://www.home-assistant.io/integrations/androidtv",
+  "requirements": [
+    "adb-shell==0.0.4",
+    "androidtv==0.0.30"
+  ],
+  "dependencies": [],
+  "codeowners": ["@JeffLIrion"]
+}

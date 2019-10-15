@@ -26,9 +26,10 @@
             },
             "discovery_confirm": {
                 "description": "Do you want to add the ESPHome node `{name}` to Home Assistant?",
-                "title":  "Discovered ESPHome node"
+                "title": "Discovered ESPHome node"
             }
         },
-        "title": "ESPHome"
+        "title": "ESPHome",
+        "flow_title": "ESPHome: {name}"
     }
 }

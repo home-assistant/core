@@ -1,39 +1,44 @@
 """Support for Abode Security System lights."""
 import logging
 from math import ceil
-from homeassistant.components.abode import AbodeDevice, DOMAIN as ABODE_DOMAIN
+
+import abodepy.helpers.constants as CONST
+
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_COLOR_TEMP,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, Light)
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    ATTR_HS_COLOR,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
+    Light,
+)
 from homeassistant.util.color import (
-    color_temperature_kelvin_to_mired, color_temperature_mired_to_kelvin)
+    color_temperature_kelvin_to_mired,
+    color_temperature_mired_to_kelvin,
+)
 
-
-DEPENDENCIES = ['abode']
+from . import AbodeDevice
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Platform uses config entry setup."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Abode light devices."""
-    import abodepy.helpers.constants as CONST
-
-    data = hass.data[ABODE_DOMAIN]
-
-    device_types = [CONST.TYPE_LIGHT, CONST.TYPE_SWITCH]
+    data = hass.data[DOMAIN]
 
     devices = []
 
-    # Get all regular lights that are not excluded or switches marked as lights
-    for device in data.abode.get_devices(generic_type=device_types):
-        if data.is_excluded(device) or not data.is_light(device):
-            continue
-
+    for device in data.abode.get_devices(generic_type=CONST.TYPE_LIGHT):
         devices.append(AbodeLight(data, device))
 
-    data.devices.extend(devices)
-
-    add_entities(devices)
+    async_add_entities(devices)
 
 
 class AbodeLight(AbodeDevice, Light):
@@ -43,8 +48,8 @@ class AbodeLight(AbodeDevice, Light):
         """Turn on the light."""
         if ATTR_COLOR_TEMP in kwargs and self._device.is_color_capable:
             self._device.set_color_temp(
-                int(color_temperature_mired_to_kelvin(
-                    kwargs[ATTR_COLOR_TEMP])))
+                int(color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP]))
+            )
 
         if ATTR_HS_COLOR in kwargs and self._device.is_color_capable:
             self._device.set_color(kwargs[ATTR_HS_COLOR])

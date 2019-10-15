@@ -4,9 +4,15 @@
             "already_configured": "UPnP/IGD je ji\u017e nakonfigurov\u00e1no",
             "incomplete_device": "Ignorov\u00e1n\u00ed ne\u00fapln\u00e9ho za\u0159\u00edzen\u00ed UPnP",
             "no_devices_discovered": "Nebyly zji\u0161t\u011bny \u017e\u00e1dn\u00e9 UPnP/IGD",
-            "no_sensors_or_port_mapping": "Povolte senzory nebo mapov\u00e1n\u00ed port\u016f"
+            "no_devices_found": "V s\u00edti nejsou nalezena \u017e\u00e1dn\u00e1 za\u0159\u00edzen\u00ed UPnP/IGD.",
+            "no_sensors_or_port_mapping": "Povolte senzory nebo mapov\u00e1n\u00ed port\u016f",
+            "single_instance_allowed": "Povolena je pouze jedna instance UPnP/IGD."
         },
         "step": {
+            "confirm": {
+                "description": "Chcete nastavit UPnP/IGD?",
+                "title": "UPnP/IGD"
+            },
             "init": {
                 "title": "UPnP/IGD"
             },

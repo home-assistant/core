@@ -1,0 +1,1 @@
+"""The hikvisioncam component."""

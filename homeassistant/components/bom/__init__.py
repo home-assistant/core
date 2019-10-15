@@ -1,0 +1,1 @@
+"""The bom component."""

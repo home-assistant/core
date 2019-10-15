@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Slapta\u017eodis"
+                }
+            }
+        }
+    }
+}

@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "all_configured": "TelldusLive jest ju\u017c skonfigurowany",
             "already_setup": "TelldusLive jest ju\u017c skonfigurowany",
             "authorize_url_fail": "Nieznany b\u0142\u0105d podczas generowania url autoryzacji.",
             "authorize_url_timeout": "Min\u0105\u0142 limit czasu generowania url autoryzacji.",

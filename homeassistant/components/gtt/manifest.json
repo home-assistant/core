@@ -1,0 +1,10 @@
+{
+  "domain": "gtt",
+  "name": "Gtt",
+  "documentation": "https://www.home-assistant.io/integrations/gtt",
+  "requirements": [
+    "pygtt==1.1.2"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

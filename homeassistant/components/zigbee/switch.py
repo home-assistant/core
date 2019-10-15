@@ -2,21 +2,17 @@
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.zigbee import (
-    ZigBeeDigitalOut, ZigBeeDigitalOutConfig, PLATFORM_SCHEMA)
 
-DEPENDENCIES = ['zigbee']
+from . import PLATFORM_SCHEMA, ZigBeeDigitalOut, ZigBeeDigitalOutConfig
 
-CONF_ON_STATE = 'on_state'
 
-DEFAULT_ON_STATE = 'high'
-DEPENDENCIES = ['zigbee']
+CONF_ON_STATE = "on_state"
 
-STATES = ['high', 'low']
+DEFAULT_ON_STATE = "high"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ON_STATE): vol.In(STATES),
-})
+STATES = ["high", "low"]
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Optional(CONF_ON_STATE): vol.In(STATES)})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

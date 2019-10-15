@@ -2,19 +2,17 @@
 import voluptuous as vol
 
 from homeassistant.components.light import Light
-from homeassistant.components.zigbee import (
-    ZigBeeDigitalOut, ZigBeeDigitalOutConfig, PLATFORM_SCHEMA)
 
-CONF_ON_STATE = 'on_state'
+from . import PLATFORM_SCHEMA, ZigBeeDigitalOut, ZigBeeDigitalOutConfig
 
-DEFAULT_ON_STATE = 'high'
-DEPENDENCIES = ['zigbee']
+CONF_ON_STATE = "on_state"
 
-STATES = ['high', 'low']
+DEFAULT_ON_STATE = "high"
+STATES = ["high", "low"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ON_STATE, default=DEFAULT_ON_STATE): vol.In(STATES),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_ON_STATE, default=DEFAULT_ON_STATE): vol.In(STATES)}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

@@ -1,0 +1,1 @@
+"""The myq component."""

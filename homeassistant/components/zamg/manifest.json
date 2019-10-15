@@ -1,0 +1,8 @@
+{
+  "domain": "zamg",
+  "name": "Zamg",
+  "documentation": "https://www.home-assistant.io/integrations/zamg",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

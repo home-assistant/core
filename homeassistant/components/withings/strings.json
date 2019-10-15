@@ -1,0 +1,20 @@
+{
+  "config": {
+    "title": "Withings",
+    "step": {
+      "user": {
+        "title": "User Profile.",
+        "description": "Select a user profile to which you want Home Assistant to map with a Withings profile. On the withings page, be sure to select the same user or data will not be labeled correctly.",
+        "data": {
+          "profile": "Profile"
+        }
+      }
+    },
+    "create_entry": {
+      "default": "Successfully authenticated with Withings for the selected profile."
+    },
+    "abort": {
+      "no_flows": "You need to configure Withings before being able to authenticate with it. Please read the documentation."
+    }
+  }
+}

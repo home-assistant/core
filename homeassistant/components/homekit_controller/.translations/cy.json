@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "ignored_model": "Mae cymorth HomeKit ar gyfer y model hwn wedi'i rwystro gan fod integreiddiad cynhenid mwy cyflawn ar gael.",
+            "invalid_config_entry": "Mae'r ddyfais yn dangos bod eisoes wedi paru ond mae cofnod ffurwedd groes amdano yn Home Assistant sydd angen ei diddymu",
+            "no_devices": "Ni ellir ddod o hyd i ddyfeisiau heb eu paru"
+        },
+        "error": {
+            "authentication_error": "Cod HomeKit anghywir. Gwiriwch a cheisiwch eto.",
+            "unable_to_pair": "Methu paru, pl\u00eds ceisiwch eto",
+            "unknown_error": "Dyfeis wedi adrodd gwall anhysbys. Methodd paru."
+        },
+        "step": {
+            "pair": {
+                "data": {
+                    "pairing_code": "Cod Paru"
+                },
+                "description": "Rhowch eich cod paru HomeKit i ddefnyddio'r ategolyn hwn",
+                "title": "Paru gyda ategolyn HomeKit"
+            },
+            "user": {
+                "data": {
+                    "device": "Dyfais"
+                },
+                "description": "Dewiswch y ddyfais rydych eisiau paru efo",
+                "title": "Paru gyda ategolyn HomeKit"
+            }
+        },
+        "title": "Ategolyn HomeKit"
+    }
+}

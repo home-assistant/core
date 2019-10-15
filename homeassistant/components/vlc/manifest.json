@@ -1,0 +1,10 @@
+{
+  "domain": "vlc",
+  "name": "Vlc",
+  "documentation": "https://www.home-assistant.io/integrations/vlc",
+  "requirements": [
+    "python-vlc==1.1.2"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

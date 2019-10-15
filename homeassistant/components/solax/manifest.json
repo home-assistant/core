@@ -1,0 +1,10 @@
+{
+    "domain": "solax",
+    "name": "Solax Inverter",
+    "documentation": "https://www.home-assistant.io/integrations/solax",
+    "requirements": [
+      "solax==0.2.2"
+    ],
+    "dependencies": [],
+    "codeowners": ["@squishykid"]
+  }

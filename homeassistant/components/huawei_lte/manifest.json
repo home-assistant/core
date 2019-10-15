@@ -1,0 +1,13 @@
+{
+  "domain": "huawei_lte",
+  "name": "Huawei LTE",
+  "documentation": "https://www.home-assistant.io/integrations/huawei_lte",
+  "requirements": [
+    "getmac==0.8.1",
+    "huawei-lte-api==1.3.0"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@scop"
+  ]
+}

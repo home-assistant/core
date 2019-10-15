@@ -1,21 +1,23 @@
 """Support for Vera switches."""
 import logging
 
-from homeassistant.util import convert
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
-from homeassistant.components.vera import (
-    VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
+from homeassistant.util import convert
+
+from . import VERA_CONTROLLER, VERA_DEVICES, VeraDevice
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['vera']
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Vera switches."""
     add_entities(
-        [VeraSwitch(device, hass.data[VERA_CONTROLLER]) for
-         device in hass.data[VERA_DEVICES]['switch']], True)
+        [
+            VeraSwitch(device, hass.data[VERA_CONTROLLER])
+            for device in hass.data[VERA_DEVICES]["switch"]
+        ],
+        True,
+    )
 
 
 class VeraSwitch(VeraDevice, SwitchDevice):

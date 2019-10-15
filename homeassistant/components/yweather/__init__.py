@@ -1,0 +1,1 @@
+"""The yweather component."""

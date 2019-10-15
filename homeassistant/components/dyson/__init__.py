@@ -3,35 +3,37 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_DEVICES, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME)
-from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['libpurecoollink==0.4.2']
+from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
+from homeassistant.helpers import discovery
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_LANGUAGE = 'language'
-CONF_RETRY = 'retry'
+CONF_LANGUAGE = "language"
+CONF_RETRY = "retry"
 
 DEFAULT_TIMEOUT = 5
 DEFAULT_RETRY = 10
-DYSON_DEVICES = 'dyson_devices'
+DYSON_DEVICES = "dyson_devices"
+DYSON_PLATFORMS = ["sensor", "fan", "vacuum", "climate", "air_quality"]
 
-DOMAIN = 'dyson'
+DOMAIN = "dyson"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_LANGUAGE): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_RETRY, default=DEFAULT_RETRY): cv.positive_int,
-        vol.Optional(CONF_DEVICES, default=[]):
-            vol.All(cv.ensure_list, [dict]),
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Required(CONF_LANGUAGE): cv.string,
+                vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+                vol.Optional(CONF_RETRY, default=DEFAULT_RETRY): cv.positive_int,
+                vol.Optional(CONF_DEVICES, default=[]): vol.All(cv.ensure_list, [dict]),
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
@@ -41,10 +43,13 @@ def setup(hass, config):
     if DYSON_DEVICES not in hass.data:
         hass.data[DYSON_DEVICES] = []
 
-    from libpurecoollink.dyson import DysonAccount
-    dyson_account = DysonAccount(config[DOMAIN].get(CONF_USERNAME),
-                                 config[DOMAIN].get(CONF_PASSWORD),
-                                 config[DOMAIN].get(CONF_LANGUAGE))
+    from libpurecool.dyson import DysonAccount
+
+    dyson_account = DysonAccount(
+        config[DOMAIN].get(CONF_USERNAME),
+        config[DOMAIN].get(CONF_PASSWORD),
+        config[DOMAIN].get(CONF_LANGUAGE),
+    )
 
     logged = dyson_account.login()
 
@@ -60,8 +65,9 @@ def setup(hass, config):
     if CONF_DEVICES in config[DOMAIN] and config[DOMAIN].get(CONF_DEVICES):
         configured_devices = config[DOMAIN].get(CONF_DEVICES)
         for device in configured_devices:
-            dyson_device = next((d for d in dyson_devices if
-                                 d.serial == device["device_id"]), None)
+            dyson_device = next(
+                (d for d in dyson_devices if d.serial == device["device_id"]), None
+            )
             if dyson_device:
                 try:
                     connected = dyson_device.connect(device["device_ip"])
@@ -69,20 +75,26 @@ def setup(hass, config):
                         _LOGGER.info("Connected to device %s", dyson_device)
                         hass.data[DYSON_DEVICES].append(dyson_device)
                     else:
-                        _LOGGER.warning("Unable to connect to device %s",
-                                        dyson_device)
+                        _LOGGER.warning("Unable to connect to device %s", dyson_device)
                 except OSError as ose:
-                    _LOGGER.error("Unable to connect to device %s: %s",
-                                  str(dyson_device.network_device), str(ose))
+                    _LOGGER.error(
+                        "Unable to connect to device %s: %s",
+                        str(dyson_device.network_device),
+                        str(ose),
+                    )
             else:
                 _LOGGER.warning(
-                    "Unable to find device %s in Dyson account",
-                    device["device_id"])
+                    "Unable to find device %s in Dyson account", device["device_id"]
+                )
     else:
         # Not yet reliable
         for device in dyson_devices:
-            _LOGGER.info("Trying to connect to device %s with timeout=%i "
-                         "and retry=%i", device, timeout, retry)
+            _LOGGER.info(
+                "Trying to connect to device %s with timeout=%i " "and retry=%i",
+                device,
+                timeout,
+                retry,
+            )
             connected = device.auto_connect(timeout, retry)
             if connected:
                 _LOGGER.info("Connected to device %s", device)
@@ -93,9 +105,7 @@ def setup(hass, config):
     # Start fan/sensors components
     if hass.data[DYSON_DEVICES]:
         _LOGGER.debug("Starting sensor/fan components")
-        discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
-        discovery.load_platform(hass, "fan", DOMAIN, {}, config)
-        discovery.load_platform(hass, "vacuum", DOMAIN, {}, config)
-        discovery.load_platform(hass, "climate", DOMAIN, {}, config)
+        for platform in DYSON_PLATFORMS:
+            discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
     return True

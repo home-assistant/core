@@ -11,39 +11,40 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_COVERS = 'covers'
-CONF_RELAY_PIN = 'relay_pin'
-CONF_RELAY_TIME = 'relay_time'
-CONF_STATE_PIN = 'state_pin'
-CONF_STATE_PULL_MODE = 'state_pull_mode'
-CONF_INVERT_STATE = 'invert_state'
-CONF_INVERT_RELAY = 'invert_relay'
+CONF_COVERS = "covers"
+CONF_RELAY_PIN = "relay_pin"
+CONF_RELAY_TIME = "relay_time"
+CONF_STATE_PIN = "state_pin"
+CONF_STATE_PULL_MODE = "state_pull_mode"
+CONF_INVERT_STATE = "invert_state"
+CONF_INVERT_RELAY = "invert_relay"
 
-DEFAULT_RELAY_TIME = .2
-DEFAULT_STATE_PULL_MODE = 'UP'
+DEFAULT_RELAY_TIME = 0.2
+DEFAULT_STATE_PULL_MODE = "UP"
 DEFAULT_INVERT_STATE = False
 DEFAULT_INVERT_RELAY = False
-DEPENDENCIES = ['rpi_gpio']
-
 _COVERS_SCHEMA = vol.All(
     cv.ensure_list,
     [
-        vol.Schema({
-            CONF_NAME: cv.string,
-            CONF_RELAY_PIN: cv.positive_int,
-            CONF_STATE_PIN: cv.positive_int,
-        })
-    ]
+        vol.Schema(
+            {
+                CONF_NAME: cv.string,
+                CONF_RELAY_PIN: cv.positive_int,
+                CONF_STATE_PIN: cv.positive_int,
+            }
+        )
+    ],
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COVERS): _COVERS_SCHEMA,
-    vol.Optional(CONF_STATE_PULL_MODE, default=DEFAULT_STATE_PULL_MODE):
-        cv.string,
-    vol.Optional(CONF_RELAY_TIME, default=DEFAULT_RELAY_TIME): cv.positive_int,
-    vol.Optional(CONF_INVERT_STATE, default=DEFAULT_INVERT_STATE): cv.boolean,
-    vol.Optional(CONF_INVERT_RELAY, default=DEFAULT_INVERT_RELAY): cv.boolean,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_COVERS): _COVERS_SCHEMA,
+        vol.Optional(CONF_STATE_PULL_MODE, default=DEFAULT_STATE_PULL_MODE): cv.string,
+        vol.Optional(CONF_RELAY_TIME, default=DEFAULT_RELAY_TIME): cv.positive_int,
+        vol.Optional(CONF_INVERT_STATE, default=DEFAULT_INVERT_STATE): cv.boolean,
+        vol.Optional(CONF_INVERT_RELAY, default=DEFAULT_INVERT_RELAY): cv.boolean,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -56,17 +57,33 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     covers_conf = config.get(CONF_COVERS)
 
     for cover in covers_conf:
-        covers.append(RPiGPIOCover(
-            cover[CONF_NAME], cover[CONF_RELAY_PIN], cover[CONF_STATE_PIN],
-            state_pull_mode, relay_time, invert_state, invert_relay))
+        covers.append(
+            RPiGPIOCover(
+                cover[CONF_NAME],
+                cover[CONF_RELAY_PIN],
+                cover[CONF_STATE_PIN],
+                state_pull_mode,
+                relay_time,
+                invert_state,
+                invert_relay,
+            )
+        )
     add_entities(covers)
 
 
 class RPiGPIOCover(CoverDevice):
     """Representation of a Raspberry GPIO cover."""
 
-    def __init__(self, name, relay_pin, state_pin, state_pull_mode,
-                 relay_time, invert_state, invert_relay):
+    def __init__(
+        self,
+        name,
+        relay_pin,
+        state_pin,
+        state_pull_mode,
+        relay_time,
+        invert_state,
+        invert_relay,
+    ):
         """Initialize the cover."""
         self._name = name
         self._state = False
