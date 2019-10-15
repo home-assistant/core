@@ -50,6 +50,16 @@ async def test_error_status(hass):
     assert result["reason"] == "result_error"
 
 
+async def test_key_error(hass):
+    """Test Connect returning empty string."""
+    flow = config_flow.SomaFlowHandler()
+    flow.hass = hass
+    with patch.object(SomaApi, "list_devices", return_value={}):
+        result = await flow.async_step_import({"host": MOCK_HOST, "port": MOCK_PORT})
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "connection_error"
+
+
 async def test_exception(hass):
     """Test if RequestException fires when no connection can be made."""
     flow = config_flow.SomaFlowHandler()
