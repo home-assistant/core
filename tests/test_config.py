@@ -33,11 +33,6 @@ from homeassistant.const import (
 from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import SECRET_YAML
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.config.group import CONFIG_PATH as GROUP_CONFIG_PATH
-from homeassistant.components.config.automation import (
-    CONFIG_PATH as AUTOMATIONS_CONFIG_PATH,
-)
-from homeassistant.components.config.script import CONFIG_PATH as SCRIPTS_CONFIG_PATH
 import homeassistant.helpers.check_config as check_config
 
 from tests.common import get_test_config_dir, patch_yaml_files
@@ -46,9 +41,9 @@ CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
 SECRET_PATH = os.path.join(CONFIG_DIR, SECRET_YAML)
 VERSION_PATH = os.path.join(CONFIG_DIR, config_util.VERSION_FILE)
-GROUP_PATH = os.path.join(CONFIG_DIR, GROUP_CONFIG_PATH)
-AUTOMATIONS_PATH = os.path.join(CONFIG_DIR, AUTOMATIONS_CONFIG_PATH)
-SCRIPTS_PATH = os.path.join(CONFIG_DIR, SCRIPTS_CONFIG_PATH)
+GROUP_PATH = os.path.join(CONFIG_DIR, config_util.GROUP_CONFIG_PATH)
+AUTOMATIONS_PATH = os.path.join(CONFIG_DIR, config_util.AUTOMATION_CONFIG_PATH)
+SCRIPTS_PATH = os.path.join(CONFIG_DIR, config_util.SCRIPT_CONFIG_PATH)
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 
 
@@ -343,62 +338,6 @@ def test_config_upgrade_no_file(hass):
         config_util.process_ha_config_upgrade(hass)
         assert opened_file.write.call_count == 1
         assert opened_file.write.call_args == mock.call(__version__)
-
-
-@mock.patch("homeassistant.config.shutil")
-@mock.patch("homeassistant.config.os")
-@mock.patch("homeassistant.config.find_config_file", mock.Mock())
-def test_migrate_file_on_upgrade(mock_os, mock_shutil, hass):
-    """Test migrate of config files on upgrade."""
-    ha_version = "0.7.0"
-
-    mock_os.path.isdir = mock.Mock(return_value=True)
-
-    mock_open = mock.mock_open()
-
-    def _mock_isfile(filename):
-        return True
-
-    with mock.patch("homeassistant.config.open", mock_open, create=True), mock.patch(
-        "homeassistant.config.os.path.isfile", _mock_isfile
-    ):
-        opened_file = mock_open.return_value
-        # pylint: disable=no-member
-        opened_file.readline.return_value = ha_version
-
-        hass.config.path = mock.Mock()
-
-        config_util.process_ha_config_upgrade(hass)
-
-    assert mock_os.rename.call_count == 1
-
-
-@mock.patch("homeassistant.config.shutil")
-@mock.patch("homeassistant.config.os")
-@mock.patch("homeassistant.config.find_config_file", mock.Mock())
-def test_migrate_no_file_on_upgrade(mock_os, mock_shutil, hass):
-    """Test not migrating config files on upgrade."""
-    ha_version = "0.7.0"
-
-    mock_os.path.isdir = mock.Mock(return_value=True)
-
-    mock_open = mock.mock_open()
-
-    def _mock_isfile(filename):
-        return False
-
-    with mock.patch("homeassistant.config.open", mock_open, create=True), mock.patch(
-        "homeassistant.config.os.path.isfile", _mock_isfile
-    ):
-        opened_file = mock_open.return_value
-        # pylint: disable=no-member
-        opened_file.readline.return_value = ha_version
-
-        hass.config.path = mock.Mock()
-
-        config_util.process_ha_config_upgrade(hass)
-
-    assert mock_os.rename.call_count == 0
 
 
 async def test_loading_configuration_from_storage(hass, hass_storage):
