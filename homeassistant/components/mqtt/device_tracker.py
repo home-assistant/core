@@ -13,14 +13,12 @@ from . import CONF_QOS
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PAYLOAD_OTHER_ZONES = "payload_other_zones"
 CONF_PAYLOAD_HOME = "payload_home"
 CONF_PAYLOAD_NOT_HOME = "payload_not_home"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(mqtt.SCHEMA_BASE).extend(
     {
         vol.Required(CONF_DEVICES): {cv.string: mqtt.valid_subscribe_topic},
-        vol.Optional(CONF_PAYLOAD_OTHER_ZONES, default=dict()): {cv.string: cv.string},
         vol.Optional(CONF_PAYLOAD_HOME, default=STATE_HOME): cv.string,
         vol.Optional(CONF_PAYLOAD_NOT_HOME, default=STATE_NOT_HOME): cv.string,
     }
@@ -31,7 +29,6 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Set up the MQTT tracker."""
     devices = config[CONF_DEVICES]
     qos = config[CONF_QOS]
-    payload_other_zones = config[CONF_PAYLOAD_OTHER_ZONES]
     payload_home = config[CONF_PAYLOAD_HOME]
     payload_not_home = config[CONF_PAYLOAD_NOT_HOME]
 
@@ -44,8 +41,6 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
                 location_name = STATE_HOME
             elif msg.payload == payload_not_home:
                 location_name = STATE_NOT_HOME
-            elif msg.payload in payload_other_zones:
-                location_name = payload_other_zones[msg.payload]
             else:
                 location_name = msg.payload
 
