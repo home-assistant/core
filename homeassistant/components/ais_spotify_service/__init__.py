@@ -9,7 +9,6 @@ import asyncio
 from homeassistant.components.ais_dom import ais_global
 from homeassistant.components import ais_cloud
 from .config_flow import configured_service, setUrl
-from homeassistant.util.async_ import run_coroutine_threadsafe
 
 aisCloud = ais_cloud.AisCloudWS()
 
@@ -397,7 +396,7 @@ class SpotifyData:
         )
 
         # get track list
-        return run_coroutine_threadsafe(
+        return asyncio.run_coroutine_threadsafe(
             self.get_tracks_list_async(
                 track["uri"], track["type"], track["item_owner_id"], track["thumbnail"]
             ),
