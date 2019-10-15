@@ -33,6 +33,8 @@ from .const import (
     CONF_ALLOW_UNLOCK,
     CONF_SECURE_DEVICES_PIN,
     CONF_SERVICE_ACCOUNT,
+    CONF_CLIENT_EMAIL,
+    CONF_PRIVATE_KEY,
 )
 from .const import EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED  # noqa: F401
 from .const import EVENT_QUERY_RECEIVED  # noqa: F401
@@ -50,7 +52,10 @@ ENTITY_SCHEMA = vol.Schema(
 )
 
 GOOGLE_SERVICE_ACCOUNT = vol.Schema(
-    {vol.Required("private_key"): cv.string, vol.Required("client_email"): cv.string},
+    {
+        vol.Required(CONF_PRIVATE_KEY): cv.string,
+        vol.Required(CONF_CLIENT_EMAIL): cv.string,
+    },
     extra=vol.ALLOW_EXTRA,
 )
 

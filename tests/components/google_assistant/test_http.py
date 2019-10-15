@@ -28,12 +28,9 @@ async def test_get_jwt(hass):
     with patch("homeassistant.components.google_assistant.http.dt_util") as mock_dt:
         mock_dt.utcnow.return_value = datetime(2019, 10, 14)
         jwt = config._async_get_jwt()
-        assert jwt == (
-            "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJkdW1teUBkdW1teS5pYW0uZ3NlcnZ"
-            "pY2VhY2NvdW50LmNvbSIsInNjb3BlIjoiaHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vYXV0aC9"
-            "ob21lZ3JhcGgiLCJhdWQiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20vby9vYXV0aDIvdG9"
-            "rZW4iLCJpc3QiOjE1NzEwMDQwMDAuMCwiZXhwIjoxNTcxMDA3NjAwLjB9.J64gpWBonUUs9S71ty"
-            "bQ0VlStodPBtiejIKH0LOIjYE"
+        assert (
+            jwt
+            == "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJkdW1teUBkdW1teS5pYW0uZ3NlcnZpY2VhY2NvdW50LmNvbSIsInNjb3BlIjoiaHR0cHM6Ly93d3cuZ29vZ2xlYXBpcy5jb20vYXV0aC9ob21lZ3JhcGgiLCJhdWQiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20vby9vYXV0aDIvdG9rZW4iLCJpYXQiOjE1NzEwMDQwMDAsImV4cCI6MTU3MTAwNzYwMH0.V4mXq5_GflIeg176axybOCmbrqMtx37vi4l5asoK35y9cRcDO51y4rRrrVzhmVQTLJk4GgpIfshS5Z0YJO2L8XP9njp2ql9O98bUy3wKQuprVefnXuPmTFlUUCOKsgUNhrr5-TkjCjo9mDJ13wKBpslCtp9w2T0IGsaNdm-dc3g"
         )
 
 
@@ -48,12 +45,17 @@ async def test_get_access_token(hass, aioclient_mock):
         token = "dummyjwt"
         mock_get_token.return_value = token
 
-        aioclient_mock.post(HOMEGRAPH_AUDIENCE, status=200)
+        aioclient_mock.post(
+            HOMEGRAPH_AUDIENCE,
+            status=200,
+            json={"access_token": "1234", "expires_in": 3600},
+        )
 
         await config._async_get_access_token()
         assert aioclient_mock.call_count == 1
         assert aioclient_mock.mock_calls[0][3] == {
-            "Authorization": "Bearer {}".format(token)
+            "Authorization": "Bearer {}".format(token),
+            "Content-Type": "application/x-www-form-urlencoded",
         }
 
 
@@ -70,7 +72,7 @@ async def test_report_state(hass, aioclient_mock, hass_storage):
         owner = User(name="Test User", perm_lookup=None, groups=[], is_owner=True)
         mock_get_owner.return_value = owner
 
-        aioclient_mock.post(REPORT_STATE_BASE_URL, status=200)
+        aioclient_mock.post(REPORT_STATE_BASE_URL, status=200, json={})
 
         await config.async_report_state(message)
 

@@ -41,6 +41,8 @@ class GoogleConfig(AbstractConfig):
         """Initialize the config."""
         super().__init__(hass)
         self._config = config
+        self._access_token = None
+        self._access_token_renew = None
 
     @property
     def enabled(self):
@@ -98,7 +100,7 @@ class GoogleConfig(AbstractConfig):
         return True
 
     def _async_get_jwt(self):
-        now = dt_util.utcnow()
+        now = int(dt_util.utcnow().timestamp())
 
         if CONF_SERVICE_ACCOUNT not in self._config:
             raise Exception("No service account defined in config")
@@ -107,21 +109,35 @@ class GoogleConfig(AbstractConfig):
             "iss": self._config[CONF_SERVICE_ACCOUNT][CONF_CLIENT_EMAIL],
             "scope": HOMEGRAPH_SCOPE,
             "aud": HOMEGRAPH_AUDIENCE,
-            "ist": now.timestamp(),
-            "exp": (now + timedelta(hours=1)).timestamp(),
+            "iat": now,
+            "exp": now + 3600,
         }
         private_key = self._config[CONF_SERVICE_ACCOUNT][CONF_PRIVATE_KEY]
-        return jwt.encode(jwt_raw, private_key).decode("utf-8")
+        return jwt.encode(jwt_raw, private_key, algorithm="RS256").decode("utf-8")
 
     async def _async_get_access_token(self):
+        now = dt_util.utcnow()
+        if self._access_token and now < self._access_token_renew:
+            return self._access_token
 
         jwt_signed = self._async_get_jwt()
-        headers = {"Authorization": "Bearer {}".format(jwt_signed)}
+        headers = {
+            "Authorization": "Bearer {}".format(jwt_signed),
+            "Content-Type": "application/x-www-form-urlencoded",
+        }
+        data = {
+            "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+            "assertion": jwt_signed,
+        }
 
         session = async_get_clientsession(self.hass)
-        async with session.post(HOMEGRAPH_AUDIENCE, headers=headers) as res:
+        async with session.post(HOMEGRAPH_AUDIENCE, headers=headers, data=data) as res:
+            data = await res.json()
             res.raise_for_status()
-            return res.text()
+
+        self._access_token = data["access_token"]
+        self._access_token_renew = now + timedelta(seconds=data["expires_in"] * 0.8)
+        return self._access_token
 
     async def async_report_state(self, message):
         """Send a state report to Google."""
@@ -148,7 +164,9 @@ class GoogleConfig(AbstractConfig):
 @callback
 def async_register_http(hass, cfg):
     """Register HTTP views for Google Assistant."""
-    hass.http.register_view(GoogleAssistantView(GoogleConfig(hass, cfg)))
+    config = GoogleConfig(hass, cfg)
+    hass.http.register_view(GoogleAssistantView(config))
+    config.async_enable_report_state()
 
 
 class GoogleAssistantView(HomeAssistantView):
