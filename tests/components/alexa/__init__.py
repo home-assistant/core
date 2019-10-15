@@ -90,7 +90,7 @@ async def assert_request_calls_service(
     msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request, context)
     await hass.async_block_till_done()
 
-    assert len(calls) > 0
+    assert len(calls) == 1
     call = calls[0]
     assert "event" in msg
     assert call.data["entity_id"] == endpoint.replace("#", ".")
