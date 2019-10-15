@@ -50,10 +50,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         engine = sqlalchemy.create_engine(db_url)
-        sessionmaker = scoped_session(sessionmaker(bind=engine))
+        sessmaker = scoped_session(sessionmaker(bind=engine))
 
         # Run a dummy query just to test the db_url
-        sess = sessionmaker()
+        sess = sessmaker()
         sess.execute("SELECT 1;")
 
     except sqlalchemy.exc.SQLAlchemyError as err:
