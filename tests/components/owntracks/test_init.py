@@ -139,7 +139,9 @@ async def test_returns_error_missing_device(mock_client):
 
 def test_context_delivers_pending_msg():
     """Test that context is able to hold pending messages while being init."""
-    context = owntracks.OwnTracksContext(None, None, None, None, None, None, None, None)
+    context = owntracks.OwnTracksContext(
+        None, None, None, None, None, None, None, None, None
+    )
     context.async_see(hello="world")
     context.async_see(world="hello")
     received = []
