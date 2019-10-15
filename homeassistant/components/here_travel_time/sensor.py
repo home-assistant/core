@@ -192,11 +192,6 @@ async def async_setup_platform(
         name, origin, destination, origin_entity_id, destination_entity_id, here_data
     )
 
-    def delayed_sensor_update(event):
-        """Update sensor after homeassistant started."""
-        sensor.async_schedule_update_ha_state(True)
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, delayed_sensor_update)
     async_add_entities([sensor])
 
 
