@@ -56,14 +56,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     from miflora import miflora_poller
 
     try:
+        from btlewrap import GatttoolBackend
+
+        backend = GatttoolBackend
+
+    except ImportError:
         import bluepy.btle  # noqa: F401 pylint: disable=unused-import
         from btlewrap import BluepyBackend
 
         backend = BluepyBackend
-    except ImportError:
-        from btlewrap import GatttoolBackend
 
-        backend = GatttoolBackend
     _LOGGER.debug("Miflora is using %s backend.", backend.__name__)
 
     cache = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL).total_seconds()
