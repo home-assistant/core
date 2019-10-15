@@ -1,12 +1,5 @@
-"""Support for the Airly service."""
-import asyncio
+"""Support for the Airly air_quality service."""
 import logging
-from datetime import timedelta
-
-import async_timeout
-from aiohttp.client_exceptions import ClientConnectorError
-from airly import Airly
-from airly.exceptions import AirlyError
 
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.components.air_quality import (
@@ -16,24 +9,24 @@ from homeassistant.components.air_quality import (
     ATTR_PM_2_5,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util import Throttle
 
-from .const import NO_AIRLY_SENSORS
+from . import AirlyData
+from .const import (
+    ATTR_API_ADVICE,
+    ATTR_API_CAQI,
+    ATTR_API_CAQI_DESCRIPTION,
+    ATTR_API_CAQI_LEVEL,
+    ATTR_API_PM10,
+    ATTR_API_PM10_LIMIT,
+    ATTR_API_PM10_PERCENT,
+    ATTR_API_PM25,
+    ATTR_API_PM25_LIMIT,
+    ATTR_API_PM25_PERCENT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Data provided by Airly"
-
-ATTR_API_ADVICE = "ADVICE"
-ATTR_API_CAQI = "CAQI"
-ATTR_API_CAQI_DESCRIPTION = "DESCRIPTION"
-ATTR_API_CAQI_LEVEL = "LEVEL"
-ATTR_API_PM10 = "PM10"
-ATTR_API_PM10_LIMIT = "PM10_LIMIT"
-ATTR_API_PM10_PERCENT = "PM10_PERCENT"
-ATTR_API_PM25 = "PM25"
-ATTR_API_PM25_LIMIT = "PM25_LIMIT"
-ATTR_API_PM25_PERCENT = "PM25_PERCENT"
 
 LABEL_ADVICE = "advice"
 LABEL_AQI_LEVEL = f"{ATTR_AQI}_level"
@@ -41,8 +34,6 @@ LABEL_PM_2_5_LIMIT = f"{ATTR_PM_2_5}_limit"
 LABEL_PM_2_5_PERCENT = f"{ATTR_PM_2_5}_percent_of_limit"
 LABEL_PM_10_LIMIT = f"{ATTR_PM_10}_limit"
 LABEL_PM_10_PERCENT = f"{ATTR_PM_10}_percent_of_limit"
-
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -76,6 +67,7 @@ class AirlyAirQuality(AirQualityEntity):
 
     def __init__(self, airly, name):
         """Initialize."""
+        _LOGGER.debug("AirlyAirQuality created for %s", name)
         self.airly = airly
         self.data = airly.data
         self._name = name
@@ -154,51 +146,3 @@ class AirlyAirQuality(AirQualityEntity):
         self._pm_10 = self.data[ATTR_API_PM10]
         self._pm_2_5 = self.data[ATTR_API_PM25]
         self._aqi = self.data[ATTR_API_CAQI]
-
-
-class AirlyData:
-    """Define an object to hold sensor data."""
-
-    def __init__(self, session, api_key, latitude, longitude):
-        """Initialize."""
-        self.latitude = latitude
-        self.longitude = longitude
-        self.airly = Airly(api_key, session)
-        self.data = {}
-
-    @Throttle(DEFAULT_SCAN_INTERVAL)
-    async def async_update(self):
-        """Update Airly data."""
-
-        try:
-            with async_timeout.timeout(10):
-                measurements = self.airly.create_measurements_session_point(
-                    self.latitude, self.longitude
-                )
-                await measurements.update()
-
-            values = measurements.current["values"]
-            index = measurements.current["indexes"][0]
-            standards = measurements.current["standards"]
-
-            if index["description"] == NO_AIRLY_SENSORS:
-                _LOGGER.error("Can't retrieve data: no Airly sensors in this area")
-                return
-            for value in values:
-                self.data[value["name"]] = value["value"]
-            for standard in standards:
-                self.data[f"{standard['pollutant']}_LIMIT"] = standard["limit"]
-                self.data[f"{standard['pollutant']}_PERCENT"] = standard["percent"]
-            self.data[ATTR_API_CAQI] = index["value"]
-            self.data[ATTR_API_CAQI_LEVEL] = index["level"].lower().replace("_", " ")
-            self.data[ATTR_API_CAQI_DESCRIPTION] = index["description"]
-            self.data[ATTR_API_ADVICE] = index["advice"]
-            _LOGGER.debug("Data retrieved from Airly")
-        except (
-            ValueError,
-            AirlyError,
-            asyncio.TimeoutError,
-            ClientConnectorError,
-        ) as error:
-            _LOGGER.error(error)
-            self.data = {}
