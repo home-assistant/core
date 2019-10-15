@@ -1,4 +1,7 @@
 """Tests for HomematicIP Cloud sensor."""
+from homematicip.base.enums import ValveState
+
+from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.components.homematicip_cloud.sensor import (
     ATTR_LEFT_COUNTER,
     ATTR_RIGHT_COUNTER,
@@ -6,9 +9,22 @@ from homeassistant.components.homematicip_cloud.sensor import (
     ATTR_WIND_DIRECTION,
     ATTR_WIND_DIRECTION_VARIATION,
 )
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, POWER_WATT, TEMP_CELSIUS
+from homeassistant.setup import async_setup_component
 
 from .helper import async_manipulate_test_data, get_and_check_entity_basics
+
+
+async def test_manually_configured_platform(hass):
+    """Test that we do not set up an access point."""
+    assert (
+        await async_setup_component(
+            hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: {"platform": HMIPC_DOMAIN}}
+        )
+        is True
+    )
+    assert not hass.data.get(HMIPC_DOMAIN)
 
 
 async def test_hmip_accesspoint_status(hass, default_mock_hap):
@@ -49,6 +65,16 @@ async def test_hmip_heating_thermostat(hass, default_mock_hap):
     await async_manipulate_test_data(hass, hmip_device, "valveState", "nn")
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "nn"
+
+    await async_manipulate_test_data(
+        hass, hmip_device, "valveState", ValveState.ADAPTION_DONE
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "37"
+
+    await async_manipulate_test_data(hass, hmip_device, "lowBat", True)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.attributes["icon"] == "mdi:battery-outline"
 
 
 async def test_hmip_humidity_sensor(hass, default_mock_hap):

@@ -2,6 +2,7 @@
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from .conftest import get_mock_hap
 from .helper import async_manipulate_test_data, get_and_check_entity_basics
 
 
@@ -109,3 +110,23 @@ async def test_hap_reconnected(hass, default_mock_hap):
     await hass.async_block_till_done()
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
+
+
+async def test_hap_with_name(hass, mock_connection, hmip_config_entry):
+    """Test hap with name."""
+    home_name = "TestName"
+    entity_id = f"light.{home_name.lower()}_treppe"
+    entity_name = f"{home_name} Treppe"
+    device_model = "HmIP-BSL"
+
+    hmip_config_entry.data["name"] = home_name
+    mock_hap = await get_mock_hap(hass, mock_connection, hmip_config_entry)
+    assert mock_hap
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert hmip_device
+    assert ha_state.state == STATE_ON
+    assert ha_state.attributes["friendly_name"] == entity_name

@@ -1,7 +1,7 @@
 """Helper for HomematicIP Cloud Tests."""
 import json
-from asynctest import Mock
 
+from asynctest import Mock
 from homematicip.aio.class_maps import (
     TYPE_CLASS_MAP,
     TYPE_GROUP_MAP,
@@ -20,6 +20,7 @@ from homeassistant.components.homematicip_cloud.device import (
 from tests.common import load_fixture
 
 HAPID = "3014F7110000000000000001"
+HAPPIN = "5678"
 AUTH_TOKEN = "1234"
 HOME_JSON = "homematicip_cloud.json"
 
@@ -81,10 +82,11 @@ class HomeTemplate(Home):
     _typeGroupMap = TYPE_GROUP_MAP
     _typeSecurityEventMap = TYPE_SECURITY_EVENT_MAP
 
-    def __init__(self, connection=None):
+    def __init__(self, connection=None, home_name=""):
         """Init template with connection."""
         super().__init__(connection=connection)
         self.label = "Access Point"
+        self.name = home_name
         self.model_type = "HmIP-HAP"
         self.init_json_state = None
 
@@ -121,13 +123,12 @@ class HomeTemplate(Home):
         Create Mock for Async_Home. based on template to be used for testing.
 
         It adds collections of mocked devices and groups to the home objects,
-        and sets reuired attributes.
+        and sets required attributes.
         """
         mock_home = Mock(
             spec=AsyncHome, wraps=self, label="Access Point", modelType="HmIP-HAP"
         )
         mock_home.__dict__.update(self.__dict__)
-        mock_home.name = ""
 
         return mock_home
 
