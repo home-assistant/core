@@ -4,7 +4,7 @@ import logging
 import time
 
 from bluepy.btle import BTLEException  # pylint: disable=import-error, no-member
-import decora
+import decora  # pylint: disable=import-error, no-member
 import voluptuous as vol
 
 from homeassistant.components.light import (
