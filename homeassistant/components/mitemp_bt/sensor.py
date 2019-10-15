@@ -63,14 +63,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     from mitemp_bt import mitemp_bt_poller
 
     try:
+        from btlewrap import GatttoolBackend
+
+        backend = GatttoolBackend        
+    except ImportError:    
         import bluepy.btle  # noqa: F401 pylint: disable=unused-import
         from btlewrap import BluepyBackend
 
         backend = BluepyBackend
-    except ImportError:
-        from btlewrap import GatttoolBackend
-
-        backend = GatttoolBackend
+        
     _LOGGER.debug("MiTempBt is using %s backend.", backend.__name__)
 
     cache = config.get(CONF_CACHE)
