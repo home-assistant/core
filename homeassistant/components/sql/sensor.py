@@ -1,13 +1,15 @@
 """Sensor from an SQL Query."""
-import decimal
 import datetime
+import decimal
 import logging
 
+import sqlalchemy
+from sqlalchemy.orm import scoped_session, sessionmaker
 import voluptuous as vol
 
+from homeassistant.components.recorder import CONF_DB_URL, DEFAULT_DB_FILE, DEFAULT_URL
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE
-from homeassistant.components.recorder import CONF_DB_URL, DEFAULT_URL, DEFAULT_DB_FILE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -45,9 +47,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     db_url = config.get(CONF_DB_URL, None)
     if not db_url:
         db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
-
-    import sqlalchemy
-    from sqlalchemy.orm import sessionmaker, scoped_session
 
     try:
         engine = sqlalchemy.create_engine(db_url)
@@ -120,7 +119,6 @@ class SQLSensor(Entity):
 
     def update(self):
         """Retrieve sensor data from the query."""
-        import sqlalchemy
 
         try:
             sess = self.sessionmaker()
