@@ -1,11 +1,11 @@
 """Support for the Airly air_quality service."""
-from homeassistant.const import CONF_NAME
 from homeassistant.components.air_quality import (
     AirQualityEntity,
     ATTR_AQI,
     ATTR_PM_10,
     ATTR_PM_2_5,
 )
+from homeassistant.const import CONF_NAME
 
 from .const import (
     ATTR_API_ADVICE,
