@@ -147,11 +147,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
     async def load_auth_tokens(store) -> Tuple[Dict, Optional[Dict]]:
         app_storage = await store.async_load()
-
         tokens = dict(app_storage if app_storage else {})
 
         if tokens.pop(CONF_USERNAME, None) != config[DOMAIN][CONF_USERNAME]:
-            await store.async_save({})
             return ({}, None)  # any tokens wont be valid
 
         # evohomeasync2 requires naive/local datetimes as strings
@@ -161,7 +159,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
             )
 
         user_data = tokens.pop(USER_DATA, None)
-
         return (tokens, user_data)
 
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
@@ -250,10 +247,7 @@ class EvoBroker:
         # evohomeasync2 uses naive/local datetimes
         access_token_expires = _local_dt_to_aware(self.client.access_token_expires)
 
-        app_storage = await self._store.async_load()
-        app_storage = {} if not app_storage else app_storage
-
-        app_storage[CONF_USERNAME] = self.client.username
+        app_storage = {CONF_USERNAME: self.client.username}
         app_storage[REFRESH_TOKEN] = self.client.refresh_token
         app_storage[ACCESS_TOKEN] = self.client.access_token
         app_storage[ACCESS_TOKEN_EXPIRES] = access_token_expires.isoformat()
@@ -263,7 +257,6 @@ class EvoBroker:
                 "userInfo": {"userID": self.client_v1.user_data["userInfo"]["userID"]},
                 "sessionId": self.client_v1.user_data["sessionId"],
             }
-
         else:
             app_storage[USER_DATA] = None
 
