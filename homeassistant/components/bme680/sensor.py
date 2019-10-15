@@ -1,10 +1,10 @@
 """Support for BME680 Sensor over SMBus."""
-import importlib
 import logging
 import threading
 from time import sleep, time
 
 from smbus import SMBus  # pylint: disable=import-error
+import bme680
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -122,8 +122,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 def _setup_bme680(config):
     """Set up and configure the BME680 sensor."""
-
-    bme680 = importlib.import_module("bme680")
 
     sensor_handler = None
     sensor = None
