@@ -184,9 +184,15 @@ class BayesianBinarySensor(BinarySensorDevice):
             prob_true = entity_observation["prob_given_true"]
             prob_false = entity_observation.get("prob_given_false", 1 - prob_true)
 
+            if "entity_id" in entity_observation:
+                entity_id=entity_observation.get("entity_id")
+            if "value_template" in entity_observation:
+                entity_id=entity_observation.get(CONF_VALUE_TEMPLATE).extract_entities()
+
             self.current_obs[obs_id] = {
                 "prob_true": prob_true,
                 "prob_false": prob_false,
+				"entity_id": entity_id,
             }
 
         else:
@@ -250,7 +256,7 @@ class BayesianBinarySensor(BinarySensorDevice):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
-            ATTR_OBSERVATIONS: list(self.current_obs.values()),
+            ATTR_OBSERVATIONS: list(self.current_obs[obs]["entity_id"] for obs in self.current_obs),
             ATTR_PROBABILITY: round(self.probability, 2),
             ATTR_PROBABILITY_THRESHOLD: self._probability_threshold,
         }
