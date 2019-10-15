@@ -78,6 +78,7 @@ async def async_setup_entry(hass, entry):
 
     if config is None:
         LOGGER.error("__init async_setup_entry empty config for host %s", host)
+        return False
 
     bridge = DynaliteBridge(hass, entry)
 

@@ -24,34 +24,18 @@ class DynaliteBridge:
     """Manages a single Dynalite bridge."""
 
     def __init__(self, hass, config_entry):
-        """Initialize the system."""
+        """Initialize the system based on host parameter."""
         self.config_entry = config_entry
         self.hass = hass
         self.area = {}
         self.async_add_entities = None
         self.waiting_entities = []
         self.all_entities = {}
-        self._dynalite_devices = None
         self.config = None
-
-    @property
-    def host(self):
-        """Return the host of this bridge."""
-        return self.config_entry.data[CONF_HOST]
-
-    async def async_setup(self, tries=0):
-        """Set up a Dynalite bridge based on host parameter."""
-        host = self.host
-        hass = self.hass
-        LOGGER.debug(
-            "component bridge async_setup - %s", pprint.pformat(self.config_entry.data)
-        )
-        if host not in hass.data[DOMAIN][DATA_CONFIGS]:
-            LOGGER.info("invalid host - %s", host)
-            return False
-
-        self.config = hass.data[DOMAIN][DATA_CONFIGS][host]
-
+        self.host = config_entry.data[CONF_HOST]
+        if self.host not in hass.data[DOMAIN][DATA_CONFIGS]:
+            LOGGER.info("invalid host - %s", self.host)
+        self.config = hass.data[DOMAIN][DATA_CONFIGS][self.host]
         # Configure the dynalite devices
         self._dynalite_devices = DynaliteDevices(
             config=self.config,
@@ -59,10 +43,20 @@ class DynaliteBridge:
             newDeviceFunc=self.add_devices,
             updateDeviceFunc=self.update_device,
         )
+        LOGGER.debug("XXX __init__")
+
+    async def async_setup(self, tries=0):
+        """Set up a Dynalite bridge."""
+        LOGGER.debug(
+            "component bridge async_setup - %s", pprint.pformat(self.config_entry.data)
+        )
+        # Configure the dynalite devices
         await self._dynalite_devices.async_setup()
 
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(self.config_entry, "light")
+        self.hass.async_create_task(
+            self.hass.config_entries.async_forward_entry_setup(
+                self.config_entry, "light"
+            )
         )
 
         return True
