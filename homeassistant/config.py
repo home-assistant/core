@@ -66,9 +66,11 @@ VERSION_FILE = ".HA_VERSION"
 CONFIG_DIR_NAME = ".homeassistant"
 DATA_CUSTOMIZE = "hass_customize"
 
-FILE_MIGRATION = (("ios.conf", ".ios.conf"),)
+GROUP_CONFIG_PATH = "groups.yaml"
+AUTOMATION_CONFIG_PATH = "automations.yaml"
+SCRIPT_CONFIG_PATH = "scripts.yaml"
 
-DEFAULT_CONFIG = """
+DEFAULT_CONFIG = f"""
 # Configure a default setup of Home Assistant (frontend, api, etc)
 default_config:
 
@@ -80,9 +82,9 @@ default_config:
 tts:
   - platform: google_translate
 
-group: !include groups.yaml
-automation: !include automations.yaml
-script: !include scripts.yaml
+group: !include {GROUP_CONFIG_PATH}
+automation: !include {AUTOMATION_CONFIG_PATH}
+script: !include {SCRIPT_CONFIG_PATH}
 """
 DEFAULT_SECRETS = """
 # Use this file to store secrets like usernames and passwords.
@@ -253,12 +255,6 @@ async def async_create_default_config(
 
 def _write_default_config(config_dir: str) -> Optional[str]:
     """Write the default config."""
-    from homeassistant.components.config.group import CONFIG_PATH as GROUP_CONFIG_PATH
-    from homeassistant.components.config.automation import (
-        CONFIG_PATH as AUTOMATION_CONFIG_PATH,
-    )
-    from homeassistant.components.config.script import CONFIG_PATH as SCRIPT_CONFIG_PATH
-
     config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
     secret_path = os.path.join(config_dir, SECRET_YAML)
     version_path = os.path.join(config_dir, VERSION_FILE)
@@ -406,12 +402,6 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
 
     with open(version_path, "wt") as outp:
         outp.write(__version__)
-
-    _LOGGER.debug("Migrating old system configuration files to new locations")
-    for oldf, newf in FILE_MIGRATION:
-        if os.path.isfile(hass.config.path(oldf)):
-            _LOGGER.info("Migrating %s to %s", oldf, newf)
-            os.rename(hass.config.path(oldf), hass.config.path(newf))
 
 
 @callback
