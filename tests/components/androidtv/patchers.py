@@ -127,17 +127,10 @@ def patch_shell(response=None, error=False):
     }
 
 
-def do_nothing(*args, **kwargs):
-    """Do nothing."""
-
-
 PATCH_ADB_DEVICE = patch("androidtv.adb_manager.AdbDevice", AdbDeviceFake)
-PATCH_SIGNER = patch("androidtv.adb_manager.PythonRSASigner", do_nothing)
-PATCH_KEYGEN = patch(
-    "homeassistant.components.androidtv.media_player.keygen", do_nothing
-)
-
 PATCH_ANDROIDTV_OPEN = patch("androidtv.adb_manager.open", mock_open())
+PATCH_KEYGEN = patch("homeassistant.components.androidtv.media_player.keygen")
+PATCH_SIGNER = patch("androidtv.adb_manager.PythonRSASigner")
 
 
 def isfile(filepath):
