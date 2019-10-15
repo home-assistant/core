@@ -3,6 +3,7 @@ import asyncio
 from datetime import timedelta
 from typing import Any, List, Sequence
 
+import hashlib
 import voluptuous as vol
 
 from homeassistant.core import callback
@@ -635,7 +636,6 @@ def get_gravatar_for_email(email: str):
 
     Async friendly.
     """
-    import hashlib
 
     url = "https://www.gravatar.com/avatar/{}.jpg?s=80&d=wavatar"
     return url.format(hashlib.md5(email.encode("utf-8").lower()).hexdigest())
