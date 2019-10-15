@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_METRIC,
     EVENT_HOMEASSISTANT_START,
 )
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import location
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -227,6 +227,7 @@ class HERETravelTimeSensor(Entity):
     async def async_added_to_hass(self) -> None:
         """Delay the sensor update to avoid entity not found warnings."""
 
+        @callback
         def delayed_sensor_update(event):
             """Update sensor after homeassistant started."""
             self.async_schedule_update_ha_state(True)
