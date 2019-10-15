@@ -27,18 +27,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_METER_NUMBER): cv.st
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
 
-    meter_number = str(config.get(CONF_METER_NUMBER, None))
+    meter_number = config[CONF_METER_NUMBER]
 
     try:
         meter = Meter(meter_number)
 
-    except MemoryError:
+    except MeterError:
         _LOGGER.error("Unable to create Oru meter")
         return
 
-    add_entities([CurrentEnergyUsageSensor(meter)])
+    add_entities([CurrentEnergyUsageSensor(meter)], True)
 
-    _LOGGER.debug("meter_number = %s", meter_number)
+    _LOGGER.debug("Oru meter_number = %s", meter_number)
 
 
 class CurrentEnergyUsageSensor(Entity):
@@ -89,4 +89,4 @@ class CurrentEnergyUsageSensor(Entity):
         except MeterError as err:
             self._available = False
 
-            _LOGGER.error("Unexpected oru meter error: %s", str(err))
+            _LOGGER.error("Unexpected oru meter error: %s", err)
