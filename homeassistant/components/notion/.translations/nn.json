@@ -3,10 +3,9 @@
         "step": {
             "user": {
                 "data": {
-                    "username": "Brukarnamn"
+                    "password": "Notion"
                 }
             }
-        },
-        "title": "AdGuard Home"
+        }
     }
 }
