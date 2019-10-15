@@ -12,6 +12,7 @@ OPTIONS = [VALID_OPTION1, VALID_OPTION2, VALID_OPTION3]
 async def test_reproducing_states(hass, caplog):
     """Test reproducing Input select states."""
 
+    # Setup entity
     assert await async_setup_component(
         hass,
         "input_select",
@@ -32,9 +33,10 @@ async def test_reproducing_states(hass, caplog):
         blocking=True,
     )
 
+    # Test that entity is in desired state
     assert hass.states.get("input_select.test_select").state == VALID_OPTION1
 
-    # Test reproducing with different state
+    # Try reproducing with different state
     await hass.helpers.state.async_reproduce_state(
         [
             State("input_select.test_select", VALID_OPTION3),
@@ -44,6 +46,7 @@ async def test_reproducing_states(hass, caplog):
         blocking=True,
     )
 
+    # Test that we got the desired result
     assert hass.states.get("input_select.test_select").state == VALID_OPTION3
 
     # Test setting state to invalid state
