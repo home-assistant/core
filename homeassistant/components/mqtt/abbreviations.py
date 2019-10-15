@@ -101,7 +101,6 @@ ABBREVIATIONS = {
     "pl_open": "payload_open",
     "pl_osc_off": "payload_oscillation_off",
     "pl_osc_on": "payload_oscillation_on",
-    "pl_oth_zs": "payload_other_zones",
     "pl_paus": "payload_pause",
     "pl_stop": "payload_stop",
     "pl_strt": "payload_start",
