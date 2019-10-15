@@ -96,7 +96,7 @@ class TestTemplateSensor:
                                 "value_template": "{{ states.sensor.test_state.state }}",
                                 "icon_color_template": "{% if states.sensor.test_state.state == "
                                 "'Works' %}"
-                                "rgb(253, 216, 53)"
+                                "red"
                                 "{% endif %}",
                             }
                         },
@@ -113,7 +113,7 @@ class TestTemplateSensor:
         self.hass.states.set("sensor.test_state", "Works")
         self.hass.block_till_done()
         state = self.hass.states.get("sensor.test_template_sensor")
-        assert state.attributes["icon_color"] == "rgb(253, 216, 53)"
+        assert state.attributes["icon_color"] == "red"
 
     def test_entity_picture_template(self):
         """Test entity_picture template."""
