@@ -340,62 +340,6 @@ def test_config_upgrade_no_file(hass):
         assert opened_file.write.call_args == mock.call(__version__)
 
 
-@mock.patch("homeassistant.config.shutil")
-@mock.patch("homeassistant.config.os")
-@mock.patch("homeassistant.config.find_config_file", mock.Mock())
-def test_migrate_file_on_upgrade(mock_os, mock_shutil, hass):
-    """Test migrate of config files on upgrade."""
-    ha_version = "0.7.0"
-
-    mock_os.path.isdir = mock.Mock(return_value=True)
-
-    mock_open = mock.mock_open()
-
-    def _mock_isfile(filename):
-        return True
-
-    with mock.patch("homeassistant.config.open", mock_open, create=True), mock.patch(
-        "homeassistant.config.os.path.isfile", _mock_isfile
-    ):
-        opened_file = mock_open.return_value
-        # pylint: disable=no-member
-        opened_file.readline.return_value = ha_version
-
-        hass.config.path = mock.Mock()
-
-        config_util.process_ha_config_upgrade(hass)
-
-    assert mock_os.rename.call_count == 1
-
-
-@mock.patch("homeassistant.config.shutil")
-@mock.patch("homeassistant.config.os")
-@mock.patch("homeassistant.config.find_config_file", mock.Mock())
-def test_migrate_no_file_on_upgrade(mock_os, mock_shutil, hass):
-    """Test not migrating config files on upgrade."""
-    ha_version = "0.7.0"
-
-    mock_os.path.isdir = mock.Mock(return_value=True)
-
-    mock_open = mock.mock_open()
-
-    def _mock_isfile(filename):
-        return False
-
-    with mock.patch("homeassistant.config.open", mock_open, create=True), mock.patch(
-        "homeassistant.config.os.path.isfile", _mock_isfile
-    ):
-        opened_file = mock_open.return_value
-        # pylint: disable=no-member
-        opened_file.readline.return_value = ha_version
-
-        hass.config.path = mock.Mock()
-
-        config_util.process_ha_config_upgrade(hass)
-
-    assert mock_os.rename.call_count == 0
-
-
 async def test_loading_configuration_from_storage(hass, hass_storage):
     """Test loading core config onto hass object."""
     hass_storage["core.config"] = {
