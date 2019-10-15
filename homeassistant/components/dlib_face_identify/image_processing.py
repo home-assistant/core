@@ -2,6 +2,8 @@
 import logging
 import io
 
+# pylint: disable=import-error
+import face_recognition
 import voluptuous as vol
 
 from homeassistant.core import split_entity_id
@@ -49,8 +51,6 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
 
     def __init__(self, camera_entity, faces, name, tolerance):
         """Initialize Dlib face identify entry."""
-        # pylint: disable=import-error
-        import face_recognition
 
         super().__init__()
 
@@ -83,8 +83,6 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
 
     def process_image(self, image):
         """Process image."""
-        # pylint: disable=import-error
-        import face_recognition
 
         fak_file = io.BytesIO(image)
         fak_file.name = "snapshot.jpg"
