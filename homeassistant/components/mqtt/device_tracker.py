@@ -6,10 +6,8 @@ import voluptuous as vol
 from homeassistant.components import mqtt
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.components.device_tracker.const import (
+    SOURCE_TYPE_ALL,
     SOURCE_TYPE_GPS,
-    SOURCE_TYPE_ROUTER,
-    SOURCE_TYPE_BLUETOOTH,
-    SOURCE_TYPE_BLUETOOTH_LE,
 )
 from homeassistant.const import CONF_DEVICES
 from homeassistant.core import callback
@@ -19,21 +17,12 @@ from . import CONF_QOS, CONF_SOURCE_TYPE
 
 _LOGGER = logging.getLogger(__name__)
 
-_VALID_SOURCE_TYPE_SCHEMA = vol.In(
-    [
-        SOURCE_TYPE_GPS,
-        SOURCE_TYPE_ROUTER,
-        SOURCE_TYPE_BLUETOOTH,
-        SOURCE_TYPE_BLUETOOTH_LE,
-    ]
-)
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(mqtt.SCHEMA_BASE).extend(
     {
         vol.Required(CONF_DEVICES): {cv.string: mqtt.valid_subscribe_topic},
-        vol.Optional(
-            CONF_SOURCE_TYPE, default=SOURCE_TYPE_GPS
-        ): _VALID_SOURCE_TYPE_SCHEMA,
+        vol.Optional(CONF_SOURCE_TYPE, default=SOURCE_TYPE_GPS): vol.In(
+            SOURCE_TYPE_ALL
+        ),
     }
 )
 
