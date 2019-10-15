@@ -249,6 +249,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
             None,
             None,
             None,
+            None
         ).result()
         assert not vs.should_poll
         assert "motion" == vs.device_class
