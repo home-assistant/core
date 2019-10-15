@@ -166,7 +166,8 @@ def async_register_http(hass, cfg):
     """Register HTTP views for Google Assistant."""
     config = GoogleConfig(hass, cfg)
     hass.http.register_view(GoogleAssistantView(config))
-    config.async_enable_report_state()
+    if config.should_report_state:
+        config.async_enable_report_state()
 
 
 class GoogleAssistantView(HomeAssistantView):
