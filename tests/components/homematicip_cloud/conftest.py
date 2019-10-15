@@ -124,7 +124,7 @@ async def mock_hap_with_service_fixture(
 
 
 @pytest.fixture(name="simple_mock_home")
-async def simple_mock_home_fixture():
+def simple_mock_home_fixture():
     """Return a simple AsyncHome Mock."""
     return Mock(
         spec=AsyncHome,
@@ -139,6 +139,6 @@ async def simple_mock_home_fixture():
 
 
 @pytest.fixture(name="simple_mock_auth")
-async def simple_mock_auth_fixture():
+def simple_mock_auth_fixture():
     """Return a simple AsyncAuth Mock."""
     return Mock(spec=AsyncAuth, pin=HAPPIN, create=True)

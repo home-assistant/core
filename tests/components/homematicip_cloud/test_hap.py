@@ -181,7 +181,7 @@ async def test_hap_create_exception(hass, hmip_config_entry, simple_mock_home):
 
     simple_mock_home.init.side_effect = HmipConnectionError
     with patch.object(
-        hap, "_create_home", return_value=mock_coro(simple_mock_home)
+        hap, "_create_home", return_value=simple_mock_home
     ), pytest.raises(ConfigEntryNotReady):
         await hap.async_setup()
 
@@ -196,9 +196,7 @@ async def test_auth_create(hass, simple_mock_auth):
     hmip_auth = HomematicipAuth(hass, config)
     assert hmip_auth
 
-    with patch.object(
-        hmip_auth, "_create_auth", return_value=mock_coro(simple_mock_auth)
-    ):
+    with patch.object(hmip_auth, "_create_auth", return_value=simple_mock_auth):
         assert await hmip_auth.async_setup() is True
         await hass.async_block_till_done()
         assert hmip_auth.auth.pin == HAPPIN
@@ -214,14 +212,10 @@ async def test_auth_create_exception(hass, simple_mock_auth):
     hmip_auth = HomematicipAuth(hass, config)
     simple_mock_auth.connectionRequest.side_effect = HmipConnectionError
     assert hmip_auth
-    with patch.object(
-        hmip_auth, "_create_auth", return_value=mock_coro(simple_mock_auth)
-    ):
+    with patch.object(hmip_auth, "_create_auth", return_value=simple_mock_auth):
         assert await hmip_auth.async_setup() is True
         await hass.async_block_till_done()
         assert hmip_auth.auth is False
 
-    with patch.object(
-        hmip_auth, "_create_auth", return_value=mock_coro(simple_mock_auth)
-    ):
+    with patch.object(hmip_auth, "_create_auth", return_value=simple_mock_auth):
         assert await hmip_auth.get_auth(hass, HAPID, HAPPIN) is False
