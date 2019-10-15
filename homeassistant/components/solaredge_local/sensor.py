@@ -256,9 +256,12 @@ class SolarEdgeSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        try:
-            return {self._attr: self._data.info[self._json_key]}
-        except KeyError:
+        if self._attr:
+            try:
+                return {self._attr: self._data.info[self._json_key]}
+            except KeyError:
+                return None
+        else:
             return None
 
     @property
