@@ -4,7 +4,7 @@ import threading
 from time import sleep, time
 
 from smbus import SMBus  # pylint: disable=import-error
-import bme680
+import bme680  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
