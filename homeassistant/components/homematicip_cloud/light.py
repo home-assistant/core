@@ -119,9 +119,7 @@ class HomematicipDimmer(HomematicipGenericDevice, Light):
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
-        if self._device.dimLevel:
-            return int(self._device.dimLevel * 255)
-        return 0
+        return int((self._device.dimLevel or 0.0) * 255)
 
     @property
     def supported_features(self) -> int:
@@ -176,9 +174,7 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
-        if self._func_channel.dimLevel:
-            return int(self._func_channel.dimLevel * 255)
-        return 0
+        return int((self._func_channel.dimLevel or 0.0) * 255)
 
     @property
     def hs_color(self) -> tuple:

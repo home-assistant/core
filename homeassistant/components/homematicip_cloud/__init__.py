@@ -213,9 +213,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     def _get_home(hapid: str):
         """Return a HmIP home."""
-        hap = hass.data[DOMAIN][hapid]
+        hap = hass.data[DOMAIN].get(hapid)
         if hap:
             return hap.home
+
+        _LOGGER.info("No matching access point found for access point id %s", hapid)
         return None
 
     return True
