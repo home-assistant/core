@@ -2,6 +2,7 @@
 import logging
 from datetime import timedelta
 
+import digitalocean
 import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -38,7 +39,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the Digital Ocean component."""
-    import digitalocean
 
     conf = config[DOMAIN]
     access_token = conf.get(CONF_ACCESS_TOKEN)
@@ -63,7 +63,6 @@ class DigitalOcean:
 
     def __init__(self, access_token):
         """Initialize the Digital Ocean connection."""
-        import digitalocean
 
         self._access_token = access_token
         self.data = None
