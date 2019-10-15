@@ -26,6 +26,7 @@ homeassistant/components/ambient_station/* @bachya
 homeassistant/components/androidtv/* @JeffLIrion
 homeassistant/components/apache_kafka/* @bachya
 homeassistant/components/api/* @home-assistant/core
+homeassistant/components/apprise/* @caronc
 homeassistant/components/aprs/* @PhilRW
 homeassistant/components/arcam_fmj/* @elupus
 homeassistant/components/arduino/* @fabaff
