@@ -571,7 +571,6 @@ async def async_api_set_mute(hass, config, directive, context):
     """Process a set mute request."""
     mute = bool(directive.payload["mute"])
     entity = directive.entity
-
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
         media_player.const.ATTR_MEDIA_VOLUME_MUTED: mute,
