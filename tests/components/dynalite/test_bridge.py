@@ -2,7 +2,8 @@
 from unittest.mock import Mock, patch
 import pytest
 
-from homeassistant.components.dynalite import DOMAIN, DATA_CONFIGS  # , LOGGER
+from dynalite_lib import CONF_ALL
+from homeassistant.components.dynalite import DOMAIN, DATA_CONFIGS, LOGGER
 from homeassistant.components.dynalite.bridge import DynaliteBridge, BridgeError
 
 
@@ -66,3 +67,34 @@ async def test_add_devices_and_then_regiter_add_entities():
         dyn_bridge.register_add_entities(reg_func)
     reg_func.assert_called_once()
     assert reg_func.call_args[0][0][0]._device is device1
+    LOGGER.debug("XXX REMOVE")
+
+
+async def test_update_device():
+    """Test the update_device callback."""
+    hass = Mock()
+    entry = Mock()
+    host = "1.2.3.4"
+    entry.data = {"host": host}
+    hass.data = {DOMAIN: {DATA_CONFIGS: {host: {}}}}
+    dyn_bridge = DynaliteBridge(hass, entry)
+    dyn_bridge._dynalite_devices = Mock()
+    dyn_bridge._dynalite_devices.ava
+    # Single device update
+    device1 = Mock()
+    device1.unique_id = "testing1"
+    device2 = Mock()
+    device2.unique_id = "testing2"
+    dyn_bridge.all_entities = {device1.unique_id: device1, device2.unique_id: device2}
+    dyn_bridge.update_device(device1)
+    device1.try_schedule_ha.assert_called_once()
+    device2.try_schedule_ha.assert_not_called()
+    # connected to network - all devices update
+    dyn_bridge.update_device(CONF_ALL)
+    assert device1.try_schedule_ha.call_count == 2
+    device2.try_schedule_ha.assert_called_once
+    # disconnected from network - all devices update
+    dyn_bridge._dynalite_devices.available = False
+    dyn_bridge.update_device(CONF_ALL)
+    assert device1.try_schedule_ha.call_count == 3
+    assert device2.try_schedule_ha.call_count == 2
