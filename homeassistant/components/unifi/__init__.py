@@ -1,7 +1,7 @@
 """Support for devices connected to UniFi POE."""
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
@@ -41,6 +41,8 @@ CONTROLLER_SCHEMA = vol.Schema(
         vol.Optional(CONF_DONT_TRACK_WIRED_CLIENTS): cv.boolean,
         vol.Optional(CONF_DETECTION_TIME): cv.positive_int,
         vol.Optional(CONF_SSID_FILTER): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_LATITUDE): cv.latitude,
+        vol.Optional(CONF_LONGITUDE): cv.longitude,
     }
 )
 

@@ -43,7 +43,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
         if (
             from_s
             and not location.has_location(from_s)
-            or not location.has_location(to_s)
+            and not location.has_location(to_s)
         ):
             return
 

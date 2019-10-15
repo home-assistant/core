@@ -216,6 +216,20 @@ class UniFiClientTracker(ScannerEntity):
 
         return attributes
 
+    @property
+    def latitude(self) -> float:
+        """Return latitude value of the device."""
+        if self.is_connected:
+            return self.controller.latitude
+        return None
+
+    @property
+    def longitude(self) -> float:
+        """Return longitude value of the device."""
+        if self.is_connected:
+            return self.controller.longitude
+        return None
+
 
 class UniFiDeviceTracker(ScannerEntity):
     """Representation of a network infrastructure device."""
@@ -308,3 +322,17 @@ class UniFiDeviceTracker(ScannerEntity):
             attributes["upgradable"] = self.device.upgradable
 
         return attributes
+
+    @property
+    def latitude(self) -> float:
+        """Return latitude value of the device."""
+        if self.is_connected:
+            return self.controller.latitude
+        return None
+
+    @property
+    def longitude(self) -> float:
+        """Return longitude value of the device."""
+        if self.is_connected:
+            return self.controller.longitude
+        return None

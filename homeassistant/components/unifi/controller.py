@@ -10,7 +10,7 @@ from aiohttp import CookieJar
 import aiounifi
 
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -80,6 +80,16 @@ class UniFiController:
     def site_role(self):
         """Return the site user role of this controller."""
         return self._site_role
+
+    @property
+    def latitude(self) -> float:
+        """Return latitude value of the device."""
+        return self.config_entry.options.get(CONF_LATITUDE)
+
+    @property
+    def longitude(self) -> float:
+        """Return longitude value of the device."""
+        return self.config_entry.options.get(CONF_LONGITUDE)
 
     @property
     def option_allow_bandwidth_sensors(self):
@@ -279,6 +289,8 @@ class UniFiController:
             (CONF_DONT_TRACK_DEVICES, CONF_TRACK_DEVICES),
             (CONF_DETECTION_TIME, CONF_DETECTION_TIME),
             (CONF_SSID_FILTER, CONF_SSID_FILTER),
+            (CONF_LATITUDE, CONF_LATITUDE),
+            (CONF_LONGITUDE, CONF_LONGITUDE),
         ):
             if config in import_config:
                 print(config)

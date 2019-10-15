@@ -35,6 +35,20 @@ class MockScannerEntity(ScannerEntity):
         """Return true if the device is connected to the network."""
         return self.connected
 
+    @property
+    def latitude(self) -> float:
+        """Return latitude value of the device."""
+        if self.is_connected:
+            return 40
+        return None
+
+    @property
+    def longitude(self) -> float:
+        """Return longitude value of the device."""
+        if self.is_connected:
+            return 50
+        return None
+
     def set_connected(self):
         """Set connected to True."""
         self.connected = True

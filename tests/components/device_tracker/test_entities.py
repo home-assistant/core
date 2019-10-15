@@ -10,7 +10,13 @@ from homeassistant.components.device_tracker.const import (
     ATTR_SOURCE_TYPE,
     DOMAIN,
 )
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME, ATTR_BATTERY_LEVEL
+from homeassistant.const import (
+    STATE_HOME,
+    STATE_NOT_HOME,
+    ATTR_BATTERY_LEVEL,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+)
 from tests.common import MockConfigEntry
 
 
@@ -36,6 +42,12 @@ async def test_scanner_entity_device_tracker(hass):
 
     entity_state = hass.states.get(entity_id)
     assert entity_state.state == STATE_HOME
+    assert entity_state.attributes == {
+        ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER,
+        ATTR_BATTERY_LEVEL: 100,
+        ATTR_LATITUDE: 40,
+        ATTR_LONGITUDE: 50,
+    }
 
 
 def test_scanner_entity():
@@ -47,6 +59,8 @@ def test_scanner_entity():
         assert entity.is_connected is None
     with pytest.raises(NotImplementedError):
         assert entity.state == STATE_NOT_HOME
+    assert entity.latitude is None
+    assert entity.longitude is None
     assert entity.battery_level is None
 
 

@@ -121,9 +121,30 @@ class ScannerEntity(BaseTrackerEntity):
     """Represent a tracked device that is on a scanned network."""
 
     @property
+    def latitude(self) -> float:
+        """Return latitude value of the device."""
+        return None
+
+    @property
+    def longitude(self) -> float:
+        """Return longitude value of the device."""
+        return None
+
+    @property
     def state(self):
         """Return the state of the device."""
         if self.is_connected:
+            if self.latitude is not None:
+                zone_state = zone.async_active_zone(
+                    self.hass, self.latitude, self.longitude
+                )
+                if zone_state is None:
+                    state = STATE_HOME
+                elif zone_state.entity_id == zone.ENTITY_ID_HOME:
+                    state = STATE_HOME
+                else:
+                    state = zone_state.name
+                return state
             return STATE_HOME
         return STATE_NOT_HOME
 
@@ -131,3 +152,14 @@ class ScannerEntity(BaseTrackerEntity):
     def is_connected(self):
         """Return true if the device is connected to the network."""
         raise NotImplementedError
+
+    @property
+    def state_attributes(self):
+        """Return the device state attributes."""
+        attr = {}
+        attr.update(super().state_attributes)
+        if self.latitude is not None:
+            attr[ATTR_LATITUDE] = self.latitude
+            attr[ATTR_LONGITUDE] = self.longitude
+
+        return attr

@@ -23,7 +23,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     STATE_UNKNOWN,
     STATE_UNAVAILABLE,
-    STATE_HOME,
     STATE_NOT_HOME,
 )
 from homeassistant.core import callback, Event, State
@@ -400,7 +399,11 @@ class Person(RestoreEntity):
 
             if state.attributes.get(ATTR_SOURCE_TYPE) == SOURCE_TYPE_GPS:
                 latest_gps = _get_latest(latest_gps, state)
-            elif state.state == STATE_HOME:
+            elif (
+                state.state != STATE_NOT_HOME
+                and state.state != STATE_UNKNOWN
+                and state.state != STATE_UNAVAILABLE
+            ):
                 latest_non_gps_home = _get_latest(latest_non_gps_home, state)
             elif state.state == STATE_NOT_HOME:
                 latest_not_home = _get_latest(latest_not_home, state)
