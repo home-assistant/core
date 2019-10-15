@@ -693,7 +693,7 @@ async def test_media_player(hass):
         "off",
         {
             "friendly_name": "Test media player",
-            "supported_features": 0x59BD | 512,
+            "supported_features": 0x59BD | 16384 | 4096 | 512 | 32 | 16 | 1,
             "volume_level": 0.75,
         },
     )
@@ -825,7 +825,7 @@ async def test_media_player(hass):
         "media_player#test",
         "media_player.volume_up",
         hass,
-        payload={"volumeSteps": 5, "volumeStepsDefault": True},
+        payload={"volumeSteps": 1, "volumeStepsDefault": False},
     )
 
     call, _ = await assert_request_calls_service(
@@ -834,7 +834,7 @@ async def test_media_player(hass):
         "media_player#test",
         "media_player.volume_down",
         hass,
-        payload={"volumeSteps": -5, "volumeStepsDefault": True},
+        payload={"volumeSteps": -1, "volumeStepsDefault": False},
     )
 
     call, _ = await assert_request_calls_service(
@@ -852,6 +852,33 @@ async def test_media_player(hass):
         "media_player.play_media",
         hass,
         payload={"channel": {"number": 24}},
+    )
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.ChannelController",
+        "ChangeChannel",
+        "media_player#test",
+        "media_player.play_media",
+        hass,
+        payload={"channel": {"callSign": "ABC"}},
+    )
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.ChannelController",
+        "SkipChannels",
+        "media_player#test",
+        "media_player.media_next_track",
+        hass,
+        payload={"channelCount": 1},
+    )
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.ChannelController",
+        "SkipChannels",
+        "media_player#test",
+        "media_player.media_previous_track",
+        hass,
+        payload={"channelCount": -1},
     )
 
 
