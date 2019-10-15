@@ -1,0 +1,10 @@
+{
+  "domain": "vodafonegigabox_router",
+  "name": "Vodafone Gigabox router",
+  "documentation": "https://www.home-assistant.io/integrations/vodafonegigabox_router",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@jdieter"
+  ]
+}

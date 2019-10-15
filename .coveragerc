@@ -748,6 +748,7 @@ omit =
     homeassistant/components/vizio/media_player.py
     homeassistant/components/vlc/media_player.py
     homeassistant/components/vlc_telnet/media_player.py
+    homeassistant/components/vodafonegigabox_router/*
     homeassistant/components/volkszaehler/sensor.py
     homeassistant/components/volumio/media_player.py
     homeassistant/components/volvooncall/*
