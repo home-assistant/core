@@ -50,7 +50,7 @@ CONFIG_SCHEMA = vol.Schema(
             ),
             vol.Optional(CONF_REGION_MAPPING, default={}): dict,
             vol.Optional(CONF_WEBHOOK_ID): cv.string,
-            vol.Optional(CONF_FRIENDS): cv.boolean,
+            vol.Optional(CONF_FRIENDS, default=False): cv.boolean,
         }
     },
     extra=vol.ALLOW_EXTRA,
@@ -192,9 +192,10 @@ async def handle_webhook(hass, webhook_id, request):
     response = []
 
     if context.friends:
-        persons = hass.data[PERSON_DOMAIN].storage_persons + [
-            dict(hass.data[PERSON_DOMAIN].config_persons[0])
-        ]
+        persons = (
+            hass.data[PERSON_DOMAIN].storage_persons
+            + hass.data[PERSON_DOMAIN].config_persons
+        )
         user, device = _parse_topic(message["topic"], context.mqtt_topic)
         dev_id = "device_tracker." + slugify(f"{user}_{device}")
 
@@ -207,37 +208,38 @@ async def handle_webhook(hass, webhook_id, request):
                 "tst": int(time.time()),
             }
 
-            if person["device_trackers"]:
-                # Check whether this is the same person as the poster and skip it
-                if dev_id in person["device_trackers"]:
-                    continue
+            if not person["device_trackers"]:
+                continue
 
-                # Get location of person from device trackers
-                for device_tracker_id in person["device_trackers"]:
-                    device_tracker_entity = hass.data[DEVICE_TRACKER_DOMAIN].get_entity(
-                        device_tracker_id
-                    )
+            # Check whether this is the same person as the poster and skip it
+            if dev_id in person["device_trackers"]:
+                continue
 
-                    if hasattr(device_tracker_entity, "latitude") and hasattr(
-                        device_tracker_entity, "longitude"
-                    ):
-                        person_location["lat"] = device_tracker_entity.latitude
-                        person_location["lon"] = device_tracker_entity.longitude
+            # Get location of person from device trackers
+            for device_tracker_id in person["device_trackers"]:
+                device_tracker_entity = hass.data[DEVICE_TRACKER_DOMAIN].get_entity(
+                    device_tracker_id
+                )
 
-                        # If tracker ID can be extracted, set it
-                        try:
-                            person_location[
-                                "tid"
-                            ] = device_tracker_entity.device_state_attributes["tid"]
-                        except TypeError:
-                            pass
+                if hasattr(device_tracker_entity, "latitude") and hasattr(
+                    device_tracker_entity, "longitude"
+                ):
+                    person_location["lat"] = device_tracker_entity.latitude
+                    person_location["lon"] = device_tracker_entity.longitude
 
-                    # Fallback if none of the device trackers has a TID
-                    if not person_location["tid"]:
-                        try:
-                            person_location["tid"] = device_tracker_entity.name[0:2]
-                        except AttributeError:
-                            pass
+                    # If tracker ID can be extracted, set it
+                    try:
+                        person_location[
+                            "tid"
+                        ] = device_tracker_entity.device_state_attributes["tid"]
+                    except TypeError:
+                        pass
+
+                # Fallback if none of the device trackers has a TID
+                if not person_location["tid"] and hasattr(
+                    device_tracker_entity, "name"
+                ):
+                    person_location["tid"] = device_tracker_entity.name[0:2]
 
                 if person_location["lat"] and person_location["lon"]:
                     response.append(person_location)
@@ -251,8 +253,8 @@ async def handle_webhook(hass, webhook_id, request):
                 ),
             }
         )
-    else:
-        return json_response(response)
+
+    return json_response(response)
 
 
 class OwnTracksContext:
