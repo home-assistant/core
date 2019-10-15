@@ -1130,9 +1130,6 @@ async def async_api_changechannel(hass, config, directive, context):
     elif "uri" in payload:
         channel = payload["uri"]
         payload_name = "uri"
-    elif "name" in payload:
-        channel = payload["name"]
-        payload_name = "name"
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,

@@ -866,6 +866,24 @@ async def test_media_player(hass):
 
     call, _ = await assert_request_calls_service(
         "Alexa.ChannelController",
+        "ChangeChannel",
+        "media_player#test",
+        "media_player.play_media",
+        hass,
+        payload={"channel": {"affiliateCallSign": "ABC"}},
+    )
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.ChannelController",
+        "ChangeChannel",
+        "media_player#test",
+        "media_player.play_media",
+        hass,
+        payload={"channel": {"uri": "ABC"}},
+    )
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.ChannelController",
         "SkipChannels",
         "media_player#test",
         "media_player.media_next_track",
