@@ -17,7 +17,6 @@ async def test_bridge_setup():
     entry.data = {"host": host}
     hass.data = {DOMAIN: {DATA_CONFIGS: {host: {}}}}
     dyn_bridge = DynaliteBridge(hass, entry)
-    dyn_bridge._dynalite_devices = Mock()
 
     with patch.object(
         dyn_bridge._dynalite_devices, "async_setup", return_value=mock_coro(Mock())
@@ -43,6 +42,28 @@ async def test_invalid_host():
     with pytest.raises(BridgeError):
         dyn_bridge = DynaliteBridge(hass, entry)
     assert dyn_bridge is None
+
+
+async def test_add_devices_and_then_regiter_add_entities():
+    """Test that add_devices work."""
+    hass = Mock()
+    entry = Mock()
+    host = "1.2.3.4"
+    entry.data = {"host": host}
+    hass.data = {DOMAIN: {DATA_CONFIGS: {host: {}}}}
+    dyn_bridge = DynaliteBridge(hass, entry)
+
+    with patch.object(
+        dyn_bridge._dynalite_devices, "async_setup", return_value=mock_coro(Mock())
+    ):
+        assert await dyn_bridge.async_setup() is True
+        device1 = Mock()
+        device1.category = "light"
+        device2 = Mock()
+        device2.category = "switch"
+        dyn_bridge.add_devices([device1, device2])
+        reg_func = Mock()
+        dyn_bridge.register_add_entities(reg_func)
 
 
 # async def test_bridge_setup_invalid_username():
