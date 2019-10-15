@@ -18,8 +18,8 @@ from .const import (
     ATTR_API_CAQI,
     ATTR_API_CAQI_DESCRIPTION,
     ATTR_API_CAQI_LEVEL,
-    DOMAIN,
     DATA_CLIENT,
+    DOMAIN,
     NO_AIRLY_SENSORS,
 )
 
