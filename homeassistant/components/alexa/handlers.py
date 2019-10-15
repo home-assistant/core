@@ -1160,7 +1160,7 @@ async def async_api_changechannel(hass, config, directive, context):
 
 @HANDLERS.register(("Alexa.ChannelController", "SkipChannels"))
 async def async_api_skipchannel(hass, config, directive, context):
-    """Process a change channel request."""
+    """Process a skipchannel request."""
     channel = int(directive.payload["channelCount"])
     entity = directive.entity
 
