@@ -1,11 +1,6 @@
 """Support for the Airly sensor service."""
-import logging
-
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
     CONF_NAME,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_PRESSURE,
@@ -13,19 +8,16 @@ from homeassistant.const import (
     PRESSURE_HPA,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 
-
-from . import AirlyData
 from .const import (
     ATTR_API_HUMIDITY,
     ATTR_API_PM1,
     ATTR_API_PRESSURE,
     ATTR_API_TEMPERATURE,
+    DATA_CLIENT,
+    DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Data provided by Airly"
 
@@ -65,15 +57,10 @@ SENSOR_TYPES = {
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Add a Airly entities from a config_entry."""
-    api_key = config_entry.data[CONF_API_KEY]
+    """Set up Airly sensor entities based on a config entry."""
     name = config_entry.data[CONF_NAME]
-    latitude = config_entry.data[CONF_LATITUDE]
-    longitude = config_entry.data[CONF_LONGITUDE]
 
-    websession = async_get_clientsession(hass)
-
-    data = AirlyData(websession, api_key, latitude, longitude)
+    data = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
 
     sensors = []
     for sensor in SENSOR_TYPES:
@@ -98,7 +85,6 @@ class AirlySensor(Entity):
 
     def __init__(self, airly, name, kind):
         """Initialize."""
-        _LOGGER.debug("AirlySensor created for %s %s", name, kind)
         self.airly = airly
         self.data = airly.data
         self._name = name
@@ -161,7 +147,7 @@ class AirlySensor(Entity):
         return bool(self.airly.data)
 
     async def async_update(self):
-        """Get the data from Airly."""
+        """Update the sensor."""
         await self.airly.async_update()
 
         if self.airly.data:

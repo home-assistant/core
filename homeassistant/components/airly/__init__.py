@@ -8,9 +8,9 @@ from aiohttp.client_exceptions import ClientConnectorError
 from airly import Airly
 from airly.exceptions import AirlyError
 
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import Config, HomeAssistant
-
-# from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle
 
 from .const import (
@@ -18,30 +18,14 @@ from .const import (
     ATTR_API_CAQI,
     ATTR_API_CAQI_DESCRIPTION,
     ATTR_API_CAQI_LEVEL,
-    # ATTR_API_PM10,
-    # ATTR_API_PM10_LIMIT,
-    # ATTR_API_PM10_PERCENT,
-    # ATTR_API_PM25,
-    # ATTR_API_PM25_LIMIT,
-    # ATTR_API_PM25_PERCENT,
+    DOMAIN,
+    DATA_CLIENT,
     NO_AIRLY_SENSORS,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)
-
-
-# def setup(hass, config_entry):
-#     """Set up the Airly component."""
-#     api_key = config_entry.data[CONF_API_KEY]
-#     name = config_entry.data[CONF_NAME]
-#     latitude = config_entry.data[CONF_LATITUDE]
-#     longitude = config_entry.data[CONF_LONGITUDE]
-
-#     websession = async_get_clientsession(hass)
-
-#     data = AirlyData(websession, api_key, latitude, longitude)
 
 
 async def async_setup(hass: HomeAssistant, config: Config) -> bool:
@@ -51,6 +35,20 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
 
 async def async_setup_entry(hass, config_entry):
     """Set up Airly as config entry."""
+    api_key = config_entry.data[CONF_API_KEY]
+    latitude = config_entry.data[CONF_LATITUDE]
+    longitude = config_entry.data[CONF_LONGITUDE]
+
+    websession = async_get_clientsession(hass)
+
+    airly = AirlyData(websession, api_key, latitude, longitude)
+
+    await airly.async_update()
+
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][DATA_CLIENT] = {}
+    hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = airly
+
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(config_entry, "air_quality")
     )
@@ -62,13 +60,14 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
+    hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
     await hass.config_entries.async_forward_entry_unload(config_entry, "air_quality")
     await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
     return True
 
 
 class AirlyData:
-    """Define an object to hold sensor data."""
+    """Define an object to hold Airly data."""
 
     def __init__(self, session, api_key, latitude, longitude):
         """Initialize."""

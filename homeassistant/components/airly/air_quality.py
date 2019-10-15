@@ -1,16 +1,12 @@
 """Support for the Airly air_quality service."""
-import logging
-
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_NAME
 from homeassistant.components.air_quality import (
     AirQualityEntity,
     ATTR_AQI,
     ATTR_PM_10,
     ATTR_PM_2_5,
 )
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import AirlyData
 from .const import (
     ATTR_API_ADVICE,
     ATTR_API_CAQI,
@@ -22,9 +18,9 @@ from .const import (
     ATTR_API_PM25,
     ATTR_API_PM25_LIMIT,
     ATTR_API_PM25_PERCENT,
+    DATA_CLIENT,
+    DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Data provided by Airly"
 
@@ -37,15 +33,10 @@ LABEL_PM_10_PERCENT = f"{ATTR_PM_10}_percent_of_limit"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Add a Airly entities from a config_entry."""
-    api_key = config_entry.data[CONF_API_KEY]
+    """Set up Airly air_quality entity based on a config entry."""
     name = config_entry.data[CONF_NAME]
-    latitude = config_entry.data[CONF_LATITUDE]
-    longitude = config_entry.data[CONF_LONGITUDE]
 
-    websession = async_get_clientsession(hass)
-
-    data = AirlyData(websession, api_key, latitude, longitude)
+    data = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
 
     async_add_entities([AirlyAirQuality(data, name)], True)
 
@@ -63,11 +54,10 @@ def round_state(func):
 
 
 class AirlyAirQuality(AirQualityEntity):
-    """Define an Airly air_quality."""
+    """Define an Airly air quality."""
 
     def __init__(self, airly, name):
         """Initialize."""
-        _LOGGER.debug("AirlyAirQuality created for %s", name)
         self.airly = airly
         self.data = airly.data
         self._name = name
@@ -137,7 +127,7 @@ class AirlyAirQuality(AirQualityEntity):
         return self._attrs
 
     async def async_update(self):
-        """Get the data from Airly."""
+        """Update the entity."""
         await self.airly.async_update()
 
         if self.airly.data:
