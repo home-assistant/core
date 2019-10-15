@@ -155,17 +155,13 @@ async def test_hap_reset_unloads_entry_if_setup():
 async def test_hap_create(hass, hmip_config_entry, simple_mock_home):
     """Mock AsyncHome to execute get_hap."""
     hass.config.components.add(HMIPC_DOMAIN)
-    # One platform should be enough.
-    const.COMPONENTS = {"binary_sensor"}
     hap = HomematicipHAP(hass, hmip_config_entry)
     assert hap
-    with patch.object(
-        hap, "_create_home", return_value=mock_coro(simple_mock_home)
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.AsyncHome",
+        return_value=simple_mock_home,
     ), patch.object(hap, "async_connect", return_value=mock_coro(None)):
         assert await hap.async_setup() is True
-
-    hass.data[HMIPC_DOMAIN] = {HAPID: hap}
-    await hass.async_block_till_done()
 
 
 async def test_hap_create_exception(hass, hmip_config_entry, simple_mock_home):
@@ -180,8 +176,9 @@ async def test_hap_create_exception(hass, hmip_config_entry, simple_mock_home):
         await hap.async_setup()
 
     simple_mock_home.init.side_effect = HmipConnectionError
-    with patch.object(
-        hap, "_create_home", return_value=simple_mock_home
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.AsyncHome",
+        return_value=simple_mock_home,
     ), pytest.raises(ConfigEntryNotReady):
         await hap.async_setup()
 
@@ -196,7 +193,10 @@ async def test_auth_create(hass, simple_mock_auth):
     hmip_auth = HomematicipAuth(hass, config)
     assert hmip_auth
 
-    with patch.object(hmip_auth, "_create_auth", return_value=simple_mock_auth):
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.AsyncAuth",
+        return_value=simple_mock_auth,
+    ):
         assert await hmip_auth.async_setup() is True
         await hass.async_block_till_done()
         assert hmip_auth.auth.pin == HAPPIN
@@ -212,10 +212,16 @@ async def test_auth_create_exception(hass, simple_mock_auth):
     hmip_auth = HomematicipAuth(hass, config)
     simple_mock_auth.connectionRequest.side_effect = HmipConnectionError
     assert hmip_auth
-    with patch.object(hmip_auth, "_create_auth", return_value=simple_mock_auth):
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.AsyncAuth",
+        return_value=simple_mock_auth,
+    ):
         assert await hmip_auth.async_setup() is True
         await hass.async_block_till_done()
         assert hmip_auth.auth is False
 
-    with patch.object(hmip_auth, "_create_auth", return_value=simple_mock_auth):
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.AsyncAuth",
+        return_value=simple_mock_auth,
+    ):
         assert await hmip_auth.get_auth(hass, HAPID, HAPPIN) is False

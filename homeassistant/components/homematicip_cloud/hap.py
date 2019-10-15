@@ -55,7 +55,7 @@ class HomematicipAuth:
 
     async def get_auth(self, hass: HomeAssistant, hapid, pin):
         """Create a HomematicIP access point object."""
-        auth = await self._create_auth(hass)
+        auth = AsyncAuth(hass.loop, async_get_clientsession(hass))
         try:
             await auth.init(hapid)
             if pin:
@@ -64,10 +64,6 @@ class HomematicipAuth:
         except HmipConnectionError:
             return False
         return auth
-
-    async def _create_auth(self, hass: HomeAssistant):
-        """Return a AsyncHome instance."""
-        return AsyncAuth(hass.loop, async_get_clientsession(hass))
 
 
 class HomematicipHAP:
@@ -231,7 +227,7 @@ class HomematicipHAP:
         self, hass: HomeAssistant, hapid: str, authtoken: str, name: str
     ) -> AsyncHome:
         """Create a HomematicIP access point object."""
-        home = await self._create_home(hass)
+        home = AsyncHome(hass.loop, async_get_clientsession(hass))
 
         home.name = name
         home.label = "Access Point"
@@ -248,7 +244,3 @@ class HomematicipHAP:
         hass.loop.create_task(self.async_connect())
 
         return home
-
-    async def _create_home(self, hass: HomeAssistant):
-        """Return a AsyncHome instance."""
-        return AsyncHome(hass.loop, async_get_clientsession(hass))
