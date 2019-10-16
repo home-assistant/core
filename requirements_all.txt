@@ -1820,7 +1820,7 @@ spotipy-homeassistant==2.4.4.dev1
 sqlalchemy==1.3.10
 
 # homeassistant.components.starline
-starline==0.0.5
+starline==0.1.0
 
 # homeassistant.components.starlingbank
 starlingbank==3.1
