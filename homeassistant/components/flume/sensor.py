@@ -4,7 +4,7 @@ import logging
 
 import voluptuous as vol
 
-from pyflume import FlumeAuth, FlumeData
+from pyflume import FlumeDeviceList, FlumeData
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
@@ -41,7 +41,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     time_zone = str(hass.config.time_zone)
     name = config[CONF_NAME]
 
-    flume_devices = FlumeAuth(_username, _password, _client_id, _client_secret)
+    flume_devices = FlumeDeviceList(_username, _password, _client_id, _client_secret)
 
     try:
         for device in flume_devices.device_list:
