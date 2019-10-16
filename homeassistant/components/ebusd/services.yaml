@@ -2,5 +2,5 @@ write:
   description: Call ebusd write command.
   fields:
     call:
-      description: Property name and value to set
-      example: '{"name": "Hc1MaxFlowTempDesired", "value": 21}'
+      description: Circuit, property name and value to set
+      example: '{"circuit": "700", "name": "Hc1MaxFlowTempDesired", "value": 21}'

@@ -2,6 +2,7 @@
 import datetime
 import logging
 
+
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
@@ -20,13 +21,16 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ebus sensor."""
     ebusd_api = hass.data[DOMAIN]
+    circuit = discovery_info["circuit"]
     monitored_conditions = discovery_info["monitored_conditions"]
     name = discovery_info["client_name"]
 
     dev = []
     for condition in monitored_conditions:
         dev.append(
-            EbusdSensor(ebusd_api, discovery_info["sensor_types"][condition], name)
+            EbusdSensor(
+                ebusd_api, circuit, discovery_info["sensor_types"][condition], name
+            )
         )
 
     add_entities(dev, True)
@@ -35,9 +39,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class EbusdSensor(Entity):
     """Ebusd component sensor methods definition."""
 
-    def __init__(self, data, sensor, name):
+    def __init__(self, data, circuit, sensor, name):
         """Initialize the sensor."""
         self._state = None
+        self._circuit = circuit
         self._client_name = name
         self._name, self._unit_of_measurement, self._icon, self._type = sensor
         self.data = data
@@ -88,7 +93,7 @@ class EbusdSensor(Entity):
     def update(self):
         """Fetch new state data for the sensor."""
         try:
-            self.data.update(self._name, self._type)
+            self.data.update(self._circuit, self._name, self._type)
             if self._name not in self.data.value:
                 return
 
