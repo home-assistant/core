@@ -376,6 +376,8 @@ class NetatmoSensor(Entity):
                     self._state = "N (%d\xb0)" % data["GustAngle"]
             elif self.type == "guststrength":
                 self._state = data["GustStrength"]
+            elif self.type == "reachable":
+                self._state = data["reachable"]
             elif self.type == "rf_status_lvl":
                 self._state = data["rf_status"]
             elif self.type == "rf_status":
