@@ -9,6 +9,9 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST,
+    CONF_PASSWORD,
+    CONF_TYPE,
+    CONF_USERNAME,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
@@ -31,6 +34,8 @@ MAX_INTERVAL = 300
 
 UNIT_OF_MEASUREMENT_HOURS = "h"
 
+INVERTER_TYPES = ["ethernet", "wifi"]
+
 SAJ_UNIT_MAPPINGS = {
     "W": POWER_WATT,
     "kWh": ENERGY_KILO_WATT_HOUR,
@@ -40,16 +45,24 @@ SAJ_UNIT_MAPPINGS = {
     "": None,
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_TYPE, default=INVERTER_TYPES[0]): vol.In(INVERTER_TYPES),
+        vol.Optional(CONF_USERNAME, default=""): cv.string,
+        vol.Optional(CONF_PASSWORD, default=""): cv.string,
+    }
+)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up SAJ sensors."""
 
     remove_interval_update = None
+    wifi = config[CONF_TYPE] == INVERTER_TYPES[1]
 
     # Init all sensors
-    sensor_def = pysaj.Sensors()
+    sensor_def = pysaj.Sensors(wifi)
 
     # Use all sensors by default
     hass_sensors = []
@@ -57,7 +70,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     for sensor in sensor_def:
         hass_sensors.append(SAJsensor(sensor))
 
-    saj = pysaj.SAJ(config[CONF_HOST])
+    if not wifi:
+        saj = pysaj.SAJ(config[CONF_HOST])
+    else:
+        if config[CONF_USERNAME] != "" and config[CONF_PASSWORD] != "":
+            saj = pysaj.SAJ(
+                config[CONF_HOST],
+                wifi=True,
+                username=config[CONF_USERNAME],
+                password=config[CONF_PASSWORD],
+            )
+        else:
+            saj = pysaj.SAJ(config[CONF_HOST], wifi=True)
 
     async_add_entities(hass_sensors)
 
