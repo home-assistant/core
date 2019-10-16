@@ -7,7 +7,6 @@ import socket
 import urllib
 
 import aiohttp
-
 import jsonrpc_base
 import jsonrpc_async
 import jsonrpc_websocket
