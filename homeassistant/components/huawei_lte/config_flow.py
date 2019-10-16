@@ -194,5 +194,17 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        data_schema = vol.Schema(OrderedDict(((vol.Optional(CONF_RECIPIENT), str),)))
+        data_schema = vol.Schema(
+            OrderedDict(
+                (
+                    (
+                        vol.Optional(
+                            CONF_RECIPIENT,
+                            default=self.config_entry.options.get(CONF_RECIPIENT),
+                        ),
+                        str,
+                    ),
+                )
+            )
+        )
         return self.async_show_form(step_id="init", data_schema=data_schema)
