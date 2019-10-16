@@ -1,9 +1,12 @@
 """Support for Google Actions Smart Home Control."""
+import asyncio
 from datetime import timedelta
 import logging
 from uuid import uuid4
 import jwt
 
+import async_timeout
+from aiohttp import ClientResponseError, ClientError
 from aiohttp.web import Request, Response
 
 # Typing imports
@@ -128,10 +131,10 @@ class GoogleConfig(AbstractConfig):
         """If an entity should have 2FA checked."""
         return True
 
-    async def async_call_homegraph_api(self, url, data):
-        """Call a homegraph api with authenticaiton."""
+    async def _async_update_token(self):
         if CONF_SERVICE_ACCOUNT not in self._config:
-            raise Exception("Trying to call homegraph api without token")
+            _LOGGER.error("Trying to get homegraph api token without service account")
+            return
 
         now = dt_util.utcnow()
         if not self._access_token or now > self._access_token_renew:
@@ -148,22 +151,31 @@ class GoogleConfig(AbstractConfig):
                 seconds=token["expires_in"] * 0.8
             )
 
-        headers = {
-            "Authorization": "Bearer {}".format(self._access_token),
-            "X-GFE-SSL": "yes",
-        }
+    async def async_call_homegraph_api(self, url, data):
+        """Call a homegraph api with authenticaiton."""
 
-        session = async_get_clientsession(self.hass)
-        async with session.post(url, headers=headers, json=data) as res:
-            if res.status >= 400:
-                _LOGGER.error(
-                    "Failed to call api '%s' with data %s. Response code: %s and message: %s",
-                    url,
-                    data,
-                    res.status,
-                    (await res.text()),
-                )
-                return
+        try:
+            with async_timeout.timeout(15):
+                await self._async_update_token()
+
+                headers = {
+                    "Authorization": "Bearer {}".format(self._access_token),
+                    "X-GFE-SSL": "yes",
+                }
+
+                session = async_get_clientsession(self.hass)
+                async with session.post(url, headers=headers, json=data) as res:
+                    _LOGGER.debug(
+                        "Response on %s with data %s was %s",
+                        url,
+                        data,
+                        await res.text(),
+                    )
+                    res.raise_for_status()
+        except ClientResponseError as error:
+            _LOGGER.error("Request for %s failed: %d", url, error.status)
+        except (asyncio.TimeoutError, ClientError):
+            _LOGGER.error("Could not contact %s", url)
 
     async def async_report_state(self, message):
         """Send a state report to Google."""
