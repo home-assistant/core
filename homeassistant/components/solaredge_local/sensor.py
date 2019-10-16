@@ -261,7 +261,8 @@ class SolarEdgeSensor(Entity):
                 return {self._attr: self._data.info[self._json_key]}
             except KeyError:
                 return None
-
+        return None
+    
     @property
     def icon(self):
         """Return the sensor icon."""
