@@ -176,7 +176,12 @@ async def test_jewish_calendar_sensor(
         dt_util.as_utc(time_zone.localize(result)) if isinstance(result, dt) else result
     )
 
-    assert hass.states.get(f"sensor.test_{sensor}").state == str(result)
+    sensor_object = hass.states.get(f"sensor.test_{sensor}")
+    assert sensor_object.state == str(result)
+
+    if sensor == "holiday":
+        assert sensor_object.attributes.get("type") == "YOM_TOV"
+        assert sensor_object.attributes.get("id") == "rosh_hashana_i"
 
 
 SHABBAT_PARAMS = [
