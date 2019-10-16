@@ -54,10 +54,8 @@ class VaillantWaterHeater(BaseVaillantEntity, WaterHeaterDevice):
                          system.hot_water.name)
         self._system = None
         self._active_mode = None
-        mode_list = HotWater.MODES + QuickModes.for_dhw()
-        mode_list.remove(QuickModes.HOLIDAY)
-        self._operation_list = [mode.name for mode in mode_list]
-        self._operation_list_to_mode = {mode.name: mode for mode in mode_list}
+        self._operations = {mode.name: mode for mode
+                            in HotWater.MODES}
         self._refresh(system)
 
     @property
@@ -145,7 +143,7 @@ class VaillantWaterHeater(BaseVaillantEntity, WaterHeaterDevice):
     @property
     def operation_list(self):
         """Return current operation ie. eco, electric, performance, ..."""
-        return self._operation_list
+        return list(self._operations.keys())
 
     @property
     def is_away_mode_on(self):
@@ -157,16 +155,16 @@ class VaillantWaterHeater(BaseVaillantEntity, WaterHeaterDevice):
         target_temp = float(kwargs.get(ATTR_TEMPERATURE))
         _LOGGER.debug("Trying to set target temp to %s", target_temp)
         # HUB will call sync update
-        self.hub.set_hot_water_target_temperature(
-            self, self._system.hot_water, target_temp
-        )
+        self.hub.set_hot_water_target_temperature(self,
+                                                  self._system.hot_water,
+                                                  target_temp)
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
         _LOGGER.debug("Will set new operation_mode %s", operation_mode)
         # HUB will call sync update
-        if operation_mode in self._operation_list:
-            mode = self._operation_list_to_mode[operation_mode]
+        if operation_mode in self._operations.keys():
+            mode = self._operations[operation_mode]
             self.hub.set_hot_water_operating_mode(self, self._system.hot_water,
                                                   mode)
         else:
@@ -193,8 +191,8 @@ class VaillantWaterHeater(BaseVaillantEntity, WaterHeaterDevice):
         self._system = system
         self._active_mode = self._system.get_active_mode_hot_water()
 
-        if self._system.holiday_mode and \
-                self._system.holiday_mode.is_applied:
-            self._operation_list.append(QuickModes.HOLIDAY.name)
-        elif QuickModes.HOLIDAY.name in self._operation_list:
-            self._operation_list.remove(QuickModes.HOLIDAY.name)
+        # if self._system.holiday_mode and \
+        #         self._system.holiday_mode.is_applied:
+        #     self._operations.append(QuickModes.HOLIDAY.name)
+        # elif QuickModes.HOLIDAY.name in self._operations:
+        #     self._operations.remove(QuickModes.HOLIDAY.name)

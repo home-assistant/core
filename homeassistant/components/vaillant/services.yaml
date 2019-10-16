@@ -1,0 +1,25 @@
+remove_quick_mode:
+  description: Remove quick mode
+
+remove_holiday_mode:
+  description: Remove holiday mode
+
+set_quick_mode:
+  description: Set a quick mode to vaillant system.
+  fields:
+    quick_mode:
+      description: Name of the quick mode (required)
+      example: QM_HOTWATER_BOOST, QM_VENTILATION_BOOST, QM_ONE_DAY_AWAY, QM_SYSTEM_OFF, QM_ONE_DAY_AT_HOME, QM_PARTY
+
+set_holiday_mode:
+  description: Set holiday mode
+  fields:
+    start_date:
+      description: Start date of the holiday mode YYYY-MM-DD format (required)
+      example: "2019-11-25"
+    end_date:
+      description: End date of the holiday mode, YYYY-MM-DD format (required)
+      example: "2019-11-25"
+    temperature:
+      description: temperature to maintin while holiday mode is active (required)
+      example: 15

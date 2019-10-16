@@ -3,7 +3,7 @@
   "name": "Vaillant",
   "documentation": "https://www.home-assistant.io/components/vaillant",
   "requirements": [
-    "pymultimatic==0.0.1"
+    "pymultimatic==0.0.2"
   ],
   "dependencies": [],
   "codeowners": [

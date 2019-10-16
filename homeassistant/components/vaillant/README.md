@@ -31,5 +31,18 @@ vaillant:
 
 
 ##Todo's
-- remove quick_mode if there is any when setting a new mode ? (creating a new set of services ?)
-- tests
+- binary sensor for holiday mode
+- sensor for quick mode
+- handling holiday mode in climate water_heater (it should not be possible to change mode/temp)
+- tests:
+    - zone: set mode while quick mode (not for zone) is running
+    - zone: set mode while quick mode (for zone) is running
+    - zone: set mode while quick veto is running
+    - zone: set low temp when AUTO
+    - zone: set high temp when AUTO
+    - zone: set target temp
+    - room: set mode while quick mode (not for room) is running
+    - room: set mode while quick mode (for room) is running
+    - room: set mode while quick veto is running
+    - room: set target temp
+     

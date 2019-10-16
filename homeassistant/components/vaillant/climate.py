@@ -3,6 +3,7 @@
 import abc
 import logging
 from typing import Optional, List, Dict, Any
+from datetime import timedelta
 
 from pymultimatic.model import (
     System,
@@ -11,8 +12,7 @@ from pymultimatic.model import (
     Zone,
     OperatingModes,
     QuickModes,
-    Mode,
-)
+    Mode)
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -21,7 +21,6 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE_RANGE,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TARGET_TEMP_HIGH,
-    SUPPORT_PRESET_MODE,
     HVAC_MODE_OFF,
     HVAC_MODE_HEAT,
     HVAC_MODE_AUTO,
@@ -33,10 +32,11 @@ from homeassistant.components.climate.const import (
     PRESET_HOME,
     HVAC_MODE_COOL,
 )
+from homeassistant.util import dt as dt_util
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 
 from . import HUB, BaseVaillantEntity, CONF_ROOM_CLIMATE, CONF_ZONE_CLIMATE, \
-    ATTR_VAILLANT_MODE
+    ATTR_VAILLANT_MODE, ATTR_QUICK_VETO_END
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,14 +48,14 @@ async def async_setup_platform(hass, config, async_add_entities,
     hub = hass.data[HUB]
 
     if hub.system:
-        if hub.config[CONF_ZONE_CLIMATE]:
+        if hub.system.zones and hub.config[CONF_ZONE_CLIMATE]:
             for zone in hub.system.zones:
                 if not zone.rbr:
                     entity = VaillantZoneClimate(hub.system, zone)
                     hub.add_listener(entity)
                     climates.append(entity)
 
-        if hub.config[CONF_ROOM_CLIMATE]:
+        if hub.system.rooms and hub.config[CONF_ROOM_CLIMATE]:
             for room in hub.system.rooms:
                 entity = VaillantRoomClimate(hub.system, room)
                 hub.add_listener(entity)
@@ -112,6 +112,17 @@ class VaillantClimate(BaseVaillantEntity, ClimateDevice, abc.ABC):
         attributes.update({
             ATTR_VAILLANT_MODE: self._active_mode.current_mode.name
         })
+
+        if self._active_mode.current_mode == OperatingModes.QUICK_VETO:
+            if self._component.quick_veto.remaining_duration:
+                qveto_millis = \
+                    self._component.quick_veto.remaining_duration \
+                    * 60 * 1000
+                end_time = dt_util.utcnow() \
+                    + timedelta(milliseconds=qveto_millis)
+                attributes.update({
+                    ATTR_QUICK_VETO_END: end_time.isoformat()
+                })
         return attributes
 
     @property
@@ -173,24 +184,23 @@ class VaillantClimate(BaseVaillantEntity, ClimateDevice, abc.ABC):
 class VaillantRoomClimate(VaillantClimate):
     """Climate for a room."""
 
-    _MODE_TO_PRESET = {
-        OperatingModes.QUICK_VETO.name: PRESET_BOOST,
-        OperatingModes.AUTO.name: PRESET_COMFORT,
-        OperatingModes.ON.name: PRESET_HOME,
-        OperatingModes.OFF.name: PRESET_SLEEP,
-        OperatingModes.MANUAL.name: PRESET_COMFORT,
-        QuickModes.HOLIDAY.name: PRESET_AWAY,
-        QuickModes.SYSTEM_OFF.name: PRESET_SLEEP,
+    _MODE_TO_PRESET: Dict[Mode, str] = {
+        OperatingModes.QUICK_VETO: PRESET_BOOST,
+        OperatingModes.AUTO: PRESET_COMFORT,
+        OperatingModes.ON: PRESET_HOME,
+        OperatingModes.OFF: PRESET_SLEEP,
+        OperatingModes.MANUAL: PRESET_COMFORT,
+        QuickModes.HOLIDAY: PRESET_AWAY,
+        QuickModes.SYSTEM_OFF: PRESET_SLEEP,
     }
 
     _MODE_TO_HVAC: Dict[Mode, str] = {
-        OperatingModes.QUICK_VETO.name: HVAC_MODE_HEAT,
-        OperatingModes.ON.name: HVAC_MODE_HEAT,
-        OperatingModes.MANUAL.name: HVAC_MODE_HEAT,
-        OperatingModes.AUTO.name: HVAC_MODE_AUTO,
-        OperatingModes.OFF.name: HVAC_MODE_OFF,
-        QuickModes.HOLIDAY.name: HVAC_MODE_OFF,
-        QuickModes.SYSTEM_OFF.name: HVAC_MODE_OFF,
+        OperatingModes.QUICK_VETO: HVAC_MODE_HEAT,
+        OperatingModes.MANUAL: HVAC_MODE_HEAT,
+        OperatingModes.AUTO: HVAC_MODE_AUTO,
+        OperatingModes.OFF: HVAC_MODE_OFF,
+        QuickModes.HOLIDAY: HVAC_MODE_OFF,
+        QuickModes.SYSTEM_OFF: HVAC_MODE_OFF,
     }
 
     _HVAC_TO_MODE: Dict[str, Mode] = {
@@ -201,19 +211,14 @@ class VaillantRoomClimate(VaillantClimate):
 
     _SUPPORTED_HVAC_MODE = list(set(_MODE_TO_HVAC.values()))
 
-    _SUPPORTED_PRESET_MODE = list(set(_MODE_TO_PRESET.values()))
-
     def __init__(self, system: System, room: Room):
         """Initialize entity."""
         super().__init__(system, room.name, room.name, room)
-        self._active_mode = system.get_active_mode_room(room)
-        self._supported_features = SUPPORT_TARGET_TEMPERATURE | \
-                                   SUPPORT_PRESET_MODE
 
     @property
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
-        return self._MODE_TO_HVAC[self._active_mode.current_mode.name]
+        return self._MODE_TO_HVAC[self._active_mode.current_mode]
 
     @property
     def hvac_modes(self) -> List[str]:
@@ -223,17 +228,17 @@ class VaillantRoomClimate(VaillantClimate):
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
-        return self._MODE_TO_PRESET[self._active_mode.current_mode.name]
+        return None
 
     @property
     def preset_modes(self) -> Optional[List[str]]:
         """Return a list of available preset modes."""
-        return self._SUPPORTED_PRESET_MODE
+        return None
 
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return self._supported_features
+        return SUPPORT_TARGET_TEMPERATURE
 
     @property
     def min_temp(self):
@@ -252,17 +257,10 @@ class VaillantRoomClimate(VaillantClimate):
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         self.hub.set_room_target_temperature(
-            self, self._component, float(kwargs.get(ATTR_TEMPERATURE))
-        )
+            self, self._component, float(kwargs.get(ATTR_TEMPERATURE)))
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if PRESET_AWAY == preset_mode:
-            self.hub.set_room_operating_mode(self, self._component,
-                                             OperatingModes.OFF)
-        else:
-            self.hub.set_room_operating_mode(self, self._component,
-                                             OperatingModes.AUTO)
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
@@ -283,58 +281,37 @@ class VaillantRoomClimate(VaillantClimate):
 class VaillantZoneClimate(VaillantClimate):
     """Climate for a zone."""
 
-    _MODE_TO_PRESET = {
-        OperatingModes.QUICK_VETO.name: PRESET_BOOST,
-        OperatingModes.AUTO.name: PRESET_COMFORT,
-        OperatingModes.NIGHT.name: PRESET_SLEEP,
-        OperatingModes.DAY.name: PRESET_HOME,
-        OperatingModes.OFF.name: PRESET_SLEEP,
-        QuickModes.ONE_DAY_AWAY.name: PRESET_AWAY,
-        QuickModes.HOLIDAY.name: PRESET_AWAY,
-        QuickModes.ONE_DAY_AT_HOME.name: PRESET_HOME,
-        QuickModes.PARTY.name: PRESET_COMFORT,
-        QuickModes.SYSTEM_OFF.name: PRESET_SLEEP,
-        QuickModes.VENTILATION_BOOST.name: PRESET_SLEEP,
-    }
-
     _MODE_TO_HVAC: Dict[Mode, str] = {
-        OperatingModes.QUICK_VETO.name: HVAC_MODE_HEAT,
-        OperatingModes.DAY.name: HVAC_MODE_HEAT,
-        QuickModes.PARTY.name: HVAC_MODE_HEAT,
-        OperatingModes.NIGHT.name: HVAC_MODE_COOL,
-        OperatingModes.AUTO.name: HVAC_MODE_AUTO,
-        QuickModes.ONE_DAY_AT_HOME.name: HVAC_MODE_AUTO,
-        OperatingModes.OFF.name: HVAC_MODE_OFF,
-        QuickModes.ONE_DAY_AWAY.name: HVAC_MODE_OFF,
-        QuickModes.HOLIDAY.name: HVAC_MODE_OFF,
-        QuickModes.SYSTEM_OFF.name: HVAC_MODE_OFF,
-        QuickModes.VENTILATION_BOOST.name: HVAC_MODE_FAN_ONLY,
+        OperatingModes.QUICK_VETO: HVAC_MODE_HEAT,
+        OperatingModes.DAY: HVAC_MODE_HEAT,
+        QuickModes.PARTY: HVAC_MODE_HEAT,
+        OperatingModes.NIGHT: HVAC_MODE_COOL,
+        OperatingModes.AUTO: HVAC_MODE_AUTO,
+        QuickModes.ONE_DAY_AT_HOME: HVAC_MODE_AUTO,
+        OperatingModes.OFF: HVAC_MODE_OFF,
+        QuickModes.ONE_DAY_AWAY: HVAC_MODE_OFF,
+        QuickModes.HOLIDAY: HVAC_MODE_OFF,
+        QuickModes.SYSTEM_OFF: HVAC_MODE_OFF,
+        QuickModes.VENTILATION_BOOST: HVAC_MODE_FAN_ONLY,
     }
 
     _HVAC_TO_MODE: Dict[str, Mode] = {
         HVAC_MODE_COOL: OperatingModes.NIGHT,
         HVAC_MODE_AUTO: OperatingModes.AUTO,
         HVAC_MODE_OFF: OperatingModes.OFF,
-        HVAC_MODE_HEAT: OperatingModes.DAY,
-        HVAC_MODE_FAN_ONLY: QuickModes.VENTILATION_BOOST,
+        HVAC_MODE_HEAT: OperatingModes.DAY
     }
 
-    _SUPPORTED_HVAC_MODE = list(set(_MODE_TO_HVAC.values()))
-
-    _SUPPORTED_PRESET_MODE = list(set(_MODE_TO_PRESET.values()))
+    _SUPPORTED_HVAC_MODE = list(set(_HVAC_TO_MODE.keys()))
 
     def __init__(self, system: System, zone: Zone):
         """Initialize entity."""
         super().__init__(system, zone.id, zone.name, zone)
-        self._active_mode = system.get_active_mode_zone(zone)
-        self._supported_features = (
-            SUPPORT_TARGET_TEMPERATURE_RANGE | SUPPORT_PRESET_MODE
-        )
 
     @property
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
-        return self._MODE_TO_HVAC[self._active_mode.current_mode.name]
+        return self._MODE_TO_HVAC[self._active_mode.current_mode]
 
     @property
     def hvac_modes(self) -> List[str]:
@@ -344,26 +321,22 @@ class VaillantZoneClimate(VaillantClimate):
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
-        return self._MODE_TO_PRESET[self._active_mode.current_mode.name]
+        return None
 
     @property
     def preset_modes(self) -> Optional[List[str]]:
         """Return a list of available preset modes."""
-        return self._SUPPORTED_PRESET_MODE
+        return None
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if PRESET_AWAY == preset_mode:
-            self.hub.set_zone_operating_mode(self, self._component,
-                                             OperatingModes.OFF)
-        else:
-            self.hub.set_zone_operating_mode(self, self._component,
-                                             OperatingModes.AUTO)
 
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return self._supported_features
+        if self._active_mode.current_mode == OperatingModes.AUTO:
+            return SUPPORT_TARGET_TEMPERATURE_RANGE
+        return SUPPORT_TARGET_TEMPERATURE
 
     @property
     def min_temp(self):

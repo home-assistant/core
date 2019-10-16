@@ -61,9 +61,9 @@ async def async_setup_platform(hass, config, async_add_entities,
                                                                    room))
         if hub.config[CONF_BINARY_SENSOR_SYSTEM_ERRORS]:
             handler = \
-                VaillantSystemBinarySensorHandler(
-                    hub, hass,  async_add_entities,
-                    hub.config[CONF_SCAN_INTERVAL])
+                VaillantSystemBinarySensorHandler(hub, hass,
+                                                  async_add_entities,
+                                                  hub.config[CONF_SCAN_INTERVAL])
             await handler.update()
 
     _LOGGER.info("Adding %s binary sensor entities", len(sensors))
@@ -296,6 +296,8 @@ class VaillantBoilerErrorBinarySensor(BaseVaillantEntity, BinarySensorDevice):
     """Check if there is some error."""
 
     async def vaillant_update(self):
+        """Update specific for vaillant."""
+        _LOGGER.debug("new boiler status is %s", self.hub.system.boiler_status)
         self._boiler_status = self.hub.system.boiler_status
 
     def __init__(self, boiler_status: BoilerStatus):
@@ -320,12 +322,10 @@ class VaillantBoilerErrorBinarySensor(BaseVaillantEntity, BinarySensorDevice):
 
 
 class VaillantSystemBinarySensorHandler:
-    """This is not a sensor in itself since error are meant to appear and 
-    disappear. This handler is responsible for creating dynamically 
-    VaillantSystemErrorBinarySensor
-    """
+    """Handler responsible for creating dynamically error binary sensor."""
 
     def __init__(self, hub, hass, async_add_entities, scan_interval) -> None:
+        """Init."""
         self.hub = hub
         self._hass = hass
         self._async_add_entities = async_add_entities
@@ -350,6 +350,7 @@ class VaillantSystemErrorBinarySensor(BaseVaillantEntity, BinarySensorDevice):
     """Check if there is any error message from system."""
 
     def __init__(self, error: Error):
+        """Init."""
         self._error = error
         super().__init__(DOMAIN, DEVICE_CLASS_PROBLEM, error.status_code,
                          error.title)
@@ -366,8 +367,11 @@ class VaillantSystemErrorBinarySensor(BaseVaillantEntity, BinarySensorDevice):
         }
 
     async def vaillant_update(self):
-        """Special attention during the update, the entity can remove itself
-        from registry if the error disappear from vaillant system."""
+        """Update specific for vaillant.
+
+        Special attention during the update, the entity can remove itself
+        from registry if the error disappear from vaillant system.
+        """
         errors = {e.status_code: e for e in self.hub.system.errors}
 
         if self._error.status_code in [e.status_code for e in

@@ -453,7 +453,7 @@ pymodbus==1.5.2
 pymonoprice==0.3
 
 # homeassistant.components.vaillant
-pymultimatic==0.0.1
+pymultimatic==0.0.2
 
 # homeassistant.components.nws
 pynws==0.8.1

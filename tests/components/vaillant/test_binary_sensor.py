@@ -84,8 +84,8 @@ async def test_state_update(hass):
 
     room_device = Device('Device 1', '123456789', 'VALVE', True, True)
     system.set_room('1', Room('1', 'Room 1', SystemManagerMock.time_program(),
-                            22, 24, OperatingModes.AUTO, None, True, True,
-                            [room_device]))
+                              22, 24, OperatingModes.AUTO, None, True, True,
+                              [room_device]))
 
     system.boiler_status.status_code = 'F11'
     system.system_status.online_status = 'OFFLINE'

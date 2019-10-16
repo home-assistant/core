@@ -139,7 +139,14 @@ class SystemManagerMock:
         cls.instance.set_quick_mode = mock.MagicMock()
         cls.instance.get_hot_water = mock.MagicMock()
         cls.instance.request_hvac_update = mock.MagicMock()
+        cls.instance.set_zone_quick_veto = mock.MagicMock()
         cls.instance.get_system = mock.MagicMock(return_value=cls.system)
+        cls.instance.get_zone = \
+            mock.MagicMock(return_value=lambda: cls.system.zones[0]
+                           if cls.system and cls.system.zones else None)
+        cls.instance.set_zone = mock.MagicMock()
+        cls.instance.remove_quick_mode = mock.MagicMock()
+        cls.instance.remove_holiday_mode = mock.MagicMock()
 
     def __init__(self, user: str, password: str, smart_phone_id: str,
                  file_path: str = None):
@@ -167,3 +174,8 @@ async def _setup(hass, config=None, system=None):
     setup = await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
     return setup
+
+
+async def _call_service(hass, domain, service, data):
+    await hass.services.async_call(domain, service, data)
+    await hass.async_block_till_done()
