@@ -44,7 +44,6 @@ class DynaliteBridge:
             newDeviceFunc=self.add_devices,
             updateDeviceFunc=self.update_device,
         )
-        LOGGER.debug("XXX __init__")
 
     async def async_setup(self, tries=0):
         """Set up a Dynalite bridge."""
