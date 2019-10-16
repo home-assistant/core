@@ -183,9 +183,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow):
     async def _async_authenticate_app(self, error=None):
         """Authenticate application."""
         try:
-            self._app_code = self._auth.get_app_code(
-                self._app_id, self._app_secret
-            )
+            self._app_code = self._auth.get_app_code(self._app_id, self._app_secret)
             self._app_token = self._auth.get_app_token(
                 self._app_id, self._app_secret, self._app_code
             )
