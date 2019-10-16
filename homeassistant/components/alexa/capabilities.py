@@ -33,6 +33,7 @@ from .const import (
     DATE_FORMAT,
     PERCENTAGE_FAN_MAP,
     RANGE_FAN_MAP,
+    Inputs,
 )
 from .errors import UnsupportedProperty
 
@@ -114,6 +115,11 @@ class AlexaCapability:
         return []
 
     @staticmethod
+    def inputs():
+        """Applicable only to media players."""
+        return []
+
+    @staticmethod
     def supported_operations():
         """Return the supportedOperations object."""
         return []
@@ -161,6 +167,10 @@ class AlexaCapability:
         supported_operations = self.supported_operations()
         if supported_operations:
             result["supportedOperations"] = supported_operations
+
+        inputs = self.inputs()
+        if inputs:
+            result["inputs"] = inputs
 
         return result
 
@@ -528,6 +538,19 @@ class AlexaInputController(AlexaCapability):
     def name(self):
         """Return the Alexa API name of this interface."""
         return "Alexa.InputController"
+
+    def inputs(self):
+        """Return the list of valid supported inputs."""
+        source_list = self.entity.attributes.get(media_player.ATTR_INPUT_SOURCE_LIST) or []
+        input_list = []
+        for source in source_list:
+            formatted_source = source.lower().replace("-", "").replace("_", "")
+            if formatted_source in Inputs.VALID_SOURCE_NAME_MAP.keys():
+                input_list.append(
+                    {"name": Inputs.VALID_SOURCE_NAME_MAP[formatted_source]}
+                )
+
+        return input_list
 
 
 class AlexaTemperatureSensor(AlexaCapability):

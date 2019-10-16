@@ -42,6 +42,7 @@ from .const import (
     API_THERMOSTAT_MODES,
     API_THERMOSTAT_PRESETS,
     Cause,
+    Inputs,
     PERCENTAGE_FAN_MAP,
     RANGE_FAN_MAP,
     SPEED_FAN_MAP,
@@ -459,13 +460,20 @@ async def async_api_select_input(hass, config, directive, context):
     media_input = directive.payload["input"]
     entity = directive.entity
 
-    # attempt to map the ALL UPPERCASE payload name to a source
+    # Attempt to map the ALL UPPERCASE payload name to a source.
+    # Strips trailing 1 to match single input devices.
     source_list = entity.attributes[media_player.const.ATTR_INPUT_SOURCE_LIST] or []
     for source in source_list:
-        # response will always be space separated, so format the source in the
-        # most likely way to find a match
-        formatted_source = source.lower().replace("-", " ").replace("_", " ")
-        if formatted_source in media_input.lower():
+        formatted_source = (
+            source.lower().replace("-", "").replace("_", "").replace(" ", "")
+        )
+        media_input = media_input.lower().replace(" ", "")
+        if (
+            formatted_source in Inputs.VALID_SOURCE_NAME_MAP.keys()
+            and formatted_source == media_input
+        ) or (
+            media_input.endswith("1") and formatted_source == media_input.rstrip("1")
+        ):
             media_input = source
             break
     else:
