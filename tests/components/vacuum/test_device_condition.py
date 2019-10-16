@@ -2,7 +2,6 @@
 import pytest
 
 from homeassistant.components.vacuum import DOMAIN
-from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.setup import async_setup_component
 import homeassistant.components.automation as automation
 from homeassistant.helpers import device_registry
@@ -14,6 +13,15 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
     async_get_device_automations,
+)
+
+from homeassistant.components.vacuum import (
+    STATE_CLEANING,
+    STATE_DOCKED,
+    STATE_IDLE,
+    STATE_PAUSED,
+    STATE_RETURNING,
+    STATE_ERROR,
 )
 
 
@@ -48,14 +56,42 @@ async def test_get_conditions(hass, device_reg, entity_reg):
         {
             "condition": "device",
             "domain": DOMAIN,
-            "type": "is_off",
+            "type": "is_cleaning",
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },
         {
             "condition": "device",
             "domain": DOMAIN,
-            "type": "is_on",
+            "type": "is_docked",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "type": "is_paused",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "type": "is_idle",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "type": "is_returning",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "type": "is_error",
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },
@@ -66,7 +102,7 @@ async def test_get_conditions(hass, device_reg, entity_reg):
 
 async def test_if_state(hass, calls):
     """Test for turn_on and turn_off conditions."""
-    hass.states.async_set("vacuum.entity", STATE_ON)
+    hass.states.async_set("cover.entity", STATE_CLEANING)
 
     assert await async_setup_component(
         hass,
@@ -80,14 +116,14 @@ async def test_if_state(hass, calls):
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "vacuum.entity",
-                            "type": "is_on",
+                            "entity_id": "cover.entity",
+                            "type": "is_cleaning",
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_on - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": "is_cleaning - {{ trigger.platform }} - {{ trigger.event.event_type }}"
                         },
                     },
                 },
@@ -98,14 +134,86 @@ async def test_if_state(hass, calls):
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": "vacuum.entity",
-                            "type": "is_off",
+                            "entity_id": "cover.entity",
+                            "type": "is_docked",
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_off - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": "is_docked - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                        },
+                    },
+                },
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event3"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": "",
+                            "entity_id": "cover.entity",
+                            "type": "is_paused",
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "is_paused - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                        },
+                    },
+                },
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event4"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": "",
+                            "entity_id": "cover.entity",
+                            "type": "is_idle",
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "is_idle - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                        },
+                    },
+                },
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event5"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": "",
+                            "entity_id": "cover.entity",
+                            "type": "is_returning",
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "is_returning - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                        },
+                    },
+                },
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event6"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": "",
+                            "entity_id": "cover.entity",
+                            "type": "is_error",
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "is_error - {{ trigger.platform }} - {{ trigger.event.event_type }}"
                         },
                     },
                 },
@@ -116,11 +224,39 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0].data["some"] == "is_on - event - test_event1"
+    assert calls[0].data["some"] == "is_cleaning - event - test_event1"
 
-    hass.states.async_set("vacuum.entity", STATE_OFF)
+    hass.states.async_set("cover.entity", STATE_DOCKED)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[1].data["some"] == "is_off - event - test_event2"
+    assert calls[1].data["some"] == "is_docked - event - test_event2"
+
+    hass.states.async_set("cover.entity", STATE_PAUSED)
+    hass.bus.async_fire("test_event1")
+    hass.bus.async_fire("test_event3")
+    await hass.async_block_till_done()
+    assert len(calls) == 3
+    assert calls[2].data["some"] == "is_paused - event - test_event3"
+
+    hass.states.async_set("cover.entity", STATE_IDLE)
+    hass.bus.async_fire("test_event1")
+    hass.bus.async_fire("test_event4")
+    await hass.async_block_till_done()
+    assert len(calls) == 4
+    assert calls[3].data["some"] == "is_idle - event - test_event4"
+
+    hass.states.async_set("cover.entity", STATE_RETURNING)
+    hass.bus.async_fire("test_event1")
+    hass.bus.async_fire("test_event5")
+    await hass.async_block_till_done()
+    assert len(calls) == 5
+    assert calls[4].data["some"] == "is_returning - event - test_event5"
+
+    hass.states.async_set("cover.entity", STATE_ERROR)
+    hass.bus.async_fire("test_event1")
+    hass.bus.async_fire("test_event6")
+    await hass.async_block_till_done()
+    assert len(calls) == 6
+    assert calls[5].data["some"] == "is_error - event - test_event6"
