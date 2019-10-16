@@ -80,4 +80,4 @@ async def async_options_updated(hass: HomeAssistant, config_entry: ConfigEntry) 
     """Triggered by config entry options updates."""
     account: StarlineAccount = hass.data[DOMAIN]
     scan_interval = config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-    account.set_update_interval(hass, scan_interval)
+    account.set_update_interval(scan_interval)

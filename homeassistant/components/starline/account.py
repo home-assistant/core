@@ -31,20 +31,20 @@ class StarlineAccount:
             config_entry.data[DATA_USER_ID], config_entry.data[DATA_SLNET_TOKEN]
         )
 
-    async def _check_slnet_token(self) -> None:
+    def _check_slnet_token(self) -> None:
         """Check SLNet token expiration and update if needed."""
         now = datetime.now().timestamp()
         slnet_token_expires = self._config_entry.data[DATA_EXPIRES]
 
         if now + self._update_interval > slnet_token_expires:
-            await self._update_slnet_token()
+            self._update_slnet_token()
 
-    async def _update_slnet_token(self) -> None:
+    def _update_slnet_token(self) -> None:
         """Update SLNet token."""
         slid_token = self._config_entry.data[DATA_SLID_TOKEN]
 
         try:
-            slnet_token, slnet_token_expires, user_id = await self._api.get_user_id(
+            slnet_token, slnet_token_expires, user_id = self._api.get_user_id(
                 slid_token
             )
             self._api.set_slnet_token(slnet_token)
@@ -62,6 +62,11 @@ class StarlineAccount:
             LOGGER.error("Error updating SLNet token: %s", err)
             pass
 
+    def _async_update(self):
+        """Update StarLine data."""
+        self._check_slnet_token()
+        self._api.update()
+
     @property
     def api(self) -> StarlineApi:
         """Return the instance of the API."""
@@ -69,10 +74,9 @@ class StarlineAccount:
 
     async def update(self, unused=None):
         """Update StarLine data."""
-        await self._check_slnet_token()
-        await self._api.update()
+        await self._hass.async_add_job(self._async_update)
 
-    def set_update_interval(self, hass: HomeAssistant, interval: int) -> None:
+    def set_update_interval(self, interval: int) -> None:
         """Set StarLine API update interval."""
         LOGGER.debug("Setting update interval: %ds", interval)
         self._update_interval = interval
@@ -81,7 +85,7 @@ class StarlineAccount:
 
         delta = timedelta(seconds=interval)
         self._unsubscribe_auto_updater = async_track_time_interval(
-            hass, self.update, delta
+            self._hass, self.update, delta
         )
 
     def unload(self):

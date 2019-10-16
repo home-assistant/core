@@ -46,10 +46,10 @@ class StarlineLock(StarlineEntity, LockDevice):
         """Return true if lock is locked."""
         return self._device.car_state["arm"]
 
-    async def async_lock(self, **kwargs):
+    def lock(self, **kwargs):
         """Lock the car."""
-        await self._account.api.set_car_state(self._device.device_id, "arm", True)
+        self._account.api.set_car_state(self._device.device_id, "arm", True)
 
-    async def async_unlock(self, **kwargs):
+    def unlock(self, **kwargs):
         """Unlock the car."""
-        await self._account.api.set_car_state(self._device.device_id, "arm", False)
+        self._account.api.set_car_state(self._device.device_id, "arm", False)

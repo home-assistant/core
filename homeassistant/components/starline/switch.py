@@ -74,12 +74,12 @@ class StarlineSwitch(StarlineEntity, SwitchDevice):
             return False
         return self._device.car_state[self._key]
 
-    async def async_turn_on(self, **kwargs):
+    def turn_on(self, **kwargs):
         """Turn the entity on."""
-        await self._account.api.set_car_state(self._device.device_id, self._key, True)
+        self._account.api.set_car_state(self._device.device_id, self._key, True)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
         if self._key == "poke":
             return
-        await self._account.api.set_car_state(self._device.device_id, self._key, False)
+        self._account.api.set_car_state(self._device.device_id, self._key, False)
