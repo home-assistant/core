@@ -4,11 +4,9 @@ from datetime import timedelta
 import logging
 import socket
 
-from samsungctl import Remote, exceptions
 import voluptuous as vol
-import wakeonlan
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
@@ -113,6 +111,9 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def __init__(self, host, port, name, timeout, mac, uuid):
         """Initialize the Samsung device."""
+        from samsungctl import exceptions
+        from samsungctl import Remote
+        import wakeonlan
 
         # Save a reference to the imported classes
         self._exceptions_class = exceptions
