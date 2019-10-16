@@ -1,5 +1,5 @@
 """Test Dynalite bridge."""
-from unittest.mock import Mock, patch, MagicMock, call
+from unittest.mock import Mock, patch, call
 import pytest
 
 from dynalite_lib import CONF_ALL
@@ -117,12 +117,10 @@ async def test_update_device():
 
 async def test_async_reset():
     """Test async_reset."""
-
-    class AsyncMock(MagicMock):
-        async def __call__(self, *args, **kwargs):
-            return super(AsyncMock, self).__call__(*args, **kwargs)
-
-    hass = AsyncMock()
+    hass = Mock()
+    hass.config_entries.async_forward_entry_unload = Mock(
+        return_value=mock_coro(Mock())
+    )
     entry = Mock()
     host = "1.2.3.4"
     entry.data = {"host": host}

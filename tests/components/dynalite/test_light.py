@@ -1,12 +1,15 @@
 """Test Dynalite light."""
-from unittest.mock import Mock, patch, MagicMock, call
+from unittest.mock import Mock, patch, call
 
-from homeassistant.components.dynalite import DOMAIN
+from homeassistant.components.dynalite import DOMAIN, LOGGER
 from homeassistant.components.dynalite.light import DynaliteLight, async_setup_entry
+
+from tests.common import mock_coro
 
 
 async def test_light_setup():
     """Test a successful setup."""
+    LOGGER.debug("XXX hello")
     hass = Mock()
     entry = Mock()
     async_add = Mock()
@@ -21,12 +24,9 @@ async def test_light_setup():
 
 async def test_light():
     """Test the light entity."""
-
-    class AsyncMock(MagicMock):
-        async def __call__(self, *args, **kwargs):
-            return super(AsyncMock, self).__call__(*args, **kwargs)
-
-    device = AsyncMock()
+    device = Mock()
+    device.async_turn_on = Mock(return_value=mock_coro(Mock()))
+    device.async_turn_off = Mock(return_value=mock_coro(Mock()))
     bridge = Mock()
     dyn_light = DynaliteLight(device, bridge)
     assert dyn_light.name is device.name

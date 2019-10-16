@@ -1,8 +1,6 @@
-"""Config flow to configure Philips Hue."""
+"""Config flow to configure Dynalite hub."""
 import asyncio
 import pprint
-
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback
@@ -30,21 +28,6 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the Dynalite flow."""
         self.host = None
-
-    async def async_step_user(self, user_input=None):
-        """Handle a flow initialized by the user."""
-        return await self.async_step_init(user_input)
-
-    async def async_step_init(self, user_input=None):
-        """Handle a flow start."""
-        if user_input is not None:
-            self.host = self.context[CONF_HOST] = user_input[CONF_HOST]
-            return await self._entry_from_bridge(self.host)
-        hosts = configured_hosts(self.hass)
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): vol.In(hosts)}),
-        )
 
     async def async_step_import(self, import_info):
         """Import a new bridge as a config entry."""
