@@ -59,6 +59,16 @@ GOOGLE_SERVICE_ACCOUNT = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+
+def _check_report_state(data):
+    if data[CONF_REPORT_STATE]:
+        if CONF_SERVICE_ACCOUNT not in data:
+            raise vol.Invalid(
+                "If report state is enabled, a service account must exist"
+            )
+    return data
+
+
 GOOGLE_ASSISTANT_SCHEMA = vol.All(
     cv.deprecated(CONF_ALLOW_UNLOCK, invalidation_version="0.95"),
     vol.Schema(
@@ -80,6 +90,7 @@ GOOGLE_ASSISTANT_SCHEMA = vol.All(
         },
         extra=vol.PREVENT_EXTRA,
     ),
+    _check_report_state,
 )
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: GOOGLE_ASSISTANT_SCHEMA}, extra=vol.ALLOW_EXTRA)

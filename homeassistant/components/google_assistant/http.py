@@ -153,7 +153,6 @@ class GoogleConfig(AbstractConfig):
 
     async def async_call_homegraph_api(self, url, data):
         """Call a homegraph api with authenticaiton."""
-
         try:
             with async_timeout.timeout(15):
                 await self._async_update_token()
