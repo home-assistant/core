@@ -77,7 +77,7 @@ TYPE_ALARM = PREFIX_TYPES + "SECURITYSYSTEM"
 SERVICE_REQUEST_SYNC = "request_sync"
 HOMEGRAPH_URL = "https://homegraph.googleapis.com/"
 HOMEGRAPH_SCOPE = "https://www.googleapis.com/auth/homegraph"
-HOMEGRAPH_AUDIENCE = "https://accounts.google.com/o/oauth2/token"
+HOMEGRAPH_TOKEN_URL = "https://accounts.google.com/o/oauth2/token"
 REQUEST_SYNC_BASE_URL = HOMEGRAPH_URL + "v1/devices:requestSync"
 REPORT_STATE_BASE_URL = HOMEGRAPH_URL + "v1/devices:reportStateAndNotification"
 

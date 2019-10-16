@@ -1,8 +1,8 @@
 """Support for Google Actions Smart Home Control."""
 from datetime import timedelta
 import logging
-import jwt
 from uuid import uuid4
+import jwt
 
 from aiohttp.web import Request, Response
 
@@ -24,7 +24,7 @@ from .const import (
     CONF_SERVICE_ACCOUNT,
     CONF_CLIENT_EMAIL,
     CONF_PRIVATE_KEY,
-    HOMEGRAPH_AUDIENCE,
+    HOMEGRAPH_TOKEN_URL,
     HOMEGRAPH_SCOPE,
     REPORT_STATE_BASE_URL,
 )
@@ -108,7 +108,7 @@ class GoogleConfig(AbstractConfig):
         jwt_raw = {
             "iss": self._config[CONF_SERVICE_ACCOUNT][CONF_CLIENT_EMAIL],
             "scope": HOMEGRAPH_SCOPE,
-            "aud": HOMEGRAPH_AUDIENCE,
+            "aud": HOMEGRAPH_TOKEN_URL,
             "iat": now,
             "exp": now + 3600,
         }
@@ -131,7 +131,7 @@ class GoogleConfig(AbstractConfig):
         }
 
         session = async_get_clientsession(self.hass)
-        async with session.post(HOMEGRAPH_AUDIENCE, headers=headers, data=data) as res:
+        async with session.post(HOMEGRAPH_TOKEN_URL, headers=headers, data=data) as res:
             data = await res.json()
             res.raise_for_status()
 
@@ -158,7 +158,14 @@ class GoogleConfig(AbstractConfig):
         async with session.post(
             REPORT_STATE_BASE_URL, headers=headers, json=data
         ) as res:
-            res.raise_for_status()
+            if res.status >= 400:
+                _LOGGER.error(
+                    "Failed to report state %s with response code: %s and message: %s",
+                    message,
+                    res.status,
+                    (await res.text()),
+                )
+                return
 
 
 @callback
