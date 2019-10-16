@@ -5,5 +5,5 @@
     "documentation": "",
     "dependencies": [],
     "codeowners": ["@ziv1234"],
-    "requirements": ["dynalite_devices==0.1.9"]
+    "requirements": ["dynalite_devices==0.1.10"]
 }
