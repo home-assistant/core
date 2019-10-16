@@ -179,9 +179,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         title = await self.hass.async_add_executor_job(get_router_title, conn)
         await self.hass.async_add_executor_job(logout)
 
-        result = self.async_create_entry(title=title, data=user_input)
-        result.setdefault("system_options", {})["disable_new_entities"] = True
-        return result
+        return self.async_create_entry(title=title, data=user_input)
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):

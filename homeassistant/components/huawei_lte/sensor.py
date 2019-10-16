@@ -31,7 +31,7 @@ SENSOR_META = {
     ),
     (KEY_DEVICE_INFORMATION, "SoftwareVersion"): dict(name="Software version"),
     (KEY_DEVICE_INFORMATION, "WanIPAddress"): dict(
-        name="WAN IP address", icon="mdi:ip"
+        name="WAN IP address", icon="mdi:ip", enabled_default=True
     ),
     (KEY_DEVICE_INFORMATION, "WanIPv6Address"): dict(
         name="WAN IPv6 address", icon="mdi:ip"
@@ -55,6 +55,7 @@ SENSOR_META = {
         or x < -5
         and "mdi:signal-cellular-2"
         or "mdi:signal-cellular-3",
+        enabled_default=True,
     ),
     (KEY_DEVICE_SIGNAL, "rsrp"): dict(
         name="RSRP",
@@ -67,6 +68,7 @@ SENSOR_META = {
         or x < -80
         and "mdi:signal-cellular-2"
         or "mdi:signal-cellular-3",
+        enabled_default=True,
     ),
     (KEY_DEVICE_SIGNAL, "rssi"): dict(
         name="RSSI",
@@ -79,6 +81,7 @@ SENSOR_META = {
         or x < -60
         and "mdi:signal-cellular-2"
         or "mdi:signal-cellular-3",
+        enabled_default=True,
     ),
     (KEY_DEVICE_SIGNAL, "sinr"): dict(
         name="SINR",
@@ -91,6 +94,7 @@ SENSOR_META = {
         or x < 10
         and "mdi:signal-cellular-2"
         or "mdi:signal-cellular-3",
+        enabled_default=True,
     ),
     KEY_MONITORING_TRAFFIC_STATISTICS: dict(
         exclude=re.compile(r"^showtraffic$", re.IGNORECASE)
@@ -211,6 +215,11 @@ class HuaweiLteSensor(HuaweiLteBaseEntity):
         if callable(icon):
             return icon(self.state)
         return icon
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return bool(self.meta.get("enabled_default"))
 
     async def async_update(self):
         """Update state."""
