@@ -47,6 +47,7 @@ class SmartPlugSwitch(SwitchDevice):
         self._now_energy_day = None
         self._state = False
         self._info = smartplug.info
+        self._supports_power_monitoring = smartplug.info["model"] != "SP1101W"
 
     @property
     def unique_id(self):
@@ -94,14 +95,15 @@ class SmartPlugSwitch(SwitchDevice):
 
     def update(self):
         """Update edimax switch."""
-        try:
-            self._now_power = float(self.smartplug.now_power)
-        except (TypeError, ValueError):
-            self._now_power = None
+        if self._supports_power_monitoring:
+            try:
+                self._now_power = float(self.smartplug.now_power)
+            except (TypeError, ValueError):
+                self._now_power = None
 
-        try:
-            self._now_energy_day = float(self.smartplug.now_energy_day)
-        except (TypeError, ValueError):
-            self._now_energy_day = None
+            try:
+                self._now_energy_day = float(self.smartplug.now_energy_day)
+            except (TypeError, ValueError):
+                self._now_energy_day = None
 
         self._state = self.smartplug.state == "ON"
