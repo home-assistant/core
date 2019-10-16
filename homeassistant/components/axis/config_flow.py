@@ -193,7 +193,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
-            "name": discovery_info["hostname"],
+            "name": discovery_info["hostname"][:-7],
             "host": discovery_info[CONF_HOST],
         }
 
