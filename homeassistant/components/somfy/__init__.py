@@ -10,16 +10,14 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant import config_entries, exceptions
+from homeassistant.helpers import config_validation as cv, config_entry_oauth2_flow
 from homeassistant.components.somfy import config_flow
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
-from . import local_auth
-from .const import DATA_IMPLEMENTATION
+from . import api
 
 API = "api"
 
@@ -54,20 +52,21 @@ SOMFY_COMPONENTS = ["cover"]
 
 async def async_setup(hass, config):
     """Set up the Somfy component."""
-    hass.data[DOMAIN] = {DATA_IMPLEMENTATION: {}}
+    hass.data[DOMAIN] = {}
 
     if DOMAIN not in config:
         return True
 
-    config_flow.register_flow_implementation(
+    config_flow.SomfyConfigFlow.register_local_implementation(
         hass,
-        local_auth.LocalSomfyImplementation(
-            hass, config[DOMAIN][CONF_CLIENT_ID], config[DOMAIN][CONF_CLIENT_SECRET]
+        config_entry_oauth2_flow.LocalOAuth2Implementation(
+            hass,
+            DOMAIN,
+            config[DOMAIN][CONF_CLIENT_ID],
+            config[DOMAIN][CONF_CLIENT_SECRET],
+            "https://accounts.somfy.com/oauth/oauth/v2/auth",
+            "https://accounts.somfy.com/oauth/oauth/v2/token",
         ),
-    )
-
-    await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
     )
 
     return True
@@ -75,19 +74,18 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Somfy from a config entry."""
-    implementation_domain = entry.data.get(
-        "domain",
-        # Fallback for backwards compat
-        DOMAIN,
-    )
-    implementation = hass.data[DOMAIN][DATA_IMPLEMENTATION].get(implementation_domain)
 
-    if not implementation:
-        raise exceptions.HomeAssistantError(
-            f"Unknown implementation: {implementation_domain}"
+    # Backwards compat
+    if "implementation" not in entry.data:
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, "implementation": DOMAIN}
         )
 
-    hass.data[DOMAIN][API] = implementation.async_create_api_auth(entry)
+    implementation = config_entry_oauth2_flow.async_get_config_entry_implementation(
+        hass, entry
+    )
+
+    hass.data[DOMAIN][API] = api.ConfigEntrySomfyApi(hass, entry, implementation)
 
     await update_all_devices(hass)
 

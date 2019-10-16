@@ -168,7 +168,9 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
 
         resp.raise_for_status()
 
-        return cast(dict, await resp.json())
+        new_token = await resp.json()
+        new_token["expires_at"] = time.time() + new_token["expires_in"]
+        return cast(dict, new_token)
 
     async def async_refresh_token(self, token: dict) -> dict:
         """Refresh tokens."""
@@ -259,7 +261,6 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         return self.async_create_entry(title=self.flow_impl.name, data=data)
 
     async_step_user = async_step_pick_implementation
-    async_step_import = async_step_pick_implementation
     async_step_ssdp = async_step_pick_implementation
     async_step_zeroconf = async_step_pick_implementation
     async_step_homekit = async_step_pick_implementation
@@ -269,11 +270,11 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         cls, hass: HomeAssistant, local_impl: LocalOAuth2Implementation
     ) -> None:
         """Register a local implementation."""
-        register_implementation(hass, cls.DOMAIN, local_impl)
+        async_register_implementation(hass, cls.DOMAIN, local_impl)
 
 
 @callback
-def register_implementation(
+def async_register_implementation(
     hass: HomeAssistant, domain: str, implementation: AbstractOAuth2Implementation
 ) -> None:
     """Register an OAuth2 flow implementation for an integration."""
@@ -295,11 +296,16 @@ def async_get_implementations(
 @callback
 def async_get_config_entry_implementation(
     hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> Optional[AbstractOAuth2Implementation]:
+) -> AbstractOAuth2Implementation:
     """Return the implementation for this config entry."""
-    return async_get_implementations(hass, config_entry.domain).get(
+    implementation = async_get_implementations(hass, config_entry.domain).get(
         config_entry.data["implementation"]
     )
+
+    if implementation is None:
+        raise ValueError("Implementation not available")
+
+    return implementation
 
 
 class OAuth2AuthorizeCallbackView(HomeAssistantView):
@@ -347,7 +353,7 @@ class OAuth2Session:
         self.config_entry = config_entry
         self.implementation = implementation
 
-    async def ensure_token_valid(self) -> None:
+    async def async_ensure_token_valid(self) -> None:
         """Ensure that the current token is valid."""
         token = self.config_entry.data["token"]
 
@@ -364,7 +370,7 @@ class OAuth2Session:
         self, method: str, url: str, **kwargs: Any
     ) -> client.ClientResponse:
         """Make a request."""
-        await self.ensure_token_valid()
+        await self.async_ensure_token_valid()
         return await async_oauth2_request(
             self.hass, self.config_entry.data["token"], method, url, **kwargs
         )
