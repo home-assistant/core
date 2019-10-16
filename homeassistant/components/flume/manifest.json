@@ -4,6 +4,6 @@
     "documentation": "https://www.home-assistant.io/integrations/flume/",
     "dependencies": [],
     "codeowners": ["@ChrisMandich"],
-    "requirements": ["pytz==2019.2"]
+    "requirements": ["pytz==2019.2","pyflume==0.1.4"]
   }
   
