@@ -112,10 +112,7 @@ class GoogleConfig(AbstractConfig):
         """If an entity should have 2FA checked."""
         return True
 
-    async def _async_get_access_token(self):
-        now = dt_util.utcnow()
-        if self._access_token and now < self._access_token_renew:
-            return self._access_token
+    async def _async_get_access_token(self, now):
 
         if CONF_SERVICE_ACCOUNT not in self._config:
             raise Exception(
@@ -148,7 +145,11 @@ class GoogleConfig(AbstractConfig):
 
     async def async_report_state(self, message):
         """Send a state report to Google."""
-        access_token = await self._async_get_access_token()
+        now = dt_util.utcnow()
+        if self._access_token and now < self._access_token_renew:
+            access_token = self._access_token
+        else:
+            access_token = await self._async_get_access_token(now)
 
         headers = {
             "Authorization": "Bearer {}".format(access_token),

@@ -43,11 +43,9 @@ async def test_get_access_token(hass, aioclient_mock):
     config = GoogleConfig(hass, DUMMY_CONFIG)
     with patch(
         "homeassistant.components.google_assistant.http._get_homegraph_jwt"
-    ) as mock_get_token, patch(
-        "homeassistant.components.google_assistant.http.dt_util"
-    ) as mock_dt:
-        mock_dt.utcnow.return_value = datetime(2019, 10, 14)
+    ) as mock_get_token:
 
+        now = datetime(2019, 10, 14)
         token = "dummyjwt"
         mock_get_token.return_value = token
 
@@ -57,7 +55,7 @@ async def test_get_access_token(hass, aioclient_mock):
             json={"access_token": "1234", "expires_in": 3600},
         )
 
-        await config._async_get_access_token()
+        await config._async_get_access_token(now)
         assert aioclient_mock.call_count == 1
         assert aioclient_mock.mock_calls[0][3] == {
             "Authorization": "Bearer {}".format(token),
