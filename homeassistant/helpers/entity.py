@@ -12,6 +12,7 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_HIDDEN,
     ATTR_ICON,
+    ATTR_ICON_COLOR,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_DEFAULT_NAME,
     STATE_OFF,
@@ -186,6 +187,11 @@ class Entity:
         return None
 
     @property
+    def icon_color(self) -> Optional[str]:
+        """Return the icon color to use in the frontend, if any."""
+        return None
+
+    @property
     def entity_picture(self) -> Optional[str]:
         """Return the entity picture to use in the frontend, if any."""
         return None
@@ -329,6 +335,10 @@ class Entity:
         icon = self.icon
         if icon is not None:
             attr[ATTR_ICON] = icon
+
+        icon_color = self.icon_color
+        if icon_color is not None:
+            attr[ATTR_ICON_COLOR] = icon_color
 
         entity_picture = self.entity_picture
         if entity_picture is not None:

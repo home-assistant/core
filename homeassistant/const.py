@@ -258,6 +258,9 @@ ATTR_ENTITY_PICTURE = "entity_picture"
 # Icon to use in the frontend
 ATTR_ICON = "icon"
 
+# Icon color to use in the frontend
+ATTR_ICON_COLOR = "icon_color"
+
 # The unit of measurement if applicable
 ATTR_UNIT_OF_MEASUREMENT = "unit_of_measurement"
 
