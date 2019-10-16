@@ -1,10 +1,11 @@
 """Test Google http services."""
-from asynctest import patch, ANY
 from datetime import datetime
+from asynctest import patch, ANY
 
 from homeassistant.components.google_assistant.http import (
     GoogleConfig,
     _get_homegraph_jwt,
+    _get_homegraph_token,
 )
 from homeassistant.components.google_assistant import GOOGLE_ASSISTANT_SCHEMA
 from homeassistant.components.google_assistant.const import (
@@ -37,39 +38,31 @@ async def test_get_jwt(hass):
 
 async def test_get_access_token(hass, aioclient_mock):
     """Test the function to get access token."""
-    config = GoogleConfig(hass, DUMMY_CONFIG)
-    with patch(
-        "homeassistant.components.google_assistant.http._get_homegraph_jwt"
-    ) as mock_get_token:
+    jwt = "dummyjwt"
 
-        now = datetime(2019, 10, 14)
-        token = "dummyjwt"
-        mock_get_token.return_value = token
+    aioclient_mock.post(
+        HOMEGRAPH_TOKEN_URL,
+        status=200,
+        json={"access_token": "1234", "expires_in": 3600},
+    )
 
-        aioclient_mock.post(
-            HOMEGRAPH_TOKEN_URL,
-            status=200,
-            json={"access_token": "1234", "expires_in": 3600},
-        )
-
-        await config._async_get_access_token(now)
-        assert aioclient_mock.call_count == 1
-        assert aioclient_mock.mock_calls[0][3] == {
-            "Authorization": "Bearer {}".format(token),
-            "Content-Type": "application/x-www-form-urlencoded",
-        }
+    await _get_homegraph_token(hass, jwt)
+    assert aioclient_mock.call_count == 1
+    assert aioclient_mock.mock_calls[0][3] == {
+        "Authorization": "Bearer {}".format(jwt),
+        "Content-Type": "application/x-www-form-urlencoded",
+    }
 
 
 async def test_report_state(hass, aioclient_mock, hass_storage):
     """Test the report state function."""
     config = GoogleConfig(hass, DUMMY_CONFIG)
-    with patch.object(
-        config, "_async_get_access_token"
+    with patch(
+        "homeassistant.components.google_assistant.http._get_homegraph_token"
     ) as mock_get_token, patch.object(hass.auth, "async_get_owner") as mock_get_owner:
-
         token = "dummyaccess"
         message = {"devices": {}}
-        mock_get_token.return_value = token
+        mock_get_token.return_value = {"access_token": token, "expires_in": 3600}
         owner = User(name="Test User", perm_lookup=None, groups=[], is_owner=True)
         mock_get_owner.return_value = owner
 

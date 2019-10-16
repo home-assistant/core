@@ -47,6 +47,22 @@ def _get_homegraph_jwt(time, iss, key):
     return jwt.encode(jwt_raw, key, algorithm="RS256").decode("utf-8")
 
 
+async def _get_homegraph_token(hass, jwt_signed):
+    headers = {
+        "Authorization": "Bearer {}".format(jwt_signed),
+        "Content-Type": "application/x-www-form-urlencoded",
+    }
+    data = {
+        "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+        "assertion": jwt_signed,
+    }
+
+    session = async_get_clientsession(hass)
+    async with session.post(HOMEGRAPH_TOKEN_URL, headers=headers, data=data) as res:
+        res.raise_for_status()
+        return await res.json()
+
+
 class GoogleConfig(AbstractConfig):
     """Config for manual setup of Google."""
 
@@ -112,68 +128,51 @@ class GoogleConfig(AbstractConfig):
         """If an entity should have 2FA checked."""
         return True
 
-    async def _async_get_access_token(self, now):
-
+    async def async_call_homegraph_api(self, url, data):
+        """Call a homegraph api with authenticaiton."""
         if CONF_SERVICE_ACCOUNT not in self._config:
-            raise Exception(
-                "Trying to get access token with no service account in config"
+            raise Exception("Trying to call homegraph api without token")
+
+        now = dt_util.utcnow()
+        if not self._access_token or now > self._access_token_renew:
+            token = await _get_homegraph_token(
+                self.hass,
+                _get_homegraph_jwt(
+                    now,
+                    self._config[CONF_SERVICE_ACCOUNT][CONF_CLIENT_EMAIL],
+                    self._config[CONF_SERVICE_ACCOUNT][CONF_PRIVATE_KEY],
+                ),
+            )
+            self._access_token = token["access_token"]
+            self._access_token_renew = now + timedelta(
+                seconds=token["expires_in"] * 0.8
             )
 
-        jwt_signed = _get_homegraph_jwt(
-            now,
-            self._config[CONF_SERVICE_ACCOUNT][CONF_CLIENT_EMAIL],
-            self._config[CONF_SERVICE_ACCOUNT][CONF_PRIVATE_KEY],
-        )
-
         headers = {
-            "Authorization": "Bearer {}".format(jwt_signed),
-            "Content-Type": "application/x-www-form-urlencoded",
-        }
-        data = {
-            "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
-            "assertion": jwt_signed,
-        }
-
-        session = async_get_clientsession(self.hass)
-        async with session.post(HOMEGRAPH_TOKEN_URL, headers=headers, data=data) as res:
-            data = await res.json()
-            res.raise_for_status()
-
-        self._access_token = data["access_token"]
-        self._access_token_renew = now + timedelta(seconds=data["expires_in"] * 0.8)
-        return self._access_token
-
-    async def async_report_state(self, message):
-        """Send a state report to Google."""
-        now = dt_util.utcnow()
-        if self._access_token and now < self._access_token_renew:
-            access_token = self._access_token
-        else:
-            access_token = await self._async_get_access_token(now)
-
-        headers = {
-            "Authorization": "Bearer {}".format(access_token),
+            "Authorization": "Bearer {}".format(self._access_token),
             "X-GFE-SSL": "yes",
         }
 
+        session = async_get_clientsession(self.hass)
+        async with session.post(url, headers=headers, json=data) as res:
+            if res.status >= 400:
+                _LOGGER.error(
+                    "Failed to call api '%s' with data %s. Response code: %s and message: %s",
+                    url,
+                    data,
+                    res.status,
+                    (await res.text()),
+                )
+                return
+
+    async def async_report_state(self, message):
+        """Send a state report to Google."""
         data = {
             "requestId": uuid4().hex,
             "agentUserId": (await self.hass.auth.async_get_owner()).id,
             "payload": message,
         }
-
-        session = async_get_clientsession(self.hass)
-        async with session.post(
-            REPORT_STATE_BASE_URL, headers=headers, json=data
-        ) as res:
-            if res.status >= 400:
-                _LOGGER.error(
-                    "Failed to report state %s with response code: %s and message: %s",
-                    message,
-                    res.status,
-                    (await res.text()),
-                )
-                return
+        await self.async_call_homegraph_api(REPORT_STATE_BASE_URL, data)
 
 
 @callback
