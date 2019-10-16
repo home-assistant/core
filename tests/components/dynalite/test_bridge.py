@@ -70,6 +70,31 @@ async def test_add_devices_and_then_regiter_add_entities():
     LOGGER.debug("XXX REMOVE")
 
 
+async def regiter_add_entities_and_then_test_add_devices():
+    """Test that add_devices work."""
+    hass = Mock()
+    entry = Mock()
+    host = "1.2.3.4"
+    entry.data = {"host": host}
+    hass.data = {DOMAIN: {DATA_CONFIGS: {host: {}}}}
+    dyn_bridge = DynaliteBridge(hass, entry)
+
+    with patch.object(
+        dyn_bridge._dynalite_devices, "async_setup", return_value=mock_coro(Mock())
+    ):
+        assert await dyn_bridge.async_setup() is True
+        device1 = Mock()
+        device1.category = "light"
+        device2 = Mock()
+        device2.category = "switch"
+        reg_func = Mock()
+        dyn_bridge.register_add_entities(reg_func)
+        dyn_bridge.add_devices([device1, device2])
+    reg_func.assert_called_once()
+    assert reg_func.call_args[0][0][0]._device is device1
+    LOGGER.debug("XXX REMOVE")
+
+
 async def test_update_device():
     """Test the update_device callback."""
     hass = Mock()
