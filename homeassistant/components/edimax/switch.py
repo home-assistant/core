@@ -9,6 +9,8 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN = "edimax"
+
 DEFAULT_NAME = "Edimax Smart Plug"
 DEFAULT_PASSWORD = "1234"
 DEFAULT_USERNAME = "admin"
@@ -44,6 +46,23 @@ class SmartPlugSwitch(SwitchDevice):
         self._now_power = None
         self._now_energy_day = None
         self._state = False
+        self._info = smartplug.info
+
+    @property
+    def unique_id(self):
+        """Return the device's MAC address."""
+        return self._info["mac"]
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": self._info["vendor"],
+            "model": self._info["model"],
+            "sw_version": self._info["version"],
+        }
 
     @property
     def name(self):
