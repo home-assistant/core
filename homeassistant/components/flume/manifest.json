@@ -2,8 +2,11 @@
     "domain": "flume",
     "name": "Flume",
     "documentation": "https://www.home-assistant.io/integrations/flume/",
+    "requirements": [
+        "pytz==2019.2",
+        "pyflume==0.1.5"
+      ],
     "dependencies": [],
-    "codeowners": ["@ChrisMandich"],
-    "requirements": ["pytz==2019.2","pyflume==0.1.4"]
+    "codeowners": ["@ChrisMandich"]
   }
   
