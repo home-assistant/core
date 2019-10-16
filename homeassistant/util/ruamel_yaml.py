@@ -90,7 +90,7 @@ def load_yaml(fname: str, round_trip: bool = False) -> JSON_TYPE:
     if round_trip:
         yaml = YAML(typ="rt")
         # type ignore: https://bitbucket.org/ruamel/yaml/pull-requests/42
-        yaml.preserve_quotes = True  # type: ignore
+        yaml.preserve_quotes = True
     else:
         if ExtSafeConstructor.name is None:
             ExtSafeConstructor.name = fname
