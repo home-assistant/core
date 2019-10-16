@@ -62,7 +62,6 @@ stages:
 
           . venv/bin/activate
           pip install -e .
-      displayName: 'Setup Env'
     - script: |
         . venv/bin/activate
         python -m script.hassfest validate
