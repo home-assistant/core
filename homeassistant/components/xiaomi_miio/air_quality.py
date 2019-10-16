@@ -73,6 +73,7 @@ class AirMonitorB1(AirQualityEntity):
         self._device = device
         self._icon = "mdi:cloud"
         self._manufacturer = "Xiaomi"
+        self._unit_of_measurement = "μg/m3"
         self._model = None
         self._mac_address = None
         self._sw_version = None
@@ -179,3 +180,13 @@ class AirMonitorB1(AirQualityEntity):
                 data[attr] = value
 
         return data
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return self._unit_of_measurement
+
+    @property
+    def state(self):
+        """Return the current state."""
+        return self._particulate_matter_2_5
