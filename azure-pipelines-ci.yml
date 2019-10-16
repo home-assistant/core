@@ -37,12 +37,15 @@ stages:
       vmImage: 'ubuntu-latest'
     container: $[ variables['PythonMain'] ]
     steps:
-    - script: |
-        python -m venv venv
+    - template: templates/azp-step-cache.yaml@azure
+      parameters:
+        keyfile: 'requirements_test.txt | homeassistant/package_constraints.txt'
+        build: |
+          set -e
+          python -m venv venv
 
-        . venv/bin/activate
-        pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
-      displayName: 'Setup Env'
+          . venv/bin/activate
+          pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
     - script: |
         . venv/bin/activate
         flake8 homeassistant tests script
@@ -71,12 +74,15 @@ stages:
       vmImage: 'ubuntu-latest'
     container: $[ variables['PythonMain'] ]
     steps:
-    - script: |
-        python -m venv venv
+    - template: templates/azp-step-cache.yaml@azure
+      parameters:
+        keyfile: 'requirements_test.txt | homeassistant/package_constraints.txt'
+        build: |
+          set -e
+          python -m venv venv
 
-        . venv/bin/activate
-        pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
-      displayName: 'Setup Env'
+          . venv/bin/activate
+          pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
     - script: |
         . venv/bin/activate
         ./script/check_format
