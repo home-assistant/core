@@ -485,6 +485,7 @@ omit =
     homeassistant/components/openweathermap/weather.py
     homeassistant/components/opple/light.py
     homeassistant/components/orangepi_gpio/*
+    homeassistant/components/oru/*
     homeassistant/components/orvibo/switch.py
     homeassistant/components/osramlightify/light.py
     homeassistant/components/otp/sensor.py
