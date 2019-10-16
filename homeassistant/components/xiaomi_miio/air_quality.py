@@ -1,7 +1,12 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5)."""
 import voluptuous as vol
 
-from homeassistant.components.air_quality import AirQualityEntity, PLATFORM_SCHEMA, _LOGGER, ATTR_PM_2_5
+from homeassistant.components.air_quality import (
+    AirQualityEntity,
+    PLATFORM_SCHEMA,
+    _LOGGER,
+    ATTR_PM_2_5,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN, ATTR_TEMPERATURE
 from homeassistant.exceptions import PlatformNotReady
 from miio import AirQualityMonitor, DeviceException
@@ -33,7 +38,7 @@ PROP_TO_ATTR = {
     "total_volatile_organic_compounds": ATTR_TVOC,
     "manufacturer": ATTR_MANUFACTURER,
     "model": ATTR_MODEL,
-    "sw_version": ATTR_SW_VERSION
+    "sw_version": ATTR_SW_VERSION,
 }
 
 
@@ -50,7 +55,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
 
     try:
-        device = AirMonitor_b1(name, AirQualityMonitor(host, token, model = None))
+        device = AirMonitor_b1(name, AirQualityMonitor(host, token, model=None))
 
     except DeviceException:
         raise PlatformNotReady
@@ -58,7 +63,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     hass.data[DATA_KEY][host] = device
     async_add_entities([device], update_before_add=True)
 
-    
+
 class AirMonitor_b1(AirQualityEntity):
     """Air Quality class for Xiaomi cgllc.airmonitor.b1 device."""
 
