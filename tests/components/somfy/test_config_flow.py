@@ -5,30 +5,35 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import data_entry_flow, setup, config_entries
-from homeassistant.components.somfy import config_flow, DOMAIN, const, local_auth
+from homeassistant.components.somfy import config_flow, DOMAIN
+from homeassistant.helpers import config_entry_oauth2_flow
+
 from tests.common import MockConfigEntry
 
 CLIENT_SECRET_VALUE = "5678"
 
 CLIENT_ID_VALUE = "1234"
 
-AUTH_URL = "http://somfy.com"
-
 
 @pytest.fixture()
 async def mock_impl(hass):
     """Mock implementation."""
     await setup.async_setup_component(hass, "http", {})
-    impl = local_auth.LocalSomfyImplementation(
-        hass, CLIENT_ID_VALUE, CLIENT_SECRET_VALUE
+
+    impl = config_entry_oauth2_flow.LocalOAuth2Implementation(
+        hass,
+        DOMAIN,
+        CLIENT_ID_VALUE,
+        CLIENT_SECRET_VALUE,
+        "https://accounts.somfy.com/oauth/oauth/v2/auth",
+        "https://accounts.somfy.com/oauth/oauth/v2/token",
     )
-    config_flow.register_flow_implementation(hass, impl)
+    config_flow.SomfyFlowHandler.async_register_implementation(hass, impl)
     return impl
 
 
 async def test_abort_if_no_configuration(hass):
     """Check flow abort when no configuration."""
-    hass.data[DOMAIN] = {const.DATA_IMPLEMENTATION: {}}
     flow = config_flow.SomfyFlowHandler()
     flow.hass = hass
     result = await flow.async_step_user()
@@ -49,8 +54,8 @@ async def test_abort_if_existing_entry(hass):
     assert result["reason"] == "already_setup"
 
 
-async def test_full_flow(hass, aiohttp_client, requests_mock):
-    """Check classic use case."""
+async def test_full_flow(hass, aiohttp_client, aioclient_mock):
+    """Check full flow."""
     assert await setup.async_setup_component(
         hass,
         "somfy",
@@ -66,21 +71,22 @@ async def test_full_flow(hass, aiohttp_client, requests_mock):
     result = await hass.config_entries.flow.async_init(
         "somfy", context={"source": config_entries.SOURCE_USER}
     )
+    state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
     assert result["url"] == (
         "https://accounts.somfy.com/oauth/oauth/v2/auth"
         f"?response_type=code&client_id={CLIENT_ID_VALUE}"
-        "&redirect_uri=https%3A%2F%2Fexample.com%2Fauth%2Fsomfy%2Fcallback"
-        f"&state={result['flow_id']}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}"
     )
 
     client = await aiohttp_client(hass.http.app)
-    resp = await client.get(f'/auth/somfy/callback?code=abcd&state={result["flow_id"]}')
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
-    requests_mock.post(
+    aioclient_mock.post(
         "https://accounts.somfy.com/oauth/oauth/v2/token",
         json={
             "refresh_token": "mock-refresh-token",
@@ -90,9 +96,7 @@ async def test_full_flow(hass, aiohttp_client, requests_mock):
         },
     )
 
-    with patch(
-        "homeassistant.components.somfy.local_auth.LocalSomfyImplementation.async_create_api_auth"
-    ):
+    with patch("homeassistant.components.somfy.api.ConfigEntrySomfyApi"):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["data"]["implementation"] == "somfy"

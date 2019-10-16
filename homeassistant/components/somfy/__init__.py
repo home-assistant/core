@@ -57,7 +57,7 @@ async def async_setup(hass, config):
     if DOMAIN not in config:
         return True
 
-    config_flow.SomfyConfigFlow.register_local_implementation(
+    config_flow.SomfyFlowHandler.async_register_implementation(
         hass,
         config_entry_oauth2_flow.LocalOAuth2Implementation(
             hass,

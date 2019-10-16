@@ -266,7 +266,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
     async_step_homekit = async_step_pick_implementation
 
     @classmethod
-    def register_local_implementation(
+    def async_register_implementation(
         cls, hass: HomeAssistant, local_impl: LocalOAuth2Implementation
     ) -> None:
         """Register a local implementation."""

@@ -7,7 +7,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class SomfyConfigFlow(
+class SomfyFlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
 ):
     """Config flow to handle Somfy OAuth2 authentication."""
