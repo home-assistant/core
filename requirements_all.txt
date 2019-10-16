@@ -1084,7 +1084,7 @@ pyalarmdotcom==0.3.2
 pyarlo==0.2.3
 
 # homeassistant.components.netatmo
-pyatmo==2.2.1
+pyatmo==2.3.2
 
 # homeassistant.components.atome
 pyatome==0.1.1
