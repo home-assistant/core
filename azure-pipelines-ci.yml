@@ -54,7 +54,7 @@ stages:
       vmImage: 'ubuntu-latest'
     container: $[ variables['PythonMain'] ]
     steps:
-    -- template: templates/azp-step-cache.yaml@azure
+    - template: templates/azp-step-cache.yaml@azure
       parameters:
         keyfile: 'homeassistant/package_constraints.txt'
         build: |
