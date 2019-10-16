@@ -215,6 +215,7 @@ homeassistant/components/opentherm_gw/* @mvn23
 homeassistant/components/openuv/* @bachya
 homeassistant/components/openweathermap/* @fabaff
 homeassistant/components/orangepi_gpio/* @pascallj
+homeassistant/components/oru/* @bvlaicu
 homeassistant/components/owlet/* @oblogic7
 homeassistant/components/panel_custom/* @home-assistant/frontend
 homeassistant/components/panel_iframe/* @home-assistant/frontend
