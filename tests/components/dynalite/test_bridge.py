@@ -45,7 +45,7 @@ async def test_invalid_host():
     assert dyn_bridge is None
 
 
-async def test_add_devices_and_then_regiter_add_entities():
+async def test_add_devices_then_register():
     """Test that add_devices work."""
     hass = Mock()
     entry = Mock()
@@ -70,8 +70,8 @@ async def test_add_devices_and_then_regiter_add_entities():
     LOGGER.debug("XXX REMOVE")
 
 
-async def regiter_add_entities_and_then_test_add_devices():
-    """Test that add_devices work."""
+async def test_register_then_add_devices():
+    """Test that add_devices work after register_add_entities."""
     hass = Mock()
     entry = Mock()
     host = "1.2.3.4"
