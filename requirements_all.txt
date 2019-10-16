@@ -916,6 +916,9 @@ openwebifpy==3.1.1
 # homeassistant.components.luci
 openwrt-luci-rpc==1.1.1
 
+# homeassistant.components.oru
+oru==0.1.9
+
 # homeassistant.components.orvibo
 orvibo==1.1.1
 
