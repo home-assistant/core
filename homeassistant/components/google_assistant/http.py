@@ -11,13 +11,14 @@ from aiohttp.web import Request, Response
 
 # Typing imports
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import callback
+from homeassistant.core import callback, ServiceCall
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
 from .const import (
     GOOGLE_ASSISTANT_API_ENDPOINT,
+    CONF_API_KEY,
     CONF_EXPOSE_BY_DEFAULT,
     CONF_EXPOSED_DOMAINS,
     CONF_ENTITY_CONFIG,
@@ -27,9 +28,12 @@ from .const import (
     CONF_SERVICE_ACCOUNT,
     CONF_CLIENT_EMAIL,
     CONF_PRIVATE_KEY,
+    DOMAIN,
     HOMEGRAPH_TOKEN_URL,
     HOMEGRAPH_SCOPE,
     REPORT_STATE_BASE_URL,
+    REQUEST_SYNC_BASE_URL,
+    SERVICE_REQUEST_SYNC,
 )
 from .smart_home import async_handle_message
 from .helpers import AbstractConfig
@@ -193,6 +197,25 @@ def async_register_http(hass, cfg):
     hass.http.register_view(GoogleAssistantView(config))
     if config.should_report_state:
         config.async_enable_report_state()
+
+    async def request_sync_service_handler(call: ServiceCall):
+        """Handle request sync service calls."""
+        agent_user_id = call.data.get("agent_user_id") or call.context.user_id
+
+        if agent_user_id is None:
+            _LOGGER.warning(
+                "No agent_user_id supplied for request_sync. Call as a user or pass in user id as agent_user_id."
+            )
+            return
+        await config.async_call_homegraph_api(
+            REQUEST_SYNC_BASE_URL, {"agentUserId": agent_user_id}
+        )
+
+    # Register service only if api key is provided
+    if CONF_API_KEY not in cfg and CONF_SERVICE_ACCOUNT in cfg:
+        hass.services.async_register(
+            DOMAIN, SERVICE_REQUEST_SYNC, request_sync_service_handler
+        )
 
 
 class GoogleAssistantView(HomeAssistantView):
