@@ -12,6 +12,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
+from homeassistant.const import CONF_HOST, CONF_PORT, ATTR_BATTERY_LEVEL
+
 from .const import API, DOMAIN, HOST, PORT
 
 DEVICES = "devices"
@@ -75,6 +77,8 @@ class SomaEntity(Entity):
         self.api = api
         self.current_position = 50
         self.is_available = True
+        self.battery_mv = 0
+        self.battery_level = 0
 
     @property
     def available(self):
@@ -103,6 +107,12 @@ class SomaEntity(Entity):
             "manufacturer": "Wazombi Labs",
         }
 
+    @property
+    def device_state_attributes(self):
+        """Return the device specific state attributes."""
+        attrs = {ATTR_BATTERY_LEVEL: self.battery_level}
+        return attrs
+
     async def async_update(self):
         """Update the device with the latest data."""
         try:
@@ -121,3 +131,13 @@ class SomaEntity(Entity):
             return
         self.current_position = 100 - response["position"]
         self.is_available = True
+        response = await self.hass.async_add_executor_job(
+            self.api.get_battery_level, self.device["mac"]
+        )
+        if response["result"] != "success":
+            _LOGGER.error(
+                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
+            )
+            return
+        self.battery_mv = response["battery_level"]
+        self.battery_level = (self.battery_mv - 360) * (100 / 60)
