@@ -1,7 +1,7 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5)."""
 import voluptuous as vol
 
-from homeassistant.components.air_quality import AirQualityEntity, PLATFORM_SCHEMA, _LOGGER, ATTR_PM_2_5, DOMAIN
+from homeassistant.components.air_quality import AirQualityEntity, PLATFORM_SCHEMA, _LOGGER, ATTR_PM_2_5
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN, ATTR_TEMPERATURE
 from homeassistant.exceptions import PlatformNotReady
 from miio import AirQualityMonitor, DeviceException
@@ -36,6 +36,7 @@ PROP_TO_ATTR = {
     "sw_version": ATTR_SW_VERSION
 }
 
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the sensor from config."""
 
@@ -59,6 +60,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 class AirMonitor_b1(AirQualityEntity):
+"""
+Air Quality class for Xiaomi cgllc.airmonitor.b1 device
+"""
     def __init__(self, name, device):
         """Initialize the entity."""
         self._name = name
@@ -76,18 +80,18 @@ class AirMonitor_b1(AirQualityEntity):
     async def async_update(self):
         """Fetch state from the miio device."""
         from miio import DeviceException
-        
+
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
             _LOGGER.debug("Got new state: %s", state)
 
-            self._carbon_dioxide_equivalent = state.co2e 
+            self._carbon_dioxide_equivalent = state.co2e
             self._relative_humidity = round(state.humidity, 1)
             self._particulate_matter_2_5 = round(state.pm25, 1)
             self._temperature = round(state.temperature, 1)
             self._total_volatile_organic_compounds = round(state.tvoc, 3)
 
-            if self._model is None: 
+            if self._model is None:
                 self._model = self._device.model
                 self._mac_address = self._device.mac_address
                 self._sw_version = self._device.firmware_version
