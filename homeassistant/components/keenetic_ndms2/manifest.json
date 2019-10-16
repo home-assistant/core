@@ -3,8 +3,10 @@
   "name": "Keenetic ndms2",
   "documentation": "https://www.home-assistant.io/integrations/keenetic_ndms2",
   "requirements": [
-    "ndms2_client==0.0.9"
+    "ndms2_client==0.0.10"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@foxel"
+  ]
 }
