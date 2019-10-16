@@ -148,6 +148,8 @@ async def _test_reconnect(hass, caplog, config):
             in caplog.record_tuples[2]
         )
 
+    return True
+
 
 async def _test_adb_shell_returns_none(hass, config):
     """Test the case that the ADB shell command returns `None`.
@@ -174,6 +176,8 @@ async def _test_adb_shell_returns_none(hass, config):
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_UNAVAILABLE
+
+    return True
 
 
 async def test_reconnect_androidtv_python_adb(hass, caplog):
