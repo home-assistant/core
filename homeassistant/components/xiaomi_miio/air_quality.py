@@ -1,4 +1,5 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5)."""
+from miio import AirQualityMonitor, DeviceException
 import voluptuous as vol
 
 from homeassistant.components.air_quality import (
@@ -9,7 +10,6 @@ from homeassistant.components.air_quality import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN, ATTR_TEMPERATURE
 from homeassistant.exceptions import PlatformNotReady
-from miio import AirQualityMonitor, DeviceException
 import homeassistant.helpers.config_validation as cv
 
 DEFAULT_NAME = "Xiaomi Miio Sensor"
@@ -55,7 +55,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
 
     try:
-        device = AirMonitor_b1(name, AirQualityMonitor(host, token, model=None))
+        device = AirMonitorB1(name, AirQualityMonitor(host, token, model=None))
 
     except DeviceException:
         raise PlatformNotReady
@@ -64,7 +64,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([device], update_before_add=True)
 
 
-class AirMonitor_b1(AirQualityEntity):
+class AirMonitorB1(AirQualityEntity):
     """Air Quality class for Xiaomi cgllc.airmonitor.b1 device."""
 
     def __init__(self, name, device):
@@ -74,6 +74,8 @@ class AirMonitor_b1(AirQualityEntity):
         self._icon = "mdi:cloud"
         self._manufacturer = "Xiaomi"
         self._model = None
+        self._mac_address = None
+        self._sw_version = None
         self._carbon_dioxide_equivalent = None
         self._relative_humidity = None
         self._particulate_matter_2_5 = None
@@ -82,7 +84,6 @@ class AirMonitor_b1(AirQualityEntity):
 
     async def async_update(self):
         """Fetch state from the miio device."""
-        from miio import DeviceException
 
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
@@ -100,7 +101,6 @@ class AirMonitor_b1(AirQualityEntity):
                 self._sw_version = self._device.firmware_version
 
         except DeviceException as ex:
-            self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
