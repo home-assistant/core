@@ -92,7 +92,6 @@ async def test_register_then_add_devices():
         dyn_bridge.add_devices([device1, device2])
     reg_func.assert_called_once()
     assert reg_func.call_args[0][0][0]._device is device1
-    LOGGER.debug("XXX REMOVE")
 
 
 async def test_update_device():
