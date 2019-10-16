@@ -3,7 +3,7 @@
   "name": "Keyboard remote",
   "documentation": "https://www.home-assistant.io/integrations/keyboard_remote",
   "requirements": [
-    "evdev==0.6.1"
+    "evdev==1.1.2", "aionotify==0.2.0"
   ],
   "dependencies": [],
   "codeowners": []
