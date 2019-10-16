@@ -172,7 +172,6 @@ class TestBinarySensorTemplate(unittest.TestCase):
         state = self.hass.states.get("binary_sensor.test_template_sensor")
         assert state.attributes["icon_color"] == "rgba(250, 114, 122, .5)"
 
-
     def test_entity_picture_template(self):
         """Test entity_picture template."""
         with assert_setup_component(1):
