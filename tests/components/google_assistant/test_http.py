@@ -37,9 +37,6 @@ async def test_get_jwt(hass):
 
 async def test_get_access_token(hass, aioclient_mock):
     """Test the function to get access token."""
-
-    # TODO this should be cached with expire time remembered
-
     config = GoogleConfig(hass, DUMMY_CONFIG)
     with patch(
         "homeassistant.components.google_assistant.http._get_homegraph_jwt"
