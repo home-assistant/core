@@ -34,6 +34,19 @@ from .helpers import AbstractConfig
 _LOGGER = logging.getLogger(__name__)
 
 
+def _get_homegraph_jwt(time, iss, key):
+    now = int(time.timestamp())
+
+    jwt_raw = {
+        "iss": iss,
+        "scope": HOMEGRAPH_SCOPE,
+        "aud": HOMEGRAPH_TOKEN_URL,
+        "iat": now,
+        "exp": now + 3600,
+    }
+    return jwt.encode(jwt_raw, key, algorithm="RS256").decode("utf-8")
+
+
 class GoogleConfig(AbstractConfig):
     """Config for manual setup of Google."""
 
@@ -99,28 +112,22 @@ class GoogleConfig(AbstractConfig):
         """If an entity should have 2FA checked."""
         return True
 
-    def _async_get_jwt(self):
-        now = int(dt_util.utcnow().timestamp())
-
-        if CONF_SERVICE_ACCOUNT not in self._config:
-            raise Exception("No service account defined in config")
-
-        jwt_raw = {
-            "iss": self._config[CONF_SERVICE_ACCOUNT][CONF_CLIENT_EMAIL],
-            "scope": HOMEGRAPH_SCOPE,
-            "aud": HOMEGRAPH_TOKEN_URL,
-            "iat": now,
-            "exp": now + 3600,
-        }
-        private_key = self._config[CONF_SERVICE_ACCOUNT][CONF_PRIVATE_KEY]
-        return jwt.encode(jwt_raw, private_key, algorithm="RS256").decode("utf-8")
-
     async def _async_get_access_token(self):
         now = dt_util.utcnow()
         if self._access_token and now < self._access_token_renew:
             return self._access_token
 
-        jwt_signed = self._async_get_jwt()
+        if CONF_SERVICE_ACCOUNT not in self._config:
+            raise Exception(
+                "Trying to get access token with no service account in config"
+            )
+
+        jwt_signed = _get_homegraph_jwt(
+            now,
+            self._config[CONF_SERVICE_ACCOUNT][CONF_CLIENT_EMAIL],
+            self._config[CONF_SERVICE_ACCOUNT][CONF_PRIVATE_KEY],
+        )
+
         headers = {
             "Authorization": "Bearer {}".format(jwt_signed),
             "Content-Type": "application/x-www-form-urlencoded",
