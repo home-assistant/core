@@ -1,5 +1,5 @@
 """Test Dynalite bridge."""
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, MagicMock, call
 import pytest
 
 from dynalite_lib import CONF_ALL
@@ -79,7 +79,6 @@ async def test_update_device():
     hass.data = {DOMAIN: {DATA_CONFIGS: {host: {}}}}
     dyn_bridge = DynaliteBridge(hass, entry)
     dyn_bridge._dynalite_devices = Mock()
-    dyn_bridge._dynalite_devices.ava
     # Single device update
     device1 = Mock()
     device1.unique_id = "testing1"
@@ -98,3 +97,24 @@ async def test_update_device():
     dyn_bridge.update_device(CONF_ALL)
     assert device1.try_schedule_ha.call_count == 3
     assert device2.try_schedule_ha.call_count == 2
+
+
+async def test_async_reset():
+    """Test async_reset."""
+
+    class AsyncMock(MagicMock):
+        async def __call__(self, *args, **kwargs):
+            return super(AsyncMock, self).__call__(*args, **kwargs)
+
+    hass = AsyncMock()
+
+    entry = Mock()
+    host = "1.2.3.4"
+    entry.data = {"host": host}
+    hass.data = {DOMAIN: {DATA_CONFIGS: {host: {}}}}
+    dyn_bridge = DynaliteBridge(hass, entry)
+    await dyn_bridge.async_reset()
+    hass.config_entries.async_forward_entry_unload.assert_called_once()
+    assert hass.config_entries.async_forward_entry_unload.mock_calls[0] == call(
+        entry, "light"
+    )
