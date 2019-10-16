@@ -209,7 +209,7 @@ async def test_setup_missing_preset_conf(hass, caplog):
 
 
 async def test_valid_conf(hass, caplog):
-    """Test set up generic_thermostat with valid config values."""
+    """Test set up virtual_thermostat with valid config values."""
     with assert_setup_component(2, "climate"):
         await async_setup_component(
             hass,
@@ -821,6 +821,7 @@ async def test_normal_operate(hass, setup_comp_1, caplog):
 
 
 async def test_heat_hysteresis_tolerance(hass, setup_comp_1, caplog):
+
     """Test heat hysteresis tolerance operation."""
 
     await setup_input_booleans(hass)
