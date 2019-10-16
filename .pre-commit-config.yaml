@@ -17,4 +17,5 @@ repos:
     rev: v0.730
     hooks:
     -   id: mypy
+        args: []
         exclude: ^script/scaffold/templates/
