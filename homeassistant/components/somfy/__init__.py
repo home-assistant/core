@@ -4,20 +4,22 @@ Support for Somfy hubs.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/somfy/
 """
+import asyncio
 import logging
 from datetime import timedelta
-from functools import partial
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant import config_entries
+from homeassistant import config_entries, exceptions
 from homeassistant.components.somfy import config_flow
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
+
+from . import local_auth
+from .const import DATA_IMPLEMENTATION
 
 API = "api"
 
@@ -52,19 +54,20 @@ SOMFY_COMPONENTS = ["cover"]
 
 async def async_setup(hass, config):
     """Set up the Somfy component."""
+    hass.data[DOMAIN] = {DATA_IMPLEMENTATION: {}}
+
     if DOMAIN not in config:
         return True
 
-    hass.data[DOMAIN] = {}
-
     config_flow.register_flow_implementation(
-        hass, config[DOMAIN][CONF_CLIENT_ID], config[DOMAIN][CONF_CLIENT_SECRET]
+        hass,
+        local_auth.LocalSomfyImplementation(
+            hass, config[DOMAIN][CONF_CLIENT_ID], config[DOMAIN][CONF_CLIENT_SECRET]
+        ),
     )
 
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-        )
+    await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
     )
 
     return True
@@ -72,24 +75,19 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Somfy from a config entry."""
-
-    def token_saver(token):
-        _LOGGER.debug("Saving updated token")
-        entry.data[CONF_TOKEN] = token
-        update_entry = partial(
-            hass.config_entries.async_update_entry, data={**entry.data}
-        )
-        hass.add_job(update_entry, entry)
-
-    # Force token update.
-    from pymfy.api.somfy_api import SomfyApi
-
-    hass.data[DOMAIN][API] = SomfyApi(
-        entry.data["refresh_args"]["client_id"],
-        entry.data["refresh_args"]["client_secret"],
-        token=entry.data[CONF_TOKEN],
-        token_updater=token_saver,
+    implementation_domain = entry.data.get(
+        "domain",
+        # Fallback for backwards compat
+        DOMAIN,
     )
+    implementation = hass.data[DOMAIN][DATA_IMPLEMENTATION].get(implementation_domain)
+
+    if not implementation:
+        raise exceptions.HomeAssistantError(
+            f"Unknown implementation: {implementation_domain}"
+        )
+
+    hass.data[DOMAIN][API] = implementation.async_create_api_auth(entry)
 
     await update_all_devices(hass)
 
@@ -104,6 +102,12 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload a config entry."""
     hass.data[DOMAIN].pop(API, None)
+    await asyncio.gather(
+        *[
+            hass.config_entries.async_forward_entry_unload(entry, component)
+            for component in SOMFY_COMPONENTS
+        ]
+    )
     return True
 
 
