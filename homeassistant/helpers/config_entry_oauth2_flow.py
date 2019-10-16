@@ -77,26 +77,6 @@ class AbstractOAuth2Implementation(ABC):
     async def async_refresh_token(self, token: dict) -> dict:
         """Refresh a token."""
 
-    # @abstractmethod
-    # def async_create_api_auth(
-    #     self, hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-    # ) -> AbstractSomfyApi:
-    #     """Create a Somfy API Auth object.
-
-    #     The tokens returned from `async_resolve_external_data` can be found in 'token' key
-    #     in the config entry data.
-
-    #     It is the responsibility of the implementation to update the config entry when
-    #     a new access token is fetched.
-
-    #     ```python
-    #     hass.config_entries.async_update_entry(
-    #         config_entry,
-    #         data={**config_entry.data, "token": new_tokens}
-    #     )
-    #     ```
-    #     """
-
 
 class LocalOAuth2Implementation(AbstractOAuth2Implementation):
     """Local OAuth2 implementation."""
@@ -206,7 +186,9 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
     def __init__(self) -> None:
         """Instantiate config flow."""
         if self.DOMAIN == "":
-            raise ValueError("Make sure to set `domain` no your inherited class")
+            raise TypeError(
+                f"Can't instantiate class {self.__class__.__name__} without DOMAIN being set"
+            )
 
         self.external_data: Any = None
         self.flow_impl: AbstractOAuth2Implementation = None  # type: ignore

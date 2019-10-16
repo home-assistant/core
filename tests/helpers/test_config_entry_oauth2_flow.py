@@ -13,6 +13,9 @@ from tests.common import mock_platform
 TEST_DOMAIN = "oauth2_test"
 CLIENT_SECRET = "5678"
 CLIENT_ID = "1234"
+REFRESH_TOKEN = "mock-refresh-token"
+ACCESS_TOKEN_1 = "mock-access-token-1"
+ACCESS_TOKEN_2 = "mock-access-token-2"
 AUTHORIZE_URL = "https://example.como/auth/authorize"
 TOKEN_URL = "https://example.como/auth/token"
 
@@ -45,6 +48,23 @@ def flow_handler(hass):
             return logging.getLogger(__name__)
 
     return TestFlowHandler
+
+
+def test_inherit_enforces_domain_set():
+    """Test we enforce setting DOMAIN."""
+
+    class TestFlowHandler(
+        config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=TEST_DOMAIN
+    ):
+        """Test flow handler."""
+
+        @property
+        def logger(self) -> logging.Logger:
+            """Return logger."""
+            return logging.getLogger(__name__)
+
+    with pytest.raises(TypeError):
+        TestFlowHandler()
 
 
 async def test_abort_if_no_implementation(hass, flow_handler):
@@ -99,8 +119,8 @@ async def test_full_flow(
     aioclient_mock.post(
         TOKEN_URL,
         json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": "mock-access-token",
+            "refresh_token": REFRESH_TOKEN,
+            "access_token": ACCESS_TOKEN_1,
             "type": "Bearer",
             "expires_in": 60,
         },
@@ -112,8 +132,47 @@ async def test_full_flow(
 
     result["data"]["token"].pop("expires_at")
     assert result["data"]["token"] == {
-        "refresh_token": "mock-refresh-token",
-        "access_token": "mock-access-token",
+        "refresh_token": REFRESH_TOKEN,
+        "access_token": ACCESS_TOKEN_1,
         "type": "Bearer",
         "expires_in": 60,
+    }
+
+    entry = hass.config_entries.async_entries(TEST_DOMAIN)[0]
+
+    assert (
+        config_entry_oauth2_flow.async_get_config_entry_implementation(hass, entry)
+        is local_impl
+    )
+
+
+async def test_local_refresh_token(hass, local_impl, aioclient_mock):
+    """Test we can refresh token."""
+    aioclient_mock.post(
+        TOKEN_URL, json={"access_token": ACCESS_TOKEN_2, "expires_in": 100}
+    )
+
+    new_tokens = await local_impl.async_refresh_token(
+        {
+            "refresh_token": REFRESH_TOKEN,
+            "access_token": ACCESS_TOKEN_1,
+            "type": "Bearer",
+            "expires_in": 60,
+        }
+    )
+    new_tokens.pop("expires_at")
+
+    assert new_tokens == {
+        "refresh_token": REFRESH_TOKEN,
+        "access_token": ACCESS_TOKEN_2,
+        "type": "Bearer",
+        "expires_in": 100,
+    }
+
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[0][2] == {
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "grant_type": "refresh_token",
+        "refresh_token": REFRESH_TOKEN,
     }
