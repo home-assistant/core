@@ -27,7 +27,7 @@ async def test_bridge_setup():
     forward_entries = set(
         c[1][1] for c in hass.config_entries.async_forward_entry_setup.mock_calls
     )
-    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 1
+    hass.config_entries.async_forward_entry_setup.assert_called_once()
     assert forward_entries == set(["light"])
 
 
@@ -54,17 +54,13 @@ async def test_add_devices_then_register():
     hass.data = {DOMAIN: {DATA_CONFIGS: {host: {}}}}
     dyn_bridge = DynaliteBridge(hass, entry)
 
-    with patch.object(
-        dyn_bridge._dynalite_devices, "async_setup", return_value=mock_coro(Mock())
-    ):
-        assert await dyn_bridge.async_setup() is True
-        device1 = Mock()
-        device1.category = "light"
-        device2 = Mock()
-        device2.category = "switch"
-        dyn_bridge.add_devices([device1, device2])
-        reg_func = Mock()
-        dyn_bridge.register_add_entities(reg_func)
+    device1 = Mock()
+    device1.category = "light"
+    device2 = Mock()
+    device2.category = "switch"
+    dyn_bridge.add_devices([device1, device2])
+    reg_func = Mock()
+    dyn_bridge.register_add_entities(reg_func)
     reg_func.assert_called_once()
     assert reg_func.call_args[0][0][0]._device is device1
     LOGGER.debug("XXX REMOVE")
@@ -79,17 +75,13 @@ async def test_register_then_add_devices():
     hass.data = {DOMAIN: {DATA_CONFIGS: {host: {}}}}
     dyn_bridge = DynaliteBridge(hass, entry)
 
-    with patch.object(
-        dyn_bridge._dynalite_devices, "async_setup", return_value=mock_coro(Mock())
-    ):
-        assert await dyn_bridge.async_setup() is True
-        device1 = Mock()
-        device1.category = "light"
-        device2 = Mock()
-        device2.category = "switch"
-        reg_func = Mock()
-        dyn_bridge.register_add_entities(reg_func)
-        dyn_bridge.add_devices([device1, device2])
+    device1 = Mock()
+    device1.category = "light"
+    device2 = Mock()
+    device2.category = "switch"
+    reg_func = Mock()
+    dyn_bridge.register_add_entities(reg_func)
+    dyn_bridge.add_devices([device1, device2])
     reg_func.assert_called_once()
     assert reg_func.call_args[0][0][0]._device is device1
 
@@ -131,7 +123,6 @@ async def test_async_reset():
             return super(AsyncMock, self).__call__(*args, **kwargs)
 
     hass = AsyncMock()
-
     entry = Mock()
     host = "1.2.3.4"
     entry.data = {"host": host}
