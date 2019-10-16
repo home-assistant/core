@@ -41,7 +41,6 @@ stages:
       parameters:
         keyfile: 'requirements_test.txt | homeassistant/package_constraints.txt'
         build: |
-          set -e
           python -m venv venv
 
           . venv/bin/activate
@@ -55,11 +54,14 @@ stages:
       vmImage: 'ubuntu-latest'
     container: $[ variables['PythonMain'] ]
     steps:
-    - script: |
-        python -m venv venv
+    -- template: templates/azp-step-cache.yaml@azure
+      parameters:
+        keyfile: 'homeassistant/package_constraints.txt'
+        build: |
+          python -m venv venv
 
-        . venv/bin/activate
-        pip install -e .
+          . venv/bin/activate
+          pip install -e .
       displayName: 'Setup Env'
     - script: |
         . venv/bin/activate
@@ -78,7 +80,6 @@ stages:
       parameters:
         keyfile: 'requirements_test.txt | homeassistant/package_constraints.txt'
         build: |
-          set -e
           python -m venv venv
 
           . venv/bin/activate
@@ -118,6 +119,11 @@ stages:
           # Find offending deps with `pipdeptree -r -p typing`
           pip uninstall -y typing
     - script: |
+      . venv/bin/activate
+
+      pip install -e .
+    displayName: 'Install Home Assistant'
+    - script: |
         set -e
 
         . venv/bin/activate
@@ -155,6 +161,11 @@ stages:
           pip install -U pip setuptools
           pip install -r requirements_all.txt -c homeassistant/package_constraints.txt
           pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
+    - script: |
+      . venv/bin/activate
+
+      pip install -e .
+    displayName: 'Install Home Assistant'
     - script: |
         . venv/bin/activate
         pylint homeassistant
