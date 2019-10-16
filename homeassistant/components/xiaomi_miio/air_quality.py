@@ -58,11 +58,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     hass.data[DATA_KEY][host] = device
     async_add_entities([device], update_before_add=True)
 
-
 class AirMonitor_b1(AirQualityEntity):
-"""
-Air Quality class for Xiaomi cgllc.airmonitor.b1 device
-"""
+    """Air Quality class for Xiaomi cgllc.airmonitor.b1 device"""
+
+
     def __init__(self, name, device):
         """Initialize the entity."""
         self._name = name
