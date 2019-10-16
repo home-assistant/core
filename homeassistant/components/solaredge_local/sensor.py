@@ -262,7 +262,7 @@ class SolarEdgeSensor(Entity):
             except KeyError:
                 return None
         return None
-    
+
     @property
     def icon(self):
         """Return the sensor icon."""
