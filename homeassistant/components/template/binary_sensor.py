@@ -277,7 +277,7 @@ class BinarySensorTemplate(BinarySensorDevice):
 
         templates = {
             "_icon": self._icon_template,
-            "_icon_color": self._icon_template,
+            "_icon_color": self._icon_color_template,
             "_entity_picture": self._entity_picture_template,
             "_available": self._availability_template,
         }

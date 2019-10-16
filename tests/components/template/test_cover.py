@@ -799,6 +799,49 @@ async def test_icon_template(hass, calls):
     assert state.attributes["icon"] == "mdi:check"
 
 
+async def test_icon_color_template(hass, calls):
+    """Test icon color template."""
+    with assert_setup_component(1, "cover"):
+        assert await setup.async_setup_component(
+            hass,
+            "cover",
+            {
+                "cover": {
+                    "platform": "template",
+                    "covers": {
+                        "test_template_cover": {
+                            "value_template": "{{ states.cover.test_state.state }}",
+                            "open_cover": {
+                                "service": "cover.open_cover",
+                                "entity_id": "cover.test_state",
+                            },
+                            "close_cover": {
+                                "service": "cover.close_cover",
+                                "entity_id": "cover.test_state",
+                            },
+                            "icon_color_template": "{% if states.cover.test_state.state %}"
+                            "#fff000"
+                            "{% endif %}",
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.test_template_cover")
+    assert state.attributes.get("icon_color") == ""
+
+    state = hass.states.async_set("cover.test_state", STATE_OPEN)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.test_template_cover")
+
+    assert state.attributes["icon_color"] == "#fff000"
+
+
 async def test_entity_picture_template(hass, calls):
     """Test icon template."""
     with assert_setup_component(1, "cover"):

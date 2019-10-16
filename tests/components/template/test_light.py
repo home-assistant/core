@@ -728,6 +728,56 @@ class TestTemplateLight:
 
         assert state.attributes["icon"] == "mdi:check"
 
+    def test_icon_color_template(self):
+        """Test icon color template."""
+        with assert_setup_component(1, "light"):
+            assert setup.setup_component(
+                self.hass,
+                "light",
+                {
+                    "light": {
+                        "platform": "template",
+                        "lights": {
+                            "test_template_light": {
+                                "friendly_name": "Template light",
+                                "value_template": "{{ 1 == 1 }}",
+                                "turn_on": {
+                                    "service": "light.turn_on",
+                                    "entity_id": "light.test_state",
+                                },
+                                "turn_off": {
+                                    "service": "light.turn_off",
+                                    "entity_id": "light.test_state",
+                                },
+                                "set_level": {
+                                    "service": "light.turn_on",
+                                    "data_template": {
+                                        "entity_id": "light.test_state",
+                                        "brightness": "{{brightness}}",
+                                    },
+                                },
+                                "icon_color_template": "{% if states.light.test_state.state %}"
+                                "red"
+                                "{% endif %}",
+                            }
+                        },
+                    }
+                },
+            )
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("light.test_template_light")
+        assert state.attributes.get("icon_color") == ""
+
+        state = self.hass.states.set("light.test_state", STATE_ON)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("light.test_template_light")
+
+        assert state.attributes["icon_color"] == "red"
+
     def test_entity_picture_template(self):
         """Test entity_picture template."""
         with assert_setup_component(1, "light"):
