@@ -1,8 +1,9 @@
 """Support for controlling GPIO pins of a Raspberry Pi."""
 import logging
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from RPi import GPIO
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+
 
 _LOGGER = logging.getLogger(__name__)
 
