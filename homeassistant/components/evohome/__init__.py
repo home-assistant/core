@@ -150,7 +150,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         tokens = dict(app_storage if app_storage else {})
 
         if tokens.pop(CONF_USERNAME, None) != config[DOMAIN][CONF_USERNAME]:
-            return ({}, None)  # any tokens wont be valid
+            # any tokens wont be valid, and store might be be corrupt
+            await store.async_save({})
+            return ({}, None)
 
         # evohomeasync2 requires naive/local datetimes as strings
         if tokens.get(ACCESS_TOKEN_EXPIRES) is not None:
