@@ -63,8 +63,8 @@ class PostNLDelivery(Entity):
         self._name = name + "_delivery"
         self._attributes = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            'enroute': [],
-            'delivered': [],
+            "enroute": [],
+            "delivered": [],
         }
         self._state = None
         self._api = api
@@ -82,7 +82,7 @@ class PostNLDelivery(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return 'packages'
+        return "packages"
 
     @property
     def device_state_attributes(self):
@@ -99,16 +99,16 @@ class PostNLDelivery(Entity):
         """Update device state."""
         shipments = self._api.get_deliveries()
 
-        self._attributes['enroute'] = []
-        self._attributes['delivered'] = []
+        self._attributes["enroute"] = []
+        self._attributes["delivered"] = []
 
         for shipment in shipments:
             if shipment.delivery_date is None:
-                self._attributes['enroute'].append(vars(shipment))
+                self._attributes["enroute"].append(vars(shipment))
             else:
-                self._attributes['delivered'].append(vars(shipment))
+                self._attributes["delivered"].append(vars(shipment))
 
-        self._state = len(self._attributes['enroute'])
+        self._state = len(self._attributes["enroute"])
 
 
 class PostNLDistribution(Entity):
@@ -119,8 +119,8 @@ class PostNLDistribution(Entity):
         self._name = name + "_distribution"
         self._attributes = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            'enroute': [],
-            'delivered': [],
+            "enroute": [],
+            "delivered": [],
         }
         self._state = None
         self._api = api
@@ -138,7 +138,7 @@ class PostNLDistribution(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return 'packages'
+        return "packages"
 
     @property
     def device_state_attributes(self):
@@ -155,16 +155,16 @@ class PostNLDistribution(Entity):
         """Update device state."""
         shipments = self._api.get_distributions()
 
-        self._attributes['enroute'] = []
-        self._attributes['delivered'] = []
+        self._attributes["enroute"] = []
+        self._attributes["delivered"] = []
 
         for shipment in shipments:
             if shipment.delivery_date is None:
-                self._attributes['enroute'].append(vars(shipment))
+                self._attributes["enroute"].append(vars(shipment))
             else:
-                self._attributes['delivered'].append(vars(shipment))
+                self._attributes["delivered"].append(vars(shipment))
 
-        self._state = len(self._attributes['enroute'])
+        self._state = len(self._attributes["enroute"])
 
 
 class PostNLLetter(Entity):
@@ -175,8 +175,8 @@ class PostNLLetter(Entity):
         self._name = name + "_letters"
         self._attributes = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            'letters': [],
-            'enabled': False,
+            "letters": [],
+            "enabled": False,
         }
         self._state = None
         self._api = api
@@ -194,7 +194,7 @@ class PostNLLetter(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return 'letters'
+        return "letters"
 
     @property
     def device_state_attributes(self):
@@ -209,13 +209,13 @@ class PostNLLetter(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update device state."""
-        self._attributes['enabled'] = self._api.is_letters_activated
+        self._attributes["enabled"] = self._api.is_letters_activated
 
-        if self._attributes['enabled']:
+        if self._attributes["enabled"]:
             letters = self._api.get_letters()
 
-            self._attributes['letters'] = []
+            self._attributes["letters"] = []
 
             for letter in letters:
-                self._attributes['letters'].append(vars(letter))
+                self._attributes["letters"].append(vars(letter))
             self._state = len(letters)
