@@ -2,6 +2,9 @@
 import json
 import logging
 
+from nacl.secret import SecretBox
+from nacl.encoding import Base64Encoder
+
 from homeassistant.components import zone as zone_comp
 from homeassistant.components.device_tracker import (
     SOURCE_TYPE_GPS,
@@ -22,8 +25,6 @@ def get_cipher():
 
     Async friendly.
     """
-    from nacl.secret import SecretBox
-    from nacl.encoding import Base64Encoder
 
     def decrypt(ciphertext, key):
         """Decrypt ciphertext using key."""

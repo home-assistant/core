@@ -14,6 +14,10 @@ def supports_encryption():
     try:
         import nacl  # noqa: F401 pylint: disable=unused-import
 
+        # What should I do with that ?
+        # How can it fit #27284 ?
+        # Is it stale code ?
+
         return True
     except OSError:
         return False
