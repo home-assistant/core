@@ -821,7 +821,6 @@ async def test_normal_operate(hass, setup_comp_1, caplog):
 
 
 async def test_heat_hysteresis_tolerance(hass, setup_comp_1, caplog):
-
     """Test heat hysteresis tolerance operation."""
 
     await setup_input_booleans(hass)
