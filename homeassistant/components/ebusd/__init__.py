@@ -1,5 +1,4 @@
 """Support for Ebusd daemon for communication with eBUS heating systems."""
-from datetime import timedelta
 import logging
 import socket
 
@@ -15,9 +14,8 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.util import Throttle
 
-from .const import DOMAIN, SENSOR_TYPES
+from .const import DOMAIN, SENSOR_TYPES, MIN_TIME_BETWEEN_UPDATES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,8 +26,6 @@ CONF_CIRCUIT = "circuit"
 CONF_CACHE_TTL = "cache_ttl"
 DEFAULT_CACHE_TTL = 900
 SERVICE_EBUSD_WRITE = "ebusd_write"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 
 
 def verify_ebusd_circuit_config(config):
@@ -125,7 +121,6 @@ class EbusdData:
         self._cache_ttl = cache_ttl
         self.value = {}
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, circuit, name, stype):
         """Call the Ebusd API to update the data."""
         try:

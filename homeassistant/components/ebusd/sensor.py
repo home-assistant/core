@@ -2,11 +2,11 @@
 import datetime
 import logging
 
-
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
+from homeassistant.util import Throttle
 
-from .const import DOMAIN
+from .const import DOMAIN, MIN_TIME_BETWEEN_UPDATES
 
 TIME_FRAME1_BEGIN = "time_frame1_begin"
 TIME_FRAME1_END = "time_frame1_end"
@@ -90,6 +90,7 @@ class EbusdSensor(Entity):
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Fetch new state data for the sensor."""
         try:
