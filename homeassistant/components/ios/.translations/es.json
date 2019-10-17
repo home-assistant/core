@@ -1,7 +1,15 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Solo se necesita una \u00fanica configuraci\u00f3n de Home Assistant iOS."
+            "single_instance_allowed": "Solo se necesita una \u00fanica configuraci\u00f3n de Home Assistant iOS.",
+            "all_configured": "Todos los puentes Philips Hue han sido configurados",
+            "already_configured": "El puente ya esta configurado",
+            "already_in_progress": "La configuraci\u00f3n del flujo para el puente ya esta en progreso",
+            "cannot_connect": "Imposible conectarse al puente",
+            "discover_timeout": "Imposible encontrar el puente Hue",
+            "no_bridges": "No se descubrieron puentes Philips Hue",
+            "not_hue_bridge": "No es un puente Hue",
+            "unknown": "Ha ocurrido un error desconocido"
         },
         "step": {
             "confirm": {
