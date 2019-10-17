@@ -63,7 +63,7 @@ async def test_get_access_token(hass, aioclient_mock):
 
 
 async def test_call_homegraph_api(hass, aioclient_mock, hass_storage):
-    """Test the report state function."""
+    """Test the function to call the homegraph api."""
     config = GoogleConfig(hass, DUMMY_CONFIG)
     with patch(
         "homeassistant.components.google_assistant.http._get_homegraph_token"
@@ -83,7 +83,7 @@ async def test_call_homegraph_api(hass, aioclient_mock, hass_storage):
 
 
 async def test_call_homegraph_api_retry(hass, aioclient_mock, hass_storage):
-    """Test the report state function."""
+    """Test the that the calls get retried with new token on 401."""
     config = GoogleConfig(hass, DUMMY_CONFIG)
     with patch(
         "homeassistant.components.google_assistant.http._get_homegraph_token"
