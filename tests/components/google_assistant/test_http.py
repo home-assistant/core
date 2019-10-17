@@ -23,6 +23,13 @@ DUMMY_CONFIG = GOOGLE_ASSISTANT_SCHEMA(
         },
     }
 )
+MOCK_TOKEN = {"access_token": "dummtoken", "expires_in": 3600}
+MOCK_JSON = {"devices": {}}
+MOCK_URL = "https://dummy"
+MOCK_HEADER = {
+    "Authorization": "Bearer {}".format(MOCK_TOKEN["access_token"]),
+    "X-GFE-SSL": "yes",
+}
 
 
 async def test_get_jwt(hass):
@@ -56,30 +63,62 @@ async def test_get_access_token(hass, aioclient_mock):
     }
 
 
-async def test_report_state(hass, aioclient_mock, hass_storage):
+async def test_call_homegraph_api(hass, aioclient_mock, hass_storage):
     """Test the report state function."""
     config = GoogleConfig(hass, DUMMY_CONFIG)
     with patch(
         "homeassistant.components.google_assistant.http._get_homegraph_token"
-    ) as mock_get_token, patch.object(hass.auth, "async_get_owner") as mock_get_owner:
-        token = "dummyaccess"
-        message = {"devices": {}}
-        mock_get_token.return_value = {"access_token": token, "expires_in": 3600}
-        owner = User(name="Test User", perm_lookup=None, groups=[], is_owner=True)
+    ) as mock_get_token:
+        mock_get_token.return_value = MOCK_TOKEN
+
+        aioclient_mock.post(MOCK_URL, status=200, json={})
+
+        await config.async_call_homegraph_api(MOCK_URL, MOCK_JSON)
+
+        assert mock_get_token.call_count == 1
+        assert aioclient_mock.call_count == 1
+
+        call = aioclient_mock.mock_calls[0]
+        assert call[2] == MOCK_JSON
+        assert call[3] == MOCK_HEADER
+
+
+async def test_call_homegraph_api_retry(hass, aioclient_mock, hass_storage):
+    """Test the report state function."""
+    config = GoogleConfig(hass, DUMMY_CONFIG)
+    with patch(
+        "homeassistant.components.google_assistant.http._get_homegraph_token"
+    ) as mock_get_token:
+        mock_get_token.return_value = MOCK_TOKEN
+
+        aioclient_mock.post(MOCK_URL, status=401, json={})
+
+        await config.async_call_homegraph_api(MOCK_URL, MOCK_JSON)
+
+        assert mock_get_token.call_count == 2
+        assert aioclient_mock.call_count == 2
+
+        call = aioclient_mock.mock_calls[0]
+        assert call[2] == MOCK_JSON
+        assert call[3] == MOCK_HEADER
+        call = aioclient_mock.mock_calls[1]
+        assert call[2] == MOCK_JSON
+        assert call[3] == MOCK_HEADER
+
+
+async def test_report_state(hass, aioclient_mock, hass_storage):
+    """Test the report state function."""
+    config = GoogleConfig(hass, DUMMY_CONFIG)
+    message = {"devices": {}}
+    owner = User(name="Test User", perm_lookup=None, groups=[], is_owner=True)
+
+    with patch.object(config, "async_call_homegraph_api") as mock_call, patch.object(
+        hass.auth, "async_get_owner"
+    ) as mock_get_owner:
         mock_get_owner.return_value = owner
 
-        aioclient_mock.post(REPORT_STATE_BASE_URL, status=200, json={})
-
         await config.async_report_state(message)
-
-        assert aioclient_mock.call_count == 1
-        call = aioclient_mock.mock_calls[0]
-        assert call[3] == {
-            "Authorization": "Bearer {}".format(token),
-            "X-GFE-SSL": "yes",
-        }
-        assert call[2] == {
-            "requestId": ANY,
-            "agentUserId": owner.id,
-            "payload": message,
-        }
+        mock_call.assert_called_once_with(
+            REPORT_STATE_BASE_URL,
+            {"requestId": ANY, "agentUserId": owner.id, "payload": message},
+        )
