@@ -174,12 +174,12 @@ stages:
     steps:
     - template: templates/azp-step-cache.yaml@azure
       parameters:
-        keyfile: 'requirements_test.txt | homeassistant/package_constraints.txt'
+        keyfile: 'requirements_test.txt | setup.py | homeassistant/package_constraints.txt'
         build: |
           python -m venv venv
 
           . venv/bin/activate
-          pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
+          pip install -e . -r requirements_test.txt -c homeassistant/package_constraints.txt
     - script: |
         . venv/bin/activate
         mypy homeassistant
