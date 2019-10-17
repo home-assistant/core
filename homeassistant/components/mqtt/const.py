@@ -5,3 +5,4 @@ DEFAULT_DISCOVERY = False
 
 ATTR_DISCOVERY_HASH = "discovery_hash"
 CONF_STATE_TOPIC = "state_topic"
+PROTOCOL_311 = "3.1.1"

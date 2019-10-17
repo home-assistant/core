@@ -50,6 +50,7 @@ from .const import (
     DEFAULT_DISCOVERY,
     CONF_STATE_TOPIC,
     ATTR_DISCOVERY_HASH,
+    PROTOCOL_311,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -95,7 +96,6 @@ CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
 
 PROTOCOL_31 = "3.1"
-PROTOCOL_311 = "3.1.1"
 
 DEFAULT_PORT = 1883
 DEFAULT_KEEPALIVE = 60
