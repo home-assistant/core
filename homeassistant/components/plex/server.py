@@ -94,7 +94,7 @@ class PlexServer:
         new_plex_clients = []
 
         try:
-            devices = self.clients()
+            devices = self._plex_server.clients()
         except plexapi.exceptions.BadRequest:
             _LOGGER.exception("Error listing plex devices")
             return
@@ -119,7 +119,7 @@ class PlexServer:
                 self._clients[device.machineIdentifier].refresh(device, None)
 
         try:
-            sessions = self.sessions()
+            sessions = self._plex_server.sessions()
         except plexapi.exceptions.BadRequest:
             _LOGGER.exception("Error listing Plex sessions")
             return
@@ -174,14 +174,6 @@ class PlexServer:
 
         self.sensor.sessions = sessions
         self.sensor.schedule_update_ha_state(True)
-
-    def clients(self):
-        """Pass through clients call to plexapi."""
-        return self._plex_server.clients()
-
-    def sessions(self):
-        """Pass through sessions call to plexapi."""
-        return self._plex_server.sessions()
 
     @property
     def friendly_name(self):
