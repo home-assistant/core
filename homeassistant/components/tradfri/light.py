@@ -60,6 +60,18 @@ class TradfriGroup(TradfriBaseClass, Light):
         self._refresh(device)
 
     @property
+    def should_poll(self):
+        """Poll needed for tradfri groups."""
+        return True
+
+    async def async_update(self):
+        """Fetch new state data for the group.
+
+        This method is required for groups to update properly.
+        """
+        await self._api(self._device.update())
+
+    @property
     def supported_features(self):
         """Flag supported features."""
         return SUPPORTED_GROUP_FEATURES
