@@ -2,6 +2,7 @@
 import asyncio
 from contextlib import suppress
 import logging
+from typing import Optional
 
 from aiohttp import web, WSMsgType
 import async_timeout
@@ -47,7 +48,7 @@ class WebSocketHandler:
         """Initialize an active connection."""
         self.hass = hass
         self.request = request
-        self.wsock = None
+        self.wsock: Optional[web.WebSocketResponse] = None
         self._to_write: asyncio.Queue = asyncio.Queue(maxsize=MAX_PENDING_MSG)
         self._handle_task = None
         self._writer_task = None
