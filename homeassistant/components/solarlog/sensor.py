@@ -148,4 +148,3 @@ class SolarlogData:
             _LOGGER.debug("Updated Solarlog overview data: %s", self.data)
         except AttributeError:
             _LOGGER.error("Missing details data in Solarlog response")
-
