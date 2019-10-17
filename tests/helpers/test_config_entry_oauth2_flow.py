@@ -50,6 +50,32 @@ def flow_handler(hass):
         yield TestFlowHandler
 
 
+class MockOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implementation):
+    """Mock implementation for testing."""
+
+    @property
+    def name(self) -> str:
+        """Name of the implementation."""
+        return "Mock"
+
+    @property
+    def domain(self) -> str:
+        """Domain that is providing the implementation."""
+        return "test"
+
+    async def async_generate_authorize_url(self, flow_id: str) -> str:
+        """Generate a url for the user to authorize."""
+        return "http://example.com/auth"
+
+    async def async_resolve_external_data(self, external_data) -> dict:
+        """Resolve external data to tokens."""
+        return external_data
+
+    async def _async_refresh_token(self, token: dict) -> dict:
+        """Refresh a token."""
+        raise NotImplementedError()
+
+
 def test_inherit_enforces_domain_set():
     """Test we enforce setting DOMAIN."""
 
@@ -97,10 +123,22 @@ async def test_full_flow(
     """Check full flow."""
     hass.config.api.base_url = "https://example.com"
     flow_handler.async_register_implementation(hass, local_impl)
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, MockOAuth2Implementation()
+    )
 
     result = await hass.config_entries.flow.async_init(
         TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "pick_implementation"
+
+    # Pick implementation
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"implementation": TEST_DOMAIN}
+    )
+
     state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP

@@ -14,6 +14,7 @@ import time
 import async_timeout
 from aiohttp import web, client
 import jwt
+import voluptuous as vol
 from yarl import URL
 
 from homeassistant.auth.util import generate_secret
@@ -73,8 +74,14 @@ class AbstractOAuth2Implementation(ABC):
         config entry data.
         """
 
-    @abstractmethod
     async def async_refresh_token(self, token: dict) -> dict:
+        """Refresh a token and update expires info."""
+        new_token = await self._async_refresh_token(token)
+        new_token["expires_at"] = time.time() + new_token["expires_in"]
+        return new_token
+
+    @abstractmethod
+    async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh a token."""
 
 
@@ -128,47 +135,37 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve the authorization code to tokens."""
+        return await self._token_request(
+            {
+                "grant_type": "authorization_code",
+                "code": external_data,
+                "redirect_uri": self.redirect_uri,
+            }
+        )
+
+    async def _async_refresh_token(self, token: dict) -> dict:
+        """Refresh tokens."""
+        new_token = await self._token_request(
+            {
+                "grant_type": "refresh_token",
+                "client_id": self.client_id,
+                "refresh_token": token["refresh_token"],
+            }
+        )
+        return {**token, **new_token}
+
+    async def _token_request(self, data: dict) -> dict:
+        """Make a token request."""
         session = async_get_clientsession(self.hass)
 
-        data = {
-            "grant_type": "authorization_code",
-            "client_id": self.client_id,
-            "code": external_data,
-            "redirect_uri": self.redirect_uri,
-        }
+        data["client_id"] = self.client_id
 
         if self.client_secret is not None:
             data["client_secret"] = self.client_secret
 
         resp = await session.post(self.token_url, data=data)
-
         resp.raise_for_status()
-
-        new_token = await resp.json()
-        new_token["expires_at"] = time.time() + new_token["expires_in"]
-        return cast(dict, new_token)
-
-    async def async_refresh_token(self, token: dict) -> dict:
-        """Refresh tokens."""
-        session = async_get_clientsession(self.hass)
-
-        data = {
-            "grant_type": "refresh_token",
-            "client_id": self.client_id,
-            "refresh_token": token["refresh_token"],
-        }
-
-        if self.client_secret is not None:
-            data["client_secret"] = self.client_secret
-
-        resp = await session.post(self.token_url, json=data)
-
-        resp.raise_for_status()
-
-        new_token = await resp.json()
-        new_token["expires_at"] = time.time() + new_token["expires_in"]
-
-        return {**token, **new_token}
+        return cast(dict, await resp.json())
 
 
 class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
@@ -199,12 +196,28 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         assert self.hass
         implementations = await async_get_implementations(self.hass, self.DOMAIN)
 
+        if user_input is not None:
+            self.flow_impl = implementations[user_input["implementation"]]
+            return await self.async_step_auth()
+
         if not implementations:
             return self.async_abort(reason="missing_configuration")
 
-        # Pick first implementation as we have only one.
-        self.flow_impl = list(implementations.values())[0]
-        return await self.async_step_auth()
+        if len(implementations) == 1:
+            # Pick first implementation as we have only one.
+            self.flow_impl = list(implementations.values())[0]
+            return await self.async_step_auth()
+
+        return self.async_show_form(
+            step_id="pick_implementation",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        "implementation", default=list(implementations.keys())[0]
+                    ): vol.In({key: impl.name for key, impl in implementations.items()})
+                }
+            ),
+        )
 
     async def async_step_auth(self, user_input: dict = None) -> dict:
         """Create an entry for auth."""
@@ -223,12 +236,13 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
 
     async def async_step_creation(self, user_input: dict = None) -> dict:
         """Create config entry from external data."""
-        tokens = await self.flow_impl.async_resolve_external_data(self.external_data)
+        token = await self.flow_impl.async_resolve_external_data(self.external_data)
+        token["expires_at"] = time.time() + token["expires_in"]
 
         self.logger.info("Successfully authenticated")
 
         return await self.async_oauth_create_entry(
-            {"auth_implementation": self.flow_impl.domain, "token": tokens}
+            {"auth_implementation": self.flow_impl.domain, "token": token}
         )
 
     async def async_oauth_create_entry(self, data: dict) -> dict:
