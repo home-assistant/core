@@ -73,11 +73,6 @@ TRIGGER_SCHEMA = vol.All(
             ),
             vol.Optional(CONF_BELOW): vol.Any(vol.Coerce(float)),
             vol.Optional(CONF_ABOVE): vol.Any(vol.Coerce(float)),
-            vol.Optional(CONF_FOR): vol.Any(
-                vol.All(cv.time_period, cv.positive_timedelta),
-                cv.template,
-                cv.template_complex,
-            ),
             vol.Optional(CONF_FOR): cv.positive_time_period_dict,
         }
     ),
