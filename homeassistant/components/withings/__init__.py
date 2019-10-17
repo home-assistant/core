@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 """
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import ConfigEntry, SOURCE_USER
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.helpers import config_validation as cv
 
@@ -58,12 +58,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         conf[const.CLIENT_SECRET],
         base_url,
         conf[const.PROFILES],
-    )
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data={}
-        )
     )
 
     return True
