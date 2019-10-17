@@ -5,7 +5,6 @@ import logging
 from uuid import uuid4
 import jwt
 
-import async_timeout
 from aiohttp import ClientResponseError, ClientError
 from aiohttp.web import Request, Response
 
@@ -135,13 +134,13 @@ class GoogleConfig(AbstractConfig):
         """If an entity should have 2FA checked."""
         return True
 
-    async def _async_update_token(self):
+    async def _async_update_token(self, force=False):
         if CONF_SERVICE_ACCOUNT not in self._config:
             _LOGGER.error("Trying to get homegraph api token without service account")
             return
 
         now = dt_util.utcnow()
-        if not self._access_token or now > self._access_token_renew:
+        if not self._access_token or now > self._access_token_renew or force:
             token = await _get_homegraph_token(
                 self.hass,
                 _get_homegraph_jwt(
@@ -155,24 +154,32 @@ class GoogleConfig(AbstractConfig):
 
     async def async_call_homegraph_api(self, url, data):
         """Call a homegraph api with authenticaiton."""
+        session = async_get_clientsession(self.hass)
+
+        async def _call():
+            headers = {
+                "Authorization": "Bearer {}".format(self._access_token),
+                "X-GFE-SSL": "yes",
+            }
+            async with session.post(url, headers=headers, json=data) as res:
+                _LOGGER.debug(
+                    "Response on %s with data %s was %s", url, data, await res.text()
+                )
+                res.raise_for_status()
+
         try:
-            with async_timeout.timeout(15):
-                await self._async_update_token()
-
-                headers = {
-                    "Authorization": "Bearer {}".format(self._access_token),
-                    "X-GFE-SSL": "yes",
-                }
-
-                session = async_get_clientsession(self.hass)
-                async with session.post(url, headers=headers, json=data) as res:
-                    _LOGGER.debug(
-                        "Response on %s with data %s was %s",
-                        url,
-                        data,
-                        await res.text(),
+            await self._async_update_token()
+            try:
+                await _call()
+            except ClientResponseError as error:
+                if error.status == 401:
+                    _LOGGER.warning(
+                        "Request for %s unauthorized, renewing token and retrying", url
                     )
-                    res.raise_for_status()
+                    await self._async_update_token(True)
+                    await _call()
+                else:
+                    raise
         except ClientResponseError as error:
             _LOGGER.error("Request for %s failed: %d", url, error.status)
         except (asyncio.TimeoutError, ClientError):
