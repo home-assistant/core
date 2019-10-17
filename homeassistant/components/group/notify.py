@@ -18,7 +18,7 @@ from homeassistant.components.notify import (
 )
 
 
-# mypy: allow-untyped-calls, allow-untyped-defs
+# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 

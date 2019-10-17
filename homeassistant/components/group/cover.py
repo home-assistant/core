@@ -44,6 +44,7 @@ from homeassistant.components.cover import (
 
 
 # mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -15,7 +15,7 @@ from homeassistant.setup import async_setup_component, async_process_deps_reqs
 from homeassistant.util.decorator import Registry
 from homeassistant.helpers import entity_registry
 
-# mypy: allow-untyped-defs
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 _UNDEF = object()
