@@ -26,7 +26,7 @@ from .error import Disconnect
 from .messages import error_message
 
 
-# mypy: allow-untyped-calls, allow-untyped-defs
+# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
 
 class WebsocketAPIView(HomeAssistantView):
@@ -116,7 +116,7 @@ class WebSocketHandler:
         # Py3.7+
         if hasattr(asyncio, "current_task"):
             # pylint: disable=no-member
-            self._handle_task = asyncio.current_task()  # type: ignore
+            self._handle_task = asyncio.current_task()
         else:
             self._handle_task = asyncio.Task.current_task()
 
