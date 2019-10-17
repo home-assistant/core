@@ -46,9 +46,7 @@ async def test_abort_if_existing_entry(hass):
     flow = config_flow.SomfyFlowHandler()
     flow.hass = hass
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
-    result = await flow.async_step_import()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+
     result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_setup"

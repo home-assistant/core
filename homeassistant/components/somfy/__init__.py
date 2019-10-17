@@ -112,10 +112,10 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
 class SomfyEntity(Entity):
     """Representation of a generic Somfy device."""
 
-    def __init__(self, device, api):
+    def __init__(self, device, somfy_api):
         """Initialize the Somfy device."""
         self.device = device
-        self.api = api
+        self.api = somfy_api
 
     @property
     def unique_id(self):
