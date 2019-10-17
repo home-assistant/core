@@ -97,7 +97,7 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
     with patch("homeassistant.components.somfy.api.ConfigEntrySomfyApi"):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["data"]["implementation"] == "somfy"
+    assert result["data"]["auth_implementation"] == "somfy"
 
     result["data"]["token"].pop("expires_at")
     assert result["data"]["token"] == {

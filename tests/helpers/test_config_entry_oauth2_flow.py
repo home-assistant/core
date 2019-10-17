@@ -127,7 +127,7 @@ async def test_full_flow(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["data"]["implementation"] == TEST_DOMAIN
+    assert result["data"]["auth_implementation"] == TEST_DOMAIN
 
     result["data"]["token"].pop("expires_at")
     assert result["data"]["token"] == {
@@ -190,7 +190,7 @@ async def test_oauth_session(hass, flow_handler, local_impl, aioclient_mock):
     config_entry = MockConfigEntry(
         domain=TEST_DOMAIN,
         data={
-            "implementation": TEST_DOMAIN,
+            "auth_implementation": TEST_DOMAIN,
             "token": {
                 "refresh_token": REFRESH_TOKEN,
                 "access_token": ACCESS_TOKEN_1,

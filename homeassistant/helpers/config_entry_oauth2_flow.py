@@ -228,7 +228,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         self.logger.info("Successfully authenticated")
 
         return await self.async_oauth_create_entry(
-            {"implementation": self.flow_impl.domain, "token": tokens}
+            {"auth_implementation": self.flow_impl.domain, "token": tokens}
         )
 
     async def async_oauth_create_entry(self, data: dict) -> dict:
@@ -283,7 +283,7 @@ def async_get_config_entry_implementation(
 ) -> AbstractOAuth2Implementation:
     """Return the implementation for this config entry."""
     implementation = async_get_implementations(hass, config_entry.domain).get(
-        config_entry.data["implementation"]
+        config_entry.data["auth_implementation"]
     )
 
     if implementation is None:
