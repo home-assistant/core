@@ -97,13 +97,13 @@ async def test_get_condition_capabilities(hass, device_reg, entity_reg):
     expected_capabilities = {
         "extra_fields": [
             {
-                "description": {"unit_of_measurement": "%"},
+                "description": {"suffix": "%"},
                 "name": "above",
                 "optional": True,
                 "type": "float",
             },
             {
-                "description": {"unit_of_measurement": "%"},
+                "description": {"suffix": "%"},
                 "name": "below",
                 "optional": True,
                 "type": "float",

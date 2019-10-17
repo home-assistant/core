@@ -10,7 +10,6 @@ from homeassistant.const import (
     CONF_BELOW,
     CONF_ENTITY_ID,
     CONF_TYPE,
-    CONF_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
@@ -153,12 +152,10 @@ async def async_get_condition_capabilities(hass, config):
         "extra_fields": vol.Schema(
             {
                 vol.Optional(
-                    CONF_ABOVE,
-                    description={CONF_UNIT_OF_MEASUREMENT: unit_of_measurement},
+                    CONF_ABOVE, description={"suffix": unit_of_measurement}
                 ): vol.Coerce(float),
                 vol.Optional(
-                    CONF_BELOW,
-                    description={CONF_UNIT_OF_MEASUREMENT: unit_of_measurement},
+                    CONF_BELOW, description={"suffix": unit_of_measurement}
                 ): vol.Coerce(float),
             }
         )
