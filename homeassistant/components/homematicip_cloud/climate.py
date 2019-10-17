@@ -4,7 +4,7 @@ from typing import Awaitable
 
 from homematicip.aio.device import AsyncHeatingThermostat, AsyncHeatingThermostatCompact
 from homematicip.aio.group import AsyncHeatingGroup
-from homematicip.base.enums import AbsenceType
+from homematicip.base.enums import AbsenceType, GroupType
 from homematicip.functionalHomes import IndoorClimateHome
 
 from homeassistant.components.climate import ClimateDevice
@@ -24,6 +24,9 @@ from homeassistant.core import HomeAssistant
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 from .hap import HomematicipHAP
+
+HEATING_PROFILES = {"PROFILE_1": 0, "PROFILE_2": 1, "PROFILE_3": 2}
+COOLING_PROFILES = {"PROFILE_4": 3, "PROFILE_5": 4, "PROFILE_6": 5}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +57,7 @@ async def async_setup_entry(
 class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
     """Representation of a HomematicIP heating group."""
 
-    def __init__(self, hap: HomematicipHAP, device) -> None:
+    def __init__(self, hap: HomematicipHAP, device: AsyncHeatingGroup) -> None:
         """Initialize heating group."""
         device.modelType = "Group-Heating"
         self._simple_heating = None
@@ -118,6 +121,8 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
         """
         if self._device.boostMode:
             return PRESET_BOOST
+        if self.hvac_mode == HVAC_MODE_HEAT:
+            return PRESET_NONE
         if self._device.controlMode == HMIP_ECO_CM:
             absence_type = self._home.get_functionalHome(IndoorClimateHome).absenceType
             if absence_type == AbsenceType.VACATION:
@@ -129,15 +134,17 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
             ]:
                 return PRESET_ECO
 
-        return PRESET_NONE
+        if self._device.activeProfile:
+            return self._device.activeProfile.name
 
     @property
     def preset_modes(self):
-        """Return a list of available preset modes.
-
-        Requires SUPPORT_PRESET_MODE.
-        """
-        return [PRESET_NONE, PRESET_BOOST]
+        """Return a list of available preset modes incl profiles."""
+        presets = self._device_profile_names
+        if not presets:
+            presets.append(PRESET_NONE)
+        presets.append(PRESET_BOOST)
+        return presets
 
     @property
     def min_temp(self) -> float:
@@ -169,6 +176,46 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
             await self._device.set_boost(False)
         if preset_mode == PRESET_BOOST:
             await self._device.set_boost()
+        if preset_mode in self._device_profile_names:
+            profile_idx = self._get_profile_idx_by_name(preset_mode)
+            await self.async_set_hvac_mode(HVAC_MODE_AUTO)
+            await self._device.set_active_profile(profile_idx)
+
+    @property
+    def _device_profiles(self):
+        """Return the relevant profiles of the device."""
+        return [
+            profile
+            for profile in self._device.profiles
+            if profile.visible
+            and profile.name != ""
+            and profile.index in self._relevant_profile_group.keys()
+        ]
+
+    @property
+    def _device_profile_names(self):
+        """Return a collection of profile names."""
+        return [profile.name for profile in self._device_profiles]
+
+    def _get_profile_idx_by_name(self, profile_name):
+        """Return an profile index by name."""
+        relevant_index = self._relevant_profile_group
+        index_name = [
+            profile.index
+            for profile in self._device_profiles
+            if profile.name == profile_name
+        ]
+
+        return relevant_index[index_name[0]]
+
+    @property
+    def _relevant_profile_group(self):
+        """Return the relevant profile group."""
+        return (
+            HEATING_PROFILES
+            if self._device.groupType == GroupType.HEATING
+            else COOLING_PROFILES
+        )
 
 
 def _get_first_heating_thermostat(heating_group: AsyncHeatingGroup):
@@ -176,4 +223,3 @@ def _get_first_heating_thermostat(heating_group: AsyncHeatingGroup):
     for device in heating_group.devices:
         if isinstance(device, (AsyncHeatingThermostat, AsyncHeatingThermostatCompact)):
             return device
-    return None
