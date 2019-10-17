@@ -69,7 +69,7 @@ class AbstractOAuth2Implementation(ABC):
         """Resolve external data to tokens.
 
         Turn the data that the implementation passed to the config flow as external
-        step data into Somfy tokens. These tokens will be stored as 'token' in the
+        step data into tokens. These tokens will be stored as 'token' in the
         config entry data.
         """
 
@@ -97,10 +97,6 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         self.client_secret = client_secret
         self.authorize_url = authorize_url
         self.token_url = token_url
-
-        if not hass.data.get(DATA_VIEW_REGISTERED, False):
-            hass.http.register_view(OAuth2AuthorizeCallbackView())  # type: ignore
-            hass.data[DATA_VIEW_REGISTERED] = True
 
     @property
     def name(self) -> str:
@@ -260,6 +256,12 @@ def async_register_implementation(
     hass: HomeAssistant, domain: str, implementation: AbstractOAuth2Implementation
 ) -> None:
     """Register an OAuth2 flow implementation for an integration."""
+    if isinstance(implementation, LocalOAuth2Implementation) and not hass.data.get(
+        DATA_VIEW_REGISTERED, False
+    ):
+        hass.http.register_view(OAuth2AuthorizeCallbackView())  # type: ignore
+        hass.data[DATA_VIEW_REGISTERED] = True
+
     implementations = hass.data.setdefault(DATA_IMPLEMENTATIONS, {})
     implementations.setdefault(domain, {})[implementation.domain] = implementation
 
