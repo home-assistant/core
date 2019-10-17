@@ -1,5 +1,5 @@
 """Test Google http services."""
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from asynctest import patch, ANY
 
 from homeassistant.components.google_assistant.http import (
@@ -60,6 +60,40 @@ async def test_get_access_token(hass, aioclient_mock):
         "Authorization": "Bearer {}".format(jwt),
         "Content-Type": "application/x-www-form-urlencoded",
     }
+
+
+async def test_update_access_token(hass):
+    """Test the function to update access token when expired."""
+    jwt = "dummyjwt"
+
+    config = GoogleConfig(hass, DUMMY_CONFIG)
+
+    base_time = datetime(2019, 10, 14, tzinfo=timezone.utc)
+    with patch(
+        "homeassistant.components.google_assistant.http._get_homegraph_token"
+    ) as mock_get_token, patch(
+        "homeassistant.components.google_assistant.http._get_homegraph_jwt"
+    ) as mock_get_jwt, patch(
+        "homeassistant.core.dt_util.utcnow"
+    ) as mock_utcnow:
+        mock_utcnow.return_value = base_time
+        mock_get_jwt.return_value = jwt
+        mock_get_token.return_value = MOCK_TOKEN
+
+        await config._async_update_token()
+        mock_get_token.assert_called_once()
+
+        mock_get_token.reset_mock()
+
+        mock_utcnow.return_value = base_time + timedelta(seconds=3600)
+        await config._async_update_token()
+        mock_get_token.assert_not_called()
+
+        mock_get_token.reset_mock()
+
+        mock_utcnow.return_value = base_time + timedelta(seconds=3601)
+        await config._async_update_token()
+        mock_get_token.assert_called_once()
 
 
 async def test_call_homegraph_api(hass, aioclient_mock, hass_storage):
