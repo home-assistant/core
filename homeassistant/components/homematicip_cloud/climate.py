@@ -56,11 +56,22 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize heating group."""
-        device.modelType = "Group-Heating"
+        device.modelType = "HmIP-Heating-Group"
         self._simple_heating = None
         if device.actualTemperature is None:
             self._simple_heating = _get_first_heating_thermostat(device)
         super().__init__(hap, device)
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "identifiers": {(HMIPC_DOMAIN, self._device.id)},
+            "name": self._device.label,
+            "manufacturer": "eQ-3",
+            "model": self._device.modelType,
+            "via_device": (HMIPC_DOMAIN, self._device.homeId),
+        }
 
     @property
     def temperature_unit(self) -> str:
@@ -176,4 +187,3 @@ def _get_first_heating_thermostat(heating_group: AsyncHeatingGroup):
     for device in heating_group.devices:
         if isinstance(device, (AsyncHeatingThermostat, AsyncHeatingThermostatCompact)):
             return device
-    return None
