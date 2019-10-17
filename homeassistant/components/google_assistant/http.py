@@ -151,9 +151,7 @@ class GoogleConfig(AbstractConfig):
                 ),
             )
             self._access_token = token["access_token"]
-            self._access_token_renew = now + timedelta(
-                seconds=token["expires_in"] * 0.8
-            )
+            self._access_token_renew = now + timedelta(seconds=token["expires_in"])
 
     async def async_call_homegraph_api(self, url, data):
         """Call a homegraph api with authenticaiton."""
