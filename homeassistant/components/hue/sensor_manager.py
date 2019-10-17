@@ -11,13 +11,8 @@ from homeassistant.components import hue
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-from .binary_sensor import HuePresence, PRESENCE_NAME_FORMAT
-from .sensor import (
-    HueLightLevel,
-    HueTemperature,
-    LIGHT_LEVEL_NAME_FORMAT,
-    TEMPERATURE_NAME_FORMAT,
-)
+import homeassistant.components.hue.binary_sensor as binary_sensor
+import homeassistant.components.hue.sensor as sensor
 
 from .sensor_base import CURRENT_SENSORS
 
@@ -53,18 +48,18 @@ class SensorManager:
             {
                 aiohue.sensors.TYPE_ZLL_LIGHTLEVEL: {
                     "binary": False,
-                    "name_format": LIGHT_LEVEL_NAME_FORMAT,
-                    "class": HueLightLevel,
+                    "name_format": sensor.LIGHT_LEVEL_NAME_FORMAT,
+                    "class": sensor.HueLightLevel,
                 },
                 aiohue.sensors.TYPE_ZLL_TEMPERATURE: {
                     "binary": False,
-                    "name_format": TEMPERATURE_NAME_FORMAT,
-                    "class": HueTemperature,
+                    "name_format": sensor.TEMPERATURE_NAME_FORMAT,
+                    "class": sensor.HueTemperature,
                 },
                 aiohue.sensors.TYPE_ZLL_PRESENCE: {
                     "binary": True,
-                    "name_format": PRESENCE_NAME_FORMAT,
-                    "class": HuePresence,
+                    "name_format": binary_sensor.PRESENCE_NAME_FORMAT,
+                    "class": binary_sensor.HuePresence,
                 },
             }
         )
