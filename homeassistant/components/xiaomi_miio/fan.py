@@ -4,6 +4,7 @@ from enum import Enum
 from functools import partial
 import logging
 
+import voluptuous as vol
 from miio import (  # pylint: disable=import-error
     AirFresh,
     AirHumidifier,
@@ -11,7 +12,19 @@ from miio import (  # pylint: disable=import-error
     Device,
     DeviceException,
 )
-import voluptuous as vol
+
+from miio.airfresh import (  # pylint: disable=import-error; pylint: disable=import-error
+    LedBrightness as airfreshLedBrightness,
+    OperationMode as airfreshOperationMode,
+)
+from miio.airhumidifier import (  # pylint: disable=import-error; pylint: disable=import-error
+    LedBrightness as airhumidifierLedBrightness,
+    OperationMode as airhumidifierOperationMode,
+)
+from miio.airpurifier import (  # pylint: disable=import-error; pylint: disable=import-error
+    LedBrightness as airpurifierLedBrightness,
+    OperationMode as airpurifierOperationMode,
+)
 
 from homeassistant.components.fan import (
     DOMAIN,
@@ -28,20 +41,6 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-
-from miio.airfresh import (  # pylint: disable=import-error; pylint: disable=import-error
-    LedBrightness as airfreshLedBrightness,
-    OperationMode as airfreshOperationMode,
-)
-from miio.airhumidifier import (  # pylint: disable=import-error; pylint: disable=import-error
-    LedBrightness as airhumidifierLedBrightness,
-    OperationMode as airhumidifierOperationMode,
-)
-from miio.airpurifier import (  # pylint: disable=import-error; pylint: disable=import-error
-    LedBrightness as airpurifierLedBrightness,
-    OperationMode as airpurifierOperationMode,
-)
-
 
 _LOGGER = logging.getLogger(__name__)
 
