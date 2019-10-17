@@ -2,10 +2,10 @@
 import logging
 
 import voluptuous as vol
-import board
-import busio
-import adafruit_mcp230xx
-import digitalio
+import board  # pylint: disable=import-error
+import busio  # pylint: disable=import-error
+import adafruit_mcp230xx  # pylint: disable=import-error
+import digitalio  # pylint: disable=import-error
 
 from homeassistant.components.binary_sensor import BinarySensorDevice, PLATFORM_SCHEMA
 from homeassistant.const import DEVICE_DEFAULT_NAME
