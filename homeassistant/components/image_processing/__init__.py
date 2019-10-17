@@ -86,7 +86,7 @@ def draw_box(
     """
 
     line_width = 5
-    font_height = 10
+    font_height = 7
     y_min, x_min, y_max, x_max = box
     (left, right, top, bottom) = (
         x_min * img_width,
