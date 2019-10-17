@@ -1,14 +1,16 @@
 """Support for HomematicIP Cloud devices."""
 import logging
 
+from homematicip.aio.group import AsyncHeatingGroup
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import comp_entity_ids
 from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import configured_haps
@@ -25,6 +27,7 @@ from .hap import HomematicipAuth, HomematicipHAP  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_CLIMATE_PROFILE_INDEX = "climate_profile_index"
 ATTR_DURATION = "duration"
 ATTR_ENDTIME = "endtime"
 ATTR_TEMPERATURE = "temperature"
@@ -35,6 +38,7 @@ SERVICE_ACTIVATE_ECO_MODE_WITH_PERIOD = "activate_eco_mode_with_period"
 SERVICE_ACTIVATE_VACATION = "activate_vacation"
 SERVICE_DEACTIVATE_ECO_MODE = "deactivate_eco_mode"
 SERVICE_DEACTIVATE_VACATION = "deactivate_vacation"
+SERVICE_SET_ACTIVE_CLIMATE_PROFILE = "set_active_climate_profile"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -84,6 +88,13 @@ SCHEMA_DEACTIVATE_ECO_MODE = vol.Schema(
 
 SCHEMA_DEACTIVATE_VACATION = vol.Schema(
     {vol.Optional(ATTR_ACCESSPOINT_ID): vol.All(str, vol.Length(min=24, max=24))}
+)
+
+SCHEMA_SET_ACTIVE_CLIMATE_PROFILE = vol.Schema(
+    {
+        vol.Optional(ATTR_ENTITY_ID): comp_entity_ids,
+        vol.Required(ATTR_CLIMATE_PROFILE_INDEX): cv.positive_int,
+    }
 )
 
 
@@ -209,6 +220,32 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_DEACTIVATE_VACATION,
         _async_deactivate_vacation,
         schema=SCHEMA_DEACTIVATE_VACATION,
+    )
+
+    async def _set_active_climate_profile(service):
+        """Service to set the active climate profile."""
+        entity_id_list = service.data.get(ATTR_ENTITY_ID)
+        climate_profile_index = service.data.get(ATTR_CLIMATE_PROFILE_INDEX) - 1
+
+        for hapid in hass.data[DOMAIN]:
+            hap = hass.data[DOMAIN][hapid]
+            home = hap.home
+
+            if entity_id_list:
+                for entity_id in entity_id_list:
+                    group = hap.hmip_device_by_entity_id.get(entity_id)
+                    if group:
+                        await group.set_active_profile(climate_profile_index)
+            else:
+                for group in home.groups:
+                    if isinstance(group, AsyncHeatingGroup):
+                        await group.set_active_profile(climate_profile_index)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_ACTIVE_CLIMATE_PROFILE,
+        _set_active_climate_profile,
+        schema=SCHEMA_SET_ACTIVE_CLIMATE_PROFILE,
     )
 
     def _get_home(hapid: str):

@@ -264,3 +264,35 @@ async def test_hmip_climate_services(hass, mock_hap_with_service):
     assert home.mock_calls[-1][1] == ()
     # There is no further call on connection.
     assert len(home._connection.mock_calls) == 10  # pylint: disable=W0212
+
+
+async def test_hmip_heating_group_services(hass, mock_hap_with_service):
+    """Test HomematicipHeatingGroup services."""
+    entity_id = "climate.badezimmer"
+    entity_name = "Badezimmer"
+    device_model = None
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap_with_service, entity_id, entity_name, device_model
+    )
+    assert ha_state
+
+    await hass.services.async_call(
+        "homematicip_cloud",
+        "set_active_climate_profile",
+        {"climate_profile_index": 2, "entity_id": "climate.badezimmer"},
+        blocking=True,
+    )
+    assert hmip_device.mock_calls[-1][0] == "set_active_profile"
+    assert hmip_device.mock_calls[-1][1] == (1,)
+    assert len(hmip_device._connection.mock_calls) == 2  # pylint: disable=W0212
+
+    await hass.services.async_call(
+        "homematicip_cloud",
+        "set_active_climate_profile",
+        {"climate_profile_index": 2},
+        blocking=True,
+    )
+    assert hmip_device.mock_calls[-1][0] == "set_active_profile"
+    assert hmip_device.mock_calls[-1][1] == (1,)
+    assert len(hmip_device._connection.mock_calls) == 12  # pylint: disable=W0212
