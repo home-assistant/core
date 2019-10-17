@@ -1,16 +1,16 @@
 """Config flow for Withings."""
 from collections import OrderedDict
 import logging
-from typing import Optional
+from typing import List
 
 import aiohttp
-import withings_api as withings
+from withings_api import WithingsAuth, AuthScope
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
+from homeassistant.helpers.typing import HomeAssistantType
 
 from . import const
 
@@ -20,7 +20,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def register_flow_implementation(hass, client_id, client_secret, base_url, profiles):
+def register_flow_implementation(
+    hass: HomeAssistantType,
+    client_id: str,
+    client_secret: str,
+    base_url: str,
+    profiles: List[str],
+) -> None:
     """Register a flow implementation.
 
     hass: Home assistant object.
@@ -52,16 +58,7 @@ class WithingsFlowHandler(config_entries.ConfigFlow):
         self.flow_profile = None
         self.data = None
 
-    def async_profile_config_entry(self, profile: str) -> Optional[ConfigEntry]:
-        """Get a profile config entry."""
-        entries = self.hass.config_entries.async_entries(const.DOMAIN)
-        for entry in entries:
-            if entry.data.get(const.PROFILE) == profile:
-                return entry
-
-        return None
-
-    def get_auth_client(self, profile: str):
+    def get_auth_client(self, profile: str) -> WithingsAuth:
         """Get a new auth client."""
         flow = self.hass.data[DATA_FLOW_IMPL]
         client_id = flow[const.CLIENT_ID]
@@ -75,18 +72,22 @@ class WithingsFlowHandler(config_entries.ConfigFlow):
             profile,
         )
 
-        return withings.WithingsAuth(
-            client_id,
-            client_secret,
-            callback_uri,
-            scope=",".join(["user.info", "user.metrics", "user.activity"]),
+        return WithingsAuth(
+            client_id=client_id,
+            consumer_secret=client_secret,
+            callback_uri=callback_uri,
+            scope=(
+                AuthScope.USER_INFO,
+                AuthScope.USER_METRICS,
+                AuthScope.USER_ACTIVITY,
+            ),
         )
 
-    async def async_step_import(self, user_input=None):
+    async def async_step_import(self, user_input: dict = None):
         """Create user step."""
         return await self.async_step_user(user_input)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input: dict = None):
         """Create an entry for selecting a profile."""
         flow = self.hass.data.get(DATA_FLOW_IMPL)
 
@@ -103,7 +104,7 @@ class WithingsFlowHandler(config_entries.ConfigFlow):
             ),
         )
 
-    async def async_step_auth(self, user_input=None):
+    async def async_step_auth(self, user_input: dict = None):
         """Create an entry for auth."""
         if user_input.get(const.CODE):
             self.data = user_input
@@ -117,7 +118,7 @@ class WithingsFlowHandler(config_entries.ConfigFlow):
 
         return self.async_external_step(step_id="auth", url=url)
 
-    async def async_step_finish(self, user_input=None):
+    async def async_step_finish(self, user_input: dict = None):
         """Received code for authentication."""
         data = user_input or self.data or {}
 
@@ -131,7 +132,7 @@ class WithingsFlowHandler(config_entries.ConfigFlow):
 
         return await self._async_create_session(profile, code)
 
-    async def _async_create_session(self, profile, code):
+    async def _async_create_session(self, profile: str, code: str):
         """Create withings session and entries."""
         auth_client = self.get_auth_client(profile)
 
@@ -140,7 +141,7 @@ class WithingsFlowHandler(config_entries.ConfigFlow):
 
         return self.async_create_entry(
             title=profile,
-            data={const.PROFILE: profile, const.CREDENTIALS: credentials.__dict__},
+            data={const.PROFILE: profile, const.CREDENTIALS: credentials._asdict()},
         )
 
 
@@ -154,9 +155,9 @@ class WithingsAuthCallbackView(HomeAssistantView):
     def __init__(self):
         """Constructor."""
 
-    async def get(self, request):
+    async def get(self, request: aiohttp.web.Request) -> aiohttp.web_response.Response:
         """Receive authorization code."""
-        hass = request.app["hass"]
+        hass = request.app["hass"]  # type: HomeAssistantType
 
         code = request.query.get("code")
         profile = request.query.get("profile")

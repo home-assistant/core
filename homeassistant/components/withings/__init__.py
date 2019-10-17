@@ -9,8 +9,12 @@ from homeassistant.config_entries import ConfigEntry, SOURCE_IMPORT, SOURCE_USER
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.helpers import config_validation as cv
 
-from . import config_flow, const
-from .common import _LOGGER, get_data_manager, NotAuthenticatedError
+from homeassistant.components.withings import config_flow, const
+from homeassistant.components.withings.common import (
+    _LOGGER,
+    get_data_manager,
+    NotAuthenticatedError,
+)
 
 DOMAIN = const.DOMAIN
 
@@ -36,7 +40,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType):
+async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the Withings component."""
     conf = config.get(DOMAIN)
     if not conf:
@@ -65,7 +69,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up Withings from a config entry."""
     data_manager = get_data_manager(hass, entry)
 
@@ -90,6 +94,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Unload Withings config entry."""
     return await hass.config_entries.async_forward_entry_unload(entry, "sensor")

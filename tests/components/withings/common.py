@@ -1,213 +1,413 @@
 """Common data for for the withings component tests."""
+import json
+import re
 import time
+from typing import List
 
-import withings_api as withings
-
+import responses
+from withings_api import WithingsApi, WithingsAuth
+from withings_api.common import (
+    SleepState,
+    SleepModel,
+    MeasureGetMeasGroupAttrib,
+    MeasureGetMeasGroupCategory,
+    MeasureType,
+)
+import homeassistant.components.api as api
+import homeassistant.components.http as http
 import homeassistant.components.withings.const as const
+from homeassistant.util import slugify
+from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config import async_process_ha_core_config
+from homeassistant.setup import async_setup_component
+from homeassistant.const import CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_METRIC
 
 
-def new_sleep_data(model, series):
-    """Create simple dict to simulate api data."""
-    return {"series": series, "model": model}
+RESPONSES_GET = responses.GET  # pylint: disable=E1101
+RESPONSES_POST = responses.POST  # pylint: disable=E1101
 
 
-def new_sleep_data_serie(startdate, enddate, state):
-    """Create simple dict to simulate api data."""
-    return {"startdate": startdate, "enddate": enddate, "state": state}
+def get_entity_id(measure, profile) -> str:
+    """Get an entity id for a measure and profile."""
+    return "sensor.{}_{}_{}".format(const.DOMAIN, measure, slugify(profile))
 
 
-def new_sleep_summary(timezone, model, startdate, enddate, date, modified, data):
-    """Create simple dict to simulate api data."""
-    return {
-        "timezone": timezone,
-        "model": model,
-        "startdate": startdate,
-        "enddate": enddate,
-        "date": date,
-        "modified": modified,
-        "data": data,
+def assert_state_equals(
+    hass: HomeAssistantType, profile: str, measure: str, expected
+) -> None:
+    """Assert the state of a withings sensor."""
+    entity_id = get_entity_id(measure, profile)
+    state_obj = hass.states.get(entity_id)
+
+    assert state_obj, "Expected entity {} to exist but it did not".format(entity_id)
+
+    assert state_obj.state == str(
+        expected
+    ), "Expected {} but was {} for measure {}, {}".format(
+        expected, state_obj.state, measure, entity_id
+    )
+
+
+async def setup_hass(hass: HomeAssistantType) -> dict:
+    """Configure home assistant."""
+    profiles = ["Person0", "Person1", "Person2", "Person3", "Person4"]
+
+    hass_config = {
+        "homeassistant": {CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC},
+        api.DOMAIN: {"base_url": "http://localhost/"},
+        http.DOMAIN: {"server_port": 8080},
+        const.DOMAIN: {
+            const.CLIENT_ID: "my_client_id",
+            const.CLIENT_SECRET: "my_client_secret",
+            const.BASE_URL: "https://localhost:8999/",
+            const.PROFILES: profiles,
+        },
     }
 
+    await async_process_ha_core_config(hass, hass_config.get("homeassistant"))
+    assert await async_setup_component(hass, http.DOMAIN, hass_config)
+    assert await async_setup_component(hass, api.DOMAIN, hass_config)
+    assert await async_setup_component(hass, const.DOMAIN, hass_config)
+    await hass.async_block_till_done()
 
-def new_sleep_summary_detail(
-    wakeupduration,
-    lightsleepduration,
-    deepsleepduration,
-    remsleepduration,
-    wakeupcount,
-    durationtosleep,
-    durationtowakeup,
-    hr_average,
-    hr_min,
-    hr_max,
-    rr_average,
-    rr_min,
-    rr_max,
-):
-    """Create simple dict to simulate api data."""
-    return {
-        "wakeupduration": wakeupduration,
-        "lightsleepduration": lightsleepduration,
-        "deepsleepduration": deepsleepduration,
-        "remsleepduration": remsleepduration,
-        "wakeupcount": wakeupcount,
-        "durationtosleep": durationtosleep,
-        "durationtowakeup": durationtowakeup,
-        "hr_average": hr_average,
-        "hr_min": hr_min,
-        "hr_max": hr_max,
-        "rr_average": rr_average,
-        "rr_min": rr_min,
-        "rr_max": rr_max,
-    }
+    return hass_config
 
 
-def new_measure_group(
-    grpid, attrib, date, created, category, deviceid, more, offset, measures
-):
-    """Create simple dict to simulate api data."""
-    return {
-        "grpid": grpid,
-        "attrib": attrib,
-        "date": date,
-        "created": created,
-        "category": category,
-        "deviceid": deviceid,
-        "measures": measures,
-        "more": more,
-        "offset": offset,
-        "comment": "blah",  # deprecated
-    }
+async def configure_integration(
+    hass: HomeAssistantType,
+    profiles: List[str],
+    profile_index: int,
+    get_device_response: dict,
+    getmeasures_response: dict,
+    get_sleep_response: dict,
+    get_sleep_summary_response: dict,
+) -> None:
+    """Configure the integration for a specific profile."""
+    selected_profile = profiles[profile_index]
 
+    with responses.RequestsMock() as rsps:
+        # This will cause the first call to get data to refresh the
+        # authentication token before requesting the data. It effectively
+        # tests the credential_saver in withings/common.py.
+        get_token_call_count = 0
 
-def new_measure(type_str, value, unit):
-    """Create simple dict to simulate api data."""
-    return {
-        "value": value,
-        "type": type_str,
-        "unit": unit,
-        "algo": -1,  # deprecated
-        "fm": -1,  # deprecated
-        "fw": -1,  # deprecated
-    }
+        def get_token_callback(request):
+            """Get authorization tokens."""
+            nonlocal get_token_call_count
+            if get_token_call_count == 0:
+                response_body = {
+                    "access_token": "my_access_token",
+                    "expires_in": 0,
+                    "token_type": "Bearer",
+                    "scope": "user.info,user.metrics,user.activity",
+                    "refresh_token": "my_refresh_token",
+                    "userid": "my_user_id",
+                }
+            else:
+                response_body = {
+                    "access_token": "my_access_token",
+                    "expires_in": 1000,
+                    "token_type": "Bearer",
+                    "scope": "user.info,user.metrics,user.activity",
+                    "refresh_token": "my_refresh_token",
+                    "userid": "my_user_id",
+                }
 
+            get_token_call_count += 1
+            return (200, {}, json.dumps(response_body))
 
-def withings_sleep_response(states):
-    """Create a sleep response based on states."""
-    data = []
-    for state in states:
-        data.append(
-            new_sleep_data_serie(
-                "2019-02-01 0{}:00:00".format(str(len(data))),
-                "2019-02-01 0{}:00:00".format(str(len(data) + 1)),
-                state,
-            )
+        rsps.add_callback(
+            method=RESPONSES_POST,
+            url=re.compile(WithingsAuth.URL + "/oauth2/token.*"),
+            callback=get_token_callback,
         )
 
-    return withings.WithingsSleep(new_sleep_data("aa", data))
+        rsps.add(
+            method=RESPONSES_GET,
+            url=re.compile(WithingsApi.URL + "/v2/user?.*action=getdevice(&.*|$)"),
+            status=200,
+            json=get_device_response,
+        )
+
+        rsps.add(
+            method=RESPONSES_GET,
+            url=re.compile(WithingsApi.URL + "/v2/sleep?.*action=get(&.*|$)"),
+            status=200,
+            json=get_sleep_response,
+        )
+
+        rsps.add(
+            method=RESPONSES_GET,
+            url=re.compile(WithingsApi.URL + "/v2/sleep?.*action=getsummary(&.*|$)"),
+            status=200,
+            json=get_sleep_summary_response,
+        )
+
+        rsps.add(
+            method=RESPONSES_GET,
+            url=re.compile(WithingsApi.URL + "/measure?.*action=getmeas(&.*|$)"),
+            status=200,
+            json=getmeasures_response,
+        )
+
+        # Get the withings config flow.
+        flows = hass.config_entries.flow.async_progress()
+        if not flows:
+            await hass.config_entries.flow.async_init(
+                const.DOMAIN, context={"source": SOURCE_USER}, data={}
+            )
+        flows = hass.config_entries.flow.async_progress()
+        flow = next(flow for flow in flows if flow["handler"] == const.DOMAIN)
+        assert flow is not None
+
+        # Present user with a list of profiles to choose from.
+        step = await hass.config_entries.flow.async_configure(flow["flow_id"], None)
+        assert step["type"] == "form"
+        assert step["step_id"] == "user"
+        assert step["data_schema"].schema["profile"].container == profiles
+
+        # Select the user profile. Present a form with authorization link.
+        step = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], {const.PROFILE: selected_profile}
+        )
+        assert step["step_id"] == "auth"
+
+        # Handle the callback to the hass http endpoint.
+        from aiohttp.test_utils import make_mocked_request
+
+        req = make_mocked_request(
+            method="GET",
+            path="%s?code=%s&profile=%s&flow_id=%s"
+            % (
+                const.AUTH_CALLBACK_PATH,
+                "my_auth_code",
+                selected_profile,
+                flow["flow_id"],
+            ),
+            loop=hass.loop,
+            app=hass.http.app,
+        )
+        match_info = await hass.http.app.router.resolve(req)
+        response = await match_info.handler(req)
+        assert response.text == "<script>window.close()</script>"
+
+        # Finish the config flow by calling it again.
+        step = await hass.config_entries.flow.async_configure(flow["flow_id"])
+        assert step["type"] == "create_entry"
+
+        # Ensure all the flows are complete.
+        flows = hass.config_entries.flow.async_progress()
+        assert not flows
+
+        # Wait for remaining tasks to complete.
+        await hass.async_block_till_done()
 
 
-WITHINGS_MEASURES_RESPONSE = withings.WithingsMeasures(
-    {
-        "updatetime": "",
-        "timezone": "",
+WITHINGS_GET_DEVICE_RESPONSE_EMPTY = {"status": 0, "body": {"devices": []}}
+
+
+WITHINGS_GET_DEVICE_RESPONSE = {
+    "status": 0,
+    "body": {
+        "devices": [
+            {
+                "type": "type1",
+                "model": "model1",
+                "battery": "battery1",
+                "deviceid": "deviceid1",
+                "timezone": "UTC",
+            }
+        ]
+    },
+}
+
+
+WITHINGS_MEASURES_RESPONSE_EMPTY = {
+    "status": 0,
+    "body": {"updatetime": "2019-08-01", "timezone": "UTC", "measuregrps": []},
+}
+
+
+WITHINGS_MEASURES_RESPONSE = {
+    "status": 0,
+    "body": {
+        "updatetime": "2019-08-01",
+        "timezone": "UTC",
         "measuregrps": [
             # Un-ambiguous groups.
-            new_measure_group(
-                1,
-                0,
-                time.time(),
-                time.time(),
-                1,
-                "DEV_ID",
-                False,
-                0,
-                [
-                    new_measure(const.MEASURE_TYPE_WEIGHT, 70, 0),
-                    new_measure(const.MEASURE_TYPE_FAT_MASS, 5, 0),
-                    new_measure(const.MEASURE_TYPE_FAT_MASS_FREE, 60, 0),
-                    new_measure(const.MEASURE_TYPE_MUSCLE_MASS, 50, 0),
-                    new_measure(const.MEASURE_TYPE_BONE_MASS, 10, 0),
-                    new_measure(const.MEASURE_TYPE_HEIGHT, 2, 0),
-                    new_measure(const.MEASURE_TYPE_TEMP, 40, 0),
-                    new_measure(const.MEASURE_TYPE_BODY_TEMP, 35, 0),
-                    new_measure(const.MEASURE_TYPE_SKIN_TEMP, 20, 0),
-                    new_measure(const.MEASURE_TYPE_FAT_RATIO, 70, -3),
-                    new_measure(const.MEASURE_TYPE_DIASTOLIC_BP, 70, 0),
-                    new_measure(const.MEASURE_TYPE_SYSTOLIC_BP, 100, 0),
-                    new_measure(const.MEASURE_TYPE_HEART_PULSE, 60, 0),
-                    new_measure(const.MEASURE_TYPE_SPO2, 95, -2),
-                    new_measure(const.MEASURE_TYPE_HYDRATION, 95, -2),
-                    new_measure(const.MEASURE_TYPE_PWV, 100, 0),
+            {
+                "grpid": 1,
+                "attrib": MeasureGetMeasGroupAttrib.DEVICE_ENTRY_FOR_USER.real,
+                "date": time.time(),
+                "created": time.time(),
+                "category": MeasureGetMeasGroupCategory.REAL.real,
+                "deviceid": "DEV_ID",
+                "more": False,
+                "offset": 0,
+                "measures": [
+                    {"type": MeasureType.WEIGHT, "value": 70, "unit": 0},
+                    {"type": MeasureType.FAT_MASS_WEIGHT, "value": 5, "unit": 0},
+                    {"type": MeasureType.FAT_FREE_MASS, "value": 60, "unit": 0},
+                    {"type": MeasureType.MUSCLE_MASS, "value": 50, "unit": 0},
+                    {"type": MeasureType.BONE_MASS, "value": 10, "unit": 0},
+                    {"type": MeasureType.HEIGHT, "value": 2, "unit": 0},
+                    {"type": MeasureType.TEMPERATURE, "value": 40, "unit": 0},
+                    {"type": MeasureType.BODY_TEMPERATURE, "value": 40, "unit": 0},
+                    {"type": MeasureType.SKIN_TEMPERATURE, "value": 20, "unit": 0},
+                    {"type": MeasureType.FAT_RATIO, "value": 70, "unit": -3},
+                    {
+                        "type": MeasureType.DIASTOLIC_BLOOD_PRESSURE,
+                        "value": 70,
+                        "unit": 0,
+                    },
+                    {
+                        "type": MeasureType.SYSTOLIC_BLOOD_PRESSURE,
+                        "value": 100,
+                        "unit": 0,
+                    },
+                    {"type": MeasureType.HEART_RATE, "value": 60, "unit": 0},
+                    {"type": MeasureType.SP02, "value": 95, "unit": -2},
+                    {"type": MeasureType.HYDRATION, "value": 95, "unit": -2},
+                    {"type": MeasureType.PULSE_WAVE_VELOCITY, "value": 100, "unit": 0},
                 ],
-            ),
+            },
             # Ambiguous groups (we ignore these)
-            new_measure_group(
-                1,
-                1,
-                time.time(),
-                time.time(),
-                1,
-                "DEV_ID",
-                False,
-                0,
-                [
-                    new_measure(const.MEASURE_TYPE_WEIGHT, 71, 0),
-                    new_measure(const.MEASURE_TYPE_FAT_MASS, 4, 0),
-                    new_measure(const.MEASURE_TYPE_MUSCLE_MASS, 51, 0),
-                    new_measure(const.MEASURE_TYPE_BONE_MASS, 11, 0),
-                    new_measure(const.MEASURE_TYPE_HEIGHT, 201, 0),
-                    new_measure(const.MEASURE_TYPE_TEMP, 41, 0),
-                    new_measure(const.MEASURE_TYPE_BODY_TEMP, 34, 0),
-                    new_measure(const.MEASURE_TYPE_SKIN_TEMP, 21, 0),
-                    new_measure(const.MEASURE_TYPE_FAT_RATIO, 71, -3),
-                    new_measure(const.MEASURE_TYPE_DIASTOLIC_BP, 71, 0),
-                    new_measure(const.MEASURE_TYPE_SYSTOLIC_BP, 101, 0),
-                    new_measure(const.MEASURE_TYPE_HEART_PULSE, 61, 0),
-                    new_measure(const.MEASURE_TYPE_SPO2, 98, -2),
-                    new_measure(const.MEASURE_TYPE_HYDRATION, 96, -2),
-                    new_measure(const.MEASURE_TYPE_PWV, 102, 0),
+            {
+                "grpid": 1,
+                "attrib": MeasureGetMeasGroupAttrib.DEVICE_ENTRY_FOR_USER.real,
+                "date": time.time(),
+                "created": time.time(),
+                "category": MeasureGetMeasGroupCategory.REAL.real,
+                "deviceid": "DEV_ID",
+                "more": False,
+                "offset": 0,
+                "measures": [
+                    {"type": MeasureType.WEIGHT, "value": 71, "unit": 0},
+                    {"type": MeasureType.FAT_MASS_WEIGHT, "value": 4, "unit": 0},
+                    {"type": MeasureType.FAT_FREE_MASS, "value": 40, "unit": 0},
+                    {"type": MeasureType.MUSCLE_MASS, "value": 51, "unit": 0},
+                    {"type": MeasureType.BONE_MASS, "value": 11, "unit": 0},
+                    {"type": MeasureType.HEIGHT, "value": 201, "unit": 0},
+                    {"type": MeasureType.TEMPERATURE, "value": 41, "unit": 0},
+                    {"type": MeasureType.BODY_TEMPERATURE, "value": 34, "unit": 0},
+                    {"type": MeasureType.SKIN_TEMPERATURE, "value": 21, "unit": 0},
+                    {"type": MeasureType.FAT_RATIO, "value": 71, "unit": -3},
+                    {
+                        "type": MeasureType.DIASTOLIC_BLOOD_PRESSURE,
+                        "value": 71,
+                        "unit": 0,
+                    },
+                    {
+                        "type": MeasureType.SYSTOLIC_BLOOD_PRESSURE,
+                        "value": 101,
+                        "unit": 0,
+                    },
+                    {"type": MeasureType.HEART_RATE, "value": 61, "unit": 0},
+                    {"type": MeasureType.SP02, "value": 98, "unit": -2},
+                    {"type": MeasureType.HYDRATION, "value": 96, "unit": -2},
+                    {"type": MeasureType.PULSE_WAVE_VELOCITY, "value": 102, "unit": 0},
                 ],
-            ),
+            },
         ],
-    }
-)
+    },
+}
 
 
-WITHINGS_SLEEP_RESPONSE = withings_sleep_response(
-    [
-        const.MEASURE_TYPE_SLEEP_STATE_AWAKE,
-        const.MEASURE_TYPE_SLEEP_STATE_LIGHT,
-        const.MEASURE_TYPE_SLEEP_STATE_REM,
-        const.MEASURE_TYPE_SLEEP_STATE_DEEP,
-    ]
-)
+WITHINGS_SLEEP_RESPONSE_EMPTY = {
+    "status": 0,
+    "body": {"model": SleepModel.TRACKER.real, "series": []},
+}
 
-WITHINGS_SLEEP_SUMMARY_RESPONSE = withings.WithingsSleepSummary(
-    {
+
+WITHINGS_SLEEP_RESPONSE = {
+    "status": 0,
+    "body": {
+        "model": SleepModel.TRACKER.real,
         "series": [
-            new_sleep_summary(
-                "UTC",
-                32,
-                "2019-02-01",
-                "2019-02-02",
-                "2019-02-02",
-                "12345",
-                new_sleep_summary_detail(
-                    110, 210, 310, 410, 510, 610, 710, 810, 910, 1010, 1110, 1210, 1310
-                ),
-            ),
-            new_sleep_summary(
-                "UTC",
-                32,
-                "2019-02-01",
-                "2019-02-02",
-                "2019-02-02",
-                "12345",
-                new_sleep_summary_detail(
-                    210, 310, 410, 510, 610, 710, 810, 910, 1010, 1110, 1210, 1310, 1410
-                ),
-            ),
-        ]
-    }
-)
+            {
+                "startdate": "2019-02-01 00:00:00",
+                "enddate": "2019-02-01 01:00:00",
+                "state": SleepState.AWAKE.real,
+            },
+            {
+                "startdate": "2019-02-01 01:00:00",
+                "enddate": "2019-02-01 02:00:00",
+                "state": SleepState.LIGHT.real,
+            },
+            {
+                "startdate": "2019-02-01 02:00:00",
+                "enddate": "2019-02-01 03:00:00",
+                "state": SleepState.REM.real,
+            },
+            {
+                "startdate": "2019-02-01 03:00:00",
+                "enddate": "2019-02-01 04:00:00",
+                "state": SleepState.DEEP.real,
+            },
+        ],
+    },
+}
+
+
+WITHINGS_SLEEP_SUMMARY_RESPONSE_EMPTY = {
+    "status": 0,
+    "body": {"more": False, "offset": 0, "series": []},
+}
+
+
+WITHINGS_SLEEP_SUMMARY_RESPONSE = {
+    "status": 0,
+    "body": {
+        "more": False,
+        "offset": 0,
+        "series": [
+            {
+                "timezone": "UTC",
+                "model": SleepModel.SLEEP_MONITOR.real,
+                "startdate": "2019-02-01",
+                "enddate": "2019-02-02",
+                "date": "2019-02-02",
+                "modified": 12345,
+                "data": {
+                    "wakeupduration": 110,
+                    "lightsleepduration": 210,
+                    "deepsleepduration": 310,
+                    "remsleepduration": 410,
+                    "wakeupcount": 510,
+                    "durationtosleep": 610,
+                    "durationtowakeup": 710,
+                    "hr_average": 810,
+                    "hr_min": 910,
+                    "hr_max": 1010,
+                    "rr_average": 1110,
+                    "rr_min": 1210,
+                    "rr_max": 1310,
+                },
+            },
+            {
+                "timezone": "UTC",
+                "model": SleepModel.SLEEP_MONITOR.real,
+                "startdate": "2019-02-01",
+                "enddate": "2019-02-02",
+                "date": "2019-02-02",
+                "modified": 12345,
+                "data": {
+                    "wakeupduration": 210,
+                    "lightsleepduration": 310,
+                    "deepsleepduration": 410,
+                    "remsleepduration": 510,
+                    "wakeupcount": 610,
+                    "durationtosleep": 710,
+                    "durationtowakeup": 810,
+                    "hr_average": 910,
+                    "hr_min": 1010,
+                    "hr_max": 1110,
+                    "rr_average": 1210,
+                    "rr_min": 1310,
+                    "rr_max": 1410,
+                },
+            },
+        ],
+    },
+}
