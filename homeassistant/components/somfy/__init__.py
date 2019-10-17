@@ -80,7 +80,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             entry, data={**entry.data, "auth_implementation": DOMAIN}
         )
 
-    hass.data[DOMAIN][API] = api.ConfigEntrySomfyApi(hass, entry)
+    implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
+        hass, entry
+    )
+
+    hass.data[DOMAIN][API] = api.ConfigEntrySomfyApi(hass, entry, implementation)
 
     await update_all_devices(hass)
 

@@ -140,7 +140,9 @@ async def test_full_flow(
     entry = hass.config_entries.async_entries(TEST_DOMAIN)[0]
 
     assert (
-        config_entry_oauth2_flow.async_get_config_entry_implementation(hass, entry)
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
+        )
         is local_impl
     )
 
@@ -203,7 +205,7 @@ async def test_oauth_session(hass, flow_handler, local_impl, aioclient_mock):
     )
 
     now = time.time()
-    session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry)
+    session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
     resp = await session.async_request("post", "https://example.com")
     assert resp.status == 201
 

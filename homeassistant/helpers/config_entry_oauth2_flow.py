@@ -197,7 +197,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
     async def async_step_pick_implementation(self, user_input: dict = None) -> dict:
         """Handle a flow start."""
         assert self.hass
-        implementations = async_get_implementations(self.hass, self.DOMAIN)
+        implementations = await async_get_implementations(self.hass, self.DOMAIN)
 
         if not implementations:
             return self.async_abort(reason="missing_configuration")
@@ -266,8 +266,7 @@ def async_register_implementation(
     implementations.setdefault(domain, {})[implementation.domain] = implementation
 
 
-@callback
-def async_get_implementations(
+async def async_get_implementations(
     hass: HomeAssistant, domain: str
 ) -> Dict[str, AbstractOAuth2Implementation]:
     """Return OAuth2 implementations for specified domain."""
@@ -277,14 +276,12 @@ def async_get_implementations(
     )
 
 
-@callback
-def async_get_config_entry_implementation(
+async def async_get_config_entry_implementation(
     hass: HomeAssistant, config_entry: config_entries.ConfigEntry
 ) -> AbstractOAuth2Implementation:
     """Return the implementation for this config entry."""
-    implementation = async_get_implementations(hass, config_entry.domain).get(
-        config_entry.data["auth_implementation"]
-    )
+    implementations = await async_get_implementations(hass, config_entry.domain)
+    implementation = implementations.get(config_entry.data["auth_implementation"])
 
     if implementation is None:
         raise ValueError("Implementation not available")
@@ -326,11 +323,16 @@ class OAuth2AuthorizeCallbackView(HomeAssistantView):
 class OAuth2Session:
     """Session to make requests authenticated with OAuth2."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: config_entries.ConfigEntry):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: config_entries.ConfigEntry,
+        implementation: AbstractOAuth2Implementation,
+    ):
         """Initialize an OAuth2 session."""
         self.hass = hass
         self.config_entry = config_entry
-        self.implementation = async_get_config_entry_implementation(hass, config_entry)
+        self.implementation = implementation
 
     async def async_ensure_token_valid(self) -> None:
         """Ensure that the current token is valid."""
