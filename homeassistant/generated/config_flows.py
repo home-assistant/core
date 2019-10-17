@@ -55,6 +55,7 @@ FLOWS = [
     "smhi",
     "solaredge",
     "solarlog",
+    "soma",
     "somfy",
     "sonos",
     "tellduslive",
