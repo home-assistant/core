@@ -1,8 +1,14 @@
 """Test Dynalite __init__."""
 from unittest.mock import Mock, patch, call
 
-from homeassistant.components.dynalite import DOMAIN, DATA_CONFIGS
-from homeassistant.components.dynalite.__init__ import async_setup, async_setup_entry
+from homeassistant.components.dynalite import DOMAIN, DATA_CONFIGS, LOGGER
+from homeassistant.components.dynalite.__init__ import (
+    async_setup,
+    async_setup_entry,
+    async_unload_entry,
+)
+
+from tests.common import mock_coro
 
 
 async def test_async_setup():
@@ -30,6 +36,8 @@ async def test_async_setup_entry():
     """Test setup of an entry."""
 
     def async_mock(mock):
+        """Return the return value of a mock from async."""
+
         async def async_func(*args, **kwargs):
             return mock()
 
@@ -49,3 +57,20 @@ async def test_async_setup_entry():
     ):
         assert await async_setup_entry(hass, entry)
     mock_async_setup.assert_called_once()
+
+
+async def test_async_unload_entry():
+    """Test unloading of an entry."""
+    host = "1.2.3.4"
+    hass = Mock()
+    mock_bridge = Mock()
+    mock_bridge.async_reset.return_value = mock_coro(True)
+    hass.data = {}
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][host] = mock_bridge
+    entry = Mock()
+    entry.data = {"host": host}
+    await async_unload_entry(hass, entry)
+    LOGGER.error("XXX calls=%s", mock_bridge.mock_calls)
+    mock_bridge.async_reset.assert_called_once()
+    assert mock_bridge.mock_calls[0] == call.async_reset()
