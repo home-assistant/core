@@ -27,6 +27,7 @@ from homeassistant.auth import (
 )
 from homeassistant.auth.permissions import system_policies
 from homeassistant.components import mqtt, recorder
+from homeassistant.components.mqtt.models import Message
 from homeassistant.config import async_process_component_config
 from homeassistant.const import (
     ATTR_DISCOVERED,
@@ -271,7 +272,7 @@ def async_fire_mqtt_message(hass, topic, payload, qos=0, retain=False):
     """Fire the MQTT message."""
     if isinstance(payload, str):
         payload = payload.encode("utf-8")
-    msg = mqtt.Message(topic, payload, qos, retain)
+    msg = Message(topic, payload, qos, retain)
     hass.data["mqtt"]._mqtt_handle_message(msg)
 
 
