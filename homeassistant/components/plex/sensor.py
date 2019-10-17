@@ -2,9 +2,6 @@
 from datetime import timedelta
 import logging
 
-import plexapi.exceptions
-import requests.exceptions
-
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -26,8 +23,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Plex sensor from a config entry."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
-    sensor = PlexSensor(hass.data[PLEX_DOMAIN][SERVERS][server_id])
-    async_add_entities([sensor], True)
+    plexserver = hass.data[PLEX_DOMAIN][SERVERS][server_id]
+    sensor = PlexSensor(plexserver)
+    async_add_entities([sensor])
+    plexserver.sensor = sensor
 
 
 class PlexSensor(Entity):
@@ -35,6 +34,7 @@ class PlexSensor(Entity):
 
     def __init__(self, plex_server):
         """Initialize the sensor."""
+        self.sessions = []
         self._state = None
         self._now_playing = []
         self._server = plex_server
@@ -50,6 +50,11 @@ class PlexSensor(Entity):
     def unique_id(self):
         """Return the id of this plex client."""
         return self._unique_id
+
+    @property
+    def should_poll(self):
+        """Return True if entity has to be polled for state."""
+        return False
 
     @property
     def state(self):
@@ -69,21 +74,8 @@ class PlexSensor(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update method for Plex sensor."""
-        try:
-            sessions = self._server.sessions()
-        except plexapi.exceptions.BadRequest:
-            _LOGGER.error(
-                "Error listing current Plex sessions on %s", self._server.friendly_name
-            )
-            return
-        except requests.exceptions.RequestException as ex:
-            _LOGGER.warning(
-                "Temporary error connecting to %s (%s)", self._server.friendly_name, ex
-            )
-            return
-
         now_playing = []
-        for sess in sessions:
+        for sess in self.sessions:
             user = sess.usernames[0]
             device = sess.players[0].title
             now_playing_user = f"{user} - {device}"
@@ -120,5 +112,5 @@ class PlexSensor(Entity):
                     now_playing_title += f" ({sess.year})"
 
             now_playing.append((now_playing_user, now_playing_title))
-        self._state = len(sessions)
+        self._state = len(self.sessions)
         self._now_playing = now_playing

@@ -1,5 +1,6 @@
 """Support to embed Plex."""
 import asyncio
+from datetime import timedelta
 import logging
 
 import plexapi.exceptions
@@ -17,6 +18,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     CONF_USE_EPISODE_ART,
@@ -129,7 +131,8 @@ async def async_setup_entry(hass, entry):
     _LOGGER.debug(
         "Connected to: %s (%s)", plex_server.friendly_name, plex_server.url_in_use
     )
-    hass.data[PLEX_DOMAIN][SERVERS][plex_server.machine_identifier] = plex_server
+    server_id = plex_server.machine_identifier
+    hass.data[PLEX_DOMAIN][SERVERS][server_id] = plex_server
 
     for platform in PLATFORMS:
         hass.async_create_task(
@@ -137,6 +140,10 @@ async def async_setup_entry(hass, entry):
         )
 
     entry.add_update_listener(async_options_updated)
+
+    hass.data[PLEX_DOMAIN][REFRESH_LISTENERS][server_id] = async_track_time_interval(
+        hass, lambda now: plex_server.update_platforms(), timedelta(seconds=10)
+    )
 
     return True
 

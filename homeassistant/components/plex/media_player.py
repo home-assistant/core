@@ -1,5 +1,4 @@
 """Support to interface with the Plex API."""
-from datetime import timedelta
 import json
 import logging
 from xml.etree.ElementTree import ParseError
@@ -29,16 +28,9 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.helpers.event import track_time_interval
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    CONF_SERVER_IDENTIFIER,
-    DOMAIN as PLEX_DOMAIN,
-    NAME_FORMAT,
-    REFRESH_LISTENERS,
-    SERVERS,
-)
+from .const import CONF_SERVER_IDENTIFIER, DOMAIN as PLEX_DOMAIN, NAME_FORMAT, SERVERS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,111 +50,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Sync version of async add entities."""
         hass.add_job(async_add_entities, entities, update_before_add)
 
-    hass.async_add_executor_job(_setup_platform, hass, config_entry, add_entities)
-
-
-def _setup_platform(hass, config_entry, add_entities_callback):
-    """Set up the Plex media_player platform."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
     plexserver = hass.data[PLEX_DOMAIN][SERVERS][server_id]
-    plex_clients = {}
-    plex_sessions = {}
-    hass.data[PLEX_DOMAIN][REFRESH_LISTENERS][server_id] = track_time_interval(
-        hass, lambda now: update_devices(), timedelta(seconds=10)
-    )
-
-    def update_devices():
-        """Update the devices objects."""
-        try:
-            devices = plexserver.clients()
-        except plexapi.exceptions.BadRequest:
-            _LOGGER.exception("Error listing plex devices")
-            return
-        except requests.exceptions.RequestException as ex:
-            _LOGGER.warning(
-                "Could not connect to Plex server: %s (%s)",
-                plexserver.friendly_name,
-                ex,
-            )
-            return
-
-        new_plex_clients = []
-        available_client_ids = []
-        for device in devices:
-            # For now, let's allow all deviceClass types
-            if device.deviceClass in ["badClient"]:
-                continue
-
-            available_client_ids.append(device.machineIdentifier)
-
-            if device.machineIdentifier not in plex_clients:
-                new_client = PlexClient(
-                    plexserver, device, None, plex_sessions, update_devices
-                )
-                plex_clients[device.machineIdentifier] = new_client
-                _LOGGER.debug("New device: %s", device.machineIdentifier)
-                new_plex_clients.append(new_client)
-            else:
-                _LOGGER.debug("Refreshing device: %s", device.machineIdentifier)
-                plex_clients[device.machineIdentifier].refresh(device, None)
-
-        # add devices with a session and no client (ex. PlexConnect Apple TV's)
-        try:
-            sessions = plexserver.sessions()
-        except plexapi.exceptions.BadRequest:
-            _LOGGER.exception("Error listing plex sessions")
-            return
-        except requests.exceptions.RequestException as ex:
-            _LOGGER.warning(
-                "Could not connect to Plex server: %s (%s)",
-                plexserver.friendly_name,
-                ex,
-            )
-            return
-
-        plex_sessions.clear()
-        for session in sessions:
-            for player in session.players:
-                plex_sessions[player.machineIdentifier] = session, player
-
-        for machine_identifier, (session, player) in plex_sessions.items():
-            if machine_identifier in available_client_ids:
-                # Avoid using session if already added as a device.
-                _LOGGER.debug("Skipping session, device exists: %s", machine_identifier)
-                continue
-
-            if (
-                machine_identifier not in plex_clients
-                and machine_identifier is not None
-            ):
-                new_client = PlexClient(
-                    plexserver, player, session, plex_sessions, update_devices
-                )
-                plex_clients[machine_identifier] = new_client
-                _LOGGER.debug("New session: %s", machine_identifier)
-                new_plex_clients.append(new_client)
-            else:
-                _LOGGER.debug("Refreshing session: %s", machine_identifier)
-                plex_clients[machine_identifier].refresh(None, session)
-
-        for client in plex_clients.values():
-            # force devices to idle that do not have a valid session
-            if client.session is None:
-                client.force_idle()
-
-            client.set_availability(
-                client.machine_identifier in available_client_ids
-                or client.machine_identifier in plex_sessions
-            )
-
-            if client not in new_plex_clients:
-                client.schedule_update_ha_state()
-
-        if new_plex_clients:
-            add_entities_callback(new_plex_clients)
+    plexserver.add_media_player_callback = add_entities
 
 
-class PlexClient(MediaPlayerDevice):
+class PlexMediaPlayer(MediaPlayerDevice):
     """Representation of a Plex device."""
 
     def __init__(self, plex_server, device, session, plex_sessions, update_devices):
