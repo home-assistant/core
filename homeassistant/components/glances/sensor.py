@@ -26,13 +26,22 @@ from homeassistant.util import Throttle
 _LOGGER = logging.getLogger(__name__)
 
 CONF_VERSION = "version"
+CONF_DOCKER_CONTAINERS = "docker_containers"
 
 DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "Glances"
 DEFAULT_PORT = "61208"
 DEFAULT_VERSION = 2
 
+ATTR_DOCKER_ID = "id"
+ATTR_DOCKER_IMAGE = "image"
+ATTR_DOCKER_COMMAND = "command"
+ATTR_DOCKER_CPU_PERCENT = "cpu_percent"
+ATTR_DOCKER_CPU_TOTAL = "cpu_total"
+
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
+
+ICON_DOCKER = "mdi:docker"
 
 SENSOR_TYPES = {
     "disk_use_percent": ["Disk used percent", "%", "mdi:harddisk"],
@@ -69,6 +78,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             cv.ensure_list, [vol.In(SENSOR_TYPES)]
         ),
         vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.In([2, 3]),
+        vol.Optional(CONF_DOCKER_CONTAINERS, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
     }
 )
 
@@ -86,6 +98,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     password = config.get(CONF_PASSWORD)
     ssl = config[CONF_SSL]
     verify_ssl = config[CONF_VERIFY_SSL]
+    docker_containers = config[CONF_DOCKER_CONTAINERS]
 
     session = async_get_clientsession(hass, verify_ssl)
     glances = GlancesData(
@@ -109,6 +122,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     dev = []
     for resource in var_conf:
         dev.append(GlancesSensor(glances, name, resource))
+
+    for docker_container in docker_containers:
+        dev.append(GlancesDockerSensor(glances, name, docker_container))
 
     async_add_entities(dev, True)
 
@@ -249,6 +265,71 @@ class GlancesSensor(Entity):
                         self._state = round(mem_use / 1024 ** 2, 1)
                 except KeyError:
                     self._state = STATE_UNAVAILABLE
+
+
+class GlancesDockerSensor(Entity):
+    """Implementation of Glances Docker sensor."""
+
+    def __init__(self, glances, name, container_name):
+        """Initialize the sensor."""
+        self.glances = glances
+        self._name = name
+        self._available = False
+        self.container_name = container_name
+        self.container_info = None
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return "{} Docker {}".format(self._name, self.container_name)
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return ICON_DOCKER
+
+    @property
+    def available(self):
+        """Could the device be accessed during the last update call."""
+        return self.glances.available and self._available
+
+    @property
+    def state(self):
+        """Return the state of the resources."""
+        return self.container_info["Status"]
+
+    @property
+    def state_attributes(self):
+        """Return the device state attributes."""
+        attr = {ATTR_DOCKER_ID: self.container_info["Id"]}
+
+        if len(self.container_info["Image"]) > 0:
+            attr[ATTR_DOCKER_IMAGE] = self.container_info["Image"][0]
+
+        if self.container_info["Command"] is not None:
+            attr[ATTR_DOCKER_COMMAND] = self.container_info["Command"]
+
+        if self.container_info["cpu_percent"] is not None:
+            attr[ATTR_DOCKER_CPU_PERCENT] = round(self.container_info["cpu_percent"], 2)
+
+        if "total" in self.container_info["cpu"]:
+            attr[ATTR_DOCKER_CPU_TOTAL] = round(self.container_info["cpu"]["total"], 2)
+
+        return attr
+
+    async def async_update(self):
+        """Get the latest data from REST API."""
+        await self.glances.async_update()
+        value = self.glances.api.data
+
+        if value is not None and "docker" in value:
+            for container_info in value["docker"]["containers"]:
+                if self.container_name == container_info["name"]:
+                    self.container_info = container_info
+                    self._available = True
+                    return
+        _LOGGER.warning("Container Information for '%s' not found", self.container_name)
+        self._available = False
 
 
 class GlancesData:
