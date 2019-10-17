@@ -4,9 +4,9 @@ from datetime import timedelta
 from requests.exceptions import RequestException
 
 from fritzconnection import FritzStatus  # pylint: disable=import-error
-from fritzconnection.fritzconnection import (
+from fritzconnection.fritzconnection import (  # pylint: disable=import-error
     FritzConnectionException,
-)  # pylint: disable=import-error
+)
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
