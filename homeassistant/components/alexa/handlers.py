@@ -1,4 +1,5 @@
 """Alexa message handlers."""
+import asyncio
 import logging
 import math
 
@@ -529,6 +530,7 @@ async def async_api_adjust_volume_step(hass, config, directive, context):
     volume_int = int(directive.payload["volumeSteps"])
     is_default = bool(directive.payload["volumeStepsDefault"])
     default_steps = 1
+    sleep_delay = 0.5
 
     if "volume_steps_default" in entity.attributes:
         try:
@@ -562,6 +564,7 @@ async def async_api_adjust_volume_step(hass, config, directive, context):
                     blocking=False,
                     context=context,
                 )
+            await asyncio.sleep(sleep_delay)
 
     return directive.response()
 
@@ -1163,6 +1166,7 @@ async def async_api_skipchannel(hass, config, directive, context):
     """Process a skipchannel request."""
     channel = int(directive.payload["channelCount"])
     entity = directive.entity
+    sleep_delay = 0.5
 
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
@@ -1175,7 +1179,6 @@ async def async_api_skipchannel(hass, config, directive, context):
                 blocking=False,
                 context=context,
             )
-
         if channel < 0:
             await hass.services.async_call(
                 entity.domain,
@@ -1184,6 +1187,7 @@ async def async_api_skipchannel(hass, config, directive, context):
                 blocking=False,
                 context=context,
             )
+        await asyncio.sleep(sleep_delay)
 
     response = directive.response()
 
