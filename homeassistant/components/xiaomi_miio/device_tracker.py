@@ -3,6 +3,8 @@ import logging
 
 import voluptuous as vol
 
+from miio import WifiRepeater, DeviceException  # pylint: disable=import-error
+
 from homeassistant.components.device_tracker import (
     DOMAIN,
     PLATFORM_SCHEMA,
@@ -23,8 +25,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_scanner(hass, config):
     """Return a Xiaomi MiIO device scanner."""
-    from miio import WifiRepeater, DeviceException
-
     scanner = None
     host = config[DOMAIN].get(CONF_HOST)
     token = config[DOMAIN].get(CONF_TOKEN)
@@ -56,8 +56,6 @@ class XiaomiMiioDeviceScanner(DeviceScanner):
 
     async def async_scan_devices(self):
         """Scan for devices and return a list containing found device IDs."""
-        from miio import DeviceException
-
         devices = []
         try:
             station_info = await self.hass.async_add_executor_job(self.device.status)

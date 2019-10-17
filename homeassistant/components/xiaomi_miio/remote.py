@@ -7,6 +7,8 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+from miio import ChuangmiIr, DeviceException  # pylint: disable=import-error
+
 from homeassistant.components.remote import (
     PLATFORM_SCHEMA,
     DOMAIN,
@@ -73,8 +75,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Xiaomi IR Remote (Chuangmi IR) platform."""
-    from miio import ChuangmiIr, DeviceException
-
     host = config.get(CONF_HOST)
     token = config.get(CONF_TOKEN)
 
@@ -226,8 +226,6 @@ class XiaomiMiioRemote(RemoteDevice):
     @property
     def is_on(self):
         """Return False if device is unreachable, else True."""
-        from miio import DeviceException
-
         try:
             self.device.info()
             return True
@@ -262,8 +260,6 @@ class XiaomiMiioRemote(RemoteDevice):
 
     def _send_command(self, payload):
         """Send a command."""
-        from miio import DeviceException
-
         _LOGGER.debug("Sending payload: '%s'", payload)
         try:
             self.device.play(payload)

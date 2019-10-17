@@ -5,6 +5,8 @@ import logging
 
 import voluptuous as vol
 
+from miio import Vacuum, DeviceException  # pylint: disable=import-error
+
 from homeassistant.components.vacuum import (
     ATTR_CLEANED_AREA,
     DOMAIN,
@@ -177,8 +179,6 @@ STATE_CODE_TO_STATE = {
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Xiaomi vacuum cleaner robot platform."""
-    from miio import Vacuum
-
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
 
@@ -348,8 +348,6 @@ class MiroboVacuum(StateVacuumDevice):
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a vacuum command handling error messages."""
-        from miio import DeviceException
-
         try:
             await self.hass.async_add_executor_job(partial(func, *args, **kwargs))
             return True
@@ -450,8 +448,6 @@ class MiroboVacuum(StateVacuumDevice):
 
     def update(self):
         """Fetch state from the device."""
-        from miio import DeviceException
-
         try:
             state = self._vacuum.status()
             self.vacuum_state = state
@@ -469,8 +465,6 @@ class MiroboVacuum(StateVacuumDevice):
 
     async def async_clean_zone(self, zone, repeats=1):
         """Clean selected area for the number of repeats indicated."""
-        from miio import DeviceException
-
         for _zone in zone:
             _zone.append(repeats)
         _LOGGER.debug("Zone with repeats: %s", zone)
