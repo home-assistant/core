@@ -1,103 +1,20 @@
 """Platform for solarlog sensors."""
 import logging
-from datetime import timedelta
 
 from requests.exceptions import HTTPError, Timeout
 from sunwatcher.solarlog.solarlog import SolarLog
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_NAME, POWER_WATT, ENERGY_KILO_WATT_HOUR
 import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
+from .const import DOMAIN, DEFAULT_HOST, DEFAULT_NAME, SCAN_INTERVAL, SENSOR_TYPES
+
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_HOST = "solar-log"
-DEFAULT_NAME = "solarlog"
-SCAN_INTERVAL = timedelta(seconds=60)
-
-"""Supported sensor types."""
-SENSOR_TYPES = {
-    "time": ["TIME", "last update", None, "mdi:solar-power"],
-    "power_ac": ["powerAC", "power AC", POWER_WATT, "mdi:solar-power"],
-    "power_dc": ["powerDC", "power DC", POWER_WATT, "mdi:solar-power"],
-    "voltage_ac": ["voltageAC", "voltage AC", "V", "mdi:solar-power"],
-    "voltage_dc": ["voltageDC", "voltage DC", "V", "mdi:solar-power"],
-    "yield_day": ["yieldDAY", "yield day", ENERGY_KILO_WATT_HOUR, "mdi:solar-power"],
-    "yield_yesterday": [
-        "yieldYESTERDAY",
-        "yield yesterday",
-        ENERGY_KILO_WATT_HOUR,
-        "mdi:solar-power",
-    ],
-    "yield_month": [
-        "yieldMONTH",
-        "yield month",
-        ENERGY_KILO_WATT_HOUR,
-        "mdi:solar-power",
-    ],
-    "yield_year": ["yieldYEAR", "yield year", ENERGY_KILO_WATT_HOUR, "mdi:solar-power"],
-    "yield_total": [
-        "yieldTOTAL",
-        "yield total",
-        ENERGY_KILO_WATT_HOUR,
-        "mdi:solar-power",
-    ],
-    "consumption_ac": [
-        "consumptionAC",
-        "consumption AC",
-        POWER_WATT,
-        "mdi:solar-power",
-    ],
-    "consumption_day": [
-        "consumptionDAY",
-        "consumption day",
-        ENERGY_KILO_WATT_HOUR,
-        "mdi:solar-power",
-    ],
-    "consumption_yesterday": [
-        "consumptionYESTERDAY",
-        "consumption yesterday",
-        ENERGY_KILO_WATT_HOUR,
-        "mdi:solar-power",
-    ],
-    "consumption_month": [
-        "consumptionMONTH",
-        "consumption month",
-        ENERGY_KILO_WATT_HOUR,
-        "mdi:solar-power",
-    ],
-    "consumption_year": [
-        "consumptionYEAR",
-        "consumption year",
-        ENERGY_KILO_WATT_HOUR,
-        "mdi:solar-power",
-    ],
-    "consumption_total": [
-        "consumptionTOTAL",
-        "consumption total",
-        ENERGY_KILO_WATT_HOUR,
-        "mdi:solar-power",
-    ],
-    "total_power": ["totalPOWER", "total power", "Wp", "mdi:solar-power"],
-    "alternator_loss": [
-        "alternatorLOSS",
-        "alternator loss",
-        POWER_WATT,
-        "mdi:solar-power",
-    ],
-    "capacity": ["CAPACITY", "capacity", "%", "mdi:solar-power"],
-    "efficiency": ["EFFICIENCY", "efficiency", "% W/Wp", "mdi:solar-power"],
-    "power_available": [
-        "powerAVAILABLE",
-        "power available",
-        POWER_WATT,
-        "mdi:solar-power",
-    ],
-    "usage": ["USAGE", "usage", None, "mdi:solar-power"],
-}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -107,17 +24,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the sensor platform."""
-    host = config.get(CONF_HOST)
-    platform_name = config.get(CONF_NAME)
-    # Set up the API connection to retrieve the data.
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Import YAML configuration when available."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config)
+        )
+    )
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Add solarlog entry."""
+    host = entry.data[CONF_HOST]
+    platform_name = entry.title
     try:
         api = SolarLog(f"http://{host}")
-        _LOGGER.debug("Connected to Solarlog API at %s", host)
+        _LOGGER.debug("Connected to Solar-Log device, setting up entries")
     except (OSError, HTTPError, Timeout):
         _LOGGER.error(
-            "Could not connect to Solarlog API at %s, check host ip address", host
+            "Could not connect to Solar-Log device at %s, check host ip address", host
         )
         return
 
@@ -130,8 +55,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         sensor = SolarlogSensor(platform_name, sensor_key, data)
         entities.append(sensor)
 
-    add_entities(entities, True)
-    return
+    async_add_entities(entities, True)
+    return True
 
 
 class SolarlogSensor(Entity):
@@ -223,3 +148,4 @@ class SolarlogData:
             _LOGGER.debug("Updated Solarlog overview data: %s", self.data)
         except AttributeError:
             _LOGGER.error("Missing details data in Solarlog response")
+
