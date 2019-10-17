@@ -25,6 +25,11 @@ class DynaliteLight(Light):
         self._bridge = bridge
 
     @property
+    def device(self):
+        """Return the underlying device - mostly for testing."""
+        return self._device
+
+    @property
     def name(self):
         """Return the name of the entity."""
         return self._device.name

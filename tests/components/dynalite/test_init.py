@@ -29,8 +29,11 @@ async def test_async_setup():
 async def test_async_setup_entry():
     """Test setup of an entry."""
 
-    async def temp_async_setup():
-        return True
+    def async_mock(mock):
+        async def async_func(*args, **kwargs):
+            return mock()
+
+        return async_func
 
     host = "1.2.3.4"
     hass = Mock()
@@ -39,11 +42,10 @@ async def test_async_setup_entry():
     hass.data = {}
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA_CONFIGS] = {host: {}}
-    mock_instance = Mock()
-    mock_instance.async_setup = temp_async_setup
-    mock_bridge = Mock(return_value=mock_instance)
+    mock_async_setup = Mock(return_value=True)
     with patch(
-        "homeassistant.components.dynalite.__init__.DynaliteBridge", mock_bridge
+        "homeassistant.components.dynalite.__init__.DynaliteBridge.async_setup",
+        async_mock(mock_async_setup),
     ):
-        await async_setup_entry(hass, entry)
-    assert hass.data[DOMAIN][host] is mock_instance
+        assert await async_setup_entry(hass, entry)
+    mock_async_setup.assert_called_once()

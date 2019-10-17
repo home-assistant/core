@@ -1,7 +1,7 @@
 """Test Dynalite light."""
 from unittest.mock import Mock, patch, call
 
-from homeassistant.components.dynalite import DOMAIN, LOGGER
+from homeassistant.components.dynalite import DOMAIN
 from homeassistant.components.dynalite.light import DynaliteLight, async_setup_entry
 
 from tests.common import mock_coro
@@ -9,7 +9,6 @@ from tests.common import mock_coro
 
 async def test_light_setup():
     """Test a successful setup."""
-    LOGGER.debug("XXX hello")
     hass = Mock()
     entry = Mock()
     async_add = Mock()

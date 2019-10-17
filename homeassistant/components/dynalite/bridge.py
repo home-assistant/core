@@ -38,7 +38,7 @@ class DynaliteBridge:
             raise BridgeError("invalid host - " + self.host)
         self.config = hass.data[DOMAIN][DATA_CONFIGS][self.host]
         # Configure the dynalite devices
-        self._dynalite_devices = DynaliteDevices(
+        self.dynalite_devices = DynaliteDevices(
             config=self.config,
             loop=hass.loop,
             newDeviceFunc=self.add_devices,
@@ -51,7 +51,7 @@ class DynaliteBridge:
             "component bridge async_setup - %s", pprint.pformat(self.config_entry.data)
         )
         # Configure the dynalite devices
-        await self._dynalite_devices.async_setup()
+        await self.dynalite_devices.async_setup()
 
         self.hass.async_create_task(
             self.hass.config_entries.async_forward_entry_setup(
@@ -83,7 +83,7 @@ class DynaliteBridge:
         """Call when a device or all devices should be updated."""
         if device == CONF_ALL:
             # This is used to signal connection or disconnection, so all devices may become available or not.
-            if self._dynalite_devices.available:
+            if self.dynalite_devices.available:
                 LOGGER.info("Connected to dynalite host")
             else:
                 LOGGER.info("Disconnected from dynalite host")
