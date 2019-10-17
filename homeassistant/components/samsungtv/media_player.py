@@ -150,7 +150,7 @@ class SamsungTVDevice(MediaPlayerDevice):
         elif self._config["port"] == 55000:
             self._config["method"] = "legacy"
 
-    def update(self):
+    async def async_update(self):
         """Update state of device."""
         self.send_key("KEY")
 
