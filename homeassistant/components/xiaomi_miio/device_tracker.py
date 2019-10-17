@@ -1,9 +1,8 @@
 """Support for Xiaomi Mi WiFi Repeater 2."""
 import logging
 
+from miio import DeviceException, WifiRepeater  # pylint: disable=import-error
 import voluptuous as vol
-
-from miio import WifiRepeater, DeviceException  # pylint: disable=import-error
 
 from homeassistant.components.device_tracker import (
     DOMAIN,

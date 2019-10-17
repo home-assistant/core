@@ -3,14 +3,19 @@ import asyncio
 from functools import partial
 import logging
 
+from miio import DeviceException, Vacuum  # pylint: disable=import-error
 import voluptuous as vol
-
-from miio import Vacuum, DeviceException  # pylint: disable=import-error
 
 from homeassistant.components.vacuum import (
     ATTR_CLEANED_AREA,
     DOMAIN,
     PLATFORM_SCHEMA,
+    STATE_CLEANING,
+    STATE_DOCKED,
+    STATE_ERROR,
+    STATE_IDLE,
+    STATE_PAUSED,
+    STATE_RETURNING,
     SUPPORT_BATTERY,
     SUPPORT_CLEAN_SPOT,
     SUPPORT_FAN_SPEED,
@@ -18,16 +23,10 @@ from homeassistant.components.vacuum import (
     SUPPORT_PAUSE,
     SUPPORT_RETURN_HOME,
     SUPPORT_SEND_COMMAND,
-    SUPPORT_STOP,
-    SUPPORT_STATE,
     SUPPORT_START,
+    SUPPORT_STATE,
+    SUPPORT_STOP,
     StateVacuumDevice,
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_PAUSED,
-    STATE_IDLE,
-    STATE_RETURNING,
-    STATE_ERROR,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,

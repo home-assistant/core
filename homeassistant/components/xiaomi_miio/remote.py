@@ -1,30 +1,28 @@
 """Support for the Xiaomi IR Remote (Chuangmi IR)."""
 import asyncio
+from datetime import timedelta
 import logging
 import time
 
-from datetime import timedelta
-
+from miio import ChuangmiIr, DeviceException  # pylint: disable=import-error
 import voluptuous as vol
 
-from miio import ChuangmiIr, DeviceException  # pylint: disable=import-error
-
 from homeassistant.components.remote import (
-    PLATFORM_SCHEMA,
-    DOMAIN,
-    ATTR_NUM_REPEATS,
     ATTR_DELAY_SECS,
+    ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
+    DOMAIN,
+    PLATFORM_SCHEMA,
     RemoteDevice,
 )
 from homeassistant.const import (
-    CONF_NAME,
-    CONF_HOST,
-    CONF_TOKEN,
-    CONF_TIMEOUT,
     ATTR_ENTITY_ID,
     ATTR_HIDDEN,
     CONF_COMMAND,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_TIMEOUT,
+    CONF_TOKEN,
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv

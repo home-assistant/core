@@ -6,22 +6,21 @@ from functools import partial
 import logging
 from math import ceil
 
-import voluptuous as vol
-
 from miio import (  # pylint: disable=import-error
+    Ceil,
     Device,
     DeviceException,
-    PhilipsEyecare,
-    Ceil,
-    PhilipsMoonlight,
     PhilipsBulb,
+    PhilipsEyecare,
+    PhilipsMoonlight,
 )
+import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_HS_COLOR,
     ATTR_COLOR_TEMP,
     ATTR_ENTITY_ID,
+    ATTR_HS_COLOR,
     DOMAIN,
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,

@@ -4,49 +4,44 @@ from enum import Enum
 from functools import partial
 import logging
 
-import voluptuous as vol
-
-from miio import (
+from miio import (  # pylint: disable=import-error
+    AirFresh,
+    AirHumidifier,
+    AirPurifier,
     Device,
     DeviceException,
-    AirPurifier,
-    AirHumidifier,
-    AirFresh,
-)  # pylint: disable=import-error
-from miio.airpurifier import (
-    OperationMode as airpurifierOperationMode,
-)  # pylint: disable=import-error
-from miio.airpurifier import (
-    LedBrightness as airpurifierLedBrightness,
-)  # pylint: disable=import-error
-from miio.airhumidifier import (
-    OperationMode as airhumidifierOperationMode,
-)  # pylint: disable=import-error
-from miio.airhumidifier import (
-    LedBrightness as airhumidifierLedBrightness,
-)  # pylint: disable=import-error
-from miio.airfresh import (
-    OperationMode as airfreshOperationMode,
-)  # pylint: disable=import-error
-from miio.airfresh import (
-    LedBrightness as airfreshLedBrightness,
-)  # pylint: disable=import-error
+)
+import voluptuous as vol
 
 from homeassistant.components.fan import (
-    FanEntity,
+    DOMAIN,
     PLATFORM_SCHEMA,
     SUPPORT_SET_SPEED,
-    DOMAIN,
+    FanEntity,
 )
 from homeassistant.const import (
-    ATTR_MODE,
-    CONF_NAME,
-    CONF_HOST,
-    CONF_TOKEN,
     ATTR_ENTITY_ID,
+    ATTR_MODE,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_TOKEN,
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+
+from miio.airfresh import (  # pylint: disable=import-error; pylint: disable=import-error
+    LedBrightness as airfreshLedBrightness,
+    OperationMode as airfreshOperationMode,
+)
+from miio.airhumidifier import (  # pylint: disable=import-error; pylint: disable=import-error
+    LedBrightness as airhumidifierLedBrightness,
+    OperationMode as airhumidifierOperationMode,
+)
+from miio.airpurifier import (  # pylint: disable=import-error; pylint: disable=import-error
+    LedBrightness as airpurifierLedBrightness,
+    OperationMode as airpurifierOperationMode,
+)
+
 
 _LOGGER = logging.getLogger(__name__)
 

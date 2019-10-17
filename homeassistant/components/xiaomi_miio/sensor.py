@@ -1,9 +1,8 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5)."""
 import logging
 
-import voluptuous as vol
-
 from miio import AirQualityMonitor, DeviceException  # pylint: disable=import-error
+import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
