@@ -178,12 +178,6 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
 class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
     """Handle a config flow."""
 
-    def __init_subclass__(  # pylint: disable=arguments-differ
-        cls, **kwargs: Any
-    ) -> None:
-        """Initialize a subclass, register if possible."""
-        super().__init_subclass__(**kwargs)  # type: ignore
-
     DOMAIN = ""
 
     VERSION = 1
