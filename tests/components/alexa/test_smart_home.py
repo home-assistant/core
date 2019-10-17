@@ -3037,3 +3037,30 @@ async def test_media_player_eq_bands_not_supported(hass):
     assert msg["header"]["name"] == "ErrorResponse"
     assert msg["header"]["namespace"] == "Alexa"
     assert msg["payload"]["type"] == "INVALID_DIRECTIVE"
+
+
+async def test_timer_hold(hass):
+    """Test timer hold."""
+    device = (
+        "timer.laundry",
+        "active",
+        {"friendly_name": "Laundry", "duration": "00:01:00", "remaining": "00:50:00"},
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "timer#laundry"
+    assert appliance["displayCategories"][0] == "OTHER"
+    assert appliance["friendlyName"] == "Laundry"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance, "Alexa", "Alexa.TimeHoldController"
+    )
+
+    time_hold_capability = get_capability(capabilities, "Alexa.TimeHoldController")
+    assert time_hold_capability is not None
+    configuration = time_hold_capability["configuration"]
+    assert configuration["allowRemoteResume"] is True
+
+    await assert_request_calls_service(
+        "Alexa.TimeHoldController", "Hold", "timer#laundry", "timer.pause", hass
+    )

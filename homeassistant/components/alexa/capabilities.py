@@ -1653,3 +1653,29 @@ class AlexaEqualizerController(AlexaCapability):
             configurations = {"modes": {"supported": supported_sound_modes}}
 
         return configurations
+
+
+class AlexaTimeHoldController(AlexaCapability):
+    """Implements Alexa.TimeHoldController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-timeholdcontroller.html
+    """
+
+    supported_locales = {"en-US"}
+
+    def __init__(self, entity, allow_remote_resume=False):
+        """Initialize the entity."""
+        super().__init__(entity)
+        self._allow_remote_resume = allow_remote_resume
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.TimeHoldController"
+
+    def configuration(self):
+        """Return configuration object.
+
+        Set allowRemoteResume to True if Alexa can restart the operation on the device.
+        When false, Alexa does not send the Resume directive.
+        """
+        return {"allowRemoteResume": self._allow_remote_resume}
