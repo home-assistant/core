@@ -74,18 +74,13 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Somfy from a config entry."""
-
     # Backwards compat
     if "implementation" not in entry.data:
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, "implementation": DOMAIN}
         )
 
-    implementation = config_entry_oauth2_flow.async_get_config_entry_implementation(
-        hass, entry
-    )
-
-    hass.data[DOMAIN][API] = api.ConfigEntrySomfyApi(hass, entry, implementation)
+    hass.data[DOMAIN][API] = api.ConfigEntrySomfyApi(hass, entry)
 
     await update_all_devices(hass)
 

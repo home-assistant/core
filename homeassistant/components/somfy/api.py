@@ -13,17 +13,12 @@ class ConfigEntrySomfyApi(somfy_api.AbstractSomfyApi):
     """Provide a Somfy API tied into an OAuth2 based config entry."""
 
     def __init__(
-        self,
-        hass: core.HomeAssistant,
-        config_entry: config_entries.ConfigEntry,
-        implementation: config_entry_oauth2_flow.AbstractOAuth2Implementation,
+        self, hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
     ):
         """Initialize the Config Entry Somfy API."""
         self.hass = hass
         self.config_entry = config_entry
-        self.session = config_entry_oauth2_flow.OAuth2Session(
-            hass, config_entry, implementation
-        )
+        self.session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry)
 
     def get(self, path):
         """Fetch a URL from the Somfy API."""

@@ -324,16 +324,11 @@ class OAuth2AuthorizeCallbackView(HomeAssistantView):
 class OAuth2Session:
     """Session to make requests authenticated with OAuth2."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: config_entries.ConfigEntry,
-        implementation: AbstractOAuth2Implementation,
-    ):
+    def __init__(self, hass: HomeAssistant, config_entry: config_entries.ConfigEntry):
         """Initialize an OAuth2 session."""
         self.hass = hass
         self.config_entry = config_entry
-        self.implementation = implementation
+        self.implementation = async_get_config_entry_implementation(hass, config_entry)
 
     async def async_ensure_token_valid(self) -> None:
         """Ensure that the current token is valid."""

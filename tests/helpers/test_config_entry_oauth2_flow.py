@@ -2,13 +2,14 @@
 import asyncio
 import logging
 from unittest.mock import patch
+import time
 
 import pytest
 
 from homeassistant import data_entry_flow, setup, config_entries
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from tests.common import mock_platform
+from tests.common import mock_platform, MockConfigEntry
 
 TEST_DOMAIN = "oauth2_test"
 CLIENT_SECRET = "5678"
@@ -35,9 +36,7 @@ def flow_handler(hass):
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
-    class TestFlowHandler(
-        config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=TEST_DOMAIN
-    ):
+    class TestFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
         """Test flow handler."""
 
         DOMAIN = TEST_DOMAIN
@@ -47,15 +46,14 @@ def flow_handler(hass):
             """Return logger."""
             return logging.getLogger(__name__)
 
-    return TestFlowHandler
+    with patch.dict(config_entries.HANDLERS, {TEST_DOMAIN: TestFlowHandler}):
+        yield TestFlowHandler
 
 
 def test_inherit_enforces_domain_set():
     """Test we enforce setting DOMAIN."""
 
-    class TestFlowHandler(
-        config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=TEST_DOMAIN
-    ):
+    class TestFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
         """Test flow handler."""
 
         @property
@@ -63,8 +61,9 @@ def test_inherit_enforces_domain_set():
             """Return logger."""
             return logging.getLogger(__name__)
 
-    with pytest.raises(TypeError):
-        TestFlowHandler()
+    with patch.dict(config_entries.HANDLERS, {TEST_DOMAIN: TestFlowHandler}):
+        with pytest.raises(TypeError):
+            TestFlowHandler()
 
 
 async def test_abort_if_no_implementation(hass, flow_handler):
@@ -121,7 +120,7 @@ async def test_full_flow(
         json={
             "refresh_token": REFRESH_TOKEN,
             "access_token": ACCESS_TOKEN_1,
-            "type": "Bearer",
+            "type": "bearer",
             "expires_in": 60,
         },
     )
@@ -134,7 +133,7 @@ async def test_full_flow(
     assert result["data"]["token"] == {
         "refresh_token": REFRESH_TOKEN,
         "access_token": ACCESS_TOKEN_1,
-        "type": "Bearer",
+        "type": "bearer",
         "expires_in": 60,
     }
 
@@ -156,7 +155,7 @@ async def test_local_refresh_token(hass, local_impl, aioclient_mock):
         {
             "refresh_token": REFRESH_TOKEN,
             "access_token": ACCESS_TOKEN_1,
-            "type": "Bearer",
+            "type": "bearer",
             "expires_in": 60,
         }
     )
@@ -165,7 +164,7 @@ async def test_local_refresh_token(hass, local_impl, aioclient_mock):
     assert new_tokens == {
         "refresh_token": REFRESH_TOKEN,
         "access_token": ACCESS_TOKEN_2,
-        "type": "Bearer",
+        "type": "bearer",
         "expires_in": 100,
     }
 
@@ -176,3 +175,47 @@ async def test_local_refresh_token(hass, local_impl, aioclient_mock):
         "grant_type": "refresh_token",
         "refresh_token": REFRESH_TOKEN,
     }
+
+
+async def test_oauth_session(hass, flow_handler, local_impl, aioclient_mock):
+    """Test the OAuth2 session helper."""
+    flow_handler.async_register_implementation(hass, local_impl)
+
+    aioclient_mock.post(
+        TOKEN_URL, json={"access_token": ACCESS_TOKEN_2, "expires_in": 100}
+    )
+
+    aioclient_mock.post("https://example.com", status=201)
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "implementation": TEST_DOMAIN,
+            "token": {
+                "refresh_token": REFRESH_TOKEN,
+                "access_token": ACCESS_TOKEN_1,
+                "expires_in": 10,
+                "expires_at": 0,  # Forces a refresh,
+                "token_type": "bearer",
+                "random_other_data": "should_stay",
+            },
+        },
+    )
+
+    now = time.time()
+    session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry)
+    resp = await session.async_request("post", "https://example.com")
+    assert resp.status == 201
+
+    # Refresh token, make request
+    assert len(aioclient_mock.mock_calls) == 2
+
+    assert (
+        aioclient_mock.mock_calls[1][3]["authorization"] == f"Bearer {ACCESS_TOKEN_2}"
+    )
+
+    assert config_entry.data["token"]["refresh_token"] == REFRESH_TOKEN
+    assert config_entry.data["token"]["access_token"] == ACCESS_TOKEN_2
+    assert config_entry.data["token"]["expires_in"] == 100
+    assert config_entry.data["token"]["random_other_data"] == "should_stay"
+    assert round(config_entry.data["token"]["expires_at"] - now) == 100
