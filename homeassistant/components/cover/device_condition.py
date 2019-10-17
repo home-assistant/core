@@ -150,10 +150,10 @@ async def async_get_condition_capabilities(hass: HomeAssistant, config: dict) ->
     return {
         "extra_fields": vol.Schema(
             {
-                vol.Optional(CONF_ABOVE): vol.All(
+                vol.Optional(CONF_ABOVE, default=0): vol.All(
                     vol.Coerce(int), vol.Range(min=0, max=100)
                 ),
-                vol.Optional(CONF_BELOW): vol.All(
+                vol.Optional(CONF_BELOW, default=100): vol.All(
                     vol.Coerce(int), vol.Range(min=0, max=100)
                 ),
             }
