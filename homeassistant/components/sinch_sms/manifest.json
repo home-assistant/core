@@ -1,0 +1,10 @@
+{
+  "domain": "sinch_sms",
+  "name": "Sinch sms",
+  "documentation": "",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@joelstahre"
+  ]
+}
