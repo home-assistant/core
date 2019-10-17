@@ -1914,6 +1914,9 @@ twentemilieu==0.1.0
 # homeassistant.components.twilio
 twilio==6.19.1
 
+# homeassistant.components.unifi_video
+unifi-video==0.1.3
+
 # homeassistant.components.upcloud
 upcloud-api==0.4.3
 

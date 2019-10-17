@@ -1,0 +1,10 @@
+{
+  "domain": "unifi_video",
+  "name": "Unifi Video",
+  "documentation": "https://www.home-assistant.io/integrations/unifi_video",
+  "dependencies": [],
+  "codeowners": [],
+  "requirements": [
+    "unifi-video==0.1.3"
+  ]
+}
