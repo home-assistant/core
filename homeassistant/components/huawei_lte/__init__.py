@@ -33,7 +33,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE
 from homeassistant.helpers import config_validation as cv, discovery
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+    dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
@@ -46,6 +50,7 @@ from .const import (
     KEY_DEVICE_SIGNAL,
     KEY_MONITORING_TRAFFIC_STATISTICS,
     KEY_WLAN_HOST_LIST,
+    UPDATE_OPTIONS_SIGNAL,
     UPDATE_SIGNAL,
 )
 
@@ -281,6 +286,11 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         hass.data[DOMAIN].hass_config,
     )
 
+    # Add config entry options update listener
+    router.unload_handlers.append(
+        config_entry.add_update_listener(async_signal_options_update)
+    )
+
     def _update_router(*_: Any) -> None:
         """
         Update router data.
@@ -342,6 +352,13 @@ async def async_setup(hass: HomeAssistantType, config) -> bool:
     return True
 
 
+async def async_signal_options_update(
+    hass: HomeAssistantType, config_entry: ConfigEntry
+) -> None:
+    """Handle config entry options update."""
+    async_dispatcher_send(hass, UPDATE_OPTIONS_SIGNAL, config_entry)
+
+
 @attr.s
 class HuaweiLteBaseEntity(Entity):
     """Huawei LTE entity base class."""
@@ -349,7 +366,7 @@ class HuaweiLteBaseEntity(Entity):
     router: Router = attr.ib()
 
     _available: bool = attr.ib(init=False, default=True)
-    _disconnect_dispatcher: Callable = attr.ib(init=False)
+    _unsub_handlers: List[Callable] = attr.ib(init=False, factory=list)
 
     @property
     def _entity_name(self) -> str:
@@ -384,10 +401,19 @@ class HuaweiLteBaseEntity(Entity):
         """Update state."""
         raise NotImplementedError
 
+    async def async_update_options(self, config_entry: ConfigEntry) -> None:
+        """Update config entry options."""
+        pass
+
     async def async_added_to_hass(self) -> None:
-        """Connect to router update signal."""
-        self._disconnect_dispatcher = async_dispatcher_connect(
-            self.hass, UPDATE_SIGNAL, self._async_maybe_update
+        """Connect to update signals."""
+        self._unsub_handlers.append(
+            async_dispatcher_connect(self.hass, UPDATE_SIGNAL, self._async_maybe_update)
+        )
+        self._unsub_handlers.append(
+            async_dispatcher_connect(
+                self.hass, UPDATE_OPTIONS_SIGNAL, self._async_maybe_update_options
+            )
         )
 
     async def _async_maybe_update(self, url: str) -> None:
@@ -395,7 +421,13 @@ class HuaweiLteBaseEntity(Entity):
         if url == self.router.url:
             await self.async_update()
 
+    async def _async_maybe_update_options(self, config_entry: ConfigEntry) -> None:
+        """Update options if the update signal comes from our router."""
+        if config_entry.data[CONF_URL] == self.router.url:
+            await self.async_update_options(config_entry)
+
     async def async_will_remove_from_hass(self) -> None:
-        """Disconnect from router update signal."""
-        if self._disconnect_dispatcher:
-            self._disconnect_dispatcher()
+        """Invoke unsubscription handlers."""
+        for unsub in self._unsub_handlers:
+            unsub()
+        self._unsub_handlers.clear()

@@ -30,7 +30,8 @@
         "step": {
             "init": {
                 "data": {
-                    "recipient": "SMS notification recipients"
+                    "recipient": "SMS notification recipients",
+                    "track_new_devices": "Track new devices"
                 }
             }
         }

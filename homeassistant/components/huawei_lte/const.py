@@ -3,8 +3,10 @@
 DOMAIN = "huawei_lte"
 
 DEFAULT_DEVICE_NAME = "LTE"
+DEFAULT_TRACK_NEW = True
 
 UPDATE_SIGNAL = f"{DOMAIN}_update"
+UPDATE_OPTIONS_SIGNAL = f"{DOMAIN}_options_update"
 
 KEY_DEVICE_BASIC_INFORMATION = "device_basic_information"
 KEY_DEVICE_INFORMATION = "device_information"

@@ -19,8 +19,9 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_RECIPIENT, CONF_URL, CONF_USERNAME
+from homeassistant.components.device_tracker import CONF_TRACK_NEW
 from homeassistant.core import callback
-from .const import DEFAULT_DEVICE_NAME, DOMAIN
+from .const import DEFAULT_DEVICE_NAME, DEFAULT_TRACK_NEW, DOMAIN
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -197,6 +198,15 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         data_schema = vol.Schema(
             OrderedDict(
                 (
+                    (
+                        vol.Optional(
+                            CONF_TRACK_NEW,
+                            default=self.config_entry.options.get(
+                                CONF_TRACK_NEW, DEFAULT_TRACK_NEW
+                            ),
+                        ),
+                        bool,
+                    ),
                     (
                         vol.Optional(
                             CONF_RECIPIENT,
