@@ -9,19 +9,22 @@ import requests.exceptions
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
     CONF_SERVER,
     CONF_SHOW_ALL_CONTROLS,
     CONF_USE_EPISODE_ART,
     DEFAULT_VERIFY_SSL,
+    PLEX_NEW_MP_SIGNAL,
+    PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
+    PLEX_UPDATE_SENSOR_SIGNAL,
     X_PLEX_DEVICE_NAME,
     X_PLEX_PLATFORM,
     X_PLEX_PRODUCT,
     X_PLEX_VERSION,
 )
 from .errors import NoServersFound, ServerNotSpecified
-from .media_player import PlexMediaPlayer
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,18 +40,16 @@ plexapi.server.BASE_HEADERS = plexapi.reset_base_headers()
 class PlexServer:
     """Manages a single Plex server connection."""
 
-    def __init__(self, server_config, options=None):
+    def __init__(self, hass, server_config, options=None):
         """Initialize a Plex server instance."""
+        self._hass = hass
         self._plex_server = None
-        self._clients = {}
-        self._sessions = {}
+        self._known_clients = []
         self._url = server_config.get(CONF_URL)
         self._token = server_config.get(CONF_TOKEN)
         self._server_name = server_config.get(CONF_SERVER)
         self._verify_ssl = server_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
         self.options = options
-        self.add_media_player_callback = None
-        self.sensor = None
 
     def connect(self):
         """Connect to a Plex server directly, obtaining direct URL if necessary."""
@@ -88,15 +89,25 @@ class PlexServer:
 
         _connect_with_url()
 
+    def refresh_entity(self, machine_identifier, device, session):
+        """Forward refresh dispatch to media_player."""
+        dispatcher_send(
+            self._hass,
+            PLEX_UPDATE_MEDIA_PLAYER_SIGNAL.format(machine_identifier),
+            device,
+            session,
+        )
+
     def update_platforms(self):
         """Update the platform entities."""
-        available_client_ids = []
-        new_plex_clients = []
+        available_clients = {}
+        new_clients = []
 
         try:
             devices = self._plex_server.clients()
+            sessions = self._plex_server.sessions()
         except plexapi.exceptions.BadRequest:
-            _LOGGER.exception("Error listing plex devices")
+            _LOGGER.exception("Error requesting Plex client data from server")
             return
         except requests.exceptions.RequestException as ex:
             _LOGGER.warning(
@@ -105,75 +116,46 @@ class PlexServer:
             return
 
         for device in devices:
-            available_client_ids.append(device.machineIdentifier)
+            available_clients[device.machineIdentifier] = {"device": device}
 
-            if device.machineIdentifier not in self._clients:
-                new_client = PlexMediaPlayer(
-                    self, device, None, self._sessions, self.update_platforms
-                )
-                self._clients[device.machineIdentifier] = new_client
+            if device.machineIdentifier not in self._known_clients:
+                new_clients.append(device.machineIdentifier)
                 _LOGGER.debug("New device: %s", device.machineIdentifier)
-                new_plex_clients.append(new_client)
-            else:
-                _LOGGER.debug("Refreshing device: %s", device.machineIdentifier)
-                self._clients[device.machineIdentifier].refresh(device, None)
 
-        try:
-            sessions = self._plex_server.sessions()
-        except plexapi.exceptions.BadRequest:
-            _LOGGER.exception("Error listing Plex sessions")
-            return
-        except requests.exceptions.RequestException as ex:
-            _LOGGER.warning(
-                "Could not connect to Plex server: %s (%s)", self.friendly_name, ex
-            )
-            return
-
-        self._sessions.clear()
         for session in sessions:
             for player in session.players:
-                self._sessions[player.machineIdentifier] = session, player
-
-        for machine_identifier, (session, player) in self._sessions.items():
-            if machine_identifier in available_client_ids:
-                # Avoid using session if already added as a device.
-                _LOGGER.debug("Skipping session, device exists: %s", machine_identifier)
-                continue
-
-            if (
-                machine_identifier not in self._clients
-                and machine_identifier is not None
-            ):
-                new_client = PlexMediaPlayer(
-                    self, player, session, self._sessions, self.update_platforms
+                available_clients.setdefault(
+                    player.machineIdentifier, {"device": player}
                 )
-                self._clients[machine_identifier] = new_client
-                _LOGGER.debug("New session: %s", machine_identifier)
-                new_plex_clients.append(new_client)
+                available_clients[player.machineIdentifier]["session"] = session
+
+                if player.machineIdentifier not in self._known_clients:
+                    new_clients.append(player.machineIdentifier)
+                    _LOGGER.debug("New session: %s", player.machineIdentifier)
+
+        new_entity_configs = []
+        for client_id, client_data in available_clients.items():
+            if client_id in new_clients:
+                new_entity_configs.append(client_data)
             else:
-                _LOGGER.debug("Refreshing session: %s", machine_identifier)
-                self._clients[machine_identifier].refresh(None, session)
+                self.refresh_entity(
+                    client_id, client_data["device"], client_data.get("session")
+                )
 
-        for client in self._clients.values():
-            # force devices to idle that do not have a valid session
-            if client.session is None:
-                client.force_idle()
+        self._known_clients.extend(new_clients)
 
-            client.set_availability(
-                client.machine_identifier in available_client_ids
-                or client.machine_identifier in self._sessions
-            )
+        idle_clients = [
+            client_id
+            for client_id in self._known_clients
+            if client_id not in available_clients
+        ]
+        for client_id in idle_clients:
+            self.refresh_entity(client_id, None, None)
 
-            if client not in new_plex_clients:
-                client.schedule_update_ha_state()
+        if new_entity_configs:
+            dispatcher_send(self._hass, PLEX_NEW_MP_SIGNAL, new_entity_configs)
 
-        if new_plex_clients:
-            self.add_media_player_callback(  # pylint: disable=not-callable
-                new_plex_clients
-            )
-
-        self.sensor.sessions = sessions
-        self.sensor.schedule_update_ha_state(True)
+        dispatcher_send(self._hass, PLEX_UPDATE_SENSOR_SIGNAL, sessions)
 
     @property
     def friendly_name(self):

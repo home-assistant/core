@@ -2,10 +2,17 @@
 from datetime import timedelta
 import logging
 
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from .const import CONF_SERVER_IDENTIFIER, DOMAIN as PLEX_DOMAIN, SERVERS
+from .const import (
+    CONF_SERVER_IDENTIFIER,
+    DISPATCHERS,
+    DOMAIN as PLEX_DOMAIN,
+    PLEX_UPDATE_SENSOR_SIGNAL,
+    SERVERS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +33,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     plexserver = hass.data[PLEX_DOMAIN][SERVERS][server_id]
     sensor = PlexSensor(plexserver)
     async_add_entities([sensor])
-    plexserver.sensor = sensor
 
 
 class PlexSensor(Entity):
@@ -40,6 +46,19 @@ class PlexSensor(Entity):
         self._server = plex_server
         self._name = f"Plex ({plex_server.friendly_name})"
         self._unique_id = f"sensor-{plex_server.machine_identifier}"
+
+    async def async_added_to_hass(self):
+        """Run when about to be added to hass."""
+        server_id = self._server.machine_identifier
+        unsub = async_dispatcher_connect(
+            self.hass, PLEX_UPDATE_SENSOR_SIGNAL, self.async_refresh_sensor
+        )
+        self.hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
+
+    async def async_refresh_sensor(self, sessions):
+        """Set instance object and trigger an entity state update."""
+        self.sessions = sessions
+        self.async_schedule_update_ha_state(True)
 
     @property
     def name(self):
