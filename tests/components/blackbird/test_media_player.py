@@ -180,7 +180,10 @@ class TestBlackbirdMediaPlayer(unittest.TestCase):
         self.hass = tests.common.get_test_home_assistant()
         self.hass.start()
         # Note, source dictionary is unsorted!
-        with mock.patch("pyblackbird.get_blackbird", new=lambda *a: self.blackbird):
+        with mock.patch(
+            "homeassistant.components.blackbird.media_player.get_blackbird",
+            new=lambda *a: self.blackbird,
+        ):
             setup_platform(
                 self.hass,
                 {
