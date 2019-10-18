@@ -69,7 +69,7 @@ async def test_setup_min(hass):
         assert await setup.async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     mock_homekit.assert_any_call(
-        hass, BRIDGE_NAME, DEFAULT_PORT, None, ANY, {}, DEFAULT_SAFE_MODE, None, None
+        hass, BRIDGE_NAME, DEFAULT_PORT, None, ANY, {}, DEFAULT_SAFE_MODE, None
     )
     assert mock_homekit().setup.called is True
 
@@ -98,7 +98,7 @@ async def test_setup_auto_start_disabled(hass):
         assert await setup.async_setup_component(hass, DOMAIN, config)
 
     mock_homekit.assert_any_call(
-        hass, "Test Name", 11111, "172.0.0.0", ANY, {}, DEFAULT_SAFE_MODE, None, None
+        hass, "Test Name", 11111, "172.0.0.0", ANY, {}, DEFAULT_SAFE_MODE, None
     )
     assert mock_homekit().setup.called is True
 
@@ -141,7 +141,6 @@ async def test_homekit_setup(hass, hk_driver):
         port=DEFAULT_PORT,
         persist_file=path,
         advertised_address=None,
-        mac=None,
     )
     assert homekit.driver.safe_mode is False
 
@@ -163,22 +162,13 @@ async def test_homekit_setup_ip_address(hass, hk_driver):
         port=DEFAULT_PORT,
         persist_file=ANY,
         advertised_address=None,
-        mac=None,
     )
 
 
-async def test_homekit_setup_advertise_ip_and_mac(hass, hk_driver):
-    """Test setup with given IP address."""
+async def test_homekit_setup_advertise_ip(hass, hk_driver):
+    """Test setup with given IP address to advertise."""
     homekit = HomeKit(
-        hass,
-        BRIDGE_NAME,
-        DEFAULT_PORT,
-        "0.0.0.0",
-        {},
-        {},
-        None,
-        "192.168.1.100",
-        "11:22:33:44:55:66",
+        hass, BRIDGE_NAME, DEFAULT_PORT, "0.0.0.0", {}, {}, None, "192.168.1.100"
     )
 
     with patch(
@@ -191,7 +181,6 @@ async def test_homekit_setup_advertise_ip_and_mac(hass, hk_driver):
         port=DEFAULT_PORT,
         persist_file=ANY,
         advertised_address="192.168.1.100",
-        mac="11:22:33:44:55:66",
     )
 
 
