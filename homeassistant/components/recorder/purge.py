@@ -2,7 +2,10 @@
 from datetime import timedelta
 import logging
 
+from sqlalchemy.exc import SQLAlchemyError
+
 import homeassistant.util.dt as dt_util
+from .models import Events, States
 
 from .util import session_scope
 
@@ -11,9 +14,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def purge_old_data(instance, purge_days, repack):
     """Purge events and states older than purge_days ago."""
-    from .models import States, Events
-    from sqlalchemy.exc import SQLAlchemyError
-
     purge_before = dt_util.utcnow() - timedelta(days=purge_days)
     _LOGGER.debug("Purging events before %s", purge_before)
 
