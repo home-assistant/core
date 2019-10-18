@@ -6,6 +6,7 @@ repos:
         args:
           - --safe
           - --quiet
+        files: ^((homeassistant|script|tests)/.+)?[^/]+\.py$
 -   repo: https://gitlab.com/pycqa/flake8
     rev: 3.7.8
     hooks:
@@ -13,6 +14,7 @@ repos:
         additional_dependencies:
           - flake8-docstrings==1.3.1
           - pydocstyle==4.0.0
+        files: ^(homeassistant|script|tests)/.+\.py$
 # Using a local "system" mypy instead of the mypy hook, because its
 # results depend on what is installed. And the mypy hook runs in a
 # virtualenv of its own, meaning we'd need to install and maintain
@@ -26,4 +28,4 @@ repos:
         language: system
         types: [python]
         require_serial: true
-        exclude: ^script/scaffold/templates/
+        files: ^homeassistant/.+\.py$
