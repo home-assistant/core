@@ -64,7 +64,7 @@ def async_setup_service(hass, host, device):
                 packet = await hass.async_add_executor_job(device.check_data)
                 if packet:
                     data = b64encode(packet).decode("utf8")
-                    log_msg = "Received packet is: {}".format(data)
+                    log_msg = f"Received packet is: {data}"
                     _LOGGER.info(log_msg)
                     hass.components.persistent_notification.async_create(
                         log_msg, title="Broadlink switch"

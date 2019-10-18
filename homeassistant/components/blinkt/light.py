@@ -51,7 +51,7 @@ class BlinktLight(Light):
         Default brightness and white color.
         """
         self._blinkt = blinkt
-        self._name = "{}_{}".format(name, index)
+        self._name = f"{name}_{index}"
         self._index = index
         self._is_on = False
         self._brightness = 255

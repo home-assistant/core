@@ -286,7 +286,7 @@ class PhilipsTV(MediaPlayerDevice):
         self._tv.update()
 
         self._sources = {
-            srcid: source["name"] or "Source {}".format(srcid)
+            srcid: source["name"] or f"Source {srcid}"
             for srcid, source in (self._tv.sources or {}).items()
         }
 

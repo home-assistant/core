@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import Dict
 
-from pyheos import CommandError, Heos, const as heos_const
+from pyheos import Heos, HeosError, const as heos_const
 import voluptuous as vol
 
 from homeassistant.components.media_player.const import DOMAIN as MEDIA_PLAYER_DOMAIN
@@ -68,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     try:
         await controller.connect(auto_reconnect=True)
     # Auto reconnect only operates if initial connection was successful.
-    except (asyncio.TimeoutError, ConnectionError, CommandError) as error:
+    except HeosError as error:
         await controller.disconnect()
         _LOGGER.debug("Unable to connect to controller %s: %s", host, error)
         raise ConfigEntryNotReady
@@ -87,19 +87,14 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             favorites = await controller.get_favorites()
         else:
             _LOGGER.warning(
-                "%s is not logged in to a HEOS account and will be unable "
-                "to retrieve HEOS favorites: Use the 'heos.sign_in' service "
-                "to sign-in to a HEOS account",
+                "%s is not logged in to a HEOS account and will be unable to retrieve "
+                "HEOS favorites: Use the 'heos.sign_in' service to sign-in to a HEOS account",
                 host,
             )
         inputs = await controller.get_input_sources()
-    except (asyncio.TimeoutError, ConnectionError, CommandError) as error:
+    except HeosError as error:
         await controller.disconnect()
-        _LOGGER.debug(
-            "Unable to retrieve players and sources: %s",
-            error,
-            exc_info=isinstance(error, CommandError),
-        )
+        _LOGGER.debug("Unable to retrieve players and sources: %s", error)
         raise ConfigEntryNotReady
 
     controller_manager = ControllerManager(hass, controller)
@@ -187,7 +182,7 @@ class ControllerManager:
                 # Retrieve latest players and refresh status
                 data = await self.controller.load_players()
                 self.update_ids(data[heos_const.DATA_MAPPED_IDS])
-            except (CommandError, asyncio.TimeoutError, ConnectionError) as ex:
+            except HeosError as ex:
                 _LOGGER.error("Unable to refresh players: %s", ex)
         # Update players
         self._hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_HEOS_UPDATED)
@@ -312,21 +307,15 @@ class SourceManager:
                         favorites = await controller.get_favorites()
                     inputs = await controller.get_input_sources()
                     return favorites, inputs
-                except (asyncio.TimeoutError, ConnectionError, CommandError) as error:
+                except HeosError as error:
                     if retry_attempts < self.max_retry_attempts:
                         retry_attempts += 1
                         _LOGGER.debug(
-                            "Error retrieving sources and will " "retry: %s",
-                            error,
-                            exc_info=isinstance(error, CommandError),
+                            "Error retrieving sources and will retry: %s", error
                         )
                         await asyncio.sleep(self.retry_delay)
                     else:
-                        _LOGGER.error(
-                            "Unable to update sources: %s",
-                            error,
-                            exc_info=isinstance(error, CommandError),
-                        )
+                        _LOGGER.error("Unable to update sources: %s", error)
                         return
 
         async def update_sources(event, data=None):

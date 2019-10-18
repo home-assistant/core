@@ -41,9 +41,9 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_LISTENER = "listener"
 
-PROGRAM_UPDATE_TOPIC = "{0}_program_update".format(DOMAIN)
-SENSOR_UPDATE_TOPIC = "{0}_data_update".format(DOMAIN)
-ZONE_UPDATE_TOPIC = "{0}_zone_update".format(DOMAIN)
+PROGRAM_UPDATE_TOPIC = f"{DOMAIN}_program_update"
+SENSOR_UPDATE_TOPIC = f"{DOMAIN}_data_update"
+ZONE_UPDATE_TOPIC = f"{DOMAIN}_zone_update"
 
 CONF_CONTROLLERS = "controllers"
 CONF_PROGRAM_ID = "program_id"

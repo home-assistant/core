@@ -92,7 +92,7 @@ class KWBSensor(Entity):
     @property
     def name(self):
         """Return the name."""
-        return "{} {}".format(self._client_name, self._name)
+        return f"{self._client_name} {self._name}"
 
     @property
     def available(self) -> bool:

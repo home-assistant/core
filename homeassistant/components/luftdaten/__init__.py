@@ -34,7 +34,7 @@ SENSOR_PM2_5 = "P2"
 SENSOR_PRESSURE = "pressure"
 SENSOR_TEMPERATURE = "temperature"
 
-TOPIC_UPDATE = "{0}_data_update".format(DOMAIN)
+TOPIC_UPDATE = f"{DOMAIN}_data_update"
 
 VOLUME_MICROGRAMS_PER_CUBIC_METER = "µg/m3"
 

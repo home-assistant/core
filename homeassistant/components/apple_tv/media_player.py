@@ -1,6 +1,8 @@
 """Support for Apple TV media player."""
 import logging
 
+import pyatv.const as atv_const
+
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
@@ -112,21 +114,21 @@ class AppleTvDevice(MediaPlayerDevice):
             return STATE_OFF
 
         if self._playing:
-            from pyatv import const
 
             state = self._playing.play_state
             if state in (
-                const.PLAY_STATE_IDLE,
-                const.PLAY_STATE_NO_MEDIA,
-                const.PLAY_STATE_LOADING,
+                atv_const.PLAY_STATE_IDLE,
+                atv_const.PLAY_STATE_NO_MEDIA,
+                atv_const.PLAY_STATE_LOADING,
             ):
                 return STATE_IDLE
-            if state == const.PLAY_STATE_PLAYING:
+            if state == atv_const.PLAY_STATE_PLAYING:
                 return STATE_PLAYING
             if state in (
-                const.PLAY_STATE_PAUSED,
-                const.PLAY_STATE_FAST_FORWARD,
-                const.PLAY_STATE_FAST_BACKWARD,
+                atv_const.PLAY_STATE_PAUSED,
+                atv_const.PLAY_STATE_FAST_FORWARD,
+                atv_const.PLAY_STATE_FAST_BACKWARD,
+                atv_const.PLAY_STATE_STOPPED,
             ):
                 # Catch fast forward/backward here so "play" is default action
                 return STATE_PAUSED
@@ -155,14 +157,13 @@ class AppleTvDevice(MediaPlayerDevice):
     def media_content_type(self):
         """Content type of current playing media."""
         if self._playing:
-            from pyatv import const
 
             media_type = self._playing.media_type
-            if media_type == const.MEDIA_TYPE_VIDEO:
+            if media_type == atv_const.MEDIA_TYPE_VIDEO:
                 return MEDIA_TYPE_VIDEO
-            if media_type == const.MEDIA_TYPE_MUSIC:
+            if media_type == atv_const.MEDIA_TYPE_MUSIC:
                 return MEDIA_TYPE_MUSIC
-            if media_type == const.MEDIA_TYPE_TV:
+            if media_type == atv_const.MEDIA_TYPE_TV:
                 return MEDIA_TYPE_TVSHOW
 
     @property
@@ -212,7 +213,7 @@ class AppleTvDevice(MediaPlayerDevice):
             title = self._playing.title
             return title if title else "No title"
 
-        return "Establishing a connection to {0}...".format(self._name)
+        return f"Establishing a connection to {self._name}..."
 
     @property
     def supported_features(self):

@@ -104,7 +104,7 @@ def _update_route53(
             {
                 "Action": "UPSERT",
                 "ResourceRecordSet": {
-                    "Name": "{}.{}".format(record, domain),
+                    "Name": f"{record}.{domain}",
                     "Type": "A",
                     "TTL": ttl,
                     "ResourceRecords": [{"Value": ipaddress}],

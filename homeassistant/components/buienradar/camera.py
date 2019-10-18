@@ -81,13 +81,13 @@ class BuienradarCam(Camera):
         # invariant: this condition is private to and owned by this instance.
         self._condition = asyncio.Condition()
 
-        self._last_image = None  # type: Optional[bytes]
+        self._last_image: Optional[bytes] = None
         # value of the last seen last modified header
-        self._last_modified = None  # type: Optional[str]
+        self._last_modified: Optional[str] = None
         # loading status
         self._loading = False
         # deadline for image refresh - self.delta after last successful load
-        self._deadline = None  # type: Optional[datetime]
+        self._deadline: Optional[datetime] = None
 
     @property
     def name(self) -> str:

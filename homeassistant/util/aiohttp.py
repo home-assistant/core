@@ -22,7 +22,7 @@ class MockRequest:
         self.method = method
         self.url = url
         self.status = status
-        self.headers = CIMultiDict(headers or {})  # type: CIMultiDict[str]
+        self.headers: CIMultiDict[str] = CIMultiDict(headers or {})
         self.query_string = query_string or ""
         self._content = content
 

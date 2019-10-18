@@ -219,6 +219,7 @@ async def test_updating_config_entry_id(hass, registry, update_events):
     assert update_events[0]["entity_id"] == entry.entity_id
     assert update_events[1]["action"] == "update"
     assert update_events[1]["entity_id"] == entry.entity_id
+    assert update_events[1]["changes"] == ["config_entry_id"]
 
 
 async def test_removing_config_entry_id(hass, registry, update_events):

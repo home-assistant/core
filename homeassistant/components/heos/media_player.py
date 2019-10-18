@@ -1,11 +1,10 @@
 """Denon HEOS Media Player."""
-import asyncio
 from functools import reduce, wraps
 import logging
 from operator import ior
 from typing import Sequence
 
-from pyheos import CommandError, const as heos_const
+from pyheos import HeosError, const as heos_const
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
@@ -83,12 +82,7 @@ def log_command_error(command: str):
         async def wrapper(*args, **kwargs):
             try:
                 await func(*args, **kwargs)
-            except (
-                CommandError,
-                asyncio.TimeoutError,
-                ConnectionError,
-                ValueError,
-            ) as ex:
+            except (HeosError, ValueError) as ex:
                 _LOGGER.error("Unable to %s: %s", command, ex)
 
         return wrapper
@@ -189,7 +183,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
                     None,
                 )
             if index is None:
-                raise ValueError("Invalid quick select '{}'".format(media_id))
+                raise ValueError(f"Invalid quick select '{media_id}'")
             await self._player.play_quick_select(index)
             return
 
@@ -197,7 +191,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
             playlists = await self._player.heos.get_playlists()
             playlist = next((p for p in playlists if p.name == media_id), None)
             if not playlist:
-                raise ValueError("Invalid playlist '{}'".format(media_id))
+                raise ValueError(f"Invalid playlist '{media_id}'")
             add_queue_option = (
                 heos_const.ADD_QUEUE_ADD_TO_END
                 if kwargs.get(ATTR_MEDIA_ENQUEUE)
@@ -221,11 +215,11 @@ class HeosMediaPlayer(MediaPlayerDevice):
                     None,
                 )
             if index is None:
-                raise ValueError("Invalid favorite '{}'".format(media_id))
+                raise ValueError(f"Invalid favorite '{media_id}'")
             await self._player.play_favorite(index)
             return
 
-        raise ValueError("Unsupported media type '{}'".format(media_type))
+        raise ValueError(f"Unsupported media type '{media_type}'")
 
     @log_command_error("select source")
     async def async_select_source(self, source):

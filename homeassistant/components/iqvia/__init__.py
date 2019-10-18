@@ -234,7 +234,7 @@ class IQVIAEntity(Entity):
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        return "{0}_{1}".format(self._zip_code, self._type)
+        return f"{self._zip_code}_{self._type}"
 
     @property
     def unit_of_measurement(self):

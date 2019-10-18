@@ -148,9 +148,7 @@ class ArestSensor(Entity):
         self._renderer = renderer
 
         if self._pin is not None:
-            request = requests.get(
-                "{}/mode/{}/i".format(self._resource, self._pin), timeout=10
-            )
+            request = requests.get(f"{self._resource}/mode/{self._pin}/i", timeout=10)
             if request.status_code != 200:
                 _LOGGER.error("Can't set mode of %s", self._resource)
 
@@ -212,7 +210,7 @@ class ArestData:
                         self.data = {"value": response.json()["return_value"]}
                 except TypeError:
                     response = requests.get(
-                        "{}/digital/{}".format(self._resource, self._pin), timeout=10
+                        f"{self._resource}/digital/{self._pin}", timeout=10
                     )
                     self.data = {"value": response.json()["return_value"]}
             self.available = True

@@ -1,7 +1,7 @@
 {
   "domain": "tod",
   "name": "Tod",
-  "documentation": "https://www.home-assistant.io/components/tod",
+  "documentation": "https://www.home-assistant.io/integrations/tod",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

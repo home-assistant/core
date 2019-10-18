@@ -82,7 +82,7 @@ class CmusDevice(MediaPlayerDevice):
 
         if server:
             self.cmus = remote.PyCmus(server=server, password=password, port=port)
-            auto_name = "cmus-{}".format(server)
+            auto_name = f"cmus-{server}"
         else:
             self.cmus = remote.PyCmus()
             auto_name = "cmus-local"

@@ -5,16 +5,7 @@ import json
 import logging
 from collections import defaultdict
 from types import ModuleType, TracebackType
-from typing import (  # noqa: F401 pylint: disable=unused-import
-    Awaitable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import Awaitable, Dict, Iterable, List, Optional, Tuple, Type, Union
 
 from homeassistant.loader import bind_hass, async_get_integration, IntegrationNotFound
 import homeassistant.util.dt as dt_util
@@ -53,7 +44,6 @@ from homeassistant.const import (
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.core import Context, State, DOMAIN as HASS_DOMAIN
-from homeassistant.util.async_ import run_coroutine_threadsafe
 from .typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
@@ -99,7 +89,7 @@ class AsyncTrackStates:
     def __init__(self, hass: HomeAssistantType) -> None:
         """Initialize a TrackStates block."""
         self.hass = hass
-        self.states = []  # type: List[State]
+        self.states: List[State] = []
 
     # pylint: disable=attribute-defined-outside-init
     def __enter__(self) -> List[State]:
@@ -131,7 +121,7 @@ def reproduce_state(
     blocking: bool = False,
 ) -> None:
     """Reproduce given state."""
-    return run_coroutine_threadsafe(  # type: ignore
+    return asyncio.run_coroutine_threadsafe(
         async_reproduce_state(hass, states, blocking), hass.loop
     ).result()
 
@@ -147,7 +137,7 @@ async def async_reproduce_state(
     if isinstance(states, State):
         states = [states]
 
-    to_call = defaultdict(list)  # type: Dict[str, List[State]]
+    to_call: Dict[str, List[State]] = defaultdict(list)
 
     for state in states:
         to_call[state.domain].append(state)
@@ -191,7 +181,7 @@ async def async_reproduce_state_legacy(
     context: Optional[Context] = None,
 ) -> None:
     """Reproduce given state."""
-    to_call = defaultdict(list)  # type: Dict[Tuple[str, str], List[str]]
+    to_call: Dict[Tuple[str, str], List[str]] = defaultdict(list)
 
     if domain == GROUP_DOMAIN:
         service_domain = HASS_DOMAIN
@@ -238,7 +228,7 @@ async def async_reproduce_state_legacy(
         key = (service, json.dumps(dict(state.attributes), sort_keys=True))
         to_call[key].append(state.entity_id)
 
-    domain_tasks = []  # type: List[Awaitable[Optional[bool]]]
+    domain_tasks: List[Awaitable[Optional[bool]]] = []
     for (service, service_data), entity_ids in to_call.items():
         data = json.loads(service_data)
         data[ATTR_ENTITY_ID] = entity_ids

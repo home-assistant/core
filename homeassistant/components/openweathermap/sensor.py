@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+from pyowm import OWM
+from pyowm.exceptions.api_call_error import APICallError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -56,7 +58,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the OpenWeatherMap sensor."""
-    from pyowm import OWM
 
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
@@ -108,7 +109,7 @@ class OpenWeatherMapSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self.client_name, self._name)
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):
@@ -127,8 +128,6 @@ class OpenWeatherMapSensor(Entity):
 
     def update(self):
         """Get the latest data from OWM and updates the states."""
-        from pyowm.exceptions.api_call_error import APICallError
-
         try:
             self.owa_client.update()
         except APICallError:
@@ -201,8 +200,6 @@ class WeatherData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from OpenWeatherMap."""
-        from pyowm.exceptions.api_call_error import APICallError
-
         try:
             obs = self.owm.weather_at_coords(self.latitude, self.longitude)
         except (APICallError, TypeError):

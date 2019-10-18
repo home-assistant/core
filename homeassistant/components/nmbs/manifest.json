@@ -1,7 +1,7 @@
 {
   "domain": "nmbs",
   "name": "Nmbs",
-  "documentation": "https://www.home-assistant.io/components/nmbs",
+  "documentation": "https://www.home-assistant.io/integrations/nmbs",
   "requirements": [
     "pyrail==0.0.3"
   ],

@@ -36,8 +36,8 @@ DOMAIN = "opensky"
 
 DEFAULT_ALTITUDE = 0
 
-EVENT_OPENSKY_ENTRY = "{}_entry".format(DOMAIN)
-EVENT_OPENSKY_EXIT = "{}_exit".format(DOMAIN)
+EVENT_OPENSKY_ENTRY = f"{DOMAIN}_entry"
+EVENT_OPENSKY_EXIT = f"{DOMAIN}_exit"
 SCAN_INTERVAL = timedelta(seconds=12)  # opensky public limit is 10 seconds
 
 OPENSKY_ATTRIBUTION = (

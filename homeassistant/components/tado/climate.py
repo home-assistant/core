@@ -124,7 +124,7 @@ def create_climate_device(tado, hass, zone, name, zone_id):
     max_temp = float(temperatures["celsius"]["max"])
     step = temperatures["celsius"].get("step", PRECISION_TENTHS)
 
-    data_id = "zone {} {}".format(name, zone_id)
+    data_id = f"zone {name} {zone_id}"
     device = TadoClimate(
         tado,
         name,

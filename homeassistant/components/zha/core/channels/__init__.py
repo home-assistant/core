@@ -2,7 +2,7 @@
 Channels module for Zigbee Home Automation.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zha/
+https://home-assistant.io/integrations/zha/
 """
 import asyncio
 from concurrent.futures import TimeoutError as Timeout
@@ -87,7 +87,7 @@ class ZigbeeChannel(LogMixin):
         self._channel_name = cluster.ep_attribute
         if self.CHANNEL_NAME:
             self._channel_name = self.CHANNEL_NAME
-        self._generic_id = "channel_0x{:04x}".format(cluster.cluster_id)
+        self._generic_id = f"channel_0x{cluster.cluster_id:04x}"
         self._cluster = cluster
         self._zha_device = device
         self._unique_id = "{}:{}:0x{:04x}".format(
@@ -202,7 +202,7 @@ class ZigbeeChannel(LogMixin):
         # Xiaomi devices don't need this and it disrupts pairing
         if self._zha_device.manufacturer != "LUMI":
             await self.bind()
-            if self.cluster.cluster_id not in self.cluster.endpoint.out_clusters:
+            if self.cluster.is_server:
                 for report_config in self._report_config:
                     await self.configure_reporting(
                         report_config["attr"], report_config["config"]
@@ -240,6 +240,8 @@ class ZigbeeChannel(LogMixin):
             {
                 "unique_id": self._unique_id,
                 "device_ieee": str(self._zha_device.ieee),
+                "endpoint_id": cluster.endpoint.endpoint_id,
+                "cluster_id": cluster.cluster_id,
                 "command": command,
                 "args": args,
             },
@@ -299,9 +301,7 @@ class AttributeListeningChannel(ZigbeeChannel):
         """Handle attribute updates on this cluster."""
         if attrid == self.value_attribute:
             async_dispatcher_send(
-                self._zha_device.hass,
-                "{}_{}".format(self.unique_id, SIGNAL_ATTR_UPDATED),
-                value,
+                self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value
             )
 
     async def async_initialize(self, from_cache):

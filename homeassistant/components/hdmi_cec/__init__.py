@@ -264,7 +264,7 @@ def setup(hass: HomeAssistant, base_config):
                 if isinstance(data[ATTR_ATT], (list,)):
                     att = data[ATTR_ATT]
                 else:
-                    att = reduce(lambda x, y: "%s:%x" % (x, y), data[ATTR_ATT])
+                    att = reduce(lambda x, y: f"{x}:{y:x}", data[ATTR_ATT])
             else:
                 att = ""
             command = CecCommand(cmd, dst, src, att)
@@ -312,7 +312,7 @@ def setup(hass: HomeAssistant, base_config):
 
     def _new_device(device):
         """Handle new devices which are detected by HDMI network."""
-        key = "{}.{}".format(DOMAIN, device.name)
+        key = f"{DOMAIN}.{device.name}"
         hass.data[key] = device
         ent_platform = base_config[DOMAIN][CONF_TYPES].get(key, platform)
         discovery.load_platform(
@@ -399,7 +399,7 @@ class CecDevice(Entity):
     def name(self):
         """Return the name of the device."""
         return (
-            "%s %s" % (self.vendor_name, self._device.osd_name)
+            f"{self.vendor_name} {self._device.osd_name}"
             if (
                 self._device.osd_name is not None
                 and self.vendor_name is not None

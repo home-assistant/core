@@ -52,7 +52,7 @@ class GoogleMapsScanner:
         self.see = see
         self.username = config[CONF_USERNAME]
         self.max_gps_accuracy = config[CONF_MAX_GPS_ACCURACY]
-        self.scan_interval = timedelta(seconds=config.get(CONF_SCAN_INTERVAL, 60))
+        self.scan_interval = config.get(CONF_SCAN_INTERVAL) or timedelta(seconds=60)
 
         credfile = "{}.{}".format(
             hass.config.path(CREDENTIALS_FILE), slugify(self.username)
@@ -67,10 +67,7 @@ class GoogleMapsScanner:
 
         except InvalidCookies:
             _LOGGER.error(
-                "You have specified invalid login credentials. "
-                "Please make sure you have saved your credentials"
-                " in the following file: %s",
-                credfile,
+                "The cookie file provided does not provide a valid session. Please create another one and try again."
             )
             self.success_init = False
 

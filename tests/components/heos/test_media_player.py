@@ -1,7 +1,7 @@
 """Tests for the Heos Media Player platform."""
 import asyncio
 
-from pyheos import CommandError, const
+from pyheos import CommandFailedError, const
 
 from homeassistant.components.heos import media_player
 from homeassistant.components.heos.const import (
@@ -179,7 +179,7 @@ async def test_updates_from_connection_event(
     event.clear()
     player.reset_mock()
     controller.load_players.reset_mock()
-    controller.load_players.side_effect = CommandError(None, "Failure", 1)
+    controller.load_players.side_effect = CommandFailedError(None, "Failure", 1)
     player.available = True
     player.heos.dispatcher.send(const.SIGNAL_HEOS_EVENT, const.EVENT_CONNECTED)
     await event.wait()
@@ -313,7 +313,7 @@ async def test_clear_playlist(hass, config_entry, config, controller, caplog):
         )
         assert player.clear_queue.call_count == 1
         player.clear_queue.reset_mock()
-        player.clear_queue.side_effect = CommandError(None, "Failure", 1)
+        player.clear_queue.side_effect = CommandFailedError(None, "Failure", 1)
     assert "Unable to clear playlist: Failure (1)" in caplog.text
 
 
@@ -331,7 +331,7 @@ async def test_pause(hass, config_entry, config, controller, caplog):
         )
         assert player.pause.call_count == 1
         player.pause.reset_mock()
-        player.pause.side_effect = CommandError(None, "Failure", 1)
+        player.pause.side_effect = CommandFailedError(None, "Failure", 1)
     assert "Unable to pause: Failure (1)" in caplog.text
 
 
@@ -349,7 +349,7 @@ async def test_play(hass, config_entry, config, controller, caplog):
         )
         assert player.play.call_count == 1
         player.play.reset_mock()
-        player.play.side_effect = CommandError(None, "Failure", 1)
+        player.play.side_effect = CommandFailedError(None, "Failure", 1)
     assert "Unable to play: Failure (1)" in caplog.text
 
 
@@ -367,7 +367,7 @@ async def test_previous_track(hass, config_entry, config, controller, caplog):
         )
         assert player.play_previous.call_count == 1
         player.play_previous.reset_mock()
-        player.play_previous.side_effect = CommandError(None, "Failure", 1)
+        player.play_previous.side_effect = CommandFailedError(None, "Failure", 1)
     assert "Unable to move to previous track: Failure (1)" in caplog.text
 
 
@@ -385,7 +385,7 @@ async def test_next_track(hass, config_entry, config, controller, caplog):
         )
         assert player.play_next.call_count == 1
         player.play_next.reset_mock()
-        player.play_next.side_effect = CommandError(None, "Failure", 1)
+        player.play_next.side_effect = CommandFailedError(None, "Failure", 1)
     assert "Unable to move to next track: Failure (1)" in caplog.text
 
 
@@ -403,7 +403,7 @@ async def test_stop(hass, config_entry, config, controller, caplog):
         )
         assert player.stop.call_count == 1
         player.stop.reset_mock()
-        player.stop.side_effect = CommandError(None, "Failure", 1)
+        player.stop.side_effect = CommandFailedError(None, "Failure", 1)
     assert "Unable to stop: Failure (1)" in caplog.text
 
 
@@ -421,7 +421,7 @@ async def test_volume_mute(hass, config_entry, config, controller, caplog):
         )
         assert player.set_mute.call_count == 1
         player.set_mute.reset_mock()
-        player.set_mute.side_effect = CommandError(None, "Failure", 1)
+        player.set_mute.side_effect = CommandFailedError(None, "Failure", 1)
     assert "Unable to set mute: Failure (1)" in caplog.text
 
 
@@ -439,7 +439,7 @@ async def test_shuffle_set(hass, config_entry, config, controller, caplog):
         )
         player.set_play_mode.assert_called_once_with(player.repeat, True)
         player.set_play_mode.reset_mock()
-        player.set_play_mode.side_effect = CommandError(None, "Failure", 1)
+        player.set_play_mode.side_effect = CommandFailedError(None, "Failure", 1)
     assert "Unable to set shuffle: Failure (1)" in caplog.text
 
 
@@ -457,7 +457,7 @@ async def test_volume_set(hass, config_entry, config, controller, caplog):
         )
         player.set_volume.assert_called_once_with(100)
         player.set_volume.reset_mock()
-        player.set_volume.side_effect = CommandError(None, "Failure", 1)
+        player.set_volume.side_effect = CommandFailedError(None, "Failure", 1)
     assert "Unable to set volume level: Failure (1)" in caplog.text
 
 
@@ -516,7 +516,7 @@ async def test_select_radio_favorite_command_error(
     player = controller.players[1]
     # Test set radio preset
     favorite = favorites[2]
-    player.play_favorite.side_effect = CommandError(None, "Failure", 1)
+    player.play_favorite.side_effect = CommandFailedError(None, "Failure", 1)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_SELECT_SOURCE,
@@ -575,7 +575,7 @@ async def test_select_input_command_error(
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
     input_source = input_sources[0]
-    player.play_input_source.side_effect = CommandError(None, "Failure", 1)
+    player.play_input_source.side_effect = CommandFailedError(None, "Failure", 1)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_SELECT_SOURCE,
@@ -615,7 +615,7 @@ async def test_play_media_url(hass, config_entry, config, controller, caplog):
         )
         player.play_url.assert_called_once_with(url)
         player.play_url.reset_mock()
-        player.play_url.side_effect = CommandError(None, "Failure", 1)
+        player.play_url.side_effect = CommandFailedError(None, "Failure", 1)
     assert "Unable to play media: Failure (1)" in caplog.text
 
 

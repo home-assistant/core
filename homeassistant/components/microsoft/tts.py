@@ -115,8 +115,8 @@ class MicrosoftProvider(Provider):
         self._gender = gender
         self._type = ttype
         self._output = DEFAULT_OUTPUT
-        self._rate = "{}%".format(rate)
-        self._volume = "{}%".format(volume)
+        self._rate = f"{rate}%"
+        self._volume = f"{volume}%"
         self._pitch = pitch
         self._contour = contour
         self.name = "Microsoft"

@@ -2,19 +2,20 @@
 import asyncio
 from datetime import timedelta
 import logging
-from urllib3.exceptions import HTTPError
 
 from amcrest import AmcrestError
+from haffmpeg.camera import CameraMjpeg
+from urllib3.exceptions import HTTPError
 import voluptuous as vol
 
 from homeassistant.components.camera import (
-    Camera,
     CAMERA_SERVICE_SCHEMA,
     SUPPORT_ON_OFF,
     SUPPORT_STREAM,
+    Camera,
 )
 from homeassistant.components.ffmpeg import DATA_FFMPEG
-from homeassistant.const import CONF_NAME, STATE_ON, STATE_OFF
+from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream,
     async_aiohttp_proxy_web,
@@ -159,7 +160,6 @@ class AmcrestCam(Camera):
             return await async_aiohttp_proxy_web(self.hass, request, stream_coro)
 
         # streaming via ffmpeg
-        from haffmpeg.camera import CameraMjpeg
 
         streaming_url = self._rtsp_url
         stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
@@ -490,7 +490,7 @@ class AmcrestCam(Camera):
             self._api.go_to_preset(action="start", preset_point_number=preset)
         except AmcrestError as error:
             log_update_error(
-                _LOGGER, "move", self.name, "camera to preset {}".format(preset), error
+                _LOGGER, "move", self.name, f"camera to preset {preset}", error
             )
 
     def _set_color_bw(self, cbw):
@@ -499,7 +499,7 @@ class AmcrestCam(Camera):
             self._api.day_night_color = _CBW.index(cbw)
         except AmcrestError as error:
             log_update_error(
-                _LOGGER, "set", self.name, "camera color mode to {}".format(cbw), error
+                _LOGGER, "set", self.name, f"camera color mode to {cbw}", error
             )
         else:
             self._color_bw = cbw

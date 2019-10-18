@@ -7,6 +7,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    ATTR_MODE,
     CONF_ICON,
     CONF_NAME,
     CONF_MODE,
@@ -32,7 +33,6 @@ ATTR_VALUE = "value"
 ATTR_MIN = "min"
 ATTR_MAX = "max"
 ATTR_STEP = "step"
-ATTR_MODE = "mode"
 
 SERVICE_SET_VALUE = "set_value"
 SERVICE_INCREMENT = "increment"
@@ -49,13 +49,11 @@ def _cv_input_number(cfg):
     maximum = cfg.get(CONF_MAX)
     if minimum >= maximum:
         raise vol.Invalid(
-            "Maximum ({}) is not greater than minimum ({})".format(minimum, maximum)
+            f"Maximum ({minimum}) is not greater than minimum ({maximum})"
         )
     state = cfg.get(CONF_INITIAL)
     if state is not None and (state < minimum or state > maximum):
-        raise vol.Invalid(
-            "Initial value {} not in range {}-{}".format(state, minimum, maximum)
-        )
+        raise vol.Invalid(f"Initial value {state} not in range {minimum}-{maximum}")
     return cfg
 
 

@@ -226,7 +226,7 @@ class RachioIro:
 
     def __str__(self) -> str:
         """Display the controller as a string."""
-        return 'Rachio controller "{}"'.format(self.name)
+        return f'Rachio controller "{self.name}"'
 
     @property
     def controller_id(self) -> str:

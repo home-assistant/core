@@ -42,6 +42,7 @@ TAHOMA_TYPES = {
     "io:RollerShutterUnoIOComponent": "cover",
     "io:RollerShutterVeluxIOComponent": "cover",
     "io:RollerShutterWithLowSpeedManagementIOComponent": "cover",
+    "io:SomfyBasicContactIOSystemSensor": "sensor",
     "io:SomfyContactIOSystemSensor": "sensor",
     "io:VerticalExteriorAwningIOComponent": "cover",
     "io:WindowOpenerVeluxIOComponent": "cover",

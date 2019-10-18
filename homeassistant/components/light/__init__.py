@@ -128,9 +128,12 @@ LIGHT_TURN_ON_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
     }
 )
 
-LIGHT_TURN_OFF_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {ATTR_TRANSITION: VALID_TRANSITION, ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG])}
-)
+
+LIGHT_TURN_OFF_SCHEMA = {
+    ATTR_TRANSITION: VALID_TRANSITION,
+    ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
+}
+
 
 LIGHT_TOGGLE_SCHEMA = LIGHT_TURN_ON_SCHEMA
 
@@ -234,16 +237,16 @@ class SetIntentHandler(intent.IntentHandler):
         response = intent_obj.create_response()
 
         if not speech_parts:  # No attributes changed
-            speech = "Turned on {}".format(state.name)
+            speech = f"Turned on {state.name}"
         else:
-            parts = ["Changed {} to".format(state.name)]
+            parts = [f"Changed {state.name} to"]
             for index, part in enumerate(speech_parts):
                 if index == 0:
-                    parts.append(" {}".format(part))
+                    parts.append(f" {part}")
                 elif index != len(speech_parts) - 1:
-                    parts.append(", {}".format(part))
+                    parts.append(f", {part}")
                 else:
-                    parts.append(" and {}".format(part))
+                    parts.append(f" and {part}")
             speech = "".join(parts)
 
         response.async_set_speech(speech)
@@ -289,7 +292,8 @@ async def async_setup(hass, config):
         preprocess_turn_on_alternatives(params)
         turn_lights_off, off_params = preprocess_turn_off(params)
 
-        update_tasks = []
+        poll_lights = []
+        change_tasks = []
         for light in target_lights:
             light.async_set_context(service.context)
 
@@ -302,17 +306,22 @@ async def async_setup(hass, config):
                 preprocess_turn_on_alternatives(pars)
                 turn_light_off, off_pars = preprocess_turn_off(pars)
             if turn_light_off:
-                await light.async_turn_off(**off_pars)
+                task = light.async_request_call(light.async_turn_off(**off_pars))
             else:
-                await light.async_turn_on(**pars)
+                task = light.async_request_call(light.async_turn_on(**pars))
 
-            if not light.should_poll:
-                continue
+            change_tasks.append(task)
 
-            update_tasks.append(light.async_update_ha_state(True))
+            if light.should_poll:
+                poll_lights.append(light)
 
-        if update_tasks:
-            await asyncio.wait(update_tasks)
+        if change_tasks:
+            await asyncio.wait(change_tasks)
+
+        if poll_lights:
+            await asyncio.wait(
+                [light.async_update_ha_state(True) for light in poll_lights]
+            )
 
     # Listen for light on and light off service calls.
     hass.services.async_register(

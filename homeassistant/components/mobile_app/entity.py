@@ -21,7 +21,7 @@ from .helpers import device_info
 
 def sensor_id(webhook_id, unique_id):
     """Return a unique sensor ID."""
-    return "{}_{}".format(webhook_id, unique_id)
+    return f"{webhook_id}_{unique_id}"
 
 
 class MobileAppEntity(Entity):

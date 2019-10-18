@@ -54,7 +54,7 @@ class TestEcobee(unittest.TestCase):
 
         self.data = mock.Mock()
         self.data.ecobee.get_thermostat.return_value = self.ecobee
-        self.thermostat = ecobee.Thermostat(self.data, 1, False)
+        self.thermostat = ecobee.Thermostat(self.data, 1)
 
     def test_name(self):
         """Test name property."""

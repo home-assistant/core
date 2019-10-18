@@ -96,7 +96,7 @@ class TemperSensor(Entity):
             )
             sensor_value = self.temper_device.get_temperature(format_str)
             self.current_value = round(sensor_value, 1)
-        except IOError:
+        except OSError:
             _LOGGER.error(
                 "Failed to get temperature. The device address may"
                 "have changed. Attempting to reset device"

@@ -55,7 +55,7 @@ async def async_setup(hass, config):
     for intent_type, conf in intents.items():
         if CONF_ACTION in conf:
             conf[CONF_ACTION] = script.Script(
-                hass, conf[CONF_ACTION], "Intent Script {}".format(intent_type)
+                hass, conf[CONF_ACTION], f"Intent Script {intent_type}"
             )
         intent.async_register(hass, ScriptIntentHandler(intent_type, conf))
 

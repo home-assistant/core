@@ -189,7 +189,7 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
             unsub = async_dispatcher_connect(self.hass, signal, func)
         else:
             unsub = async_dispatcher_connect(
-                self.hass, "{}_{}".format(channel.unique_id, signal), func
+                self.hass, f"{channel.unique_id}_{signal}", func
             )
         self._unsubs.append(unsub)
 

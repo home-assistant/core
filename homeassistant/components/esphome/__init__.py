@@ -80,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         host,
         port,
         password,
-        client_info="Home Assistant {}".format(const.__version__),
+        client_info=f"Home Assistant {const.__version__}",
     )
 
     # Store client in per-config-entry hass.data
@@ -203,7 +203,7 @@ async def _setup_auto_reconnect_logic(
             # When removing/disconnecting manually
             return
 
-        data = hass.data[DOMAIN][entry.entry_id]  # type: RuntimeEntryData
+        data: RuntimeEntryData = hass.data[DOMAIN][entry.entry_id]
         for disconnect_cb in data.disconnect_callbacks:
             disconnect_cb()
         data.disconnect_callbacks = []
@@ -254,7 +254,7 @@ async def _async_setup_device_registry(
     """Set up device registry feature for a particular config entry."""
     sw_version = device_info.esphome_version
     if device_info.compilation_time:
-        sw_version += " ({})".format(device_info.compilation_time)
+        sw_version += f" ({device_info.compilation_time})"
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -269,7 +269,7 @@ async def _async_setup_device_registry(
 async def _register_service(
     hass: HomeAssistantType, entry_data: RuntimeEntryData, service: UserService
 ):
-    service_name = "{}_{}".format(entry_data.device_info.name, service.name)
+    service_name = f"{entry_data.device_info.name}_{service.name}"
     schema = {}
     for arg in service.args:
         schema[vol.Required(arg.name)] = {
@@ -315,7 +315,7 @@ async def _setup_services(
     entry_data.services = {serv.key: serv for serv in services}
 
     for service in to_unregister:
-        service_name = "{}_{}".format(entry_data.device_info.name, service.name)
+        service_name = f"{entry_data.device_info.name}_{service.name}"
         hass.services.async_remove(DOMAIN, service_name)
 
     for service in to_register:
@@ -326,7 +326,7 @@ async def _cleanup_instance(
     hass: HomeAssistantType, entry: ConfigEntry
 ) -> RuntimeEntryData:
     """Cleanup the esphome client if it exists."""
-    data = hass.data[DATA_KEY].pop(entry.entry_id)  # type: RuntimeEntryData
+    data: RuntimeEntryData = hass.data[DATA_KEY].pop(entry.entry_id)
     if data.reconnect_task is not None:
         data.reconnect_task.cancel()
     for disconnect_cb in data.disconnect_callbacks:
@@ -363,7 +363,7 @@ async def platform_async_setup_entry(
     This method is in charge of receiving, distributing and storing
     info and state updates.
     """
-    entry_data = hass.data[DOMAIN][entry.entry_id]  # type: RuntimeEntryData
+    entry_data: RuntimeEntryData = hass.data[DOMAIN][entry.entry_id]
     entry_data.info[component_key] = {}
     entry_data.state[component_key] = {}
 
@@ -468,7 +468,7 @@ class EsphomeEntity(Entity):
         self._entry_id = entry_id
         self._component_key = component_key
         self._key = key
-        self._remove_callbacks = []  # type: List[Callable[[], None]]
+        self._remove_callbacks: List[Callable[[], None]] = []
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -479,7 +479,9 @@ class EsphomeEntity(Entity):
         }
         self._remove_callbacks.append(
             async_dispatcher_connect(
-                self.hass, DISPATCHER_UPDATE_ENTITY.format(**kwargs), self._on_update
+                self.hass,
+                DISPATCHER_UPDATE_ENTITY.format(**kwargs),
+                self._on_state_update,
             )
         )
 
@@ -493,12 +495,21 @@ class EsphomeEntity(Entity):
             async_dispatcher_connect(
                 self.hass,
                 DISPATCHER_ON_DEVICE_UPDATE.format(**kwargs),
-                self.async_schedule_update_ha_state,
+                self._on_device_update,
             )
         )
 
-    async def _on_update(self) -> None:
+    async def _on_state_update(self) -> None:
         """Update the entity state when state or static info changed."""
+        self.async_schedule_update_ha_state()
+
+    async def _on_device_update(self) -> None:
+        """Update the entity state when device info has changed."""
+        if self._entry_data.available:
+            # Don't update the HA state yet when the device comes online.
+            # Only update the HA state when the full state arrives
+            # through the next entity state packet.
+            return
         self.async_schedule_update_ha_state()
 
     async def async_will_remove_from_hass(self) -> None:

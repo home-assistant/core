@@ -81,7 +81,7 @@ class TcpSensor(Entity):
         name = self._config[CONF_NAME]
         if name is not None:
             return name
-        return super(TcpSensor, self).name
+        return super().name
 
     @property
     def state(self):

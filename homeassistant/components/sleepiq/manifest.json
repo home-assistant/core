@@ -1,7 +1,7 @@
 {
   "domain": "sleepiq",
   "name": "Sleepiq",
-  "documentation": "https://www.home-assistant.io/components/sleepiq",
+  "documentation": "https://www.home-assistant.io/integrations/sleepiq",
   "requirements": [
     "sleepyq==0.7"
   ],

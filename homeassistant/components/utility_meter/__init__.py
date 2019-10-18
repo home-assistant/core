@@ -98,7 +98,7 @@ async def async_setup(hass, config):
                 tariff_confs.append(
                     {
                         CONF_METER: meter,
-                        CONF_NAME: "{} {}".format(meter, tariff),
+                        CONF_NAME: f"{meter} {tariff}",
                         CONF_TARIFF: tariff,
                     }
                 )

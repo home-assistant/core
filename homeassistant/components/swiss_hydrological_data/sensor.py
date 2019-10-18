@@ -101,7 +101,7 @@ class SwissHydrologicalDataSensor(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique, friendly identifier for this entity."""
-        return "{0}_{1}".format(self._station, self._condition)
+        return f"{self._station}_{self._condition}"
 
     @property
     def unit_of_measurement(self):

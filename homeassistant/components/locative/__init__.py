@@ -22,7 +22,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "locative"
-TRACKER_UPDATE = "{}_tracker_update".format(DOMAIN)
+TRACKER_UPDATE = f"{DOMAIN}_tracker_update"
 
 
 ATTR_DEVICE_ID = "device"
@@ -76,12 +76,10 @@ async def handle_webhook(hass, webhook_id, request):
 
     if direction == "enter":
         async_dispatcher_send(hass, TRACKER_UPDATE, device, gps_location, location_name)
-        return web.Response(
-            text="Setting location to {}".format(location_name), status=HTTP_OK
-        )
+        return web.Response(text=f"Setting location to {location_name}", status=HTTP_OK)
 
     if direction == "exit":
-        current_state = hass.states.get("{}.{}".format(DEVICE_TRACKER, device))
+        current_state = hass.states.get(f"{DEVICE_TRACKER}.{device}")
 
         if current_state is None or current_state.state == location_name:
             location_name = STATE_NOT_HOME
@@ -108,7 +106,7 @@ async def handle_webhook(hass, webhook_id, request):
 
     _LOGGER.error("Received unidentified message from Locative: %s", direction)
     return web.Response(
-        text="Received unidentified message: {}".format(direction),
+        text=f"Received unidentified message: {direction}",
         status=HTTP_UNPROCESSABLE_ENTITY,
     )
 

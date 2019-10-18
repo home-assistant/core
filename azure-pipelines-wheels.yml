@@ -10,7 +10,7 @@ trigger:
     - requirements_all.txt
 pr: none
 schedules:
-- cron: '0 */8 * * *'
+- cron: '0 */4 * * *'
   displayName: 'daily builds'
   branches:
     include:
@@ -18,7 +18,7 @@ schedules:
   always: true
 variables:
   - name: versionWheels
-    value: '1.1-3.7-alpine3.10'
+    value: '1.4-3.7-alpine3.10'
 resources:
   repositories:
     - repository: azure
@@ -30,7 +30,8 @@ jobs:
 - template: templates/azp-job-wheels.yaml@azure
   parameters:
     builderVersion: '$(versionWheels)'
-    builderApk: 'build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;linux-headers;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev'
+    builderApk: 'build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev'
+    builderPip: 'Cython;numpy'
     wheelsRequirement: 'requirements_wheels.txt'
     wheelsRequirementDiff: 'requirements_diff.txt'
     preBuild:
@@ -44,7 +45,6 @@ jobs:
 
         requirement_files="requirements_wheels.txt requirements_diff.txt"
         for requirement_file in ${requirement_files}; do
-          sed -i "s|# pytradfri|pytradfri|g" ${requirement_file}
           sed -i "s|# pybluez|pybluez|g" ${requirement_file}
           sed -i "s|# bluepy|bluepy|g" ${requirement_file}
           sed -i "s|# beacontools|beacontools|g" ${requirement_file}
@@ -62,8 +62,15 @@ jobs:
           sed -i "s|# homekit|homekit|g" ${requirement_file}
           sed -i "s|# decora_wifi|decora_wifi|g" ${requirement_file}
           sed -i "s|# decora|decora|g" ${requirement_file}
+          sed -i "s|# avion|avion|g" ${requirement_file}
           sed -i "s|# PySwitchbot|PySwitchbot|g" ${requirement_file}
           sed -i "s|# pySwitchmate|pySwitchmate|g" ${requirement_file}
           sed -i "s|# face_recognition|face_recognition|g" ${requirement_file}
+          sed -i "s|# py_noaa|py_noaa|g" ${requirement_file}
+          sed -i "s|# bme680|bme680|g" ${requirement_file}
+
+          if [[ "$(buildArch)" =~ arm ]]; then
+            sed -i "s|# VL53L1X|VL53L1X|g" ${requirement_file}
+          fi
         done
       displayName: 'Prepare requirements files for Hass.io'

@@ -76,7 +76,7 @@ class HTU21DSensor(Entity):
 
     def __init__(self, htu21d_client, name, variable, unit):
         """Initialize the sensor."""
-        self._name = "{}_{}".format(name, variable)
+        self._name = f"{name}_{variable}"
         self._variable = variable
         self._unit_of_measurement = unit
         self._client = htu21d_client

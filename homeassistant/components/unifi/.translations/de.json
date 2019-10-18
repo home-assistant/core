@@ -22,5 +22,28 @@
             }
         },
         "title": "UniFi-Controller"
+    },
+    "options": {
+        "step": {
+            "device_tracker": {
+                "data": {
+                    "detection_time": "Zeit in Sekunden vom letzten Gesehenen bis zur Entfernung",
+                    "track_clients": "Nachverfolgen von Netzwerkclients",
+                    "track_devices": "Verfolgen von Netzwerkger\u00e4ten (Ubiquiti-Ger\u00e4te)",
+                    "track_wired_clients": "Einbinden von kabelgebundenen Netzwerk-Clients"
+                }
+            },
+            "init": {
+                "data": {
+                    "one": "eins",
+                    "other": "andere"
+                }
+            },
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "Erstellen von Bandbreiten-Nutzungssensoren f\u00fcr Netzwerk-Clients"
+                }
+            }
+        }
     }
 }

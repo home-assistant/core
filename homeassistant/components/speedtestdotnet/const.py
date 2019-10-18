@@ -1,7 +1,7 @@
 """Consts used by Speedtest.net."""
 
 DOMAIN = "speedtestdotnet"
-DATA_UPDATED = "{}_data_updated".format(DOMAIN)
+DATA_UPDATED = f"{DOMAIN}_data_updated"
 
 SENSOR_TYPES = {
     "ping": ["Ping", "ms"],

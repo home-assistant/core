@@ -37,8 +37,8 @@ ATTR_ABV = "abv"
 ATTR_CO2_VOLUME = "co2_volume"
 ATTR_BATCH_VOLUME = "batch_volume"
 
-SENSOR_UPDATE = "{}_sensor_update".format(DOMAIN)
-SENSOR_DATA_KEY = "{}.{}".format(DOMAIN, SENSOR)
+SENSOR_UPDATE = f"{DOMAIN}_sensor_update"
+SENSOR_DATA_KEY = f"{DOMAIN}.{SENSOR}"
 
 WEBHOOK_SCHEMA = vol.Schema(
     {
@@ -121,7 +121,7 @@ async def handle_webhook(hass, webhook_id, request):
 
     async_dispatcher_send(hass, SENSOR_UPDATE, device_id)
 
-    return web.Response(text="Saving status for {}".format(device_id), status=HTTP_OK)
+    return web.Response(text=f"Saving status for {device_id}", status=HTTP_OK)
 
 
 def _device_id(data):

@@ -55,7 +55,7 @@ class BlinkSyncModule(AlarmControlPanel):
     @property
     def name(self):
         """Return the name of the panel."""
-        return "{} {}".format(BLINK_DATA, self._name)
+        return f"{BLINK_DATA} {self._name}"
 
     @property
     def device_state_attributes(self):

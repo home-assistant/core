@@ -147,7 +147,7 @@ class NiluSensor(AirQualityEntity):
     def __init__(self, api_data: NiluData, name: str, show_on_map: bool):
         """Initialize the sensor."""
         self._api = api_data
-        self._name = "{} {}".format(name, api_data.data.name)
+        self._name = f"{name} {api_data.data.name}"
         self._max_aqi = None
         self._attrs = {}
 

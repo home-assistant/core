@@ -9,8 +9,10 @@ import voluptuous as vol
 
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.loader import bind_hass
 from homeassistant.util import sanitize_filename
+from homeassistant.util.yaml.loader import load_yaml
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,15 +92,28 @@ def discover_scripts(hass):
             continue
         hass.services.remove(DOMAIN, existing_service)
 
+    # Load user-provided service descriptions from python_scripts/services.yaml
+    services_yaml = os.path.join(path, "services.yaml")
+    if os.path.exists(services_yaml):
+        services_dict = load_yaml(services_yaml)
+    else:
+        services_dict = {}
+
     for fil in glob.iglob(os.path.join(path, "*.py")):
         name = os.path.splitext(os.path.basename(fil))[0]
         hass.services.register(DOMAIN, name, python_script_service_handler)
+
+        service_desc = {
+            "description": services_dict.get(name, {}).get("description", ""),
+            "fields": services_dict.get(name, {}).get("fields", {}),
+        }
+        async_set_service_schema(hass, DOMAIN, name, service_desc)
 
 
 @bind_hass
 def execute_script(hass, name, data=None):
     """Execute a script."""
-    filename = "{}.py".format(name)
+    filename = f"{name}.py"
     with open(hass.config.path(FOLDER, sanitize_filename(filename))) as fil:
         source = fil.read()
     execute(hass, filename, source, data)
@@ -151,9 +166,7 @@ def execute(hass, filename, source, data=None):
             or isinstance(obj, TimeWrapper)
             and name not in ALLOWED_TIME
         ):
-            raise ScriptError(
-                "Not allowed to access {}.{}".format(obj.__class__.__name__, name)
-            )
+            raise ScriptError(f"Not allowed to access {obj.__class__.__name__}.{name}")
 
         return getattr(obj, name, default)
 
@@ -173,7 +186,7 @@ def execute(hass, filename, source, data=None):
         "_iter_unpack_sequence_": guarded_iter_unpack_sequence,
         "_unpack_sequence_": guarded_unpack_sequence,
     }
-    logger = logging.getLogger("{}.{}".format(__name__, filename))
+    logger = logging.getLogger(f"{__name__}.{filename}")
     local = {"hass": hass, "data": data or {}, "logger": logger}
 
     try:

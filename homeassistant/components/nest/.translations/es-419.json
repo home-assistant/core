@@ -6,7 +6,8 @@
             "no_flows": "Debe configurar Nest antes de poder autenticarse con \u00e9l. [Lea las instrucciones] (https://www.home-assistant.io/components/nest/)."
         },
         "error": {
-            "invalid_code": "Codigo invalido"
+            "invalid_code": "Codigo invalido",
+            "unknown": "Error desconocido al validar el c\u00f3digo"
         },
         "step": {
             "init": {

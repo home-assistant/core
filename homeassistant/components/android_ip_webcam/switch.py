@@ -39,7 +39,7 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchDevice):
 
         self._setting = setting
         self._mapped_name = KEY_MAP.get(self._setting, self._setting)
-        self._name = "{} {}".format(name, self._mapped_name)
+        self._name = f"{name} {self._mapped_name}"
         self._state = False
 
     @property

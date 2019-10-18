@@ -96,7 +96,7 @@ class RovaSensor(Entity):
     @property
     def name(self):
         """Return the name."""
-        return "{}_{}".format(self.platform_name, self.sensor_key)
+        return f"{self.platform_name}_{self.sensor_key}"
 
     @property
     def icon(self):

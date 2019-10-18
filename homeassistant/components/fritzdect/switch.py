@@ -95,7 +95,7 @@ class FritzDectSwitch(SwitchDevice):
             attrs[ATTR_CURRENT_CONSUMPTION_UNIT] = "{}".format(
                 ATTR_CURRENT_CONSUMPTION_UNIT_VALUE
             )
-            attrs[ATTR_TOTAL_CONSUMPTION] = "{:.3f}".format(self.data.total_consumption)
+            attrs[ATTR_TOTAL_CONSUMPTION] = f"{self.data.total_consumption:.3f}"
             attrs[ATTR_TOTAL_CONSUMPTION_UNIT] = "{}".format(
                 ATTR_TOTAL_CONSUMPTION_UNIT_VALUE
             )
@@ -104,7 +104,7 @@ class FritzDectSwitch(SwitchDevice):
             attrs[ATTR_TEMPERATURE] = "{}".format(
                 self.units.temperature(self.data.temperature, TEMP_CELSIUS)
             )
-            attrs[ATTR_TEMPERATURE_UNIT] = "{}".format(self.units.temperature_unit)
+            attrs[ATTR_TEMPERATURE_UNIT] = f"{self.units.temperature_unit}"
         return attrs
 
     @property

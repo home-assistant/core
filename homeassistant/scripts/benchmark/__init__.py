@@ -15,7 +15,7 @@ from homeassistant.util import dt as dt_util
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 # mypy: no-warn-return-any
 
-BENCHMARKS = {}  # type: Dict[str, Callable]
+BENCHMARKS: Dict[str, Callable] = {}
 
 
 def run(args):
@@ -39,7 +39,7 @@ def run(args):
             hass = core.HomeAssistant(loop)
             hass.async_stop_track_tasks()
             runtime = loop.run_until_complete(bench(hass))
-            print("Benchmark {} done in {}s".format(bench.__name__, runtime))
+            print(f"Benchmark {bench.__name__} done in {runtime}s")
             loop.run_until_complete(hass.async_stop())
             loop.close()
 

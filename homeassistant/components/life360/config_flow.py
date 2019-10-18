@@ -13,7 +13,7 @@ from .helpers import get_api
 
 _LOGGER = logging.getLogger(__name__)
 
-DOCS_URL = "https://www.home-assistant.io/components/life360"
+DOCS_URL = "https://www.home-assistant.io/integrations/life360"
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -99,7 +99,7 @@ class Life360ConfigFlow(config_entries.ConfigFlow):
             )
             return self.async_abort(reason="unexpected")
         return self.async_create_entry(
-            title="{} (from configuration)".format(username),
+            title=f"{username} (from configuration)",
             data={
                 CONF_USERNAME: username,
                 CONF_PASSWORD: password,

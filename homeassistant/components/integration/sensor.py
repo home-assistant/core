@@ -94,7 +94,7 @@ class IntegrationSensor(RestoreEntity):
         self._state = 0
         self._method = integration_method
 
-        self._name = name if name is not None else "{} integral".format(source_entity)
+        self._name = name if name is not None else f"{source_entity} integral"
 
         if unit_of_measurement is None:
             self._unit_template = "{}{}{}".format(

@@ -1,11 +1,12 @@
 """Support for sending data to StatsD."""
 import logging
 
+import statsd
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PREFIX, EVENT_STATE_CHANGED
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import state as state_helper
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +41,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the StatsD component."""
-    import statsd
 
     conf = config[DOMAIN]
     host = conf.get(CONF_HOST)

@@ -59,7 +59,7 @@ class NelloLock(LockDevice):
         location_id = self._nello_lock.location_id
         short_id = self._nello_lock.short_id
         address = self._nello_lock.address
-        self._name = "Nello {}".format(short_id)
+        self._name = f"Nello {short_id}"
         self._device_attrs = {ATTR_ADDRESS: address, ATTR_LOCATION_ID: location_id}
         # Process recent activity
         activity = self._nello_lock.activity

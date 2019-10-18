@@ -101,7 +101,7 @@ class DysonSensor(Entity):
     @property
     def unique_id(self):
         """Return the sensor's unique id."""
-        return "{}-{}".format(self._device.serial, self._sensor_type)
+        return f"{self._device.serial}-{self._sensor_type}"
 
 
 class DysonFilterLifeSensor(DysonSensor):
@@ -110,7 +110,7 @@ class DysonFilterLifeSensor(DysonSensor):
     def __init__(self, device):
         """Create a new Dyson Filter Life sensor."""
         super().__init__(device, "filter_life")
-        self._name = "{} Filter Life".format(self._device.name)
+        self._name = f"{self._device.name} Filter Life"
 
     @property
     def state(self):
@@ -126,7 +126,7 @@ class DysonDustSensor(DysonSensor):
     def __init__(self, device):
         """Create a new Dyson Dust sensor."""
         super().__init__(device, "dust")
-        self._name = "{} Dust".format(self._device.name)
+        self._name = f"{self._device.name} Dust"
 
     @property
     def state(self):
@@ -142,7 +142,7 @@ class DysonHumiditySensor(DysonSensor):
     def __init__(self, device):
         """Create a new Dyson Humidity sensor."""
         super().__init__(device, "humidity")
-        self._name = "{} Humidity".format(self._device.name)
+        self._name = f"{self._device.name} Humidity"
 
     @property
     def state(self):
@@ -160,7 +160,7 @@ class DysonTemperatureSensor(DysonSensor):
     def __init__(self, device, unit):
         """Create a new Dyson Temperature sensor."""
         super().__init__(device, "temperature")
-        self._name = "{} Temperature".format(self._device.name)
+        self._name = f"{self._device.name} Temperature"
         self._unit = unit
 
     @property
@@ -187,7 +187,7 @@ class DysonAirQualitySensor(DysonSensor):
     def __init__(self, device):
         """Create a new Dyson Air Quality sensor."""
         super().__init__(device, "air_quality")
-        self._name = "{} AQI".format(self._device.name)
+        self._name = f"{self._device.name} AQI"
 
     @property
     def state(self):

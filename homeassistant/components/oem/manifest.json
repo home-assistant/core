@@ -1,7 +1,7 @@
 {
   "domain": "oem",
   "name": "Oem",
-  "documentation": "https://www.home-assistant.io/components/oem",
+  "documentation": "https://www.home-assistant.io/integrations/oem",
   "requirements": [
     "oemthermostat==1.1"
   ],

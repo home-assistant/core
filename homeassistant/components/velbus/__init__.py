@@ -119,7 +119,7 @@ class VelbusEntity(Entity):
             serial = self._module.get_module_address()
         else:
             serial = self._module.serial
-        return "{}-{}".format(serial, self._channel)
+        return f"{serial}-{self._channel}"
 
     @property
     def name(self):

@@ -25,10 +25,10 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-KILOBITS = "Kb"  # type: str
-PRICE = "CAD"  # type: str
-MESSAGES = "messages"  # type: str
-MINUTES = "minutes"  # type: str
+KILOBITS = "Kb"
+PRICE = "CAD"
+MESSAGES = "messages"
+MINUTES = "minutes"
 
 DEFAULT_NAME = "Fido"
 
@@ -108,7 +108,7 @@ class FidoSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {} {}".format(self.client_name, self._number, self._name)
+        return f"{self.client_name} {self._number} {self._name}"
 
     @property
     def state(self):

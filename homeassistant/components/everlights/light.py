@@ -87,7 +87,7 @@ class EverLightsLight(Light):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return "{}-{}".format(self._mac, self._channel)
+        return f"{self._mac}-{self._channel}"
 
     @property
     def available(self) -> bool:
@@ -102,7 +102,7 @@ class EverLightsLight(Light):
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._status["ch{}Active".format(self._channel)] == 1
+        return self._status[f"ch{self._channel}Active"] == 1
 
     @property
     def brightness(self):

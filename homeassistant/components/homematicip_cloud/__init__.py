@@ -213,9 +213,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     def _get_home(hapid: str):
         """Return a HmIP home."""
-        hap = hass.data[DOMAIN][hapid]
+        hap = hass.data[DOMAIN].get(hapid)
         if hap:
             return hap.home
+
+        _LOGGER.info("No matching access point found for access point id %s", hapid)
         return None
 
     return True
@@ -234,7 +236,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_registry = await dr.async_get_registry(hass)
     home = hap.home
     # Add the HAP name from configuration if set.
-    hapname = home.label if not home.name else "{} {}".format(home.label, home.name)
+    hapname = home.label if not home.name else f"{home.label} {home.name}"
     device_registry.async_get_or_create(
         config_entry_id=home.id,
         identifiers={(DOMAIN, home.id)},

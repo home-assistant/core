@@ -4,6 +4,9 @@ import logging
 import datetime
 import time
 
+from fitbit import Fitbit
+from fitbit.api import FitbitOauth2Client
+from oauthlib.oauth2.rfc6749.errors import MismatchingStateError, MissingTokenError
 import voluptuous as vol
 
 from homeassistant.core import callback
@@ -167,7 +170,7 @@ def request_app_setup(hass, config, add_entities, config_path, discovery_info=No
         else:
             setup_platform(hass, config, add_entities, discovery_info)
 
-    start_url = "{}{}".format(hass.config.api.base_url, FITBIT_AUTH_CALLBACK_PATH)
+    start_url = f"{hass.config.api.base_url}{FITBIT_AUTH_CALLBACK_PATH}"
 
     description = """Please create a Fitbit developer app at
                        https://dev.fitbit.com/apps/new.
@@ -204,9 +207,9 @@ def request_oauth_completion(hass):
     def fitbit_configuration_callback(callback_data):
         """Handle configuration updates."""
 
-    start_url = "{}{}".format(hass.config.api.base_url, FITBIT_AUTH_START)
+    start_url = f"{hass.config.api.base_url}{FITBIT_AUTH_START}"
 
-    description = "Please authorize Fitbit by visiting {}".format(start_url)
+    description = f"Please authorize Fitbit by visiting {start_url}"
 
     _CONFIGURING["fitbit"] = configurator.request_config(
         "Fitbit",
@@ -234,13 +237,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if "fitbit" in _CONFIGURING:
         hass.components.configurator.request_done(_CONFIGURING.pop("fitbit"))
 
-    import fitbit
-
     access_token = config_file.get(ATTR_ACCESS_TOKEN)
     refresh_token = config_file.get(ATTR_REFRESH_TOKEN)
     expires_at = config_file.get(ATTR_LAST_SAVED_AT)
     if None not in (access_token, refresh_token):
-        authd_client = fitbit.Fitbit(
+        authd_client = Fitbit(
             config_file.get(ATTR_CLIENT_ID),
             config_file.get(ATTR_CLIENT_SECRET),
             access_token=access_token,
@@ -294,7 +295,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities(dev, True)
 
     else:
-        oauth = fitbit.api.FitbitOauth2Client(
+        oauth = FitbitOauth2Client(
             config_file.get(ATTR_CLIENT_ID), config_file.get(ATTR_CLIENT_SECRET)
         )
 
@@ -337,9 +338,6 @@ class FitbitAuthCallbackView(HomeAssistantView):
     @callback
     def get(self, request):
         """Finish OAuth callback request."""
-        from oauthlib.oauth2.rfc6749.errors import MismatchingStateError
-        from oauthlib.oauth2.rfc6749.errors import MissingTokenError
-
         hass = request.app["hass"]
         data = request.query
 
@@ -498,7 +496,7 @@ class FitbitSensor(Entity):
                         hours -= 12
                     elif hours == 0:
                         hours = 12
-                    self._state = "{}:{:02d} {}".format(hours, minutes, setting)
+                    self._state = f"{hours}:{minutes:02d} {setting}"
                 else:
                     self._state = raw_state
             else:

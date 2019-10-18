@@ -25,6 +25,12 @@
                 },
                 "description": "Ingresa tu informaci\u00f3n de PlayStation 4. Para 'PIN', navegue hasta 'Configuraci\u00f3n' en su consola PlayStation 4. Luego navegue a 'Configuraci\u00f3n de conexi\u00f3n de la aplicaci\u00f3n m\u00f3vil' y seleccione 'Agregar dispositivo'. Ingrese el PIN que se muestra.",
                 "title": "Playstation 4"
+            },
+            "mode": {
+                "data": {
+                    "mode": "Modo de configuraci\u00f3n"
+                },
+                "title": "Playstation 4"
             }
         },
         "title": "Playstation 4"

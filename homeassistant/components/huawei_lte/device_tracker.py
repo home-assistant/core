@@ -1,4 +1,5 @@
 """Support for device tracking of Huawei LTE routers."""
+
 import logging
 from typing import Any, Dict, List, Optional
 
@@ -8,19 +9,20 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA, DeviceScanner
 from homeassistant.const import CONF_URL
-from . import DATA_KEY, RouterData
+from . import RouterData
+from .const import DOMAIN, KEY_WLAN_HOST_LIST
 
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Optional(CONF_URL): cv.url})
 
-HOSTS_PATH = "wlan_host_list.Hosts.Host"
+HOSTS_PATH = f"{KEY_WLAN_HOST_LIST}.Hosts.Host"
 
 
 def get_scanner(hass, config):
     """Get a Huawei LTE router scanner."""
-    data = hass.data[DATA_KEY].get_data(config)
+    data = hass.data[DOMAIN].get_data(config)
     data.subscribe(HOSTS_PATH)
     return HuaweiLteScanner(data)
 

@@ -1,7 +1,7 @@
 {
   "domain": "pvoutput",
   "name": "Pvoutput",
-  "documentation": "https://www.home-assistant.io/components/pvoutput",
+  "documentation": "https://www.home-assistant.io/integrations/pvoutput",
   "requirements": [],
   "dependencies": [],
   "codeowners": [

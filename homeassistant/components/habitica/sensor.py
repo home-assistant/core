@@ -66,7 +66,7 @@ class HabitipySensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{0}_{1}_{2}".format(habitica.DOMAIN, self._name, self._sensor_name)
+        return f"{habitica.DOMAIN}_{self._name}_{self._sensor_name}"
 
     @property
     def state(self):

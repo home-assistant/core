@@ -17,7 +17,7 @@ from time import monotonic
 import uuid
 
 from types import MappingProxyType
-from typing import (  # noqa: F401 pylint: disable=unused-import
+from typing import (
     Optional,
     Any,
     Callable,
@@ -28,7 +28,7 @@ from typing import (  # noqa: F401 pylint: disable=unused-import
     Set,
     TYPE_CHECKING,
     Awaitable,
-    Iterator,
+    Mapping,
 )
 
 from async_timeout import timeout
@@ -64,11 +64,7 @@ from homeassistant.exceptions import (
     Unauthorized,
     ServiceNotFound,
 )
-from homeassistant.util.async_ import (
-    run_coroutine_threadsafe,
-    run_callback_threadsafe,
-    fire_coroutine_threadsafe,
-)
+from homeassistant.util.async_ import run_callback_threadsafe, fire_coroutine_threadsafe
 from homeassistant import util
 import homeassistant.util.dt as dt_util
 from homeassistant.util import location, slugify
@@ -145,8 +141,8 @@ def async_loop_exception_handler(_: Any, context: Dict) -> None:
     if exception:
         kwargs["exc_info"] = (type(exception), exception, exception.__traceback__)
 
-    _LOGGER.error(  # type: ignore
-        "Error doing job: %s", context["message"], **kwargs
+    _LOGGER.error(
+        "Error doing job: %s", context["message"], **kwargs  # type: ignore
     )
 
 
@@ -170,10 +166,10 @@ class HomeAssistant:
         """Initialize new Home Assistant object."""
         self.loop: asyncio.events.AbstractEventLoop = (loop or asyncio.get_event_loop())
 
-        executor_opts = {
+        executor_opts: Dict[str, Any] = {
             "max_workers": None,
             "thread_name_prefix": "SyncWorker",
-        }  # type: Dict[str, Any]
+        }
 
         self.executor = ThreadPoolExecutor(**executor_opts)
         self.loop.set_default_executor(self.executor)
@@ -190,7 +186,9 @@ class HomeAssistant:
         self.data: dict = {}
         self.state = CoreState.not_running
         self.exit_code = 0
-        self.config_entries: Optional[ConfigEntries] = None
+        self.config_entries: Optional[
+            ConfigEntries  # pylint: disable=used-before-assignment
+        ] = None
         # If not None, use to signal end-of-loop
         self._stopped: Optional[asyncio.Event] = None
 
@@ -375,7 +373,9 @@ class HomeAssistant:
 
     def block_till_done(self) -> None:
         """Block till all pending work is done."""
-        run_coroutine_threadsafe(self.async_block_till_done(), self.loop).result()
+        asyncio.run_coroutine_threadsafe(
+            self.async_block_till_done(), self.loop
+        ).result()
 
     async def async_block_till_done(self) -> None:
         """Block till all pending work is done."""
@@ -704,8 +704,8 @@ class State:
     def __init__(
         self,
         entity_id: str,
-        state: Any,
-        attributes: Optional[Dict] = None,
+        state: str,
+        attributes: Optional[Mapping] = None,
         last_changed: Optional[datetime.datetime] = None,
         last_updated: Optional[datetime.datetime] = None,
         context: Optional[Context] = None,
@@ -733,7 +733,7 @@ class State:
             )
 
         self.entity_id = entity_id.lower()
-        self.state = state  # type: str
+        self.state = state
         self.attributes = MappingProxyType(attributes or {})
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
@@ -836,7 +836,7 @@ class StateMachine:
 
     def __init__(self, bus: EventBus, loop: asyncio.events.AbstractEventLoop) -> None:
         """Initialize state machine."""
-        self._states = {}  # type: Dict[str, State]
+        self._states: Dict[str, State] = {}
         self._bus = bus
         self._loop = loop
 
@@ -925,7 +925,7 @@ class StateMachine:
     def set(
         self,
         entity_id: str,
-        new_state: Any,
+        new_state: str,
         attributes: Optional[Dict] = None,
         force_update: bool = False,
         context: Optional[Context] = None,
@@ -951,7 +951,7 @@ class StateMachine:
     def async_set(
         self,
         entity_id: str,
-        new_state: Any,
+        new_state: str,
         attributes: Optional[Dict] = None,
         force_update: bool = False,
         context: Optional[Context] = None,
@@ -1050,7 +1050,7 @@ class ServiceRegistry:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a service registry."""
-        self._services = {}  # type: Dict[str, Dict[str, Service]]
+        self._services: Dict[str, Dict[str, Service]] = {}
         self._hass = hass
 
     @property
@@ -1168,7 +1168,7 @@ class ServiceRegistry:
         Because the service is sent as an event you are not allowed to use
         the keys ATTR_DOMAIN and ATTR_SERVICE in your service_data.
         """
-        return run_coroutine_threadsafe(  # type: ignore
+        return asyncio.run_coroutine_threadsafe(
             self.async_call(domain, service, service_data, blocking, context),
             self._hass.loop,
         ).result()
@@ -1269,29 +1269,29 @@ class Config:
         """Initialize a new config object."""
         self.hass = hass
 
-        self.latitude = 0  # type: float
-        self.longitude = 0  # type: float
-        self.elevation = 0  # type: int
-        self.location_name = "Home"  # type: str
-        self.time_zone = dt_util.UTC  # type: datetime.tzinfo
-        self.units = METRIC_SYSTEM  # type: UnitSystem
+        self.latitude: float = 0
+        self.longitude: float = 0
+        self.elevation: int = 0
+        self.location_name: str = "Home"
+        self.time_zone: datetime.tzinfo = dt_util.UTC
+        self.units: UnitSystem = METRIC_SYSTEM
 
-        self.config_source = "default"  # type: str
+        self.config_source: str = "default"
 
         # If True, pip install is skipped for requirements on startup
-        self.skip_pip = False  # type: bool
+        self.skip_pip: bool = False
 
         # List of loaded components
-        self.components = set()  # type: set
+        self.components: set = set()
 
         # API (HTTP) server configuration, see components.http.ApiConfig
-        self.api = None  # type: Optional[Any]
+        self.api: Optional[Any] = None
 
         # Directory that holds the configuration
-        self.config_dir = None  # type: Optional[str]
+        self.config_dir: Optional[str] = None
 
         # List of allowed external dirs to access
-        self.whitelist_external_dirs = set()  # type: Set[str]
+        self.whitelist_external_dirs: Set[str] = set()
 
     def distance(self, lat: float, lon: float) -> Optional[float]:
         """Calculate distance from Home Assistant.
@@ -1365,7 +1365,7 @@ class Config:
             self.time_zone = time_zone
             dt_util.set_default_time_zone(time_zone)
         else:
-            raise ValueError("Received invalid time zone {}".format(time_zone_str))
+            raise ValueError(f"Received invalid time zone {time_zone_str}")
 
     @callback
     def _update(

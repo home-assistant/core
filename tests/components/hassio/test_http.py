@@ -4,19 +4,13 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.const import HTTP_HEADER_HA_AUTH
-
-from . import API_PASSWORD
-
 
 @asyncio.coroutine
 def test_forward_request(hassio_client, aioclient_mock):
     """Test fetching normal path."""
     aioclient_mock.post("http://127.0.0.1/beer", text="response")
 
-    resp = yield from hassio_client.post(
-        "/api/hassio/beer", headers={HTTP_HEADER_HA_AUTH: API_PASSWORD}
-    )
+    resp = yield from hassio_client.post("/api/hassio/beer")
 
     # Check we got right response
     assert resp.status == 200
@@ -87,9 +81,7 @@ def test_forward_log_request(hassio_client, aioclient_mock):
     """Test fetching normal log path doesn't remove ANSI color escape codes."""
     aioclient_mock.get("http://127.0.0.1/beer/logs", text="\033[32mresponse\033[0m")
 
-    resp = yield from hassio_client.get(
-        "/api/hassio/beer/logs", headers={HTTP_HEADER_HA_AUTH: API_PASSWORD}
-    )
+    resp = yield from hassio_client.get("/api/hassio/beer/logs")
 
     # Check we got right response
     assert resp.status == 200
@@ -107,9 +99,7 @@ def test_bad_gateway_when_cannot_find_supervisor(hassio_client):
         "homeassistant.components.hassio.http.async_timeout.timeout",
         side_effect=asyncio.TimeoutError,
     ):
-        resp = yield from hassio_client.get(
-            "/api/hassio/addons/test/info", headers={HTTP_HEADER_HA_AUTH: API_PASSWORD}
-        )
+        resp = yield from hassio_client.get("/api/hassio/addons/test/info")
     assert resp.status == 502
 
 

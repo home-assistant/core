@@ -44,6 +44,8 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.script import Script
 
+from .const import CONF_AVAILABILITY_TEMPLATE
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_VACUUMS = "vacuums"
@@ -67,6 +69,7 @@ VACUUM_SCHEMA = vol.Schema(
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_BATTERY_LEVEL_TEMPLATE): cv.template,
         vol.Optional(CONF_FAN_SPEED_TEMPLATE): cv.template,
+        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
         vol.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
         vol.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
         vol.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
@@ -94,6 +97,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         state_template = device_config.get(CONF_VALUE_TEMPLATE)
         battery_level_template = device_config.get(CONF_BATTERY_LEVEL_TEMPLATE)
         fan_speed_template = device_config.get(CONF_FAN_SPEED_TEMPLATE)
+        availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
 
         start_action = device_config[SERVICE_START]
         pause_action = device_config.get(SERVICE_PAUSE)
@@ -113,6 +117,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             (CONF_VALUE_TEMPLATE, state_template),
             (CONF_BATTERY_LEVEL_TEMPLATE, battery_level_template),
             (CONF_FAN_SPEED_TEMPLATE, fan_speed_template),
+            (CONF_AVAILABILITY_TEMPLATE, availability_template),
         ):
             if template is None:
                 continue
@@ -152,6 +157,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 state_template,
                 battery_level_template,
                 fan_speed_template,
+                availability_template,
                 start_action,
                 pause_action,
                 stop_action,
@@ -178,6 +184,7 @@ class TemplateVacuum(StateVacuumDevice):
         state_template,
         battery_level_template,
         fan_speed_template,
+        availability_template,
         start_action,
         pause_action,
         stop_action,
@@ -198,6 +205,7 @@ class TemplateVacuum(StateVacuumDevice):
         self._template = state_template
         self._battery_level_template = battery_level_template
         self._fan_speed_template = fan_speed_template
+        self._availability_template = availability_template
         self._supported_features = SUPPORT_START
 
         self._start_script = Script(hass, start_action)
@@ -235,6 +243,7 @@ class TemplateVacuum(StateVacuumDevice):
         self._state = None
         self._battery_level = None
         self._fan_speed = None
+        self._available = True
 
         if self._template:
             self._supported_features |= SUPPORT_STATE
@@ -279,6 +288,11 @@ class TemplateVacuum(StateVacuumDevice):
     def should_poll(self):
         """Return the polling state."""
         return False
+
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return self._available
 
     async def async_start(self):
         """Start or resume the cleaning task."""
@@ -421,3 +435,16 @@ class TemplateVacuum(StateVacuumDevice):
                     self._fan_speed_list,
                 )
                 self._fan_speed = None
+        # Update availability if availability template is defined
+        if self._availability_template is not None:
+            try:
+                self._available = (
+                    self._availability_template.async_render().lower() == "true"
+                )
+            except (TemplateError, ValueError) as ex:
+                _LOGGER.error(
+                    "Could not render %s template %s: %s",
+                    CONF_AVAILABILITY_TEMPLATE,
+                    self._name,
+                    ex,
+                )

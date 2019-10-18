@@ -67,7 +67,7 @@ class HddTempSensor(Entity):
         """Initialize a HDDTemp sensor."""
         self.hddtemp = hddtemp
         self.disk = disk
-        self._name = "{} {}".format(name, disk)
+        self._name = f"{name} {disk}"
         self._state = None
         self._details = None
         self._unit = None

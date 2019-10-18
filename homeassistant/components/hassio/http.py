@@ -75,7 +75,7 @@ class HassIOView(HomeAssistantView):
 
             method = getattr(self._websession, request.method.lower())
             client = await method(
-                "http://{}/{}".format(self._host, path),
+                f"http://{self._host}/{path}",
                 data=data,
                 headers=headers,
                 timeout=read_timeout,

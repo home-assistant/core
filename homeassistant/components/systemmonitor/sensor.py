@@ -1,9 +1,9 @@
 """Support for monitoring the local system."""
-from datetime import datetime
 import logging
 import os
 import socket
 
+import psutil
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -135,8 +135,6 @@ class SystemMonitorSensor(Entity):
 
     def update(self):
         """Get the latest system information."""
-        import psutil
-
         if self.type == "disk_use_percent":
             self._state = psutil.disk_usage(self.argument).percent
         elif self.type == "disk_use":
@@ -193,7 +191,7 @@ class SystemMonitorSensor(Entity):
             counters = psutil.net_io_counters(pernic=True)
             if self.argument in counters:
                 counter = counters[self.argument][IO_COUNTER[self.type]]
-                now = datetime.now()
+                now = dt_util.utcnow()
                 if self._last_value and self._last_value < counter:
                     self._state = round(
                         (counter - self._last_value)

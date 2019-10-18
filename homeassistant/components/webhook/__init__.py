@@ -1,7 +1,7 @@
 """Webhooks for Home Assistant."""
 import logging
 
-from aiohttp.web import Response
+from aiohttp.web import Response, Request
 import voluptuous as vol
 
 from homeassistant.core import callback
@@ -98,11 +98,17 @@ class WebhookView(HomeAssistantView):
     url = URL_WEBHOOK_PATH
     name = "api:webhook"
     requires_auth = False
+    cors_allowed = True
 
-    async def post(self, request, webhook_id):
+    async def _handle(self, request: Request, webhook_id):
         """Handle webhook call."""
+        _LOGGER.debug("Handling webhook %s payload for %s", request.method, webhook_id)
         hass = request.app["hass"]
         return await async_handle_webhook(hass, webhook_id, request)
+
+    head = _handle
+    post = _handle
+    put = _handle
 
 
 @callback

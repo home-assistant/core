@@ -26,10 +26,10 @@ from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
-GIGABITS = "Gb"  # type: str
-PRICE = "CAD"  # type: str
-DAYS = "days"  # type: str
-PERCENT = "%"  # type: str
+GIGABITS = "Gb"
+PRICE = "CAD"
+DAYS = "days"
+PERCENT = "%"
 
 DEFAULT_NAME = "EBox"
 
@@ -106,7 +106,7 @@ class EBoxSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self.client_name, self._name)
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):

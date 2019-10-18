@@ -22,9 +22,7 @@ class RequirementsNotFound(HomeAssistantError):
 
     def __init__(self, domain: str, requirements: List) -> None:
         """Initialize a component not found error."""
-        super().__init__(
-            "Requirements for {} not found: {}.".format(domain, requirements)
-        )
+        super().__init__(f"Requirements for {domain} not found: {requirements}.")
         self.domain = domain
         self.requirements = requirements
 

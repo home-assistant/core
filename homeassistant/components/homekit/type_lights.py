@@ -127,9 +127,7 @@ class Light(HomeAccessory):
             self.set_state(0)  # Turn off light
             return
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_BRIGHTNESS_PCT: value}
-        self.call_service(
-            DOMAIN, SERVICE_TURN_ON, params, "brightness at {}%".format(value)
-        )
+        self.call_service(DOMAIN, SERVICE_TURN_ON, params, f"brightness at {value}%")
 
     def set_color_temperature(self, value):
         """Set color temperature if call came from HomeKit."""
@@ -137,7 +135,7 @@ class Light(HomeAccessory):
         self._flag[CHAR_COLOR_TEMPERATURE] = True
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_COLOR_TEMP: value}
         self.call_service(
-            DOMAIN, SERVICE_TURN_ON, params, "color temperature at {}".format(value)
+            DOMAIN, SERVICE_TURN_ON, params, f"color temperature at {value}"
         )
 
     def set_saturation(self, value):
@@ -167,9 +165,7 @@ class Light(HomeAccessory):
                 {CHAR_HUE: False, CHAR_SATURATION: False, RGB_COLOR: True}
             )
             params = {ATTR_ENTITY_ID: self.entity_id, ATTR_HS_COLOR: color}
-            self.call_service(
-                DOMAIN, SERVICE_TURN_ON, params, "set color at {}".format(color)
-            )
+            self.call_service(DOMAIN, SERVICE_TURN_ON, params, f"set color at {color}")
 
     def update_state(self, new_state):
         """Update light after state change."""

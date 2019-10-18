@@ -4,6 +4,7 @@ import logging
 import mimetypes
 import os
 import pathlib
+from typing import Any, Dict, Optional, Set, Tuple
 
 from aiohttp import web, web_urldispatcher, hdrs
 import voluptuous as vol
@@ -22,7 +23,7 @@ from homeassistant.loader import bind_hass
 from .storage import async_setup_frontend_storage
 
 
-# mypy: allow-incomplete-defs, allow-untyped-defs, no-check-untyped-defs
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 # Fix mimetypes for borked Windows machines
 # https://github.com/home-assistant/home-assistant-polymer/issues/3336
@@ -121,19 +122,19 @@ class Panel:
     """Abstract class for panels."""
 
     # Name of the webcomponent
-    component_name = None
+    component_name: Optional[str] = None
 
-    # Icon to show in the sidebar (optional)
-    sidebar_icon = None
+    # Icon to show in the sidebar
+    sidebar_icon: Optional[str] = None
 
-    # Title to show in the sidebar (optional)
-    sidebar_title = None
+    # Title to show in the sidebar
+    sidebar_title: Optional[str] = None
 
     # Url to show the panel in the frontend
-    frontend_url_path = None
+    frontend_url_path: Optional[str] = None
 
     # Config to pass to the webcomponent
-    config = None
+    config: Optional[Dict[str, Any]] = None
 
     # If the panel should only be visible to admins
     require_admin = False
@@ -274,9 +275,7 @@ async def async_setup(hass, config):
         ("frontend_latest", True),
         ("frontend_es5", True),
     ):
-        hass.http.register_static_path(
-            "/{}".format(path), str(root_path / path), should_cache
-        )
+        hass.http.register_static_path(f"/{path}", str(root_path / path), should_cache)
 
     hass.http.register_static_path(
         "/auth/authorize", str(root_path / "authorize.html"), False
@@ -294,9 +293,7 @@ async def async_setup(hass, config):
     # To smooth transition to new urls, add redirects to new urls of dev tools
     # Added June 27, 2019. Can be removed in 2021.
     for panel in ("event", "info", "service", "state", "template", "mqtt"):
-        hass.http.register_redirect(
-            "/dev-{}".format(panel), "/developer-tools/{}".format(panel)
-        )
+        hass.http.register_redirect(f"/dev-{panel}", f"/developer-tools/{panel}")
 
     async_register_built_in_panel(
         hass,
@@ -404,7 +401,9 @@ class IndexView(web_urldispatcher.AbstractResource):
         """Construct url for resource with additional params."""
         return URL("/")
 
-    async def resolve(self, request: web.Request):
+    async def resolve(
+        self, request: web.Request
+    ) -> Tuple[Optional[web_urldispatcher.UrlMappingMatchInfo], Set[str]]:
         """Resolve resource.
 
         Return (UrlMappingMatchInfo, allowed_methods) pair.
@@ -451,7 +450,7 @@ class IndexView(web_urldispatcher.AbstractResource):
 
         return tpl
 
-    async def get(self, request: web.Request):
+    async def get(self, request: web.Request) -> web.Response:
         """Serve the index page for panel pages."""
         hass = request.app["hass"]
 

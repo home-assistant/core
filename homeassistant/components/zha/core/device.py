@@ -2,7 +2,7 @@
 Device for Zigbee Home Automation.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zha/
+https://home-assistant.io/integrations/zha/
 """
 import asyncio
 from datetime import timedelta
@@ -102,7 +102,7 @@ class ZHADevice(LogMixin):
     @property
     def name(self):
         """Return device name."""
-        return "{} {}".format(self.manufacturer, self.model)
+        return f"{self.manufacturer} {self.model}"
 
     @property
     def ieee(self):
@@ -186,6 +186,13 @@ class ZHADevice(LogMixin):
     def all_channels(self):
         """Return cluster channels and relay channels for device."""
         return self._all_channels
+
+    @property
+    def device_automation_triggers(self):
+        """Return the device automation triggers for this device."""
+        if hasattr(self._zigpy_device, "device_automation_triggers"):
+            return self._zigpy_device.device_automation_triggers
+        return None
 
     @property
     def available_signal(self):
@@ -341,7 +348,6 @@ class ZHADevice(LogMixin):
         zdo_task = None
         for channel in channels:
             if channel.name == CHANNEL_ZDO:
-                # pylint: disable=E1111
                 if zdo_task is None:  # We only want to do this once
                     zdo_task = self._async_create_task(
                         semaphore, channel, task_name, *args
@@ -366,8 +372,7 @@ class ZHADevice(LogMixin):
     @callback
     def async_unsub_dispatcher(self):
         """Unsubscribe the dispatcher."""
-        if self._unsub:
-            self._unsub()
+        self._unsub()
 
     @callback
     def async_update_last_seen(self, last_seen):
@@ -461,10 +466,10 @@ class ZHADevice(LogMixin):
         except DeliveryError as exc:
             self.debug(
                 "failed to set attribute: %s %s %s %s %s",
-                "{}: {}".format(ATTR_VALUE, value),
-                "{}: {}".format(ATTR_ATTRIBUTE, attribute),
-                "{}: {}".format(ATTR_CLUSTER_ID, cluster_id),
-                "{}: {}".format(ATTR_ENDPOINT_ID, endpoint_id),
+                f"{ATTR_VALUE}: {value}",
+                f"{ATTR_ATTRIBUTE}: {attribute}",
+                f"{ATTR_CLUSTER_ID}: {cluster_id}",
+                f"{ATTR_ENDPOINT_ID}: {endpoint_id}",
                 exc,
             )
             return None
@@ -493,13 +498,13 @@ class ZHADevice(LogMixin):
 
         self.debug(
             "Issued cluster command: %s %s %s %s %s %s %s",
-            "{}: {}".format(ATTR_CLUSTER_ID, cluster_id),
-            "{}: {}".format(ATTR_COMMAND, command),
-            "{}: {}".format(ATTR_COMMAND_TYPE, command_type),
-            "{}: {}".format(ATTR_ARGS, args),
-            "{}: {}".format(ATTR_CLUSTER_ID, cluster_type),
-            "{}: {}".format(ATTR_MANUFACTURER, manufacturer),
-            "{}: {}".format(ATTR_ENDPOINT_ID, endpoint_id),
+            f"{ATTR_CLUSTER_ID}: {cluster_id}",
+            f"{ATTR_COMMAND}: {command}",
+            f"{ATTR_COMMAND_TYPE}: {command_type}",
+            f"{ATTR_ARGS}: {args}",
+            f"{ATTR_CLUSTER_ID}: {cluster_type}",
+            f"{ATTR_MANUFACTURER}: {manufacturer}",
+            f"{ATTR_ENDPOINT_ID}: {endpoint_id}",
         )
         return response
 

@@ -1,9 +1,9 @@
 {
   "domain": "blink",
   "name": "Blink",
-  "documentation": "https://www.home-assistant.io/components/blink",
+  "documentation": "https://www.home-assistant.io/integrations/blink",
   "requirements": [
-    "blinkpy==0.14.1"
+    "blinkpy==0.14.2"
   ],
   "dependencies": [],
   "codeowners": [

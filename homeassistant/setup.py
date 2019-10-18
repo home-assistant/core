@@ -10,7 +10,6 @@ from homeassistant import requirements, core, loader, config as conf_util
 from homeassistant.config import async_notify_setup_error
 from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.async_ import run_coroutine_threadsafe
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +24,7 @@ SLOW_SETUP_WARNING = 10
 
 def setup_component(hass: core.HomeAssistant, domain: str, config: Dict) -> bool:
     """Set up a component and all its dependencies."""
-    return run_coroutine_threadsafe(  # type: ignore
+    return asyncio.run_coroutine_threadsafe(
         async_setup_component(hass, domain, config), hass.loop
     ).result()
 
@@ -240,7 +239,7 @@ async def async_prepare_setup_platform(
     try:
         platform = integration.get_platform(domain)
     except ImportError as exc:
-        log_error("Platform not found ({}).".format(exc))
+        log_error(f"Platform not found ({exc}).")
         return None
 
     # Already loaded
@@ -253,7 +252,7 @@ async def async_prepare_setup_platform(
         try:
             component = integration.get_component()
         except ImportError as exc:
-            log_error("Unable to import the component ({}).".format(exc))
+            log_error(f"Unable to import the component ({exc}).")
             return None
 
         if hasattr(component, "setup") or hasattr(component, "async_setup"):

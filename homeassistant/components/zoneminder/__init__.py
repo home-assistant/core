@@ -64,7 +64,7 @@ def setup(hass, config):
             schema = "http"
 
         host_name = conf[CONF_HOST]
-        server_origin = "{}://{}".format(schema, host_name)
+        server_origin = f"{schema}://{host_name}"
         zm_client = ZoneMinder(
             server_origin,
             conf.get(CONF_USERNAME),

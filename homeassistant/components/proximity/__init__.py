@@ -71,7 +71,7 @@ def setup_proximity_component(hass, name, config):
         zone_id,
         unit_of_measurement,
     )
-    proximity.entity_id = "{}.{}".format(DOMAIN, proximity_zone)
+    proximity.entity_id = f"{DOMAIN}.{proximity_zone}"
 
     proximity.schedule_update_ha_state()
 
@@ -211,8 +211,8 @@ class Proximity(Entity):
 
         # Loop through each of the distances collected and work out the
         # closest.
-        closest_device = None  # type: str
-        dist_to_zone = None  # type: float
+        closest_device: str = None
+        dist_to_zone: float = None
 
         for device in distances_to_zone:
             if not dist_to_zone or distances_to_zone[device] < dist_to_zone:

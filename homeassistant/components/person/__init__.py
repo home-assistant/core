@@ -441,7 +441,7 @@ def ws_list_person(
     hass: HomeAssistantType, connection: websocket_api.ActiveConnection, msg
 ):
     """List persons."""
-    manager = hass.data[DOMAIN]  # type: PersonManager
+    manager: PersonManager = hass.data[DOMAIN]
     connection.send_result(
         msg["id"],
         {"storage": manager.storage_persons, "config": manager.config_persons},
@@ -464,7 +464,7 @@ async def ws_create_person(
     hass: HomeAssistantType, connection: websocket_api.ActiveConnection, msg
 ):
     """Create a person."""
-    manager = hass.data[DOMAIN]  # type: PersonManager
+    manager: PersonManager = hass.data[DOMAIN]
     try:
         person = await manager.async_create_person(
             name=msg["name"],
@@ -495,7 +495,7 @@ async def ws_update_person(
     hass: HomeAssistantType, connection: websocket_api.ActiveConnection, msg
 ):
     """Update a person."""
-    manager = hass.data[DOMAIN]  # type: PersonManager
+    manager: PersonManager = hass.data[DOMAIN]
     changes = {}
     for key in ("name", "user_id", "device_trackers"):
         if key in msg:
@@ -519,7 +519,7 @@ async def ws_delete_person(
     hass: HomeAssistantType, connection: websocket_api.ActiveConnection, msg
 ):
     """Delete a person."""
-    manager = hass.data[DOMAIN]  # type: PersonManager
+    manager: PersonManager = hass.data[DOMAIN]
     await manager.async_delete_person(msg["person_id"])
     connection.send_result(msg["id"])
 

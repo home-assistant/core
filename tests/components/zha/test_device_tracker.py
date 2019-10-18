@@ -67,10 +67,10 @@ async def test_device_tracker(hass, config_entry, zha_gateway):
 
     # turn state flip
     attr = make_attribute(0x0020, 23)
-    cluster.handle_message(False, 1, 0x0A, [[attr]])
+    cluster.handle_message(1, 0x0A, [[attr]])
 
     attr = make_attribute(0x0021, 200)
-    cluster.handle_message(False, 1, 0x0A, [[attr]])
+    cluster.handle_message(1, 0x0A, [[attr]])
 
     zigpy_device.last_seen = time.time() + 10
     next_update = dt_util.utcnow() + timedelta(seconds=30)

@@ -1,5 +1,6 @@
 """Support for Prometheus metrics export."""
 import logging
+import string
 
 from aiohttp import web
 import voluptuous as vol
@@ -159,9 +160,22 @@ class PrometheusMetrics:
         try:
             return self._metrics[metric]
         except KeyError:
-            full_metric_name = f"{self.metrics_prefix}{metric}"
+            full_metric_name = self._sanitize_metric_name(
+                f"{self.metrics_prefix}{metric}"
+            )
             self._metrics[metric] = factory(full_metric_name, documentation, labels)
             return self._metrics[metric]
+
+    @staticmethod
+    def _sanitize_metric_name(metric: str) -> str:
+        return "".join(
+            [
+                c
+                if c in string.ascii_letters or c.isdigit() or c == "_" or c == ":"
+                else f"u{hex(ord(c))}"
+                for c in metric
+            ]
+        )
 
     @staticmethod
     def state_as_number(state):

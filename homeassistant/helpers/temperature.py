@@ -20,7 +20,7 @@ def display_temp(
     # If the temperature is not a number this can cause issues
     # with Polymer components, so bail early there.
     if not isinstance(temperature, Number):
-        raise TypeError("Temperature is not a number: {}".format(temperature))
+        raise TypeError(f"Temperature is not a number: {temperature}")
 
     # type ignore: https://github.com/python/mypy/issues/7207
     if temperature_unit != ha_unit:  # type: ignore

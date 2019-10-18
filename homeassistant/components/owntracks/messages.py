@@ -60,7 +60,7 @@ def _parse_see_args(message, subscribe_topic):
     Async friendly.
     """
     user, device = _parse_topic(message["topic"], subscribe_topic)
-    dev_id = slugify("{}_{}".format(user, device))
+    dev_id = slugify(f"{user}_{device}")
     kwargs = {"dev_id": dev_id, "host_name": user, "attributes": {}}
     if message["lat"] is not None and message["lon"] is not None:
         kwargs["gps"] = (message["lat"], message["lon"])
@@ -79,6 +79,8 @@ def _parse_see_args(message, subscribe_topic):
         kwargs["attributes"]["address"] = message["addr"]
     if "cog" in message:
         kwargs["attributes"]["course"] = message["cog"]
+    if "bs" in message:
+        kwargs["attributes"]["battery_status"] = message["bs"]
     if "t" in message:
         if message["t"] in ("c", "u"):
             kwargs["source_type"] = SOURCE_TYPE_GPS
@@ -253,7 +255,7 @@ async def async_handle_transition_message(hass, context, message):
 async def async_handle_waypoint(hass, name_base, waypoint):
     """Handle a waypoint."""
     name = waypoint["desc"]
-    pretty_name = "{} - {}".format(name_base, name)
+    pretty_name = f"{name_base} - {name}"
     lat = waypoint["lat"]
     lon = waypoint["lon"]
     rad = waypoint["rad"]

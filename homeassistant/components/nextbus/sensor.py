@@ -62,9 +62,7 @@ def validate_value(value_name, value, value_list):
             "Invalid %s tag `%s`. Please use one of the following: %s",
             value_name,
             value,
-            ", ".join(
-                "{}: {}".format(title, tag) for tag, title in valid_values.items()
-            ),
+            ", ".join(f"{title}: {tag}" for tag, title in valid_values.items()),
         )
         return False
 
@@ -126,7 +124,7 @@ class NextBusDepartureSensor(Entity):
         self.stop = stop
         self._custom_name = name
         # Maybe pull a more user friendly name from the API here
-        self._name = "{} {}".format(agency, route)
+        self._name = f"{agency} {route}"
         self._client = client
 
         # set up default state attributes

@@ -11,6 +11,7 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_MODE
 from homeassistant.helpers.entity import Entity
@@ -157,10 +158,10 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
         self._stop_atcocode = stop_atcocode
         self._bus_direction = bus_direction
         self._next_buses = []
-        self._destination_re = re.compile("{}".format(bus_direction), re.IGNORECASE)
+        self._destination_re = re.compile(f"{bus_direction}", re.IGNORECASE)
 
-        sensor_name = "Next bus to {}".format(bus_direction)
-        stop_url = "bus/stop/{}/live.json".format(stop_atcocode)
+        sensor_name = f"Next bus to {bus_direction}"
+        stop_url = f"bus/stop/{stop_atcocode}/live.json"
 
         UkTransportSensor.__init__(self, sensor_name, api_app_id, api_app_key, stop_url)
         self.update = Throttle(interval)(self._update)
@@ -220,8 +221,8 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
         self._calling_at = calling_at
         self._next_trains = []
 
-        sensor_name = "Next train to {}".format(calling_at)
-        query_url = "train/station/{}/live.json".format(station_code)
+        sensor_name = f"Next train to {calling_at}"
+        query_url = f"train/station/{station_code}/live.json"
 
         UkTransportSensor.__init__(
             self, sensor_name, api_app_id, api_app_key, query_url
@@ -277,12 +278,11 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
 
 def _delta_mins(hhmm_time_str):
     """Calculate time delta in minutes to a time in hh:mm format."""
-    now = datetime.now()
+    now = dt_util.now()
     hhmm_time = datetime.strptime(hhmm_time_str, "%H:%M")
 
-    hhmm_datetime = datetime(
-        now.year, now.month, now.day, hour=hhmm_time.hour, minute=hhmm_time.minute
-    )
+    hhmm_datetime = now.replace(hour=hhmm_time.hour, minute=hhmm_time.minute)
+
     if hhmm_datetime < now:
         hhmm_datetime += timedelta(days=1)
 

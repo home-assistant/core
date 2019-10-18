@@ -84,13 +84,13 @@ class Itunes:
             uri_scheme = "http://"
 
         if self.port:
-            return "{}{}:{}".format(uri_scheme, self.host, self.port)
+            return f"{uri_scheme}{self.host}:{self.port}"
 
-        return "{}{}".format(uri_scheme, self.host)
+        return f"{uri_scheme}{self.host}"
 
     def _request(self, method, path, params=None):
         """Make the actual request and return the parsed response."""
-        url = "{}{}".format(self._base_url, path)
+        url = f"{self._base_url}{path}"
 
         try:
             if method == "GET":

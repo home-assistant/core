@@ -120,7 +120,7 @@ class SeventeenTrackSummarySensor(Entity):
     @property
     def name(self):
         """Return the name."""
-        return "Seventeentrack Packages {0}".format(self._status)
+        return f"Seventeentrack Packages {self._status}"
 
     @property
     def state(self):
@@ -203,7 +203,7 @@ class SeventeenTrackPackageSensor(Entity):
         name = self._friendly_name
         if not name:
             name = self._tracking_number
-        return "Seventeentrack Package: {0}".format(name)
+        return f"Seventeentrack Package: {name}"
 
     @property
     def state(self):

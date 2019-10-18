@@ -184,7 +184,7 @@ class SynoNasSensor(Entity):
     def name(self):
         """Return the name of the sensor, if any."""
         if self.monitor_device is not None:
-            return "{} ({})".format(self.var_name, self.monitor_device)
+            return f"{self.var_name} ({self.monitor_device})"
         return self.var_name
 
     @property

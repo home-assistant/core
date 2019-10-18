@@ -198,7 +198,7 @@ async def async_setup(hass, config):
             return
         if service.service == "write":
             logger = logging.getLogger(
-                service.data.get(CONF_LOGGER, "{}.external".format(__name__))
+                service.data.get(CONF_LOGGER, f"{__name__}.external")
             )
             level = service.data[CONF_LEVEL]
             getattr(logger, level)(service.data[CONF_MESSAGE])

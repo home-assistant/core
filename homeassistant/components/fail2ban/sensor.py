@@ -57,7 +57,7 @@ class BanSensor(Entity):
 
     def __init__(self, name, jail, log_parser):
         """Initialize the sensor."""
-        self._name = "{} {}".format(name, jail)
+        self._name = f"{name} {jail}"
         self.jail = jail
         self.ban_dict = {STATE_CURRENT_BANS: [], STATE_ALL_BANS: []}
         self.last_ban = None

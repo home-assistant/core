@@ -107,7 +107,7 @@ def _drop_index(engine, table_name, index_name):
 
     # Engines like DB2/Oracle
     try:
-        engine.execute(text("DROP INDEX {index}".format(index=index_name)))
+        engine.execute(text(f"DROP INDEX {index_name}"))
     except SQLAlchemyError:
         pass
     else:
@@ -170,7 +170,7 @@ def _add_columns(engine, table_name, columns_def):
         table_name,
     )
 
-    columns_def = ["ADD {}".format(col_def) for col_def in columns_def]
+    columns_def = [f"ADD {col_def}" for col_def in columns_def]
 
     try:
         engine.execute(
@@ -265,9 +265,7 @@ def _apply_update(engine, new_version, old_version):
         #     'context_parent_id CHARACTER(36)',
         # ])
     else:
-        raise ValueError(
-            "No schema migration defined for version {}".format(new_version)
-        )
+        raise ValueError(f"No schema migration defined for version {new_version}")
 
 
 def _inspect_schema_version(engine, session):
