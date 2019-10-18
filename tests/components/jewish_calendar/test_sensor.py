@@ -42,27 +42,17 @@ TEST_PARAMS = [
         False,
         'כ"ג אלול ה\' תשע"ח',
     ),
-    (
-        dt(2018, 9, 10),
-        "UTC",
-        31.778,
-        35.235,
-        "hebrew",
-        "holiday_name",
-        False,
-        "א' ראש השנה",
-    ),
+    (dt(2018, 9, 10), "UTC", 31.778, 35.235, "hebrew", "holiday", False, "א' ראש השנה"),
     (
         dt(2018, 9, 10),
         "UTC",
         31.778,
         35.235,
         "english",
-        "holiday_name",
+        "holiday",
         False,
         "Rosh Hashana I",
     ),
-    (dt(2018, 9, 10), "UTC", 31.778, 35.235, "english", "holiday_type", False, 1),
     (
         dt(2018, 9, 8),
         "UTC",
@@ -128,9 +118,8 @@ TEST_PARAMS = [
 TEST_IDS = [
     "date_output",
     "date_output_hebrew",
-    "holiday_name",
-    "holiday_name_english",
-    "holiday_type",
+    "holiday",
+    "holiday_english",
     "torah_reading",
     "first_stars_ny",
     "first_stars_jerusalem",
@@ -187,7 +176,12 @@ async def test_jewish_calendar_sensor(
         dt_util.as_utc(time_zone.localize(result)) if isinstance(result, dt) else result
     )
 
-    assert hass.states.get(f"sensor.test_{sensor}").state == str(result)
+    sensor_object = hass.states.get(f"sensor.test_{sensor}")
+    assert sensor_object.state == str(result)
+
+    if sensor == "holiday":
+        assert sensor_object.attributes.get("type") == "YOM_TOV"
+        assert sensor_object.attributes.get("id") == "rosh_hashana_i"
 
 
 SHABBAT_PARAMS = [
@@ -256,8 +250,8 @@ SHABBAT_PARAMS = [
             "english_upcoming_shabbat_havdalah": dt(2018, 9, 15, 19, 50),
             "english_parshat_hashavua": "Vayeilech",
             "hebrew_parshat_hashavua": "וילך",
-            "english_holiday_name": "Erev Rosh Hashana",
-            "hebrew_holiday_name": "ערב ראש השנה",
+            "english_holiday": "Erev Rosh Hashana",
+            "hebrew_holiday": "ערב ראש השנה",
         },
     ),
     make_nyc_test_params(
@@ -269,8 +263,8 @@ SHABBAT_PARAMS = [
             "english_upcoming_shabbat_havdalah": dt(2018, 9, 15, 19, 50),
             "english_parshat_hashavua": "Vayeilech",
             "hebrew_parshat_hashavua": "וילך",
-            "english_holiday_name": "Rosh Hashana I",
-            "hebrew_holiday_name": "א' ראש השנה",
+            "english_holiday": "Rosh Hashana I",
+            "hebrew_holiday": "א' ראש השנה",
         },
     ),
     make_nyc_test_params(
@@ -282,8 +276,8 @@ SHABBAT_PARAMS = [
             "english_upcoming_shabbat_havdalah": dt(2018, 9, 15, 19, 50),
             "english_parshat_hashavua": "Vayeilech",
             "hebrew_parshat_hashavua": "וילך",
-            "english_holiday_name": "Rosh Hashana II",
-            "hebrew_holiday_name": "ב' ראש השנה",
+            "english_holiday": "Rosh Hashana II",
+            "hebrew_holiday": "ב' ראש השנה",
         },
     ),
     make_nyc_test_params(
@@ -306,8 +300,8 @@ SHABBAT_PARAMS = [
             "english_upcoming_shabbat_havdalah": dt(2018, 10, 6, 19, 13),
             "english_parshat_hashavua": "Bereshit",
             "hebrew_parshat_hashavua": "בראשית",
-            "english_holiday_name": "Hoshana Raba",
-            "hebrew_holiday_name": "הושענא רבה",
+            "english_holiday": "Hoshana Raba",
+            "hebrew_holiday": "הושענא רבה",
         },
     ),
     make_nyc_test_params(
@@ -319,8 +313,8 @@ SHABBAT_PARAMS = [
             "english_upcoming_shabbat_havdalah": dt(2018, 10, 6, 19, 13),
             "english_parshat_hashavua": "Bereshit",
             "hebrew_parshat_hashavua": "בראשית",
-            "english_holiday_name": "Shmini Atzeret",
-            "hebrew_holiday_name": "שמיני עצרת",
+            "english_holiday": "Shmini Atzeret",
+            "hebrew_holiday": "שמיני עצרת",
         },
     ),
     make_nyc_test_params(
@@ -332,8 +326,8 @@ SHABBAT_PARAMS = [
             "english_upcoming_shabbat_havdalah": dt(2018, 10, 6, 19, 13),
             "english_parshat_hashavua": "Bereshit",
             "hebrew_parshat_hashavua": "בראשית",
-            "english_holiday_name": "Simchat Torah",
-            "hebrew_holiday_name": "שמחת תורה",
+            "english_holiday": "Simchat Torah",
+            "hebrew_holiday": "שמחת תורה",
         },
     ),
     make_jerusalem_test_params(
@@ -345,8 +339,8 @@ SHABBAT_PARAMS = [
             "english_upcoming_shabbat_havdalah": dt(2018, 10, 6, 18, 56),
             "english_parshat_hashavua": "Bereshit",
             "hebrew_parshat_hashavua": "בראשית",
-            "english_holiday_name": "Hoshana Raba",
-            "hebrew_holiday_name": "הושענא רבה",
+            "english_holiday": "Hoshana Raba",
+            "hebrew_holiday": "הושענא רבה",
         },
     ),
     make_jerusalem_test_params(
@@ -358,8 +352,8 @@ SHABBAT_PARAMS = [
             "english_upcoming_shabbat_havdalah": dt(2018, 10, 6, 18, 56),
             "english_parshat_hashavua": "Bereshit",
             "hebrew_parshat_hashavua": "בראשית",
-            "english_holiday_name": "Shmini Atzeret",
-            "hebrew_holiday_name": "שמיני עצרת",
+            "english_holiday": "Shmini Atzeret",
+            "hebrew_holiday": "שמיני עצרת",
         },
     ),
     make_jerusalem_test_params(
@@ -382,8 +376,8 @@ SHABBAT_PARAMS = [
             "english_upcoming_shabbat_havdalah": "unknown",
             "english_parshat_hashavua": "Bamidbar",
             "hebrew_parshat_hashavua": "במדבר",
-            "english_holiday_name": "Erev Shavuot",
-            "hebrew_holiday_name": "ערב שבועות",
+            "english_holiday": "Erev Shavuot",
+            "hebrew_holiday": "ערב שבועות",
         },
     ),
     make_nyc_test_params(
@@ -395,8 +389,8 @@ SHABBAT_PARAMS = [
             "english_upcoming_shabbat_havdalah": dt(2016, 6, 18, 21, 19),
             "english_parshat_hashavua": "Nasso",
             "hebrew_parshat_hashavua": "נשא",
-            "english_holiday_name": "Shavuot",
-            "hebrew_holiday_name": "שבועות",
+            "english_holiday": "Shavuot",
+            "hebrew_holiday": "שבועות",
         },
     ),
     make_jerusalem_test_params(
@@ -408,8 +402,8 @@ SHABBAT_PARAMS = [
             "english_upcoming_shabbat_havdalah": dt(2017, 9, 23, 19, 13),
             "english_parshat_hashavua": "Ha'Azinu",
             "hebrew_parshat_hashavua": "האזינו",
-            "english_holiday_name": "Rosh Hashana I",
-            "hebrew_holiday_name": "א' ראש השנה",
+            "english_holiday": "Rosh Hashana I",
+            "hebrew_holiday": "א' ראש השנה",
         },
     ),
     make_jerusalem_test_params(
@@ -421,8 +415,8 @@ SHABBAT_PARAMS = [
             "english_upcoming_shabbat_havdalah": dt(2017, 9, 23, 19, 13),
             "english_parshat_hashavua": "Ha'Azinu",
             "hebrew_parshat_hashavua": "האזינו",
-            "english_holiday_name": "Rosh Hashana II",
-            "hebrew_holiday_name": "ב' ראש השנה",
+            "english_holiday": "Rosh Hashana II",
+            "hebrew_holiday": "ב' ראש השנה",
         },
     ),
     make_jerusalem_test_params(
@@ -434,8 +428,8 @@ SHABBAT_PARAMS = [
             "english_upcoming_shabbat_havdalah": dt(2017, 9, 23, 19, 13),
             "english_parshat_hashavua": "Ha'Azinu",
             "hebrew_parshat_hashavua": "האזינו",
-            "english_holiday_name": "",
-            "hebrew_holiday_name": "",
+            "english_holiday": "",
+            "hebrew_holiday": "",
         },
     ),
 ]
