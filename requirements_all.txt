@@ -346,6 +346,9 @@ ciscosparkapi==0.4.2
 # homeassistant.components.cppm_tracker
 clearpasspy==1.0.2
 
+# homeassistant.components.sinch
+clx-sdk-xms==1.0.0
+
 # homeassistant.components.co2signal
 co2signal==0.4.2
 
