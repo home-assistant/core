@@ -276,9 +276,14 @@ class HueLight(Light):
                     self.gamut = None
 
     @property
+    def unique_id(self):
+        """Return the unique ID of this Hue light."""
+        return self.light.uniqueid
+
+    @property
     def device_id(self):
         """Return the ID of this Hue light."""
-        return self.light.uniqueid
+        return self.unique_id
 
     @property
     def name(self):
