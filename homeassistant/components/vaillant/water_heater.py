@@ -83,7 +83,9 @@ class VaillantWaterHeater(BaseVaillantEntity, WaterHeaterDevice):
         is off, but it means the user will be able to change the target
          temperature only when the heater is ON (which seems odd to me)
         """
-        return SUPPORTED_FLAGS
+        if self._active_mode.current_mode != QuickModes.HOLIDAY:
+            return SUPPORTED_FLAGS
+        return 0
 
     @property
     def available(self):
@@ -143,7 +145,10 @@ class VaillantWaterHeater(BaseVaillantEntity, WaterHeaterDevice):
     @property
     def operation_list(self):
         """Return current operation ie. eco, electric, performance, ..."""
-        return list(self._operations.keys())
+        if self._active_mode.current_mode != QuickModes.HOLIDAY:
+            return list(self._operations.keys())
+        else:
+            []
 
     @property
     def is_away_mode_on(self):

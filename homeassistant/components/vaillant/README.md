@@ -31,9 +31,6 @@ vaillant:
 
 
 ##Todo's
-- binary sensor for holiday mode
-- sensor for quick mode
-- handling holiday mode in climate water_heater (it should not be possible to change mode/temp)
 - tests:
     - zone: set mode while quick mode (not for zone) is running
     - zone: set mode while quick mode (for zone) is running
@@ -45,4 +42,5 @@ vaillant:
     - room: set mode while quick mode (for room) is running
     - room: set mode while quick veto is running
     - room: set target temp
+    - binary_sensor system error
      

@@ -10,7 +10,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     HVAC_MODE_HEAT,
     HVAC_MODE_COOL,
-    HVAC_MODE_FAN_ONLY,
     SUPPORT_TARGET_TEMPERATURE_RANGE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 import homeassistant.components.vaillant as vaillant
@@ -36,18 +35,26 @@ def _assert_room_state(hass, mode, hvac, temp, current_temp):
     assert state.attributes["current_temperature"] == current_temp
     assert state.attributes["max_temp"] == Room.MAX_TARGET_TEMP
     assert state.attributes["min_temp"] == Room.MIN_TARGET_TEMP
-    assert state.attributes["temperature"] == temp
-    assert set(state.attributes["hvac_modes"]) == {
-        HVAC_MODE_HEAT,
-        HVAC_MODE_AUTO,
-        HVAC_MODE_OFF,
-    }
+
+    if temp is not None:
+        assert state.attributes["temperature"] == temp
+    else:
+        assert state.attributes.get('temperature') is None
+
+    if mode == QuickModes.HOLIDAY:
+        assert state.attributes["hvac_modes"] == []
+    else:
+        assert set(state.attributes["hvac_modes"]) == {
+            HVAC_MODE_HEAT,
+            HVAC_MODE_AUTO,
+            HVAC_MODE_OFF,
+        }
 
     assert state.attributes[ATTR_VAILLANT_MODE] == mode.name
 
 
 def _assert_zone_state(hass, mode, hvac, target_high, target_low,
-                       current_temp):
+                       current_temp, target_temp=None):
     """Assert zone climate state."""
     state = hass.states.get("climate.vaillant_zone_1")
 
@@ -55,14 +62,28 @@ def _assert_zone_state(hass, mode, hvac, target_high, target_low,
     assert state.attributes["current_temperature"] == current_temp
     assert state.attributes["max_temp"] == Zone.MAX_TARGET_TEMP
     assert state.attributes["min_temp"] == Zone.MIN_TARGET_TEMP
-    assert state.attributes["target_temp_high"] == target_high
-    assert state.attributes["target_temp_low"] == target_low
-    assert set(state.attributes["hvac_modes"]) == {
-        HVAC_MODE_OFF,
-        HVAC_MODE_AUTO,
-        HVAC_MODE_HEAT,
-        HVAC_MODE_COOL
-    }
+    if target_high is not None:
+        assert state.attributes["target_temp_high"] == target_high
+    else:
+        assert state.attributes.get("target_temp_high") is None
+    if target_low is not None:
+        assert state.attributes["target_temp_low"] == target_low
+    else:
+        assert state.attributes.get("target_temp_low") is None
+    if target_temp is not None:
+        assert state.attributes["temperature"] == target_temp
+    else:
+        assert state.attributes.get("temperature") is None
+
+    if mode == QuickModes.HOLIDAY:
+        assert state.attributes["hvac_modes"] == []
+    else:
+        assert set(state.attributes["hvac_modes"]) == {
+            HVAC_MODE_OFF,
+            HVAC_MODE_AUTO,
+            HVAC_MODE_HEAT,
+            HVAC_MODE_COOL
+        }
 
     assert state.attributes[ATTR_VAILLANT_MODE] == mode.name
 
@@ -144,7 +165,9 @@ async def test_holiday_mode(hass):
     )
 
     assert await _setup(hass, system=system)
-    _assert_room_state(hass, QuickModes.HOLIDAY, HVAC_MODE_OFF, 15, 22)
+    _assert_room_state(hass, QuickModes.HOLIDAY, HVAC_MODE_OFF, None, 22)
+    _assert_zone_state(hass, QuickModes.HOLIDAY, HVAC_MODE_OFF, None, None, 25,
+                       None)
 
 
 async def test_supported_features_all_modes_for_zone(hass):
@@ -190,8 +213,13 @@ async def test_supported_features_all_modes_for_zone(hass):
 
         await _goto_future(hass)
         state = hass.states.get("climate.vaillant_zone_1")
-        assert state.attributes["supported_features"] == \
-            SUPPORT_TARGET_TEMPERATURE
+
+        if mode == QuickModes.HOLIDAY:
+            assert state.attributes["supported_features"] == 0
+            assert state.attributes["hvac_modes"] == []
+        else:
+            assert state.attributes["supported_features"] == \
+                SUPPORT_TARGET_TEMPERATURE
 
 
 async def test_set_zone_target_high_temperature_quick_veto(hass):

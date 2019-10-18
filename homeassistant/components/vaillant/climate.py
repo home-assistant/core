@@ -167,7 +167,8 @@ class VaillantClimate(BaseVaillantEntity, ClimateDevice, abc.ABC):
 
     async def vaillant_update(self):
         """Update specific for vaillant."""
-        self._refresh(self.hub.system, self.hub.find_component(self._component))
+        self._refresh(
+            self.hub.system, self.hub.find_component(self._component))
 
     def _refresh(self, system, component):
         """Refresh the entity."""
@@ -223,7 +224,9 @@ class VaillantRoomClimate(VaillantClimate):
     @property
     def hvac_modes(self) -> List[str]:
         """Return the list of available hvac operation modes."""
-        return self._SUPPORTED_HVAC_MODE
+        if self._active_mode.current_mode != QuickModes.HOLIDAY:
+            return self._SUPPORTED_HVAC_MODE
+        return []
 
     @property
     def preset_mode(self) -> Optional[str]:
@@ -238,7 +241,9 @@ class VaillantRoomClimate(VaillantClimate):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE
+        if self._active_mode.current_mode != QuickModes.HOLIDAY:
+            return SUPPORT_TARGET_TEMPERATURE
+        return 0
 
     @property
     def min_temp(self):
@@ -316,7 +321,9 @@ class VaillantZoneClimate(VaillantClimate):
     @property
     def hvac_modes(self) -> List[str]:
         """Return the list of available hvac operation modes."""
-        return self._SUPPORTED_HVAC_MODE
+        if self._active_mode.current_mode != QuickModes.HOLIDAY:
+            return self._SUPPORTED_HVAC_MODE
+        return []
 
     @property
     def preset_mode(self) -> Optional[str]:
@@ -334,9 +341,11 @@ class VaillantZoneClimate(VaillantClimate):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        if self._active_mode.current_mode == OperatingModes.AUTO:
-            return SUPPORT_TARGET_TEMPERATURE_RANGE
-        return SUPPORT_TARGET_TEMPERATURE
+        if self._active_mode.current_mode != QuickModes.HOLIDAY:
+            if self._active_mode.current_mode == OperatingModes.AUTO:
+                return SUPPORT_TARGET_TEMPERATURE_RANGE
+            return SUPPORT_TARGET_TEMPERATURE
+        return 0
 
     @property
     def min_temp(self):

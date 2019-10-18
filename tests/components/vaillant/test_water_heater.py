@@ -31,16 +31,16 @@ def _assert_state(hass, mode, temp, current_temp, away_mode):
     assert state.attributes['max_temp'] == HotWater.MAX_TARGET_TEMP
     assert state.attributes['temperature'] == temp
     assert state.attributes['current_temperature'] == current_temp
-    assert state.attributes['operation_mode'] == mode.name
-    assert state.attributes['away_mode'] == away_mode
-    # if mode == QuickModes.HOLIDAY:
-    assert set(state.attributes['operation_list']) == {'ON', 'OFF', 'AUTO'}
-    # else:
-    #     assert set(state.attributes['operation_list']) == \
-    #         {'ON', 'OFF', 'AUTO', 'QM_HOTWATER_BOOST', 'QM_ONE_DAY_AWAY',
-    #          'QM_SYSTEM_OFF'}
-
     assert state.attributes[ATTR_VAILLANT_MODE] == mode.name
+
+    if mode == QuickModes.HOLIDAY:
+        assert state.attributes.get('operation_mode') is None
+        assert state.attributes.get('away_mode') is None
+        assert state.attributes.get('operation_list') is None
+    else:
+        assert state.attributes['operation_mode'] == mode.name
+        assert state.attributes['away_mode'] == away_mode
+        assert set(state.attributes['operation_list']) == {'ON', 'OFF', 'AUTO'}
 
 
 @pytest.fixture(autouse=True)

@@ -39,6 +39,8 @@ CONF_BINARY_SENSOR_ROOM_CHILD_LOCK = 'binary_sensor_room_child_lock'
 CONF_BINARY_SENSOR_DEVICE_BATTERY = 'binary_sensor_device_battery'
 CONF_BINARY_SENSOR_DEVICE_RADIO_REACH = 'binary_sensor_device_radio_reach'
 CONF_BINARY_SENSOR_SYSTEM_ERRORS = 'binary_sensor_system_errors'
+CONF_BINARY_SENSOR_HOLIDAY_MODE = 'binary_sensor_holiday'
+CONF_BINARY_SENSOR_QUICK_MODE = 'sensor_quick_mode'
 CONF_SENSOR_BOILER_WATER_TEMPERATURE = 'sensor_boiler_water_temperature'
 CONF_SENSOR_BOILER_WATER_PRESSURE = 'sensor_boiler_water_pressure'
 CONF_SENSOR_ROOM_TEMPERATURE = 'sensor_room_temperature'
@@ -84,6 +86,10 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_BINARY_SENSOR_DEVICE_RADIO_REACH,
                      default=True): cv.boolean,
         vol.Optional(CONF_BINARY_SENSOR_SYSTEM_ERRORS,
+                     default=True): cv.boolean,
+        vol.Optional(CONF_BINARY_SENSOR_HOLIDAY_MODE,
+                     default=True): cv.boolean,
+        vol.Optional(CONF_BINARY_SENSOR_QUICK_MODE,
                      default=True): cv.boolean,
         vol.Optional(CONF_SENSOR_BOILER_WATER_TEMPERATURE,
                      default=True): cv.boolean,
@@ -446,10 +452,11 @@ class VaillantServiceHandler:
 class BaseVaillantEntity(Entity, ABC):
     """Define base class for vaillant."""
 
-    def __init__(self, domain, device_class, comp_id, comp_name):
+    def __init__(self, domain, device_class, comp_id, comp_name,
+                 class_in_id=True):
         """Initialize entity."""
         self._device_class = device_class
-        if device_class:
+        if device_class and class_in_id:
             id_format = domain + '.' + DOMAIN + '_{}_' + device_class
         else:
             id_format = domain + '.' + DOMAIN + '_{}'
