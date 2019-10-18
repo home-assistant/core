@@ -10,6 +10,7 @@ import logging
 import requests
 import json
 import os.path
+import time
 from homeassistant.components import ais_cloud
 from homeassistant.components.ais_dom import ais_global
 
@@ -207,13 +208,23 @@ class AudioBooksData:
             )
 
             path = self.hass.config.path() + PERSISTENCE_AUDIOBOOKS
-            try:
-                ws_resp = requests.get(AUDIOBOOKS_WS_URL, timeout=10)
-                data = ws_resp.json()
-                with open(path, "w+") as my_file:
-                    json.dump(data, my_file)
-            except Exception as e:
-                _LOGGER.info("Can't load books list: " + str(e))
+            download_book_list = False
+            # download book list only one per 2 weeks
+            if os.path.isfile(path):
+                # check if the file is older than 14 days
+                if time.time() - os.path.getmtime(path) > 14 * 24 * 3600:
+                    download_book_list = True
+            else:
+                download_book_list = True
+
+            if download_book_list is True:
+                try:
+                    ws_resp = requests.get(AUDIOBOOKS_WS_URL, timeout=10)
+                    data = ws_resp.json()
+                    with open(path, "w+") as my_file:
+                        json.dump(data, my_file)
+                except Exception as e:
+                    _LOGGER.info("Can't load books list: " + str(e))
 
             if not os.path.isfile(path):
                 return
