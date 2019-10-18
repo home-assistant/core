@@ -1,11 +1,23 @@
 """Test reproduce state for Vacuum."""
 from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
+    SERVICE_PAUSE,
+    SERVICE_RETURN_TO_BASE,
+    SERVICE_SET_FAN_SPEED,
+    SERVICE_START,
+    SERVICE_STOP,
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_RETURNING,
 )
-from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_ON, STATE_PAUSED
+from homeassistant.const import (
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_IDLE,
+    STATE_OFF,
+    STATE_ON,
+    STATE_PAUSED,
+)
 from homeassistant.core import State
 
 from tests.common import async_mock_service
@@ -27,13 +39,13 @@ async def test_reproducing_states(hass, caplog):
     hass.states.async_set("vacuum.entity_returning", STATE_RETURNING, {})
     hass.states.async_set("vacuum.entity_paused", STATE_PAUSED, {})
 
-    turn_on_calls = async_mock_service(hass, "vacuum", "async_turn_on")
-    turn_off_calls = async_mock_service(hass, "vacuum", "async_turn_off")
-    start_calls = async_mock_service(hass, "vacuum", "async_start")
-    pause_calls = async_mock_service(hass, "vacuum", "async_pause")
-    stop_calls = async_mock_service(hass, "vacuum", "async_stop")
-    return_calls = async_mock_service(hass, "vacuum", "async_return_to_base")
-    fan_speed_calls = async_mock_service(hass, "vacuum", "async_set_fan_speed")
+    turn_on_calls = async_mock_service(hass, "vacuum", SERVICE_TURN_ON)
+    turn_off_calls = async_mock_service(hass, "vacuum", SERVICE_TURN_OFF)
+    start_calls = async_mock_service(hass, "vacuum", SERVICE_START)
+    pause_calls = async_mock_service(hass, "vacuum", SERVICE_PAUSE)
+    stop_calls = async_mock_service(hass, "vacuum", SERVICE_STOP)
+    return_calls = async_mock_service(hass, "vacuum", SERVICE_RETURN_TO_BASE)
+    fan_speed_calls = async_mock_service(hass, "vacuum", SERVICE_SET_FAN_SPEED)
 
     # These calls should do nothing as entities already in desired state
     await hass.helpers.state.async_reproduce_state(
