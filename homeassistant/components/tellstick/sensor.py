@@ -1,13 +1,15 @@
 """Support for Tellstick sensors."""
-import logging
 from collections import namedtuple
+import logging
 
+from tellcore import telldus
+import tellcore.constants as tellcore_constants
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import TEMP_CELSIUS, CONF_ID, CONF_NAME, CONF_PROTOCOL
-from homeassistant.helpers.entity import Entity
+from homeassistant.const import CONF_ID, CONF_NAME, CONF_PROTOCOL, TEMP_CELSIUS
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,8 +50,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tellstick sensors."""
-    from tellcore import telldus
-    import tellcore.constants as tellcore_constants
 
     sensor_value_descriptions = {
         tellcore_constants.TELLSTICK_TEMPERATURE: DatatypeDescription(

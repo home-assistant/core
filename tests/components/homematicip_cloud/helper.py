@@ -1,18 +1,26 @@
 """Helper for HomematicIP Cloud Tests."""
 import json
-from unittest.mock import Mock
 
+from asynctest import Mock
 from homematicip.aio.class_maps import (
     TYPE_CLASS_MAP,
     TYPE_GROUP_MAP,
     TYPE_SECURITY_EVENT_MAP,
 )
+from homematicip.aio.device import AsyncDevice
+from homematicip.aio.group import AsyncGroup
 from homematicip.aio.home import AsyncHome
 from homematicip.home import Home
 
+from homeassistant.components.homematicip_cloud.device import (
+    ATTR_IS_GROUP,
+    ATTR_MODEL_TYPE,
+)
+
 from tests.common import load_fixture
 
-HAPID = "Mock_HAP"
+HAPID = "3014F7110000000000000001"
+HAPPIN = "5678"
 AUTH_TOKEN = "1234"
 HOME_JSON = "homematicip_cloud.json"
 
@@ -21,28 +29,39 @@ def get_and_check_entity_basics(
     hass, default_mock_hap, entity_id, entity_name, device_model
 ):
     """Get and test basic device."""
-    ha_entity = hass.states.get(entity_id)
-    assert ha_entity is not None
-    assert ha_entity.attributes["model_type"] == device_model
-    assert ha_entity.name == entity_name
+    ha_state = hass.states.get(entity_id)
+    assert ha_state is not None
+    if device_model:
+        assert ha_state.attributes[ATTR_MODEL_TYPE] == device_model
+    assert ha_state.name == entity_name
 
-    hmip_device = default_mock_hap.home.template.search_mock_device_by_id(
-        ha_entity.attributes["id"]
-    )
-    assert hmip_device is not None
-    return ha_entity, hmip_device
+    hmip_device = default_mock_hap.hmip_device_by_entity_id.get(entity_id)
+
+    if hmip_device:
+        if isinstance(hmip_device, AsyncDevice):
+            assert ha_state.attributes[ATTR_IS_GROUP] is False
+        elif isinstance(hmip_device, AsyncGroup):
+            assert ha_state.attributes[ATTR_IS_GROUP] is True
+    return ha_state, hmip_device
 
 
 async def async_manipulate_test_data(
-    hass, hmip_device, attribute, new_value, channel=1
+    hass, hmip_device, attribute, new_value, channel=1, fire_device=None
 ):
     """Set new value on hmip device."""
     if channel == 1:
         setattr(hmip_device, attribute, new_value)
-    functional_channel = hmip_device.functionalChannels[channel]
-    setattr(functional_channel, attribute, new_value)
+    if hasattr(hmip_device, "functionalChannels"):
+        functional_channel = hmip_device.functionalChannels[channel]
+        setattr(functional_channel, attribute, new_value)
 
-    hmip_device.fire_update_event()
+    fire_target = hmip_device if fire_device is None else fire_device
+
+    if isinstance(fire_target, AsyncHome):
+        fire_target.fire_update_event(fire_target._rawJSONData)  # pylint: disable=W0212
+    else:
+        fire_target.fire_update_event()
+
     await hass.async_block_till_done()
 
 
@@ -63,66 +82,63 @@ class HomeTemplate(Home):
     _typeGroupMap = TYPE_GROUP_MAP
     _typeSecurityEventMap = TYPE_SECURITY_EVENT_MAP
 
-    def __init__(self, connection=None):
+    def __init__(self, connection=None, home_name=""):
         """Init template with connection."""
         super().__init__(connection=connection)
-        self.mock_devices = []
-        self.mock_groups = []
+        self.label = "Access Point"
+        self.name = home_name
+        self.model_type = "HmIP-HAP"
+        self.init_json_state = None
 
     def init_home(self, json_path=HOME_JSON):
         """Init template with json."""
-        json_state = json.loads(load_fixture(HOME_JSON), encoding="UTF-8")
-        self.update_home(json_state=json_state, clearConfig=True)
-        self._generate_mocks()
+        self.init_json_state = json.loads(load_fixture(HOME_JSON), encoding="UTF-8")
+        self.update_home(json_state=self.init_json_state, clearConfig=True)
         return self
+
+    def update_home(self, json_state, clearConfig: bool = False):
+        """Update home and ensure that mocks are created."""
+        result = super().update_home(json_state, clearConfig)
+        self._generate_mocks()
+        return result
 
     def _generate_mocks(self):
         """Generate mocks for groups and devices."""
+        mock_devices = []
         for device in self.devices:
-            self.mock_devices.append(_get_mock(device))
+            mock_devices.append(_get_mock(device))
+        self.devices = mock_devices
+
+        mock_groups = []
         for group in self.groups:
-            self.mock_groups.append(_get_mock(group))
+            mock_groups.append(_get_mock(group))
+        self.groups = mock_groups
 
-    def search_mock_device_by_id(self, device_id):
-        """Search a device by given id."""
-        for device in self.mock_devices:
-            if device.id == device_id:
-                return device
-        return None
-
-    def search_mock_group_by_id(self, group_id):
-        """Search a group by given id."""
-        for group in self.mock_groups:
-            if group.id == group_id:
-                return group
-        return None
+    def download_configuration(self):
+        """Return the initial json config."""
+        return self.init_json_state
 
     def get_async_home_mock(self):
         """
         Create Mock for Async_Home. based on template to be used for testing.
 
         It adds collections of mocked devices and groups to the home objects,
-        and sets reuired attributes.
+        and sets required attributes.
         """
         mock_home = Mock(
-            check_connection=self._connection,
-            id=HAPID,
-            connected=True,
-            dutyCycle=self.dutyCycle,
-            devices=self.mock_devices,
-            groups=self.mock_groups,
-            weather=self.weather,
-            location=self.location,
-            label="home label",
-            template=self,
-            spec=AsyncHome,
+            spec=AsyncHome, wraps=self, label="Access Point", modelType="HmIP-HAP"
         )
-        mock_home.name = ""
+        mock_home.__dict__.update(self.__dict__)
+
         return mock_home
 
 
 def _get_mock(instance):
     """Create a mock and copy instance attributes over mock."""
+    if isinstance(instance, Mock):
+        instance.__dict__.update(instance._mock_wraps.__dict__)  # pylint: disable=W0212
+        return instance
+
     mock = Mock(spec=instance, wraps=instance)
     mock.__dict__.update(instance.__dict__)
     return mock

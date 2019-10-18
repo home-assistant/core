@@ -44,6 +44,7 @@ CONF_OPERATION_MODE_COMFORT_ADDRESS = "operation_mode_comfort_address"
 CONF_OPERATION_MODES = "operation_modes"
 CONF_ON_OFF_ADDRESS = "on_off_address"
 CONF_ON_OFF_STATE_ADDRESS = "on_off_state_address"
+CONF_ON_OFF_INVERT = "on_off_invert"
 CONF_MIN_TEMP = "min_temp"
 CONF_MAX_TEMP = "max_temp"
 
@@ -51,6 +52,7 @@ DEFAULT_NAME = "KNX Climate"
 DEFAULT_SETPOINT_SHIFT_STEP = 0.5
 DEFAULT_SETPOINT_SHIFT_MAX = 6
 DEFAULT_SETPOINT_SHIFT_MIN = -6
+DEFAULT_ON_OFF_INVERT = False
 # Map KNX operation modes to HA modes. This list might not be full.
 OPERATION_MODES = {
     # Map DPT 201.105 HVAC control modes
@@ -102,6 +104,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_OPERATION_MODE_COMFORT_ADDRESS): cv.string,
         vol.Optional(CONF_ON_OFF_ADDRESS): cv.string,
         vol.Optional(CONF_ON_OFF_STATE_ADDRESS): cv.string,
+        vol.Optional(CONF_ON_OFF_INVERT, default=DEFAULT_ON_OFF_INVERT): cv.boolean,
         vol.Optional(CONF_OPERATION_MODES): vol.All(
             cv.ensure_list, [vol.In(OPERATION_MODES)]
         ),
@@ -182,6 +185,7 @@ def async_add_entities_config(hass, config, async_add_entities):
         min_temp=config.get(CONF_MIN_TEMP),
         max_temp=config.get(CONF_MAX_TEMP),
         mode=climate_mode,
+        on_off_invert=config[CONF_ON_OFF_INVERT],
     )
     hass.data[DATA_KNX].xknx.devices.add(climate)
 

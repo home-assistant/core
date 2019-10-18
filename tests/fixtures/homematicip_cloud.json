@@ -2077,6 +2077,144 @@
             "type": "SHUTTER_CONTACT",
             "updateState": "UP_TO_DATE"
         },
+        "3014F7110000000000000108": {
+            "availableFirmwareVersion": "1.12.6",
+            "firmwareVersion": "1.12.6",
+            "firmwareVersionInteger": 68614,
+            "functionalChannels": {
+                "0": {
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "coProUpdateFailure": false,
+                    "configPending": false,
+                    "deviceId": "3014F7110000000000000108",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "deviceUndervoltage": false,
+                    "dutyCycle": false,
+                    "functionalChannelType": "DEVICE_BASE",
+                    "groupIndex": 0,
+                    "groups": [
+                        "00000000-0000-0000-0000-000000000009"
+                    ],
+                    "index": 0,
+                    "label": "",
+                    "lowBat": null,
+                    "routerModuleEnabled": false,
+                    "routerModuleSupported": false,
+                    "rssiDeviceValue": -68,
+                    "rssiPeerValue": -63,
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceCoProError": false,
+                        "IFeatureDeviceCoProRestart": false,
+                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceOverheated": true,
+                        "IFeatureDeviceOverloaded": false,
+                        "IFeatureDeviceTemperatureOutOfRange": false,
+                        "IFeatureDeviceUndervoltage": false
+                    },
+                    "temperatureOutOfRange": false,
+                    "unreach": false
+                },
+                "1": {
+                    "currentPowerConsumption": 0.0,
+                    "deviceId": "3014F7110000000000000108",
+                    "energyCounter": 6.333200000000001,
+                    "functionalChannelType": "SWITCH_MEASURING_CHANNEL",
+                    "groupIndex": 1,
+                    "groups": [
+                        "00000000-0000-0000-0000-000000000023"
+                    ],
+                    "index": 1,
+                    "label": "",
+                    "on": false,
+                    "profileMode": "AUTOMATIC",
+                    "userDesiredProfileMode": "AUTOMATIC"
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F7110000000000000108",
+            "label": "Flur oben",
+            "lastStatusUpdate": 1570365990392,
+            "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+            "manufacturerCode": 1,
+            "modelId": 288,
+            "modelType": "HmIP-BSM",
+            "oem": "eQ-3",
+            "permanentlyReachable": true,
+            "serializedGlobalTradeItemNumber": "3014F7110000000000000108",
+            "type": "BRAND_SWITCH_MEASURING",
+            "updateState": "UP_TO_DATE"
+        },
+        "3014F7110000000000000109": {
+            "availableFirmwareVersion": "1.6.2",
+            "firmwareVersion": "1.6.2",
+            "firmwareVersionInteger": 67074,
+            "functionalChannels": {
+                "0": {
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "coProUpdateFailure": false,
+                    "configPending": false,
+                    "deviceId": "3014F7110000000000000109",
+                    "deviceOverheated": null,
+                    "deviceOverloaded": false,
+                    "deviceUndervoltage": false,
+                    "dutyCycle": false,
+                    "functionalChannelType": "DEVICE_BASE",
+                    "groupIndex": 0,
+                    "groups": [
+                        "00000000-0000-0000-0000-000000000029"
+                    ],
+                    "index": 0,
+                    "label": "",
+                    "lowBat": null,
+                    "routerModuleEnabled": false,
+                    "routerModuleSupported": false,
+                    "rssiDeviceValue": -80,
+                    "rssiPeerValue": -73,
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceCoProError": false,
+                        "IFeatureDeviceCoProRestart": false,
+                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceOverheated": true,
+                        "IFeatureDeviceOverloaded": false,
+                        "IFeatureDeviceTemperatureOutOfRange": false,
+                        "IFeatureDeviceUndervoltage": false
+                    },
+                    "temperatureOutOfRange": false,
+                    "unreach": false
+                },
+                "1": {
+                    "currentPowerConsumption": 0.0,
+                    "deviceId": "3014F7110000000000000109",
+                    "energyCounter": 0.0011,
+                    "functionalChannelType": "SWITCH_MEASURING_CHANNEL",
+                    "groupIndex": 1,
+                    "groups": [
+                        "00000000-0000-0000-0000-000000000030"
+                    ],
+                    "index": 1,
+                    "label": "",
+                    "on": false,
+                    "profileMode": "AUTOMATIC",
+                    "userDesiredProfileMode": "AUTOMATIC"
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F7110000000000000011",
+            "label": "Ausschalter Terrasse Bewegungsmelder",
+            "lastStatusUpdate": 1570366291250,
+            "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+            "manufacturerCode": 1,
+            "modelId": 289,
+            "modelType": "HmIP-FSM",
+            "oem": "eQ-3",
+            "permanentlyReachable": true,
+            "serializedGlobalTradeItemNumber": "3014F7110000000000000109",
+            "type": "FULL_FLUSH_SWITCH_MEASURING",
+            "updateState": "UP_TO_DATE"
+        },
         "3014F7110000000000000008": {
             "availableFirmwareVersion": "0.0.0",
             "firmwareVersion": "2.6.2",
@@ -2234,6 +2372,57 @@
             "permanentlyReachable": true,
             "serializedGlobalTradeItemNumber": "3014F7110000000000000010",
             "type": "PLUGABLE_SWITCH_MEASURING",
+            "updateState": "UP_TO_DATE"
+        },
+        "3014F7110000000000000110": {
+            "availableFirmwareVersion": "0.0.0",
+            "firmwareVersion": "2.6.2",
+            "firmwareVersionInteger": 132610,
+            "functionalChannels": {
+                "0": {
+                    "configPending": false,
+                    "deviceId": "3014F7110000000000000110",
+                    "dutyCycle": false,
+                    "functionalChannelType": "DEVICE_BASE",
+                    "groupIndex": 0,
+                    "groups": [
+                        "00000000-0000-0000-0000-000000000017"
+                    ],
+                    "index": 0,
+                    "label": "",
+                    "lowBat": null,
+                    "routerModuleEnabled": true,
+                    "routerModuleSupported": true,
+                    "rssiDeviceValue": -47,
+                    "rssiPeerValue": -49,
+                    "unreach": false
+                },
+                "1": {
+                    "deviceId": "3014F7110000000000000110",
+                    "functionalChannelType": "SWITCH_CHANNEL",
+                    "groupIndex": 1,
+                    "groups": [
+                        "00000000-0000-0000-0000-000000000018"
+                    ],
+                    "index": 1,
+                    "label": "",
+                    "on": true,
+                    "profileMode": "AUTOMATIC",
+                    "userDesiredProfileMode": "AUTOMATIC"
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F7110000000000000110",
+            "label": "Schrank",
+            "lastStatusUpdate": 1524513613922,
+            "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+            "manufacturerCode": 1,
+            "modelId": 262,
+            "modelType": "HMIP-PS",
+            "oem": "eQ-3",
+            "permanentlyReachable": true,
+            "serializedGlobalTradeItemNumber": "3014F7110000000000000110",
+            "type": "PLUGABLE_SWITCH",
             "updateState": "UP_TO_DATE"
         },
         "3014F7110000000000000011": {

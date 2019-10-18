@@ -34,6 +34,7 @@
                 "title": "V\u00e6lg Plex-server"
             },
             "start_website_auth": {
+                "description": "Forts\u00e6t for at autorisere p\u00e5 plex.tv.",
                 "title": "Tilslut Plex-server"
             },
             "user": {

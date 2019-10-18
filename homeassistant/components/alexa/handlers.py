@@ -412,7 +412,6 @@ async def async_api_lock(hass, config, directive, context):
     return response
 
 
-# Not supported by Alexa yet
 @HANDLERS.register(("Alexa.LockController", "Unlock"))
 async def async_api_unlock(hass, config, directive, context):
     """Process an unlock request."""
@@ -425,7 +424,12 @@ async def async_api_unlock(hass, config, directive, context):
         context=context,
     )
 
-    return directive.response()
+    response = directive.response()
+    response.add_context_property(
+        {"namespace": "Alexa.LockController", "name": "lockState", "value": "UNLOCKED"}
+    )
+
+    return response
 
 
 @HANDLERS.register(("Alexa.Speaker", "SetVolume"))
