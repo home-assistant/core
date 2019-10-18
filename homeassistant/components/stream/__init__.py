@@ -4,31 +4,32 @@ import threading
 
 import voluptuous as vol
 
+from homeassistant.auth.util import generate_secret
+from homeassistant.const import CONF_FILENAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.config_validation as cv
+from homeassistant.loader import bind_hass
+
+from .const import (
+    ATTR_ENDPOINTS,
+    ATTR_STREAMS,
+    CONF_DURATION,
+    CONF_LOOKBACK,
+    CONF_STREAM_SOURCE,
+    DOMAIN,
+    SERVICE_RECORD,
+)
+from .core import PROVIDERS
+from .hls import async_setup_hls
+from .recorder import async_setup_recorder
+from .worker import stream_worker
+
 try:
     import uvloop
 except ImportError:
     uvloop = None
 
-from homeassistant.auth.util import generate_secret
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_FILENAME
-from homeassistant.core import callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import bind_hass
-
-from .const import (
-    DOMAIN,
-    ATTR_STREAMS,
-    ATTR_ENDPOINTS,
-    CONF_STREAM_SOURCE,
-    CONF_DURATION,
-    CONF_LOOKBACK,
-    SERVICE_RECORD,
-)
-from .core import PROVIDERS
-from .worker import stream_worker
-from .hls import async_setup_hls
-from .recorder import async_setup_recorder
 
 _LOGGER = logging.getLogger(__name__)
 

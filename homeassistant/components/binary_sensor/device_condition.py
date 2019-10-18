@@ -1,5 +1,5 @@
 """Implemenet device conditions for binary sensor."""
-from typing import List
+from typing import Dict, List
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
@@ -193,9 +193,11 @@ CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_conditions(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_conditions(
+    hass: HomeAssistant, device_id: str
+) -> List[Dict[str, str]]:
     """List device conditions."""
-    conditions: List[dict] = []
+    conditions: List[Dict[str, str]] = []
     entity_registry = await async_get_registry(hass)
     entries = [
         entry

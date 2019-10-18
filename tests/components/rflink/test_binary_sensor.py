@@ -8,14 +8,13 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant.components.rflink import CONF_RECONNECT_INTERVAL
-
-import homeassistant.core as ha
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
-    STATE_ON,
     STATE_OFF,
+    STATE_ON,
     STATE_UNAVAILABLE,
 )
+import homeassistant.core as ha
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed

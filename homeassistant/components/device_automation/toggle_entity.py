@@ -205,7 +205,7 @@ async def async_get_actions(
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str, domain: str
-) -> List[dict]:
+) -> List[Dict[str, str]]:
     """List device conditions."""
     return await _async_get_automations(hass, device_id, ENTITY_CONDITIONS, domain)
 

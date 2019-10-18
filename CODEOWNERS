@@ -13,6 +13,7 @@ homeassistant/util/* @home-assistant/core
 homeassistant/scripts/check_config.py @kellerza
 
 # Integrations
+homeassistant/components/abode/* @shred86
 homeassistant/components/adguard/* @frenck
 homeassistant/components/airly/* @bieniu
 homeassistant/components/airvisual/* @bachya
@@ -25,6 +26,7 @@ homeassistant/components/ambient_station/* @bachya
 homeassistant/components/androidtv/* @JeffLIrion
 homeassistant/components/apache_kafka/* @bachya
 homeassistant/components/api/* @home-assistant/core
+homeassistant/components/apprise/* @caronc
 homeassistant/components/aprs/* @PhilRW
 homeassistant/components/arcam_fmj/* @elupus
 homeassistant/components/arduino/* @fabaff
@@ -155,6 +157,7 @@ homeassistant/components/izone/* @Swamp-Ig
 homeassistant/components/jewish_calendar/* @tsvi
 homeassistant/components/kaiterra/* @Michsior14
 homeassistant/components/keba/* @dannerph
+homeassistant/components/keenetic_ndms2/* @foxel
 homeassistant/components/knx/* @Julius2342
 homeassistant/components/kodi/* @armills
 homeassistant/components/konnected/* @heythisisnate
@@ -213,6 +216,7 @@ homeassistant/components/opentherm_gw/* @mvn23
 homeassistant/components/openuv/* @bachya
 homeassistant/components/openweathermap/* @fabaff
 homeassistant/components/orangepi_gpio/* @pascallj
+homeassistant/components/oru/* @bvlaicu
 homeassistant/components/owlet/* @oblogic7
 homeassistant/components/panel_custom/* @home-assistant/frontend
 homeassistant/components/panel_iframe/* @home-assistant/frontend
@@ -253,6 +257,7 @@ homeassistant/components/shell_command/* @home-assistant/core
 homeassistant/components/shiftr/* @fabaff
 homeassistant/components/shodan/* @fabaff
 homeassistant/components/simplisafe/* @bachya
+homeassistant/components/sinch/* @bendikrb
 homeassistant/components/slide/* @ualex73
 homeassistant/components/sma/* @kellerza
 homeassistant/components/smarthab/* @outadoc

@@ -2,15 +2,15 @@
 import unittest
 from unittest import mock
 
+import pytest
 import voluptuous as vol
 
-from homeassistant.setup import setup_component
-import homeassistant.core as ha
 import homeassistant.components.statsd as statsd
-from homeassistant.const import STATE_ON, STATE_OFF, EVENT_STATE_CHANGED
+from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON
+import homeassistant.core as ha
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
-import pytest
 
 
 class TestStatsd(unittest.TestCase):

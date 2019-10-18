@@ -10,7 +10,15 @@ omit =
     homeassistant/util/async.py
 
     # omit pieces of code that rely on external devices being present
-    homeassistant/components/abode/*
+    homeassistant/components/abode/__init__.py
+    homeassistant/components/abode/alarm_control_panel.py
+    homeassistant/components/abode/binary_sensor.py
+    homeassistant/components/abode/camera.py
+    homeassistant/components/abode/cover.py
+    homeassistant/components/abode/light.py
+    homeassistant/components/abode/lock.py
+    homeassistant/components/abode/sensor.py
+    homeassistant/components/abode/switch.py
     homeassistant/components/acer_projector/switch.py
     homeassistant/components/actiontec/device_tracker.py
     homeassistant/components/adguard/__init__.py
@@ -21,6 +29,7 @@ omit =
     homeassistant/components/aftership/sensor.py
     homeassistant/components/airly/__init__.py
     homeassistant/components/airly/air_quality.py
+    homeassistant/components/airly/sensor.py
     homeassistant/components/airly/const.py
     homeassistant/components/airvisual/sensor.py
     homeassistant/components/aladdin_connect/cover.py
@@ -282,7 +291,6 @@ omit =
     homeassistant/components/homematic/climate.py
     homeassistant/components/homematic/cover.py
     homeassistant/components/homematic/notify.py
-    homeassistant/components/homematicip_cloud/*
     homeassistant/components/homeworks/*
     homeassistant/components/honeywell/climate.py
     homeassistant/components/hook/switch.py
@@ -478,6 +486,7 @@ omit =
     homeassistant/components/openweathermap/weather.py
     homeassistant/components/opple/light.py
     homeassistant/components/orangepi_gpio/*
+    homeassistant/components/oru/*
     homeassistant/components/orvibo/switch.py
     homeassistant/components/osramlightify/light.py
     homeassistant/components/otp/sensor.py
@@ -595,6 +604,7 @@ omit =
     homeassistant/components/skybeacon/sensor.py
     homeassistant/components/skybell/*
     homeassistant/components/slack/notify.py
+    homeassistant/components/sinch/*
     homeassistant/components/slide/*
     homeassistant/components/sma/sensor.py
     homeassistant/components/smappee/*

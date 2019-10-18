@@ -2,9 +2,10 @@
 from datetime import timedelta
 import logging
 
-# pylint: disable=import-error
-import fritzconnection as fc
-from fritzconnection.fritzconnection import FritzConnectionException
+from fritzconnection import FritzStatus  # pylint: disable=import-error
+from fritzconnection.fritzconnection import (  # pylint: disable=import-error
+    FritzConnectionException,
+)
 from requests.exceptions import RequestException
 import voluptuous as vol
 
@@ -48,12 +49,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the FRITZ!Box monitor sensors."""
-
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
 
     try:
-        fstatus = fc.FritzStatus(address=host)
+        fstatus = FritzStatus(address=host)
     except (ValueError, TypeError, FritzConnectionException):
         fstatus = None
 

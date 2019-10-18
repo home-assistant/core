@@ -1,6 +1,7 @@
 """Support for Rflink sensors."""
 import logging
 
+from rflink.parser import PACKET_FIELDS, UNITS
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -66,8 +67,6 @@ def lookup_unit_for_sensor_type(sensor_type):
 
     Async friendly.
     """
-    from rflink.parser import UNITS, PACKET_FIELDS
-
     field_abbrev = {v: k for k, v in PACKET_FIELDS.items()}
 
     return UNITS.get(field_abbrev.get(sensor_type))
