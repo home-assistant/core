@@ -723,26 +723,9 @@ def do_download_upgrade(hass, call):
             os.makedirs(update_dir)
 
         # download
-        if beta:
-            l_ret = run_shell_command(
-                [
-                    "pip",
-                    "download",
-                    "ais-dom-beta==" + dom_app_newest_version,
-                    "-d",
-                    update_dir,
-                ]
-            )
-        else:
-            l_ret = run_shell_command(
-                [
-                    "pip",
-                    "download",
-                    "ais-dom==" + dom_app_newest_version,
-                    "-d",
-                    update_dir,
-                ]
-            )
+        l_ret = run_shell_command(
+            ["pip", "download", "ais-dom==" + dom_app_newest_version, "-d", update_dir]
+        )
 
     # go next or not
     if l_ret == 0:
@@ -787,28 +770,16 @@ def do_install_upgrade(hass, call):
     update_dir = hass.config.path(UPDATER_DOWNLOAD_FOLDER)
     if reinstall_dom_app:
         # install
-        if beta:
-            run_shell_command(
-                [
-                    "pip",
-                    "install",
-                    "ais-dom-beta==" + dom_app_newest_version,
-                    "--find-links",
-                    update_dir,
-                    "-U",
-                ]
-            )
-        else:
-            run_shell_command(
-                [
-                    "pip",
-                    "install",
-                    "ais-dom==" + dom_app_newest_version,
-                    "--find-links",
-                    update_dir,
-                    "-U",
-                ]
-            )
+        run_shell_command(
+            [
+                "pip",
+                "install",
+                "ais-dom==" + dom_app_newest_version,
+                "--find-links",
+                update_dir,
+                "-U",
+            ]
+        )
 
     # remove update dir
     update_dir = hass.config.path(UPDATER_DOWNLOAD_FOLDER)
