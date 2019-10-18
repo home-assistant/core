@@ -8,13 +8,14 @@ import queue
 import threading
 import time
 from typing import Any, Dict, Optional
+from sqlite3 import Connection
 
 import voluptuous as vol
-from sqlalchemy import exc, create_engine, event
+from sqlalchemy import exc, create_engine
 from sqlalchemy.engine import Engine
+from sqlalchemy.event import listens_for
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.pool import StaticPool
-from sqlite3 import Connection
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -397,7 +398,7 @@ class Recorder(threading.Thread):
         kwargs = {}
 
         # pylint: disable=unused-variable
-        @event.listens_for(Engine, "connect")
+        @listens_for(Engine, "connect")
         def set_sqlite_pragma(dbapi_connection, connection_record):
             """Set sqlite's WAL mode."""
             if isinstance(dbapi_connection, Connection):
