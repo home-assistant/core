@@ -5,7 +5,7 @@ from homeassistant.helpers.device_registry import async_get_registry as get_dev_
 from .const import DOMAIN
 
 
-async def get_removed_devices(hass, config_entry, api_ids, current):
+async def remove_devices(hass, config_entry, api_ids, current):
     """Get items that are removed from api."""
     removed_items = []
 
@@ -22,10 +22,12 @@ async def get_removed_devices(hass, config_entry, api_ids, current):
             ent_registry.async_remove(entity.entity_id)
         dev_registry = await get_dev_reg(hass)
         device = dev_registry.async_get_device(
-            identifiers={(DOMAIN, entity.unique_id)}, connections=set()
+            identifiers={(DOMAIN, entity.device_id)}, connections=set()
         )
-        dev_registry.async_update_device(
-            device.id, remove_config_entry_id=config_entry.entry_id
-        )
+        if device is not None:
+            dev_registry.async_update_device(
+                device.id, remove_config_entry_id=config_entry.entry_id
+            )
 
-    return removed_items
+    for item_id in removed_items:
+        del current[item_id]

@@ -29,7 +29,7 @@ from homeassistant.components.light import (
     Light,
 )
 from homeassistant.util import color
-from .helpers import get_removed_devices
+from .helpers import remove_devices
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
@@ -235,13 +235,10 @@ async def async_update_items(
         elif item_id not in progress_waiting:
             current[item_id].async_schedule_update_ha_state()
 
-    removed_items = await get_removed_devices(hass, config_entry, api, current)
+    await remove_devices(hass, config_entry, api, current)
 
     if new_items:
         async_add_entities(new_items)
-
-    for item_id in removed_items:
-        del current[item_id]
 
 
 class HueLight(Light):
@@ -279,7 +276,7 @@ class HueLight(Light):
                     self.gamut = None
 
     @property
-    def unique_id(self):
+    def device_id(self):
         """Return the ID of this Hue light."""
         return self.light.uniqueid
 
@@ -364,7 +361,7 @@ class HueLight(Light):
             return None
 
         return {
-            "identifiers": {(hue.DOMAIN, self.unique_id)},
+            "identifiers": {(hue.DOMAIN, self.device_id)},
             "name": self.name,
             "manufacturer": self.light.manufacturername,
             # productname added in Hue Bridge API 1.24

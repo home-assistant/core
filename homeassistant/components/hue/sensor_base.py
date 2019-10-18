@@ -11,7 +11,7 @@ from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-from .helpers import get_removed_devices
+from .helpers import remove_devices
 
 CURRENT_SENSORS = "current_sensors"
 SENSOR_MANAGER_FORMAT = "{}_sensor_manager"
@@ -196,7 +196,7 @@ class SensorManager:
             else:
                 new_sensors.append(current[api[item_id].uniqueid])
 
-        removed_items = await get_removed_devices(
+        await remove_devices(
             self.hass,
             self.config_entry,
             [value.uniqueid for value in api.values()],
@@ -209,9 +209,6 @@ class SensorManager:
             async_add_sensor_entities(new_sensors)
         if new_binary_sensors and async_add_binary_entities:
             async_add_binary_entities(new_binary_sensors)
-
-        for item_id in removed_items:
-            del current[item_id]
 
 
 class GenericHueSensor:
