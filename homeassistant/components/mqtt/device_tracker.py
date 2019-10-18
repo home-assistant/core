@@ -33,7 +33,7 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     qos = config[CONF_QOS]
     payload_home = config[CONF_PAYLOAD_HOME]
     payload_not_home = config[CONF_PAYLOAD_NOT_HOME]
-    source_type = config.get[CONF_SOURCE_TYPE]
+    source_type = config.get(CONF_SOURCE_TYPE)
 
     for dev_id, topic in devices.items():
 
