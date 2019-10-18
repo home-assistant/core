@@ -5,6 +5,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.components.androidtv.media_player import (
     ANDROIDTV_DOMAIN,
     CONF_ADB_SERVER_IP,
+    CONF_ADBKEY,
 )
 from homeassistant.components.media_player.const import DOMAIN
 from homeassistant.const import (
@@ -61,14 +62,8 @@ CONFIG_FIRETV_ADB_SERVER = {
 }
 
 
-async def _test_reconnect(hass, caplog, config):
-    """Test that the error and reconnection attempts are logged correctly.
-
-    "Handles device/service unavailable. Log a warning once when
-    unavailable, log once when reconnected."
-
-    https://developers.home-assistant.io/docs/en/integration_quality_scale_index.html
-    """
+def _setup(hass, config):
+    """Perform common setup tasks for the tests."""
     if CONF_ADB_SERVER_IP not in config[DOMAIN]:
         patch_key = "python"
     else:
@@ -79,10 +74,26 @@ async def _test_reconnect(hass, caplog, config):
     else:
         entity_id = "media_player.fire_tv"
 
+    return patch_key, entity_id
+
+
+async def _test_reconnect(hass, caplog, config):
+    """Test that the error and reconnection attempts are logged correctly.
+
+    "Handles device/service unavailable. Log a warning once when
+    unavailable, log once when reconnected."
+
+    https://developers.home-assistant.io/docs/en/integration_quality_scale_index.html
+    """
+    patch_key, entity_id = _setup(hass, config)
+
     with patchers.PATCH_ADB_DEVICE, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell("")[patch_key]:
+    ], patchers.patch_shell("")[
+        patch_key
+    ], patchers.PATCH_KEYGEN, patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
         assert await async_setup_component(hass, DOMAIN, config)
+
         await hass.helpers.entity_component.async_update_entity(entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
@@ -93,7 +104,7 @@ async def _test_reconnect(hass, caplog, config):
 
     with patchers.patch_connect(False)[patch_key], patchers.patch_shell(error=True)[
         patch_key
-    ]:
+    ], patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
         for _ in range(5):
             await hass.helpers.entity_component.async_update_entity(entity_id)
             state = hass.states.get(entity_id)
@@ -105,7 +116,9 @@ async def _test_reconnect(hass, caplog, config):
     assert caplog.record_tuples[1][1] == logging.WARNING
 
     caplog.set_level(logging.DEBUG)
-    with patchers.patch_connect(True)[patch_key], patchers.patch_shell("1")[patch_key]:
+    with patchers.patch_connect(True)[patch_key], patchers.patch_shell("1")[
+        patch_key
+    ], patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
         # Update 1 will reconnect
         await hass.helpers.entity_component.async_update_entity(entity_id)
 
@@ -143,19 +156,13 @@ async def _test_adb_shell_returns_none(hass, config):
 
     The state should be `None` and the device should be unavailable.
     """
-    if CONF_ADB_SERVER_IP not in config[DOMAIN]:
-        patch_key = "python"
-    else:
-        patch_key = "server"
-
-    if config[DOMAIN].get(CONF_DEVICE_CLASS) != "firetv":
-        entity_id = "media_player.android_tv"
-    else:
-        entity_id = "media_player.fire_tv"
+    patch_key, entity_id = _setup(hass, config)
 
     with patchers.PATCH_ADB_DEVICE, patchers.patch_connect(True)[
         patch_key
-    ], patchers.patch_shell("")[patch_key]:
+    ], patchers.patch_shell("")[
+        patch_key
+    ], patchers.PATCH_KEYGEN, patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.helpers.entity_component.async_update_entity(entity_id)
         state = hass.states.get(entity_id)
@@ -164,7 +171,7 @@ async def _test_adb_shell_returns_none(hass, config):
 
     with patchers.patch_shell(None)[patch_key], patchers.patch_shell(error=True)[
         patch_key
-    ]:
+    ], patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
         await hass.helpers.entity_component.async_update_entity(entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
@@ -251,3 +258,21 @@ async def test_adb_shell_returns_none_firetv_adb_server(hass):
 
     """
     assert await _test_adb_shell_returns_none(hass, CONFIG_FIRETV_ADB_SERVER)
+
+
+async def test_setup_with_adbkey(hass):
+    """Test that setup succeeds when using an ADB key."""
+    config = CONFIG_ANDROIDTV_PYTHON_ADB.copy()
+    config[DOMAIN][CONF_ADBKEY] = hass.config.path("user_provided_adbkey")
+    patch_key, entity_id = _setup(hass, config)
+
+    with patchers.PATCH_ADB_DEVICE, patchers.patch_connect(True)[
+        patch_key
+    ], patchers.patch_shell("")[
+        patch_key
+    ], patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER, patchers.PATCH_ISFILE, patchers.PATCH_ACCESS:
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.helpers.entity_component.async_update_entity(entity_id)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_OFF

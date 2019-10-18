@@ -4,6 +4,15 @@ import logging
 import os
 import yaml
 
+import httplib2
+from oauth2client.client import (
+    OAuth2WebServerFlow,
+    OAuth2DeviceCodeError,
+    FlowExchangeError,
+)
+from oauth2client.file import Storage
+from googleapiclient import discovery as google_discovery
+
 import voluptuous as vol
 from voluptuous.error import Error as VoluptuousError
 
@@ -126,13 +135,6 @@ def do_authentication(hass, hass_config, config):
     Notify user of user_code and verification_url then poll
     until we have an access token.
     """
-    from oauth2client.client import (
-        OAuth2WebServerFlow,
-        OAuth2DeviceCodeError,
-        FlowExchangeError,
-    )
-    from oauth2client.file import Storage
-
     oauth = OAuth2WebServerFlow(
         client_id=config[CONF_CLIENT_ID],
         client_secret=config[CONF_CLIENT_SECRET],
@@ -341,10 +343,6 @@ class GoogleCalendarService:
 
     def get(self):
         """Get the calendar service from the storage file token."""
-        import httplib2
-        from oauth2client.file import Storage
-        from googleapiclient import discovery as google_discovery
-
         credentials = Storage(self.token_file).get()
         http = credentials.authorize(httplib2.Http())
         service = google_discovery.build(

@@ -82,7 +82,7 @@ PyXiaomiGateway==0.12.4
 
 # homeassistant.components.mcp23017
 # homeassistant.components.rpi_gpio
-# RPi.GPIO==0.6.5
+# RPi.GPIO==0.7.0
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -112,7 +112,7 @@ adafruit-blinka==1.2.1
 adafruit-circuitpython-mcp230xx==1.1.2
 
 # homeassistant.components.androidtv
-adb-shell==0.0.4
+adb-shell==0.0.7
 
 # homeassistant.components.adguard
 adguardhome==0.2.1
@@ -203,7 +203,7 @@ ambiclimate==0.2.1
 amcrest==1.5.3
 
 # homeassistant.components.androidtv
-androidtv==0.0.30
+androidtv==0.0.32
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -345,6 +345,9 @@ ciscosparkapi==0.4.2
 
 # homeassistant.components.cppm_tracker
 clearpasspy==1.0.2
+
+# homeassistant.components.sinch
+clx-sdk-xms==1.0.0
 
 # homeassistant.components.co2signal
 co2signal==0.4.2
@@ -531,7 +534,7 @@ gearbest_parser==1.0.7
 geizhals==0.0.9
 
 # homeassistant.components.geniushub
-geniushub-client==0.6.26
+geniushub-client==0.6.28
 
 # homeassistant.components.geo_json_events
 # homeassistant.components.nsw_rural_fire_service_feed
@@ -619,7 +622,7 @@ hass-nabucasa==0.22
 hbmqtt==0.9.5
 
 # homeassistant.components.jewish_calendar
-hdate==0.9.0
+hdate==0.9.1
 
 # homeassistant.components.heatmiser
 heatmiserV3==0.9.1
@@ -847,7 +850,7 @@ n26==0.2.7
 nad_receiver==0.0.11
 
 # homeassistant.components.keenetic_ndms2
-ndms2_client==0.0.9
+ndms2_client==0.0.10
 
 # homeassistant.components.ness_alarm
 nessclient==0.9.15
@@ -2017,7 +2020,7 @@ yeelight==0.5.0
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2019.09.28
+youtube_dl==2019.10.16
 
 # homeassistant.components.zengge
 zengge==0.2
