@@ -1,13 +1,13 @@
 """Sinch platform for notify component."""
-from aiohttp.hdrs import CONTENT_TYPE
-from homeassistant.const import CONF_API_KEY, CONF_RECIPIENT, CONTENT_TYPE_JSON
-from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
-
 import logging
+import json
 import requests
 import voluptuous as vol
-import json
+from aiohttp.hdrs import CONTENT_TYPE
 import homeassistant.helpers.config_validation as cv
+
+from homeassistant.const import CONF_API_KEY, CONF_RECIPIENT, CONTENT_TYPE_JSON
+from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
 
 
 _LOGGER = logging.getLogger(__name__)
