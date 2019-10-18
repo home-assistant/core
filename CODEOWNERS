@@ -272,6 +272,7 @@ homeassistant/components/songpal/* @rytilahti
 homeassistant/components/spaceapi/* @fabaff
 homeassistant/components/spider/* @peternijssen
 homeassistant/components/sql/* @dgomes
+homeassistant/components/srp_energy/* @briglx
 homeassistant/components/statistics/* @fabaff
 homeassistant/components/stiebel_eltron/* @fucm
 homeassistant/components/stream/* @hunterjm
