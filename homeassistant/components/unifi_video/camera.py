@@ -50,10 +50,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             verify_cert=verify_cert,
             check_ufv_version=False,
         )
-    except Exception as e:
-        raise UnifiVideoError(f"Unifi platform setup error: {e}")
+    except Exception as exception:
+        raise UnifiVideoError(f"Unifi platform setup error: {exception}")
 
-    _LOGGER.info(f"Connected to {uva._name} v{uva._version}")
+    _LOGGER.info(
+        "Connected to %s v%s", uva._name, uva._version
+    )  # pylint: disable=W0212
 
     add_entities([UnifiVideoCamera(camera) for camera in uva.cameras])
 
@@ -69,7 +71,6 @@ class UnifiVideoCamera(Camera):
 
     def update(self):
         """Update camera data."""
-        # FIXME: don't know what to do with that, periodic updates?
         self._camera.update()
 
     @property
@@ -80,7 +81,9 @@ class UnifiVideoCamera(Camera):
     @property
     def is_recording(self):
         """Return true if the device is recording."""
-        return self._camera._data["recordingSettings"]["fullTimeRecordEnabled"]
+        return self._camera._data["recordingSettings"][
+            "fullTimeRecordEnabled"
+        ]  # pylint: disable=W0212
 
     @property
     def brand(self):
@@ -90,7 +93,9 @@ class UnifiVideoCamera(Camera):
     @property
     def motion_detection_enabled(self):
         """Return the camera motion detection status."""
-        return self._camera._data["recordingSettings"]["motionRecordEnabled"]
+        return self._camera._data["recordingSettings"][
+            "motionRecordEnabled"
+        ]  # pylint: disable=W0212
 
     @property
     def model(self):
