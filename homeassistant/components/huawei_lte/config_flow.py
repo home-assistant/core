@@ -21,7 +21,10 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_RECIPIENT, CONF_URL, CONF_USERNAME
 from homeassistant.components.device_tracker import CONF_TRACK_NEW
 from homeassistant.core import callback
-from .const import DEFAULT_DEVICE_NAME, DEFAULT_TRACK_NEW, DOMAIN
+from .const import DEFAULT_DEVICE_NAME, DEFAULT_TRACK_NEW
+
+# https://github.com/PyCQA/pylint/issues/3202
+from .const import DOMAIN  # pylint: disable=unused-import
 
 
 _LOGGER = logging.getLogger(__name__)
