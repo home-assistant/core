@@ -89,9 +89,10 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Invalid credentials provided, config not created")
             errors["base"] = "faulty_credentials"
         except (plexapi.exceptions.NotFound, requests.exceptions.ConnectionError):
-            _LOGGER.error(
-                "Plex server could not be reached: %s", server_config[CONF_URL]
+            server_identifier = (
+                server_config.get(CONF_URL) or plex_server.server_choice or "Unknown"
             )
+            _LOGGER.error("Plex server could not be reached: %s", server_identifier)
             errors["base"] = "not_found"
 
         except ServerNotSpecified as available_servers:
