@@ -1612,9 +1612,6 @@ pytradfri[async]==6.3.1
 # homeassistant.components.trafikverket_weatherstation
 pytrafikverket==0.1.5.9
 
-# homeassistant.components.flume
-pytz==2019.2
-
 # homeassistant.components.ubee
 pyubee==0.7
 
