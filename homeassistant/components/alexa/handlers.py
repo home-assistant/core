@@ -1,5 +1,4 @@
 """Alexa message handlers."""
-import asyncio
 import logging
 import math
 
@@ -530,41 +529,22 @@ async def async_api_adjust_volume_step(hass, config, directive, context):
     volume_int = int(directive.payload["volumeSteps"])
     is_default = bool(directive.payload["volumeStepsDefault"])
     default_steps = 1
-    sleep_delay = 0.5
 
-    if "volume_steps_default" in entity.attributes:
-        try:
-            default_steps = int(entity.attributes["volume_steps_default"])
-        except ValueError:
-            default_steps = 1
-
-    if is_default:
-        if volume_int < 0:
+    if volume_int < 0:
+        service_volume = SERVICE_VOLUME_DOWN
+        if is_default:
             volume_int = -default_steps
-        else:
+    else:
+        service_volume = SERVICE_VOLUME_UP
+        if is_default:
             volume_int = default_steps
 
-    if volume_int != 0:
-        data = {ATTR_ENTITY_ID: entity.entity_id}
+    data = {ATTR_ENTITY_ID: entity.entity_id}
 
-        for _ in range(0, abs(volume_int)):
-            if volume_int > 0:
-                await hass.services.async_call(
-                    entity.domain,
-                    SERVICE_VOLUME_UP,
-                    data,
-                    blocking=False,
-                    context=context,
-                )
-            elif volume_int < 0:
-                await hass.services.async_call(
-                    entity.domain,
-                    SERVICE_VOLUME_DOWN,
-                    data,
-                    blocking=False,
-                    context=context,
-                )
-            await asyncio.sleep(sleep_delay)
+    for _ in range(0, abs(volume_int)):
+        await hass.services.async_call(
+            entity.domain, service_volume, data, blocking=False, context=context
+        )
 
     return directive.response()
 
@@ -1166,28 +1146,18 @@ async def async_api_skipchannel(hass, config, directive, context):
     """Process a skipchannel request."""
     channel = int(directive.payload["channelCount"])
     entity = directive.entity
-    sleep_delay = 0.5
 
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
+    if channel < 0:
+        service_media = SERVICE_MEDIA_PREVIOUS_TRACK
+    else:
+        service_media = SERVICE_MEDIA_NEXT_TRACK
+
     for _ in range(0, abs(channel)):
-        if channel > 0:
-            await hass.services.async_call(
-                entity.domain,
-                SERVICE_MEDIA_NEXT_TRACK,
-                data,
-                blocking=False,
-                context=context,
-            )
-        if channel < 0:
-            await hass.services.async_call(
-                entity.domain,
-                SERVICE_MEDIA_PREVIOUS_TRACK,
-                data,
-                blocking=False,
-                context=context,
-            )
-        await asyncio.sleep(sleep_delay)
+        await hass.services.async_call(
+            entity.domain, service_media, data, blocking=False, context=context
+        )
 
     response = directive.response()
 

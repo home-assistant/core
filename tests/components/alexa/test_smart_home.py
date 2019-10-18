@@ -4,6 +4,7 @@ import pytest
 from homeassistant.core import Context, callback
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.components.alexa import smart_home, messages
+from homeassistant.components.media_player import SUPPORT_PLAY_MEDIA
 from homeassistant.helpers import entityfilter
 
 from tests.common import async_mock_service
@@ -693,7 +694,7 @@ async def test_media_player(hass):
         "off",
         {
             "friendly_name": "Test media player",
-            "supported_features": 0x59BD | 16384 | 4096 | 512 | 32 | 16 | 1,
+            "supported_features": 0x59BD | SUPPORT_PLAY_MEDIA,
             "volume_level": 0.75,
             "volume_steps_default": "INVALID",
         },
