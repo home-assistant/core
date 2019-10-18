@@ -74,13 +74,13 @@ async def async_test_binary_sensor_on_off(hass, cluster, entity_id):
     """Test getting on and off messages for binary sensors."""
     # binary sensor on
     attr = make_attribute(0, 1)
-    cluster.handle_message(False, 1, 0x0A, [[attr]])
+    cluster.handle_message(1, 0x0A, [[attr]])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ON
 
     # binary sensor off
     attr.value.value = 0
-    cluster.handle_message(False, 0, 0x0A, [[attr]])
+    cluster.handle_message(0, 0x0A, [[attr]])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_OFF
 

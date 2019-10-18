@@ -1,27 +1,39 @@
 """Config flow for Plex."""
+import copy
 import logging
 
+from aiohttp import web_response
 import plexapi.exceptions
+from plexauth import PlexAuth
 import requests.exceptions
 import voluptuous as vol
 
+from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant import config_entries
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import CONF_URL, CONF_TOKEN, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import callback
 from homeassistant.util.json import load_json
 
 from .const import (  # pylint: disable=unused-import
+    AUTH_CALLBACK_NAME,
+    AUTH_CALLBACK_PATH,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
+    CONF_USE_EPISODE_ART,
+    CONF_SHOW_ALL_CONTROLS,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     PLEX_CONFIG_FILE,
     PLEX_SERVER_CONFIG,
+    X_PLEX_DEVICE_NAME,
+    X_PLEX_VERSION,
+    X_PLEX_PRODUCT,
+    X_PLEX_PLATFORM,
 )
 from .errors import NoServersFound, ServerNotSpecified
 from .server import PlexServer
-
-USER_SCHEMA = vol.Schema({vol.Required(CONF_TOKEN): str})
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -41,17 +53,26 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return PlexOptionsFlowHandler(config_entry)
+
     def __init__(self):
         """Initialize the Plex flow."""
         self.current_login = {}
         self.available_servers = None
+        self.plexauth = None
+        self.token = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        if user_input is not None:
-            return await self.async_step_server_validate(user_input)
+        return self.async_show_form(step_id="start_website_auth")
 
-        return self.async_show_form(step_id="user", data_schema=USER_SCHEMA, errors={})
+    async def async_step_start_website_auth(self, user_input=None):
+        """Show a form before starting external authentication."""
+        return await self.async_step_plex_website_auth()
 
     async def async_step_server_validate(self, server_config):
         """Validate a provided configuration."""
@@ -68,9 +89,10 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Invalid credentials provided, config not created")
             errors["base"] = "faulty_credentials"
         except (plexapi.exceptions.NotFound, requests.exceptions.ConnectionError):
-            _LOGGER.error(
-                "Plex server could not be reached: %s", server_config[CONF_URL]
+            server_identifier = (
+                server_config.get(CONF_URL) or plex_server.server_choice or "Unknown"
             )
+            _LOGGER.error("Plex server could not be reached: %s", server_identifier)
             errors["base"] = "not_found"
 
         except ServerNotSpecified as available_servers:
@@ -82,9 +104,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unknown")
 
         if errors:
-            return self.async_show_form(
-                step_id="user", data_schema=USER_SCHEMA, errors=errors
-            )
+            return self.async_show_form(step_id="start_website_auth", errors=errors)
 
         server_id = plex_server.machine_identifier
 
@@ -163,9 +183,105 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.info("Imported legacy config, file can be removed: %s", json_file)
             return await self.async_step_server_validate(server_config)
 
-        return await self.async_step_user()
+        return self.async_abort(reason="discovery_no_file")
 
     async def async_step_import(self, import_config):
         """Import from Plex configuration."""
         _LOGGER.debug("Imported Plex configuration")
         return await self.async_step_server_validate(import_config)
+
+    async def async_step_plex_website_auth(self):
+        """Begin external auth flow on Plex website."""
+        self.hass.http.register_view(PlexAuthorizationCallbackView)
+        payload = {
+            "X-Plex-Device-Name": X_PLEX_DEVICE_NAME,
+            "X-Plex-Version": X_PLEX_VERSION,
+            "X-Plex-Product": X_PLEX_PRODUCT,
+            "X-Plex-Device": self.hass.config.location_name,
+            "X-Plex-Platform": X_PLEX_PLATFORM,
+            "X-Plex-Model": "Plex OAuth",
+        }
+        session = async_get_clientsession(self.hass)
+        self.plexauth = PlexAuth(payload, session)
+        await self.plexauth.initiate_auth()
+        forward_url = f"{self.hass.config.api.base_url}{AUTH_CALLBACK_PATH}?flow_id={self.flow_id}"
+        auth_url = self.plexauth.auth_url(forward_url)
+        return self.async_external_step(step_id="obtain_token", url=auth_url)
+
+    async def async_step_obtain_token(self, user_input=None):
+        """Obtain token after external auth completed."""
+        token = await self.plexauth.token(10)
+
+        if not token:
+            return self.async_external_step_done(next_step_id="timed_out")
+
+        self.token = token
+        return self.async_external_step_done(next_step_id="use_external_token")
+
+    async def async_step_timed_out(self, user_input=None):
+        """Abort flow when time expires."""
+        return self.async_abort(reason="token_request_timeout")
+
+    async def async_step_use_external_token(self, user_input=None):
+        """Continue server validation with external token."""
+        server_config = {CONF_TOKEN: self.token}
+        return await self.async_step_server_validate(server_config)
+
+
+class PlexOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle Plex options."""
+
+    def __init__(self, config_entry):
+        """Initialize Plex options flow."""
+        self.options = copy.deepcopy(config_entry.options)
+
+    async def async_step_init(self, user_input=None):
+        """Manage the Plex options."""
+        return await self.async_step_plex_mp_settings()
+
+    async def async_step_plex_mp_settings(self, user_input=None):
+        """Manage the Plex media_player options."""
+        if user_input is not None:
+            self.options[MP_DOMAIN][CONF_USE_EPISODE_ART] = user_input[
+                CONF_USE_EPISODE_ART
+            ]
+            self.options[MP_DOMAIN][CONF_SHOW_ALL_CONTROLS] = user_input[
+                CONF_SHOW_ALL_CONTROLS
+            ]
+            return self.async_create_entry(title="", data=self.options)
+
+        return self.async_show_form(
+            step_id="plex_mp_settings",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USE_EPISODE_ART,
+                        default=self.options[MP_DOMAIN][CONF_USE_EPISODE_ART],
+                    ): bool,
+                    vol.Required(
+                        CONF_SHOW_ALL_CONTROLS,
+                        default=self.options[MP_DOMAIN][CONF_SHOW_ALL_CONTROLS],
+                    ): bool,
+                }
+            ),
+        )
+
+
+class PlexAuthorizationCallbackView(HomeAssistantView):
+    """Handle callback from external auth."""
+
+    url = AUTH_CALLBACK_PATH
+    name = AUTH_CALLBACK_NAME
+    requires_auth = False
+
+    async def get(self, request):
+        """Receive authorization confirmation."""
+        hass = request.app["hass"]
+        await hass.config_entries.flow.async_configure(
+            flow_id=request.query["flow_id"], user_input=None
+        )
+
+        return web_response.Response(
+            headers={"content-type": "text/html"},
+            text="<script>window.close()</script>Success! This window can be closed",
+        )

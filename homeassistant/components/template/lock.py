@@ -19,6 +19,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
+from .const import CONF_AVAILABILITY_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
         vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
     }
 )
@@ -48,13 +50,23 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
 
     if value_template_entity_ids == MATCH_ALL:
         _LOGGER.warning(
-            "Template lock %s has no entity ids configured to track nor "
-            "were we able to extract the entities to track from the %s "
+            "Template lock '%s' has no entity ids configured to track nor "
+            "were we able to extract the entities to track from the '%s' "
             "template. This entity will only be able to be updated "
             "manually.",
             name,
             CONF_VALUE_TEMPLATE,
         )
+
+    template_entity_ids = set()
+    template_entity_ids |= set(value_template_entity_ids)
+
+    availability_template = config.get(CONF_AVAILABILITY_TEMPLATE)
+    if availability_template is not None:
+        availability_template.hass = hass
+        temp_ids = availability_template.extract_entities()
+        if str(temp_ids) != MATCH_ALL:
+            template_entity_ids |= set(temp_ids)
 
     async_add_devices(
         [
@@ -62,7 +74,8 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
                 hass,
                 name,
                 value_template,
-                value_template_entity_ids,
+                availability_template,
+                template_entity_ids,
                 config.get(CONF_LOCK),
                 config.get(CONF_UNLOCK),
                 config.get(CONF_OPTIMISTIC),
@@ -79,6 +92,7 @@ class TemplateLock(LockDevice):
         hass,
         name,
         value_template,
+        availability_template,
         entity_ids,
         command_lock,
         command_unlock,
@@ -89,10 +103,12 @@ class TemplateLock(LockDevice):
         self._hass = hass
         self._name = name
         self._state_template = value_template
+        self._availability_template = availability_template
         self._state_entities = entity_ids
         self._command_lock = Script(hass, command_lock)
         self._command_unlock = Script(hass, command_unlock)
         self._optimistic = optimistic
+        self._available = True
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -136,6 +152,11 @@ class TemplateLock(LockDevice):
         """Return true if lock is locked."""
         return self._state
 
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return self._available
+
     async def async_update(self):
         """Update the state from the template."""
         try:
@@ -147,6 +168,19 @@ class TemplateLock(LockDevice):
         except TemplateError as ex:
             self._state = None
             _LOGGER.error("Could not render template %s: %s", self._name, ex)
+
+        if self._availability_template is not None:
+            try:
+                self._available = (
+                    self._availability_template.async_render().lower() == "true"
+                )
+            except (TemplateError, ValueError) as ex:
+                _LOGGER.error(
+                    "Could not render %s template %s: %s",
+                    CONF_AVAILABILITY_TEMPLATE,
+                    self._name,
+                    ex,
+                )
 
     async def async_lock(self, **kwargs):
         """Lock the device."""

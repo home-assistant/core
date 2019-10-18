@@ -3,6 +3,7 @@ import asyncio
 from ipaddress import IPv4Address
 
 import aiohttp
+from async_upnp_client.profiles.igd import IgdDevice
 
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import HomeAssistantType
@@ -28,9 +29,6 @@ class Device:
             local_ip = hass.data[DOMAIN]["config"].get(CONF_LOCAL_IP)
         if local_ip:
             local_ip = IPv4Address(local_ip)
-
-        # discover devices
-        from async_upnp_client.profiles.igd import IgdDevice
 
         discovery_infos = await IgdDevice.async_search(source_ip=local_ip, timeout=10)
 
@@ -60,9 +58,6 @@ class Device:
 
         factory = UpnpFactory(requester, disable_state_variable_validation=True)
         upnp_device = await factory.async_create_device(ssdp_description)
-
-        # wrap with async_upnp_client.IgdDevice
-        from async_upnp_client.profiles.igd import IgdDevice
 
         igd_device = IgdDevice(upnp_device, None)
 

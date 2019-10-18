@@ -4,6 +4,8 @@ from datetime import timedelta
 import logging
 import socket
 
+import broadlink
+
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -91,7 +93,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Broadlink switches."""
-    import broadlink
 
     devices = config.get(CONF_SWITCHES)
     slots = config.get("slots", {})

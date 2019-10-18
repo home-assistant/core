@@ -1,7 +1,7 @@
 {
   "domain": "flexit",
   "name": "Flexit",
-  "documentation": "https://www.home-assistant.io/components/flexit",
+  "documentation": "https://www.home-assistant.io/integrations/flexit",
   "requirements": [
     "pyflexit==0.3"
   ],

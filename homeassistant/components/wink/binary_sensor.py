@@ -1,6 +1,8 @@
 """Support for Wink binary sensors."""
 import logging
 
+import pywink
+
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from . import DOMAIN, WinkDevice
@@ -26,7 +28,6 @@ SENSOR_TYPES = {
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink binary sensor platform."""
-    import pywink
 
     for sensor in pywink.get_sensors():
         _id = sensor.object_id() + sensor.name()

@@ -1,6 +1,7 @@
 {
     "config": {
         "title": "deCONZ Zigbee gateway",
+        "flow_title": "deCONZ Zigbee gateway ({host})",
         "step": {
             "init": {
                 "title": "Define deCONZ gateway",
@@ -63,6 +64,7 @@
             "remote_button_quadruple_press": "\"{subtype}\" button quadruple clicked",
             "remote_button_quintuple_press": "\"{subtype}\" button quintuple clicked",
             "remote_button_rotated": "Button rotated \"{subtype}\"",
+            "remote_button_rotation_stopped": "Button rotation \"{subtype}\" stopped",
             "remote_gyro_activated": "Device shaken"
         },
         "trigger_subtype": {

@@ -3,9 +3,10 @@
 from collections import namedtuple
 import logging
 
+import denonavr
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MUSIC,
@@ -88,7 +89,6 @@ NewHost = namedtuple("NewHost", ["host", "name"])
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Denon platform."""
-    import denonavr
 
     # Initialize list with receivers to be started
     receivers = []

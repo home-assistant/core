@@ -26,6 +26,36 @@ from homeassistant.helpers import (
 from homeassistant.helpers.state import HASS_DOMAIN, async_reproduce_state
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, STATES, Scene
 
+
+def _convert_states(states):
+    """Convert state definitions to State objects."""
+    result = {}
+
+    for entity_id in states:
+        entity_id = cv.entity_id(entity_id)
+
+        if isinstance(states[entity_id], dict):
+            entity_attrs = states[entity_id].copy()
+            state = entity_attrs.pop(ATTR_STATE, None)
+            attributes = entity_attrs
+        else:
+            state = states[entity_id]
+            attributes = {}
+
+        # YAML translates 'on' to a boolean
+        # http://yaml.org/type/bool.html
+        if isinstance(state, bool):
+            state = STATE_ON if state else STATE_OFF
+        elif not isinstance(state, str):
+            raise vol.Invalid(f"State for {entity_id} should be a string")
+
+        result[entity_id] = State(entity_id, state, attributes)
+
+    return result
+
+
+STATES_SCHEMA = vol.All(dict, _convert_states)
+
 PLATFORM_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PLATFORM): HASS_DOMAIN,
@@ -34,9 +64,7 @@ PLATFORM_SCHEMA = vol.Schema(
             [
                 {
                     vol.Required(CONF_NAME): cv.string,
-                    vol.Required(CONF_ENTITIES): {
-                        cv.entity_id: vol.Any(str, bool, dict)
-                    },
+                    vol.Required(CONF_ENTITIES): STATES_SCHEMA,
                 }
             ],
         ),
@@ -44,6 +72,7 @@ PLATFORM_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+SERVICE_APPLY = "apply"
 SCENECONFIG = namedtuple("SceneConfig", [CONF_NAME, STATES])
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,6 +116,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         SCENE_DOMAIN, SERVICE_RELOAD, reload_config
     )
 
+    async def apply_service(call):
+        """Apply a scene."""
+        await async_reproduce_state(
+            hass, call.data[CONF_ENTITIES].values(), blocking=True, context=call.context
+        )
+
+    hass.services.async_register(
+        SCENE_DOMAIN,
+        SERVICE_APPLY,
+        apply_service,
+        vol.Schema({vol.Required(CONF_ENTITIES): STATES_SCHEMA}),
+    )
+
 
 def _process_scenes_config(hass, async_add_entities, config):
     """Process multiple scenes and add them."""
@@ -97,39 +139,9 @@ def _process_scenes_config(hass, async_add_entities, config):
         return
 
     async_add_entities(
-        HomeAssistantScene(hass, _process_scene_config(scene)) for scene in scene_config
+        HomeAssistantScene(hass, SCENECONFIG(scene[CONF_NAME], scene[CONF_ENTITIES]))
+        for scene in scene_config
     )
-
-
-def _process_scene_config(scene_config):
-    """Process passed in config into a format to work with.
-
-    Async friendly.
-    """
-    name = scene_config.get(CONF_NAME)
-
-    states = {}
-    c_entities = dict(scene_config.get(CONF_ENTITIES, {}))
-
-    for entity_id in c_entities:
-        if isinstance(c_entities[entity_id], dict):
-            entity_attrs = c_entities[entity_id].copy()
-            state = entity_attrs.pop(ATTR_STATE, None)
-            attributes = entity_attrs
-        else:
-            state = c_entities[entity_id]
-            attributes = {}
-
-        # YAML translates 'on' to a boolean
-        # http://yaml.org/type/bool.html
-        if isinstance(state, bool):
-            state = STATE_ON if state else STATE_OFF
-        else:
-            state = str(state)
-
-        states[entity_id.lower()] = State(entity_id, state, attributes)
-
-    return SCENECONFIG(name, states)
 
 
 class HomeAssistantScene(Scene):
@@ -148,8 +160,13 @@ class HomeAssistantScene(Scene):
     @property
     def device_state_attributes(self):
         """Return the scene state attributes."""
-        return {ATTR_ENTITY_ID: list(self.scene_config.states.keys())}
+        return {ATTR_ENTITY_ID: list(self.scene_config.states)}
 
     async def async_activate(self):
         """Activate scene. Try to get entities into requested state."""
-        await async_reproduce_state(self.hass, self.scene_config.states.values(), True)
+        await async_reproduce_state(
+            self.hass,
+            self.scene_config.states.values(),
+            blocking=True,
+            context=self._context,
+        )

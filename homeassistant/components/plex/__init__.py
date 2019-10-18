@@ -1,4 +1,5 @@
 """Support to embed Plex."""
+import asyncio
 import logging
 
 import plexapi.exceptions
@@ -21,6 +22,7 @@ from .const import (
     CONF_USE_EPISODE_ART,
     CONF_SHOW_ALL_CONTROLS,
     CONF_SERVER,
+    CONF_SERVER_IDENTIFIER,
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
@@ -28,6 +30,7 @@ from .const import (
     PLATFORMS,
     PLEX_MEDIA_PLAYER_OPTIONS,
     PLEX_SERVER_CONFIG,
+    REFRESH_LISTENERS,
     SERVERS,
 )
 from .server import PlexServer
@@ -61,7 +64,7 @@ _LOGGER = logging.getLogger(__package__)
 
 def setup(hass, config):
     """Set up the Plex component."""
-    hass.data.setdefault(PLEX_DOMAIN, {SERVERS: {}})
+    hass.data.setdefault(PLEX_DOMAIN, {SERVERS: {}, REFRESH_LISTENERS: {}})
 
     plex_config = config.get(PLEX_DOMAIN, {})
     if plex_config:
@@ -74,7 +77,7 @@ def _setup_plex(hass, config):
     """Pass configuration to a config flow."""
     server_config = dict(config)
     if MP_DOMAIN in server_config:
-        hass.data[PLEX_MEDIA_PLAYER_OPTIONS] = server_config.pop(MP_DOMAIN)
+        hass.data.setdefault(PLEX_MEDIA_PLAYER_OPTIONS, server_config.pop(MP_DOMAIN))
     if CONF_HOST in server_config:
         prefix = "https" if server_config.pop(CONF_SSL) else "http"
         server_config[
@@ -93,7 +96,15 @@ async def async_setup_entry(hass, entry):
     """Set up Plex from a config entry."""
     server_config = entry.data[PLEX_SERVER_CONFIG]
 
-    plex_server = PlexServer(server_config)
+    if MP_DOMAIN not in entry.options:
+        options = dict(entry.options)
+        options.setdefault(
+            MP_DOMAIN,
+            hass.data.get(PLEX_MEDIA_PLAYER_OPTIONS) or MEDIA_PLAYER_SCHEMA({}),
+        )
+        hass.config_entries.async_update_entry(entry, options=options)
+
+    plex_server = PlexServer(server_config, entry.options)
     try:
         await hass.async_add_executor_job(plex_server.connect)
     except requests.exceptions.ConnectionError as error:
@@ -110,7 +121,7 @@ async def async_setup_entry(hass, entry):
     ) as error:
         _LOGGER.error(
             "Login to %s failed, verify token and SSL settings: [%s]",
-            server_config[CONF_SERVER],
+            entry.data[CONF_SERVER],
             error,
         )
         return False
@@ -120,12 +131,35 @@ async def async_setup_entry(hass, entry):
     )
     hass.data[PLEX_DOMAIN][SERVERS][plex_server.machine_identifier] = plex_server
 
-    if not hass.data.get(PLEX_MEDIA_PLAYER_OPTIONS):
-        hass.data[PLEX_MEDIA_PLAYER_OPTIONS] = MEDIA_PLAYER_SCHEMA({})
-
     for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
+    entry.add_update_listener(async_options_updated)
+
     return True
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    server_id = entry.data[CONF_SERVER_IDENTIFIER]
+
+    cancel = hass.data[PLEX_DOMAIN][REFRESH_LISTENERS].pop(server_id)
+    await hass.async_add_executor_job(cancel)
+
+    tasks = [
+        hass.config_entries.async_forward_entry_unload(entry, platform)
+        for platform in PLATFORMS
+    ]
+    await asyncio.gather(*tasks)
+
+    hass.data[PLEX_DOMAIN][SERVERS].pop(server_id)
+
+    return True
+
+
+async def async_options_updated(hass, entry):
+    """Triggered by config entry options updates."""
+    server_id = entry.data[CONF_SERVER_IDENTIFIER]
+    hass.data[PLEX_DOMAIN][SERVERS][server_id].options = entry.options

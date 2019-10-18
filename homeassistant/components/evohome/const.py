@@ -21,5 +21,3 @@ EVO_PERMOVER = "PermanentOverride"
 # These are used only to help prevent E501 (line too long) violations
 GWS = "gateways"
 TCS = "temperatureControlSystems"
-
-EVO_STRFTIME = "%Y-%m-%dT%H:%M:%SZ"

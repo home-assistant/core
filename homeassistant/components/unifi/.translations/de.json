@@ -38,6 +38,11 @@
                     "one": "eins",
                     "other": "andere"
                 }
+            },
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "Erstellen von Bandbreiten-Nutzungssensoren f\u00fcr Netzwerk-Clients"
+                }
             }
         }
     }

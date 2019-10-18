@@ -3,7 +3,7 @@ import asyncio
 from collections import Counter
 import itertools
 import logging
-from typing import Any, Callable, Iterator, List, Optional, Tuple
+from typing import Any, Callable, Iterator, List, Optional, Tuple, cast
 
 import voluptuous as vol
 
@@ -43,6 +43,9 @@ from homeassistant.components.light import (
     SUPPORT_WHITE_VALUE,
 )
 
+
+# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Light Group"
@@ -69,7 +72,9 @@ async def async_setup_platform(
     hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ) -> None:
     """Initialize light.group platform."""
-    async_add_entities([LightGroup(config.get(CONF_NAME), config[CONF_ENTITIES])])
+    async_add_entities(
+        [LightGroup(cast(str, config.get(CONF_NAME)), config[CONF_ENTITIES])]
+    )
 
 
 class LightGroup(light.Light):
@@ -263,7 +268,7 @@ class LightGroup(light.Light):
     async def async_update(self):
         """Query all members and determine the light group state."""
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
-        states = list(filter(None, all_states))
+        states: List[State] = list(filter(None, all_states))
         on_states = [state for state in states if state.state == STATE_ON]
 
         self._is_on = len(on_states) > 0

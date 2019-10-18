@@ -1,7 +1,7 @@
 {
   "domain": "swiss_public_transport",
   "name": "Swiss public transport",
-  "documentation": "https://www.home-assistant.io/components/swiss_public_transport",
+  "documentation": "https://www.home-assistant.io/integrations/swiss_public_transport",
   "requirements": [
     "python_opendata_transport==0.1.4"
   ],

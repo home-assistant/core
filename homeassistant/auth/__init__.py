@@ -87,18 +87,6 @@ class AuthManager:
         )
 
     @property
-    def support_legacy(self) -> bool:
-        """
-        Return if legacy_api_password auth providers are registered.
-
-        Should be removed when we removed legacy_api_password auth providers.
-        """
-        for provider_type, _ in self._providers:
-            if provider_type == "legacy_api_password":
-                return True
-        return False
-
-    @property
     def auth_providers(self) -> List[AuthProvider]:
         """Return a list of available auth providers."""
         return list(self._providers.values())

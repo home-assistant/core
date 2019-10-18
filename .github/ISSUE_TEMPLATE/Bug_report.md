@@ -29,9 +29,9 @@ about: Create a report to help us improve
 Please provide details about your environment.
 -->
 
-**Component/platform:**
+**Integration:**
 <!--
-Please add the link to the documentation at https://www.home-assistant.io/components/ of the component/platform in question.
+Please add the link to the documentation at https://www.home-assistant.io/integrations/ of the integration in question.
 -->
 
 
