@@ -210,7 +210,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     (
                         vol.Optional(
                             CONF_RECIPIENT,
-                            default=self.config_entry.options.get(CONF_RECIPIENT),
+                            default=self.config_entry.options.get(CONF_RECIPIENT, ""),
                         ),
                         str,
                     ),
