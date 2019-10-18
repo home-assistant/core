@@ -11,7 +11,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-Logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Flume Sensor"
 
@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 )
                 flume_entity_list.append(FlumeSensor(flume, f"{name} {device['id']}"))
     except KeyError:
-        Logger.error("No Flume Devices Returned of Type: %s", FLUME_TYPE_SENSOR)
+        LOGGER.error("No Flume Devices Returned of Type: %s", FLUME_TYPE_SENSOR)
 
     add_entities(flume_entity_list, True)
 
