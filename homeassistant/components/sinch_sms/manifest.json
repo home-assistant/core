@@ -1,7 +1,7 @@
 {
   "domain": "sinch_sms",
   "name": "Sinch sms",
-  "documentation": "",
+  "documentation": "https://www.home-assistant.io/integrations/sinch_sms",
   "requirements": [],
   "dependencies": [],
   "codeowners": [
