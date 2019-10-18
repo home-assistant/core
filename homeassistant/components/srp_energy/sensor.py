@@ -11,7 +11,6 @@ from homeassistant.util import Throttle
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 
-# REQUIREMENTS = ['srpenergy==1.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
