@@ -260,7 +260,7 @@ def _get_domains(hass: core.HomeAssistant, config: Dict[str, Any]) -> Set[str]:
     domains = set(key.split(" ")[0] for key in config.keys() if key != core.DOMAIN)
 
     # Add config entry domains
-    domains.update(hass.config_entries.async_domains())  # type: ignore
+    domains.update(hass.config_entries.async_domains())
 
     # Make sure the Hass.io component is loaded
     if "HASSIO" in os.environ:

@@ -337,7 +337,7 @@ class ConfigEntry:
                 return False
             if result:
                 # pylint: disable=protected-access
-                hass.config_entries._async_schedule_save()  # type: ignore
+                hass.config_entries._async_schedule_save()
             return result
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
