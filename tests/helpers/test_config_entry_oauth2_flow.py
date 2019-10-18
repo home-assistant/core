@@ -46,6 +46,11 @@ def flow_handler(hass):
             """Return logger."""
             return logging.getLogger(__name__)
 
+        @property
+        def extra_authorize_data(self) -> dict:
+            """Extra data that needs to be appended to the authorize url."""
+            return {"scope": "read write"}
+
     with patch.dict(config_entries.HANDLERS, {TEST_DOMAIN: TestFlowHandler}):
         yield TestFlowHandler
 
@@ -145,7 +150,7 @@ async def test_full_flow(
     assert result["url"] == (
         f"{AUTHORIZE_URL}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}"
+        f"&state={state}&scope=read+write"
     )
 
     client = await aiohttp_client(hass.http.app)

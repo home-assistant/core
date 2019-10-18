@@ -191,6 +191,11 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
     def logger(self) -> logging.Logger:
         """Return logger."""
 
+    @property
+    def extra_authorize_data(self) -> dict:
+        """Extra data that needs to be appended to the authorize url."""
+        return {}
+
     async def async_step_pick_implementation(self, user_input: dict = None) -> dict:
         """Handle a flow start."""
         assert self.hass
@@ -231,6 +236,8 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
                 url = await self.flow_impl.async_generate_authorize_url(self.flow_id)
         except asyncio.TimeoutError:
             return self.async_abort(reason="authorize_url_timeout")
+
+        url = str(URL(url).update_query(self.extra_authorize_data))
 
         return self.async_external_step(step_id="auth", url=url)
 
