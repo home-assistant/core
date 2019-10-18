@@ -198,7 +198,7 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
         return [profile.name for profile in self._device_profiles]
 
     def _get_profile_idx_by_name(self, profile_name):
-        """Return an profile index by name."""
+        """Return a profile index by name."""
         relevant_index = self._relevant_profile_group
         index_name = [
             profile.index
@@ -210,7 +210,7 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
 
     @property
     def _relevant_profile_group(self):
-        """Return the relevant profile group."""
+        """Return the relevant profile groups."""
         return (
             HEATING_PROFILES
             if self._device.groupType == GroupType.HEATING
@@ -223,3 +223,4 @@ def _get_first_heating_thermostat(heating_group: AsyncHeatingGroup):
     for device in heating_group.devices:
         if isinstance(device, (AsyncHeatingThermostat, AsyncHeatingThermostatCompact)):
             return device
+    return None
