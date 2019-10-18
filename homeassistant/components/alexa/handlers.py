@@ -43,6 +43,7 @@ from .const import (
     Cause,
     PERCENTAGE_FAN_MAP,
     RANGE_FAN_MAP,
+    SPEED_FAN_MAP,
 )
 from .entities import async_get_entities
 from .errors import (
@@ -1032,7 +1033,7 @@ async def async_api_set_range(hass, config, directive, context):
 
     if instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
         service = fan.SERVICE_SET_SPEED
-        speed = RANGE_FAN_MAP.get(range_value, None)
+        speed = SPEED_FAN_MAP.get(range_value, None)
 
         if not speed:
             msg = "Entity does not support value"
@@ -1065,7 +1066,7 @@ async def async_api_adjust_range(hass, config, directive, context):
 
         # adjust range
         current_range = RANGE_FAN_MAP.get(entity.attributes.get(fan.ATTR_SPEED), 0)
-        speed = RANGE_FAN_MAP.get(max(0, range_delta + current_range), fan.SPEED_OFF)
+        speed = SPEED_FAN_MAP.get(max(0, range_delta + current_range), fan.SPEED_OFF)
 
         if speed == fan.SPEED_OFF:
             service = fan.SERVICE_TURN_OFF
