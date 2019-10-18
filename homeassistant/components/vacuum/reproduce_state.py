@@ -7,8 +7,10 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_IDLE,
     STATE_OFF,
     STATE_ON,
+    STATE_PAUSED,
 )
 from homeassistant.core import Context, State
 from homeassistant.helpers.typing import HomeAssistantType
@@ -16,9 +18,11 @@ from homeassistant.helpers.typing import HomeAssistantType
 from . import (
     ATTR_FAN_SPEED,
     DOMAIN,
+    SERVICE_PAUSE,
     SERVICE_RETURN_TO_BASE,
     SERVICE_SET_FAN_SPEED,
     SERVICE_START,
+    SERVICE_STOP,
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_RETURNING,
@@ -27,7 +31,13 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 VALID_STATES_TOGGLE = {STATE_ON, STATE_OFF}
-VALID_STATES_STATE = {STATE_CLEANING, STATE_DOCKED, STATE_RETURNING}
+VALID_STATES_STATE = {
+    STATE_CLEANING,
+    STATE_DOCKED,
+    STATE_IDLE,
+    STATE_RETURNING,
+    STATE_PAUSED,
+}
 
 
 async def _async_reproduce_state(
@@ -62,6 +72,10 @@ async def _async_reproduce_state(
         service = SERVICE_START
     elif state.state == STATE_DOCKED or state.state == STATE_RETURNING:
         service = SERVICE_RETURN_TO_BASE
+    elif state.state == STATE_IDLE:
+        service = SERVICE_STOP
+    elif state.state == STATE_PAUSED:
+        service = SERVICE_PAUSE
 
     await hass.services.async_call(
         DOMAIN, service, service_data, context=context, blocking=True

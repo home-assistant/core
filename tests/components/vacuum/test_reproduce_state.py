@@ -5,7 +5,7 @@ from homeassistant.components.vacuum import (
     STATE_DOCKED,
     STATE_RETURNING,
 )
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_ON, STATE_PAUSED
 from homeassistant.core import State
 
 from tests.common import async_mock_service
@@ -23,11 +23,15 @@ async def test_reproducing_states(hass, caplog):
     )
     hass.states.async_set("vacuum.entity_cleaning", STATE_CLEANING, {})
     hass.states.async_set("vacuum.entity_docked", STATE_DOCKED, {})
+    hass.states.async_set("vacuum.entity_idle", STATE_IDLE, {})
     hass.states.async_set("vacuum.entity_returning", STATE_RETURNING, {})
+    hass.states.async_set("vacuum.entity_paused", STATE_PAUSED, {})
 
     turn_on_calls = async_mock_service(hass, "vacuum", "async_turn_on")
     turn_off_calls = async_mock_service(hass, "vacuum", "async_turn_off")
-    start_calls = async_mock_service(hass, "vacuum", "async_set_fan_speed")
+    start_calls = async_mock_service(hass, "vacuum", "async_start")
+    pause_calls = async_mock_service(hass, "vacuum", "async_pause")
+    stop_calls = async_mock_service(hass, "vacuum", "async_stop")
     return_calls = async_mock_service(hass, "vacuum", "async_return_to_base")
     fan_speed_calls = async_mock_service(hass, "vacuum", "async_set_fan_speed")
 
@@ -39,7 +43,9 @@ async def test_reproducing_states(hass, caplog):
             State("vacuum.entity_on_fan", STATE_ON, {ATTR_FAN_SPEED: FAN_SPEED_LOW}),
             State("vacuum.entity_cleaning", STATE_CLEANING),
             State("vacuum.entity_docked", STATE_DOCKED),
+            State("vacuum.entity_idle", STATE_IDLE),
             State("vacuum.entity_returning", STATE_RETURNING),
+            State("vacuum.entity_paused", STATE_PAUSED),
         ],
         blocking=True,
     )
@@ -47,6 +53,8 @@ async def test_reproducing_states(hass, caplog):
     assert len(turn_on_calls) == 0
     assert len(turn_off_calls) == 0
     assert len(start_calls) == 0
+    assert len(pause_calls) == 0
+    assert len(stop_calls) == 0
     assert len(return_calls) == 0
     assert len(fan_speed_calls) == 0
 
@@ -59,6 +67,8 @@ async def test_reproducing_states(hass, caplog):
     assert len(turn_on_calls) == 0
     assert len(turn_off_calls) == 0
     assert len(start_calls) == 0
+    assert len(pause_calls) == 0
+    assert len(stop_calls) == 0
     assert len(return_calls) == 0
     assert len(fan_speed_calls) == 0
 
@@ -68,9 +78,11 @@ async def test_reproducing_states(hass, caplog):
             State("vacuum.entity_off", STATE_ON),
             State("vacuum.entity_on", STATE_OFF),
             State("vacuum.entity_on_fan", STATE_ON, {ATTR_FAN_SPEED: FAN_SPEED_HIGH}),
-            State("vacuum.entity_cleaning", STATE_DOCKED),
+            State("vacuum.entity_cleaning", STATE_PAUSED),
             State("vacuum.entity_docked", STATE_CLEANING),
+            State("vacuum.entity_idle", STATE_DOCKED),
             State("vacuum.entity_returning", STATE_CLEANING),
+            State("vacuum.entity_paused", STATE_IDLE),
             # Should not raise
             State("vacuum.non_existing", STATE_ON),
         ],
@@ -95,9 +107,17 @@ async def test_reproducing_states(hass, caplog):
         assert call.data in entities
         entities.remove(call.data)
 
+    assert len(pause_calls) == 1
+    assert pause_calls[0].domain == "vacuum"
+    assert pause_calls[0].data == {"entity_id": "vacuum.entity_cleaning"}
+
+    assert len(stop_calls) == 1
+    assert stop_calls[0].domain == "vacuum"
+    assert stop_calls[0].data == {"entity_id": "vacuum.entity_paused"}
+
     assert len(return_calls) == 1
     assert return_calls[0].domain == "vacuum"
-    assert return_calls[0].data == {"entity_id": "vacuum.entity_cleaning"}
+    assert return_calls[0].data == {"entity_id": "vacuum.entity_idle"}
 
     assert len(fan_speed_calls) == 1
     assert fan_speed_calls[0].domain == "vacuum"
