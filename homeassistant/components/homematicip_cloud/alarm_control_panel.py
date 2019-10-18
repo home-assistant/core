@@ -60,6 +60,17 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
                 self._external_alarm_zone = security_zone
 
     @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "identifiers": {(HMIPC_DOMAIN, f"ACP {self._home.id}")},
+            "name": self.name,
+            "manufacturer": "eQ-3",
+            "model": CONST_ALARM_CONTROL_PANEL_NAME,
+            "via_device": (HMIPC_DOMAIN, self._home.id),
+        }
+
+    @property
     def state(self) -> str:
         """Return the state of the device."""
         activation_state = self._home.get_security_zones_activation()
