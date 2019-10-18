@@ -44,7 +44,7 @@ class PlexServer:
         """Initialize a Plex server instance."""
         self._hass = hass
         self._plex_server = None
-        self._known_clients = []
+        self._known_clients = set()
         self._url = server_config.get(CONF_URL)
         self._token = server_config.get(CONF_TOKEN)
         self._server_name = server_config.get(CONF_SERVER)
@@ -101,7 +101,7 @@ class PlexServer:
     def update_platforms(self):
         """Update the platform entities."""
         available_clients = {}
-        new_clients = []
+        new_clients = set()
 
         try:
             devices = self._plex_server.clients()
@@ -142,9 +142,9 @@ class PlexServer:
                     client_id, client_data["device"], client_data.get("session")
                 )
 
-        self._known_clients.extend(new_clients)
+        self._known_clients.update(new_clients)
 
-        idle_clients = [
+        idle_clients = self._known_clients.difference(available_clients)
             client_id
             for client_id in self._known_clients
             if client_id not in available_clients
