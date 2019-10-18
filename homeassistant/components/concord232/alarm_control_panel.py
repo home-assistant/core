@@ -2,22 +2,23 @@
 import datetime
 import logging
 
+from concord232 import client as concord232_client
 import requests
 import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
+    CONF_CODE,
     CONF_HOST,
+    CONF_MODE,
     CONF_NAME,
     CONF_PORT,
-    CONF_CODE,
-    CONF_MODE,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED,
 )
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +61,6 @@ class Concord232Alarm(alarm.AlarmControlPanel):
 
     def __init__(self, url, name, code, mode):
         """Initialize the Concord232 alarm panel."""
-        from concord232 import client as concord232_client
 
         self._state = None
         self._name = name
