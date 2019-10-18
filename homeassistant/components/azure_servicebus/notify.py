@@ -2,6 +2,7 @@
 import json
 import logging
 
+from azure.servicebus.aio import Message, ServiceBusClient
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -36,8 +37,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_service(hass, config, discovery_info=None):
     """Get the notification service."""
-    from azure.servicebus.aio import ServiceBusClient
-
     connection_string = config[CONF_CONNECTION_STRING]
     queue_name = config.get(CONF_QUEUE_NAME)
     topic_name = config.get(CONF_TOPIC_NAME)
@@ -68,8 +67,6 @@ class ServiceBusNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message, **kwargs):
         """Send a message."""
-        from azure.servicebus.aio import Message
-
         dto = {ATTR_MESSAGE: message}
 
         if ATTR_TITLE in kwargs:
