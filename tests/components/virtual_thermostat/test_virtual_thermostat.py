@@ -31,10 +31,7 @@ from homeassistant.core import CoreState, State, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from tests.common import (
-    assert_setup_component,
-    mock_restore_cache,
-)
+from tests.common import assert_setup_component, mock_restore_cache
 from tests.components.climate import common
 
 CLIMATE_ENTITY = "climate.test"
@@ -462,7 +459,7 @@ async def test_set_wrong_preset_mode(hass, setup_comp_1, caplog):
                 "sensor": ENTITY_SENSOR,
                 "cool": {"entity_id": ENTITY_AC_IB, "away_temp": 31},
                 "initial_hvac_mode": HVAC_MODE_OFF,
-                "enabled_presets": ["away"]
+                "enabled_presets": ["away"],
             }
         },
     )
@@ -941,11 +938,11 @@ async def test_heat_comfort_eco(hass, setup_comp_1, caplog):
                     "initial_target_temp": 21,
                     "comfort_shift": 3,
                     "eco_shift": -5,
-                    "away_temp": 12
+                    "away_temp": 12,
                 },
                 "initial_hvac_mode": HVAC_MODE_HEAT,
                 "initial_preset_mode": PRESET_COMFORT,
-                "enabled_presets": [PRESET_AWAY, PRESET_COMFORT, PRESET_ECO]
+                "enabled_presets": [PRESET_AWAY, PRESET_COMFORT, PRESET_ECO],
             }
         },
     )
@@ -953,7 +950,10 @@ async def test_heat_comfort_eco(hass, setup_comp_1, caplog):
     await hass.async_block_till_done()
 
     # Preset should be comfort
-    assert hass.states.get(CLIMATE_ENTITY).attributes.get(ATTR_PRESET_MODE) == PRESET_COMFORT
+    assert (
+        hass.states.get(CLIMATE_ENTITY).attributes.get(ATTR_PRESET_MODE)
+        == PRESET_COMFORT
+    )
 
     # Target temp should be 21 + 3 = 24
     assert hass.states.get(CLIMATE_ENTITY).attributes.get(ATTR_TEMPERATURE) == 24
@@ -976,7 +976,9 @@ async def test_heat_comfort_eco(hass, setup_comp_1, caplog):
     await hass.async_block_till_done()
 
     # Preset should be eco
-    assert hass.states.get(CLIMATE_ENTITY).attributes.get(ATTR_PRESET_MODE) == PRESET_ECO
+    assert (
+        hass.states.get(CLIMATE_ENTITY).attributes.get(ATTR_PRESET_MODE) == PRESET_ECO
+    )
 
     # Target temp should be 21 + (-5) = 16
     assert hass.states.get(CLIMATE_ENTITY).attributes.get(ATTR_TEMPERATURE) == 16
@@ -1015,11 +1017,11 @@ async def test_cool_comfort_eco(hass, setup_comp_1, caplog):
                     "initial_target_temp": 28,
                     "comfort_shift": -3,
                     "eco_shift": 10,
-                    "away_temp": 28
+                    "away_temp": 28,
                 },
                 "initial_hvac_mode": HVAC_MODE_COOL,
                 "initial_preset_mode": PRESET_ECO,
-                "enabled_presets": [PRESET_AWAY, PRESET_COMFORT, PRESET_ECO]
+                "enabled_presets": [PRESET_AWAY, PRESET_COMFORT, PRESET_ECO],
             }
         },
     )
@@ -1027,7 +1029,9 @@ async def test_cool_comfort_eco(hass, setup_comp_1, caplog):
     await hass.async_block_till_done()
 
     # Preset should be eco
-    assert hass.states.get(CLIMATE_ENTITY).attributes.get(ATTR_PRESET_MODE) == PRESET_ECO
+    assert (
+        hass.states.get(CLIMATE_ENTITY).attributes.get(ATTR_PRESET_MODE) == PRESET_ECO
+    )
 
     # Target temp should be 28 + 10 = 38
     assert hass.states.get(CLIMATE_ENTITY).attributes.get(ATTR_TEMPERATURE) == 38
@@ -1040,7 +1044,10 @@ async def test_cool_comfort_eco(hass, setup_comp_1, caplog):
     await hass.async_block_till_done()
 
     # Preset should be comfort
-    assert hass.states.get(CLIMATE_ENTITY).attributes.get(ATTR_PRESET_MODE) == PRESET_COMFORT
+    assert (
+        hass.states.get(CLIMATE_ENTITY).attributes.get(ATTR_PRESET_MODE)
+        == PRESET_COMFORT
+    )
 
     # Target temp should be 25
     assert hass.states.get(CLIMATE_ENTITY).attributes.get(ATTR_TEMPERATURE) == 25
@@ -1071,14 +1078,9 @@ async def test_keep_alive_interval(hass, setup_comp_1, caplog):
                 "sensor": ENTITY_SENSOR,
                 "hysteresis_tolerance_on": 0,
                 "hysteresis_tolerance_off": 0,
-                "keep_alive": {
-                    "minutes": 10
-                },
-                "heat": {
-                    "entity_id": ENTITY_HEATER_IB,
-                    "initial_target_temp": 21
-                },
-                "initial_hvac_mode": HVAC_MODE_HEAT
+                "keep_alive": {"minutes": 10},
+                "heat": {"entity_id": ENTITY_HEATER_IB, "initial_target_temp": 21},
+                "initial_hvac_mode": HVAC_MODE_HEAT,
             }
         },
     )
@@ -1125,18 +1127,10 @@ async def test_min_cycle_duration_disabled(hass, setup_comp_1, caplog):
                 "sensor": ENTITY_SENSOR,
                 "hysteresis_tolerance_on": 0,
                 "hysteresis_tolerance_off": 0,
-                "min_cycle_duration": {
-                    "minutes": 0
-                },
-                "heat": {
-                    "entity_id": ENTITY_HEATER_IB,
-                    "initial_target_temp": 21
-                },
-                "cool": {
-                    "entity_id": ENTITY_AC_IB,
-                    "initial_target_temp": 28
-                },
-                "initial_hvac_mode": HVAC_MODE_HEAT
+                "min_cycle_duration": {"minutes": 0},
+                "heat": {"entity_id": ENTITY_HEATER_IB, "initial_target_temp": 21},
+                "cool": {"entity_id": ENTITY_AC_IB, "initial_target_temp": 28},
+                "initial_hvac_mode": HVAC_MODE_HEAT,
             }
         },
     )
@@ -1224,18 +1218,10 @@ async def test_min_cycle_duration_enabled(hass, setup_comp_1, caplog):
                 "sensor": ENTITY_SENSOR,
                 "hysteresis_tolerance_on": 0,
                 "hysteresis_tolerance_off": 0,
-                "min_cycle_duration": {
-                    "minutes": 10
-                },
-                "heat": {
-                    "entity_id": ENTITY_HEATER_IB,
-                    "initial_target_temp": 21
-                },
-                "cool": {
-                    "entity_id": ENTITY_AC_IB,
-                    "initial_target_temp": 28
-                },
-                "initial_hvac_mode": HVAC_MODE_HEAT
+                "min_cycle_duration": {"minutes": 10},
+                "heat": {"entity_id": ENTITY_HEATER_IB, "initial_target_temp": 21},
+                "cool": {"entity_id": ENTITY_AC_IB, "initial_target_temp": 28},
+                "initial_hvac_mode": HVAC_MODE_HEAT,
             }
         },
     )
@@ -1293,18 +1279,10 @@ async def test_off_min_cycle_duration_enabled(hass, setup_comp_1, caplog):
                 "sensor": ENTITY_SENSOR,
                 "hysteresis_tolerance_on": 0,
                 "hysteresis_tolerance_off": 0,
-                "min_cycle_duration": {
-                    "minutes": 10
-                },
-                "heat": {
-                    "entity_id": ENTITY_HEATER_IB,
-                    "initial_target_temp": 21
-                },
-                "cool": {
-                    "entity_id": ENTITY_AC_IB,
-                    "initial_target_temp": 28
-                },
-                "initial_hvac_mode": HVAC_MODE_HEAT
+                "min_cycle_duration": {"minutes": 10},
+                "heat": {"entity_id": ENTITY_HEATER_IB, "initial_target_temp": 21},
+                "cool": {"entity_id": ENTITY_AC_IB, "initial_target_temp": 28},
+                "initial_hvac_mode": HVAC_MODE_HEAT,
             }
         },
     )
