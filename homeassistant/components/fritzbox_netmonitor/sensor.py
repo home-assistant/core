@@ -1,18 +1,18 @@
 """Support for monitoring an AVM Fritz!Box router."""
-import logging
 from datetime import timedelta
-from requests.exceptions import RequestException
+import logging
 
 from fritzconnection import FritzStatus  # pylint: disable=import-error
 from fritzconnection.fritzconnection import (  # pylint: disable=import-error
     FritzConnectionException,
 )
+from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_HOST, STATE_UNAVAILABLE
-from homeassistant.helpers.entity import Entity
+from homeassistant.const import CONF_HOST, CONF_NAME, STATE_UNAVAILABLE
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
