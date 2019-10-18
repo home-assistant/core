@@ -413,7 +413,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
                         return
 
             too_cold = self._target_temp >= self._cur_temp + self._cold_tolerance
-            too_hot = self._target_temp <= self._cur_temp + self._hot_tolerance
+            too_hot = self._cur_temp >= self._target_temp + self._hot_tolerance
             if self._is_device_active:
                 if (self.ac_mode and too_cold) or (not self.ac_mode and too_hot):
                     _LOGGER.info("Turning off heater %s", self.heater_entity_id)
