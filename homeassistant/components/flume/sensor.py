@@ -9,6 +9,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +20,8 @@ CONF_CLIENT_SECRET = "client_secret"
 FLUME_TYPE_SENSOR = 2
 
 SCAN_INTERVAL = timedelta(minutes=1)
-
+MIN_TIME_BETWEEN_FORCED_UPDATES = timedelta(seconds=5)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=45)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -40,6 +42,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     _client_secret = config[CONF_CLIENT_SECRET]
     time_zone = str(hass.config.time_zone)
     name = config[CONF_NAME]
+    flume_entity_list = []
 
     flume_devices = FlumeDeviceList(_username, _password, _client_id, _client_secret)
 
@@ -55,13 +58,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     time_zone,
                     SCAN_INTERVAL,
                 )
-                add_entities([FlumeSensor(flume, f"{name} {device['id']}")], True)
+                flume_entity_list.append(FlumeSensor(flume, f"{name} {device['id']}"))
     except KeyError:
         _LOGGER.error("No Flume Devices Returned of Type: %s", FLUME_TYPE_SENSOR)
-        return False
     except AttributeError as attr_error:
         _LOGGER.error("Unable to setup Flume Devices: %s", attr_error)
-        return False
+
+    add_entities(flume_entity_list, True)
 
 
 class FlumeSensor(Entity):
@@ -88,6 +91,7 @@ class FlumeSensor(Entity):
         """Return the unit the value is expressed in."""
         return "gal"
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES, MIN_TIME_BETWEEN_FORCED_UPDATES)
     def update(self):
         """Get the latest data and updates the states."""
         self.flume.update()
