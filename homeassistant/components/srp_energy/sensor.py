@@ -89,30 +89,6 @@ class SrpEnergy(Entity):
         """Return the unit of measurement of this entity, if any."""
         return ENERGY_KWH
 
-    @property
-    def history(self):
-        """Return the energy usage history of this entity, if any."""
-        if self._usage is None:
-            return None
-
-        history = [
-            {
-                ATTR_READING_TIME: isodate,
-                ATTR_READING_USAGE: kwh,
-                ATTR_READING_COST: cost,
-            }
-            for _, _, isodate, kwh, cost in self._usage
-        ]
-
-        return history
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        attributes = {ATTR_USAGE_HISTORY: self.history}
-
-        return attributes
-
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest usage from SRP Energy."""
