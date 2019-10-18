@@ -2,7 +2,7 @@
 import re
 
 from asynctest import MagicMock
-import responses
+import requests_mock
 import voluptuous as vol
 from withings_api import WithingsApi
 from withings_api.common import SleepModel, SleepState
@@ -31,7 +31,6 @@ from .common import (
     assert_state_equals,
     configure_integration,
     setup_hass,
-    RESPONSES_GET,
 )
 
 
@@ -224,11 +223,10 @@ async def test_async_setup_entry_not_authenticated(hass: HomeAssistantType) -> N
     entries = hass.config_entries.async_entries(const.DOMAIN)
 
     # Simulate no longer authenticated.
-    with responses.RequestsMock() as rsps:
-        rsps.add(
-            method=RESPONSES_GET,
-            url=re.compile(WithingsApi.URL + "/v2/user?.*action=getdevice(&.*)?"),
-            status=401,
+    with requests_mock.mock() as rqmck:
+        rqmck.get(
+            re.compile(WithingsApi.URL + "/v2/user?.*action=getdevice(&.*)?"),
+            status_code=401,
             json={"status": 100, "body": None},
         )
 

@@ -1,10 +1,9 @@
 """Common data for for the withings component tests."""
-import json
 import re
 import time
 from typing import List
 
-import responses
+import requests_mock
 from withings_api import WithingsApi, WithingsAuth
 from withings_api.common import (
     SleepState,
@@ -22,10 +21,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 from homeassistant.const import CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_METRIC
-
-
-RESPONSES_GET = responses.GET  # pylint: disable=E1101
-RESPONSES_POST = responses.POST  # pylint: disable=E1101
 
 
 def get_entity_id(measure, profile) -> str:
@@ -86,68 +81,60 @@ async def configure_integration(
     """Configure the integration for a specific profile."""
     selected_profile = profiles[profile_index]
 
-    with responses.RequestsMock() as rsps:
+    with requests_mock.mock() as rqmck:
         # This will cause the first call to get data to refresh the
         # authentication token before requesting the data. It effectively
         # tests the credential_saver in withings/common.py.
-        get_token_call_count = 0
-
-        def get_token_callback(request):
-            """Get authorization tokens."""
-            nonlocal get_token_call_count
-            if get_token_call_count == 0:
-                response_body = {
-                    "access_token": "my_access_token",
-                    "expires_in": 0,
-                    "token_type": "Bearer",
-                    "scope": "user.info,user.metrics,user.activity",
-                    "refresh_token": "my_refresh_token",
-                    "userid": "my_user_id",
-                }
-            else:
-                response_body = {
-                    "access_token": "my_access_token",
-                    "expires_in": 1000,
-                    "token_type": "Bearer",
-                    "scope": "user.info,user.metrics,user.activity",
-                    "refresh_token": "my_refresh_token",
-                    "userid": "my_user_id",
-                }
-
-            get_token_call_count += 1
-            return (200, {}, json.dumps(response_body))
-
-        rsps.add_callback(
-            method=RESPONSES_POST,
-            url=re.compile(WithingsAuth.URL + "/oauth2/token.*"),
-            callback=get_token_callback,
+        rqmck.register_uri(
+            "POST",
+            re.compile(WithingsAuth.URL + "/oauth2/token.*"),
+            [
+                {
+                    "status_code": 200,
+                    "json": {
+                        "access_token": "my_access_token",
+                        "expires_in": 0,
+                        "token_type": "Bearer",
+                        "scope": "user.info,user.metrics,user.activity",
+                        "refresh_token": "my_refresh_token",
+                        "userid": "my_user_id",
+                    },
+                },
+                {
+                    "status_code": 200,
+                    "json": {
+                        "access_token": "my_access_token",
+                        "expires_in": 1000,
+                        "token_type": "Bearer",
+                        "scope": "user.info,user.metrics,user.activity",
+                        "refresh_token": "my_refresh_token",
+                        "userid": "my_user_id",
+                    },
+                },
+            ],
         )
 
-        rsps.add(
-            method=RESPONSES_GET,
-            url=re.compile(WithingsApi.URL + "/v2/user?.*action=getdevice(&.*|$)"),
-            status=200,
+        rqmck.get(
+            re.compile(WithingsApi.URL + "/v2/user?.*action=getdevice(&.*|$)"),
+            status_code=200,
             json=get_device_response,
         )
 
-        rsps.add(
-            method=RESPONSES_GET,
-            url=re.compile(WithingsApi.URL + "/v2/sleep?.*action=get(&.*|$)"),
-            status=200,
+        rqmck.get(
+            re.compile(WithingsApi.URL + "/v2/sleep?.*action=get(&.*|$)"),
+            status_code=200,
             json=get_sleep_response,
         )
 
-        rsps.add(
-            method=RESPONSES_GET,
-            url=re.compile(WithingsApi.URL + "/v2/sleep?.*action=getsummary(&.*|$)"),
-            status=200,
+        rqmck.get(
+            re.compile(WithingsApi.URL + "/v2/sleep?.*action=getsummary(&.*|$)"),
+            status_code=200,
             json=get_sleep_summary_response,
         )
 
-        rsps.add(
-            method=RESPONSES_GET,
-            url=re.compile(WithingsApi.URL + "/measure?.*action=getmeas(&.*|$)"),
-            status=200,
+        rqmck.get(
+            re.compile(WithingsApi.URL + "/measure?.*action=getmeas(&.*|$)"),
+            status_code=200,
             json=getmeasures_response,
         )
 

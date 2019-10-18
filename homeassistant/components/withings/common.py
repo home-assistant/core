@@ -188,7 +188,6 @@ class WithingsDataManager:
 
     async def check_authenticated(self) -> bool:
         """Check if the user is authenticated."""
-
         def function():
             return bool(self._api.user_get_device())
 
@@ -196,7 +195,6 @@ class WithingsDataManager:
 
     async def update_measures(self) -> MeasureGetMeasResponse:
         """Update the measures data."""
-
         def function():
             return self._api.measure_get_meas()
 
