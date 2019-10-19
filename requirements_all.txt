@@ -1004,6 +1004,9 @@ prometheus_client==0.7.1
 # homeassistant.components.tensorflow
 protobuf==3.6.1
 
+# homeassistant.components.pseg
+pseg==0.1.1
+
 # homeassistant.components.systemmonitor
 psutil==5.6.3
 

@@ -1,0 +1,8 @@
+{
+    "domain": "pseg",
+    "name": "PSE&G Gas Meter Sensors",
+    "documentation": "https://www.home-assistant.io/integrations/pseg",
+    "dependencies": [],
+    "codeowners": ["@bvlaicu"],
+    "requirements": ["pseg==0.1.1"]
+}
