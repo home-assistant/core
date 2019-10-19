@@ -127,7 +127,7 @@ class KeyboardRemote:
     async def async_stop_monitoring(self, event):
         """Stop and cleanup running monitoring tasks."""
 
-        _LOGGER.debug("cleanup on shutdown")
+        _LOGGER.debug("Cleanup on shutdown")
 
         if self.monitor_task is not None:
             if not self.monitor_task.done():
@@ -182,7 +182,7 @@ class KeyboardRemote:
                     self.active_handlers_by_descriptor[descriptor] = handler
                     await handler.async_start_monitoring(dev)
         except asyncio.CancelledError:
-            return True
+            return
 
     class DeviceHandler:
         """Manage input events using evdev with asyncio."""
@@ -227,7 +227,6 @@ class KeyboardRemote:
                     {DEVICE_DESCRIPTOR: dev.path, DEVICE_NAME: dev.name},
                 )
                 _LOGGER.debug("Keyboard (re-)connected, %s", dev.name)
-            return True
 
         async def async_stop_monitoring(self):
             """Stop event monitoring task and issue event."""
@@ -250,7 +249,6 @@ class KeyboardRemote:
                 )
                 _LOGGER.debug("Keyboard disconnected, %s", self.dev.name)
                 self.dev = None
-            return True
 
         async def async_monitor_input(self, dev):
             """Monitor one device for new events using evdev with asyncio, start and stop key hold emulation tasks as needed."""
@@ -258,7 +256,7 @@ class KeyboardRemote:
             repeat_tasks = {}
 
             try:
-                _LOGGER.debug("start device monitoring")
+                _LOGGER.debug("Start device monitoring")
                 dev.grab()
                 async for event in dev.async_read_loop():
                     if event.type is ecodes.EV_KEY:
@@ -297,5 +295,3 @@ class KeyboardRemote:
 
                 if repeat_tasks:
                     await asyncio.wait(repeat_tasks.items())
-
-                return True
