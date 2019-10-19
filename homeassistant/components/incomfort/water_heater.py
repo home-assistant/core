@@ -35,7 +35,7 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterDevice):
 
         self._unique_id = f"{heater.serial_no}"
         self.entity_id = ENTITY_ID_FORMAT.format(DOMAIN)
-        self._name = "Boiler State"
+        self._name = "Boiler"
 
         self._client = client
         self._heater = heater
