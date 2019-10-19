@@ -59,6 +59,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except sqlalchemy.exc.SQLAlchemyError as err:
         _LOGGER.error("Couldn't connect using %s DB_URL: %s", db_url, err)
         return
+    finally:
+        sess.close()
 
     queries = []
 
@@ -73,7 +75,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             value_template.hass = hass
 
         sensor = SQLSensor(
-            name, sessionmaker, query_str, column_name, unit, value_template
+            name, sessmaker, query_str, column_name, unit, value_template
         )
         queries.append(sensor)
 
