@@ -164,10 +164,10 @@ class TahomaCover(TahomaDevice, CoverDevice):
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         if self.tahoma_device.type == "io:WindowOpenerVeluxIOComponent":
-          command = "setClosure"
+            command = "setClosure"
         else:
-          command = "setPosition"
-        
+            command = "setPosition"
+
         if self.tahoma_device.type == HORIZONTAL_AWNING:
             self.apply_action(command, kwargs.get(ATTR_POSITION, 0))
         else:
