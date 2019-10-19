@@ -40,13 +40,6 @@ async def async_attach_trigger(hass, config, action, automation_info):
     @callback
     def zone_automation_listener(entity, from_s, to_s):
         """Listen for state changes and calls action."""
-        if (
-            from_s
-            and not location.has_location(from_s)
-            or not location.has_location(to_s)
-        ):
-            return
-
         zone_state = hass.states.get(zone_entity_id)
         if from_s:
             from_match = condition.zone(hass, zone_state, from_s)

@@ -467,6 +467,9 @@ def zone(
     if entity is None:
         return False
 
+    if zone_ent.entity_id == zone_cmp.ENTITY_ID_HOME and entity.state == STATE_HOME:
+        return True
+
     latitude = entity.attributes.get(ATTR_LATITUDE)
     longitude = entity.attributes.get(ATTR_LONGITUDE)
 
