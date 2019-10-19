@@ -607,7 +607,7 @@ async def async_setup_entry(hass, config_entry):
             "Renamed Z-Wave value (Node %d Value %d) to %s", node_id, value_id, name
         )
         update_ids = service.data.get(const.ATTR_UPDATE_IDS)
-        value_key = f"{node_id}-{value_id}"
+        value_key = compute_value_unique_id(node, value)
         entity = hass.data[DATA_DEVICES][value_key]
         await entity.value_renamed(update_ids)
 

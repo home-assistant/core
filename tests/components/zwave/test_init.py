@@ -230,7 +230,7 @@ async def test_device_entity(hass, mock_openzwave):
     await hass.async_block_till_done()
 
     assert not device.should_poll
-    assert device.unique_id == "10-11"
+    assert device.unique_id == "10-2-0-48"
     assert device.name == "Mock Node Sensor"
     assert device.device_state_attributes[zwave.ATTR_POWER] == 50.123
 
@@ -463,13 +463,17 @@ async def test_value_entities(hass, mock_openzwave):
 
     entry = ent_reg.async_get("binary_sensor.mock_node_mock_value")
     assert entry is not None
-    assert entry.unique_id == "{}-{}".format(node.node_id, value.object_id)
+    assert entry.unique_id == "{}-{}-{}-{}".format(
+        node.node_id, value.instance, value.index, value.command_class
+    )
     assert entry.name is None
     assert entry.device_id == node_dev_id
 
     entry = ent_reg.async_get("binary_sensor.mock_node_mock_value_b")
     assert entry is not None
-    assert entry.unique_id == "{}-{}".format(node.node_id, value2.object_id)
+    assert entry.unique_id == "{}-{}-{}-{}".format(
+        node.node_id, value2.instance, value2.index, value2.command_class
+    )
     assert entry.name is None
     assert entry.device_id != node_dev_id
     device_id_b = entry.device_id
@@ -531,7 +535,9 @@ async def test_value_entities(hass, mock_openzwave):
 
     entry = ent_reg.async_get("binary_sensor.new_node_mock_value")
     assert entry is not None
-    assert entry.unique_id == "{}-{}".format(node.node_id, value.object_id)
+    assert entry.unique_id == "{}-{}-{}-{}".format(
+        node.node_id, value.instance, value.index, value.command_class
+    )
 
     device = dev_reg.async_get(node_dev_id)
     assert device is not None
@@ -556,7 +562,58 @@ async def test_value_entities(hass, mock_openzwave):
 
     entry = ent_reg.async_get("binary_sensor.new_node_new_label")
     assert entry is not None
-    assert entry.unique_id == "{}-{}".format(node.node_id, value.object_id)
+    assert entry.unique_id == "{}-{}-{}-{}".format(
+        node.node_id, value.instance, value.index, value.command_class
+    )
+
+
+async def test_unique_id_migration(hass, mock_openzwave):
+    """Test unique id migration on a node value."""
+    mock_receivers = {}
+
+    def mock_connect(receiver, signal, *args, **kwargs):
+        mock_receivers[signal] = receiver
+
+    with patch("pydispatch.dispatcher.connect", new=mock_connect):
+        await async_setup_component(hass, "zwave", {"zwave": {}})
+        await hass.async_block_till_done()
+
+    zwave_network = hass.data[DATA_NETWORK]
+    zwave_network.state = MockNetwork.STATE_READY
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    ent_reg = await async_get_registry(hass)
+    node_entity = ent_reg.async_get_or_create(
+        "binary_sensor", "zwave", "11-1234", suggested_object_id="mock_node_mock_value"
+    )
+    assert node_entity.unique_id == "11-1234"
+
+    assert mock_receivers
+
+    hass.async_add_job(mock_receivers[MockNetwork.SIGNAL_ALL_NODES_QUERIED])
+    node = MockNode(node_id=11, generic=const.GENERIC_TYPE_SENSOR_BINARY)
+    zwave_network.nodes = {node.node_id: node}
+    value = MockValue(
+        data=False,
+        node=node,
+        index=12,
+        instance=1,
+        object_id=1234,
+        command_class=const.COMMAND_CLASS_SENSOR_BINARY,
+        type=const.TYPE_BOOL,
+        genre=const.GENRE_USER,
+    )
+    node.values = {"primary": value, value.value_id: value}
+
+    hass.async_add_job(mock_receivers[MockNetwork.SIGNAL_NODE_ADDED], node)
+    hass.async_add_job(mock_receivers[MockNetwork.SIGNAL_VALUE_ADDED], node, value)
+    await hass.async_block_till_done()
+
+    entry = ent_reg.async_get("binary_sensor.mock_node_mock_value")
+    assert entry.unique_id == "{}-{}-{}-{}".format(
+        node.node_id, value.instance, value.index, value.command_class
+    )
 
 
 async def test_value_discovery_existing_entity(hass, mock_openzwave):
