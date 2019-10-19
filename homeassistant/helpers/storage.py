@@ -13,6 +13,7 @@ from homeassistant.helpers.event import async_call_later
 
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-warn-return-any
+# mypy: no-check-untyped-defs
 
 STORAGE_DIR = ".storage"
 _LOGGER = logging.getLogger(__name__)
