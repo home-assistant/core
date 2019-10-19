@@ -74,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     if LooseVersion(MIN_ADGUARD_HOME_VERSION) > LooseVersion(version):
         _LOGGER.error(
-            "This integration requires AdGuard Home v0.99.0 to work correctly"
+            "This integration requires AdGuard Home v0.99.0 or higher to work correctly"
         )
         raise ConfigEntryNotReady
 
