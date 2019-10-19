@@ -6,5 +6,5 @@
     "evdev==1.1.2", "aionotify==0.2.0"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@bendavid"]
 }
