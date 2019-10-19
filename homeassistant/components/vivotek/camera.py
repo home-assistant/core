@@ -49,10 +49,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             pwd=config[CONF_PASSWORD],
         ),
         stream_source=(
-            "rtsp://%s:%s@%s:554/live.sdp",
-            config[CONF_USERNAME],
-            config[CONF_PASSWORD],
-            config[CONF_IP_ADDRESS],
+            "rtsp://%s:%s@%s:554/live.sdp"
+            % (config[CONF_USERNAME], config[CONF_PASSWORD], config[CONF_IP_ADDRESS])
         ),
     )
     add_entities([VivotekCam(**args)], True)
