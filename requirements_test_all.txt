@@ -46,7 +46,7 @@ RtmAPI==0.7.2
 YesssSMS==0.4.1
 
 # homeassistant.components.abode
-abodepy==0.16.5
+abodepy==0.16.6
 
 # homeassistant.components.androidtv
 adb-shell==0.0.7
