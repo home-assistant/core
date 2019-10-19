@@ -1077,6 +1077,21 @@ class ZWaveDeviceEntityValues:
             _LOGGER.debug("Using %s instead of %s", workaround_component, component)
             component = workaround_component
 
+        # Start Unique ID migration in preparation for OZW 1.6
+        # This migration will be removed when the component moves to OZW 1.6
+        old_unique_id = f"{self._node.node_id}-{self.primary.object_id}"
+        new_unique_id = compute_value_unique_id(self._node, self.primary)
+        entity_id = self._registry.async_get_entity_id(component, DOMAIN, old_unique_id)
+        if entity_id is not None:
+            _LOGGER.info(
+                "Migrating unique_id for %s :: %s -> %s",
+                entity_id,
+                old_unique_id,
+                new_unique_id,
+            )
+            self._registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
+        # End Unique ID migration
+
         entity_id = self._registry.async_get_entity_id(
             component, DOMAIN, compute_value_unique_id(self._node, self.primary)
         )
@@ -1315,4 +1330,4 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
 
 def compute_value_unique_id(node, value):
     """Compute unique_id a value would get if it were to get one."""
-    return f"{node.node_id}-{value.object_id}"
+    return f"{node.node_id}-{value.instance}-{value.index}-{value.command_class}"
