@@ -214,7 +214,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
             self._media_content_id = self.session.ratingKey
             self._media_content_rating = getattr(self.session, "contentRating", None)
 
-        self._name = NAME_FORMAT.format(name_base or DEVICE_DEFAULT_NAME)
+        self._name = self._name or NAME_FORMAT.format(name_base or DEVICE_DEFAULT_NAME)
         self._set_player_state()
 
         if self._is_player_active and self.session is not None:
