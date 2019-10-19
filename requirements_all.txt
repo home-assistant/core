@@ -115,7 +115,7 @@ adafruit-circuitpython-mcp230xx==1.1.2
 adb-shell==0.0.7
 
 # homeassistant.components.adguard
-adguardhome==0.2.1
+adguardhome==0.3.0
 
 # homeassistant.components.frontier_silicon
 afsapi==0.0.4
