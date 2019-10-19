@@ -59,12 +59,13 @@ async def test_incorrect_username(hass):
         assert result["errors"] == {"base": "auth_error"}
 
 
-async def test_entered_plant_id(hass):
+async def test_no_plants_on_account(hass):
     """Test registering an integration and finishing flow with an entered plant_id."""
     flow = config_flow.GrowattServerConfigFlow()
     flow.hass = hass
     user_input = FIXTURE_USER_INPUT
-    user_input[CONF_PLANT_ID] = "123456"
+    plant_list = GROWATT_PLANT_LIST_RESPONSE
+    plant_list["data"].pop(0)
 
     with patch("growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE):
         with patch(
@@ -73,15 +74,33 @@ async def test_entered_plant_id(hass):
         ):
 
             result = await flow.async_step_user(user_input=user_input)
-            assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-            assert result["title"] == FIXTURE_USER_INPUT[CONF_NAME]
-            assert result["data"][CONF_PLANT_ID] == user_input[CONF_PLANT_ID]
+            assert result["errors"] == {"base": "no_plants"}
+
+
+async def test_multiple_plant_ids(hass):
+    """Test registering an integration and finishing flow with an entered plant_id."""
+    flow = config_flow.GrowattServerConfigFlow()
+    flow.hass = hass
+    user_input = FIXTURE_USER_INPUT
+    plant_list = GROWATT_PLANT_LIST_RESPONSE
+    plant_list["data"].append(plant_list["data"][0])
+
+    with patch("growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE):
+        with patch("growattServer.GrowattApi.plant_list", return_value=plant_list):
+            result = await flow.async_step_user(user_input=user_input)
+            assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+            assert result["step_id"] == "plant"
+
+            user_input[CONF_PLANT_ID] = "123456"
+            result = await flow.async_step_plant(user_input=user_input)
+
             assert result["data"][CONF_NAME] == FIXTURE_USER_INPUT[CONF_NAME]
             assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
             assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
+            assert result["data"][CONF_PLANT_ID] == user_input[CONF_PLANT_ID]
 
 
-async def test_not_entered_plant_id(hass):
+async def test_one_plant_on_account(hass):
     """Test registering an integration and finishing flow with an entered plant_id."""
     flow = config_flow.GrowattServerConfigFlow()
     flow.hass = hass
@@ -95,7 +114,6 @@ async def test_not_entered_plant_id(hass):
 
             result = await flow.async_step_user(user_input=user_input)
             assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-            assert result["title"] == FIXTURE_USER_INPUT[CONF_NAME]
             assert result["data"][CONF_NAME] == FIXTURE_USER_INPUT[CONF_NAME]
             assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
             assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]

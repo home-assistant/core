@@ -10,10 +10,17 @@
           "plant_id": "Plant Id",
           "name": "Name",
         }
+      },
+      "plant": {
+        "title": "Select your plant",
+        "data": {
+          "plant_id": "Plant"
+        }
       }
     },
     "error": {
-      "auth_error": "Username or password is incorrect"
+      "auth_error": "Username or password is incorrect",
+      "no_plants": "No plants have been found on this account"
     }
   }
 }
