@@ -917,7 +917,7 @@ opensensemap-api==0.1.5
 openwebifpy==3.1.1
 
 # homeassistant.components.luci
-openwrt-luci-rpc==1.1.1
+openwrt-luci-rpc==1.1.2
 
 # homeassistant.components.oru
 oru==0.1.9
