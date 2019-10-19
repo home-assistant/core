@@ -63,7 +63,7 @@ async def async_setup(hass, config):
     config = config.get(DOMAIN)
 
     remote = KeyboardRemote(hass, config)
-    await remote.async_setup()
+    remote.setup()
 
     return True
 
@@ -88,7 +88,7 @@ class KeyboardRemote:
                 name = dev_block.get(DEVICE_NAME)
                 self.handlers_by_name[name] = handler
 
-    async def async_setup(self):
+    def setup(self):
         """Listen for Home Assistant start and stop events."""
 
         self.hass.bus.async_listen_once(
