@@ -27,7 +27,6 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     STATE_OFF,
     STATE_ON,
-    STATE_UNKNOWN,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
@@ -65,7 +64,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Samsung TV platform."""
     known_devices = hass.data.get(KNOWN_DEVICES_KEY)
     if known_devices is None:
@@ -159,19 +158,19 @@ class SamsungTVDevice(MediaPlayerDevice):
             for method in METHODS:
                 try:
                     self._config["method"] = method
-                    LOGGER.debug("try config: %s", self._config)
+                    LOGGER.debug("Try config: %s", self._config)
                     self._remote = self._remote_class(self._config.copy())
                     self._state = STATE_ON
-                    LOGGER.info("found working config: %s", self._config)
+                    LOGGER.debug("Found working config: %s", self._config)
                     break
                 except Exception as err:
-                    LOGGER.debug("failing config: %s error was: %s", self._config, err)
+                    LOGGER.debug("Failing config: %s error was: %s", self._config, err)
                     self._config["method"] = None
 
             # Unable to find working connection
             if self._config["method"] is None:
                 self._remote = None
-                self._state = STATE_UNKNOWN
+                self._state = None
                 return None
 
         if self._remote is None:
