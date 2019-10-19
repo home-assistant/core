@@ -9,6 +9,7 @@ from .const import (
     CONF_SERVER_IDENTIFIER,
     DISPATCHERS,
     DOMAIN as PLEX_DOMAIN,
+    NAME_FORMAT,
     PLEX_UPDATE_SENSOR_SIGNAL,
     SERVERS,
 )
@@ -41,7 +42,7 @@ class PlexSensor(Entity):
         self._state = None
         self._now_playing = []
         self._server = plex_server
-        self._name = f"Plex ({plex_server.friendly_name})"
+        self._name = NAME_FORMAT.format(plex_server.friendly_name)
         self._unique_id = f"sensor-{plex_server.machine_identifier}"
 
     async def async_added_to_hass(self):

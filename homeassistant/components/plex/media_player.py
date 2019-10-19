@@ -165,6 +165,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
         self._clear_media_details()
 
         self._available = self.device or self.session
+        name_base = None
 
         if self.device:
             try:
@@ -173,7 +174,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
                 device_url = "127.0.0.1"
             if "127.0.0.1" in device_url:
                 self.device.proxyThroughServer()
-            self._name = NAME_FORMAT.format(self.device.title or DEVICE_DEFAULT_NAME)
+            name_base = self.device.title or self.device.product
             self._device_protocol_capabilities = self.device.protocolCapabilities
             self._player_state = self.device.state
 
@@ -191,6 +192,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
             if session_device:
                 self._make = session_device.device or ""
                 self._player_state = session_device.state
+                name_base = name_base or session_device.title or session_device.product
             else:
                 _LOGGER.warning("No player associated with active session")
 
@@ -212,6 +214,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
             self._media_content_id = self.session.ratingKey
             self._media_content_rating = getattr(self.session, "contentRating", None)
 
+        self._name = NAME_FORMAT.format(name_base or DEVICE_DEFAULT_NAME)
         self._set_player_state()
 
         if self._is_player_active and self.session is not None:
