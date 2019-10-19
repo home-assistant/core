@@ -1464,9 +1464,6 @@ pyspcwebgw==0.4.0
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2
 
-# homeassistant.components.stride
-pystride==0.1.7
-
 # homeassistant.components.suez_water
 pysuez==0.1.17
 
