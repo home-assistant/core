@@ -192,37 +192,54 @@ class ONVIFHassCamera(Camera):
         try:
             system_date = dt_util.utcnow()
             device_time = await devicemgmt.GetSystemDateAndTime()
-            if device_time:
-                cdate = device_time.UTCDateTime or device_time.LocalDateTime
-                if cdate is None:
-                    _LOGGER.warning("Could not retrieve date/time on this camera")
-                else:
-                    cam_date = dt.datetime(
-                        cdate.Date.Year,
-                        cdate.Date.Month,
-                        cdate.Date.Day,
-                        cdate.Time.Hour,
-                        cdate.Time.Minute,
-                        cdate.Time.Second,
-                        0,
-                        dt_util.UTC,
+            if not device_time:
+                _LOGGER.debug(
+                    """Couldn't get camera '%s' date/time.
+                    GetSystemDateAndTime() return null/empty""",
+                    self._name,
+                )
+                return
+
+            tzone, cdate = (
+                (dt_util.UTC, device_time.UTCDateTime)
+                if device_time.UTCDateTime
+                else (dt_util.DEFAULT_TIME_ZONE, device_time.LocalDateTime)
+            )
+            if cdate is None:
+                _LOGGER.warning("Could not retrieve date/time on this camera")
+            else:
+                cam_date = dt.datetime(
+                    cdate.Date.Year,
+                    cdate.Date.Month,
+                    cdate.Date.Day,
+                    cdate.Time.Hour,
+                    cdate.Time.Minute,
+                    cdate.Time.Second,
+                    0,
+                    tzone,
+                )
+
+                cam_date_utc = cam_date.astimezone(dt_util.UTC)
+
+                _LOGGER.debug("TimeZone for date/time: %s", tzone)
+
+                _LOGGER.debug("Camera date/time: %s", cam_date)
+
+                _LOGGER.debug("Camera date/time in UTC: %s", cam_date_utc)
+
+                _LOGGER.debug("System date/time: %s", system_date)
+
+                dt_diff = cam_date - system_date
+                dt_diff_seconds = dt_diff.total_seconds()
+
+                if dt_diff_seconds > 5:
+                    _LOGGER.warning(
+                        "The date/time on the camera (UTC) is '%s', "
+                        "which is different from the system '%s', "
+                        "this could lead to authentication issues",
+                        cam_date_utc,
+                        system_date,
                     )
-
-                    _LOGGER.debug("Camera date/time: %s", cam_date)
-
-                    _LOGGER.debug("System date/time: %s", system_date)
-
-                    dt_diff = cam_date - system_date
-                    dt_diff_seconds = dt_diff.total_seconds()
-
-                    if dt_diff_seconds > 5:
-                        _LOGGER.warning(
-                            "The date/time on the camera is '%s', "
-                            "which is different from the system '%s', "
-                            "this could lead to authentication issues",
-                            cam_date,
-                            system_date,
-                        )
         except ServerDisconnectedError as err:
             _LOGGER.warning(
                 "Couldn't get camera '%s' date/time. Error: %s", self._name, err
