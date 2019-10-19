@@ -1,4 +1,9 @@
 """Config flow for OwnTracks."""
+try:
+    import nacl
+except ImportError:
+    nacl = None
+
 from homeassistant import config_entries
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.auth.util import generate_secret
@@ -11,16 +16,7 @@ CONF_CLOUDHOOK = "cloudhook"
 
 def supports_encryption():
     """Test if we support encryption."""
-    try:
-        import nacl  # noqa: F401 pylint: disable=unused-import
-
-        # What should I do with that ?
-        # How can it fit #27284 ?
-        # Is it stale code ?
-
-        return True
-    except OSError:
-        return False
+    return nacl is not None
 
 
 class OwnTracksFlow(config_entries.ConfigFlow, domain=DOMAIN):
