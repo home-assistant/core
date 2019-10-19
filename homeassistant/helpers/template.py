@@ -886,20 +886,12 @@ def ordinal(value):
 
 def from_json(value):
     """Convert a string to a JSON object."""
-    try:
-        return json.loads(value)
-    except (ValueError, TypeError):
-        # If string can't be converted
-        return value
+    return json.loads(value)
 
 
 def to_json(value):
     """Convert an object to a JSON string."""
-    try:
-        return json.dumps(value)
-    except (ValueError, TypeError):
-        # If object can't be converted
-        return value
+    return json.dumps(value)
 
 
 @contextfilter
