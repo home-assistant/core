@@ -1,14 +1,14 @@
 """The Growatt server PV inverter sensor integration."""
-from homeassistant.config_entries import ConfigEntry
+from homeassistant import config_entries
 from homeassistant.helpers.typing import HomeAssistantType
 
 
 async def async_setup(hass, config):
-    """Platform setup, do nothing."""
+    """Set up this integration."""
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistantType, entry: config_entries.ConfigEntry):
     """Load the saved entities."""
 
     hass.async_create_task(
@@ -19,7 +19,4 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_unload(entry, "sensor")
-    )
-    return True
+    return await hass.config_entries.async_forward_entry_unload(entry, "sensor")

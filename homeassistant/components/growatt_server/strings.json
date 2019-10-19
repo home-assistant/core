@@ -2,7 +2,7 @@
   "config": {
     "title": "Growatt Server",
     "step": {
-      "init": {
+      "user": {
         "title": "Enter your growatt information",
         "data": {
           "username": "Username",

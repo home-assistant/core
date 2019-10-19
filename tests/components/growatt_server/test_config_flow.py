@@ -1,5 +1,6 @@
 """Tests for the Growatt server config flow."""
 from unittest.mock import patch
+from copy import deepcopy
 
 from homeassistant import data_entry_flow
 from homeassistant.components.growatt_server import config_flow
@@ -44,7 +45,7 @@ async def test_show_authenticate_form(hass):
     result = await flow.async_step_user(user_input=None)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
+    assert result["step_id"] == "user"
 
 
 async def test_incorrect_username(hass):
@@ -63,15 +64,12 @@ async def test_no_plants_on_account(hass):
     """Test registering an integration and finishing flow with an entered plant_id."""
     flow = config_flow.GrowattServerConfigFlow()
     flow.hass = hass
-    user_input = FIXTURE_USER_INPUT
-    plant_list = GROWATT_PLANT_LIST_RESPONSE
-    plant_list["data"].pop(0)
+    user_input = FIXTURE_USER_INPUT.copy()
+    plant_list = deepcopy(GROWATT_PLANT_LIST_RESPONSE)
+    plant_list["data"] = []
 
     with patch("growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE):
-        with patch(
-            "growattServer.GrowattApi.plant_list",
-            return_value=GROWATT_PLANT_LIST_RESPONSE,
-        ):
+        with patch("growattServer.GrowattApi.plant_list", return_value=plant_list):
 
             result = await flow.async_step_user(user_input=user_input)
             assert result["errors"] == {"base": "no_plants"}
@@ -81,8 +79,8 @@ async def test_multiple_plant_ids(hass):
     """Test registering an integration and finishing flow with an entered plant_id."""
     flow = config_flow.GrowattServerConfigFlow()
     flow.hass = hass
-    user_input = FIXTURE_USER_INPUT
-    plant_list = GROWATT_PLANT_LIST_RESPONSE
+    user_input = FIXTURE_USER_INPUT.copy()
+    plant_list = deepcopy(GROWATT_PLANT_LIST_RESPONSE)
     plant_list["data"].append(plant_list["data"][0])
 
     with patch("growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE):
@@ -104,7 +102,7 @@ async def test_one_plant_on_account(hass):
     """Test registering an integration and finishing flow with an entered plant_id."""
     flow = config_flow.GrowattServerConfigFlow()
     flow.hass = hass
-    user_input = FIXTURE_USER_INPUT
+    user_input = FIXTURE_USER_INPUT.copy()
 
     with patch("growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE):
         with patch(
@@ -130,30 +128,9 @@ async def test_full_flow_implementation(hass):
         ):
             result = await flow.async_step_user(user_input=None)
             assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-            assert result["step_id"] == "init"
+            assert result["step_id"] == "user"
 
             result = await flow.async_step_user(user_input=FIXTURE_USER_INPUT)
-            assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-            assert result["title"] == FIXTURE_USER_INPUT[CONF_NAME]
-            assert result["data"][CONF_NAME] == FIXTURE_USER_INPUT[CONF_NAME]
-            assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
-            assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
-
-
-async def test_full_flow_implementation_via_init(hass):
-    """Test registering an integration and finishing flow works."""
-    flow = config_flow.GrowattServerConfigFlow()
-    flow.hass = hass
-    with patch("growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE):
-        with patch(
-            "growattServer.GrowattApi.plant_list",
-            return_value=GROWATT_PLANT_LIST_RESPONSE,
-        ):
-            result = await flow.async_step_init(user_input=None)
-            assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-            assert result["step_id"] == "init"
-
-            result = await flow.async_step_init(user_input=FIXTURE_USER_INPUT)
             assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
             assert result["title"] == FIXTURE_USER_INPUT[CONF_NAME]
             assert result["data"][CONF_NAME] == FIXTURE_USER_INPUT[CONF_NAME]
