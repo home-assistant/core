@@ -883,6 +883,21 @@ def ordinal(value):
         else "th"
     )
 
+def from_json(value):
+    """Convert a string to a JSON object."""
+    try:
+        return json.loads(value)
+    except (ValueError, TypeError):
+        # If string can't be converted
+        return value
+
+def to_json(value):
+    """Convert an object to a JSON string."""
+    try:
+        return json.dumps(value)
+    except (ValueError, TypeError):
+        # If object can't be converted
+        return value
 
 @contextfilter
 def random_every_time(context, values):
@@ -916,6 +931,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["timestamp_custom"] = timestamp_custom
         self.filters["timestamp_local"] = timestamp_local
         self.filters["timestamp_utc"] = timestamp_utc
+        self.filters["to_json"] = to_json
+        self.filters["from_json"] = from_json
         self.filters["is_defined"] = fail_when_undefined
         self.filters["max"] = max
         self.filters["min"] = min
