@@ -390,7 +390,7 @@ pyarlo==0.2.3
 pyblackbird==0.5
 
 # homeassistant.components.neato
-pybotvac==0.0.16
+pybotvac==0.0.17
 
 # homeassistant.components.cast
 pychromecast==4.0.1
