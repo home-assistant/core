@@ -5,17 +5,17 @@ from homeassistant.core import Context, callback
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.components.alexa import smart_home, messages
 from homeassistant.components.media_player.const import (
-    SUPPORT_PAUSE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_PREVIOUS_TRACK,
     SUPPORT_NEXT_TRACK,
-    SUPPORT_TURN_ON,
-    SUPPORT_TURN_OFF,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_STOP,
-    SUPPORT_PLAY,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
 )
 from homeassistant.helpers import entityfilter
 
@@ -706,17 +706,17 @@ async def test_media_player(hass):
         "off",
         {
             "friendly_name": "Test media player",
-            "supported_features": SUPPORT_PAUSE
-            | SUPPORT_VOLUME_SET
-            | SUPPORT_VOLUME_MUTE
-            | SUPPORT_PREVIOUS_TRACK
-            | SUPPORT_NEXT_TRACK
-            | SUPPORT_TURN_ON
-            | SUPPORT_TURN_OFF
+            "supported_features": SUPPORT_NEXT_TRACK
+            | SUPPORT_PAUSE
+            | SUPPORT_PLAY
             | SUPPORT_PLAY_MEDIA
+            | SUPPORT_PREVIOUS_TRACK
             | SUPPORT_SELECT_SOURCE
             | SUPPORT_STOP
-            | SUPPORT_PLAY,
+            | SUPPORT_TURN_OFF
+            | SUPPORT_TURN_ON
+            | SUPPORT_VOLUME_MUTE
+            | SUPPORT_VOLUME_SET,
             "volume_level": 0.75,
         },
     )
