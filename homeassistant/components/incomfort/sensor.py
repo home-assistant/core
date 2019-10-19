@@ -53,15 +53,16 @@ class IncomfortSensor(IncomfortChild, Entity):
 
         self._unique_id = f"{heater.serial_no}_{slugify(name)}"
         self.entity_id = ENTITY_ID_FORMAT.format(f"{DOMAIN}_{slugify(name)}")
-        self._name = name
+        self._name = f"Boiler {name}"
 
         self._device_class = None
+        self._state_attr = INCOMFORT_MAP_ATTRS[name][0]
         self._unit_of_measurement = None
 
     @property
     def state(self) -> Optional[str]:
         """Return the state of the sensor."""
-        return self._heater.status[INCOMFORT_MAP_ATTRS[self._name][0]]
+        return self._heater.status[self._state_attr]
 
     @property
     def device_class(self) -> Optional[str]:
@@ -92,11 +93,11 @@ class IncomfortTemperature(IncomfortSensor):
         """Initialize the signal strength sensor."""
         super().__init__(client, heater, name)
 
+        self._attr = INCOMFORT_MAP_ATTRS[name][1]
         self._device_class = DEVICE_CLASS_TEMPERATURE
         self._unit_of_measurement = TEMP_CELSIUS
 
     @property
     def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the device state attributes."""
-        key = INCOMFORT_MAP_ATTRS[self._name][1]
-        return {key: self._heater.status[key]}
+        return {self._attr: self._heater.status[self._attr]}
