@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+import pysnmp.hlapi.asyncio as hlapi
 from pysnmp.hlapi.asyncio import (
     CommunityData,
     ContextData,
@@ -101,7 +102,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         value_template.hass = hass
 
     if version == "3":
-        import pysnmp.hlapi.asyncio as hlapi
 
         if not authkey:
             authproto = "none"

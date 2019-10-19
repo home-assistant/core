@@ -1,6 +1,7 @@
 """Support for SNMP enabled switch."""
 import logging
 
+import pysnmp.hlapi.asyncio as hlapi
 from pysnmp.hlapi.asyncio import (
     CommunityData,
     ContextData,
@@ -161,7 +162,6 @@ class SnmpSwitch(SwitchDevice):
         self._payload_off = payload_off
 
         if version == "3":
-            import pysnmp.hlapi.asyncio as hlapi
 
             if not authkey:
                 authproto = "none"
