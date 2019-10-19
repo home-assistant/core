@@ -28,6 +28,7 @@ ATTR_LOCK_ORIG = "lock_originator"
 HORIZONTAL_AWNING = "io:HorizontalAwningIOComponent"
 
 TAHOMA_DEVICE_CLASSES = {
+    "io:VerticalInteriorBlindVeluxIOComponent": DEVICE_CLASS_BLIND,
     "io:ExteriorVenetianBlindIOComponent": DEVICE_CLASS_BLIND,
     HORIZONTAL_AWNING: DEVICE_CLASS_AWNING,
     "io:RollerShutterGenericIOComponent": DEVICE_CLASS_SHUTTER,
@@ -162,10 +163,15 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        if self.tahoma_device.type == HORIZONTAL_AWNING:
-            self.apply_action("setPosition", kwargs.get(ATTR_POSITION, 0))
+        if self.tahoma_device.type == "io:WindowOpenerVeluxIOComponent":
+          command = "setClosure"
         else:
-            self.apply_action("setPosition", 100 - kwargs.get(ATTR_POSITION, 0))
+          command = "setPosition"
+        
+        if self.tahoma_device.type == HORIZONTAL_AWNING:
+            self.apply_action(command, kwargs.get(ATTR_POSITION, 0))
+        else:
+            self.apply_action(command, 100 - kwargs.get(ATTR_POSITION, 0))
 
     @property
     def is_closed(self):
@@ -234,6 +240,8 @@ class TahomaCover(TahomaDevice, CoverDevice):
             HORIZONTAL_AWNING,
             "io:RollerShutterGenericIOComponent",
             "io:VerticalExteriorAwningIOComponent",
+            "io:VerticalInteriorBlindVeluxIOComponent",
+            "io:WindowOpenerVeluxIOComponent"
         ):
             self.apply_action("stop")
         else:
