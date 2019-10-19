@@ -241,7 +241,7 @@ class TahomaCover(TahomaDevice, CoverDevice):
             "io:RollerShutterGenericIOComponent",
             "io:VerticalExteriorAwningIOComponent",
             "io:VerticalInteriorBlindVeluxIOComponent",
-            "io:WindowOpenerVeluxIOComponent"
+            "io:WindowOpenerVeluxIOComponent",
         ):
             self.apply_action("stop")
         else:
