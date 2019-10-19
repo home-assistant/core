@@ -48,7 +48,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             and entity.config_entry_id == config_entry.entry_id
         ):
             tracked.add(entity.unique_id)
-    await async_add_new_entities(hass, router.url, async_add_entities, tracked, True)
+    async_add_new_entities(hass, router.url, async_add_entities, tracked, True)
 
     # Tell parent router to poll hosts list for new devices, if enabled
     if config_entry.options.setdefault(CONF_TRACK_NEW, DEFAULT_TRACK_NEW):
@@ -57,7 +57,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def _async_maybe_add_new_entities(url: str) -> None:
         """Add new entities if enabled and the update signal comes from our router."""
         if url == router.url and config_entry.options.get(CONF_TRACK_NEW):
-            await async_add_new_entities(hass, url, async_add_entities, tracked)
+            async_add_new_entities(hass, url, async_add_entities, tracked)
 
     # Register to handle router data updates
     disconnect_dispatcher = async_dispatcher_connect(
@@ -67,10 +67,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     # Add new entities from initial scan, if enabled
     if config_entry.options.get(CONF_TRACK_NEW):
-        await async_add_new_entities(hass, router.url, async_add_entities, tracked)
+        async_add_new_entities(hass, router.url, async_add_entities, tracked)
 
 
-async def async_add_new_entities(
+def async_add_new_entities(
     hass, router_url, async_add_entities, tracked, included: bool = False
 ):
     """Add new entities.
