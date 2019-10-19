@@ -567,6 +567,8 @@ async def test_value_entities(hass, mock_openzwave):
     )
 
 
+# Test Unique ID migration in preparation for OZW 1.6
+# This migration and test will be removed when the component moves to OZW 1.6
 async def test_unique_id_migration(hass, mock_openzwave):
     """Test unique id migration on a node value."""
     mock_receivers = {}
