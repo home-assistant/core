@@ -62,7 +62,9 @@ async def async_setup(hass, config):
     """Set up the keyboard_remote."""
     config = config.get(DOMAIN)
 
-    KeyboardRemote(hass, config)
+    remote = KeyboardRemote(hass, config)
+    await remote.async_setup()
+
     return True
 
 
@@ -76,12 +78,6 @@ class KeyboardRemote:
         self.handlers_by_descriptor = {}
         self.active_handlers_by_descriptor = {}
         self.monitor_task = None
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, self.async_start_monitoring
-        )
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, self.async_stop_monitoring
-        )
 
         for dev_block in config:
             handler = self.DeviceHandler(hass, dev_block)
@@ -92,8 +88,22 @@ class KeyboardRemote:
                 name = dev_block.get(DEVICE_NAME)
                 self.handlers_by_name[name] = handler
 
+    async def async_setup(self):
+        """Listen for Home Assistant start and stop events."""
+
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START, self.async_start_monitoring
+        )
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self.async_stop_monitoring
+        )
+
     async def async_start_monitoring(self, event):
-        """Start inotify watching for events, start event monitoring for those already connected, and start monitoring for device connection/disconnection."""
+        """Start monitoring of events and devices.
+
+        Start inotify watching for events, start event monitoring for those already
+        connected, and start monitoring for device connection/disconnection.
+        """
 
         # start watching
         self.watcher = aionotify.Watcher()
@@ -233,9 +243,10 @@ class KeyboardRemote:
             if self.monitor_task is not None:
                 try:
                     self.dev.ungrab()
-                except (OSError, IOError):
+                except OSError:
                     pass
-                # device has to be closed before cancelling the task to avoid
+                # monitoring of the device form the event loop and closing of the
+                # device has to occur before cancelling the task to avoid
                 # triggering unhandled exceptions inside evdev coroutines
                 asyncio.get_event_loop().remove_reader(self.dev.fileno())
                 self.dev.close()
@@ -251,7 +262,11 @@ class KeyboardRemote:
                 self.dev = None
 
         async def async_monitor_input(self, dev):
-            """Monitor one device for new events using evdev with asyncio, start and stop key hold emulation tasks as needed."""
+            """Event monitoring loop.
+
+            Monitor one device for new events using evdev with asyncio,
+            start and stop key hold emulation tasks as needed.
+            """
 
             repeat_tasks = {}
 
@@ -290,8 +305,8 @@ class KeyboardRemote:
                                 del repeat_tasks[event.code]
             except (OSError, PermissionError, asyncio.CancelledError):
                 # cancel key repeat tasks
-                for task in repeat_tasks.items():
+                for task in repeat_tasks.values():
                     task.cancel()
 
                 if repeat_tasks:
-                    await asyncio.wait(repeat_tasks.items())
+                    await asyncio.wait(repeat_tasks.values())
