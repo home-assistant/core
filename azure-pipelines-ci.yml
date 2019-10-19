@@ -108,13 +108,13 @@ stages:
     steps:
     - template: templates/azp-step-cache.yaml@azure
       parameters:
-        keyfile: 'requirements_test_all.txt | homeassistant/package_constraints.txt'
+        keyfile: 'requirements_test_all.txt | homeassistant/package_constraints.txt | "v2"'
         build: |
           set -e
           python -m venv venv
 
           . venv/bin/activate
-          pip install -U pip setuptools pytest-azurepipelines -c homeassistant/package_constraints.txt
+          pip install -U pip setuptools pytest-azurepipelines pytest-xdist -c homeassistant/package_constraints.txt
           pip install -r requirements_test_all.txt -c homeassistant/package_constraints.txt
           # This is a TEMP. Eventually we should make sure our 4 dependencies drop typing.
           # Find offending deps with `pipdeptree -r -p typing`
@@ -127,7 +127,7 @@ stages:
         set -e
 
         . venv/bin/activate
-        pytest --timeout=9 --durations=10 -qq -o console_output_style=count -p no:sugar tests
+        pytest --timeout=9 --durations=10 -n 2 --dist loadfile -qq -o console_output_style=count -p no:sugar tests
         script/check_dirty
       displayName: 'Run pytest for python $(python.container)'
       condition: and(succeeded(), ne(variables['python.container'], variables['PythonMain']))
@@ -135,7 +135,7 @@ stages:
         set -e
 
         . venv/bin/activate
-        pytest --timeout=9 --durations=10 --cov homeassistant --cov-report html -qq -o console_output_style=count -p no:sugar tests
+        pytest --timeout=9 --durations=10 -n 2 --dist loadfile --cov homeassistant --cov-report html -qq -o console_output_style=count -p no:sugar tests
         codecov --token $(codecovToken)
         script/check_dirty
       displayName: 'Run pytest for python $(python.container) / coverage'
