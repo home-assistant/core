@@ -25,7 +25,7 @@ class IncomfortFailed(IncomfortChild, BinarySensorDevice):
 
         self._unique_id = f"{heater.serial_no}_failed"
         self.entity_id = ENTITY_ID_FORMAT.format(f"{DOMAIN}_failed")
-        self._name = "InComfort Fault state"
+        self._name = "Boiler Fault"
 
         self._client = client
         self._heater = heater
