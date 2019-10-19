@@ -50,7 +50,12 @@ async def test_hmip_heating_group(hass, default_mock_hap):
     assert ha_state.attributes["temperature"] == 5.0
     assert ha_state.attributes["current_humidity"] == 47
     assert ha_state.attributes[ATTR_PRESET_MODE] == "STD"
-    assert ha_state.attributes[ATTR_PRESET_MODES] == ["STD", "Winter", PRESET_BOOST]
+    assert ha_state.attributes[ATTR_PRESET_MODES] == [
+        PRESET_NONE,
+        PRESET_BOOST,
+        "STD",
+        "Winter",
+    ]
 
     service_call_counter = len(hmip_device.mock_calls)
 

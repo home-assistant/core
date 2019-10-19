@@ -140,10 +140,8 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
     @property
     def preset_modes(self):
         """Return a list of available preset modes incl profiles."""
-        presets = self._device_profile_names
-        if not presets:
-            presets.append(PRESET_NONE)
-        presets.append(PRESET_BOOST)
+        presets = [PRESET_NONE, PRESET_BOOST]
+        presets.extend(self._device_profile_names)
         return presets
 
     @property
