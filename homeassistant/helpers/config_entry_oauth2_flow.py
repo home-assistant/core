@@ -392,7 +392,7 @@ async def async_oauth2_request(
         url,
         **kwargs,
         headers={
-            **kwargs.get("headers", {}),
+            **(kwargs.get("headers") or {}),
             "authorization": f"Bearer {token['access_token']}",
         },
     )
