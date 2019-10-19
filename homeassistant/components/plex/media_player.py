@@ -57,8 +57,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Plex media_player from a config entry."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
 
-    async def async_new_media_players(new_entities):
-        await _async_add_entities(
+    def async_new_media_players(new_entities):
+        _async_add_entities(
             hass, config_entry, async_add_entities, server_id, new_entities
         )
 
@@ -67,7 +67,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 @callback
-async def _async_add_entities(
+def _async_add_entities(
     hass, config_entry, async_add_entities, server_id, new_entities
 ):
     """Set up Plex media_player entities."""
@@ -185,11 +185,14 @@ class PlexMediaPlayer(MediaPlayerDevice):
                     p
                     for p in self.session.players
                     if p.machineIdentifier == self.device.machineIdentifier
-                )
+                ),
+                None,
             )
             if session_device:
                 self._make = session_device.device or ""
                 self._player_state = session_device.state
+            else:
+                _LOGGER.warning("No player associated with active session")
 
             self._session_username = self.session.usernames[0]
 

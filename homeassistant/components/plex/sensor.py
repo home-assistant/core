@@ -1,11 +1,9 @@
 """Support for Plex media server monitoring."""
-from datetime import timedelta
 import logging
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 from .const import (
     CONF_SERVER_IDENTIFIER,
@@ -16,8 +14,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -92,7 +88,6 @@ class PlexSensor(Entity):
         """Return the state attributes."""
         return {content[0]: content[1] for content in self._now_playing}
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update method for Plex sensor."""
         now_playing = []
