@@ -149,24 +149,24 @@ class NZBGetData:
     def init_download_list(self):
         """Initialize download list."""
         self.downloads = self._api.history()
-        self.completed_downloads = [
-            (x["Name"], x["Category"], x["Status"]) for x in self.downloads
-        ]
+        self.completed_downloads = set(
+            [(x["Name"], x["Category"], x["Status"]) for x in self.downloads]
+        )
 
     def check_completed_downloads(self):
         """Check that downloads have completed."""
 
-        actual_completed_downloads = [
-            (x["Name"], x["Category"], x["Status"]) for x in self.downloads
-        ]
+        actual_completed_downloads = set(
+            [(x["Name"], x["Category"], x["Status"]) for x in self.downloads]
+        )
 
         tmp_completed_downloads = list(
-            set(actual_completed_downloads).difference(self.completed_downloads)
+            actual_completed_downloads.difference(self.completed_downloads)
         )
 
         for download in tmp_completed_downloads:
             self.hass.bus.fire(
-                "nzbget_downloaded_nzb",
+                "nzbget_download_complete",
                 {"name": download[0], "category": download[1], "status": download[2]},
             )
 
