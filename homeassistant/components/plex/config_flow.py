@@ -79,7 +79,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         self.current_login = server_config
 
-        plex_server = PlexServer(server_config)
+        plex_server = PlexServer(self.hass, server_config)
         try:
             await self.hass.async_add_executor_job(plex_server.connect)
 

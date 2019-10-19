@@ -2,12 +2,13 @@
 from homeassistant.const import __version__
 
 DOMAIN = "plex"
-NAME_FORMAT = "Plex {}"
+NAME_FORMAT = "Plex ({})"
 
 DEFAULT_PORT = 32400
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
+DISPATCHERS = "dispatchers"
 PLATFORMS = ["media_player", "sensor"]
 REFRESH_LISTENERS = "refresh_listeners"
 SERVERS = "servers"
@@ -15,6 +16,10 @@ SERVERS = "servers"
 PLEX_CONFIG_FILE = "plex.conf"
 PLEX_MEDIA_PLAYER_OPTIONS = "plex_mp_options"
 PLEX_SERVER_CONFIG = "server_config"
+
+PLEX_NEW_MP_SIGNAL = "plex_new_mp_signal"
+PLEX_UPDATE_MEDIA_PLAYER_SIGNAL = "plex_update_mp_signal.{}"
+PLEX_UPDATE_SENSOR_SIGNAL = "plex_update_sensor_signal"
 
 CONF_SERVER = "server"
 CONF_SERVER_IDENTIFIER = "server_id"
