@@ -164,7 +164,7 @@ class ThermostatDevice(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self._api.get_temperature(self._domain_objects)
+        return self._api.get_target_temperature(self._domain_objects)
 
     @property
     def min_temp(self):

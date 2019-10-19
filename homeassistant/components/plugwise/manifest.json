@@ -4,5 +4,5 @@
   "documentation": "https://www.home-assistant.io/integrations/plugwise",
   "dependencies": [],
   "codeowners": ["@laetificat","@CoMPaTech"],
-  "requirements": ["haanna==0.10.1"]
+  "requirements": ["haanna==0.12.3"]
 }
