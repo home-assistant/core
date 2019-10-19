@@ -79,10 +79,6 @@ class IncomfortEntity:
 class IncomfortChild(IncomfortEntity):
     """Base class for all InComfort entities (excluding the boiler)."""
 
-    def __init__(self) -> None:
-        """Initialize the class."""
-        super().__init__()
-
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
         # pylint: disable=no-member
