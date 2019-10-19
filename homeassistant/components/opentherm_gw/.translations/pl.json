@@ -19,5 +19,15 @@
             }
         },
         "title": "Bramka OpenTherm"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "floor_temperature": "Temperatura pod\u0142ogi",
+                    "precision": "Precyzja"
+                }
+            }
+        }
     }
 }
