@@ -883,6 +883,7 @@ def ordinal(value):
         else "th"
     )
 
+
 def from_json(value):
     """Convert a string to a JSON object."""
     try:
@@ -891,6 +892,7 @@ def from_json(value):
         # If string can't be converted
         return value
 
+
 def to_json(value):
     """Convert an object to a JSON string."""
     try:
@@ -898,6 +900,7 @@ def to_json(value):
     except (ValueError, TypeError):
         # If object can't be converted
         return value
+
 
 @contextfilter
 def random_every_time(context, values):
