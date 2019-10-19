@@ -86,7 +86,6 @@ class IncomfortChild(IncomfortEntity):
 
     @callback
     def _refresh(self) -> None:
-        # pylint: disable=no-member
         self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
