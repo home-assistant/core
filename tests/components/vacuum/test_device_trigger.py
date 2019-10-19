@@ -1,8 +1,6 @@
 """The tests for Vacuum device triggers."""
 import pytest
 
-from homeassistant.components.vacuum import DOMAIN
-from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.setup import async_setup_component
 import homeassistant.components.automation as automation
 from homeassistant.helpers import device_registry
@@ -15,6 +13,10 @@ from tests.common import (
     mock_registry,
     async_get_device_automations,
 )
+
+from homeassistant.const import STATE_PAUSED
+
+from homeassistant.components.vacuum import DOMAIN, STATE_CLEANING
 
 
 @pytest.fixture
@@ -48,14 +50,42 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         {
             "platform": "device",
             "domain": DOMAIN,
-            "type": "turned_off",
+            "type": "cleaning",
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },
         {
             "platform": "device",
             "domain": DOMAIN,
-            "type": "turned_on",
+            "type": "docked",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": "paused",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": "idle",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": "returning",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": "error",
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },
@@ -66,7 +96,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
 
 async def test_if_fires_on_state_change(hass, calls):
     """Test for turn_on and turn_off triggers firing."""
-    hass.states.async_set("vacuum.entity", STATE_OFF)
+    hass.states.async_set("vacuum.entity", STATE_PAUSED)
 
     assert await async_setup_component(
         hass,
@@ -79,54 +109,27 @@ async def test_if_fires_on_state_change(hass, calls):
                         "domain": DOMAIN,
                         "device_id": "",
                         "entity_id": "vacuum.entity",
-                        "type": "turned_on",
+                        "type": "cleaning",
                     },
                     "action": {
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "turn_on - {{ trigger.platform}} - "
+                                "cleaning - {{ trigger.platform}} - "
                                 "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
                                 "{{ trigger.to_state.state}} - {{ trigger.for }}"
                             )
                         },
                     },
-                },
-                {
-                    "trigger": {
-                        "platform": "device",
-                        "domain": DOMAIN,
-                        "device_id": "",
-                        "entity_id": "vacuum.entity",
-                        "type": "turned_off",
-                    },
-                    "action": {
-                        "service": "test.automation",
-                        "data_template": {
-                            "some": (
-                                "turn_off - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
-                            )
-                        },
-                    },
-                },
+                }
             ]
         },
     )
 
-    # Fake that the entity is turning on.
-    hass.states.async_set("vacuum.entity", STATE_ON)
+    # Fake that the entity is cleaning.
+    hass.states.async_set("vacuum.entity", STATE_CLEANING)
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0].data["some"] == "turn_on - device - {} - off - on - None".format(
-        "vacuum.entity"
-    )
-
-    # Fake that the entity is turning off.
-    hass.states.async_set("vacuum.entity", STATE_OFF)
-    await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert calls[1].data["some"] == "turn_off - device - {} - on - off - None".format(
-        "vacuum.entity"
-    )
+    assert calls[0].data[
+        "some"
+    ] == "cleaning - device - {} - paused - cleaning - None".format("vacuum.entity")
