@@ -108,7 +108,7 @@ stages:
     steps:
     - template: templates/azp-step-cache.yaml@azure
       parameters:
-        keyfile: 'requirements_test_all.txt | homeassistant/package_constraints.txt | "v2"'
+        keyfile: 'requirements_test_all.txt | homeassistant/package_constraints.txt'
         build: |
           set -e
           python -m venv venv
