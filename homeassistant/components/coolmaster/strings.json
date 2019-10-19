@@ -1,0 +1,20 @@
+{
+  "config": {
+    "title": "CoolMasterNet",
+    "step": {
+      "user": {
+        "title": "Setup your CoolMasterNet connection details.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "off": "Can be turned off",
+          "heat": "Support heat mode",
+          "cool": "Support cool mode",
+          "heat_cool": "Support automatic heat/cool mode",
+          "dry": "Support dry mode",
+          "fan_only": "Support fan only mode"
+        }
+      }
+    }
+  }
+}

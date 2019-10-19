@@ -14,6 +14,7 @@ FLOWS = [
     "axis",
     "cast",
     "cert_expiry",
+    "coolmaster",
     "daikin",
     "deconz",
     "dialogflow",
