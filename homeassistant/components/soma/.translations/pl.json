@@ -8,6 +8,13 @@
         "create_entry": {
             "default": "Pomy\u015blnie uwierzytelniono z Soma"
         },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port"
+                }
+            }
+        },
         "title": "Soma"
     }
 }

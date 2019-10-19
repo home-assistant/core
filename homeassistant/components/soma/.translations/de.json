@@ -8,6 +8,16 @@
         "create_entry": {
             "default": "Erfolgreich bei Soma authentifiziert."
         },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "description": "Bitte gib die Verbindungsinformationen f\u00fcr SOMA Connect ein.",
+                "title": "SOMA Connect"
+            }
+        },
         "title": "Soma"
     }
 }
