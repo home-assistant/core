@@ -28,6 +28,7 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util
 
@@ -65,6 +66,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
 
+@callback
 async def _async_add_entities(
     hass, config_entry, async_add_entities, server_id, new_entities
 ):
@@ -90,8 +92,6 @@ class PlexMediaPlayer(MediaPlayerDevice):
         self._available = False
         self._device_protocol_capabilities = None
         self._is_player_active = False
-        self._is_player_available = False
-        self._player = None
         self._machine_identifier = device.machineIdentifier
         self._make = ""
         self._name = None
@@ -131,7 +131,8 @@ class PlexMediaPlayer(MediaPlayerDevice):
         )
         self.hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
-    async def async_refresh_media_player(self, device, session):
+    @callback
+    def async_refresh_media_player(self, device, session):
         """Set instance objects and trigger an entity state update."""
         self.device = device
         self.session = session
@@ -174,27 +175,23 @@ class PlexMediaPlayer(MediaPlayerDevice):
                 self.device.proxyThroughServer()
             self._name = NAME_FORMAT.format(self.device.title or DEVICE_DEFAULT_NAME)
             self._device_protocol_capabilities = self.device.protocolCapabilities
+            self._player_state = self.device.state
 
         if not self.session:
             self.force_idle()
         else:
-            if (
-                self.device is not None
-                and self.device.machineIdentifier is not None
-                and self.session.players
-            ):
-                self._is_player_available = True
-                self._player = [
+            session_device = next(
+                (
                     p
                     for p in self.session.players
                     if p.machineIdentifier == self.device.machineIdentifier
-                ][0]
-                self._name = NAME_FORMAT.format(self._player.title)
-                self._player_state = self._player.state
-                self._session_username = self.session.usernames[0]
-                self._make = self._player.device
-            else:
-                self._is_player_available = False
+                )
+            )
+            if session_device:
+                self._make = session_device.device or ""
+                self._player_state = session_device.state
+
+            self._session_username = self.session.usernames[0]
 
             # Calculate throttled position for proper progress display.
             position = int(self.session.viewOffset / 1000)

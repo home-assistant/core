@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -55,7 +56,8 @@ class PlexSensor(Entity):
         )
         self.hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
-    async def async_refresh_sensor(self, sessions):
+    @callback
+    def async_refresh_sensor(self, sessions):
         """Set instance object and trigger an entity state update."""
         self.sessions = sessions
         self.async_schedule_update_ha_state(True)

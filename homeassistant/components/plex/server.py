@@ -119,7 +119,7 @@ class PlexServer:
             available_clients[device.machineIdentifier] = {"device": device}
 
             if device.machineIdentifier not in self._known_clients:
-                new_clients.append(device.machineIdentifier)
+                new_clients.add(device.machineIdentifier)
                 _LOGGER.debug("New device: %s", device.machineIdentifier)
 
         for session in sessions:
@@ -130,7 +130,7 @@ class PlexServer:
                 available_clients[player.machineIdentifier]["session"] = session
 
                 if player.machineIdentifier not in self._known_clients:
-                    new_clients.append(player.machineIdentifier)
+                    new_clients.add(player.machineIdentifier)
                     _LOGGER.debug("New session: %s", player.machineIdentifier)
 
         new_entity_configs = []
@@ -145,10 +145,6 @@ class PlexServer:
         self._known_clients.update(new_clients)
 
         idle_clients = self._known_clients.difference(available_clients)
-            client_id
-            for client_id in self._known_clients
-            if client_id not in available_clients
-        ]
         for client_id in idle_clients:
             self.refresh_entity(client_id, None, None)
 
