@@ -158,6 +158,7 @@ homeassistant/components/jewish_calendar/* @tsvi
 homeassistant/components/kaiterra/* @Michsior14
 homeassistant/components/keba/* @dannerph
 homeassistant/components/keenetic_ndms2/* @foxel
+homeassistant/components/keyboard_remote/* @bendavid
 homeassistant/components/knx/* @Julius2342
 homeassistant/components/kodi/* @armills
 homeassistant/components/konnected/* @heythisisnate
