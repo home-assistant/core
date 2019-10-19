@@ -571,7 +571,7 @@ def get_entity_state(config, entity):
 def entity_to_json(config, entity, state):
     """Convert an entity to its Hue bridge JSON representation."""
     entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-    if (entity_features & SUPPORT_BRIGHTNESS) or (entity.domain == climate.DOMAIN or entity.domain == fan.DOMAIN or entity.domain == media_player.DOMAIN or entity.domain == cover.DOMAIN):
+    if (entity_features & SUPPORT_BRIGHTNESS) or entity.domain in [climate.DOMAIN, fan.DOMAIN, media_player.DOMAIN, cover.DOMAIN]:
         return {
             "state": {
                 HUE_API_STATE_ON: state[STATE_ON],
