@@ -3,13 +3,11 @@
 import logging
 import asyncio
 
-import voluptuous as vol
-
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from evdev import InputDevice, categorize, ecodes, list_devices
 import aionotify
-
+import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,6 +75,7 @@ class KeyboardRemote:
         self.handlers_by_name = {}
         self.handlers_by_descriptor = {}
         self.active_handlers_by_descriptor = {}
+        self.watcher = None
         self.monitor_task = None
 
         for dev_block in config:
