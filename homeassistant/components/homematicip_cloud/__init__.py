@@ -219,11 +219,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _set_active_climate_profile(service):
         """Service to set the active climate profile."""
-        entity_id_list = service.data.get(ATTR_ENTITY_ID)
-        climate_profile_index = service.data.get(ATTR_CLIMATE_PROFILE_INDEX) - 1
+        entity_id_list = service.data[ATTR_ENTITY_ID]
+        climate_profile_index = service.data[ATTR_CLIMATE_PROFILE_INDEX] - 1
 
         for hap in hass.data[DOMAIN].values():
-            if entity_id_list and entity_id_list != "all":
+            if entity_id_list != "all":
                 for entity_id in entity_id_list:
                     group = hap.hmip_device_by_entity_id.get(entity_id)
                     if group:
