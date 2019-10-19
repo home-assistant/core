@@ -92,7 +92,7 @@ SCHEMA_DEACTIVATE_VACATION = vol.Schema(
 
 SCHEMA_SET_ACTIVE_CLIMATE_PROFILE = vol.Schema(
     {
-        vol.Optional(ATTR_ENTITY_ID): comp_entity_ids,
+        vol.Required(ATTR_ENTITY_ID): comp_entity_ids,
         vol.Required(ATTR_CLIMATE_PROFILE_INDEX): cv.positive_int,
     }
 )
@@ -128,9 +128,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if home:
                 await home.activate_absence_with_duration(duration)
         else:
-            for hapid in hass.data[DOMAIN]:
-                home = hass.data[DOMAIN][hapid].home
-                await home.activate_absence_with_duration(duration)
+            for hap in hass.data[DOMAIN].values():
+                await hap.home.activate_absence_with_duration(duration)
 
     hass.services.async_register(
         DOMAIN,
@@ -149,9 +148,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if home:
                 await home.activate_absence_with_period(endtime)
         else:
-            for hapid in hass.data[DOMAIN]:
-                home = hass.data[DOMAIN][hapid].home
-                await home.activate_absence_with_period(endtime)
+            for hap in hass.data[DOMAIN].values():
+                await hap.home.activate_absence_with_period(endtime)
 
     hass.services.async_register(
         DOMAIN,
@@ -171,9 +169,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if home:
                 await home.activate_vacation(endtime, temperature)
         else:
-            for hapid in hass.data[DOMAIN]:
-                home = hass.data[DOMAIN][hapid].home
-                await home.activate_vacation(endtime, temperature)
+            for hap in hass.data[DOMAIN].values():
+                await hap.home.activate_vacation(endtime, temperature)
 
     hass.services.async_register(
         DOMAIN,
@@ -191,9 +188,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if home:
                 await home.deactivate_absence()
         else:
-            for hapid in hass.data[DOMAIN]:
-                home = hass.data[DOMAIN][hapid].home
-                await home.deactivate_absence()
+            for hap in hass.data[DOMAIN].values():
+                await hap.home.deactivate_absence()
 
     hass.services.async_register(
         DOMAIN,
@@ -211,9 +207,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if home:
                 await home.deactivate_vacation()
         else:
-            for hapid in hass.data[DOMAIN]:
-                home = hass.data[DOMAIN][hapid].home
-                await home.deactivate_vacation()
+            for hap in hass.data[DOMAIN].values():
+                await hap.home.deactivate_vacation()
 
     hass.services.async_register(
         DOMAIN,
@@ -227,17 +222,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         entity_id_list = service.data.get(ATTR_ENTITY_ID)
         climate_profile_index = service.data.get(ATTR_CLIMATE_PROFILE_INDEX) - 1
 
-        for hapid in hass.data[DOMAIN]:
-            hap = hass.data[DOMAIN][hapid]
-            home = hap.home
-
-            if entity_id_list:
+        for hap in hass.data[DOMAIN].values():
+            if entity_id_list and entity_id_list != "all":
                 for entity_id in entity_id_list:
                     group = hap.hmip_device_by_entity_id.get(entity_id)
                     if group:
                         await group.set_active_profile(climate_profile_index)
             else:
-                for group in home.groups:
+                for group in hap.home.groups:
                     if isinstance(group, AsyncHeatingGroup):
                         await group.set_active_profile(climate_profile_index)
 

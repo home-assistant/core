@@ -187,7 +187,7 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
             for profile in self._device.profiles
             if profile.visible
             and profile.name != ""
-            and profile.index in self._relevant_profile_group.keys()
+            and profile.index in self._relevant_profile_group
         ]
 
     @property

@@ -307,7 +307,7 @@ async def test_hmip_heating_group_services(hass, mock_hap_with_service):
     await hass.services.async_call(
         "homematicip_cloud",
         "set_active_climate_profile",
-        {"climate_profile_index": 2},
+        {"climate_profile_index": 2, "entity_id": "all"},
         blocking=True,
     )
     assert hmip_device.mock_calls[-1][0] == "set_active_profile"

@@ -51,7 +51,7 @@ set_active_climate_profile:
   description: Set the active climate profile index.
   fields:
     entity_id:
-      description: The ID of the climte entity (optional)
+      description: The ID of the climte entity. Use 'all' keyword to switch the profile for all entities.
       example: climate.livingroom
     climate_profile_index:
       description: The index of the climate profile (1 based)
