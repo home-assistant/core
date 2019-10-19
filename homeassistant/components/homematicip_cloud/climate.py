@@ -99,7 +99,7 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
         Need to be one of HVAC_MODE_*.
         """
         if self._device.boostMode:
-            return HVAC_MODE_AUTO
+            return HVAC_MODE_HEAT
         if self._device.controlMode == HMIP_MANUAL_CM:
             return HVAC_MODE_HEAT
 
