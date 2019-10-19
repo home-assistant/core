@@ -208,14 +208,12 @@ class AudioBooksData:
             )
 
             path = self.hass.config.path() + PERSISTENCE_AUDIOBOOKS
-            download_book_list = False
+            download_book_list = True
             # download book list only one per 2 weeks
             if os.path.isfile(path):
                 # check if the file is older than 14 days
-                if time.time() - os.path.getmtime(path) > 14 * 24 * 3600:
-                    download_book_list = True
-            else:
-                download_book_list = True
+                if time.time() - os.path.getmtime(path) < 14 * 24 * 3600:
+                    download_book_list = False
 
             if download_book_list is True:
                 try:
