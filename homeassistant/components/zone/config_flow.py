@@ -20,7 +20,7 @@ from homeassistant.util import slugify
 from .const import CONF_PASSIVE, DOMAIN, HOME_ZONE
 
 
-# mypy: allow-untyped-defs
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 
 @callback

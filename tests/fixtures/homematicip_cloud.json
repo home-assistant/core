@@ -4638,7 +4638,7 @@
                     "enabled": true,
                     "groupId": "00000000-0000-0000-0000-000000000021",
                     "index": "PROFILE_1",
-                    "name": "",
+                    "name": "STD",
                     "profileId": "00000000-0000-0000-0000-000000000038",
                     "visible": true
                 },
@@ -4646,9 +4646,9 @@
                     "enabled": true,
                     "groupId": "00000000-0000-0000-0000-000000000021",
                     "index": "PROFILE_2",
-                    "name": "",
+                    "name": "Winter",
                     "profileId": "00000000-0000-0000-0000-000000000039",
-                    "visible": false
+                    "visible": true
                 },
                 "PROFILE_3": {
                     "enabled": true,

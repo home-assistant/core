@@ -3,7 +3,7 @@ from typing import Callable, Awaitable, Union
 from homeassistant import config_entries
 from .typing import HomeAssistantType
 
-# mypy: allow-untyped-defs
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 DiscoveryFunctionType = Callable[[], Union[Awaitable[bool], bool]]
 

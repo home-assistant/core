@@ -637,7 +637,6 @@ omit =
     homeassistant/components/steam_online/sensor.py
     homeassistant/components/stiebel_eltron/*
     homeassistant/components/streamlabswater/*
-    homeassistant/components/stride/notify.py
     homeassistant/components/suez_water/*
     homeassistant/components/supervisord/sensor.py
     homeassistant/components/swiss_hydrological_data/sensor.py
