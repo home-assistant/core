@@ -104,12 +104,10 @@ class CoolmasterClimate(ClimateDevice):
     def device_info(self):
         """Return device info for this device."""
         return {
-            'identifiers': {
-                (DOMAIN, self.unique_id)
-            },
-            'name': self.name,
-            'manufacturer': "CoolAutomation",  # TODO: take from `line`
-            'model': "CoolMasterNet"  # TODO: take from `set`
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": "CoolAutomation",  # TODO: take from `line`
+            "model": "CoolMasterNet",  # TODO: take from `set`
         }
 
     @property

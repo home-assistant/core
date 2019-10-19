@@ -11,7 +11,7 @@ from .const import AVAILABLE_MODES, CONF_SUPPORTED_MODES, DEFAULT_PORT, DOMAIN
 MODES_SCHEMA = {vol.Required(mode): bool for mode in AVAILABLE_MODES}
 HOST_SCHEMA = {
     vol.Required(CONF_HOST): str,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 }
 
 DATA_SCHEMA = vol.Schema({**HOST_SCHEMA, **MODES_SCHEMA})
@@ -24,13 +24,15 @@ class CoolmasterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def _async_get_entry(self, data):
-        supported_modes = [key for (key, value) in data.items() if key in AVAILABLE_MODES and value]
+        supported_modes = [
+            key for (key, value) in data.items() if key in AVAILABLE_MODES and value
+        ]
         return self.async_create_entry(
             title=data[CONF_HOST],
             data={
                 CONF_HOST: data[CONF_HOST],
                 CONF_PORT: data[CONF_PORT],
-                CONF_SUPPORTED_MODES: supported_modes
+                CONF_SUPPORTED_MODES: supported_modes,
             },
         )
 
