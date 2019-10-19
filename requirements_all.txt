@@ -721,7 +721,7 @@ kaiterra-async-client==0.0.2
 keba-kecontact==0.2.0
 
 # homeassistant.scripts.keyring
-keyring==17.1.1
+keyring==19.2.0
 
 # homeassistant.scripts.keyring
 keyrings.alt==3.1.1

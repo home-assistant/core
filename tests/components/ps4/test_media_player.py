@@ -169,11 +169,6 @@ async def mock_ddp_response(hass, mock_status_data, games=None):
         await hass.async_block_till_done()
 
 
-async def test_async_setup_platform_does_nothing():
-    """Test setup platform does nothing (Uses config entries only)."""
-    await ps4.media_player.async_setup_platform(None, None, None)
-
-
 async def test_media_player_is_setup_correctly_with_entry(hass):
     """Test entity is setup correctly with entry correctly."""
     mock_entity_id = await setup_mock_component(hass)

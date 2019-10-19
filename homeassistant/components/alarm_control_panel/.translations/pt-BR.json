@@ -1,0 +1,7 @@
+{
+    "device_automation": {
+        "action_type": {
+            "trigger": "Disparar {entidade_nome}"
+        }
+    }
+}
