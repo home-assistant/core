@@ -5,40 +5,55 @@ from unittest.mock import patch, MagicMock, call
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
 from homeassistant.components.ign_sismologia.geo_location import (
-    ATTR_EXTERNAL_ID, SCAN_INTERVAL, ATTR_REGION,
-    ATTR_MAGNITUDE, ATTR_IMAGE_URL, ATTR_PUBLICATION_DATE, ATTR_TITLE)
-from homeassistant.const import EVENT_HOMEASSISTANT_START, \
-    CONF_RADIUS, ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_FRIENDLY_NAME, \
-    ATTR_UNIT_OF_MEASUREMENT, ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE
+    ATTR_EXTERNAL_ID,
+    SCAN_INTERVAL,
+    ATTR_REGION,
+    ATTR_MAGNITUDE,
+    ATTR_IMAGE_URL,
+    ATTR_PUBLICATION_DATE,
+    ATTR_TITLE,
+)
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START,
+    CONF_RADIUS,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    ATTR_FRIENDLY_NAME,
+    ATTR_UNIT_OF_MEASUREMENT,
+    ATTR_ATTRIBUTION,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    ATTR_ICON,
+)
 from homeassistant.setup import async_setup_component
 from tests.common import assert_setup_component, async_fire_time_changed
 import homeassistant.util.dt as dt_util
 
-CONFIG = {
-    geo_location.DOMAIN: [
-        {
-            'platform': 'ign_sismologia',
-            CONF_RADIUS: 200
-        }
-    ]
-}
+CONFIG = {geo_location.DOMAIN: [{"platform": "ign_sismologia", CONF_RADIUS: 200}]}
 
 CONFIG_WITH_CUSTOM_LOCATION = {
     geo_location.DOMAIN: [
         {
-            'platform': 'ign_sismologia',
+            "platform": "ign_sismologia",
             CONF_RADIUS: 200,
             CONF_LATITUDE: 40.4,
-            CONF_LONGITUDE: -3.7
+            CONF_LONGITUDE: -3.7,
         }
     ]
 }
 
 
-def _generate_mock_feed_entry(external_id, title, distance_to_home,
-                              coordinates, region=None,
-                              attribution=None, published=None,
-                              magnitude=None, image_url=None):
+def _generate_mock_feed_entry(
+    external_id,
+    title,
+    distance_to_home,
+    coordinates,
+    region=None,
+    attribution=None,
+    published=None,
+    magnitude=None,
+    image_url=None,
+):
     """Construct a mock feed entry for testing purposes."""
     feed_entry = MagicMock()
     feed_entry.external_id = external_id
@@ -57,29 +72,35 @@ async def test_setup(hass):
     """Test the general setup of the platform."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
-        '1234', 'Title 1', 15.5, (38.0, -3.0),
-        region='Region 1', attribution='Attribution 1',
-        published=datetime.datetime(2018, 9, 22, 8, 0,
-                                    tzinfo=datetime.timezone.utc),
-        magnitude=5.7, image_url='http://image.url/map.jpg')
+        "1234",
+        "Title 1",
+        15.5,
+        (38.0, -3.0),
+        region="Region 1",
+        attribution="Attribution 1",
+        published=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc),
+        magnitude=5.7,
+        image_url="http://image.url/map.jpg",
+    )
     mock_entry_2 = _generate_mock_feed_entry(
-        '2345', 'Title 2', 20.5, (38.1, -3.1), magnitude=4.6)
+        "2345", "Title 2", 20.5, (38.1, -3.1), magnitude=4.6
+    )
     mock_entry_3 = _generate_mock_feed_entry(
-        '3456', 'Title 3', 25.5, (38.2, -3.2), region='Region 3')
-    mock_entry_4 = _generate_mock_feed_entry(
-        '4567', 'Title 4', 12.5, (38.3, -3.3))
+        "3456", "Title 3", 25.5, (38.2, -3.2), region="Region 3"
+    )
+    mock_entry_4 = _generate_mock_feed_entry("4567", "Title 4", 12.5, (38.3, -3.3))
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with patch('homeassistant.util.dt.utcnow', return_value=utcnow), \
-        patch('georss_ign_sismologia_client.'
-              'IgnSismologiaFeed') as mock_feed:
-        mock_feed.return_value.update.return_value = 'OK', [mock_entry_1,
-                                                            mock_entry_2,
-                                                            mock_entry_3]
+    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
+        "georss_ign_sismologia_client." "IgnSismologiaFeed"
+    ) as mock_feed:
+        mock_feed.return_value.update.return_value = (
+            "OK",
+            [mock_entry_1, mock_entry_2, mock_entry_3],
+        )
         with assert_setup_component(1, geo_location.DOMAIN):
-            assert await async_setup_component(
-                hass, geo_location.DOMAIN, CONFIG)
+            assert await async_setup_component(hass, geo_location.DOMAIN, CONFIG)
             # Artificially trigger update.
             hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
             # Collect events.
@@ -99,13 +120,15 @@ async def test_setup(hass):
                 ATTR_TITLE: "Title 1",
                 ATTR_REGION: "Region 1",
                 ATTR_ATTRIBUTION: "Attribution 1",
-                ATTR_PUBLICATION_DATE:
-                    datetime.datetime(
-                        2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc),
-                ATTR_IMAGE_URL: 'http://image.url/map.jpg',
+                ATTR_PUBLICATION_DATE: datetime.datetime(
+                    2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc
+                ),
+                ATTR_IMAGE_URL: "http://image.url/map.jpg",
                 ATTR_MAGNITUDE: 5.7,
                 ATTR_UNIT_OF_MEASUREMENT: "km",
-                ATTR_SOURCE: 'ign_sismologia'}
+                ATTR_SOURCE: "ign_sismologia",
+                ATTR_ICON: "mdi:pulse",
+            }
             assert float(state.state) == 15.5
 
             state = hass.states.get("geo_location.m_4_6")
@@ -119,7 +142,9 @@ async def test_setup(hass):
                 ATTR_TITLE: "Title 2",
                 ATTR_MAGNITUDE: 4.6,
                 ATTR_UNIT_OF_MEASUREMENT: "km",
-                ATTR_SOURCE: 'ign_sismologia'}
+                ATTR_SOURCE: "ign_sismologia",
+                ATTR_ICON: "mdi:pulse",
+            }
             assert float(state.state) == 20.5
 
             state = hass.states.get("geo_location.region_3")
@@ -133,13 +158,17 @@ async def test_setup(hass):
                 ATTR_TITLE: "Title 3",
                 ATTR_REGION: "Region 3",
                 ATTR_UNIT_OF_MEASUREMENT: "km",
-                ATTR_SOURCE: 'ign_sismologia'}
+                ATTR_SOURCE: "ign_sismologia",
+                ATTR_ICON: "mdi:pulse",
+            }
             assert float(state.state) == 25.5
 
             # Simulate an update - one existing, one new entry,
             # one outdated entry
-            mock_feed.return_value.update.return_value = 'OK', [
-                mock_entry_1, mock_entry_4, mock_entry_3]
+            mock_feed.return_value.update.return_value = (
+                "OK",
+                [mock_entry_1, mock_entry_4, mock_entry_3],
+            )
             async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
             await hass.async_block_till_done()
 
@@ -148,7 +177,7 @@ async def test_setup(hass):
 
             # Simulate an update - empty data, but successful update,
             # so no changes to entities.
-            mock_feed.return_value.update.return_value = 'OK_NO_DATA', None
+            mock_feed.return_value.update.return_value = "OK_NO_DATA", None
             async_fire_time_changed(hass, utcnow + 2 * SCAN_INTERVAL)
             await hass.async_block_till_done()
 
@@ -156,7 +185,7 @@ async def test_setup(hass):
             assert len(all_states) == 3
 
             # Simulate an update - empty data, removes all entities
-            mock_feed.return_value.update.return_value = 'ERROR', None
+            mock_feed.return_value.update.return_value = "ERROR", None
             async_fire_time_changed(hass, utcnow + 3 * SCAN_INTERVAL)
             await hass.async_block_till_done()
 
@@ -167,16 +196,15 @@ async def test_setup(hass):
 async def test_setup_with_custom_location(hass):
     """Test the setup with a custom location."""
     # Set up some mock feed entries for this test.
-    mock_entry_1 = _generate_mock_feed_entry(
-        '1234', 'Title 1', 20.5, (38.1, -3.1))
+    mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 20.5, (38.1, -3.1))
 
-    with patch('georss_ign_sismologia_client.'
-               'IgnSismologiaFeed') as mock_feed:
-        mock_feed.return_value.update.return_value = 'OK', [mock_entry_1]
+    with patch("georss_ign_sismologia_client." "IgnSismologiaFeed") as mock_feed:
+        mock_feed.return_value.update.return_value = "OK", [mock_entry_1]
 
         with assert_setup_component(1, geo_location.DOMAIN):
             assert await async_setup_component(
-                hass, geo_location.DOMAIN, CONFIG_WITH_CUSTOM_LOCATION)
+                hass, geo_location.DOMAIN, CONFIG_WITH_CUSTOM_LOCATION
+            )
 
             # Artificially trigger update.
             hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -187,5 +215,5 @@ async def test_setup_with_custom_location(hass):
             assert len(all_states) == 1
 
             assert mock_feed.call_args == call(
-                (40.4, -3.7), filter_minimum_magnitude=0.0,
-                filter_radius=200.0)
+                (40.4, -3.7), filter_minimum_magnitude=0.0, filter_radius=200.0
+            )

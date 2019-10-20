@@ -7,11 +7,7 @@ from tests.common import get_test_home_assistant, MockDependency
 from homeassistant.components import nuheat
 
 VALID_CONFIG = {
-    "nuheat": {
-        "username": "warm",
-        "password": "feet",
-        "devices": "thermostat123"
-    }
+    "nuheat": {"username": "warm", "password": "feet", "devices": "thermostat123"}
 }
 
 
@@ -36,8 +32,9 @@ class TestNuHeat(unittest.TestCase):
         mocked_nuheat.NuHeat.assert_called_with("warm", "feet")
         assert nuheat.DOMAIN in self.hass.data
         assert 2 == len(self.hass.data[nuheat.DOMAIN])
-        assert isinstance(self.hass.data[nuheat.DOMAIN][0],
-                          type(mocked_nuheat.NuHeat()))
+        assert isinstance(
+            self.hass.data[nuheat.DOMAIN][0], type(mocked_nuheat.NuHeat())
+        )
         assert self.hass.data[nuheat.DOMAIN][1] == "thermostat123"
 
         mocked_load.assert_called_with(

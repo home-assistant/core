@@ -14,7 +14,7 @@
                 "data": {
                     "password": "Passwuert"
                 },
-                "description": "Gitt d'Passwuert vun \u00e4rer Konfiguratioun an.",
+                "description": "Gitt d'Passwuert vun \u00e4rer Konfiguratioun an fir {name}.",
                 "title": "Passwuert aginn"
             },
             "discovery_confirm": {

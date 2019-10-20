@@ -1,37 +1,42 @@
 """A sensor for incoming calls using a USB modem that supports caller ID."""
 import logging
 import voluptuous as vol
-from homeassistant.const import (STATE_IDLE,
-                                 EVENT_HOMEASSISTANT_STOP,
-                                 CONF_NAME,
-                                 CONF_DEVICE)
+from homeassistant.const import (
+    STATE_IDLE,
+    EVENT_HOMEASSISTANT_STOP,
+    CONF_NAME,
+    CONF_DEVICE,
+)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-DEFAULT_NAME = 'Modem CallerID'
-ICON = 'mdi:phone-classic'
-DEFAULT_DEVICE = '/dev/ttyACM0'
+DEFAULT_NAME = "Modem CallerID"
+ICON = "mdi:phone-classic"
+DEFAULT_DEVICE = "/dev/ttyACM0"
 
-STATE_RING = 'ring'
-STATE_CALLERID = 'callerid'
+STATE_RING = "ring"
+STATE_CALLERID = "callerid"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up modem caller ID sensor platform."""
     from basicmodem.basicmodem import BasicModem as bm
+
     name = config.get(CONF_NAME)
     port = config.get(CONF_DEVICE)
 
     modem = bm(port)
     if modem.state == modem.STATE_FAILED:
-        _LOGGER.error('Unable to initialize modem.')
+        _LOGGER.error("Unable to initialize modem.")
         return
 
     add_entities([ModemCalleridSensor(hass, name, port, modem)])
@@ -42,7 +47,7 @@ class ModemCalleridSensor(Entity):
 
     def __init__(self, hass, name, port, modem):
         """Initialize the sensor."""
-        self._attributes = {"cid_time": 0, "cid_number": '', "cid_name": ''}
+        self._attributes = {"cid_time": 0, "cid_number": "", "cid_name": ""}
         self._name = name
         self.port = port
         self.modem = modem
@@ -93,16 +98,20 @@ class ModemCalleridSensor(Entity):
         """Handle new states."""
         if newstate == self.modem.STATE_RING:
             if self.state == self.modem.STATE_IDLE:
-                att = {"cid_time": self.modem.get_cidtime,
-                       "cid_number": '',
-                       "cid_name": ''}
+                att = {
+                    "cid_time": self.modem.get_cidtime,
+                    "cid_number": "",
+                    "cid_name": "",
+                }
                 self.set_attributes(att)
             self._state = STATE_RING
             self.schedule_update_ha_state()
         elif newstate == self.modem.STATE_CALLERID:
-            att = {"cid_time": self.modem.get_cidtime,
-                   "cid_number": self.modem.get_cidnumber,
-                   "cid_name": self.modem.get_cidname}
+            att = {
+                "cid_time": self.modem.get_cidtime,
+                "cid_number": self.modem.get_cidnumber,
+                "cid_name": self.modem.get_cidname,
+            }
             self.set_attributes(att)
             self._state = STATE_CALLERID
             self.schedule_update_ha_state()

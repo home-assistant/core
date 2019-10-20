@@ -1,28 +1,31 @@
 """Alexa capabilities."""
-from datetime import datetime
 import logging
 
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
     STATE_LOCKED,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNLOCKED,
+    STATE_UNKNOWN,
 )
 import homeassistant.components.climate.const as climate
-from homeassistant.components import (
-    light,
-    fan,
-    cover,
-)
+from homeassistant.components.alarm_control_panel import ATTR_CODE_FORMAT, FORMAT_NUMBER
+from homeassistant.components import light, fan, cover
 import homeassistant.util.color as color_util
+import homeassistant.util.dt as dt_util
 
 from .const import (
     API_TEMP_UNITS,
     API_THERMOSTAT_MODES,
+    API_THERMOSTAT_PRESETS,
     DATE_FORMAT,
     PERCENTAGE_FAN_MAP,
 )
@@ -81,38 +84,48 @@ class AlexaCapibility:
         """Applicable only to scenes."""
         return None
 
+    @staticmethod
+    def configuration():
+        """Applicable only to security control panel."""
+        return []
+
     def serialize_discovery(self):
         """Serialize according to the Discovery API."""
         result = {
-            'type': 'AlexaInterface',
-            'interface': self.name(),
-            'version': '3',
-            'properties': {
-                'supported': self.properties_supported(),
-                'proactivelyReported': self.properties_proactively_reported(),
-                'retrievable': self.properties_retrievable(),
+            "type": "AlexaInterface",
+            "interface": self.name(),
+            "version": "3",
+            "properties": {
+                "supported": self.properties_supported(),
+                "proactivelyReported": self.properties_proactively_reported(),
+                "retrievable": self.properties_retrievable(),
             },
         }
 
         # pylint: disable=assignment-from-none
         supports_deactivation = self.supports_deactivation()
         if supports_deactivation is not None:
-            result['supportsDeactivation'] = supports_deactivation
+            result["supportsDeactivation"] = supports_deactivation
+
+        configuration = self.configuration()
+        if configuration:
+            result["configuration"] = configuration
+
         return result
 
     def serialize_properties(self):
         """Return properties serialized for an API response."""
         for prop in self.properties_supported():
-            prop_name = prop['name']
+            prop_name = prop["name"]
             # pylint: disable=assignment-from-no-return
             prop_value = self.get_property(prop_name)
             if prop_value is not None:
                 yield {
-                    'name': prop_name,
-                    'namespace': self.name(),
-                    'value': prop_value,
-                    'timeOfSample': datetime.now().strftime(DATE_FORMAT),
-                    'uncertaintyInMilliseconds': 0
+                    "name": prop_name,
+                    "namespace": self.name(),
+                    "value": prop_value,
+                    "timeOfSample": dt_util.utcnow().strftime(DATE_FORMAT),
+                    "uncertaintyInMilliseconds": 0,
                 }
 
 
@@ -129,11 +142,11 @@ class AlexaEndpointHealth(AlexaCapibility):
 
     def name(self):
         """Return the Alexa API name of this interface."""
-        return 'Alexa.EndpointHealth'
+        return "Alexa.EndpointHealth"
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{'name': 'connectivity'}]
+        return [{"name": "connectivity"}]
 
     def properties_proactively_reported(self):
         """Return True if properties asynchronously reported."""
@@ -145,12 +158,12 @@ class AlexaEndpointHealth(AlexaCapibility):
 
     def get_property(self, name):
         """Read and return a property."""
-        if name != 'connectivity':
+        if name != "connectivity":
             raise UnsupportedProperty(name)
 
         if self.entity.state == STATE_UNAVAILABLE:
-            return {'value': 'UNREACHABLE'}
-        return {'value': 'OK'}
+            return {"value": "UNREACHABLE"}
+        return {"value": "OK"}
 
 
 class AlexaPowerController(AlexaCapibility):
@@ -161,11 +174,11 @@ class AlexaPowerController(AlexaCapibility):
 
     def name(self):
         """Return the Alexa API name of this interface."""
-        return 'Alexa.PowerController'
+        return "Alexa.PowerController"
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{'name': 'powerState'}]
+        return [{"name": "powerState"}]
 
     def properties_proactively_reported(self):
         """Return True if properties asynchronously reported."""
@@ -177,12 +190,16 @@ class AlexaPowerController(AlexaCapibility):
 
     def get_property(self, name):
         """Read and return a property."""
-        if name != 'powerState':
+        if name != "powerState":
             raise UnsupportedProperty(name)
 
-        if self.entity.state == STATE_OFF:
-            return 'OFF'
-        return 'ON'
+        if self.entity.domain == climate.DOMAIN:
+            is_on = self.entity.state != climate.HVAC_MODE_OFF
+
+        else:
+            is_on = self.entity.state != STATE_OFF
+
+        return "ON" if is_on else "OFF"
 
 
 class AlexaLockController(AlexaCapibility):
@@ -193,11 +210,11 @@ class AlexaLockController(AlexaCapibility):
 
     def name(self):
         """Return the Alexa API name of this interface."""
-        return 'Alexa.LockController'
+        return "Alexa.LockController"
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{'name': 'lockState'}]
+        return [{"name": "lockState"}]
 
     def properties_retrievable(self):
         """Return True if properties can be retrieved."""
@@ -209,14 +226,14 @@ class AlexaLockController(AlexaCapibility):
 
     def get_property(self, name):
         """Read and return a property."""
-        if name != 'lockState':
+        if name != "lockState":
             raise UnsupportedProperty(name)
 
         if self.entity.state == STATE_LOCKED:
-            return 'LOCKED'
+            return "LOCKED"
         if self.entity.state == STATE_UNLOCKED:
-            return 'UNLOCKED'
-        return 'JAMMED'
+            return "UNLOCKED"
+        return "JAMMED"
 
 
 class AlexaSceneController(AlexaCapibility):
@@ -232,7 +249,7 @@ class AlexaSceneController(AlexaCapibility):
 
     def name(self):
         """Return the Alexa API name of this interface."""
-        return 'Alexa.SceneController'
+        return "Alexa.SceneController"
 
 
 class AlexaBrightnessController(AlexaCapibility):
@@ -243,11 +260,11 @@ class AlexaBrightnessController(AlexaCapibility):
 
     def name(self):
         """Return the Alexa API name of this interface."""
-        return 'Alexa.BrightnessController'
+        return "Alexa.BrightnessController"
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{'name': 'brightness'}]
+        return [{"name": "brightness"}]
 
     def properties_proactively_reported(self):
         """Return True if properties asynchronously reported."""
@@ -259,10 +276,10 @@ class AlexaBrightnessController(AlexaCapibility):
 
     def get_property(self, name):
         """Read and return a property."""
-        if name != 'brightness':
+        if name != "brightness":
             raise UnsupportedProperty(name)
-        if 'brightness' in self.entity.attributes:
-            return round(self.entity.attributes['brightness'] / 255.0 * 100)
+        if "brightness" in self.entity.attributes:
+            return round(self.entity.attributes["brightness"] / 255.0 * 100)
         return 0
 
 
@@ -274,11 +291,11 @@ class AlexaColorController(AlexaCapibility):
 
     def name(self):
         """Return the Alexa API name of this interface."""
-        return 'Alexa.ColorController'
+        return "Alexa.ColorController"
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{'name': 'color'}]
+        return [{"name": "color"}]
 
     def properties_retrievable(self):
         """Return True if properties can be retrieved."""
@@ -286,17 +303,15 @@ class AlexaColorController(AlexaCapibility):
 
     def get_property(self, name):
         """Read and return a property."""
-        if name != 'color':
+        if name != "color":
             raise UnsupportedProperty(name)
 
-        hue, saturation = self.entity.attributes.get(
-            light.ATTR_HS_COLOR, (0, 0))
+        hue, saturation = self.entity.attributes.get(light.ATTR_HS_COLOR, (0, 0))
 
         return {
-            'hue': hue,
-            'saturation': saturation / 100.0,
-            'brightness': self.entity.attributes.get(
-                light.ATTR_BRIGHTNESS, 0) / 255.0,
+            "hue": hue,
+            "saturation": saturation / 100.0,
+            "brightness": self.entity.attributes.get(light.ATTR_BRIGHTNESS, 0) / 255.0,
         }
 
 
@@ -308,11 +323,11 @@ class AlexaColorTemperatureController(AlexaCapibility):
 
     def name(self):
         """Return the Alexa API name of this interface."""
-        return 'Alexa.ColorTemperatureController'
+        return "Alexa.ColorTemperatureController"
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{'name': 'colorTemperatureInKelvin'}]
+        return [{"name": "colorTemperatureInKelvin"}]
 
     def properties_retrievable(self):
         """Return True if properties can be retrieved."""
@@ -320,12 +335,13 @@ class AlexaColorTemperatureController(AlexaCapibility):
 
     def get_property(self, name):
         """Read and return a property."""
-        if name != 'colorTemperatureInKelvin':
+        if name != "colorTemperatureInKelvin":
             raise UnsupportedProperty(name)
-        if 'color_temp' in self.entity.attributes:
+        if "color_temp" in self.entity.attributes:
             return color_util.color_temperature_mired_to_kelvin(
-                self.entity.attributes['color_temp'])
-        return 0
+                self.entity.attributes["color_temp"]
+            )
+        return None
 
 
 class AlexaPercentageController(AlexaCapibility):
@@ -336,11 +352,11 @@ class AlexaPercentageController(AlexaCapibility):
 
     def name(self):
         """Return the Alexa API name of this interface."""
-        return 'Alexa.PercentageController'
+        return "Alexa.PercentageController"
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{'name': 'percentage'}]
+        return [{"name": "percentage"}]
 
     def properties_retrievable(self):
         """Return True if properties can be retrieved."""
@@ -348,7 +364,7 @@ class AlexaPercentageController(AlexaCapibility):
 
     def get_property(self, name):
         """Read and return a property."""
-        if name != 'percentage':
+        if name != "percentage":
             raise UnsupportedProperty(name)
 
         if self.entity.domain == fan.DOMAIN:
@@ -370,7 +386,7 @@ class AlexaSpeaker(AlexaCapibility):
 
     def name(self):
         """Return the Alexa API name of this interface."""
-        return 'Alexa.Speaker'
+        return "Alexa.Speaker"
 
 
 class AlexaStepSpeaker(AlexaCapibility):
@@ -381,7 +397,7 @@ class AlexaStepSpeaker(AlexaCapibility):
 
     def name(self):
         """Return the Alexa API name of this interface."""
-        return 'Alexa.StepSpeaker'
+        return "Alexa.StepSpeaker"
 
 
 class AlexaPlaybackController(AlexaCapibility):
@@ -392,7 +408,7 @@ class AlexaPlaybackController(AlexaCapibility):
 
     def name(self):
         """Return the Alexa API name of this interface."""
-        return 'Alexa.PlaybackController'
+        return "Alexa.PlaybackController"
 
 
 class AlexaInputController(AlexaCapibility):
@@ -403,7 +419,7 @@ class AlexaInputController(AlexaCapibility):
 
     def name(self):
         """Return the Alexa API name of this interface."""
-        return 'Alexa.InputController'
+        return "Alexa.InputController"
 
 
 class AlexaTemperatureSensor(AlexaCapibility):
@@ -419,11 +435,11 @@ class AlexaTemperatureSensor(AlexaCapibility):
 
     def name(self):
         """Return the Alexa API name of this interface."""
-        return 'Alexa.TemperatureSensor'
+        return "Alexa.TemperatureSensor"
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{'name': 'temperature'}]
+        return [{"name": "temperature"}]
 
     def properties_proactively_reported(self):
         """Return True if properties asynchronously reported."""
@@ -435,19 +451,25 @@ class AlexaTemperatureSensor(AlexaCapibility):
 
     def get_property(self, name):
         """Read and return a property."""
-        if name != 'temperature':
+        if name != "temperature":
             raise UnsupportedProperty(name)
 
         unit = self.entity.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         temp = self.entity.state
         if self.entity.domain == climate.DOMAIN:
             unit = self.hass.config.units.temperature_unit
-            temp = self.entity.attributes.get(
-                climate.ATTR_CURRENT_TEMPERATURE)
-        return {
-            'value': float(temp),
-            'scale': API_TEMP_UNITS[unit],
-        }
+            temp = self.entity.attributes.get(climate.ATTR_CURRENT_TEMPERATURE)
+
+        if temp in (STATE_UNAVAILABLE, STATE_UNKNOWN, None):
+            return None
+
+        try:
+            temp = float(temp)
+        except ValueError:
+            _LOGGER.warning("Invalid temp value %s for %s", temp, self.entity.entity_id)
+            return None
+
+        return {"value": temp, "scale": API_TEMP_UNITS[unit]}
 
 
 class AlexaContactSensor(AlexaCapibility):
@@ -468,11 +490,11 @@ class AlexaContactSensor(AlexaCapibility):
 
     def name(self):
         """Return the Alexa API name of this interface."""
-        return 'Alexa.ContactSensor'
+        return "Alexa.ContactSensor"
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{'name': 'detectionState'}]
+        return [{"name": "detectionState"}]
 
     def properties_proactively_reported(self):
         """Return True if properties asynchronously reported."""
@@ -484,12 +506,12 @@ class AlexaContactSensor(AlexaCapibility):
 
     def get_property(self, name):
         """Read and return a property."""
-        if name != 'detectionState':
+        if name != "detectionState":
             raise UnsupportedProperty(name)
 
         if self.entity.state == STATE_ON:
-            return 'DETECTED'
-        return 'NOT_DETECTED'
+            return "DETECTED"
+        return "NOT_DETECTED"
 
 
 class AlexaMotionSensor(AlexaCapibility):
@@ -505,11 +527,11 @@ class AlexaMotionSensor(AlexaCapibility):
 
     def name(self):
         """Return the Alexa API name of this interface."""
-        return 'Alexa.MotionSensor'
+        return "Alexa.MotionSensor"
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{'name': 'detectionState'}]
+        return [{"name": "detectionState"}]
 
     def properties_proactively_reported(self):
         """Return True if properties asynchronously reported."""
@@ -521,12 +543,12 @@ class AlexaMotionSensor(AlexaCapibility):
 
     def get_property(self, name):
         """Read and return a property."""
-        if name != 'detectionState':
+        if name != "detectionState":
             raise UnsupportedProperty(name)
 
         if self.entity.state == STATE_ON:
-            return 'DETECTED'
-        return 'NOT_DETECTED'
+            return "DETECTED"
+        return "NOT_DETECTED"
 
 
 class AlexaThermostatController(AlexaCapibility):
@@ -542,20 +564,17 @@ class AlexaThermostatController(AlexaCapibility):
 
     def name(self):
         """Return the Alexa API name of this interface."""
-        return 'Alexa.ThermostatController'
+        return "Alexa.ThermostatController"
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        properties = []
+        properties = [{"name": "thermostatMode"}]
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & climate.SUPPORT_TARGET_TEMPERATURE:
-            properties.append({'name': 'targetSetpoint'})
-        if supported & climate.SUPPORT_TARGET_TEMPERATURE_LOW:
-            properties.append({'name': 'lowerSetpoint'})
-        if supported & climate.SUPPORT_TARGET_TEMPERATURE_HIGH:
-            properties.append({'name': 'upperSetpoint'})
-        if supported & climate.SUPPORT_OPERATION_MODE:
-            properties.append({'name': 'thermostatMode'})
+            properties.append({"name": "targetSetpoint"})
+        if supported & climate.SUPPORT_TARGET_TEMPERATURE_RANGE:
+            properties.append({"name": "lowerSetpoint"})
+            properties.append({"name": "upperSetpoint"})
         return properties
 
     def properties_proactively_reported(self):
@@ -568,22 +587,32 @@ class AlexaThermostatController(AlexaCapibility):
 
     def get_property(self, name):
         """Read and return a property."""
-        if name == 'thermostatMode':
-            ha_mode = self.entity.attributes.get(climate.ATTR_OPERATION_MODE)
-            mode = API_THERMOSTAT_MODES.get(ha_mode)
-            if mode is None:
-                _LOGGER.error("%s (%s) has unsupported %s value '%s'",
-                              self.entity.entity_id, type(self.entity),
-                              climate.ATTR_OPERATION_MODE, ha_mode)
-                raise UnsupportedProperty(name)
+        if self.entity.state == STATE_UNAVAILABLE:
+            return None
+
+        if name == "thermostatMode":
+            preset = self.entity.attributes.get(climate.ATTR_PRESET_MODE)
+
+            if preset in API_THERMOSTAT_PRESETS:
+                mode = API_THERMOSTAT_PRESETS[preset]
+            else:
+                mode = API_THERMOSTAT_MODES.get(self.entity.state)
+                if mode is None:
+                    _LOGGER.error(
+                        "%s (%s) has unsupported state value '%s'",
+                        self.entity.entity_id,
+                        type(self.entity),
+                        self.entity.state,
+                    )
+                    raise UnsupportedProperty(name)
             return mode
 
         unit = self.hass.config.units.temperature_unit
-        if name == 'targetSetpoint':
+        if name == "targetSetpoint":
             temp = self.entity.attributes.get(ATTR_TEMPERATURE)
-        elif name == 'lowerSetpoint':
+        elif name == "lowerSetpoint":
             temp = self.entity.attributes.get(climate.ATTR_TARGET_TEMP_LOW)
-        elif name == 'upperSetpoint':
+        elif name == "upperSetpoint":
             temp = self.entity.attributes.get(climate.ATTR_TARGET_TEMP_HIGH)
         else:
             raise UnsupportedProperty(name)
@@ -591,7 +620,99 @@ class AlexaThermostatController(AlexaCapibility):
         if temp is None:
             return None
 
-        return {
-            'value': float(temp),
-            'scale': API_TEMP_UNITS[unit],
-        }
+        try:
+            temp = float(temp)
+        except ValueError:
+            _LOGGER.warning(
+                "Invalid temp value %s for %s in %s", temp, name, self.entity.entity_id
+            )
+            return None
+
+        return {"value": temp, "scale": API_TEMP_UNITS[unit]}
+
+
+class AlexaPowerLevelController(AlexaCapibility):
+    """Implements Alexa.PowerLevelController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-powerlevelcontroller.html
+    """
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.PowerLevelController"
+
+    def properties_supported(self):
+        """Return what properties this entity supports."""
+        return [{"name": "powerLevel"}]
+
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
+
+    def properties_retrievable(self):
+        """Return True if properties can be retrieved."""
+        return True
+
+    def get_property(self, name):
+        """Read and return a property."""
+        if name != "powerLevel":
+            raise UnsupportedProperty(name)
+
+        if self.entity.domain == fan.DOMAIN:
+            speed = self.entity.attributes.get(fan.ATTR_SPEED)
+
+            return PERCENTAGE_FAN_MAP.get(speed, None)
+
+        return None
+
+
+class AlexaSecurityPanelController(AlexaCapibility):
+    """Implements Alexa.SecurityPanelController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-securitypanelcontroller.html
+    """
+
+    def __init__(self, hass, entity):
+        """Initialize the entity."""
+        super().__init__(entity)
+        self.hass = hass
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.SecurityPanelController"
+
+    def properties_supported(self):
+        """Return what properties this entity supports."""
+        return [{"name": "armState"}]
+
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
+
+    def properties_retrievable(self):
+        """Return True if properties can be retrieved."""
+        return True
+
+    def get_property(self, name):
+        """Read and return a property."""
+        if name != "armState":
+            raise UnsupportedProperty(name)
+
+        arm_state = self.entity.state
+        if arm_state == STATE_ALARM_ARMED_HOME:
+            return "ARMED_STAY"
+        if arm_state == STATE_ALARM_ARMED_AWAY:
+            return "ARMED_AWAY"
+        if arm_state == STATE_ALARM_ARMED_NIGHT:
+            return "ARMED_NIGHT"
+        if arm_state == STATE_ALARM_ARMED_CUSTOM_BYPASS:
+            return "ARMED_STAY"
+        return "DISARMED"
+
+    def configuration(self):
+        """Return supported authorization types."""
+        code_format = self.entity.attributes.get(ATTR_CODE_FORMAT)
+
+        if code_format == FORMAT_NUMBER:
+            return {"supportedAuthorizationTypes": [{"type": "FOUR_DIGIT_PIN"}]}
+        return []

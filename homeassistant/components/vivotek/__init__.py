@@ -1,0 +1,1 @@
+"""The Vivotek camera component."""

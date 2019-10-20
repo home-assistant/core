@@ -13,4 +13,5 @@ async def _async_has_devices(hass):
 
 
 config_entry_flow.register_discovery_flow(
-    DOMAIN, 'LIFX', _async_has_devices, config_entries.CONN_CLASS_LOCAL_POLL)
+    DOMAIN, "LIFX", _async_has_devices, config_entries.CONN_CLASS_LOCAL_POLL
+)

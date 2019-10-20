@@ -3,6 +3,8 @@ import asyncio
 import logging
 from collections import OrderedDict
 
+import aiobotocore
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -39,11 +41,9 @@ AWS_CREDENTIAL_SCHEMA = vol.Schema(
     }
 )
 
-DEFAULT_CREDENTIAL = [{
-    CONF_NAME: "default",
-    CONF_PROFILE_NAME: "default",
-    CONF_VALIDATE: False,
-}]
+DEFAULT_CREDENTIAL = [
+    {CONF_NAME: "default", CONF_PROFILE_NAME: "default", CONF_VALIDATE: False}
+]
 
 SUPPORTED_SERVICES = ["lambda", "sns", "sqs"]
 
@@ -66,9 +66,9 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional(
-                    CONF_CREDENTIALS, default=DEFAULT_CREDENTIAL
-                ): vol.All(cv.ensure_list, [AWS_CREDENTIAL_SCHEMA]),
+                vol.Optional(CONF_CREDENTIALS, default=DEFAULT_CREDENTIAL): vol.All(
+                    cv.ensure_list, [AWS_CREDENTIAL_SCHEMA]
+                ),
                 vol.Optional(CONF_NOTIFY, default=[]): vol.All(
                     cv.ensure_list, [NOTIFY_PLATFORM_SCHEMA]
                 ),
@@ -111,9 +111,7 @@ async def async_setup_entry(hass, entry):
     if entry.source == config_entries.SOURCE_IMPORT:
         if conf is None:
             # user removed config from configuration.yaml, abort setup
-            hass.async_create_task(
-                hass.config_entries.async_remove(entry.entry_id)
-            )
+            hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
             return False
 
         if conf != entry.data:
@@ -147,9 +145,7 @@ async def async_setup_entry(hass, entry):
     # have to use discovery to load platform.
     for notify_config in conf[CONF_NOTIFY]:
         hass.async_create_task(
-            discovery.async_load_platform(
-                hass, "notify", DOMAIN, notify_config, config
-            )
+            discovery.async_load_platform(hass, "notify", DOMAIN, notify_config, config)
         )
 
     return validation
@@ -157,7 +153,6 @@ async def async_setup_entry(hass, entry):
 
 async def _validate_aws_credentials(hass, credential):
     """Validate AWS credential config."""
-    import aiobotocore
 
     aws_config = credential.copy()
     del aws_config[CONF_NAME]

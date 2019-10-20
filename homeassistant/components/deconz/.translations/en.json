@@ -11,6 +11,7 @@
         "error": {
             "no_key": "Couldn't get an API key"
         },
+        "flow_title": "deCONZ Zigbee gateway ({host})",
         "step": {
             "hassio_confirm": {
                 "data": {
@@ -40,5 +41,53 @@
             }
         },
         "title": "deCONZ Zigbee gateway"
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "both_buttons": "Both buttons",
+            "button_1": "First button",
+            "button_2": "Second button",
+            "button_3": "Third button",
+            "button_4": "Fourth button",
+            "close": "Close",
+            "dim_down": "Dim down",
+            "dim_up": "Dim up",
+            "left": "Left",
+            "open": "Open",
+            "right": "Right",
+            "turn_off": "Turn off",
+            "turn_on": "Turn on"
+        },
+        "trigger_type": {
+            "remote_button_double_press": "\"{subtype}\" button double clicked",
+            "remote_button_long_press": "\"{subtype}\" button continuously pressed",
+            "remote_button_long_release": "\"{subtype}\" button released after long press",
+            "remote_button_quadruple_press": "\"{subtype}\" button quadruple clicked",
+            "remote_button_quintuple_press": "\"{subtype}\" button quintuple clicked",
+            "remote_button_rotated": "Button rotated \"{subtype}\"",
+            "remote_button_rotation_stopped": "Button rotation \"{subtype}\" stopped",
+            "remote_button_short_press": "\"{subtype}\" button pressed",
+            "remote_button_short_release": "\"{subtype}\" button released",
+            "remote_button_triple_press": "\"{subtype}\" button triple clicked",
+            "remote_gyro_activated": "Device shaken"
+        }
+    },
+    "options": {
+        "step": {
+            "async_step_deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "Allow deCONZ CLIP sensors",
+                    "allow_deconz_groups": "Allow deCONZ light groups"
+                },
+                "description": "Configure visibility of deCONZ device types"
+            },
+            "deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "Allow deCONZ CLIP sensors",
+                    "allow_deconz_groups": "Allow deCONZ light groups"
+                },
+                "description": "Configure visibility of deCONZ device types"
+            }
+        }
     }
 }

@@ -2,18 +2,30 @@
 
 from homeassistant.components.camera import SUPPORT_STREAM
 from homeassistant.components.mjpeg.camera import (
-    CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, MjpegCamera, filter_urllib3_logging)
+    CONF_MJPEG_URL,
+    CONF_STILL_IMAGE_URL,
+    MjpegCamera,
+    filter_urllib3_logging,
+)
 from homeassistant.const import (
-    CONF_AUTHENTICATION, CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_NAME,
-    CONF_PASSWORD, CONF_PORT, CONF_USERNAME, HTTP_DIGEST_AUTHENTICATION)
+    CONF_AUTHENTICATION,
+    CONF_DEVICE,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    HTTP_DIGEST_AUTHENTICATION,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .axis_base import AxisEntityBase
 from .const import DOMAIN as AXIS_DOMAIN
 
-AXIS_IMAGE = 'http://{}:{}/axis-cgi/jpg/image.cgi'
-AXIS_VIDEO = 'http://{}:{}/axis-cgi/mjpg/video.cgi'
-AXIS_STREAM = 'rtsp://{}:{}@{}/axis-media/media.amp?videocodec=h264'
+AXIS_IMAGE = "http://{}:{}/axis-cgi/jpg/image.cgi"
+AXIS_VIDEO = "http://{}:{}/axis-cgi/mjpg/video.cgi"
+AXIS_STREAM = "rtsp://{}:{}@{}/axis-media/media.amp?videocodec=h264"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -29,10 +41,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         CONF_PASSWORD: config_entry.data[CONF_DEVICE][CONF_PASSWORD],
         CONF_MJPEG_URL: AXIS_VIDEO.format(
             config_entry.data[CONF_DEVICE][CONF_HOST],
-            config_entry.data[CONF_DEVICE][CONF_PORT]),
+            config_entry.data[CONF_DEVICE][CONF_PORT],
+        ),
         CONF_STILL_IMAGE_URL: AXIS_IMAGE.format(
             config_entry.data[CONF_DEVICE][CONF_HOST],
-            config_entry.data[CONF_DEVICE][CONF_PORT]),
+            config_entry.data[CONF_DEVICE][CONF_PORT],
+        ),
         CONF_AUTHENTICATION: HTTP_DIGEST_AUTHENTICATION,
     }
     async_add_entities([AxisCamera(config, device)])
@@ -48,8 +62,11 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
 
     async def async_added_to_hass(self):
         """Subscribe camera events."""
-        self.unsub_dispatcher.append(async_dispatcher_connect(
-            self.hass, self.device.event_new_address, self._new_address))
+        self.unsub_dispatcher.append(
+            async_dispatcher_connect(
+                self.hass, self.device.event_new_address, self._new_address
+            )
+        )
 
         await super().async_added_to_hass()
 
@@ -63,7 +80,8 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
         return AXIS_STREAM.format(
             self.device.config_entry.data[CONF_DEVICE][CONF_USERNAME],
             self.device.config_entry.data[CONF_DEVICE][CONF_PASSWORD],
-            self.device.host)
+            self.device.host,
+        )
 
     def _new_address(self):
         """Set new device address for video stream."""
@@ -74,4 +92,4 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
     @property
     def unique_id(self):
         """Return a unique identifier for this device."""
-        return '{}-camera'.format(self.device.serial)
+        return f"{self.device.serial}-camera"

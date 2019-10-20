@@ -2,16 +2,20 @@
 import logging
 
 from homeassistant.components.cover import (
-    ATTR_POSITION, DOMAIN, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_SET_POSITION,
-    CoverDevice)
+    ATTR_POSITION,
+    DOMAIN,
+    SUPPORT_CLOSE,
+    SUPPORT_OPEN,
+    SUPPORT_SET_POSITION,
+    CoverDevice,
+)
 
 from . import LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Lutron Caseta shades as a cover device."""
     devs = []
     bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
@@ -34,12 +38,12 @@ class LutronCasetaCover(LutronCasetaDevice, CoverDevice):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        return self._state['current_state'] < 1
+        return self._state["current_state"] < 1
 
     @property
     def current_cover_position(self):
         """Return the current position of cover."""
-        return self._state['current_state']
+        return self._state["current_state"]
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""

@@ -11,17 +11,16 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_STOP = 'stop'
-CONF_BUS_NAME = 'bus_name'
+CONF_STOP = "stop"
+CONF_BUS_NAME = "bus_name"
 
-ICON = 'mdi:train'
+ICON = "mdi:train"
 
 SCAN_INTERVAL = timedelta(minutes=2)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_STOP): cv.string,
-    vol.Optional(CONF_BUS_NAME): cv.string
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_STOP): cv.string, vol.Optional(CONF_BUS_NAME): cv.string}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -39,7 +38,7 @@ class GttSensor(Entity):
         """Initialize the Gtt sensor."""
         self.data = GttData(stop, bus_name)
         self._state = None
-        self._name = 'Stop {}'.format(stop)
+        self._name = f"Stop {stop}"
 
     @property
     def name(self):
@@ -64,9 +63,7 @@ class GttSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        attr = {
-            'bus_name': self.data.state_bus['bus_name']
-        }
+        attr = {"bus_name": self.data.state_bus["bus_name"]}
         return attr
 
     def update(self):
@@ -82,6 +79,7 @@ class GttData:
     def __init__(self, stop, bus_name):
         """Initialize the GttData class."""
         from pygtt import PyGTT
+
         self._pygtt = PyGTT()
         self._stop = stop
         self._bus_name = bus_name
@@ -102,13 +100,13 @@ class GttData:
     def get_bus_by_name(self):
         """Get the bus by name."""
         for bus in self.bus_list:
-            if bus['bus_name'] == self._bus_name:
+            if bus["bus_name"] == self._bus_name:
                 return bus
 
 
 def get_datetime(bus):
     """Get the datetime from a bus."""
-    bustime = datetime.strptime(bus['time'][0]['run'], "%H:%M")
+    bustime = datetime.strptime(bus["time"][0]["run"], "%H:%M")
     now = datetime.now()
     bustime = bustime.replace(year=now.year, month=now.month, day=now.day)
     if bustime < now:

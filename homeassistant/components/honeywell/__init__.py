@@ -1,1 +1,1 @@
-"""Support for Honeywell Total Connect Comfort climate systems."""
+"""Support for Honeywell (US) Total Connect Comfort climate systems."""

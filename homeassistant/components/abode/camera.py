@@ -2,35 +2,36 @@
 from datetime import timedelta
 import logging
 
+import abodepy.helpers.constants as CONST
+import abodepy.helpers.timeline as TIMELINE
 import requests
 
 from homeassistant.components.camera import Camera
 from homeassistant.util import Throttle
 
-from . import DOMAIN as ABODE_DOMAIN, AbodeDevice
+from . import AbodeDevice
+from .const import DOMAIN
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=90)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up Abode camera devices."""
-    import abodepy.helpers.constants as CONST
-    import abodepy.helpers.timeline as TIMELINE
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Platform uses config entry setup."""
+    pass
 
-    data = hass.data[ABODE_DOMAIN]
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up a camera for an Abode device."""
+
+    data = hass.data[DOMAIN]
 
     devices = []
     for device in data.abode.get_devices(generic_type=CONST.TYPE_CAMERA):
-        if data.is_excluded(device):
-            continue
-
         devices.append(AbodeCamera(data, device, TIMELINE.CAPTURE_IMAGE))
 
-    data.devices.extend(devices)
-
-    add_entities(devices)
+    async_add_entities(devices)
 
 
 class AbodeCamera(AbodeDevice, Camera):
@@ -49,7 +50,8 @@ class AbodeCamera(AbodeDevice, Camera):
 
         self.hass.async_add_job(
             self._data.abode.events.add_timeline_callback,
-            self._event, self._capture_callback
+            self._event,
+            self._capture_callback,
         )
 
     def capture(self):
@@ -66,8 +68,7 @@ class AbodeCamera(AbodeDevice, Camera):
         """Attempt to download the most recent capture."""
         if self._device.image_url:
             try:
-                self._response = requests.get(
-                    self._device.image_url, stream=True)
+                self._response = requests.get(self._device.image_url, stream=True)
 
                 self._response.raise_for_status()
             except requests.HTTPError as err:

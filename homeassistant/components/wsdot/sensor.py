@@ -8,46 +8,57 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_API_KEY, CONF_NAME, ATTR_ATTRIBUTION, CONF_ID, ATTR_NAME)
+    CONF_API_KEY,
+    CONF_NAME,
+    ATTR_ATTRIBUTION,
+    CONF_ID,
+    ATTR_NAME,
+)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ACCESS_CODE = 'AccessCode'
-ATTR_AVG_TIME = 'AverageTime'
-ATTR_CURRENT_TIME = 'CurrentTime'
-ATTR_DESCRIPTION = 'Description'
-ATTR_TIME_UPDATED = 'TimeUpdated'
-ATTR_TRAVEL_TIME_ID = 'TravelTimeID'
+ATTR_ACCESS_CODE = "AccessCode"
+ATTR_AVG_TIME = "AverageTime"
+ATTR_CURRENT_TIME = "CurrentTime"
+ATTR_DESCRIPTION = "Description"
+ATTR_TIME_UPDATED = "TimeUpdated"
+ATTR_TRAVEL_TIME_ID = "TravelTimeID"
 
 ATTRIBUTION = "Data provided by WSDOT"
 
-CONF_TRAVEL_TIMES = 'travel_time'
+CONF_TRAVEL_TIMES = "travel_time"
 
-ICON = 'mdi:car'
+ICON = "mdi:car"
 
-RESOURCE = 'http://www.wsdot.wa.gov/Traffic/api/TravelTimes/' \
-           'TravelTimesREST.svc/GetTravelTimeAsJson'
+RESOURCE = (
+    "http://www.wsdot.wa.gov/Traffic/api/TravelTimes/"
+    "TravelTimesREST.svc/GetTravelTimeAsJson"
+)
 
 SCAN_INTERVAL = timedelta(minutes=3)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_TRAVEL_TIMES): [{
-        vol.Required(CONF_ID): cv.string,
-        vol.Optional(CONF_NAME): cv.string}]
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Optional(CONF_TRAVEL_TIMES): [
+            {vol.Required(CONF_ID): cv.string, vol.Optional(CONF_NAME): cv.string}
+        ],
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the WSDOT sensor."""
     sensors = []
     for travel_time in config.get(CONF_TRAVEL_TIMES):
-        name = (travel_time.get(CONF_NAME) or travel_time.get(CONF_ID))
+        name = travel_time.get(CONF_NAME) or travel_time.get(CONF_ID)
         sensors.append(
             WashingtonStateTravelTimeSensor(
-                name, config.get(CONF_API_KEY), travel_time.get(CONF_ID)))
+                name, config.get(CONF_API_KEY), travel_time.get(CONF_ID)
+            )
+        )
 
     add_entities(sensors, True)
 
@@ -111,17 +122,22 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
         """Return other details about the sensor state."""
         if self._data is not None:
             attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
-            for key in [ATTR_AVG_TIME, ATTR_NAME, ATTR_DESCRIPTION,
-                        ATTR_TRAVEL_TIME_ID]:
+            for key in [
+                ATTR_AVG_TIME,
+                ATTR_NAME,
+                ATTR_DESCRIPTION,
+                ATTR_TRAVEL_TIME_ID,
+            ]:
                 attrs[key] = self._data.get(key)
             attrs[ATTR_TIME_UPDATED] = _parse_wsdot_timestamp(
-                self._data.get(ATTR_TIME_UPDATED))
+                self._data.get(ATTR_TIME_UPDATED)
+            )
             return attrs
 
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return 'min'
+        return "min"
 
 
 def _parse_wsdot_timestamp(timestamp):
@@ -129,7 +145,7 @@ def _parse_wsdot_timestamp(timestamp):
     if not timestamp:
         return None
     # ex: Date(1485040200000-0800)
-    milliseconds, tzone = re.search(
-        r'Date\((\d+)([+-]\d\d)\d\d\)', timestamp).groups()
+    milliseconds, tzone = re.search(r"Date\((\d+)([+-]\d\d)\d\d\)", timestamp).groups()
     return datetime.fromtimestamp(
-        int(milliseconds) / 1000, tz=timezone(timedelta(hours=int(tzone))))
+        int(milliseconds) / 1000, tz=timezone(timedelta(hours=int(tzone)))
+    )

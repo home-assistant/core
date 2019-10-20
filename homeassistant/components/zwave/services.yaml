@@ -137,9 +137,6 @@ set_wakeup:
     value:
       description: Value of the interval to set. (integer)
 
-update_config:
-  description: Attempt to update ozw configuration files from git to support newer devices.
-
 start_network:
   description: Start the Z-Wave network. This might take a while, depending on how big your Z-Wave network is.
 
@@ -168,6 +165,9 @@ rename_node:
     node_id:
       description: ID of the node to rename.
       example: 10
+    update_ids:
+      description: (optional) Rename the entity IDs for entities of this node.
+      example: True
     name:
       description: New Name
       example: 'kitchen'
@@ -181,6 +181,9 @@ rename_value:
     value_id:
       description: ID of the value to rename.
       example: 72037594255792737
+    update_ids:
+      description: (optional) Update the entity ID for this value's entity.
+      example: True
     name:
       description: New Name
       example: 'Luminosity'

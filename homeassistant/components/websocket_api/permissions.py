@@ -7,9 +7,12 @@ from homeassistant.const import (
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
-    EVENT_THEMES_UPDATED)
+    EVENT_THEMES_UPDATED,
+    EVENT_CORE_CONFIG_UPDATE,
+)
 from homeassistant.components.persistent_notification import (
-    EVENT_PERSISTENT_NOTIFICATIONS_UPDATED)
+    EVENT_PERSISTENT_NOTIFICATIONS_UPDATED,
+)
 from homeassistant.components.lovelace import EVENT_LOVELACE_UPDATED
 from homeassistant.helpers.area_registry import EVENT_AREA_REGISTRY_UPDATED
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
@@ -20,6 +23,7 @@ from homeassistant.components.frontend import EVENT_PANELS_UPDATED
 # Except for state_changed, which is handled accordingly.
 SUBSCRIBE_WHITELIST = {
     EVENT_COMPONENT_LOADED,
+    EVENT_CORE_CONFIG_UPDATE,
     EVENT_PANELS_UPDATED,
     EVENT_PERSISTENT_NOTIFICATIONS_UPDATED,
     EVENT_SERVICE_REGISTERED,

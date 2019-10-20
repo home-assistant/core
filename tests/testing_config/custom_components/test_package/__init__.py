@@ -2,7 +2,7 @@
 from .const import TEST  # noqa
 
 
-DOMAIN = 'test_package'
+DOMAIN = "test_package"
 
 
 async def async_setup(hass, config):

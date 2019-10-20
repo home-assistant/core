@@ -12,7 +12,10 @@ from homeassistant.components.google_assistant import smart_home as ga
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.aiohttp import MockRequest
-from homeassistant.components.alexa import smart_home as alexa_sh
+from homeassistant.components.alexa import (
+    smart_home as alexa_sh,
+    errors as alexa_errors,
+)
 
 from . import utils, alexa_config, google_config
 from .const import DISPATCHER_REMOTE_UPDATE
@@ -25,10 +28,14 @@ _LOGGER = logging.getLogger(__name__)
 class CloudClient(Interface):
     """Interface class for Home Assistant Cloud."""
 
-    def __init__(self, hass: HomeAssistantType, prefs: CloudPreferences,
-                 websession: aiohttp.ClientSession,
-                 alexa_user_config: Dict[str, Any],
-                 google_user_config: Dict[str, Any]):
+    def __init__(
+        self,
+        hass: HomeAssistantType,
+        prefs: CloudPreferences,
+        websession: aiohttp.ClientSession,
+        alexa_user_config: Dict[str, Any],
+        google_user_config: Dict[str, Any],
+    ):
         """Initialize client interface to Cloud."""
         self._hass = hass
         self._prefs = prefs
@@ -80,7 +87,8 @@ class CloudClient(Interface):
         if self._alexa_config is None:
             assert self.cloud is not None
             self._alexa_config = alexa_config.AlexaConfig(
-                self._hass, self.alexa_user_config, self._prefs, self.cloud)
+                self._hass, self.alexa_user_config, self._prefs, self.cloud
+            )
 
         return self._alexa_config
 
@@ -90,7 +98,8 @@ class CloudClient(Interface):
         if not self._google_config:
             assert self.cloud is not None
             self._google_config = google_config.CloudGoogleConfig(
-                self.google_user_config, self._prefs, self.cloud)
+                self._hass, self.google_user_config, self._prefs, self.cloud
+            )
 
         return self._google_config
 
@@ -98,8 +107,20 @@ class CloudClient(Interface):
         """Initialize the client."""
         self.cloud = cloud
 
-        if self.alexa_config.should_report_state and self.cloud.is_logged_in:
-            await self.alexa_config.async_enable_proactive_mode()
+        if not self.cloud.is_logged_in:
+            return
+
+        if self.alexa_config.enabled and self.alexa_config.should_report_state:
+            try:
+                await self.alexa_config.async_enable_proactive_mode()
+            except alexa_errors.NoTokenAvailable:
+                pass
+
+        if self.google_config.enabled:
+            self.google_config.async_enable_local_sdk()
+
+            if self.google_config.should_report_state:
+                self.google_config.async_enable_report_state()
 
     async def cleanups(self) -> None:
         """Cleanup some stuff after logout."""
@@ -118,16 +139,13 @@ class CloudClient(Interface):
         if identifier.startswith("remote_"):
             async_dispatcher_send(self._hass, DISPATCHER_REMOTE_UPDATE, data)
 
-    async def async_alexa_message(
-            self, payload: Dict[Any, Any]) -> Dict[Any, Any]:
+    async def async_alexa_message(self, payload: Dict[Any, Any]) -> Dict[Any, Any]:
         """Process cloud alexa message to client."""
         return await alexa_sh.async_handle_message(
-            self._hass, self.alexa_config, payload,
-            enabled=self._prefs.alexa_enabled
+            self._hass, self.alexa_config, payload, enabled=self._prefs.alexa_enabled
         )
 
-    async def async_google_message(
-            self, payload: Dict[Any, Any]) -> Dict[Any, Any]:
+    async def async_google_message(self, payload: Dict[Any, Any]) -> Dict[Any, Any]:
         """Process cloud google message to client."""
         if not self._prefs.google_enabled:
             return ga.turned_off_response(payload)
@@ -136,44 +154,39 @@ class CloudClient(Interface):
             self._hass, self.google_config, self.prefs.cloud_user, payload
         )
 
-    async def async_webhook_message(
-            self, payload: Dict[Any, Any]) -> Dict[Any, Any]:
+    async def async_webhook_message(self, payload: Dict[Any, Any]) -> Dict[Any, Any]:
         """Process cloud webhook message to client."""
-        cloudhook_id = payload['cloudhook_id']
+        cloudhook_id = payload["cloudhook_id"]
 
         found = None
         for cloudhook in self._prefs.cloudhooks.values():
-            if cloudhook['cloudhook_id'] == cloudhook_id:
+            if cloudhook["cloudhook_id"] == cloudhook_id:
                 found = cloudhook
                 break
 
         if found is None:
-            return {
-                'status': 200
-            }
+            return {"status": 200}
 
         request = MockRequest(
-            content=payload['body'].encode('utf-8'),
-            headers=payload['headers'],
-            method=payload['method'],
-            query_string=payload['query'],
+            content=payload["body"].encode("utf-8"),
+            headers=payload["headers"],
+            method=payload["method"],
+            query_string=payload["query"],
         )
 
         response = await self._hass.components.webhook.async_handle_webhook(
-            found['webhook_id'], request)
+            found["webhook_id"], request
+        )
 
         response_dict = utils.aiohttp_serialize_response(response)
-        body = response_dict.get('body')
+        body = response_dict.get("body")
 
         return {
-            'body': body,
-            'status': response_dict['status'],
-            'headers': {
-                'Content-Type': response.content_type
-            }
+            "body": body,
+            "status": response_dict["status"],
+            "headers": {"Content-Type": response.content_type},
         }
 
-    async def async_cloudhooks_update(
-            self, data: Dict[str, Dict[str, str]]) -> None:
+    async def async_cloudhooks_update(self, data: Dict[str, Dict[str, str]]) -> None:
         """Update local list of cloudhooks."""
         await self._prefs.async_update(cloudhooks=data)

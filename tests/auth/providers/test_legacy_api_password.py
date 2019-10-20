@@ -15,18 +15,15 @@ def store(hass):
 @pytest.fixture
 def provider(hass, store):
     """Mock provider."""
-    return legacy_api_password.LegacyApiPasswordAuthProvider(hass, store, {
-        'type': 'legacy_api_password',
-        'api_password': 'test-password',
-    })
+    return legacy_api_password.LegacyApiPasswordAuthProvider(
+        hass, store, {"type": "legacy_api_password", "api_password": "test-password"}
+    )
 
 
 @pytest.fixture
 def manager(hass, store, provider):
     """Mock manager."""
-    return auth.AuthManager(hass, store, {
-        (provider.type, provider.id): provider
-    }, {})
+    return auth.AuthManager(hass, store, {(provider.type, provider.id): provider}, {})
 
 
 async def test_create_new_credential(manager, provider):
@@ -50,31 +47,23 @@ async def test_only_one_credentials(manager, provider):
 
 async def test_verify_login(hass, provider):
     """Test login using legacy api password auth provider."""
-    provider.async_validate_login('test-password')
+    provider.async_validate_login("test-password")
     with pytest.raises(legacy_api_password.InvalidAuthError):
-        provider.async_validate_login('invalid-password')
+        provider.async_validate_login("invalid-password")
 
 
 async def test_login_flow_works(hass, manager):
     """Test wrong config."""
-    result = await manager.login_flow.async_init(
-        handler=('legacy_api_password', None)
-    )
-    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    result = await manager.login_flow.async_init(handler=("legacy_api_password", None))
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
     result = await manager.login_flow.async_configure(
-        flow_id=result['flow_id'],
-        user_input={
-            'password': 'not-hello'
-        }
+        flow_id=result["flow_id"], user_input={"password": "not-hello"}
     )
-    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
-    assert result['errors']['base'] == 'invalid_auth'
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"]["base"] == "invalid_auth"
 
     result = await manager.login_flow.async_configure(
-        flow_id=result['flow_id'],
-        user_input={
-            'password': 'test-password'
-        }
+        flow_id=result["flow_id"], user_input={"password": "test-password"}
     )
-    assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY

@@ -16,7 +16,7 @@
         },
         "step": {
             "auth": {
-                "description": "Kliknij poni\u017cszy link i <b>Zaakceptuj</b> dost\u0119p do swojego konta Minut, a nast\u0119pnie wr\u00f3\u0107 i naci\u015bnij <b>Prze\u015blij</b> poni\u017cej. \n\n [Link]({authorization_url})",
+                "description": "Kliknij poni\u017cszy link i <b>Zaakceptuj</b> dost\u0119p do konta Minut, a nast\u0119pnie wr\u00f3\u0107 i naci\u015bnij <b>Prze\u015blij</b> poni\u017cej. \n\n [Link]({authorization_url})",
                 "title": "Uwierzytelnienie Point"
             },
             "user": {

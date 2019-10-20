@@ -1,81 +1,40 @@
 """Support for SolarEdge Monitoring API."""
-
-from datetime import timedelta
 import logging
-
-import voluptuous as vol
+import solaredge
 
 from requests.exceptions import HTTPError, ConnectTimeout
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_API_KEY, CONF_MONITORED_CONDITIONS, CONF_NAME, POWER_WATT,
-    ENERGY_WATT_HOUR)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-# Config for solaredge monitoring api requests.
-CONF_SITE_ID = "site_id"
-
-OVERVIEW_UPDATE_DELAY = timedelta(minutes=10)
-DETAILS_UPDATE_DELAY = timedelta(hours=12)
-INVENTORY_UPDATE_DELAY = timedelta(hours=12)
-POWER_FLOW_UPDATE_DELAY = timedelta(minutes=10)
-
-SCAN_INTERVAL = timedelta(minutes=10)
-
-# Supported overview sensor types:
-# Key: ['json_key', 'name', unit, icon]
-SENSOR_TYPES = {
-    'lifetime_energy': ['lifeTimeData', "Lifetime energy",
-                        ENERGY_WATT_HOUR, 'mdi:solar-power'],
-    'energy_this_year': ['lastYearData', "Energy this year",
-                         ENERGY_WATT_HOUR, 'mdi:solar-power'],
-    'energy_this_month': ['lastMonthData', "Energy this month",
-                          ENERGY_WATT_HOUR, 'mdi:solar-power'],
-    'energy_today': ['lastDayData', "Energy today",
-                     ENERGY_WATT_HOUR, 'mdi:solar-power'],
-    'current_power': ['currentPower', "Current Power", POWER_WATT,
-                      'mdi:solar-power'],
-    'site_details': [None, 'Site details', None, None],
-    'meters': ['meters', 'Meters', None, None],
-    'sensors': ['sensors', 'Sensors', None, None],
-    'gateways': ['gateways', 'Gateways', None, None],
-    'batteries': ['batteries', 'Batteries', None, None],
-    'inverters': ['inverters', 'Inverters', None, None],
-    'power_consumption': ['LOAD', 'Power Consumption', None, 'mdi:flash'],
-    'solar_power': ['PV', 'Solar Power', None, 'mdi:solar-power'],
-    'grid_power': ['GRID', 'Grid Power', None, 'mdi:power-plug'],
-    'storage_power': ['STORAGE', 'Storage Power', None, 'mdi:car-battery']
-}
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_SITE_ID): cv.string,
-    vol.Optional(CONF_NAME, default='SolarEdge'): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=['current_power']):
-    vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)])
-})
+from .const import (
+    CONF_SITE_ID,
+    OVERVIEW_UPDATE_DELAY,
+    DETAILS_UPDATE_DELAY,
+    INVENTORY_UPDATE_DELAY,
+    POWER_FLOW_UPDATE_DELAY,
+    SENSOR_TYPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Create the SolarEdge Monitoring API sensor."""
-    import solaredge
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Old configuration."""
+    pass
 
-    api_key = config[CONF_API_KEY]
-    site_id = config[CONF_SITE_ID]
-    platform_name = config[CONF_NAME]
 
-    # Create new SolarEdge object to retrieve data
-    api = solaredge.Solaredge(api_key)
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Add an solarEdge entry."""
+    # Add the needed sensors to hass
+    api = solaredge.Solaredge(entry.data[CONF_API_KEY])
 
     # Check if api can be reached and site is active
     try:
-        response = api.get_details(site_id)
-
-        if response['details']['status'].lower() != 'active':
+        response = await hass.async_add_executor_job(
+            api.get_details, entry.data[CONF_SITE_ID]
+        )
+        if response["details"]["status"].lower() != "active":
             _LOGGER.error("SolarEdge site is not active")
             return
         _LOGGER.debug("Credentials correct and site is active")
@@ -86,17 +45,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Could not retrieve details from SolarEdge API")
         return
 
-    # Create sensor factory that will create sensors based on sensor_key.
-    sensor_factory = SolarEdgeSensorFactory(platform_name, site_id, api)
-
-    # Create a new sensor for each sensor type.
+    sensor_factory = SolarEdgeSensorFactory(entry.title, entry.data[CONF_SITE_ID], api)
     entities = []
-    for sensor_key in config[CONF_MONITORED_CONDITIONS]:
+    for sensor_key in SENSOR_TYPES:
         sensor = sensor_factory.create_sensor(sensor_key)
         if sensor is not None:
             entities.append(sensor)
-
-    add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class SolarEdgeSensorFactory:
@@ -111,19 +66,21 @@ class SolarEdgeSensorFactory:
         inventory = SolarEdgeInventoryDataService(api, site_id)
         flow = SolarEdgePowerFlowDataService(api, site_id)
 
-        self.services = {
-            'site_details': (SolarEdgeDetailsSensor, details)
-        }
+        self.services = {"site_details": (SolarEdgeDetailsSensor, details)}
 
-        for key in ['lifetime_energy', 'energy_this_year', 'energy_this_month',
-                    'energy_today', 'current_power']:
+        for key in [
+            "lifetime_energy",
+            "energy_this_year",
+            "energy_this_month",
+            "energy_today",
+            "current_power",
+        ]:
             self.services[key] = (SolarEdgeOverviewSensor, overview)
 
-        for key in ['meters', 'sensors', 'gateways', 'batteries', 'inverters']:
+        for key in ["meters", "sensors", "gateways", "batteries", "inverters"]:
             self.services[key] = (SolarEdgeInventorySensor, inventory)
 
-        for key in ['power_consumption', 'solar_power', 'grid_power',
-                    'storage_power']:
+        for key in ["power_consumption", "solar_power", "grid_power", "storage_power"]:
             self.services[key] = (SolarEdgePowerFlowSensor, flow)
 
     def create_sensor(self, sensor_key):
@@ -150,8 +107,7 @@ class SolarEdgeSensor(Entity):
     @property
     def name(self):
         """Return the name."""
-        return "{} ({})".format(self.platform_name,
-                                SENSOR_TYPES[self.sensor_key][1])
+        return "{} ({})".format(self.platform_name, SENSOR_TYPES[self.sensor_key][1])
 
     @property
     def unit_of_measurement(self):
@@ -272,7 +228,7 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
         """Update the data from the SolarEdge Monitoring API."""
         try:
             data = self.api.get_overview(self.site_id)
-            overview = data['overview']
+            overview = data["overview"]
         except KeyError:
             _LOGGER.error("Missing overview data, skipping update")
             return
@@ -283,11 +239,10 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
         self.data = {}
 
         for key, value in overview.items():
-            if key in ['lifeTimeData', 'lastYearData',
-                       'lastMonthData', 'lastDayData']:
-                data = value['energy']
-            elif key in ['currentPower']:
-                data = value['power']
+            if key in ["lifeTimeData", "lastYearData", "lastMonthData", "lastDayData"]:
+                data = value["energy"]
+            elif key in ["currentPower"]:
+                data = value["power"]
             else:
                 data = value
             self.data[key] = data
@@ -311,7 +266,7 @@ class SolarEdgeDetailsDataService(SolarEdgeDataService):
 
         try:
             data = self.api.get_details(self.site_id)
-            details = data['details']
+            details = data["details"]
         except KeyError:
             _LOGGER.error("Missing details data, skipping update")
             return
@@ -325,17 +280,21 @@ class SolarEdgeDetailsDataService(SolarEdgeDataService):
         for key, value in details.items():
             key = snakecase(key)
 
-            if key in ['primary_module']:
+            if key in ["primary_module"]:
                 for module_key, module_value in value.items():
                     self.attributes[snakecase(module_key)] = module_value
-            elif key in ['peak_power', 'type', 'name', 'last_update_time',
-                         'installation_date']:
+            elif key in [
+                "peak_power",
+                "type",
+                "name",
+                "last_update_time",
+                "installation_date",
+            ]:
                 self.attributes[key] = value
-            elif key == 'status':
+            elif key == "status":
                 self.data = value
 
-        _LOGGER.debug("Updated SolarEdge details: %s, %s",
-                      self.data, self.attributes)
+        _LOGGER.debug("Updated SolarEdge details: %s, %s", self.data, self.attributes)
 
 
 class SolarEdgeInventoryDataService(SolarEdgeDataService):
@@ -346,7 +305,7 @@ class SolarEdgeInventoryDataService(SolarEdgeDataService):
         """Update the data from the SolarEdge Monitoring API."""
         try:
             data = self.api.get_inventory(self.site_id)
-            inventory = data['Inventory']
+            inventory = data["Inventory"]
         except KeyError:
             _LOGGER.error("Missing inventory data, skipping update")
             return
@@ -361,8 +320,7 @@ class SolarEdgeInventoryDataService(SolarEdgeDataService):
             self.data[key] = len(value)
             self.attributes[key] = {key: value}
 
-        _LOGGER.debug("Updated SolarEdge inventory: %s, %s",
-                      self.data, self.attributes)
+        _LOGGER.debug("Updated SolarEdge inventory: %s, %s", self.data, self.attributes)
 
 
 class SolarEdgePowerFlowDataService(SolarEdgeDataService):
@@ -379,7 +337,7 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
         """Update the data from the SolarEdge Monitoring API."""
         try:
             data = self.api.get_current_power_flow(self.site_id)
-            power_flow = data['siteCurrentPowerFlow']
+            power_flow = data["siteCurrentPowerFlow"]
         except KeyError:
             _LOGGER.error("Missing power flow data, skipping update")
             return
@@ -390,34 +348,33 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
         power_from = []
         power_to = []
 
-        if 'connections' not in power_flow:
+        if "connections" not in power_flow:
             _LOGGER.error("Missing connections in power flow data")
             return
 
-        for connection in power_flow['connections']:
-            power_from.append(connection['from'].lower())
-            power_to.append(connection['to'].lower())
+        for connection in power_flow["connections"]:
+            power_from.append(connection["from"].lower())
+            power_to.append(connection["to"].lower())
 
         self.data = {}
         self.attributes = {}
-        self.unit = power_flow['unit']
+        self.unit = power_flow["unit"]
 
         for key, value in power_flow.items():
-            if key in ['LOAD', 'PV', 'GRID', 'STORAGE']:
-                self.data[key] = value['currentPower']
-                self.attributes[key] = {'status': value['status']}
+            if key in ["LOAD", "PV", "GRID", "STORAGE"]:
+                self.data[key] = value["currentPower"]
+                self.attributes[key] = {"status": value["status"]}
 
-            if key in ['GRID']:
+            if key in ["GRID"]:
                 export = key.lower() in power_to
                 self.data[key] *= -1 if export else 1
-                self.attributes[key]['flow'] = ('export' if export
-                                                else 'import')
+                self.attributes[key]["flow"] = "export" if export else "import"
 
-            if key in ['STORAGE']:
+            if key in ["STORAGE"]:
                 charge = key.lower() in power_to
                 self.data[key] *= -1 if charge else 1
-                self.attributes[key]['flow'] = ('charge' if charge
-                                                else 'discharge')
+                self.attributes[key]["flow"] = "charge" if charge else "discharge"
 
-        _LOGGER.debug("Updated SolarEdge power flow: %s, %s",
-                      self.data, self.attributes)
+        _LOGGER.debug(
+            "Updated SolarEdge power flow: %s, %s", self.data, self.attributes
+        )

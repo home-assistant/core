@@ -11,17 +11,14 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PINS = 'pins'
-CONF_TYPE = 'analog'
+CONF_PINS = "pins"
+CONF_TYPE = "analog"
 
-PIN_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): cv.string,
-})
+PIN_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PINS):
-        vol.Schema({cv.positive_int: PIN_SCHEMA}),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_PINS): vol.Schema({cv.positive_int: PIN_SCHEMA})}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -46,7 +43,7 @@ class ArduinoSensor(Entity):
         self._pin = pin
         self._name = name
         self.pin_type = pin_type
-        self.direction = 'in'
+        self.direction = "in"
         self._value = None
 
         arduino.BOARD.set_mode(self._pin, self.direction, self.pin_type)

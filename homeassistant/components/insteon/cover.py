@@ -3,8 +3,12 @@ import logging
 import math
 
 from homeassistant.components.cover import (
-    ATTR_POSITION, SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_SET_POSITION,
-    CoverDevice)
+    ATTR_POSITION,
+    SUPPORT_CLOSE,
+    SUPPORT_OPEN,
+    SUPPORT_SET_POSITION,
+    CoverDevice,
+)
 
 from . import InsteonEntity
 
@@ -13,20 +17,22 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORTED_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Insteon platform."""
     if not discovery_info:
         return
 
-    insteon_modem = hass.data['insteon'].get('modem')
+    insteon_modem = hass.data["insteon"].get("modem")
 
-    address = discovery_info['address']
+    address = discovery_info["address"]
     device = insteon_modem.devices[address]
-    state_key = discovery_info['state_key']
+    state_key = discovery_info["state_key"]
 
-    _LOGGER.debug('Adding device %s entity %s to Cover platform',
-                  device.address.hex, device.states[state_key].name)
+    _LOGGER.debug(
+        "Adding device %s entity %s to Cover platform",
+        device.address.hex,
+        device.states[state_key].name,
+    )
 
     new_entity = InsteonCoverDevice(device, state_key)
 
@@ -39,7 +45,7 @@ class InsteonCoverDevice(InsteonEntity, CoverDevice):
     @property
     def current_cover_position(self):
         """Return the current cover position."""
-        return int(math.ceil(self._insteon_device_state.value*100/255))
+        return int(math.ceil(self._insteon_device_state.value * 100 / 255))
 
     @property
     def supported_features(self):
@@ -61,7 +67,7 @@ class InsteonCoverDevice(InsteonEntity, CoverDevice):
 
     async def async_set_cover_position(self, **kwargs):
         """Set the cover position."""
-        position = int(kwargs[ATTR_POSITION]*255/100)
+        position = int(kwargs[ATTR_POSITION] * 255 / 100)
         if position == 0:
             self._insteon_device_state.close()
         else:

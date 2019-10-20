@@ -7,6 +7,7 @@
             "cannot_connect": "Verbindung zur Bridge nicht m\u00f6glich",
             "discover_timeout": "Nicht in der Lage Hue Bridges zu entdecken",
             "no_bridges": "Keine Philips Hue Bridges entdeckt",
+            "not_hue_bridge": "Keine Philips Hue Bridge entdeckt",
             "unknown": "Unbekannter Fehler ist aufgetreten"
         },
         "error": {

@@ -1,38 +1,43 @@
 """Support for Abode Security System sensors."""
 import logging
 
-from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE)
+import abodepy.helpers.constants as CONST
 
-from . import DOMAIN as ABODE_DOMAIN, AbodeDevice
+from homeassistant.const import (
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_TEMPERATURE,
+)
+
+from . import AbodeDevice
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 # Sensor types: Name, icon
 SENSOR_TYPES = {
-    'temp': ['Temperature', DEVICE_CLASS_TEMPERATURE],
-    'humidity': ['Humidity', DEVICE_CLASS_HUMIDITY],
-    'lux': ['Lux', DEVICE_CLASS_ILLUMINANCE],
+    "temp": ["Temperature", DEVICE_CLASS_TEMPERATURE],
+    "humidity": ["Humidity", DEVICE_CLASS_HUMIDITY],
+    "lux": ["Lux", DEVICE_CLASS_ILLUMINANCE],
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up a sensor for an Abode device."""
-    import abodepy.helpers.constants as CONST
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Platform uses config entry setup."""
+    pass
 
-    data = hass.data[ABODE_DOMAIN]
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up a sensor for an Abode device."""
+
+    data = hass.data[DOMAIN]
 
     devices = []
     for device in data.abode.get_devices(generic_type=CONST.TYPE_SENSOR):
-        if data.is_excluded(device):
-            continue
-
         for sensor_type in SENSOR_TYPES:
             devices.append(AbodeSensor(data, device, sensor_type))
 
-    data.devices.extend(devices)
-
-    add_entities(devices)
+    async_add_entities(devices)
 
 
 class AbodeSensor(AbodeDevice):
@@ -42,8 +47,9 @@ class AbodeSensor(AbodeDevice):
         """Initialize a sensor for an Abode device."""
         super().__init__(data, device)
         self._sensor_type = sensor_type
-        self._name = '{0} {1}'.format(
-            self._device.name, SENSOR_TYPES[self._sensor_type][0])
+        self._name = "{0} {1}".format(
+            self._device.name, SENSOR_TYPES[self._sensor_type][0]
+        )
         self._device_class = SENSOR_TYPES[self._sensor_type][1]
 
     @property
@@ -59,19 +65,19 @@ class AbodeSensor(AbodeDevice):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._sensor_type == 'temp':
+        if self._sensor_type == "temp":
             return self._device.temp
-        if self._sensor_type == 'humidity':
+        if self._sensor_type == "humidity":
             return self._device.humidity
-        if self._sensor_type == 'lux':
+        if self._sensor_type == "lux":
             return self._device.lux
 
     @property
     def unit_of_measurement(self):
         """Return the units of measurement."""
-        if self._sensor_type == 'temp':
+        if self._sensor_type == "temp":
             return self._device.temp_unit
-        if self._sensor_type == 'humidity':
+        if self._sensor_type == "humidity":
             return self._device.humidity_unit
-        if self._sensor_type == 'lux':
+        if self._sensor_type == "lux":
             return self._device.lux_unit

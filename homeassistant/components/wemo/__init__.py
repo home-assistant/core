@@ -1,6 +1,7 @@
 """Support for WeMo device discovery."""
 import logging
 
+import pywemo
 import requests
 import voluptuous as vol
 
@@ -9,23 +10,22 @@ from homeassistant.components.discovery import SERVICE_WEMO
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 
-DOMAIN = 'wemo'
+DOMAIN = "wemo"
 
 # Mapping from Wemo model_name to component.
 WEMO_MODEL_DISPATCH = {
-    'Bridge':  'light',
-    'CoffeeMaker': 'switch',
-    'Dimmer': 'light',
-    'Humidifier': 'fan',
-    'Insight': 'switch',
-    'LightSwitch': 'switch',
-    'Maker':   'switch',
-    'Motion': 'binary_sensor',
-    'Sensor':  'binary_sensor',
-    'Socket':  'switch',
+    "Bridge": "light",
+    "CoffeeMaker": "switch",
+    "Dimmer": "light",
+    "Humidifier": "fan",
+    "Insight": "switch",
+    "LightSwitch": "switch",
+    "Maker": "switch",
+    "Motion": "binary_sensor",
+    "Sensor": "binary_sensor",
+    "Socket": "switch",
 }
 
 SUBSCRIPTION_REGISTRY = None
@@ -39,10 +39,10 @@ def coerce_host_port(value):
 
     Returns (host, None) or (host, port) respectively.
     """
-    host, _, port = value.partition(':')
+    host, _, port = value.partition(":")
 
     if not host:
-        raise vol.Invalid('host cannot be empty')
+        raise vol.Invalid("host cannot be empty")
 
     if port:
         port = cv.port(port)
@@ -52,19 +52,24 @@ def coerce_host_port(value):
     return host, port
 
 
-CONF_STATIC = 'static'
-CONF_DISCOVERY = 'discovery'
+CONF_STATIC = "static"
+CONF_DISCOVERY = "discovery"
 
 DEFAULT_DISCOVERY = True
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_STATIC, default=[]): vol.Schema([
-            vol.All(cv.string, coerce_host_port)
-        ]),
-        vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_STATIC, default=[]): vol.Schema(
+                    [vol.All(cv.string, coerce_host_port)]
+                ),
+                vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
@@ -72,15 +77,17 @@ def setup(hass, config):
     hass.data[DOMAIN] = config
 
     if DOMAIN in config:
-        hass.async_create_task(hass.config_entries.flow.async_init(
-            DOMAIN, context={'source': config_entries.SOURCE_IMPORT}))
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
+            )
+        )
 
     return True
 
 
 async def async_setup_entry(hass, entry):
     """Set up a wemo config entry."""
-    import pywemo
 
     config = hass.data[DOMAIN]
 
@@ -101,7 +108,7 @@ async def async_setup_entry(hass, entry):
 
     def setup_url_for_device(device):
         """Determine setup.xml url for given device."""
-        return 'http://{}:{}/setup.xml'.format(device.host, device.port)
+        return f"http://{device.host}:{device.port}/setup.xml"
 
     def setup_url_for_address(host, port):
         """Determine setup.xml url for given host and port pair."""
@@ -111,27 +118,25 @@ async def async_setup_entry(hass, entry):
         if not port:
             return None
 
-        return 'http://{}:{}/setup.xml'.format(host, port)
+        return f"http://{host}:{port}/setup.xml"
 
     def discovery_dispatch(service, discovery_info):
         """Dispatcher for incoming WeMo discovery events."""
         # name, model, location, mac
-        model_name = discovery_info.get('model_name')
-        serial = discovery_info.get('serial')
+        model_name = discovery_info.get("model_name")
+        serial = discovery_info.get("serial")
 
         # Only register a device once
         if serial in KNOWN_DEVICES:
-            _LOGGER.debug(
-                "Ignoring known device %s %s", service, discovery_info)
+            _LOGGER.debug("Ignoring known device %s %s", service, discovery_info)
             return
 
         _LOGGER.debug("Discovered unique WeMo device: %s", serial)
         KNOWN_DEVICES.append(serial)
 
-        component = WEMO_MODEL_DISPATCH.get(model_name, 'switch')
+        component = WEMO_MODEL_DISPATCH.get(model_name, "switch")
 
-        discovery.load_platform(
-            hass, component, DOMAIN, discovery_info, config)
+        discovery.load_platform(hass, component, DOMAIN, discovery_info, config)
 
     discovery.async_listen(hass, SERVICE_WEMO, discovery_dispatch)
 
@@ -144,45 +149,45 @@ async def async_setup_entry(hass, entry):
 
             if not url:
                 _LOGGER.error(
-                    'Unable to get description url for WeMo at: %s',
-                    '{}:{}'.format(host, port) if port else host)
+                    "Unable to get description url for WeMo at: %s",
+                    f"{host}:{port}" if port else host,
+                )
                 continue
 
             try:
                 device = pywemo.discovery.device_from_description(url, None)
-            except (requests.exceptions.ConnectionError,
-                    requests.exceptions.Timeout) as err:
+            except (
+                requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout,
+            ) as err:
                 _LOGGER.error("Unable to access WeMo at %s (%s)", url, err)
                 continue
 
-            if not [d[1] for d in devices
-                    if d[1].serialnumber == device.serialnumber]:
+            if not [d[1] for d in devices if d[1].serialnumber == device.serialnumber]:
                 devices.append((url, device))
 
         if config.get(DOMAIN, {}).get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
             _LOGGER.debug("Scanning network for WeMo devices...")
             for device in pywemo.discover_devices():
-                if not [d[1] for d in devices
-                        if d[1].serialnumber == device.serialnumber]:
-                    devices.append((setup_url_for_device(device),
-                                    device))
+                if not [
+                    d[1] for d in devices if d[1].serialnumber == device.serialnumber
+                ]:
+                    devices.append((setup_url_for_device(device), device))
 
         for url, device in devices:
-            _LOGGER.debug(
-                "Adding WeMo device at %s:%i", device.host, device.port)
+            _LOGGER.debug("Adding WeMo device at %s:%i", device.host, device.port)
 
             discovery_info = {
-                'model_name': device.model_name,
-                'serial': device.serialnumber,
-                'mac_address': device.mac,
-                'ssdp_description': url,
+                "model_name": device.model_name,
+                "serial": device.serialnumber,
+                "mac_address": device.mac,
+                "ssdp_description": url,
             }
 
             discovery_dispatch(SERVICE_WEMO, discovery_info)
 
         _LOGGER.debug("WeMo device discovery has finished")
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_START, discover_wemo_devices)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, discover_wemo_devices)
 
     return True

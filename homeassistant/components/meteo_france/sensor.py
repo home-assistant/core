@@ -4,12 +4,21 @@ import logging
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.entity import Entity
 
-from . import ATTRIBUTION, CONF_CITY, DATA_METEO_FRANCE, SENSOR_TYPES
+from .const import (
+    ATTRIBUTION,
+    CONF_CITY,
+    DATA_METEO_FRANCE,
+    SENSOR_TYPES,
+    SENSOR_TYPE_ICON,
+    SENSOR_TYPE_NAME,
+    SENSOR_TYPE_UNIT,
+    SENSOR_TYPE_CLASS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-STATE_ATTR_FORECAST = '1h rain forecast'
-STATE_ATTR_BULLETIN_TIME = 'Bulletin date'
+STATE_ATTR_FORECAST = "1h rain forecast"
+STATE_ATTR_BULLETIN_TIME = "Bulletin date"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -20,34 +29,49 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     city = discovery_info[CONF_CITY]
     monitored_conditions = discovery_info[CONF_MONITORED_CONDITIONS]
     client = hass.data[DATA_METEO_FRANCE][city]
-    weather_alert_client = hass.data[DATA_METEO_FRANCE]['weather_alert_client']
+    weather_alert_client = hass.data[DATA_METEO_FRANCE]["weather_alert_client"]
 
     from vigilancemeteo import DepartmentWeatherAlert
 
     alert_watcher = None
-    if 'weather_alert' in monitored_conditions:
+    if "weather_alert" in monitored_conditions:
         datas = hass.data[DATA_METEO_FRANCE][city].get_data()
         # Check if a department code is available for this city.
         if "dept" in datas:
             try:
                 # If yes create the watcher DepartmentWeatherAlert object.
-                alert_watcher = DepartmentWeatherAlert(datas["dept"],
-                                                       weather_alert_client)
+                alert_watcher = DepartmentWeatherAlert(
+                    datas["dept"], weather_alert_client
+                )
             except ValueError as exp:
-                _LOGGER.error(exp)
+                _LOGGER.error(
+                    "Unexpected error when creating the weather alert sensor for %s in department %s: %s",
+                    city,
+                    datas["dept"],
+                    exp,
+                )
                 alert_watcher = None
             else:
-                _LOGGER.info("weather alert watcher added for %s"
-                             "in department %s",
-                             city, datas["dept"])
+                _LOGGER.info(
+                    "Weather alert watcher added for %s in department %s",
+                    city,
+                    datas["dept"],
+                )
         else:
-            _LOGGER.warning("No dept key found for '%s'. So weather alert "
-                            "information won't be available", city)
+            _LOGGER.warning(
+                "No 'dept' key found for '%s'. So weather alert information won't be available",
+                city,
+            )
             # Exit and don't create the sensor if no department code available.
             return
 
-    add_entities([MeteoFranceSensor(variable, client, alert_watcher)
-                  for variable in monitored_conditions], True)
+    add_entities(
+        [
+            MeteoFranceSensor(variable, client, alert_watcher)
+            for variable in monitored_conditions
+        ],
+        True,
+    )
 
 
 class MeteoFranceSensor(Entity):
@@ -64,8 +88,7 @@ class MeteoFranceSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(
-            self._data['name'], SENSOR_TYPES[self._condition][0])
+        return f"{self._data['name']} {SENSOR_TYPES[self._condition][SENSOR_TYPE_NAME]}"
 
     @property
     def state(self):
@@ -76,21 +99,19 @@ class MeteoFranceSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         # Attributes for next_rain sensor.
-        if self._condition == 'next_rain' and 'rain_forecast' in self._data:
+        if self._condition == "next_rain" and "rain_forecast" in self._data:
             return {
-                **{STATE_ATTR_FORECAST: self._data['rain_forecast']},
-                ** self._data['next_rain_intervals'],
-                **{ATTR_ATTRIBUTION: ATTRIBUTION}
+                **{STATE_ATTR_FORECAST: self._data["rain_forecast"]},
+                **self._data["next_rain_intervals"],
+                **{ATTR_ATTRIBUTION: ATTRIBUTION},
             }
 
         # Attributes for weather_alert sensor.
-        if self._condition == 'weather_alert' \
-                and self._alert_watcher is not None:
+        if self._condition == "weather_alert" and self._alert_watcher is not None:
             return {
-                **{STATE_ATTR_BULLETIN_TIME:
-                   self._alert_watcher.bulletin_date},
-                ** self._alert_watcher.alerts_list,
-                ATTR_ATTRIBUTION: ATTRIBUTION
+                **{STATE_ATTR_BULLETIN_TIME: self._alert_watcher.bulletin_date},
+                **self._alert_watcher.alerts_list,
+                ATTR_ATTRIBUTION: ATTRIBUTION,
             }
 
         # Attributes for all other sensors.
@@ -99,7 +120,17 @@ class MeteoFranceSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return SENSOR_TYPES[self._condition][1]
+        return SENSOR_TYPES[self._condition][SENSOR_TYPE_UNIT]
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return SENSOR_TYPES[self._condition][SENSOR_TYPE_ICON]
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return SENSOR_TYPES[self._condition][SENSOR_TYPE_CLASS]
 
     def update(self):
         """Fetch new state data for the sensor."""
@@ -107,19 +138,24 @@ class MeteoFranceSensor(Entity):
             self._client.update()
             self._data = self._client.get_data()
 
-            if self._condition == 'weather_alert':
+            if self._condition == "weather_alert":
                 if self._alert_watcher is not None:
                     self._alert_watcher.update_department_status()
                     self._state = self._alert_watcher.department_color
-                    _LOGGER.debug("weather alert watcher for %s updated. Proxy"
-                                  " have the status: %s", self._data['name'],
-                                  self._alert_watcher.proxy.status)
+                    _LOGGER.debug(
+                        "weather alert watcher for %s updated. Proxy"
+                        " have the status: %s",
+                        self._data["name"],
+                        self._alert_watcher.proxy.status,
+                    )
                 else:
-                    _LOGGER.warning("No weather alert data for location %s",
-                                    self._data['name'])
+                    _LOGGER.warning(
+                        "No weather alert data for location %s", self._data["name"]
+                    )
             else:
                 self._state = self._data[self._condition]
         except KeyError:
-            _LOGGER.error("No condition %s for location %s",
-                          self._condition, self._data['name'])
+            _LOGGER.error(
+                "No condition %s for location %s", self._condition, self._data["name"]
+            )
             self._state = None

@@ -1,59 +1,74 @@
-"""Support for switchs that can be controlled using the RaspyRFM rc module."""
+"""Support for switches that can be controlled using the RaspyRFM rc module."""
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PORT, CONF_SWITCHES,
-    DEVICE_DEFAULT_NAME)
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_SWITCHES,
+    DEVICE_DEFAULT_NAME,
+)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_GATEWAY_MANUFACTURER = 'gateway_manufacturer'
-CONF_GATEWAY_MODEL = 'gateway_model'
-CONF_CONTROLUNIT_MANUFACTURER = 'controlunit_manufacturer'
-CONF_CONTROLUNIT_MODEL = 'controlunit_model'
-CONF_CHANNEL_CONFIG = 'channel_config'
-DEFAULT_HOST = '127.0.0.1'
+CONF_GATEWAY_MANUFACTURER = "gateway_manufacturer"
+CONF_GATEWAY_MODEL = "gateway_model"
+CONF_CONTROLUNIT_MANUFACTURER = "controlunit_manufacturer"
+CONF_CONTROLUNIT_MODEL = "controlunit_model"
+CONF_CHANNEL_CONFIG = "channel_config"
+DEFAULT_HOST = "127.0.0.1"
 
 # define configuration parameters
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_PORT): cv.port,
-    vol.Optional(CONF_GATEWAY_MANUFACTURER): cv.string,
-    vol.Optional(CONF_GATEWAY_MODEL): cv.string,
-    vol.Required(CONF_SWITCHES): vol.Schema([{
-        vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string,
-        vol.Required(CONF_CONTROLUNIT_MANUFACTURER): cv.string,
-        vol.Required(CONF_CONTROLUNIT_MODEL): cv.string,
-        vol.Required(CONF_CHANNEL_CONFIG): {cv.string: cv.match_all},
-    }])
-}, extra=vol.ALLOW_EXTRA)
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_PORT): cv.port,
+        vol.Optional(CONF_GATEWAY_MANUFACTURER): cv.string,
+        vol.Optional(CONF_GATEWAY_MODEL): cv.string,
+        vol.Required(CONF_SWITCHES): vol.Schema(
+            [
+                {
+                    vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string,
+                    vol.Required(CONF_CONTROLUNIT_MANUFACTURER): cv.string,
+                    vol.Required(CONF_CONTROLUNIT_MODEL): cv.string,
+                    vol.Required(CONF_CHANNEL_CONFIG): {cv.string: cv.match_all},
+                }
+            ]
+        ),
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RaspyRFM switch."""
     from raspyrfm_client import RaspyRFMClient
-    from raspyrfm_client.device_implementations.controlunit. \
-        controlunit_constants import ControlUnitModel
-    from raspyrfm_client.device_implementations.gateway.manufacturer. \
-        gateway_constants import GatewayModel
-    from raspyrfm_client.device_implementations.manufacturer_constants \
-        import Manufacturer
+    from raspyrfm_client.device_implementations.controlunit.controlunit_constants import (
+        ControlUnitModel,
+    )
+    from raspyrfm_client.device_implementations.gateway.manufacturer.gateway_constants import (
+        GatewayModel,
+    )
+    from raspyrfm_client.device_implementations.manufacturer_constants import (
+        Manufacturer,
+    )
 
-    gateway_manufacturer = config.get(CONF_GATEWAY_MANUFACTURER,
-                                      Manufacturer.SEEGEL_SYSTEME.value)
+    gateway_manufacturer = config.get(
+        CONF_GATEWAY_MANUFACTURER, Manufacturer.SEEGEL_SYSTEME.value
+    )
     gateway_model = config.get(CONF_GATEWAY_MODEL, GatewayModel.RASPYRFM.value)
     host = config[CONF_HOST]
     port = config.get(CONF_PORT)
     switches = config[CONF_SWITCHES]
 
     raspyrfm_client = RaspyRFMClient()
-    gateway = raspyrfm_client.get_gateway(Manufacturer(gateway_manufacturer),
-                                          GatewayModel(gateway_model), host,
-                                          port)
+    gateway = raspyrfm_client.get_gateway(
+        Manufacturer(gateway_manufacturer), GatewayModel(gateway_model), host, port
+    )
     switch_entities = []
     for switch in switches:
         name = switch[CONF_NAME]
@@ -62,8 +77,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         channel_config = switch[CONF_CHANNEL_CONFIG]
 
         controlunit = raspyrfm_client.get_controlunit(
-            Manufacturer(controlunit_manufacturer),
-            ControlUnitModel(controlunit_model))
+            Manufacturer(controlunit_manufacturer), ControlUnitModel(controlunit_model)
+        )
 
         controlunit.set_channel_config(**channel_config)
 
@@ -108,8 +123,7 @@ class RaspyRFMSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        from raspyrfm_client.device_implementations.controlunit.actions \
-            import Action
+        from raspyrfm_client.device_implementations.controlunit.actions import Action
 
         self._raspyrfm_client.send(self._gateway, self._controlunit, Action.ON)
         self._state = True
@@ -117,15 +131,12 @@ class RaspyRFMSwitch(SwitchDevice):
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        from raspyrfm_client.device_implementations.controlunit.actions \
-            import Action
+        from raspyrfm_client.device_implementations.controlunit.actions import Action
 
         if Action.OFF in self._controlunit.get_supported_actions():
-            self._raspyrfm_client.send(
-                self._gateway, self._controlunit, Action.OFF)
+            self._raspyrfm_client.send(self._gateway, self._controlunit, Action.OFF)
         else:
-            self._raspyrfm_client.send(
-                self._gateway, self._controlunit, Action.ON)
+            self._raspyrfm_client.send(self._gateway, self._controlunit, Action.ON)
 
         self._state = False
         self.schedule_update_ha_state()

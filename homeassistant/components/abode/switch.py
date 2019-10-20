@@ -1,41 +1,37 @@
 """Support for Abode Security System switches."""
 import logging
 
+import abodepy.helpers.constants as CONST
+import abodepy.helpers.timeline as TIMELINE
+
 from homeassistant.components.switch import SwitchDevice
 
-from . import DOMAIN as ABODE_DOMAIN, AbodeAutomation, AbodeDevice
+from . import AbodeAutomation, AbodeDevice
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up Abode switch devices."""
-    import abodepy.helpers.constants as CONST
-    import abodepy.helpers.timeline as TIMELINE
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Platform uses config entry setup."""
+    pass
 
-    data = hass.data[ABODE_DOMAIN]
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Abode switch devices."""
+    data = hass.data[DOMAIN]
 
     devices = []
 
-    # Get all regular switches that are not excluded or marked as lights
     for device in data.abode.get_devices(generic_type=CONST.TYPE_SWITCH):
-        if data.is_excluded(device) or data.is_light(device):
-            continue
-
         devices.append(AbodeSwitch(data, device))
 
-    # Get all Abode automations that can be enabled/disabled
-    for automation in data.abode.get_automations(
-            generic_type=CONST.TYPE_AUTOMATION):
-        if data.is_automation_excluded(automation):
-            continue
+    for automation in data.abode.get_automations(generic_type=CONST.TYPE_AUTOMATION):
+        devices.append(
+            AbodeAutomationSwitch(data, automation, TIMELINE.AUTOMATION_EDIT_GROUP)
+        )
 
-        devices.append(AbodeAutomationSwitch(
-            data, automation, TIMELINE.AUTOMATION_EDIT_GROUP))
-
-    data.devices.extend(devices)
-
-    add_entities(devices)
+    async_add_entities(devices)
 
 
 class AbodeSwitch(AbodeDevice, SwitchDevice):

@@ -2,8 +2,7 @@
 import logging
 
 from homeassistant.components import orangepi_gpio
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
+from homeassistant.components.binary_sensor import BinarySensorDevice, PLATFORM_SCHEMA
 from homeassistant.const import DEVICE_DEFAULT_NAME
 
 from . import CONF_PIN_MODE
@@ -24,8 +23,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     binary_sensors = []
     ports = config[CONF_PORTS]
     for port_num, port_name in ports.items():
-        binary_sensors.append(OPiGPIOBinarySensor(
-            port_name, port_num, invert_logic))
+        binary_sensors.append(OPiGPIOBinarySensor(port_name, port_num, invert_logic))
     add_entities(binary_sensors, True)
 
 

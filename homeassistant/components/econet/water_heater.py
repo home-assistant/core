@@ -5,58 +5,71 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.water_heater import (
-    DOMAIN, PLATFORM_SCHEMA, STATE_ECO, STATE_ELECTRIC, STATE_GAS,
-    STATE_HEAT_PUMP, STATE_HIGH_DEMAND, STATE_OFF, STATE_PERFORMANCE,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, WaterHeaterDevice)
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    STATE_ECO,
+    STATE_ELECTRIC,
+    STATE_GAS,
+    STATE_HEAT_PUMP,
+    STATE_HIGH_DEMAND,
+    STATE_OFF,
+    STATE_PERFORMANCE,
+    SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    WaterHeaterDevice,
+)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_PASSWORD, CONF_USERNAME,
-    TEMP_FAHRENHEIT)
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    TEMP_FAHRENHEIT,
+)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_VACATION_START = 'next_vacation_start_date'
-ATTR_VACATION_END = 'next_vacation_end_date'
-ATTR_ON_VACATION = 'on_vacation'
-ATTR_TODAYS_ENERGY_USAGE = 'todays_energy_usage'
-ATTR_IN_USE = 'in_use'
+ATTR_VACATION_START = "next_vacation_start_date"
+ATTR_VACATION_END = "next_vacation_end_date"
+ATTR_ON_VACATION = "on_vacation"
+ATTR_TODAYS_ENERGY_USAGE = "todays_energy_usage"
+ATTR_IN_USE = "in_use"
 
-ATTR_START_DATE = 'start_date'
-ATTR_END_DATE = 'end_date'
+ATTR_START_DATE = "start_date"
+ATTR_END_DATE = "end_date"
 
-SUPPORT_FLAGS_HEATER = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE)
+SUPPORT_FLAGS_HEATER = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
-SERVICE_ADD_VACATION = 'econet_add_vacation'
-SERVICE_DELETE_VACATION = 'econet_delete_vacation'
+SERVICE_ADD_VACATION = "econet_add_vacation"
+SERVICE_DELETE_VACATION = "econet_delete_vacation"
 
-ADD_VACATION_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(ATTR_START_DATE): cv.positive_int,
-    vol.Required(ATTR_END_DATE): cv.positive_int,
-})
+ADD_VACATION_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Optional(ATTR_START_DATE): cv.positive_int,
+        vol.Required(ATTR_END_DATE): cv.positive_int,
+    }
+)
 
-DELETE_VACATION_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-})
+DELETE_VACATION_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 
-ECONET_DATA = 'econet'
+ECONET_DATA = "econet"
 
 ECONET_STATE_TO_HA = {
-    'Energy Saver': STATE_ECO,
-    'gas': STATE_GAS,
-    'High Demand': STATE_HIGH_DEMAND,
-    'Off': STATE_OFF,
-    'Performance': STATE_PERFORMANCE,
-    'Heat Pump Only': STATE_HEAT_PUMP,
-    'Electric-Only': STATE_ELECTRIC,
-    'Electric': STATE_ELECTRIC,
-    'Heat Pump': STATE_HEAT_PUMP
+    "Energy Saver": STATE_ECO,
+    "gas": STATE_GAS,
+    "High Demand": STATE_HIGH_DEMAND,
+    "Off": STATE_OFF,
+    "Performance": STATE_PERFORMANCE,
+    "Heat Pump Only": STATE_HEAT_PUMP,
+    "Electric-Only": STATE_ELECTRIC,
+    "Electric": STATE_ELECTRIC,
+    "Heat Pump": STATE_HEAT_PUMP,
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -64,7 +77,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     from pyeconet.api import PyEcoNet
 
     hass.data[ECONET_DATA] = {}
-    hass.data[ECONET_DATA]['water_heaters'] = []
+    hass.data[ECONET_DATA]["water_heaters"] = []
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -72,17 +85,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     econet = PyEcoNet(username, password)
     water_heaters = econet.get_water_heaters()
     hass_water_heaters = [
-        EcoNetWaterHeater(water_heater) for water_heater in water_heaters]
+        EcoNetWaterHeater(water_heater) for water_heater in water_heaters
+    ]
     add_entities(hass_water_heaters)
-    hass.data[ECONET_DATA]['water_heaters'].extend(hass_water_heaters)
+    hass.data[ECONET_DATA]["water_heaters"].extend(hass_water_heaters)
 
     def service_handle(service):
         """Handle the service calls."""
-        entity_ids = service.data.get('entity_id')
-        all_heaters = hass.data[ECONET_DATA]['water_heaters']
+        entity_ids = service.data.get("entity_id")
+        all_heaters = hass.data[ECONET_DATA]["water_heaters"]
         _heaters = [
-            x for x in all_heaters
-            if not entity_ids or x.entity_id in entity_ids]
+            x for x in all_heaters if not entity_ids or x.entity_id in entity_ids
+        ]
 
         for _water_heater in _heaters:
             if service.service == SERVICE_ADD_VACATION:
@@ -95,11 +109,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
             _water_heater.schedule_update_ha_state(True)
 
-    hass.services.register(DOMAIN, SERVICE_ADD_VACATION, service_handle,
-                           schema=ADD_VACATION_SCHEMA)
+    hass.services.register(
+        DOMAIN, SERVICE_ADD_VACATION, service_handle, schema=ADD_VACATION_SCHEMA
+    )
 
-    hass.services.register(DOMAIN, SERVICE_DELETE_VACATION, service_handle,
-                           schema=DELETE_VACATION_SCHEMA)
+    hass.services.register(
+        DOMAIN, SERVICE_DELETE_VACATION, service_handle, schema=DELETE_VACATION_SCHEMA
+    )
 
 
 class EcoNetWaterHeater(WaterHeaterDevice):
@@ -118,8 +134,11 @@ class EcoNetWaterHeater(WaterHeaterDevice):
             self.ha_state_to_econet[value] = key
         for mode in self.supported_modes:
             if mode not in ECONET_STATE_TO_HA:
-                error = "Invalid operation mode mapping. " + mode + \
-                    " doesn't map. Please report this."
+                error = (
+                    "Invalid operation mode mapping. "
+                    + mode
+                    + " doesn't map. Please report this."
+                )
                 _LOGGER.error(error)
 
     @property

@@ -14,23 +14,27 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_BOARDS = 'boards'
-CONF_BOARD = 'board'
-CONF_ADDR = 'addr'
-CONF_RELAYS = 'relays'
+CONF_BOARDS = "boards"
+CONF_BOARD = "board"
+CONF_ADDR = "addr"
+CONF_RELAYS = "relays"
 
-RELAY_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_ADDR): cv.positive_int,
-    vol.Optional(CONF_BOARD, default=0): cv.positive_int,
-})
+RELAY_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_ADDR): cv.positive_int,
+        vol.Optional(CONF_BOARD, default=0): cv.positive_int,
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PORT): cv.port,
-    vol.Optional(CONF_BOARDS, default=1): cv.positive_int,
-    vol.Required(CONF_RELAYS): vol.All(cv.ensure_list, [RELAY_SCHEMA]),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PORT): cv.port,
+        vol.Optional(CONF_BOARDS, default=1): cv.positive_int,
+        vol.Required(CONF_RELAYS): vol.All(cv.ensure_list, [RELAY_SCHEMA]),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -95,5 +99,4 @@ class PencomRelay(SwitchDevice):
     @property
     def device_state_attributes(self):
         """Return supported attributes."""
-        return {"board": self._board,
-                "addr": self._addr}
+        return {"board": self._board, "addr": self._addr}

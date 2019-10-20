@@ -5,7 +5,10 @@ import time
 from pyHS100 import SmartDeviceException, SmartPlug
 
 from homeassistant.components.switch import (
-    ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH, SwitchDevice)
+    ATTR_CURRENT_POWER_W,
+    ATTR_TODAY_ENERGY_KWH,
+    SwitchDevice,
+)
 from homeassistant.const import ATTR_VOLTAGE
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.typing import HomeAssistantType
@@ -17,18 +20,19 @@ PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_TOTAL_ENERGY_KWH = 'total_energy_kwh'
-ATTR_CURRENT_A = 'current_a'
+ATTR_TOTAL_ENERGY_KWH = "total_energy_kwh"
+ATTR_CURRENT_A = "current_a"
 
 
-async def async_setup_platform(hass, config, add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the platform.
 
     Deprecated.
     """
-    _LOGGER.warning('Loading as a platform is no longer supported, '
-                    'convert to use the tplink component.')
+    _LOGGER.warning(
+        "Loading as a platform is no longer supported, "
+        "convert to use the tplink component."
+    )
 
 
 def add_entity(device: SmartPlug, async_add_entities):
@@ -38,23 +42,13 @@ def add_entity(device: SmartPlug, async_add_entities):
     # will try again later.
     device.get_sysinfo()
 
-    async_add_entities(
-        [SmartPlugSwitch(device)],
-        update_before_add=True
-    )
+    async_add_entities([SmartPlugSwitch(device)], update_before_add=True)
 
 
-async def async_setup_entry(
-        hass: HomeAssistantType,
-        config_entry,
-        async_add_entities
-):
+async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
     """Set up switches."""
     await async_add_entities_retry(
-        hass,
-        async_add_entities,
-        hass.data[TPLINK_DOMAIN][CONF_SWITCH],
-        add_entity
+        hass, async_add_entities, hass.data[TPLINK_DOMAIN][CONF_SWITCH], add_entity
     )
 
     return True
@@ -92,10 +86,8 @@ class SmartPlugSwitch(SwitchDevice):
         return {
             "name": self._alias,
             "model": self._model,
-            "manufacturer": 'TP-Link',
-            "connections": {
-                (dr.CONNECTION_NETWORK_MAC, self._mac)
-            },
+            "manufacturer": "TP-Link",
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
             "sw_version": self._sysinfo["sw_ver"],
         }
 
@@ -131,26 +123,29 @@ class SmartPlugSwitch(SwitchDevice):
                 self._alias = self.smartplug.alias
                 self._model = self.smartplug.model
 
-            self._state = self.smartplug.state == \
-                self.smartplug.SWITCH_STATE_ON
+            self._state = self.smartplug.state == self.smartplug.SWITCH_STATE_ON
 
             if self.smartplug.has_emeter:
                 emeter_readings = self.smartplug.get_emeter_realtime()
 
-                self._emeter_params[ATTR_CURRENT_POWER_W] \
-                    = "{:.2f}".format(emeter_readings["power"])
-                self._emeter_params[ATTR_TOTAL_ENERGY_KWH] \
-                    = "{:.3f}".format(emeter_readings["total"])
-                self._emeter_params[ATTR_VOLTAGE] \
-                    = "{:.1f}".format(emeter_readings["voltage"])
-                self._emeter_params[ATTR_CURRENT_A] \
-                    = "{:.2f}".format(emeter_readings["current"])
+                self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.2f}".format(
+                    emeter_readings["power"]
+                )
+                self._emeter_params[ATTR_TOTAL_ENERGY_KWH] = "{:.3f}".format(
+                    emeter_readings["total"]
+                )
+                self._emeter_params[ATTR_VOLTAGE] = "{:.1f}".format(
+                    emeter_readings["voltage"]
+                )
+                self._emeter_params[ATTR_CURRENT_A] = "{:.2f}".format(
+                    emeter_readings["current"]
+                )
 
                 emeter_statics = self.smartplug.get_emeter_daily()
                 try:
-                    self._emeter_params[ATTR_TODAY_ENERGY_KWH] \
-                        = "{:.3f}".format(
-                            emeter_statics[int(time.strftime("%e"))])
+                    self._emeter_params[ATTR_TODAY_ENERGY_KWH] = "{:.3f}".format(
+                        emeter_statics[int(time.strftime("%e"))]
+                    )
                 except KeyError:
                     # Device returned no daily history
                     pass
@@ -159,6 +154,7 @@ class SmartPlugSwitch(SwitchDevice):
 
         except (SmartDeviceException, OSError) as ex:
             if self._available:
-                _LOGGER.warning("Could not read state for %s: %s",
-                                self.smartplug.host, ex)
+                _LOGGER.warning(
+                    "Could not read state for %s: %s", self.smartplug.host, ex
+                )
             self._available = False

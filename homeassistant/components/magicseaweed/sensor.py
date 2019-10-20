@@ -5,7 +5,11 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_API_KEY, CONF_NAME, CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION)
+    CONF_API_KEY,
+    CONF_NAME,
+    CONF_MONITORED_CONDITIONS,
+    ATTR_ATTRIBUTION,
+)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
@@ -13,36 +17,40 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_HOURS = 'hours'
-CONF_SPOT_ID = 'spot_id'
-CONF_UNITS = 'units'
+CONF_HOURS = "hours"
+CONF_SPOT_ID = "spot_id"
+CONF_UNITS = "units"
 
-DEFAULT_UNIT = 'us'
-DEFAULT_NAME = 'MSW'
+DEFAULT_UNIT = "us"
+DEFAULT_NAME = "MSW"
 DEFAULT_ATTRIBUTION = "Data provided by magicseaweed.com"
 
-ICON = 'mdi:waves'
+ICON = "mdi:waves"
 
-HOURS = ['12AM', '3AM', '6AM', '9AM', '12PM', '3PM', '6PM', '9PM']
+HOURS = ["12AM", "3AM", "6AM", "9AM", "12PM", "3PM", "6PM", "9PM"]
 
 SENSOR_TYPES = {
-    'max_breaking_swell': ['Max'],
-    'min_breaking_swell': ['Min'],
-    'swell_forecast': ['Forecast'],
+    "max_breaking_swell": ["Max"],
+    "min_breaking_swell": ["Min"],
+    "swell_forecast": ["Forecast"],
 }
 
-UNITS = ['eu', 'uk', 'us']
+UNITS = ["eu", "uk", "us"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_SPOT_ID): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_HOURS, default=None):
-        vol.All(cv.ensure_list, [vol.In(HOURS)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_UNITS): vol.In(UNITS),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_MONITORED_CONDITIONS): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+        ),
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_SPOT_ID): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_HOURS, default=None): vol.All(
+            cv.ensure_list, [vol.In(HOURS)]
+        ),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_UNITS): vol.In(UNITS),
+    }
+)
 
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
@@ -62,10 +70,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     else:
         units = UNITS[2]
 
-    forecast_data = MagicSeaweedData(
-        api_key=api_key,
-        spot_id=spot_id,
-        units=units)
+    forecast_data = MagicSeaweedData(api_key=api_key, spot_id=spot_id, units=units)
     forecast_data.update()
 
     # If connection failed don't setup platform.
@@ -74,20 +79,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
-        sensors.append(MagicSeaweedSensor(forecast_data, variable, name,
-                                          units))
-        if 'forecast' not in variable and hours is not None:
+        sensors.append(MagicSeaweedSensor(forecast_data, variable, name, units))
+        if "forecast" not in variable and hours is not None:
             for hour in hours:
-                sensors.append(MagicSeaweedSensor(
-                    forecast_data, variable, name, units, hour))
+                sensors.append(
+                    MagicSeaweedSensor(forecast_data, variable, name, units, hour)
+                )
     add_entities(sensors, True)
 
 
 class MagicSeaweedSensor(Entity):
     """Implementation of a MagicSeaweed sensor."""
 
-    def __init__(self, forecast_data, sensor_type, name, unit_system,
-                 hour=None):
+    def __init__(self, forecast_data, sensor_type, name, unit_system, hour=None):
         """Initialize the sensor."""
         self.client_name = name
         self.data = forecast_data
@@ -103,12 +107,11 @@ class MagicSeaweedSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        if self.hour is None and 'forecast' in self.type:
-            return "{} {}".format(self.client_name, self._name)
+        if self.hour is None and "forecast" in self.type:
+            return f"{self.client_name} {self._name}"
         if self.hour is None:
-            return "Current {} {}".format(self.client_name, self._name)
-        return "{} {} {}".format(
-            self.hour, self.client_name, self._name)
+            return f"Current {self.client_name} {self._name}"
+        return f"{self.hour} {self.client_name} {self._name}"
 
     @property
     def state(self):
@@ -144,14 +147,14 @@ class MagicSeaweedSensor(Entity):
             forecast = self.data.hourly[self.hour]
 
         self._unit_of_measurement = forecast.swell_unit
-        if self.type == 'min_breaking_swell':
+        if self.type == "min_breaking_swell":
             self._state = forecast.swell_minBreakingHeight
-        elif self.type == 'max_breaking_swell':
+        elif self.type == "max_breaking_swell":
             self._state = forecast.swell_maxBreakingHeight
-        elif self.type == 'swell_forecast':
+        elif self.type == "swell_forecast":
             summary = "{} - {}".format(
-                forecast.swell_minBreakingHeight,
-                forecast.swell_maxBreakingHeight)
+                forecast.swell_minBreakingHeight, forecast.swell_maxBreakingHeight
+            )
             self._state = summary
             if self.hour is None:
                 for hour, data in self.data.hourly.items():
@@ -159,10 +162,11 @@ class MagicSeaweedSensor(Entity):
                     hr_summary = "{} - {} {}".format(
                         data.swell_minBreakingHeight,
                         data.swell_maxBreakingHeight,
-                        data.swell_unit)
+                        data.swell_unit,
+                    )
                     self._attrs[occurs] = hr_summary
 
-        if self.type != 'swell_forecast':
+        if self.type != "swell_forecast":
             self._attrs.update(forecast.attrs)
 
 
@@ -172,8 +176,8 @@ class MagicSeaweedData:
     def __init__(self, api_key, spot_id, units):
         """Initialize the data object."""
         import magicseaweed
-        self._msw = magicseaweed.MSW_Forecast(api_key, spot_id,
-                                              None, units)
+
+        self._msw = magicseaweed.MSW_Forecast(api_key, spot_id, None, units)
         self.currently = None
         self.hourly = {}
 
@@ -186,8 +190,9 @@ class MagicSeaweedData:
             forecasts = self._msw.get_future()
             self.currently = forecasts.data[0]
             for forecast in forecasts.data[:8]:
-                hour = dt_util.utc_from_timestamp(
-                    forecast.localTimestamp).strftime("%-I%p")
+                hour = dt_util.utc_from_timestamp(forecast.localTimestamp).strftime(
+                    "%-I%p"
+                )
                 self.hourly[hour] = forecast
         except ConnectionError:
             _LOGGER.error("Unable to retrieve data from Magicseaweed")

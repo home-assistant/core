@@ -5,29 +5,35 @@ import logging
 from amcrest import AmcrestError
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, DEVICE_CLASS_CONNECTIVITY, DEVICE_CLASS_MOTION)
+    BinarySensorDevice,
+    DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_MOTION,
+)
 from homeassistant.const import CONF_NAME, CONF_BINARY_SENSORS
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
-    BINARY_SENSOR_SCAN_INTERVAL_SECS, DATA_AMCREST, DEVICES, SERVICE_UPDATE)
+    BINARY_SENSOR_SCAN_INTERVAL_SECS,
+    DATA_AMCREST,
+    DEVICES,
+    SERVICE_UPDATE,
+)
 from .helpers import log_update_error, service_signal
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=BINARY_SENSOR_SCAN_INTERVAL_SECS)
 
-BINARY_SENSOR_MOTION_DETECTED = 'motion_detected'
-BINARY_SENSOR_ONLINE = 'online'
+BINARY_SENSOR_MOTION_DETECTED = "motion_detected"
+BINARY_SENSOR_ONLINE = "online"
 # Binary sensor types are defined like: Name, device class
 BINARY_SENSORS = {
-    BINARY_SENSOR_MOTION_DETECTED: ('Motion Detected', DEVICE_CLASS_MOTION),
-    BINARY_SENSOR_ONLINE: ('Online', DEVICE_CLASS_CONNECTIVITY),
+    BINARY_SENSOR_MOTION_DETECTED: ("Motion Detected", DEVICE_CLASS_MOTION),
+    BINARY_SENSOR_ONLINE: ("Online", DEVICE_CLASS_CONNECTIVITY),
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up a binary sensor for an Amcrest IP Camera."""
     if discovery_info is None:
         return
@@ -35,9 +41,12 @@ async def async_setup_platform(hass, config, async_add_entities,
     name = discovery_info[CONF_NAME]
     device = hass.data[DATA_AMCREST][DEVICES][name]
     async_add_entities(
-        [AmcrestBinarySensor(name, device, sensor_type)
-         for sensor_type in discovery_info[CONF_BINARY_SENSORS]],
-        True)
+        [
+            AmcrestBinarySensor(name, device, sensor_type)
+            for sensor_type in discovery_info[CONF_BINARY_SENSORS]
+        ],
+        True,
+    )
 
 
 class AmcrestBinarySensor(BinarySensorDevice):
@@ -45,7 +54,7 @@ class AmcrestBinarySensor(BinarySensorDevice):
 
     def __init__(self, name, device, sensor_type):
         """Initialize entity."""
-        self._name = '{} {}'.format(name, BINARY_SENSORS[sensor_type][0])
+        self._name = "{} {}".format(name, BINARY_SENSORS[sensor_type][0])
         self._signal_name = name
         self._api = device.api
         self._sensor_type = sensor_type
@@ -82,7 +91,7 @@ class AmcrestBinarySensor(BinarySensorDevice):
         """Update entity."""
         if not self.available:
             return
-        _LOGGER.debug('Updating %s binary sensor', self._name)
+        _LOGGER.debug("Updating %s binary sensor", self._name)
 
         try:
             if self._sensor_type == BINARY_SENSOR_MOTION_DETECTED:
@@ -91,8 +100,7 @@ class AmcrestBinarySensor(BinarySensorDevice):
             elif self._sensor_type == BINARY_SENSOR_ONLINE:
                 self._state = self._api.available
         except AmcrestError as error:
-            log_update_error(
-                _LOGGER, 'update', self.name, 'binary sensor', error)
+            log_update_error(_LOGGER, "update", self.name, "binary sensor", error)
 
     async def async_on_demand_update(self):
         """Update state."""
@@ -101,8 +109,10 @@ class AmcrestBinarySensor(BinarySensorDevice):
     async def async_added_to_hass(self):
         """Subscribe to update signal."""
         self._unsub_dispatcher = async_dispatcher_connect(
-            self.hass, service_signal(SERVICE_UPDATE, self._signal_name),
-            self.async_on_demand_update)
+            self.hass,
+            service_signal(SERVICE_UPDATE, self._signal_name),
+            self.async_on_demand_update,
+        )
 
     async def async_will_remove_from_hass(self):
         """Disconnect from update signal."""

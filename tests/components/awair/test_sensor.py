@@ -65,8 +65,7 @@ async def setup_awair(hass, config=None, data_fixture=AIR_DATA_FIXTURE):
     """Load the Awair platform."""
     devices_json = json.loads(load_fixture("awair_devices.json"))
     devices_mock = mock_coro(devices_json)
-    devices_patch = patch(
-        "python_awair.AwairClient.devices", return_value=devices_mock)
+    devices_patch = patch("python_awair.AwairClient.devices", return_value=devices_mock)
     air_data_mock = mock_coro(data_fixture)
     air_data_patch = patch(
         "python_awair.AwairClient.air_data_latest", return_value=air_data_mock
@@ -109,31 +108,25 @@ async def test_bad_platform_setup(hass):
     from python_awair import AwairClient
 
     auth_patch = patch(
-        "python_awair.AwairClient.devices",
-        side_effect=AwairClient.AuthError
+        "python_awair.AwairClient.devices", side_effect=AwairClient.AuthError
     )
     rate_patch = patch(
-        "python_awair.AwairClient.devices",
-        side_effect=AwairClient.RatelimitError
+        "python_awair.AwairClient.devices", side_effect=AwairClient.RatelimitError
     )
     generic_patch = patch(
-        "python_awair.AwairClient.devices",
-        side_effect=AwairClient.GenericError
+        "python_awair.AwairClient.devices", side_effect=AwairClient.GenericError
     )
 
     with auth_patch:
-        assert await async_setup_component(
-            hass, SENSOR_DOMAIN, DISCOVERY_CONFIG)
+        assert await async_setup_component(hass, SENSOR_DOMAIN, DISCOVERY_CONFIG)
         assert not hass.states.async_all()
 
     with rate_patch:
-        assert await async_setup_component(
-            hass, SENSOR_DOMAIN, DISCOVERY_CONFIG)
+        assert await async_setup_component(hass, SENSOR_DOMAIN, DISCOVERY_CONFIG)
         assert not hass.states.async_all()
 
     with generic_patch:
-        assert await async_setup_component(
-            hass, SENSOR_DOMAIN, DISCOVERY_CONFIG)
+        assert await async_setup_component(hass, SENSOR_DOMAIN, DISCOVERY_CONFIG)
         assert not hass.states.async_all()
 
 
@@ -189,8 +182,7 @@ async def test_awair_co2(hass):
 
     sensor = hass.states.get("sensor.awair_co2")
     assert sensor.state == "612"
-    assert sensor.attributes["device_class"] == \
-        DEVICE_CLASS_CARBON_DIOXIDE
+    assert sensor.attributes["device_class"] == DEVICE_CLASS_CARBON_DIOXIDE
     assert sensor.attributes["unit_of_measurement"] == "ppm"
 
 
@@ -200,8 +192,7 @@ async def test_awair_voc(hass):
 
     sensor = hass.states.get("sensor.awair_voc")
     assert sensor.state == "1012"
-    assert sensor.attributes["device_class"] == \
-        DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS
+    assert sensor.attributes["device_class"] == DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS
     assert sensor.attributes["unit_of_measurement"] == "ppb"
 
 
@@ -249,8 +240,7 @@ async def test_availability(hass):
     fixture = AIR_DATA_FIXTURE_UPDATED
     fixture[0][ATTR_TIMESTAMP] = str(future)
     data_patch = patch(
-        "python_awair.AwairClient.air_data_latest",
-        return_value=mock_coro(fixture)
+        "python_awair.AwairClient.air_data_latest", return_value=mock_coro(fixture)
     )
 
     with data_patch, alter_time(future):
@@ -262,8 +252,7 @@ async def test_availability(hass):
     future = NOW + timedelta(minutes=90)
     fixture = AIR_DATA_FIXTURE_EMPTY
     data_patch = patch(
-        "python_awair.AwairClient.air_data_latest",
-        return_value=mock_coro(fixture)
+        "python_awair.AwairClient.air_data_latest", return_value=mock_coro(fixture)
     )
 
     with data_patch, alter_time(future):

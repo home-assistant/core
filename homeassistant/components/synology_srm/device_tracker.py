@@ -4,30 +4,42 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.synology_srm/
 """
 import logging
+
+import synology_srm
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    DeviceScanner,
+)
 from homeassistant.const import (
-    CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
-    CONF_PORT, CONF_SSL, CONF_VERIFY_SSL)
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_USERNAME = 'admin'
+DEFAULT_USERNAME = "admin"
 DEFAULT_PORT = 8001
 DEFAULT_SSL = True
 DEFAULT_VERIFY_SSL = False
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    }
+)
 
 
 def get_scanner(hass, config):
@@ -42,14 +54,13 @@ class SynologySrmDeviceScanner(DeviceScanner):
 
     def __init__(self, config):
         """Initialize the scanner."""
-        import synology_srm
 
         self.client = synology_srm.Client(
             host=config[CONF_HOST],
             port=config[CONF_PORT],
             username=config[CONF_USERNAME],
             password=config[CONF_PASSWORD],
-            https=config[CONF_SSL]
+            https=config[CONF_SSL],
         )
 
         if not config[CONF_VERIFY_SSL]:
@@ -64,12 +75,15 @@ class SynologySrmDeviceScanner(DeviceScanner):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
 
-        return [device['mac'] for device in self.last_results]
+        return [device["mac"] for device in self.last_results]
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        filter_named = [result['hostname'] for result in self.last_results if
-                        result['mac'] == device]
+        filter_named = [
+            result["hostname"]
+            for result in self.last_results
+            if result["mac"] == device
+        ]
 
         if filter_named:
             return filter_named[0]
@@ -80,19 +94,13 @@ class SynologySrmDeviceScanner(DeviceScanner):
         """Check the router for connected devices."""
         _LOGGER.debug("Scanning for connected devices")
 
-        devices = self.client.core.network_nsm_device({'is_online': True})
+        devices = self.client.core.network_nsm_device({"is_online": True})
         last_results = []
 
         for device in devices:
-            last_results.append({
-                'mac': device['mac'],
-                'hostname': device['hostname']
-            })
+            last_results.append({"mac": device["mac"], "hostname": device["hostname"]})
 
-        _LOGGER.debug(
-            "Found %d device(s) connected to the router",
-            len(devices)
-        )
+        _LOGGER.debug("Found %d device(s) connected to the router", len(devices))
 
         self.last_results = last_results
         return True

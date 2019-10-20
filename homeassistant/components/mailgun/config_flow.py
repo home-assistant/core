@@ -5,9 +5,9 @@ from .const import DOMAIN
 
 config_entry_flow.register_webhook_flow(
     DOMAIN,
-    'Mailgun Webhook',
+    "Mailgun Webhook",
     {
-        'mailgun_url': 'https://documentation.mailgun.com/en/latest/user_manual.html#webhooks',  # noqa: E501 pylint: disable=line-too-long
-        'docs_url': 'https://www.home-assistant.io/components/mailgun/'
-    }
+        "mailgun_url": "https://documentation.mailgun.com/en/latest/user_manual.html#webhooks",  # noqa: E501 pylint: disable=line-too-long
+        "docs_url": "https://www.home-assistant.io/integrations/mailgun/",
+    },
 )

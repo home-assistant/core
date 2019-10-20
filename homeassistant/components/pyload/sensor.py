@@ -8,61 +8,70 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_SSL, CONF_HOST, CONF_NAME, CONF_PORT, CONF_PASSWORD, CONF_USERNAME,
-    CONTENT_TYPE_JSON, CONF_MONITORED_VARIABLES)
+    CONF_SSL,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONTENT_TYPE_JSON,
+    CONF_MONITORED_VARIABLES,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_HOST = 'localhost'
-DEFAULT_NAME = 'pyLoad'
+DEFAULT_HOST = "localhost"
+DEFAULT_NAME = "pyLoad"
 DEFAULT_PORT = 8000
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 
-SENSOR_TYPES = {
-    'speed': ['speed', 'Speed', 'MB/s'],
-}
+SENSOR_TYPES = {"speed": ["speed", "Speed", "MB/s"]}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_MONITORED_VARIABLES, default=['speed']):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_SSL, default=False): cv.boolean,
-    vol.Optional(CONF_USERNAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_MONITORED_VARIABLES, default=["speed"]): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+        ),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_SSL, default=False): cv.boolean,
+        vol.Optional(CONF_USERNAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the pyLoad sensors."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
-    ssl = 's' if config.get(CONF_SSL) else ''
+    ssl = "s" if config.get(CONF_SSL) else ""
     name = config.get(CONF_NAME)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     monitored_types = config.get(CONF_MONITORED_VARIABLES)
-    url = "http{}://{}:{}/api/".format(ssl, host, port)
+    url = f"http{ssl}://{host}:{port}/api/"
 
     try:
-        pyloadapi = PyLoadAPI(
-            api_url=url, username=username, password=password)
+        pyloadapi = PyLoadAPI(api_url=url, username=username, password=password)
         pyloadapi.update()
-    except (requests.exceptions.ConnectionError,
-            requests.exceptions.HTTPError) as conn_err:
+    except (
+        requests.exceptions.ConnectionError,
+        requests.exceptions.HTTPError,
+    ) as conn_err:
         _LOGGER.error("Error setting up pyLoad API: %s", conn_err)
         return False
 
     devices = []
     for ng_type in monitored_types:
         new_sensor = PyLoadSensor(
-            api=pyloadapi, sensor_type=SENSOR_TYPES.get(ng_type),
-            client_name=name)
+            api=pyloadapi, sensor_type=SENSOR_TYPES.get(ng_type), client_name=name
+        )
         devices.append(new_sensor)
 
     add_entities(devices, True)
@@ -73,7 +82,7 @@ class PyLoadSensor(Entity):
 
     def __init__(self, api, sensor_type, client_name):
         """Initialize a new pyLoad sensor."""
-        self._name = '{} {}'.format(client_name, sensor_type[1])
+        self._name = "{} {}".format(client_name, sensor_type[1])
         self.type = sensor_type[0]
         self.api = api
         self._state = None
@@ -103,8 +112,9 @@ class PyLoadSensor(Entity):
             return
 
         if self.api.status is None:
-            _LOGGER.debug("Update of %s requested, but no status is available",
-                          self._name)
+            _LOGGER.debug(
+                "Update of %s requested, but no status is available", self._name
+            )
             return
 
         value = self.api.status.get(self.type)
@@ -114,7 +124,7 @@ class PyLoadSensor(Entity):
 
         if "speed" in self.type and value > 0:
             # Convert download rate from Bytes/s to MBytes/s
-            self._state = round(value / 2**20, 2)
+            self._state = round(value / 2 ** 20, 2)
         else:
             self._state = value
 
@@ -129,32 +139,36 @@ class PyLoadAPI:
         self.headers = {CONTENT_TYPE: CONTENT_TYPE_JSON}
 
         if username is not None and password is not None:
-            self.payload = {'username': username, 'password': password}
+            self.payload = {"username": username, "password": password}
             self.login = requests.post(
-                '{}{}'.format(api_url, 'login'), data=self.payload, timeout=5)
+                "{}{}".format(api_url, "login"), data=self.payload, timeout=5
+            )
         self.update()
 
     def post(self, method, params=None):
         """Send a POST request and return the response as a dict."""
-        payload = {'method': method}
+        payload = {"method": method}
 
         if params:
-            payload['params'] = params
+            payload["params"] = params
 
         try:
             response = requests.post(
-                '{}{}'.format(self.api_url, 'statusServer'), json=payload,
-                cookies=self.login.cookies, headers=self.headers, timeout=5)
+                "{}{}".format(self.api_url, "statusServer"),
+                json=payload,
+                cookies=self.login.cookies,
+                headers=self.headers,
+                timeout=5,
+            )
             response.raise_for_status()
             _LOGGER.debug("JSON Response: %s", response.json())
             return response.json()
 
         except requests.exceptions.ConnectionError as conn_exc:
-            _LOGGER.error("Failed to update pyLoad status. Error: %s",
-                          conn_exc)
+            _LOGGER.error("Failed to update pyLoad status. Error: %s", conn_exc)
             raise
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update cached response."""
-        self.status = self.post('speed')
+        self.status = self.post("speed")

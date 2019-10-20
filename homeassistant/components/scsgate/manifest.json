@@ -1,7 +1,7 @@
 {
   "domain": "scsgate",
   "name": "Scsgate",
-  "documentation": "https://www.home-assistant.io/components/scsgate",
+  "documentation": "https://www.home-assistant.io/integrations/scsgate",
   "requirements": [
     "scsgate==0.1.0"
   ],

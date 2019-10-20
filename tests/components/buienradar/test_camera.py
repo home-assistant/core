@@ -12,76 +12,78 @@ EPSILON_DELTA = 0.0000000001
 
 def radar_map_url(dim: int = 512) -> str:
     """Build map url, defaulting to 512 wide (as in component)."""
-    return ("https://api.buienradar.nl/"
-            "image/1.0/RadarMapNL?w={dim}&h={dim}").format(dim=dim)
+    return ("https://api.buienradar.nl/" "image/1.0/RadarMapNL?w={dim}&h={dim}").format(
+        dim=dim
+    )
 
 
 async def test_fetching_url_and_caching(aioclient_mock, hass, hass_client):
     """Test that it fetches the given url."""
-    aioclient_mock.get(radar_map_url(), text='hello world')
+    aioclient_mock.get(radar_map_url(), text="hello world")
 
-    await async_setup_component(hass, 'camera', {
-        'camera': {
-            'name': 'config_test',
-            'platform': 'buienradar',
-        }})
+    await async_setup_component(
+        hass, "camera", {"camera": {"name": "config_test", "platform": "buienradar"}}
+    )
 
     client = await hass_client()
 
-    resp = await client.get('/api/camera_proxy/camera.config_test')
+    resp = await client.get("/api/camera_proxy/camera.config_test")
 
     assert resp.status == 200
     assert aioclient_mock.call_count == 1
     body = await resp.text()
-    assert body == 'hello world'
+    assert body == "hello world"
 
     # default delta is 600s -> should be the same when calling immediately
     # afterwards.
 
-    resp = await client.get('/api/camera_proxy/camera.config_test')
+    resp = await client.get("/api/camera_proxy/camera.config_test")
     assert aioclient_mock.call_count == 1
 
 
 async def test_expire_delta(aioclient_mock, hass, hass_client):
     """Test that the cache expires after delta."""
-    aioclient_mock.get(radar_map_url(), text='hello world')
+    aioclient_mock.get(radar_map_url(), text="hello world")
 
-    await async_setup_component(hass, 'camera', {
-        'camera': {
-            'name': 'config_test',
-            'platform': 'buienradar',
-            'delta': EPSILON_DELTA,
-        }})
+    await async_setup_component(
+        hass,
+        "camera",
+        {
+            "camera": {
+                "name": "config_test",
+                "platform": "buienradar",
+                "delta": EPSILON_DELTA,
+            }
+        },
+    )
 
     client = await hass_client()
 
-    resp = await client.get('/api/camera_proxy/camera.config_test')
+    resp = await client.get("/api/camera_proxy/camera.config_test")
 
     assert resp.status == 200
     assert aioclient_mock.call_count == 1
     body = await resp.text()
-    assert body == 'hello world'
+    assert body == "hello world"
 
     await asyncio.sleep(EPSILON_DELTA)
     # tiny delta has passed -> should immediately call again
-    resp = await client.get('/api/camera_proxy/camera.config_test')
+    resp = await client.get("/api/camera_proxy/camera.config_test")
     assert aioclient_mock.call_count == 2
 
 
 async def test_only_one_fetch_at_a_time(aioclient_mock, hass, hass_client):
     """Test that it fetches with only one request at the same time."""
-    aioclient_mock.get(radar_map_url(), text='hello world')
+    aioclient_mock.get(radar_map_url(), text="hello world")
 
-    await async_setup_component(hass, 'camera', {
-        'camera': {
-            'name': 'config_test',
-            'platform': 'buienradar',
-        }})
+    await async_setup_component(
+        hass, "camera", {"camera": {"name": "config_test", "platform": "buienradar"}}
+    )
 
     client = await hass_client()
 
-    resp_1 = client.get('/api/camera_proxy/camera.config_test')
-    resp_2 = client.get('/api/camera_proxy/camera.config_test')
+    resp_1 = client.get("/api/camera_proxy/camera.config_test")
+    resp_2 = client.get("/api/camera_proxy/camera.config_test")
 
     resp = await resp_1
     resp_2 = await resp_2
@@ -93,36 +95,33 @@ async def test_only_one_fetch_at_a_time(aioclient_mock, hass, hass_client):
 
 async def test_dimension(aioclient_mock, hass, hass_client):
     """Test that it actually adheres to the dimension."""
-    aioclient_mock.get(radar_map_url(700), text='hello world')
+    aioclient_mock.get(radar_map_url(700), text="hello world")
 
-    await async_setup_component(hass, 'camera', {
-        'camera': {
-            'name': 'config_test',
-            'platform': 'buienradar',
-            'dimension': 700,
-        }})
+    await async_setup_component(
+        hass,
+        "camera",
+        {"camera": {"name": "config_test", "platform": "buienradar", "dimension": 700}},
+    )
 
     client = await hass_client()
 
-    await client.get('/api/camera_proxy/camera.config_test')
+    await client.get("/api/camera_proxy/camera.config_test")
 
     assert aioclient_mock.call_count == 1
 
 
 async def test_failure_response_not_cached(aioclient_mock, hass, hass_client):
     """Test that it does not cache a failure response."""
-    aioclient_mock.get(radar_map_url(), text='hello world', status=401)
+    aioclient_mock.get(radar_map_url(), text="hello world", status=401)
 
-    await async_setup_component(hass, 'camera', {
-        'camera': {
-            'name': 'config_test',
-            'platform': 'buienradar',
-        }})
+    await async_setup_component(
+        hass, "camera", {"camera": {"name": "config_test", "platform": "buienradar"}}
+    )
 
     client = await hass_client()
 
-    await client.get('/api/camera_proxy/camera.config_test')
-    await client.get('/api/camera_proxy/camera.config_test')
+    await client.get("/api/camera_proxy/camera.config_test")
+    await client.get("/api/camera_proxy/camera.config_test")
 
     assert aioclient_mock.call_count == 2
 
@@ -133,21 +132,28 @@ async def test_last_modified_updates(aioclient_mock, hass, hass_client):
     now = dt_util.utcnow()
     last_modified = now.strftime("%a, %d %m %Y %H:%M:%S GMT")
 
-    aioclient_mock.get(radar_map_url(), text='hello world', status=200,
-                       headers={
-                           'Last-Modified':  last_modified,
-                       })
+    aioclient_mock.get(
+        radar_map_url(),
+        text="hello world",
+        status=200,
+        headers={"Last-Modified": last_modified},
+    )
 
-    await async_setup_component(hass, 'camera', {
-        'camera': {
-            'name': 'config_test',
-            'platform': 'buienradar',
-            'delta': EPSILON_DELTA,
-        }})
+    await async_setup_component(
+        hass,
+        "camera",
+        {
+            "camera": {
+                "name": "config_test",
+                "platform": "buienradar",
+                "delta": EPSILON_DELTA,
+            }
+        },
+    )
 
     client = await hass_client()
 
-    resp_1 = await client.get('/api/camera_proxy/camera.config_test')
+    resp_1 = await client.get("/api/camera_proxy/camera.config_test")
     # It is not possible to check if header was sent.
     assert aioclient_mock.call_count == 1
 
@@ -161,7 +167,7 @@ async def test_last_modified_updates(aioclient_mock, hass, hass_client):
 
     aioclient_mock.get(radar_map_url(), text=None, status=304)
 
-    resp_2 = await client.get('/api/camera_proxy/camera.config_test')
+    resp_2 = await client.get("/api/camera_proxy/camera.config_test")
     assert aioclient_mock.call_count == 1
 
     assert (await resp_1.read()) == (await resp_2.read())
@@ -169,11 +175,9 @@ async def test_last_modified_updates(aioclient_mock, hass, hass_client):
 
 async def test_retries_after_error(aioclient_mock, hass, hass_client):
     """Test that it does retry after an error instead of caching."""
-    await async_setup_component(hass, 'camera', {
-        'camera': {
-            'name': 'config_test',
-            'platform': 'buienradar',
-        }})
+    await async_setup_component(
+        hass, "camera", {"camera": {"name": "config_test", "platform": "buienradar"}}
+    )
 
     client = await hass_client()
 
@@ -181,7 +185,7 @@ async def test_retries_after_error(aioclient_mock, hass, hass_client):
 
     # A 404 should not return data and throw:
     try:
-        await client.get('/api/camera_proxy/camera.config_test')
+        await client.get("/api/camera_proxy/camera.config_test")
     except ClientResponseError:
         pass
 
@@ -194,7 +198,7 @@ async def test_retries_after_error(aioclient_mock, hass, hass_client):
     assert aioclient_mock.call_count == 0
 
     # http error should not be cached, immediate retry.
-    resp_2 = await client.get('/api/camera_proxy/camera.config_test')
+    resp_2 = await client.get("/api/camera_proxy/camera.config_test")
     assert aioclient_mock.call_count == 1
 
     # Binary text can not be added as body to `aioclient_mock.get(text=...)`,

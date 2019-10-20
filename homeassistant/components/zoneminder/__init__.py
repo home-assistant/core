@@ -5,40 +5,48 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_PATH, CONF_SSL, CONF_USERNAME,
-    CONF_VERIFY_SSL, ATTR_NAME, ATTR_ID)
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PATH,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    ATTR_NAME,
+    ATTR_ID,
+)
 from homeassistant.helpers.discovery import async_load_platform
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PATH_ZMS = 'path_zms'
+CONF_PATH_ZMS = "path_zms"
 
-DEFAULT_PATH = '/zm/'
-DEFAULT_PATH_ZMS = '/zm/cgi-bin/nph-zms'
+DEFAULT_PATH = "/zm/"
+DEFAULT_PATH_ZMS = "/zm/cgi-bin/nph-zms"
 DEFAULT_SSL = False
 DEFAULT_TIMEOUT = 10
 DEFAULT_VERIFY_SSL = True
-DOMAIN = 'zoneminder'
+DOMAIN = "zoneminder"
 
-HOST_CONFIG_SCHEMA = vol.Schema({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
-    vol.Optional(CONF_PATH_ZMS, default=DEFAULT_PATH_ZMS): cv.string,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-    vol.Optional(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-})
+HOST_CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
+        vol.Optional(CONF_PATH_ZMS, default=DEFAULT_PATH_ZMS): cv.string,
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    }
+)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(cv.ensure_list, [HOST_CONFIG_SCHEMA])
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.All(cv.ensure_list, [HOST_CONFIG_SCHEMA])}, extra=vol.ALLOW_EXTRA
+)
 
-SERVICE_SET_RUN_STATE = 'set_run_state'
-SET_RUN_STATE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ID): cv.string,
-    vol.Required(ATTR_NAME): cv.string
-})
+SERVICE_SET_RUN_STATE = "set_run_state"
+SET_RUN_STATE_SCHEMA = vol.Schema(
+    {vol.Required(ATTR_ID): cv.string, vol.Required(ATTR_NAME): cv.string}
+)
 
 
 def setup(hass, config):
@@ -51,19 +59,19 @@ def setup(hass, config):
 
     for conf in config[DOMAIN]:
         if conf[CONF_SSL]:
-            schema = 'https'
+            schema = "https"
         else:
-            schema = 'http'
+            schema = "http"
 
         host_name = conf[CONF_HOST]
-        server_origin = '{}://{}'.format(schema, host_name)
+        server_origin = f"{schema}://{host_name}"
         zm_client = ZoneMinder(
             server_origin,
             conf.get(CONF_USERNAME),
             conf.get(CONF_PASSWORD),
             conf.get(CONF_PATH),
             conf.get(CONF_PATH_ZMS),
-            conf.get(CONF_VERIFY_SSL)
+            conf.get(CONF_VERIFY_SSL),
         )
         hass.data[DOMAIN][host_name] = zm_client
 
@@ -74,21 +82,20 @@ def setup(hass, config):
         zm_id = call.data[ATTR_ID]
         state_name = call.data[ATTR_NAME]
         if zm_id not in hass.data[DOMAIN]:
-            _LOGGER.error('Invalid ZoneMinder host provided: %s', zm_id)
+            _LOGGER.error("Invalid ZoneMinder host provided: %s", zm_id)
         if not hass.data[DOMAIN][zm_id].set_active_state(state_name):
             _LOGGER.error(
-                'Unable to change ZoneMinder state. Host: %s, state: %s',
+                "Unable to change ZoneMinder state. Host: %s, state: %s",
                 zm_id,
-                state_name
+                state_name,
             )
 
     hass.services.register(
-        DOMAIN, SERVICE_SET_RUN_STATE, set_active_state,
-        schema=SET_RUN_STATE_SCHEMA
+        DOMAIN, SERVICE_SET_RUN_STATE, set_active_state, schema=SET_RUN_STATE_SCHEMA
     )
 
     hass.async_create_task(
-        async_load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
+        async_load_platform(hass, "binary_sensor", DOMAIN, {}, config)
     )
 
     return success

@@ -6,14 +6,19 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
-    CONF_OUTPUTS, CONF_ZONE_NAME, CONF_ZONE_TYPE, CONF_ZONES,
-    SIGNAL_OUTPUTS_UPDATED, SIGNAL_ZONES_UPDATED, DATA_SATEL)
+    CONF_OUTPUTS,
+    CONF_ZONE_NAME,
+    CONF_ZONE_TYPE,
+    CONF_ZONES,
+    SIGNAL_OUTPUTS_UPDATED,
+    SIGNAL_ZONES_UPDATED,
+    DATA_SATEL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Satel Integra binary sensor devices."""
     if not discovery_info:
         return
@@ -27,7 +32,8 @@ async def async_setup_platform(
         zone_type = device_config_data[CONF_ZONE_TYPE]
         zone_name = device_config_data[CONF_ZONE_NAME]
         device = SatelIntegraBinarySensor(
-            controller, zone_num, zone_name, zone_type, SIGNAL_ZONES_UPDATED)
+            controller, zone_num, zone_name, zone_type, SIGNAL_ZONES_UPDATED
+        )
         devices.append(device)
 
     configured_outputs = discovery_info[CONF_OUTPUTS]
@@ -36,7 +42,8 @@ async def async_setup_platform(
         zone_type = device_config_data[CONF_ZONE_TYPE]
         zone_name = device_config_data[CONF_ZONE_NAME]
         device = SatelIntegraBinarySensor(
-            controller, zone_num, zone_name, zone_type, SIGNAL_OUTPUTS_UPDATED)
+            controller, zone_num, zone_name, zone_type, SIGNAL_OUTPUTS_UPDATED
+        )
         devices.append(device)
 
     async_add_entities(devices)
@@ -45,8 +52,9 @@ async def async_setup_platform(
 class SatelIntegraBinarySensor(BinarySensorDevice):
     """Representation of an Satel Integra binary sensor."""
 
-    def __init__(self, controller, device_number, device_name,
-                 zone_type, react_to_signal):
+    def __init__(
+        self, controller, device_number, device_name, zone_type, react_to_signal
+    ):
         """Initialize the binary_sensor."""
         self._device_number = device_number
         self._name = device_name
@@ -68,7 +76,8 @@ class SatelIntegraBinarySensor(BinarySensorDevice):
             else:
                 self._state = 0
         async_dispatcher_connect(
-            self.hass, self._react_to_signal, self._devices_updated)
+            self.hass, self._react_to_signal, self._devices_updated
+        )
 
     @property
     def name(self):
@@ -78,7 +87,7 @@ class SatelIntegraBinarySensor(BinarySensorDevice):
     @property
     def icon(self):
         """Icon for device by its type."""
-        if self._zone_type == 'smoke':
+        if self._zone_type == "smoke":
             return "mdi:fire"
 
     @property
@@ -99,7 +108,6 @@ class SatelIntegraBinarySensor(BinarySensorDevice):
     @callback
     def _devices_updated(self, zones):
         """Update the zone's state, if needed."""
-        if self._device_number in zones \
-                and self._state != zones[self._device_number]:
+        if self._device_number in zones and self._state != zones[self._device_number]:
             self._state = zones[self._device_number]
             self.async_schedule_update_ha_state()

@@ -12,34 +12,33 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by the Swiss Federal Office for the " \
-              "Environment FOEN"
+ATTRIBUTION = "Data provided by the Swiss Federal Office for the " "Environment FOEN"
 
-ATTR_DELTA_24H = 'delta-24h'
-ATTR_MAX_1H = 'max-1h'
-ATTR_MAX_24H = 'max-24h'
-ATTR_MEAN_1H = 'mean-1h'
-ATTR_MEAN_24H = 'mean-24h'
-ATTR_MIN_1H = 'min-1h'
-ATTR_MIN_24H = 'min-24h'
-ATTR_PREVIOUS_24H = 'previous-24h'
-ATTR_STATION = 'station'
-ATTR_STATION_UPDATE = 'station_update'
-ATTR_WATER_BODY = 'water_body'
-ATTR_WATER_BODY_TYPE = 'water_body_type'
+ATTR_DELTA_24H = "delta-24h"
+ATTR_MAX_1H = "max-1h"
+ATTR_MAX_24H = "max-24h"
+ATTR_MEAN_1H = "mean-1h"
+ATTR_MEAN_24H = "mean-24h"
+ATTR_MIN_1H = "min-1h"
+ATTR_MIN_24H = "min-24h"
+ATTR_PREVIOUS_24H = "previous-24h"
+ATTR_STATION = "station"
+ATTR_STATION_UPDATE = "station_update"
+ATTR_WATER_BODY = "water_body"
+ATTR_WATER_BODY_TYPE = "water_body_type"
 
-CONF_STATION = 'station'
+CONF_STATION = "station"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-SENSOR_DISCHARGE = 'discharge'
-SENSOR_LEVEL = 'level'
-SENSOR_TEMPERATURE = 'temperature'
+SENSOR_DISCHARGE = "discharge"
+SENSOR_LEVEL = "level"
+SENSOR_TEMPERATURE = "temperature"
 
 CONDITIONS = {
-    SENSOR_DISCHARGE: 'mdi:waves',
-    SENSOR_LEVEL: 'mdi:zodiac-aquarius',
-    SENSOR_TEMPERATURE: 'mdi:oil-temperature',
+    SENSOR_DISCHARGE: "mdi:waves",
+    SENSOR_LEVEL: "mdi:zodiac-aquarius",
+    SENSOR_TEMPERATURE: "mdi:oil-temperature",
 }
 
 CONDITION_DETAILS = [
@@ -53,11 +52,14 @@ CONDITION_DETAILS = [
     ATTR_PREVIOUS_24H,
 ]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_STATION): vol.Coerce(int),
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=[SENSOR_TEMPERATURE]):
-        vol.All(cv.ensure_list, [vol.In(CONDITIONS)]),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_STATION): vol.Coerce(int),
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=[SENSOR_TEMPERATURE]): vol.All(
+            cv.ensure_list, [vol.In(CONDITIONS)]
+        ),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -75,8 +77,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     entities = []
 
     for condition in monitored_conditions:
-        entities.append(
-            SwissHydrologicalDataSensor(hydro_data, station, condition))
+        entities.append(SwissHydrologicalDataSensor(hydro_data, station, condition))
 
     add_entities(entities, True)
 
@@ -95,18 +96,18 @@ class SwissHydrologicalDataSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{0} {1}".format(self._data['water-body-name'], self._condition)
+        return "{0} {1}".format(self._data["water-body-name"], self._condition)
 
     @property
     def unique_id(self) -> str:
         """Return a unique, friendly identifier for this entity."""
-        return '{0}_{1}'.format(self._station, self._condition)
+        return f"{self._station}_{self._condition}"
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         if self._state is not None:
-            return self.hydro_data.data['parameters'][self._condition]['unit']
+            return self.hydro_data.data["parameters"][self._condition]["unit"]
         return None
 
     @property
@@ -125,15 +126,17 @@ class SwissHydrologicalDataSensor(Entity):
             attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
             return attrs
 
-        attrs[ATTR_WATER_BODY_TYPE] = self._data['water-body-type']
-        attrs[ATTR_STATION] = self._data['name']
-        attrs[ATTR_STATION_UPDATE] = \
-            self._data['parameters'][self._condition]['datetime']
+        attrs[ATTR_WATER_BODY_TYPE] = self._data["water-body-type"]
+        attrs[ATTR_STATION] = self._data["name"]
+        attrs[ATTR_STATION_UPDATE] = self._data["parameters"][self._condition][
+            "datetime"
+        ]
         attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
 
         for entry in CONDITION_DETAILS:
-            attrs[entry.replace('-', '_')] = \
-                self._data['parameters'][self._condition][entry]
+            attrs[entry.replace("-", "_")] = self._data["parameters"][self._condition][
+                entry
+            ]
 
         return attrs
 
@@ -150,7 +153,7 @@ class SwissHydrologicalDataSensor(Entity):
         if self._data is None:
             self._state = None
         else:
-            self._state = self._data['parameters'][self._condition]['value']
+            self._state = self._data["parameters"][self._condition]["value"]
 
 
 class HydrologicalData:
