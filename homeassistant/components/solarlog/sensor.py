@@ -1,5 +1,6 @@
 """Platform for solarlog sensors."""
 import logging
+from urllib.parse import ParseResult, urlparse
 
 from requests.exceptions import HTTPError, Timeout
 from sunwatcher.solarlog.solarlog import SolarLog
@@ -35,10 +36,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Add solarlog entry."""
-    host = entry.data[CONF_HOST]
+    host_entry = entry.data[CONF_HOST]
+
+    url = urlparse(host_entry, "http")
+    netloc = url.netloc or url.path
+    path = url.path if url.netloc else ""
+    url = ParseResult("http", netloc, path, *url[3:])
+    host = url.geturl()
+
     platform_name = entry.title
+
     try:
-        api = SolarLog(f"http://{host}")
+        api = await hass.async_add_executor_job(SolarLog, host)
         _LOGGER.debug("Connected to Solar-Log device, setting up entries")
     except (OSError, HTTPError, Timeout):
         _LOGGER.error(
@@ -47,7 +56,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         return
 
     # Create solarlog data service which will retrieve and update the data.
-    data = SolarlogData(hass, api, host)
+    data = await hass.async_add_executor_job(SolarlogData, hass, api, host)
 
     # Create a new sensor for each sensor type.
     entities = []
@@ -110,9 +119,9 @@ class SolarlogData:
         self.data = {}
 
     def _update(self):
-        """Update the data from the Solarlog API."""
+        """Update the data from the SolarLog device."""
         try:
-            self.api = SolarLog(f"http://{self.host}")
+            self.api = SolarLog(self.host)
             response = self.api.time
             _LOGGER.debug(
                 "Connection to Solarlog successful. Retrieving latest Solarlog update of %s",
