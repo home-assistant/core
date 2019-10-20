@@ -89,9 +89,9 @@ class AirMonitorB1(AirQualityEntity):
         try:
             if self._model is None:
                 info = await self.hass.async_add_executor_job(self._device.info)
-                self._model       = info.model
+                self._model = info.model
                 self._mac_address = info.mac_address
-                self._sw_version  = info.firmware_version
+                self._sw_version = info.firmware_version
 
             state = await self.hass.async_add_executor_job(self._device.status)
             _LOGGER.debug("Got new state: %s", state)
