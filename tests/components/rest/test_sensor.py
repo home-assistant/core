@@ -152,6 +152,7 @@ class TestRestSensor(unittest.TestCase):
         self.value_template = template("{{ value_json.key }}")
         self.value_template.hass = self.hass
         self.force_update = False
+        self.resource_template = None
 
         self.sensor = rest.RestSensor(
             self.hass,
@@ -162,6 +163,7 @@ class TestRestSensor(unittest.TestCase):
             self.value_template,
             [],
             self.force_update,
+            self.resource_template,
         )
 
     def tearDown(self):
@@ -222,6 +224,7 @@ class TestRestSensor(unittest.TestCase):
             None,
             [],
             self.force_update,
+            self.resource_template,
         )
         self.sensor.update()
         assert "plain_state" == self.sensor.state
@@ -242,6 +245,7 @@ class TestRestSensor(unittest.TestCase):
             None,
             ["key"],
             self.force_update,
+            self.resource_template,
         )
         self.sensor.update()
         assert "some_json_value" == self.sensor.device_state_attributes["key"]
@@ -261,6 +265,7 @@ class TestRestSensor(unittest.TestCase):
             None,
             ["key"],
             self.force_update,
+            self.resource_template,
         )
         self.sensor.update()
         assert {} == self.sensor.device_state_attributes
@@ -282,6 +287,7 @@ class TestRestSensor(unittest.TestCase):
             None,
             ["key"],
             self.force_update,
+            self.resource_template,
         )
         self.sensor.update()
         assert {} == self.sensor.device_state_attributes
@@ -303,6 +309,7 @@ class TestRestSensor(unittest.TestCase):
             None,
             ["key"],
             self.force_update,
+            self.resource_template,
         )
         self.sensor.update()
         assert {} == self.sensor.device_state_attributes
@@ -326,6 +333,7 @@ class TestRestSensor(unittest.TestCase):
             self.value_template,
             ["key"],
             self.force_update,
+            self.resource_template,
         )
         self.sensor.update()
 
