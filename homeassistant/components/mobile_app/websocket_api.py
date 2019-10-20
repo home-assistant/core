@@ -29,7 +29,6 @@ from .const import (
     DATA_STORE,
     DOMAIN,
 )
-
 from .helpers import safe_registration, savable_state
 
 

@@ -1,18 +1,19 @@
 """Provides an HTTP API for mobile_app."""
-import uuid
 from typing import Dict
+import uuid
 
-from aiohttp.web import Response, Request
+from aiohttp.web import Request, Response
+from nacl.secret import SecretBox
 
 from homeassistant.auth.util import generate_secret
 from homeassistant.components.cloud import (
+    CloudNotAvailable,
     async_create_cloudhook,
     async_remote_ui_url,
-    CloudNotAvailable,
 )
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.const import HTTP_CREATED, CONF_WEBHOOK_ID
+from homeassistant.const import CONF_WEBHOOK_ID, HTTP_CREATED
 
 from .const import (
     ATTR_DEVICE_ID,
@@ -24,7 +25,6 @@ from .const import (
     DOMAIN,
     REGISTRATION_SCHEMA,
 )
-
 from .helpers import supports_encryption
 
 
@@ -49,8 +49,6 @@ class RegistrationsView(HomeAssistantView):
         data[CONF_WEBHOOK_ID] = webhook_id
 
         if data[ATTR_SUPPORTS_ENCRYPTION] and supports_encryption():
-            from nacl.secret import SecretBox
-
             data[CONF_SECRET] = generate_secret(SecretBox.KEY_SIZE)
 
         data[CONF_USER_ID] = request["hass_user"].id
