@@ -129,3 +129,16 @@ async def test_full_flow_implementation(hass):
             assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
             assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
             assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
+
+
+async def test_import(hass):
+    """Test importing from yaml."""
+    flow = config_flow.GrowattServerConfigFlow()
+    flow.hass = hass
+    with patch("growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE):
+        with patch(
+            "growattServer.GrowattApi.plant_list",
+            return_value=GROWATT_PLANT_LIST_RESPONSE,
+        ):
+            result = await flow.async_step_import(FIXTURE_USER_INPUT)
+            assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
