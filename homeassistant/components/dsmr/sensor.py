@@ -53,7 +53,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the DSMR sensor."""
     # Suppress logging
-    _LOGGER.setLevel(logging.ERROR)
+    logging.getLogger("dsmr_parser").setLevel(logging.ERROR)
 
     dsmr_version = config[CONF_DSMR_VERSION]
 
