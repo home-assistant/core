@@ -1,10 +1,6 @@
 """The tests for the buienradar weather component."""
-import unittest
-
 from homeassistant.components import weather
-from homeassistant.setup import setup_component
-
-from tests.common import get_test_home_assistant
+from homeassistant.setup import async_setup_component
 
 
 # Example config snippet from documentation.
@@ -21,23 +17,9 @@ BASE_CONFIG = {
 }
 
 
-class TestBuienradarWeather(unittest.TestCase):
-    """Test the Buienradar weather component."""
+async def test_smoke_test_setup_component(hass):
+    """Smoke test for successfully set-up with default config."""
+    assert await async_setup_component(hass, weather.DOMAIN, BASE_CONFIG)
 
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop down everything that was started."""
-        self.hass.stop()
-
-    def test_setup(self):
-        """Test for successfully set-up with default config.
-
-        Smoke test.
-        """
-        assert setup_component(self.hass, weather.DOMAIN, BASE_CONFIG)
-
-        state = self.hass.states.get("weather.volkel")
-        assert state.state == "unknown"
+    state = hass.states.get("weather.volkel")
+    assert state.state == "unknown"

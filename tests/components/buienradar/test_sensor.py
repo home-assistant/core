@@ -1,10 +1,7 @@
-"""The tests for the Dark Sky platform."""
-import unittest
-
-from homeassistant.setup import setup_component
+"""The tests for the Buienradar sensor platform."""
+from homeassistant.setup import async_setup_component
 from homeassistant.components import sensor
 
-from tests.common import get_test_home_assistant
 
 CONDITIONS = ["stationname", "temperature"]
 BASE_CONFIG = {
@@ -20,24 +17,10 @@ BASE_CONFIG = {
 }
 
 
-class TestBuienradarSensorSetup(unittest.TestCase):
-    """Test the Buienradar sensor platform."""
+async def test_smoke_test_setup_component(hass):
+    """Smoke test for successfully set-up with default config."""
+    assert await async_setup_component(hass, sensor.DOMAIN, BASE_CONFIG)
 
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-
-    def tearDown(self):
-        """Stop down everything that was started."""
-        self.hass.stop()
-
-    def test_setup(self):
-        """Test for successfully set-up with default config.
-
-        Smoke test.
-        """
-        assert setup_component(self.hass, sensor.DOMAIN, BASE_CONFIG)
-
-        for cond in CONDITIONS:
-            state = self.hass.states.get(f"sensor.volkel_{cond}")
-            assert state.state == "unknown"
+    for cond in CONDITIONS:
+        state = hass.states.get(f"sensor.volkel_{cond}")
+        assert state.state == "unknown"
