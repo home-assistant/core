@@ -120,14 +120,14 @@ class AbstractConfig:
             self._unsub_report_state()
             self._unsub_report_state = None
 
-    async def async_sync_entities(self):
+    async def async_sync_entities(self, agent_user_id: Optional[str] = None):
         """Sync all entities to Google."""
         # Remove any pending sync
         if self._google_sync_unsub:
             self._google_sync_unsub()
             self._google_sync_unsub = None
 
-        return await self._async_request_sync_devices()
+        return await self._async_request_sync_devices(agent_user_id)
 
     async def _schedule_callback(self, _now):
         """Handle a scheduled sync callback."""
@@ -144,7 +144,7 @@ class AbstractConfig:
             self.hass, SYNC_DELAY, self._schedule_callback
         )
 
-    async def _async_request_sync_devices(self) -> int:
+    async def _async_request_sync_devices(self, agent_user_id: str) -> int:
         """Trigger a sync with Google.
 
         Return value is the HTTP status code of the sync request.
