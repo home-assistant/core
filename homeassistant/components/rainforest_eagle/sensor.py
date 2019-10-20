@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 
 from eagle200_reader import EagleReader
+from uEagle import Eagle as LegacyReader
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 import voluptuous as vol
 
@@ -42,11 +43,20 @@ SENSORS = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_IP_ADDRESS): cv.string,
+        vol.Optional(CONF_IP_ADDRESS): cv.string,
         vol.Required(CONF_CLOUD_ID): cv.string,
         vol.Required(CONF_INSTALL_CODE): cv.string,
     }
 )
+
+
+def hwtest(cloud_id, install_code, ip_address=None):
+    """Try API call 'device_list' to see if target device is Legacy or Eagle-200."""
+    reader = LeagleReader(cloud_id, install_code, ip_address)
+    response = reader.post_cmd("device_list")
+    if "Error" in response and "Unknown Command" in response["Error"]["Text"]:
+        reader = EagleReader(ip_address, cloud_id, install_code)
+    return reader
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -56,7 +66,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     install_code = config[CONF_INSTALL_CODE]
 
     try:
-        eagle_reader = EagleReader(ip_address, cloud_id, install_code)
+        eagle_reader = hwtest(cloud_id, install_code, ip_address)
     except (ConnectError, HTTPError, Timeout, ValueError) as error:
         _LOGGER.error("Failed to connect during setup: %s", error)
         return
@@ -138,3 +148,21 @@ class EagleData:
         state = self.data.get(sensor_type)
         _LOGGER.debug("Updating: %s - %s", sensor_type, state)
         return state
+
+
+class LeagleReader(LegacyReader):
+    """Wraps uEagle to make it behave like eagle_reader, offering update()."""
+
+    def update(self):
+        """Fetch and return the four sensor values in a dict."""
+        d = {}
+
+        resp = self.get_instantaneous_demand()["InstantaneousDemand"]
+        d["instantanous_demand"] = resp["Demand"]
+
+        resp = self.get_current_summation()["CurrentSummation"]
+        d["summation_delivered"] = resp["SummationDelivered"]
+        d["summation_received"] = resp["SummationReceived"]
+        d["summation_total"] = d["summation_delivered"] - d["summation_received"]
+
+        return d
