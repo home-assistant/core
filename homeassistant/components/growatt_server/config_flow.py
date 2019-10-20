@@ -21,6 +21,27 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.plants = {}
         self.user_id = None
 
+    async def async_step_import(self, import_config):
+        """Import a config entry from configuration.yaml."""
+        if CONF_PLANT_ID in import_config:
+            return self.async_create_entry(
+                title=import_config[CONF_NAME], data=import_config
+            )
+
+        login_response = await self.hass.async_add_executor_job(
+            self.api.login, import_config[CONF_USERNAME], import_config[CONF_PASSWORD]
+        )
+        user_id = login_response["userId"]
+        plant_info = await self.hass.async_add_executor_job(
+            self.api.plant_list, user_id
+        )
+
+        import_config[CONF_PLANT_ID] = plant_info["data"][0]["plantId"]
+
+        return self.async_create_entry(
+            title=import_config[CONF_NAME], data=import_config
+        )
+
     async def _show_user_form(self, errors=None):
         """Show the form to the user."""
         data_schema = vol.Schema(
