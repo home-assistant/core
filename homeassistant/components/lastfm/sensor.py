@@ -2,10 +2,12 @@
 import logging
 import re
 
+import pylast as lastfm
+from pylast import WSError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_API_KEY, ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -30,9 +32,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Last.fm sensor platform."""
-    import pylast as lastfm
-    from pylast import WSError
-
     api_key = config[CONF_API_KEY]
     users = config.get(CONF_USERS)
 
