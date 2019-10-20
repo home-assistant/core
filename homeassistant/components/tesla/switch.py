@@ -11,11 +11,12 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tesla switch platform."""
-    controller = hass.data[TESLA_DOMAIN]["devices"]["controller"]
+    controller = hass.data[TESLA_DOMAIN]["controller"]
     devices = []
     for device in hass.data[TESLA_DOMAIN]["devices"]["switch"]:
         if device.bin_type == 0x8:
             devices.append(ChargerSwitch(device, controller))
+            devices.append(UpdateSwitch(device, controller))
         elif device.bin_type == 0x9:
             devices.append(RangeSwitch(device, controller))
     add_entities(devices, True)
