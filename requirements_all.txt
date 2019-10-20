@@ -480,7 +480,7 @@ eternalegypt==0.0.10
 # evdev==0.6.1
 
 # homeassistant.components.evohome
-evohome-async==0.3.3b5
+evohome-async==0.3.4b1
 
 # homeassistant.components.dlib_face_detect
 # homeassistant.components.dlib_face_identify
