@@ -28,6 +28,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     CONF_WEEKDAY,
     CONF_ZONE,
+    STATE_HOME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     SUN_EVENT_SUNRISE,

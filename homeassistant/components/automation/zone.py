@@ -10,7 +10,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
 )
 from homeassistant.helpers.event import async_track_state_change
-from homeassistant.helpers import condition, config_validation as cv, location
+from homeassistant.helpers import condition, config_validation as cv
 
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
