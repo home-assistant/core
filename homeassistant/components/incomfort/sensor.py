@@ -8,7 +8,6 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
 from . import DOMAIN, IncomfortChild
@@ -41,7 +40,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class IncomfortSensor(IncomfortChild, Entity):
+class IncomfortSensor(IncomfortChild):
     """Representation of an InComfort/InTouch sensor device."""
 
     def __init__(self, client, heater, name) -> None:
