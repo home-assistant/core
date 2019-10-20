@@ -27,6 +27,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_RADIUS,
     EVENT_HOMEASSISTANT_START,
+    ATTR_ICON,
 )
 from homeassistant.setup import async_setup_component
 from tests.common import assert_setup_component, async_fire_time_changed
@@ -150,6 +151,7 @@ async def test_setup(hass):
                 ATTR_RESPONSIBLE_AGENCY: "Agency 1",
                 ATTR_UNIT_OF_MEASUREMENT: "km",
                 ATTR_SOURCE: "nsw_rural_fire_service_feed",
+                ATTR_ICON: "mdi:fire",
             }
             assert round(abs(float(state.state) - 15.5), 7) == 0
 
@@ -164,6 +166,7 @@ async def test_setup(hass):
                 ATTR_FIRE: False,
                 ATTR_UNIT_OF_MEASUREMENT: "km",
                 ATTR_SOURCE: "nsw_rural_fire_service_feed",
+                ATTR_ICON: "mdi:alarm-light",
             }
             assert round(abs(float(state.state) - 20.5), 7) == 0
 
@@ -178,6 +181,7 @@ async def test_setup(hass):
                 ATTR_FIRE: True,
                 ATTR_UNIT_OF_MEASUREMENT: "km",
                 ATTR_SOURCE: "nsw_rural_fire_service_feed",
+                ATTR_ICON: "mdi:fire",
             }
             assert round(abs(float(state.state) - 25.5), 7) == 0
 

@@ -2,6 +2,7 @@
 import logging
 
 import requests
+import rxv
 import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
@@ -82,7 +83,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yamaha platform."""
-    import rxv
 
     # Keep track of configured receivers so that we don't end up
     # discovering a receiver dynamically that we have static config
@@ -114,7 +114,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for recv in rxv.find():
             receivers.extend(recv.zone_controllers())
     else:
-        ctrl_url = "http://{}:80/YamahaRemoteControl/ctrl".format(host)
+        ctrl_url = f"http://{host}:80/YamahaRemoteControl/ctrl"
         receivers = rxv.RXV(ctrl_url, name).zone_controllers()
 
     devices = []
@@ -276,7 +276,7 @@ class YamahaDevice(MediaPlayerDevice):
     @property
     def zone_id(self):
         """Return a zone_id to ensure 1 media player per zone."""
-        return "{0}:{1}".format(self.receiver.ctrl_url, self._zone)
+        return f"{self.receiver.ctrl_url}:{self._zone}"
 
     @property
     def supported_features(self):
@@ -336,8 +336,6 @@ class YamahaDevice(MediaPlayerDevice):
         self._call_playback_function(self.receiver.next, "next track")
 
     def _call_playback_function(self, function, function_text):
-        import rxv
-
         try:
             function()
         except rxv.exceptions.ResponseException:
@@ -410,6 +408,6 @@ class YamahaDevice(MediaPlayerDevice):
             # If both song and station is available, print both, otherwise
             # just the one we have.
             if song and station:
-                return "{}: {}".format(station, song)
+                return f"{station}: {song}"
 
             return song or station

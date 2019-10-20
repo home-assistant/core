@@ -54,7 +54,7 @@ def number(value: Any) -> Union[int, float]:
         value = float(value)
         return value
     except (TypeError, ValueError):
-        raise vol.Invalid("invalid number {}".format(value))
+        raise vol.Invalid(f"invalid number {value}")
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

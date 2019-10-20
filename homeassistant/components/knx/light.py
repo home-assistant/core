@@ -305,7 +305,10 @@ class KNXLight(Light):
             await self.device.set_color_temperature(kelvin)
         elif self.device.supports_tunable_white and update_color_temp:
             # calculate relative_ct from Kelvin to fit typical KNX devices
-            kelvin = int(color_util.color_temperature_mired_to_kelvin(mireds))
+            kelvin = min(
+                self._max_kelvin,
+                int(color_util.color_temperature_mired_to_kelvin(mireds)),
+            )
             relative_ct = int(
                 255
                 * (kelvin - self._min_kelvin)

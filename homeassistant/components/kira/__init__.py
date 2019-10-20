@@ -32,7 +32,7 @@ CONF_REMOTES = "remotes"
 CONF_SENSOR = "sensor"
 CONF_REMOTE = "remote"
 
-CODES_YAML = "{}_codes.yaml".format(DOMAIN)
+CODES_YAML = f"{DOMAIN}_codes.yaml"
 
 CODE_SCHEMA = vol.Schema(
     {

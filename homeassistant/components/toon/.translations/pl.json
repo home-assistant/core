@@ -18,8 +18,8 @@
                     "tenant": "Najemca",
                     "username": "Nazwa u\u017cytkownika"
                 },
-                "description": "Uwierzytelnij swoje konto Eneco Toon (nie konto programisty).",
-                "title": "Po\u0142\u0105cz swoje konto Toon"
+                "description": "Uwierzytelnij konto Eneco Toon (nie konto programisty).",
+                "title": "Po\u0142\u0105cz konto Toon"
             },
             "display": {
                 "data": {

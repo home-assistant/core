@@ -272,7 +272,7 @@ class ISYSensorDevice(ISYDevice):
                 int_prec = int(self._node.prec)
                 decimal_part = str_val[-int_prec:]
                 whole_part = str_val[: len(str_val) - int_prec]
-                val = float("{}.{}".format(whole_part, decimal_part))
+                val = float(f"{whole_part}.{decimal_part}")
                 raw_units = self.raw_unit_of_measurement
                 if raw_units in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
                     val = self.hass.config.units.temperature(val, raw_units)

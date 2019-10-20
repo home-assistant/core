@@ -1,5 +1,6 @@
 """Support for MQTT message handling."""
 import asyncio
+import sys
 from functools import partial, wraps
 import inspect
 from itertools import groupby
@@ -10,11 +11,13 @@ import os
 import socket
 import ssl
 import time
-from typing import Any, Callable, List, Optional, Union, cast  # noqa: F401
+from typing import Any, Callable, List, Optional, Union
 
 import attr
 import requests.certs
 import voluptuous as vol
+import paho.mqtt.client as mqtt
+from paho.mqtt.matcher import MQTTMatcher
 
 from homeassistant import config_entries
 from homeassistant.components import websocket_api
@@ -36,10 +39,11 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
 )
 from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceDataType
 from homeassistant.loader import bind_hass
-from homeassistant.util.async_ import run_callback_threadsafe, run_coroutine_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.logging import catch_log_exception
 
 # Loading the config flow file will register the flow
@@ -50,7 +54,12 @@ from .const import (
     DEFAULT_DISCOVERY,
     CONF_STATE_TOPIC,
     ATTR_DISCOVERY_HASH,
+    PROTOCOL_311,
+    DEFAULT_QOS,
 )
+from .discovery import MQTT_DISCOVERY_UPDATED, clear_discovery_hash
+from .models import PublishPayloadType, Message, MessageCallbackType
+from .subscription import async_subscribe_topics, async_unsubscribe_topics
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,11 +104,9 @@ CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
 
 PROTOCOL_31 = "3.1"
-PROTOCOL_311 = "3.1.1"
 
 DEFAULT_PORT = 1883
 DEFAULT_KEEPALIVE = 60
-DEFAULT_QOS = 0
 DEFAULT_RETAIN = False
 DEFAULT_PROTOCOL = PROTOCOL_311
 DEFAULT_DISCOVERY_PREFIX = "homeassistant"
@@ -329,21 +336,7 @@ MQTT_PUBLISH_SCHEMA = vol.Schema(
 
 
 # pylint: disable=invalid-name
-PublishPayloadType = Union[str, bytes, int, float, None]
 SubscribePayloadType = Union[str, bytes]  # Only bytes if encoding is None
-
-
-@attr.s(slots=True, frozen=True)
-class Message:
-    """MQTT Message."""
-
-    topic = attr.ib(type=str)
-    payload = attr.ib(type=PublishPayloadType)
-    qos = attr.ib(type=int)
-    retain = attr.ib(type=bool)
-
-
-MessageCallbackType = Callable[[Message], None]
 
 
 def _build_publish_data(topic: Any, qos: int, retain: bool) -> ServiceDataType:
@@ -463,7 +456,7 @@ def subscribe(
     encoding: str = "utf-8",
 ) -> Callable[[], None]:
     """Subscribe to an MQTT topic."""
-    async_remove = run_coroutine_threadsafe(
+    async_remove = asyncio.run_coroutine_threadsafe(
         async_subscribe(hass, topic, msg_callback, qos, encoding), hass.loop
     ).result()
 
@@ -479,7 +472,7 @@ async def _async_setup_server(hass: HomeAssistantType, config: ConfigType):
 
     This method is a coroutine.
     """
-    conf = config.get(DOMAIN, {})  # type: ConfigType
+    conf: ConfigType = config.get(DOMAIN, {})
 
     success, broker_config = await server.async_start(
         hass, conf.get(CONF_PASSWORD), conf.get(CONF_EMBEDDED)
@@ -502,16 +495,16 @@ async def _async_setup_discovery(
         _LOGGER.error("Unable to load MQTT discovery")
         return False
 
-    success = await discovery.async_start(
+    success: bool = await discovery.async_start(
         hass, conf[CONF_DISCOVERY_PREFIX], hass_config, config_entry
-    )  # type: bool
+    )
 
     return success
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Start the MQTT protocol service."""
-    conf = config.get(DOMAIN)  # type: Optional[ConfigType]
+    conf: Optional[ConfigType] = config.get(DOMAIN)
 
     # We need this because discovery can cause components to be set up and
     # otherwise it will not load the users config.
@@ -621,7 +614,7 @@ async def async_setup_entry(hass, entry):
         birth_message = None
 
     # Be able to override versions other than TLSv1.0 under Python3.6
-    conf_tls_version = conf.get(CONF_TLS_VERSION)  # type: str
+    conf_tls_version: str = conf.get(CONF_TLS_VERSION)
     if conf_tls_version == "1.2":
         tls_version = ssl.PROTOCOL_TLSv1_2
     elif conf_tls_version == "1.1":
@@ -629,8 +622,6 @@ async def async_setup_entry(hass, entry):
     elif conf_tls_version == "1.0":
         tls_version = ssl.PROTOCOL_TLSv1
     else:
-        import sys
-
         # Python3.6 supports automatic negotiation of highest TLS version
         if sys.hexversion >= 0x03060000:
             tls_version = ssl.PROTOCOL_TLS  # pylint: disable=no-member
@@ -655,7 +646,7 @@ async def async_setup_entry(hass, entry):
         tls_version=tls_version,
     )
 
-    result = await hass.data[DATA_MQTT].async_connect()  # type: str
+    result: str = await hass.data[DATA_MQTT].async_connect()
 
     if result == CONNECTION_FAILED:
         return False
@@ -671,11 +662,11 @@ async def async_setup_entry(hass, entry):
 
     async def async_publish_service(call: ServiceCall):
         """Handle MQTT publish service calls."""
-        msg_topic = call.data[ATTR_TOPIC]  # type: str
+        msg_topic: str = call.data[ATTR_TOPIC]
         payload = call.data.get(ATTR_PAYLOAD)
         payload_template = call.data.get(ATTR_PAYLOAD_TEMPLATE)
-        qos = call.data[ATTR_QOS]  # type: int
-        retain = call.data[ATTR_RETAIN]  # type: bool
+        qos: int = call.data[ATTR_QOS]
+        retain: bool = call.data[ATTR_RETAIN]
         if payload_template is not None:
             try:
                 payload = template.Template(payload_template, hass).async_render()
@@ -735,20 +726,18 @@ class MQTT:
         tls_version: Optional[int],
     ) -> None:
         """Initialize Home Assistant MQTT client."""
-        import paho.mqtt.client as mqtt
-
         self.hass = hass
         self.broker = broker
         self.port = port
         self.keepalive = keepalive
-        self.subscriptions = []  # type: List[Subscription]
+        self.subscriptions: List[Subscription] = []
         self.birth_message = birth_message
         self.connected = False
-        self._mqttc = None  # type: mqtt.Client
+        self._mqttc: mqtt.Client = None
         self._paho_lock = asyncio.Lock()
 
         if protocol == PROTOCOL_31:
-            proto = mqtt.MQTTv31  # type: int
+            proto: int = mqtt.MQTTv31
         else:
             proto = mqtt.MQTTv311
 
@@ -776,7 +765,9 @@ class MQTT:
         self._mqttc.on_message = self._mqtt_on_message
 
         if will_message is not None:
-            self._mqttc.will_set(*attr.astuple(will_message))
+            self._mqttc.will_set(  # pylint: disable=no-value-for-parameter
+                *attr.astuple(will_message)
+            )
 
     async def async_publish(
         self, topic: str, payload: PublishPayloadType, qos: int, retain: bool
@@ -796,7 +787,7 @@ class MQTT:
 
         This method is a coroutine.
         """
-        result = None  # type: int
+        result: int = None
         try:
             result = await self.hass.async_add_job(
                 self._mqttc.connect, self.broker, self.port, self.keepalive
@@ -806,8 +797,6 @@ class MQTT:
             return CONNECTION_FAILED_RECOVERABLE
 
         if result != 0:
-            import paho.mqtt.client as mqtt
-
             _LOGGER.error("Failed to connect: %s", mqtt.error_string(result))
             return CONNECTION_FAILED
 
@@ -870,7 +859,7 @@ class MQTT:
         This method is a coroutine.
         """
         async with self._paho_lock:
-            result = None  # type: int
+            result: int = None
             result, _ = await self.hass.async_add_job(self._mqttc.unsubscribe, topic)
             _raise_on_error(result)
 
@@ -879,7 +868,7 @@ class MQTT:
         _LOGGER.debug("Subscribing to %s", topic)
 
         async with self._paho_lock:
-            result = None  # type: int
+            result: int = None
             result, _ = await self.hass.async_add_job(self._mqttc.subscribe, topic, qos)
             _raise_on_error(result)
 
@@ -889,8 +878,6 @@ class MQTT:
         Resubscribe to all topics we were subscribed to and publish birth
         message.
         """
-        import paho.mqtt.client as mqtt
-
         if result_code != mqtt.CONNACK_ACCEPTED:
             _LOGGER.error(
                 "Unable to connect to the MQTT broker: %s",
@@ -909,7 +896,11 @@ class MQTT:
             self.hass.add_job(self._async_perform_subscription, topic, max_qos)
 
         if self.birth_message:
-            self.hass.add_job(self.async_publish(*attr.astuple(self.birth_message)))
+            self.hass.add_job(
+                self.async_publish(  # pylint: disable=no-value-for-parameter
+                    *attr.astuple(self.birth_message)
+                )
+            )
 
     def _mqtt_on_message(self, _mqttc, _userdata, msg) -> None:
         """Message received callback."""
@@ -928,7 +919,7 @@ class MQTT:
             if not _match_topic(subscription.topic, msg.topic):
                 continue
 
-            payload = msg.payload  # type: SubscribePayloadType
+            payload: SubscribePayloadType = msg.payload
             if subscription.encoding is not None:
                 try:
                     payload = msg.payload.decode(subscription.encoding)
@@ -978,8 +969,6 @@ class MQTT:
 def _raise_on_error(result_code: int) -> None:
     """Raise error if error result."""
     if result_code != 0:
-        import paho.mqtt.client as mqtt
-
         raise HomeAssistantError(
             "Error talking to MQTT: {}".format(mqtt.error_string(result_code))
         )
@@ -987,8 +976,6 @@ def _raise_on_error(result_code: int) -> None:
 
 def _match_topic(subscription: str, topic: str) -> bool:
     """Test if topic matches subscription."""
-    from paho.mqtt.matcher import MQTTMatcher
-
     matcher = MQTTMatcher()
     matcher[subscription] = True
     try:
@@ -1022,8 +1009,6 @@ class MqttAttributes(Entity):
 
     async def _attributes_subscribe_topics(self):
         """(Re)Subscribe to topics."""
-        from .subscription import async_subscribe_topics
-
         attr_tpl = self._attributes_config.get(CONF_JSON_ATTRS_TEMPLATE)
         if attr_tpl is not None:
             attr_tpl.hass = self.hass
@@ -1059,8 +1044,6 @@ class MqttAttributes(Entity):
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        from .subscription import async_unsubscribe_topics
-
         self._attributes_sub_state = await async_unsubscribe_topics(
             self.hass, self._attributes_sub_state
         )
@@ -1077,7 +1060,7 @@ class MqttAvailability(Entity):
     def __init__(self, config: dict) -> None:
         """Initialize the availability mixin."""
         self._availability_sub_state = None
-        self._available = False  # type: bool
+        self._available = False
 
         self._avail_config = config
 
@@ -1096,7 +1079,6 @@ class MqttAvailability(Entity):
 
     async def _availability_subscribe_topics(self):
         """(Re)Subscribe to topics."""
-        from .subscription import async_subscribe_topics
 
         @callback
         def availability_message_received(msg: Message) -> None:
@@ -1122,8 +1104,6 @@ class MqttAvailability(Entity):
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        from .subscription import async_unsubscribe_topics
-
         self._availability_sub_state = await async_unsubscribe_topics(
             self.hass, self._availability_sub_state
         )
@@ -1147,9 +1127,6 @@ class MqttDiscoveryUpdate(Entity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to discovery updates."""
         await super().async_added_to_hass()
-
-        from homeassistant.helpers.dispatcher import async_dispatcher_connect
-        from .discovery import MQTT_DISCOVERY_UPDATED, clear_discovery_hash
 
         @callback
         def discovery_callback(payload):

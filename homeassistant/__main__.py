@@ -1,13 +1,11 @@
 """Start Home Assistant."""
-from __future__ import print_function
-
 import argparse
 import os
 import platform
 import subprocess
 import sys
 import threading
-from typing import List, Dict, Any, TYPE_CHECKING  # noqa pylint: disable=unused-import
+from typing import List, Dict, Any, TYPE_CHECKING
 
 from homeassistant import monkey_patch
 from homeassistant.const import __version__, REQUIRED_PYTHON_VER, RESTART_EXIT_CODE
@@ -216,7 +214,7 @@ def check_pid(pid_file: str) -> None:
     try:
         with open(pid_file, "r") as file:
             pid = int(file.readline())
-    except IOError:
+    except OSError:
         # PID File does not exist
         return
 
@@ -239,7 +237,7 @@ def write_pid(pid_file: str) -> None:
     try:
         with open(pid_file, "w") as file:
             file.write(str(pid))
-    except IOError:
+    except OSError:
         print(f"Fatal Error: Unable to write pid file {pid_file}")
         sys.exit(1)
 
@@ -258,7 +256,7 @@ def closefds_osx(min_fd: int, max_fd: int) -> None:
             val = fcntl(_fd, F_GETFD)
             if not val & FD_CLOEXEC:
                 fcntl(_fd, F_SETFD, val | FD_CLOEXEC)
-        except IOError:
+        except OSError:
             pass
 
 
@@ -280,7 +278,7 @@ async def setup_and_run_hass(config_dir: str, args: argparse.Namespace) -> int:
     hass = core.HomeAssistant()
 
     if args.demo_mode:
-        config = {"frontend": {}, "demo": {}}  # type: Dict[str, Any]
+        config: Dict[str, Any] = {"frontend": {}, "demo": {}}
         bootstrap.async_from_config_dict(
             config,
             hass,

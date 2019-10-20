@@ -1,40 +1,41 @@
 """Constants for ebus component."""
-from homeassistant.const import ENERGY_KILO_WATT_HOUR
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, PRESSURE_BAR, TEMP_CELSIUS
 
 DOMAIN = "ebusd"
+TIME_SECONDS = "seconds"
 
-#  SensorTypes:
+#  SensorTypes from ebusdpy module :
 #  0='decimal', 1='time-schedule', 2='switch', 3='string', 4='value;status'
 
 SENSOR_TYPES = {
     "700": {
         "ActualFlowTemperatureDesired": [
             "Hc1ActualFlowTempDesired",
-            "°C",
+            TEMP_CELSIUS,
             "mdi:thermometer",
             0,
         ],
         "MaxFlowTemperatureDesired": [
             "Hc1MaxFlowTempDesired",
-            "°C",
+            TEMP_CELSIUS,
             "mdi:thermometer",
             0,
         ],
         "MinFlowTemperatureDesired": [
             "Hc1MinFlowTempDesired",
-            "°C",
+            TEMP_CELSIUS,
             "mdi:thermometer",
             0,
         ],
         "PumpStatus": ["Hc1PumpStatus", None, "mdi:toggle-switch", 2],
         "HCSummerTemperatureLimit": [
             "Hc1SummerTempLimit",
-            "°C",
+            TEMP_CELSIUS,
             "mdi:weather-sunny",
             0,
         ],
-        "HolidayTemperature": ["HolidayTemp", "°C", "mdi:thermometer", 0],
-        "HWTemperatureDesired": ["HwcTempDesired", "°C", "mdi:thermometer", 0],
+        "HolidayTemperature": ["HolidayTemp", TEMP_CELSIUS, "mdi:thermometer", 0],
+        "HWTemperatureDesired": ["HwcTempDesired", TEMP_CELSIUS, "mdi:thermometer", 0],
         "HWTimerMonday": ["hwcTimer.Monday", None, "mdi:timer", 1],
         "HWTimerTuesday": ["hwcTimer.Tuesday", None, "mdi:timer", 1],
         "HWTimerWednesday": ["hwcTimer.Wednesday", None, "mdi:timer", 1],
@@ -42,15 +43,20 @@ SENSOR_TYPES = {
         "HWTimerFriday": ["hwcTimer.Friday", None, "mdi:timer", 1],
         "HWTimerSaturday": ["hwcTimer.Saturday", None, "mdi:timer", 1],
         "HWTimerSunday": ["hwcTimer.Sunday", None, "mdi:timer", 1],
-        "WaterPressure": ["WaterPressure", "bar", "mdi:water-pump", 0],
+        "WaterPressure": ["WaterPressure", PRESSURE_BAR, "mdi:water-pump", 0],
         "Zone1RoomZoneMapping": ["z1RoomZoneMapping", None, "mdi:label", 0],
-        "Zone1NightTemperature": ["z1NightTemp", "°C", "mdi:weather-night", 0],
-        "Zone1DayTemperature": ["z1DayTemp", "°C", "mdi:weather-sunny", 0],
-        "Zone1HolidayTemperature": ["z1HolidayTemp", "°C", "mdi:thermometer", 0],
-        "Zone1RoomTemperature": ["z1RoomTemp", "°C", "mdi:thermometer", 0],
+        "Zone1NightTemperature": ["z1NightTemp", TEMP_CELSIUS, "mdi:weather-night", 0],
+        "Zone1DayTemperature": ["z1DayTemp", TEMP_CELSIUS, "mdi:weather-sunny", 0],
+        "Zone1HolidayTemperature": [
+            "z1HolidayTemp",
+            TEMP_CELSIUS,
+            "mdi:thermometer",
+            0,
+        ],
+        "Zone1RoomTemperature": ["z1RoomTemp", TEMP_CELSIUS, "mdi:thermometer", 0],
         "Zone1ActualRoomTemperatureDesired": [
             "z1ActualRoomTempDesired",
-            "°C",
+            TEMP_CELSIUS,
             "mdi:thermometer",
             0,
         ],
@@ -62,7 +68,7 @@ SENSOR_TYPES = {
         "Zone1TimerSaturday": ["z1Timer.Saturday", None, "mdi:timer", 1],
         "Zone1TimerSunday": ["z1Timer.Sunday", None, "mdi:timer", 1],
         "Zone1OperativeMode": ["z1OpMode", None, "mdi:math-compass", 3],
-        "ContinuosHeating": ["ContinuosHeating", "°C", "mdi:weather-snowy", 0],
+        "ContinuosHeating": ["ContinuosHeating", TEMP_CELSIUS, "mdi:weather-snowy", 0],
         "PowerEnergyConsumptionLastMonth": [
             "PrEnergySumHcLastMonth",
             ENERGY_KILO_WATT_HOUR,
@@ -77,14 +83,38 @@ SENSOR_TYPES = {
         ],
     },
     "ehp": {
-        "HWTemperature": ["HwcTemp", "°C", "mdi:thermometer", 4],
-        "OutsideTemp": ["OutsideTemp", "°C", "mdi:thermometer", 4],
+        "HWTemperature": ["HwcTemp", TEMP_CELSIUS, "mdi:thermometer", 4],
+        "OutsideTemp": ["OutsideTemp", TEMP_CELSIUS, "mdi:thermometer", 4],
     },
     "bai": {
-        "ReturnTemperature": ["ReturnTemp", "°C", "mdi:thermometer", 4],
+        "HotWaterTemperature": ["HwcTemp", TEMP_CELSIUS, "mdi:thermometer", 4],
+        "StorageTemperature": ["StorageTemp", TEMP_CELSIUS, "mdi:thermometer", 4],
+        "DesiredStorageTemperature": [
+            "StorageTempDesired",
+            TEMP_CELSIUS,
+            "mdi:thermometer",
+            0,
+        ],
+        "OutdoorsTemperature": [
+            "OutdoorstempSensor",
+            TEMP_CELSIUS,
+            "mdi:thermometer",
+            4,
+        ],
+        "WaterPreasure": ["WaterPressure", PRESSURE_BAR, "mdi:pipe", 4],
+        "AverageIgnitionTime": ["averageIgnitiontime", TIME_SECONDS, "mdi:av-timer", 0],
+        "MaximumIgnitionTime": ["maxIgnitiontime", TIME_SECONDS, "mdi:av-timer", 0],
+        "MinimumIgnitionTime": ["minIgnitiontime", TIME_SECONDS, "mdi:av-timer", 0],
+        "ReturnTemperature": ["ReturnTemp", TEMP_CELSIUS, "mdi:thermometer", 4],
         "CentralHeatingPump": ["WP", None, "mdi:toggle-switch", 2],
         "HeatingSwitch": ["HeatingSwitch", None, "mdi:toggle-switch", 2],
-        "FlowTemperature": ["FlowTemp", "°C", "mdi:thermometer", 4],
+        "DesiredFlowTemperature": [
+            "FlowTempDesired",
+            TEMP_CELSIUS,
+            "mdi:thermometer",
+            0,
+        ],
+        "FlowTemperature": ["FlowTemp", TEMP_CELSIUS, "mdi:thermometer", 4],
         "Flame": ["Flame", None, "mdi:toggle-switch", 2],
         "PowerEnergyConsumptionHeatingCircuit": [
             "PrEnergySumHc1",

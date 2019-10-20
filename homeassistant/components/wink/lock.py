@@ -1,10 +1,17 @@
 """Support for Wink locks."""
 import logging
 
+import pywink
 import voluptuous as vol
 
 from homeassistant.components.lock import LockDevice
-from homeassistant.const import ATTR_CODE, ATTR_ENTITY_ID, ATTR_NAME, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_CODE,
+    ATTR_ENTITY_ID,
+    ATTR_MODE,
+    ATTR_NAME,
+    STATE_UNKNOWN,
+)
 import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN, WinkDevice
@@ -20,7 +27,6 @@ SERVICE_ADD_KEY = "wink_add_new_lock_key_code"
 
 ATTR_ENABLED = "enabled"
 ATTR_SENSITIVITY = "sensitivity"
-ATTR_MODE = "mode"
 
 ALARM_SENSITIVITY_MAP = {
     "low": 0.2,
@@ -65,7 +71,6 @@ ADD_KEY_SCHEMA = vol.Schema(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink platform."""
-    import pywink
 
     for lock in pywink.get_locks():
         _id = lock.object_id() + lock.name()

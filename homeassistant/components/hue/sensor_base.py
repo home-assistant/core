@@ -11,6 +11,7 @@ from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
+from .helpers import remove_devices
 
 CURRENT_SENSORS = "current_sensors"
 SENSOR_MANAGER_FORMAT = "{}_sensor_manager"
@@ -34,7 +35,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities, binary=False
     sm_key = SENSOR_MANAGER_FORMAT.format(config_entry.data["host"])
     manager = hass.data[hue.DOMAIN].get(sm_key)
     if manager is None:
-        manager = SensorManager(hass, bridge)
+        manager = SensorManager(hass, bridge, config_entry)
         hass.data[hue.DOMAIN][sm_key] = manager
 
     manager.register_component(binary, async_add_entities)
@@ -50,7 +51,7 @@ class SensorManager:
     SCAN_INTERVAL = timedelta(seconds=5)
     sensor_config_map = {}
 
-    def __init__(self, hass, bridge):
+    def __init__(self, hass, bridge, config_entry):
         """Initialize the sensor manager."""
         import aiohue
         from .binary_sensor import HuePresence, PRESENCE_NAME_FORMAT
@@ -63,6 +64,7 @@ class SensorManager:
 
         self.hass = hass
         self.bridge = bridge
+        self.config_entry = config_entry
         self._component_add_entities = {}
         self._started = False
 
@@ -193,6 +195,13 @@ class SensorManager:
                 new_binary_sensors.append(current[api[item_id].uniqueid])
             else:
                 new_sensors.append(current[api[item_id].uniqueid])
+
+        await remove_devices(
+            self.hass,
+            self.config_entry,
+            [value.uniqueid for value in api.values()],
+            current,
+        )
 
         async_add_sensor_entities = self._component_add_entities.get(False)
         async_add_binary_entities = self._component_add_entities.get(True)

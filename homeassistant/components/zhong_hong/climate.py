@@ -10,6 +10,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
@@ -46,7 +47,26 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-SUPPORT_HVAC = [HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY]
+SUPPORT_HVAC = [
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_DRY,
+    HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_OFF,
+]
+
+ZHONG_HONG_MODE_COOL = "cool"
+ZHONG_HONG_MODE_HEAT = "heat"
+ZHONG_HONG_MODE_DRY = "dry"
+ZHONG_HONG_MODE_FAN_ONLY = "fan_only"
+
+
+MODE_TO_STATE = {
+    ZHONG_HONG_MODE_COOL: HVAC_MODE_COOL,
+    ZHONG_HONG_MODE_HEAT: HVAC_MODE_HEAT,
+    ZHONG_HONG_MODE_DRY: HVAC_MODE_DRY,
+    ZHONG_HONG_MODE_FAN_ONLY: HVAC_MODE_FAN_ONLY,
+}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -117,7 +137,9 @@ class ZhongHongClimate(ClimateDevice):
         """Handle state update."""
         _LOGGER.debug("async update ha state")
         if self._device.current_operation:
-            self._current_operation = self._device.current_operation.lower()
+            self._current_operation = MODE_TO_STATE[
+                self._device.current_operation.lower()
+            ]
         if self._device.current_temperature:
             self._current_temperature = self._device.current_temperature
         if self._device.current_fan_mode:
@@ -156,7 +178,9 @@ class ZhongHongClimate(ClimateDevice):
     @property
     def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
-        return self._current_operation
+        if self.is_on:
+            return self._current_operation
+        return HVAC_MODE_OFF
 
     @property
     def hvac_modes(self):
@@ -223,6 +247,14 @@ class ZhongHongClimate(ClimateDevice):
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target operation mode."""
+        if hvac_mode == HVAC_MODE_OFF:
+            if self.is_on:
+                self.turn_off()
+            return
+
+        if not self.is_on:
+            self.turn_on()
+
         self._device.set_operation_mode(hvac_mode.upper())
 
     def set_fan_mode(self, fan_mode):

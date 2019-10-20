@@ -50,6 +50,8 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
+    # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+
     def __init__(self):
         """Initialize the Hue flow."""
         self.host = None
@@ -160,7 +162,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 "host": host,
                 # This format is the legacy format that Hue used for discovery
-                "path": "phue-{}.conf".format(serial),
+                "path": f"phue-{serial}.conf",
             }
         )
 

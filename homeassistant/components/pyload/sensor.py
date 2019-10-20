@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     monitored_types = config.get(CONF_MONITORED_VARIABLES)
-    url = "http{}://{}:{}/api/".format(ssl, host, port)
+    url = f"http{ssl}://{host}:{port}/api/"
 
     try:
         pyloadapi = PyLoadAPI(api_url=url, username=username, password=password)

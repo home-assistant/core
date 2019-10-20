@@ -6,6 +6,7 @@ from threading import Lock
 import pickle
 
 import voluptuous as vol
+import feedparser
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, CONF_SCAN_INTERVAL
 from homeassistant.helpers.event import track_time_interval
@@ -44,7 +45,7 @@ def setup(hass, config):
     urls = config.get(DOMAIN)[CONF_URLS]
     scan_interval = config.get(DOMAIN).get(CONF_SCAN_INTERVAL)
     max_entries = config.get(DOMAIN).get(CONF_MAX_ENTRIES)
-    data_file = hass.config.path("{}.pickle".format(DOMAIN))
+    data_file = hass.config.path(f"{DOMAIN}.pickle")
     storage = StoredData(data_file)
     feeds = [
         FeedManager(url, scan_interval, max_entries, hass, storage) for url in urls
@@ -87,8 +88,6 @@ class FeedManager:
 
     def _update(self):
         """Update the feed and publish new entries to the event bus."""
-        import feedparser
-
         _LOGGER.info("Fetching new data from feed %s", self._url)
         self._feed = feedparser.parse(
             self._url,

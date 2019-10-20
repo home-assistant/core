@@ -538,7 +538,7 @@ class KonnectedView(HomeAssistantView):
             )
 
         auth = request.headers.get(AUTHORIZATION, None)
-        if not hmac.compare_digest("Bearer {}".format(self.auth_token), auth):
+        if not hmac.compare_digest(f"Bearer {self.auth_token}", auth):
             return self.json_message("unauthorized", status_code=HTTP_UNAUTHORIZED)
         pin_num = int(pin_num)
         device = data[CONF_DEVICES].get(device_id)

@@ -15,7 +15,7 @@ from homeassistant.setup import async_setup_component, async_process_deps_reqs
 from homeassistant.util.decorator import Registry
 from homeassistant.helpers import entity_registry
 
-# mypy: allow-untyped-defs
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 _UNDEF = object()
@@ -138,10 +138,10 @@ class ConfigEntry:
         self.state = state
 
         # Listeners to call on update
-        self.update_listeners = []  # type: list
+        self.update_listeners: List = []
 
         # Function to cancel a scheduled retry
-        self._async_cancel_retry_setup = None  # type: Optional[Callable[[], Any]]
+        self._async_cancel_retry_setup: Optional[Callable[[], Any]] = None
 
     async def async_setup(
         self,
@@ -337,7 +337,7 @@ class ConfigEntry:
                 return False
             if result:
                 # pylint: disable=protected-access
-                hass.config_entries._async_schedule_save()  # type: ignore
+                hass.config_entries._async_schedule_save()
             return result
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
@@ -386,14 +386,14 @@ class ConfigEntries:
         )
         self.options = OptionsFlowManager(hass)
         self._hass_config = hass_config
-        self._entries = []  # type: List[ConfigEntry]
+        self._entries: List[ConfigEntry] = []
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         EntityRegistryDisabledHandler(hass).async_setup()
 
     @callback
     def async_domains(self) -> List[str]:
         """Return domains for which we have entries."""
-        seen = set()  # type: Set[str]
+        seen: Set[str] = set()
         result = []
 
         for entry in self._entries:
@@ -676,7 +676,7 @@ async def _old_conf_migrator(old_config):
 class ConfigFlow(data_entry_flow.FlowHandler):
     """Base class for config flows with some helpers."""
 
-    def __init_subclass__(cls, domain=None, **kwargs):
+    def __init_subclass__(cls, domain: Optional[str] = None, **kwargs: Any) -> None:
         """Initialize a subclass, register if possible."""
         super().__init_subclass__(**kwargs)  # type: ignore
         if domain is not None:

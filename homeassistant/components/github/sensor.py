@@ -1,6 +1,7 @@
 """Support for GitHub."""
 from datetime import timedelta
 import logging
+import github
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -148,8 +149,6 @@ class GitHubData:
 
     def __init__(self, repository, access_token=None, server_url=None):
         """Set up GitHub."""
-        import github
-
         self._github = github
 
         self.setup_error = False

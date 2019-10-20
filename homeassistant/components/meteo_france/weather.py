@@ -12,7 +12,7 @@ from homeassistant.components.weather import (
 import homeassistant.util.dt as dt_util
 from homeassistant.const import TEMP_CELSIUS
 
-from . import ATTRIBUTION, CONDITION_CLASSES, CONF_CITY, DATA_METEO_FRANCE
+from .const import ATTRIBUTION, CONDITION_CLASSES, CONF_CITY, DATA_METEO_FRANCE
 
 _LOGGER = logging.getLogger(__name__)
 

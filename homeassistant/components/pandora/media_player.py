@@ -220,7 +220,7 @@ class PandoraMediaPlayer(MediaPlayerDevice):
             return
         _LOGGER.debug("Setting station %s, %d", source, station_index)
         self._send_station_list_command()
-        self._pianobar.sendline("{}".format(station_index))
+        self._pianobar.sendline(f"{station_index}")
         self._pianobar.expect("\r\n")
         self._player_state = STATE_PLAYING
 

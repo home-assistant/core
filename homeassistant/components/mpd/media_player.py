@@ -211,7 +211,7 @@ class MpdDevice(MediaPlayerDevice):
         if title is None:
             return name
 
-        return "{}: {}".format(name, title)
+        return f"{name}: {title}"
 
     @property
     def media_artist(self):

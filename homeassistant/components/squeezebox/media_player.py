@@ -2,13 +2,14 @@
 import asyncio
 import json
 import logging
+import socket
 import urllib.parse
 
 import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     DOMAIN,
@@ -100,7 +101,6 @@ SERVICE_TO_METHOD = {
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the squeezebox platform."""
-    import socket
 
     known_servers = hass.data.get(KNOWN_SERVERS)
     if known_servers is None:
@@ -208,7 +208,7 @@ class LogitechMediaServer:
             if self._username is None
             else aiohttp.BasicAuth(self._username, self._password)
         )
-        url = "http://{}:{}/jsonrpc.js".format(self.host, self.port)
+        url = f"http://{self.host}:{self.port}/jsonrpc.js"
         data = json.dumps(
             {"id": "1", "method": "slim.request", "params": [player, command]}
         )
@@ -246,7 +246,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
     def __init__(self, lms, player_id, name):
         """Initialize the SqueezeBox device."""
-        super(SqueezeBoxDevice, self).__init__()
+        super().__init__()
         self._lms = lms
         self._id = player_id
         self._status = {}
@@ -288,9 +288,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
     async def async_update(self):
         """Retrieve the current state of the player."""
         tags = "adKl"
-        response = await self.async_query(
-            "status", "-", "1", "tags:{tags}".format(tags=tags)
-        )
+        response = await self.async_query("status", "-", "1", f"tags:{tags}")
 
         if response is False:
             return

@@ -3,6 +3,8 @@ import logging
 from datetime import timedelta
 
 import requests
+import pybbox
+
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -13,7 +15,7 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-BANDWIDTH_MEGABITS_SECONDS = "Mb/s"  # type: str
+BANDWIDTH_MEGABITS_SECONDS = "Mb/s"
 
 ATTRIBUTION = "Powered by Bouygues Telecom"
 
@@ -91,7 +93,7 @@ class BboxSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self.client_name, self._name)
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):
@@ -136,7 +138,6 @@ class BboxData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from the Bbox."""
-        import pybbox
 
         try:
             box = pybbox.Bbox()

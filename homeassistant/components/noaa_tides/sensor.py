@@ -101,10 +101,10 @@ class NOAATidesAndCurrentsSensor(Entity):
         api_time = self.data.index[0]
         if self.data["hi_lo"][0] == "H":
             tidetime = api_time.strftime("%-I:%M %p")
-            return "High tide at {}".format(tidetime)
+            return f"High tide at {tidetime}"
         if self.data["hi_lo"][0] == "L":
             tidetime = api_time.strftime("%-I:%M %p")
-            return "Low tide at {}".format(tidetime)
+            return f"Low tide at {tidetime}"
         return None
 
     def update(self):

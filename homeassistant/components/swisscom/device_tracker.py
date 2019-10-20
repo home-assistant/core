@@ -74,7 +74,7 @@ class SwisscomDeviceScanner(DeviceScanner):
 
     def get_swisscom_data(self):
         """Retrieve data from Swisscom and return parsed result."""
-        url = "http://{}/ws".format(self.host)
+        url = f"http://{self.host}/ws"
         headers = {CONTENT_TYPE: "application/x-sah-ws-4-call+json"}
         data = """
         {"service":"Devices", "method":"get",

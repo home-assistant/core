@@ -99,7 +99,46 @@ async def test_posting_webhook_no_data(hass, mock_client):
     assert len(hooks) == 1
     assert hooks[0][0] is hass
     assert hooks[0][1] == webhook_id
+    assert hooks[0][2].method == "POST"
     assert await hooks[0][2].text() == ""
+
+
+async def test_webhook_put(hass, mock_client):
+    """Test sending a put request to a webhook."""
+    hooks = []
+    webhook_id = hass.components.webhook.async_generate_id()
+
+    async def handle(*args):
+        """Handle webhook."""
+        hooks.append(args)
+
+    hass.components.webhook.async_register("test", "Test hook", webhook_id, handle)
+
+    resp = await mock_client.put("/api/webhook/{}".format(webhook_id))
+    assert resp.status == 200
+    assert len(hooks) == 1
+    assert hooks[0][0] is hass
+    assert hooks[0][1] == webhook_id
+    assert hooks[0][2].method == "PUT"
+
+
+async def test_webhook_head(hass, mock_client):
+    """Test sending a head request to a webhook."""
+    hooks = []
+    webhook_id = hass.components.webhook.async_generate_id()
+
+    async def handle(*args):
+        """Handle webhook."""
+        hooks.append(args)
+
+    hass.components.webhook.async_register("test", "Test hook", webhook_id, handle)
+
+    resp = await mock_client.head("/api/webhook/{}".format(webhook_id))
+    assert resp.status == 200
+    assert len(hooks) == 1
+    assert hooks[0][0] is hass
+    assert hooks[0][1] == webhook_id
+    assert hooks[0][2].method == "HEAD"
 
 
 async def test_listing_webhook(hass, hass_ws_client, hass_access_token):

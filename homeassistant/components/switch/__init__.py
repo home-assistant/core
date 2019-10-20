@@ -10,7 +10,6 @@ from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.config_validation import (  # noqa
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
-    ENTITY_SERVICE_SCHEMA,
 )
 from homeassistant.const import (
     STATE_ON,
@@ -68,17 +67,9 @@ async def async_setup(hass, config):
     )
     await component.async_setup(config)
 
-    component.async_register_entity_service(
-        SERVICE_TURN_OFF, ENTITY_SERVICE_SCHEMA, "async_turn_off"
-    )
-
-    component.async_register_entity_service(
-        SERVICE_TURN_ON, ENTITY_SERVICE_SCHEMA, "async_turn_on"
-    )
-
-    component.async_register_entity_service(
-        SERVICE_TOGGLE, ENTITY_SERVICE_SCHEMA, "async_toggle"
-    )
+    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
+    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
+    component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
 
     return True
 

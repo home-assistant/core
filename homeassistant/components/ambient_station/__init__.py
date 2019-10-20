@@ -492,7 +492,7 @@ class AmbientWeatherEntity(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{0}_{1}".format(self._station_name, self._sensor_name)
+        return f"{self._station_name}_{self._sensor_name}"
 
     @property
     def should_poll(self):
@@ -502,7 +502,7 @@ class AmbientWeatherEntity(Entity):
     @property
     def unique_id(self):
         """Return a unique, unchanging string that represents this sensor."""
-        return "{0}_{1}".format(self._mac_address, self._sensor_type)
+        return f"{self._mac_address}_{self._sensor_type}"
 
     async def async_added_to_hass(self):
         """Register callbacks."""

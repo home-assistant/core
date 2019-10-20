@@ -1,7 +1,7 @@
 {
   "domain": "thethingsnetwork",
   "name": "Thethingsnetwork",
-  "documentation": "https://www.home-assistant.io/components/thethingsnetwork",
+  "documentation": "https://www.home-assistant.io/integrations/thethingsnetwork",
   "requirements": [],
   "dependencies": [],
   "codeowners": [

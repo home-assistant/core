@@ -48,7 +48,7 @@ class YeelightNightlightModeSensor(BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} nightlight".format(self._device.name)
+        return f"{self._device.name} nightlight"
 
     @property
     def is_on(self):

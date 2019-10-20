@@ -1,11 +1,12 @@
 """The test for the sql sensor platform."""
 import unittest
+
 import pytest
 import voluptuous as vol
 
 from homeassistant.components.sql.sensor import validate_sql_select
-from homeassistant.setup import setup_component
 from homeassistant.const import STATE_UNKNOWN
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 

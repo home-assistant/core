@@ -109,7 +109,7 @@ class SetupFlow(data_entry_flow.FlowHandler):
         Return self.async_show_form(step_id='init') if user_input is None.
         Return self.async_create_entry(data={'result': result}) if finish.
         """
-        errors = {}  # type: Dict[str, str]
+        errors: Dict[str, str] = {}
 
         if user_input:
             result = await self._auth_module.async_setup_user(self._user_id, user_input)

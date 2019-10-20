@@ -101,13 +101,6 @@ def async_setup(hass, config):
     hass.http.register_view(UpdateShoppingListItemView)
     hass.http.register_view(ClearCompletedItemsView)
 
-    hass.components.conversation.async_register(
-        INTENT_ADD_ITEM, ["Add [the] [a] [an] {item} to my shopping list"]
-    )
-    hass.components.conversation.async_register(
-        INTENT_LAST_ITEMS, ["What is on my shopping list"]
-    )
-
     hass.components.frontend.async_register_built_in_panel(
         "shopping-list", "shopping_list", "mdi:cart"
     )
@@ -196,7 +189,7 @@ class AddItemIntent(intent.IntentHandler):
         intent_obj.hass.data[DOMAIN].async_add(item)
 
         response = intent_obj.create_response()
-        response.async_set_speech("I've added {} to your shopping list".format(item))
+        response.async_set_speech(f"I've added {item} to your shopping list")
         intent_obj.hass.bus.async_fire(EVENT)
         return response
 

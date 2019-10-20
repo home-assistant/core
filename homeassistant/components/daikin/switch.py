@@ -44,7 +44,7 @@ class DaikinZoneSwitch(ToggleEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return "{}-zone{}".format(self._api.mac, self._zone_id)
+        return f"{self._api.mac}-zone{self._zone_id}"
 
     @property
     def icon(self):

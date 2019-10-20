@@ -1,7 +1,7 @@
 {
   "domain": "proximity",
   "name": "Proximity",
-  "documentation": "https://www.home-assistant.io/components/proximity",
+  "documentation": "https://www.home-assistant.io/integrations/proximity",
   "requirements": [],
   "dependencies": [
     "device_tracker",

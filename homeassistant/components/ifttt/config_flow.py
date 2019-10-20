@@ -8,6 +8,6 @@ config_entry_flow.register_webhook_flow(
     "IFTTT Webhook",
     {
         "applet_url": "https://ifttt.com/maker_webhooks",
-        "docs_url": "https://www.home-assistant.io/components/ifttt/",
+        "docs_url": "https://www.home-assistant.io/integrations/ifttt/",
     },
 )

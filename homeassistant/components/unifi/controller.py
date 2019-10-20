@@ -15,25 +15,34 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
+    CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
+    CONF_DONT_TRACK_CLIENTS,
+    CONF_DONT_TRACK_DEVICES,
+    CONF_DONT_TRACK_WIRED_CLIENTS,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONTROLLER_ID,
+    DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_BLOCK_CLIENTS,
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
     DEFAULT_DETECTION_TIME,
     DEFAULT_SSID_FILTER,
+    DOMAIN,
     LOGGER,
     UNIFI_CONFIG,
+    UNIFI_WIRELESS_CLIENTS,
 )
 from .errors import AuthenticationRequired, CannotConnect
+
+SUPPORTED_PLATFORMS = ["device_tracker", "sensor", "switch"]
 
 
 class UniFiController:
@@ -46,10 +55,11 @@ class UniFiController:
         self.available = True
         self.api = None
         self.progress = None
+        self.wireless_clients = None
 
+        self.listeners = []
         self._site_name = None
         self._site_role = None
-        self.unifi_config = {}
 
     @property
     def host(self):
@@ -70,6 +80,13 @@ class UniFiController:
     def site_role(self):
         """Return the site user role of this controller."""
         return self._site_role
+
+    @property
+    def option_allow_bandwidth_sensors(self):
+        """Config entry option to allow bandwidth sensors."""
+        return self.config_entry.options.get(
+            CONF_ALLOW_BANDWIDTH_SENSORS, DEFAULT_ALLOW_BANDWIDTH_SENSORS
+        )
 
     @property
     def option_block_clients(self):
@@ -116,11 +133,30 @@ class UniFiController:
         return None
 
     @property
-    def event_update(self):
+    def signal_update(self):
         """Event specific per UniFi entry to signal new data."""
-        return "unifi-update-{}".format(
-            CONTROLLER_ID.format(host=self.host, site=self.site)
-        )
+        return f"unifi-update-{CONTROLLER_ID.format(host=self.host, site=self.site)}"
+
+    @property
+    def signal_options_update(self):
+        """Event specific per UniFi entry to signal new options."""
+        return f"unifi-options-{CONTROLLER_ID.format(host=self.host, site=self.site)}"
+
+    def update_wireless_clients(self):
+        """Update set of known to be wireless clients."""
+        new_wireless_clients = set()
+
+        for client_id in self.api.clients:
+            if (
+                client_id not in self.wireless_clients
+                and not self.api.clients[client_id].is_wired
+            ):
+                new_wireless_clients.add(client_id)
+
+        if new_wireless_clients:
+            self.wireless_clients |= new_wireless_clients
+            unifi_wireless_clients = self.hass.data[UNIFI_WIRELESS_CLIENTS]
+            unifi_wireless_clients.update_data(self.wireless_clients, self.config_entry)
 
     async def request_update(self):
         """Request an update."""
@@ -164,7 +200,9 @@ class UniFiController:
             LOGGER.info("Reconnected to controller %s", self.host)
             self.available = True
 
-        async_dispatcher_send(self.hass, self.event_update)
+        self.update_wireless_clients()
+
+        async_dispatcher_send(self.hass, self.signal_update)
 
     async def async_setup(self):
         """Set up a UniFi controller."""
@@ -191,39 +229,15 @@ class UniFiController:
             LOGGER.error("Unknown error connecting with UniFi controller: %s", err)
             return False
 
-        for unifi_config in hass.data[UNIFI_CONFIG]:
-            if (
-                self.host == unifi_config[CONF_HOST]
-                and self.site_name == unifi_config[CONF_SITE_ID]
-            ):
-                self.unifi_config = unifi_config
-                break
+        wireless_clients = hass.data[UNIFI_WIRELESS_CLIENTS]
+        self.wireless_clients = wireless_clients.get_data(self.config_entry)
+        self.update_wireless_clients()
 
-        options = dict(self.config_entry.options)
+        self.import_configuration()
 
-        if CONF_BLOCK_CLIENT in self.unifi_config:
-            options[CONF_BLOCK_CLIENT] = self.unifi_config[CONF_BLOCK_CLIENT]
+        self.config_entry.add_update_listener(self.async_options_updated)
 
-        if CONF_TRACK_CLIENTS in self.unifi_config:
-            options[CONF_TRACK_CLIENTS] = self.unifi_config[CONF_TRACK_CLIENTS]
-
-        if CONF_TRACK_DEVICES in self.unifi_config:
-            options[CONF_TRACK_DEVICES] = self.unifi_config[CONF_TRACK_DEVICES]
-
-        if CONF_TRACK_WIRED_CLIENTS in self.unifi_config:
-            options[CONF_TRACK_WIRED_CLIENTS] = self.unifi_config[
-                CONF_TRACK_WIRED_CLIENTS
-            ]
-
-        if CONF_DETECTION_TIME in self.unifi_config:
-            options[CONF_DETECTION_TIME] = self.unifi_config[CONF_DETECTION_TIME]
-
-        if CONF_SSID_FILTER in self.unifi_config:
-            options[CONF_SSID_FILTER] = self.unifi_config[CONF_SSID_FILTER]
-
-        hass.config_entries.async_update_entry(self.config_entry, options=options)
-
-        for platform in ["device_tracker", "switch"]:
+        for platform in SUPPORTED_PLATFORMS:
             hass.async_create_task(
                 hass.config_entries.async_forward_entry_setup(
                     self.config_entry, platform
@@ -232,20 +246,72 @@ class UniFiController:
 
         return True
 
+    @staticmethod
+    async def async_options_updated(hass, entry):
+        """Triggered by config entry options updates."""
+        controller_id = CONTROLLER_ID.format(
+            host=entry.data[CONF_CONTROLLER][CONF_HOST],
+            site=entry.data[CONF_CONTROLLER][CONF_SITE_ID],
+        )
+        controller = hass.data[DOMAIN][controller_id]
+
+        async_dispatcher_send(hass, controller.signal_options_update)
+
+    def import_configuration(self):
+        """Import configuration to config entry options."""
+        import_config = {}
+
+        for config in self.hass.data[UNIFI_CONFIG]:
+            if (
+                self.host == config[CONF_HOST]
+                and self.site_name == config[CONF_SITE_ID]
+            ):
+                import_config = config
+                break
+
+        old_options = dict(self.config_entry.options)
+        new_options = {}
+
+        for config, option in (
+            (CONF_BLOCK_CLIENT, CONF_BLOCK_CLIENT),
+            (CONF_DONT_TRACK_CLIENTS, CONF_TRACK_CLIENTS),
+            (CONF_DONT_TRACK_WIRED_CLIENTS, CONF_TRACK_WIRED_CLIENTS),
+            (CONF_DONT_TRACK_DEVICES, CONF_TRACK_DEVICES),
+            (CONF_DETECTION_TIME, CONF_DETECTION_TIME),
+            (CONF_SSID_FILTER, CONF_SSID_FILTER),
+        ):
+            if config in import_config:
+                print(config)
+                if config == option and import_config[
+                    config
+                ] != self.config_entry.options.get(option):
+                    new_options[option] = import_config[config]
+                elif config != option and (
+                    option not in self.config_entry.options
+                    or import_config[config] == self.config_entry.options.get(option)
+                ):
+                    new_options[option] = not import_config[config]
+
+        if new_options:
+            options = {**old_options, **new_options}
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, options=options
+            )
+
     async def async_reset(self):
         """Reset this controller to default state.
 
         Will cancel any scheduled setup retry and will unload
         the config entry.
         """
-        # If the authentication was wrong.
-        if self.api is None:
-            return True
-
-        for platform in ["device_tracker", "switch"]:
+        for platform in SUPPORTED_PLATFORMS:
             await self.hass.config_entries.async_forward_entry_unload(
                 self.config_entry, platform
             )
+
+        for unsub_dispatcher in self.listeners:
+            unsub_dispatcher()
+        self.listeners = []
 
         return True
 

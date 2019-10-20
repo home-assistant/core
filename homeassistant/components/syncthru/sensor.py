@@ -18,12 +18,10 @@ TONER_COLORS = COLORS
 TRAYS = range(1, 6)
 OUTPUT_TRAYS = range(0, 6)
 DEFAULT_MONITORED_CONDITIONS = []
-DEFAULT_MONITORED_CONDITIONS.extend(["toner_{}".format(key) for key in TONER_COLORS])
-DEFAULT_MONITORED_CONDITIONS.extend(["drum_{}".format(key) for key in DRUM_COLORS])
-DEFAULT_MONITORED_CONDITIONS.extend(["tray_{}".format(key) for key in TRAYS])
-DEFAULT_MONITORED_CONDITIONS.extend(
-    ["output_tray_{}".format(key) for key in OUTPUT_TRAYS]
-)
+DEFAULT_MONITORED_CONDITIONS.extend([f"toner_{key}" for key in TONER_COLORS])
+DEFAULT_MONITORED_CONDITIONS.extend([f"drum_{key}" for key in DRUM_COLORS])
+DEFAULT_MONITORED_CONDITIONS.extend([f"tray_{key}" for key in TRAYS])
+DEFAULT_MONITORED_CONDITIONS.extend([f"output_tray_{key}" for key in OUTPUT_TRAYS])
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -81,16 +79,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     devices = [SyncThruMainSensor(printer, name)]
 
     for key in supp_toner:
-        if "toner_{}".format(key) in monitored:
+        if f"toner_{key}" in monitored:
             devices.append(SyncThruTonerSensor(printer, name, key))
     for key in supp_drum:
-        if "drum_{}".format(key) in monitored:
+        if f"drum_{key}" in monitored:
             devices.append(SyncThruDrumSensor(printer, name, key))
     for key in supp_tray:
-        if "tray_{}".format(key) in monitored:
+        if f"tray_{key}" in monitored:
             devices.append(SyncThruInputTraySensor(printer, name, key))
     for key in supp_output_tray:
-        if "output_tray_{}".format(key) in monitored:
+        if f"output_tray_{key}" in monitored:
             devices.append(SyncThruOutputTraySensor(printer, name, key))
 
     async_add_entities(devices, True)
@@ -173,10 +171,10 @@ class SyncThruTonerSensor(SyncThruSensor):
     def __init__(self, syncthru, name, color):
         """Initialize the sensor."""
         super().__init__(syncthru, name)
-        self._name = "{} Toner {}".format(name, color)
+        self._name = f"{name} Toner {color}"
         self._color = color
         self._unit_of_measurement = "%"
-        self._id_suffix = "_toner_{}".format(color)
+        self._id_suffix = f"_toner_{color}"
 
     def update(self):
         """Get the latest data from SyncThru and update the state."""
@@ -193,10 +191,10 @@ class SyncThruDrumSensor(SyncThruSensor):
     def __init__(self, syncthru, name, color):
         """Initialize the sensor."""
         super().__init__(syncthru, name)
-        self._name = "{} Drum {}".format(name, color)
+        self._name = f"{name} Drum {color}"
         self._color = color
         self._unit_of_measurement = "%"
-        self._id_suffix = "_drum_{}".format(color)
+        self._id_suffix = f"_drum_{color}"
 
     def update(self):
         """Get the latest data from SyncThru and update the state."""
@@ -213,9 +211,9 @@ class SyncThruInputTraySensor(SyncThruSensor):
     def __init__(self, syncthru, name, number):
         """Initialize the sensor."""
         super().__init__(syncthru, name)
-        self._name = "{} Tray {}".format(name, number)
+        self._name = f"{name} Tray {number}"
         self._number = number
-        self._id_suffix = "_tray_{}".format(number)
+        self._id_suffix = f"_tray_{number}"
 
     def update(self):
         """Get the latest data from SyncThru and update the state."""
@@ -234,9 +232,9 @@ class SyncThruOutputTraySensor(SyncThruSensor):
     def __init__(self, syncthru, name, number):
         """Initialize the sensor."""
         super().__init__(syncthru, name)
-        self._name = "{} Output Tray {}".format(name, number)
+        self._name = f"{name} Output Tray {number}"
         self._number = number
-        self._id_suffix = "_output_tray_{}".format(number)
+        self._id_suffix = f"_output_tray_{number}"
 
     def update(self):
         """Get the latest data from SyncThru and update the state."""

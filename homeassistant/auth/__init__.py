@@ -45,9 +45,9 @@ async def auth_manager_from_config(
             )
         )
     else:
-        providers = ()
+        providers = []
     # So returned auth providers are in same order as config
-    provider_hash = OrderedDict()  # type: _ProviderDict
+    provider_hash: _ProviderDict = OrderedDict()
     for provider in providers:
         key = (provider.type, provider.id)
         provider_hash[key] = provider
@@ -57,9 +57,9 @@ async def auth_manager_from_config(
             *(auth_mfa_module_from_config(hass, config) for config in module_configs)
         )
     else:
-        modules = ()
+        modules = []
     # So returned auth modules are in same order as config
-    module_hash = OrderedDict()  # type: _MfaModuleDict
+    module_hash: _MfaModuleDict = OrderedDict()
     for module in modules:
         module_hash[module.id] = module
 
@@ -85,18 +85,6 @@ class AuthManager:
         self.login_flow = data_entry_flow.FlowManager(
             hass, self._async_create_login_flow, self._async_finish_login_flow
         )
-
-    @property
-    def support_legacy(self) -> bool:
-        """
-        Return if legacy_api_password auth providers are registered.
-
-        Should be removed when we removed legacy_api_password auth providers.
-        """
-        for provider_type, _ in self._providers:
-            if provider_type == "legacy_api_password":
-                return True
-        return False
 
     @property
     def auth_providers(self) -> List[AuthProvider]:
@@ -168,11 +156,11 @@ class AuthManager:
 
     async def async_create_user(self, name: str) -> models.User:
         """Create a user."""
-        kwargs = {
+        kwargs: Dict[str, Any] = {
             "name": name,
             "is_active": True,
             "group_ids": [GROUP_ID_ADMIN],
-        }  # type: Dict[str, Any]
+        }
 
         if await self._user_should_be_owner():
             kwargs["is_owner"] = True
@@ -238,7 +226,7 @@ class AuthManager:
         group_ids: Optional[List[str]] = None,
     ) -> None:
         """Update a user."""
-        kwargs = {}  # type: Dict[str,Any]
+        kwargs: Dict[str, Any] = {}
         if name is not None:
             kwargs["name"] = name
         if group_ids is not None:
@@ -299,7 +287,7 @@ class AuthManager:
 
     async def async_get_enabled_mfa(self, user: models.User) -> Dict[str, str]:
         """List enabled mfa modules for user."""
-        modules = OrderedDict()  # type: Dict[str, str]
+        modules: Dict[str, str] = OrderedDict()
         for module_id, module in self._mfa_modules.items():
             if await module.async_is_user_setup(user.id):
                 modules[module_id] = module.name

@@ -13,6 +13,7 @@ from homeassistant.helpers.event import async_call_later
 
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-warn-return-any
+# mypy: no-check-untyped-defs
 
 STORAGE_DIR = ".storage"
 _LOGGER = logging.getLogger(__name__)
@@ -70,11 +71,11 @@ class Store:
         self.key = key
         self.hass = hass
         self._private = private
-        self._data = None  # type: Optional[Dict[str, Any]]
+        self._data: Optional[Dict[str, Any]] = None
         self._unsub_delay_listener = None
         self._unsub_stop_listener = None
         self._write_lock = asyncio.Lock()
-        self._load_task = None  # type: Optional[asyncio.Future]
+        self._load_task: Optional[asyncio.Future] = None
         self._encoder = encoder
 
     @property

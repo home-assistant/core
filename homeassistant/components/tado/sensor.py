@@ -80,7 +80,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 def create_zone_sensor(tado, zone, name, zone_id, variable):
     """Create a zone sensor."""
-    data_id = "zone {} {}".format(name, zone_id)
+    data_id = f"zone {name} {zone_id}"
 
     tado.add_sensor(
         data_id,
@@ -92,7 +92,7 @@ def create_zone_sensor(tado, zone, name, zone_id, variable):
 
 def create_device_sensor(tado, device, name, device_id, variable):
     """Create a device sensor."""
-    data_id = "device {} {}".format(name, device_id)
+    data_id = f"device {name} {device_id}"
 
     tado.add_sensor(
         data_id,
@@ -118,7 +118,7 @@ class TadoSensor(Entity):
         self.zone_id = zone_id
         self.zone_variable = zone_variable
 
-        self._unique_id = "{} {}".format(zone_variable, zone_id)
+        self._unique_id = f"{zone_variable} {zone_id}"
         self._data_id = data_id
 
         self._state = None
@@ -132,7 +132,7 @@ class TadoSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self.zone_name, self.zone_variable)
+        return f"{self.zone_name} {self.zone_variable}"
 
     @property
     def state(self):

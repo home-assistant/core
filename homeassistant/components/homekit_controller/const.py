@@ -1,9 +1,9 @@
 """Constants for the homekit_controller component."""
 DOMAIN = "homekit_controller"
 
-KNOWN_DEVICES = "{}-devices".format(DOMAIN)
-CONTROLLER = "{}-controller".format(DOMAIN)
-ENTITY_MAP = "{}-entity-map".format(DOMAIN)
+KNOWN_DEVICES = f"{DOMAIN}-devices"
+CONTROLLER = f"{DOMAIN}-controller"
+ENTITY_MAP = f"{DOMAIN}-entity-map"
 
 HOMEKIT_DIR = ".homekit"
 PAIRING_FILE = "pairing.json"
@@ -25,4 +25,5 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     "humidity": "sensor",
     "light": "sensor",
     "temperature": "sensor",
+    "battery": "sensor",
 }

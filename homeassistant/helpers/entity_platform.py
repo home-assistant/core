@@ -6,7 +6,7 @@ from typing import Optional
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import callback, valid_entity_id, split_entity_id
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
-from homeassistant.util.async_ import run_callback_threadsafe, run_coroutine_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 
 from .entity_registry import DISABLED_INTEGRATION
 from .event import async_track_time_interval, async_call_later
@@ -220,7 +220,7 @@ class EntityPlatform:
                 "only inside tests or you can run into a deadlock!"
             )
 
-        run_coroutine_threadsafe(
+        asyncio.run_coroutine_threadsafe(
             self.async_add_entities(list(new_entities), update_before_add),
             self.hass.loop,
         ).result()

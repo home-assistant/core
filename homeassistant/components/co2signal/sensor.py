@@ -1,16 +1,17 @@
 """Support for the CO2signal platform."""
 import logging
 
+import CO2Signal
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    CONF_TOKEN,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    CONF_TOKEN,
 )
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 CONF_COUNTRY_CODE = "country_code"
@@ -68,7 +69,7 @@ class CO2Sensor(Entity):
                 lat=round(self._latitude, 2), lon=round(self._longitude, 2)
             )
 
-        self._friendly_name = "CO2 intensity - {}".format(device_name)
+        self._friendly_name = f"CO2 intensity - {device_name}"
 
     @property
     def name(self):
@@ -97,7 +98,6 @@ class CO2Sensor(Entity):
 
     def update(self):
         """Get the latest data and updates the states."""
-        import CO2Signal
 
         _LOGGER.debug("Update data for %s", self._friendly_name)
 

@@ -34,13 +34,13 @@ class DemoFan(FanEntity):
         self._supported_features = supported_features
         self._speed = STATE_OFF
         self.oscillating = None
-        self.direction = None
+        self._direction = None
         self._name = name
 
         if supported_features & SUPPORT_OSCILLATE:
             self.oscillating = False
         if supported_features & SUPPORT_DIRECTION:
-            self.direction = "forward"
+            self._direction = "forward"
 
     @property
     def name(self) -> str:
@@ -80,7 +80,7 @@ class DemoFan(FanEntity):
 
     def set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
-        self.direction = direction
+        self._direction = direction
         self.schedule_update_ha_state()
 
     def oscillate(self, oscillating: bool) -> None:
@@ -91,7 +91,7 @@ class DemoFan(FanEntity):
     @property
     def current_direction(self) -> str:
         """Fan direction."""
-        return self.direction
+        return self._direction
 
     @property
     def supported_features(self) -> int:

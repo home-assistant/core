@@ -11,7 +11,7 @@ CONF_AUTH_TOKEN = "auth_token"
 
 DATA_TWILIO = DOMAIN
 
-RECEIVED_DATA = "{}_data_received".format(DOMAIN)
+RECEIVED_DATA = f"{DOMAIN}_data_received"
 
 CONFIG_SCHEMA = vol.Schema(
     {

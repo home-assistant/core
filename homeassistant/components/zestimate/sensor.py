@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 
 import requests
+import xmltodict
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -19,7 +20,7 @@ CONF_ZPID = "zpid"
 
 DEFAULT_NAME = "Zestimate"
 NAME = "zestimate"
-ZESTIMATE = "{}:{}".format(DEFAULT_NAME, NAME)
+ZESTIMATE = f"{DEFAULT_NAME}:{NAME}"
 
 ICON = "mdi:home-variant"
 
@@ -74,7 +75,7 @@ class ZestimateDataSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._name, self.address)
+        return f"{self._name} {self.address}"
 
     @property
     def state(self):
@@ -101,7 +102,6 @@ class ZestimateDataSensor(Entity):
 
     def update(self):
         """Get the latest data and update the states."""
-        import xmltodict
 
         try:
             response = requests.get(_RESOURCE, params=self.params, timeout=5)

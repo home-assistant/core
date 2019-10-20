@@ -41,6 +41,11 @@ async def prometheus_client(loop, hass, hass_client):
     sensor3.entity_id = "sensor.electricity_price"
     await sensor3.async_update_ha_state()
 
+    sensor4 = DemoSensor("Wind Direction", 25, None, "°", None)
+    sensor4.hass = hass
+    sensor4.entity_id = "sensor.wind_direction"
+    await sensor4.async_update_ha_state()
+
     return await hass_client()
 
 
@@ -102,4 +107,10 @@ def test_view(prometheus_client):  # pylint: disable=redefined-outer-name
         'sensor_unit_sek_per_kwh{domain="sensor",'
         'entity="sensor.electricity_price",'
         'friendly_name="Electricity price"} 0.123' in body
+    )
+
+    assert (
+        'sensor_unit_u0xb0{domain="sensor",'
+        'entity="sensor.wind_direction",'
+        'friendly_name="Wind Direction"} 25.0' in body
     )

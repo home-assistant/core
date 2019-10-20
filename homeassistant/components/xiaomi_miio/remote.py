@@ -90,7 +90,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     try:
         device_info = device.info()
         model = device_info.model
-        unique_id = "{}-{}".format(model, device_info.mac_address)
+        unique_id = f"{model}-{device_info.mac_address}"
         _LOGGER.info(
             "%s %s %s detected",
             model,

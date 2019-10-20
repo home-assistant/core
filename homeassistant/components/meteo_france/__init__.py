@@ -4,69 +4,16 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_MONITORED_CONDITIONS, TEMP_CELSIUS
+from homeassistant.const import CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import Throttle
 
+from .const import DOMAIN, CONF_CITY, SENSOR_TYPES, DATA_METEO_FRANCE
+
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by Météo-France"
-
-CONF_CITY = "city"
-
-DATA_METEO_FRANCE = "data_meteo_france"
-DEFAULT_WEATHER_CARD = True
-DOMAIN = "meteo_france"
-
 SCAN_INTERVAL = datetime.timedelta(minutes=5)
-
-SENSOR_TYPES = {
-    "rain_chance": ["Rain chance", "%"],
-    "freeze_chance": ["Freeze chance", "%"],
-    "thunder_chance": ["Thunder chance", "%"],
-    "snow_chance": ["Snow chance", "%"],
-    "weather": ["Weather", None],
-    "wind_speed": ["Wind Speed", "km/h"],
-    "next_rain": ["Next rain", "min"],
-    "temperature": ["Temperature", TEMP_CELSIUS],
-    "uv": ["UV", None],
-    "weather_alert": ["Weather Alert", None],
-}
-
-CONDITION_CLASSES = {
-    "clear-night": ["Nuit Claire"],
-    "cloudy": ["Très nuageux"],
-    "fog": ["Brume ou bancs de brouillard", "Brouillard", "Brouillard givrant"],
-    "hail": ["Risque de grêle"],
-    "lightning": ["Risque d'orages", "Orages"],
-    "lightning-rainy": ["Pluie orageuses", "Pluies orageuses", "Averses orageuses"],
-    "partlycloudy": ["Ciel voilé", "Ciel voilé nuit", "Éclaircies"],
-    "pouring": ["Pluie forte"],
-    "rainy": [
-        "Bruine / Pluie faible",
-        "Bruine",
-        "Pluie faible",
-        "Pluies éparses / Rares averses",
-        "Pluies éparses",
-        "Rares averses",
-        "Pluie / Averses",
-        "Averses",
-        "Pluie",
-    ],
-    "snowy": [
-        "Neige / Averses de neige",
-        "Neige",
-        "Averses de neige",
-        "Neige forte",
-        "Quelques flocons",
-    ],
-    "snowy-rainy": ["Pluie et neige", "Pluie verglaçante"],
-    "sunny": ["Ensoleillé"],
-    "windy": [],
-    "windy-variant": [],
-    "exceptional": [],
-}
 
 
 def has_all_unique_cities(value):

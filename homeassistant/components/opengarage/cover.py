@@ -122,9 +122,7 @@ class OpenGarageCover(CoverDevice):
     def update(self):
         """Get updated status from API."""
         try:
-            status = requests.get(
-                "{}/jc".format(self.opengarage_url), timeout=10
-            ).json()
+            status = requests.get(f"{self.opengarage_url}/jc", timeout=10).json()
         except requests.exceptions.RequestException as ex:
             _LOGGER.error(
                 "Unable to connect to OpenGarage device: %(reason)s", dict(reason=ex)
@@ -157,8 +155,7 @@ class OpenGarageCover(CoverDevice):
         result = -1
         try:
             result = requests.get(
-                "{}/cc?dkey={}&click=1".format(self.opengarage_url, self._device_key),
-                timeout=10,
+                f"{self.opengarage_url}/cc?dkey={self._device_key}&click=1", timeout=10
             ).json()["result"]
         except requests.exceptions.RequestException as ex:
             _LOGGER.error(

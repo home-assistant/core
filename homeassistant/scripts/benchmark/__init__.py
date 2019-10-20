@@ -15,7 +15,7 @@ from homeassistant.util import dt as dt_util
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 # mypy: no-warn-return-any
 
-BENCHMARKS = {}  # type: Dict[str, Callable]
+BENCHMARKS: Dict[str, Callable] = {}
 
 
 def run(args):

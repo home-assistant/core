@@ -34,7 +34,7 @@ class QSSensor(QSEntity):
 
         self._decode, self.unit = SENSORS[sensor_type]
         if isinstance(self.unit, type):
-            self.unit = "{}:{}".format(sensor_type, self.channel)
+            self.unit = f"{sensor_type}:{self.channel}"
 
     @callback
     def update_packet(self, packet):
@@ -60,7 +60,7 @@ class QSSensor(QSEntity):
     @property
     def unique_id(self):
         """Return a unique identifier for this sensor."""
-        return "qs{}:{}".format(self.qsid, self.channel)
+        return f"qs{self.qsid}:{self.channel}"
 
     @property
     def unit_of_measurement(self):

@@ -81,7 +81,7 @@ class KafkaManager:
         self._hass = hass
         self._producer = AIOKafkaProducer(
             loop=hass.loop,
-            bootstrap_servers="{0}:{1}".format(ip_address, port),
+            bootstrap_servers=f"{ip_address}:{port}",
             compression_type="gzip",
         )
         self._topic = topic

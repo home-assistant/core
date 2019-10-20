@@ -36,7 +36,7 @@ CheckConfigError = namedtuple("CheckConfigError", "message domain config")
 class HomeAssistantConfig(OrderedDict):
     """Configuration result with errors attribute."""
 
-    errors = attr.ib(default=attr.Factory(list))  # type: List[CheckConfigError]
+    errors: List[CheckConfigError] = attr.ib(default=attr.Factory(list))
 
     def add_error(self, message, domain=None, config=None):
         """Add a single error."""

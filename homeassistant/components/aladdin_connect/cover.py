@@ -1,21 +1,22 @@
 """Platform for the Aladdin Connect cover component."""
 import logging
 
+from aladdin_connect import AladdinConnectClient
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-    CoverDevice,
     PLATFORM_SCHEMA,
-    SUPPORT_OPEN,
     SUPPORT_CLOSE,
+    SUPPORT_OPEN,
+    CoverDevice,
 )
 from homeassistant.const import (
-    CONF_USERNAME,
     CONF_PASSWORD,
+    CONF_USERNAME,
     STATE_CLOSED,
-    STATE_OPENING,
     STATE_CLOSING,
     STATE_OPEN,
+    STATE_OPENING,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -40,7 +41,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Aladdin Connect platform."""
-    from aladdin_connect import AladdinConnectClient
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -85,7 +85,7 @@ class AladdinDevice(CoverDevice):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return "{}-{}".format(self._device_id, self._number)
+        return f"{self._device_id}-{self._number}"
 
     @property
     def name(self):

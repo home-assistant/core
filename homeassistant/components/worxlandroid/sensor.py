@@ -63,12 +63,12 @@ class WorxLandroidSensor(Entity):
         self.pin = config.get(CONF_PIN)
         self.timeout = config.get(CONF_TIMEOUT)
         self.allow_unreachable = config.get(CONF_ALLOW_UNREACHABLE)
-        self.url = "http://{}/jsondata.cgi".format(self.host)
+        self.url = f"http://{self.host}/jsondata.cgi"
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "worxlandroid-{}".format(self.sensor)
+        return f"worxlandroid-{self.sensor}"
 
     @property
     def state(self):

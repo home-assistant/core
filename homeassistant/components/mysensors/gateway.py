@@ -44,7 +44,7 @@ def is_serial_port(value):
         ports = ("COM{}".format(idx + 1) for idx in range(256))
         if value in ports:
             return value
-        raise vol.Invalid("{} is not a serial port".format(value))
+        raise vol.Invalid(f"{value} is not a serial port")
     return cv.isdevice(value)
 
 

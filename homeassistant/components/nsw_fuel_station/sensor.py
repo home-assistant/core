@@ -141,7 +141,7 @@ class StationPriceData:
                     None,
                 )
 
-            self._station_name = name or "station {}".format(self.station_id)
+            self._station_name = name or f"station {self.station_id}"
 
         return self._station_name
 

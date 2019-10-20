@@ -1,7 +1,7 @@
 {
   "domain": "microsoft",
   "name": "Microsoft",
-  "documentation": "https://www.home-assistant.io/components/microsoft",
+  "documentation": "https://www.home-assistant.io/integrations/microsoft",
   "requirements": [
     "pycsspeechtts==1.0.2"
   ],

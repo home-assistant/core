@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il bridge \u00e8 gi\u00e0 configurato"
+            "already_configured": "Bridge gi\u00e0 configurato.",
+            "already_in_progress": "La configurazione del Bridge \u00e8 gi\u00e0 in corso."
         },
         "error": {
             "cannot_connect": "Impossibile connettersi al gateway.",

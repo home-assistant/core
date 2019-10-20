@@ -25,7 +25,7 @@ class IPWebcamBinarySensor(AndroidIPCamEntity, BinarySensorDevice):
 
         self._sensor = sensor
         self._mapped_name = KEY_MAP.get(self._sensor, self._sensor)
-        self._name = "{} {}".format(name, self._mapped_name)
+        self._name = f"{name} {self._mapped_name}"
         self._state = None
         self._unit = None
 

@@ -74,7 +74,7 @@ class MaryTTSProvider(Provider):
 
         try:
             with async_timeout.timeout(10):
-                url = "http://{}:{}/process?".format(self._host, self._port)
+                url = f"http://{self._host}:{self._port}/process?"
 
                 audio = self._codec.upper()
                 if audio == "WAV":

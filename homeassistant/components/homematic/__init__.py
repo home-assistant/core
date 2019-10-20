@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     ATTR_NAME,
     CONF_HOST,
     CONF_HOSTS,
@@ -47,7 +48,6 @@ ATTR_VALUE_TYPE = "value_type"
 ATTR_INTERFACE = "interface"
 ATTR_ERRORCODE = "error"
 ATTR_MESSAGE = "message"
-ATTR_MODE = "mode"
 ATTR_TIME = "time"
 ATTR_UNIQUE_ID = "unique_id"
 ATTR_PARAMSET_KEY = "paramset_key"
@@ -711,15 +711,15 @@ def _create_ha_id(name, channel, param, count):
 
     # Has multiple elements/channels
     if count > 1 and param is None:
-        return "{} {}".format(name, channel)
+        return f"{name} {channel}"
 
     # With multiple parameters on first channel
     if count == 1 and param is not None:
-        return "{} {}".format(name, param)
+        return f"{name} {param}"
 
     # Multiple parameters with multiple channels
     if count > 1 and param is not None:
-        return "{} {} {}".format(name, channel, param)
+        return f"{name} {channel} {param}"
 
 
 def _hm_event_handler(hass, interface, device, caller, attribute, value):

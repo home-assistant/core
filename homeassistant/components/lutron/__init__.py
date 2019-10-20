@@ -114,7 +114,7 @@ class LutronDevice(Entity):
     @property
     def name(self):
         """Return the name of the device."""
-        return "{} {}".format(self._area_name, self._lutron_device.name)
+        return f"{self._area_name} {self._lutron_device.name}"
 
     @property
     def should_poll(self):
@@ -132,7 +132,7 @@ class LutronButton:
 
     def __init__(self, hass, keypad, button):
         """Register callback for activity on the button."""
-        name = "{}: {}".format(keypad.name, button.name)
+        name = f"{keypad.name}: {button.name}"
         self._hass = hass
         self._has_release_event = (
             button.button_type is not None and "RaiseLower" in button.button_type

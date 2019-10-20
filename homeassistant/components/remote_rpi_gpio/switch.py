@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for port, name in ports.items():
         try:
             led = remote_rpi_gpio.setup_output(address, port, invert_logic)
-        except (ValueError, IndexError, KeyError, IOError):
+        except (ValueError, IndexError, KeyError, OSError):
             return
         new_switch = RemoteRPiGPIOSwitch(name, led, invert_logic)
         devices.append(new_switch)

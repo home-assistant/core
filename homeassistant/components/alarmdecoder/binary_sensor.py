@@ -151,10 +151,15 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
             self.schedule_update_ha_state()
 
     def _rel_message_callback(self, message):
-        """Update relay state."""
+        """Update relay / expander state."""
+
         if self._relay_addr == message.address and self._relay_chan == message.channel:
             _LOGGER.debug(
-                "Relay %d:%d value:%d", message.address, message.channel, message.value
+                "%s %d:%d value:%d",
+                "Relay" if message.type == message.RELAY else "ZoneExpander",
+                message.address,
+                message.channel,
+                message.value,
             )
             self._state = message.value
             self.schedule_update_ha_state()

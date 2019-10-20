@@ -2,7 +2,10 @@
 import logging
 import re
 
+import elkm1_lib as elkm1
+from elkm1_lib.const import Max
 import voluptuous as vol
+
 from homeassistant.const import (
     CONF_EXCLUDE,
     CONF_HOST,
@@ -12,8 +15,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback  # noqa
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import discovery
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType  # noqa
 
@@ -125,9 +127,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up the Elk M1 platform."""
-    from elkm1_lib.const import Max
-    import elkm1_lib as elkm1
-
     devices = {}
     elk_datas = {}
 
@@ -146,7 +145,7 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     def _included(ranges, set_to, values):
         for rng in ranges:
             if not rng[0] <= rng[1] <= len(values):
-                raise vol.Invalid("Invalid range {}".format(rng))
+                raise vol.Invalid(f"Invalid range {rng}")
             values[rng[0] - 1 : rng[1]] = [set_to] * (rng[1] - rng[0] + 1)
 
     for index, conf in enumerate(hass_config[DOMAIN]):
@@ -250,7 +249,7 @@ class ElkEntity(Entity):
         # we could have used elkm1__foo_bar for the latter, but that
         # would have been a breaking change
         if self._prefix != "":
-            uid_start = "elkm1m_{prefix}".format(prefix=self._prefix)
+            uid_start = f"elkm1m_{self._prefix}"
         else:
             uid_start = "elkm1"
         self._unique_id = "{uid_start}_{name}".format(
@@ -260,7 +259,7 @@ class ElkEntity(Entity):
     @property
     def name(self):
         """Name of the element."""
-        return "{p}{n}".format(p=self._prefix, n=self._element.name)
+        return f"{self._prefix}{self._element.name}"
 
     @property
     def unique_id(self):

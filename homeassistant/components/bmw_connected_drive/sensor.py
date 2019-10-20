@@ -1,6 +1,8 @@
 """Support for reading vehicle status from BMW connected drive portal."""
 import logging
 
+from bimmer_connected.state import ChargingState
+
 from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_KILOMETERS,
@@ -17,24 +19,28 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_TO_HA_METRIC = {
     "mileage": ["mdi:speedometer", LENGTH_KILOMETERS],
-    "remaining_range_total": ["mdi:ruler", LENGTH_KILOMETERS],
-    "remaining_range_electric": ["mdi:ruler", LENGTH_KILOMETERS],
-    "remaining_range_fuel": ["mdi:ruler", LENGTH_KILOMETERS],
-    "max_range_electric": ["mdi:ruler", LENGTH_KILOMETERS],
+    "remaining_range_total": ["mdi:map-marker-distance", LENGTH_KILOMETERS],
+    "remaining_range_electric": ["mdi:map-marker-distance", LENGTH_KILOMETERS],
+    "remaining_range_fuel": ["mdi:map-marker-distance", LENGTH_KILOMETERS],
+    "max_range_electric": ["mdi:map-marker-distance", LENGTH_KILOMETERS],
     "remaining_fuel": ["mdi:gas-station", VOLUME_LITERS],
     "charging_time_remaining": ["mdi:update", "h"],
     "charging_status": ["mdi:battery-charging", None],
+    # No icon as this is dealt with directly as a special case in icon()
+    "charging_level_hv": [None, "%"],
 }
 
 ATTR_TO_HA_IMPERIAL = {
     "mileage": ["mdi:speedometer", LENGTH_MILES],
-    "remaining_range_total": ["mdi:ruler", LENGTH_MILES],
-    "remaining_range_electric": ["mdi:ruler", LENGTH_MILES],
-    "remaining_range_fuel": ["mdi:ruler", LENGTH_MILES],
-    "max_range_electric": ["mdi:ruler", LENGTH_MILES],
+    "remaining_range_total": ["mdi:map-marker-distance", LENGTH_MILES],
+    "remaining_range_electric": ["mdi:map-marker-distance", LENGTH_MILES],
+    "remaining_range_fuel": ["mdi:map-marker-distance", LENGTH_MILES],
+    "max_range_electric": ["mdi:map-marker-distance", LENGTH_MILES],
     "remaining_fuel": ["mdi:gas-station", VOLUME_GALLONS],
     "charging_time_remaining": ["mdi:update", "h"],
     "charging_status": ["mdi:battery-charging", None],
+    # No icon as this is dealt with directly as a special case in icon()
+    "charging_level_hv": [None, "%"],
 }
 
 
@@ -68,8 +74,8 @@ class BMWConnectedDriveSensor(Entity):
         self._account = account
         self._attribute = attribute
         self._state = None
-        self._name = "{} {}".format(self._vehicle.name, self._attribute)
-        self._unique_id = "{}-{}".format(self._vehicle.vin, self._attribute)
+        self._name = f"{self._vehicle.name} {self._attribute}"
+        self._unique_id = f"{self._vehicle.vin}-{self._attribute}"
         self._attribute_info = attribute_info
 
     @property
@@ -93,7 +99,6 @@ class BMWConnectedDriveSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        from bimmer_connected.state import ChargingState
 
         vehicle_state = self._vehicle.state
         charging_state = vehicle_state.charging_status in [ChargingState.CHARGING]

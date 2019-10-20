@@ -3,6 +3,7 @@ import logging
 import re
 
 import voluptuous as vol
+from haffmpeg.tools import FFVersion
 
 from homeassistant.core import callback
 from homeassistant.const import (
@@ -105,7 +106,6 @@ class FFmpegManager:
 
     async def async_get_version(self):
         """Return ffmpeg version."""
-        from haffmpeg.tools import FFVersion
 
         ffversion = FFVersion(self._bin, self.hass.loop)
         self._version = await ffversion.get_version()

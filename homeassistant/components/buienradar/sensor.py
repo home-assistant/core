@@ -5,6 +5,34 @@ import logging
 
 import aiohttp
 import async_timeout
+from buienradar.buienradar import parse_data
+from buienradar.constants import (
+    ATTRIBUTION,
+    CONDCODE,
+    CONDITION,
+    CONTENT,
+    DATA,
+    DETAILED,
+    EXACT,
+    EXACTNL,
+    FORECAST,
+    HUMIDITY,
+    IMAGE,
+    MEASURED,
+    MESSAGE,
+    PRECIPITATION_FORECAST,
+    PRESSURE,
+    STATIONNAME,
+    STATUS_CODE,
+    SUCCESS,
+    TEMPERATURE,
+    TIMEFRAME,
+    VISIBILITY,
+    WINDAZIMUTH,
+    WINDGUST,
+    WINDSPEED,
+)
+from buienradar.urls import JSON_FEED_URL, json_precipitation_forecast_url
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -21,6 +49,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
+
+from .weather import DEFAULT_TIMEFRAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,11 +138,11 @@ SENSOR_TYPES = {
     "rainchance_3d": ["Rainchance 3d", "%", "mdi:weather-pouring"],
     "rainchance_4d": ["Rainchance 4d", "%", "mdi:weather-pouring"],
     "rainchance_5d": ["Rainchance 5d", "%", "mdi:weather-pouring"],
-    "sunchance_1d": ["Sunchance 1d", "%", "mdi:weather-partlycloudy"],
-    "sunchance_2d": ["Sunchance 2d", "%", "mdi:weather-partlycloudy"],
-    "sunchance_3d": ["Sunchance 3d", "%", "mdi:weather-partlycloudy"],
-    "sunchance_4d": ["Sunchance 4d", "%", "mdi:weather-partlycloudy"],
-    "sunchance_5d": ["Sunchance 5d", "%", "mdi:weather-partlycloudy"],
+    "sunchance_1d": ["Sunchance 1d", "%", "mdi:weather-partly-cloudy"],
+    "sunchance_2d": ["Sunchance 2d", "%", "mdi:weather-partly-cloudy"],
+    "sunchance_3d": ["Sunchance 3d", "%", "mdi:weather-partly-cloudy"],
+    "sunchance_4d": ["Sunchance 4d", "%", "mdi:weather-partly-cloudy"],
+    "sunchance_5d": ["Sunchance 5d", "%", "mdi:weather-partly-cloudy"],
     "windforce_1d": ["Wind force 1d", "Bft", "mdi:weather-windy"],
     "windforce_2d": ["Wind force 2d", "Bft", "mdi:weather-windy"],
     "windforce_3d": ["Wind force 3d", "Bft", "mdi:weather-windy"],
@@ -183,7 +213,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Create the buienradar sensor."""
-    from .weather import DEFAULT_TIMEFRAME
 
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
@@ -216,7 +245,6 @@ class BrSensor(Entity):
 
     def __init__(self, sensor_type, client_name, coordinates):
         """Initialize the sensor."""
-        from buienradar.constants import PRECIPITATION_FORECAST, CONDITION
 
         self.client_name = client_name
         self._name = SENSOR_TYPES[sensor_type][0]
@@ -247,23 +275,6 @@ class BrSensor(Entity):
     def load_data(self, data):
         """Load the sensor with relevant data."""
         # Find sensor
-        from buienradar.constants import (
-            ATTRIBUTION,
-            CONDITION,
-            CONDCODE,
-            DETAILED,
-            EXACT,
-            EXACTNL,
-            FORECAST,
-            IMAGE,
-            MEASURED,
-            PRECIPITATION_FORECAST,
-            STATIONNAME,
-            TIMEFRAME,
-            VISIBILITY,
-            WINDGUST,
-            WINDSPEED,
-        )
 
         # Check if we have a new measurement,
         # otherwise we do not have to update the sensor
@@ -401,7 +412,7 @@ class BrSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self.client_name, self._name)
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):
@@ -421,7 +432,6 @@ class BrSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        from buienradar.constants import PRECIPITATION_FORECAST
 
         if self.type.startswith(PRECIPITATION_FORECAST):
             result = {ATTR_ATTRIBUTION: self._attribution}
@@ -488,7 +498,6 @@ class BrData:
 
     async def get_data(self, url):
         """Load data from specified url."""
-        from buienradar.constants import CONTENT, MESSAGE, STATUS_CODE, SUCCESS
 
         _LOGGER.debug("Calling url: %s...", url)
         result = {SUCCESS: False, MESSAGE: None}
@@ -515,9 +524,6 @@ class BrData:
 
     async def async_update(self, *_):
         """Update the data from buienradar."""
-        from buienradar.constants import CONTENT, DATA, MESSAGE, STATUS_CODE, SUCCESS
-        from buienradar.buienradar import parse_data
-        from buienradar.urls import JSON_FEED_URL, json_precipitation_forecast_url
 
         content = await self.get_data(JSON_FEED_URL)
 
@@ -576,28 +582,24 @@ class BrData:
     @property
     def attribution(self):
         """Return the attribution."""
-        from buienradar.constants import ATTRIBUTION
 
         return self.data.get(ATTRIBUTION)
 
     @property
     def stationname(self):
         """Return the name of the selected weatherstation."""
-        from buienradar.constants import STATIONNAME
 
         return self.data.get(STATIONNAME)
 
     @property
     def condition(self):
         """Return the condition."""
-        from buienradar.constants import CONDITION
 
         return self.data.get(CONDITION)
 
     @property
     def temperature(self):
         """Return the temperature, or None."""
-        from buienradar.constants import TEMPERATURE
 
         try:
             return float(self.data.get(TEMPERATURE))
@@ -607,7 +609,6 @@ class BrData:
     @property
     def pressure(self):
         """Return the pressure, or None."""
-        from buienradar.constants import PRESSURE
 
         try:
             return float(self.data.get(PRESSURE))
@@ -617,7 +618,6 @@ class BrData:
     @property
     def humidity(self):
         """Return the humidity, or None."""
-        from buienradar.constants import HUMIDITY
 
         try:
             return int(self.data.get(HUMIDITY))
@@ -627,7 +627,6 @@ class BrData:
     @property
     def visibility(self):
         """Return the visibility, or None."""
-        from buienradar.constants import VISIBILITY
 
         try:
             return int(self.data.get(VISIBILITY))
@@ -637,7 +636,6 @@ class BrData:
     @property
     def wind_speed(self):
         """Return the windspeed, or None."""
-        from buienradar.constants import WINDSPEED
 
         try:
             return float(self.data.get(WINDSPEED))
@@ -647,7 +645,6 @@ class BrData:
     @property
     def wind_bearing(self):
         """Return the wind bearing, or None."""
-        from buienradar.constants import WINDAZIMUTH
 
         try:
             return int(self.data.get(WINDAZIMUTH))
@@ -657,6 +654,5 @@ class BrData:
     @property
     def forecast(self):
         """Return the forecast data."""
-        from buienradar.constants import FORECAST
 
         return self.data.get(FORECAST)

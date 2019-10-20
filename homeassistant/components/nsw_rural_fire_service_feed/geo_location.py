@@ -211,6 +211,13 @@ class NswRuralFireServiceLocationEvent(GeolocationEvent):
         self._responsible_agency = feed_entry.responsible_agency
 
     @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        if self._fire:
+            return "mdi:fire"
+        return "mdi:alarm-light"
+
+    @property
     def source(self) -> str:
         """Return source value of this external event."""
         return SOURCE

@@ -36,7 +36,7 @@ CONF_SERVICE_URL = "service_url"
 CONF_SCANDINAVIAN_MILES = "scandinavian_miles"
 CONF_MUTABLE = "mutable"
 
-SIGNAL_STATE_UPDATED = "{}.updated".format(DOMAIN)
+SIGNAL_STATE_UPDATED = f"{DOMAIN}.updated"
 
 COMPONENTS = {
     "sensor": "sensor",
@@ -261,7 +261,7 @@ class VolvoEntity(Entity):
     @property
     def name(self):
         """Return full name of the entity."""
-        return "{} {}".format(self._vehicle_name, self._entity_name)
+        return f"{self._vehicle_name} {self._entity_name}"
 
     @property
     def should_poll(self):
@@ -278,5 +278,5 @@ class VolvoEntity(Entity):
         """Return device specific state attributes."""
         return dict(
             self.instrument.attributes,
-            model="{}/{}".format(self.vehicle.vehicle_type, self.vehicle.model_year),
+            model=f"{self.vehicle.vehicle_type}/{self.vehicle.model_year}",
         )

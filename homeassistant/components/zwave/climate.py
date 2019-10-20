@@ -171,6 +171,28 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
     def update_properties(self):
         """Handle the data changes for node values."""
         # Operation Mode
+        self._update_operation_mode()
+
+        # Current Temp
+        self._update_current_temp()
+
+        # Fan Mode
+        self._update_fan_mode()
+
+        # Swing mode
+        self._update_swing_mode()
+
+        # Set point
+        self._update_target_temp()
+
+        # Operating state
+        self._update_operating_state()
+
+        # Fan operating state
+        self._update_fan_state()
+
+    def _update_operation_mode(self):
+        """Update hvac and preset modes."""
         if self.values.mode:
             self._hvac_list = []
             self._hvac_mapping = {}
@@ -259,22 +281,27 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         _LOGGER.debug("self._preset_list=%s", self._preset_list)
         _LOGGER.debug("self._preset_mode=%s", self._preset_mode)
 
-        # Current Temp
+    def _update_current_temp(self):
+        """Update current temperature."""
         if self.values.temperature:
             self._current_temperature = self.values.temperature.data
             device_unit = self.values.temperature.units
             if device_unit is not None:
                 self._unit = device_unit
 
-        # Fan Mode
+    def _update_fan_mode(self):
+        """Update fan mode."""
         if self.values.fan_mode:
             self._current_fan_mode = self.values.fan_mode.data
             fan_modes = self.values.fan_mode.data_items
             if fan_modes:
                 self._fan_modes = list(fan_modes)
+
         _LOGGER.debug("self._fan_modes=%s", self._fan_modes)
         _LOGGER.debug("self._current_fan_mode=%s", self._current_fan_mode)
-        # Swing mode
+
+    def _update_swing_mode(self):
+        """Update swing mode."""
         if self._zxt_120 == 1:
             if self.values.zxt_120_swing_mode:
                 self._current_swing_mode = self.values.zxt_120_swing_mode.data
@@ -283,7 +310,9 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                     self._swing_modes = list(swing_modes)
             _LOGGER.debug("self._swing_modes=%s", self._swing_modes)
             _LOGGER.debug("self._current_swing_mode=%s", self._current_swing_mode)
-        # Set point
+
+    def _update_target_temp(self):
+        """Update target temperature."""
         if self.values.primary.data == 0:
             _LOGGER.debug(
                 "Setpoint is 0, setting default to " "current_temperature=%s",
@@ -294,12 +323,14 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         else:
             self._target_temperature = round((float(self.values.primary.data)), 1)
 
-        # Operating state
+    def _update_operating_state(self):
+        """Update operating state."""
         if self.values.operating_state:
             mode = self.values.operating_state.data
             self._hvac_action = HVAC_CURRENT_MAPPINGS.get(str(mode).lower(), mode)
 
-        # Fan operating state
+    def _update_fan_state(self):
+        """Update fan state."""
         if self.values.fan_action:
             self._fan_action = self.values.fan_action.data
 
@@ -448,7 +479,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             return
         if preset_mode == PRESET_NONE:
             # Activate the current hvac mode
-            self.update_properties()
+            self._update_operation_mode()
             operation_mode = self._hvac_mapping.get(self.hvac_mode)
             _LOGGER.debug("Set operation_mode to %s", operation_mode)
             self.values.mode.data = operation_mode

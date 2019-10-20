@@ -108,9 +108,9 @@ async def test_async_setup_entry_not_signed_in_loads_platforms(
     assert hass.data[DOMAIN][DATA_SOURCE_MANAGER].favorites == {}
     assert hass.data[DOMAIN][DATA_SOURCE_MANAGER].inputs == input_sources
     assert (
-        "127.0.0.1 is not logged in to a HEOS account and will be unable "
-        "to retrieve HEOS favorites: Use the 'heos.sign_in' service to "
-        "sign-in to a HEOS account" in caplog.text
+        "127.0.0.1 is not logged in to a HEOS account and will be unable to retrieve "
+        "HEOS favorites: Use the 'heos.sign_in' service to sign-in to a HEOS account"
+        in caplog.text
     )
 
 

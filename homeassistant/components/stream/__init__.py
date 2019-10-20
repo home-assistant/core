@@ -4,31 +4,30 @@ import threading
 
 import voluptuous as vol
 
+from homeassistant.auth.util import generate_secret
+from homeassistant.const import CONF_FILENAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.config_validation as cv
+from homeassistant.loader import bind_hass
+
+from .const import (
+    ATTR_ENDPOINTS,
+    ATTR_STREAMS,
+    CONF_DURATION,
+    CONF_LOOKBACK,
+    CONF_STREAM_SOURCE,
+    DOMAIN,
+    SERVICE_RECORD,
+)
+from .core import PROVIDERS
+from .hls import async_setup_hls
+
 try:
     import uvloop
 except ImportError:
     uvloop = None
 
-from homeassistant.auth.util import generate_secret
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_FILENAME
-from homeassistant.core import callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import bind_hass
-
-from .const import (
-    DOMAIN,
-    ATTR_STREAMS,
-    ATTR_ENDPOINTS,
-    CONF_STREAM_SOURCE,
-    CONF_DURATION,
-    CONF_LOOKBACK,
-    SERVICE_RECORD,
-)
-from .core import PROVIDERS
-from .worker import stream_worker
-from .hls import async_setup_hls
-from .recorder import async_setup_recorder
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,6 +103,9 @@ def request_stream(hass, stream_source, *, fmt="hls", keepalive=False, options=N
 
 async def async_setup(hass, config):
     """Set up stream."""
+    # Keep import here so that we can import stream integration without installing reqs
+    from .recorder import async_setup_recorder
+
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][ATTR_ENDPOINTS] = {}
     hass.data[DOMAIN][ATTR_STREAMS] = {}
@@ -181,6 +183,9 @@ class Stream:
 
     def start(self):
         """Start a stream."""
+        # Keep import here so that we can import stream integration without installing reqs
+        from .worker import stream_worker
+
         if self._thread is None or not self._thread.isAlive():
             self._thread_quit = threading.Event()
             self._thread = threading.Thread(
@@ -217,9 +222,7 @@ async def async_handle_record_service(hass, call):
 
     # Check for file access
     if not hass.config.is_allowed_path(video_path):
-        raise HomeAssistantError(
-            "Can't write {}, no access to path!".format(video_path)
-        )
+        raise HomeAssistantError(f"Can't write {video_path}, no access to path!")
 
     # Check for active stream
     streams = hass.data[DOMAIN][ATTR_STREAMS]
@@ -231,9 +234,7 @@ async def async_handle_record_service(hass, call):
     # Add recorder
     recorder = stream.outputs.get("recorder")
     if recorder:
-        raise HomeAssistantError(
-            "Stream already recording to {}!".format(recorder.video_path)
-        )
+        raise HomeAssistantError(f"Stream already recording to {recorder.video_path}!")
 
     recorder = stream.add_provider("recorder")
     recorder.video_path = video_path

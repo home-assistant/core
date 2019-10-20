@@ -61,9 +61,7 @@ class PushettaNotificationService(BaseNotificationService):
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
         try:
-            self.pushetta.pushMessage(
-                self._channel_name, "{} {}".format(title, message)
-            )
+            self.pushetta.pushMessage(self._channel_name, f"{title} {message}")
         except exceptions.TokenValidationError:
             _LOGGER.error("Please check your access token")
             self.is_valid = False

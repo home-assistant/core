@@ -1,10 +1,11 @@
 """Support for Start.ca Bandwidth Monitor."""
 from datetime import timedelta
-from xml.parsers.expat import ExpatError
 import logging
-import async_timeout
+from xml.parsers.expat import ExpatError
 
+import async_timeout
 import voluptuous as vol
+import xmltodict
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_API_KEY, CONF_MONITORED_VARIABLES, CONF_NAME
@@ -18,8 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Start.ca"
 CONF_TOTAL_BANDWIDTH = "total_bandwidth"
 
-GIGABYTES = "GB"  # type: str
-PERCENT = "%"  # type: str
+GIGABYTES = "GB"
+PERCENT = "%"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 REQUEST_TIMEOUT = 5  # seconds
@@ -86,7 +87,7 @@ class StartcaSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self.client_name, self._name)
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):
@@ -138,8 +139,6 @@ class StartcaData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the Start.ca bandwidth data from the web service."""
-        import xmltodict
-
         _LOGGER.debug("Updating Start.ca usage data")
         url = "https://www.start.ca/support/usage/api?key=" + self.api_key
         with async_timeout.timeout(REQUEST_TIMEOUT):

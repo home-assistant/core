@@ -4,9 +4,13 @@ import logging
 import tempfile
 
 import voluptuous as vol
+from hbmqtt.broker import Broker, BrokerException
+from passlib.apps import custom_app_context
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
+
+from .const import PROTOCOL_311
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,8 +37,6 @@ def async_start(hass, password, server_config):
 
     This method is a coroutine.
     """
-    from hbmqtt.broker import Broker, BrokerException
-
     passwd = tempfile.NamedTemporaryFile()
 
     gen_server_config, client_config = generate_config(hass, passwd, password)
@@ -63,8 +65,6 @@ def async_start(hass, password, server_config):
 
 def generate_config(hass, passwd, password):
     """Generate a configuration based on current Home Assistant instance."""
-    from . import PROTOCOL_311
-
     config = {
         "listeners": {
             "default": {
@@ -83,8 +83,6 @@ def generate_config(hass, passwd, password):
         username = "homeassistant"
 
         # Encrypt with what hbmqtt uses to verify
-        from passlib.apps import custom_app_context
-
         passwd.write(
             "homeassistant:{}\n".format(custom_app_context.encrypt(password)).encode(
                 "utf-8"

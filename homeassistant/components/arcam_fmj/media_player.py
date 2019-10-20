@@ -319,7 +319,7 @@ class ArcamFmj(MediaPlayerDevice):
         channel = self.media_channel
 
         if channel:
-            value = "{} - {}".format(source.name, channel)
+            value = f"{source.name} - {channel}"
         else:
             value = source.name
         return value

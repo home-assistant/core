@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "name_exists": "El nombre ya existe"
+            "name_exists": "La ubicaci\u00f3n ya existe"
         },
         "step": {
             "user": {
@@ -14,6 +14,7 @@
                 "description": "Instituto de meteorolog\u00eda",
                 "title": "Ubicaci\u00f3n"
             }
-        }
+        },
+        "title": "Met.no"
     }
 }

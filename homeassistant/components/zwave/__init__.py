@@ -478,10 +478,10 @@ async def async_setup_entry(hass, config_entry):
 
     def node_removed(node):
         node_id = node.node_id
-        node_key = "node-{}".format(node_id)
+        node_key = f"node-{node_id}"
         _LOGGER.info("Node Removed: %s", hass.data[DATA_DEVICES][node_key])
         for key in list(hass.data[DATA_DEVICES]):
-            if not key.startswith("{}-".format(node_id)):
+            if not key.startswith(f"{node_id}-"):
                 continue
 
             entity = hass.data[DATA_DEVICES][key]
@@ -586,11 +586,11 @@ async def async_setup_entry(hass, config_entry):
         update_ids = service.data.get(const.ATTR_UPDATE_IDS)
         # We want to rename the device, the node entity,
         # and all the contained entities
-        node_key = "node-{}".format(node_id)
+        node_key = f"node-{node_id}"
         entity = hass.data[DATA_DEVICES][node_key]
         await entity.node_renamed(update_ids)
         for key in list(hass.data[DATA_DEVICES]):
-            if not key.startswith("{}-".format(node_id)):
+            if not key.startswith(f"{node_id}-"):
                 continue
             entity = hass.data[DATA_DEVICES][key]
             await entity.value_renamed(update_ids)
@@ -607,7 +607,7 @@ async def async_setup_entry(hass, config_entry):
             "Renamed Z-Wave value (Node %d Value %d) to %s", node_id, value_id, name
         )
         update_ids = service.data.get(const.ATTR_UPDATE_IDS)
-        value_key = "{}-{}".format(node_id, value_id)
+        value_key = f"{node_id}-{value_id}"
         entity = hass.data[DATA_DEVICES][value_key]
         await entity.value_renamed(update_ids)
 
@@ -851,7 +851,8 @@ async def async_setup_entry(hass, config_entry):
                     # Need to be in STATE_AWAKED before talking to nodes.
                     _LOGGER.info("Z-Wave ready after %d seconds", waited)
                     break
-                elif waited >= const.NETWORK_READY_WAIT_SECS:
+
+                if waited >= const.NETWORK_READY_WAIT_SECS:
                     # Wait up to NETWORK_READY_WAIT_SECS seconds for the Z-Wave
                     # network to be ready.
                     _LOGGER.warning(
@@ -861,8 +862,8 @@ async def async_setup_entry(hass, config_entry):
                         "final network state: %d %s", network.state, network.state_str
                     )
                     break
-                else:
-                    await asyncio.sleep(1)
+
+                await asyncio.sleep(1)
 
             hass.async_add_job(_finalize_start)
 
@@ -1109,7 +1110,7 @@ class ZWaveDeviceEntityValues:
         if polling_intensity:
             self.primary.enable_poll(polling_intensity)
 
-        platform = import_module(".{}".format(component), __name__)
+        platform = import_module(f".{component}", __name__)
 
         device = platform.get_device(
             node=self._node, values=self, node_config=node_config, hass=self._hass
@@ -1149,9 +1150,7 @@ class ZWaveDeviceEntityValues:
 
             self._hass.data[DATA_DEVICES][device.unique_id] = device
             if component in SUPPORTED_PLATFORMS:
-                async_dispatcher_send(
-                    self._hass, "zwave_new_{}".format(component), device
-                )
+                async_dispatcher_send(self._hass, f"zwave_new_{component}", device)
             else:
                 await discovery.async_load_platform(
                     self._hass,
@@ -1316,4 +1315,4 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
 
 def compute_value_unique_id(node, value):
     """Compute unique_id a value would get if it were to get one."""
-    return "{}-{}".format(node.node_id, value.object_id)
+    return f"{node.node_id}-{value.object_id}"

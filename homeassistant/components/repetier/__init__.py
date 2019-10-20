@@ -239,7 +239,7 @@ class PrinterAPI:
                 info["name"] = printer.slug
                 info["printer_name"] = self.conf_name
 
-                known = "{}-{}".format(printer.slug, sensor_type)
+                known = f"{printer.slug}-{sensor_type}"
                 if known in self._known_entities:
                     continue
 

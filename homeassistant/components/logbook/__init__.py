@@ -188,7 +188,7 @@ def humanify(hass, events):
     - if 2+ sensor updates in GROUP_BY_MINUTES, show last
     - if home assistant stop and start happen in same minute call it restarted
     """
-    domain_prefixes = tuple("{}.".format(dom) for dom in CONTINUOUS_DOMAINS)
+    domain_prefixes = tuple(f"{dom}." for dom in CONTINUOUS_DOMAINS)
 
     # Group events in batches of GROUP_BY_MINUTES
     for _, g_events in groupby(
@@ -332,7 +332,7 @@ def humanify(hass, events):
                 entity_id = data.get(ATTR_ENTITY_ID)
                 value = data.get(ATTR_VALUE)
 
-                value_msg = " to {}".format(value) if value else ""
+                value_msg = f" to {value}" if value else ""
                 message = "send command {}{} for {}".format(
                     data[ATTR_SERVICE], value_msg, data[ATTR_DISPLAY_NAME]
                 )
@@ -519,7 +519,7 @@ def _keep_event(event, entities_filter):
         domain = DOMAIN_HOMEKIT
 
     if not entity_id and domain:
-        entity_id = "%s." % (domain,)
+        entity_id = f"{domain}."
 
     return not entity_id or entities_filter(entity_id)
 
@@ -530,7 +530,7 @@ def _entry_message_from_state(domain, state):
     if domain in ["device_tracker", "person"]:
         if state.state == STATE_NOT_HOME:
             return "is away"
-        return "is at {}".format(state.state)
+        return f"is at {state.state}"
 
     if domain == "sun":
         if state.state == sun.STATE_ABOVE_HORIZON:
@@ -596,9 +596,9 @@ def _entry_message_from_state(domain, state):
             "vibration",
         ]:
             if state.state == STATE_ON:
-                return "detected {}".format(device_class)
+                return f"detected {device_class}"
             if state.state == STATE_OFF:
-                return "cleared (no {} detected)".format(device_class)
+                return f"cleared (no {device_class} detected)"
 
     if state.state == STATE_ON:
         # Future: combine groups and its entity entries ?
@@ -607,4 +607,4 @@ def _entry_message_from_state(domain, state):
     if state.state == STATE_OFF:
         return "turned off"
 
-    return "changed to {}".format(state.state)
+    return f"changed to {state.state}"

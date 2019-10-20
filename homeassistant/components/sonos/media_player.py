@@ -8,8 +8,8 @@ import urllib
 
 import async_timeout
 import pysonos
+from pysonos.exceptions import SoCoException, SoCoUPnPException
 import pysonos.snapshot
-from pysonos.exceptions import SoCoUPnPException, SoCoException
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
@@ -40,11 +40,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.dt import utcnow
 
 from . import (
-    CONF_ADVERTISE_ADDR,
-    CONF_HOSTS,
-    CONF_INTERFACE_ADDR,
-    DATA_SERVICE_EVENT,
-    DOMAIN as SONOS_DOMAIN,
     ATTR_ALARM_ID,
     ATTR_ENABLED,
     ATTR_INCLUDE_LINKED_ZONES,
@@ -56,6 +51,11 @@ from . import (
     ATTR_TIME,
     ATTR_VOLUME,
     ATTR_WITH_GROUP,
+    CONF_ADVERTISE_ADDR,
+    CONF_HOSTS,
+    CONF_INTERFACE_ADDR,
+    DATA_SERVICE_EVENT,
+    DOMAIN as SONOS_DOMAIN,
     SERVICE_CLEAR_TIMER,
     SERVICE_JOIN,
     SERVICE_PLAY_QUEUE,
@@ -337,7 +337,15 @@ class SonosEntity(MediaPlayerDevice):
     async def async_added_to_hass(self):
         """Subscribe sonos events."""
         await self.async_seen()
+
         self.hass.data[DATA_SONOS].entities.append(self)
+
+        def _rebuild_groups():
+            """Build the current group topology."""
+            for entity in self.hass.data[DATA_SONOS].entities:
+                entity.update_groups()
+
+        self.hass.async_add_executor_job(_rebuild_groups)
 
     @property
     def unique_id(self):
@@ -469,10 +477,6 @@ class SonosEntity(MediaPlayerDevice):
             self.update_volume()
             self._set_favorites()
 
-            # New player available, build the current group topology
-            for entity in self.hass.data[DATA_SONOS].entities:
-                entity.update_groups()
-
             player = self.soco
 
             def subscribe(service, action):
@@ -602,7 +606,7 @@ class SonosEntity(MediaPlayerDevice):
             #   media_artist = "Station - Artist - Title"
             # detect this case and trim from the front of
             # media_artist for cosmetics
-            trim = "{title} - ".format(title=self._media_title)
+            trim = f"{self._media_title} - "
             chars = min(len(self._media_artist), len(trim))
 
             if self._media_artist[:chars].upper() == trim[:chars].upper():
@@ -1157,10 +1161,9 @@ class SonosEntity(MediaPlayerDevice):
     @soco_coordinator
     def set_alarm(self, data):
         """Set the alarm clock on the player."""
-        from pysonos import alarms
 
         alarm = None
-        for one_alarm in alarms.get_alarms(self.soco):
+        for one_alarm in pysonos.alarms.get_alarms(self.soco):
             # pylint: disable=protected-access
             if one_alarm._alarm_id == str(data[ATTR_ALARM_ID]):
                 alarm = one_alarm

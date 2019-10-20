@@ -87,13 +87,13 @@ def _create_instance(
     component.add_entities([entity])
     hass.services.register(
         DOMAIN,
-        "{}_create_task".format(account_name),
+        f"{account_name}_create_task",
         entity.create_task,
         schema=SERVICE_SCHEMA_CREATE_TASK,
     )
     hass.services.register(
         DOMAIN,
-        "{}_complete_task".format(account_name),
+        f"{account_name}_complete_task",
         entity.complete_task,
         schema=SERVICE_SCHEMA_COMPLETE_TASK,
     )
@@ -137,7 +137,7 @@ def _register_new_account(
         configurator.request_done(request_id)
 
     request_id = configurator.async_request_config(
-        "{} - {}".format(DOMAIN, account_name),
+        f"{DOMAIN} - {account_name}",
         callback=register_account_callback,
         description="You need to log in to Remember The Milk to"
         + "connect your account. \n\n"

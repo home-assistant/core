@@ -34,7 +34,7 @@ class SkyHubDeviceScanner(DeviceScanner):
         _LOGGER.info("Initialising Sky Hub")
         self.host = config.get(CONF_HOST, "192.168.1.254")
         self.last_results = {}
-        self.url = "http://{}/".format(self.host)
+        self.url = f"http://{self.host}/"
 
         # Test the router is accessible
         data = _get_skyhub_data(self.url)
@@ -94,7 +94,7 @@ def _parse_skyhub_response(data_str):
     """Parse the Sky Hub data format."""
     pattmatch = re.search("attach_dev = '(.*)'", data_str)
     if pattmatch is None:
-        raise IOError(
+        raise OSError(
             "Error: Impossible to fetch data from"
             + " Sky Hub. Try to reboot the router."
         )

@@ -50,7 +50,7 @@ class FakeEndpoint:
         """Add an input cluster."""
         from zigpy.zcl import Cluster
 
-        cluster = Cluster.from_id(self, cluster_id)
+        cluster = Cluster.from_id(self, cluster_id, is_server=True)
         patch_cluster(cluster)
         self.in_clusters[cluster_id] = cluster
         if hasattr(cluster, "ep_attribute"):
@@ -60,7 +60,7 @@ class FakeEndpoint:
         """Add an output cluster."""
         from zigpy.zcl import Cluster
 
-        cluster = Cluster.from_id(self, cluster_id)
+        cluster = Cluster.from_id(self, cluster_id, is_server=False)
         patch_cluster(cluster)
         self.out_clusters[cluster_id] = cluster
 

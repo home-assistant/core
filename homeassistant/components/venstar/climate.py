@@ -1,6 +1,7 @@
 """Support for Venstar WiFi Thermostats."""
 import logging
 
+from venstarcolortouch import VenstarColorTouch
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
@@ -11,14 +12,20 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF,
     SUPPORT_FAN_MODE,
+    FAN_ON,
+    FAN_AUTO,
     SUPPORT_TARGET_HUMIDITY,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     PRESET_AWAY,
     PRESET_NONE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
-    HVAC_MODE_OFF,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -65,7 +72,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Venstar thermostat."""
-    import venstarcolortouch
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -78,7 +84,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     else:
         proto = "http"
 
-    client = venstarcolortouch.VenstarColorTouch(
+    client = VenstarColorTouch(
         addr=host, timeout=timeout, user=username, password=password, proto=proto
     )
 
@@ -156,7 +162,7 @@ class VenstarThermostat(ClimateDevice):
 
     @property
     def hvac_mode(self):
-        """Return current operation ie. heat, cool, idle."""
+        """Return current operation mode ie. heat, cool, auto."""
         if self._client.mode == self._client.MODE_HEAT:
             return HVAC_MODE_HEAT
         if self._client.mode == self._client.MODE_COOL:
@@ -166,11 +172,22 @@ class VenstarThermostat(ClimateDevice):
         return HVAC_MODE_OFF
 
     @property
+    def hvac_action(self):
+        """Return current operation mode ie. heat, cool, auto."""
+        if self._client.state == self._client.STATE_IDLE:
+            return CURRENT_HVAC_IDLE
+        if self._client.state == self._client.STATE_HEATING:
+            return CURRENT_HVAC_HEAT
+        if self._client.state == self._client.STATE_COOLING:
+            return CURRENT_HVAC_COOL
+        return CURRENT_HVAC_OFF
+
+    @property
     def fan_mode(self):
-        """Return the fan setting."""
-        if self._client.fan == self._client.FAN_AUTO:
-            return HVAC_MODE_AUTO
-        return STATE_ON
+        """Return the current fan mode."""
+        if self._client.fan == self._client.FAN_ON:
+            return FAN_ON
+        return FAN_AUTO
 
     @property
     def device_state_attributes(self):

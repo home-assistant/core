@@ -106,7 +106,7 @@ class HomeKitEntity(Entity):
         # Callback to allow entity to configure itself based on this
         # characteristics metadata (valid values, value ranges, features, etc)
         setup_fn_name = escape_characteristic_name(short_name)
-        setup_fn = getattr(self, "_setup_{}".format(setup_fn_name), None)
+        setup_fn = getattr(self, f"_setup_{setup_fn_name}", None)
         if not setup_fn:
             return
         # pylint: disable=not-callable
@@ -128,7 +128,7 @@ class HomeKitEntity(Entity):
 
             # Callback to update the entity with this characteristic value
             char_name = escape_characteristic_name(self._char_names[iid])
-            update_fn = getattr(self, "_update_{}".format(char_name), None)
+            update_fn = getattr(self, f"_update_{char_name}", None)
             if not update_fn:
                 continue
 
@@ -141,7 +141,7 @@ class HomeKitEntity(Entity):
     def unique_id(self):
         """Return the ID of this device."""
         serial = self._accessory_info["serial-number"]
-        return "homekit-{}-{}".format(serial, self._iid)
+        return f"homekit-{serial}-{self._iid}"
 
     @property
     def name(self):

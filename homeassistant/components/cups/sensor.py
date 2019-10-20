@@ -276,11 +276,11 @@ class MarkerSensor(Entity):
         if self._attributes is None:
             return None
 
-        high_level = self._attributes[self._printer]["marker-high-levels"]
+        high_level = self._attributes[self._printer].get("marker-high-levels")
         if isinstance(high_level, list):
             high_level = high_level[self._index]
 
-        low_level = self._attributes[self._printer]["marker-low-levels"]
+        low_level = self._attributes[self._printer].get("marker-low-levels")
         if isinstance(low_level, list):
             low_level = low_level[self._index]
 
@@ -333,7 +333,7 @@ class CupsData:
             else:
                 for ipp_printer in self._ipp_printers:
                     self.attributes[ipp_printer] = conn.getPrinterAttributes(
-                        uri="ipp://{}:{}/{}".format(self._host, self._port, ipp_printer)
+                        uri=f"ipp://{self._host}:{self._port}/{ipp_printer}"
                     )
 
             self.available = True

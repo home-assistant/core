@@ -85,7 +85,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
         prefix = config.get(CONF_NAME)
         if prefix:
-            name = "{} {}".format(prefix, name)
+            name = f"{prefix} {name}"
 
         devs.append(
             MiFloraSensor(poller, parameter, name, unit, icon, force_update, median)
@@ -157,7 +157,7 @@ class MiFloraSensor(Entity):
         try:
             _LOGGER.debug("Polling data for %s", self.name)
             data = self.poller.parameter_value(self.parameter)
-        except IOError as ioerr:
+        except OSError as ioerr:
             _LOGGER.info("Polling error %s", ioerr)
             return
         except BluetoothBackendException as bterror:

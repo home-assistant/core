@@ -139,7 +139,7 @@ class StiebelEltron(ClimateDevice):
     @property
     def current_humidity(self):
         """Return the current humidity."""
-        return float("{0:.1f}".format(self._current_humidity))
+        return float(f"{self._current_humidity:.1f}")
 
     @property
     def hvac_modes(self):

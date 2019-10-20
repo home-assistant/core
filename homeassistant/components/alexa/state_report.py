@@ -51,14 +51,16 @@ async def async_enable_proactive_mode(hass, smart_home_config):
     )
 
 
-async def async_send_changereport_message(hass, config, alexa_entity):
+async def async_send_changereport_message(
+    hass, config, alexa_entity, *, invalidate_access_token=True
+):
     """Send a ChangeReport message for an Alexa entity.
 
     https://developer.amazon.com/docs/smarthome/state-reporting-for-a-smart-home-skill.html#report-state-with-changereport-events
     """
     token = await config.async_get_access_token()
 
-    headers = {"Authorization": "Bearer {}".format(token)}
+    headers = {"Authorization": f"Bearer {token}"}
 
     endpoint = alexa_entity.alexa_id()
 
@@ -88,20 +90,32 @@ async def async_send_changereport_message(hass, config, alexa_entity):
 
     except (asyncio.TimeoutError, aiohttp.ClientError):
         _LOGGER.error("Timeout sending report to Alexa.")
-        return None
+        return
 
     response_text = await response.text()
 
     _LOGGER.debug("Sent: %s", json.dumps(message_serialized))
     _LOGGER.debug("Received (%s): %s", response.status, response_text)
 
-    if response.status != 202:
-        response_json = json.loads(response_text)
-        _LOGGER.error(
-            "Error when sending ChangeReport to Alexa: %s: %s",
-            response_json["payload"]["code"],
-            response_json["payload"]["description"],
+    if response.status == 202:
+        return
+
+    response_json = json.loads(response_text)
+
+    if (
+        response_json["payload"]["code"] == "INVALID_ACCESS_TOKEN_EXCEPTION"
+        and not invalidate_access_token
+    ):
+        config.async_invalidate_access_token()
+        return await async_send_changereport_message(
+            hass, config, alexa_entity, invalidate_access_token=False
         )
+
+    _LOGGER.error(
+        "Error when sending ChangeReport to Alexa: %s: %s",
+        response_json["payload"]["code"],
+        response_json["payload"]["description"],
+    )
 
 
 async def async_send_add_or_update_message(hass, config, entity_ids):
@@ -111,12 +125,16 @@ async def async_send_add_or_update_message(hass, config, entity_ids):
     """
     token = await config.async_get_access_token()
 
-    headers = {"Authorization": "Bearer {}".format(token)}
+    headers = {"Authorization": f"Bearer {token}"}
 
     endpoints = []
 
     for entity_id in entity_ids:
         domain = entity_id.split(".", 1)[0]
+
+        if domain not in ENTITY_ADAPTERS:
+            continue
+
         alexa_entity = ENTITY_ADAPTERS[domain](hass, config, hass.states.get(entity_id))
         endpoints.append(alexa_entity.serialize_discovery())
 
@@ -141,12 +159,16 @@ async def async_send_delete_message(hass, config, entity_ids):
     """
     token = await config.async_get_access_token()
 
-    headers = {"Authorization": "Bearer {}".format(token)}
+    headers = {"Authorization": f"Bearer {token}"}
 
     endpoints = []
 
     for entity_id in entity_ids:
         domain = entity_id.split(".", 1)[0]
+
+        if domain not in ENTITY_ADAPTERS:
+            continue
+
         alexa_entity = ENTITY_ADAPTERS[domain](hass, config, hass.states.get(entity_id))
         endpoints.append({"endpointId": alexa_entity.alexa_id()})
 

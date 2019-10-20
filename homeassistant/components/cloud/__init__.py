@@ -1,6 +1,7 @@
 """Component to integrate the Home Assistant cloud."""
 import logging
 
+from hass_nabucasa import Cloud
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
@@ -20,15 +21,18 @@ from homeassistant.loader import bind_hass
 from homeassistant.util.aiohttp import MockRequest
 
 from . import http_api
+from .client import CloudClient
 from .const import (
     CONF_ACME_DIRECTORY_SERVER,
     CONF_ALEXA,
+    CONF_ALEXA_ACCESS_TOKEN_URL,
     CONF_ALIASES,
     CONF_CLOUDHOOK_CREATE_URL,
     CONF_COGNITO_CLIENT_ID,
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
     CONF_GOOGLE_ACTIONS,
+    CONF_GOOGLE_ACTIONS_REPORT_STATE_URL,
     CONF_GOOGLE_ACTIONS_SYNC_URL,
     CONF_RELAYER,
     CONF_REMOTE_API_URL,
@@ -37,7 +41,6 @@ from .const import (
     DOMAIN,
     MODE_DEV,
     MODE_PROD,
-    CONF_ALEXA_ACCESS_TOKEN_URL,
 )
 from .prefs import CloudPreferences
 
@@ -96,7 +99,8 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_ACME_DIRECTORY_SERVER): vol.Url(),
                 vol.Optional(CONF_ALEXA): ALEXA_SCHEMA,
                 vol.Optional(CONF_GOOGLE_ACTIONS): GACTIONS_SCHEMA,
-                vol.Optional(CONF_ALEXA_ACCESS_TOKEN_URL): str,
+                vol.Optional(CONF_ALEXA_ACCESS_TOKEN_URL): vol.Url(),
+                vol.Optional(CONF_GOOGLE_ACTIONS_REPORT_STATE_URL): vol.Url(),
             }
         )
     },
@@ -164,8 +168,6 @@ def is_cloudhook_request(request):
 
 async def async_setup(hass, config):
     """Initialize the Home Assistant cloud."""
-    from hass_nabucasa import Cloud
-    from .client import CloudClient
 
     # Process configs
     if DOMAIN in config:

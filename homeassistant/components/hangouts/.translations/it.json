@@ -14,14 +14,16 @@
                 "data": {
                     "2fa": "2FA Pin"
                 },
+                "description": "Vuoto",
                 "title": "Autenticazione a due fattori"
             },
             "user": {
                 "data": {
                     "authorization_code": "Codice di autorizzazione (necessario per l'autenticazione manuale)",
-                    "email": "Indirizzo email",
+                    "email": "Indirizzo E-mail",
                     "password": "Password"
                 },
+                "description": "Vuoto",
                 "title": "Accesso a Google Hangouts"
             }
         },

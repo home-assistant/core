@@ -78,7 +78,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             cmddata = cmd[CONF_DATA].strip()
             if not cmddata:
                 cmddata = '""'
-            cmddatas += "{}\n{}\n".format(cmdname, cmddata)
+            cmddatas += f"{cmdname}\n{cmddata}\n"
         itachip2ir.addDevice(name, modaddr, connaddr, cmddatas)
         devices.append(ITachIP2IRRemote(itachip2ir, name))
     add_entities(devices, True)

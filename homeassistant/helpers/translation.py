@@ -82,7 +82,7 @@ def build_resources(
 ) -> Dict[str, Dict[str, Any]]:
     """Build the resources response for the given components."""
     # Build response
-    resources = {}  # type: Dict[str, Dict[str, Any]]
+    resources: Dict[str, Dict[str, Any]] = {}
     for component in components:
         if "." not in component:
             domain = component

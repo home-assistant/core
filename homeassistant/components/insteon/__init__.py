@@ -314,7 +314,7 @@ async def async_setup(hass, config):
 
     def _send_load_aldb_signal(entity_id, reload):
         """Send the load All-Link database signal to INSTEON entity."""
-        signal = "{}_{}".format(entity_id, SIGNAL_LOAD_ALDB)
+        signal = f"{entity_id}_{SIGNAL_LOAD_ALDB}"
         dispatcher_send(hass, signal, reload)
 
     def print_aldb(service):
@@ -322,7 +322,7 @@ async def async_setup(hass, config):
         # For now this sends logs to the log file.
         # Furture direction is to create an INSTEON control panel.
         entity_id = service.data[CONF_ENTITY_ID]
-        signal = "{}_{}".format(entity_id, SIGNAL_PRINT_ALDB)
+        signal = f"{entity_id}_{SIGNAL_PRINT_ALDB}"
         dispatcher_send(hass, signal)
 
     def print_im_aldb(service):
@@ -652,9 +652,9 @@ class InsteonEntity(Entity):
         )
         self._insteon_device_state.register_updates(self.async_entity_update)
         self.hass.data[DOMAIN][INSTEON_ENTITIES][self.entity_id] = self
-        load_signal = "{}_{}".format(self.entity_id, SIGNAL_LOAD_ALDB)
+        load_signal = f"{self.entity_id}_{SIGNAL_LOAD_ALDB}"
         async_dispatcher_connect(self.hass, load_signal, self._load_aldb)
-        print_signal = "{}_{}".format(self.entity_id, SIGNAL_PRINT_ALDB)
+        print_signal = f"{self.entity_id}_{SIGNAL_PRINT_ALDB}"
         async_dispatcher_connect(self.hass, print_signal, self._print_aldb)
 
     def _load_aldb(self, reload=False):
@@ -679,7 +679,7 @@ class InsteonEntity(Entity):
             if self._insteon_device_state.name in STATE_NAME_LABEL_MAP:
                 label = STATE_NAME_LABEL_MAP[self._insteon_device_state.name]
             else:
-                label = "Group {:d}".format(self.group)
+                label = f"Group {self.group:d}"
         return label
 
 

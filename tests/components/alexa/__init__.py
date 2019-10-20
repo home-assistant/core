@@ -171,6 +171,12 @@ class ReportedProperties:
         """Initialize class."""
         self.properties = properties
 
+    def assert_not_has_property(self, namespace, name):
+        """Assert a property does not exist."""
+        for prop in self.properties:
+            if prop["namespace"] == namespace and prop["name"] == name:
+                assert False, "Property %s:%s exists"
+
     def assert_equal(self, namespace, name, value):
         """Assert a property is equal to a given value."""
         for prop in self.properties:

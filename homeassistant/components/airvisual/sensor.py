@@ -1,7 +1,9 @@
 """Support for AirVisual air quality sensors."""
-from logging import getLogger
 from datetime import timedelta
+from logging import getLogger
 
+from pyairvisual import Client
+from pyairvisual.errors import AirVisualError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -14,8 +16,8 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_SCAN_INTERVAL,
-    CONF_STATE,
     CONF_SHOW_ON_MAP,
+    CONF_STATE,
 )
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -97,7 +99,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Configure the platform and add the sensors."""
-    from pyairvisual import Client
 
     city = config.get(CONF_CITY)
     state = config.get(CONF_STATE)
@@ -194,7 +195,7 @@ class AirVisualSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        return "{0}_{1}_{2}".format(self._location_id, self._locale, self._type)
+        return f"{self._location_id}_{self._locale}_{self._type}"
 
     @property
     def unit_of_measurement(self):
@@ -210,7 +211,7 @@ class AirVisualSensor(Entity):
             return
 
         if self._type == SENSOR_TYPE_LEVEL:
-            aqi = data["aqi{0}".format(self._locale)]
+            aqi = data[f"aqi{self._locale}"]
             [level] = [
                 i
                 for i in POLLUTANT_LEVEL_MAPPING
@@ -219,9 +220,9 @@ class AirVisualSensor(Entity):
             self._state = level["label"]
             self._icon = level["icon"]
         elif self._type == SENSOR_TYPE_AQI:
-            self._state = data["aqi{0}".format(self._locale)]
+            self._state = data[f"aqi{self._locale}"]
         elif self._type == SENSOR_TYPE_POLLUTANT:
-            symbol = data["main{0}".format(self._locale)]
+            symbol = data[f"main{self._locale}"]
             self._state = POLLUTANT_MAPPING[symbol]["label"]
             self._attrs.update(
                 {
@@ -249,7 +250,6 @@ class AirVisualData:
 
     async def _async_update(self):
         """Update AirVisual data."""
-        from pyairvisual.errors import AirVisualError
 
         try:
             if self.city and self.state and self.country:

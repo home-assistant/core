@@ -157,7 +157,7 @@ class KeyboardRemoteThread(threading.Thread):
 
             try:
                 event = self.dev.read_one()
-            except IOError:  # Keyboard Disconnected
+            except OSError:  # Keyboard Disconnected
                 self.dev = None
                 self.hass.bus.fire(
                     KEYBOARD_REMOTE_DISCONNECTED,

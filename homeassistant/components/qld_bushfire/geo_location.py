@@ -199,6 +199,11 @@ class QldBushfireLocationEvent(GeolocationEvent):
         self._status = feed_entry.status
 
     @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        return "mdi:fire"
+
+    @property
     def source(self) -> str:
         """Return source value of this external event."""
         return SOURCE

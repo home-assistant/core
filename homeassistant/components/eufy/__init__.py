@@ -1,5 +1,6 @@
 """Support for Eufy devices."""
 import logging
+import lakeside
 
 import voluptuous as vol
 
@@ -56,7 +57,6 @@ EUFY_DISPATCH = {
 
 def setup(hass, config):
     """Set up Eufy devices."""
-    import lakeside
 
     if CONF_USERNAME in config[DOMAIN] and CONF_PASSWORD in config[DOMAIN]:
         data = lakeside.get_devices(

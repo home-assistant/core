@@ -5,26 +5,15 @@ import json
 import logging
 from collections import defaultdict
 from types import ModuleType, TracebackType
-from typing import (  # noqa: F401 pylint: disable=unused-import
-    Awaitable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import Awaitable, Dict, Iterable, List, Optional, Tuple, Type, Union
 
 from homeassistant.loader import bind_hass, async_get_integration, IntegrationNotFound
 import homeassistant.util.dt as dt_util
 from homeassistant.components.notify import ATTR_MESSAGE, SERVICE_NOTIFY
 from homeassistant.components.sun import STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON
-from homeassistant.components.mysensors.switch import ATTR_IR_CODE, SERVICE_SEND_IR_CODE
 from homeassistant.components.cover import ATTR_POSITION, ATTR_TILT_POSITION
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_OPTION,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_DISARM,
@@ -50,10 +39,8 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_UNKNOWN,
     STATE_UNLOCKED,
-    SERVICE_SELECT_OPTION,
 )
 from homeassistant.core import Context, State, DOMAIN as HASS_DOMAIN
-from homeassistant.util.async_ import run_coroutine_threadsafe
 from .typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,8 +51,6 @@ GROUP_DOMAIN = "group"
 # Each item is a service with a list of required attributes.
 SERVICE_ATTRIBUTES = {
     SERVICE_NOTIFY: [ATTR_MESSAGE],
-    SERVICE_SEND_IR_CODE: [ATTR_IR_CODE],
-    SERVICE_SELECT_OPTION: [ATTR_OPTION],
     SERVICE_SET_COVER_POSITION: [ATTR_POSITION],
     SERVICE_SET_COVER_TILT_POSITION: [ATTR_TILT_POSITION],
 }
@@ -99,7 +84,7 @@ class AsyncTrackStates:
     def __init__(self, hass: HomeAssistantType) -> None:
         """Initialize a TrackStates block."""
         self.hass = hass
-        self.states = []  # type: List[State]
+        self.states: List[State] = []
 
     # pylint: disable=attribute-defined-outside-init
     def __enter__(self) -> List[State]:
@@ -131,7 +116,7 @@ def reproduce_state(
     blocking: bool = False,
 ) -> None:
     """Reproduce given state."""
-    return run_coroutine_threadsafe(  # type: ignore
+    return asyncio.run_coroutine_threadsafe(
         async_reproduce_state(hass, states, blocking), hass.loop
     ).result()
 
@@ -147,7 +132,7 @@ async def async_reproduce_state(
     if isinstance(states, State):
         states = [states]
 
-    to_call = defaultdict(list)  # type: Dict[str, List[State]]
+    to_call: Dict[str, List[State]] = defaultdict(list)
 
     for state in states:
         to_call[state.domain].append(state)
@@ -191,7 +176,7 @@ async def async_reproduce_state_legacy(
     context: Optional[Context] = None,
 ) -> None:
     """Reproduce given state."""
-    to_call = defaultdict(list)  # type: Dict[Tuple[str, str], List[str]]
+    to_call: Dict[Tuple[str, str], List[str]] = defaultdict(list)
 
     if domain == GROUP_DOMAIN:
         service_domain = HASS_DOMAIN
@@ -238,7 +223,7 @@ async def async_reproduce_state_legacy(
         key = (service, json.dumps(dict(state.attributes), sort_keys=True))
         to_call[key].append(state.entity_id)
 
-    domain_tasks = []  # type: List[Awaitable[Optional[bool]]]
+    domain_tasks: List[Awaitable[Optional[bool]]] = []
     for (service, service_data), entity_ids in to_call.items():
         data = json.loads(service_data)
         data[ATTR_ENTITY_ID] = entity_ids

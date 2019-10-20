@@ -2,7 +2,7 @@
 HVAC channels module for Zigbee Home Automation.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zha/
+https://home-assistant.io/integrations/zha/
 """
 import logging
 
@@ -48,9 +48,7 @@ class FanChannel(ZigbeeChannel):
         result = await self.get_attribute_value("fan_mode", from_cache=True)
 
         async_dispatcher_send(
-            self._zha_device.hass,
-            "{}_{}".format(self.unique_id, SIGNAL_ATTR_UPDATED),
-            result,
+            self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", result
         )
 
     @callback
@@ -62,9 +60,7 @@ class FanChannel(ZigbeeChannel):
         )
         if attrid == self._value_attribute:
             async_dispatcher_send(
-                self._zha_device.hass,
-                "{}_{}".format(self.unique_id, SIGNAL_ATTR_UPDATED),
-                value,
+                self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value
             )
 
     async def async_initialize(self, from_cache):

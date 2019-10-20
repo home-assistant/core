@@ -8,22 +8,31 @@ import asyncio
 import datetime as dt
 import logging
 import os
-import voluptuous as vol
 
+from aiohttp.client_exceptions import ClientConnectionError, ServerDisconnectedError
+from haffmpeg.camera import CameraMjpeg
+from haffmpeg.tools import IMAGE_JPEG, ImageFrame
+import onvif
+from onvif import ONVIFCamera, exceptions
+import voluptuous as vol
+from zeep.exceptions import Fault
+
+from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
+from homeassistant.components.camera.const import DOMAIN
+from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS, DATA_FFMPEG
 from homeassistant.const import (
-    CONF_NAME,
+    ATTR_ENTITY_ID,
     CONF_HOST,
-    CONF_USERNAME,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
-    ATTR_ENTITY_ID,
+    CONF_USERNAME,
 )
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA, SUPPORT_STREAM
-from homeassistant.components.camera.const import DOMAIN
-from homeassistant.components.ffmpeg import DATA_FFMPEG, CONF_EXTRA_ARGUMENTS
-import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
-from homeassistant.helpers.service import extract_entity_ids
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.service import async_extract_entity_ids
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,7 +96,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         tilt = service.data.get(ATTR_TILT, None)
         zoom = service.data.get(ATTR_ZOOM, None)
         all_cameras = hass.data[ONVIF_DATA][ENTITIES]
-        entity_ids = extract_entity_ids(hass, service)
+        entity_ids = await async_extract_entity_ids(hass, service)
         target_cameras = []
         if not entity_ids:
             target_cameras = all_cameras
@@ -121,9 +130,6 @@ class ONVIFHassCamera(Camera):
 
         _LOGGER.debug("Importing dependencies")
 
-        import onvif
-        from onvif import ONVIFCamera
-
         _LOGGER.debug("Setting up the ONVIF camera component")
 
         self._username = config.get(CONF_USERNAME)
@@ -155,22 +161,35 @@ class ONVIFHassCamera(Camera):
         Initializes the camera by obtaining the input uri and connecting to
         the camera. Also retrieves the ONVIF profiles.
         """
-        from aiohttp.client_exceptions import ClientConnectorError
-        from homeassistant.exceptions import PlatformNotReady
-        from zeep.exceptions import Fault
-        import homeassistant.util.dt as dt_util
-
         try:
             _LOGGER.debug("Updating service addresses")
-
             await self._camera.update_xaddrs()
 
-            _LOGGER.debug("Setting up the ONVIF device management service")
+            await self.async_check_date_and_time()
+            await self.async_obtain_input_uri()
+            self.setup_ptz()
+        except ClientConnectionError as err:
+            _LOGGER.warning(
+                "Couldn't connect to camera '%s', but will retry later. Error: %s",
+                self._name,
+                err,
+            )
+            raise PlatformNotReady
+        except Fault as err:
+            _LOGGER.error(
+                "Couldn't connect to camera '%s', please verify "
+                "that the credentials are correct. Error: %s",
+                self._name,
+                err,
+            )
 
-            devicemgmt = self._camera.create_devicemgmt_service()
+    async def async_check_date_and_time(self):
+        """Warns if camera and system date not synced."""
+        _LOGGER.debug("Setting up the ONVIF device management service")
+        devicemgmt = self._camera.create_devicemgmt_service()
 
-            _LOGGER.debug("Retrieving current camera date/time")
-
+        _LOGGER.debug("Retrieving current camera date/time")
+        try:
             system_date = dt_util.utcnow()
             device_time = await devicemgmt.GetSystemDateAndTime()
             if device_time:
@@ -201,38 +220,13 @@ class ONVIFHassCamera(Camera):
                         cam_date,
                         system_date,
                     )
-
-            _LOGGER.debug("Obtaining input uri")
-
-            await self.async_obtain_input_uri()
-
-            _LOGGER.debug("Setting up the ONVIF PTZ service")
-
-            if self._camera.get_service("ptz", create=False) is None:
-                _LOGGER.warning("PTZ is not available on this camera")
-            else:
-                self._ptz_service = self._camera.create_ptz_service()
-                _LOGGER.debug("Completed set up of the ONVIF camera component")
-        except ClientConnectorError as err:
+        except ServerDisconnectedError as err:
             _LOGGER.warning(
-                "Couldn't connect to camera '%s', but will " "retry later. Error: %s",
-                self._name,
-                err,
+                "Couldn't get camera '%s' date/time. Error: %s", self._name, err
             )
-            raise PlatformNotReady
-        except Fault as err:
-            _LOGGER.error(
-                "Couldn't connect to camera '%s', please verify "
-                "that the credentials are correct. Error: %s",
-                self._name,
-                err,
-            )
-        return
 
     async def async_obtain_input_uri(self):
         """Set the input uri for the camera."""
-        from onvif import exceptions
-
         _LOGGER.debug(
             "Connecting with ONVIF Camera: %s on port %s", self._host, self._port
         )
@@ -270,7 +264,7 @@ class ONVIFHassCamera(Camera):
             uri_no_auth = stream_uri.Uri
             uri_for_log = uri_no_auth.replace("rtsp://", "rtsp://<user>:<password>@", 1)
             self._input = uri_no_auth.replace(
-                "rtsp://", "rtsp://{}:{}@".format(self._username, self._password), 1
+                "rtsp://", f"rtsp://{self._username}:{self._password}@", 1
             )
 
             _LOGGER.debug(
@@ -280,12 +274,18 @@ class ONVIFHassCamera(Camera):
             )
         except exceptions.ONVIFError as err:
             _LOGGER.error("Couldn't setup camera '%s'. Error: %s", self._name, err)
-            return
+
+    def setup_ptz(self):
+        """Set up PTZ if available."""
+        _LOGGER.debug("Setting up the ONVIF PTZ service")
+        if self._camera.get_service("ptz", create=False) is None:
+            _LOGGER.debug("PTZ is not available")
+        else:
+            self._ptz_service = self._camera.create_ptz_service()
+            _LOGGER.debug("Completed set up of the ONVIF camera component")
 
     async def async_perform_ptz(self, pan, tilt, zoom):
         """Perform a PTZ action on the camera."""
-        from onvif import exceptions
-
         if self._ptz_service is None:
             _LOGGER.warning("PTZ actions are not supported on camera '%s'", self._name)
             return
@@ -327,7 +327,6 @@ class ONVIFHassCamera(Camera):
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-        from haffmpeg.tools import ImageFrame, IMAGE_JPEG
 
         _LOGGER.debug("Retrieving image from camera '%s'", self._name)
 
@@ -342,8 +341,6 @@ class ONVIFHassCamera(Camera):
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
-        from haffmpeg.camera import CameraMjpeg
-
         _LOGGER.debug("Handling mjpeg stream from camera '%s'", self._name)
 
         ffmpeg_manager = self.hass.data[DATA_FFMPEG]

@@ -46,7 +46,7 @@ DATA_CONFIG_ENTRY_LOCK = "tellduslive_config_entry_lock"
 CONFIG_ENTRY_IS_SETUP = "telldus_config_entry_is_setup"
 
 NEW_CLIENT_TASK = "telldus_new_client_task"
-INTERVAL_TRACKER = "{}_INTERVAL".format(DOMAIN)
+INTERVAL_TRACKER = f"{DOMAIN}_INTERVAL"
 
 
 async def async_setup_entry(hass, entry):

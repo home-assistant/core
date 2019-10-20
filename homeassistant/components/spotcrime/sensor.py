@@ -1,27 +1,28 @@
 """Sensor for Spot Crime."""
 
-from datetime import timedelta
 from collections import defaultdict
+from datetime import timedelta
 import logging
 
+import spotcrime
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_INCLUDE,
-    CONF_EXCLUDE,
-    CONF_NAME,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    CONF_API_KEY,
+    CONF_EXCLUDE,
+    CONF_INCLUDE,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
     CONF_RADIUS,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ CONF_DAYS = "days"
 DEFAULT_DAYS = 1
 NAME = "spotcrime"
 
-EVENT_INCIDENT = "{}_incident".format(NAME)
+EVENT_INCIDENT = f"{NAME}_incident"
 
 SCAN_INTERVAL = timedelta(minutes=30)
 
@@ -75,7 +76,6 @@ class SpotCrimeSensor(Entity):
         self, name, latitude, longitude, radius, include, exclude, api_key, days
     ):
         """Initialize the Spot Crime sensor."""
-        import spotcrime
 
         self._name = name
         self._include = include

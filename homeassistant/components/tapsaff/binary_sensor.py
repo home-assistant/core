@@ -45,7 +45,7 @@ class TapsAffSensor(BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{}".format(self._name)
+        return f"{self._name}"
 
     @property
     def is_on(self):

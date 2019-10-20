@@ -22,7 +22,7 @@ JSON_TYPE = Union[List, Dict, str]  # pylint: disable=invalid-name
 class ExtSafeConstructor(SafeConstructor):
     """Extended SafeConstructor."""
 
-    name = None  # type: Optional[str]
+    name: Optional[str] = None
 
 
 class UnsupportedYamlError(HomeAssistantError):
@@ -67,7 +67,7 @@ def object_to_yaml(data: JSON_TYPE) -> str:
     stream = StringIO()
     try:
         yaml.dump(data, stream)
-        result = stream.getvalue()  # type: str
+        result: str = stream.getvalue()
         return result
     except YAMLError as exc:
         _LOGGER.error("YAML error: %s", exc)
@@ -78,7 +78,7 @@ def yaml_to_object(data: str) -> JSON_TYPE:
     """Create object from yaml string."""
     yaml = YAML(typ="rt")
     try:
-        result = yaml.load(data)  # type: Union[List, Dict, str]
+        result: Union[List, Dict, str] = yaml.load(data)
         return result
     except YAMLError as exc:
         _LOGGER.error("YAML error: %s", exc)
