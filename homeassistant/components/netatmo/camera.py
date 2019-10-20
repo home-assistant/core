@@ -77,7 +77,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     async def async_service_handler(call):
         """Handle service call."""
         _LOGGER.debug(
-            "Service handler invoked with service=%s and data=%s", call.service, call.data
+            "Service handler invoked with service=%s and data=%s",
+            call.service,
+            call.data,
         )
         service = call.service
         entity_id = call.data["entity_id"][0]
