@@ -140,6 +140,23 @@ def update_items(controller, async_add_entities, switches, switches_off):
         new_switches.append(switches[poe_client_id])
         LOGGER.debug("New UniFi POE switch %s (%s)", client.hostname, client.mac)
 
+    # wlan control
+    for wlan_id in controller.api.wlans:
+
+        if wlan_id in switches:
+            LOGGER.debug(
+                "Updating UniFi Wlan switch %s (%s)",
+                switches[wlan_id].entity_id,
+                switches[wlan_id].wlan.name,
+            )
+            switches[wlan_id].async_schedule_update_ha_state()
+            continue
+
+        wlan = controller.api.wlans[wlan_id]
+        switches[wlan_id] = UniFiWlanSwitch(wlan, controller)
+        new_switches.append(switches[wlan_id])
+        LOGGER.debug("New UniFi Wlan switch %s", wlan.name)
+
     if new_switches:
         async_add_entities(new_switches)
 
@@ -274,3 +291,56 @@ class UniFiBlockClientSwitch(UniFiClient, SwitchDevice):
     async def async_turn_off(self, **kwargs):
         """Turn off connectivity for client."""
         await self.controller.api.clients.async_block(self.client.mac)
+
+
+class UniFiWlanSwitch(SwitchDevice):
+    """Control state of UniFi Wlan."""
+
+    def __init__(self, wlan, controller):
+        """Set up switch."""
+        self.wlan = wlan
+        self.controller = controller
+
+    async def async_added_to_hass(self):
+        """Call when entity about to be added to Home Assistant."""
+        if not self.controller.option_control_wlans:
+            return False
+
+        return True
+
+    async def async_update(self):
+        """Synchronize state with controller."""
+        await self.controller.request_update()
+
+    @property
+    def name(self):
+        """Return the name of the wlan."""
+        return self.wlan.name
+
+    # @property
+    # def device_info(self):
+    #     """Return a device description for device registry."""
+    #     return {"connections": {(CONNECTION_NETWORK_MAC, self.client.mac)}}
+
+    @property
+    def unique_id(self):
+        """Return a unique identifier for this switch."""
+        return self.wlan.id
+
+    @property
+    def is_on(self):
+        """Return true if wlan is enabled."""
+        return self.wlan.enabled
+
+    @property
+    def available(self):
+        """Return if controller is available."""
+        return self.controller.available
+
+    async def async_turn_on(self, **kwargs):
+        """Turn on connectivity for client."""
+        await self.controller.api.wlans.async_enable(self.wlan.id)
+
+    async def async_turn_off(self, **kwargs):
+        """Turn off connectivity for client."""
+        await self.controller.api.wlans.async_disable(self.wlan.id)

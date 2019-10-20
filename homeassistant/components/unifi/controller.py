@@ -94,6 +94,12 @@ class UniFiController:
         return self.config_entry.options.get(CONF_BLOCK_CLIENT, DEFAULT_BLOCK_CLIENTS)
 
     @property
+    def option_control_wlans(self):
+        """Config entry option to control state of wlans."""
+        return True
+        # return self.config_entry.options.get(CONF_CONTROL_WLAN, DEFAULT_CONTROL_WLAN)
+
+    @property
     def option_track_clients(self):
         """Config entry option to not track clients."""
         return self.config_entry.options.get(CONF_TRACK_CLIENTS, DEFAULT_TRACK_CLIENTS)
