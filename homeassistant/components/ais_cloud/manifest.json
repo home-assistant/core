@@ -3,7 +3,7 @@
   "name": "AIS Cloud",
   "config_flow": false,
   "documentation": "https://www.ai-speaker.com",
-  "requirements": ["feedparser==5.2.1", "readability-lxml==0.7.1", "bs4==0.0.1"],
+  "requirements": ["feedparser==5.2.1", "readability-lxml==0.7.1", "bs4==0.0.1", "hass-nabucasa==0.22"],
   "dependencies": [],
   "codeowners": []
 }
