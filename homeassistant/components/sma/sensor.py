@@ -3,17 +3,18 @@ import asyncio
 from datetime import timedelta
 import logging
 
+import pysma
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
+    CONF_PATH,
     CONF_SCAN_INTERVAL,
     CONF_SSL,
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
-    CONF_PATH,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -35,8 +36,6 @@ GROUPS = ["user", "installer"]
 def _check_sensor_schema(conf):
     """Check sensors and attributes are valid."""
     try:
-        import pysma
-
         valid = [s.name for s in pysma.Sensors()]
     except (ImportError, AttributeError):
         return conf
@@ -87,7 +86,6 @@ PLATFORM_SCHEMA = vol.All(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up SMA WebConnect sensor."""
-    import pysma
 
     # Check config again during load - dependency available
     config = _check_sensor_schema(config)
