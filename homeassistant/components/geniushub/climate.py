@@ -1,14 +1,14 @@
 """Support for Genius Hub climate devices."""
-from typing import Optional, List
+from typing import List, Optional
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_OFF,
     HVAC_MODE_HEAT,
-    PRESET_BOOST,
+    HVAC_MODE_OFF,
     PRESET_ACTIVITY,
-    SUPPORT_TARGET_TEMPERATURE,
+    PRESET_BOOST,
     SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
