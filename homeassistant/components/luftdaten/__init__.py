@@ -172,12 +172,9 @@ async def async_unload_entry(hass, config_entry):
     )
     remove_listener()
 
-    for component in ("sensor",):
-        await hass.config_entries.async_forward_entry_unload(config_entry, component)
-
     hass.data[DOMAIN][DATA_LUFTDATEN_CLIENT].pop(config_entry.entry_id)
 
-    return True
+    return await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
 
 
 class LuftDatenData:
