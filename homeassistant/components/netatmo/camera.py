@@ -79,6 +79,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hass.services.async_register(DOMAIN, "set_light_on", async_service_handler, CAMERA_SERVICE_SCHEMA)
     hass.services.async_register(DOMAIN, "set_light_off", async_service_handler, CAMERA_SERVICE_SCHEMA)
 
+
 class NetatmoCamera(Camera):
     """Representation of the images published from a Netatmo camera."""
 
@@ -108,7 +109,7 @@ class NetatmoCamera(Camera):
 
         # SD Card status
         self._sd_status = None
-        
+
         # Power status
         self._alim_status = None
 
@@ -248,7 +249,7 @@ class NetatmoCamera(Camera):
         async_dispatcher_connect(
             self.hass,
             f"set_light_off_{self.entity_id}",
-            self.set_light_off)            
+            self.set_light_off)
 
     def update(self):
         """Update entity status."""
@@ -339,10 +340,10 @@ class NetatmoCamera(Camera):
         self._set_light_mode('off')
 
     def _set_light_mode(self, mode):
-        """Set light mode ('auto', 'on', 'off')"""
+        """Set light mode ('auto', 'on', 'off')."""
         if self.model == "Presence":
             try:
-                config = '{"mode":"'+ mode + '"}'
+                config = '{"mode":"' + mode + '"}'
                 if self._localurl:
                     requests.get(f"{self._localurl}/command/floodlight_set_config?config={config}", timeout=10)
                 elif self._vpnurl:
