@@ -68,7 +68,8 @@ async def test_no_plants_on_account(hass):
         with patch("growattServer.GrowattApi.plant_list", return_value=plant_list):
 
             result = await flow.async_step_user(user_input=user_input)
-            assert result["errors"] == {"base": "no_plants"}
+            assert result["type"] == "abort"
+            assert result["reason"] == "no_plants"
 
 
 async def test_multiple_plant_ids(hass):
