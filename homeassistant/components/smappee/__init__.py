@@ -68,7 +68,7 @@ def setup(hass, config):
     return True
 
 
-class Smappee(object):
+class Smappee:
     """Stores data retrieved from Smappee sensor."""
 
     def __init__(
