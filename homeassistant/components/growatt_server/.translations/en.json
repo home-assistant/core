@@ -3,11 +3,10 @@
     "title": "Growatt Server",
     "step": {
       "user": {
-        "title": "Enter your growatt information",
+        "title": "Enter your Growatt information",
         "data": {
           "username": "Username",
           "password": "Password",
-          "plant_id": "Plant Id",
           "name": "Name"
         }
       },
@@ -19,7 +18,9 @@
       }
     },
     "error": {
-      "auth_error": "Username or password is incorrect",
+      "auth_error": "Username or password is incorrect"
+    },
+    "abort": {
       "no_plants": "No plants have been found on this account"
     }
   }

@@ -4,14 +4,10 @@ from copy import deepcopy
 
 from homeassistant import data_entry_flow
 from homeassistant.components.growatt_server import config_flow
-from homeassistant.components.growatt_server.const import CONF_PLANT_ID, DEFAULT_NAME
-from homeassistant.const import CONF_NAME, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.components.growatt_server.const import CONF_PLANT_ID
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 
-FIXTURE_USER_INPUT = {
-    CONF_NAME: DEFAULT_NAME,
-    CONF_USERNAME: "username",
-    CONF_PASSWORD: "password",
-}
+FIXTURE_USER_INPUT = {CONF_USERNAME: "username", CONF_PASSWORD: "password"}
 
 GROWATT_PLANT_LIST_RESPONSE = {
     "data": [
@@ -92,7 +88,6 @@ async def test_multiple_plant_ids(hass):
             user_input[CONF_PLANT_ID] = "123456"
             result = await flow.async_step_plant(user_input=user_input)
 
-            assert result["data"][CONF_NAME] == FIXTURE_USER_INPUT[CONF_NAME]
             assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
             assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
             assert result["data"][CONF_PLANT_ID] == user_input[CONF_PLANT_ID]
@@ -112,7 +107,6 @@ async def test_one_plant_on_account(hass):
 
             result = await flow.async_step_user(user_input=user_input)
             assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-            assert result["data"][CONF_NAME] == FIXTURE_USER_INPUT[CONF_NAME]
             assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
             assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
 
@@ -132,7 +126,5 @@ async def test_full_flow_implementation(hass):
 
             result = await flow.async_step_user(user_input=FIXTURE_USER_INPUT)
             assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-            assert result["title"] == FIXTURE_USER_INPUT[CONF_NAME]
-            assert result["data"][CONF_NAME] == FIXTURE_USER_INPUT[CONF_NAME]
             assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
             assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]

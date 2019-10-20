@@ -105,7 +105,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 async def async_setup_entry(hass, config_entry, add_entities):
     """Set up growatt server from Config Flow."""
-    hass.async_add_executor_job(setup_platform(hass, config_entry.data, add_entities))
+    hass.async_add_executor_job(setup_platform, hass, config_entry.data, add_entities)
 
 
 class GrowattInverter(Entity):
