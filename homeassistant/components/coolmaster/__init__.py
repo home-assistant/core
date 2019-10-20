@@ -15,6 +15,8 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass, entry):
     """Unload a Coolmaster config entry."""
-    hass.async_add_job(hass.config_entries.async_forward_entry_unload(entry, "climate"))
+    await hass.async_add_job(
+        hass.config_entries.async_forward_entry_unload(entry, "climate")
+    )
 
     return True

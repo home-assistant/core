@@ -1,5 +1,6 @@
 """Config flow to configure Coolmaster."""
 
+from pycoolmasternet import CoolMasterNet
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -8,7 +9,7 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import AVAILABLE_MODES, CONF_SUPPORTED_MODES, DEFAULT_PORT, DOMAIN
 
-MODES_SCHEMA = {vol.Required(mode): bool for mode in AVAILABLE_MODES}
+MODES_SCHEMA = {vol.Required(mode, default=True): bool for mode in AVAILABLE_MODES}
 HOST_SCHEMA = {
     vol.Required(CONF_HOST): str,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
@@ -38,7 +39,25 @@ class CoolmasterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        if user_input is not None:
-            return self._async_get_entry(user_input)
+        if user_input is None:
+            return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
 
-        return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
+        errors = {}
+
+        host = user_input[CONF_HOST]
+        port = user_input[CONF_PORT]
+        cool = CoolMasterNet(host, port=port)
+
+        try:
+            devices = await self.hass.async_add_executor_job(cool.devices)
+            if len(devices) == 0:
+                errors["base"] = "no_units"
+        except (ConnectionRefusedError, TimeoutError):
+            errors["base"] = "connection_error"
+
+        if errors:
+            return self.async_show_form(
+                step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            )
+
+        return self._async_get_entry(user_input)

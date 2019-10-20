@@ -15,6 +15,10 @@
           "fan_only": "Support fan only mode"
         }
       }
+    },
+    "error": {
+      "connection_error": "Failed to connect to CoolMasterNet instance. Please check your host and port.",
+      "no_units": "Could not find any HVAC units in CoolMasterNet host."
     }
   }
 }

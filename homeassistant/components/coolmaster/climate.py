@@ -47,11 +47,6 @@ def _build_entity(device, supported_modes):
     return CoolmasterClimate(device, supported_modes)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the CoolMasterNet climate platform."""
-    return True
-
-
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up the CoolMasterNet climate platform."""
     supported_modes = config_entry.data.get(CONF_SUPPORTED_MODES)
