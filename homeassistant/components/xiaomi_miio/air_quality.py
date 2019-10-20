@@ -12,7 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN, ATTR_TEMPERATU
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-DEFAULT_NAME = "Xiaomi Miio Sensor"
+DEFAULT_NAME = "Xiaomi Miio Air Quality Monitor"
 DATA_KEY = "air_quality.xiaomi_miio"
 
 ATTR_CO2E = "carbon_dioxide_equivalent"
@@ -87,6 +87,12 @@ class AirMonitorB1(AirQualityEntity):
         """Fetch state from the miio device."""
 
         try:
+            if self._model is None:
+                info = await self.hass.async_add_executor_job(self._device.info)
+                self._model       = info.model
+                self._mac_address = info.mac_address
+                self._sw_version  = info.firmware_version
+
             state = await self.hass.async_add_executor_job(self._device.status)
             _LOGGER.debug("Got new state: %s", state)
 
@@ -95,11 +101,6 @@ class AirMonitorB1(AirQualityEntity):
             self._particulate_matter_2_5 = round(state.pm25, 1)
             self._temperature = round(state.temperature, 1)
             self._total_volatile_organic_compounds = round(state.tvoc, 3)
-
-            if self._model is None:
-                self._model = self._device.model
-                self._mac_address = self._device.mac_address
-                self._sw_version = self._device.firmware_version
 
         except DeviceException as ex:
             _LOGGER.error("Got exception while fetching the state: %s", ex)
@@ -142,7 +143,7 @@ class AirMonitorB1(AirQualityEntity):
     @property
     def unique_id(self):
         """Return the unique ID."""
-        return "{self._model}-{self._mac_address}"
+        return f"{self._model}-{self._mac_address}"
 
     @property
     def carbon_dioxide_equivalent(self):
