@@ -3,8 +3,8 @@ import logging
 from typing import Optional
 
 from aiohttp import ClientResponseError
-import voluptuous as vol
 from incomfortclient import Gateway as InComfortGateway
+import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback

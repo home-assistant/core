@@ -1,7 +1,7 @@
 """Support for an Intergas boiler via an InComfort/InTouch Lan2RF gateway."""
 from typing import Any, Dict, List, Optional
 
-from homeassistant.components.climate import ClimateDevice, ENTITY_ID_FORMAT
+from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     SUPPORT_TARGET_TEMPERATURE,

@@ -4,6 +4,7 @@ import logging
 from typing import Any, Dict
 
 from aiohttp import ClientResponseError
+
 from homeassistant.components.water_heater import ENTITY_ID_FORMAT, WaterHeaterDevice
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import async_dispatcher_send

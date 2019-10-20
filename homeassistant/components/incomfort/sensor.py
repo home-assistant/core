@@ -3,10 +3,10 @@ from typing import Any, Dict, Optional
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.const import (
-    PRESSURE_BAR,
-    TEMP_CELSIUS,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    PRESSURE_BAR,
+    TEMP_CELSIUS,
 )
 from homeassistant.util import slugify
 
