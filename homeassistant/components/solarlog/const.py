@@ -14,7 +14,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 """Supported sensor types."""
 SENSOR_TYPES = {
-    "time": ["TIME", "last update", None, "mdi:solar-power"],
+    "time": ["TIME", "last update", None, "mdi:calendar-clock"],
     "power_ac": ["powerAC", "power AC", POWER_WATT, "mdi:solar-power"],
     "power_dc": ["powerDC", "power DC", POWER_WATT, "mdi:solar-power"],
     "voltage_ac": ["voltageAC", "voltage AC", "V", "mdi:flash"],
@@ -39,12 +39,7 @@ SENSOR_TYPES = {
         ENERGY_KILO_WATT_HOUR,
         "mdi:solar-power",
     ],
-    "consumption_ac": [
-        "consumptionAC",
-        "consumption AC",
-        POWER_WATT,
-        "mdi:power-plug",
-    ],
+    "consumption_ac": ["consumptionAC", "consumption AC", POWER_WATT, "mdi:power-plug"],
     "consumption_day": [
         "consumptionDAY",
         "consumption day",
