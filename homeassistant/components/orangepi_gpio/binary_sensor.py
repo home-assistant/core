@@ -1,12 +1,6 @@
 """Support for binary sensor using Orange Pi GPIO."""
 
-from homeassistant.components.binary_sensor import (
-    ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA,
-    BinarySensorDevice,
-)
-from homeassistant.core import callback
-from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
 
 from . import edge_detect, read_input, setup_input, setup_mode
 from .const import CONF_INVERT_LOGIC, CONF_PIN_MODE, CONF_PORTS, PORT_SCHEMA
@@ -35,7 +29,6 @@ class OPiGPIOBinarySensor(BinarySensorDevice):
 
     def __init__(self, hass, name, port, invert_logic):
         """Initialize the Orange Pi binary sensor."""
-        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, name, hass=hass)
         self._name = name
         self._port = port
         self._invert_logic = invert_logic
@@ -44,14 +37,16 @@ class OPiGPIOBinarySensor(BinarySensorDevice):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
 
-        @callback
         def gpio_edge_listener(port):
             """Update GPIO when edge change is detected."""
-            self.async_schedule_update_ha_state(True)
+            self.schedule_update_ha_state(True)
 
-        setup_input(self._port)
-        edge_detect(self._port, gpio_edge_listener)
-        self.async_schedule_update_ha_state(True)
+        def setup_entity():
+            setup_input(self._port)
+            edge_detect(self._port, gpio_edge_listener)
+            self.schedule_update_ha_state(True)
+
+        self.hass.async_add_executor_job(setup_entity)
 
     @property
     def should_poll(self):
@@ -68,6 +63,6 @@ class OPiGPIOBinarySensor(BinarySensorDevice):
         """Return the state of the entity."""
         return self._state != self._invert_logic
 
-    async def async_update(self):
+    def update(self):
         """Update state with new GPIO data."""
         self._state = read_input(self._port)

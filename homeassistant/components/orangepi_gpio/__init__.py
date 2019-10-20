@@ -8,6 +8,8 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_S
 
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN = "orangepi_gpio"
+
 
 async def async_setup(hass, config):
     """Set up the Orange Pi GPIO component."""
