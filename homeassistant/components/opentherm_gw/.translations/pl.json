@@ -26,7 +26,8 @@
                 "data": {
                     "floor_temperature": "Temperatura pod\u0142ogi",
                     "precision": "Precyzja"
-                }
+                },
+                "description": "Opcje dla bramki OpenTherm"
             }
         }
     }
