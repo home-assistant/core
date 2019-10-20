@@ -70,10 +70,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     async def async_service_handler(call):
         """Handle service call."""
-        _LOGGER.debug("Service handler invoked with service={0} and data={1}".format(call.service, call.data))
+        _LOGGER.debug(f"Service handler invoked with service={call.service} and data={call.data}")
         service = call.service
         entity_id = call.data["entity_id"][0]
-        async_dispatcher_send(hass, "{0}_{1}".format(service, entity_id))
+        async_dispatcher_send(hass, f"{service}_{entity_id}")
 
     hass.services.async_register(DOMAIN, "set_light_auto", async_service_handler, CAMERA_SERVICE_SCHEMA)
     hass.services.async_register(DOMAIN, "set_light_on", async_service_handler, CAMERA_SERVICE_SCHEMA)
@@ -238,18 +238,18 @@ class NetatmoCamera(Camera):
 
     async def async_added_to_hass(self):
         """Subscribe to signals and add camera to list."""
-        _LOGGER.debug("Registering services for entity_id={0}".format(self.entity_id))
+        _LOGGER.debug(f"Registering services for entity_id={self.entity_id}")
         async_dispatcher_connect(
             self.hass,
-            "set_light_auto_{0}".format(self.entity_id),
+            f"set_light_auto_{self.entity_id}",
             self.set_light_auto)
         async_dispatcher_connect(
             self.hass,
-            "set_light_on_{0}".format(self.entity_id),
+            f"set_light_on_{self.entity_id}",
             self.set_light_on)
         async_dispatcher_connect(
             self.hass,
-            "set_light_off_{0}".format(self.entity_id),
+            f"set_light_off_{self.entity_id}",
             self.set_light_off)            
 
     async def async_will_remove_from_hass(self):
@@ -324,11 +324,9 @@ class NetatmoCamera(Camera):
         """Enable or disable motion detection."""
         try:
             if self._localurl:
-                response = requests.get('{0}/command/changestatus?status={1}'.format(
-                    self._localurl, _BOOL_TO_STATE.get(enable)), timeout=10)
+                response = requests.get(f"{self._localurl}/command/changestatus?status={_BOOL_TO_STATE.get(enable)}", timeout=10)
             elif self._vpnurl:
-                response = requests.get('{0}/command/changestatus?status={1}'.format(
-                    self._vpnurl, _BOOL_TO_STATE.get(enable)), timeout=10, verify=self._verify_ssl)
+                response = requests.get(f"{self._vpnurl}/command/changestatus?status={_BOOL_TO_STATE.get(enable)}", timeout=10, verify=self._verify_ssl)
             else:
                 _LOGGER.error("Welcome/Presence VPN URL is None")
                 self._data.update()
@@ -367,11 +365,9 @@ class NetatmoCamera(Camera):
             try:
                 config = '{"mode":"'+ mode + '"}'
                 if self._localurl:
-                    response = requests.get('{0}/command/floodlight_set_config?config={1}'.format(
-                        self._localurl, config), timeout=10)
+                    response = requests.get(f"{self._localurl}/command/floodlight_set_config?config={config}", timeout=10)
                 elif self._vpnurl:
-                    response = requests.get('{0}/command/changestatus?status={1}'.format(
-                        self._vpnurl, config), timeout=10, verify=self._verify_ssl)
+                    response = requests.get(f"{self._vpnurl}/command/changestatus?status={config}", timeout=10, verify=self._verify_ssl)
                 else:
                     _LOGGER.error("Presence VPN URL is None")
                     self._data.update()
