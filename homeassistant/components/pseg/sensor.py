@@ -19,7 +19,7 @@ CONF_ACCESS_TOKEN = "session_id"
 SCAN_INTERVAL = timedelta(minutes=60)
 
 ENERGY_THERMS = "therms"
-COST_DOLLARS = "dollars"
+COST_DOLLARS = "$"
 
 SENSOR_NAME_GAS_CONSUMPTION = "PSEG Gas Consumption"
 SENSOR_ICON_GAS_CONSUMPTION = "mdi:counter"
@@ -29,7 +29,7 @@ SENSOR_ICON_GAS_COST = "mdi:currency-usd"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENERGIZE_ID): cv.string,
-        vol.Optional(CONF_ACCESS_TOKEN): cv.string,
+        vol.Required(CONF_ACCESS_TOKEN): cv.string,
     }
 )
 
