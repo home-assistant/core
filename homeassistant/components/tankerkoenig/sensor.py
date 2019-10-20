@@ -7,12 +7,8 @@ import pytankerkoenig
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -21,22 +17,11 @@ from homeassistant.const import (
     STATE_CLOSED,
     STATE_OPEN,
 )
-from .const import NAME
+from .const import NAME, CONF_TYPES, FUEL_TYPES
+from .base_sensor import FuelPriceSensorBase
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ADDRESS = "address"
-ATTR_BRAND = "brand"
-ATTR_FUEL = "fuel_type"
-ATTR_IS_OPEN = "state"
-ATTR_STATION_NAME = "station_name"
-ATTRIBUTION = "Data provided by https://creativecommons.tankerkoenig.de"
-
-CONF_TYPES = "fuel_types"
-
-ICON = "mdi:fuel"
-
-FUEL_TYPES = ["e5", "e10", "diesel"]
 DEFAULT_RADIUS = 5
 SCAN_INTERVAL = timedelta(minutes=30)
 
@@ -84,7 +69,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 _LOGGER.error("Could not find any station in range")
             else:
                 entities.append(
-                    FuelPriceSensor(
+                    FuelPriceSensorStandalone(
                         api_key, fuel, station, f"{NAME}_{station['name']}_{fuel}"
                     )
                 )
@@ -92,60 +77,22 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities, True)
 
 
-class FuelPriceSensor(Entity):
-    """Contains prices for fuels in the given station."""
+class FuelPriceSensorStandalone(FuelPriceSensorBase):
+    """Standalone sensor for tankerkoenig prices."""
 
     def __init__(self, api_key, fuel_type, station, name=NAME):
-        """Initialize the sensor."""
+        """Initialize the class."""
+        super().__init__(fuel_type, station, name)
         self._api_key = api_key
-        self._station = station
-        self._fuel_type = fuel_type
-        self._name = name
-        self._latitude = station["lat"]
-        self._longitude = station["lng"]
-        if station["isOpen"]:
-            self._is_open = STATE_OPEN
-        else:
-            self._is_open = STATE_CLOSED
-        self._address = f"{station['street']} {station['houseNumber']}, {station['postCode']} {station['place']}"
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return ICON
-
-    @property
-    def unit_of_measurement(self):
-        """Return unit of measurement."""
-        return "€"
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._station["price"]
-
-    @property
-    def device_state_attributes(self):
-        """Return the attributes of the device."""
-        attrs = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_BRAND: self._station["brand"],
-            ATTR_FUEL: self._fuel_type,
-            ATTR_STATION_NAME: self._station["name"],
-            ATTR_ADDRESS: self._address,
-            ATTR_LATITUDE: self._latitude,
-            ATTR_LONGITUDE: self._longitude,
-            ATTR_IS_OPEN: self._is_open,
-        }
-        return attrs
+    def should_poll(self):
+        """Poll regularly for the standalone sensor."""
+        return True
 
     async def async_update(self):
         """Fetch new prices."""
+        _LOGGER.debug("Fetching new prices for standalone sensor")
         self._station = pytankerkoenig.getNearbyStations(
             self._api_key, self._latitude, self._longitude, 1, self._fuel_type, "dist"
         )["stations"][0]
@@ -153,3 +100,9 @@ class FuelPriceSensor(Entity):
             self._is_open = STATE_OPEN
         else:
             self._is_open = STATE_CLOSED
+
+
+class FuelPriceSensor(FuelPriceSensorBase):
+    """Contains prices for fuels in the given station."""
+
+    pass
