@@ -46,7 +46,7 @@ class OPiGPIOBinarySensor(BinarySensorDevice):
             edge_detect(self._port, gpio_edge_listener)
             self.schedule_update_ha_state(True)
 
-        self.hass.async_add_executor_job(setup_entity)
+        await self.hass.async_add_executor_job(setup_entity)
 
     @property
     def should_poll(self):
