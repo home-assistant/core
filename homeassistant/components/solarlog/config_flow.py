@@ -1,4 +1,7 @@
 """Config flow for solarlog integration."""
+import logging
+from urllib.parse import ParseResult, urlparse
+
 from requests.exceptions import HTTPError, Timeout
 from sunwatcher.solarlog.solarlog import SolarLog
 import voluptuous as vol
@@ -9,6 +12,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
 from .const import DEFAULT_HOST, DEFAULT_NAME, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -29,21 +34,23 @@ class SolarLogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._errors = {}
 
-    def _host_in_configuration_exists(self, user_input) -> bool:
+    def _host_in_configuration_exists(self, host) -> bool:
         """Return True if host exists in configuration."""
-        host = user_input.get(CONF_HOST, DEFAULT_HOST)
         if host in solarlog_entries(self.hass):
             return True
         return False
 
-    async def _test_connection(self, user_input=None):
+    async def _test_connection(self, host):
         """Check if we can connect to the Solar-Log device."""
-        host = user_input.get(CONF_HOST, DEFAULT_HOST)
         try:
-            SolarLog(f"http://{host}")
+            await self.hass.async_add_executor_job(SolarLog, host)
             return True
         except (OSError, HTTPError, Timeout):
             self._errors[CONF_HOST] = "cannot_connect"
+            _LOGGER.error(
+                "Could not connect to Solar-Log device at %s, check host ip address",
+                host,
+            )
         return False
 
     async def async_step_user(self, user_input=None):
@@ -51,12 +58,19 @@ class SolarLogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._errors = {}
         if user_input is not None:
             # set some defaults in case we need to return to the form
-            if self._host_in_configuration_exists(user_input):
+            name = slugify(user_input.get(CONF_NAME, DEFAULT_NAME))
+            host_entry = user_input.get(CONF_HOST, DEFAULT_HOST)
+
+            url = urlparse(host_entry, "http")
+            netloc = url.netloc or url.path
+            path = url.path if url.netloc else ""
+            url = ParseResult("http", netloc, path, *url[3:])
+            host = url.geturl()
+
+            if self._host_in_configuration_exists(host):
                 self._errors[CONF_HOST] = "already_configured"
             else:
-                if await self._test_connection(user_input):
-                    name = slugify(user_input.get(CONF_NAME, DEFAULT_NAME))
-                    host = user_input.get(CONF_HOST, DEFAULT_HOST)
+                if await self._test_connection(host):
                     return self.async_create_entry(title=name, data={CONF_HOST: host})
         else:
             user_input = {}
@@ -80,6 +94,15 @@ class SolarLogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input=None):
         """Import a config entry."""
-        if self._host_in_configuration_exists(user_input):
+        host_entry = user_input.get(CONF_HOST, DEFAULT_HOST)
+
+        url = urlparse(host_entry, "http")
+        netloc = url.netloc or url.path
+        path = url.path if url.netloc else ""
+        url = ParseResult("http", netloc, path, *url[3:])
+        host = url.geturl()
+
+        if self._host_in_configuration_exists(host):
             return self.async_abort(reason="already_configured")
         return await self.async_step_user(user_input)
+
