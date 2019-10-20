@@ -1,20 +1,22 @@
 """Support for KNX/IP climate devices."""
-from typing import Optional, List
+from typing import List, Optional
 
 import voluptuous as vol
+import xknx
+from xknx.knx import HVACOperationMode
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
+    HVAC_MODE_AUTO,
+    HVAC_MODE_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    HVAC_MODE_COOL,
-    HVAC_MODE_AUTO,
-    PRESET_ECO,
-    PRESET_SLEEP,
     PRESET_AWAY,
     PRESET_COMFORT,
+    PRESET_ECO,
+    PRESET_SLEEP,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
@@ -135,8 +137,6 @@ def async_add_entities_discovery(hass, discovery_info, async_add_entities):
 @callback
 def async_add_entities_config(hass, config, async_add_entities):
     """Set up climate for KNX platform configured within platform."""
-    import xknx
-
     climate_mode = xknx.devices.ClimateMode(
         hass.data[DATA_KNX].xknx,
         name=config[CONF_NAME] + " Mode",
@@ -302,8 +302,6 @@ class KNXClimate(ClimateDevice):
         elif self.device.supports_on_off and hvac_mode == HVAC_MODE_HEAT:
             await self.device.turn_on()
         elif self.device.mode.supports_operation_mode:
-            from xknx.knx import HVACOperationMode
-
             knx_operation_mode = HVACOperationMode(OPERATION_MODES_INV.get(hvac_mode))
             await self.device.mode.set_operation_mode(knx_operation_mode)
             await self.async_update_ha_state()
@@ -337,8 +335,6 @@ class KNXClimate(ClimateDevice):
         This method must be run in the event loop and returns a coroutine.
         """
         if self.device.mode.supports_operation_mode:
-            from xknx.knx import HVACOperationMode
-
             knx_operation_mode = HVACOperationMode(PRESET_MODES_INV.get(preset_mode))
             await self.device.mode.set_operation_mode(knx_operation_mode)
             await self.async_update_ha_state()

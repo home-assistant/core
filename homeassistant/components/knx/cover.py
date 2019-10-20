@@ -1,5 +1,6 @@
 """Support for KNX/IP covers."""
 import voluptuous as vol
+import xknx
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -74,8 +75,6 @@ def async_add_entities_discovery(hass, discovery_info, async_add_entities):
 @callback
 def async_add_entities_config(hass, config, async_add_entities):
     """Set up cover for KNX platform configured within platform."""
-    import xknx
-
     cover = xknx.devices.Cover(
         hass.data[DATA_KNX].xknx,
         name=config[CONF_NAME],
