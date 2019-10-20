@@ -46,6 +46,14 @@ def read_input(port):
     return GPIO.input(port)
 
 
-def edge_detect(port, event_callback, bounce):
+def edge_detect(port, edge, event_callback, bounce):
     """Add detection for RISING and FALLING events."""
-    GPIO.add_event_detect(port, GPIO.BOTH, callback=event_callback, bouncetime=bounce)
+
+    if edge == "RISING":
+        edge = GPIO.RISING
+    elif edge == "FALLING":
+        edge = GPIO.FALLING
+    elif edge == "BOTH":
+        edge = GPIO.BOTH
+
+    GPIO.add_event_detect(port, edge, callback=event_callback, bouncetime=bounce)
