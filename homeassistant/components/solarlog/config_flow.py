@@ -105,4 +105,3 @@ class SolarLogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._host_in_configuration_exists(host):
             return self.async_abort(reason="already_configured")
         return await self.async_step_user(user_input)
-
