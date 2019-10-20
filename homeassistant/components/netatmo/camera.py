@@ -9,9 +9,8 @@ from homeassistant.components.camera import (
     PLATFORM_SCHEMA, Camera, SUPPORT_STREAM, CAMERA_SERVICE_SCHEMA)
 from homeassistant.const import (CONF_VERIFY_SSL, STATE_ON, STATE_OFF)
 from homeassistant.helpers import config_validation as cv
-from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_send, dispatcher_send, async_dispatcher_connect)
+    async_dispatcher_send, async_dispatcher_connect)
 
 from .const import DATA_NETATMO_AUTH, DOMAIN
 from . import CameraData
@@ -38,6 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 _BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up access to Netatmo cameras."""
@@ -78,8 +78,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hass.services.async_register(DOMAIN, "set_light_auto", async_service_handler, CAMERA_SERVICE_SCHEMA)
     hass.services.async_register(DOMAIN, "set_light_on", async_service_handler, CAMERA_SERVICE_SCHEMA)
     hass.services.async_register(DOMAIN, "set_light_off", async_service_handler, CAMERA_SERVICE_SCHEMA)
-
-
 
 class NetatmoCamera(Camera):
     """Representation of the images published from a Netatmo camera."""
@@ -252,9 +250,6 @@ class NetatmoCamera(Camera):
             f"set_light_off_{self.entity_id}",
             self.set_light_off)            
 
-    async def async_will_remove_from_hass(self):
-        """Remove camera from list and disconnect from signals."""
-
     def update(self):
         """Update entity status."""
 
@@ -264,49 +259,33 @@ class NetatmoCamera(Camera):
         self._data.update()
 
         # URLs.
-        self._vpnurl, self._localurl = self._data.camera_data.cameraUrls(
-            camera=self._camera_name
-        )
+        self._vpnurl, self._localurl = self._data.camera_data.cameraUrls(camera=self._camera_name)
 
         # Identifier
-        self._id = self._data.camera_data.cameraByName(
-            camera=self._camera_name, home=self._home
-            )["id"]
+        self._id = self._data.camera_data.cameraByName(camera=self._camera_name, home=self._home)["id"]
 
         # Monitoring status.
-        self._status = self._data.camera_data.cameraByName(
-            camera=self._camera_name, home=self._home
-            )["status"]
+        self._status = self._data.camera_data.cameraByName(camera=self._camera_name, home=self._home)["status"]
 
         _LOGGER.debug("Status of '%s' = %s", self._name, self._status)
 
         # SD Card status
-        self._sd_status = self._data.camera_data.cameraByName(
-            camera=self._camera_name, home=self._home
-            )["sd_status"]
+        self._sd_status = self._data.camera_data.cameraByName(camera=self._camera_name, home=self._home)["sd_status"]
 
         # Power status
-        self._alim_status = self._data.camera_data.cameraByName(
-            camera=self._camera_name, home=self._home
-            )["alim_status"]
+        self._alim_status = self._data.camera_data.cameraByName(camera=self._camera_name, home=self._home)["alim_status"]
 
         # Is local
-        self._is_local = self._data.camera_data.cameraByName(
-            camera=self._camera_name, home=self._home
-            )["is_local"]
+        self._is_local = self._data.camera_data.cameraByName(camera=self._camera_name, home=self._home)["is_local"]
 
         # VPN URL
-        self._vpn_url = self._data.camera_data.cameraByName(
-            camera=self._camera_name, home=self._home
-            )["vpn_url"]
+        self._vpn_url = self._data.camera_data.cameraByName(camera=self._camera_name, home=self._home)["vpn_url"]
 
         self.is_streaming = (self._alim_status == 'on')
 
         if self.model == "Presence":
             # Light mode status
-            self._light_mode_status = self._data.camera_data.cameraByName(
-                camera=self._camera_name, home=self._home
-                )["light_mode_status"]        
+            self._light_mode_status = self._data.camera_data.cameraByName(camera=self._camera_name, home=self._home)["light_mode_status"]
 
     # Camera method overrides
 
@@ -324,9 +303,9 @@ class NetatmoCamera(Camera):
         """Enable or disable motion detection."""
         try:
             if self._localurl:
-                response = requests.get(f"{self._localurl}/command/changestatus?status={_BOOL_TO_STATE.get(enable)}", timeout=10)
+                requests.get(f"{self._localurl}/command/changestatus?status={_BOOL_TO_STATE.get(enable)}", timeout=10)
             elif self._vpnurl:
-                response = requests.get(f"{self._vpnurl}/command/changestatus?status={_BOOL_TO_STATE.get(enable)}", timeout=10, verify=self._verify_ssl)
+                requests.get(f"{self._vpnurl}/command/changestatus?status={_BOOL_TO_STATE.get(enable)}", timeout=10, verify=self._verify_ssl)
             else:
                 _LOGGER.error("Welcome/Presence VPN URL is None")
                 self._data.update()
@@ -365,9 +344,9 @@ class NetatmoCamera(Camera):
             try:
                 config = '{"mode":"'+ mode + '"}'
                 if self._localurl:
-                    response = requests.get(f"{self._localurl}/command/floodlight_set_config?config={config}", timeout=10)
+                    requests.get(f"{self._localurl}/command/floodlight_set_config?config={config}", timeout=10)
                 elif self._vpnurl:
-                    response = requests.get(f"{self._vpnurl}/command/changestatus?status={config}", timeout=10, verify=self._verify_ssl)
+                    requests.get(f"{self._vpnurl}/command/changestatus?status={config}", timeout=10, verify=self._verify_ssl)
                 else:
                     _LOGGER.error("Presence VPN URL is None")
                     self._data.update()
@@ -384,4 +363,3 @@ class NetatmoCamera(Camera):
                 self.async_schedule_update_ha_state(True)
         else:
             _LOGGER.error("Unsupported camera model for light mode")
-
