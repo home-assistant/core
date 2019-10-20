@@ -1,5 +1,4 @@
 """Alexa message handlers."""
-from datetime import datetime
 import logging
 import math
 
@@ -10,6 +9,11 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
+    STATE_ALARM_DISARMED,
+    SERVICE_ALARM_ARM_AWAY,
+    SERVICE_ALARM_ARM_HOME,
+    SERVICE_ALARM_ARM_NIGHT,
+    SERVICE_ALARM_DISARM,
     SERVICE_LOCK,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
@@ -28,6 +32,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 import homeassistant.util.color as color_util
+import homeassistant.util.dt as dt_util
 from homeassistant.util.decorator import Registry
 from homeassistant.util.temperature import convert as convert_temperature
 
@@ -35,6 +40,8 @@ from .const import API_TEMP_UNITS, API_THERMOSTAT_MODES, API_THERMOSTAT_PRESETS,
 from .entities import async_get_entities
 from .errors import (
     AlexaInvalidValueError,
+    AlexaSecurityPanelAuthorizationRequired,
+    AlexaSecurityPanelUnauthorizedError,
     AlexaTempRangeError,
     AlexaUnsupportedThermostatModeError,
 )
@@ -275,7 +282,7 @@ async def async_api_activate(hass, config, directive, context):
 
     payload = {
         "cause": {"type": Cause.VOICE_INTERACTION},
-        "timestamp": "%sZ" % (datetime.utcnow().isoformat(),),
+        "timestamp": f"{dt_util.utcnow().replace(tzinfo=None).isoformat()}Z",
     }
 
     return directive.response(
@@ -299,7 +306,7 @@ async def async_api_deactivate(hass, config, directive, context):
 
     payload = {
         "cause": {"type": Cause.VOICE_INTERACTION},
-        "timestamp": "%sZ" % (datetime.utcnow().isoformat(),),
+        "timestamp": f"{dt_util.utcnow().replace(tzinfo=None).isoformat()}Z",
     }
 
     return directive.response(
@@ -405,7 +412,6 @@ async def async_api_lock(hass, config, directive, context):
     return response
 
 
-# Not supported by Alexa yet
 @HANDLERS.register(("Alexa.LockController", "Unlock"))
 async def async_api_unlock(hass, config, directive, context):
     """Process an unlock request."""
@@ -418,7 +424,12 @@ async def async_api_unlock(hass, config, directive, context):
         context=context,
     )
 
-    return directive.response()
+    response = directive.response()
+    response.add_context_property(
+        {"namespace": "Alexa.LockController", "name": "lockState", "value": "UNLOCKED"}
+    )
+
+    return response
 
 
 @HANDLERS.register(("Alexa.Speaker", "SetVolume"))
@@ -779,3 +790,141 @@ async def async_api_set_thermostat_mode(hass, config, directive, context):
 async def async_api_reportstate(hass, config, directive, context):
     """Process a ReportState request."""
     return directive.response(name="StateReport")
+
+
+@HANDLERS.register(("Alexa.PowerLevelController", "SetPowerLevel"))
+async def async_api_set_power_level(hass, config, directive, context):
+    """Process a SetPowerLevel request."""
+    entity = directive.entity
+    percentage = int(directive.payload["powerLevel"])
+    service = None
+    data = {ATTR_ENTITY_ID: entity.entity_id}
+
+    if entity.domain == fan.DOMAIN:
+        service = fan.SERVICE_SET_SPEED
+        speed = "off"
+
+        if percentage <= 33:
+            speed = "low"
+        elif percentage <= 66:
+            speed = "medium"
+        else:
+            speed = "high"
+
+        data[fan.ATTR_SPEED] = speed
+
+    await hass.services.async_call(
+        entity.domain, service, data, blocking=False, context=context
+    )
+
+    return directive.response()
+
+
+@HANDLERS.register(("Alexa.PowerLevelController", "AdjustPowerLevel"))
+async def async_api_adjust_power_level(hass, config, directive, context):
+    """Process an AdjustPowerLevel request."""
+    entity = directive.entity
+    percentage_delta = int(directive.payload["powerLevelDelta"])
+    service = None
+    data = {ATTR_ENTITY_ID: entity.entity_id}
+    current = 0
+
+    if entity.domain == fan.DOMAIN:
+        service = fan.SERVICE_SET_SPEED
+        speed = entity.attributes.get(fan.ATTR_SPEED)
+
+        if speed == "off":
+            current = 0
+        elif speed == "low":
+            current = 33
+        elif speed == "medium":
+            current = 66
+        else:
+            current = 100
+
+        # set percentage
+        percentage = max(0, percentage_delta + current)
+        speed = "off"
+
+        if percentage <= 33:
+            speed = "low"
+        elif percentage <= 66:
+            speed = "medium"
+        else:
+            speed = "high"
+
+        data[fan.ATTR_SPEED] = speed
+
+    await hass.services.async_call(
+        entity.domain, service, data, blocking=False, context=context
+    )
+
+    return directive.response()
+
+
+@HANDLERS.register(("Alexa.SecurityPanelController", "Arm"))
+async def async_api_arm(hass, config, directive, context):
+    """Process a Security Panel Arm request."""
+    entity = directive.entity
+    service = None
+    arm_state = directive.payload["armState"]
+    data = {ATTR_ENTITY_ID: entity.entity_id}
+
+    if entity.state != STATE_ALARM_DISARMED:
+        msg = "You must disarm the system before you can set the requested arm state."
+        raise AlexaSecurityPanelAuthorizationRequired(msg)
+
+    if arm_state == "ARMED_AWAY":
+        service = SERVICE_ALARM_ARM_AWAY
+    if arm_state == "ARMED_STAY":
+        service = SERVICE_ALARM_ARM_HOME
+    if arm_state == "ARMED_NIGHT":
+        service = SERVICE_ALARM_ARM_NIGHT
+
+    await hass.services.async_call(
+        entity.domain, service, data, blocking=False, context=context
+    )
+
+    response = directive.response(
+        name="Arm.Response", namespace="Alexa.SecurityPanelController"
+    )
+
+    response.add_context_property(
+        {
+            "name": "armState",
+            "namespace": "Alexa.SecurityPanelController",
+            "value": arm_state,
+        }
+    )
+
+    return response
+
+
+@HANDLERS.register(("Alexa.SecurityPanelController", "Disarm"))
+async def async_api_disarm(hass, config, directive, context):
+    """Process a Security Panel Disarm request."""
+    entity = directive.entity
+    data = {ATTR_ENTITY_ID: entity.entity_id}
+
+    payload = directive.payload
+    if "authorization" in payload:
+        value = payload["authorization"]["value"]
+        if payload["authorization"]["type"] == "FOUR_DIGIT_PIN":
+            data["code"] = value
+
+    if not await hass.services.async_call(
+        entity.domain, SERVICE_ALARM_DISARM, data, blocking=True, context=context
+    ):
+        msg = "Invalid Code"
+        raise AlexaSecurityPanelUnauthorizedError(msg)
+
+    response = directive.response()
+    response.add_context_property(
+        {
+            "name": "armState",
+            "namespace": "Alexa.SecurityPanelController",
+            "value": "DISARMED",
+        }
+    )
+
+    return response

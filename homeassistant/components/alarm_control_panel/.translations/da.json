@@ -1,0 +1,7 @@
+{
+    "device_automation": {
+        "action_type": {
+            "trigger": "Udl\u00f8s {entity_name}"
+        }
+    }
+}

@@ -1,13 +1,15 @@
 """Sensor from an SQL Query."""
-import decimal
 import datetime
+import decimal
 import logging
 
+import sqlalchemy
+from sqlalchemy.orm import scoped_session, sessionmaker
 import voluptuous as vol
 
+from homeassistant.components.recorder import CONF_DB_URL, DEFAULT_DB_FILE, DEFAULT_URL
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE
-from homeassistant.components.recorder import CONF_DB_URL, DEFAULT_URL, DEFAULT_DB_FILE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -46,20 +48,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if not db_url:
         db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
 
-    import sqlalchemy
-    from sqlalchemy.orm import sessionmaker, scoped_session
-
     try:
         engine = sqlalchemy.create_engine(db_url)
-        sessionmaker = scoped_session(sessionmaker(bind=engine))
+        sessmaker = scoped_session(sessionmaker(bind=engine))
 
         # Run a dummy query just to test the db_url
-        sess = sessionmaker()
+        sess = sessmaker()
         sess.execute("SELECT 1;")
 
     except sqlalchemy.exc.SQLAlchemyError as err:
         _LOGGER.error("Couldn't connect using %s DB_URL: %s", db_url, err)
         return
+    finally:
+        sess.close()
 
     queries = []
 
@@ -74,7 +75,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             value_template.hass = hass
 
         sensor = SQLSensor(
-            name, sessionmaker, query_str, column_name, unit, value_template
+            name, sessmaker, query_str, column_name, unit, value_template
         )
         queries.append(sensor)
 
@@ -120,7 +121,6 @@ class SQLSensor(Entity):
 
     def update(self):
         """Retrieve sensor data from the query."""
-        import sqlalchemy
 
         try:
             sess = self.sessionmaker()

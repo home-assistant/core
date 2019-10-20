@@ -1,11 +1,14 @@
 """Alexa capabilities."""
-from datetime import datetime
 import logging
 
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
     STATE_LOCKED,
     STATE_OFF,
     STATE_ON,
@@ -14,8 +17,10 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 import homeassistant.components.climate.const as climate
+from homeassistant.components.alarm_control_panel import ATTR_CODE_FORMAT, FORMAT_NUMBER
 from homeassistant.components import light, fan, cover
 import homeassistant.util.color as color_util
+import homeassistant.util.dt as dt_util
 
 from .const import (
     API_TEMP_UNITS,
@@ -79,6 +84,11 @@ class AlexaCapibility:
         """Applicable only to scenes."""
         return None
 
+    @staticmethod
+    def configuration():
+        """Applicable only to security control panel."""
+        return []
+
     def serialize_discovery(self):
         """Serialize according to the Discovery API."""
         result = {
@@ -96,6 +106,11 @@ class AlexaCapibility:
         supports_deactivation = self.supports_deactivation()
         if supports_deactivation is not None:
             result["supportsDeactivation"] = supports_deactivation
+
+        configuration = self.configuration()
+        if configuration:
+            result["configuration"] = configuration
+
         return result
 
     def serialize_properties(self):
@@ -109,7 +124,7 @@ class AlexaCapibility:
                     "name": prop_name,
                     "namespace": self.name(),
                     "value": prop_value,
-                    "timeOfSample": datetime.now().strftime(DATE_FORMAT),
+                    "timeOfSample": dt_util.utcnow().strftime(DATE_FORMAT),
                     "uncertaintyInMilliseconds": 0,
                 }
 
@@ -326,7 +341,7 @@ class AlexaColorTemperatureController(AlexaCapibility):
             return color_util.color_temperature_mired_to_kelvin(
                 self.entity.attributes["color_temp"]
             )
-        return 0
+        return None
 
 
 class AlexaPercentageController(AlexaCapibility):
@@ -445,7 +460,7 @@ class AlexaTemperatureSensor(AlexaCapibility):
             unit = self.hass.config.units.temperature_unit
             temp = self.entity.attributes.get(climate.ATTR_CURRENT_TEMPERATURE)
 
-        if temp in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+        if temp in (STATE_UNAVAILABLE, STATE_UNKNOWN, None):
             return None
 
         try:
@@ -572,6 +587,9 @@ class AlexaThermostatController(AlexaCapibility):
 
     def get_property(self, name):
         """Read and return a property."""
+        if self.entity.state == STATE_UNAVAILABLE:
+            return None
+
         if name == "thermostatMode":
             preset = self.entity.attributes.get(climate.ATTR_PRESET_MODE)
 
@@ -611,3 +629,90 @@ class AlexaThermostatController(AlexaCapibility):
             return None
 
         return {"value": temp, "scale": API_TEMP_UNITS[unit]}
+
+
+class AlexaPowerLevelController(AlexaCapibility):
+    """Implements Alexa.PowerLevelController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-powerlevelcontroller.html
+    """
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.PowerLevelController"
+
+    def properties_supported(self):
+        """Return what properties this entity supports."""
+        return [{"name": "powerLevel"}]
+
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
+
+    def properties_retrievable(self):
+        """Return True if properties can be retrieved."""
+        return True
+
+    def get_property(self, name):
+        """Read and return a property."""
+        if name != "powerLevel":
+            raise UnsupportedProperty(name)
+
+        if self.entity.domain == fan.DOMAIN:
+            speed = self.entity.attributes.get(fan.ATTR_SPEED)
+
+            return PERCENTAGE_FAN_MAP.get(speed, None)
+
+        return None
+
+
+class AlexaSecurityPanelController(AlexaCapibility):
+    """Implements Alexa.SecurityPanelController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-securitypanelcontroller.html
+    """
+
+    def __init__(self, hass, entity):
+        """Initialize the entity."""
+        super().__init__(entity)
+        self.hass = hass
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.SecurityPanelController"
+
+    def properties_supported(self):
+        """Return what properties this entity supports."""
+        return [{"name": "armState"}]
+
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
+
+    def properties_retrievable(self):
+        """Return True if properties can be retrieved."""
+        return True
+
+    def get_property(self, name):
+        """Read and return a property."""
+        if name != "armState":
+            raise UnsupportedProperty(name)
+
+        arm_state = self.entity.state
+        if arm_state == STATE_ALARM_ARMED_HOME:
+            return "ARMED_STAY"
+        if arm_state == STATE_ALARM_ARMED_AWAY:
+            return "ARMED_AWAY"
+        if arm_state == STATE_ALARM_ARMED_NIGHT:
+            return "ARMED_NIGHT"
+        if arm_state == STATE_ALARM_ARMED_CUSTOM_BYPASS:
+            return "ARMED_STAY"
+        return "DISARMED"
+
+    def configuration(self):
+        """Return supported authorization types."""
+        code_format = self.entity.attributes.get(ATTR_CODE_FORMAT)
+
+        if code_format == FORMAT_NUMBER:
+            return {"supportedAuthorizationTypes": [{"type": "FOUR_DIGIT_PIN"}]}
+        return []

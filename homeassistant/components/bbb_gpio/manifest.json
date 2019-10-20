@@ -1,7 +1,7 @@
 {
   "domain": "bbb_gpio",
   "name": "Bbb gpio",
-  "documentation": "https://www.home-assistant.io/components/bbb_gpio",
+  "documentation": "https://www.home-assistant.io/integrations/bbb_gpio",
   "requirements": [
     "Adafruit_BBIO==1.0.0"
   ],

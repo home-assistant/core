@@ -1,7 +1,7 @@
 {
   "domain": "pushover",
   "name": "Pushover",
-  "documentation": "https://www.home-assistant.io/components/pushover",
+  "documentation": "https://www.home-assistant.io/integrations/pushover",
   "requirements": [
     "python-pushover==0.4"
   ],

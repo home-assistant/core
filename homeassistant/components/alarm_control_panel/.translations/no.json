@@ -1,0 +1,11 @@
+{
+    "device_automation": {
+        "action_type": {
+            "arm_away": "Aktiver {entity_name} borte",
+            "arm_home": "Aktiver {entity_name} hjemme",
+            "arm_night": "Aktiver {entity_name} natt",
+            "disarm": "Deaktiver {entity_name}",
+            "trigger": "Utl\u00f8ser {entity_name}"
+        }
+    }
+}

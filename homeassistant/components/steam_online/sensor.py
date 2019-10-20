@@ -1,15 +1,16 @@
 """Sensor for Steam account status."""
-import logging
 from datetime import timedelta
+import logging
 
+import steam
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.const import CONF_API_KEY
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,13 +39,12 @@ BASE_INTERVAL = timedelta(minutes=1)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Steam platform."""
-    import steam as steamod
 
-    steamod.api.key.set(config.get(CONF_API_KEY))
+    steam.api.key.set(config.get(CONF_API_KEY))
     # Initialize steammods app list before creating sensors
     # to benefit from internal caching of the list.
-    hass.data[APP_LIST_KEY] = steamod.apps.app_list()
-    entities = [SteamSensor(account, steamod) for account in config.get(CONF_ACCOUNTS)]
+    hass.data[APP_LIST_KEY] = steam.apps.app_list()
+    entities = [SteamSensor(account, steam) for account in config.get(CONF_ACCOUNTS)]
     if not entities:
         return
     add_entities(entities, True)

@@ -134,7 +134,9 @@ async def test_user_step_two_bridges_selection(hass, aioclient_mock):
     assert flow.deconz_config[config_flow.CONF_HOST] == "1.2.3.4"
 
 
-async def test_user_step_manual_configuration(hass, aioclient_mock):
+async def test_user_step_manual_configuration_no_bridges_discovered(
+    hass, aioclient_mock
+):
     """Test config flow with manual input."""
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
@@ -148,6 +150,7 @@ async def test_user_step_manual_configuration(hass, aioclient_mock):
 
     assert result["type"] == "form"
     assert result["step_id"] == "init"
+    assert not hass.config_entries.flow._progress[result["flow_id"]].bridges
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -156,6 +159,36 @@ async def test_user_step_manual_configuration(hass, aioclient_mock):
 
     assert result["type"] == "form"
     assert result["step_id"] == "link"
+
+
+async def test_user_step_manual_configuration_after_timeout(hass):
+    """Test config flow with manual input."""
+    with patch(
+        "homeassistant.components.deconz.config_flow.async_discovery",
+        side_effect=asyncio.TimeoutError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN, context={"source": "user"}
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+    assert not hass.config_entries.flow._progress[result["flow_id"]].bridges
+
+
+async def test_user_step_manual_configuration_after_ResponseError(hass):
+    """Test config flow with manual input."""
+    with patch(
+        "homeassistant.components.deconz.config_flow.async_discovery",
+        side_effect=config_flow.ResponseError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN, context={"source": "user"}
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+    assert not hass.config_entries.flow._progress[result["flow_id"]].bridges
 
 
 async def test_link_no_api_key(hass):
@@ -209,22 +242,25 @@ async def test_bridge_discovery_update_existing_entry(hass):
     """Test if a discovered bridge has already been configured."""
     entry = MockConfigEntry(
         domain=config_flow.DOMAIN,
-        data={config_flow.CONF_HOST: "1.2.3.4", config_flow.CONF_BRIDGEID: "id"},
+        data={
+            config_flow.CONF_HOST: "1.2.3.4",
+            config_flow.CONF_BRIDGEID: "123ABC",
+            config_flow.CONF_UUID: "456DEF",
+        },
     )
     entry.add_to_hass(hass)
 
     gateway = Mock()
     gateway.config_entry = entry
-    gateway.api.config.uuid = "1234"
-    hass.data[config_flow.DOMAIN] = {"id": gateway}
+    hass.data[config_flow.DOMAIN] = {"123ABC": gateway}
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         data={
             config_flow.CONF_HOST: "mock-deconz",
-            ATTR_SERIAL: "id",
+            ATTR_SERIAL: "123ABC",
             ATTR_MANUFACTURERURL: config_flow.DECONZ_MANUFACTURERURL,
-            config_flow.ATTR_UUID: "uuid:1234",
+            config_flow.ATTR_UUID: "uuid:456DEF",
         },
         context={"source": "ssdp"},
     )
@@ -234,46 +270,11 @@ async def test_bridge_discovery_update_existing_entry(hass):
     assert entry.data[config_flow.CONF_HOST] == "mock-deconz"
 
 
-async def test_import_without_api_key(hass):
-    """Test importing a host without an API key."""
-    result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
-        data={config_flow.CONF_HOST: "1.2.3.4"},
-        context={"source": "import"},
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "link"
-
-
-async def test_import_with_api_key(hass):
-    """Test importing a host with an API key."""
-    result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
-        data={
-            config_flow.CONF_BRIDGEID: "id",
-            config_flow.CONF_HOST: "mock-deconz",
-            config_flow.CONF_PORT: 80,
-            config_flow.CONF_API_KEY: "1234567890ABCDEF",
-        },
-        context={"source": "import"},
-    )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "deCONZ-id"
-    assert result["data"] == {
-        config_flow.CONF_BRIDGEID: "id",
-        config_flow.CONF_HOST: "mock-deconz",
-        config_flow.CONF_PORT: 80,
-        config_flow.CONF_API_KEY: "1234567890ABCDEF",
-    }
-
-
 async def test_create_entry(hass, aioclient_mock):
     """Test that _create_entry work and that bridgeid can be requested."""
     aioclient_mock.get(
         "http://1.2.3.4:80/api/1234567890ABCDEF/config",
-        json={"bridgeid": "id"},
+        json={"bridgeid": "123ABC", "uuid": "456DEF"},
         headers={"content-type": "application/json"},
     )
 
@@ -288,12 +289,13 @@ async def test_create_entry(hass, aioclient_mock):
     result = await flow._create_entry()
 
     assert result["type"] == "create_entry"
-    assert result["title"] == "deCONZ-id"
+    assert result["title"] == "deCONZ-123ABC"
     assert result["data"] == {
-        config_flow.CONF_BRIDGEID: "id",
+        config_flow.CONF_BRIDGEID: "123ABC",
         config_flow.CONF_HOST: "1.2.3.4",
         config_flow.CONF_PORT: 80,
         config_flow.CONF_API_KEY: "1234567890ABCDEF",
+        config_flow.CONF_UUID: "456DEF",
     }
 
 
@@ -308,7 +310,7 @@ async def test_create_entry_timeout(hass, aioclient_mock):
     }
 
     with patch(
-        "homeassistant.components.deconz.config_flow.async_get_bridgeid",
+        "homeassistant.components.deconz.config_flow.async_get_gateway_config",
         side_effect=asyncio.TimeoutError,
     ):
         result = await flow._create_entry()
@@ -385,7 +387,7 @@ async def test_hassio_confirm(hass):
 
 
 async def test_option_flow(hass):
-    """Test config flow selection of one of two bridges."""
+    """Test config flow options."""
     entry = MockConfigEntry(domain=config_flow.DOMAIN, data={}, options=None)
     hass.config_entries._entries.append(entry)
 

@@ -11,11 +11,9 @@ from homeassistant.loader import bind_hass, async_get_integration, IntegrationNo
 import homeassistant.util.dt as dt_util
 from homeassistant.components.notify import ATTR_MESSAGE, SERVICE_NOTIFY
 from homeassistant.components.sun import STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON
-from homeassistant.components.mysensors.switch import ATTR_IR_CODE, SERVICE_SEND_IR_CODE
 from homeassistant.components.cover import ATTR_POSITION, ATTR_TILT_POSITION
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_OPTION,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_DISARM,
@@ -41,10 +39,8 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_UNKNOWN,
     STATE_UNLOCKED,
-    SERVICE_SELECT_OPTION,
 )
 from homeassistant.core import Context, State, DOMAIN as HASS_DOMAIN
-from homeassistant.util.async_ import run_coroutine_threadsafe
 from .typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,8 +51,6 @@ GROUP_DOMAIN = "group"
 # Each item is a service with a list of required attributes.
 SERVICE_ATTRIBUTES = {
     SERVICE_NOTIFY: [ATTR_MESSAGE],
-    SERVICE_SEND_IR_CODE: [ATTR_IR_CODE],
-    SERVICE_SELECT_OPTION: [ATTR_OPTION],
     SERVICE_SET_COVER_POSITION: [ATTR_POSITION],
     SERVICE_SET_COVER_TILT_POSITION: [ATTR_TILT_POSITION],
 }
@@ -122,7 +116,7 @@ def reproduce_state(
     blocking: bool = False,
 ) -> None:
     """Reproduce given state."""
-    return run_coroutine_threadsafe(  # type: ignore
+    return asyncio.run_coroutine_threadsafe(
         async_reproduce_state(hass, states, blocking), hass.loop
     ).result()
 

@@ -1,7 +1,7 @@
 {
   "domain": "lannouncer",
   "name": "Lannouncer",
-  "documentation": "https://www.home-assistant.io/components/lannouncer",
+  "documentation": "https://www.home-assistant.io/integrations/lannouncer",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

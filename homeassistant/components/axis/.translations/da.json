@@ -12,6 +12,7 @@
             "device_unavailable": "Enheden er ikke tilg\u00e6ngelig",
             "faulty_credentials": "Ugyldige legitimationsoplysninger"
         },
+        "flow_title": "Axis enhed: {name} ({host})",
         "step": {
             "user": {
                 "data": {

@@ -59,7 +59,7 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         feed_entry.category = category
         return feed_entry
 
-    @mock.patch("georss_client.generic_feed.GenericFeed")
+    @mock.patch("homeassistant.components.geo_rss_events.sensor.GenericFeed")
     def test_setup(self, mock_feed):
         """Test the general setup of the platform."""
         # Set up some mock feed entries for this test.
@@ -122,7 +122,7 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
                     ATTR_ICON: "mdi:alert",
                 }
 
-    @mock.patch("georss_client.generic_feed.GenericFeed")
+    @mock.patch("homeassistant.components.geo_rss_events.sensor.GenericFeed")
     def test_setup_with_categories(self, mock_feed):
         """Test the general setup of the platform."""
         # Set up some mock feed entries for this test.

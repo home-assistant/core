@@ -420,6 +420,62 @@ async def test_new_light_discovered(hass, mock_bridge):
     assert light.state == "off"
 
 
+async def test_group_removed(hass, mock_bridge):
+    """Test if 2nd update has removed group."""
+    mock_bridge.allow_groups = True
+    mock_bridge.mock_light_responses.append({})
+    mock_bridge.mock_group_responses.append(GROUP_RESPONSE)
+
+    await setup_bridge(hass, mock_bridge)
+    assert len(mock_bridge.mock_requests) == 2
+    assert len(hass.states.async_all()) == 3
+
+    mock_bridge.mock_light_responses.append({})
+    mock_bridge.mock_group_responses.append({"1": GROUP_RESPONSE["1"]})
+
+    # Calling a service will trigger the updates to run
+    await hass.services.async_call(
+        "light", "turn_on", {"entity_id": "light.group_1"}, blocking=True
+    )
+
+    # 2x group update, 2x light update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 5
+    assert len(hass.states.async_all()) == 2
+
+    group = hass.states.get("light.group_1")
+    assert group is not None
+
+    removed_group = hass.states.get("light.group_2")
+    assert removed_group is None
+
+
+async def test_light_removed(hass, mock_bridge):
+    """Test if 2nd update has removed light."""
+    mock_bridge.mock_light_responses.append(LIGHT_RESPONSE)
+
+    await setup_bridge(hass, mock_bridge)
+    assert len(mock_bridge.mock_requests) == 1
+    assert len(hass.states.async_all()) == 3
+
+    mock_bridge.mock_light_responses.clear()
+    mock_bridge.mock_light_responses.append({"1": LIGHT_RESPONSE.get("1")})
+
+    # Calling a service will trigger the updates to run
+    await hass.services.async_call(
+        "light", "turn_on", {"entity_id": "light.hue_lamp_1"}, blocking=True
+    )
+
+    # 2x light update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 3
+    assert len(hass.states.async_all()) == 2
+
+    light = hass.states.get("light.hue_lamp_1")
+    assert light is not None
+
+    removed_light = hass.states.get("light.hue_lamp_2")
+    assert removed_light is None
+
+
 async def test_other_group_update(hass, mock_bridge):
     """Test changing one group that will impact the state of other light."""
     mock_bridge.allow_groups = True

@@ -1,6 +1,7 @@
 """Support for Nest thermostats."""
 import logging
 
+from nest.nest import APIError
 import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
@@ -192,7 +193,10 @@ class NestThermostat(ClimateDevice):
     def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
         if self._mode == NEST_MODE_ECO:
-            # We assume the first operation in operation list is the main one
+            if self.device.previous_mode in MODE_NEST_TO_HASS:
+                return MODE_NEST_TO_HASS[self.device.previous_mode]
+
+            # previous_mode not supported so return the first compatible mode
             return self._operation_list[0]
 
         return MODE_NEST_TO_HASS[self._mode]
@@ -229,7 +233,6 @@ class NestThermostat(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        import nest
 
         temp = None
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
@@ -244,7 +247,7 @@ class NestThermostat(ClimateDevice):
         try:
             if temp is not None:
                 self.device.target = temp
-        except nest.nest.APIError as api_error:
+        except APIError as api_error:
             _LOGGER.error("An error occurred while setting temperature: %s", api_error)
             # restore target temperature
             self.schedule_update_ha_state(True)
@@ -270,7 +273,7 @@ class NestThermostat(ClimateDevice):
         if self._mode == NEST_MODE_ECO:
             return PRESET_ECO
 
-        return None
+        return PRESET_NONE
 
     @property
     def preset_modes(self):
@@ -294,7 +297,7 @@ class NestThermostat(ClimateDevice):
             if need_eco:
                 self.device.mode = NEST_MODE_ECO
             else:
-                self.device.mode = MODE_HASS_TO_NEST[self._operation_list[0]]
+                self.device.mode = self.device.previous_mode
 
     @property
     def fan_mode(self):

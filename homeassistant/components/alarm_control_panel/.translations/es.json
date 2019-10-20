@@ -1,0 +1,11 @@
+{
+    "device_automation": {
+        "action_type": {
+            "arm_away": "Armar {entity_name} exterior",
+            "arm_home": "Armar {entity_name} casa",
+            "arm_night": "Armar {entity_name}",
+            "disarm": "Desarmar {entity_name}",
+            "trigger": "Lanzar {entity_name}"
+        }
+    }
+}

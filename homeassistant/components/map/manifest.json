@@ -1,7 +1,7 @@
 {
   "domain": "map",
   "name": "Map",
-  "documentation": "https://www.home-assistant.io/components/map",
+  "documentation": "https://www.home-assistant.io/integrations/map",
   "requirements": [],
   "dependencies": [
     "frontend"

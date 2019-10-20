@@ -44,13 +44,13 @@ async def test_switch(hass, config_entry, zha_gateway):
 
     # turn on at switch
     attr = make_attribute(0, 1)
-    cluster.handle_message(False, 1, 0x0A, [[attr]])
+    cluster.handle_message(1, 0x0A, [[attr]])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ON
 
     # turn off at switch
     attr.value.value = 0
-    cluster.handle_message(False, 0, 0x0A, [[attr]])
+    cluster.handle_message(0, 0x0A, [[attr]])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_OFF
 
