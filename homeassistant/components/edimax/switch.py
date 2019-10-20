@@ -33,7 +33,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     auth = (config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
     name = config.get(CONF_NAME)
 
-    add_entities([SmartPlugSwitch(SmartPlug(host, auth), name)])
+    add_entities([SmartPlugSwitch(SmartPlug(host, auth), name)], True)
 
 
 class SmartPlugSwitch(SwitchDevice):
@@ -46,19 +46,20 @@ class SmartPlugSwitch(SwitchDevice):
         self._now_power = None
         self._now_energy_day = None
         self._state = False
-        self._info = smartplug.info
-        self._supports_power_monitoring = smartplug.info["model"] != "SP1101W"
+        self._supports_power_monitoring = False
+        self._info = None
+        self._mac = None
 
     @property
     def unique_id(self):
         """Return the device's MAC address."""
-        return self._info["mac"]
+        return self._mac
 
     @property
     def device_info(self):
         """Return the device info."""
         return {
-            "identifiers": {(DOMAIN, self.unique_id)},
+            "identifiers": {(DOMAIN, self._mac)},
             "name": self.name,
             "manufacturer": self._info["vendor"],
             "model": self._info["model"],
@@ -95,6 +96,11 @@ class SmartPlugSwitch(SwitchDevice):
 
     def update(self):
         """Update edimax switch."""
+        if not self._info:
+            self._info = self.smartplug.info
+            self._mac = self._info["mac"]
+            self._supports_power_monitoring = self._info["model"] != "SP1101W"
+
         if self._supports_power_monitoring:
             try:
                 self._now_power = float(self.smartplug.now_power)
