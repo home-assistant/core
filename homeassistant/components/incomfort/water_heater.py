@@ -1,14 +1,14 @@
 """Support for an Intergas boiler via an InComfort/Intouch Lan2RF gateway."""
 import asyncio
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from aiohttp import ClientResponseError
-from homeassistant.components.water_heater import ENTITY_ID_FORMAT, WaterHeaterDevice
+from homeassistant.components.water_heater import WaterHeaterDevice
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import DOMAIN, IncomfortEntity
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,19 +26,25 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([IncomfortWaterHeater(client, heater)])
 
 
-class IncomfortWaterHeater(IncomfortEntity, WaterHeaterDevice):
+class IncomfortWaterHeater(WaterHeaterDevice):
     """Representation of an InComfort/Intouch water_heater device."""
 
     def __init__(self, client, heater) -> None:
         """Initialize the water_heater device."""
-        super().__init__()
-
         self._unique_id = f"{heater.serial_no}"
-        self.entity_id = ENTITY_ID_FORMAT.format(DOMAIN)
-        self._name = "Boiler"
 
         self._client = client
         self._heater = heater
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        return self._unique_id
+
+    @property
+    def name(self) -> str:
+        """Return the name of the water_heater device."""
+        return "Boiler"
 
     @property
     def icon(self) -> str:
