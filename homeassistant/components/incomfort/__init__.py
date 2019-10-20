@@ -7,11 +7,12 @@ import voluptuous as vol
 from incomfortclient import Gateway as InComfortGateway
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.core import callback
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +59,7 @@ async def async_setup(hass, hass_config):
     return True
 
 
-class IncomfortEntity:
+class IncomfortEntity(Entity):
     """Base class for all InComfort entities."""
 
     def __init__(self) -> None:
@@ -81,7 +82,6 @@ class IncomfortChild(IncomfortEntity):
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
-        # pylint: disable=no-member
         async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
 
     @callback
