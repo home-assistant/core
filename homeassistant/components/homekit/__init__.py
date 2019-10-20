@@ -1,6 +1,7 @@
 """Support for Apple HomeKit."""
 import ipaddress
 import logging
+import hashlib
 from zlib import adler32
 
 import voluptuous as vol
@@ -255,7 +256,7 @@ def get_accessory(hass, driver, state, aid, config):
 
 def generate_aid(entity_id):
     """Generate accessory aid with zlib adler32."""
-    aid = adler32(entity_id.encode("utf-8"))
+    aid = adler32(hashlib.sha512(entity_id.encode("utf-8")).digest())
     if aid in (0, 1):
         return None
     return aid
