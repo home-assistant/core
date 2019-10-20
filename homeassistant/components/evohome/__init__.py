@@ -8,9 +8,9 @@ import re
 from typing import Any, Dict, Optional, Tuple
 
 import aiohttp.client_exceptions
-import voluptuous as vol
-import evohomeasync2
 import evohomeasync
+import evohomeasync2
+import voluptuous as vol
 
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -28,7 +28,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, EVO_FOLLOW, STORAGE_VERSION, STORAGE_KEY, GWS, TCS
+from .const import DOMAIN, EVO_FOLLOW, GWS, STORAGE_KEY, STORAGE_VERSION, TCS
 
 _LOGGER = logging.getLogger(__name__)
 
