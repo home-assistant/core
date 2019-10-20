@@ -5,6 +5,7 @@ import math
 from homeassistant import core as ha
 from homeassistant.components import cover, fan, group, light, media_player
 from homeassistant.components.climate import const as climate
+from homeassistant.components.media_player.const import MEDIA_TYPE_CHANNEL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -1116,7 +1117,7 @@ async def async_api_changechannel(hass, config, directive, context):
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
         media_player.const.ATTR_MEDIA_CONTENT_ID: channel,
-        media_player.const.ATTR_MEDIA_CONTENT_TYPE: "channel",
+        media_player.const.ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
     }
 
     await hass.services.async_call(
