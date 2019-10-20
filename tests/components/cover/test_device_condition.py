@@ -549,3 +549,106 @@ async def test_if_position(hass, calls):
     await hass.async_block_till_done()
     assert len(calls) == 5
     assert calls[4].data["some"] == "is_pos_gt_45 - event - test_event1"
+
+
+async def test_if_tilt_position(hass, calls):
+    """Test for tilt position conditions."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+    ent = platform.ENTITIES[2]
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event1"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": "",
+                            "entity_id": ent.entity_id,
+                            "type": "is_tilt_position",
+                            "above": 45,
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "is_pos_gt_45 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                        },
+                    },
+                },
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event2"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": "",
+                            "entity_id": ent.entity_id,
+                            "type": "is_tilt_position",
+                            "below": 90,
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "is_pos_lt_90 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                        },
+                    },
+                },
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event3"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": "",
+                            "entity_id": ent.entity_id,
+                            "type": "is_tilt_position",
+                            "above": 45,
+                            "below": 90,
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "is_pos_gt_45_lt_90 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                        },
+                    },
+                },
+            ]
+        },
+    )
+    hass.bus.async_fire("test_event1")
+    hass.bus.async_fire("test_event2")
+    hass.bus.async_fire("test_event3")
+    await hass.async_block_till_done()
+    assert len(calls) == 3
+    assert calls[0].data["some"] == "is_pos_gt_45 - event - test_event1"
+    assert calls[1].data["some"] == "is_pos_lt_90 - event - test_event2"
+    assert calls[2].data["some"] == "is_pos_gt_45_lt_90 - event - test_event3"
+
+    hass.states.async_set(
+        ent.entity_id, STATE_CLOSED, attributes={"current_tilt_position": 45}
+    )
+    hass.bus.async_fire("test_event1")
+    hass.bus.async_fire("test_event2")
+    hass.bus.async_fire("test_event3")
+    await hass.async_block_till_done()
+    assert len(calls) == 4
+    assert calls[3].data["some"] == "is_pos_lt_90 - event - test_event2"
+
+    hass.states.async_set(
+        ent.entity_id, STATE_CLOSED, attributes={"current_tilt_position": 90}
+    )
+    hass.bus.async_fire("test_event1")
+    hass.bus.async_fire("test_event2")
+    hass.bus.async_fire("test_event3")
+    await hass.async_block_till_done()
+    assert len(calls) == 5
+    assert calls[4].data["some"] == "is_pos_gt_45 - event - test_event1"
