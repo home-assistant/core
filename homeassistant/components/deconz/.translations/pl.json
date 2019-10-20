@@ -11,6 +11,7 @@
         "error": {
             "no_key": "Nie mo\u017cna uzyska\u0107 klucza API"
         },
+        "flow_title": "Bramka deCONZ Zigbee ({host})",
         "step": {
             "hassio_confirm": {
                 "data": {

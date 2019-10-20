@@ -11,8 +11,11 @@
         "step": {
             "user": {
                 "data": {
+                    "host": "Host",
                     "port": "Port"
-                }
+                },
+                "description": "Wprowad\u017a ustawienia po\u0142\u0105czenia SOMA Connect.",
+                "title": "SOMA Connect"
             }
         },
         "title": "Soma"
