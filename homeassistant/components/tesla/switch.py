@@ -79,3 +79,35 @@ class RangeSwitch(TeslaDevice, SwitchDevice):
         _LOGGER.debug("Updating state for: %s", self._name)
         self.tesla_device.update()
         self._state = STATE_ON if self.tesla_device.is_maxrange() else STATE_OFF
+
+
+class UpdateSwitch(TeslaDevice, SwitchDevice):
+    """Representation of a Tesla update switch."""
+
+    def __init__(self, tesla_device, controller):
+        """Initialise of the switch."""
+        self._state = None
+        super().__init__(tesla_device, controller)
+        self._name = self._name.replace("charger", "update")
+        self.tesla_id = self.tesla_id.replace("charger", "update")
+
+    def turn_on(self, **kwargs):
+        """Send the on command."""
+        _LOGGER.debug("Enable updates: %s %s", self._name, self.tesla_device.id())
+        self.controller.set_updates(self.tesla_device.id(), True)
+
+    def turn_off(self, **kwargs):
+        """Send the off command."""
+        _LOGGER.debug("Disable updates: %s %s", self._name, self.tesla_device.id())
+        self.controller.set_updates(self.tesla_device.id(), False)
+
+    @property
+    def is_on(self):
+        """Get whether the switch is in on state."""
+        return self._state == STATE_ON
+
+    def update(self):
+        """Update the state of the switch."""
+        car_id = self.tesla_device.id()
+        _LOGGER.debug("Updating state for: %s %s", self._name, car_id)
+        self._state = STATE_ON if self.controller.get_updates(car_id) else STATE_OFF
