@@ -6,7 +6,7 @@ from homeassistant.const import POWER_WATT, ENERGY_KILO_WATT_HOUR
 DOMAIN = "solarlog"
 
 """Default config for solarlog."""
-DEFAULT_HOST = "solar-log"
+DEFAULT_HOST = "http://solar-log"
 DEFAULT_NAME = "solarlog"
 
 """Fixed constants."""
@@ -17,8 +17,8 @@ SENSOR_TYPES = {
     "time": ["TIME", "last update", None, "mdi:solar-power"],
     "power_ac": ["powerAC", "power AC", POWER_WATT, "mdi:solar-power"],
     "power_dc": ["powerDC", "power DC", POWER_WATT, "mdi:solar-power"],
-    "voltage_ac": ["voltageAC", "voltage AC", "V", "mdi:solar-power"],
-    "voltage_dc": ["voltageDC", "voltage DC", "V", "mdi:solar-power"],
+    "voltage_ac": ["voltageAC", "voltage AC", "V", "mdi:flash"],
+    "voltage_dc": ["voltageDC", "voltage DC", "V", "mdi:flash"],
     "yield_day": ["yieldDAY", "yield day", ENERGY_KILO_WATT_HOUR, "mdi:solar-power"],
     "yield_yesterday": [
         "yieldYESTERDAY",
@@ -43,37 +43,37 @@ SENSOR_TYPES = {
         "consumptionAC",
         "consumption AC",
         POWER_WATT,
-        "mdi:solar-power",
+        "mdi:power-plug",
     ],
     "consumption_day": [
         "consumptionDAY",
         "consumption day",
         ENERGY_KILO_WATT_HOUR,
-        "mdi:solar-power",
+        "mdi:power-plug",
     ],
     "consumption_yesterday": [
         "consumptionYESTERDAY",
         "consumption yesterday",
         ENERGY_KILO_WATT_HOUR,
-        "mdi:solar-power",
+        "mdi:power-plug",
     ],
     "consumption_month": [
         "consumptionMONTH",
         "consumption month",
         ENERGY_KILO_WATT_HOUR,
-        "mdi:solar-power",
+        "mdi:power-plug",
     ],
     "consumption_year": [
         "consumptionYEAR",
         "consumption year",
         ENERGY_KILO_WATT_HOUR,
-        "mdi:solar-power",
+        "mdi:power-plug",
     ],
     "consumption_total": [
         "consumptionTOTAL",
         "consumption total",
         ENERGY_KILO_WATT_HOUR,
-        "mdi:solar-power",
+        "mdi:power-plug",
     ],
     "total_power": ["totalPOWER", "total power", "Wp", "mdi:solar-power"],
     "alternator_loss": [
