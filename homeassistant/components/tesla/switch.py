@@ -72,13 +72,13 @@ class RangeSwitch(TeslaDevice, SwitchDevice):
     @property
     def is_on(self):
         """Get whether the switch is in on state."""
-        return self._state == STATE_ON
+        return self._state
 
     def update(self):
         """Update the state of the switch."""
         _LOGGER.debug("Updating state for: %s", self._name)
         self.tesla_device.update()
-        self._state = STATE_ON if self.tesla_device.is_maxrange() else STATE_OFF
+        self._state = bool(self.tesla_device.is_maxrange())
 
 
 class UpdateSwitch(TeslaDevice, SwitchDevice):
@@ -104,10 +104,10 @@ class UpdateSwitch(TeslaDevice, SwitchDevice):
     @property
     def is_on(self):
         """Get whether the switch is in on state."""
-        return self._state == STATE_ON
+        return self._state
 
     def update(self):
         """Update the state of the switch."""
         car_id = self.tesla_device.id()
         _LOGGER.debug("Updating state for: %s %s", self._name, car_id)
-        self._state = STATE_ON if self.controller.get_updates(car_id) else STATE_OFF
+        self._state = bool(self.controller.get_updates(car_id))
