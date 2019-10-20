@@ -7,14 +7,13 @@ from .const import DOMAIN
 async def async_setup(hass, config):
     """Set up this integration."""
     if DOMAIN in config:
-        for server in config[DOMAIN]:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": config_entries.SOURCE_IMPORT},
-                    data=server,
-                )
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                data=config[DOMAIN],
             )
+        )
     return True
 
 

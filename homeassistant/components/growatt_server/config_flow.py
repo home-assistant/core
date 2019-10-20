@@ -23,7 +23,7 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
-        if CONF_PLANT_ID in import_config:
+        if CONF_PLANT_ID in import_config and CONF_NAME in import_config:
             return self.async_create_entry(
                 title=import_config[CONF_NAME], data=import_config
             )
@@ -35,8 +35,13 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         plant_info = await self.hass.async_add_executor_job(
             self.api.plant_list, user_id
         )
-
-        import_config[CONF_PLANT_ID] = plant_info["data"][0]["plantId"]
+        self.plants = {}
+        for plant in plant_info["data"]:
+            self.plants[plant["plantId"]] = plant["plantName"]
+        if CONF_PLANT_ID not in import_config:
+            import_config[CONF_PLANT_ID] = plant_info["data"][0]["plantId"]
+        if CONF_NAME not in import_config:
+            import_config[CONF_NAME] = self.plants[import_config[CONF_PLANT_ID]]
 
         return self.async_create_entry(
             title=import_config[CONF_NAME], data=import_config
