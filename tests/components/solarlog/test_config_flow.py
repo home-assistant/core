@@ -11,7 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from tests.common import MockConfigEntry, mock_coro
 
 NAME = "Solarlog test 1 2 3"
-HOST = "1.1.1.1"
+HOST = "http://1.1.1.1"
 
 
 async def test_form(hass):
@@ -38,7 +38,7 @@ async def test_form(hass):
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "solarlog_test_1_2_3"
-    assert result2["data"] == {"host": "1.1.1.1"}
+    assert result2["data"] == {"host": "http://1.1.1.1"}
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -118,16 +118,18 @@ async def test_abort_if_already_setup(hass, test_connect):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {CONF_HOST: "already_configured"}
 
-    # SHOULD pass, diff HOST, different NAME
+    # SHOULD pass, diff HOST (without http://), different NAME
     result = await flow.async_step_import(
         {CONF_HOST: "2.2.2.2", CONF_NAME: "solarlog_test_7_8_9"}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "solarlog_test_7_8_9"
-    assert result["data"][CONF_HOST] == "2.2.2.2"
+    assert result["data"][CONF_HOST] == "http://2.2.2.2"
 
     # SHOULD pass, diff HOST, same NAME
-    result = await flow.async_step_import({CONF_HOST: "2.2.2.2", CONF_NAME: NAME})
+    result = await flow.async_step_import(
+        {CONF_HOST: "http://2.2.2.2", CONF_NAME: NAME}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "solarlog_test_1_2_3"
-    assert result["data"][CONF_HOST] == "2.2.2.2"
+    assert result["data"][CONF_HOST] == "http://2.2.2.2"
