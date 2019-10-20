@@ -328,7 +328,7 @@ class NetatmoCamera(Camera):
                 self._data.camera_data.cameraUrls(camera=self._camera_name)
             return None
         else:
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state(True)
 
     # Netatmo Presence specific camera method.
 
@@ -371,7 +371,7 @@ class NetatmoCamera(Camera):
                     self._data.camera_data.cameraUrls(camera=self._camera_name)
                 return None
             else:
-                self.schedule_update_ha_state()
+                self.async_schedule_update_ha_state(True)
         else:
             _LOGGER.error("Unsupported camera model for light mode")
 
