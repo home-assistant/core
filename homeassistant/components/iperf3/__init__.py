@@ -1,19 +1,20 @@
 """Support for Iperf3 network measurement tool."""
-import logging
 from datetime import timedelta
+import logging
 
+import iperf3
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
+    CONF_HOST,
+    CONF_HOSTS,
     CONF_MONITORED_CONDITIONS,
     CONF_PORT,
-    CONF_HOST,
     CONF_PROTOCOL,
-    CONF_HOSTS,
     CONF_SCAN_INTERVAL,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -80,8 +81,6 @@ SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_HOST, default=None): cv.string})
 
 async def async_setup(hass, config):
     """Set up the iperf3 component."""
-    import iperf3
-
     hass.data[DOMAIN] = {}
 
     conf = config[DOMAIN]
