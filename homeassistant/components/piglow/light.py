@@ -2,18 +2,19 @@
 import logging
 import subprocess
 
+import piglow
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
     ATTR_HS_COLOR,
+    PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     Light,
-    PLATFORM_SCHEMA,
 )
 from homeassistant.const import CONF_NAME
+import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,8 +30,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Piglow Light platform."""
-    import piglow
-
     if subprocess.getoutput("i2cdetect  -q -y 1 | grep -o 54") != "54":
         _LOGGER.error("A Piglow device was not found")
         return False
