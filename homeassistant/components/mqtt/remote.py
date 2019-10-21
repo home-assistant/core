@@ -152,11 +152,6 @@ class MqttRemote(
         """
         for cmd in command:
             if cmd in self._commands:
-                _LOGGER.info(
-                    "mqtt remote: send command (%s => %s)",
-                    cmd,
-                    self._commands[cmd][CONF_COMMAND],
-                )
                 self._publish_command(self._commands[cmd][CONF_COMMAND])
             else:
                 _LOGGER.warning("Unknown command: %s", cmd)
