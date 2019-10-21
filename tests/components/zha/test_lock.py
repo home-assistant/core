@@ -1,7 +1,9 @@
 """Test zha lock."""
 from unittest.mock import patch
 
-from zigpy.zcl.foundation import Command
+import zigpy.zcl.clusters.closures as closures
+import zigpy.zcl.clusters.general as general
+import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.lock import DOMAIN
 from homeassistant.const import STATE_LOCKED, STATE_UNAVAILABLE, STATE_UNLOCKED
@@ -22,12 +24,14 @@ UNLOCK_DOOR = 1
 
 async def test_lock(hass, config_entry, zha_gateway):
     """Test zha lock platform."""
-    from zigpy.zcl.clusters.closures import DoorLock
-    from zigpy.zcl.clusters.general import Basic
 
     # create zigpy device
     zigpy_device = await async_init_zigpy_device(
-        hass, [DoorLock.cluster_id, Basic.cluster_id], [], None, zha_gateway
+        hass,
+        [closures.DoorLock.cluster_id, general.Basic.cluster_id],
+        [],
+        None,
+        zha_gateway,
     )
 
     # load up lock domain
@@ -49,7 +53,7 @@ async def test_lock(hass, config_entry, zha_gateway):
 
     # set state to locked
     attr = make_attribute(0, 1)
-    hdr = make_zcl_header(Command.Report_Attributes)
+    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
     cluster.handle_message(hdr, [[attr]])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_LOCKED
@@ -69,9 +73,9 @@ async def test_lock(hass, config_entry, zha_gateway):
 
 async def async_lock(hass, cluster, entity_id):
     """Test lock functionality from hass."""
-    from zigpy.zcl.foundation import Status
-
-    with patch("zigpy.zcl.Cluster.request", return_value=mock_coro([Status.SUCCESS])):
+    with patch(
+        "zigpy.zcl.Cluster.request", return_value=mock_coro([zcl_f.Status.SUCCESS])
+    ):
         # lock via UI
         await hass.services.async_call(
             DOMAIN, "lock", {"entity_id": entity_id}, blocking=True
@@ -83,9 +87,9 @@ async def async_lock(hass, cluster, entity_id):
 
 async def async_unlock(hass, cluster, entity_id):
     """Test lock functionality from hass."""
-    from zigpy.zcl.foundation import Status
-
-    with patch("zigpy.zcl.Cluster.request", return_value=mock_coro([Status.SUCCESS])):
+    with patch(
+        "zigpy.zcl.Cluster.request", return_value=mock_coro([zcl_f.Status.SUCCESS])
+    ):
         # lock via UI
         await hass.services.async_call(
             DOMAIN, "unlock", {"entity_id": entity_id}, blocking=True
