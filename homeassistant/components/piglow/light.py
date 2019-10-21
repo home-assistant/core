@@ -36,15 +36,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     name = config.get(CONF_NAME)
 
-    add_entities([PiglowLight(piglow, name)])
+    add_entities([PiglowLight(name)])
 
 
 class PiglowLight(Light):
     """Representation of an Piglow Light."""
 
-    def __init__(self, piglow, name):
+    def __init__(self, name):
         """Initialize an PiglowLight."""
-        self._piglow = piglow
         self._name = name
         self._is_on = False
         self._brightness = 255
@@ -87,7 +86,7 @@ class PiglowLight(Light):
 
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
-        self._piglow.clear()
+        piglow.clear()
 
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
@@ -98,16 +97,16 @@ class PiglowLight(Light):
         rgb = color_util.color_hsv_to_RGB(
             self._hs_color[0], self._hs_color[1], self._brightness / 255 * 100
         )
-        self._piglow.red(rgb[0])
-        self._piglow.green(rgb[1])
-        self._piglow.blue(rgb[2])
-        self._piglow.show()
+        piglow.red(rgb[0])
+        piglow.green(rgb[1])
+        piglow.blue(rgb[2])
+        piglow.show()
         self._is_on = True
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        self._piglow.clear()
-        self._piglow.show()
+        piglow.clear()
+        piglow.show()
         self._is_on = False
         self.schedule_update_ha_state()
