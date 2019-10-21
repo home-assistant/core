@@ -70,6 +70,7 @@ class SSLCertificate(Entity):
         self._name = sensor_name
         self._state = None
         self._available = False
+        self._valid = False
 
     @property
     def name(self):
@@ -122,10 +123,12 @@ class SSLCertificate(Entity):
         except socket.gaierror:
             _LOGGER.error("Cannot resolve hostname: %s", self.server_name)
             self._available = False
+            self._valid = False
             return
         except socket.timeout:
             _LOGGER.error("Connection timeout with server: %s", self.server_name)
             self._available = False
+            self._valid = False
             return
         except ssl.CertificateError as err:
             if "doesn't match" in err.args[0]:
@@ -136,17 +139,17 @@ class SSLCertificate(Entity):
                 _LOGGER.error(
                     "Certificate could not be validated: %s [%s]", self.server_name, err
                 )
+            self._available = True
+            self._state = 0
+            self._valid = False
             return
         except ssl.SSLError as err:
             _LOGGER.error(
                 "Certificate could not be validated: %s [%s]", self.server_name, err
             )
-            return
-        except OSError:
-            _LOGGER.error(
-                "Cannot fetch certificate from %s", self.server_name, exc_info=1
-            )
-            self._available = False
+            self._available = True
+            self._state = 0
+            self._valid = False
             return
 
         ts_seconds = ssl.cert_time_to_seconds(cert["notAfter"])
@@ -154,3 +157,11 @@ class SSLCertificate(Entity):
         expiry = timestamp - datetime.today()
         self._available = True
         self._state = expiry.days
+        self._valid = True
+
+    @property
+    def device_state_attributes(self):
+        """Return additional sensor state attributes."""
+        attr = {"is_valid": self._valid}
+
+        return attr
