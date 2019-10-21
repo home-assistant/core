@@ -77,6 +77,40 @@ class TestRestSensorSetup(unittest.TestCase):
         assert 2 == mock_req.call_count
 
     @requests_mock.Mocker()
+    def test_setup_minimum_resource_template(self, mock_req):
+        """Test setup with minimum configuration (resource_template)."""
+        mock_req.get("http://localhost", status_code=200)
+        with assert_setup_component(1, "sensor"):
+            assert setup_component(
+                self.hass,
+                "sensor",
+                {
+                    "sensor": {
+                        "platform": "rest",
+                        "resource_template": "http://localhost",
+                    }
+                },
+            )
+        assert mock_req.call_count == 2
+
+    @requests_mock.Mocker()
+    def test_setup_duplicate_resource(self, mock_req):
+        """Test setup with duplicate resources."""
+        mock_req.get("http://localhost", status_code=200)
+        with assert_setup_component(0, "sensor"):
+            assert setup_component(
+                self.hass,
+                "sensor",
+                {
+                    "sensor": {
+                        "platform": "rest",
+                        "resource": "http://localhost",
+                        "resource_template": "http://localhost",
+                    }
+                },
+            )
+
+    @requests_mock.Mocker()
     def test_setup_get(self, mock_req):
         """Test setup with valid configuration."""
         mock_req.get("http://localhost", status_code=200)

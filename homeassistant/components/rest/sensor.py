@@ -64,6 +64,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+PLATFORM_SCHEMA = vol.All(
+    cv.has_at_least_one_key(CONF_RESOURCE, CONF_RESOURCE_TEMPLATE), PLATFORM_SCHEMA
+)
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RESTful sensor."""
