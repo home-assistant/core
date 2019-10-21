@@ -48,8 +48,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         _LOGGER.error("There was an error while logging in: %s", err)
         return
 
-    await myq.update_device_info()
-
     async_add_entities([MyQDevice(device) for device in myq.covers.values()], True)
 
 
