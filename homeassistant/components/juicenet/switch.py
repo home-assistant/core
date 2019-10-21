@@ -29,7 +29,7 @@ class JuicenetChargeNowSwitch(JuicenetDevice, SwitchDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return "{} {}".format(self.device.name(), "Charge Now")
+        return f"{self.device.name()} Charge Now"
 
     @property
     def is_on(self):
