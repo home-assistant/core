@@ -4,59 +4,58 @@ import hmac
 import json
 import logging
 
-import voluptuous as vol
-
 from aiohttp.hdrs import AUTHORIZATION
 from aiohttp.web import Request, Response
+import konnected
+import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.components.discovery import SERVICE_KONNECTED
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_STATE,
+    CONF_ACCESS_TOKEN,
+    CONF_BINARY_SENSORS,
+    CONF_DEVICES,
+    CONF_HOST,
+    CONF_ID,
+    CONF_NAME,
+    CONF_PIN,
+    CONF_PORT,
+    CONF_SENSORS,
+    CONF_SWITCHES,
+    CONF_TYPE,
+    CONF_ZONE,
     EVENT_HOMEASSISTANT_START,
     HTTP_BAD_REQUEST,
     HTTP_NOT_FOUND,
     HTTP_UNAUTHORIZED,
-    CONF_DEVICES,
-    CONF_BINARY_SENSORS,
-    CONF_SENSORS,
-    CONF_SWITCHES,
-    CONF_HOST,
-    CONF_PORT,
-    CONF_ID,
-    CONF_NAME,
-    CONF_TYPE,
-    CONF_PIN,
-    CONF_ZONE,
-    CONF_ACCESS_TOKEN,
-    ATTR_ENTITY_ID,
-    ATTR_STATE,
     STATE_ON,
 )
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers import discovery
-from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CONF_ACTIVATION,
     CONF_API_HOST,
+    CONF_BLINK,
+    CONF_DHT_SENSORS,
+    CONF_DISCOVERY,
+    CONF_DS18B20_SENSORS,
+    CONF_INVERSE,
     CONF_MOMENTARY,
     CONF_PAUSE,
     CONF_POLL_INTERVAL,
     CONF_REPEAT,
-    CONF_INVERSE,
-    CONF_BLINK,
-    CONF_DISCOVERY,
-    CONF_DHT_SENSORS,
-    CONF_DS18B20_SENSORS,
     DOMAIN,
-    STATE_LOW,
-    STATE_HIGH,
-    PIN_TO_ZONE,
-    ZONE_TO_PIN,
     ENDPOINT_ROOT,
-    UPDATE_ENDPOINT,
+    PIN_TO_ZONE,
     SIGNAL_SENSOR_UPDATE,
+    STATE_HIGH,
+    STATE_LOW,
+    UPDATE_ENDPOINT,
+    ZONE_TO_PIN,
 )
 from .handlers import HANDLERS
 
@@ -141,8 +140,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Konnected platform."""
-    import konnected
-
     cfg = config.get(DOMAIN)
     if cfg is None:
         cfg = {}
@@ -335,8 +332,6 @@ class DiscoveredDevice:
         self.hass = hass
         self.host = host
         self.port = port
-
-        import konnected
 
         self.client = konnected.Client(host, str(port))
         self.status = self.client.get_status()
