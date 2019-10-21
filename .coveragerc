@@ -415,6 +415,7 @@ omit =
     homeassistant/components/mopar/*
     homeassistant/components/mpchc/media_player.py
     homeassistant/components/mpd/media_player.py
+    homeassistant/components/mqtt/remote.py
     homeassistant/components/mqtt_room/sensor.py
     homeassistant/components/mvglive/sensor.py
     homeassistant/components/mychevy/*
