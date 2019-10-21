@@ -39,11 +39,12 @@ class PlexServer:
         self._server_name = server_config.get(CONF_SERVER)
         self._verify_ssl = server_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
         self.options = options
+        self.server_choice = None
 
     def connect(self):
         """Connect to a Plex server directly, obtaining direct URL if necessary."""
 
-        def _set_missing_url():
+        def _connect_with_token():
             account = plexapi.myplex.MyPlexAccount(token=self._token)
             available_servers = [
                 (x.name, x.clientIdentifier)
@@ -56,13 +57,10 @@ class PlexServer:
             if not self._server_name and len(available_servers) > 1:
                 raise ServerNotSpecified(available_servers)
 
-            server_choice = (
+            self.server_choice = (
                 self._server_name if self._server_name else available_servers[0][0]
             )
-            connections = account.resource(server_choice).connections
-            local_url = [x.httpuri for x in connections if x.local]
-            remote_url = [x.uri for x in connections if not x.local]
-            self._url = local_url[0] if local_url else remote_url[0]
+            self._plex_server = account.resource(self.server_choice).connect()
 
         def _connect_with_url():
             session = None
@@ -73,10 +71,10 @@ class PlexServer:
                 self._url, self._token, session
             )
 
-        if self._token and not self._url:
-            _set_missing_url()
-
-        _connect_with_url()
+        if self._url:
+            _connect_with_url()
+        else:
+            _connect_with_token()
 
     def clients(self):
         """Pass through clients call to plexapi."""
