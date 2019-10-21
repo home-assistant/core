@@ -127,6 +127,21 @@ class SSLCertificate(Entity):
             _LOGGER.error("Connection timeout with server: %s", self.server_name)
             self._available = False
             return
+        except ssl.CertificateError as err:
+            if "doesn't match" in err.args[0]:
+                _LOGGER.error(
+                    "Certificate does not match hostname: %s", self.server_name
+                )
+            else:
+                _LOGGER.error(
+                    "Certificate could not be validated: %s [%s]", self.server_name, err
+                )
+            return
+        except ssl.SSLError as err:
+            _LOGGER.error(
+                "Certificate could not be validated: %s [%s]", self.server_name, err
+            )
+            return
         except OSError:
             _LOGGER.error(
                 "Cannot fetch certificate from %s", self.server_name, exc_info=1

@@ -1,5 +1,6 @@
 """Config flow for the Cert Expiry platform."""
 import socket
+import ssl
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -49,6 +50,13 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._errors[CONF_HOST] = "resolve_failed"
         except socket.timeout:
             self._errors[CONF_HOST] = "connection_timeout"
+        except ssl.CertificateError as err:
+            if "doesn't match" in err.args[0]:
+                self._errors[CONF_HOST] = "wrong_host"
+            else:
+                self._errors[CONF_HOST] = "certificate_error"
+        except ssl.SSLError:
+            self._errors[CONF_HOST] = "certificate_error"
         except OSError:
             self._errors[CONF_HOST] = "certificate_fetch_failed"
         return False
