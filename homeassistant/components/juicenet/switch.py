@@ -41,13 +41,13 @@ class JuicenetChargeNowSwitch(JuicenetDevice, SwitchDevice):
 
     @property
     def is_on(self):
-      """Return true if switch is on."""
-      return self.device.getOverrideTime() != 0
+        """Return true if switch is on."""
+        return self.device.getOverrideTime() != 0
 
     def turn_on(self, **kwargs):
-      """Charge now."""
-      self.device.setOverride(True)
+        """Charge now."""
+        self.device.setOverride(True)
 
     def turn_off(self, **kwargs):
-      """Don't charge now."""
-      self.device.setOverride(False)
+        """Don't charge now."""
+        self.device.setOverride(False)
