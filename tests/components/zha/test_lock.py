@@ -1,14 +1,20 @@
 """Test zha lock."""
 from unittest.mock import patch
-from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED, STATE_UNAVAILABLE
+
+from zigpy.zcl.foundation import Command
+
 from homeassistant.components.lock import DOMAIN
-from tests.common import mock_coro
+from homeassistant.const import STATE_LOCKED, STATE_UNAVAILABLE, STATE_UNLOCKED
+
 from .common import (
+    async_enable_traffic,
     async_init_zigpy_device,
     make_attribute,
     make_entity_id,
-    async_enable_traffic,
+    make_zcl_header,
 )
+
+from tests.common import mock_coro
 
 LOCK_DOOR = 0
 UNLOCK_DOOR = 1
@@ -43,13 +49,14 @@ async def test_lock(hass, config_entry, zha_gateway):
 
     # set state to locked
     attr = make_attribute(0, 1)
-    cluster.handle_message(1, 0x0A, [[attr]])
+    hdr = make_zcl_header(Command.Report_Attributes)
+    cluster.handle_message(hdr, [[attr]])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_LOCKED
 
     # set state to unlocked
     attr.value.value = 2
-    cluster.handle_message(0, 0x0A, [[attr]])
+    cluster.handle_message(hdr, [[attr]])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_UNLOCKED
 

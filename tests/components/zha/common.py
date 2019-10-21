@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 from asynctest import CoroutineMock
 from zigpy.types.named import EUI64
+import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.zha.core.const import (
     DATA_ZHA,
@@ -71,7 +72,6 @@ def patch_cluster(cluster):
     cluster.configure_reporting = CoroutineMock(return_value=[0])
     cluster.deserialize = Mock()
     cluster.handle_cluster_request = Mock()
-    cluster.handle_cluster_general_request = Mock()
     cluster.read_attributes = CoroutineMock()
     cluster.read_attributes_raw = Mock()
     cluster.unbind = CoroutineMock(return_value=[0])
@@ -230,3 +230,12 @@ async def async_test_device_join(
                 domain, zigpy_device, cluster, use_suffix=device_type is None
             )
             assert hass.states.get(entity_id) is not None
+
+
+def make_zcl_header(command_id: int, global_command: bool = True) -> zcl_f.ZCLHeader:
+    """Cluster.handle_message() ZCL Header helper."""
+    if global_command:
+        frc = zcl_f.FrameControl(zcl_f.FrameType.GLOBAL_COMMAND)
+    else:
+        frc = zcl_f.FrameControl(zcl_f.FrameType.CLUSTER_COMMAND)
+    return zcl_f.ZCLHeader(frc, tsn=1, command_id=command_id)

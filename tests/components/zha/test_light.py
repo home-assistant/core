@@ -2,6 +2,8 @@
 import asyncio
 from unittest.mock import MagicMock, call, patch, sentinel
 
+from zigpy.zcl.foundation import Command
+
 from homeassistant.components.light import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 
@@ -11,6 +13,7 @@ from .common import (
     async_test_device_join,
     make_attribute,
     make_entity_id,
+    make_zcl_header,
 )
 
 from tests.common import mock_coro
@@ -123,13 +126,14 @@ async def async_test_on_off_from_light(hass, cluster, entity_id):
     """Test on off functionality from the light."""
     # turn on at light
     attr = make_attribute(0, 1)
-    cluster.handle_message(1, 0x0A, [[attr]])
+    hdr = make_zcl_header(Command.Report_Attributes)
+    cluster.handle_message(hdr, [[attr]])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ON
 
     # turn off at light
     attr.value.value = 0
-    cluster.handle_message(0, 0x0A, [[attr]])
+    cluster.handle_message(hdr, [[attr]])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_OFF
 
@@ -138,7 +142,8 @@ async def async_test_on_from_light(hass, cluster, entity_id):
     """Test on off functionality from the light."""
     # turn on at light
     attr = make_attribute(0, 1)
-    cluster.handle_message(1, 0x0A, [[attr]])
+    hdr = make_zcl_header(Command.Report_Attributes)
+    cluster.handle_message(hdr, [[attr]])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ON
 
@@ -243,7 +248,8 @@ async def async_test_level_on_off_from_hass(
 async def async_test_dimmer_from_light(hass, cluster, entity_id, level, expected_state):
     """Test dimmer functionality from the light."""
     attr = make_attribute(0, level)
-    cluster.handle_message(1, 0x0A, [[attr]])
+    hdr = make_zcl_header(Command.Report_Attributes)
+    cluster.handle_message(hdr, [[attr]])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == expected_state
     # hass uses None for brightness of 0 in state attributes

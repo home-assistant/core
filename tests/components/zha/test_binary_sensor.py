@@ -1,12 +1,16 @@
 """Test zha binary sensor."""
+from zigpy.zcl.foundation import Command
+
 from homeassistant.components.binary_sensor import DOMAIN
-from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNAVAILABLE
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+
 from .common import (
+    async_enable_traffic,
     async_init_zigpy_device,
+    async_test_device_join,
     make_attribute,
     make_entity_id,
-    async_test_device_join,
-    async_enable_traffic,
+    make_zcl_header,
 )
 
 
@@ -74,13 +78,15 @@ async def async_test_binary_sensor_on_off(hass, cluster, entity_id):
     """Test getting on and off messages for binary sensors."""
     # binary sensor on
     attr = make_attribute(0, 1)
-    cluster.handle_message(1, 0x0A, [[attr]])
+    hdr = make_zcl_header(Command.Report_Attributes)
+
+    cluster.handle_message(hdr, [[attr]])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ON
 
     # binary sensor off
     attr.value.value = 0
-    cluster.handle_message(0, 0x0A, [[attr]])
+    cluster.handle_message(hdr, [[attr]])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_OFF
 

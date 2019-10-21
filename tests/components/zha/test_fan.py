@@ -1,17 +1,29 @@
 """Test zha fan."""
 from unittest.mock import call, patch
+
+from zigpy.zcl.foundation import Command
+
 from homeassistant.components import fan
-from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.components.fan import ATTR_SPEED, DOMAIN, SERVICE_SET_SPEED
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF
-from tests.common import mock_coro
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
+
 from .common import (
+    async_enable_traffic,
     async_init_zigpy_device,
+    async_test_device_join,
     make_attribute,
     make_entity_id,
-    async_test_device_join,
-    async_enable_traffic,
+    make_zcl_header,
 )
+
+from tests.common import mock_coro
 
 
 async def test_fan(hass, config_entry, zha_gateway):
@@ -44,13 +56,14 @@ async def test_fan(hass, config_entry, zha_gateway):
 
     # turn on at fan
     attr = make_attribute(0, 1)
-    cluster.handle_message(1, 0x0A, [[attr]])
+    hdr = make_zcl_header(Command.Report_Attributes)
+    cluster.handle_message(hdr, [[attr]])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ON
 
     # turn off at fan
     attr.value.value = 0
-    cluster.handle_message(0, 0x0A, [[attr]])
+    cluster.handle_message(hdr, [[attr]])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_OFF
 
