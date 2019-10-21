@@ -1297,3 +1297,66 @@ async def test_off_min_cycle_duration_enabled(hass, setup_comp_1, caplog):
     assert STATE_OFF == hass.states.get(ENTITY_AC_IB).state
 
     assert "ERROR" not in caplog.text
+
+
+async def test_b4dpxl_case(hass, setup_comp_1, caplog):
+    """Test b4dpxl case.
+
+    https://github.com/home-assistant/home-assistant/pull/27833#issuecomment-544477918
+    """
+
+    await setup_input_booleans(hass)
+
+    # Set the temperature to 20
+    _set_sensor_value(hass, 20)
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "climate": {
+                "platform": "virtual_thermostat",
+                "name": "test",
+                "sensor": ENTITY_SENSOR,
+                "hysteresis_tolerance_on": 0,
+                "hysteresis_tolerance_off": 0,
+                "heat": {"entity_id": ENTITY_HEATER_IB, "away_temp": 12},
+                "initial_hvac_mode": HVAC_MODE_HEAT,
+                "initial_preset_mode": PRESET_AWAY,
+                "enabled_presets": [PRESET_AWAY],
+            }
+        },
+    )
+
+    # Start OFF
+    assert STATE_OFF == hass.states.get(ENTITY_HEATER_IB).state
+
+    # Preset should be away
+    assert (
+        hass.states.get(CLIMATE_ENTITY).attributes.get(ATTR_PRESET_MODE) == PRESET_AWAY
+    )
+
+    # Set the setpoint to 19
+    await common.async_set_temperature(
+        hass, temperature=19, entity_id=CLIMATE_ENTITY, hvac_mode=HVAC_MODE_HEAT
+    )
+
+    # The device should stay OFF
+    assert STATE_OFF == hass.states.get(ENTITY_HEATER_IB).state
+
+    # Set the temperature to 18
+    _set_sensor_value(hass, 18)
+    await hass.async_block_till_done()
+
+    # The device should stay OFF
+    assert STATE_OFF == hass.states.get(ENTITY_HEATER_IB).state
+
+    # Set the temperature to 11
+    _set_sensor_value(hass, 11)
+    await hass.async_block_till_done()
+
+    # The device should turn ON
+    assert STATE_ON == hass.states.get(ENTITY_HEATER_IB).state
+
+    assert "ERROR" not in caplog.text
