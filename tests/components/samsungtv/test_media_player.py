@@ -215,49 +215,58 @@ async def test_send_key(hass, remote, wakeonlan):
 
 async def test_send_key_autodetect_websocket(hass, remote):
     """Test for send key with autodetection of protocol."""
-    await setup_samsungtv(hass, MOCK_CONFIG_AUTO)
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID_AUTO}, True
-    )
-    state = hass.states.get(ENTITY_ID)
-    assert remote.control.call_count == 1
-    assert remote.call_args_list == [call(AUTODETECT_WEBSOCKET)]
-    assert state.state == STATE_ON
+    with patch("samsungctl.Remote") as remote, patch(
+        "homeassistant.components.samsungtv.media_player.socket"
+    ):
+        await setup_samsungtv(hass, MOCK_CONFIG_AUTO)
+        assert await hass.services.async_call(
+            DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID_AUTO}, True
+        )
+        state = hass.states.get(ENTITY_ID_AUTO)
+        assert remote.call_count == 1
+        assert remote.call_args_list == [call(AUTODETECT_WEBSOCKET)]
+        assert state.state == STATE_ON
 
 
 async def test_send_key_autodetect_legacy(hass, remote):
     """Test for send key with autodetection of protocol."""
-    remote.side_effect = [OSError("Boom"), mock.DEFAULT]
-    await setup_samsungtv(hass, MOCK_CONFIG_AUTO)
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID_AUTO}, True
-    )
-    state = hass.states.get(ENTITY_ID_AUTO)
-    assert remote.call_count == 2
-    assert remote.call_args_list == [
-        call(AUTODETECT_WEBSOCKET),
-        call(AUTODETECT_LEGACY),
-    ]
-    assert state.state == STATE_ON
+    with patch(
+        "samsungctl.Remote", side_effect=[OSError("Boom"), mock.DEFAULT]
+    ) as remote, patch("homeassistant.components.samsungtv.media_player.socket"):
+        remote.side_effect = [OSError("Boom"), mock.DEFAULT]
+        await setup_samsungtv(hass, MOCK_CONFIG_AUTO)
+        assert await hass.services.async_call(
+            DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID_AUTO}, True
+        )
+        state = hass.states.get(ENTITY_ID_AUTO)
+        assert remote.call_count == 2
+        assert remote.call_args_list == [
+            call(AUTODETECT_WEBSOCKET),
+            call(AUTODETECT_LEGACY),
+        ]
+        assert state.state == STATE_ON
 
 
 async def test_send_key_autodetect_none(hass, remote):
     """Test for send key with autodetection of protocol."""
-    remote.side_effect = OSError("Boom")
-    await setup_samsungtv(hass, MOCK_CONFIG_AUTO)
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID_AUTO}, True
-    )
-    state = hass.states.get(ENTITY_ID_AUTO)
-    # 4 calls because of retry
-    assert remote.call_count == 4
-    assert remote.call_args_list == [
-        call(AUTODETECT_WEBSOCKET),
-        call(AUTODETECT_LEGACY),
-        call(AUTODETECT_WEBSOCKET),
-        call(AUTODETECT_LEGACY),
-    ]
-    assert state.state == STATE_UNKNOWN
+    with patch("samsungctl.Remote", side_effect=OSError("Boom")) as remote, patch(
+        "homeassistant.components.samsungtv.media_player.socket"
+    ):
+        remote.side_effect = OSError("Boom")
+        await setup_samsungtv(hass, MOCK_CONFIG_AUTO)
+        assert await hass.services.async_call(
+            DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID_AUTO}, True
+        )
+        state = hass.states.get(ENTITY_ID_AUTO)
+        # 4 calls because of retry
+        assert remote.call_count == 4
+        assert remote.call_args_list == [
+            call(AUTODETECT_WEBSOCKET),
+            call(AUTODETECT_LEGACY),
+            call(AUTODETECT_WEBSOCKET),
+            call(AUTODETECT_LEGACY),
+        ]
+        assert state.state == STATE_UNKNOWN
 
 
 async def test_send_key_broken_pipe(hass, remote):
