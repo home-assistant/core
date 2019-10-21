@@ -226,7 +226,21 @@ class GeniusZone(GeniusEntity):
     def device_state_attributes(self) -> Dict[str, Any]:
         """Return the device state attributes."""
         status = {k: v for k, v in self._zone.data.items() if k in GH_ZONE_ATTRS}
+        status.update(self._zone.data["_state"])
         return {"status": status}
+
+    @property
+    def hvac_action(self) -> Optional[str]:
+        """Return the current running hvac operation (off/idle/heating)."""
+        _LOGGER.warn("_state[%s] = %s", self.name, self._zone.data["_state"])
+        _LOGGER.warn(
+            "hvac_action[%s] = %s",
+            self.name,
+            self._zone.data["_state"]["bOutRequestHeat"],
+        )
+        if self._zone.data["_state"]["bOutRequestHeat"]:
+            return "heating"
+        return None
 
     @property
     def current_temperature(self) -> Optional[float]:
