@@ -5,7 +5,7 @@
       "user": {
         "title": "Define your Solar-Log connection",
         "data": {
-          "host": "The hostname or ip-address of your Solar-Log device (without http://)",
+          "host": "The hostname or ip-address of your Solar-Log device",
           "name": "The prefix to be used for your Solar-Log sensors"
         }
       }
