@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Une seule configuration de Abode est autoris\u00e9e."
+            "single_instance_allowed": "Une seule configuration d'Abode est autoris\u00e9e."
         },
         "error": {
             "connection_error": "Impossible de se connecter \u00e0 Abode.",
