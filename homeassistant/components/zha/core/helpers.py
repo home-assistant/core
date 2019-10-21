@@ -8,6 +8,8 @@ import asyncio
 import collections
 import logging
 
+from zigpy.types.named import EUI64
+
 from homeassistant.core import callback
 
 from .const import (
@@ -78,15 +80,6 @@ async def check_zigpy_connection(usb_path, radio_type, database_path):
     return True
 
 
-def convert_ieee(ieee_str):
-    """Convert given ieee string to EUI64."""
-    from zigpy.types import EUI64, uint8_t
-
-    if ieee_str is None:
-        return None
-    return EUI64([uint8_t(p, base=16) for p in ieee_str.split(":")])
-
-
 def get_attr_id_by_name(cluster, attr_name):
     """Get the attribute id for a cluster attribute by its name."""
     return next(
@@ -145,7 +138,7 @@ async def async_get_zha_device(hass, device_id):
     registry_device = device_registry.async_get(device_id)
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     ieee_address = list(list(registry_device.identifiers)[0])[1]
-    ieee = convert_ieee(ieee_address)
+    ieee = EUI64.convert(ieee_address)
     return zha_gateway.devices[ieee]
 
 
