@@ -35,9 +35,9 @@ class JuicenetChargeNowSwitch(JuicenetDevice, SwitchDevice):
     def state(self):
         """Return the state."""
         if self.device.getOverrideTime() != 0:
-          return "on"
+            return "on"
         else:
-          return "off"
+            return "off"
 
     @property
     def is_on(self):
