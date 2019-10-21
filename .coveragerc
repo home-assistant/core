@@ -603,6 +603,7 @@ omit =
     homeassistant/components/simulated/sensor.py
     homeassistant/components/sisyphus/*
     homeassistant/components/sky_hub/device_tracker.py
+    homeassistant/components/sky_plus_hd/media_player.py
     homeassistant/components/skybeacon/sensor.py
     homeassistant/components/skybell/*
     homeassistant/components/slack/notify.py

@@ -1437,6 +1437,9 @@ pysesame2==1.0.1
 # homeassistant.components.goalfeed
 pysher==1.0.1
 
+# homeassistant.components.sky_plus_hd
+pyskyplushd==0.1.1
+
 # homeassistant.components.sma
 pysma==0.3.4
 

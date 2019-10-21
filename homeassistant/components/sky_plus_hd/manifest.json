@@ -1,0 +1,8 @@
+{
+  "domain": "sky_plus_hd",
+  "name": "Sky+HD",
+  "documentation": "https://www.home-assistant.io/integrations/sky_plus_hd",
+  "requirements": ["pyskyplushd==0.1.1"],
+  "dependencies": [],
+  "codeowners": ["@GreenTurtwig"]
+}
