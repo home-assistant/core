@@ -160,6 +160,13 @@ async def test_setup_with_mac(hass, remote):
     assert hass.states.get(ENTITY_ID)
 
 
+async def test_setup_duplicate(hass, remote, caplog):
+    """Test duplicate setup of platform."""
+    DUPLICATE = {DOMAIN: [MOCK_CONFIG[DOMAIN], MOCK_CONFIG[DOMAIN]]}
+    await setup_samsungtv(hass, DUPLICATE)
+    assert "Ignoring duplicate Samsung TV fake" in caplog.text
+
+
 async def test_setup_without_mac(hass, remote):
     """Test setup of platform."""
     await setup_samsungtv(hass, MOCK_CONFIG_NOMAC)
