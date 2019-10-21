@@ -2,8 +2,12 @@
 import json
 import logging
 
-from nacl.secret import SecretBox
-from nacl.encoding import Base64Encoder
+try:
+    from nacl.secret import SecretBox
+    from nacl.encoding import Base64Encoder
+except ImportError:
+    SecretBox = None
+    Base64Encoder = None
 
 from homeassistant.components import zone as zone_comp
 from homeassistant.components.device_tracker import (
@@ -14,6 +18,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import STATE_HOME
 from homeassistant.util import decorator, slugify
 
+from .helper import supports_encryption
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,9 +110,9 @@ def _set_gps_from_zone(kwargs, location, zone):
 
 def _decrypt_payload(secret, topic, ciphertext):
     """Decrypt encrypted payload."""
-    try:
+    if supports_encryption():
         keylen, decrypt = get_cipher()
-    except OSError:
+    else:
         _LOGGER.warning("Ignoring encrypted payload because nacl not installed")
         return None
 

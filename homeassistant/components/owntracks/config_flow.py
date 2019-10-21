@@ -1,22 +1,13 @@
 """Config flow for OwnTracks."""
-try:
-    import nacl
-except ImportError:
-    nacl = None
-
 from homeassistant import config_entries
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.auth.util import generate_secret
 
 from .const import DOMAIN  # noqa pylint: disable=unused-import
+from .helper import supports_encryption
 
 CONF_SECRET = "secret"
 CONF_CLOUDHOOK = "cloudhook"
-
-
-def supports_encryption():
-    """Test if we support encryption."""
-    return nacl is not None
 
 
 class OwnTracksFlow(config_entries.ConfigFlow, domain=DOMAIN):
