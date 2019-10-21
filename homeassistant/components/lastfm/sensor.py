@@ -52,11 +52,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class LastfmSensor(Entity):
     """A class for the Last.fm account."""
 
-    def __init__(self, user, lastfm):
+    def __init__(self, user, lastfm_api):
         """Initialize the sensor."""
-        self._user = lastfm.get_user(user)
+        self._user = lastfm_api.get_user(user)
         self._name = user
-        self._lastfm = lastfm
+        self._lastfm = lastfm_api
         self._state = "Not Scrobbling"
         self._playcount = None
         self._lastplayed = None
