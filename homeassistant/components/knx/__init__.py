@@ -2,9 +2,8 @@
 import logging
 
 import voluptuous as vol
-import xknx
 from xknx import XKNX
-from xknx.devices import DateTime, DateTimeBroadcastType, ExposeSensor
+from xknx.devices import ActionCallback, DateTime, DateTimeBroadcastType, ExposeSensor
 from xknx.exceptions import XKNXException
 from xknx.io import DEFAULT_MCAST_PORT, ConnectionConfig, ConnectionType
 from xknx.knx import AddressFilter, DPTArray, DPTBinary, GroupAddress, Telegram
@@ -295,7 +294,7 @@ class KNXAutomation:
         script_name = "{} turn ON script".format(device.get_name())
         self.script = Script(hass, action, script_name)
 
-        self.action = xknx.devices.ActionCallback(
+        self.action = ActionCallback(
             hass.data[DATA_KNX].xknx, self.script.async_run, hook=hook, counter=counter
         )
         device.actions.append(self.action)

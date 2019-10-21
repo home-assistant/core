@@ -2,7 +2,7 @@
 from typing import List, Optional
 
 import voluptuous as vol
-import xknx
+from xknx.devices import Climate as XknxClimate, ClimateMode as XknxClimateMode
 from xknx.knx import HVACOperationMode
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
@@ -137,7 +137,7 @@ def async_add_entities_discovery(hass, discovery_info, async_add_entities):
 @callback
 def async_add_entities_config(hass, config, async_add_entities):
     """Set up climate for KNX platform configured within platform."""
-    climate_mode = xknx.devices.ClimateMode(
+    climate_mode = XknxClimateMode(
         hass.data[DATA_KNX].xknx,
         name=config[CONF_NAME] + " Mode",
         group_address_operation_mode=config.get(CONF_OPERATION_MODE_ADDRESS),
@@ -165,7 +165,7 @@ def async_add_entities_config(hass, config, async_add_entities):
     )
     hass.data[DATA_KNX].xknx.devices.add(climate_mode)
 
-    climate = xknx.devices.Climate(
+    climate = XknxClimate(
         hass.data[DATA_KNX].xknx,
         name=config[CONF_NAME],
         group_address_temperature=config[CONF_TEMPERATURE_ADDRESS],

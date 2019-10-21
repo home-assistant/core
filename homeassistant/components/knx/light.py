@@ -2,7 +2,7 @@
 from enum import Enum
 
 import voluptuous as vol
-import xknx
+from xknx.devices import Light as XknxLight
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -110,7 +110,7 @@ def async_add_entities_config(hass, config, async_add_entities):
         group_address_tunable_white = config.get(CONF_COLOR_TEMP_ADDRESS)
         group_address_tunable_white_state = config.get(CONF_COLOR_TEMP_STATE_ADDRESS)
 
-    light = xknx.devices.Light(
+    light = XknxLight(
         hass.data[DATA_KNX].xknx,
         name=config[CONF_NAME],
         group_address_switch=config[CONF_ADDRESS],
