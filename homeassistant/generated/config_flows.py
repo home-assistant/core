@@ -9,6 +9,7 @@ FLOWS = [
     "adguard",
     "ais_dom_device",
     "ais_drives_service",
+    "ais_google_home",
     "ais_host",
     "ais_spotify_service",
     "ais_supla",

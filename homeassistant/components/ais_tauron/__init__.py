@@ -64,7 +64,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up TAURON as config entry."""
-    _LOGGER.info("TAURON async_setup_entry")
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 

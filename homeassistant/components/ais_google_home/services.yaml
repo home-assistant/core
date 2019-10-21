@@ -1,0 +1,20 @@
+# Describes the format for available AIS drives services
+browse_path:
+  description: Przeglądanie zawartości (foldery i pliki) wskazanej ścieżki na dysku
+  fields:
+    path:
+      description: Śeieżka
+      example: '/sdcard/dom/Muzyka/Zalewski/Zelig'
+
+sync_locations:
+  description: Synchronizacja folderu źródłowego i docelowego, modyfikowane jest tylko miejsce docelowe
+  fields:
+    source_path:
+      description: Śeieżka źródłowa
+      example: 'Dysk-Google:'
+    dest_path:
+      description: Śeieżka docelowa
+      example: '/sdcard/dom/kopia_dysku_google'
+    say:
+      description: Zwrotne informacje głosowe
+      example: 'true'
