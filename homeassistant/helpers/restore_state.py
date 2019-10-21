@@ -165,7 +165,7 @@ class RestoreStateData:
     def async_setup_dump(self, *args: Any) -> None:
         """Set up the restore state listeners."""
 
-        def _async_dump_states() -> None:
+        def _async_dump_states(*_: Any) -> None:
             self.hass.async_create_task(self.async_dump_states())
 
         # Dump the initial states now. This helps minimize the risk of having
