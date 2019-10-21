@@ -110,7 +110,7 @@ homeassistant/components/geniushub/* @zxdavb
 homeassistant/components/geo_rss_events/* @exxamalte
 homeassistant/components/geonetnz_quakes/* @exxamalte
 homeassistant/components/gitter/* @fabaff
-homeassistant/components/glances/* @fabaff
+homeassistant/components/glances/* @fabaff @engrbm87
 homeassistant/components/gntp/* @robbiet480
 homeassistant/components/google_assistant/* @home-assistant/cloud
 homeassistant/components/google_cloud/* @lufton
