@@ -397,17 +397,14 @@ async def test_turn_off_legacy(hass, remote):
     assert remote.control.call_args_list == [call("KEY_POWEROFF")]
 
 
-async def test_turn_off_os_error(hass, remote):
+async def test_turn_off_os_error(hass, remote, caplog):
     """Test for turn_off with OSError."""
-    with patch(
-        "homeassistant.components.samsungtv.media_player.LOGGER.debug"
-    ) as mocked_debug:
-        await setup_samsungtv(hass, MOCK_CONFIG)
-        remote.close = mock.Mock(side_effect=OSError("BOOM"))
-        assert await hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
-        )
-        mocked_debug.assert_called_once_with("Could not establish connection.")
+    await setup_samsungtv(hass, MOCK_CONFIG)
+    remote.close = mock.Mock(side_effect=OSError("BOOM"))
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+    assert "Could not establish connection." in caplog.text
 
 
 async def test_volume_up(hass, remote):
