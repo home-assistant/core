@@ -103,17 +103,17 @@ async def test_import_file_from_discovery(hass):
 
 async def test_discovery(hass):
     """Test starting a flow from discovery."""
-
-    result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
-        context={"source": "discovery"},
-        data={
-            CONF_HOST: MOCK_SERVERS[0][CONF_HOST],
-            CONF_PORT: MOCK_SERVERS[0][CONF_PORT],
-        },
-    )
-    assert result["type"] == "abort"
-    assert result["reason"] == "discovery_no_file"
+    with patch("homeassistant.components.plex.config_flow.load_json", return_value={}):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": "discovery"},
+            data={
+                CONF_HOST: MOCK_SERVERS[0][CONF_HOST],
+                CONF_PORT: MOCK_SERVERS[0][CONF_PORT],
+            },
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "discovery_no_file"
 
 
 async def test_discovery_while_in_progress(hass):
