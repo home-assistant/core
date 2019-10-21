@@ -373,7 +373,7 @@ class GTFSDepartureSensor(Entity):
 
     def __init__(
         self,
-        pygtfs: Any,
+        gtfs: Any,
         name: Optional[Any],
         origin: Any,
         destination: Any,
@@ -381,7 +381,7 @@ class GTFSDepartureSensor(Entity):
         include_tomorrow: bool,
     ) -> None:
         """Initialize the sensor."""
-        self._pygtfs = pygtfs
+        self._pygtfs = gtfs
         self.origin = origin
         self.destination = destination
         self._include_tomorrow = include_tomorrow
