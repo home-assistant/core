@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -38,6 +39,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Open Hardware Monitor platform."""
     data = OpenHardwareMonitorData(config, hass)
+    if data.data is None:
+        raise PlatformNotReady
     add_entities(data.devices, True)
 
 
