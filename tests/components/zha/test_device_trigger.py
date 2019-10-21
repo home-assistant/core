@@ -1,5 +1,6 @@
 """ZHA device automation trigger tests."""
 import pytest
+import zigpy.zcl.clusters.general as general
 
 import homeassistant.components.automation as automation
 from homeassistant.components.switch import DOMAIN
@@ -9,7 +10,7 @@ from homeassistant.setup import async_setup_component
 
 from .common import async_enable_traffic, async_init_zigpy_device
 
-from tests.common import async_mock_service, async_get_device_automations
+from tests.common import async_get_device_automations, async_mock_service
 
 ON = 1
 OFF = 0
@@ -43,11 +44,10 @@ def calls(hass):
 
 async def test_triggers(hass, config_entry, zha_gateway):
     """Test zha device triggers."""
-    from zigpy.zcl.clusters.general import OnOff, Basic
 
     # create zigpy device
     zigpy_device = await async_init_zigpy_device(
-        hass, [Basic.cluster_id], [OnOff.cluster_id], None, zha_gateway
+        hass, [general.Basic.cluster_id], [general.OnOff.cluster_id], None, zha_gateway
     )
 
     zigpy_device.device_automation_triggers = {
@@ -112,11 +112,10 @@ async def test_triggers(hass, config_entry, zha_gateway):
 
 async def test_no_triggers(hass, config_entry, zha_gateway):
     """Test zha device with no triggers."""
-    from zigpy.zcl.clusters.general import OnOff, Basic
 
     # create zigpy device
     zigpy_device = await async_init_zigpy_device(
-        hass, [Basic.cluster_id], [OnOff.cluster_id], None, zha_gateway
+        hass, [general.Basic.cluster_id], [general.OnOff.cluster_id], None, zha_gateway
     )
 
     await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
@@ -135,11 +134,10 @@ async def test_no_triggers(hass, config_entry, zha_gateway):
 
 async def test_if_fires_on_event(hass, config_entry, zha_gateway, calls):
     """Test for remote triggers firing."""
-    from zigpy.zcl.clusters.general import OnOff, Basic
 
     # create zigpy device
     zigpy_device = await async_init_zigpy_device(
-        hass, [Basic.cluster_id], [OnOff.cluster_id], None, zha_gateway
+        hass, [general.Basic.cluster_id], [general.OnOff.cluster_id], None, zha_gateway
     )
 
     zigpy_device.device_automation_triggers = {
@@ -197,11 +195,10 @@ async def test_if_fires_on_event(hass, config_entry, zha_gateway, calls):
 
 async def test_exception_no_triggers(hass, config_entry, zha_gateway, calls, caplog):
     """Test for exception on event triggers firing."""
-    from zigpy.zcl.clusters.general import OnOff, Basic
 
     # create zigpy device
     zigpy_device = await async_init_zigpy_device(
-        hass, [Basic.cluster_id], [OnOff.cluster_id], None, zha_gateway
+        hass, [general.Basic.cluster_id], [general.OnOff.cluster_id], None, zha_gateway
     )
 
     await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
@@ -244,11 +241,10 @@ async def test_exception_no_triggers(hass, config_entry, zha_gateway, calls, cap
 
 async def test_exception_bad_trigger(hass, config_entry, zha_gateway, calls, caplog):
     """Test for exception on event triggers firing."""
-    from zigpy.zcl.clusters.general import OnOff, Basic
 
     # create zigpy device
     zigpy_device = await async_init_zigpy_device(
-        hass, [Basic.cluster_id], [OnOff.cluster_id], None, zha_gateway
+        hass, [general.Basic.cluster_id], [general.OnOff.cluster_id], None, zha_gateway
     )
 
     zigpy_device.device_automation_triggers = {

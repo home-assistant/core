@@ -5,6 +5,7 @@ import logging
 
 import voluptuous as vol
 from zigpy.types.named import EUI64
+import zigpy.zdo.types as zdo_types
 
 from homeassistant.components import websocket_api
 from homeassistant.core import callback
@@ -514,7 +515,6 @@ async def websocket_unbind_devices(hass, connection, msg):
 
 async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operation):
     """Create or remove a direct zigbee binding between 2 devices."""
-    from zigpy.zdo import types as zdo_types
 
     source_device = zha_gateway.get_device(source_ieee)
     target_device = zha_gateway.get_device(target_ieee)
