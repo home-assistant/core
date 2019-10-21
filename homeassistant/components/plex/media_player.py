@@ -62,7 +62,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             hass, config_entry, async_add_entities, server_id, new_entities
         )
 
-    unsub = async_dispatcher_connect(hass, PLEX_NEW_MP_SIGNAL, async_new_media_players)
+    unsub = async_dispatcher_connect(
+        hass, PLEX_NEW_MP_SIGNAL.format(server_id), async_new_media_players
+    )
     hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
 
