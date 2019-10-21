@@ -1,12 +1,16 @@
 """Test zha sensor."""
+from zigpy.zcl.foundation import Command
+
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.const import STATE_UNKNOWN, STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+
 from .common import (
+    async_enable_traffic,
     async_init_zigpy_device,
+    async_test_device_join,
     make_attribute,
     make_entity_id,
-    async_test_device_join,
-    async_enable_traffic,
+    make_zcl_header,
 )
 
 
@@ -177,7 +181,8 @@ async def send_attribute_report(hass, cluster, attrid, value):
     device is paired to the zigbee network.
     """
     attr = make_attribute(attrid, value)
-    cluster.handle_message(1, 0x0A, [[attr]])
+    hdr = make_zcl_header(Command.Report_Attributes)
+    cluster.handle_message(hdr, [[attr]])
     await hass.async_block_till_done()
 
 

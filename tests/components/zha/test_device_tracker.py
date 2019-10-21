@@ -1,19 +1,25 @@
 """Test ZHA Device Tracker."""
 from datetime import timedelta
 import time
+
+from zigpy.zcl.foundation import Command
+
 from homeassistant.components.device_tracker import DOMAIN, SOURCE_TYPE_ROUTER
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
 from homeassistant.components.zha.core.registries import (
     SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE,
 )
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
 import homeassistant.util.dt as dt_util
+
 from .common import (
+    async_enable_traffic,
     async_init_zigpy_device,
+    async_test_device_join,
     make_attribute,
     make_entity_id,
-    async_test_device_join,
-    async_enable_traffic,
+    make_zcl_header,
 )
+
 from tests.common import async_fire_time_changed
 
 
@@ -67,10 +73,11 @@ async def test_device_tracker(hass, config_entry, zha_gateway):
 
     # turn state flip
     attr = make_attribute(0x0020, 23)
-    cluster.handle_message(1, 0x0A, [[attr]])
+    hdr = make_zcl_header(Command.Report_Attributes)
+    cluster.handle_message(hdr, [[attr]])
 
     attr = make_attribute(0x0021, 200)
-    cluster.handle_message(1, 0x0A, [[attr]])
+    cluster.handle_message(hdr, [[attr]])
 
     zigpy_device.last_seen = time.time() + 10
     next_update = dt_util.utcnow() + timedelta(seconds=30)
