@@ -121,25 +121,26 @@ class SmartPlugSwitch(SwitchDevice):
             if not self._sysinfo:
                 self._sysinfo = self.smartplug.sys_info
                 self._mac = self.smartplug.mac
-                self._alias = self.smartplug.alias
                 self._model = self.smartplug.model
                 if self.smartplug.context is None:
-                    self._device_id = self.smartplug.sys_info["deviceId"]
+                    self._alias = self.smartplug.alias
+                    self._device_id = self._mac
                 else:
+                    self._alias = [
+                        child
+                        for child in self.smartplug.sys_info["children"]
+                        if child["id"] == self.smartplug.context
+                    ][0]["alias"]
                     self._device_id = self.smartplug.context
 
             if self.smartplug.context is None:
                 self._state = self.smartplug.state == self.smartplug.SWITCH_STATE_ON
             else:
-                self._state = (
-                    list(
-                        filter(
-                            lambda child: child["id"] == self.smartplug.context,
-                            self.smartplug.sys_info["children"],
-                        )
-                    )[0]["state"]
-                    == 1
-                )
+                self._state = [
+                    child
+                    for child in self.smartplug.sys_info["children"]
+                    if child["id"] == self.smartplug.context
+                ][0]["state"] == 1
 
             if self.smartplug.has_emeter:
                 emeter_readings = self.smartplug.get_emeter_realtime()
