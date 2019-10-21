@@ -12,6 +12,6 @@
   ],
   "codeowners": [
     "@home-assistant/core",
-    "kmstumpff"
+    "@kmstumpff"
   ]
 }

@@ -189,7 +189,7 @@ homeassistant/components/mobile_app/* @robbiet480
 homeassistant/components/monoprice/* @etsinko
 homeassistant/components/moon/* @fabaff
 homeassistant/components/mpd/* @fabaff
-homeassistant/components/mqtt/* @home-assistant/core
+homeassistant/components/mqtt/* @home-assistant/core @kmstumpff
 homeassistant/components/mysensors/* @MartinHjelmare
 homeassistant/components/mystrom/* @fabaff
 homeassistant/components/neato/* @dshokouhi @Santobert
