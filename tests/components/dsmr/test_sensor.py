@@ -11,17 +11,23 @@ from decimal import Decimal
 from unittest.mock import Mock
 
 import asynctest
+from dsmr_parser.clients.protocol import DSMRProtocol
+from dsmr_parser.obis_references import (
+    CURRENT_ELECTRICITY_USAGE,
+    ELECTRICITY_ACTIVE_TARIFF,
+)
+from dsmr_parser.objects import CosemObject, MBusObject
+import pytest
+
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.dsmr.sensor import DerivativeDSMREntity
-import pytest
+
 from tests.common import assert_setup_component
 
 
 @pytest.fixture
 def mock_connection_factory(monkeypatch):
     """Mock the create functions for serial and TCP Asyncio connections."""
-    from dsmr_parser.clients.protocol import DSMRProtocol
-
     transport = asynctest.Mock(spec=asyncio.Transport)
     protocol = asynctest.Mock(spec=DSMRProtocol)
 
@@ -47,12 +53,6 @@ def mock_connection_factory(monkeypatch):
 def test_default_setup(hass, mock_connection_factory):
     """Test the default setup."""
     (connection_factory, transport, protocol) = mock_connection_factory
-
-    from dsmr_parser.obis_references import (
-        CURRENT_ELECTRICITY_USAGE,
-        ELECTRICITY_ACTIVE_TARIFF,
-    )
-    from dsmr_parser.objects import CosemObject
 
     config = {"platform": "dsmr"}
 
@@ -93,8 +93,6 @@ def test_default_setup(hass, mock_connection_factory):
 @asyncio.coroutine
 def test_derivative():
     """Test calculation of derivative value."""
-    from dsmr_parser.objects import MBusObject
-
     config = {"platform": "dsmr"}
 
     entity = DerivativeDSMREntity("test", "1.0.0", config)
