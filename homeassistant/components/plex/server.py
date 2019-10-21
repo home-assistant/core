@@ -9,7 +9,7 @@ import requests.exceptions
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import dispatcher_connect, dispatcher_send
 
 from .const import (
     CONF_CLIENT_IDENTIFIER,
@@ -17,8 +17,11 @@ from .const import (
     CONF_SHOW_ALL_CONTROLS,
     CONF_USE_EPISODE_ART,
     DEFAULT_VERIFY_SSL,
+    DISPATCHERS,
+    DOMAIN as PLEX_DOMAIN,
     PLEX_NEW_MP_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
+    PLEX_UPDATE_PLATFORMS_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
     X_PLEX_DEVICE_NAME,
     X_PLEX_PLATFORM,
@@ -57,6 +60,17 @@ class PlexServer:
         plexapi.myplex.BASE_HEADERS = plexapi.reset_base_headers()
         plexapi.server.BASE_HEADERS = plexapi.reset_base_headers()
 
+    def setup_websocket_callback(self):
+        """Connect dispatcher for websocket callbacks."""
+        server_id = self.machine_identifier
+        unsub = dispatcher_connect(
+            self._hass,
+            PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id),
+            self.update_platforms,
+        )
+        self._hass.data[PLEX_DOMAIN][DISPATCHERS].setdefault(server_id, [])
+        self._hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
+
     def connect(self):
         """Connect to a Plex server directly, obtaining direct URL if necessary."""
 
@@ -92,6 +106,8 @@ class PlexServer:
         else:
             _connect_with_token()
 
+        self.setup_websocket_callback()
+
     def refresh_entity(self, machine_identifier, device, session):
         """Forward refresh dispatch to media_player."""
         dispatcher_send(
@@ -103,6 +119,8 @@ class PlexServer:
 
     def update_platforms(self):
         """Update the platform entities."""
+        _LOGGER.debug("Updating devices")
+
         available_clients = {}
         new_clients = set()
 
@@ -201,3 +219,10 @@ class PlexServer:
     def create_playqueue(self, media, **kwargs):
         """Create playqueue on Plex server."""
         return plexapi.playqueue.PlayQueue.create(self._plex_server, media, **kwargs)
+
+    @property
+    def websocket_url(self):
+        """Return the websocket URL for this Plex server."""
+        return self._plex_server.url(
+            "/:/websockets/notifications", includeToken=True
+        ).replace("http", "ws")
