@@ -75,7 +75,6 @@ def async_add_entities_discovery(hass, discovery_info, async_add_entities):
 @callback
 def async_add_entities_config(hass, config, async_add_entities):
     """Set up cover for KNX platform configured within platform."""
-
     cover = Cover(
         hass.data[DATA_KNX].xknx,
         name=config[CONF_NAME],

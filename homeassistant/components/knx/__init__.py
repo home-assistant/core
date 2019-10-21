@@ -95,7 +95,6 @@ SERVICE_KNX_SEND_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the KNX component."""
-
     try:
         hass.data[DATA_KNX] = KNXModule(hass, config)
         hass.data[DATA_KNX].async_create_exposures()
@@ -209,7 +208,6 @@ class KNXModule:
 
     def connection_config_tunneling(self):
         """Return the connection_config if tunneling is configured."""
-
         gateway_ip = self.config[DOMAIN][CONF_KNX_TUNNELING].get(CONF_HOST)
         gateway_port = self.config[DOMAIN][CONF_KNX_TUNNELING].get(CONF_PORT)
         local_ip = self.config[DOMAIN][CONF_KNX_TUNNELING].get(CONF_KNX_LOCAL_IP)
@@ -225,7 +223,6 @@ class KNXModule:
     def connection_config_auto(self):
         """Return the connection_config if auto is configured."""
         # pylint: disable=no-self-use
-
         return ConnectionConfig()
 
     def register_callbacks(self):
@@ -273,7 +270,6 @@ class KNXModule:
 
     async def service_send_to_knx_bus(self, call):
         """Service for sending an arbitrary KNX message to the KNX bus."""
-
         attr_payload = call.data.get(SERVICE_KNX_ATTR_PAYLOAD)
         attr_address = call.data.get(SERVICE_KNX_ATTR_ADDRESS)
 
@@ -321,7 +317,6 @@ class KNXExposeTime:
     @callback
     def async_register(self):
         """Register listener."""
-
         broadcast_type_string = self.type.upper()
         broadcast_type = DateTimeBroadcastType[broadcast_type_string]
         self.device = DateTime(
@@ -345,7 +340,6 @@ class KNXExposeSensor:
     @callback
     def async_register(self):
         """Register listener."""
-
         self.device = ExposeSensor(
             self.xknx,
             name=self.entity_id,

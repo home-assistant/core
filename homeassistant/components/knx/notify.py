@@ -43,7 +43,6 @@ def async_get_service_discovery(hass, discovery_info):
 @callback
 def async_get_service_config(hass, config):
     """Set up notification for KNX platform configured within platform."""
-
     notification = Notification(
         hass.data[DATA_KNX].xknx,
         name=config[CONF_NAME],

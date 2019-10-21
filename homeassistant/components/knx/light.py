@@ -99,7 +99,6 @@ def async_add_entities_discovery(hass, discovery_info, async_add_entities):
 @callback
 def async_add_entities_config(hass, config, async_add_entities):
     """Set up light for KNX platform configured within platform."""
-
     group_address_tunable_white = None
     group_address_tunable_white_state = None
     group_address_color_temp = None
