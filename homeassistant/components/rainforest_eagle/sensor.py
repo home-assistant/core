@@ -64,7 +64,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     cloud_id = config[CONF_CLOUD_ID]
     install_code = config[CONF_INSTALL_CODE]
     if config[CONF_IP_ADDRESS] == "":
-        ip_address = None
+        from zeroconf import Zeroconf
+
+        zc = Zeroconf()
+        info = zc.get_service_info(
+            "_http._tcp.local.", "eagle-{}._http._tcp.local.".format(cloud_id)
+        )
+        ip_address = "{}.{}.{}.{}".format(*info.address)
     else:
         ip_address = config[CONF_IP_ADDRESS]
 
