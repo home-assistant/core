@@ -6,15 +6,14 @@ import voluptuous as vol
 from homeassistant.components import mqtt
 from homeassistant.components.remote import RemoteDevice
 from homeassistant.const import (
+    CONF_COMMAND,
     CONF_DEVICE,
     CONF_ICON,
     CONF_NAME,
-    CONF_PAYLOAD_ON,
-    CONF_PAYLOAD_OFF,
-    CONF_COMMAND,
     CONF_OPTIMISTIC,
+    CONF_PAYLOAD_OFF,
+    CONF_PAYLOAD_ON,
 )
-
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
