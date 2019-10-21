@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+import btlewrap
 from btlewrap import BluetoothBackendException
 from miflora import miflora_poller
 import voluptuous as vol
@@ -21,13 +22,10 @@ from homeassistant.helpers.entity import Entity
 
 try:
     import bluepy.btle  # noqa: F401 pylint: disable=unused-import
-    from btlewrap import BluepyBackend
 
-    BACKEND = BluepyBackend
+    BACKEND = btlewrap.BluepyBackend
 except ImportError:
-    from btlewrap import GatttoolBackend
-
-    BACKEND = GatttoolBackend
+    BACKEND = btlewrap.GatttoolBackend
 
 _LOGGER = logging.getLogger(__name__)
 
