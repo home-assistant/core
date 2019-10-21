@@ -121,7 +121,7 @@ class MqttRemote(
 
     @property
     def name(self):
-        """Return the name of the switch."""
+        """Return the name of the remote."""
         return self._config[CONF_NAME]
 
     @property
@@ -160,7 +160,7 @@ class MqttRemote(
         self._publish_command(self._config[CONF_PAYLOAD_ON])
 
         if self._optimistic:
-            # Optimistically assume that switch has changed state.
+            # Optimistically assume that remote has changed state.
             self._state = True
             self.async_write_ha_state()
 
@@ -169,7 +169,7 @@ class MqttRemote(
         self._publish_command(self._config[CONF_PAYLOAD_OFF])
 
         if self._optimistic:
-            # Optimistically assume that switch has changed state.
+            # Optimistically assume that remote has changed state.
             self._state = False
             self.async_write_ha_state()
 
