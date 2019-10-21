@@ -3,6 +3,9 @@ import logging
 import threading
 import time
 
+from raspihats import i2c_hats
+from raspihats.i2c_hats import ResponseException
+
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 
 _LOGGER = logging.getLogger(__name__)
@@ -120,10 +123,7 @@ class I2CHatsManager(threading.Thread):
         with self._lock:
             i2c_hat = self._i2c_hats.get(address)
             if i2c_hat is None:
-                # pylint: disable=import-error,no-name-in-module
-                import raspihats.i2c_hats as module
-
-                constructor = getattr(module, board)
+                constructor = getattr(i2c_hats, board)
                 i2c_hat = constructor(address)
                 setattr(i2c_hat, self._CALLBACKS, {})
 
@@ -138,9 +138,6 @@ class I2CHatsManager(threading.Thread):
 
     def run(self):
         """Keep alive for I2C-HATs."""
-        # pylint: disable=import-error,no-name-in-module
-        from raspihats.i2c_hats import ResponseException
-
         _LOGGER.info(log_message(self, "starting"))
 
         while self._run:
@@ -199,9 +196,6 @@ class I2CHatsManager(threading.Thread):
 
     def read_di(self, address, channel):
         """Read a value from a I2C-HAT digital input."""
-        # pylint: disable=import-error,no-name-in-module
-        from raspihats.i2c_hats import ResponseException
-
         with self._lock:
             i2c_hat = self._i2c_hats[address]
             try:
@@ -212,9 +206,6 @@ class I2CHatsManager(threading.Thread):
 
     def write_dq(self, address, channel, value):
         """Write a value to a I2C-HAT digital output."""
-        # pylint: disable=import-error,no-name-in-module
-        from raspihats.i2c_hats import ResponseException
-
         with self._lock:
             i2c_hat = self._i2c_hats[address]
             try:
@@ -224,9 +215,6 @@ class I2CHatsManager(threading.Thread):
 
     def read_dq(self, address, channel):
         """Read a value from a I2C-HAT digital output."""
-        # pylint: disable=import-error,no-name-in-module
-        from raspihats.i2c_hats import ResponseException
-
         with self._lock:
             i2c_hat = self._i2c_hats[address]
             try:
