@@ -127,9 +127,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     # Get IP of host, to prevent duplication of same host (different DNS names)
     try:
         ipaddr = socket.gethostbyname(host)
-    except (OSError) as error:
+    except OSError as error:
         _LOGGER.error("Could not communicate with %s:%d: %s", host, port, error)
-        raise PlatformNotReady
+        raise PlatformNotReady from error
 
     if ipaddr in known_servers:
         return
