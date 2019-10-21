@@ -147,9 +147,17 @@ class PlexServer:
             self.refresh_entity(client_id, None, None)
 
         if new_entity_configs:
-            dispatcher_send(self._hass, PLEX_NEW_MP_SIGNAL, new_entity_configs)
+            dispatcher_send(
+                self._hass,
+                PLEX_NEW_MP_SIGNAL.format(self.machine_identifier),
+                new_entity_configs,
+            )
 
-        dispatcher_send(self._hass, PLEX_UPDATE_SENSOR_SIGNAL, sessions)
+        dispatcher_send(
+            self._hass,
+            PLEX_UPDATE_SENSOR_SIGNAL.format(self.machine_identifier),
+            sessions,
+        )
 
     @property
     def friendly_name(self):
