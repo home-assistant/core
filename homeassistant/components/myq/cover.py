@@ -13,6 +13,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import (
     CONF_PASSWORD,
+    CONF_TYPE,
     CONF_USERNAME,
     STATE_CLOSED,
     STATE_CLOSING,
@@ -31,7 +32,13 @@ MYQ_TO_HASS = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
+    {
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        # This parameter is no longer used; keeping it to avoid a breaking change in
+        # a hotfix, but in a future main release, this should be removed:
+        vol.Optional(CONF_TYPE): cv.string,
+    }
 )
 
 
