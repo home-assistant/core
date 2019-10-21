@@ -75,7 +75,7 @@ class RingCam(Camera):
 
     def __init__(self, hass, camera, device_info):
         """Initialize a Ring Door Bell camera."""
-        super(RingCam, self).__init__()
+        super().__init__()
         self._camera = camera
         self._hass = hass
         self._name = self._camera.name

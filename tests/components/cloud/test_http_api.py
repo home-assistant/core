@@ -33,7 +33,9 @@ SUBSCRIPTION_INFO_URL = "https://api-test.hass.io/subscription_info"
 @pytest.fixture()
 def mock_auth():
     """Mock check token."""
-    with patch("hass_nabucasa.auth.CognitoAuth.check_token"):
+    with patch(
+        "hass_nabucasa.auth.CognitoAuth.async_check_token", side_effect=mock_coro
+    ):
         yield
 
 
@@ -357,6 +359,7 @@ async def test_websocket_status(
             "google_secure_devices_pin": None,
             "alexa_entity_configs": {},
             "alexa_report_state": False,
+            "google_report_state": False,
             "remote_enabled": False,
         },
         "alexa_entities": {

@@ -1,7 +1,7 @@
 {
   "domain": "statsd",
   "name": "Statsd",
-  "documentation": "https://www.home-assistant.io/components/statsd",
+  "documentation": "https://www.home-assistant.io/integrations/statsd",
   "requirements": [
     "statsd==3.2.1"
   ],

@@ -16,15 +16,15 @@ ICON = "mdi:bus-clock"
 
 CONF_APP_ID = "app_id"
 CONF_APP_KEY = "app_key"
-CONF_STOP = "stop"
 CONF_LINE = "line"
-CONF_STOPS = "stops"
+CONF_BUS_STOP = "stop"
+CONF_BUS_STOPS = "stops"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 LINE_STOP_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_STOP): cv.string,
+        vol.Required(CONF_BUS_STOP): cv.string,
         vol.Required(CONF_LINE): cv.string,
         vol.Optional(CONF_NAME): cv.string,
     }
@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_APP_ID): cv.string,
         vol.Required(CONF_APP_KEY): cv.string,
-        vol.Optional(CONF_STOPS): ROUTES_SCHEMA,
+        vol.Optional(CONF_BUS_STOPS): ROUTES_SCHEMA,
     }
 )
 
@@ -47,9 +47,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     sensors = []
 
-    for line_stop in config.get(CONF_STOPS):
+    for line_stop in config.get(CONF_BUS_STOPS):
         line = line_stop[CONF_LINE]
-        stop = line_stop[CONF_STOP]
+        stop = line_stop[CONF_BUS_STOP]
         if line_stop[CONF_NAME] is not None:
             friendly_name = line_stop[CONF_NAME]
             name = f"{line} - {friendly_name} ({stop})"
@@ -103,7 +103,7 @@ class TMBSensor(Entity):
         """Return the state attributes of the last update."""
         attrs = {}
         attrs[ATTR_ATTRIBUTION] = (ATTRIBUTION,)
-        attrs[CONF_STOP] = (self._stop,)
+        attrs[CONF_BUS_STOP] = (self._stop,)
         attrs[CONF_LINE] = self._line
         return attrs
 

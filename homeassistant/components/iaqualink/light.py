@@ -1,7 +1,7 @@
 """Support for Aqualink pool lights."""
 import logging
 
-from iaqualink import AqualinkLight, AqualinkLightEffect
+from iaqualink import AqualinkLightEffect
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -32,12 +32,8 @@ async def async_setup_entry(
     async_add_entities(devs, True)
 
 
-class HassAqualinkLight(Light, AqualinkEntity):
+class HassAqualinkLight(AqualinkEntity, Light):
     """Representation of a light."""
-
-    def __init__(self, dev: AqualinkLight):
-        """Initialize the light."""
-        self.dev = dev
 
     @property
     def name(self) -> str:

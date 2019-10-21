@@ -28,6 +28,7 @@ from typing import (
     Set,
     TYPE_CHECKING,
     Awaitable,
+    Mapping,
 )
 
 from async_timeout import timeout
@@ -63,11 +64,7 @@ from homeassistant.exceptions import (
     Unauthorized,
     ServiceNotFound,
 )
-from homeassistant.util.async_ import (
-    run_coroutine_threadsafe,
-    run_callback_threadsafe,
-    fire_coroutine_threadsafe,
-)
+from homeassistant.util.async_ import run_callback_threadsafe, fire_coroutine_threadsafe
 from homeassistant import util
 import homeassistant.util.dt as dt_util
 from homeassistant.util import location, slugify
@@ -144,8 +141,8 @@ def async_loop_exception_handler(_: Any, context: Dict) -> None:
     if exception:
         kwargs["exc_info"] = (type(exception), exception, exception.__traceback__)
 
-    _LOGGER.error(  # type: ignore
-        "Error doing job: %s", context["message"], **kwargs
+    _LOGGER.error(
+        "Error doing job: %s", context["message"], **kwargs  # type: ignore
     )
 
 
@@ -374,7 +371,9 @@ class HomeAssistant:
 
     def block_till_done(self) -> None:
         """Block till all pending work is done."""
-        run_coroutine_threadsafe(self.async_block_till_done(), self.loop).result()
+        asyncio.run_coroutine_threadsafe(
+            self.async_block_till_done(), self.loop
+        ).result()
 
     async def async_block_till_done(self) -> None:
         """Block till all pending work is done."""
@@ -703,8 +702,8 @@ class State:
     def __init__(
         self,
         entity_id: str,
-        state: Any,
-        attributes: Optional[Dict] = None,
+        state: str,
+        attributes: Optional[Mapping] = None,
         last_changed: Optional[datetime.datetime] = None,
         last_updated: Optional[datetime.datetime] = None,
         context: Optional[Context] = None,
@@ -732,7 +731,7 @@ class State:
             )
 
         self.entity_id = entity_id.lower()
-        self.state: str = state
+        self.state = state
         self.attributes = MappingProxyType(attributes or {})
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
@@ -924,7 +923,7 @@ class StateMachine:
     def set(
         self,
         entity_id: str,
-        new_state: Any,
+        new_state: str,
         attributes: Optional[Dict] = None,
         force_update: bool = False,
         context: Optional[Context] = None,
@@ -950,7 +949,7 @@ class StateMachine:
     def async_set(
         self,
         entity_id: str,
-        new_state: Any,
+        new_state: str,
         attributes: Optional[Dict] = None,
         force_update: bool = False,
         context: Optional[Context] = None,
@@ -1167,7 +1166,7 @@ class ServiceRegistry:
         Because the service is sent as an event you are not allowed to use
         the keys ATTR_DOMAIN and ATTR_SERVICE in your service_data.
         """
-        return run_coroutine_threadsafe(  # type: ignore
+        return asyncio.run_coroutine_threadsafe(
             self.async_call(domain, service, service_data, blocking, context),
             self._hass.loop,
         ).result()

@@ -110,9 +110,7 @@ async def test_imperial(hass, aioclient_mock):
         STAURL.format(40.0, -85.0), text=load_fixture("nws-weather-sta-valid.json")
     )
     aioclient_mock.get(
-        OBSURL.format("KMIE"),
-        text=load_fixture("nws-weather-obs-valid.json"),
-        params={"limit": 1},
+        OBSURL.format("KMIE"), text=load_fixture("nws-weather-obs-valid.json")
     )
     aioclient_mock.get(
         FORCURL.format(40.0, -85.0), text=load_fixture("nws-weather-fore-valid.json")
@@ -142,9 +140,7 @@ async def test_metric(hass, aioclient_mock):
         STAURL.format(40.0, -85.0), text=load_fixture("nws-weather-sta-valid.json")
     )
     aioclient_mock.get(
-        OBSURL.format("KMIE"),
-        text=load_fixture("nws-weather-obs-valid.json"),
-        params={"limit": 1},
+        OBSURL.format("KMIE"), text=load_fixture("nws-weather-obs-valid.json")
     )
     aioclient_mock.get(
         FORCURL.format(40.0, -85.0), text=load_fixture("nws-weather-fore-valid.json")
@@ -174,9 +170,7 @@ async def test_none(hass, aioclient_mock):
         STAURL.format(40.0, -85.0), text=load_fixture("nws-weather-sta-valid.json")
     )
     aioclient_mock.get(
-        OBSURL.format("KMIE"),
-        text=load_fixture("nws-weather-obs-null.json"),
-        params={"limit": 1},
+        OBSURL.format("KMIE"), text=load_fixture("nws-weather-obs-null.json")
     )
     aioclient_mock.get(
         FORCURL.format(40.0, -85.0), text=load_fixture("nws-weather-fore-null.json")
@@ -208,7 +202,6 @@ async def test_fail_obs(hass, aioclient_mock):
     aioclient_mock.get(
         OBSURL.format("KMIE"),
         text=load_fixture("nws-weather-obs-valid.json"),
-        params={"limit": 1},
         status=400,
     )
     aioclient_mock.get(
@@ -234,9 +227,7 @@ async def test_fail_stn(hass, aioclient_mock):
         status=400,
     )
     aioclient_mock.get(
-        OBSURL.format("KMIE"),
-        text=load_fixture("nws-weather-obs-valid.json"),
-        params={"limit": 1},
+        OBSURL.format("KMIE"), text=load_fixture("nws-weather-obs-valid.json")
     )
     aioclient_mock.get(
         FORCURL.format(40.0, -85.0), text=load_fixture("nws-weather-fore-valid.json")
@@ -257,9 +248,7 @@ async def test_invalid_config(hass, aioclient_mock):
         STAURL.format(40.0, -85.0), text=load_fixture("nws-weather-sta-valid.json")
     )
     aioclient_mock.get(
-        OBSURL.format("KMIE"),
-        text=load_fixture("nws-weather-obs-valid.json"),
-        params={"limit": 1},
+        OBSURL.format("KMIE"), text=load_fixture("nws-weather-obs-valid.json")
     )
     aioclient_mock.get(
         FORCURL.format(40.0, -85.0), text=load_fixture("nws-weather-fore-valid.json")

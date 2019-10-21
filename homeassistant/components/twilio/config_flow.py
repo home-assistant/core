@@ -9,6 +9,6 @@ config_entry_flow.register_webhook_flow(
     "Twilio Webhook",
     {
         "twilio_url": "https://www.twilio.com/docs/glossary/what-is-a-webhook",
-        "docs_url": "https://www.home-assistant.io/components/twilio/",
+        "docs_url": "https://www.home-assistant.io/integrations/twilio/",
     },
 )

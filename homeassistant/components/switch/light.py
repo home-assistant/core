@@ -1,6 +1,6 @@
 """Light support for switch entities."""
 import logging
-from typing import cast
+from typing import cast, Callable, Dict, Optional, Sequence
 
 import voluptuous as vol
 
@@ -14,13 +14,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import State, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from homeassistant.components.light import PLATFORM_SCHEMA, Light
 
 
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: allow-untyped-calls, allow-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +36,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistantType,
+    config: ConfigType,
+    async_add_entities: Callable[[Sequence[Entity], bool], None],
+    discovery_info: Optional[Dict] = None,
 ) -> None:
     """Initialize Light Switch platform."""
     async_add_entities(
@@ -105,7 +109,7 @@ class LightSwitch(Light):
         @callback
         def async_state_changed_listener(
             entity_id: str, old_state: State, new_state: State
-        ):
+        ) -> None:
             """Handle child updates."""
             self.async_schedule_update_ha_state(True)
 

@@ -33,6 +33,7 @@ SUPPORTED_REGIONS = [
     "sa-east-1",
 ]
 
+CONF_ENGINE = "engine"
 CONF_VOICE = "voice"
 CONF_OUTPUT_FORMAT = "output_format"
 CONF_SAMPLE_RATE = "sample_rate"
@@ -101,10 +102,12 @@ SUPPORTED_VOICES = [
 
 SUPPORTED_OUTPUT_FORMATS = ["mp3", "ogg_vorbis", "pcm"]
 
-SUPPORTED_SAMPLE_RATES = ["8000", "16000", "22050"]
+SUPPORTED_ENGINES = ["neural", "standard"]
+
+SUPPORTED_SAMPLE_RATES = ["8000", "16000", "22050", "24000"]
 
 SUPPORTED_SAMPLE_RATES_MAP = {
-    "mp3": ["8000", "16000", "22050"],
+    "mp3": ["8000", "16000", "22050", "24000"],
     "ogg_vorbis": ["8000", "16000", "22050"],
     "pcm": ["8000", "16000"],
 }
@@ -113,6 +116,7 @@ SUPPORTED_TEXT_TYPES = ["text", "ssml"]
 
 CONTENT_TYPE_EXTENSIONS = {"audio/mpeg": "mp3", "audio/ogg": "ogg", "audio/pcm": "pcm"}
 
+DEFAULT_ENGINE = "standard"
 DEFAULT_VOICE = "Joanna"
 DEFAULT_OUTPUT_FORMAT = "mp3"
 DEFAULT_TEXT_TYPE = "text"
@@ -126,6 +130,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
         vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
         vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): vol.In(SUPPORTED_VOICES),
+        vol.Optional(CONF_ENGINE, default=DEFAULT_ENGINE): vol.In(SUPPORTED_ENGINES),
         vol.Optional(CONF_OUTPUT_FORMAT, default=DEFAULT_OUTPUT_FORMAT): vol.In(
             SUPPORTED_OUTPUT_FORMATS
         ),
@@ -225,6 +230,7 @@ class AmazonPollyProvider(Provider):
             return None, None
 
         resp = self.client.synthesize_speech(
+            Engine=self.config[CONF_ENGINE],
             OutputFormat=self.config[CONF_OUTPUT_FORMAT],
             SampleRate=self.config[CONF_SAMPLE_RATE],
             Text=message,

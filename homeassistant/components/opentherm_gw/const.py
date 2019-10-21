@@ -4,7 +4,6 @@ import pyotgw.vars as gw_vars
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 
 ATTR_GW_ID = "gateway_id"
-ATTR_MODE = "mode"
 ATTR_LEVEL = "level"
 ATTR_DHW_OVRD = "dhw_override"
 

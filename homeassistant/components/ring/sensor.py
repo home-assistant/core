@@ -110,7 +110,7 @@ class RingSensor(Entity):
 
     def __init__(self, hass, data, sensor_type):
         """Initialize a sensor for Ring device."""
-        super(RingSensor, self).__init__()
+        super().__init__()
         self._sensor_type = sensor_type
         self._data = data
         self._extra = None

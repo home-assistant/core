@@ -16,5 +16,17 @@
             }
         },
         "title": "ZHA"
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "close": "St\u00e4ng",
+            "dim_down": "Dimma ned",
+            "dim_up": "Dimma upp",
+            "left": "V\u00e4nster",
+            "open": "\u00d6ppen",
+            "right": "H\u00f6ger",
+            "turn_off": "St\u00e4ng av",
+            "turn_on": "Starta"
+        }
     }
 }

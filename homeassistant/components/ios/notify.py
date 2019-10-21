@@ -1,5 +1,4 @@
 """Support for iOS push notifications."""
-from datetime import datetime, timezone
 import logging
 
 import requests
@@ -25,7 +24,7 @@ def log_rate_limits(hass, target, resp, level=20):
     """Output rate limit log line at given level."""
     rate_limits = resp["rateLimits"]
     resetsAt = dt_util.parse_datetime(rate_limits["resetsAt"])
-    resetsAtTime = resetsAt - datetime.now(timezone.utc)
+    resetsAtTime = resetsAt - dt_util.utcnow()
     rate_limit_msg = (
         "iOS push notification rate limits for %s: "
         "%d sent, %d allowed, %d errors, "

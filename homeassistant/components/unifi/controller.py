@@ -36,6 +36,7 @@ from .const import (
     DOMAIN,
     LOGGER,
     UNIFI_CONFIG,
+    UNIFI_WIRELESS_CLIENTS,
 )
 from .errors import AuthenticationRequired, CannotConnect
 
@@ -50,6 +51,7 @@ class UniFiController:
         self.available = True
         self.api = None
         self.progress = None
+        self.wireless_clients = None
 
         self._site_name = None
         self._site_role = None
@@ -128,6 +130,22 @@ class UniFiController:
         """Event specific per UniFi entry to signal new options."""
         return f"unifi-options-{CONTROLLER_ID.format(host=self.host, site=self.site)}"
 
+    def update_wireless_clients(self):
+        """Update set of known to be wireless clients."""
+        new_wireless_clients = set()
+
+        for client_id in self.api.clients:
+            if (
+                client_id not in self.wireless_clients
+                and not self.api.clients[client_id].is_wired
+            ):
+                new_wireless_clients.add(client_id)
+
+        if new_wireless_clients:
+            self.wireless_clients |= new_wireless_clients
+            unifi_wireless_clients = self.hass.data[UNIFI_WIRELESS_CLIENTS]
+            unifi_wireless_clients.update_data(self.wireless_clients, self.config_entry)
+
     async def request_update(self):
         """Request an update."""
         if self.progress is not None:
@@ -170,6 +188,8 @@ class UniFiController:
             LOGGER.info("Reconnected to controller %s", self.host)
             self.available = True
 
+        self.update_wireless_clients()
+
         async_dispatcher_send(self.hass, self.signal_update)
 
     async def async_setup(self):
@@ -196,6 +216,10 @@ class UniFiController:
         except Exception as err:  # pylint: disable=broad-except
             LOGGER.error("Unknown error connecting with UniFi controller: %s", err)
             return False
+
+        wireless_clients = hass.data[UNIFI_WIRELESS_CLIENTS]
+        self.wireless_clients = wireless_clients.get_data(self.config_entry)
+        self.update_wireless_clients()
 
         self.import_configuration()
 

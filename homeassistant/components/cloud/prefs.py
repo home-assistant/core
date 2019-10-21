@@ -20,6 +20,8 @@ from .const import (
     PREF_ALEXA_ENTITY_CONFIGS,
     PREF_ALEXA_REPORT_STATE,
     DEFAULT_ALEXA_REPORT_STATE,
+    PREF_GOOGLE_REPORT_STATE,
+    DEFAULT_GOOGLE_REPORT_STATE,
     InvalidTrustedNetworks,
     InvalidTrustedProxies,
 )
@@ -74,6 +76,7 @@ class CloudPreferences:
         google_entity_configs=_UNDEF,
         alexa_entity_configs=_UNDEF,
         alexa_report_state=_UNDEF,
+        google_report_state=_UNDEF,
     ):
         """Update user preferences."""
         for key, value in (
@@ -86,6 +89,7 @@ class CloudPreferences:
             (PREF_GOOGLE_ENTITY_CONFIGS, google_entity_configs),
             (PREF_ALEXA_ENTITY_CONFIGS, alexa_entity_configs),
             (PREF_ALEXA_REPORT_STATE, alexa_report_state),
+            (PREF_GOOGLE_REPORT_STATE, google_report_state),
         ):
             if value is not _UNDEF:
                 self._prefs[key] = value
@@ -164,6 +168,7 @@ class CloudPreferences:
             PREF_GOOGLE_ENTITY_CONFIGS: self.google_entity_configs,
             PREF_ALEXA_ENTITY_CONFIGS: self.alexa_entity_configs,
             PREF_ALEXA_REPORT_STATE: self.alexa_report_state,
+            PREF_GOOGLE_REPORT_STATE: self.google_report_state,
             PREF_CLOUDHOOKS: self.cloudhooks,
             PREF_CLOUD_USER: self.cloud_user,
         }
@@ -195,6 +200,11 @@ class CloudPreferences:
     def google_enabled(self):
         """Return if Google is enabled."""
         return self._prefs[PREF_ENABLE_GOOGLE]
+
+    @property
+    def google_report_state(self):
+        """Return if Google report state is enabled."""
+        return self._prefs.get(PREF_GOOGLE_REPORT_STATE, DEFAULT_GOOGLE_REPORT_STATE)
 
     @property
     def google_secure_devices_pin(self):

@@ -3,11 +3,13 @@ import asyncio
 from functools import wraps
 import logging
 
-from aiohttp import CookieJar
+from aiohttp import ClientTimeout
 import voluptuous as vol
 
 from iaqualink import (
+    AqualinkBinarySensor,
     AqualinkClient,
+    AqualinkDevice,
     AqualinkLight,
     AqualinkLoginException,
     AqualinkSensor,
@@ -16,6 +18,7 @@ from iaqualink import (
 )
 
 from homeassistant import config_entries
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -76,12 +79,13 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> None
     password = entry.data[CONF_PASSWORD]
 
     # These will contain the initialized devices
+    binary_sensors = hass.data[DOMAIN][BINARY_SENSOR_DOMAIN] = []
     climates = hass.data[DOMAIN][CLIMATE_DOMAIN] = []
     lights = hass.data[DOMAIN][LIGHT_DOMAIN] = []
     sensors = hass.data[DOMAIN][SENSOR_DOMAIN] = []
     switches = hass.data[DOMAIN][SWITCH_DOMAIN] = []
 
-    session = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
+    session = async_create_clientsession(hass, timeout=ClientTimeout(total=5))
     aqualink = AqualinkClient(username, password, session)
     try:
         await aqualink.login()
@@ -103,12 +107,17 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> None
             climates += [dev]
         elif isinstance(dev, AqualinkLight):
             lights += [dev]
+        elif isinstance(dev, AqualinkBinarySensor):
+            binary_sensors += [dev]
         elif isinstance(dev, AqualinkSensor):
             sensors += [dev]
         elif isinstance(dev, AqualinkToggle):
             switches += [dev]
 
     forward_setup = hass.config_entries.async_forward_entry_setup
+    if binary_sensors:
+        _LOGGER.debug("Got %s binary sensors: %s", len(binary_sensors), binary_sensors)
+        hass.async_create_task(forward_setup(entry, BINARY_SENSOR_DOMAIN))
     if climates:
         _LOGGER.debug("Got %s climates: %s", len(climates), climates)
         hass.async_create_task(forward_setup(entry, CLIMATE_DOMAIN))
@@ -138,6 +147,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
 
     tasks = []
 
+    if hass.data[DOMAIN][BINARY_SENSOR_DOMAIN]:
+        tasks += [forward_unload(entry, BINARY_SENSOR_DOMAIN)]
     if hass.data[DOMAIN][CLIMATE_DOMAIN]:
         tasks += [forward_unload(entry, CLIMATE_DOMAIN)]
     if hass.data[DOMAIN][LIGHT_DOMAIN]:
@@ -174,6 +185,10 @@ class AqualinkEntity(Entity):
     class.
     """
 
+    def __init__(self, dev: AqualinkDevice):
+        """Initialize the entity."""
+        self.dev = dev
+
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
         async_dispatcher_connect(self.hass, DOMAIN, self._update_callback)
@@ -190,3 +205,8 @@ class AqualinkEntity(Entity):
         updates on a timer.
         """
         return False
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique identifier for this entity."""
+        return f"{self.dev.system.serial}_{self.dev.name}"

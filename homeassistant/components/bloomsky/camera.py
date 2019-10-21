@@ -19,7 +19,7 @@ class BloomSkyCamera(Camera):
 
     def __init__(self, bs, device):
         """Initialize access to the BloomSky camera images."""
-        super(BloomSkyCamera, self).__init__()
+        super().__init__()
         self._name = device["DeviceName"]
         self._id = device["DeviceID"]
         self._bloomsky = bs

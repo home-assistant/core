@@ -59,7 +59,7 @@ async def test_alexa_config_invalidate_token(hass, cloud_prefs, aioclient_mock):
         cloud_prefs,
         Mock(
             alexa_access_token_url="http://example/alexa_token",
-            run_executor=Mock(side_effect=mock_coro),
+            auth=Mock(async_check_token=Mock(side_effect=mock_coro)),
             websession=hass.helpers.aiohttp_client.async_get_clientsession(),
         ),
     )
@@ -160,7 +160,11 @@ async def test_alexa_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
     with patch_sync_helper() as (to_update, to_remove):
         hass.bus.async_fire(
             EVENT_ENTITY_REGISTRY_UPDATED,
-            {"action": "update", "entity_id": "light.kitchen"},
+            {
+                "action": "update",
+                "entity_id": "light.kitchen",
+                "changes": ["entity_id"],
+            },
         )
         await hass.async_block_till_done()
 

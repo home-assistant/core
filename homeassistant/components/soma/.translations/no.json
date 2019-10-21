@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Du kan bare konfigurere en Soma-konto.",
+            "authorize_url_timeout": "Tidsavbrudd ved generering av autoriseringsadresse.",
+            "missing_configuration": "Soma-komponenten er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen."
+        },
+        "create_entry": {
+            "default": "Vellykket autentisering med Somfy."
+        },
+        "title": "Soma"
+    }
+}

@@ -1,6 +1,7 @@
 """The tests for google-assistant init."""
 import asyncio
 
+from homeassistant.core import Context
 from homeassistant.setup import async_setup_component
 from homeassistant.components import google_assistant as ga
 
@@ -20,7 +21,10 @@ def test_request_sync_service(aioclient_mock, hass):
 
     assert aioclient_mock.call_count == 0
     yield from hass.services.async_call(
-        ga.const.DOMAIN, ga.const.SERVICE_REQUEST_SYNC, blocking=True
+        ga.const.DOMAIN,
+        ga.const.SERVICE_REQUEST_SYNC,
+        blocking=True,
+        context=Context(user_id="123"),
     )
 
     assert aioclient_mock.call_count == 1

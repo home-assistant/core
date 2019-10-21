@@ -3,6 +3,7 @@ from collections import OrderedDict
 import uuid
 
 from homeassistant.components.automation import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.automation.config import async_validate_config_item
 from homeassistant.const import CONF_ID, SERVICE_RELOAD
 import homeassistant.helpers.config_validation as cv
 
@@ -26,6 +27,7 @@ async def async_setup(hass):
             cv.string,
             PLATFORM_SCHEMA,
             post_write_hook=hook,
+            data_validator=async_validate_config_item,
         )
     )
     return True
@@ -53,7 +55,7 @@ class EditAutomationConfigView(EditIdBasedConfigView):
 
         # Iterate through some keys that we want to have ordered in the output
         updated_value = OrderedDict()
-        for key in ("id", "alias", "trigger", "condition", "action"):
+        for key in ("id", "alias", "description", "trigger", "condition", "action"):
             if key in cur_value:
                 updated_value[key] = cur_value[key]
             if key in new_value:

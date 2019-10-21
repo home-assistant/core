@@ -277,6 +277,7 @@ DISCOVERY_SCHEMAS = [
                         const.COMMAND_CLASS_ALARM,
                         const.COMMAND_CLASS_SENSOR_ALARM,
                         const.COMMAND_CLASS_INDICATOR,
+                        const.COMMAND_CLASS_BATTERY,
                     ],
                     const.DISC_GENRE: const.GENRE_USER,
                 }

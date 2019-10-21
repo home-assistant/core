@@ -12,6 +12,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +54,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.debug("Initializing client")
         client = concord232_client.Client(f"http://{host}:{port}")
         client.zones = client.list_zones()
-        client.last_zone_update = datetime.datetime.now()
+        client.last_zone_update = dt_util.utcnow()
 
     except requests.exceptions.ConnectionError as ex:
         _LOGGER.error("Unable to connect to Concord232: %s", str(ex))
@@ -128,11 +129,11 @@ class Concord232ZoneSensor(BinarySensorDevice):
 
     def update(self):
         """Get updated stats from API."""
-        last_update = datetime.datetime.now() - self._client.last_zone_update
+        last_update = dt_util.utcnow() - self._client.last_zone_update
         _LOGGER.debug("Zone: %s ", self._zone)
         if last_update > datetime.timedelta(seconds=1):
             self._client.zones = self._client.list_zones()
-            self._client.last_zone_update = datetime.datetime.now()
+            self._client.last_zone_update = dt_util.utcnow()
             _LOGGER.debug("Updated from zone: %s", self._zone["name"])
 
         if hasattr(self._client, "zones"):

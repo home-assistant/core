@@ -1,7 +1,7 @@
 {
   "domain": "zeroconf",
   "name": "Zeroconf",
-  "documentation": "https://www.home-assistant.io/components/zeroconf",
+  "documentation": "https://www.home-assistant.io/integrations/zeroconf",
   "requirements": [
     "zeroconf==0.23.0"
   ],

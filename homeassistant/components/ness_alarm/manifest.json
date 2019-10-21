@@ -1,7 +1,7 @@
 {
   "domain": "ness_alarm",
   "name": "Ness alarm",
-  "documentation": "https://www.home-assistant.io/components/ness_alarm",
+  "documentation": "https://www.home-assistant.io/integrations/ness_alarm",
   "requirements": [
     "nessclient==0.9.15"
   ],

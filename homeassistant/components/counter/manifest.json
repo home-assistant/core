@@ -1,7 +1,7 @@
 {
   "domain": "counter",
   "name": "Counter",
-  "documentation": "https://www.home-assistant.io/components/counter",
+  "documentation": "https://www.home-assistant.io/integrations/counter",
   "requirements": [],
   "dependencies": [],
   "codeowners": [

@@ -1,7 +1,7 @@
 {
   "domain": "watson_tts",
   "name": "IBM Watson TTS",
-  "documentation": "https://www.home-assistant.io/components/watson_tts",
+  "documentation": "https://www.home-assistant.io/integrations/watson_tts",
   "requirements": [
     "ibm-watson==3.0.3"
   ],

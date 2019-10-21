@@ -3,6 +3,12 @@ import functools
 import logging
 import voluptuous as vol
 
+from adb_shell.exceptions import (
+    InvalidChecksumError,
+    InvalidCommandError,
+    InvalidResponseError,
+    TcpTimeoutException,
+)
 from androidtv import setup, ha_state_detection_rules_validator
 from androidtv.constants import APPS, KEYS
 
@@ -123,11 +129,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Android TV / Fire TV platform."""
     hass.data.setdefault(ANDROIDTV_DOMAIN, {})
 
-    host = "{0}:{1}".format(config[CONF_HOST], config[CONF_PORT])
+    host = f"{config[CONF_HOST]}:{config[CONF_PORT]}"
 
     if CONF_ADB_SERVER_IP not in config:
-        # Use "python-adb" (Python ADB implementation)
-        adb_log = "using Python ADB implementation "
+        # Use "adb_shell" (Python ADB implementation)
+        adb_log = "using Python ADB implementation " + (
+            f"with adbkey='{config[CONF_ADBKEY]}'"
+            if CONF_ADBKEY in config
+            else "without adbkey authentication"
+        )
         if CONF_ADBKEY in config:
             aftv = setup(
                 host,
@@ -135,7 +145,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 device_class=config[CONF_DEVICE_CLASS],
                 state_detection_rules=config[CONF_STATE_DETECTION_RULES],
             )
-            adb_log += "with adbkey='{0}'".format(config[CONF_ADBKEY])
 
         else:
             aftv = setup(
@@ -143,7 +152,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 device_class=config[CONF_DEVICE_CLASS],
                 state_detection_rules=config[CONF_STATE_DETECTION_RULES],
             )
-            adb_log += "without adbkey authentication"
     else:
         # Use "pure-python-adb" (communicate with ADB server)
         aftv = setup(
@@ -153,9 +161,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             device_class=config[CONF_DEVICE_CLASS],
             state_detection_rules=config[CONF_STATE_DETECTION_RULES],
         )
-        adb_log = "using ADB server at {0}:{1}".format(
-            config[CONF_ADB_SERVER_IP], config[CONF_ADB_SERVER_PORT]
-        )
+        adb_log = f"using ADB server at {config[CONF_ADB_SERVER_IP]}:{config[CONF_ADB_SERVER_PORT]}"
 
     if not aftv.available:
         # Determine the name that will be used for the device in the log
@@ -251,6 +257,7 @@ def adb_decorator(override_available=False):
                     "establishing attempt in the next update. Error: %s",
                     err,
                 )
+                self.aftv.adb.close()
                 self._available = False  # pylint: disable=protected-access
                 return None
 
@@ -278,14 +285,7 @@ class ADBDevice(MediaPlayerDevice):
 
         # ADB exceptions to catch
         if not self.aftv.adb_server_ip:
-            # Using "python-adb" (Python ADB implementation)
-            from adb.adb_protocol import (
-                InvalidChecksumError,
-                InvalidCommandError,
-                InvalidResponseError,
-            )
-            from adb.usb_exceptions import TcpTimeoutException
-
+            # Using "adb_shell" (Python ADB implementation)
             self.exceptions = (
                 AttributeError,
                 BrokenPipeError,

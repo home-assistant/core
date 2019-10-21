@@ -1,7 +1,7 @@
 {
   "domain": "cups",
   "name": "Cups",
-  "documentation": "https://www.home-assistant.io/components/cups",
+  "documentation": "https://www.home-assistant.io/integrations/cups",
   "requirements": [
     "pycups==1.9.73"
   ],
