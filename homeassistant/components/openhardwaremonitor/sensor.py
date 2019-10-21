@@ -133,7 +133,7 @@ class OpenHardwareMonitorData:
             response = requests.get(data_url, timeout=30)
             self.data = response.json()
         except requests.exceptions.ConnectionError:
-            _LOGGER.error("ConnectionError: Is OpenHardwareMonitor running?")
+            _LOGGER.debug("ConnectionError: Is OpenHardwareMonitor running?")
 
     def initialize(self, now):
         """Parse of the sensors and adding of devices."""
