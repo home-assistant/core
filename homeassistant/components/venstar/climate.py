@@ -270,10 +270,11 @@ class VenstarThermostat(ClimateDevice):
         temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        mode_map = { HVAC_MODE_HEAT: self._client.MODE_HEAT,
-                     HVAC_MODE_COOL: self._client.MODE_COOL,
-                     HVAC_MODE_AUTO: self._client.MODE_AUTO
-                   }
+        mode_map = {
+            HVAC_MODE_HEAT: self._client.MODE_HEAT,
+            HVAC_MODE_COOL: self._client.MODE_COOL,
+            HVAC_MODE_AUTO: self._client.MODE_AUTO,
+        }
 
         if mode_map.get(operation_mode) != self._client.mode:
             set_temp = self._set_operation_mode(mode_map.get(operation_mode))
