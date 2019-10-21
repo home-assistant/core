@@ -11,6 +11,7 @@
     "http"
   ],
   "codeowners": [
-    "@home-assistant/core"
+    "@home-assistant/core",
+    "kmstumpff"
   ]
 }
