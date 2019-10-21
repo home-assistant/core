@@ -885,7 +885,7 @@ def ordinal(value):
 
 
 def from_json(value):
-    """Convert a string to a JSON object."""
+    """Convert a JSON string to an object."""
     return json.loads(value)
 
 
