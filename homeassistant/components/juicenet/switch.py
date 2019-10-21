@@ -1,4 +1,4 @@
-"""Support for monitoring juicenet/juicepoint/juicebox based EVSE sensors."""
+"""Support for monitoring juicenet/juicepoint/juicebox based EVSE switches."""
 import logging
 
 from homeassistant.components.switch import SwitchDevice
