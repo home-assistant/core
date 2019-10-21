@@ -1,5 +1,9 @@
 """Test zha sensor."""
-from zigpy.zcl.foundation import Command
+import zigpy.zcl.clusters.general as general
+import zigpy.zcl.clusters.homeautomation as homeautomation
+import zigpy.zcl.clusters.measurement as measurement
+import zigpy.zcl.clusters.smartenergy as smartenergy
+import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -16,23 +20,15 @@ from .common import (
 
 async def test_sensor(hass, config_entry, zha_gateway):
     """Test zha sensor platform."""
-    from zigpy.zcl.clusters.measurement import (
-        RelativeHumidity,
-        TemperatureMeasurement,
-        PressureMeasurement,
-        IlluminanceMeasurement,
-    )
-    from zigpy.zcl.clusters.smartenergy import Metering
-    from zigpy.zcl.clusters.homeautomation import ElectricalMeasurement
 
     # list of cluster ids to create devices and sensor entities for
     cluster_ids = [
-        RelativeHumidity.cluster_id,
-        TemperatureMeasurement.cluster_id,
-        PressureMeasurement.cluster_id,
-        IlluminanceMeasurement.cluster_id,
-        Metering.cluster_id,
-        ElectricalMeasurement.cluster_id,
+        measurement.RelativeHumidity.cluster_id,
+        measurement.TemperatureMeasurement.cluster_id,
+        measurement.PressureMeasurement.cluster_id,
+        measurement.IlluminanceMeasurement.cluster_id,
+        smartenergy.Metering.cluster_id,
+        homeautomation.ElectricalMeasurement.cluster_id,
     ]
 
     # devices that were created from cluster_ids list above
@@ -63,33 +59,33 @@ async def test_sensor(hass, config_entry, zha_gateway):
         assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
     # get the humidity device info and test the associated sensor logic
-    device_info = zigpy_device_infos[RelativeHumidity.cluster_id]
+    device_info = zigpy_device_infos[measurement.RelativeHumidity.cluster_id]
     await async_test_humidity(hass, device_info)
 
     # get the temperature device info and test the associated sensor logic
-    device_info = zigpy_device_infos[TemperatureMeasurement.cluster_id]
+    device_info = zigpy_device_infos[measurement.TemperatureMeasurement.cluster_id]
     await async_test_temperature(hass, device_info)
 
     # get the pressure device info and test the associated sensor logic
-    device_info = zigpy_device_infos[PressureMeasurement.cluster_id]
+    device_info = zigpy_device_infos[measurement.PressureMeasurement.cluster_id]
     await async_test_pressure(hass, device_info)
 
     # get the illuminance device info and test the associated sensor logic
-    device_info = zigpy_device_infos[IlluminanceMeasurement.cluster_id]
+    device_info = zigpy_device_infos[measurement.IlluminanceMeasurement.cluster_id]
     await async_test_illuminance(hass, device_info)
 
     # get the metering device info and test the associated sensor logic
-    device_info = zigpy_device_infos[Metering.cluster_id]
+    device_info = zigpy_device_infos[smartenergy.Metering.cluster_id]
     await async_test_metering(hass, device_info)
 
     # get the electrical_measurement device info and test the associated
     # sensor logic
-    device_info = zigpy_device_infos[ElectricalMeasurement.cluster_id]
+    device_info = zigpy_device_infos[homeautomation.ElectricalMeasurement.cluster_id]
     await async_test_electrical_measurement(hass, device_info)
 
     # test joining a new temperature sensor to the network
     await async_test_device_join(
-        hass, zha_gateway, TemperatureMeasurement.cluster_id, DOMAIN
+        hass, zha_gateway, measurement.TemperatureMeasurement.cluster_id, DOMAIN
     )
 
 
@@ -102,7 +98,6 @@ async def async_build_devices(hass, zha_gateway, config_entry, cluster_ids):
     A dict containing relevant device info for testing is returned. It contains
     the entity id, zigpy device, and the zigbee cluster for the sensor.
     """
-    from zigpy.zcl.clusters.general import Basic
 
     device_infos = {}
     counter = 0
@@ -111,7 +106,7 @@ async def async_build_devices(hass, zha_gateway, config_entry, cluster_ids):
         device_infos[cluster_id] = {"zigpy_device": None}
         device_infos[cluster_id]["zigpy_device"] = await async_init_zigpy_device(
             hass,
-            [cluster_id, Basic.cluster_id],
+            [cluster_id, general.Basic.cluster_id],
             [],
             None,
             zha_gateway,
@@ -181,7 +176,7 @@ async def send_attribute_report(hass, cluster, attrid, value):
     device is paired to the zigbee network.
     """
     attr = make_attribute(attrid, value)
-    hdr = make_zcl_header(Command.Report_Attributes)
+    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
     cluster.handle_message(hdr, [[attr]])
     await hass.async_block_till_done()
 
