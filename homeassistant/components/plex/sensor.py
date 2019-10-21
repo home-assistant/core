@@ -49,7 +49,9 @@ class PlexSensor(Entity):
         """Run when about to be added to hass."""
         server_id = self._server.machine_identifier
         unsub = async_dispatcher_connect(
-            self.hass, PLEX_UPDATE_SENSOR_SIGNAL, self.async_refresh_sensor
+            self.hass,
+            PLEX_UPDATE_SENSOR_SIGNAL.format(server_id),
+            self.async_refresh_sensor,
         )
         self.hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
