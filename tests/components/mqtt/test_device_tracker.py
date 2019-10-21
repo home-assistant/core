@@ -219,7 +219,7 @@ async def test_not_matching_custom_payload_for_home_and_not_home(
     assert hass.states.get(entity_id).state != STATE_HOME
     assert hass.states.get(entity_id).state != STATE_NOT_HOME
 
-    
+
 async def test_default_source_type(hass, mock_device_tracker_conf):
     """Test the default source type."""
     dev_id = "paulus"

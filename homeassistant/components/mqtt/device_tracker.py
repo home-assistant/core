@@ -9,10 +9,9 @@ from homeassistant.components.device_tracker.const import (
     SOURCE_TYPE_ALL,
     SOURCE_TYPE_GPS,
 )
-from homeassistant.const import CONF_DEVICES
+from homeassistant.const import CONF_DEVICES, STATE_NOT_HOME, STATE_HOME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_DEVICES, STATE_NOT_HOME, STATE_HOME
 
 from . import CONF_QOS, CONF_SOURCE_TYPE
 
@@ -46,7 +45,6 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
         @callback
         def async_message_received(msg, dev_id=dev_id):
             """Handle received MQTT message."""
-
             if msg.payload == payload_home:
                 location_name = STATE_HOME
             elif msg.payload == payload_not_home:
