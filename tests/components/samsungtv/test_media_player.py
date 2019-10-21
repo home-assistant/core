@@ -35,7 +35,6 @@ from homeassistant.const import (
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PLAY_PAUSE,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -44,8 +43,6 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
     STATE_OFF,
     STATE_ON,
-    STATE_PAUSED,
-    STATE_PLAYING,
     STATE_UNKNOWN,
 )
 from homeassistant.setup import async_setup_component
@@ -353,29 +350,6 @@ async def test_state_without_mac(hass, remote):
     assert state.state == STATE_OFF
 
 
-async def test_is_volume_muted(hass, remote):
-    """Test for is_volume_muted property."""
-    await setup_samsungtv(hass, MOCK_CONFIG)
-    state = hass.states.get(ENTITY_ID)
-    assert not state.attributes[ATTR_MEDIA_VOLUME_MUTED]
-    assert await hass.services.async_call(
-        DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: True},
-        True,
-    )
-    state = hass.states.get(ENTITY_ID)
-    assert state.attributes[ATTR_MEDIA_VOLUME_MUTED]
-    assert await hass.services.async_call(
-        DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: False},
-        True,
-    )
-    state = hass.states.get(ENTITY_ID)
-    assert not state.attributes[ATTR_MEDIA_VOLUME_MUTED]
-
-
 async def test_supported_features_with_mac(hass, remote):
     """Test for supported_features property."""
     await setup_samsungtv(hass, MOCK_CONFIG)
@@ -461,26 +435,6 @@ async def test_mute_volume(hass, remote):
     # key and update called
     assert remote.control.call_count == 2
     assert remote.control.call_args_list == [call("KEY_MUTE"), call("KEY")]
-
-
-async def test_media_play_pause(hass, remote):
-    """Test for media_next_track."""
-    await setup_samsungtv(hass, MOCK_CONFIG)
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_MEDIA_PLAY, {ATTR_ENTITY_ID: ENTITY_ID}, True
-    )
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == STATE_PLAYING
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, {ATTR_ENTITY_ID: ENTITY_ID}, True
-    )
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == STATE_PAUSED
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, {ATTR_ENTITY_ID: ENTITY_ID}, True
-    )
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == STATE_PLAYING
 
 
 async def test_media_play(hass, remote):
