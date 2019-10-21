@@ -2,12 +2,26 @@
 from datetime import timedelta
 from itertools import groupby
 import logging
+import time
 
+from sqlalchemy.exc import SQLAlchemyError
 import voluptuous as vol
 
-from homeassistant.loader import bind_hass
 from homeassistant.components import sun
+from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
+from homeassistant.components.homekit.const import (
+    ATTR_DISPLAY_NAME,
+    ATTR_VALUE,
+    DOMAIN as DOMAIN_HOMEKIT,
+    EVENT_HOMEKIT_CHANGED,
+)
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.recorder.models import Events, States
+from homeassistant.components.recorder.util import (
+    QUERY_RETRY_WAIT,
+    RETRIES,
+    session_scope,
+)
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
@@ -16,26 +30,21 @@ from homeassistant.const import (
     ATTR_SERVICE,
     CONF_EXCLUDE,
     CONF_INCLUDE,
+    EVENT_AUTOMATION_TRIGGERED,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_LOGBOOK_ENTRY,
-    EVENT_STATE_CHANGED,
-    EVENT_AUTOMATION_TRIGGERED,
     EVENT_SCRIPT_STARTED,
+    EVENT_STATE_CHANGED,
     HTTP_BAD_REQUEST,
     STATE_NOT_HOME,
     STATE_OFF,
     STATE_ON,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN, State, callback, split_entity_id
-from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
-from homeassistant.components.homekit.const import (
-    ATTR_DISPLAY_NAME,
-    ATTR_VALUE,
-    DOMAIN as DOMAIN_HOMEKIT,
-    EVENT_HOMEKIT_CHANGED,
-)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entityfilter import generate_filter
+from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -371,11 +380,6 @@ def humanify(hass, events):
 
 
 def _get_related_entity_ids(session, entity_filter):
-    from homeassistant.components.recorder.models import States
-    from homeassistant.components.recorder.util import RETRIES, QUERY_RETRY_WAIT
-    from sqlalchemy.exc import SQLAlchemyError
-    import time
-
     timer_start = time.perf_counter()
 
     query = session.query(States).with_entities(States.entity_id).distinct()
@@ -402,8 +406,6 @@ def _get_related_entity_ids(session, entity_filter):
 
 
 def _generate_filter_from_config(config):
-    from homeassistant.helpers.entityfilter import generate_filter
-
     excluded_entities = []
     excluded_domains = []
     included_entities = []
@@ -425,9 +427,6 @@ def _generate_filter_from_config(config):
 
 def _get_events(hass, config, start_day, end_day, entity_id=None):
     """Get events for a period of time."""
-    from homeassistant.components.recorder.models import Events, States
-    from homeassistant.components.recorder.util import session_scope
-
     entities_filter = _generate_filter_from_config(config)
 
     def yield_events(query):
