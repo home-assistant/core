@@ -1,6 +1,14 @@
 """Platform to control a Zehnder ComfoAir Q350/450/600 ventilation unit."""
 import logging
 
+from pycomfoconnect import (
+    CMD_FAN_MODE_AWAY,
+    CMD_FAN_MODE_HIGH,
+    CMD_FAN_MODE_LOW,
+    CMD_FAN_MODE_MEDIUM,
+    SENSOR_FAN_SPEED_MODE,
+)
+
 from homeassistant.components.fan import (
     SPEED_HIGH,
     SPEED_LOW,
@@ -30,7 +38,6 @@ class ComfoConnectFan(FanEntity):
 
     def __init__(self, hass, name, ccb: ComfoConnectBridge) -> None:
         """Initialize the ComfoConnect fan."""
-        from pycomfoconnect import SENSOR_FAN_SPEED_MODE
 
         self._ccb = ccb
         self._name = name
@@ -64,7 +71,6 @@ class ComfoConnectFan(FanEntity):
     @property
     def speed(self):
         """Return the current fan mode."""
-        from pycomfoconnect import SENSOR_FAN_SPEED_MODE
 
         try:
             speed = self._ccb.data[SENSOR_FAN_SPEED_MODE]
@@ -90,13 +96,6 @@ class ComfoConnectFan(FanEntity):
     def set_speed(self, speed: str):
         """Set fan speed."""
         _LOGGER.debug("Changing fan speed to %s.", speed)
-
-        from pycomfoconnect import (
-            CMD_FAN_MODE_AWAY,
-            CMD_FAN_MODE_LOW,
-            CMD_FAN_MODE_MEDIUM,
-            CMD_FAN_MODE_HIGH,
-        )
 
         if speed == SPEED_OFF:
             self._ccb.comfoconnect.cmd_rmi_request(CMD_FAN_MODE_AWAY)

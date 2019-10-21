@@ -6,22 +6,22 @@ import os
 import pathlib
 from typing import Any, Dict, Optional, Set, Tuple
 
-from aiohttp import web, web_urldispatcher, hdrs
-import voluptuous as vol
+from aiohttp import hdrs, web, web_urldispatcher
+import hass_frontend
 import jinja2
+import voluptuous as vol
 from yarl import URL
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components import websocket_api
+from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.config import find_config_file, load_yaml_config_file
 from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
 
 from .storage import async_setup_frontend_storage
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -241,8 +241,6 @@ def _frontend_root(dev_repo_path):
     """Return root path to the frontend files."""
     if dev_repo_path is not None:
         return pathlib.Path(dev_repo_path) / "hass_frontend"
-
-    import hass_frontend
 
     return hass_frontend.where()
 

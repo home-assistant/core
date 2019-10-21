@@ -1,7 +1,8 @@
 """Support for RFXtrx devices."""
-from collections import OrderedDict
 import binascii
+from collections import OrderedDict
 import logging
+
 import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
@@ -13,8 +14,8 @@ from homeassistant.const import (
     CONF_DEVICES,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    TEMP_CELSIUS,
     POWER_WATT,
+    TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity

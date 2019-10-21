@@ -8,8 +8,16 @@
             "other": "Andre"
         },
         "step": {
+            "confirm": {
+                "title": "UPnP/IGD"
+            },
             "init": {
                 "title": "UPnP / IGD"
+            },
+            "user": {
+                "data": {
+                    "igd": "UPnP/IGD"
+                }
             }
         },
         "title": "UPnP / IGD"

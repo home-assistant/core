@@ -1,4 +1,5 @@
 """Support to emulate keyboard presses on host machine."""
+from pykeyboard import PyKeyboard  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -17,9 +18,8 @@ TAP_KEY_SCHEMA = vol.Schema({})
 
 def setup(hass, config):
     """Listen for keyboard events."""
-    import pykeyboard  # pylint: disable=import-error
 
-    keyboard = pykeyboard.PyKeyboard()
+    keyboard = PyKeyboard()
     keyboard.special_key_assignment()
 
     hass.services.register(

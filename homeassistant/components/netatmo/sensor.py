@@ -80,6 +80,7 @@ SENSOR_TYPES = {
     "gustangle": ["Gust Angle", "", "mdi:compass", None],
     "gustangle_value": ["Gust Angle Value", "º", "mdi:compass", None],
     "guststrength": ["Gust Strength", "km/h", "mdi:weather-windy", None],
+    "reachable": ["Reachability", "", "mdi:signal", None],
     "rf_status": ["Radio", "", "mdi:signal", None],
     "rf_status_lvl": ["Radio_lvl", "", "mdi:signal", None],
     "wifi_status": ["Wifi", "", "mdi:wifi", None],
@@ -375,6 +376,8 @@ class NetatmoSensor(Entity):
                     self._state = "N (%d\xb0)" % data["GustAngle"]
             elif self.type == "guststrength":
                 self._state = data["GustStrength"]
+            elif self.type == "reachable":
+                self._state = data["reachable"]
             elif self.type == "rf_status_lvl":
                 self._state = data["rf_status"]
             elif self.type == "rf_status":

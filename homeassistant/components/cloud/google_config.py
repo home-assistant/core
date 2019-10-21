@@ -63,6 +63,19 @@ class CloudGoogleConfig(AbstractConfig):
         """Return if states should be proactively reported."""
         return self._prefs.google_report_state
 
+    @property
+    def local_sdk_webhook_id(self):
+        """Return the local SDK webhook.
+
+        Return None to disable the local SDK.
+        """
+        return self._prefs.google_local_webhook_id
+
+    @property
+    def local_sdk_user_id(self):
+        """Return the user ID to be used for actions received via the local SDK."""
+        return self._prefs.cloud_user
+
     def should_expose(self, state):
         """If a state object should be exposed."""
         return self._should_expose_entity_id(state.entity_id)
@@ -131,17 +144,19 @@ class CloudGoogleConfig(AbstractConfig):
             # State reporting is reported as a property on entities.
             # So when we change it, we need to sync all entities.
             await self.async_sync_entities()
-            return
 
         # If entity prefs are the same or we have filter in config.yaml,
         # don't sync.
-        if (
-            self._cur_entity_prefs is prefs.google_entity_configs
-            or not self._config["filter"].empty_filter
+        elif (
+            self._cur_entity_prefs is not prefs.google_entity_configs
+            and self._config["filter"].empty_filter
         ):
-            return
+            self.async_schedule_google_sync()
 
-        self.async_schedule_google_sync()
+        if self.enabled and not self.is_local_sdk_active:
+            self.async_enable_local_sdk()
+        elif not self.enabled and self.is_local_sdk_active:
+            self.async_disable_local_sdk()
 
     async def _handle_entity_registry_updated(self, event):
         """Handle when entity registry updated."""

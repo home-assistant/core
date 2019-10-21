@@ -1,6 +1,18 @@
 """Support for SNMP enabled switch."""
 import logging
 
+import pysnmp.hlapi.asyncio as hlapi
+from pysnmp.hlapi.asyncio import (
+    CommunityData,
+    ContextData,
+    ObjectIdentity,
+    ObjectType,
+    SnmpEngine,
+    UdpTransportTarget,
+    UsmUserData,
+    getCmd,
+    setCmd,
+)
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
@@ -136,13 +148,6 @@ class SnmpSwitch(SwitchDevice):
         command_payload_off,
     ):
         """Initialize the switch."""
-        from pysnmp.hlapi.asyncio import (
-            CommunityData,
-            ContextData,
-            SnmpEngine,
-            UdpTransportTarget,
-            UsmUserData,
-        )
 
         self._name = name
         self._baseoid = baseoid
@@ -157,7 +162,6 @@ class SnmpSwitch(SwitchDevice):
         self._payload_off = payload_off
 
         if version == "3":
-            import pysnmp.hlapi.asyncio as hlapi
 
             if not authkey:
                 authproto = "none"
@@ -194,7 +198,6 @@ class SnmpSwitch(SwitchDevice):
 
     async def async_update(self):
         """Update the state."""
-        from pysnmp.hlapi.asyncio import getCmd, ObjectType, ObjectIdentity
 
         errindication, errstatus, errindex, restable = await getCmd(
             *self._request_args, ObjectType(ObjectIdentity(self._baseoid))
@@ -228,7 +231,6 @@ class SnmpSwitch(SwitchDevice):
         return self._state
 
     async def _set(self, value):
-        from pysnmp.hlapi.asyncio import setCmd, ObjectType, ObjectIdentity
 
         await setCmd(
             *self._request_args, ObjectType(ObjectIdentity(self._commandoid), value)

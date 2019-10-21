@@ -3,9 +3,10 @@ from datetime import timedelta
 import logging
 import os
 
+import mpd
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
@@ -85,8 +86,6 @@ class MpdDevice(MediaPlayerDevice):
     # pylint: disable=no-member
     def __init__(self, server, port, password, name):
         """Initialize the MPD device."""
-        import mpd
-
         self.server = server
         self.port = port
         self._name = name
@@ -107,8 +106,6 @@ class MpdDevice(MediaPlayerDevice):
 
     def _connect(self):
         """Connect to MPD."""
-        import mpd
-
         try:
             self._client.connect(self.server, self.port)
 
@@ -121,8 +118,6 @@ class MpdDevice(MediaPlayerDevice):
 
     def _disconnect(self):
         """Disconnect from MPD."""
-        import mpd
-
         try:
             self._client.disconnect()
         except mpd.ConnectionError:
@@ -144,8 +139,6 @@ class MpdDevice(MediaPlayerDevice):
 
     def update(self):
         """Get the latest data and update the state."""
-        import mpd
-
         try:
             if not self._is_connected:
                 self._connect()
@@ -261,8 +254,6 @@ class MpdDevice(MediaPlayerDevice):
     @Throttle(PLAYLIST_UPDATE_INTERVAL)
     def _update_playlists(self, **kwargs):
         """Update available MPD playlists."""
-        import mpd
-
         try:
             self._playlists = []
             for playlist_data in self._client.listplaylists():

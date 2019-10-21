@@ -18,7 +18,15 @@
         "title": "ZHA"
     },
     "device_automation": {
+        "action_type": {
+            "squawk": "Schreeuw",
+            "warn": "Waarschuwen"
+        },
         "trigger_subtype": {
+            "close": "Sluiten",
+            "dim_down": "Dim omlaag",
+            "dim_up": "Dim omhoog",
+            "face_any": "Met elk/opgegeven gezicht (en) geactiveerd",
             "left": "Links",
             "open": "Open",
             "right": "Rechts",

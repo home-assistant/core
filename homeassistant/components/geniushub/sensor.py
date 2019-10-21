@@ -94,6 +94,8 @@ class GeniusIssue(GeniusEntity):
         super().__init__()
 
         self._hub = broker.client
+        self._unique_id = f"{broker.hub_uid}_{GH_LEVEL_MAPPING[level]}"
+
         self._name = f"GeniusHub {GH_LEVEL_MAPPING[level]}"
         self._level = level
         self._issues = []

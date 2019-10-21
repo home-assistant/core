@@ -3,7 +3,7 @@ from unittest.mock import patch, Mock
 import pytest
 
 from homeassistant.core import State, EVENT_CALL_SERVICE
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, __version__
 from homeassistant.setup import async_setup_component
 from homeassistant.components import camera
 from homeassistant.components.climate.const import (
@@ -733,4 +733,138 @@ async def test_trait_execute_adding_query_data(hass):
                 }
             ]
         },
+    }
+
+
+async def test_identify(hass):
+    """Test identify message."""
+    result = await sh.async_handle_message(
+        hass,
+        BASIC_CONFIG,
+        None,
+        {
+            "requestId": REQ_ID,
+            "inputs": [
+                {
+                    "intent": "action.devices.IDENTIFY",
+                    "payload": {
+                        "device": {
+                            "mdnsScanData": {
+                                "additionals": [
+                                    {
+                                        "type": "TXT",
+                                        "class": "IN",
+                                        "name": "devhome._home-assistant._tcp.local",
+                                        "ttl": 4500,
+                                        "data": [
+                                            "version=0.101.0.dev0",
+                                            "base_url=http://192.168.1.101:8123",
+                                            "requires_api_password=true",
+                                        ],
+                                    }
+                                ]
+                            }
+                        },
+                        "structureData": {},
+                    },
+                }
+            ],
+            "devices": [
+                {
+                    "id": "light.ceiling_lights",
+                    "customData": {
+                        "httpPort": 8123,
+                        "httpSSL": False,
+                        "proxyDeviceId": BASIC_CONFIG.agent_user_id,
+                        "webhookId": "dde3b9800a905e886cc4d38e226a6e7e3f2a6993d2b9b9f63d13e42ee7de3219",
+                    },
+                }
+            ],
+        },
+    )
+
+    assert result == {
+        "requestId": REQ_ID,
+        "payload": {
+            "device": {
+                "id": BASIC_CONFIG.agent_user_id,
+                "isLocalOnly": True,
+                "isProxy": True,
+                "deviceInfo": {
+                    "hwVersion": "UNKNOWN_HW_VERSION",
+                    "manufacturer": "Home Assistant",
+                    "model": "Home Assistant",
+                    "swVersion": __version__,
+                },
+            }
+        },
+    }
+
+
+async def test_reachable_devices(hass):
+    """Test REACHABLE_DEVICES intent."""
+    # Matching passed in device.
+    hass.states.async_set("light.ceiling_lights", "on")
+
+    # Unsupported entity
+    hass.states.async_set("not_supported.entity", "something")
+
+    # Excluded via config
+    hass.states.async_set("light.not_expose", "on")
+
+    # Not passed in as google_id
+    hass.states.async_set("light.not_mentioned", "on")
+
+    config = MockConfig(
+        should_expose=lambda state: state.entity_id != "light.not_expose"
+    )
+
+    result = await sh.async_handle_message(
+        hass,
+        config,
+        None,
+        {
+            "requestId": REQ_ID,
+            "inputs": [
+                {
+                    "intent": "action.devices.REACHABLE_DEVICES",
+                    "payload": {
+                        "device": {
+                            "proxyDevice": {
+                                "id": "6a04f0f7-6125-4356-a846-861df7e01497",
+                                "customData": "{}",
+                                "proxyData": "{}",
+                            }
+                        },
+                        "structureData": {},
+                    },
+                }
+            ],
+            "devices": [
+                {
+                    "id": "light.ceiling_lights",
+                    "customData": {
+                        "httpPort": 8123,
+                        "httpSSL": False,
+                        "proxyDeviceId": BASIC_CONFIG.agent_user_id,
+                        "webhookId": "dde3b9800a905e886cc4d38e226a6e7e3f2a6993d2b9b9f63d13e42ee7de3219",
+                    },
+                },
+                {
+                    "id": "light.not_expose",
+                    "customData": {
+                        "httpPort": 8123,
+                        "httpSSL": False,
+                        "proxyDeviceId": BASIC_CONFIG.agent_user_id,
+                        "webhookId": "dde3b9800a905e886cc4d38e226a6e7e3f2a6993d2b9b9f63d13e42ee7de3219",
+                    },
+                },
+                {"id": BASIC_CONFIG.agent_user_id, "customData": {}},
+            ],
+        },
+    )
+
+    assert result == {
+        "requestId": REQ_ID,
+        "payload": {"devices": [{"verificationId": "light.ceiling_lights"}]},
     }

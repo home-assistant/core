@@ -8,6 +8,14 @@
         "create_entry": {
             "default": "Autenticado con \u00e9xito con Soma."
         },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Puerto"
+                }
+            }
+        },
         "title": "Soma"
     }
 }

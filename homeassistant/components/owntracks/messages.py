@@ -79,6 +79,8 @@ def _parse_see_args(message, subscribe_topic):
         kwargs["attributes"]["address"] = message["addr"]
     if "cog" in message:
         kwargs["attributes"]["course"] = message["cog"]
+    if "bs" in message:
+        kwargs["attributes"]["battery_status"] = message["bs"]
     if "t" in message:
         if message["t"] in ("c", "u"):
             kwargs["source_type"] = SOURCE_TYPE_GPS
