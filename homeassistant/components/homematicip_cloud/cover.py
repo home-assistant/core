@@ -31,13 +31,13 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP cover from a config entry."""
-    home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
+    hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
     devices = []
-    for device in home.devices:
+    for device in hap.home.devices:
         if isinstance(device, AsyncFullFlushBlind):
-            devices.append(HomematicipCoverSlats(home, device))
+            devices.append(HomematicipCoverSlats(hap, device))
         elif isinstance(device, AsyncFullFlushShutter):
-            devices.append(HomematicipCoverShutter(home, device))
+            devices.append(HomematicipCoverShutter(hap, device))
 
     if devices:
         async_add_entities(devices)

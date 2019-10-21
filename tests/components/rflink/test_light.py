@@ -11,10 +11,10 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ON,
     STATE_OFF,
+    STATE_ON,
 )
-from homeassistant.core import callback, State, CoreState
+from homeassistant.core import CoreState, State, callback
 
 from tests.common import mock_restore_cache
 from tests.components.rflink.test_init import mock_rflink
@@ -313,10 +313,10 @@ async def test_signal_repetitions_cancelling(hass, monkeypatch):
 
     await hass.async_block_till_done()
 
-    assert protocol.send_command_ack.call_args_list[0][0][1] == "on"
-    assert protocol.send_command_ack.call_args_list[1][0][1] == "off"
-    assert protocol.send_command_ack.call_args_list[2][0][1] == "off"
-    assert protocol.send_command_ack.call_args_list[3][0][1] == "off"
+    assert protocol.send_command_ack.call_args_list[0][0][1] == "off"
+    assert protocol.send_command_ack.call_args_list[1][0][1] == "on"
+    assert protocol.send_command_ack.call_args_list[2][0][1] == "on"
+    assert protocol.send_command_ack.call_args_list[3][0][1] == "on"
 
 
 async def test_type_toggle(hass, monkeypatch):

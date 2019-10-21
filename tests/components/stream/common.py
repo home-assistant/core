@@ -1,8 +1,11 @@
 """Collection of test helpers."""
 import io
 
+import av
+import numpy as np
+
 from homeassistant.components.stream import Stream
-from homeassistant.components.stream.const import DOMAIN, ATTR_STREAMS
+from homeassistant.components.stream.const import ATTR_STREAMS, DOMAIN
 
 
 def generate_h264_video():
@@ -11,8 +14,6 @@ def generate_h264_video():
 
     See: http://docs.mikeboers.com/pyav/develop/cookbook/numpy.html
     """
-    import numpy as np
-    import av
 
     duration = 5
     fps = 24

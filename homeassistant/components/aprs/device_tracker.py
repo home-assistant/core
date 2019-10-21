@@ -3,6 +3,11 @@
 import logging
 import threading
 
+import geopy.distance
+import aprslib
+from aprslib import ConnectionError as AprsConnectionError
+from aprslib import LoginError
+
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
@@ -59,7 +64,6 @@ def make_filter(callsigns: list) -> str:
 
 def gps_accuracy(gps, posambiguity: int) -> int:
     """Calculate the GPS accuracy based on APRS posambiguity."""
-    import geopy.distance
 
     pos_a_map = {0: 0, 1: 1 / 600, 2: 1 / 60, 3: 1 / 6, 4: 1}
     if posambiguity in pos_a_map:
@@ -115,8 +119,6 @@ class AprsListenerThread(threading.Thread):
         """Initialize the class."""
         super().__init__()
 
-        import aprslib
-
         self.callsign = callsign
         self.host = host
         self.start_event = threading.Event()
@@ -138,8 +140,6 @@ class AprsListenerThread(threading.Thread):
     def run(self):
         """Connect to APRS and listen for data."""
         self.ais.set_filter(self.server_filter)
-        from aprslib import ConnectionError as AprsConnectionError
-        from aprslib import LoginError
 
         try:
             _LOGGER.info(

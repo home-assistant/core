@@ -156,7 +156,9 @@ class MelissaClimate(ClimateDevice):
             return
 
         mode = self.hass_mode_to_melissa(hvac_mode)
-        await self.async_send({self._api.MODE: mode})
+        await self.async_send(
+            {self._api.MODE: mode, self._api.STATE: self._api.STATE_ON}
+        )
 
     async def async_send(self, value):
         """Send action to service."""

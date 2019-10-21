@@ -1,18 +1,28 @@
 """Support for Buienradar.nl weather service."""
 import logging
 
+from buienradar.constants import (
+    CONDCODE,
+    CONDITION,
+    DATETIME,
+    MAX_TEMP,
+    MIN_TEMP,
+    RAIN,
+    WINDAZIMUTH,
+    WINDSPEED,
+)
 import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
-    PLATFORM_SCHEMA,
-    WeatherEntity,
-    ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
+    PLATFORM_SCHEMA,
+    WeatherEntity,
 )
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
 from homeassistant.helpers import config_validation as cv
@@ -110,7 +120,6 @@ class BrWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-        from buienradar.constants import CONDCODE
 
         if self._data and self._data.condition:
             ccode = self._data.condition.get(CONDCODE)
@@ -161,16 +170,6 @@ class BrWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        from buienradar.constants import (
-            CONDITION,
-            CONDCODE,
-            RAIN,
-            DATETIME,
-            MIN_TEMP,
-            MAX_TEMP,
-            WINDAZIMUTH,
-            WINDSPEED,
-        )
 
         if not self._forecast:
             return None

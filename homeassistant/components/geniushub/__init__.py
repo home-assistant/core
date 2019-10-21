@@ -214,7 +214,7 @@ class GeniusZone(GeniusEntity):
         super().__init__()
 
         self._zone = zone
-        self._unique_id = f"{broker.hub_uid}_device_{zone.id}"
+        self._unique_id = f"{broker.hub_uid}_zone_{zone.id}"
 
         self._max_temp = self._min_temp = self._supported_features = None
 

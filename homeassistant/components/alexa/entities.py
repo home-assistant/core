@@ -14,6 +14,7 @@ from homeassistant.const import (
 from homeassistant.util.decorator import Registry
 from homeassistant.components.climate import const as climate
 from homeassistant.components import (
+    alarm_control_panel,
     alert,
     automation,
     binary_sensor,
@@ -43,7 +44,9 @@ from .capabilities import (
     AlexaPercentageController,
     AlexaPlaybackController,
     AlexaPowerController,
+    AlexaPowerLevelController,
     AlexaSceneController,
+    AlexaSecurityPanelController,
     AlexaSpeaker,
     AlexaStepSpeaker,
     AlexaTemperatureSensor,
@@ -344,6 +347,7 @@ class FanCapabilities(AlexaEntity):
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & fan.SUPPORT_SET_SPEED:
             yield AlexaPercentageController(self.entity)
+            yield AlexaPowerLevelController(self.entity)
         yield AlexaEndpointHealth(self.hass, self.entity)
 
 
@@ -485,3 +489,18 @@ class BinarySensorCapabilities(AlexaEntity):
             return self.TYPE_CONTACT
         if attrs.get(ATTR_DEVICE_CLASS) == "motion":
             return self.TYPE_MOTION
+
+
+@ENTITY_ADAPTERS.register(alarm_control_panel.DOMAIN)
+class AlarmControlPanelCapabilities(AlexaEntity):
+    """Class to represent Alarm capabilities."""
+
+    def default_display_categories(self):
+        """Return the display categories for this entity."""
+        return [DisplayCategory.SECURITY_PANEL]
+
+    def interfaces(self):
+        """Yield the supported interfaces."""
+        if not self.entity.attributes.get("code_arm_required"):
+            yield AlexaSecurityPanelController(self.hass, self.entity)
+            yield AlexaEndpointHealth(self.hass, self.entity)

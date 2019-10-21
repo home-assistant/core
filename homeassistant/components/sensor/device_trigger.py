@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_FOR,
     CONF_TYPE,
+    CONF_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
@@ -87,14 +88,17 @@ TRIGGER_SCHEMA = vol.All(
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     numeric_state_config = {
+        numeric_state_automation.CONF_PLATFORM: "numeric_state",
         numeric_state_automation.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        numeric_state_automation.CONF_ABOVE: config.get(CONF_ABOVE),
-        numeric_state_automation.CONF_BELOW: config.get(CONF_BELOW),
-        numeric_state_automation.CONF_FOR: config.get(CONF_FOR),
     }
+    if CONF_ABOVE in config:
+        numeric_state_config[numeric_state_automation.CONF_ABOVE] = config[CONF_ABOVE]
+    if CONF_BELOW in config:
+        numeric_state_config[numeric_state_automation.CONF_BELOW] = config[CONF_BELOW]
     if CONF_FOR in config:
         numeric_state_config[CONF_FOR] = config[CONF_FOR]
 
+    numeric_state_config = numeric_state_automation.TRIGGER_SCHEMA(numeric_state_config)
     return await numeric_state_automation.async_attach_trigger(
         hass, numeric_state_config, action, automation_info, platform_type="device"
     )
@@ -121,7 +125,8 @@ async def async_get_triggers(hass, device_id):
         if not state or not unit_of_measurement:
             continue
 
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+        if ATTR_DEVICE_CLASS in state.attributes:
+            device_class = state.attributes[ATTR_DEVICE_CLASS]
 
         templates = ENTITY_TRIGGERS.get(
             device_class, ENTITY_TRIGGERS[DEVICE_CLASS_NONE]
@@ -143,13 +148,24 @@ async def async_get_triggers(hass, device_id):
     return triggers
 
 
-async def async_get_trigger_capabilities(hass, trigger):
+async def async_get_trigger_capabilities(hass, config):
     """List trigger capabilities."""
+    state = hass.states.get(config[CONF_ENTITY_ID])
+    unit_of_measurement = (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) if state else ""
+    )
+
     return {
         "extra_fields": vol.Schema(
             {
-                vol.Optional(CONF_ABOVE): vol.Coerce(float),
-                vol.Optional(CONF_BELOW): vol.Coerce(float),
+                vol.Optional(
+                    CONF_ABOVE,
+                    description={CONF_UNIT_OF_MEASUREMENT: unit_of_measurement},
+                ): vol.Coerce(float),
+                vol.Optional(
+                    CONF_BELOW,
+                    description={CONF_UNIT_OF_MEASUREMENT: unit_of_measurement},
+                ): vol.Coerce(float),
                 vol.Optional(CONF_FOR): cv.positive_time_period_dict,
             }
         )

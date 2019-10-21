@@ -96,7 +96,7 @@ class TemperatureSensor(HomeAccessory):
             temperature = temperature_to_homekit(temperature, unit)
             self.char_temp.set_value(temperature)
             _LOGGER.debug(
-                "%s: Current temperature set to %d°C", self.entity_id, temperature
+                "%s: Current temperature set to %.1f°C", self.entity_id, temperature
             )
 
 

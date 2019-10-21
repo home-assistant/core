@@ -348,7 +348,6 @@ class ZHADevice(LogMixin):
         zdo_task = None
         for channel in channels:
             if channel.name == CHANNEL_ZDO:
-                # pylint: disable=E1111
                 if zdo_task is None:  # We only want to do this once
                     zdo_task = self._async_create_task(
                         semaphore, channel, task_name, *args
@@ -373,8 +372,7 @@ class ZHADevice(LogMixin):
     @callback
     def async_unsub_dispatcher(self):
         """Unsubscribe the dispatcher."""
-        if self._unsub:
-            self._unsub()
+        self._unsub()
 
     @callback
     def async_update_last_seen(self, last_seen):

@@ -1,6 +1,15 @@
 """Platform to control a Zehnder ComfoAir Q350/450/600 ventilation unit."""
 import logging
 
+from pycomfoconnect import (
+    SENSOR_FAN_EXHAUST_FLOW,
+    SENSOR_FAN_SUPPLY_FLOW,
+    SENSOR_HUMIDITY_EXTRACT,
+    SENSOR_HUMIDITY_OUTDOOR,
+    SENSOR_TEMPERATURE_EXTRACT,
+    SENSOR_TEMPERATURE_OUTDOOR,
+)
+
 from homeassistant.const import CONF_RESOURCES, TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -24,14 +33,6 @@ SENSOR_TYPES = {}
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ComfoConnect fan platform."""
-    from pycomfoconnect import (
-        SENSOR_TEMPERATURE_EXTRACT,
-        SENSOR_HUMIDITY_EXTRACT,
-        SENSOR_TEMPERATURE_OUTDOOR,
-        SENSOR_HUMIDITY_OUTDOOR,
-        SENSOR_FAN_SUPPLY_FLOW,
-        SENSOR_FAN_EXHAUST_FLOW,
-    )
 
     global SENSOR_TYPES
     SENSOR_TYPES = {

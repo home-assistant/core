@@ -19,5 +19,16 @@
             }
         },
         "title": "OpenTherm Gateway"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "floor_temperature": "Buedem Temperatur",
+                    "precision": "Pr\u00e4zisioun"
+                },
+                "description": "Optioune fir OpenTherm Gateway"
+            }
+        }
     }
 }

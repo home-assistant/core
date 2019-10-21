@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DOMAIN
@@ -78,13 +78,10 @@ async def _execute_service_based_action(
     service_name = SERVICE_NAMES[action_type]
     zha_device = await async_get_zha_device(hass, config[CONF_DEVICE_ID])
 
-    service_action = {
-        service.CONF_SERVICE: "{}.{}".format(DOMAIN, service_name),
-        ATTR_DATA: {ATTR_IEEE: str(zha_device.ieee)},
-    }
+    service_data = {ATTR_IEEE: str(zha_device.ieee)}
 
-    await service.async_call_from_config(
-        hass, service_action, blocking=True, variables=variables, context=context
+    await hass.services.async_call(
+        DOMAIN, service_name, service_data, blocking=True, context=context
     )
 
 

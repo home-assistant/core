@@ -1,5 +1,6 @@
 """Support to embed Plex."""
 import asyncio
+from datetime import timedelta
 import logging
 
 import plexapi.exceptions
@@ -17,6 +18,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     CONF_USE_EPISODE_ART,
@@ -26,6 +28,7 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
+    DISPATCHERS,
     DOMAIN as PLEX_DOMAIN,
     PLATFORMS,
     PLEX_MEDIA_PLAYER_OPTIONS,
@@ -64,7 +67,9 @@ _LOGGER = logging.getLogger(__package__)
 
 def setup(hass, config):
     """Set up the Plex component."""
-    hass.data.setdefault(PLEX_DOMAIN, {SERVERS: {}, REFRESH_LISTENERS: {}})
+    hass.data.setdefault(
+        PLEX_DOMAIN, {SERVERS: {}, REFRESH_LISTENERS: {}, DISPATCHERS: {}}
+    )
 
     plex_config = config.get(PLEX_DOMAIN, {})
     if plex_config:
@@ -104,7 +109,7 @@ async def async_setup_entry(hass, entry):
         )
         hass.config_entries.async_update_entry(entry, options=options)
 
-    plex_server = PlexServer(server_config, entry.options)
+    plex_server = PlexServer(hass, server_config, entry.options)
     try:
         await hass.async_add_executor_job(plex_server.connect)
     except requests.exceptions.ConnectionError as error:
@@ -129,7 +134,9 @@ async def async_setup_entry(hass, entry):
     _LOGGER.debug(
         "Connected to: %s (%s)", plex_server.friendly_name, plex_server.url_in_use
     )
-    hass.data[PLEX_DOMAIN][SERVERS][plex_server.machine_identifier] = plex_server
+    server_id = plex_server.machine_identifier
+    hass.data[PLEX_DOMAIN][SERVERS][server_id] = plex_server
+    hass.data[PLEX_DOMAIN][DISPATCHERS][server_id] = []
 
     for platform in PLATFORMS:
         hass.async_create_task(
@@ -137,6 +144,10 @@ async def async_setup_entry(hass, entry):
         )
 
     entry.add_update_listener(async_options_updated)
+
+    hass.data[PLEX_DOMAIN][REFRESH_LISTENERS][server_id] = async_track_time_interval(
+        hass, lambda now: plex_server.update_platforms(), timedelta(seconds=10)
+    )
 
     return True
 
@@ -146,7 +157,11 @@ async def async_unload_entry(hass, entry):
     server_id = entry.data[CONF_SERVER_IDENTIFIER]
 
     cancel = hass.data[PLEX_DOMAIN][REFRESH_LISTENERS].pop(server_id)
-    await hass.async_add_executor_job(cancel)
+    cancel()
+
+    dispatchers = hass.data[PLEX_DOMAIN][DISPATCHERS].pop(server_id)
+    for unsub in dispatchers:
+        unsub()
 
     tasks = [
         hass.config_entries.async_forward_entry_unload(entry, platform)

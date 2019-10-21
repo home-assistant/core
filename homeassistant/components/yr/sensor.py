@@ -7,6 +7,7 @@ from xml.parsers.expat import ExpatError
 
 import aiohttp
 import async_timeout
+import xmltodict
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -155,7 +156,6 @@ class YrData:
 
     async def fetching_data(self, *_):
         """Get the latest data from yr.no."""
-        import xmltodict
 
         def try_again(err: str):
             """Retry in 15 to 20 minutes."""

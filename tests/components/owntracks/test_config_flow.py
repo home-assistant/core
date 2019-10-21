@@ -43,6 +43,7 @@ async def test_config_flow_unload(hass):
 
 async def test_with_cloud_sub(hass):
     """Test creating a config flow while subscribed."""
+    hass.config.components.add("cloud")
     with patch(
         "homeassistant.components.cloud.async_active_subscription", return_value=True
     ), patch(

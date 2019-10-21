@@ -1,10 +1,15 @@
 """Helper classes for Google Assistant integration."""
 from asyncio import gather
 from collections.abc import Mapping
-from typing import List
+import logging
+import pprint
+from typing import List, Optional
+
+from aiohttp.web import json_response
 
 from homeassistant.core import Context, callback, HomeAssistant, State
 from homeassistant.helpers.event import async_call_later
+from homeassistant.components import webhook
 from homeassistant.const import (
     CONF_NAME,
     STATE_UNAVAILABLE,
@@ -15,6 +20,7 @@ from homeassistant.const import (
 
 from . import trait
 from .const import (
+    DOMAIN,
     DOMAIN_TO_GOOGLE_TYPES,
     CONF_ALIASES,
     ERR_FUNCTION_NOT_SUPPORTED,
@@ -24,6 +30,7 @@ from .const import (
 from .error import SmartHomeError
 
 SYNC_DELAY = 15
+_LOGGER = logging.getLogger(__name__)
 
 
 class AbstractConfig:
@@ -35,6 +42,7 @@ class AbstractConfig:
         """Initialize abstract config."""
         self.hass = hass
         self._google_sync_unsub = None
+        self._local_sdk_active = False
 
     @property
     def enabled(self):
@@ -62,10 +70,28 @@ class AbstractConfig:
         return self._unsub_report_state is not None
 
     @property
+    def is_local_sdk_active(self):
+        """Return if we're actively accepting local messages."""
+        return self._local_sdk_active
+
+    @property
     def should_report_state(self):
         """Return if states should be proactively reported."""
         # pylint: disable=no-self-use
         return False
+
+    @property
+    def local_sdk_webhook_id(self):
+        """Return the local SDK webhook ID.
+
+        Return None to disable the local SDK.
+        """
+        return None
+
+    @property
+    def local_sdk_user_id(self):
+        """Return the user ID to be used for actions received via the local SDK."""
+        raise NotImplementedError
 
     def should_expose(self, state) -> bool:
         """Return if entity should be exposed."""
@@ -131,15 +157,66 @@ class AbstractConfig:
         Called when the user disconnects their account from Google.
         """
 
+    @callback
+    def async_enable_local_sdk(self):
+        """Enable the local SDK."""
+        webhook_id = self.local_sdk_webhook_id
+
+        if webhook_id is None:
+            return
+
+        webhook.async_register(
+            self.hass, DOMAIN, "Local Support", webhook_id, self._handle_local_webhook
+        )
+
+        self._local_sdk_active = True
+
+    @callback
+    def async_disable_local_sdk(self):
+        """Disable the local SDK."""
+        if not self._local_sdk_active:
+            return
+
+        webhook.async_unregister(self.hass, self.local_sdk_webhook_id)
+        self._local_sdk_active = False
+
+    async def _handle_local_webhook(self, hass, webhook_id, request):
+        """Handle an incoming local SDK message."""
+        from . import smart_home
+
+        payload = await request.json()
+
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("Received local message:\n%s\n", pprint.pformat(payload))
+
+        if not self.enabled:
+            return json_response(smart_home.turned_off_response(payload))
+
+        result = await smart_home.async_handle_message(
+            self.hass, self, self.local_sdk_user_id, payload
+        )
+
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("Responding to local message:\n%s\n", pprint.pformat(result))
+
+        return json_response(result)
+
 
 class RequestData:
     """Hold data associated with a particular request."""
 
-    def __init__(self, config: AbstractConfig, user_id: str, request_id: str):
+    def __init__(
+        self,
+        config: AbstractConfig,
+        user_id: str,
+        request_id: str,
+        devices: Optional[List[dict]],
+    ):
         """Initialize the request data."""
         self.config = config
         self.request_id = request_id
         self.context = Context(user_id=user_id)
+        self.devices = devices
 
 
 def get_google_type(domain, device_class):
@@ -234,6 +311,15 @@ class GoogleEntity:
         if aliases:
             device["name"]["nicknames"] = aliases
 
+        if self.config.is_local_sdk_active:
+            device["otherDeviceIds"] = [{"deviceId": self.entity_id}]
+            device["customData"] = {
+                "webhookId": self.config.local_sdk_webhook_id,
+                "httpPort": self.hass.config.api.port,
+                "httpSSL": self.hass.config.api.use_ssl,
+                "proxyDeviceId": self.config.agent_user_id,
+            }
+
         for trt in traits:
             device["attributes"].update(trt.sync_attributes())
 
@@ -279,6 +365,11 @@ class GoogleEntity:
             deep_update(attrs, trt.query_attributes())
 
         return attrs
+
+    @callback
+    def reachable_device_serialize(self):
+        """Serialize entity for a REACHABLE_DEVICE response."""
+        return {"verificationId": self.entity_id}
 
     async def execute(self, data, command_payload):
         """Execute a command.

@@ -77,7 +77,8 @@ from homeassistant.util.unit_system import (  # NOQA
 # Typing imports that create a circular dependency
 # pylint: disable=using-constant-test
 if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntries  # noqa
+    from homeassistant.config_entries import ConfigEntries
+    from homeassistant.components.http import HomeAssistantHTTP
 
 # pylint: disable=invalid-name
 T = TypeVar("T")
@@ -162,6 +163,9 @@ class CoreState(enum.Enum):
 class HomeAssistant:
     """Root object of the Home Assistant home automation."""
 
+    http: "HomeAssistantHTTP" = None  # type: ignore
+    config_entries: "ConfigEntries" = None  # type: ignore
+
     def __init__(self, loop: Optional[asyncio.events.AbstractEventLoop] = None) -> None:
         """Initialize new Home Assistant object."""
         self.loop: asyncio.events.AbstractEventLoop = (loop or asyncio.get_event_loop())
@@ -186,7 +190,6 @@ class HomeAssistant:
         self.data: dict = {}
         self.state = CoreState.not_running
         self.exit_code = 0
-        self.config_entries: Optional[ConfigEntries] = None
         # If not None, use to signal end-of-loop
         self._stopped: Optional[asyncio.Event] = None
 
