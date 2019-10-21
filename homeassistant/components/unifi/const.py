@@ -14,6 +14,7 @@ UNIFI_WIRELESS_CLIENTS = "unifi_wireless_clients"
 
 CONF_ALLOW_BANDWIDTH_SENSORS = "allow_bandwidth_sensors"
 CONF_BLOCK_CLIENT = "block_client"
+CONF_CONTROL_WLAN = "control_wlan"
 CONF_DETECTION_TIME = "detection_time"
 CONF_TRACK_CLIENTS = "track_clients"
 CONF_TRACK_DEVICES = "track_devices"
@@ -26,6 +27,7 @@ CONF_DONT_TRACK_WIRED_CLIENTS = "dont_track_wired_clients"
 
 DEFAULT_ALLOW_BANDWIDTH_SENSORS = False
 DEFAULT_BLOCK_CLIENTS = []
+DEFAULT_CONTROL_WLAN = False
 DEFAULT_TRACK_CLIENTS = True
 DEFAULT_TRACK_DEVICES = True
 DEFAULT_TRACK_WIRED_CLIENTS = True

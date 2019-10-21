@@ -13,6 +13,7 @@ from homeassistant.const import (
 
 from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
+    CONF_CONTROL_WLAN,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
     CONF_SITE_ID,
@@ -21,6 +22,7 @@ from .const import (
     CONF_TRACK_WIRED_CLIENTS,
     CONTROLLER_ID,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
+    DEFAULT_CONTROL_WLAN,
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
@@ -177,7 +179,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the device tracker options."""
         if user_input is not None:
             self.options.update(user_input)
-            return await self.async_step_statistics_sensors()
+            return await self.async_step_access_control()
 
         return self.async_show_form(
             step_id="device_tracker",
@@ -207,6 +209,26 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                             CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
                         ),
                     ): int,
+                }
+            ),
+        )
+
+    async def async_step_access_control(self, user_input=None):
+        """Manage access control features."""
+        if user_input is not None:
+            self.options.update(user_input)
+            return await self.async_step_statistics_sensors()
+
+        return self.async_show_form(
+            step_id="access_control",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_CONTROL_WLAN,
+                        default=self.config_entry.options.get(
+                            CONF_CONTROL_WLAN, DEFAULT_CONTROL_WLAN
+                        ),
+                    ): bool
                 }
             ),
         )

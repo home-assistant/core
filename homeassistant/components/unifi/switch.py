@@ -67,7 +67,7 @@ def update_items(controller, async_add_entities, switches, switches_off):
     new_switches = []
     devices = controller.api.devices
 
-    # block client
+    # control network access for client
     for client_id in controller.option_block_clients:
 
         block_client_id = f"block-{client_id}"
@@ -89,7 +89,7 @@ def update_items(controller, async_add_entities, switches, switches_off):
         new_switches.append(switches[block_client_id])
         LOGGER.debug("New UniFi Block switch %s (%s)", client.hostname, client.mac)
 
-    # control POE
+    # control POE state for client
     for client_id in controller.api.clients:
 
         poe_client_id = f"poe-{client_id}"
@@ -140,7 +140,7 @@ def update_items(controller, async_add_entities, switches, switches_off):
         new_switches.append(switches[poe_client_id])
         LOGGER.debug("New UniFi POE switch %s (%s)", client.hostname, client.mac)
 
-    # wlan control
+    # control state of WLAN
     for wlan_id in controller.api.wlans:
 
         if wlan_id in switches:
@@ -153,6 +153,7 @@ def update_items(controller, async_add_entities, switches, switches_off):
             continue
 
         wlan = controller.api.wlans[wlan_id]
+        print(wlan.__dict__)
         switches[wlan_id] = UniFiWlanSwitch(wlan, controller)
         new_switches.append(switches[wlan_id])
         LOGGER.debug("New UniFi Wlan switch %s", wlan.name)
@@ -317,10 +318,12 @@ class UniFiWlanSwitch(SwitchDevice):
         """Return the name of the wlan."""
         return self.wlan.name
 
-    # @property
-    # def device_info(self):
-    #     """Return a device description for device registry."""
-    #     return {"connections": {(CONNECTION_NETWORK_MAC, self.client.mac)}}
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        mac = self.controller.mac
+        if mac:
+            return {"connections": {(CONNECTION_NETWORK_MAC, mac)}}
 
     @property
     def unique_id(self):
@@ -329,7 +332,7 @@ class UniFiWlanSwitch(SwitchDevice):
 
     @property
     def is_on(self):
-        """Return true if wlan is enabled."""
+        """Return true if WLAN is enabled."""
         return self.wlan.enabled
 
     @property
@@ -339,8 +342,14 @@ class UniFiWlanSwitch(SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Turn on connectivity for client."""
-        await self.controller.api.wlans.async_enable(self.wlan.id)
+        await self.controller.api.wlans.async_enable(self.wlan)
 
     async def async_turn_off(self, **kwargs):
         """Turn off connectivity for client."""
-        await self.controller.api.wlans.async_disable(self.wlan.id)
+        await self.controller.api.wlans.async_disable(self.wlan)
+
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        attributes = {"is_guest_network": self.wlan.is_guest}
+        return attributes

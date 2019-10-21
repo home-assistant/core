@@ -17,6 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_BLOCK_CLIENT,
+    CONF_CONTROL_WLAN,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
     CONF_DONT_TRACK_CLIENTS,
@@ -30,6 +31,7 @@ from .const import (
     CONTROLLER_ID,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_BLOCK_CLIENTS,
+    DEFAULT_CONTROL_WLAN,
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
@@ -97,7 +99,7 @@ class UniFiController:
     def option_control_wlans(self):
         """Config entry option to control state of wlans."""
         return True
-        # return self.config_entry.options.get(CONF_CONTROL_WLAN, DEFAULT_CONTROL_WLAN)
+        return self.config_entry.options.get(CONF_CONTROL_WLAN, DEFAULT_CONTROL_WLAN)
 
     @property
     def option_track_clients(self):
@@ -184,6 +186,8 @@ class UniFiController:
                 await self.api.devices.update()
                 if self.option_block_clients:
                     await self.api.clients_all.update()
+                if self.option_control_wlans:
+                    await self.api.wlans.update()
 
         except aiounifi.LoginRequired:
             try:
@@ -287,7 +291,7 @@ class UniFiController:
             (CONF_SSID_FILTER, CONF_SSID_FILTER),
         ):
             if config in import_config:
-                print(config)
+
                 if config == option and import_config[
                     config
                 ] != self.config_entry.options.get(option):
