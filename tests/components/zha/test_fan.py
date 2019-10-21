@@ -1,7 +1,9 @@
 """Test zha fan."""
 from unittest.mock import call, patch
 
-from zigpy.zcl.foundation import Command
+import zigpy.zcl.clusters.general as general
+import zigpy.zcl.clusters.hvac as hvac
+import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components import fan
 from homeassistant.components.fan import ATTR_SPEED, DOMAIN, SERVICE_SET_SPEED
@@ -28,13 +30,10 @@ from tests.common import mock_coro
 
 async def test_fan(hass, config_entry, zha_gateway):
     """Test zha fan platform."""
-    from zigpy.zcl.clusters.hvac import Fan
-    from zigpy.zcl.clusters.general import Basic
-    from zigpy.zcl.foundation import Status
 
     # create zigpy device
     zigpy_device = await async_init_zigpy_device(
-        hass, [Fan.cluster_id, Basic.cluster_id], [], None, zha_gateway
+        hass, [hvac.Fan.cluster_id, general.Basic.cluster_id], [], None, zha_gateway
     )
 
     # load up fan domain
@@ -56,7 +55,7 @@ async def test_fan(hass, config_entry, zha_gateway):
 
     # turn on at fan
     attr = make_attribute(0, 1)
-    hdr = make_zcl_header(Command.Report_Attributes)
+    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
     cluster.handle_message(hdr, [[attr]])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ON
@@ -70,7 +69,7 @@ async def test_fan(hass, config_entry, zha_gateway):
     # turn on from HA
     with patch(
         "zigpy.zcl.Cluster.write_attributes",
-        return_value=mock_coro([Status.SUCCESS, Status.SUCCESS]),
+        return_value=mock_coro([zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS]),
     ):
         # turn on via UI
         await async_turn_on(hass, entity_id)
@@ -80,7 +79,7 @@ async def test_fan(hass, config_entry, zha_gateway):
     # turn off from HA
     with patch(
         "zigpy.zcl.Cluster.write_attributes",
-        return_value=mock_coro([Status.SUCCESS, Status.SUCCESS]),
+        return_value=mock_coro([zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS]),
     ):
         # turn off via UI
         await async_turn_off(hass, entity_id)
@@ -90,7 +89,7 @@ async def test_fan(hass, config_entry, zha_gateway):
     # change speed from HA
     with patch(
         "zigpy.zcl.Cluster.write_attributes",
-        return_value=mock_coro([Status.SUCCESS, Status.SUCCESS]),
+        return_value=mock_coro([zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS]),
     ):
         # turn on via UI
         await async_set_speed(hass, entity_id, speed=fan.SPEED_HIGH)
@@ -98,7 +97,7 @@ async def test_fan(hass, config_entry, zha_gateway):
         assert cluster.write_attributes.call_args == call({"fan_mode": 3})
 
     # test adding new fan to the network and HA
-    await async_test_device_join(hass, zha_gateway, Fan.cluster_id, DOMAIN)
+    await async_test_device_join(hass, zha_gateway, hvac.Fan.cluster_id, DOMAIN)
 
 
 async def async_turn_on(hass, entity_id, speed=None):

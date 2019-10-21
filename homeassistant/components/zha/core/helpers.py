@@ -8,7 +8,15 @@ import asyncio
 import collections
 import logging
 
-from zigpy.types.named import EUI64
+import bellows.ezsp
+import bellows.zigbee.application
+import zigpy.types
+import zigpy_deconz.api
+import zigpy_deconz.zigbee.application
+import zigpy_xbee.api
+import zigpy_xbee.zigbee.application
+import zigpy_zigate.api
+import zigpy_zigate.zigbee.application
 
 from homeassistant.core import callback
 
@@ -51,25 +59,17 @@ async def safe_read(
 async def check_zigpy_connection(usb_path, radio_type, database_path):
     """Test zigpy radio connection."""
     if radio_type == RadioType.ezsp.name:
-        import bellows.ezsp
-        from bellows.zigbee.application import ControllerApplication
-
         radio = bellows.ezsp.EZSP()
+        ControllerApplication = bellows.zigbee.application.ControllerApplication
     elif radio_type == RadioType.xbee.name:
-        import zigpy_xbee.api
-        from zigpy_xbee.zigbee.application import ControllerApplication
-
         radio = zigpy_xbee.api.XBee()
+        ControllerApplication = zigpy_xbee.zigbee.application.ControllerApplication
     elif radio_type == RadioType.deconz.name:
-        import zigpy_deconz.api
-        from zigpy_deconz.zigbee.application import ControllerApplication
-
         radio = zigpy_deconz.api.Deconz()
+        ControllerApplication = zigpy_deconz.zigbee.application.ControllerApplication
     elif radio_type == RadioType.zigate.name:
-        import zigpy_zigate.api
-        from zigpy_zigate.zigbee.application import ControllerApplication
-
         radio = zigpy_zigate.api.ZiGate()
+        ControllerApplication = zigpy_zigate.zigbee.application.ControllerApplication
     try:
         await radio.connect(usb_path, DEFAULT_BAUDRATE)
         controller = ControllerApplication(radio, database_path)
@@ -138,7 +138,7 @@ async def async_get_zha_device(hass, device_id):
     registry_device = device_registry.async_get(device_id)
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     ieee_address = list(list(registry_device.identifiers)[0])[1]
-    ieee = EUI64.convert(ieee_address)
+    ieee = zigpy.types.EUI64.convert(ieee_address)
     return zha_gateway.devices[ieee]
 
 

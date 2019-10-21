@@ -2,6 +2,9 @@
 from unittest.mock import patch
 
 import pytest
+import zigpy.zcl.clusters.general as general
+import zigpy.zcl.clusters.security as security
+import zigpy.zcl.foundation as zcl_f
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import (
@@ -29,13 +32,15 @@ def calls(hass):
 
 async def test_get_actions(hass, config_entry, zha_gateway):
     """Test we get the expected actions from a zha device."""
-    from zigpy.zcl.clusters.general import Basic
-    from zigpy.zcl.clusters.security import IasZone, IasWd
 
     # create zigpy device
     zigpy_device = await async_init_zigpy_device(
         hass,
-        [Basic.cluster_id, IasZone.cluster_id, IasWd.cluster_id],
+        [
+            general.Basic.cluster_id,
+            security.IasZone.cluster_id,
+            security.IasWd.cluster_id,
+        ],
         [],
         None,
         zha_gateway,
@@ -64,15 +69,15 @@ async def test_get_actions(hass, config_entry, zha_gateway):
 async def test_action(hass, config_entry, zha_gateway, calls):
     """Test for executing a zha device action."""
 
-    from zigpy.zcl.clusters.general import Basic, OnOff
-    from zigpy.zcl.clusters.security import IasZone, IasWd
-    from zigpy.zcl.foundation import Status
-
     # create zigpy device
     zigpy_device = await async_init_zigpy_device(
         hass,
-        [Basic.cluster_id, IasZone.cluster_id, IasWd.cluster_id],
-        [OnOff.cluster_id],
+        [
+            general.Basic.cluster_id,
+            security.IasZone.cluster_id,
+            security.IasWd.cluster_id,
+        ],
+        [general.OnOff.cluster_id],
         None,
         zha_gateway,
     )
@@ -96,7 +101,8 @@ async def test_action(hass, config_entry, zha_gateway, calls):
     await async_enable_traffic(hass, zha_gateway, [zha_device])
 
     with patch(
-        "zigpy.zcl.Cluster.request", return_value=mock_coro([0x00, Status.SUCCESS])
+        "zigpy.zcl.Cluster.request",
+        return_value=mock_coro([0x00, zcl_f.Status.SUCCESS]),
     ):
         assert await async_setup_component(
             hass,
