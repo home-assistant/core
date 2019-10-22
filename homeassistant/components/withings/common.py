@@ -1,28 +1,36 @@
 """Common code for Withings."""
 import datetime
+from functools import partial
 import logging
 import re
 import time
-from typing import Any
+from typing import Any, Dict
 
-from oauthlib.oauth2.rfc6749.errors import MissingTokenError
+from asyncio import run_coroutine_threadsafe
+import requests
 from withings_api import (
-    WithingsApi,
-    Credentials,
+    AbstractWithingsApi,
     SleepGetResponse,
     MeasureGetMeasResponse,
     SleepGetSummaryResponse,
 )
+from withings_api.common import UnauthorizedException, AuthFailedException
+
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    AbstractOAuth2Implementation,
+    OAuth2Session,
+)
 from homeassistant.util import dt, slugify
 
 from . import const
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
 NOT_AUTHENTICATED_ERROR = re.compile(
-    ".*(Error Code (100|101|102|200|401)|Missing access token parameter).*",
+    # ".*(Error Code (100|101|102|200|401)|Missing access token parameter).*",
+    "^401,.*",
     re.IGNORECASE,
 )
 
@@ -68,12 +76,56 @@ class ThrottleData:
         return int(time.time()) - self.time > self.interval
 
 
+class ConfigEntryWithingsApi(AbstractWithingsApi):
+    """Withing API that uses HA resources."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        implementation: AbstractOAuth2Implementation,
+    ):
+        """Initialize object."""
+        self._hass = hass
+        self._config_entry = config_entry
+        self._implementation = implementation
+        self.session = OAuth2Session(hass, config_entry, implementation)
+
+    def _request(
+        self, path: str, params: Dict[str, Any], method: str = "GET"
+    ) -> Dict[str, Any]:
+        return run_coroutine_threadsafe(
+            self.async_do_request(path, params, method), self._hass.loop
+        ).result()
+
+    async def async_do_request(
+        self, path: str, params: Dict[str, Any], method: str = "GET"
+    ) -> Dict[str, Any]:
+        """Perform an async request."""
+        await self.session.async_ensure_token_valid()
+
+        response = await self._hass.async_add_executor_job(
+            partial(
+                requests.request,
+                method,
+                "%s/%s" % (self.URL, path),
+                params=params,
+                headers={
+                    "Authorization": "Bearer %s"
+                    % self._config_entry.data["token"]["access_token"]
+                },
+            )
+        )
+
+        return response.json()
+
+
 class WithingsDataManager:
     """A class representing an Withings cloud service connection."""
 
     service_available = None
 
-    def __init__(self, hass: HomeAssistantType, profile: str, api: WithingsApi):
+    def __init__(self, hass: HomeAssistant, profile: str, api: ConfigEntryWithingsApi):
         """Constructor."""
         self._hass = hass
         self._api = api
@@ -98,7 +150,7 @@ class WithingsDataManager:
         return self._slug
 
     @property
-    def api(self) -> WithingsApi:
+    def api(self) -> ConfigEntryWithingsApi:
         """Get the api object."""
         return self._api
 
@@ -174,11 +226,12 @@ class WithingsDataManager:
             WithingsDataManager.print_service_available()
             return result
 
-        except MissingTokenError as ex:
-            raise NotAuthenticatedError(ex)
-
         except Exception as ex:  # pylint: disable=broad-except
-            # Service error, probably not authenticated.
+            # Withings api encountered error.
+            if isinstance(ex, (UnauthorizedException, AuthFailedException)):
+                raise NotAuthenticatedError(ex)
+
+            # Oauth2 config flow failed to authenticate.
             if NOT_AUTHENTICATED_ERROR.match(str(ex)):
                 raise NotAuthenticatedError(ex)
 
@@ -247,42 +300,33 @@ class WithingsDataManager:
 
 
 def create_withings_data_manager(
-    hass: HomeAssistantType, entry: ConfigEntry
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    implementation: AbstractOAuth2Implementation,
 ) -> WithingsDataManager:
     """Set up the sensor config entry."""
-    entry_creds = entry.data.get(const.CREDENTIALS) or {}
-    profile = entry.data[const.PROFILE]
-    credentials = Credentials(
-        access_token=entry_creds.get("access_token"),
-        token_expiry=entry_creds.get("token_expiry"),
-        token_type=entry_creds.get("token_type"),
-        refresh_token=entry_creds.get("refresh_token"),
-        userid=entry_creds.get("userid") or entry_creds.get("user_id"),
-        client_id=entry_creds.get("client_id"),
-        consumer_secret=entry_creds.get("consumer_secret"),
-    )
-
-    def credentials_saver(credentials_param: Credentials):
-        _LOGGER.debug("Saving updated credentials of type %s", type(credentials_param))
-        entry.data[const.CREDENTIALS] = credentials_param._asdict()
-        hass.config_entries.async_update_entry(entry, data={**entry.data})
+    profile = config_entry.data.get(const.PROFILE)
 
     _LOGGER.debug("Creating withings api instance")
-    api = WithingsApi(credentials=credentials, refresh_cb=credentials_saver)
+    api = ConfigEntryWithingsApi(
+        hass=hass, config_entry=config_entry, implementation=implementation
+    )
 
     _LOGGER.debug("Creating withings data manager for profile: %s", profile)
     return WithingsDataManager(hass, profile, api)
 
 
 def get_data_manager(
-    hass: HomeAssistantType, entry: ConfigEntry
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    implementation: AbstractOAuth2Implementation,
 ) -> WithingsDataManager:
     """Get a data manager for a config entry.
 
     If the data manager doesn't exist yet, it will be
     created and cached for later use.
     """
-    profile = entry.data.get(const.PROFILE)
+    entry_id = entry.entry_id
 
     hass.data[const.DOMAIN] = hass.data.get(const.DOMAIN, {})
 
@@ -290,6 +334,8 @@ def get_data_manager(
     domain_dict[const.DATA_MANAGER] = domain_dict.get(const.DATA_MANAGER, {})
 
     dm_dict = domain_dict[const.DATA_MANAGER]
-    dm_dict[profile] = dm_dict.get(profile, create_withings_data_manager(hass, entry))
+    dm_dict[entry_id] = dm_dict.get(entry_id) or create_withings_data_manager(
+        hass, entry, implementation
+    )
 
-    return dm_dict[profile]
+    return dm_dict[entry_id]

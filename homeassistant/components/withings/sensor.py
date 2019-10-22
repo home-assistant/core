@@ -13,9 +13,10 @@ from withings_api.common import (
 )
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
+from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import const
 from .common import _LOGGER, WithingsDataManager, get_data_manager
@@ -27,13 +28,19 @@ PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: Callable[[List[Entity], bool], None],
 ) -> None:
     """Set up the sensor config entry."""
-    data_manager = get_data_manager(hass, entry)
-    entities = create_sensor_entities(data_manager)
+    implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
+        hass, entry
+    )
+
+    data_manager = get_data_manager(hass, entry, implementation)
+    userid = entry.data["token"]["userid"]
+
+    entities = create_sensor_entities(data_manager, userid)
     async_add_entities(entities, True)
 
 
@@ -184,91 +191,91 @@ WITHINGS_ATTRIBUTES = [
     ),
     WithingsSleepSummaryAttribute(
         const.MEAS_SLEEP_WAKEUP_DURATION_SECONDS,
-        GetSleepSummaryField.WAKEUP_DURATION,
+        GetSleepSummaryField.WAKEUP_DURATION.value,
         "Wakeup time",
         const.UOM_SECONDS,
         "mdi:sleep-off",
     ),
     WithingsSleepSummaryAttribute(
         const.MEAS_SLEEP_LIGHT_DURATION_SECONDS,
-        GetSleepSummaryField.LIGHT_SLEEP_DURATION,
+        GetSleepSummaryField.LIGHT_SLEEP_DURATION.value,
         "Light sleep",
         const.UOM_SECONDS,
         "mdi:sleep",
     ),
     WithingsSleepSummaryAttribute(
         const.MEAS_SLEEP_DEEP_DURATION_SECONDS,
-        GetSleepSummaryField.DEEP_SLEEP_DURATION,
+        GetSleepSummaryField.DEEP_SLEEP_DURATION.value,
         "Deep sleep",
         const.UOM_SECONDS,
         "mdi:sleep",
     ),
     WithingsSleepSummaryAttribute(
         const.MEAS_SLEEP_REM_DURATION_SECONDS,
-        GetSleepSummaryField.REM_SLEEP_DURATION,
+        GetSleepSummaryField.REM_SLEEP_DURATION.value,
         "REM sleep",
         const.UOM_SECONDS,
         "mdi:sleep",
     ),
     WithingsSleepSummaryAttribute(
         const.MEAS_SLEEP_WAKEUP_COUNT,
-        GetSleepSummaryField.WAKEUP_COUNT,
+        GetSleepSummaryField.WAKEUP_COUNT.value,
         "Wakeup count",
         const.UOM_FREQUENCY,
         "mdi:sleep-off",
     ),
     WithingsSleepSummaryAttribute(
         const.MEAS_SLEEP_TOSLEEP_DURATION_SECONDS,
-        GetSleepSummaryField.DURATION_TO_SLEEP,
+        GetSleepSummaryField.DURATION_TO_SLEEP.value,
         "Time to sleep",
         const.UOM_SECONDS,
         "mdi:sleep",
     ),
     WithingsSleepSummaryAttribute(
         const.MEAS_SLEEP_TOWAKEUP_DURATION_SECONDS,
-        GetSleepSummaryField.DURATION_TO_WAKEUP,
+        GetSleepSummaryField.DURATION_TO_WAKEUP.value,
         "Time to wakeup",
         const.UOM_SECONDS,
         "mdi:sleep-off",
     ),
     WithingsSleepSummaryAttribute(
         const.MEAS_SLEEP_HEART_RATE_AVERAGE,
-        GetSleepSummaryField.HR_AVERAGE,
+        GetSleepSummaryField.HR_AVERAGE.value,
         "Average heart rate",
         const.UOM_BEATS_PER_MINUTE,
         "mdi:heart-pulse",
     ),
     WithingsSleepSummaryAttribute(
         const.MEAS_SLEEP_HEART_RATE_MIN,
-        GetSleepSummaryField.HR_MIN,
+        GetSleepSummaryField.HR_MIN.value,
         "Minimum heart rate",
         const.UOM_BEATS_PER_MINUTE,
         "mdi:heart-pulse",
     ),
     WithingsSleepSummaryAttribute(
         const.MEAS_SLEEP_HEART_RATE_MAX,
-        GetSleepSummaryField.HR_MAX,
+        GetSleepSummaryField.HR_MAX.value,
         "Maximum heart rate",
         const.UOM_BEATS_PER_MINUTE,
         "mdi:heart-pulse",
     ),
     WithingsSleepSummaryAttribute(
         const.MEAS_SLEEP_RESPIRATORY_RATE_AVERAGE,
-        GetSleepSummaryField.RR_AVERAGE,
+        GetSleepSummaryField.RR_AVERAGE.value,
         "Average respiratory rate",
         const.UOM_BREATHS_PER_MINUTE,
         None,
     ),
     WithingsSleepSummaryAttribute(
         const.MEAS_SLEEP_RESPIRATORY_RATE_MIN,
-        GetSleepSummaryField.RR_MIN,
+        GetSleepSummaryField.RR_MIN.value,
         "Minimum respiratory rate",
         const.UOM_BREATHS_PER_MINUTE,
         None,
     ),
     WithingsSleepSummaryAttribute(
         const.MEAS_SLEEP_RESPIRATORY_RATE_MAX,
-        GetSleepSummaryField.RR_MAX,
+        GetSleepSummaryField.RR_MAX.value,
         "Maximum respiratory rate",
         const.UOM_BREATHS_PER_MINUTE,
         None,
@@ -282,7 +289,10 @@ class WithingsHealthSensor(Entity):
     """Implementation of a Withings sensor."""
 
     def __init__(
-        self, data_manager: WithingsDataManager, attribute: WithingsAttribute
+        self,
+        data_manager: WithingsDataManager,
+        attribute: WithingsAttribute,
+        userid: str,
     ) -> None:
         """Initialize the Withings sensor."""
         self._data_manager = data_manager
@@ -290,7 +300,7 @@ class WithingsHealthSensor(Entity):
         self._state = None
 
         self._slug = self._data_manager.slug
-        self._user_id = self._data_manager.api.get_credentials().userid
+        self._userid = userid
 
     @property
     def name(self) -> str:
@@ -301,7 +311,7 @@ class WithingsHealthSensor(Entity):
     def unique_id(self) -> str:
         """Return a unique, HASS-friendly identifier for this entity."""
         return "withings_{}_{}_{}".format(
-            self._slug, self._user_id, slugify(self._attribute.measurement)
+            self._slug, self._userid, slugify(self._attribute.measurement)
         )
 
     @property
@@ -330,7 +340,7 @@ class WithingsHealthSensor(Entity):
             "Async update slug: %s, measurement: %s, user_id: %s",
             self._slug,
             self._attribute.measurement,
-            self._user_id,
+            self._userid,
         )
 
         if isinstance(self._attribute, WithingsMeasureAttribute):
@@ -400,31 +410,31 @@ class WithingsHealthSensor(Entity):
         for serie in data.series:
             data = serie.data
             value = 0
-            if measure_type == GetSleepSummaryField.REM_SLEEP_DURATION:
+            if measure_type == GetSleepSummaryField.REM_SLEEP_DURATION.value:
                 value = data.remsleepduration
-            elif measure_type == GetSleepSummaryField.WAKEUP_DURATION:
+            elif measure_type == GetSleepSummaryField.WAKEUP_DURATION.value:
                 value = data.wakeupduration
-            elif measure_type == GetSleepSummaryField.LIGHT_SLEEP_DURATION:
+            elif measure_type == GetSleepSummaryField.LIGHT_SLEEP_DURATION.value:
                 value = data.lightsleepduration
-            elif measure_type == GetSleepSummaryField.DEEP_SLEEP_DURATION:
+            elif measure_type == GetSleepSummaryField.DEEP_SLEEP_DURATION.value:
                 value = data.deepsleepduration
-            elif measure_type == GetSleepSummaryField.WAKEUP_COUNT:
+            elif measure_type == GetSleepSummaryField.WAKEUP_COUNT.value:
                 value = data.wakeupcount
-            elif measure_type == GetSleepSummaryField.DURATION_TO_SLEEP:
+            elif measure_type == GetSleepSummaryField.DURATION_TO_SLEEP.value:
                 value = data.durationtosleep
-            elif measure_type == GetSleepSummaryField.DURATION_TO_WAKEUP:
+            elif measure_type == GetSleepSummaryField.DURATION_TO_WAKEUP.value:
                 value = data.durationtowakeup
-            elif measure_type == GetSleepSummaryField.HR_AVERAGE:
+            elif measure_type == GetSleepSummaryField.HR_AVERAGE.value:
                 value = data.hr_average
-            elif measure_type == GetSleepSummaryField.HR_MIN:
+            elif measure_type == GetSleepSummaryField.HR_MIN.value:
                 value = data.hr_min
-            elif measure_type == GetSleepSummaryField.HR_MAX:
+            elif measure_type == GetSleepSummaryField.HR_MAX.value:
                 value = data.hr_max
-            elif measure_type == GetSleepSummaryField.RR_AVERAGE:
+            elif measure_type == GetSleepSummaryField.RR_AVERAGE.value:
                 value = data.rr_average
-            elif measure_type == GetSleepSummaryField.RR_MIN:
+            elif measure_type == GetSleepSummaryField.RR_MIN.value:
                 value = data.rr_min
-            elif measure_type == GetSleepSummaryField.RR_MAX:
+            elif measure_type == GetSleepSummaryField.RR_MAX.value:
                 value = data.rr_max
 
             # Sometimes a None is provided for value, default to 0.
@@ -434,7 +444,7 @@ class WithingsHealthSensor(Entity):
 
 
 def create_sensor_entities(
-    data_manager: WithingsDataManager
+    data_manager: WithingsDataManager, userid: str
 ) -> List[WithingsHealthSensor]:
     """Create sensor entities."""
     entities = []
@@ -449,7 +459,7 @@ def create_sensor_entities(
             attribute.unit_of_measurement,
         )
 
-        entity = WithingsHealthSensor(data_manager, attribute)
+        entity = WithingsHealthSensor(data_manager, attribute, userid)
 
         entities.append(entity)
 

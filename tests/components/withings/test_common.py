@@ -1,14 +1,15 @@
 """Tests for the Withings component."""
 from asynctest import MagicMock
-from withings_api import WithingsApi
-from oauthlib.oauth2.rfc6749.errors import MissingTokenError
-import pytest
 
+import pytest
+from withings_api import WithingsApi
+from withings_api.common import UnauthorizedException, TimeoutException
+
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.components.withings.common import (
     NotAuthenticatedError,
     WithingsDataManager,
 )
-from homeassistant.exceptions import PlatformNotReady
 
 
 @pytest.fixture(name="withings_api")
@@ -58,28 +59,19 @@ def test_print_service() -> None:
 async def test_data_manager_call(data_manager: WithingsDataManager) -> None:
     """Test method."""
     # Not authenticated 1.
-    test_function = MagicMock(side_effect=MissingTokenError("Error Code 401"))
-    try:
+    test_function = MagicMock(side_effect=UnauthorizedException(401))
+    with pytest.raises(NotAuthenticatedError):
         await data_manager.call(test_function)
-        assert False, "An exception should have been thrown."
-    except NotAuthenticatedError:
-        assert True
 
     # Not authenticated 2.
-    test_function = MagicMock(side_effect=Exception("Error Code 401"))
-    try:
+    test_function = MagicMock(side_effect=TimeoutException(522))
+    with pytest.raises(PlatformNotReady):
         await data_manager.call(test_function)
-        assert False, "An exception should have been thrown."
-    except NotAuthenticatedError:
-        assert True
 
     # Service error.
     test_function = MagicMock(side_effect=PlatformNotReady())
-    try:
+    with pytest.raises(PlatformNotReady):
         await data_manager.call(test_function)
-        assert False, "An exception should have been thrown."
-    except PlatformNotReady:
-        assert True
 
 
 async def test_data_manager_call_throttle_enabled(

@@ -620,7 +620,7 @@ watchdog==0.8.3
 websockets==6.0
 
 # homeassistant.components.withings
-withings-api==2.1.0
+withings-api==2.1.2
 
 # homeassistant.components.bluesound
 # homeassistant.components.startca

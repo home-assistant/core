@@ -1,10 +1,11 @@
 """Tests for the Withings component."""
 import re
+import time
 
 from asynctest import MagicMock
 import requests_mock
 import voluptuous as vol
-from withings_api import WithingsApi
+from withings_api import AbstractWithingsApi
 from withings_api.common import SleepModel, SleepState
 
 import homeassistant.components.api as api
@@ -15,11 +16,13 @@ from homeassistant.components.withings import (
     const,
     CONFIG_SCHEMA,
 )
-from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import STATE_UNKNOWN
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from .common import (
+    assert_state_equals,
+    configure_integration,
+    setup_hass,
     WITHINGS_GET_DEVICE_RESPONSE,
     WITHINGS_GET_DEVICE_RESPONSE_EMPTY,
     WITHINGS_SLEEP_RESPONSE,
@@ -28,9 +31,6 @@ from .common import (
     WITHINGS_SLEEP_SUMMARY_RESPONSE_EMPTY,
     WITHINGS_MEASURES_RESPONSE,
     WITHINGS_MEASURES_RESPONSE_EMPTY,
-    assert_state_equals,
-    configure_integration,
-    setup_hass,
 )
 
 
@@ -195,7 +195,7 @@ def test_config_schema_base_url() -> None:
     )
 
 
-async def test_async_setup_no_config(hass: HomeAssistantType) -> None:
+async def test_async_setup_no_config(hass: HomeAssistant) -> None:
     """Test method."""
     hass.async_create_task = MagicMock()
 
@@ -204,50 +204,122 @@ async def test_async_setup_no_config(hass: HomeAssistantType) -> None:
     hass.async_create_task.assert_not_called()
 
 
-async def test_async_setup_entry_not_authenticated(hass: HomeAssistantType) -> None:
-    """Test method."""
+async def test_upgrade_token(
+    hass: HomeAssistant, aiohttp_client, aioclient_mock
+) -> None:
+    """Test upgrading from old config data format to new one."""
     config = await setup_hass(hass)
     profiles = config[const.DOMAIN][const.PROFILES]
 
     await configure_integration(
         hass=hass,
+        aiohttp_client=aiohttp_client,
+        aioclient_mock=aioclient_mock,
         profiles=profiles,
-        profile_index=1,
+        profile_index=0,
         get_device_response=WITHINGS_GET_DEVICE_RESPONSE_EMPTY,
         getmeasures_response=WITHINGS_MEASURES_RESPONSE_EMPTY,
         get_sleep_response=WITHINGS_SLEEP_RESPONSE_EMPTY,
         get_sleep_summary_response=WITHINGS_SLEEP_SUMMARY_RESPONSE_EMPTY,
     )
 
-    # Get the config entry from the previous config flow.
     entries = hass.config_entries.async_entries(const.DOMAIN)
+    assert entries
 
-    # Simulate no longer authenticated.
+    entry = entries[0]
+    data = entry.data
+    token = data.get("token")
+    hass.config_entries.async_update_entry(
+        entry,
+        data={
+            const.PROFILE: data.get(const.PROFILE),
+            const.CREDENTIALS: {
+                "access_token": token.get("access_token"),
+                "refresh_token": token.get("refresh_token"),
+                "token_expiry": token.get("expires_at"),
+                "token_type": token.get("type"),
+                "userid": token.get("userid"),
+                "client_id": token.get("my_client_id"),
+                "consumer_secret": token.get("my_consumer_secret"),
+            },
+        },
+    )
+
     with requests_mock.mock() as rqmck:
         rqmck.get(
-            re.compile(WithingsApi.URL + "/v2/user?.*action=getdevice(&.*)?"),
-            status_code=401,
-            json={"status": 100, "body": None},
+            re.compile(AbstractWithingsApi.URL + "/v2/user?.*action=getdevice(&.*|$)"),
+            status_code=200,
+            json=WITHINGS_GET_DEVICE_RESPONSE_EMPTY,
         )
 
-        # Attempt to setup again with non-authenticated config.
-        assert not hass.config_entries.flow.async_progress()
-        assert not await async_setup_entry(hass, entries[0])
-        await hass.async_block_till_done()
+        assert await async_setup_entry(hass, entry)
 
-    flows = hass.config_entries.flow.async_progress()
-    assert flows
-    assert flows[0]["handler"] == const.DOMAIN
-    assert flows[0]["context"] == {"source": SOURCE_USER, "profile": profiles[1]}
+    entries = hass.config_entries.async_entries(const.DOMAIN)
+    assert entries
+
+    data = entries[0].data
+
+    assert data.get("auth_implementation") == const.DOMAIN
+    assert data.get("implementation") == const.DOMAIN
+    assert data.get(const.PROFILE) == profiles[0]
+
+    token = data.get("token")
+    assert token
+    assert token.get("access_token") == "mock-access-token"
+    assert token.get("refresh_token") == "mock-refresh-token"
+    assert token.get("expires_at") > time.time()
+    assert token.get("type") == "Bearer"
+    assert token.get("userid") == "myuserid"
+    assert not token.get("client_id")
+    assert not token.get("consumer_secret")
 
 
-async def test_full_setup(hass: HomeAssistantType) -> None:
+async def test_auth_failure(
+    hass: HomeAssistant, aiohttp_client, aioclient_mock
+) -> None:
+    """Test auth failure."""
+    config = await setup_hass(hass)
+    profiles = config[const.DOMAIN][const.PROFILES]
+
+    await configure_integration(
+        hass=hass,
+        aiohttp_client=aiohttp_client,
+        aioclient_mock=aioclient_mock,
+        profiles=profiles,
+        profile_index=0,
+        get_device_response=WITHINGS_GET_DEVICE_RESPONSE_EMPTY,
+        getmeasures_response=WITHINGS_MEASURES_RESPONSE_EMPTY,
+        get_sleep_response=WITHINGS_SLEEP_RESPONSE_EMPTY,
+        get_sleep_summary_response=WITHINGS_SLEEP_SUMMARY_RESPONSE_EMPTY,
+    )
+
+    entries = hass.config_entries.async_entries(const.DOMAIN)
+    assert entries
+
+    entry = entries[0]
+    hass.config_entries.async_update_entry(
+        entry, data={**entry.data, **{"new_item": 1}}
+    )
+
+    with requests_mock.mock() as rqmck:
+        rqmck.get(
+            re.compile(AbstractWithingsApi.URL + "/v2/user?.*action=getdevice(&.*|$)"),
+            status_code=200,
+            json={"status": 401, "body": {}},
+        )
+
+        assert not (await async_setup_entry(hass, entry))
+
+
+async def test_full_setup(hass: HomeAssistant, aiohttp_client, aioclient_mock) -> None:
     """Test the whole component lifecycle."""
     config = await setup_hass(hass)
     profiles = config[const.DOMAIN][const.PROFILES]
 
     await configure_integration(
         hass=hass,
+        aiohttp_client=aiohttp_client,
+        aioclient_mock=aioclient_mock,
         profiles=profiles,
         profile_index=0,
         get_device_response=WITHINGS_GET_DEVICE_RESPONSE,
@@ -258,6 +330,8 @@ async def test_full_setup(hass: HomeAssistantType) -> None:
 
     await configure_integration(
         hass=hass,
+        aiohttp_client=aiohttp_client,
+        aioclient_mock=aioclient_mock,
         profiles=profiles,
         profile_index=1,
         get_device_response=WITHINGS_GET_DEVICE_RESPONSE_EMPTY,
@@ -268,6 +342,8 @@ async def test_full_setup(hass: HomeAssistantType) -> None:
 
     await configure_integration(
         hass=hass,
+        aiohttp_client=aiohttp_client,
+        aioclient_mock=aioclient_mock,
         profiles=profiles,
         profile_index=2,
         get_device_response=WITHINGS_GET_DEVICE_RESPONSE_EMPTY,
@@ -290,6 +366,8 @@ async def test_full_setup(hass: HomeAssistantType) -> None:
 
     await configure_integration(
         hass=hass,
+        aiohttp_client=aiohttp_client,
+        aioclient_mock=aioclient_mock,
         profiles=profiles,
         profile_index=3,
         get_device_response=WITHINGS_GET_DEVICE_RESPONSE_EMPTY,
@@ -312,6 +390,8 @@ async def test_full_setup(hass: HomeAssistantType) -> None:
 
     await configure_integration(
         hass=hass,
+        aiohttp_client=aiohttp_client,
+        aioclient_mock=aioclient_mock,
         profiles=profiles,
         profile_index=4,
         get_device_response=WITHINGS_GET_DEVICE_RESPONSE_EMPTY,
@@ -369,7 +449,6 @@ async def test_full_setup(hass: HomeAssistantType) -> None:
         (profiles[4], const.MEAS_SLEEP_STATE, const.STATE_REM),
     )
     for (profile, meas, value) in expected_states:
-        print("CHECKING:", profile, meas, value)
         assert_state_equals(hass, profile, meas, value)
 
     # Tear down setup entries.

@@ -4,23 +4,26 @@ import time
 from typing import List
 
 import requests_mock
-from withings_api import WithingsApi, WithingsAuth
+from withings_api import AbstractWithingsApi
 from withings_api.common import (
-    SleepState,
-    SleepModel,
     MeasureGetMeasGroupAttrib,
     MeasureGetMeasGroupCategory,
     MeasureType,
+    SleepModel,
+    SleepState,
 )
+
+from homeassistant import data_entry_flow
 import homeassistant.components.api as api
 import homeassistant.components.http as http
 import homeassistant.components.withings.const as const
-from homeassistant.util import slugify
-from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.config_entries import SOURCE_USER
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.setup import async_setup_component
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_METRIC
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.setup import async_setup_component
+from homeassistant.util import slugify
 
 
 def get_entity_id(measure, profile) -> str:
@@ -29,7 +32,7 @@ def get_entity_id(measure, profile) -> str:
 
 
 def assert_state_equals(
-    hass: HomeAssistantType, profile: str, measure: str, expected
+    hass: HomeAssistant, profile: str, measure: str, expected
 ) -> None:
     """Assert the state of a withings sensor."""
     entity_id = get_entity_id(measure, profile)
@@ -44,7 +47,7 @@ def assert_state_equals(
     )
 
 
-async def setup_hass(hass: HomeAssistantType) -> dict:
+async def setup_hass(hass: HomeAssistant) -> dict:
     """Configure home assistant."""
     profiles = ["Person0", "Person1", "Person2", "Person3", "Person4"]
 
@@ -70,7 +73,9 @@ async def setup_hass(hass: HomeAssistantType) -> dict:
 
 
 async def configure_integration(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
+    aiohttp_client,
+    aioclient_mock,
     profiles: List[str],
     profile_index: int,
     get_device_response: dict,
@@ -82,106 +87,85 @@ async def configure_integration(
     selected_profile = profiles[profile_index]
 
     with requests_mock.mock() as rqmck:
-        # This will cause the first call to get data to refresh the
-        # authentication token before requesting the data. It effectively
-        # tests the credential_saver in withings/common.py.
-        rqmck.register_uri(
-            "POST",
-            re.compile(WithingsAuth.URL + "/oauth2/token.*"),
-            [
-                {
-                    "status_code": 200,
-                    "json": {
-                        "access_token": "my_access_token",
-                        "expires_in": 0,
-                        "token_type": "Bearer",
-                        "scope": "user.info,user.metrics,user.activity",
-                        "refresh_token": "my_refresh_token",
-                        "userid": "my_user_id",
-                    },
-                },
-                {
-                    "status_code": 200,
-                    "json": {
-                        "access_token": "my_access_token",
-                        "expires_in": 1000,
-                        "token_type": "Bearer",
-                        "scope": "user.info,user.metrics,user.activity",
-                        "refresh_token": "my_refresh_token",
-                        "userid": "my_user_id",
-                    },
-                },
-            ],
-        )
-
         rqmck.get(
-            re.compile(WithingsApi.URL + "/v2/user?.*action=getdevice(&.*|$)"),
+            re.compile(AbstractWithingsApi.URL + "/v2/user?.*action=getdevice(&.*|$)"),
             status_code=200,
             json=get_device_response,
         )
 
         rqmck.get(
-            re.compile(WithingsApi.URL + "/v2/sleep?.*action=get(&.*|$)"),
+            re.compile(AbstractWithingsApi.URL + "/v2/sleep?.*action=get(&.*|$)"),
             status_code=200,
             json=get_sleep_response,
         )
 
         rqmck.get(
-            re.compile(WithingsApi.URL + "/v2/sleep?.*action=getsummary(&.*|$)"),
+            re.compile(
+                AbstractWithingsApi.URL + "/v2/sleep?.*action=getsummary(&.*|$)"
+            ),
             status_code=200,
             json=get_sleep_summary_response,
         )
 
         rqmck.get(
-            re.compile(WithingsApi.URL + "/measure?.*action=getmeas(&.*|$)"),
+            re.compile(AbstractWithingsApi.URL + "/measure?.*action=getmeas(&.*|$)"),
             status_code=200,
             json=getmeasures_response,
         )
 
         # Get the withings config flow.
-        flows = hass.config_entries.flow.async_progress()
-        if not flows:
-            await hass.config_entries.flow.async_init(
-                const.DOMAIN, context={"source": SOURCE_USER}, data={}
-            )
-        flows = hass.config_entries.flow.async_progress()
-        flow = next(flow for flow in flows if flow["handler"] == const.DOMAIN)
-        assert flow is not None
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN, context={"source": SOURCE_USER}
+        )
+        assert result
+        # pylint: disable=protected-access
+        state = config_entry_oauth2_flow._encode_jwt(
+            hass, {"flow_id": result["flow_id"]}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
+        assert result["url"] == (
+            "https://account.withings.com/oauth2_user/authorize2?"
+            "response_type=code&client_id=my_client_id&"
+            "redirect_uri=http://127.0.0.1:8080/auth/external/callback&"
+            f"state={state}"
+            "&scope=user.info,user.metrics,user.activity"
+        )
+
+        # Simulate user being redirected from withings site.
+        client = await aiohttp_client(hass.http.app)
+        resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+        assert resp.status == 200
+        assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+        aioclient_mock.post(
+            "https://account.withings.com/oauth2/token",
+            json={
+                "refresh_token": "mock-refresh-token",
+                "access_token": "mock-access-token",
+                "type": "Bearer",
+                "expires_in": 60,
+                "userid": "myuserid",
+            },
+        )
 
         # Present user with a list of profiles to choose from.
-        step = await hass.config_entries.flow.async_configure(flow["flow_id"], None)
-        assert step["type"] == "form"
-        assert step["step_id"] == "user"
-        assert step["data_schema"].schema["profile"].container == profiles
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result.get("type") == "form"
+        assert result.get("step_id") == "profile"
+        assert result.get("data_schema").schema["profile"].container == profiles
 
-        # Select the user profile. Present a form with authorization link.
-        step = await hass.config_entries.flow.async_configure(
-            flow["flow_id"], {const.PROFILE: selected_profile}
+        # Select the user profile.
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {const.PROFILE: selected_profile}
         )
-        assert step["step_id"] == "auth"
-
-        # Handle the callback to the hass http endpoint.
-        from aiohttp.test_utils import make_mocked_request
-
-        req = make_mocked_request(
-            method="GET",
-            path="%s?code=%s&profile=%s&flow_id=%s"
-            % (
-                const.AUTH_CALLBACK_PATH,
-                "my_auth_code",
-                selected_profile,
-                flow["flow_id"],
-            ),
-            loop=hass.loop,
-            app=hass.http.app,
-        )
-        match_info = await hass.http.app.router.resolve(req)
-        response = await match_info.handler(req)
-        assert response.text == "<script>window.close()</script>"
 
         # Finish the config flow by calling it again.
-        step = await hass.config_entries.flow.async_configure(flow["flow_id"])
-        assert step["type"] == "create_entry"
+        assert result.get("type") == "create_entry"
+        assert result.get("result")
+        config_data = result.get("result").data
+        assert config_data.get(const.PROFILE) == profiles[profile_index]
+        assert config_data.get("auth_implementation") == const.DOMAIN
+        assert config_data.get("token")
 
         # Ensure all the flows are complete.
         flows = hass.config_entries.flow.async_progress()

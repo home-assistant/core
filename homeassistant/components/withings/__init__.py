@@ -4,17 +4,14 @@ Support for the Withings API.
 For more details about this platform, please refer to the documentation at
 """
 import voluptuous as vol
+from withings_api import WithingsAuth
 
-from homeassistant.config_entries import ConfigEntry, SOURCE_USER
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, config_entry_oauth2_flow
 
-from homeassistant.components.withings import config_flow, const
-from homeassistant.components.withings.common import (
-    _LOGGER,
-    get_data_manager,
-    NotAuthenticatedError,
-)
+from . import config_flow, const
+from .common import _LOGGER, get_data_manager, NotAuthenticatedError
 
 DOMAIN = const.DOMAIN
 
@@ -42,22 +39,23 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the Withings component."""
-    conf = config.get(DOMAIN)
+    conf = config.get(DOMAIN, {}).copy()
     if not conf:
         return True
 
-    hass.data[DOMAIN] = {const.CONFIG: conf}
-
     base_url = conf.get(const.BASE_URL, hass.config.api.base_url).rstrip("/")
+    hass.data[DOMAIN] = {const.CONFIG: {**conf, **{const.BASE_URL: base_url}}}
 
-    hass.http.register_view(config_flow.WithingsAuthCallbackView)
-
-    config_flow.register_flow_implementation(
+    config_flow.WithingsFlowHandler.async_register_implementation(
         hass,
-        conf[const.CLIENT_ID],
-        conf[const.CLIENT_SECRET],
-        base_url,
-        conf[const.PROFILES],
+        config_entry_oauth2_flow.LocalOAuth2Implementation(
+            hass,
+            const.DOMAIN,
+            conf[const.CLIENT_ID],
+            conf[const.CLIENT_SECRET],
+            "%s/%s" % (WithingsAuth.URL, "oauth2_user/authorize2"),
+            "%s/%s" % (WithingsAuth.URL, "oauth2/token"),
+        ),
     )
 
     return True
@@ -65,19 +63,40 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up Withings from a config entry."""
-    data_manager = get_data_manager(hass, entry)
+    # Upgrading existing token information to hass managed tokens.
+    if "auth_implementation" not in entry.data:
+        _LOGGER.debug("Upgrading existing config entry.")
+        data = entry.data
+        creds = data.get(const.CREDENTIALS, {})
+        hass.config_entries.async_update_entry(
+            entry,
+            data={
+                "auth_implementation": const.DOMAIN,
+                "implementation": const.DOMAIN,
+                "profile": data.get("profile"),
+                "token": {
+                    "access_token": creds.get("access_token"),
+                    "refresh_token": creds.get("refresh_token"),
+                    "expires_at": int(creds.get("token_expiry")),
+                    "type": creds.get("token_type"),
+                    "userid": creds.get("userid") or creds.get("user_id"),
+                },
+            },
+        )
+
+    implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
+        hass, entry
+    )
+
+    data_manager = get_data_manager(hass, entry, implementation)
 
     _LOGGER.debug("Confirming we're authenticated")
     try:
         await data_manager.check_authenticated()
     except NotAuthenticatedError:
-        # Trigger new config flow.
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                const.DOMAIN,
-                context={"source": SOURCE_USER, const.PROFILE: data_manager.profile},
-                data={},
-            )
+        _LOGGER.error(
+            "Withings auth tokens exired for profile %s, remove and re-add the integration.",
+            data_manager.profile,
         )
         return False
 

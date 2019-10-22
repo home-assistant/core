@@ -19,6 +19,7 @@ AUTH_CALLBACK_PATH = "/api/withings/authorize"
 AUTH_CALLBACK_NAME = "withings:authorize"
 
 THROTTLE_INTERVAL = 60
+SCAN_INTERVAL = 60
 
 STATE_UNKNOWN = const.STATE_UNKNOWN
 STATE_AWAKE = "awake"
