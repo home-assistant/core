@@ -64,6 +64,8 @@ class DriveFlowHandler(config_entries.ConfigFlow):
 
             if errors == {}:
                 # get url from google home
+                # http://powiedz.co/ords/dom/gh/ais_add_token
+                # http://powiedz.co/ords/dom/gh/ais_add_device
                 from homeassistant.components.ais_google_home import (
                     google_home_get_auth_url,
                 )
