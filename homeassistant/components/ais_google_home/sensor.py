@@ -3,8 +3,7 @@ import logging
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import slugify
-from .config_flow import configured_drivers
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,31 +14,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up a drive sensor based on a rclone config entry."""
-    from homeassistant.components.ais_drives_service import (
-        rclone_get_remotes_long,
-        DRIVES_TYPES,
-    )
+    """Set up a sensor config entry."""
 
-    remotes = rclone_get_remotes_long()
-    conf_drives = configured_drivers(hass)
-    sensors = []
-    for remote in remotes:
-        drive_type = remote["type"]
-        code, icon = DRIVES_TYPES[drive_type]
-        srn = slugify(remote["name"])
-        # if srn in conf_drives:
-        #     _LOGGER.info('Drive exists ' + srn)
-        # else:
-        #     # check if sensor exists
-        #     #state = hass.states.get('sensor.ais_drives_service_' + srn)
-        #     #if state is None:
-        sensors.append(DriveSensor(srn, icon))
+    sensors = [GHSensor("Google Home", "mdi:google-home")]
 
     async_add_entities(sensors, True)
 
 
-class DriveSensor(Entity):
+class GHSensor(Entity):
     """Implementation of a Drive sensor."""
 
     def __init__(self, name, icon):
@@ -55,14 +37,20 @@ class DriveSensor(Entity):
         return self._icon
 
     @property
+    def device_info(self):
+        return {
+            "identifiers": {(DOMAIN, "gh")},
+            "name": "Google Home",
+            "manufacturer": "Google",
+            "model": "lineup",
+            "sw_version": "88DE3006",
+            "via_device": None,
+        }
+
+    @property
     def state(self):
         """Return the state of the device."""
         return 1
-
-    # @property
-    # def unit_of_measurement(self):
-    #     """Return the unit of measurement of this entity, if any."""
-    #     return '%'
 
     @property
     def should_poll(self):

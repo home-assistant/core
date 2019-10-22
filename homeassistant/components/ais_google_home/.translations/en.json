@@ -3,29 +3,30 @@
         "title": "AIS Google Home",
         "step": {
             "confirm": {
-                  "description": "![AIS logo](/static/icons/ais_google_home.png)\n\nTa integracja pozwala na wysyłanie poleceń do Asystenta Google oraz na wysyłanie powiadomień audio do urządzeń Google Home, bez przerywania muzyki.\n Czy chcesz skonfiguraować integrację AIS Google Home?",
+                  "description": "![AIS logo](/static/icons/ais_google_home.png)\n\nThis integration allows you to send commands to the Google Assistant and to send audio notifications to Google Home devices without interrupting the music.\n\n Do you want to set up AIS Google Home integration?",
                   "title": "AIS Google Home"
              },
             "oauth": {
-                "description": "Konfiguracja komunikacji z Google Home wymaga pobrania pliku JSON OAuth2 z Google. Aby to zrobić, postępuj zgodnie z [przewodnikiem w dokumentacji Asystenta domowego](https://sviete.github.io/AIS-docs/docs/en/ais_app_ai_integration.html)\n\n Następnie wróć na tą stronę i wklej w pole **Poświadczenie oAuth2 dla urządzenia** (zawartość z pliku pobranego z Google).\n\n W ten sposób poświadczenie zostanie zapisane na Twoim urządzeniu.\n\n![AIS logo](/static/icons/favicon-100x100.png)\n\n {error_info}",
-                "title": "Uwierzytelnianie urządzenia w Google",
+                "description": "Setting up communication with Google Home requires downloading the JSON OAuth2 file from Google. To do this, follow the [Guide in the Home Assistant documentation](https://sviete.github.io/AIS-docs/docs/en/ais_app_ai_integration_google_home.html)\n\n Then come back to this page and paste in the field ** Certificate oAuth2 for the device ** content from a file downloaded from Google.\n\n In this way the device will be authorized.\n\n![AIS logo](/static/icons/ais_google_home.png)\n\n {error_info}",
+                "title": "Device authentication in Google",
                 "data": {
-                    "oauth_json": "Poświadczenie oAuth2 dla urządzenia"
+                    "oauth_json": "OAuth2 certification for the device"
                 }
             },
             "token": {
-                "description": "Aby zezwolić na dostęp integracji AIS Google Home do twojego konta w Google należy: \n 1. Nacisnąć poniższy link uwierzytelniający \n 2. Zalogować się na wybrane konto w Google \n 3. Autoryzować dostęp integracji do konta. \n 4. Wrócić na tą stronę i wkleić **Token** który został wygenerowany po autoryzacji dostępu i wcisnąć **SUBMIT** by zatwierdzić. \n\n ![AIS logo](/static/icons/favicon-100x100.png) **[link uwierzytelniający]({auth_url})**",
-                "title": "Uwierzytelnianie użytkownika w Google",
+                "description": "To allow AIS Google Home integration access to your Google account you must: \n\n * In the web browser click **[authentication link]({auth_url})** \n\n * Log in to the selected Google account and authorize account integration access\n. \n\n ![AIS logo](/static/icons/ais_google_home.png) \n\n * Return to this page, paste in ** CODE ** that was generated after access authorization and press **SUBMIT**.",
+                "title": "User authentication in Google",
                 "data": {
-                    "token_key": "Token"
+                    "token_key": "Code"
                 }
             }
         },
         "error": {
-          "name_exists": "To konto jest już skonfugorane",
-          "oauth_error": "Niepoprawne dane oAuth",
-          "token_error": "Bad token",
-          "rclone_error": "Connection error"
+          "oauth_error": "Invalid oAuth data",
+          "token_error": "Invalid code"
+        },
+        "abort": {
+            "single_instance_allowed": "You've already set up Google Home AIS integration.\n\nIf you want to reconfigure, first remove the current integration."
         }
     }
 }

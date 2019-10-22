@@ -1,6 +1,6 @@
 {
   "config": {
-    "title": "Dialogflow",
+    "title": "AIS Dialogflow",
     "step": {
       "user": {
         "title": "Set up the Dialogflow Webhook",

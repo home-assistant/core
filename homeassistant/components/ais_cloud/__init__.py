@@ -279,6 +279,7 @@ class AisCloudWS:
     def __init__(self):
         """Initialize the cloud WS connections."""
         self.url = "https://powiedz.co/ords/dom/dom/"
+        self.url_gh = "http://powiedz.co/ords/dom/gh/"
 
     def setCloudToken(self):
         # take the token from secrets
@@ -286,6 +287,34 @@ class AisCloudWS:
         if CLOUD_WS_TOKEN is None:
             CLOUD_WS_TOKEN = ais_global.get_sercure_android_id_dom()
             CLOUD_WS_HEADER = {"Authorization": "{}".format(CLOUD_WS_TOKEN)}
+
+    def gh_ais_add_device(self, oauth_json):
+        self.setCloudToken()
+        payload = {
+            "user": ais_global.get_sercure_android_id_dom(),
+            "oauthJson": oauth_json,
+        }
+        ws_resp = requests.post(
+            self.url_gh + "ais_add_device",
+            json=payload,
+            headers=CLOUD_WS_HEADER,
+            timeout=5,
+        )
+        return ws_resp
+
+    def gh_ais_add_token(self, oauth_code):
+        self.setCloudToken()
+        payload = {
+            "user": ais_global.get_sercure_android_id_dom(),
+            "oauthCode": oauth_code,
+        }
+        ws_resp = requests.post(
+            self.url_gh + "ais_add_token",
+            json=payload,
+            headers=CLOUD_WS_HEADER,
+            timeout=5,
+        )
+        return ws_resp
 
     def ask(self, question, org_answer):
         self.setCloudToken()
