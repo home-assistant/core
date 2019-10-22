@@ -43,7 +43,7 @@ class VodafoneDeviceScanner(DeviceScanner):
     """This class queries a Vodafone Gigabox router."""
 
     CSRF_REGEX = re.compile(r"csrf_token = '(.*?)'")
-    VODAFONE_API_PASS = '$1$SERCOMM$'
+    VODAFONE_API_PASS = "$1$SERCOMM$"
 
     def __init__(self, config):
         """Initialize the scanner."""
@@ -74,15 +74,15 @@ class VodafoneDeviceScanner(DeviceScanner):
             return None
         for client in self.last_results:
             if client.mac == device:
-                return {'ip': client.ip}
+                return {"ip": client.ip}
         return None
 
     def _get_csrf(self):
         """Get CSRF token."""
         csrf = requests.get(
             f"http://{self.host}/login.html",
-            headers={'Accept-Language': 'en-US,en;q=0.5'},
-            verify=False
+            headers={"Accept-Language": "en-US,en;q=0.5"},
+            verify=False,
         )
         csrf_re = self.CSRF_REGEX.search(csrf.content.decode())
         return csrf_re.group(1)
@@ -90,14 +90,12 @@ class VodafoneDeviceScanner(DeviceScanner):
     def _get_encrypted_pwd(self, key):
         """Get encrypted password."""
         passhash = hmac.new(
-            self.VODAFONE_API_PASS.encode('utf-8'),
-            msg=self.password.encode('utf-8'),
-            digestmod=hashlib.sha256
+            self.VODAFONE_API_PASS.encode("utf-8"),
+            msg=self.password.encode("utf-8"),
+            digestmod=hashlib.sha256,
         ).hexdigest()
         return hmac.new(
-            key.encode('utf-8'),
-            msg=passhash.encode('utf-8'),
-            digestmod=hashlib.sha256
+            key.encode("utf-8"), msg=passhash.encode("utf-8"), digestmod=hashlib.sha256
         ).hexdigest()
 
     def _get_url(self, path):
@@ -126,48 +124,43 @@ class VodafoneDeviceScanner(DeviceScanner):
 
         # 2. Get session password encryption key
         data_req = requests.get(
-            self._get_url('/data/user_lang.json'),
-            headers={'Accept-Language': 'en-US,en;q=0.5'},
-            cookies={'login_uid': f"{self.login_uid}"},
-            verify=False
+            self._get_url("/data/user_lang.json"),
+            headers={"Accept-Language": "en-US,en;q=0.5"},
+            cookies={"login_uid": f"{self.login_uid}"},
+            verify=False,
         )
         data = data_req.json()
         key = None
         for item in data:
-            if 'encryption_key' in item:
-                key = item['encryption_key']
+            if "encryption_key" in item:
+                key = item["encryption_key"]
         password = self._get_encrypted_pwd(key)
 
         # 3. Reset the one thing, but not that thing, but the other thing
         requests.post(
-            self._get_url('/data/reset.json'),
-            headers={'Accept-Language': 'en-US,en;q=0.5'},
-            data=[
-                ("chk_sys_busy", ""),
-            ],
-            cookies={'login_uid': f"{self.login_uid}"},
-            verify=False
+            self._get_url("/data/reset.json"),
+            headers={"Accept-Language": "en-US,en;q=0.5"},
+            data=[("chk_sys_busy", "")],
+            cookies={"login_uid": f"{self.login_uid}"},
+            verify=False,
         )
 
         # 4. Login!  Hurrah!
         login_req = requests.post(
-            self._get_url('/data/login.json'),
-            headers={'Accept-Language': 'en-US,en;q=0.5'},
-            data=[
-                ("LoginName", self.username),
-                ("LoginPWD", password)
-            ],
-            cookies={'login_uid': f"{self.login_uid}"},
-            verify=False
+            self._get_url("/data/login.json"),
+            headers={"Accept-Language": "en-US,en;q=0.5"},
+            data=[("LoginName", self.username), ("LoginPWD", password)],
+            cookies={"login_uid": f"{self.login_uid}"},
+            verify=False,
         )
 
         # Get router overview, including clients
-        session = login_req.cookies['session_id']
+        session = login_req.cookies["session_id"]
         overview_req = requests.get(
-            self._get_url('/data/overview.json'),
-            headers={'Accept-Language': 'en-US,en;q=0.5'},
-            cookies={'login_uid': f"{self.login_uid}", 'session_id': session},
-            verify=False
+            self._get_url("/data/overview.json"),
+            headers={"Accept-Language": "en-US,en;q=0.5"},
+            cookies={"login_uid": f"{self.login_uid}", "session_id": session},
+            verify=False,
         )
 
         clients = []
@@ -175,21 +168,17 @@ class VodafoneDeviceScanner(DeviceScanner):
         # This is "JSON", but not really.  Why?
         wifi_clients = None
         for i in overview_req.json():
-            if 'wifi_user' in i:
-                wifi_clients = i['wifi_user']
+            if "wifi_user" in i:
+                wifi_clients = i["wifi_user"]
 
         # Someone doesn't understand what JSON is, so let's parse the wifi clients into a 2D array
-        wifi_clients = wifi_clients.split(';')
+        wifi_clients = wifi_clients.split(";")
         for i in wifi_clients:
             if len(i) == 0:
                 continue
-            item = i.split('|')
-            if item[0].lower() != 'on':
+            item = i.split("|")
+            if item[0].lower() != "on":
                 continue
-            clients.append(Device(
-                item[2],
-                item[4],
-                item[3]
-            ))
+            clients.append(Device(item[2], item[4], item[3]))
 
         self.last_results = clients
