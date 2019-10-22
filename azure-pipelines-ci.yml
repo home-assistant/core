@@ -118,8 +118,6 @@ stages:
                 # This is a TEMP. Eventually we should make sure our 4 dependencies drop typing.
                 # Find offending deps with `pipdeptree -r -p typing`
                 pip uninstall -y typing
-                # This is a temporary workaround to deal with cache
-                pip uninstall -y pytest-azurepipelines
           - script: |
               . venv/bin/activate
               pip install -e .
@@ -127,6 +125,8 @@ stages:
           - script: |
               set -e
               . venv/bin/activate
+              # This is a temporary workaround to deal with cache
+              pip uninstall -y pytest-azurepipelines
               pytest --timeout=9 --durations=10 -n 2 --dist loadfile --junitxml=test-results.xml --cov --cov-report=xml -qq -o console_output_style=count -p no:sugar tests
             displayName: "Run pytest for python $(python.container)"
             condition: succeeded()
