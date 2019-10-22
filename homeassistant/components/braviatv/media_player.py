@@ -2,7 +2,7 @@
 import ipaddress
 import logging
 
-from braviarc import braviarc
+import braviarc
 from getmac import get_mac_address
 import voluptuous as vol
 
