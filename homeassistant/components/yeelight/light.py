@@ -411,6 +411,7 @@ class YeelightGenericLight(Light):
         """Initialize the Yeelight light."""
         self.config = device.config
         self._device = device
+        self._unique_id = self._device.mac
 
         self._brightness = None
         self._color_temp = None
@@ -471,6 +472,11 @@ class YeelightGenericLight(Light):
     def name(self) -> str:
         """Return the name of the device if any."""
         return self.device.name
+
+    @property
+    def unique_id(self):
+        """Return Unique ID for entity."""
+        return self._unique_id
 
     @property
     def is_on(self) -> bool:

@@ -556,6 +556,7 @@ georss_qld_bushfire_alert_client==0.3
 # homeassistant.components.braviatv
 # homeassistant.components.huawei_lte
 # homeassistant.components.nmap_tracker
+# homeassistant.components.yeelight
 getmac==0.8.1
 
 # homeassistant.components.gitter

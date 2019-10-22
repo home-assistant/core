@@ -3,7 +3,9 @@
 import logging
 from datetime import timedelta
 
+import ipaddress
 import voluptuous as vol
+from getmac import get_mac_address
 from yeelight import Bulb, BulbException
 from homeassistant.components.discovery import SERVICE_YEELIGHT
 from homeassistant.const import (
@@ -183,7 +185,16 @@ def _setup_device(hass, _, ipaddr, device_config):
     if ipaddr in devices:
         return
 
-    device = YeelightDevice(hass, ipaddr, device_config)
+    try:
+        if ipaddress.ip_address(ipaddr).version == 6:
+            mode = "ip6"
+        else:
+            mode = "ip"
+    except ValueError:
+        mode = "hostname"
+    mac = get_mac_address(**{mode: ipaddr})
+
+    device = YeelightDevice(hass, ipaddr, mac, device_config)
 
     devices[ipaddr] = device
     hass.add_job(device.setup)
@@ -192,12 +203,13 @@ def _setup_device(hass, _, ipaddr, device_config):
 class YeelightDevice:
     """Represents single Yeelight device."""
 
-    def __init__(self, hass, ipaddr, config):
+    def __init__(self, hass, ipaddr, mac, config):
         """Initialize device."""
         self._hass = hass
         self._config = config
         self._ipaddr = ipaddr
         self._name = config.get(CONF_NAME)
+        self._mac = mac
         self._model = config.get(CONF_MODEL)
         self._bulb_device = Bulb(self.ipaddr, model=self._model)
         self._device_type = None
@@ -233,6 +245,11 @@ class YeelightDevice:
     def model(self):
         """Return configured device model."""
         return self._model
+
+    @property
+    def mac(self):
+        """Return ip address."""
+        return self._mac
 
     @property
     def is_nightlight_enabled(self) -> bool:
