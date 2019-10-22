@@ -1670,7 +1670,7 @@ radiotherm==2.0.0
 raincloudy==0.0.7
 
 # homeassistant.components.raspihats
-raspihats==2.3.0
+# raspihats==2.3.0
 
 # homeassistant.components.raspyrfm
 raspyrfm-client==1.2.8
