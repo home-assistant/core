@@ -84,12 +84,18 @@ async def _async_reproduce_state(
     service = SERVICE_SET_DATETIME
     service_data = {ATTR_ENTITY_ID: state.entity_id}
 
-    if is_valid_datetime(state.state):
+    has_time = cur_state.attributes.get(CONF_HAS_TIME)
+    has_date = cur_state.attributes.get(CONF_HAS_DATE)
+
+    if has_time and has_date:
         service_data[ATTR_DATETIME] = state.state
-    elif is_valid_date(state.state):
-        service_data[ATTR_DATE] = state.state
-    elif is_valid_time(state.state):
+    elif has_time:
         service_data[ATTR_TIME] = state.state
+    elif has_date:
+        service_data[ATTR_DATE] = state.state
+    else:
+        _LOGGER.warning("input_datetime needs either has_date or has_time or both")
+        return
 
     await hass.services.async_call(
         DOMAIN, service, service_data, context=context, blocking=True
