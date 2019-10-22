@@ -20,7 +20,6 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Sky+HD"
-ICON = "mdi:set-top-box"
 
 SERVICE_RECORD = ""
 
@@ -69,11 +68,6 @@ class SkyPlusHD(MediaPlayerDevice):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def icon(self):
-        """Return the icon of the device."""
-        return ICON
 
     @property
     def state(self):
