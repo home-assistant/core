@@ -23,6 +23,15 @@ from homeassistant.components.cover import (
     SERVICE_SET_COVER_POSITION,
     SUPPORT_SET_POSITION,
 )
+from homeassistant.components.lock import (
+    ATTR_CODE,
+    ATTR_CODE_FORMAT,
+    STATE_LOCKED,
+    STATE_UNLOCKED,
+    SERVICE_LOCK,
+    SERVICE_UNLOCK,
+    SERVICE_OPEN,
+)
 from homeassistant.components.fan import (
     ATTR_SPEED,
     SPEED_HIGH,
@@ -334,6 +343,14 @@ class HueOneLightChangeView(HomeAssistantView):
                     service = SERVICE_VOLUME_SET
                     # Convert 0-100 to 0.0-1.0
                     data[ATTR_MEDIA_VOLUME_LEVEL] = parsed[STATE_BRIGHTNESS] / 100.0
+
+        # If the requested entity is a lock, convert to lock/unlock
+        elif entity.domain == lock.DOMAIN:
+            domain = entity.domain
+            if service == SERVICE_TURN_ON:
+                service = SERVICE_UNLOCK
+            else:
+                service = SERVICE_LOCK
 
         # If the requested entity is a cover, convert to open_cover/close_cover
         elif entity.domain == cover.DOMAIN:
