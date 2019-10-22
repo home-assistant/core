@@ -66,7 +66,6 @@ async def async_reproduce_states(
     hass: HomeAssistantType, states: Iterable[State], context: Optional[Context] = None
 ) -> None:
     """Reproduce Counter states."""
-    # Reproduce states in parallel.
     await asyncio.gather(
         *(_async_reproduce_state(hass, state, context) for state in states)
     )
