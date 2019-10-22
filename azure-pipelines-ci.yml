@@ -129,6 +129,7 @@ stages:
             displayName: "Run pytest for python $(python.container)"
             condition: succeeded()
           - script: |
+              . venv/bin/activate
               codecov --token $(codecovToken)
             displayName: "Uploading test coverage to Codecov"
             condition: and(succeeded(), eq(variables['python.container'], variables['PythonMain']))
