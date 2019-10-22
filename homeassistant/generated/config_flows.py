@@ -55,6 +55,7 @@ FLOWS = [
     "plex",
     "point",
     "ps4",
+    "rainforest_eagle",
     "rainmachine",
     "simplisafe",
     "smartthings",

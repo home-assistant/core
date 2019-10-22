@@ -168,6 +168,9 @@ distro==1.4.0
 # homeassistant.components.dsmr
 dsmr_parser==0.12
 
+# homeassistant.components.rainforest_eagle
+eagle200_reader==0.2.1
+
 # homeassistant.components.ee_brightbox
 eebrightbox==0.0.4
 
@@ -597,6 +600,9 @@ twentemilieu==0.1.0
 
 # homeassistant.components.twilio
 twilio==6.19.1
+
+# homeassistant.components.rainforest_eagle
+uEagle==0.0.1
 
 # homeassistant.components.uvc
 uvcclient==0.11.0

@@ -1,0 +1,15 @@
+{
+  "config": {
+    "title": "Rainforest Eagle",
+    "step": {
+      "confirm": {
+        "title": "Rainforest Eagle",
+        "description": "Do you want to set up Rainforest Eagle?"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Only a single configuration of Rainforest Eagle is possible.",
+      "no_devices_found": "No Rainforest Eagle devices found on the network."
+    }
+  }
+}

@@ -1911,6 +1911,9 @@ twentemilieu==0.1.0
 # homeassistant.components.twilio
 twilio==6.19.1
 
+# homeassistant.components.rainforest_eagle
+uEagle==0.0.1
+
 # homeassistant.components.upcloud
 upcloud-api==0.4.3
 
