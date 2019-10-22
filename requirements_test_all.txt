@@ -395,6 +395,9 @@ pybotvac==0.0.16
 # homeassistant.components.cast
 pychromecast==4.0.1
 
+# homeassistant.components.coolmaster
+pycoolmasternet==0.0.4
+
 # homeassistant.components.daikin
 pydaikin==1.6.1
 
