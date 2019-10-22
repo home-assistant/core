@@ -3,8 +3,8 @@ import logging
 import threading
 import time
 
-from raspihats import i2c_hats
-from raspihats.i2c_hats import ResponseException
+from raspihats import i2c_hats  # pylint: disable=import-error
+from raspihats.i2c_hats import ResponseException  # pylint: disable=import-error
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 
