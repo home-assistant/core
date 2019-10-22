@@ -1,5 +1,7 @@
 [run]
 source = homeassistant
+concurrency = multiprocessing
+parallel = true
 
 omit =
     homeassistant/__main__.py
