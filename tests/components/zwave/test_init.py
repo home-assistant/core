@@ -571,6 +571,7 @@ async def test_value_entities(hass, mock_openzwave):
 # This migration and test will be removed when the component moves to OZW 1.6
 async def test_unique_id_migration(hass, mock_openzwave):
     """Test unique id migration on a node value."""
+
     mock_receivers = {}
 
     def mock_connect(receiver, signal, *args, **kwargs):
@@ -616,6 +617,63 @@ async def test_unique_id_migration(hass, mock_openzwave):
     assert entry.unique_id == "{}-{}-{}-{}".format(
         node.node_id, value.instance, value.index, value.command_class
     )
+
+    @patch.object(zwave, "import_module")
+    @patch.object(zwave, "discovery")
+    async def test_entity_config_ignore_with_registry(
+        hass, mock_openzwave, discovery, import_module
+    ):
+        """Test ignore config.
+
+        The case when the device is in entity registry.
+        """
+        hass.start()
+        registry = mock_registry(hass)
+
+        setup_component(hass, "zwave", {"zwave": {}})
+        hass.async_block_till_done()
+
+        node = MockNode()
+        mock_schema = {
+            const.DISC_COMPONENT: "mock_component",
+            const.DISC_VALUES: {
+                const.DISC_PRIMARY: {const.DISC_COMMAND_CLASS: ["mock_primary_class"]},
+                "secondary": {const.DISC_COMMAND_CLASS: ["mock_secondary_class"]},
+                "optional": {
+                    const.DISC_COMMAND_CLASS: ["mock_optional_class"],
+                    const.DISC_OPTIONAL: True,
+                },
+            },
+        }
+        primary = MockValue(
+            command_class="mock_primary_class", node=node, value_id=1000
+        )
+        secondary = MockValue(command_class="mock_secondary_class", node=node)
+
+        entity_id = "mock_component.mock_node_mock_value"
+        zwave_config = {"zwave": {}}
+        device_config = {entity_id: {}}
+        node.values = {primary.value_id: primary, secondary.value_id: secondary}
+        device_config = {"mock_component.registry_id": {zwave.CONF_IGNORED: True}}
+        with patch.object(registry, "async_schedule_save"):
+            registry.async_get_or_create(
+                "mock_component",
+                zwave.DOMAIN,
+                "567-1000",
+                suggested_object_id="registry_id",
+            )
+
+        zwave.ZWaveDeviceEntityValues(
+            hass,
+            schema=mock_schema,
+            primary_value=primary,
+            zwave_config=zwave_config,
+            device_config=device_config,
+            registry=registry,
+        )
+        hass.async_block_till_done()
+
+        assert not discovery.async_load_platform.called
 
 
 async def test_value_discovery_existing_entity(hass, mock_openzwave):
@@ -1091,38 +1149,6 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
             registry=self.registry,
         )
         values._check_entity_ready()
-        self.hass.block_till_done()
-
-        assert not discovery.async_load_platform.called
-
-    @patch.object(zwave, "import_module")
-    @patch.object(zwave, "discovery")
-    def test_entity_config_ignore_with_registry(self, discovery, import_module):
-        """Test ignore config.
-
-        The case when the device is in entity registry.
-        """
-        self.node.values = {
-            self.primary.value_id: self.primary,
-            self.secondary.value_id: self.secondary,
-        }
-        self.device_config = {"mock_component.registry_id": {zwave.CONF_IGNORED: True}}
-        with patch.object(self.registry, "async_schedule_save"):
-            self.registry.async_get_or_create(
-                "mock_component",
-                zwave.DOMAIN,
-                "567-1000",
-                suggested_object_id="registry_id",
-            )
-
-        zwave.ZWaveDeviceEntityValues(
-            hass=self.hass,
-            schema=self.mock_schema,
-            primary_value=self.primary,
-            zwave_config=self.zwave_config,
-            device_config=self.device_config,
-            registry=self.registry,
-        )
         self.hass.block_till_done()
 
         assert not discovery.async_load_platform.called
