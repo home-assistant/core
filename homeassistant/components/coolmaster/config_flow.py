@@ -3,7 +3,7 @@
 from pycoolmasternet import CoolMasterNet
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant import core, config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 
@@ -16,6 +16,13 @@ HOST_SCHEMA = {
 }
 
 DATA_SCHEMA = vol.Schema({**HOST_SCHEMA, **MODES_SCHEMA})
+
+
+async def validate_connection(hass: core.HomeAssistant, host, port):
+    """Validate that we can connect to the Coolmaster instance."""
+    cool = CoolMasterNet(host, port=port)
+    devices = await hass.async_add_executor_job(cool.devices)
+    return len(devices) > 0
 
 
 class CoolmasterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -46,11 +53,10 @@ class CoolmasterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         host = user_input[CONF_HOST]
         port = user_input[CONF_PORT]
-        cool = CoolMasterNet(host, port=port)
 
         try:
-            devices = await self.hass.async_add_executor_job(cool.devices)
-            if len(devices) == 0:
+            result = await validate_connection(self.hass, host, port)
+            if not result:
                 errors["base"] = "no_units"
         except (ConnectionRefusedError, TimeoutError):
             errors["base"] = "connection_error"

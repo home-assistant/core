@@ -101,8 +101,8 @@ class CoolmasterClimate(ClimateDevice):
         return {
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
-            "manufacturer": "CoolAutomation",  # TODO: take from `line`
-            "model": "CoolMasterNet",  # TODO: take from `set`
+            "manufacturer": "CoolAutomation",
+            "model": "CoolMasterNet",
         }
 
     @property
