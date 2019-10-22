@@ -43,27 +43,25 @@ class MSTeamsNotificationService(BaseNotificationService):
 
     def send_message(self, message=None, **kwargs):
         """Send a message to the webhook."""
+        title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
+        data = kwargs.get(ATTR_DATA)
+
+        self.teams_message.title(title)
+
+        self.teams_message.text(message)
+
+        if data is not None:
+            file_url = data.get(ATTR_FILE_URL)
+
+            if file_url is not None:
+                if not file_url.startswith("http"):
+                    _LOGGER.error("URL should start with http or https")
+                    return
+
+                message_section = pymsteams.cardsection()
+                message_section.addImage(file_url)
+                self.teams_message.addSection(message_section)
         try:
-            title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-            data = kwargs.get(ATTR_DATA)
-
-            self.teams_message.title(title)
-
-            self.teams_message.text(message)
-
-            if data is not None:
-                file_url = data.get(ATTR_FILE_URL)
-
-                if file_url is not None:
-                    if not file_url.startswith("http"):
-                        _LOGGER.error("URL should start with http or https")
-                        return
-
-                    message_section = pymsteams.cardsection()
-                    message_section.addImage(file_url)
-                    self.teams_message.addSection(message_section)
-
             self.teams_message.send()
-
         except RuntimeError as err:
             _LOGGER.error("Could not send notification. Error: %s", err)
