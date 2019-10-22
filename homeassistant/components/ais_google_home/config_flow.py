@@ -7,7 +7,6 @@ import time
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, CONF_TYPE, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.util import slugify
 from .const import DOMAIN, CONF_OAUTH_JSON
 import json
 
@@ -52,20 +51,16 @@ class DriveFlowHandler(config_entries.ConfigFlow):
         """Handle a flow start."""
         global AUTH_URL
         errors = {}
-        data_schema = vol.Schema(
-            {vol.Required(CONF_USERNAME): str, vol.Required(CONF_OAUTH_JSON): str}
-        )
+        description_placeholders = {"error_info": ""}
+        data_schema = vol.Schema({vol.Required(CONF_OAUTH_JSON): str})
         if user_input is not None:
-            user_name_input = user_input.get(CONF_USERNAME)
             oauth_json = user_input.get(CONF_OAUTH_JSON)
-
-            if slugify(user_name_input) in configured_drivers(self.hass):
-                errors = {CONF_NAME: "name_exists"}
 
             try:
                 json.loads(oauth_json)
-            except ValueError:
-                errors = {CONF_NAME: "oauth_error"}
+            except ValueError as e:
+                errors = {CONF_OAUTH_JSON: "oauth_error"}
+                description_placeholders = {"error_info": str(e)}
 
             if errors == {}:
                 # get url from google home
@@ -73,11 +68,14 @@ class DriveFlowHandler(config_entries.ConfigFlow):
                     google_home_get_auth_url,
                 )
 
-                AUTH_URL = google_home_get_auth_url(user_name_input, oauth_json)
+                AUTH_URL = google_home_get_auth_url(oauth_json)
                 return await self.async_step_token(user_input=None)
 
         return self.async_show_form(
-            step_id="oauth", errors=errors, data_schema=data_schema
+            step_id="oauth",
+            errors=errors,
+            data_schema=data_schema,
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_token(self, user_input=None):

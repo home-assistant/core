@@ -175,12 +175,13 @@ def rclone_get_remotes_long():
     return G_RCLONE_REMOTES_LONG
 
 
-def google_home_get_auth_url(user_name, oauth_json):
+def google_home_get_auth_url(oauth_json):
     import pexpect
 
     # 1. save json as file
 
     # 2. import npm module
+    #  npm install --save https://github.com/araczkowski/assistant-relay/tarball/master
 
     # 3. run ralay
     # ralay_cmd = "npm start "
