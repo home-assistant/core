@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT,
+    HVAC_MODE_AUTO,
     HVAC_MODE_OFF,
     SUPPORT_TARGET_TEMPERATURE,
 )
@@ -13,7 +13,7 @@ from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_HVAC = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
+SUPPORT_HVAC = [HVAC_MODE_AUTO, HVAC_MODE_OFF]
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -46,7 +46,7 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
         Need to be one of HVAC_MODE_*.
         """
         if self.tesla_device.is_hvac_enabled():
-            return HVAC_MODE_HEAT
+            return HVAC_MODE_AUTO
         return HVAC_MODE_OFF
 
     @property
@@ -95,5 +95,5 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
         _LOGGER.debug("Setting mode for: %s", self._name)
         if hvac_mode == HVAC_MODE_OFF:
             self.tesla_device.set_status(False)
-        elif hvac_mode == HVAC_MODE_HEAT:
+        elif hvac_mode == HVAC_MODE_AUTO:
             self.tesla_device.set_status(True)
