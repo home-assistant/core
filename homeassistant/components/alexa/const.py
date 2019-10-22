@@ -56,9 +56,10 @@ API_THERMOSTAT_MODES = OrderedDict(
         (climate.HVAC_MODE_AUTO, "AUTO"),
         (climate.HVAC_MODE_OFF, "OFF"),
         (climate.HVAC_MODE_FAN_ONLY, "OFF"),
-        (climate.HVAC_MODE_DRY, "OFF"),
+        (climate.HVAC_MODE_DRY, "CUSTOM"),
     ]
 )
+API_THERMOSTAT_MODES_CUSTOM = {climate.HVAC_MODE_DRY: "DEHUMIDIFY"}
 API_THERMOSTAT_PRESETS = {climate.PRESET_ECO: "ECO"}
 
 PERCENTAGE_FAN_MAP = {

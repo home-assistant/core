@@ -38,6 +38,7 @@ from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import (
     API_TEMP_UNITS,
+    API_THERMOSTAT_MODES_CUSTOM,
     API_THERMOSTAT_MODES,
     API_THERMOSTAT_PRESETS,
     Cause,
@@ -767,11 +768,28 @@ async def async_api_set_thermostat_mode(hass, config, directive, context):
             raise AlexaUnsupportedThermostatModeError(msg)
 
         service = climate.SERVICE_SET_PRESET_MODE
-        data[climate.ATTR_PRESET_MODE] = climate.PRESET_ECO
+        data[climate.ATTR_PRESET_MODE] = ha_preset
+
+    elif mode == "CUSTOM":
+        operation_list = entity.attributes.get(climate.ATTR_HVAC_MODES)
+        custom_mode = directive.payload["thermostatMode"]["customName"]
+        custom_mode = next(
+            (k for k, v in API_THERMOSTAT_MODES_CUSTOM.items() if v == custom_mode),
+            None,
+        )
+        if custom_mode not in operation_list:
+            msg = (
+                f"The requested thermostat mode {mode}: {custom_mode} is not supported"
+            )
+            raise AlexaUnsupportedThermostatModeError(msg)
+
+        service = climate.SERVICE_SET_HVAC_MODE
+        data[climate.ATTR_HVAC_MODE] = custom_mode
 
     else:
         operation_list = entity.attributes.get(climate.ATTR_HVAC_MODES)
-        ha_mode = next((k for k, v in API_THERMOSTAT_MODES.items() if v == mode), None)
+        ha_modes = {k: v for k, v in API_THERMOSTAT_MODES.items() if v == mode}
+        ha_mode = next(iter(set(ha_modes).intersection(operation_list)), None)
         if ha_mode not in operation_list:
             msg = f"The requested thermostat mode {mode} is not supported"
             raise AlexaUnsupportedThermostatModeError(msg)
