@@ -234,7 +234,10 @@ class CoverDevice(Entity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
+        supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
+        
+        if self.stop_cover is not None:
+            supported_features |= SUPPORT_STOP
 
         if self.current_cover_position is not None:
             supported_features |= SUPPORT_SET_POSITION
@@ -360,25 +363,25 @@ class CoverDevice(Entity):
         )
 
     def stop_cover_tilt(self, **kwargs):
-        """Stop the cover."""
+        """Stop the cover tilt."""
         pass
 
     def async_stop_cover_tilt(self, **kwargs):
-        """Stop the cover.
+        """Stop the cover tilt.
 
         This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.async_add_job(ft.partial(self.stop_cover_tilt, **kwargs))
 
     def toggle_tilt(self, **kwargs: Any) -> None:
-        """Toggle the entity."""
+        """Toggle the entity tilt."""
         if self.current_cover_tilt_position == 0:
             self.open_cover_tilt(**kwargs)
         else:
             self.close_cover_tilt(**kwargs)
 
     def async_toggle_tilt(self, **kwargs):
-        """Toggle the entity.
+        """Toggle the entity tilt.
 
         This method must be run in the event loop and returns a coroutine.
         """
