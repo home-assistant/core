@@ -41,7 +41,7 @@ HAP-python==2.6.0
 Mastodon.py==1.5.0
 
 # homeassistant.components.orangepi_gpio
-OPi.GPIO==0.3.6
+OPi.GPIO==0.4.0
 
 # homeassistant.components.essent
 PyEssent==0.13

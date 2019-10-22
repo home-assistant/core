@@ -6,6 +6,8 @@ from OPi import GPIO
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 
+from .const import PIN_MODES
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "orangepi_gpio"
@@ -23,33 +25,13 @@ async def async_setup(hass, config):
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup_gpio)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, prepare_gpio)
-
     return True
 
 
 def setup_mode(mode):
     """Set GPIO pin mode."""
-    _LOGGER.debug("Setting GPIO pin mode as %s", mode)
-    if mode == "pc":
-        import orangepi.pc
-
-        GPIO.setmode(orangepi.pc.BOARD)
-    elif mode == "zeroplus":
-        import orangepi.zeroplus
-
-        GPIO.setmode(orangepi.zeroplus.BOARD)
-    elif mode == "zeroplus2":
-        import orangepi.zeroplus
-
-        GPIO.setmode(orangepi.zeroplus2.BOARD)
-    elif mode == "duo":
-        import nanopi.duo
-
-        GPIO.setmode(nanopi.duo.BOARD)
-    elif mode == "neocore2":
-        import nanopi.neocore2
-
-        GPIO.setmode(nanopi.neocore2.BOARD)
+    _LOGGER.debug("Setting GPIO pin mode as %s", PIN_MODES[mode])
+    GPIO.setmode(PIN_MODES[mode])
 
 
 def setup_input(port):
