@@ -596,7 +596,7 @@ transmissionrpc==0.11
 twentemilieu==0.1.0
 
 # homeassistant.components.twilio
-twilio==6.19.1
+twilio==6.32.0
 
 # homeassistant.components.uvc
 uvcclient==0.11.0
