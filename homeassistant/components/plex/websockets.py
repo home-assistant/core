@@ -1,4 +1,5 @@
 """Support for Plex websockets."""
+import asyncio
 import json
 import logging
 
@@ -25,42 +26,52 @@ async def websocket_handler(hass, server_id, uri):
     """Create websocket connection thread and handle received messages."""
     websocket_players = {}
 
-    async with websockets.connect(uri) as websocket:
-        async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
-
-        async for message in websocket:
-            _LOGGER.warning(message)
-            msg = json.loads(message)["NotificationContainer"]
-            if msg["type"] == "update.statechange":
+    while True:
+        try:
+            async with websockets.connect(uri) as websocket:
+                _LOGGER.debug("Websocket connected")
                 async_dispatcher_send(
                     hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id)
                 )
-                continue
-            if msg["type"] != "playing":
-                continue
 
-            payload = msg["PlaySessionStateNotification"][0]
-            session_id = payload["sessionKey"]
-            state = payload["state"]
-            media_key = payload["key"]
-            position = payload["viewOffset"]
+                async for message in websocket:
+                    msg = json.loads(message)["NotificationContainer"]
+                    if msg["type"] == "update.statechange":
+                        async_dispatcher_send(
+                            hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id)
+                        )
+                        continue
+                    if msg["type"] != "playing":
+                        continue
 
-            if session_id not in websocket_players:
-                websocket_players[session_id] = WebsocketPlayer(
-                    state, media_key, position
-                )
-            else:
-                websocket_player = websocket_players[session_id]
-                if (websocket_player.media_key != media_key) or (
-                    websocket_player.state != state
-                ):
-                    websocket_player.state = state
-                    websocket_player.media_key = media_key
-                    websocket_player.position = position
-                else:
-                    continue
+                    payload = msg["PlaySessionStateNotification"][0]
+                    session_id = payload["sessionKey"]
+                    state = payload["state"]
+                    media_key = payload["key"]
+                    position = payload["viewOffset"]
 
-            async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+                    if session_id not in websocket_players:
+                        websocket_players[session_id] = WebsocketPlayer(
+                            state, media_key, position
+                        )
+                    else:
+                        websocket_player = websocket_players[session_id]
+                        if (websocket_player.media_key != media_key) or (
+                            websocket_player.state != state
+                        ):
+                            websocket_player.state = state
+                            websocket_player.media_key = media_key
+                            websocket_player.position = position
+                        else:
+                            continue
 
-        _LOGGER.warning("Websocket closed inner")
-    _LOGGER.warning("Websocket closed outer")
+                    async_dispatcher_send(
+                        hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id)
+                    )
+
+        except websockets.exceptions.ConnectionClosed:
+            _LOGGER.debug("Websocket connection lost")
+        except OSError:
+            _LOGGER.debug("Websocket connection failed")
+
+        await asyncio.sleep(5)
