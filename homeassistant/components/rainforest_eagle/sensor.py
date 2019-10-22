@@ -54,9 +54,12 @@ def hwtest(cloud_id, install_code, ip_address):
     """Try API call 'device_list' to see if target device is Legacy or Eagle-200."""
     reader = LeagleReader(cloud_id, install_code, ip_address)
     response = reader.post_cmd("device_list")
-    if "Error" in response and "Unknown Command" in response["Error"]["Text"]:
-        reader = EagleReader(ip_address, cloud_id, install_code)
-    return reader
+    if "Error" in response and "Unknown command" in response["Error"]["Text"]:
+        return reader  # Probably a Legacy model
+    elif "device_list" in response:
+        return EagleReader(ip_address, cloud_id, install_code)  # Probably Eagle-200
+    else:
+        _LOGGER.error("Couldn't determine device model.")
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
