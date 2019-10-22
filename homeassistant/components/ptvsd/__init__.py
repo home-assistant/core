@@ -4,10 +4,11 @@ Enable ptvsd debugger to attach to HA.
 Attach ptvsd debugger by default to port 5678.
 """
 
+from asyncio import Event
 import logging
 from threading import Thread
-from asyncio import Event
 
+import ptvsd
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -36,8 +37,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up ptvsd debugger."""
-    import ptvsd
-
     conf = config[DOMAIN]
     host = conf[CONF_HOST]
     port = conf[CONF_PORT]
