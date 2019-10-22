@@ -391,7 +391,7 @@ class NetatmoCamera(Camera):
                     )
                 elif self._vpnurl:
                     requests.get(
-                        f"{self._vpnurl}/command/changestatus?status={config}",
+                        f"{self._vpnurl}/command/floodlight_set_config?config={config}",
                         timeout=10,
                         verify=self._verify_ssl,
                     )
