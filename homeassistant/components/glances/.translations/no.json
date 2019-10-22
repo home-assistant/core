@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Verten er allerede konfigurert."
+        },
+        "error": {
+            "cannot_connect": "Kan ikke koble til vert",
+            "wrong_version": "Versjonen st\u00f8ttes ikke (bare 2 eller 3)"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "name": "Navn",
+                    "password": "Passord",
+                    "port": "Port",
+                    "username": "Brukernavn"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Oppdater frekvens"
+                }
+            }
+        }
+    }
+}
