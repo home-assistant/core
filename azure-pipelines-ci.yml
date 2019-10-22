@@ -137,12 +137,13 @@ stages:
             inputs:
               testResultsFiles: "test-results.xml"
               testRunTitle: "Publish test results for Python $(python.container)"
+            displayName: "Publish test results"
             condition: succeededOrFailed()
           - task: PublishCodeCoverageResults@1
             inputs:
               codeCoverageTool: cobertura
               summaryFileLocation: coverage.xml
-            displayName: "publish coverage artifact"
+            displayName: "Publish coverage artifact"
             condition: and(succeeded(), eq(variables['python.container'], variables['PythonMain']))
           - script: |
               set -e
