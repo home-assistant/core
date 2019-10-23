@@ -11,7 +11,7 @@ from .const import AVAILABLE_MODES, CONF_SUPPORTED_MODES, DEFAULT_PORT, DOMAIN
 
 MODES_SCHEMA = {vol.Required(mode, default=True): bool for mode in AVAILABLE_MODES}
 
-DATA_SCHEMA = vol.Schema({**{vol.Required(CONF_HOST): str}, **MODES_SCHEMA})
+DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, **MODES_SCHEMA})
 
 
 async def validate_connection(hass: core.HomeAssistant, host):
