@@ -262,9 +262,12 @@ class WebDavCalendarData:
     @staticmethod
     def is_over(vevent):
         """Return if the event is over."""
-        return dt.now() >= WebDavCalendarData.to_datetime(
-            WebDavCalendarData.get_end_date(vevent)
-        )
+        end_date = WebDavCalendarData.to_datetime(WebDavCalendarData.get_end_date(vevent))
+        if end_date.tzinfo is None:
+            # floating value, not bound to any time zone in particular
+            # represent same time regardless of which time zone is currently being observed
+            end_date = end_date.astimezone(dt.DEFAULT_TIME_ZONE)
+        return dt.now() >= end_date
 
     @staticmethod
     def get_hass_date(obj):
