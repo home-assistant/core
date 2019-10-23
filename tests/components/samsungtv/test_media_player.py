@@ -3,6 +3,7 @@ import asyncio
 from asynctest import mock
 from datetime import timedelta
 import pytest
+from samsungctl import exceptions
 from tests.common import MockDependency, async_fire_time_changed
 from unittest.mock import call, patch
 
@@ -121,15 +122,10 @@ class UnhandledResponse(Exception):
 def remote_fixture():
     """Patch the samsungctl Remote."""
     with patch("samsungctl.Remote") as remote_class, patch(
-        "samsungctl.exceptions"
-    ) as exceptions_class, patch(
         "homeassistant.components.samsungtv.media_player.socket"
     ) as socket_class:
         remote = mock.Mock()
         remote_class.return_value = remote
-        exceptions_class.AccessDenied = AccessDenied
-        exceptions_class.ConnectionClosed = ConnectionClosed
-        exceptions_class.UnhandledResponse = UnhandledResponse
         socket = mock.Mock()
         socket_class.return_value = socket
         yield remote
@@ -291,7 +287,7 @@ async def test_send_key_connection_closed_retry_succeed(hass, remote):
     """Test retry on connection closed."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     remote.control = mock.Mock(
-        side_effect=[ConnectionClosed("Boom"), mock.DEFAULT, mock.DEFAULT]
+        side_effect=[exceptions.ConnectionClosed("Boom"), mock.DEFAULT, mock.DEFAULT]
     )
     assert await hass.services.async_call(
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
@@ -310,7 +306,7 @@ async def test_send_key_connection_closed_retry_succeed(hass, remote):
 async def test_send_key_unhandled_response(hass, remote):
     """Testing unhandled response exception."""
     await setup_samsungtv(hass, MOCK_CONFIG)
-    remote.control = mock.Mock(side_effect=UnhandledResponse("Boom"))
+    remote.control = mock.Mock(side_effect=exceptions.UnhandledResponse("Boom"))
     assert await hass.services.async_call(
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
