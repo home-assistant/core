@@ -1,6 +1,6 @@
 """StarLine base entity."""
-from homeassistant.helpers.entity import Entity
 from typing import Callable, Optional
+from homeassistant.helpers.entity import Entity
 from .account import StarlineAccount, StarlineDevice
 
 
