@@ -167,7 +167,7 @@ stages:
       displayName: 'Install Home Assistant'
     - script: |
         . venv/bin/activate
-        pylint -j 2 homeassistant
+        pylint homeassistant
       displayName: 'Run pylint'
   - job: 'Mypy'
     pool:
