@@ -2,7 +2,6 @@
 
 from unittest.mock import patch
 
-from future import Future
 import pytest
 from transmissionrpc.error import TransmissionError
 
@@ -10,7 +9,7 @@ from homeassistant.components import transmission
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_coro
 
 MOCK_ENTRY = MockConfigEntry(
     domain=transmission.DOMAIN,
@@ -113,13 +112,12 @@ async def test_unload_entry(hass, api):
     """Test removing transmission client."""
     entry = MOCK_ENTRY
     entry.add_to_hass(hass)
-    entry.return_value = Future()
 
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_unload"
+    with patch.object(
+        hass.config_entries, "async_forward_entry_unload", return_value=mock_coro(True)
     ) as unload_entry:
         assert await transmission.async_setup_entry(hass, entry)
 
         assert await transmission.async_unload_entry(hass, entry)
-        assert len(unload_entry.mock_calls) == 2
+        assert unload_entry.call_count == 2
         assert entry.entry_id not in hass.data[transmission.DOMAIN]
