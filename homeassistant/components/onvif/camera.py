@@ -200,15 +200,16 @@ class ONVIFHassCamera(Camera):
                 )
                 return
 
-            tzone, cdate = (
-                (dt_util.UTC, device_time.UTCDateTime)
-                if device_time.UTCDateTime
-                else (
+            if device_time.UTCDateTime:
+                tzone = dt_util.UTC
+                cdate = device_time.UTCDateTime
+            else:
+                tzone = (
                     dt_util.get_time_zone(device_time.TimeZone)
                     or dt_util.DEFAULT_TIME_ZONE,
-                    device_time.LocalDateTime,
                 )
-            )
+                cdate = device_time.LocalDateTime
+
             if cdate is None:
                 _LOGGER.warning("Could not retrieve date/time on this camera")
             else:
