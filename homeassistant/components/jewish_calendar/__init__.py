@@ -8,10 +8,10 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.helpers.discovery import async_load_platform
 import homeassistant.helpers.config_validation as cv
 
+from .const import DOMAIN
+
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "jewish_calendar"
 
 SENSOR_TYPES = {
     "binary": {
@@ -104,5 +104,15 @@ async def async_setup(hass, config):
     hass.async_create_task(
         async_load_platform(hass, "binary_sensor", DOMAIN, {}, config)
     )
+
+    return True
+
+
+async def async_setup_entry(hass, entry):
+    """Set up a config entry for NEW_NAME."""
+    # TODO forward the entry for each platform that you want to set up.
+    # hass.async_create_task(
+    #     hass.config_entries.async_forward_entry_setup(entry, "media_player")
+    # )
 
     return True

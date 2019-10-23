@@ -8,5 +8,6 @@
   "dependencies": [],
   "codeowners": [
     "@tsvi"
-  ]
+  ],
+  "config_flow": true
 }

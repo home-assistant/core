@@ -38,6 +38,7 @@ FLOWS = [
     "ipma",
     "iqvia",
     "izone",
+    "jewish_calendar",
     "life360",
     "lifx",
     "linky",
