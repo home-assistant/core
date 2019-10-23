@@ -29,11 +29,6 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return TransmissionOptionsFlowHandler(config_entry)
 
-    # def __init__(self):
-    #     """Initialize the Transmission flow."""
-    #     self.config = {}
-    #     self.errors = {}
-
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         errors = {}
