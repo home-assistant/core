@@ -1,4 +1,4 @@
-"""Test UniFi setup process."""
+"""Test Mikrotik setup process."""
 from unittest.mock import Mock, patch
 
 from homeassistant.components import mikrotik
@@ -20,13 +20,13 @@ MOCK_ENTRY = MockConfigEntry(
 
 
 async def test_setup_with_no_config(hass):
-    """Test that we do not discover anything or try to set up a bridge."""
+    """Test that we do not discover anything or try to set up a hub."""
     assert await async_setup_component(hass, mikrotik.DOMAIN, {}) is True
     assert mikrotik.DOMAIN not in hass.data
 
 
 async def test_setup_with_config(hass):
-    """Test that we do not discover anything or try to set up a bridge."""
+    """Test that we do not discover anything or try to set up a hub."""
     config = {
         mikrotik.DOMAIN: {
             mikrotik.CONF_HOST: "0.0.0.0",
@@ -75,7 +75,7 @@ async def test_successful_config_entry(hass):
 
 
 async def test_hub_fail_setup(hass):
-    """Test that a failed setup still stores controller."""
+    """Test that a failed setup still stores hub."""
     entry = MOCK_ENTRY
     entry.add_to_hass(hass)
 
