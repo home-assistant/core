@@ -575,6 +575,9 @@ somecomfort==0.5.2
 # homeassistant.components.sql
 sqlalchemy==1.3.10
 
+# homeassistant.components.starline
+starline==0.1.2
+
 # homeassistant.components.statsd
 statsd==3.2.1
 
