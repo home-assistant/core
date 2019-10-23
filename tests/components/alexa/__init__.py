@@ -67,13 +67,22 @@ def get_new_request(namespace, name, endpoint=None):
 
 
 async def assert_request_calls_service(
-    namespace, name, endpoint, service, hass, response_type="Response", payload=None
+    namespace,
+    name,
+    endpoint,
+    service,
+    hass,
+    response_type="Response",
+    payload=None,
+    instance=None,
 ):
     """Assert an API request calls a hass service."""
     context = Context()
     request = get_new_request(namespace, name, endpoint)
     if payload:
         request["directive"]["payload"] = payload
+    if instance:
+        request["directive"]["header"]["instance"] = instance
 
     domain, service_name = service.split(".")
     calls = async_mock_service(hass, domain, service_name)
