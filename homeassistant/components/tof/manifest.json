@@ -1,7 +1,7 @@
 {
   "domain": "tof",
   "name": "Tof",
-  "documentation": "https://www.home-assistant.io/components/tof",
+  "documentation": "https://www.home-assistant.io/integrations/tof",
   "requirements": [
     "VL53L1X2==0.1.5"
   ],

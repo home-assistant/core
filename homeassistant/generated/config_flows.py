@@ -6,7 +6,9 @@ To update, run python3 -m script.hassfest
 # fmt: off
 
 FLOWS = [
+    "abode",
     "adguard",
+    "airly",
     "ambiclimate",
     "ambient_station",
     "axis",
@@ -20,6 +22,7 @@ FLOWS = [
     "esphome",
     "geofency",
     "geonetnz_quakes",
+    "glances",
     "gpslogger",
     "hangouts",
     "heos",
@@ -42,8 +45,10 @@ FLOWS = [
     "met",
     "mobile_app",
     "mqtt",
+    "neato",
     "nest",
     "notion",
+    "opentherm_gw",
     "openuv",
     "owntracks",
     "plaato",
@@ -55,6 +60,7 @@ FLOWS = [
     "smartthings",
     "smhi",
     "solaredge",
+    "solarlog",
     "soma",
     "somfy",
     "sonos",

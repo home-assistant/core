@@ -18,6 +18,7 @@
                 "data": {
                     "host": "Vert"
                 },
+                "description": "Tom",
                 "title": "Velg endepunkt."
             }
         },

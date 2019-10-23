@@ -4,7 +4,7 @@ import logging
 import re
 import time
 
-import nokia
+import withings_api as withings
 from oauthlib.oauth2.rfc6749.errors import MissingTokenError
 from requests_oauthlib import TokenUpdated
 
@@ -68,7 +68,9 @@ class WithingsDataManager:
 
     service_available = None
 
-    def __init__(self, hass: HomeAssistantType, profile: str, api: nokia.NokiaApi):
+    def __init__(
+        self, hass: HomeAssistantType, profile: str, api: withings.WithingsApi
+    ):
         """Constructor."""
         self._hass = hass
         self._api = api
@@ -253,7 +255,7 @@ def create_withings_data_manager(
     """Set up the sensor config entry."""
     entry_creds = entry.data.get(const.CREDENTIALS) or {}
     profile = entry.data[const.PROFILE]
-    credentials = nokia.NokiaCredentials(
+    credentials = withings.WithingsCredentials(
         entry_creds.get("access_token"),
         entry_creds.get("token_expiry"),
         entry_creds.get("token_type"),
@@ -266,7 +268,7 @@ def create_withings_data_manager(
     def credentials_saver(credentials_param):
         _LOGGER.debug("Saving updated credentials of type %s", type(credentials_param))
 
-        # Sanitizing the data as sometimes a NokiaCredentials object
+        # Sanitizing the data as sometimes a WithingsCredentials object
         # is passed through from the API.
         cred_data = credentials_param
         if not isinstance(credentials_param, dict):
@@ -275,8 +277,8 @@ def create_withings_data_manager(
         entry.data[const.CREDENTIALS] = cred_data
         hass.config_entries.async_update_entry(entry, data={**entry.data})
 
-    _LOGGER.debug("Creating nokia api instance")
-    api = nokia.NokiaApi(
+    _LOGGER.debug("Creating withings api instance")
+    api = withings.WithingsApi(
         credentials, refresh_cb=(lambda token: credentials_saver(api.credentials))
     )
 

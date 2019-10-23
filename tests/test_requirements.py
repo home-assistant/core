@@ -17,6 +17,13 @@ from homeassistant.requirements import (
 from tests.common import get_test_home_assistant, MockModule, mock_integration
 
 
+def env_without_wheel_links():
+    """Return env without wheel links."""
+    env = dict(os.environ)
+    env.pop("WHEEL_LINKS", None)
+    return env
+
+
 class TestRequirements:
     """Test the requirements module."""
 
@@ -36,6 +43,7 @@ class TestRequirements:
     @patch("homeassistant.util.package.is_virtual_env", return_value=True)
     @patch("homeassistant.util.package.is_docker_env", return_value=False)
     @patch("homeassistant.util.package.install_package", return_value=True)
+    @patch.dict(os.environ, env_without_wheel_links(), clear=True)
     def test_requirement_installed_in_venv(
         self, mock_install, mock_denv, mock_venv, mock_dirname
     ):
@@ -55,6 +63,7 @@ class TestRequirements:
     @patch("homeassistant.util.package.is_virtual_env", return_value=False)
     @patch("homeassistant.util.package.is_docker_env", return_value=False)
     @patch("homeassistant.util.package.install_package", return_value=True)
+    @patch.dict(os.environ, env_without_wheel_links(), clear=True)
     def test_requirement_installed_in_deps(
         self, mock_install, mock_denv, mock_venv, mock_dirname
     ):
@@ -136,7 +145,7 @@ async def test_install_with_wheels_index(hass):
         mock_dir.return_value = "ha_package_path"
         assert await setup.async_setup_component(hass, "comp", {})
         assert "comp" in hass.config.components
-        print(mock_inst.call_args)
+
         assert mock_inst.call_args == call(
             "hello==1.0.0",
             find_links="https://wheels.hass.io/test",
@@ -154,11 +163,13 @@ async def test_install_on_docker(hass):
         "homeassistant.util.package.is_docker_env", return_value=True
     ), patch("homeassistant.util.package.install_package") as mock_inst, patch(
         "os.path.dirname"
-    ) as mock_dir:
+    ) as mock_dir, patch.dict(
+        os.environ, env_without_wheel_links(), clear=True
+    ):
         mock_dir.return_value = "ha_package_path"
         assert await setup.async_setup_component(hass, "comp", {})
         assert "comp" in hass.config.components
-        print(mock_inst.call_args)
+
         assert mock_inst.call_args == call(
             "hello==1.0.0",
             constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),

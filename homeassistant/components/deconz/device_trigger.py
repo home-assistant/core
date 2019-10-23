@@ -31,6 +31,7 @@ CONF_TRIPLE_PRESS = "remote_button_triple_press"
 CONF_QUADRUPLE_PRESS = "remote_button_quadruple_press"
 CONF_QUINTUPLE_PRESS = "remote_button_quintuple_press"
 CONF_ROTATED = "remote_button_rotated"
+CONF_ROTATION_STOPPED = "remote_button_rotation_stopped"
 CONF_SHAKE = "remote_gyro_activated"
 
 CONF_TURN_ON = "turn_on"
@@ -73,6 +74,17 @@ HUE_TAP_REMOTE = {
     (CONF_SHORT_PRESS, CONF_BUTTON_2): 16,
     (CONF_SHORT_PRESS, CONF_BUTTON_3): 17,
     (CONF_SHORT_PRESS, CONF_BUTTON_4): 18,
+}
+
+SYMFONISK_SOUND_CONTROLLER_MODEL = "SYMFONISK Sound Controller"
+SYMFONISK_SOUND_CONTROLLER = {
+    (CONF_SHORT_PRESS, CONF_TURN_ON): 1002,
+    (CONF_DOUBLE_PRESS, CONF_TURN_ON): 1004,
+    (CONF_TRIPLE_PRESS, CONF_TURN_ON): 1005,
+    (CONF_ROTATED, CONF_LEFT): 2001,
+    (CONF_ROTATION_STOPPED, CONF_LEFT): 2003,
+    (CONF_ROTATED, CONF_RIGHT): 3001,
+    (CONF_ROTATION_STOPPED, CONF_RIGHT): 3003,
 }
 
 TRADFRI_ON_OFF_SWITCH_MODEL = "TRADFRI on/off switch"
@@ -162,6 +174,7 @@ AQARA_SQUARE_SWITCH = {
 REMOTES = {
     HUE_DIMMER_REMOTE_MODEL: HUE_DIMMER_REMOTE,
     HUE_TAP_REMOTE_MODEL: HUE_TAP_REMOTE,
+    SYMFONISK_SOUND_CONTROLLER_MODEL: SYMFONISK_SOUND_CONTROLLER,
     TRADFRI_ON_OFF_SWITCH_MODEL: TRADFRI_ON_OFF_SWITCH,
     TRADFRI_OPEN_CLOSE_REMOTE_MODEL: TRADFRI_OPEN_CLOSE_REMOTE,
     TRADFRI_REMOTE_MODEL: TRADFRI_REMOTE,
@@ -191,8 +204,8 @@ def _get_deconz_event_from_device_id(hass, device_id):
     return None
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
-    """Listen for state changes based on configuration."""
+async def async_validate_trigger_config(hass, config):
+    """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
@@ -200,8 +213,18 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
 
-    if device.model not in REMOTES and trigger not in REMOTES[device.model]:
+    if device.model not in REMOTES or trigger not in REMOTES[device.model]:
         raise InvalidDeviceAutomationConfig
+
+    return config
+
+
+async def async_attach_trigger(hass, config, action, automation_info):
+    """Listen for state changes based on configuration."""
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device = device_registry.async_get(config[CONF_DEVICE_ID])
+
+    trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
 
     trigger = REMOTES[device.model][trigger]
 
@@ -211,13 +234,14 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
     event_id = deconz_event.serial
 
-    state_config = {
+    event_config = {
         event.CONF_EVENT_TYPE: CONF_DECONZ_EVENT,
         event.CONF_EVENT_DATA: {CONF_UNIQUE_ID: event_id, CONF_EVENT: trigger},
     }
 
+    event_config = event.TRIGGER_SCHEMA(event_config)
     return await event.async_attach_trigger(
-        hass, state_config, action, automation_info, platform_type="device"
+        hass, event_config, action, automation_info, platform_type="device"
     )
 
 

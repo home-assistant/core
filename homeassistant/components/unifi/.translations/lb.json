@@ -38,6 +38,11 @@
                     "one": "Een",
                     "other": "M\u00e9i"
                 }
+            },
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "Bandbreet Benotzung Sensore fir Netzwierk Cliente erstellen"
+                }
             }
         }
     }

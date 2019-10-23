@@ -3,6 +3,12 @@ from datetime import timedelta
 import logging
 
 import voluptuous as vol
+from yahooweather import (  # pylint: disable=import-error
+    UNIT_C,
+    UNIT_F,
+    YahooWeather,
+    get_woeid,
+)
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -20,7 +26,6 @@ _LOGGER = logging.getLogger(__name__)
 DATA_CONDITION = "yahoo_condition"
 
 ATTRIBUTION = "Weather details provided by Yahoo! Inc."
-
 
 CONF_WOEID = "woeid"
 
@@ -46,7 +51,6 @@ CONDITION_CLASSES = {
     "exceptional": [0, 1, 2, 19, 22],
 }
 
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_WOEID): cv.string,
@@ -57,8 +61,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yahoo! weather platform."""
-    from yahooweather import get_woeid, UNIT_C, UNIT_F
-
     unit = hass.config.units.temperature_unit
     woeid = config.get(CONF_WOEID)
     name = config.get(CONF_NAME)
@@ -181,8 +183,6 @@ class YahooWeatherData:
 
     def __init__(self, woeid, temp_unit):
         """Initialize the data object."""
-        from yahooweather import YahooWeather
-
         self._yahoo = YahooWeather(woeid, temp_unit)
 
     @property

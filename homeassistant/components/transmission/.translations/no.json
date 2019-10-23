@@ -22,7 +22,7 @@
                     "port": "Port",
                     "username": "Brukernavn"
                 },
-                "title": "Oppsett av klient for Transmission"
+                "title": "Oppsett av Transmission-klient"
             }
         },
         "title": "Transmission"

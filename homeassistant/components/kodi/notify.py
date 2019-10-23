@@ -2,6 +2,8 @@
 import logging
 
 import aiohttp
+import jsonrpc_async
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -77,8 +79,6 @@ class KodiNotificationService(BaseNotificationService):
 
     def __init__(self, hass, url, auth=None):
         """Initialize the service."""
-        import jsonrpc_async
-
         self._url = url
 
         kwargs = {"timeout": DEFAULT_TIMEOUT, "session": async_get_clientsession(hass)}
@@ -90,8 +90,6 @@ class KodiNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message="", **kwargs):
         """Send a message to Kodi."""
-        import jsonrpc_async
-
         try:
             data = kwargs.get(ATTR_DATA) or {}
 

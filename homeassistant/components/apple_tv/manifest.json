@@ -1,7 +1,7 @@
 {
   "domain": "apple_tv",
   "name": "Apple tv",
-  "documentation": "https://www.home-assistant.io/components/apple_tv",
+  "documentation": "https://www.home-assistant.io/integrations/apple_tv",
   "requirements": [
     "pyatv==0.3.13"
   ],

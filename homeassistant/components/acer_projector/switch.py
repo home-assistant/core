@@ -1,6 +1,7 @@
 """Use serial protocol of Acer projector to obtain state of the projector."""
 import logging
 import re
+import serial
 
 import voluptuous as vol
 
@@ -73,7 +74,6 @@ class AcerSwitch(SwitchDevice):
 
     def __init__(self, serial_port, name, timeout, write_timeout, **kwargs):
         """Init of the Acer projector."""
-        import serial
 
         self.ser = serial.Serial(
             port=serial_port, timeout=timeout, write_timeout=write_timeout, **kwargs
@@ -90,7 +90,6 @@ class AcerSwitch(SwitchDevice):
 
     def _write_read(self, msg):
         """Write to the projector and read the return."""
-        import serial
 
         ret = ""
         # Sometimes the projector won't answer for no reason or the projector

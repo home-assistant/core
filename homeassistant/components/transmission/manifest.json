@@ -2,7 +2,7 @@
   "domain": "transmission",
   "name": "Transmission",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/transmission",
+  "documentation": "https://www.home-assistant.io/integrations/transmission",
   "requirements": [
     "transmissionrpc==0.11"
   ],

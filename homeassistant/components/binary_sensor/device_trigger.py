@@ -7,7 +7,7 @@ from homeassistant.components.device_automation.const import (
     CONF_TURNED_OFF,
     CONF_TURNED_ON,
 )
-from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, CONF_TYPE
+from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, CONF_FOR, CONF_TYPE
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers import config_validation as cv
 
@@ -81,8 +81,8 @@ CONF_SOUND = "sound"
 CONF_NO_SOUND = "no_sound"
 CONF_VIBRATION = "vibration"
 CONF_NO_VIBRATION = "no_vibration"
-CONF_OPEN = "open"
-CONF_NOT_OPEN = "not_open"
+CONF_OPENED = "opened"
+CONF_NOT_OPENED = "not_opened"
 
 
 TURNED_ON = [
@@ -97,7 +97,7 @@ TURNED_ON = [
     CONF_MOTION,
     CONF_MOVING,
     CONF_OCCUPIED,
-    CONF_OPEN,
+    CONF_OPENED,
     CONF_PLUGGED_IN,
     CONF_POWERED,
     CONF_PRESENT,
@@ -118,7 +118,7 @@ TURNED_OFF = [
     CONF_NOT_MOIST,
     CONF_NOT_MOVING,
     CONF_NOT_OCCUPIED,
-    CONF_NOT_OPEN,
+    CONF_NOT_OPENED,
     CONF_NOT_PLUGGED_IN,
     CONF_NOT_POWERED,
     CONF_NOT_PRESENT,
@@ -141,8 +141,8 @@ ENTITY_TRIGGERS = {
         {CONF_TYPE: CONF_CONNECTED},
         {CONF_TYPE: CONF_NOT_CONNECTED},
     ],
-    DEVICE_CLASS_DOOR: [{CONF_TYPE: CONF_OPEN}, {CONF_TYPE: CONF_NOT_OPEN}],
-    DEVICE_CLASS_GARAGE_DOOR: [{CONF_TYPE: CONF_OPEN}, {CONF_TYPE: CONF_NOT_OPEN}],
+    DEVICE_CLASS_DOOR: [{CONF_TYPE: CONF_OPENED}, {CONF_TYPE: CONF_NOT_OPENED}],
+    DEVICE_CLASS_GARAGE_DOOR: [{CONF_TYPE: CONF_OPENED}, {CONF_TYPE: CONF_NOT_OPENED}],
     DEVICE_CLASS_GAS: [{CONF_TYPE: CONF_GAS}, {CONF_TYPE: CONF_NO_GAS}],
     DEVICE_CLASS_HEAT: [{CONF_TYPE: CONF_HOT}, {CONF_TYPE: CONF_NOT_HOT}],
     DEVICE_CLASS_LIGHT: [{CONF_TYPE: CONF_LIGHT}, {CONF_TYPE: CONF_NO_LIGHT}],
@@ -154,7 +154,7 @@ ENTITY_TRIGGERS = {
         {CONF_TYPE: CONF_OCCUPIED},
         {CONF_TYPE: CONF_NOT_OCCUPIED},
     ],
-    DEVICE_CLASS_OPENING: [{CONF_TYPE: CONF_OPEN}, {CONF_TYPE: CONF_NOT_OPEN}],
+    DEVICE_CLASS_OPENING: [{CONF_TYPE: CONF_OPENED}, {CONF_TYPE: CONF_NOT_OPENED}],
     DEVICE_CLASS_PLUG: [{CONF_TYPE: CONF_PLUGGED_IN}, {CONF_TYPE: CONF_NOT_PLUGGED_IN}],
     DEVICE_CLASS_POWER: [{CONF_TYPE: CONF_POWERED}, {CONF_TYPE: CONF_NOT_POWERED}],
     DEVICE_CLASS_PRESENCE: [{CONF_TYPE: CONF_PRESENT}, {CONF_TYPE: CONF_NOT_PRESENT}],
@@ -166,7 +166,7 @@ ENTITY_TRIGGERS = {
         {CONF_TYPE: CONF_VIBRATION},
         {CONF_TYPE: CONF_NO_VIBRATION},
     ],
-    DEVICE_CLASS_WINDOW: [{CONF_TYPE: CONF_OPEN}, {CONF_TYPE: CONF_NOT_OPEN}],
+    DEVICE_CLASS_WINDOW: [{CONF_TYPE: CONF_OPENED}, {CONF_TYPE: CONF_NOT_OPENED}],
     DEVICE_CLASS_NONE: [{CONF_TYPE: CONF_TURNED_ON}, {CONF_TYPE: CONF_TURNED_OFF}],
 }
 
@@ -175,13 +175,13 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(TURNED_OFF + TURNED_ON),
+        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
-    config = TRIGGER_SCHEMA(config)
     trigger_type = config[CONF_TYPE]
     if trigger_type in TURNED_ON:
         from_state = "off"
@@ -191,11 +191,15 @@ async def async_attach_trigger(hass, config, action, automation_info):
         to_state = "off"
 
     state_config = {
+        state_automation.CONF_PLATFORM: "state",
         state_automation.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
         state_automation.CONF_FROM: from_state,
         state_automation.CONF_TO: to_state,
     }
+    if CONF_FOR in config:
+        state_config[CONF_FOR] = config[CONF_FOR]
 
+    state_config = state_automation.TRIGGER_SCHEMA(state_config)
     return await state_automation.async_attach_trigger(
         hass, state_config, action, automation_info, platform_type="device"
     )
@@ -213,7 +217,7 @@ async def async_get_triggers(hass, device_id):
     ]
 
     for entry in entries:
-        device_class = None
+        device_class = DEVICE_CLASS_NONE
         state = hass.states.get(entry.entity_id)
         if state:
             device_class = state.attributes.get(ATTR_DEVICE_CLASS)
@@ -236,3 +240,12 @@ async def async_get_triggers(hass, device_id):
         )
 
     return triggers
+
+
+async def async_get_trigger_capabilities(hass, config):
+    """List trigger capabilities."""
+    return {
+        "extra_fields": vol.Schema(
+            {vol.Optional(CONF_FOR): cv.positive_time_period_dict}
+        )
+    }

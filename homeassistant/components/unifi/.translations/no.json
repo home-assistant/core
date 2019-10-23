@@ -38,6 +38,11 @@
                     "one": "en",
                     "other": "andre"
                 }
+            },
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "Opprett b\u00e5ndbreddesensorer for nettverksklienter"
+                }
             }
         }
     }

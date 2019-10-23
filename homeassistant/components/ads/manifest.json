@@ -1,7 +1,7 @@
 {
   "domain": "ads",
   "name": "Ads",
-  "documentation": "https://www.home-assistant.io/components/ads",
+  "documentation": "https://www.home-assistant.io/integrations/ads",
   "requirements": [
     "pyads==3.0.7"
   ],

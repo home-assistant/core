@@ -1,6 +1,7 @@
 """Support for RFXtrx binary sensors."""
 import logging
 
+import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
 from homeassistant.components import rfxtrx
@@ -54,8 +55,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Binary Sensor platform to RFXtrx."""
-    import RFXtrx as rfxtrxmod
-
     sensors = []
 
     for packet_id, entity in config[CONF_DEVICES].items():

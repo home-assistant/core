@@ -15,8 +15,9 @@ from typing import Any, Union, TypeVar, Callable, List, Dict, Optional
 from urllib.parse import urlparse
 from uuid import UUID
 
-import voluptuous as vol
 from pkg_resources import parse_version
+import voluptuous as vol
+import voluptuous_serialize
 
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
@@ -374,6 +375,9 @@ def positive_timedelta(value: timedelta) -> timedelta:
     return value
 
 
+positive_time_period_dict = vol.All(time_period_dict, positive_timedelta)
+
+
 def remove_falsy(value: List[T]) -> List[T]:
     """Remove falsy values from a list."""
     return [v for v in value if v]
@@ -382,6 +386,7 @@ def remove_falsy(value: List[T]) -> List[T]:
 def service(value):
     """Validate service."""
     # Services use same format as entities so we can use same helper.
+    value = string(value).lower()
     if valid_entity_id(value):
         return value
     raise vol.Invalid("Service {} does not match format <domain>.<name>".format(value))
@@ -596,7 +601,8 @@ def deprecated(
     if module is not None:
         module_name = module.__name__
     else:
-        # Unclear when it is None, but it happens, so let's guard.
+        # If Python is unable to access the sources files, the call stack frame
+        # will be missing information, so let's guard.
         # https://github.com/home-assistant/home-assistant/issues/24982
         module_name = __name__
 
@@ -688,6 +694,14 @@ def key_dependency(key, dependency):
         return value
 
     return validator
+
+
+def custom_serializer(schema):
+    """Serialize additional types for voluptuous_serialize."""
+    if schema is positive_time_period_dict:
+        return {"type": "positive_time_period_dict"}
+
+    return voluptuous_serialize.UNSUPPORTED
 
 
 # Schemas
@@ -872,6 +886,8 @@ DEVICE_ACTION_BASE_SCHEMA = vol.Schema(
 
 DEVICE_ACTION_SCHEMA = DEVICE_ACTION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
+_SCRIPT_SCENE_SCHEMA = vol.Schema({vol.Required("scene"): entity_domain("scene")})
+
 SCRIPT_SCHEMA = vol.All(
     ensure_list,
     [
@@ -882,6 +898,7 @@ SCRIPT_SCHEMA = vol.All(
             EVENT_SCHEMA,
             CONDITION_SCHEMA,
             DEVICE_ACTION_SCHEMA,
+            _SCRIPT_SCENE_SCHEMA,
         )
     ],
 )

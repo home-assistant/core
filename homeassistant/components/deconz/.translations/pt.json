@@ -29,5 +29,10 @@
             }
         },
         "title": "Gateway Zigbee deCONZ"
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "left": "Esquerda"
+        }
     }
 }

@@ -171,7 +171,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if discovery_info[CONF_HOST].startswith("169.254"):
             return self.async_abort(reason="link_local_address")
 
-        # pylint: disable=unsupported-assignment-operation
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["macaddress"] = serialnumber
 
         if any(
@@ -191,6 +191,12 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             load_json, self.hass.config.path(CONFIG_FILE)
         )
 
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context["title_placeholders"] = {
+            "name": discovery_info["hostname"][:-7],
+            "host": discovery_info[CONF_HOST],
+        }
+
         if serialnumber not in config_file:
             self.discovery_schema = {
                 vol.Required(CONF_HOST, default=discovery_info[CONF_HOST]): str,
@@ -198,6 +204,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_PASSWORD): str,
                 vol.Required(CONF_PORT, default=discovery_info[CONF_PORT]): int,
             }
+
             return await self.async_step_user()
 
         try:

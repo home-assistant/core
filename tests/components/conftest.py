@@ -40,7 +40,9 @@ def hass_ws_client(aiohttp_client, hass_access_token):
             assert auth_resp["type"] == TYPE_AUTH_REQUIRED
 
             if access_token is None:
-                await websocket.send_json({"type": TYPE_AUTH, "api_password": "bla"})
+                await websocket.send_json(
+                    {"type": TYPE_AUTH, "access_token": "incorrect"}
+                )
             else:
                 await websocket.send_json(
                     {"type": TYPE_AUTH, "access_token": access_token}

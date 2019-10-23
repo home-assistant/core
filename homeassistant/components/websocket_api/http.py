@@ -2,6 +2,7 @@
 import asyncio
 from contextlib import suppress
 import logging
+from typing import Optional
 
 from aiohttp import web, WSMsgType
 import async_timeout
@@ -25,7 +26,7 @@ from .error import Disconnect
 from .messages import error_message
 
 
-# mypy: allow-untyped-calls, allow-untyped-defs
+# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
 
 class WebsocketAPIView(HomeAssistantView):
@@ -47,7 +48,7 @@ class WebSocketHandler:
         """Initialize an active connection."""
         self.hass = hass
         self.request = request
-        self.wsock = None
+        self.wsock: Optional[web.WebSocketResponse] = None
         self._to_write: asyncio.Queue = asyncio.Queue(maxsize=MAX_PENDING_MSG)
         self._handle_task = None
         self._writer_task = None
@@ -61,12 +62,15 @@ class WebSocketHandler:
                 message = await self._to_write.get()
                 if message is None:
                     break
+
                 self._logger.debug("Sending %s", message)
+
+                if isinstance(message, str):
+                    await self.wsock.send_str(message)
+                    continue
+
                 try:
-                    if isinstance(message, str):
-                        await self.wsock.send_str(message)
-                    else:
-                        await self.wsock.send_json(message, dumps=JSON_DUMP)
+                    dumped = JSON_DUMP(message)
                 except (ValueError, TypeError) as err:
                     self._logger.error(
                         "Unable to serialize to JSON: %s\n%s", err, message
@@ -76,6 +80,9 @@ class WebSocketHandler:
                             message["id"], ERR_UNKNOWN_ERROR, "Invalid JSON in response"
                         )
                     )
+                    continue
+
+                await self.wsock.send_str(dumped)
 
     @callback
     def _send_message(self, message):
@@ -109,7 +116,7 @@ class WebSocketHandler:
         # Py3.7+
         if hasattr(asyncio, "current_task"):
             # pylint: disable=no-member
-            self._handle_task = asyncio.current_task()  # type: ignore
+            self._handle_task = asyncio.current_task()
         else:
             self._handle_task = asyncio.Task.current_task()
 

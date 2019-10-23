@@ -1,5 +1,6 @@
 """Support for MQTT message handling."""
 import asyncio
+import sys
 from functools import partial, wraps
 import inspect
 from itertools import groupby
@@ -15,6 +16,8 @@ from typing import Any, Callable, List, Optional, Union
 import attr
 import requests.certs
 import voluptuous as vol
+import paho.mqtt.client as mqtt
+from paho.mqtt.matcher import MQTTMatcher
 
 from homeassistant import config_entries
 from homeassistant.components import websocket_api
@@ -36,6 +39,7 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
 )
 from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceDataType
 from homeassistant.loader import bind_hass
@@ -50,7 +54,12 @@ from .const import (
     DEFAULT_DISCOVERY,
     CONF_STATE_TOPIC,
     ATTR_DISCOVERY_HASH,
+    PROTOCOL_311,
+    DEFAULT_QOS,
 )
+from .discovery import MQTT_DISCOVERY_UPDATED, clear_discovery_hash
+from .models import PublishPayloadType, Message, MessageCallbackType
+from .subscription import async_subscribe_topics, async_unsubscribe_topics
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,11 +104,9 @@ CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
 
 PROTOCOL_31 = "3.1"
-PROTOCOL_311 = "3.1.1"
 
 DEFAULT_PORT = 1883
 DEFAULT_KEEPALIVE = 60
-DEFAULT_QOS = 0
 DEFAULT_RETAIN = False
 DEFAULT_PROTOCOL = PROTOCOL_311
 DEFAULT_DISCOVERY_PREFIX = "homeassistant"
@@ -329,21 +336,7 @@ MQTT_PUBLISH_SCHEMA = vol.Schema(
 
 
 # pylint: disable=invalid-name
-PublishPayloadType = Union[str, bytes, int, float, None]
 SubscribePayloadType = Union[str, bytes]  # Only bytes if encoding is None
-
-
-@attr.s(slots=True, frozen=True)
-class Message:
-    """MQTT Message."""
-
-    topic = attr.ib(type=str)
-    payload = attr.ib(type=PublishPayloadType)
-    qos = attr.ib(type=int)
-    retain = attr.ib(type=bool)
-
-
-MessageCallbackType = Callable[[Message], None]
 
 
 def _build_publish_data(topic: Any, qos: int, retain: bool) -> ServiceDataType:
@@ -629,8 +622,6 @@ async def async_setup_entry(hass, entry):
     elif conf_tls_version == "1.0":
         tls_version = ssl.PROTOCOL_TLSv1
     else:
-        import sys
-
         # Python3.6 supports automatic negotiation of highest TLS version
         if sys.hexversion >= 0x03060000:
             tls_version = ssl.PROTOCOL_TLS  # pylint: disable=no-member
@@ -735,8 +726,6 @@ class MQTT:
         tls_version: Optional[int],
     ) -> None:
         """Initialize Home Assistant MQTT client."""
-        import paho.mqtt.client as mqtt
-
         self.hass = hass
         self.broker = broker
         self.port = port
@@ -776,7 +765,9 @@ class MQTT:
         self._mqttc.on_message = self._mqtt_on_message
 
         if will_message is not None:
-            self._mqttc.will_set(*attr.astuple(will_message))
+            self._mqttc.will_set(  # pylint: disable=no-value-for-parameter
+                *attr.astuple(will_message)
+            )
 
     async def async_publish(
         self, topic: str, payload: PublishPayloadType, qos: int, retain: bool
@@ -806,8 +797,6 @@ class MQTT:
             return CONNECTION_FAILED_RECOVERABLE
 
         if result != 0:
-            import paho.mqtt.client as mqtt
-
             _LOGGER.error("Failed to connect: %s", mqtt.error_string(result))
             return CONNECTION_FAILED
 
@@ -889,8 +878,6 @@ class MQTT:
         Resubscribe to all topics we were subscribed to and publish birth
         message.
         """
-        import paho.mqtt.client as mqtt
-
         if result_code != mqtt.CONNACK_ACCEPTED:
             _LOGGER.error(
                 "Unable to connect to the MQTT broker: %s",
@@ -909,7 +896,11 @@ class MQTT:
             self.hass.add_job(self._async_perform_subscription, topic, max_qos)
 
         if self.birth_message:
-            self.hass.add_job(self.async_publish(*attr.astuple(self.birth_message)))
+            self.hass.add_job(
+                self.async_publish(  # pylint: disable=no-value-for-parameter
+                    *attr.astuple(self.birth_message)
+                )
+            )
 
     def _mqtt_on_message(self, _mqttc, _userdata, msg) -> None:
         """Message received callback."""
@@ -934,10 +925,11 @@ class MQTT:
                     payload = msg.payload.decode(subscription.encoding)
                 except (AttributeError, UnicodeDecodeError):
                     _LOGGER.warning(
-                        "Can't decode payload %s on %s with encoding %s",
+                        "Can't decode payload %s on %s with encoding %s (for %s)",
                         msg.payload,
                         msg.topic,
                         subscription.encoding,
+                        subscription.callback,
                     )
                     continue
 
@@ -978,8 +970,6 @@ class MQTT:
 def _raise_on_error(result_code: int) -> None:
     """Raise error if error result."""
     if result_code != 0:
-        import paho.mqtt.client as mqtt
-
         raise HomeAssistantError(
             "Error talking to MQTT: {}".format(mqtt.error_string(result_code))
         )
@@ -987,8 +977,6 @@ def _raise_on_error(result_code: int) -> None:
 
 def _match_topic(subscription: str, topic: str) -> bool:
     """Test if topic matches subscription."""
-    from paho.mqtt.matcher import MQTTMatcher
-
     matcher = MQTTMatcher()
     matcher[subscription] = True
     try:
@@ -1022,8 +1010,6 @@ class MqttAttributes(Entity):
 
     async def _attributes_subscribe_topics(self):
         """(Re)Subscribe to topics."""
-        from .subscription import async_subscribe_topics
-
         attr_tpl = self._attributes_config.get(CONF_JSON_ATTRS_TEMPLATE)
         if attr_tpl is not None:
             attr_tpl.hass = self.hass
@@ -1059,8 +1045,6 @@ class MqttAttributes(Entity):
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        from .subscription import async_unsubscribe_topics
-
         self._attributes_sub_state = await async_unsubscribe_topics(
             self.hass, self._attributes_sub_state
         )
@@ -1096,7 +1080,6 @@ class MqttAvailability(Entity):
 
     async def _availability_subscribe_topics(self):
         """(Re)Subscribe to topics."""
-        from .subscription import async_subscribe_topics
 
         @callback
         def availability_message_received(msg: Message) -> None:
@@ -1122,8 +1105,6 @@ class MqttAvailability(Entity):
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        from .subscription import async_unsubscribe_topics
-
         self._availability_sub_state = await async_unsubscribe_topics(
             self.hass, self._availability_sub_state
         )
@@ -1147,9 +1128,6 @@ class MqttDiscoveryUpdate(Entity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to discovery updates."""
         await super().async_added_to_hass()
-
-        from homeassistant.helpers.dispatcher import async_dispatcher_connect
-        from .discovery import MQTT_DISCOVERY_UPDATED, clear_discovery_hash
 
         @callback
         def discovery_callback(payload):

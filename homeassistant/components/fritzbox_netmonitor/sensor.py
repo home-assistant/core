@@ -1,14 +1,18 @@
 """Support for monitoring an AVM Fritz!Box router."""
-import logging
 from datetime import timedelta
-from requests.exceptions import RequestException
+import logging
 
+from fritzconnection import FritzStatus  # pylint: disable=import-error
+from fritzconnection.fritzconnection import (  # pylint: disable=import-error
+    FritzConnectionException,
+)
+from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_HOST, STATE_UNAVAILABLE
-from homeassistant.helpers.entity import Entity
+from homeassistant.const import CONF_HOST, CONF_NAME, STATE_UNAVAILABLE
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,15 +49,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the FRITZ!Box monitor sensors."""
-    # pylint: disable=import-error
-    import fritzconnection as fc
-    from fritzconnection.fritzconnection import FritzConnectionException
-
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
 
     try:
-        fstatus = fc.FritzStatus(address=host)
+        fstatus = FritzStatus(address=host)
     except (ValueError, TypeError, FritzConnectionException):
         fstatus = None
 

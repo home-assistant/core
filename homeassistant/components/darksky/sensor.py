@@ -2,6 +2,7 @@
 import logging
 from datetime import timedelta
 
+import forecastio
 import voluptuous as vol
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 
@@ -797,8 +798,6 @@ class DarkSkyData:
 
     def _update(self):
         """Get the latest data from Dark Sky."""
-        import forecastio
-
         try:
             self.data = forecastio.load_forecast(
                 self._api_key,

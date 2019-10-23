@@ -8,29 +8,31 @@ from typing import Callable, Container, Optional, Union, cast
 
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
-from homeassistant.loader import async_get_integration
 from homeassistant.core import HomeAssistant, State
 from homeassistant.components import zone as zone_cmp
+from homeassistant.components.device_automation import (
+    async_get_device_automation_platform,
+)
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    CONF_ABOVE,
+    CONF_AFTER,
+    CONF_BEFORE,
+    CONF_BELOW,
+    CONF_CONDITION,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
-    CONF_VALUE_TEMPLATE,
-    CONF_CONDITION,
-    WEEKDAYS,
     CONF_STATE,
-    CONF_ZONE,
-    CONF_BEFORE,
-    CONF_AFTER,
+    CONF_VALUE_TEMPLATE,
     CONF_WEEKDAY,
-    SUN_EVENT_SUNRISE,
-    SUN_EVENT_SUNSET,
-    CONF_BELOW,
-    CONF_ABOVE,
+    CONF_ZONE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    SUN_EVENT_SUNRISE,
+    SUN_EVENT_SUNSET,
+    WEEKDAYS,
 )
 from homeassistant.exceptions import TemplateError, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -498,9 +500,32 @@ async def async_device_from_config(
     """Test a device condition."""
     if config_validation:
         config = cv.DEVICE_CONDITION_SCHEMA(config)
-    integration = await async_get_integration(hass, config[CONF_DOMAIN])
-    platform = integration.get_platform("device_condition")
+    platform = await async_get_device_automation_platform(
+        hass, config[CONF_DOMAIN], "condition"
+    )
     return cast(
         ConditionCheckerType,
         platform.async_condition_from_config(config, config_validation),  # type: ignore
     )
+
+
+async def async_validate_condition_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate config."""
+    condition = config[CONF_CONDITION]
+    if condition in ("and", "or"):
+        conditions = []
+        for sub_cond in config["conditions"]:
+            sub_cond = await async_validate_condition_config(hass, sub_cond)
+            conditions.append(sub_cond)
+        config["conditions"] = conditions
+
+    if condition == "device":
+        config = cv.DEVICE_CONDITION_SCHEMA(config)
+        platform = await async_get_device_automation_platform(
+            hass, config[CONF_DOMAIN], "condition"
+        )
+        return cast(ConfigType, platform.CONDITION_SCHEMA(config))  # type: ignore
+
+    return config

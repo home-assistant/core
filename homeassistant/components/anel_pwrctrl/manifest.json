@@ -1,7 +1,7 @@
 {
   "domain": "anel_pwrctrl",
   "name": "Anel pwrctrl",
-  "documentation": "https://www.home-assistant.io/components/anel_pwrctrl",
+  "documentation": "https://www.home-assistant.io/integrations/anel_pwrctrl",
   "requirements": [
     "anel_pwrctrl-homeassistant==0.0.1.dev2"
   ],
