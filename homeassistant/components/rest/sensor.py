@@ -229,14 +229,14 @@ class RestData:
         """Initialize the data object."""
         self._request = requests.Request(
             method, resource, headers=headers, auth=auth, data=data
-        ).prepare()
+        )
         self._verify_ssl = verify_ssl
         self._timeout = timeout
         self.data = None
 
     def set_url(self, url):
         """Set url."""
-        self._request.prepare_url(url, None)
+        self._request.url = url
 
     def update(self):
         """Get the latest data from REST service with provided method."""
@@ -244,7 +244,7 @@ class RestData:
         try:
             with requests.Session() as sess:
                 response = sess.send(
-                    self._request, timeout=self._timeout, verify=self._verify_ssl
+                    self._request.prepare(), timeout=self._timeout, verify=self._verify_ssl
                 )
 
             self.data = response.text
