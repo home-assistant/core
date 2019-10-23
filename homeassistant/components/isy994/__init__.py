@@ -113,7 +113,7 @@ NODE_FILTERS = {
             "RemoteLinc2",
             "RemoteLinc2_ADV",
             "KeypadDimmer",
-            "KeypadDimmer_ADV",
+            "KeypadDimmer_ADV"
         ],
         "insteon_type": ["1."],
     },
