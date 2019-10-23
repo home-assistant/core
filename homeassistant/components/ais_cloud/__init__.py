@@ -279,7 +279,7 @@ class AisCloudWS:
     def __init__(self):
         """Initialize the cloud WS connections."""
         self.url = "https://powiedz.co/ords/dom/dom/"
-        self.url_gh = "http://powiedz.co/ords/dom/gh/"
+        self.url_gh = "https://powiedz.co/ords/dom/gh/"
 
     def setCloudToken(self):
         # take the token from secrets
@@ -313,6 +313,25 @@ class AisCloudWS:
             json=payload,
             headers=CLOUD_WS_HEADER,
             timeout=5,
+        )
+        return ws_resp
+
+    def gh_ais_remove_integration(self):
+        self.setCloudToken()
+        payload = {"user": ais_global.get_sercure_android_id_dom()}
+        ws_resp = requests.post(
+            self.url_gh + "ais_remove_integration",
+            json=payload,
+            headers=CLOUD_WS_HEADER,
+            timeout=5,
+        )
+        return ws_resp
+
+    def ask_gh(self, question):
+        self.setCloudToken()
+        payload = {"question": question}
+        ws_resp = requests.get(
+            self.url_gh + "ask", headers=CLOUD_WS_HEADER, params=payload, timeout=5
         )
         return ws_resp
 
