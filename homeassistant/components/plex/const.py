@@ -12,6 +12,7 @@ DISPATCHERS = "dispatchers"
 PLATFORMS = ["media_player", "sensor"]
 REFRESH_LISTENERS = "refresh_listeners"
 SERVERS = "servers"
+WEBSOCKETS = "websockets"
 
 PLEX_CONFIG_FILE = "plex.conf"
 PLEX_MEDIA_PLAYER_OPTIONS = "plex_mp_options"

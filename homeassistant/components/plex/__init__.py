@@ -33,6 +33,7 @@ from .const import (
     PLEX_SERVER_CONFIG,
     REFRESH_LISTENERS,
     SERVERS,
+    WEBSOCKETS,
 )
 from .server import PlexServer
 from .websockets import websocket_handler
@@ -67,7 +68,8 @@ _LOGGER = logging.getLogger(__package__)
 def setup(hass, config):
     """Set up the Plex component."""
     hass.data.setdefault(
-        PLEX_DOMAIN, {SERVERS: {}, REFRESH_LISTENERS: {}, DISPATCHERS: {}}
+        PLEX_DOMAIN,
+        {SERVERS: {}, REFRESH_LISTENERS: {}, DISPATCHERS: {}, WEBSOCKETS: {}},
     )
 
     plex_config = config.get(PLEX_DOMAIN, {})
@@ -143,12 +145,13 @@ async def async_setup_entry(hass, entry):
 
     entry.add_update_listener(async_options_updated)
 
-    asyncio.run_coroutine_threadsafe(
+    future = asyncio.run_coroutine_threadsafe(
         websocket_handler(
             hass, plex_server.machine_identifier, plex_server.websocket_url
         ),
         hass.loop,
     )
+    hass.data[PLEX_DOMAIN][WEBSOCKETS][server_id] = future
 
     return True
 
@@ -156,6 +159,9 @@ async def async_setup_entry(hass, entry):
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     server_id = entry.data[CONF_SERVER_IDENTIFIER]
+
+    future = hass.data[PLEX_DOMAIN][WEBSOCKETS].pop(server_id)
+    future.cancel()
 
     cancel = hass.data[PLEX_DOMAIN][REFRESH_LISTENERS].pop(server_id)
     cancel()
