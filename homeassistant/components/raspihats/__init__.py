@@ -122,8 +122,7 @@ class I2CHatsManager(threading.Thread):
             if i2c_hat is None:
                 # This is a Pi module and can't install that in CI without
                 # breaking the build.
-                # pylint: disable=import-outside-toplevel
-                # pylint: disable=import-error,no-name-in-module
+                # pylint: disable=import-outside-toplevel,import-error
                 import raspihats.i2c_hats as module
 
                 constructor = getattr(module, board)
@@ -143,8 +142,7 @@ class I2CHatsManager(threading.Thread):
         """Keep alive for I2C-HATs."""
         # This is a Pi module and can't install that in CI without
         # breaking the build.
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=import-error,no-name-in-module
+        # pylint: disable=import-outside-toplevel,import-error
         from raspihats.i2c_hats import ResponseException
 
         _LOGGER.info(log_message(self, "starting"))
@@ -207,8 +205,7 @@ class I2CHatsManager(threading.Thread):
         """Read a value from a I2C-HAT digital input."""
         # This is a Pi module and can't install that in CI without
         # breaking the build.
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=import-error,no-name-in-module
+        # pylint: disable=import-outside-toplevel,import-error
         from raspihats.i2c_hats import ResponseException
 
         with self._lock:
@@ -223,8 +220,7 @@ class I2CHatsManager(threading.Thread):
         """Write a value to a I2C-HAT digital output."""
         # This is a Pi module and can't install that in CI without
         # breaking the build.
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=import-error,no-name-in-module
+        # pylint: disable=import-outside-toplevel,import-error
         from raspihats.i2c_hats import ResponseException
 
         with self._lock:
@@ -238,8 +234,7 @@ class I2CHatsManager(threading.Thread):
         """Read a value from a I2C-HAT digital output."""
         # This is a Pi module and can't install that in CI without
         # breaking the build.
-        # pylint: disable=import-outside-toplevel
-        # pylint: disable=import-error,no-name-in-module
+        # pylint: disable=import-outside-toplevel,import-error
         from raspihats.i2c_hats import ResponseException
 
         with self._lock:
