@@ -61,7 +61,7 @@
             "remote_button_quintuple_press": "bouton \" {subtype} \" quintuple clic",
             "remote_button_short_press": "bouton \" {subtype} \" enfonc\u00e9",
             "remote_button_short_release": "Bouton \" {subtype} \" est rel\u00e2ch\u00e9",
-            "remote_button_triple_press": "Bouton\"{sous-type}\" \u00e0 trois clics"
+            "remote_button_triple_press": "Bouton\"{subtype}\" \u00e0 trois clics"
         }
     }
 }
