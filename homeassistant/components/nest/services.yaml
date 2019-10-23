@@ -1,16 +1,37 @@
-set_mode:
-  description: 'Set the home/away mode for a Nest structure. Set to away mode will
-    also set Estimated Arrival Time if provided. Set ETA will cause the thermostat
-    to begin warming or cooling the home before the user arrives. After ETA set other
-    Automation can read ETA sensor as a signal to prepare the home for the user''s
-    arrival.
+# Describes the format for available Nest services
 
-    '
+set_away_mode:
+  description: Set the away mode for a Nest structure.
   fields:
-    eta: {description: Optional Estimated Arrival Time from now., example: '0:10'}
-    eta_window: {description: Optional ETA window. Default is 1 minute., example: '0:5'}
-    home_mode: {description: home or away, example: home}
-    structure: {description: Optional structure name. Default set all structures managed
-        by Home Assistant., example: My Home}
-    trip_id: {description: Optional identity of a trip. Using the same trip_ID will
-        update the estimation., example: trip_back_home}
+    away_mode:
+      description: New mode to set. Valid modes are "away" or "home".
+      example: "away"
+    structure:
+      description: Name(s) of structure(s) to change. Defaults to all structures if not specified.
+      example: "Apartment"
+
+set_eta:
+  description: Set or update the estimated time of arrival window for a Nest structure.
+  fields:
+    eta:
+      description: Estimated time of arrival from now.
+      example: "00:10:30"
+    eta_window:
+      description: Estimated time of arrival window. Default is 1 minute.
+      example: "00:05"
+    trip_id:
+      description: Unique ID for the trip. Default is auto-generated using a timestamp.
+      example: "Leave Work"
+    structure:
+      description: Name(s) of structure(s) to change. Defaults to all structures if not specified.
+      example: "Apartment"
+
+cancel_eta:
+  description: Cancel an existing estimated time of arrival window for a Nest structure.
+  fields:
+    trip_id:
+      description: Unique ID for the trip.
+      example: "Leave Work"
+    structure:
+      description: Name(s) of structure(s) to change. Defaults to all structures if not specified.
+      example: "Apartment"
