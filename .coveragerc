@@ -126,7 +126,9 @@ omit =
     homeassistant/components/comfoconnect/*
     homeassistant/components/concord232/alarm_control_panel.py
     homeassistant/components/concord232/binary_sensor.py
+    homeassistant/components/coolmaster/__init__.py
     homeassistant/components/coolmaster/climate.py
+    homeassistant/components/coolmaster/const.py
     homeassistant/components/cppm_tracker/device_tracker.py
     homeassistant/components/cpuspeed/sensor.py
     homeassistant/components/crimereports/sensor.py
