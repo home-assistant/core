@@ -5,22 +5,17 @@ import voluptuous as vol
 
 from homeassistant import core, config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
-import homeassistant.helpers.config_validation as cv
 
 from .const import AVAILABLE_MODES, CONF_SUPPORTED_MODES, DEFAULT_PORT, DOMAIN
 
 MODES_SCHEMA = {vol.Required(mode, default=True): bool for mode in AVAILABLE_MODES}
-HOST_SCHEMA = {
-    vol.Required(CONF_HOST): str,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-}
 
-DATA_SCHEMA = vol.Schema({**HOST_SCHEMA, **MODES_SCHEMA})
+DATA_SCHEMA = vol.Schema({**{vol.Required(CONF_HOST): str}, **MODES_SCHEMA})
 
 
-async def validate_connection(hass: core.HomeAssistant, host, port):
+async def validate_connection(hass: core.HomeAssistant, host):
     """Validate that we can connect to the Coolmaster instance."""
-    cool = CoolMasterNet(host, port=port)
+    cool = CoolMasterNet(host, port=DEFAULT_PORT)
     devices = await hass.async_add_executor_job(cool.devices)
     return len(devices) > 0
 
@@ -39,7 +34,7 @@ class CoolmasterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title=data[CONF_HOST],
             data={
                 CONF_HOST: data[CONF_HOST],
-                CONF_PORT: data[CONF_PORT],
+                CONF_PORT: DEFAULT_PORT,
                 CONF_SUPPORTED_MODES: supported_modes,
             },
         )
@@ -52,10 +47,9 @@ class CoolmasterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         host = user_input[CONF_HOST]
-        port = user_input[CONF_PORT]
 
         try:
-            result = await validate_connection(self.hass, host, port)
+            result = await validate_connection(self.hass, host)
             if not result:
                 errors["base"] = "no_units"
         except (ConnectionRefusedError, TimeoutError):

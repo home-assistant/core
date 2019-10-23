@@ -10,7 +10,7 @@ from tests.common import mock_coro
 
 
 def _flow_data():
-    options = {"host": "1.1.1.1", "port": 10102}
+    options = {"host": "1.1.1.1"}
     for mode in AVAILABLE_MODES:
         options[mode] = True
     return options

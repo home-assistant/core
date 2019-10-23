@@ -6,7 +6,6 @@
         "title": "Setup your CoolMasterNet connection details.",
         "data": {
           "host": "Host",
-          "port": "Port",
           "off": "Can be turned off",
           "heat": "Support heat mode",
           "cool": "Support cool mode",
@@ -17,7 +16,7 @@
       }
     },
     "error": {
-      "connection_error": "Failed to connect to CoolMasterNet instance. Please check your host and port.",
+      "connection_error": "Failed to connect to CoolMasterNet instance. Please check your host.",
       "no_units": "Could not find any HVAC units in CoolMasterNet host."
     }
   }
