@@ -62,7 +62,7 @@ class StarlineAccount:
             LOGGER.error("Error updating SLNet token: %s", err)
             pass
 
-    def _async_update(self):
+    def _update_data(self):
         """Update StarLine data."""
         self._check_slnet_token()
         self._api.update()
@@ -74,7 +74,7 @@ class StarlineAccount:
 
     async def update(self, unused=None):
         """Update StarLine data."""
-        await self._hass.async_add_job(self._async_update)
+        await self._hass.async_add_job(self._update_data)
 
     def set_update_interval(self, interval: int) -> None:
         """Set StarLine API update interval."""
