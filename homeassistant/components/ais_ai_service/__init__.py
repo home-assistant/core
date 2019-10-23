@@ -111,6 +111,7 @@ INTENT_CLIMATE_SET_ALL_ON = "AisClimateSetAllOn"
 INTENT_CLIMATE_SET_ALL_OFF = "AisClimateSetAllOff"
 INTENT_SPELL_STATUS = "AisSpellStatusInfo"
 INTENT_RUN_AUTOMATION = "AisRunAutomation"
+INTENT_ASK_GOOGLE = "AisAskGoogle"
 
 REGEX_TYPE = type(re.compile(""))
 
@@ -2466,6 +2467,7 @@ async def async_setup(hass, config):
     hass.helpers.intent.async_register(AisPrev())
     hass.helpers.intent.async_register(AisSceneActive())
     hass.helpers.intent.async_register(AisRunAutomation())
+    hass.helpers.intent.async_register(AisAskGoogle())
     hass.helpers.intent.async_register(AisSayIt())
     hass.helpers.intent.async_register(SpellStatusIntent())
 
@@ -2642,6 +2644,7 @@ async def async_setup(hass, config):
     async_register(
         hass, INTENT_RUN_AUTOMATION, ["Uruchom {item}", "Automatyzacja {item}"]
     )
+    async_register(hass, INTENT_ASK_GOOGLE, ["Google {item}"])
     async_register(
         hass,
         INTENT_NEXT,
@@ -4328,6 +4331,27 @@ class AisRunAutomation(intent.IntentHandler):
                 success = True
             else:
                 message = name + " nie można uruchomić"
+        return message, success
+
+
+class AisAskGoogle(intent.IntentHandler):
+    """Handle AisAskGoogle intents."""
+
+    intent_type = INTENT_ASK_GOOGLE
+    slot_schema = {"item": cv.string}
+
+    @asyncio.coroutine
+    def async_handle(self, intent_obj):
+        """Handle the intent."""
+        slots = self.async_validate_slots(intent_obj.slots)
+        question = slots["item"]["value"]
+        try:
+            ws_ret = aisCloudWS.ask_gh(question)
+            message = ws_ret.text.split("---")[0]
+            success = True
+        except:
+            message = "Nie udało się zapytać"
+            success = False
         return message, success
 
 
