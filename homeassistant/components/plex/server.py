@@ -71,7 +71,7 @@ class PlexServer:
         self._hass.data[PLEX_DOMAIN][DISPATCHERS].setdefault(server_id, [])
         self._hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
-    def connect(self):
+    def connect(self, validating=False):
         """Connect to a Plex server directly, obtaining direct URL if necessary."""
 
         def _connect_with_token():
@@ -106,7 +106,8 @@ class PlexServer:
         else:
             _connect_with_token()
 
-        self.setup_websocket_callback()
+        if not validating:
+            self.setup_websocket_callback()
 
     def refresh_entity(self, machine_identifier, device, session):
         """Forward refresh dispatch to media_player."""
