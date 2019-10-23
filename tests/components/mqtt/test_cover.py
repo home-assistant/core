@@ -547,7 +547,7 @@ async def test_no_command_topic(hass, mqtt_mock):
 
 
 async def test_no_payload_stop(hass, mqtt_mock):
-    """Test with no command topic."""
+    """Test with no stop payload."""
     assert await async_setup_component(
         hass,
         cover.DOMAIN,
