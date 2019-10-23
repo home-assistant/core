@@ -3,7 +3,7 @@
   "name": "Raspihats",
   "documentation": "https://www.home-assistant.io/integrations/raspihats",
   "requirements": [
-    "raspihats==2.3.0",
+    "raspihats==2.2.3",
     "smbus-cffi==0.5.1"
   ],
   "dependencies": [],

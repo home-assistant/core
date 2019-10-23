@@ -3,9 +3,6 @@ import logging
 import threading
 import time
 
-from raspihats import i2c_hats  # pylint: disable=import-error
-from raspihats.i2c_hats import ResponseException  # pylint: disable=import-error
-
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 
 _LOGGER = logging.getLogger(__name__)
@@ -123,7 +120,13 @@ class I2CHatsManager(threading.Thread):
         with self._lock:
             i2c_hat = self._i2c_hats.get(address)
             if i2c_hat is None:
-                constructor = getattr(i2c_hats, board)
+                # This is a Pi module and can't install that in CI without
+                # breaking the build.
+                # pylint: disable=import-outside-toplevel
+                # pylint: disable=import-error,no-name-in-module
+                import raspihats.i2c_hats as module
+
+                constructor = getattr(module, board)
                 i2c_hat = constructor(address)
                 setattr(i2c_hat, self._CALLBACKS, {})
 
@@ -138,6 +141,12 @@ class I2CHatsManager(threading.Thread):
 
     def run(self):
         """Keep alive for I2C-HATs."""
+        # This is a Pi module and can't install that in CI without
+        # breaking the build.
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=import-error,no-name-in-module
+        from raspihats.i2c_hats import ResponseException
+
         _LOGGER.info(log_message(self, "starting"))
 
         while self._run:
@@ -196,6 +205,12 @@ class I2CHatsManager(threading.Thread):
 
     def read_di(self, address, channel):
         """Read a value from a I2C-HAT digital input."""
+        # This is a Pi module and can't install that in CI without
+        # breaking the build.
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=import-error,no-name-in-module
+        from raspihats.i2c_hats import ResponseException
+
         with self._lock:
             i2c_hat = self._i2c_hats[address]
             try:
@@ -206,6 +221,12 @@ class I2CHatsManager(threading.Thread):
 
     def write_dq(self, address, channel, value):
         """Write a value to a I2C-HAT digital output."""
+        # This is a Pi module and can't install that in CI without
+        # breaking the build.
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=import-error,no-name-in-module
+        from raspihats.i2c_hats import ResponseException
+
         with self._lock:
             i2c_hat = self._i2c_hats[address]
             try:
@@ -215,6 +236,12 @@ class I2CHatsManager(threading.Thread):
 
     def read_dq(self, address, channel):
         """Read a value from a I2C-HAT digital output."""
+        # This is a Pi module and can't install that in CI without
+        # breaking the build.
+        # pylint: disable=import-outside-toplevel
+        # pylint: disable=import-error,no-name-in-module
+        from raspihats.i2c_hats import ResponseException
+
         with self._lock:
             i2c_hat = self._i2c_hats[address]
             try:
