@@ -12,7 +12,7 @@ from homeassistant.components.homematicip_cloud import (
     const as hmipc,
     hap as hmip_hap,
 )
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .helper import AUTH_TOKEN, HAPID, HAPPIN, HomeTemplate
 

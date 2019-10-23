@@ -5,11 +5,11 @@ from typing import Optional
 from homematicip.aio.device import AsyncDevice
 from homematicip.aio.group import AsyncGroup
 
-from homeassistant.components import homematicip_cloud
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import Entity
 
+from .const import DOMAIN as HMIPC_DOMAIN
 from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,13 +70,13 @@ class HomematicipGenericDevice(Entity):
             return {
                 "identifiers": {
                     # Serial numbers of Homematic IP device
-                    (homematicip_cloud.DOMAIN, self._device.id)
+                    (HMIPC_DOMAIN, self._device.id)
                 },
                 "name": self._device.label,
                 "manufacturer": self._device.oem,
                 "model": self._device.modelType,
                 "sw_version": self._device.firmwareVersion,
-                "via_device": (homematicip_cloud.DOMAIN, self._device.homeId),
+                "via_device": (HMIPC_DOMAIN, self._device.homeId),
             }
         return None
 
