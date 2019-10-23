@@ -1,5 +1,7 @@
 """Config flow for the Cert Expiry platform."""
+import logging
 import socket
+import ssl
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -8,6 +10,8 @@ from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN, DEFAULT_PORT, DEFAULT_NAME
 from .helper import get_cert
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -39,17 +43,28 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _test_connection(self, user_input=None):
         """Test connection to the server and try to get the certtificate."""
+        host = user_input[CONF_HOST]
         try:
             await self.hass.async_add_executor_job(
-                get_cert, user_input[CONF_HOST], user_input.get(CONF_PORT, DEFAULT_PORT)
+                get_cert, host, user_input.get(CONF_PORT, DEFAULT_PORT)
             )
             return True
         except socket.gaierror:
+            _LOGGER.error("Host cannot be resolved: %s", host)
             self._errors[CONF_HOST] = "resolve_failed"
         except socket.timeout:
+            _LOGGER.error("Timed out connecting to %s", host)
             self._errors[CONF_HOST] = "connection_timeout"
-        except OSError:
-            self._errors[CONF_HOST] = "certificate_fetch_failed"
+        except ssl.CertificateError as err:
+            if "doesn't match" in err.args[0]:
+                _LOGGER.error("Certificate does not match host: %s", host)
+                self._errors[CONF_HOST] = "wrong_host"
+            else:
+                _LOGGER.error("Certificate could not be validated: %s", host)
+                self._errors[CONF_HOST] = "certificate_error"
+        except ssl.SSLError:
+            _LOGGER.error("Certificate could not be validated: %s", host)
+            self._errors[CONF_HOST] = "certificate_error"
         return False
 
     async def async_step_user(self, user_input=None):
