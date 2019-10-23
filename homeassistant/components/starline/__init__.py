@@ -27,7 +27,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if not account.api.available:
         raise ConfigEntryNotReady
 
-    hass.data[DOMAIN] = account
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][config_entry.entry_id] = account
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
     for device in account.api.devices.values():
@@ -71,13 +73,13 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     for domain in PLATFORMS:
         await hass.config_entries.async_forward_entry_unload(config_entry, domain)
 
-    account: StarlineAccount = hass.data[DOMAIN]
+    account: StarlineAccount = hass.data[DOMAIN][config_entry.entry_id]
     account.unload()
     return True
 
 
 async def async_options_updated(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Triggered by config entry options updates."""
-    account: StarlineAccount = hass.data[DOMAIN]
+    account: StarlineAccount = hass.data[DOMAIN][config_entry.entry_id]
     scan_interval = config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     account.set_update_interval(scan_interval)

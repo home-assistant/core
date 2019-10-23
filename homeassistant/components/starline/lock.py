@@ -8,7 +8,7 @@ from .entity import StarlineEntity
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the StarLine lock."""
 
-    account: StarlineAccount = hass.data[DOMAIN]
+    account: StarlineAccount = hass.data[DOMAIN][entry.entry_id]
     entities = []
     for device in account.api.devices.values():
         if device.support_state:
