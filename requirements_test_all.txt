@@ -343,7 +343,7 @@ pillow==6.2.0
 plexapi==3.0.6
 
 # homeassistant.components.plex
-plexauth==0.0.4
+plexauth==0.0.5
 
 # homeassistant.components.mhz19
 # homeassistant.components.serial_pm

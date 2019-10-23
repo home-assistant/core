@@ -19,6 +19,7 @@ from homeassistant.util.json import load_json
 from .const import (  # pylint: disable=unused-import
     AUTH_CALLBACK_NAME,
     AUTH_CALLBACK_PATH,
+    CONF_CLIENT_IDENTIFIER,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
     CONF_USE_EPISODE_ART,
@@ -65,6 +66,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.available_servers = None
         self.plexauth = None
         self.token = None
+        self.client_id = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -116,6 +118,8 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         token = server_config.get(CONF_TOKEN)
 
         entry_config = {CONF_URL: url}
+        if self.client_id:
+            entry_config[CONF_CLIENT_IDENTIFIER] = self.client_id
         if token:
             entry_config[CONF_TOKEN] = token
         if url.startswith("https"):
@@ -216,6 +220,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_external_step_done(next_step_id="timed_out")
 
         self.token = token
+        self.client_id = self.plexauth.client_identifier
         return self.async_external_step_done(next_step_id="use_external_token")
 
     async def async_step_timed_out(self, user_input=None):
