@@ -15,10 +15,15 @@ from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_CACHE = "cache"
+
 CONF_CUSTOMIZE_ENTITIES = "customize"
 CONF_DEFAULT_STREAM_QUERY = "default_query"
+CONF_CACHE_DIR = "cache_dir"
 
 DEFAULT_STREAM_QUERY = "best"
+DEFAULT_CACHE_DIR = "media_cache"
+
 DOMAIN = "media_extractor"
 
 CONFIG_SCHEMA = vol.Schema(
@@ -29,6 +34,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_CUSTOMIZE_ENTITIES): vol.Schema(
                     {cv.entity_id: vol.Schema({cv.string: cv.string})}
                 ),
+                vol.Optional(CONF_CACHE_DIR, default=DEFAULT_CACHE_DIR): cv.string,
             }
         )
     },
@@ -123,8 +129,13 @@ class MediaExtractor:
         def stream_selector(query):
             """Find stream URL that matches query."""
             try:
+                file_format = "%(autonumber)s-%(title)s.%(ext)s"
                 ydl.params["format"] = query
-                requested_stream = ydl.process_ie_result(selected_media, download=False)
+                ydl.params["outtmpl"] = f"{self.cache_dir}/{file_format}"
+                ydl.params["restrictfilenames"] = True
+                requested_stream = ydl.process_ie_result(
+                    selected_media, download=self.call_data.get(ATTR_CACHE, False)
+                )
             except (ExtractorError, DownloadError):
                 _LOGGER.error("Could not extract stream for the query: %s", query)
                 raise MEQueryException()
