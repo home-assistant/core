@@ -92,6 +92,15 @@ class AlexaCapability:
         return None
 
     @staticmethod
+    def capability_proactively_reported():
+        """Return True if the capability is proactively reported.
+
+        Set properties_proactively_reported() for proactively reported properties.
+        Applicable to DoorbellEventSource.
+        """
+        return None
+
+    @staticmethod
     def capability_resources():
         """Applicable to ToggleController, RangeController, and ModeController interfaces."""
         return []
@@ -103,16 +112,20 @@ class AlexaCapability:
 
     def serialize_discovery(self):
         """Serialize according to the Discovery API."""
-        result = {
-            "type": "AlexaInterface",
-            "interface": self.name(),
-            "version": "3",
-            "properties": {
+        result = {"type": "AlexaInterface", "interface": self.name(), "version": "3"}
+
+        properties_supported = self.properties_supported()
+        if properties_supported:
+            result["properties"] = {
                 "supported": self.properties_supported(),
                 "proactivelyReported": self.properties_proactively_reported(),
                 "retrievable": self.properties_retrievable(),
-            },
-        }
+            }
+
+        # pylint: disable=assignment-from-none
+        proactively_reported = self.capability_proactively_reported()
+        if proactively_reported is not None:
+            result["proactivelyReported"] = proactively_reported
 
         # pylint: disable=assignment-from-none
         non_controllable = self.properties_non_controllable()
@@ -1050,3 +1063,18 @@ class AlexaChannelController(AlexaCapability):
     def name(self):
         """Return the Alexa API name of this interface."""
         return "Alexa.ChannelController"
+
+
+class AlexaDoorbellEventSource(AlexaCapability):
+    """Implements Alexa.DoorbellEventSource.
+
+    https://developer.amazon.com/docs/device-apis/alexa-doorbelleventsource.html
+    """
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.DoorbellEventSource"
+
+    def capability_proactively_reported(self):
+        """Return True for proactively reported capability."""
+        return True
