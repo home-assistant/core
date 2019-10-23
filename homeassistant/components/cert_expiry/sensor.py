@@ -130,23 +130,7 @@ class SSLCertificate(Entity):
             self._available = False
             self._valid = False
             return
-        except ssl.CertificateError as err:
-            if "doesn't match" in err.args[0]:
-                _LOGGER.error(
-                    "Certificate does not match hostname: %s", self.server_name
-                )
-            else:
-                _LOGGER.error(
-                    "Certificate could not be validated: %s [%s]", self.server_name, err
-                )
-            self._available = True
-            self._state = 0
-            self._valid = False
-            return
-        except ssl.SSLError as err:
-            _LOGGER.error(
-                "Certificate could not be validated: %s [%s]", self.server_name, err
-            )
+        except (ssl.CertificateError, ssl.SSLError):
             self._available = True
             self._state = 0
             self._valid = False
