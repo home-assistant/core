@@ -5,7 +5,7 @@ import os
 import threading
 from typing import Any, Callable, Optional
 
-import pygtfs
+import pygtfs as py_gtfs
 from sqlalchemy.sql import text
 import voluptuous as vol
 
@@ -357,11 +357,11 @@ def setup_platform(
 
     sqlite_file = f"{gtfs_root}.sqlite?check_same_thread=False"
     joined_path = os.path.join(gtfs_dir, sqlite_file)
-    gtfs = pygtfs.Schedule(joined_path)
+    gtfs = py_gtfs.Schedule(joined_path)
 
     # pylint: disable=no-member
     if not gtfs.feeds:
-        pygtfs.append_feed(gtfs, os.path.join(gtfs_dir, data))
+        py_gtfs.append_feed(gtfs, os.path.join(gtfs_dir, data))
 
     add_entities(
         [GTFSDepartureSensor(gtfs, name, origin, destination, offset, include_tomorrow)]
@@ -381,7 +381,7 @@ class GTFSDepartureSensor(Entity):
         include_tomorrow: bool,
     ) -> None:
         """Initialize the sensor."""
-        self._pygtfs = pygtfs
+        self._pygtfs = py_gtfs
         self.origin = origin
         self.destination = destination
         self._include_tomorrow = include_tomorrow
