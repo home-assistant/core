@@ -411,7 +411,7 @@ class YeelightGenericLight(Light):
         """Initialize the Yeelight light."""
         self.config = device.config
         self._device = device
-        self._unique_id = self._device.mac
+        self._unique_id = device.mac
 
         self._brightness = None
         self._color_temp = None
