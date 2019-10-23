@@ -3,7 +3,11 @@ from collections import defaultdict
 import logging
 
 import voluptuous as vol
-from teslajsonpy import Controller as teslaAPI, TeslaException
+from teslajsonpy import (
+    Controller as teslaAPI,
+    TeslaException,
+    __version__ as teslajsonpy_version,
+)
 
 
 from homeassistant.const import (
@@ -12,10 +16,11 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
+from .config_flow import configured_instances
 
 DOMAIN = "tesla"
 
@@ -55,22 +60,55 @@ TESLA_COMPONENTS = [
 def setup(hass, base_config):
     """Set up of Tesla component."""
     config = base_config.get(DOMAIN)
-
+    if not config:
+        return True
     email = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     update_interval = config.get(CONF_SCAN_INTERVAL)
-    if hass.data.get(DOMAIN) is None:
+    if email in configured_instances(hass):
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if email == entry.title:
+                hass.config_entries.async_update_entry(
+                    entry,
+                    data={
+                        CONF_USERNAME: email,
+                        CONF_PASSWORD: password,
+                        CONF_SCAN_INTERVAL: update_interval,
+                    },
+                )
+                break
+    else:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={
+                    CONF_USERNAME: email,
+                    CONF_PASSWORD: password,
+                    CONF_SCAN_INTERVAL: update_interval,
+                },
+            )
+        )
+    return True
+
+
+def setup_entry(hass, config_entry):
+    """Set up Tesla as config entry."""
+
+    _LOGGER.info("Loaded teslajsonpy==%s", teslajsonpy_version)
+    if DOMAIN not in hass.data:
+        config = config_entry.data
         try:
-            hass.data[DOMAIN] = {
-                "controller": teslaAPI(email, password, update_interval),
-                "devices": defaultdict(list),
-            }
+            controller = teslaAPI(
+                config[CONF_USERNAME], config[CONF_PASSWORD], config[CONF_SCAN_INTERVAL]
+            )
+            hass.data[DOMAIN] = {"controller": controller, "devices": defaultdict(list)}
             _LOGGER.debug("Connected to the Tesla API.")
         except TeslaException as ex:
             if ex.code == 401:
                 hass.components.persistent_notification.create(
                     "Error:<br />Please check username and password."
-                    "You will need to restart Home Assistant after fixing.",
+                    "Please remove and readd the Integration.",
                     title=NOTIFICATION_TITLE,
                     notification_id=NOTIFICATION_ID,
                 )
@@ -78,14 +116,16 @@ def setup(hass, base_config):
                 hass.components.persistent_notification.create(
                     "Error:<br />Can't communicate with Tesla API.<br />"
                     "Error code: {} Reason: {}"
-                    "You will need to restart Home Assistant after fixing."
+                    "Please remove and readd the Integration.",
                     "".format(ex.code, ex.message),
                     title=NOTIFICATION_TITLE,
                     notification_id=NOTIFICATION_ID,
                 )
-            _LOGGER.error("Unable to communicate with Tesla API: %s", ex.message)
+            _LOGGER.warning("Unable to communicate with Tesla API: %s", ex.message)
             return False
-
+        except BaseException as ex:
+            _LOGGER.warning("Unknown error: %s", ex)
+            return False
     all_devices = hass.data[DOMAIN]["controller"].list_vehicles()
 
     if not all_devices:
@@ -95,8 +135,28 @@ def setup(hass, base_config):
         hass.data[DOMAIN]["devices"][device.hass_type].append(device)
 
     for component in TESLA_COMPONENTS:
-        discovery.load_platform(hass, component, DOMAIN, {}, base_config)
+        hass.async_add_job(
+            hass.config_entries.async_forward_entry_setup(config_entry, component)
+        )
+    return True
 
+
+async def async_setup_entry(hass, config_entry):
+    """Set up Tesla as config entry."""
+    return await hass.async_add_executor_job(setup_entry, hass, config_entry)
+
+
+async def async_unload_entry(hass, entry) -> bool:
+    """Unload a config entry."""
+    for component in TESLA_COMPONENTS:
+        _LOGGER.debug("Attemping to unload %s", component)
+        if component == "device_tracker":
+            await hass.data[DOMAIN]["devices"]["device_tracker"].unload()
+        else:
+            await hass.config_entries.async_forward_entry_unload(entry, component)
+    username = entry.data["username"]
+    hass.data.pop(DOMAIN)
+    _LOGGER.debug("Unloaded entry for %s", username)
     return True
 
 
@@ -133,3 +193,14 @@ class TeslaDevice(Entity):
         if self.tesla_device.has_battery():
             attr[ATTR_BATTERY_LEVEL] = self.tesla_device.battery_level()
         return attr
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": {(DOMAIN, self.tesla_device.id())},
+            "name": self.tesla_device.car_name(),
+            "manufacturer": "Tesla",
+            "model": self.tesla_device.car_type,
+            "sw_version": self.tesla_device.car_version,
+        }
