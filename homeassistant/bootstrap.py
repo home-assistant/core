@@ -93,6 +93,17 @@ async def async_from_config_dict(
     stop = time()
     _LOGGER.info("Home Assistant initialized in %.2fs", stop - start)
 
+    if sys.version_info[:3] < (3, 7, 0):
+        msg = (
+            "Python 3.6 support is deprecated and will "
+            "be removed in the first release after December 15, 2019. Please "
+            "upgrade Python to 3.7.0 or higher."
+        )
+        _LOGGER.warning(msg)
+        hass.components.persistent_notification.async_create(
+            msg, "Python version", "python_version"
+        )
+
     return hass
 
 
@@ -249,7 +260,7 @@ def _get_domains(hass: core.HomeAssistant, config: Dict[str, Any]) -> Set[str]:
     domains = set(key.split(" ")[0] for key in config.keys() if key != core.DOMAIN)
 
     # Add config entry domains
-    domains.update(hass.config_entries.async_domains())  # type: ignore
+    domains.update(hass.config_entries.async_domains())
 
     # Make sure the Hass.io component is loaded
     if "HASSIO" in os.environ:

@@ -1,0 +1,10 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_closed": "{entity_name} \uc774(\uac00) \ub2eb\ud614\uc2b5\ub2c8\ub2e4",
+            "is_closing": "{entity_name} \uc774(\uac00) \ub2eb\ud799\ub2c8\ub2e4",
+            "is_open": "{entity_name} \uc774(\uac00) \uc5f4\ub838\uc2b5\ub2c8\ub2e4",
+            "is_opening": "{entity_name} \uc774(\uac00) \uc5f4\ub9bd\ub2c8\ub2e4"
+        }
+    }
+}

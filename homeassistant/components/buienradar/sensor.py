@@ -1,10 +1,23 @@
 """Support for Buienradar.nl weather service."""
-import asyncio
-from datetime import datetime, timedelta
 import logging
 
-import aiohttp
-import async_timeout
+from buienradar.constants import (
+    ATTRIBUTION,
+    CONDCODE,
+    CONDITION,
+    DETAILED,
+    EXACT,
+    EXACTNL,
+    FORECAST,
+    IMAGE,
+    MEASURED,
+    PRECIPITATION_FORECAST,
+    STATIONNAME,
+    TIMEFRAME,
+    VISIBILITY,
+    WINDGUST,
+    WINDSPEED,
+)
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -16,11 +29,14 @@ from homeassistant.const import (
     CONF_NAME,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
+
+
+from .const import DEFAULT_TIMEFRAME
+from .util import BrData
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -183,7 +199,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Create the buienradar sensor."""
-    from .weather import DEFAULT_TIMEFRAME
 
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
@@ -216,7 +231,6 @@ class BrSensor(Entity):
 
     def __init__(self, sensor_type, client_name, coordinates):
         """Initialize the sensor."""
-        from buienradar.constants import PRECIPITATION_FORECAST, CONDITION
 
         self.client_name = client_name
         self._name = SENSOR_TYPES[sensor_type][0]
@@ -247,23 +261,6 @@ class BrSensor(Entity):
     def load_data(self, data):
         """Load the sensor with relevant data."""
         # Find sensor
-        from buienradar.constants import (
-            ATTRIBUTION,
-            CONDITION,
-            CONDCODE,
-            DETAILED,
-            EXACT,
-            EXACTNL,
-            FORECAST,
-            IMAGE,
-            MEASURED,
-            PRECIPITATION_FORECAST,
-            STATIONNAME,
-            TIMEFRAME,
-            VISIBILITY,
-            WINDGUST,
-            WINDSPEED,
-        )
 
         # Check if we have a new measurement,
         # otherwise we do not have to update the sensor
@@ -421,7 +418,6 @@ class BrSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        from buienradar.constants import PRECIPITATION_FORECAST
 
         if self.type.startswith(PRECIPITATION_FORECAST):
             result = {ATTR_ATTRIBUTION: self._attribution}
@@ -455,208 +451,3 @@ class BrSensor(Entity):
     def force_update(self):
         """Return true for continuous sensors, false for discrete sensors."""
         return self._force_update
-
-
-class BrData:
-    """Get the latest data and updates the states."""
-
-    def __init__(self, hass, coordinates, timeframe, devices):
-        """Initialize the data object."""
-        self.devices = devices
-        self.data = {}
-        self.hass = hass
-        self.coordinates = coordinates
-        self.timeframe = timeframe
-
-    async def update_devices(self):
-        """Update all devices/sensors."""
-        if self.devices:
-            tasks = []
-            # Update all devices
-            for dev in self.devices:
-                if dev.load_data(self.data):
-                    tasks.append(dev.async_update_ha_state())
-
-            if tasks:
-                await asyncio.wait(tasks)
-
-    async def schedule_update(self, minute=1):
-        """Schedule an update after minute minutes."""
-        _LOGGER.debug("Scheduling next update in %s minutes.", minute)
-        nxt = dt_util.utcnow() + timedelta(minutes=minute)
-        async_track_point_in_utc_time(self.hass, self.async_update, nxt)
-
-    async def get_data(self, url):
-        """Load data from specified url."""
-        from buienradar.constants import CONTENT, MESSAGE, STATUS_CODE, SUCCESS
-
-        _LOGGER.debug("Calling url: %s...", url)
-        result = {SUCCESS: False, MESSAGE: None}
-        resp = None
-        try:
-            websession = async_get_clientsession(self.hass)
-            with async_timeout.timeout(10):
-                resp = await websession.get(url)
-
-                result[STATUS_CODE] = resp.status
-                result[CONTENT] = await resp.text()
-                if resp.status == 200:
-                    result[SUCCESS] = True
-                else:
-                    result[MESSAGE] = "Got http statuscode: %d" % (resp.status)
-
-                return result
-        except (asyncio.TimeoutError, aiohttp.ClientError) as err:
-            result[MESSAGE] = "%s" % err
-            return result
-        finally:
-            if resp is not None:
-                await resp.release()
-
-    async def async_update(self, *_):
-        """Update the data from buienradar."""
-        from buienradar.constants import CONTENT, DATA, MESSAGE, STATUS_CODE, SUCCESS
-        from buienradar.buienradar import parse_data
-        from buienradar.urls import JSON_FEED_URL, json_precipitation_forecast_url
-
-        content = await self.get_data(JSON_FEED_URL)
-
-        if content.get(SUCCESS) is not True:
-            # unable to get the data
-            _LOGGER.warning(
-                "Unable to retrieve json data from Buienradar."
-                "(Msg: %s, status: %s,)",
-                content.get(MESSAGE),
-                content.get(STATUS_CODE),
-            )
-            # schedule new call
-            await self.schedule_update(SCHEDULE_NOK)
-            return
-
-        # rounding coordinates prevents unnecessary redirects/calls
-        lat = self.coordinates[CONF_LATITUDE]
-        lon = self.coordinates[CONF_LONGITUDE]
-        rainurl = json_precipitation_forecast_url(lat, lon)
-        raincontent = await self.get_data(rainurl)
-
-        if raincontent.get(SUCCESS) is not True:
-            # unable to get the data
-            _LOGGER.warning(
-                "Unable to retrieve raindata from Buienradar." "(Msg: %s, status: %s,)",
-                raincontent.get(MESSAGE),
-                raincontent.get(STATUS_CODE),
-            )
-            # schedule new call
-            await self.schedule_update(SCHEDULE_NOK)
-            return
-
-        result = parse_data(
-            content.get(CONTENT),
-            raincontent.get(CONTENT),
-            self.coordinates[CONF_LATITUDE],
-            self.coordinates[CONF_LONGITUDE],
-            self.timeframe,
-            False,
-        )
-
-        _LOGGER.debug("Buienradar parsed data: %s", result)
-        if result.get(SUCCESS) is not True:
-            if int(datetime.now().strftime("%H")) > 0:
-                _LOGGER.warning(
-                    "Unable to parse data from Buienradar." "(Msg: %s)",
-                    result.get(MESSAGE),
-                )
-            await self.schedule_update(SCHEDULE_NOK)
-            return
-
-        self.data = result.get(DATA)
-        await self.update_devices()
-        await self.schedule_update(SCHEDULE_OK)
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        from buienradar.constants import ATTRIBUTION
-
-        return self.data.get(ATTRIBUTION)
-
-    @property
-    def stationname(self):
-        """Return the name of the selected weatherstation."""
-        from buienradar.constants import STATIONNAME
-
-        return self.data.get(STATIONNAME)
-
-    @property
-    def condition(self):
-        """Return the condition."""
-        from buienradar.constants import CONDITION
-
-        return self.data.get(CONDITION)
-
-    @property
-    def temperature(self):
-        """Return the temperature, or None."""
-        from buienradar.constants import TEMPERATURE
-
-        try:
-            return float(self.data.get(TEMPERATURE))
-        except (ValueError, TypeError):
-            return None
-
-    @property
-    def pressure(self):
-        """Return the pressure, or None."""
-        from buienradar.constants import PRESSURE
-
-        try:
-            return float(self.data.get(PRESSURE))
-        except (ValueError, TypeError):
-            return None
-
-    @property
-    def humidity(self):
-        """Return the humidity, or None."""
-        from buienradar.constants import HUMIDITY
-
-        try:
-            return int(self.data.get(HUMIDITY))
-        except (ValueError, TypeError):
-            return None
-
-    @property
-    def visibility(self):
-        """Return the visibility, or None."""
-        from buienradar.constants import VISIBILITY
-
-        try:
-            return int(self.data.get(VISIBILITY))
-        except (ValueError, TypeError):
-            return None
-
-    @property
-    def wind_speed(self):
-        """Return the windspeed, or None."""
-        from buienradar.constants import WINDSPEED
-
-        try:
-            return float(self.data.get(WINDSPEED))
-        except (ValueError, TypeError):
-            return None
-
-    @property
-    def wind_bearing(self):
-        """Return the wind bearing, or None."""
-        from buienradar.constants import WINDAZIMUTH
-
-        try:
-            return int(self.data.get(WINDAZIMUTH))
-        except (ValueError, TypeError):
-            return None
-
-    @property
-    def forecast(self):
-        """Return the forecast data."""
-        from buienradar.constants import FORECAST
-
-        return self.data.get(FORECAST)

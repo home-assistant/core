@@ -42,7 +42,7 @@ REQUIRES = [
     "jinja2>=2.10.1",
     "PyJWT==1.7.1",
     # PyJWT has loose dependency. We want the latest one.
-    "cryptography==2.7",
+    "cryptography==2.8",
     "pip>=8.0.3",
     "python-slugify==3.0.6",
     "pytz>=2019.03",

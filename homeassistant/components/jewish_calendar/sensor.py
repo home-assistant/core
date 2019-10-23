@@ -44,6 +44,7 @@ class JewishCalendarSensor(Entity):
         self._havdalah_offset = data["havdalah_offset"]
         self._diaspora = data["diaspora"]
         self._state = None
+        self._holiday_attrs = {}
 
     @property
     def name(self):
@@ -103,6 +104,14 @@ class JewishCalendarSensor(Entity):
             hebrew=self._hebrew,
         )
 
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        if self._type == "holiday":
+            return self._holiday_attrs
+
+        return {}
+
     def get_state(self, after_shkia_date, after_tzais_date):
         """For a given type of sensor, return the state."""
         # Terminology note: by convention in py-libhdate library, "upcoming"
@@ -112,10 +121,10 @@ class JewishCalendarSensor(Entity):
         if self._type == "weekly_portion":
             # Compute the weekly portion based on the upcoming shabbat.
             return after_tzais_date.upcoming_shabbat.parasha
-        if self._type == "holiday_name":
+        if self._type == "holiday":
+            self._holiday_attrs["type"] = after_shkia_date.holiday_type.name
+            self._holiday_attrs["id"] = after_shkia_date.holiday_name
             return after_shkia_date.holiday_description
-        if self._type == "holiday_type":
-            return after_shkia_date.holiday_type
         if self._type == "omer_count":
             return after_shkia_date.omer_day
 

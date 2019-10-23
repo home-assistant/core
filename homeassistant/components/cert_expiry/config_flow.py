@@ -5,7 +5,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PORT, CONF_NAME, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.util import slugify
 
 from .const import DOMAIN, DEFAULT_PORT, DEFAULT_NAME
 from .helper import get_cert
@@ -62,11 +61,12 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._errors[CONF_HOST] = "host_port_exists"
             else:
                 if await self._test_connection(user_input):
-                    host = user_input[CONF_HOST]
-                    name = slugify(user_input.get(CONF_NAME, DEFAULT_NAME))
-                    prt = user_input.get(CONF_PORT, DEFAULT_PORT)
                     return self.async_create_entry(
-                        title=name, data={CONF_HOST: host, CONF_PORT: prt}
+                        title=user_input.get(CONF_NAME, DEFAULT_NAME),
+                        data={
+                            CONF_HOST: user_input[CONF_HOST],
+                            CONF_PORT: user_input.get(CONF_PORT, DEFAULT_PORT),
+                        },
                     )
         else:
             user_input = {}

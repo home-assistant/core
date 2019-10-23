@@ -19,5 +19,15 @@
             }
         },
         "title": "Passerelle OpenTherm"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "precision": "Pr\u00e9cision"
+                },
+                "description": "Options pour la passerelle OpenTherm"
+            }
+        }
     }
 }

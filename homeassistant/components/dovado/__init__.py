@@ -2,6 +2,7 @@
 import logging
 from datetime import timedelta
 
+import dovado
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -32,7 +33,6 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 def setup(hass, config):
     """Set up the Dovado component."""
-    import dovado
 
     hass.data[DOMAIN] = DovadoData(
         dovado.Dovado(

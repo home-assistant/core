@@ -2,16 +2,17 @@
 
 import logging
 
+from pycoolmasternet import CoolMasterNet
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_OFF,
-    HVAC_MODE_HEAT_COOL,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_OFF,
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
@@ -70,7 +71,6 @@ def _build_entity(device, supported_modes):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the CoolMasterNet climate platform."""
-    from pycoolmasternet import CoolMasterNet
 
     supported_modes = config.get(CONF_SUPPORTED_MODES)
     host = config[CONF_HOST]
