@@ -163,7 +163,15 @@ class SamsungTVDevice(MediaPlayerDevice):
                     self._state = STATE_ON
                     LOGGER.debug("Found working config: %s", self._config)
                     break
-                except Exception as err:
+                except (
+                    self._exceptions_class.UnhandledResponse,
+                    self._exceptions_class.AccessDenied,
+                ):
+                    # We got a response so it's working.
+                    self._state = STATE_ON
+                    LOGGER.debug("Found working config: %s", self._config)
+                    break
+                except OSError as err:
                     LOGGER.debug("Failing config: %s error was: %s", self._config, err)
                     self._config["method"] = None
 
