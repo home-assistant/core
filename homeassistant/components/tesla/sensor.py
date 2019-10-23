@@ -26,6 +26,21 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
         elif device.bin_type in [0xA, 0xB, 0x5]:
             devices.append(TeslaSensor(device, controller))
     add_entities(devices, True)
+    return True
+
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Set up the Tesla binary_sensors by config_entry."""
+    return await hass.async_add_executor_job(
+        setup_platform, hass, config_entry.data, async_add_devices, None
+    )
+
+
+async def async_unload_entry(hass, entry) -> bool:
+    """Unload a config entry."""
+    for device in hass.data[TESLA_DOMAIN]["devices"]["sensor"]:
+        await device.async_remove()
+    return True
 
 
 class TeslaSensor(TeslaDevice, Entity):
