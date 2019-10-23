@@ -1,5 +1,6 @@
 """StarLine base entity."""
 from homeassistant.helpers.entity import Entity
+from typing import Callable, Optional
 from .account import StarlineAccount, StarlineDevice
 
 
@@ -14,6 +15,7 @@ class StarlineEntity(Entity):
         self._device = device
         self._key = key
         self._name = name
+        self._unsubscribe_api: Optional[Callable] = None
 
     @property
     def should_poll(self):
@@ -47,4 +49,11 @@ class StarlineEntity(Entity):
     async def async_added_to_hass(self):
         """Call when entity about to be added to Home Assistant."""
         await super().async_added_to_hass()
-        self._account.api.add_update_listener(self.update)
+        self._unsubscribe_api = self._account.api.add_update_listener(self.update)
+
+    async def async_will_remove_from_hass(self):
+        """Call when entity is being removed from Home Assistant."""
+        await super().async_will_remove_from_hass()
+        if self._unsubscribe_api is not None:
+            self._unsubscribe_api()
+            self._unsubscribe_api = None
