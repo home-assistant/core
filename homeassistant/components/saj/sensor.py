@@ -49,8 +49,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_TYPE, default=INVERTER_TYPES[0]): vol.In(INVERTER_TYPES),
-        vol.Optional(CONF_USERNAME, default=""): cv.string,
-        vol.Optional(CONF_PASSWORD, default=""): cv.string,
+        vol.Inclusive(CONF_USERNAME, "credentials"): cv.string,
+        vol.Inclusive(CONF_PASSWORD, "credentials"): cv.string,
     }
 )
 
@@ -70,18 +70,25 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     for sensor in sensor_def:
         hass_sensors.append(SAJsensor(sensor))
 
-    if not wifi:
-        saj = pysaj.SAJ(config[CONF_HOST])
-    else:
-        if config[CONF_USERNAME] != "" and config[CONF_PASSWORD] != "":
-            saj = pysaj.SAJ(
-                config[CONF_HOST],
-                wifi=True,
-                username=config[CONF_USERNAME],
-                password=config[CONF_PASSWORD],
-            )
-        else:
-            saj = pysaj.SAJ(config[CONF_HOST], wifi=True)
+    kwargs = {}
+
+    if wifi:
+        kwargs["wifi"] = True
+        if config.get(CONF_USERNAME) and config.get(CONF_PASSWORD):
+            kwargs["username"] = config[CONF_USERNAME]
+            kwargs["password"] = config[CONF_PASSWORD]
+
+    try:
+        saj = pysaj.SAJ(config[CONF_HOST], **kwargs)
+        await saj.read(sensor_def)
+    except pysaj.UnauthorizedException:
+        _LOGGER.error("Username and/or password is wrong.")
+        return
+    except pysaj.UnexpectedResponseException as err:
+        _LOGGER.error(
+            "Error in SAJ, please check host/ip address. Original error: %s", err
+        )
+        return
 
     async_add_entities(hass_sensors)
 
