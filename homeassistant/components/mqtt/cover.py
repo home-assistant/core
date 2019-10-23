@@ -122,7 +122,9 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_PAYLOAD_CLOSE, default=DEFAULT_PAYLOAD_CLOSE): cv.string,
             vol.Optional(CONF_PAYLOAD_OPEN, default=DEFAULT_PAYLOAD_OPEN): cv.string,
-            vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): vol.Any(cv.string, None),
+            vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): vol.Any(
+                cv.string, None
+            ),
             vol.Optional(CONF_POSITION_CLOSED, default=DEFAULT_POSITION_CLOSED): int,
             vol.Optional(CONF_POSITION_OPEN, default=DEFAULT_POSITION_OPEN): int,
             vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
