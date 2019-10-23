@@ -120,7 +120,7 @@ class I2CHatsManager(threading.Thread):
         with self._lock:
             i2c_hat = self._i2c_hats.get(address)
             if i2c_hat is None:
-                # This is a Pi module and can't install that in CI without
+                # This is a Pi module and can't be installed in CI without
                 # breaking the build.
                 # pylint: disable=import-outside-toplevel,import-error
                 import raspihats.i2c_hats as module
