@@ -3,6 +3,7 @@ import asyncio
 import io
 import logging
 
+# Main imports
 import aiohttp
 import hangups
 from hangups import ChatMessageEvent, ChatMessageSegment, Client, get_auth, hangouts_pb2
