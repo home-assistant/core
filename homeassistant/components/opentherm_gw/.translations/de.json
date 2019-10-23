@@ -19,5 +19,15 @@
             }
         },
         "title": "OpenTherm Gateway"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "floor_temperature": "Boden-Temperatur",
+                    "precision": "Genauigkeit"
+                }
+            }
+        }
     }
 }
