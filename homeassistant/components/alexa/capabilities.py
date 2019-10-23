@@ -1041,7 +1041,7 @@ class AlexaToggleController(AlexaCapability):
         return capability_resources
 
 
-class AlexaChannelController(AlexaCapibility):
+class AlexaChannelController(AlexaCapability):
     """Implements Alexa.ChannelController.
 
     https://developer.amazon.com/docs/device-apis/alexa-channelcontroller.html

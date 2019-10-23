@@ -929,7 +929,6 @@ async def async_api_disarm(hass, config, directive, context):
     return response
 
 
-<<<<<<< HEAD
 @HANDLERS.register(("Alexa.ModeController", "SetMode"))
 async def async_api_set_mode(hass, config, directive, context):
     """Process a next request."""
