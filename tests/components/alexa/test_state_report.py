@@ -137,3 +137,34 @@ async def test_send_delete_message(hass, aioclient_mock):
         call_json["event"]["payload"]["endpoints"][0]["endpointId"]
         == "binary_sensor#test_contact"
     )
+
+
+async def test_doorbell_event(hass, aioclient_mock):
+    """Test doorbell press reports."""
+    aioclient_mock.post(TEST_URL, text="", status=202)
+
+    hass.states.async_set(
+        "binary_sensor.test_doorbell",
+        "off",
+        {"friendly_name": "Test Doorbell Sensor", "device_class": "occupancy"},
+    )
+
+    await state_report.async_enable_proactive_mode(hass, DEFAULT_CONFIG)
+
+    hass.states.async_set(
+        "binary_sensor.test_doorbell",
+        "on",
+        {"friendly_name": "Test Doorbell Sensor", "device_class": "occupancy"},
+    )
+
+    # To trigger event listener
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 1
+    call = aioclient_mock.mock_calls
+
+    call_json = call[0][2]
+    assert call_json["event"]["header"]["namespace"] == "Alexa.DoorbellEventSource"
+    assert call_json["event"]["header"]["name"] == "DoorbellPress"
+    assert call_json["event"]["payload"]["cause"]["type"] == "PHYSICAL_INTERACTION"
+    assert call_json["event"]["endpoint"]["endpointId"] == "binary_sensor#test_doorbell"

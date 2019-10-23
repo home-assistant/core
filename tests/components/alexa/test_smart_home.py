@@ -1196,6 +1196,28 @@ async def test_motion_sensor(hass):
     properties.assert_equal("Alexa.MotionSensor", "detectionState", "DETECTED")
 
 
+async def test_doorbell_sensor(hass):
+    """Test doorbell sensor discovery."""
+    device = (
+        "binary_sensor.test_doorbell",
+        "off",
+        {"friendly_name": "Test Doorbell Sensor", "device_class": "occupancy"},
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "binary_sensor#test_doorbell"
+    assert appliance["displayCategories"][0] == "DOORBELL"
+    assert appliance["friendlyName"] == "Test Doorbell Sensor"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance, "Alexa.DoorbellEventSource", "Alexa.EndpointHealth"
+    )
+
+    doorbell_capability = get_capability(capabilities, "Alexa.DoorbellEventSource")
+    assert doorbell_capability is not None
+    assert doorbell_capability["proactivelyReported"] is True
+
+
 async def test_unknown_sensor(hass):
     """Test sensors of unknown quantities are not discovered."""
     device = (

@@ -38,6 +38,7 @@ from .capabilities import (
     AlexaColorController,
     AlexaColorTemperatureController,
     AlexaContactSensor,
+    AlexaDoorbellEventSource,
     AlexaEndpointHealth,
     AlexaInputController,
     AlexaLockController,
@@ -84,7 +85,7 @@ class DisplayCategory:
     DOOR = "DOOR"
 
     # Indicates a doorbell.
-    DOOR_BELL = "DOORBELL"
+    DOORBELL = "DOORBELL"
 
     # Indicates a fan.
     FAN = "FAN"
@@ -499,6 +500,11 @@ class BinarySensorCapabilities(AlexaEntity):
             yield AlexaContactSensor(self.hass, self.entity)
         elif sensor_type is self.TYPE_MOTION:
             yield AlexaMotionSensor(self.hass, self.entity)
+
+        entity_conf = self.config.entity_config.get(self.entity.entity_id, {})
+        if CONF_DISPLAY_CATEGORIES in entity_conf:
+            if entity_conf[CONF_DISPLAY_CATEGORIES] == DisplayCategory.DOORBELL:
+                yield AlexaDoorbellEventSource(self.entity)
 
         yield AlexaEndpointHealth(self.hass, self.entity)
 
