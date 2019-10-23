@@ -24,6 +24,7 @@ SUN_EVENT_SUNRISE = "sunrise"
 
 # #### CONFIG ####
 CONF_ABOVE = "above"
+CONF_ACCEPT_UNAVAILABLE = "accept_unavailable"
 CONF_ACCESS_TOKEN = "access_token"
 CONF_ADDRESS = "address"
 CONF_AFTER = "after"

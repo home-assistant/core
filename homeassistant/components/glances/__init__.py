@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    CONF_ACCEPT_UNAVAILABLE,
 )
 from homeassistant.core import Config, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -47,6 +48,7 @@ GLANCES_SCHEMA = vol.All(
             vol.Optional(CONF_SSL, default=False): cv.boolean,
             vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
             vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.In([2, 3]),
+            vol.Optional(CONF_ACCEPT_UNAVAILABLE, default=False): cv.boolean,
         }
     )
 )
@@ -108,7 +110,10 @@ class GlancesData:
             await self.api.get_data()
             self.available = True
         except exceptions.GlancesApiError:
-            _LOGGER.error("Unable to fetch data from Glances")
+            if CONF_ACCEPT_UNAVAILABLE:
+                _LOGGER.debug("Unable to fetch data from Glances")
+            else:
+                _LOGGER.error("Unable to fetch data from Glances")
             self.available = False
         _LOGGER.debug("Glances data updated")
         async_dispatcher_send(self.hass, DATA_UPDATED)
