@@ -521,20 +521,28 @@ async def async_api_adjust_volume_step(hass, config, directive, context):
     """Process an adjust volume step request."""
     # media_player volume up/down service does not support specifying steps
     # each component handles it differently e.g. via config.
-    # For now we use the volumeSteps returned to figure out if we
-    # should step up/down
-    volume_step = directive.payload["volumeSteps"]
+    # This workaround will simply call the volume up/Volume down the amount of steps asked for
+    # When no steps are called in the request, Alexa sends a default of 10 steps which for most
+    # purposes is too high. The default  is set 1 in this case.
     entity = directive.entity
+    volume_int = int(directive.payload["volumeSteps"])
+    is_default = bool(directive.payload["volumeStepsDefault"])
+    default_steps = 1
+
+    if volume_int < 0:
+        service_volume = SERVICE_VOLUME_DOWN
+        if is_default:
+            volume_int = -default_steps
+    else:
+        service_volume = SERVICE_VOLUME_UP
+        if is_default:
+            volume_int = default_steps
 
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
-    if volume_step > 0:
+    for _ in range(0, abs(volume_int)):
         await hass.services.async_call(
-            entity.domain, SERVICE_VOLUME_UP, data, blocking=False, context=context
-        )
-    elif volume_step < 0:
-        await hass.services.async_call(
-            entity.domain, SERVICE_VOLUME_DOWN, data, blocking=False, context=context
+            entity.domain, service_volume, data, blocking=False, context=context
         )
 
     return directive.response()
@@ -546,7 +554,6 @@ async def async_api_set_mute(hass, config, directive, context):
     """Process a set mute request."""
     mute = bool(directive.payload["mute"])
     entity = directive.entity
-
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
         media_player.const.ATTR_MEDIA_VOLUME_MUTED: mute,
@@ -1082,3 +1089,82 @@ async def async_api_adjust_range(hass, config, directive, context):
     )
 
     return directive.response()
+
+
+@HANDLERS.register(("Alexa.ChannelController", "ChangeChannel"))
+async def async_api_changechannel(hass, config, directive, context):
+    """Process a change channel request."""
+    channel = "0"
+    entity = directive.entity
+    payload = directive.payload["channel"]
+    payload_name = "number"
+
+    if "number" in payload:
+        channel = payload["number"]
+        payload_name = "number"
+    elif "callSign" in payload:
+        channel = payload["callSign"]
+        payload_name = "callSign"
+    elif "affiliateCallSign" in payload:
+        channel = payload["affiliateCallSign"]
+        payload_name = "affiliateCallSign"
+    elif "uri" in payload:
+        channel = payload["uri"]
+        payload_name = "uri"
+
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id,
+        media_player.const.ATTR_MEDIA_CONTENT_ID: channel,
+        media_player.const.ATTR_MEDIA_CONTENT_TYPE: media_player.const.MEDIA_TYPE_CHANNEL,
+    }
+
+    await hass.services.async_call(
+        entity.domain,
+        media_player.const.SERVICE_PLAY_MEDIA,
+        data,
+        blocking=False,
+        context=context,
+    )
+
+    response = directive.response()
+
+    response.add_context_property(
+        {
+            "namespace": "Alexa.ChannelController",
+            "name": "channel",
+            "value": {payload_name: channel},
+        }
+    )
+
+    return response
+
+
+@HANDLERS.register(("Alexa.ChannelController", "SkipChannels"))
+async def async_api_skipchannel(hass, config, directive, context):
+    """Process a skipchannel request."""
+    channel = int(directive.payload["channelCount"])
+    entity = directive.entity
+
+    data = {ATTR_ENTITY_ID: entity.entity_id}
+
+    if channel < 0:
+        service_media = SERVICE_MEDIA_PREVIOUS_TRACK
+    else:
+        service_media = SERVICE_MEDIA_NEXT_TRACK
+
+    for _ in range(0, abs(channel)):
+        await hass.services.async_call(
+            entity.domain, service_media, data, blocking=False, context=context
+        )
+
+    response = directive.response()
+
+    response.add_context_property(
+        {
+            "namespace": "Alexa.ChannelController",
+            "name": "channel",
+            "value": {"number": ""},
+        }
+    )
+
+    return response
