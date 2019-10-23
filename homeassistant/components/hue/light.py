@@ -2,8 +2,8 @@
 import asyncio
 from datetime import timedelta
 import logging
-from time import monotonic
 import random
+from time import monotonic
 
 import aiohue
 import async_timeout
@@ -14,21 +14,22 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_FLASH,
-    ATTR_TRANSITION,
     ATTR_HS_COLOR,
+    ATTR_TRANSITION,
     EFFECT_COLORLOOP,
     EFFECT_RANDOM,
     FLASH_LONG,
     FLASH_SHORT,
     SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
     SUPPORT_FLASH,
-    SUPPORT_COLOR,
     SUPPORT_TRANSITION,
     Light,
 )
 from homeassistant.util import color
+
 from .helpers import remove_devices
 
 SCAN_INTERVAL = timedelta(seconds=5)
