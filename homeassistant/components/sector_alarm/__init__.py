@@ -1,9 +1,13 @@
 """The Sector Alarm Integration."""
 import logging
+
+import sectoralarmlib.sector as sectorlib
+
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_CODE, CONF_EMAIL
+
+from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_NAME, CONF_PASSWORD
 from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
 
 DOMAIN = "sector_alarm"
 
@@ -29,8 +33,6 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Initialitation for Sector Alarm."""
     try:
-        import sectoralarmlib.sector as sectorlib
-
         alarm = sectorlib.SectorAlarm(
             config[DOMAIN][CONF_EMAIL],
             config[DOMAIN][CONF_PASSWORD],

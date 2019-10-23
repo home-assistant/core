@@ -1,10 +1,11 @@
 """The Sector Alarm Integration."""
-import logging
 from datetime import timedelta
+import logging
+
 from homeassistant.components.sector_alarm import DOMAIN as SECTOR_DOMAIN
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-from homeassistant.const import TEMP_CELSIUS
 
 UPDATE_INTERVAL = timedelta(minutes=5)
 

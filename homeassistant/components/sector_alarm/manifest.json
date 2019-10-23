@@ -1,7 +1,7 @@
 {
   "domain": "sector_alarm",
   "name": "Sector Alarm",
-  "documentation": "https://www.home-assistant.io/components/sector_alarm",
+  "documentation": "https://www.home-assistant.io/integrations/sector_alarm",
   "dependencies": [],
   "codeowners": ["@peroyvind"],
   "requirements": ["sectoralarmlib==0.8"]
