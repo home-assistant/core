@@ -77,6 +77,40 @@ class TestRestSensorSetup(unittest.TestCase):
         assert 2 == mock_req.call_count
 
     @requests_mock.Mocker()
+    def test_setup_minimum_resource_template(self, mock_req):
+        """Test setup with minimum configuration (resource_template)."""
+        mock_req.get("http://localhost", status_code=200)
+        with assert_setup_component(1, "sensor"):
+            assert setup_component(
+                self.hass,
+                "sensor",
+                {
+                    "sensor": {
+                        "platform": "rest",
+                        "resource_template": "http://localhost",
+                    }
+                },
+            )
+        assert mock_req.call_count == 2
+
+    @requests_mock.Mocker()
+    def test_setup_duplicate_resource(self, mock_req):
+        """Test setup with duplicate resources."""
+        mock_req.get("http://localhost", status_code=200)
+        with assert_setup_component(0, "sensor"):
+            assert setup_component(
+                self.hass,
+                "sensor",
+                {
+                    "sensor": {
+                        "platform": "rest",
+                        "resource": "http://localhost",
+                        "resource_template": "http://localhost",
+                    }
+                },
+            )
+
+    @requests_mock.Mocker()
     def test_setup_get(self, mock_req):
         """Test setup with valid configuration."""
         mock_req.get("http://localhost", status_code=200)
@@ -152,6 +186,7 @@ class TestRestSensor(unittest.TestCase):
         self.value_template = template("{{ value_json.key }}")
         self.value_template.hass = self.hass
         self.force_update = False
+        self.resource_template = None
 
         self.sensor = rest.RestSensor(
             self.hass,
@@ -162,6 +197,7 @@ class TestRestSensor(unittest.TestCase):
             self.value_template,
             [],
             self.force_update,
+            self.resource_template,
         )
 
     def tearDown(self):
@@ -222,6 +258,7 @@ class TestRestSensor(unittest.TestCase):
             None,
             [],
             self.force_update,
+            self.resource_template,
         )
         self.sensor.update()
         assert "plain_state" == self.sensor.state
@@ -242,6 +279,7 @@ class TestRestSensor(unittest.TestCase):
             None,
             ["key"],
             self.force_update,
+            self.resource_template,
         )
         self.sensor.update()
         assert "some_json_value" == self.sensor.device_state_attributes["key"]
@@ -261,6 +299,7 @@ class TestRestSensor(unittest.TestCase):
             None,
             ["key"],
             self.force_update,
+            self.resource_template,
         )
         self.sensor.update()
         assert {} == self.sensor.device_state_attributes
@@ -282,6 +321,7 @@ class TestRestSensor(unittest.TestCase):
             None,
             ["key"],
             self.force_update,
+            self.resource_template,
         )
         self.sensor.update()
         assert {} == self.sensor.device_state_attributes
@@ -303,6 +343,7 @@ class TestRestSensor(unittest.TestCase):
             None,
             ["key"],
             self.force_update,
+            self.resource_template,
         )
         self.sensor.update()
         assert {} == self.sensor.device_state_attributes
@@ -326,6 +367,7 @@ class TestRestSensor(unittest.TestCase):
             self.value_template,
             ["key"],
             self.force_update,
+            self.resource_template,
         )
         self.sensor.update()
 
