@@ -14,6 +14,7 @@ from .common import (
     CONF_DISCOVERY,
     CONF_LIGHT,
     CONF_SWITCH,
+    CONF_STRIP,
     SmartDevices,
     async_discover_devices,
     get_static_devices,
@@ -34,6 +35,9 @@ CONFIG_SCHEMA = vol.Schema(
                     cv.ensure_list, [TPLINK_HOST_SCHEMA]
                 ),
                 vol.Optional(CONF_SWITCH, default=[]): vol.All(
+                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
+                ),
+                vol.Optional(CONF_STRIP, default=[]): vol.All(
                     cv.ensure_list, [TPLINK_HOST_SCHEMA]
                 ),
                 vol.Optional(CONF_DIMMER, default=[]): vol.All(
