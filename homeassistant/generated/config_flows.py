@@ -60,6 +60,7 @@ FLOWS = [
     "smartthings",
     "smhi",
     "solaredge",
+    "solarlog",
     "soma",
     "somfy",
     "sonos",
