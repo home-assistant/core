@@ -3,7 +3,10 @@ from asynctest import patch
 import pytest
 
 from homeassistant.components import device_tracker
-from homeassistant.components.device_tracker.const import ENTITY_ID_FORMAT
+from homeassistant.components.device_tracker.const import (
+    ENTITY_ID_FORMAT,
+    SOURCE_TYPE_BLUETOOTH,
+)
 from homeassistant.const import CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME
 from homeassistant.setup import async_setup_component
 
@@ -218,3 +221,29 @@ async def test_not_matching_custom_payload_for_home_and_not_home(
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state != STATE_HOME
     assert hass.states.get(entity_id).state != STATE_NOT_HOME
+
+
+async def test_matching_source_type(hass, mock_device_tracker_conf):
+    """Test setting source type."""
+    dev_id = "paulus"
+    entity_id = ENTITY_ID_FORMAT.format(dev_id)
+    topic = "/location/paulus"
+    source_type = SOURCE_TYPE_BLUETOOTH
+    location = "work"
+
+    hass.config.components = set(["mqtt", "zone"])
+    assert await async_setup_component(
+        hass,
+        device_tracker.DOMAIN,
+        {
+            device_tracker.DOMAIN: {
+                CONF_PLATFORM: "mqtt",
+                "devices": {dev_id: topic},
+                "source_type": source_type,
+            }
+        },
+    )
+
+    async_fire_mqtt_message(hass, topic, location)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).attributes["source_type"] == SOURCE_TYPE_BLUETOOTH
