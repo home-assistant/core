@@ -7,11 +7,10 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import comp_entity_ids
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .config_flow import configured_haps
 from .const import (
@@ -98,7 +97,7 @@ SCHEMA_SET_ACTIVE_CLIMATE_PROFILE = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the HomematicIP Cloud component."""
     hass.data[DOMAIN] = {}
 
@@ -252,7 +251,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up an access point from a config entry."""
     hap = HomematicipHAP(hass, entry)
     hapid = entry.data[HMIPC_HAPID].replace("-", "").upper()
