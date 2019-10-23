@@ -27,7 +27,8 @@ class TestNuHeat(unittest.TestCase):
     @patch("homeassistant.helpers.discovery.load_platform")
     def test_setup(self, mocked_nuheat, mocked_load):
         """Test setting up the NuHeat component."""
-        nuheat.nuheat = mocked_nuheat
+        with patch.object(nuheat, 'nuheat', mocked_nuheat):
+            …
         nuheat.setup(self.hass, self.config)
 
         mocked_nuheat.NuHeat.assert_called_with("warm", "feet")
