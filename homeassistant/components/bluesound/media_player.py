@@ -336,7 +336,6 @@ class BluesoundPlayer(MediaPlayerDevice):
         self, method, raise_timeout=False, allow_offline=False
     ):
         """Send command to the player."""
-
         if not self._is_online and not allow_offline:
             return
 
@@ -376,7 +375,6 @@ class BluesoundPlayer(MediaPlayerDevice):
 
     async def async_update_status(self):
         """Use the poll session to always get the status of the player."""
-
         response = None
 
         url = "Status"
@@ -408,22 +406,8 @@ class BluesoundPlayer(MediaPlayerDevice):
                     _LOGGER.debug("Group name change detected on device: %s", self.host)
                     self._group_name = group_name
 
-                    # rebuild ordered list of entity_id's that are in the group, master is first
-                    self._group_list = []
-                    if self._group_name is not None:
-                        group_list = group_name.split("+")
-                        for e in self._hass.data[DATA_BLUESOUND]:
-                            if (
-                                e._bluesound_device_name in group_list
-                                and e._is_master is True
-                            ):
-                                self._group_list.append(e._name)
-                        for e in self._hass.data[DATA_BLUESOUND]:
-                            if (
-                                e._bluesound_device_name in group_list
-                                and e._is_master is False
-                            ):
-                                self._group_list.append(e._name)
+                    # rebuild ordered list of entity_ids that are in the group, master is first
+                    self._group_list = self.rebuild_bluesound_group()
 
                     # the sleep is needed to make sure that the
                     # devices is synced
@@ -683,6 +667,11 @@ class BluesoundPlayer(MediaPlayerDevice):
         return self._name
 
     @property
+    def bluesound_device_name(self):
+        """Return the device name as returned by the device."""
+        return self._bluesound_device_name
+
+    @property
     def icon(self):
         """Return the icon of the device."""
         return self._icon
@@ -713,7 +702,6 @@ class BluesoundPlayer(MediaPlayerDevice):
     @property
     def source(self):
         """Name of the current input source."""
-
         if self._status is None or (self.is_grouped and not self.is_master):
             return None
 
@@ -864,6 +852,30 @@ class BluesoundPlayer(MediaPlayerDevice):
         attributes[ATTR_MASTER] = self._is_master
 
         return attributes
+
+    def rebuild_bluesound_group(self):
+        """Rebuild the list of entities in speaker group."""
+        if self._group_name is None:
+            return None
+
+        device_group = []
+        bluesound_group = []
+
+        device_group = self._group_name.split("+")
+        for entity in self._hass.data[DATA_BLUESOUND]:
+            if (
+                entity.bluesound_device_name in device_group
+                and entity.is_master is True
+            ):
+                bluesound_group.append(entity.name)
+        for entity in self._hass.data[DATA_BLUESOUND]:
+            if (
+                entity.bluesound_device_name in device_group
+                and entity.is_master is False
+            ):
+                bluesound_group.append(entity.name)
+
+        return bluesound_group
 
     async def async_unjoin(self):
         """Unjoin the player from a group."""
