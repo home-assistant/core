@@ -140,7 +140,7 @@ class I2CHatsManager(threading.Thread):
 
     def run(self):
         """Keep alive for I2C-HATs."""
-        # This is a Pi module and can't install that in CI without
+        # This is a Pi module and can't be installed in CI without
         # breaking the build.
         # pylint: disable=import-outside-toplevel,import-error
         from raspihats.i2c_hats import ResponseException
@@ -203,7 +203,7 @@ class I2CHatsManager(threading.Thread):
 
     def read_di(self, address, channel):
         """Read a value from a I2C-HAT digital input."""
-        # This is a Pi module and can't install that in CI without
+        # This is a Pi module and can't be installed in CI without
         # breaking the build.
         # pylint: disable=import-outside-toplevel,import-error
         from raspihats.i2c_hats import ResponseException
@@ -218,7 +218,7 @@ class I2CHatsManager(threading.Thread):
 
     def write_dq(self, address, channel, value):
         """Write a value to a I2C-HAT digital output."""
-        # This is a Pi module and can't install that in CI without
+        # This is a Pi module and can't be installed in CI without
         # breaking the build.
         # pylint: disable=import-outside-toplevel,import-error
         from raspihats.i2c_hats import ResponseException
@@ -232,7 +232,7 @@ class I2CHatsManager(threading.Thread):
 
     def read_dq(self, address, channel):
         """Read a value from a I2C-HAT digital output."""
-        # This is a Pi module and can't install that in CI without
+        # This is a Pi module and can't be installed in CI without
         # breaking the build.
         # pylint: disable=import-outside-toplevel,import-error
         from raspihats.i2c_hats import ResponseException
