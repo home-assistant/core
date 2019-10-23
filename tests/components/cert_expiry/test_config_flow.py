@@ -1,5 +1,6 @@
 """Tests for the Cert Expiry config flow."""
 import pytest
+import ssl
 import socket
 from unittest.mock import patch
 
@@ -131,7 +132,22 @@ async def test_abort_on_socket_failed(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {CONF_HOST: "connection_timeout"}
 
-    with patch("socket.create_connection", side_effect=OSError()):
+    with patch(
+        "socket.create_connection",
+        side_effect=ssl.CertificateError(f"{HOST} doesn't match somethingelse.com"),
+    ):
         result = await flow.async_step_user({CONF_HOST: HOST})
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {CONF_HOST: "certificate_fetch_failed"}
+        assert result["errors"] == {CONF_HOST: "wrong_host"}
+
+    with patch(
+        "socket.create_connection", side_effect=ssl.CertificateError("different error")
+    ):
+        result = await flow.async_step_user({CONF_HOST: HOST})
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {CONF_HOST: "certificate_error"}
+
+    with patch("socket.create_connection", side_effect=ssl.SSLError()):
+        result = await flow.async_step_user({CONF_HOST: HOST})
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {CONF_HOST: "certificate_error"}
