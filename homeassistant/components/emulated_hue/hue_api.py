@@ -9,6 +9,7 @@ from homeassistant.components import (
     cover,
     fan,
     light,
+    lock,
     media_player,
     scene,
     script,
@@ -24,13 +25,8 @@ from homeassistant.components.cover import (
     SUPPORT_SET_POSITION,
 )
 from homeassistant.components.lock import (
-    ATTR_CODE,
-    ATTR_CODE_FORMAT,
-    STATE_LOCKED,
-    STATE_UNLOCKED,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
-    SERVICE_OPEN,
 )
 from homeassistant.components.fan import (
     ATTR_SPEED,
