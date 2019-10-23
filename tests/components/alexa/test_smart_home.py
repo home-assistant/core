@@ -4,6 +4,19 @@ import pytest
 from homeassistant.core import Context, callback
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.components.alexa import smart_home, messages
+from homeassistant.components.media_player.const import (
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_STOP,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
+)
 from homeassistant.helpers import entityfilter
 
 from tests.common import async_mock_service
@@ -693,7 +706,17 @@ async def test_media_player(hass):
         "off",
         {
             "friendly_name": "Test media player",
-            "supported_features": 0x59BD,
+            "supported_features": SUPPORT_NEXT_TRACK
+            | SUPPORT_PAUSE
+            | SUPPORT_PLAY
+            | SUPPORT_PLAY_MEDIA
+            | SUPPORT_PREVIOUS_TRACK
+            | SUPPORT_SELECT_SOURCE
+            | SUPPORT_STOP
+            | SUPPORT_TURN_OFF
+            | SUPPORT_TURN_ON
+            | SUPPORT_VOLUME_MUTE
+            | SUPPORT_VOLUME_SET,
             "volume_level": 0.75,
         },
     )
@@ -711,6 +734,7 @@ async def test_media_player(hass):
         "Alexa.StepSpeaker",
         "Alexa.PlaybackController",
         "Alexa.EndpointHealth",
+        "Alexa.ChannelController",
     )
 
     await assert_power_controller_works(
@@ -824,7 +848,7 @@ async def test_media_player(hass):
         "media_player#test",
         "media_player.volume_up",
         hass,
-        payload={"volumeSteps": 20},
+        payload={"volumeSteps": 1, "volumeStepsDefault": False},
     )
 
     call, _ = await assert_request_calls_service(
@@ -833,7 +857,69 @@ async def test_media_player(hass):
         "media_player#test",
         "media_player.volume_down",
         hass,
-        payload={"volumeSteps": -20},
+        payload={"volumeSteps": -1, "volumeStepsDefault": False},
+    )
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.StepSpeaker",
+        "AdjustVolume",
+        "media_player#test",
+        "media_player.volume_up",
+        hass,
+        payload={"volumeSteps": 10, "volumeStepsDefault": True},
+    )
+    call, _ = await assert_request_calls_service(
+        "Alexa.ChannelController",
+        "ChangeChannel",
+        "media_player#test",
+        "media_player.play_media",
+        hass,
+        payload={"channel": {"number": 24}},
+    )
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.ChannelController",
+        "ChangeChannel",
+        "media_player#test",
+        "media_player.play_media",
+        hass,
+        payload={"channel": {"callSign": "ABC"}},
+    )
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.ChannelController",
+        "ChangeChannel",
+        "media_player#test",
+        "media_player.play_media",
+        hass,
+        payload={"channel": {"affiliateCallSign": "ABC"}},
+    )
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.ChannelController",
+        "ChangeChannel",
+        "media_player#test",
+        "media_player.play_media",
+        hass,
+        payload={"channel": {"uri": "ABC"}},
+    )
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.ChannelController",
+        "SkipChannels",
+        "media_player#test",
+        "media_player.media_next_track",
+        hass,
+        payload={"channelCount": 1},
+    )
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.ChannelController",
+        "SkipChannels",
+        "media_player#test",
+        "media_player.media_previous_track",
+        hass,
+        payload={"channelCount": -1},
     )
 
 
@@ -862,6 +948,7 @@ async def test_media_player_power(hass):
         "Alexa.StepSpeaker",
         "Alexa.PlaybackController",
         "Alexa.EndpointHealth",
+        "Alexa.ChannelController",
     )
 
     await assert_request_calls_service(
