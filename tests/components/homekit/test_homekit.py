@@ -69,7 +69,7 @@ async def test_setup_min(hass):
         assert await setup.async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     mock_homekit.assert_any_call(
-        hass, BRIDGE_NAME, DEFAULT_PORT, None, ANY, {}, DEFAULT_SAFE_MODE
+        hass, BRIDGE_NAME, DEFAULT_PORT, None, ANY, {}, DEFAULT_SAFE_MODE, None
     )
     assert mock_homekit().setup.called is True
 
@@ -98,7 +98,7 @@ async def test_setup_auto_start_disabled(hass):
         assert await setup.async_setup_component(hass, DOMAIN, config)
 
     mock_homekit.assert_any_call(
-        hass, "Test Name", 11111, "172.0.0.0", ANY, {}, DEFAULT_SAFE_MODE
+        hass, "Test Name", 11111, "172.0.0.0", ANY, {}, DEFAULT_SAFE_MODE, None
     )
     assert mock_homekit().setup.called is True
 
@@ -136,7 +136,11 @@ async def test_homekit_setup(hass, hk_driver):
     path = hass.config.path(HOMEKIT_FILE)
     assert isinstance(homekit.bridge, HomeBridge)
     mock_driver.assert_called_with(
-        hass, address=IP_ADDRESS, port=DEFAULT_PORT, persist_file=path
+        hass,
+        address=IP_ADDRESS,
+        port=DEFAULT_PORT,
+        persist_file=path,
+        advertised_address=None,
     )
     assert homekit.driver.safe_mode is False
 
@@ -153,7 +157,30 @@ async def test_homekit_setup_ip_address(hass, hk_driver):
     ) as mock_driver:
         await hass.async_add_job(homekit.setup)
     mock_driver.assert_called_with(
-        hass, address="172.0.0.0", port=DEFAULT_PORT, persist_file=ANY
+        hass,
+        address="172.0.0.0",
+        port=DEFAULT_PORT,
+        persist_file=ANY,
+        advertised_address=None,
+    )
+
+
+async def test_homekit_setup_advertise_ip(hass, hk_driver):
+    """Test setup with given IP address to advertise."""
+    homekit = HomeKit(
+        hass, BRIDGE_NAME, DEFAULT_PORT, "0.0.0.0", {}, {}, None, "192.168.1.100"
+    )
+
+    with patch(
+        PATH_HOMEKIT + ".accessories.HomeDriver", return_value=hk_driver
+    ) as mock_driver:
+        await hass.async_add_job(homekit.setup)
+    mock_driver.assert_called_with(
+        hass,
+        address="0.0.0.0",
+        port=DEFAULT_PORT,
+        persist_file=ANY,
+        advertised_address="192.168.1.100",
     )
 
 
