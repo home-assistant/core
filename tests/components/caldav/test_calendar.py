@@ -304,6 +304,7 @@ async def test_ongoing_event_different_tz(mock_now, hass, calendar):
         "location": "San Francisco",
     }
 
+
 @patch("homeassistant.util.dt.now", return_value=_local_datetime(19, 10))
 async def test_ongoing_floating_event_returned(mock_now, hass, calendar):
     """Test that floating events without timezones work."""
@@ -325,6 +326,7 @@ async def test_ongoing_floating_event_returned(mock_now, hass, calendar):
         "location": "Hamburg",
         "description": "What a day",
     }
+
 
 @patch("homeassistant.util.dt.now", return_value=_local_datetime(8, 30))
 async def test_ongoing_event_with_offset(mock_now, hass, calendar):
