@@ -335,6 +335,19 @@ class AisCloudWS:
         )
         return ws_resp
 
+    def ask_json_gh(self, question):
+        self.setCloudToken()
+        payload = {
+            "command": question,
+            "user": ais_global.get_sercure_android_id_dom(),
+            "broadcast": False,
+            "converse": True,
+        }
+        ws_resp = requests.post(
+            self.url_gh + "ask_json", json=payload, headers=CLOUD_WS_HEADER, timeout=5
+        )
+        return ws_resp
+
     def ask(self, question, org_answer):
         self.setCloudToken()
         payload = {"question": question, "org_answer": org_answer}

@@ -7,9 +7,11 @@ https://ai-speaker.com
 """
 import asyncio
 import logging
+import json
 from homeassistant.components import ais_cloud
 from .const import DOMAIN
 from .config_flow import configured_google_homes
+from homeassistant.components.ais_dom import ais_global
 
 aisCloud = ais_cloud.AisCloudWS()
 aisCloudWS = ais_cloud.AisCloudWS()
@@ -34,12 +36,48 @@ def async_setup(hass, config):
 def _process_ask_google_home(hass, call):
     try:
         question = call.data["question"]
-        ws_ret = aisCloudWS.ask_gh(question)
-        m = ws_ret.text.split("---")[0]
-        yield from hass.services.async_call("ais_ai_service", "say_it", {"text": m})
-    except:
+        ws_ret = aisCloudWS.ask_json_gh(question)
+        ret = ws_ret.json()
+        if ret["success"]:
+            if "response" in ret:
+                m = ret["response"].split("---")[0]
+                yield from hass.services.async_call(
+                    "ais_ai_service", "say_it", {"text": m}
+                )
+            elif "audio" in ret:
+                _audio_info = {
+                    "IMAGE_URL": "",
+                    "NAME": "Asystent",
+                    "MEDIA_SOURCE": ais_global.G_AN_BOOKMARK,
+                    "media_content_id": "https://powiedz.co" + ret["audio"],
+                }
+                _audio_info = json.dumps(_audio_info)
+                yield from hass.services.async_call(
+                    "media_player",
+                    "play_media",
+                    {
+                        "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
+                        "media_content_type": "ais_content_info",
+                        "media_content_id": _audio_info,
+                    },
+                )
+        else:
+            _LOGGER.error("Google answer: " + str(ws_ret))
+            try:
+                _LOGGER.error("Google answer: " + str(ws_ret.text))
+            except:
+                pass
+            yield from hass.services.async_call(
+                "ais_ai_service",
+                "say_it",
+                {
+                    "text": "Błąd podczas pobierania odpowiedzi z Google, sprawdz w logach"
+                },
+            )
+    except Exception as e:
+        _LOGGER.error("e " + str(e))
         yield from hass.services.async_call(
-            "ais_ai_service", "say_it", {"text": "Brak odpowiedzi z Google Home"}
+            "ais_ai_service", "say_it", {"text": "Brak odpowiedzi z Google"}
         )
         return
 

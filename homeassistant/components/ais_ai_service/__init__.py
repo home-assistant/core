@@ -4344,14 +4344,51 @@ class AisAskGoogle(intent.IntentHandler):
     def async_handle(self, intent_obj):
         """Handle the intent."""
         slots = self.async_validate_slots(intent_obj.slots)
+        hass = intent_obj.hass
         question = slots["item"]["value"]
+
         try:
-            ws_ret = aisCloudWS.ask_gh(question)
-            message = ws_ret.text.split("---")[0]
-            success = True
-        except:
-            message = "Nie udało się zapytać"
+            ws_ret = aisCloudWS.ask_json_gh(question)
+            ret = ws_ret.json()
+            if ret["success"]:
+                if "response" in ret:
+                    message = ret["response"].split("---")[0]
+                    success = True
+                elif "audio" in ret:
+                    message = ""
+                    success = True
+                    _audio_info = {
+                        "IMAGE_URL": "",
+                        "NAME": "Asystent",
+                        "MEDIA_SOURCE": ais_global.G_AN_BOOKMARK,
+                        "media_content_id": "https://powiedz.co" + ret["audio"],
+                    }
+                    _audio_info = json.dumps(_audio_info)
+                    yield from hass.services.async_call(
+                        "media_player",
+                        "play_media",
+                        {
+                            "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
+                            "media_content_type": "ais_content_info",
+                            "media_content_id": _audio_info,
+                        },
+                    )
+            else:
+                message = (
+                    "Błąd podczas pobierania odpowiedzi z Google, sprawdz w logach"
+                )
+                success = False
+                _LOGGER.error("Google answer: " + str(ws_ret))
+                try:
+                    _LOGGER.error("Google answer: " + str(ws_ret.text))
+                except:
+                    pass
+
+        except Exception as e:
+            _LOGGER.error("e " + str(e))
+            message = "Błąd podczas pobierania odpowiedzi z Google, sprawdz w logach"
             success = False
+
         return message, success
 
 
