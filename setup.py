@@ -44,7 +44,7 @@ REQUIRES = [
     # PyJWT has loose dependency. We want the latest one.
     "cryptography==2.8",
     "pip>=8.0.3",
-    "python-slugify==3.0.6",
+    "python-slugify==4.0.0",
     "pytz>=2019.03",
     "pyyaml==5.1.2",
     "requests==2.22.0",
