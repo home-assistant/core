@@ -233,7 +233,7 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     @property
     def device_class(self):
-        """ Set the device class to TV."""
+        """Set the device class to TV."""
         return DEVICE_CLASS_TV
 
     def turn_off(self):
