@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_URL,
     CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -151,6 +152,11 @@ async def async_setup_entry(hass, entry):
     ws = PlexWebsocket(plex_server, update_plex, session)
     hass.loop.create_task(ws.listen())
     hass.data[PLEX_DOMAIN][WEBSOCKETS][server_id] = ws
+
+    def close_websocket_session(_):
+        ws.close()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_websocket_session)
 
     return True
 
