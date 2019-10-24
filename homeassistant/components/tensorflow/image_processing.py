@@ -1,12 +1,13 @@
 """Support for performing TensorFlow classification on images."""
-import logging
 import io
-import numpy as np
+import logging
 import os
 import sys
-import voluptuous as vol
 
 from PIL import Image, ImageDraw
+import numpy as np
+import voluptuous as vol
+
 from homeassistant.components.image_processing import (
     CONF_CONFIDENCE,
     CONF_ENTITY_ID,
