@@ -93,7 +93,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
     async_track_time_interval(hass, broker.async_update, SCAN_INTERVAL)
 
-    for platform in ["climate", "water_heater", "sensor", "binary_sensor"]:
+    for platform in ["climate", "water_heater", "sensor", "binary_sensor", "switch"]:
         hass.async_create_task(async_load_platform(hass, platform, DOMAIN, {}, config))
 
     return True
