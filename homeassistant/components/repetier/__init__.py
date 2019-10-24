@@ -1,7 +1,8 @@
 """Support for Repetier-Server sensors."""
-import logging
 from datetime import timedelta
+import logging
 
+import pyrepetier
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -160,8 +161,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the Repetier Server component."""
-    import pyrepetier
-
     hass.data[REPETIER_API] = {}
 
     for repetier in config[DOMAIN]:

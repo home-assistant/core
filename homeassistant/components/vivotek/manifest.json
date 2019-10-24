@@ -6,5 +6,7 @@
     "libpyvivotek==0.2.2"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@HarlemSquirrel"
+  ]
 }

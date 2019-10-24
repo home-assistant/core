@@ -100,6 +100,7 @@ omit =
     homeassistant/components/bt_home_hub_5/device_tracker.py
     homeassistant/components/bt_smarthub/device_tracker.py
     homeassistant/components/buienradar/sensor.py
+    homeassistant/components/buienradar/util.py
     homeassistant/components/buienradar/weather.py
     homeassistant/components/caldav/calendar.py
     homeassistant/components/canary/alarm_control_panel.py
@@ -125,7 +126,9 @@ omit =
     homeassistant/components/comfoconnect/*
     homeassistant/components/concord232/alarm_control_panel.py
     homeassistant/components/concord232/binary_sensor.py
+    homeassistant/components/coolmaster/__init__.py
     homeassistant/components/coolmaster/climate.py
+    homeassistant/components/coolmaster/const.py
     homeassistant/components/cppm_tracker/device_tracker.py
     homeassistant/components/cpuspeed/sensor.py
     homeassistant/components/crimereports/sensor.py
@@ -253,6 +256,7 @@ omit =
     homeassistant/components/github/sensor.py
     homeassistant/components/gitlab_ci/sensor.py
     homeassistant/components/gitter/sensor.py
+    homeassistant/components/glances/__init__.py
     homeassistant/components/glances/sensor.py
     homeassistant/components/gntp/notify.py
     homeassistant/components/goalfeed/*
@@ -416,6 +420,7 @@ omit =
     homeassistant/components/mpchc/media_player.py
     homeassistant/components/mpd/media_player.py
     homeassistant/components/mqtt_room/sensor.py
+    homeassistant/components/msteams/notify.py
     homeassistant/components/mvglive/sensor.py
     homeassistant/components/mychevy/*
     homeassistant/components/mycroft/*
@@ -618,6 +623,7 @@ omit =
     homeassistant/components/solaredge/__init__.py
     homeassistant/components/solaredge/sensor.py
     homeassistant/components/solaredge_local/sensor.py
+    homeassistant/components/solarlog/*
     homeassistant/components/solax/sensor.py
     homeassistant/components/soma/cover.py
     homeassistant/components/soma/__init__.py
@@ -697,7 +703,6 @@ omit =
     homeassistant/components/tradfri/base_class.py
     homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/sensor.py
-    homeassistant/components/transmission/__init__.py
     homeassistant/components/transmission/sensor.py
     homeassistant/components/transmission/switch.py
     homeassistant/components/transmission/const.py

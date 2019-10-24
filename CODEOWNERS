@@ -110,7 +110,7 @@ homeassistant/components/geniushub/* @zxdavb
 homeassistant/components/geo_rss_events/* @exxamalte
 homeassistant/components/geonetnz_quakes/* @exxamalte
 homeassistant/components/gitter/* @fabaff
-homeassistant/components/glances/* @fabaff
+homeassistant/components/glances/* @fabaff @engrbm87
 homeassistant/components/gntp/* @robbiet480
 homeassistant/components/google_assistant/* @home-assistant/cloud
 homeassistant/components/google_cloud/* @lufton
@@ -171,7 +171,7 @@ homeassistant/components/liveboxplaytv/* @pschmitt
 homeassistant/components/logger/* @home-assistant/core
 homeassistant/components/logi_circle/* @evanjd
 homeassistant/components/lovelace/* @home-assistant/frontend
-homeassistant/components/luci/* @fbradyirl
+homeassistant/components/luci/* @fbradyirl @mzdrale
 homeassistant/components/luftdaten/* @fabaff
 homeassistant/components/mastodon/* @fabaff
 homeassistant/components/matrix/* @tinloaf
@@ -190,6 +190,7 @@ homeassistant/components/monoprice/* @etsinko
 homeassistant/components/moon/* @fabaff
 homeassistant/components/mpd/* @fabaff
 homeassistant/components/mqtt/* @home-assistant/core
+homeassistant/components/msteams/* @peroyvind
 homeassistant/components/mysensors/* @MartinHjelmare
 homeassistant/components/mystrom/* @fabaff
 homeassistant/components/neato/* @dshokouhi @Santobert
@@ -265,6 +266,7 @@ homeassistant/components/smartthings/* @andrewsayre
 homeassistant/components/smarty/* @z0mbieprocess
 homeassistant/components/smtp/* @fabaff
 homeassistant/components/solaredge_local/* @drobtravels @scheric
+homeassistant/components/solarlog/* @Ernst79
 homeassistant/components/solax/* @squishykid
 homeassistant/components/soma/* @ratsept
 homeassistant/components/somfy/* @tetienne
@@ -321,6 +323,7 @@ homeassistant/components/velux/* @Julius2342
 homeassistant/components/version/* @fabaff
 homeassistant/components/vesync/* @markperdue @webdjoe
 homeassistant/components/vicare/* @oischinger
+homeassistant/components/vivotek/* @HarlemSquirrel
 homeassistant/components/vizio/* @raman325
 homeassistant/components/vlc_telnet/* @rodripf
 homeassistant/components/waqi/* @andrey-git

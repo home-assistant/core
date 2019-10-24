@@ -36,7 +36,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import HomeAssistantType
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 from .device import ATTR_GROUP_MEMBER_UNREACHABLE
@@ -82,7 +82,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP Cloud binary sensor from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]

@@ -47,11 +47,11 @@
             "turn_on": "\ucf1c\uae30"
         },
         "trigger_type": {
-            "device_dropped": "\uc7a5\uce58\ub97c \ub5a8\uc5b4\ub728\ub9bc",
+            "device_dropped": "\uae30\uae30\ub97c \ub5a8\uad7c",
             "device_flipped": "\"{subtype}\" \uae30\uae30\ub97c \ub4a4\uc9d1\uc74c",
             "device_knocked": "\"{subtype}\" \uae30\uae30\ub97c \ub450\ub4dc\ub9bc",
             "device_rotated": "\"{subtype}\" \uae30\uae30\ub97c \ud68c\uc804",
-            "device_shaken": "\uae30\uae30 \ud754\ub4e6",
+            "device_shaken": "\uae30\uae30\ub97c \ud754\ub4e6",
             "device_slid": "\"{subtype}\" \uae30\uae30\ub97c \uc2ac\ub77c\uc774\ub4dc",
             "device_tilted": "\uae30\uae30\ub97c \uae30\uc6b8\uc784",
             "remote_button_double_press": "\"{subtype}\" \ubc84\ud2bc\uc744 \ub450 \ubc88 \ub204\ub984",

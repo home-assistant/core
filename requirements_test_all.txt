@@ -70,7 +70,7 @@ aioautomatic==0.6.5
 aiobotocore==0.10.2
 
 # homeassistant.components.esphome
-aioesphomeapi==2.2.0
+aioesphomeapi==2.4.0
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -208,6 +208,9 @@ georss_qld_bushfire_alert_client==0.3
 # homeassistant.components.nmap_tracker
 getmac==0.8.1
 
+# homeassistant.components.glances
+glances_api==0.2.0
+
 # homeassistant.components.google
 google-api-python-client==1.6.4
 
@@ -239,7 +242,7 @@ hole==0.5.0
 holidays==0.9.11
 
 # homeassistant.components.frontend
-home-assistant-frontend==20191014.0
+home-assistant-frontend==20191023.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.4
@@ -340,7 +343,7 @@ pillow==6.2.0
 plexapi==3.0.6
 
 # homeassistant.components.plex
-plexauth==0.0.4
+plexauth==0.0.5
 
 # homeassistant.components.mhz19
 # homeassistant.components.serial_pm
@@ -390,10 +393,13 @@ pyarlo==0.2.3
 pyblackbird==0.5
 
 # homeassistant.components.neato
-pybotvac==0.0.16
+pybotvac==0.0.17
 
 # homeassistant.components.cast
 pychromecast==4.0.1
+
+# homeassistant.components.coolmaster
+pycoolmasternet==0.0.4
 
 # homeassistant.components.daikin
 pydaikin==1.6.1
@@ -497,7 +503,7 @@ pysmartthings==0.6.9
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.23
+pysonos==0.0.24
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -581,14 +587,14 @@ statsd==3.2.1
 # homeassistant.components.traccar
 stringcase==1.2.0
 
+# homeassistant.components.solarlog
+sunwatcher==0.2.1
+
 # homeassistant.components.tellduslive
 tellduslive==0.10.10
 
 # homeassistant.components.toon
 toonapilib==3.2.4
-
-# homeassistant.components.tplink
-tplink==0.2.1
 
 # homeassistant.components.transmission
 transmissionrpc==0.11
@@ -597,7 +603,7 @@ transmissionrpc==0.11
 twentemilieu==0.1.0
 
 # homeassistant.components.twilio
-twilio==6.19.1
+twilio==6.32.0
 
 # homeassistant.components.huawei_lte
 url-normalize==1.4.1
@@ -645,13 +651,13 @@ zeroconf==0.23.0
 zha-quirks==0.0.26
 
 # homeassistant.components.zha
-zigpy-deconz==0.5.0
+zigpy-deconz==0.6.0
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.9.0
+zigpy-homeassistant==0.10.0
 
 # homeassistant.components.zha
-zigpy-xbee-homeassistant==0.5.0
+zigpy-xbee-homeassistant==0.6.0
 
 # homeassistant.components.zha
-zigpy-zigate==0.4.1
+zigpy-zigate==0.5.0

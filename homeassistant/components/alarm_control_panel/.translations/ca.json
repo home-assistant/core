@@ -1,0 +1,11 @@
+{
+    "device_automation": {
+        "action_type": {
+            "arm_away": "Activa {entity_name} fora",
+            "arm_home": "Activa {entity_name} a casa",
+            "arm_night": "Activa {entity_name} nocturn",
+            "disarm": "Desactiva {entity_name}",
+            "trigger": "Dispara {entity_name}"
+        }
+    }
+}

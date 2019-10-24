@@ -1,7 +1,9 @@
 """Tests for ZHA config flow."""
 from asynctest import patch
+
 from homeassistant.components.zha import config_flow
 from homeassistant.components.zha.core.const import DOMAIN
+
 from tests.common import MockConfigEntry
 
 

@@ -44,6 +44,8 @@ ATTR_EVENT_TYPE = "event_type"
 ATTR_EVENT_UTC = "event_utc"
 ATTR_SETTING = "setting"
 ATTR_USER_NAME = "user_name"
+ATTR_APP_TYPE = "app_type"
+ATTR_EVENT_BY = "event_by"
 ATTR_VALUE = "value"
 
 ABODE_DEVICE_ID_LIST_SCHEMA = vol.Schema([str])
@@ -247,6 +249,8 @@ def setup_abode_events(hass):
             ATTR_EVENT_TYPE: event_json.get(ATTR_EVENT_TYPE, ""),
             ATTR_EVENT_UTC: event_json.get(ATTR_EVENT_UTC, ""),
             ATTR_USER_NAME: event_json.get(ATTR_USER_NAME, ""),
+            ATTR_APP_TYPE: event_json.get(ATTR_APP_TYPE, ""),
+            ATTR_EVENT_BY: event_json.get(ATTR_EVENT_BY, ""),
             ATTR_DATE: event_json.get(ATTR_DATE, ""),
             ATTR_TIME: event_json.get(ATTR_TIME, ""),
         }
@@ -259,6 +263,12 @@ def setup_abode_events(hass):
         TIMELINE.PANEL_FAULT_GROUP,
         TIMELINE.PANEL_RESTORE_GROUP,
         TIMELINE.AUTOMATION_GROUP,
+        TIMELINE.DISARM_GROUP,
+        TIMELINE.ARM_GROUP,
+        TIMELINE.TEST_GROUP,
+        TIMELINE.CAPTURE_GROUP,
+        TIMELINE.DEVICE_GROUP,
+        TIMELINE.AUTOMATION_EDIT_GROUP,
     ]
 
     for event in events:

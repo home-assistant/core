@@ -11,7 +11,6 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_FOR,
     CONF_TYPE,
-    CONF_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
@@ -73,11 +72,6 @@ TRIGGER_SCHEMA = vol.All(
             ),
             vol.Optional(CONF_BELOW): vol.Any(vol.Coerce(float)),
             vol.Optional(CONF_ABOVE): vol.Any(vol.Coerce(float)),
-            vol.Optional(CONF_FOR): vol.Any(
-                vol.All(cv.time_period, cv.positive_timedelta),
-                cv.template,
-                cv.template_complex,
-            ),
             vol.Optional(CONF_FOR): cv.positive_time_period_dict,
         }
     ),
@@ -159,12 +153,10 @@ async def async_get_trigger_capabilities(hass, config):
         "extra_fields": vol.Schema(
             {
                 vol.Optional(
-                    CONF_ABOVE,
-                    description={CONF_UNIT_OF_MEASUREMENT: unit_of_measurement},
+                    CONF_ABOVE, description={"suffix": unit_of_measurement}
                 ): vol.Coerce(float),
                 vol.Optional(
-                    CONF_BELOW,
-                    description={CONF_UNIT_OF_MEASUREMENT: unit_of_measurement},
+                    CONF_BELOW, description={"suffix": unit_of_measurement}
                 ): vol.Coerce(float),
                 vol.Optional(CONF_FOR): cv.positive_time_period_dict,
             }
