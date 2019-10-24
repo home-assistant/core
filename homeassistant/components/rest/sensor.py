@@ -103,7 +103,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         auth = None
     rest = RestData(method, resource, auth, headers, payload, verify_ssl, timeout)
     rest.update()
-    if rest.data is None:
+    if rest.response_data is None:
         raise PlatformNotReady
 
     # Must update the sensor now (including fetching the rest resource) to
@@ -130,16 +130,16 @@ class RestSensor(Entity):
     """Implementation of a REST sensor."""
 
     def __init__(
-        self,
-        hass,
-        rest,
-        name,
-        unit_of_measurement,
-        device_class,
-        value_template,
-        json_attrs,
-        force_update,
-        resource_template,
+            self,
+            hass,
+            rest,
+            name,
+            unit_of_measurement,
+            device_class,
+            value_template,
+            json_attrs,
+            force_update,
+            resource_template,
     ):
         """Initialize the REST sensor."""
         self._hass = hass
@@ -172,7 +172,7 @@ class RestSensor(Entity):
     @property
     def available(self):
         """Return if the sensor data are available."""
-        return self.rest.data is not None
+        return self.rest.response_data is not None
 
     @property
     def state(self):
@@ -190,7 +190,7 @@ class RestSensor(Entity):
             self.rest.set_url(self._resource_template.render())
 
         self.rest.update()
-        value = self.rest.data
+        value = self.rest.response_data
 
         if self._json_attrs:
             self._attributes = {}
@@ -224,35 +224,34 @@ class RestData:
     """Class for handling the data retrieval."""
 
     def __init__(
-        self, method, resource, auth, headers, data, verify_ssl, timeout=DEFAULT_TIMEOUT
+            self, method, resource, auth, headers, data, verify_ssl, timeout=DEFAULT_TIMEOUT
     ):
         """Initialize the data object."""
-        self._request = requests.Request(
-            method, resource, headers=headers, auth=auth, data=data
-        )
+        self._method = method
+        self._resource = resource
+        self._auth = auth
+        self._headers = headers
+        self._request_data = data
         self._verify_ssl = verify_ssl
         self._timeout = timeout
-        self.data = None
+        self.response_data = None
 
     def set_url(self, url):
         """Set url."""
-        self._request.url = url
+        self._resource = url
 
     def update(self):
         """Get the latest data from REST service with provided method."""
-        _LOGGER.debug("Updating from %s", self._request.url)
+        _LOGGER.debug("Updating from %s", self._resource)
         try:
-            with requests.Session() as sess:
-                response = sess.send(
-                    self._request.prepare(), timeout=self._timeout, verify=self._verify_ssl
-                )
-
-            self.data = response.text
+            response = requests.request(self._method, self._resource, headers=self._headers,
+                                        auth=self._auth, data=self._request_data,
+                                        timeout=self._timeout, verify=self._verify_ssl)
+            self.response_data = response.text
         except requests.exceptions.RequestException as ex:
             _LOGGER.error(
-                "Error fetching data: %s from %s failed with %s",
-                self._request,
-                self._request.url,
+                "Error fetching data: %s failed with %s",
+                self._resource,
                 ex,
             )
-            self.data = None
+            self.response_data = None
