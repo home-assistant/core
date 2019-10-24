@@ -206,7 +206,7 @@ class ONVIFHassCamera(Camera):
             else:
                 tzone = (
                     dt_util.get_time_zone(device_time.TimeZone)
-                    or dt_util.DEFAULT_TIME_ZONE,
+                    or dt_util.DEFAULT_TIME_ZONE
                 )
                 cdate = device_time.LocalDateTime
 
