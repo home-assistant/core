@@ -280,11 +280,20 @@ class VenstarThermostat(ClimateDevice):
             set_temp = self._set_operation_mode(self._mode_map.get(operation_mode))
 
         if set_temp:
-            if self._mode_map.get(operation_mode, self._client.mode) == self._client.MODE_HEAT:
+            if (
+                self._mode_map.get(operation_mode, self._client.mode)
+                == self._client.MODE_HEAT
+            ):
                 success = self._client.set_setpoints(temperature, self._client.cooltemp)
-            elif self._mode_map.get(operation_mode, self._client.mode) == self._client.MODE_COOL:
+            elif (
+                self._mode_map.get(operation_mode, self._client.mode)
+                == self._client.MODE_COOL
+            ):
                 success = self._client.set_setpoints(self._client.heattemp, temperature)
-            elif self._mode_map.get(operation_mode, self._client.mode) == self._client.MODE_AUTO:
+            elif (
+                self._mode_map.get(operation_mode, self._client.mode)
+                == self._client.MODE_AUTO
+            ):
                 success = self._client.set_setpoints(temp_low, temp_high)
             else:
                 success = False
