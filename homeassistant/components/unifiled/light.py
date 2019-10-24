@@ -21,7 +21,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PORT, default="20443"): cv.string,
+        vol.Optional(CONF_PORT, default=20443): vol.All(cv.port, cv.string),
     }
 )
 
@@ -31,12 +31,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Assign configuration variables.
     # The configuration check takes care they are present.
-    _ip = config[CONF_HOST]
-    _port = config[CONF_PORT]
-    _username = config[CONF_USERNAME]
-    _password = config[CONF_PASSWORD]
+    ip = config[CONF_HOST]
+    port = config[CONF_PORT]
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
 
-    api = unifiled(_ip, _port, username=_username, password=_password)
+    api = unifiled(ip, port, username=username, password=password)
 
     # Verify that passed in configuration works
     if not api.getloginstate():
