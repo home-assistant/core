@@ -19,6 +19,8 @@ from .const import (
     KEY_DEVICE_INFORMATION,
     KEY_DEVICE_SIGNAL,
     KEY_MONITORING_TRAFFIC_STATISTICS,
+    UNIT_BYTES,
+    UNIT_SECONDS,
 )
 
 
@@ -29,7 +31,6 @@ SENSOR_META = {
     KEY_DEVICE_INFORMATION: dict(
         include=re.compile(r"^WanIP.*Address$", re.IGNORECASE)
     ),
-    (KEY_DEVICE_INFORMATION, "SoftwareVersion"): dict(name="Software version"),
     (KEY_DEVICE_INFORMATION, "WanIPAddress"): dict(
         name="WAN IP address", icon="mdi:ip", enabled_default=True
     ),
@@ -38,7 +39,7 @@ SENSOR_META = {
     ),
     (KEY_DEVICE_SIGNAL, "band"): dict(name="Band"),
     (KEY_DEVICE_SIGNAL, "cell_id"): dict(name="Cell ID"),
-    (KEY_DEVICE_SIGNAL, "lac"): dict(name="LAC"),
+    (KEY_DEVICE_SIGNAL, "lac"): dict(name="LAC", icon="mdi:map-marker"),
     (KEY_DEVICE_SIGNAL, "mode"): dict(
         name="Mode",
         formatter=lambda x: ({"0": "2G", "2": "3G", "7": "4G"}.get(x, "Unknown"), None),
@@ -96,8 +97,50 @@ SENSOR_META = {
         or "mdi:signal-cellular-3",
         enabled_default=True,
     ),
+    (KEY_DEVICE_SIGNAL, "rscp"): dict(
+        name="RSCP",
+        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+        # https://wiki.teltonika.lt/view/RSCP
+        icon=lambda x: (x is None or x < -95)
+        and "mdi:signal-cellular-outline"
+        or x < -85
+        and "mdi:signal-cellular-1"
+        or x < -75
+        and "mdi:signal-cellular-2"
+        or "mdi:signal-cellular-3",
+    ),
+    (KEY_DEVICE_SIGNAL, "ecio"): dict(
+        name="EC/IO",
+        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+        # https://wiki.teltonika.lt/view/EC/IO
+        icon=lambda x: (x is None or x < -20)
+        and "mdi:signal-cellular-outline"
+        or x < -10
+        and "mdi:signal-cellular-1"
+        or x < -6
+        and "mdi:signal-cellular-2"
+        or "mdi:signal-cellular-3",
+    ),
     KEY_MONITORING_TRAFFIC_STATISTICS: dict(
         exclude=re.compile(r"^showtraffic$", re.IGNORECASE)
+    ),
+    (KEY_MONITORING_TRAFFIC_STATISTICS, "CurrentConnectTime"): dict(
+        name="Current connection duration", unit=UNIT_SECONDS, icon="mdi:timer"
+    ),
+    (KEY_MONITORING_TRAFFIC_STATISTICS, "CurrentDownload"): dict(
+        name="Current connection download", unit=UNIT_BYTES, icon="mdi:download"
+    ),
+    (KEY_MONITORING_TRAFFIC_STATISTICS, "CurrentUpload"): dict(
+        name="Current connection upload", unit=UNIT_BYTES, icon="mdi:upload"
+    ),
+    (KEY_MONITORING_TRAFFIC_STATISTICS, "TotalConnectTime"): dict(
+        name="Total connected duration", unit=UNIT_SECONDS, icon="mdi:timer"
+    ),
+    (KEY_MONITORING_TRAFFIC_STATISTICS, "TotalDownload"): dict(
+        name="Total download", unit=UNIT_BYTES, icon="mdi:download"
+    ),
+    (KEY_MONITORING_TRAFFIC_STATISTICS, "TotalUpload"): dict(
+        name="Total upload", unit=UNIT_BYTES, icon="mdi:upload"
     ),
 }
 
