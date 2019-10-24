@@ -24,7 +24,8 @@ async def test_form(hass):
     assert result["errors"] is None
 
     with patch(
-        "pycoolmasternet.CoolMasterNet.devices", return_value=mock_coro([1])
+        "homeassistant.components.coolmaster.config_flow.CoolMasterNet.devices",
+        return_value=[1],
     ), patch(
         "homeassistant.components.coolmaster.async_setup", return_value=mock_coro(True)
     ) as mock_setup, patch(
@@ -53,7 +54,10 @@ async def test_form_timeout(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("pycoolmasternet.CoolMasterNet.devices", side_effect=TimeoutError()):
+    with patch(
+        "homeassistant.components.coolmaster.config_flow.CoolMasterNet.devices",
+        side_effect=TimeoutError(),
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], _flow_data()
         )
@@ -69,7 +73,8 @@ async def test_form_connection_refused(hass):
     )
 
     with patch(
-        "pycoolmasternet.CoolMasterNet.devices", side_effect=ConnectionRefusedError()
+        "homeassistant.components.coolmaster.config_flow.CoolMasterNet.devices",
+        side_effect=ConnectionRefusedError(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], _flow_data()
@@ -85,7 +90,10 @@ async def test_form_no_units(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("pycoolmasternet.CoolMasterNet.devices", return_value=mock_coro([])):
+    with patch(
+        "homeassistant.components.coolmaster.config_flow.CoolMasterNet.devices",
+        return_value=[],
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], _flow_data()
         )
