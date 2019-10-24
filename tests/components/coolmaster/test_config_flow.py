@@ -4,8 +4,6 @@ from unittest.mock import patch
 from homeassistant import config_entries, setup
 from homeassistant.components.coolmaster.const import DOMAIN, AVAILABLE_MODES
 
-# from homeassistant.components.coolmaster.config_flow import validate_connection
-
 from tests.common import mock_coro
 
 
@@ -26,8 +24,7 @@ async def test_form(hass):
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.coolmaster.config_flow.validate_connection",
-        return_value=mock_coro(True),
+        "pycoolmasternet.CoolMasterNet.devices", return_value=mock_coro([1])
     ), patch(
         "homeassistant.components.coolmaster.async_setup", return_value=mock_coro(True)
     ) as mock_setup, patch(
@@ -56,10 +53,7 @@ async def test_form_timeout(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.coolmaster.config_flow.validate_connection",
-        side_effect=TimeoutError(),
-    ):
+    with patch("pycoolmasternet.CoolMasterNet.devices", side_effect=TimeoutError()):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], _flow_data()
         )
@@ -75,8 +69,7 @@ async def test_form_connection_refused(hass):
     )
 
     with patch(
-        "homeassistant.components.coolmaster.config_flow.validate_connection",
-        side_effect=ConnectionRefusedError(),
+        "pycoolmasternet.CoolMasterNet.devices", side_effect=ConnectionRefusedError()
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], _flow_data()
@@ -92,10 +85,7 @@ async def test_form_no_units(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.coolmaster.config_flow.validate_connection",
-        return_value=mock_coro(False),
-    ):
+    with patch("pycoolmasternet.CoolMasterNet.devices", return_value=mock_coro([])):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], _flow_data()
         )
