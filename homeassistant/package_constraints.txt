@@ -16,7 +16,7 @@ importlib-metadata==0.23
 jinja2>=2.10.1
 netdisco==2.6.0
 pip>=8.0.3
-python-slugify==3.0.6
+python-slugify==4.0.0
 pytz>=2019.03
 pyyaml==5.1.2
 requests==2.22.0
