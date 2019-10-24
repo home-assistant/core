@@ -1453,7 +1453,6 @@ async def test_thermostat(hass):
         payload={"thermostatMode": {"value": "CUSTOM", "customName": "INVALID"}},
     )
     assert msg["event"]["payload"]["type"] == "UNSUPPORTED_THERMOSTAT_MODE"
-    hass.config.units.temperature_unit = TEMP_CELSIUS
 
     msg = await assert_request_fails(
         "Alexa.ThermostatController",
@@ -1464,7 +1463,6 @@ async def test_thermostat(hass):
         payload={"thermostatMode": {"value": "INVALID"}},
     )
     assert msg["event"]["payload"]["type"] == "UNSUPPORTED_THERMOSTAT_MODE"
-    hass.config.units.temperature_unit = TEMP_CELSIUS
 
     call, _ = await assert_request_calls_service(
         "Alexa.ThermostatController",
