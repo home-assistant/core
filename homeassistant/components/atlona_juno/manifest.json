@@ -1,5 +1,5 @@
 {
-  "domain": "media_player",
+  "domain": "atlona_juno",
   "name": "Atlona Juno 451",
   "documentation": "https://www.home-assistant.io/components/atlona_juno",
   "requirements": [

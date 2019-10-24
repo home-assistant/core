@@ -27,8 +27,9 @@ DEFAULT_NAME = "Atlona Juno 451"
 DEFAULT_PORT = 80
 DEFAULT_PROTOCOL = "http"
 
-SUPPORT_ATLONAJUNO = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+DATA_ATLONAJUNO = "atlona_juno"
 
+SUPPORT_ATLONAJUNO = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
 CONF_SOURCES = "sources"
 ATTR_SOURCE = "source"
@@ -51,6 +52,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Atlona Juno 451 HDMI switch."""
+    if DATA_ATLONAJUNO not in hass.data:
+        hass.data[DATA_ATLONAJUNO] = {}
+
     url = "{}://{}:{}".format(
         config.get(CONF_PROTOCOL), config.get(CONF_HOST), config.get(CONF_PORT)
     )
@@ -59,7 +63,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         source_id: extra[CONF_NAME] for source_id, extra in config[CONF_SOURCES].items()
     }
 
-    atlona_device = AtlonaJuno(hass, config.get(CONF_NAME), Juno451(url), sources)
+    # As a device has one and only one IP address in our context, this qualiffies for uid
+    unique_id = "{}-{}".format(DATA_ATLONAJUNO, config.get(CONF_HOST).replace(".", "_"))
+    atlona_device = AtlonaJuno(config.get(CONF_NAME), unique_id, Juno451(url), sources)
+    hass.data[DATA_ATLONAJUNO][unique_id] = atlona_device
 
     add_entities([atlona_device], True)
 
@@ -67,11 +74,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AtlonaJuno(MediaPlayerDevice):
     """Representation of a Atlona Juno 451 HDMI switch."""
 
-    def __init__(self, hass, name, atlona_device, sources):
+    def __init__(self, name, unique_id, atlona_device, sources):
         """Initialize."""
         self._name = name
+        self._unique_id = unique_id
         self._atlona_device = atlona_device
-
         # dict source_id -> source name
         self._source_id_name = sources
         # dict source name -> source_id
@@ -80,7 +87,6 @@ class AtlonaJuno(MediaPlayerDevice):
         self._source_names = sorted(
             self._source_name_id.keys(), key=lambda v: self._source_name_id[v]
         )
-
         self._state = None
         self._source = None
 
