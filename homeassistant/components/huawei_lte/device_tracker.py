@@ -8,22 +8,20 @@ import attr
 from stringcase import snakecase
 
 from homeassistant.components.device_tracker import (
-    CONF_TRACK_NEW,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     SOURCE_TYPE_ROUTER,
 )
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import HuaweiLteBaseEntity
-from .const import DEFAULT_TRACK_NEW, DOMAIN, KEY_WLAN_HOST_LIST, UPDATE_SIGNAL
+from .const import DOMAIN, KEY_WLAN_HOST_LIST, UPDATE_SIGNAL
 
 
 _LOGGER = logging.getLogger(__name__)
 
-_NEW_DEVICE_SCAN = f"{DEVICE_TRACKER_DOMAIN}/new_device_scan"
+_DEVICE_SCAN = f"{DEVICE_TRACKER_DOMAIN}/device_scan"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -50,13 +48,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             tracked.add(entity.unique_id)
     async_add_new_entities(hass, router.url, async_add_entities, tracked, True)
 
-    # Tell parent router to poll hosts list for new devices, if enabled
-    if config_entry.options.setdefault(CONF_TRACK_NEW, DEFAULT_TRACK_NEW):
-        router.subscriptions[KEY_WLAN_HOST_LIST].add(_NEW_DEVICE_SCAN)
+    # Tell parent router to poll hosts list to gather new devices
+    router.subscriptions[KEY_WLAN_HOST_LIST].add(_DEVICE_SCAN)
 
     async def _async_maybe_add_new_entities(url: str) -> None:
-        """Add new entities if enabled and the update signal comes from our router."""
-        if url == router.url and config_entry.options.get(CONF_TRACK_NEW):
+        """Add new entities if the update signal comes from our router."""
+        if url == router.url:
             async_add_new_entities(hass, url, async_add_entities, tracked)
 
     # Register to handle router data updates
@@ -65,9 +62,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
     router.unload_handlers.append(disconnect_dispatcher)
 
-    # Add new entities from initial scan, if enabled
-    if config_entry.options.get(CONF_TRACK_NEW):
-        async_add_new_entities(hass, router.url, async_add_entities, tracked)
+    # Add new entities from initial scan
+    async_add_new_entities(hass, router.url, async_add_entities, tracked)
 
 
 def async_add_new_entities(
@@ -120,20 +116,6 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
     _name: str = attr.ib(init=False, default="device")
     _device_state_attributes: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
-    async def async_added_to_hass(self):
-        """Subscribe to needed data on add."""
-        await super().async_added_to_hass()
-        self.router.subscriptions[KEY_WLAN_HOST_LIST].add(
-            f"{DEVICE_TRACKER_DOMAIN}/{self.mac}"
-        )
-
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe from needed data on remove."""
-        await super().async_will_remove_from_hass()
-        self.router.subscriptions[KEY_WLAN_HOST_LIST].remove(
-            f"{DEVICE_TRACKER_DOMAIN}/{self.mac}"
-        )
-
     @property
     def _entity_name(self) -> str:
         return self._name
@@ -169,15 +151,6 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
                 for k, v in host.items()
                 if k not in ("MacAddress", "HostName")
             }
-
-    async def async_update_options(self, config_entry: ConfigEntry) -> None:
-        """Update config entry options."""
-        await super().async_update_options(config_entry)
-        subscriptions = self.router.subscriptions[KEY_WLAN_HOST_LIST]
-        if config_entry.options.get(CONF_TRACK_NEW):
-            subscriptions.add(_NEW_DEVICE_SCAN)
-        else:
-            subscriptions.discard(_NEW_DEVICE_SCAN)
 
 
 def get_scanner(*args, **kwargs):  # pylint: disable=useless-return

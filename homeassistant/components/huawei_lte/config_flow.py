@@ -19,9 +19,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_RECIPIENT, CONF_URL, CONF_USERNAME
-from homeassistant.components.device_tracker import CONF_TRACK_NEW
 from homeassistant.core import callback
-from .const import DEFAULT_DEVICE_NAME, DEFAULT_TRACK_NEW
+from .const import DEFAULT_DEVICE_NAME
 
 # https://github.com/PyCQA/pylint/issues/3202
 from .const import DOMAIN  # pylint: disable=unused-import
@@ -199,25 +198,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         data_schema = vol.Schema(
-            OrderedDict(
-                (
-                    (
-                        vol.Optional(
-                            CONF_TRACK_NEW,
-                            default=self.config_entry.options.get(
-                                CONF_TRACK_NEW, DEFAULT_TRACK_NEW
-                            ),
-                        ),
-                        bool,
-                    ),
-                    (
-                        vol.Optional(
-                            CONF_RECIPIENT,
-                            default=self.config_entry.options.get(CONF_RECIPIENT, ""),
-                        ),
-                        str,
-                    ),
-                )
-            )
+            {
+                vol.Optional(
+                    CONF_RECIPIENT,
+                    default=self.config_entry.options.get(CONF_RECIPIENT, ""),
+                ): str
+            }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)
