@@ -129,7 +129,7 @@ class NZBGetData:
         self.available = True
         self._api = api
         self.downloads = None
-        self.completed_downloads = []
+        self.completed_downloads = set()
 
     def update(self):
         """Get the latest data from NZBGet instance."""
@@ -149,16 +149,16 @@ class NZBGetData:
     def init_download_list(self):
         """Initialize download list."""
         self.downloads = self._api.history()
-        self.completed_downloads = set(
-            [(x["Name"], x["Category"], x["Status"]) for x in self.downloads]
-        )
+        self.completed_downloads = {
+            (x["Name"], x["Category"], x["Status"]) for x in self.downloads
+        }
 
     def check_completed_downloads(self):
         """Check that downloads have completed."""
 
-        actual_completed_downloads = set(
-            [(x["Name"], x["Category"], x["Status"]) for x in self.downloads]
-        )
+        actual_completed_downloads = {
+            (x["Name"], x["Category"], x["Status"]) for x in self.downloads
+        }
 
         tmp_completed_downloads = list(
             actual_completed_downloads.difference(self.completed_downloads)
