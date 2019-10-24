@@ -1,0 +1,10 @@
+{
+  "domain": "media_player",
+  "name": "Atlona Juno 451",
+  "documentation": "https://www.home-assistant.io/components/atlona_juno",
+  "requirements": [
+    "pyatlonajuno==1.1.1"
+  ],
+  "dependencies": [],
+  "codeowners": ["@bluestripe"]
+}
