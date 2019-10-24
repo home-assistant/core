@@ -1,10 +1,12 @@
 """Support for performing TensorFlow classification on images."""
 import logging
+import io
+import numpy as np
 import os
 import sys
-
 import voluptuous as vol
 
+from PIL import Image, ImageDraw
 from homeassistant.components.image_processing import (
     CONF_CONFIDENCE,
     CONF_ENTITY_ID,
@@ -236,9 +238,6 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         }
 
     def _save_image(self, image, matches, paths):
-        from PIL import Image, ImageDraw
-        import io
-
         img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
         img_width, img_height = img.size
         draw = ImageDraw.Draw(img)
@@ -280,7 +279,6 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
 
     def process_image(self, image):
         """Process the image."""
-        import numpy as np
 
         try:
             import cv2  # pylint: disable=import-error
@@ -289,9 +287,6 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
             inp = img[:, :, [2, 1, 0]]  # BGR->RGB
             inp_expanded = inp.reshape(1, inp.shape[0], inp.shape[1], 3)
         except ImportError:
-            from PIL import Image
-            import io
-
             img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
             img.thumbnail((460, 460), Image.ANTIALIAS)
             img_width, img_height = img.size
