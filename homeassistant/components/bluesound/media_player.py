@@ -220,7 +220,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         self._master = None
         self._is_master = False
         self._group_name = None
-        self._group_list = []
+        self._group_list = None
         self._bluesound_device_name = None
 
         self._init_callback = init_callback
