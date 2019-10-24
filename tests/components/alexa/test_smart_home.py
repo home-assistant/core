@@ -2,7 +2,7 @@
 import pytest
 
 from homeassistant.core import Context, callback
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import TEMP_FAHRENHEIT
 from homeassistant.components.alexa import smart_home, messages
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
