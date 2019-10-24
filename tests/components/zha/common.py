@@ -168,7 +168,7 @@ def make_entity_id(domain, device, cluster, use_suffix=True):
     machine so that we can test state changes.
     """
     ieee = device.ieee
-    ieeetail = "".join(["%02x" % (o,) for o in ieee[-4:]])
+    ieeetail = "".join([f"{o:02x}" for o in ieee[:4]])
     entity_id = "{}.{}_{}_{}_{}{}".format(
         domain,
         slugify(device.manufacturer),
