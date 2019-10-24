@@ -3,6 +3,7 @@ import asyncio
 import logging
 
 import plexapi.exceptions
+from plexwebsocket import PlexWebsocket
 import requests.exceptions
 import voluptuous as vol
 
@@ -17,6 +18,8 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
     CONF_USE_EPISODE_ART,
@@ -31,12 +34,11 @@ from .const import (
     PLATFORMS,
     PLEX_MEDIA_PLAYER_OPTIONS,
     PLEX_SERVER_CONFIG,
-    REFRESH_LISTENERS,
+    PLEX_UPDATE_PLATFORMS_SIGNAL,
     SERVERS,
     WEBSOCKETS,
 )
 from .server import PlexServer
-from .websockets import websocket_handler
 
 MEDIA_PLAYER_SCHEMA = vol.Schema(
     {
@@ -67,10 +69,7 @@ _LOGGER = logging.getLogger(__package__)
 
 def setup(hass, config):
     """Set up the Plex component."""
-    hass.data.setdefault(
-        PLEX_DOMAIN,
-        {SERVERS: {}, REFRESH_LISTENERS: {}, DISPATCHERS: {}, WEBSOCKETS: {}},
-    )
+    hass.data.setdefault(PLEX_DOMAIN, {SERVERS: {}, DISPATCHERS: {}, WEBSOCKETS: {}})
 
     plex_config = config.get(PLEX_DOMAIN, {})
     if plex_config:
@@ -145,13 +144,13 @@ async def async_setup_entry(hass, entry):
 
     entry.add_update_listener(async_options_updated)
 
-    future = asyncio.run_coroutine_threadsafe(
-        websocket_handler(
-            hass, plex_server.machine_identifier, plex_server.websocket_url
-        ),
-        hass.loop,
-    )
-    hass.data[PLEX_DOMAIN][WEBSOCKETS][server_id] = future
+    def update_plex():
+        dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+
+    session = async_get_clientsession(hass)
+    ws = PlexWebsocket(plex_server, update_plex, session)
+    hass.loop.create_task(ws.listen())
+    hass.data[PLEX_DOMAIN][WEBSOCKETS][server_id] = ws
 
     return True
 
@@ -160,11 +159,8 @@ async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     server_id = entry.data[CONF_SERVER_IDENTIFIER]
 
-    future = hass.data[PLEX_DOMAIN][WEBSOCKETS].pop(server_id)
-    future.cancel()
-
-    cancel = hass.data[PLEX_DOMAIN][REFRESH_LISTENERS].pop(server_id)
-    cancel()
+    ws = hass.data[PLEX_DOMAIN][WEBSOCKETS].pop(server_id)
+    ws.close()
 
     dispatchers = hass.data[PLEX_DOMAIN][DISPATCHERS].pop(server_id)
     for unsub in dispatchers:

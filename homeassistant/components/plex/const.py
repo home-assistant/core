@@ -10,7 +10,6 @@ DEFAULT_VERIFY_SSL = True
 
 DISPATCHERS = "dispatchers"
 PLATFORMS = ["media_player", "sensor"]
-REFRESH_LISTENERS = "refresh_listeners"
 SERVERS = "servers"
 WEBSOCKETS = "websockets"
 

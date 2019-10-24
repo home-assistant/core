@@ -221,9 +221,6 @@ class PlexServer:
         """Create playqueue on Plex server."""
         return plexapi.playqueue.PlayQueue.create(self._plex_server, media, **kwargs)
 
-    @property
-    def websocket_url(self):
+    def url(self, key, includeToken=False):
         """Return the websocket URL for this Plex server."""
-        return self._plex_server.url(
-            "/:/websockets/notifications", includeToken=True
-        ).replace("http", "ws")
+        return self._plex_server.url(key, includeToken)
