@@ -141,6 +141,10 @@ class AtlonaJuno(MediaPlayerDevice):
         source_index = self._source_name_id[source]
         _LOGGER.debug("Setting input source to %s", source)
         self._atlona_device.setSource(source_index)
+        if source_index in self._source_id_name:
+            self._source = self._source_id_name[source_index]
+        else:
+            self._source = None
 
     def update(self):
         """Retrieve state."""
