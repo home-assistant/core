@@ -3,7 +3,7 @@
   "name": "Tradfri",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tradfri",
-  "requirements": ["pytradfri[async]==6.3.1"],
+  "requirements": ["pytradfri[async]==6.4.0"],
   "homekit": {
     "models": ["TRADFRI"]
   },
