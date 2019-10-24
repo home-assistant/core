@@ -723,8 +723,7 @@ class AlexaThermostatController(AlexaCapability):
             if thermostat_mode:
                 supported_modes.append(thermostat_mode)
 
-        # track_point_in_time() listener can be used to support utterances for scheduling and durations.
-        # Return False for supportsScheduling until supported.
+        # Return False for supportsScheduling until supported with event listener in handler.
         configuration = {"supportsScheduling": False}
 
         if supported_modes:
