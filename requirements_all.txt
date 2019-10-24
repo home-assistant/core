@@ -1984,7 +1984,7 @@ websockets==6.0
 wirelesstagpy==0.4.0
 
 # homeassistant.components.withings
-withings-api==2.0.0b8
+withings-api==2.1.2
 
 # homeassistant.components.wunderlist
 wunderpy2==0.1.6
