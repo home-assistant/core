@@ -9,7 +9,7 @@ from homeassistant.components.cover import (
     SUPPORT_SET_POSITION,
 )
 from .base_class import TradfriBaseDevice
-from .const import ATTR_BATTERY, KEY_GATEWAY, KEY_API, CONF_GATEWAY_ID
+from .const import KEY_GATEWAY, KEY_API, CONF_GATEWAY_ID
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -68,11 +68,6 @@ class TradfriCover(TradfriBaseDevice, CoverDevice):
     def is_closed(self):
         """Return if the cover is closed or not."""
         return self.current_cover_position == 0
-
-    @property
-    def device_state_attributes(self):
-        """Return the devices' state attributes."""
-        return {ATTR_BATTERY: self._device.device_info.battery_level}
 
     def _refresh(self, device):
         """Refresh the cover data."""
