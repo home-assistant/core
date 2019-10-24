@@ -89,9 +89,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         port = None
         timeout = DEFAULT_TIMEOUT
         mac = None
-        udn = discovery_info.get("udn")
-        if udn and udn.startswith("uuid:"):
-            uuid = udn[len("uuid:") :]
+        uuid = discovery_info.get("udn")
+        if uuid and uuid.startswith("uuid:"):
+            uuid = uuid[len("uuid:") :]
 
     # Only add a device once, so discovered devices do not override manual
     # config.

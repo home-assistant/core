@@ -46,6 +46,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNKNOWN,
 )
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -82,8 +83,20 @@ MOCK_CONFIG_AUTO = {
     }
 }
 
-MOCK_DISCOVERY = {
-    "discovery": {"name": "[TV]fake2", "model_name": "fake2", "host": "fake2"}
+ENTITY_ID_DISCOVERY = f"{DOMAIN}.fake_discovery_fake_model"
+MOCK_CONFIG_DISCOVERY = {
+    "name": "fake_discovery",
+    "model_name": "fake_model",
+    "host": "fake_host",
+    "udn": "fake_uuid",
+}
+
+ENTITY_ID_DISCOVERY_PREFIX = f"{DOMAIN}.fake_discovery_prefix_fake_model_prefix"
+MOCK_CONFIG_DISCOVERY_PREFIX = {
+    "name": "[TV]fake_discovery_prefix",
+    "model_name": "fake_model_prefix",
+    "host": "fake_host_prefix",
+    "udn": "uuid:fake_uuid_prefix",
 }
 
 AUTODETECT_WEBSOCKET = {
@@ -171,9 +184,30 @@ async def test_setup_without_mac(hass, remote):
 
 async def test_setup_discovery(hass, remote):
     """Test setup of platform with discovery."""
-    # await setup_samsungtv(hass, MOCK_DISCOVERY)
-    # assert hass.states.get("media_player.fake2")
-    assert False
+    hass.async_create_task(
+        async_load_platform(
+            hass, DOMAIN, SAMSUNGTV_DOMAIN, MOCK_CONFIG_DISCOVERY, {DOMAIN: {}}
+        )
+    )
+    await hass.async_block_till_done()
+    entity = hass.data[DOMAIN].get_entity(ENTITY_ID_DISCOVERY)
+    assert entity
+    assert entity.name == "fake_discovery (fake_model)"
+    assert entity.unique_id == "fake_uuid"
+
+
+async def test_setup_discovery_prefix(hass, remote):
+    """Test setup of platform with discovery."""
+    hass.async_create_task(
+        async_load_platform(
+            hass, DOMAIN, SAMSUNGTV_DOMAIN, MOCK_CONFIG_DISCOVERY_PREFIX, {DOMAIN: {}}
+        )
+    )
+    await hass.async_block_till_done()
+    entity = hass.data[DOMAIN].get_entity(ENTITY_ID_DISCOVERY_PREFIX)
+    assert entity
+    assert entity.name == "fake_discovery_prefix (fake_model_prefix)"
+    assert entity.unique_id == "fake_uuid_prefix"
 
 
 async def test_update_on(hass, remote, mock_now):
