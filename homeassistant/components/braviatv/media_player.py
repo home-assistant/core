@@ -2,7 +2,7 @@
 import ipaddress
 import logging
 
-import braviarc
+from braviarc.braviarc import BraviaRC
 from getmac import get_mac_address
 import voluptuous as vol
 
@@ -131,7 +131,7 @@ def request_configuration(config, hass, add_entities):
         """Handle the entry of user PIN."""
 
         pin = data.get("pin")
-        _braviarc = braviarc.braviarc.BraviaRC(host)
+        _braviarc = BraviaRC(host)
         _braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
         if _braviarc.is_connected():
             setup_bravia(config, pin, hass, add_entities)
@@ -156,7 +156,7 @@ class BraviaTVDevice(MediaPlayerDevice):
         """Initialize the Sony Bravia device."""
 
         self._pin = pin
-        self._braviarc = braviarc.braviarc.BraviaRC(host, mac)
+        self._braviarc = BraviaRC(host, mac)
         self._name = name
         self._state = STATE_OFF
         self._muted = False
