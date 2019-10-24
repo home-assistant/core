@@ -8,6 +8,7 @@ from asynctest import mock
 import pytest
 
 import tests.common
+from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.components.media_player.const import (
     SUPPORT_TURN_ON,
     MEDIA_TYPE_CHANNEL,
@@ -196,6 +197,10 @@ class TestSamsungTv(unittest.TestCase):
         assert SUPPORT_SAMSUNGTV == self.device.supported_features
         self.device._mac = "fake"
         assert SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON == self.device.supported_features
+
+    def test_device_class(self):
+        """Test for device_class property."""
+        assert DEVICE_CLASS_TV == self.device.device_class
 
     def test_turn_off(self):
         """Test for turn_off."""
