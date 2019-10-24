@@ -4,11 +4,12 @@ from homeassistant.components.cover import (
     CoverDevice,
     ATTR_POSITION,
     SUPPORT_OPEN,
+    SUPPORT_STOP,
     SUPPORT_CLOSE,
     SUPPORT_SET_POSITION,
 )
 from .base_class import TradfriBaseDevice
-from .const import KEY_GATEWAY, KEY_API, CONF_GATEWAY_ID
+from .const import ATTR_BATTERY, KEY_GATEWAY, KEY_API, CONF_GATEWAY_ID
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -37,7 +38,7 @@ class TradfriCover(TradfriBaseDevice, CoverDevice):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
+        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION | SUPPORT_STOP
 
     @property
     def current_cover_position(self):
@@ -59,10 +60,19 @@ class TradfriCover(TradfriBaseDevice, CoverDevice):
         """Close cover."""
         await self._api(self._device_control.set_state(100))
 
+    async def async_stop_cover(self, **kwargs):
+        """Close cover."""
+        await self._api(self._device_control.trigger_blind())
+
     @property
     def is_closed(self):
         """Return if the cover is closed or not."""
         return self.current_cover_position == 0
+
+    @property
+    def device_state_attributes(self):
+        """Return the devices' state attributes."""
+        return {ATTR_BATTERY: self._device.device_info.battery_level}
 
     def _refresh(self, device):
         """Refresh the cover data."""
