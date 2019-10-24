@@ -28,10 +28,6 @@ async def async_setup_platform(
 class GeniusSwitch(GeniusZone, SwitchDevice):
     """Representation of a Genius Hub switch."""
 
-    def __init__(self, broker, zone) -> None:
-        """Initialize the switch."""
-        super().__init__(broker, zone)
-
     @property
     def is_on(self) -> bool:
         """Return the status of the sensor."""
