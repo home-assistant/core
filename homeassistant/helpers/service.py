@@ -217,6 +217,13 @@ async def async_get_all_descriptions(hass):
                 domain_yaml = loaded[domain]
                 yaml_description = domain_yaml.get(service, {})
 
+                # if no description is found check if service name in yaml
+                # ends with '_'. if yes check if key is a substring of service name
+                for key in domain_yaml:
+                    if "_" == key[-1:] and key == service[: len(key)]:
+                        yaml_description = domain_yaml.get(key, {})
+                        break
+
                 # Don't warn for missing services, because it triggers false
                 # positives for things like scripts, that register as a service
 
