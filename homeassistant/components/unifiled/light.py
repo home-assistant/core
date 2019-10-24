@@ -43,6 +43,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Could not connect to unifiled controller")
         return
 
+    # test comment
     add_entities(UnifiLedLight(light, api) for light in api.getlights())
 
 
