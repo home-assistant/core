@@ -58,7 +58,6 @@ async def setup_hass(hass: HomeAssistant) -> dict:
         const.DOMAIN: {
             const.CLIENT_ID: "my_client_id",
             const.CLIENT_SECRET: "my_client_secret",
-            const.BASE_URL: "https://localhost:8999/",
             const.PROFILES: profiles,
         },
     }

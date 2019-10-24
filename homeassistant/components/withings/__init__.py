@@ -23,7 +23,6 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(const.CLIENT_SECRET): vol.All(
                     cv.string, vol.Length(min=1)
                 ),
-                vol.Optional(const.BASE_URL): cv.url,
                 vol.Required(const.PROFILES): vol.All(
                     cv.ensure_list,
                     vol.Unique(),
@@ -39,12 +38,11 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the Withings component."""
-    conf = config.get(DOMAIN, {}).copy()
+    conf = config.get(DOMAIN, {})
     if not conf:
         return True
 
-    base_url = conf.get(const.BASE_URL, hass.config.api.base_url).rstrip("/")
-    hass.data[DOMAIN] = {const.CONFIG: {**conf, **{const.BASE_URL: base_url}}}
+    hass.data[DOMAIN] = {const.CONFIG: conf}
 
     config_flow.WithingsFlowHandler.async_register_implementation(
         hass,
@@ -53,8 +51,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
             const.DOMAIN,
             conf[const.CLIENT_ID],
             conf[const.CLIENT_SECRET],
-            "%s/%s" % (WithingsAuth.URL, "oauth2_user/authorize2"),
-            "%s/%s" % (WithingsAuth.URL, "oauth2/token"),
+            f"{WithingsAuth.URL}/oauth2_user/authorize2",
+            f"{WithingsAuth.URL}/oauth2/token",
         ),
     )
 
@@ -65,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     """Set up Withings from a config entry."""
     # Upgrading existing token information to hass managed tokens.
     if "auth_implementation" not in entry.data:
-        _LOGGER.debug("Upgrading existing config entry.")
+        _LOGGER.debug("Upgrading existing config entry")
         data = entry.data
         creds = data.get(const.CREDENTIALS, {})
         hass.config_entries.async_update_entry(
@@ -95,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         await data_manager.check_authenticated()
     except NotAuthenticatedError:
         _LOGGER.error(
-            "Withings auth tokens exired for profile %s, remove and re-add the integration.",
+            "Withings auth tokens exired for profile %s, remove and re-add the integration",
             data_manager.profile,
         )
         return False

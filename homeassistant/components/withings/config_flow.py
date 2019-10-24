@@ -61,4 +61,4 @@ class WithingsFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
         """Finish the flow."""
         self._current_data = None
 
-        return await super().async_oauth_create_entry(data)
+        return self.async_create_entry(title=data[const.PROFILE], data=data)

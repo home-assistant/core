@@ -8,7 +8,6 @@ import voluptuous as vol
 from withings_api import AbstractWithingsApi
 from withings_api.common import SleepModel, SleepState
 
-import homeassistant.components.api as api
 import homeassistant.components.http as http
 from homeassistant.components.withings import (
     async_setup,
@@ -36,11 +35,7 @@ from .common import (
 
 def config_schema_validate(withings_config) -> None:
     """Assert a schema config succeeds."""
-    hass_config = {
-        http.DOMAIN: {},
-        api.DOMAIN: {"base_url": "http://localhost/"},
-        const.DOMAIN: withings_config,
-    }
+    hass_config = {http.DOMAIN: {}, const.DOMAIN: withings_config}
 
     return CONFIG_SCHEMA(hass_config)
 
@@ -148,49 +143,6 @@ def test_config_schema_profiles() -> None:
             const.CLIENT_ID: "my_client_id",
             const.CLIENT_SECRET: "my_client_secret",
             const.PROFILES: ["Person 1", "Person 2"],
-        }
-    )
-
-
-def test_config_schema_base_url() -> None:
-    """Test schema."""
-    config_schema_validate(
-        {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "my_client_secret",
-            const.PROFILES: ["Person 1"],
-        }
-    )
-    config_schema_assert_fail(
-        {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "my_client_secret",
-            const.BASE_URL: 123,
-            const.PROFILES: ["Person 1"],
-        }
-    )
-    config_schema_assert_fail(
-        {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "my_client_secret",
-            const.BASE_URL: "",
-            const.PROFILES: ["Person 1"],
-        }
-    )
-    config_schema_assert_fail(
-        {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "my_client_secret",
-            const.BASE_URL: "blah blah",
-            const.PROFILES: ["Person 1"],
-        }
-    )
-    config_schema_validate(
-        {
-            const.CLIENT_ID: "my_client_id",
-            const.CLIENT_SECRET: "my_client_secret",
-            const.BASE_URL: "https://www.blah.blah.blah/blah/blah",
-            const.PROFILES: ["Person 1"],
         }
     )
 
