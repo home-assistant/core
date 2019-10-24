@@ -1086,6 +1086,9 @@ pyalarmdotcom==0.3.2
 # homeassistant.components.arlo
 pyarlo==0.2.3
 
+# homeassistant.components.atlona_juno
+pyatlonajuno==1.1.1
+
 # homeassistant.components.netatmo
 pyatmo==2.3.2
 
