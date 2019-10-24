@@ -271,13 +271,13 @@ class TestSamsungTv(unittest.TestCase):
         """Test for media_next_track."""
         self.device.send_key = mock.Mock()
         self.device.media_next_track()
-        self.device.send_key.assert_called_once_with("KEY_FF")
+        self.device.send_key.assert_called_once_with("KEY_CHUP")
 
     def test_media_previous_track(self):
         """Test for media_previous_track."""
         self.device.send_key = mock.Mock()
         self.device.media_previous_track()
-        self.device.send_key.assert_called_once_with("KEY_REWIND")
+        self.device.send_key.assert_called_once_with("KEY_CHDOWN")
 
     def test_turn_on(self):
         """Test turn on."""
