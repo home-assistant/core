@@ -69,10 +69,6 @@ class MockPlexServer:
         prefix = "https" if ssl else "http"
         self._baseurl = f"{prefix}://{host}:{port}"
 
-    def connect(self):
-        """Mock the PlexServer connect method."""
-        return
-
     @property
     def url_in_use(self):
         """Return URL used by PlexServer."""
