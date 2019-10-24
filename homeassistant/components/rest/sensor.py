@@ -130,16 +130,16 @@ class RestSensor(Entity):
     """Implementation of a REST sensor."""
 
     def __init__(
-            self,
-            hass,
-            rest,
-            name,
-            unit_of_measurement,
-            device_class,
-            value_template,
-            json_attrs,
-            force_update,
-            resource_template,
+        self,
+        hass,
+        rest,
+        name,
+        unit_of_measurement,
+        device_class,
+        value_template,
+        json_attrs,
+        force_update,
+        resource_template,
     ):
         """Initialize the REST sensor."""
         self._hass = hass
@@ -224,7 +224,7 @@ class RestData:
     """Class for handling the data retrieval."""
 
     def __init__(
-            self, method, resource, auth, headers, data, verify_ssl, timeout=DEFAULT_TIMEOUT
+        self, method, resource, auth, headers, data, verify_ssl, timeout=DEFAULT_TIMEOUT
     ):
         """Initialize the data object."""
         self._method = method
@@ -244,14 +244,16 @@ class RestData:
         """Get the latest data from REST service with provided method."""
         _LOGGER.debug("Updating from %s", self._resource)
         try:
-            response = requests.request(self._method, self._resource, headers=self._headers,
-                                        auth=self._auth, data=self._request_data,
-                                        timeout=self._timeout, verify=self._verify_ssl)
+            response = requests.request(
+                self._method,
+                self._resource,
+                headers=self._headers,
+                auth=self._auth,
+                data=self._request_data,
+                timeout=self._timeout,
+                verify=self._verify_ssl,
+            )
             self.response_data = response.text
         except requests.exceptions.RequestException as ex:
-            _LOGGER.error(
-                "Error fetching data: %s failed with %s",
-                self._resource,
-                ex,
-            )
+            _LOGGER.error("Error fetching data: %s failed with %s", self._resource, ex)
             self.response_data = None
