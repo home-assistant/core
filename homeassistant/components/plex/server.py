@@ -1,4 +1,5 @@
 """Shared class to maintain Plex server instances."""
+import asyncio
 import logging
 
 import plexapi.myplex
@@ -9,7 +10,7 @@ import requests.exceptions
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
-from homeassistant.helpers.dispatcher import dispatcher_connect, dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 
 from .const import (
     CONF_CLIENT_IDENTIFIER,
@@ -60,10 +61,10 @@ class PlexServer:
         plexapi.myplex.BASE_HEADERS = plexapi.reset_base_headers()
         plexapi.server.BASE_HEADERS = plexapi.reset_base_headers()
 
-    def setup_websocket_callback(self):
+    async def async_setup_websocket_callback(self):
         """Connect dispatcher for websocket callbacks."""
         server_id = self.machine_identifier
-        unsub = dispatcher_connect(
+        unsub = async_dispatcher_connect(
             self._hass,
             PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id),
             self.update_platforms,
@@ -107,7 +108,9 @@ class PlexServer:
             _connect_with_token()
 
         if not validating:
-            self.setup_websocket_callback()
+            asyncio.run_coroutine_threadsafe(
+                self.async_setup_websocket_callback(), self._hass.loop
+            )
 
     def refresh_entity(self, machine_identifier, device, session):
         """Forward refresh dispatch to media_player."""
@@ -221,6 +224,6 @@ class PlexServer:
         """Create playqueue on Plex server."""
         return plexapi.playqueue.PlayQueue.create(self._plex_server, media, **kwargs)
 
-    def url(self, key, includeToken=False):
+    def url(self, key, includeToken=False):  # pylint: disable=invalid-name
         """Return the websocket URL for this Plex server."""
         return self._plex_server.url(key, includeToken)

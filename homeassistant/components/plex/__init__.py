@@ -20,7 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     CONF_USE_EPISODE_ART,
@@ -146,15 +146,15 @@ async def async_setup_entry(hass, entry):
     entry.add_update_listener(async_options_updated)
 
     def update_plex():
-        dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+        async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
 
     session = async_get_clientsession(hass)
-    ws = PlexWebsocket(plex_server, update_plex, session)
-    hass.loop.create_task(ws.listen())
-    hass.data[PLEX_DOMAIN][WEBSOCKETS][server_id] = ws
+    websocket = PlexWebsocket(plex_server, update_plex, session)
+    hass.loop.create_task(websocket.listen())
+    hass.data[PLEX_DOMAIN][WEBSOCKETS][server_id] = websocket
 
     def close_websocket_session(_):
-        ws.close()
+        websocket.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_websocket_session)
 
@@ -165,8 +165,8 @@ async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     server_id = entry.data[CONF_SERVER_IDENTIFIER]
 
-    ws = hass.data[PLEX_DOMAIN][WEBSOCKETS].pop(server_id)
-    ws.close()
+    websocket = hass.data[PLEX_DOMAIN][WEBSOCKETS].pop(server_id)
+    websocket.close()
 
     dispatchers = hass.data[PLEX_DOMAIN][DISPATCHERS].pop(server_id)
     for unsub in dispatchers:
