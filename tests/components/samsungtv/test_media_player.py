@@ -7,6 +7,7 @@ from samsungctl import exceptions
 from tests.common import MockDependency, async_fire_time_changed
 from unittest.mock import call, patch
 
+from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_CONTENT_ID,
@@ -410,6 +411,14 @@ async def test_supported_features_without_mac(hass, remote):
     await setup_samsungtv(hass, MOCK_CONFIG_NOMAC)
     state = hass.states.get(ENTITY_ID_NOMAC)
     assert SUPPORT_SAMSUNGTV == state.attributes[ATTR_SUPPORTED_FEATURES]
+
+
+async def test_device_class(hass, remote):
+    """Test for device_class property."""
+    await setup_samsungtv(hass, MOCK_CONFIG)
+    entity = hass.data[DOMAIN].get_entity(ENTITY_ID)
+    assert entity
+    assert entity.device_class == DEVICE_CLASS_TV
 
 
 async def test_turn_off_websocket(hass, remote):

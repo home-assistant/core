@@ -5,7 +5,11 @@ import socket
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import (
+    MediaPlayerDevice,
+    PLATFORM_SCHEMA,
+    DEVICE_CLASS_TV,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
@@ -258,6 +262,11 @@ class SamsungTVDevice(MediaPlayerDevice):
         if self._mac:
             return SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON
         return SUPPORT_SAMSUNGTV
+
+    @property
+    def device_class(self):
+        """Set the device class to TV."""
+        return DEVICE_CLASS_TV
 
     def turn_off(self):
         """Turn off media player."""
