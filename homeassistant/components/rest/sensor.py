@@ -103,7 +103,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         auth = None
     rest = RestData(method, resource, auth, headers, payload, verify_ssl, timeout)
     rest.update()
-    if rest.response_data is None:
+    if rest.data is None:
         raise PlatformNotReady
 
     # Must update the sensor now (including fetching the rest resource) to
@@ -172,7 +172,7 @@ class RestSensor(Entity):
     @property
     def available(self):
         """Return if the sensor data are available."""
-        return self.rest.response_data is not None
+        return self.rest.data is not None
 
     @property
     def state(self):
@@ -190,7 +190,7 @@ class RestSensor(Entity):
             self.rest.set_url(self._resource_template.render())
 
         self.rest.update()
-        value = self.rest.response_data
+        value = self.rest.data
 
         if self._json_attrs:
             self._attributes = {}
@@ -234,7 +234,7 @@ class RestData:
         self._request_data = data
         self._verify_ssl = verify_ssl
         self._timeout = timeout
-        self.response_data = None
+        self.data = None
 
     def set_url(self, url):
         """Set url."""
@@ -253,7 +253,7 @@ class RestData:
                 timeout=self._timeout,
                 verify=self._verify_ssl,
             )
-            self.response_data = response.text
+            self.data = response.text
         except requests.exceptions.RequestException as ex:
             _LOGGER.error("Error fetching data: %s failed with %s", self._resource, ex)
-            self.response_data = None
+            self.data = None
