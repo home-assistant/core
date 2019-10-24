@@ -846,7 +846,7 @@ class BluesoundPlayer(MediaPlayerDevice):
     def device_state_attributes(self):
         """List members in group."""
         attributes = {}
-        if self._group_list != []:
+        if self._group_list is not None:
             attributes = {ATTR_BLUESOUND_GROUP: self._group_list}
 
         attributes[ATTR_MASTER] = self._is_master
