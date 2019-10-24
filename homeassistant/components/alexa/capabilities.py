@@ -727,7 +727,7 @@ class AlexaThermostatController(AlexaCapability):
         configuration = {"supportsScheduling": False}
 
         if supported_modes:
-            configuration["supportedModes"] = [mode for mode in supported_modes]
+            configuration["supportedModes"] = supported_modes
 
         return configuration
 
