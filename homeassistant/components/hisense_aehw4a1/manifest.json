@@ -4,7 +4,11 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hisense_aehw4a1",
   "requirements": [
+<<<<<<< HEAD
     "pyaehw4a1==0.1.2"
+=======
+    "pyaehw4a1==0.0.5"
+>>>>>>> First commit
   ],
   "ssdp": {},
   "homekit": {},
@@ -12,4 +16,8 @@
   "codeowners": [
     "@bannhead"
   ]
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> First commit
