@@ -2,7 +2,7 @@
 import pytest
 
 from homeassistant.core import Context, callback
-from homeassistant.const import TEMP_FAHRENHEIT
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.components.alexa import smart_home, messages
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
@@ -1484,6 +1484,9 @@ async def test_thermostat(hass):
         payload={"thermostatMode": "ECO"},
     )
     assert call.data["preset_mode"] == "eco"
+
+    # Reset config temperature_unit back to CELSIUS, required for additional tests outside this component.
+    hass.config.units.temperature_unit = TEMP_CELSIUS
 
 
 async def test_exclude_filters(hass):
