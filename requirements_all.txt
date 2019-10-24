@@ -11,7 +11,7 @@ jinja2>=2.10.1
 PyJWT==1.7.1
 cryptography==2.8
 pip>=8.0.3
-python-slugify==3.0.6
+python-slugify==4.0.0
 pytz>=2019.03
 pyyaml==5.1.2
 requests==2.22.0
@@ -139,7 +139,7 @@ aiobotocore==0.10.2
 aiodns==2.0.0
 
 # homeassistant.components.esphome
-aioesphomeapi==2.4.0
+aioesphomeapi==2.4.2
 
 # homeassistant.components.freebox
 aiofreepybox==0.0.8
@@ -665,7 +665,7 @@ horimote==0.4.1
 httplib2==0.10.3
 
 # homeassistant.components.huawei_lte
-huawei-lte-api==1.3.0
+huawei-lte-api==1.4.3
 
 # homeassistant.components.hydrawise
 hydrawiser==0.1.1
@@ -1612,7 +1612,7 @@ pytraccar==0.9.0
 pytrackr==0.0.5
 
 # homeassistant.components.tradfri
-pytradfri[async]==6.3.1
+pytradfri[async]==6.4.0
 
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
@@ -1837,6 +1837,7 @@ steamodd==4.21
 # homeassistant.components.streamlabswater
 streamlabswater==1.0.1
 
+# homeassistant.components.huawei_lte
 # homeassistant.components.solaredge
 # homeassistant.components.thermoworks_smoke
 # homeassistant.components.traccar
@@ -1923,6 +1924,9 @@ unifiled==0.11
 # homeassistant.components.upcloud
 upcloud-api==0.4.3
 
+# homeassistant.components.huawei_lte
+url-normalize==1.4.1
+
 # homeassistant.components.uscis
 uscisstatus==0.1.1
 
@@ -1980,7 +1984,7 @@ websockets==6.0
 wirelesstagpy==0.4.0
 
 # homeassistant.components.withings
-withings-api==2.0.0b8
+withings-api==2.1.2
 
 # homeassistant.components.wunderlist
 wunderpy2==0.1.6
