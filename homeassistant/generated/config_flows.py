@@ -28,6 +28,7 @@ FLOWS = [
     "gpslogger",
     "hangouts",
     "heos",
+    "hisense_aehw4a1",
     "homekit_controller",
     "homematicip_cloud",
     "huawei_lte",
