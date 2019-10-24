@@ -1,9 +1,9 @@
 """Support for Unifi Led lights."""
 import logging
 
+from unifiled import unifiled
 import voluptuous as vol
 
-from unifiled import unifiled
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
@@ -31,19 +31,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Assign configuration variables.
     # The configuration check takes care they are present.
-    ip = config[CONF_HOST]
+    host = config[CONF_HOST]
     port = config[CONF_PORT]
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
 
-    api = unifiled(ip, port, username=username, password=password)
+    api = unifiled(host, port, username=username, password=password)
 
     # Verify that passed in configuration works
     if not api.getloginstate():
         _LOGGER.error("Could not connect to unifiled controller")
         return
 
-    # Add devices
     add_entities(UnifiLedLight(light, api) for light in api.getlights())
 
 
