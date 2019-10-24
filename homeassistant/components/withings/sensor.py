@@ -38,9 +38,9 @@ async def async_setup_entry(
     )
 
     data_manager = get_data_manager(hass, entry, implementation)
-    userid = entry.data["token"]["userid"]
+    user_id = entry.data["token"]["userid"]
 
-    entities = create_sensor_entities(data_manager, userid)
+    entities = create_sensor_entities(data_manager, user_id)
     async_add_entities(entities, True)
 
 
@@ -292,7 +292,7 @@ class WithingsHealthSensor(Entity):
         self,
         data_manager: WithingsDataManager,
         attribute: WithingsAttribute,
-        userid: str,
+        user_id: str,
     ) -> None:
         """Initialize the Withings sensor."""
         self._data_manager = data_manager
@@ -300,7 +300,7 @@ class WithingsHealthSensor(Entity):
         self._state = None
 
         self._slug = self._data_manager.slug
-        self._userid = userid
+        self._user_id = user_id
 
     @property
     def name(self) -> str:
@@ -311,7 +311,7 @@ class WithingsHealthSensor(Entity):
     def unique_id(self) -> str:
         """Return a unique, HASS-friendly identifier for this entity."""
         return "withings_{}_{}_{}".format(
-            self._slug, self._userid, slugify(self._attribute.measurement)
+            self._slug, self._user_id, slugify(self._attribute.measurement)
         )
 
     @property
@@ -340,7 +340,7 @@ class WithingsHealthSensor(Entity):
             "Async update slug: %s, measurement: %s, user_id: %s",
             self._slug,
             self._attribute.measurement,
-            self._userid,
+            self._user_id,
         )
 
         if isinstance(self._attribute, WithingsMeasureAttribute):
@@ -444,7 +444,7 @@ class WithingsHealthSensor(Entity):
 
 
 def create_sensor_entities(
-    data_manager: WithingsDataManager, userid: str
+    data_manager: WithingsDataManager, user_id: str
 ) -> List[WithingsHealthSensor]:
     """Create sensor entities."""
     entities = []
@@ -459,7 +459,7 @@ def create_sensor_entities(
             attribute.unit_of_measurement,
         )
 
-        entity = WithingsHealthSensor(data_manager, attribute, userid)
+        entity = WithingsHealthSensor(data_manager, attribute, user_id)
 
         entities.append(entity)
 
