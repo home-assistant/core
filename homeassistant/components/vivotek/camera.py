@@ -43,6 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Vivotek IP Camera."""
+    creds = f"{config[CONF_USERNAME]}:{config[CONF_PASSWORD]}"
     args = dict(
         config=config,
         cam=VivotekCamera(
@@ -52,15 +53,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             usr=config[CONF_USERNAME],
             pwd=config[CONF_PASSWORD],
         ),
-        stream_source=(
-            "rtsp://%s:%s@%s:554/%s"
-            % (
-                config[CONF_USERNAME],
-                config[CONF_PASSWORD],
-                config[CONF_IP_ADDRESS],
-                config[CONF_STREAM_PATH],
-            )
-        ),
+        stream_source=f"rtsp://{creds}@{config[CONF_IP_ADDRESS]}:554/{config[CONF_STREAM_PATH]}",
     )
     add_entities([VivotekCam(**args)], True)
 
