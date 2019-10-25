@@ -391,7 +391,11 @@ class MediaPlayerCapabilities(AlexaEntity):
 
     def default_display_categories(self):
         """Return the display categories for this entity."""
-        return [DisplayCategory.TV]
+        device_class = self.entity.attributes.get(ATTR_DEVICE_CLASS)
+        if device_class == media_player.DEVICE_CLASS_SPEAKER:
+            return [DisplayCategory.SPEAKER]
+        else:
+            return [DisplayCategory.TV]
 
     def interfaces(self):
         """Yield the supported interfaces."""
