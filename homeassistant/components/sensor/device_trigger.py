@@ -3,6 +3,9 @@ import voluptuous as vol
 
 import homeassistant.components.automation.numeric_state as numeric_state_automation
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -156,7 +159,7 @@ async def async_get_trigger_capabilities(hass, config):
     )
 
     if not state or not unit_of_measurement:
-        return {}
+        raise InvalidDeviceAutomationConfig
 
     return {
         "extra_fields": vol.Schema(

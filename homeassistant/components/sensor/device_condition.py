@@ -2,6 +2,9 @@
 from typing import List
 import voluptuous as vol
 
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -149,7 +152,7 @@ async def async_get_condition_capabilities(hass, config):
     )
 
     if not state or not unit_of_measurement:
-        return {}
+        raise InvalidDeviceAutomationConfig
 
     return {
         "extra_fields": vol.Schema(
