@@ -736,6 +736,33 @@ class AlexaThermostatController(AlexaCapability):
 
         return {"value": temp, "scale": API_TEMP_UNITS[unit]}
 
+    def configuration(self):
+        """Return configuration object.
+
+        Translates climate HVAC_MODES and PRESETS to supported Alexa ThermostatMode Values.
+        ThermostatMode Value must be AUTO, COOL, HEAT, ECO, OFF, or CUSTOM.
+        """
+        supported_modes = []
+        hvac_modes = self.entity.attributes.get(climate.ATTR_HVAC_MODES)
+        for mode in hvac_modes:
+            thermostat_mode = API_THERMOSTAT_MODES.get(mode)
+            if thermostat_mode:
+                supported_modes.append(thermostat_mode)
+
+        preset_modes = self.entity.attributes.get(climate.ATTR_PRESET_MODES)
+        for mode in preset_modes:
+            thermostat_mode = API_THERMOSTAT_PRESETS.get(mode)
+            if thermostat_mode:
+                supported_modes.append(thermostat_mode)
+
+        # Return False for supportsScheduling until supported with event listener in handler.
+        configuration = {"supportsScheduling": False}
+
+        if supported_modes:
+            configuration["supportedModes"] = supported_modes
+
+        return configuration
+
 
 class AlexaPowerLevelController(AlexaCapability):
     """Implements Alexa.PowerLevelController.
