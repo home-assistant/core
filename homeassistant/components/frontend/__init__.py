@@ -7,7 +7,6 @@ import pathlib
 from typing import Any, Dict, Optional, Set, Tuple
 
 from aiohttp import hdrs, web, web_urldispatcher
-import hass_frontend
 import jinja2
 import voluptuous as vol
 from yarl import URL
@@ -241,6 +240,8 @@ def _frontend_root(dev_repo_path):
     """Return root path to the frontend files."""
     if dev_repo_path is not None:
         return pathlib.Path(dev_repo_path) / "hass_frontend"
+    # Keep import here so that we can import frontend without installing reqs
+    import hass_frontend
 
     return hass_frontend.where()
 
