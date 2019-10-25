@@ -2,7 +2,7 @@
   "domain": "cloud",
   "name": "Cloud",
   "documentation": "https://www.home-assistant.io/integrations/cloud",
-  "requirements": ["hass-nabucasa==0.22"],
+  "requirements": ["hass-nabucasa==0.23"],
   "dependencies": ["http", "webhook"],
   "codeowners": ["@home-assistant/cloud"]
 }

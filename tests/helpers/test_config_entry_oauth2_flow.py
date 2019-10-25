@@ -264,3 +264,45 @@ async def test_oauth_session(hass, flow_handler, local_impl, aioclient_mock):
     assert config_entry.data["token"]["expires_in"] == 100
     assert config_entry.data["token"]["random_other_data"] == "should_stay"
     assert round(config_entry.data["token"]["expires_at"] - now) == 100
+
+
+async def test_implementation_provider(hass, local_impl):
+    """Test providing an implementation provider."""
+    assert (
+        await config_entry_oauth2_flow.async_get_implementations(hass, TEST_DOMAIN)
+        == {}
+    )
+
+    mock_domain_with_impl = "some_domain"
+
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, mock_domain_with_impl, local_impl
+    )
+
+    assert await config_entry_oauth2_flow.async_get_implementations(
+        hass, mock_domain_with_impl
+    ) == {TEST_DOMAIN: local_impl}
+
+    provider_source = {}
+
+    async def async_provide_implementation(hass, domain):
+        """Mock implementation provider."""
+        return provider_source.get(domain)
+
+    config_entry_oauth2_flow.async_add_implementation_provider(
+        hass, "cloud", async_provide_implementation
+    )
+
+    assert await config_entry_oauth2_flow.async_get_implementations(
+        hass, mock_domain_with_impl
+    ) == {TEST_DOMAIN: local_impl}
+
+    provider_source[
+        mock_domain_with_impl
+    ] = config_entry_oauth2_flow.LocalOAuth2Implementation(
+        hass, "cloud", CLIENT_ID, CLIENT_SECRET, AUTHORIZE_URL, TOKEN_URL
+    )
+
+    assert await config_entry_oauth2_flow.async_get_implementations(
+        hass, mock_domain_with_impl
+    ) == {TEST_DOMAIN: local_impl, "cloud": provider_source[mock_domain_with_impl]}
