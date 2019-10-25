@@ -10,7 +10,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
