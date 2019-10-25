@@ -3,11 +3,11 @@ import logging
 
 import voluptuous as vol
 
+from pcal9535a import PCAL9535A
+
 from homeassistant.components.binary_sensor import BinarySensorDevice, PLATFORM_SCHEMA
 from homeassistant.const import DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
-
-from pcal9535a import PCAL9535A
 
 _LOGGER = logging.getLogger(__name__)
 
