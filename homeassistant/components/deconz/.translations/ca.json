@@ -37,7 +37,7 @@
                     "allow_clip_sensor": "Permet la importaci\u00f3 de sensors virtuals",
                     "allow_deconz_groups": "Permetre la importaci\u00f3 de grups deCONZ"
                 },
-                "title": "Opcions de configuraci\u00f3 addicionals per deCONZ"
+                "title": "Opcions de configuraci\u00f3 addicionals de deCONZ"
             }
         },
         "title": "Passarel\u00b7la d'enlla\u00e7 deCONZ Zigbee"
