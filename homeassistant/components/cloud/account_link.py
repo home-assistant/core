@@ -116,7 +116,7 @@ class CloudOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implement
                     flow_id=flow_id, user_input=tokens
                 )
 
-        self.hass.async_add_job(await_tokens())
+        self.hass.async_create_task(await_tokens())
 
         return authorize_url
 
