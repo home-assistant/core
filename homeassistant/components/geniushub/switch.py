@@ -2,7 +2,7 @@
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from . import DOMAIN, DEVICE_CLASS_OUTLET, GeniusZone
+from . import DOMAIN, DEVICE_CLASS_OUTLET, GeniusEntity
 
 GH_ON_OFF_ZONE = "on / off"
 
@@ -25,8 +25,26 @@ async def async_setup_platform(
     async_add_entities(switches)
 
 
-class GeniusSwitch(GeniusZone, SwitchDevice):
+class GeniusSwitch(GeniusEntity, SwitchDevice):
     """Representation of a Genius Hub switch."""
+
+    def __init__(self, broker, zone) -> None:
+        """Initialize the Zone."""
+        super().__init__()
+
+        self._zone = zone
+        self._unique_id = f"{broker.hub_uid}_zone_{zone.id}"
+
+    @property
+    def name(self) -> str:
+        """Return the name of the climate device."""
+        return self._zone.name
+
+    @property
+    def device_state_attributes(self) -> Dict[str, Any]:
+        """Return the device state attributes."""
+        status = {k: v for k, v in self._zone.data.items() if k in GH_ZONE_ATTRS}
+        return {"status": status}
 
     @property
     def device_class(self):
