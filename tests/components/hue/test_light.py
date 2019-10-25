@@ -599,13 +599,13 @@ async def test_update_timeout(hass, mock_bridge):
 
 
 async def test_update_unauthorized(hass, mock_bridge):
-    """Test bridge marked as not available if unauthorized during update."""
+    """Test bridge marked as not authorized if unauthorized during update."""
     mock_bridge.api.lights.update = Mock(side_effect=aiohue.Unauthorized)
     mock_bridge.api.groups.update = Mock(side_effect=aiohue.Unauthorized)
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 0
     assert len(hass.states.async_all()) == 0
-    assert mock_bridge.available is False
+    assert mock_bridge.authorized is False
 
 
 async def test_light_turn_on_service(hass, mock_bridge):
