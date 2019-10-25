@@ -26,6 +26,7 @@ from homeassistant.components.samsungtv.media_player import (
     SUPPORT_SAMSUNGTV,
 )
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
@@ -191,10 +192,13 @@ async def test_setup_discovery(hass, remote):
         )
     )
     await hass.async_block_till_done()
-    entity = hass.data[DOMAIN].get_entity(ENTITY_ID_DISCOVERY)
-    assert entity
-    assert entity.name == "fake_discovery (fake_model)"
-    assert entity.unique_id == "fake_uuid"
+    state = hass.states.get(ENTITY_ID_DISCOVERY)
+    assert state
+    assert state.name == "fake_discovery (fake_model)"
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entry = entity_registry.async_get(ENTITY_ID_DISCOVERY)
+    assert entry
+    assert entry.unique_id == "fake_uuid"
 
 
 async def test_setup_discovery_prefix(hass, remote):
@@ -205,10 +209,13 @@ async def test_setup_discovery_prefix(hass, remote):
         )
     )
     await hass.async_block_till_done()
-    entity = hass.data[DOMAIN].get_entity(ENTITY_ID_DISCOVERY_PREFIX)
-    assert entity
-    assert entity.name == "fake_discovery_prefix (fake_model_prefix)"
-    assert entity.unique_id == "fake_uuid_prefix"
+    state = hass.states.get(ENTITY_ID_DISCOVERY_PREFIX)
+    assert state
+    assert state.name == "fake_discovery_prefix (fake_model_prefix)"
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entry = entity_registry.async_get(ENTITY_ID_DISCOVERY_PREFIX)
+    assert entry
+    assert entry.unique_id == "fake_uuid_prefix"
 
 
 async def test_update_on(hass, remote, mock_now):
@@ -402,7 +409,7 @@ async def test_supported_features_with_mac(hass, remote):
     await setup_samsungtv(hass, MOCK_CONFIG)
     state = hass.states.get(ENTITY_ID)
     assert (
-        SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON == state.attributes[ATTR_SUPPORTED_FEATURES]
+        state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON
     )
 
 
@@ -410,15 +417,14 @@ async def test_supported_features_without_mac(hass, remote):
     """Test for supported_features property."""
     await setup_samsungtv(hass, MOCK_CONFIG_NOMAC)
     state = hass.states.get(ENTITY_ID_NOMAC)
-    assert SUPPORT_SAMSUNGTV == state.attributes[ATTR_SUPPORTED_FEATURES]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_SAMSUNGTV
 
 
 async def test_device_class(hass, remote):
     """Test for device_class property."""
     await setup_samsungtv(hass, MOCK_CONFIG)
-    entity = hass.data[DOMAIN].get_entity(ENTITY_ID)
-    assert entity
-    assert entity.device_class == DEVICE_CLASS_TV
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TV
 
 
 async def test_turn_off_websocket(hass, remote):
