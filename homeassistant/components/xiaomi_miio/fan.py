@@ -14,16 +14,16 @@ from miio import (  # pylint: disable=import-error
 )
 
 from miio.airfresh import (  # pylint: disable=import-error; pylint: disable=import-error
-    LedBrightness as airfreshLedBrightness,
-    OperationMode as airfreshOperationMode,
+    LedBrightness as AirfreshLedBrightness,
+    OperationMode as AirfreshOperationMode,
 )
 from miio.airhumidifier import (  # pylint: disable=import-error; pylint: disable=import-error
-    LedBrightness as airhumidifierLedBrightness,
-    OperationMode as airhumidifierOperationMode,
+    LedBrightness as AirhumidifierLedBrightness,
+    OperationMode as AirhumidifierOperationMode,
 )
 from miio.airpurifier import (  # pylint: disable=import-error; pylint: disable=import-error
-    LedBrightness as airpurifierLedBrightness,
-    OperationMode as airpurifierOperationMode,
+    LedBrightness as AirpurifierLedBrightness,
+    OperationMode as AirpurifierOperationMode,
 )
 
 from homeassistant.components.fan import (
@@ -739,7 +739,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
     def speed(self):
         """Return the current speed."""
         if self._state:
-            return airpurifierOperationMode(self._state_attrs[ATTR_MODE]).name
+            return AirpurifierOperationMode(self._state_attrs[ATTR_MODE]).name
 
         return None
 
@@ -753,7 +753,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
         await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
-            airpurifierOperationMode[speed.title()],
+            AirpurifierOperationMode[speed.title()],
         )
 
     async def async_set_led_on(self):
@@ -784,7 +784,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
         await self._try_command(
             "Setting the led brightness of the miio device failed.",
             self._device.set_led_brightness,
-            airpurifierLedBrightness(brightness),
+            AirpurifierLedBrightness(brightness),
         )
 
     async def async_set_favorite_level(self, level: int = 1):
@@ -887,16 +887,16 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA_AND_CB
             self._speed_list = [
                 mode.name
-                for mode in airhumidifierOperationMode
-                if mode is not airhumidifierOperationMode.Strong
+                for mode in AirhumidifierOperationMode
+                if mode is not AirhumidifierOperationMode.Strong
             ]
         else:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER
             self._speed_list = [
                 mode.name
-                for mode in airhumidifierOperationMode
-                if mode is not airhumidifierOperationMode.Auto
+                for mode in AirhumidifierOperationMode
+                if mode is not AirhumidifierOperationMode.Auto
             ]
 
         self._state_attrs.update(
@@ -936,7 +936,7 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
     def speed(self):
         """Return the current speed."""
         if self._state:
-            return airhumidifierOperationMode(self._state_attrs[ATTR_MODE]).name
+            return AirhumidifierOperationMode(self._state_attrs[ATTR_MODE]).name
 
         return None
 
@@ -950,7 +950,7 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
         await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
-            airhumidifierOperationMode[speed.title()],
+            AirhumidifierOperationMode[speed.title()],
         )
 
     async def async_set_led_brightness(self, brightness: int = 2):
@@ -961,7 +961,7 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
         await self._try_command(
             "Setting the led brightness of the miio device failed.",
             self._device.set_led_brightness,
-            airhumidifierLedBrightness(brightness),
+            AirhumidifierLedBrightness(brightness),
         )
 
     async def async_set_target_humidity(self, humidity: int = 40):
@@ -1045,7 +1045,7 @@ class XiaomiAirFresh(XiaomiGenericDevice):
     def speed(self):
         """Return the current speed."""
         if self._state:
-            return airfreshOperationMode(self._state_attrs[ATTR_MODE]).name
+            return AirfreshOperationMode(self._state_attrs[ATTR_MODE]).name
 
         return None
 
@@ -1059,7 +1059,7 @@ class XiaomiAirFresh(XiaomiGenericDevice):
         await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
-            airfreshOperationMode[speed.title()],
+            AirfreshOperationMode[speed.title()],
         )
 
     async def async_set_led_on(self):
@@ -1090,7 +1090,7 @@ class XiaomiAirFresh(XiaomiGenericDevice):
         await self._try_command(
             "Setting the led brightness of the miio device failed.",
             self._device.set_led_brightness,
-            airfreshLedBrightness(brightness),
+            AirfreshLedBrightness(brightness),
         )
 
     async def async_set_extra_features(self, features: int = 1):
