@@ -968,6 +968,25 @@ async def test_media_player_power(hass):
     )
 
 
+async def test_media_player_speaker(hass):
+    """Test media player discovery with device class speaker."""
+    device = (
+        "media_player.test",
+        "off",
+        {
+            "friendly_name": "Test media player",
+            "supported_features": 51765,
+            "volume_level": 0.75,
+            "device_class": "speaker",
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "media_player#test"
+    assert appliance["displayCategories"][0] == "SPEAKER"
+    assert appliance["friendlyName"] == "Test media player"
+
+
 async def test_alert(hass):
     """Test alert discovery."""
     device = ("alert.test", "off", {"friendly_name": "Test alert"})
