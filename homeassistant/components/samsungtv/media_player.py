@@ -173,7 +173,9 @@ class SamsungTVDevice(MediaPlayerDevice):
                 ):
                     # We got a response so it's working.
                     self._state = STATE_ON
-                    LOGGER.debug("Found working config: %s", self._config)
+                    LOGGER.debug(
+                        "Found working config without connection: %s", self._config
+                    )
                     break
                 except OSError as err:
                     LOGGER.debug("Failing config: %s error was: %s", self._config, err)
