@@ -22,8 +22,6 @@ ATTR_TORRENT = "torrent"
 SERVICE_ADD_TORRENT = "add_torrent"
 
 DATA_UPDATED = "transmission_data_updated"
-<<<<<<< HEAD
-=======
 DATA_TRANSMISSION = "data_transmission"
 
 _TRPC = {
@@ -35,4 +33,3 @@ _TRPC = {
     "download pending": "download pending",
     "seed pending": "seed pending",
 }
->>>>>>> Add information about current downloads.

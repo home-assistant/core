@@ -6,9 +6,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-<<<<<<< HEAD
-from .const import DOMAIN, SENSOR_TYPES
-=======
 from .const import (
     DATA_TRANSMISSION,
     DATA_UPDATED,
@@ -16,7 +13,7 @@ from .const import (
     SENSOR_TYPES,
     STATE_ATTR_TORRENT_INFO,
 )
->>>>>>> Add information about current downloads.
+
 
 _LOGGER = logging.getLogger(__name__)
 
