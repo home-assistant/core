@@ -49,9 +49,6 @@ class TransmissionSensor(Entity):
     """Representation of a Transmission sensor."""
 
     def __init__(
-<<<<<<< HEAD
-        self, sensor_type, tm_client, client_name, sensor_name, unit_of_measurement
-=======
         self,
         sensor_type,
         transmission_api,
@@ -59,7 +56,6 @@ class TransmissionSensor(Entity):
         sensor_name,
         unit_of_measurement,
         torrent_info,
->>>>>>> Add information about current downloads.
     ):
         """Initialize the sensor."""
         self._name = sensor_name
@@ -127,12 +123,8 @@ class TransmissionSensor(Entity):
         if self.type == "completed_torrents":
             self._state = self._tm_client.api.get_completed_torrent_count()
         elif self.type == "started_torrents":
-<<<<<<< HEAD
-            self._state = self._tm_client.api.get_started_torrent_count()
-=======
             self._state = self._transmission_api.get_started_torrent_count()
             self._torrent_info = self._transmission_api.started_torrent_dict
->>>>>>> Remove transmission_downloading, give started_torrents the info.
 
         if self.type == "current_status":
             if self._data:
