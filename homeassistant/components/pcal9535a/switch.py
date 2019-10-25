@@ -2,7 +2,6 @@
 import logging
 
 import voluptuous as vol
-
 from pcal9535a import PCAL9535A
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice

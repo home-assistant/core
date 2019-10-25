@@ -2,7 +2,6 @@
 import logging
 
 import voluptuous as vol
-
 from pcal9535a import PCAL9535A
 
 from homeassistant.components.binary_sensor import BinarySensorDevice, PLATFORM_SCHEMA
