@@ -2,9 +2,9 @@
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from . import DOMAIN, GeniusZone
+from . import DOMAIN, DEVICE_CLASS_OUTLET, GeniusZone
 
-GH_ZONE_ATTR = "on / off"
+GH_ON_OFF_ZONE = "on / off"
 
 
 async def async_setup_platform(
@@ -19,14 +19,19 @@ async def async_setup_platform(
     switches = [
         GeniusSwitch(broker, z)
         for z in broker.client.zone_objs
-        if GH_ZONE_ATTR in z.data["type"]
+        z.data["type"] == GH_ON_OFF_ZONE
     ]
 
-    async_add_entities(switches, update_before_add=True)
+    async_add_entities(switches)
 
 
 class GeniusSwitch(GeniusZone, SwitchDevice):
     """Representation of a Genius Hub switch."""
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_OUTLET
 
     @property
     def is_on(self) -> bool:
