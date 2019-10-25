@@ -79,13 +79,13 @@ HUE_API_STATE_CT = "ct"
 HUE_API_STATE_EFFECT = "effect"
 
 # Hue API min/max values - https://developers.meethue.com/develop/hue-api/lights-api/
-HUE_API_STATE_BRI_MIN = 1     # Brightness
+HUE_API_STATE_BRI_MIN = 1  # Brightness
 HUE_API_STATE_BRI_MAX = 254
-HUE_API_STATE_HUE_MIN = 0     # Hue
+HUE_API_STATE_HUE_MIN = 0  # Hue
 HUE_API_STATE_HUE_MAX = 65535
-HUE_API_STATE_SAT_MIN = 0     # Saturation
+HUE_API_STATE_SAT_MIN = 0  # Saturation
 HUE_API_STATE_SAT_MAX = 254
-HUE_API_STATE_CT_MIN = 153    # Color temp
+HUE_API_STATE_CT_MIN = 153  # Color temp
 HUE_API_STATE_CT_MAX = 500
 
 
@@ -417,9 +417,9 @@ class HueOneLightChangeView(HomeAssistantView):
 
         for (key, val) in (
             (STATE_BRIGHTNESS, HUE_API_STATE_BRI),
-            (STATE_HUE,        HUE_API_STATE_HUE),
+            (STATE_HUE, HUE_API_STATE_HUE),
             (STATE_SATURATION, HUE_API_STATE_SAT),
-            (STATE_COLOR_TEMP, HUE_API_STATE_CT)
+            (STATE_COLOR_TEMP, HUE_API_STATE_CT),
         ):
             if parsed[key] is not None:
                 json_response.append(
@@ -450,10 +450,25 @@ def parse_hue_api_put_light_body(request_json, entity):
         data[STATE_BRIGHTNESS] = None
 
     for (key, attr, v_min, v_max) in (
-        (HUE_API_STATE_BRI, STATE_BRIGHTNESS, HUE_API_STATE_BRI_MIN, HUE_API_STATE_BRI_MAX),
-        (HUE_API_STATE_HUE, STATE_HUE,        HUE_API_STATE_HUE_MIN, HUE_API_STATE_HUE_MAX),
-        (HUE_API_STATE_SAT, STATE_SATURATION, HUE_API_STATE_SAT_MIN, HUE_API_STATE_SAT_MAX),
-        (HUE_API_STATE_CT,  STATE_COLOR_TEMP, HUE_API_STATE_CT_MIN,  HUE_API_STATE_CT_MAX)
+        (
+            HUE_API_STATE_BRI,
+            STATE_BRIGHTNESS,
+            HUE_API_STATE_BRI_MIN,
+            HUE_API_STATE_BRI_MAX,
+        ),
+        (HUE_API_STATE_HUE, STATE_HUE, HUE_API_STATE_HUE_MIN, HUE_API_STATE_HUE_MAX),
+        (
+            HUE_API_STATE_SAT,
+            STATE_SATURATION,
+            HUE_API_STATE_SAT_MIN,
+            HUE_API_STATE_SAT_MAX,
+        ),
+        (
+            HUE_API_STATE_CT,
+            STATE_COLOR_TEMP,
+            HUE_API_STATE_CT_MIN,
+            HUE_API_STATE_CT_MAX,
+        ),
     ):
         if key in request_json:
             try:
@@ -567,9 +582,9 @@ def get_entity_state(config, entity):
     # Clamp brightness, hue, saturation, and color temp to valid values
     for (key, v_min, v_max) in (
         (STATE_BRIGHTNESS, HUE_API_STATE_BRI_MIN, HUE_API_STATE_BRI_MAX),
-        (STATE_HUE,        HUE_API_STATE_HUE_MIN, HUE_API_STATE_HUE_MAX),
+        (STATE_HUE, HUE_API_STATE_HUE_MIN, HUE_API_STATE_HUE_MAX),
         (STATE_SATURATION, HUE_API_STATE_SAT_MIN, HUE_API_STATE_SAT_MAX),
-        (STATE_COLOR_TEMP, HUE_API_STATE_CT_MIN,  HUE_API_STATE_CT_MAX )
+        (STATE_COLOR_TEMP, HUE_API_STATE_CT_MIN, HUE_API_STATE_CT_MAX),
     ):
         if data[key] is not None:
             data[key] = max(v_min, min(data[key], v_max))
@@ -604,9 +619,10 @@ def entity_to_json(config, entity, state):
         "swversion": "123",
     }
 
-    if (entity_features & SUPPORT_BRIGHTNESS) and (
-        entity_features & SUPPORT_COLOR) and (
-        entity_features & SUPPORT_COLOR_TEMP
+    if (
+        (entity_features & SUPPORT_BRIGHTNESS)
+        and (entity_features & SUPPORT_COLOR)
+        and (entity_features & SUPPORT_COLOR_TEMP)
     ):
         # Extended Color light (ZigBee Device ID: 0x0210)
         # Same as Color light, but which supports additional setting of color temperature
@@ -639,16 +655,15 @@ def entity_to_json(config, entity, state):
                 HUE_API_STATE_EFFECT: "none",
             }
         )
-    elif (entity_features & SUPPORT_BRIGHTNESS) and (entity_features & SUPPORT_COLOR_TEMP):
+    elif (entity_features & SUPPORT_BRIGHTNESS) and (
+        entity_features & SUPPORT_COLOR_TEMP
+    ):
         # Color temperature light (ZigBee Device ID: 0x0220)
         # Supports groups, scenes, on/off, dimming, and setting of a color temperature
         retval["type"] = "Color temperature light"
         retval["modelid"] = "HASS312"
         retval["state"].update(
-            {
-                HUE_API_STATE_COLORMODE: "ct",
-                HUE_API_STATE_CT: state[STATE_COLOR_TEMP],
-            }
+            {HUE_API_STATE_COLORMODE: "ct", HUE_API_STATE_CT: state[STATE_COLOR_TEMP]}
         )
     elif (
         entity_features
