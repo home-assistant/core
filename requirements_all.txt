@@ -1132,7 +1132,7 @@ pycomfoconnect==0.3
 pycoolmasternet==0.0.4
 
 # homeassistant.components.microsoft
-pycsspeechtts==1.0.2
+pycsspeechtts==1.0.3
 
 # homeassistant.components.cups
 # pycups==1.9.73
