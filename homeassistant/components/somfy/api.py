@@ -8,7 +8,7 @@ from homeassistant import core, config_entries
 from homeassistant.helpers import config_entry_oauth2_flow
 
 
-class ConfigEntrySomfyApi(somfy_api.SomfyApi) -> Dict[str, Union[str, int]]:
+class ConfigEntrySomfyApi(somfy_api.SomfyApi):
     """Provide a Somfy API tied into an OAuth2 based config entry."""
 
     def __init__(
@@ -25,7 +25,7 @@ class ConfigEntrySomfyApi(somfy_api.SomfyApi) -> Dict[str, Union[str, int]]:
         )
         super().__init__(None, None, token=self.session.token)
 
-    def refresh_tokens(self,) -> dict:
+    def refresh_tokens(self,) -> Dict[str, Union[str, int]]:
         """Refresh and return new Somfy tokens using Home Assistant OAuth2 session."""
         run_coroutine_threadsafe(
             self.session.async_ensure_token_valid(), self.hass.loop
