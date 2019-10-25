@@ -145,8 +145,11 @@ async def async_get_condition_capabilities(hass, config):
     """List condition capabilities."""
     state = hass.states.get(config[CONF_ENTITY_ID])
     unit_of_measurement = (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) if state else ""
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) if state else None
     )
+
+    if not state or not unit_of_measurement:
+        return {}
 
     return {
         "extra_fields": vol.Schema(
