@@ -3,10 +3,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import DEVICE_DEFAULT_NAME
-from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
+
+from pcal9535a import PCAL9535A
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,23 +44,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the PCAL9535A devices."""
-    from pcal9535a import PCAL9535A
-
-    invert_logic = config.get(CONF_INVERT_LOGIC)
-    i2c_address = config.get(CONF_I2C_ADDRESS)
-    bus = config.get(CONF_I2C_BUS)
+    invert_logic = config[CONF_INVERT_LOGIC]
+    i2c_address = config[CONF_I2C_ADDRESS]
+    bus = config[CONF_I2C_BUS]
 
     pcal = PCAL9535A(bus, i2c_address)
 
     switches = []
-    pins = config.get(CONF_PINS)
+    pins = config[CONF_PINS]
     for pin_num, pin_name in pins.items():
         pin = pcal.get_pin(pin_num // 8, pin_num % 8)
         switches.append(PCAL9535ASwitch(pin_name, pin, invert_logic))
+
     add_entities(switches)
 
 
-class PCAL9535ASwitch(ToggleEntity):
+class PCAL9535ASwitch(SwitchDevice):
     """Representation of a PCAL9535A output pin."""
 
     def __init__(self, name, pin, invert_logic):
