@@ -1,1 +1,1 @@
-"""The samsungtv component."""
+"""The Samsung TV integration."""
