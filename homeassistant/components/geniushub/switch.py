@@ -61,14 +61,8 @@ class GeniusSwitch(GeniusEntity, SwitchDevice):
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the switch off."""
         await self._zone.set_mode("off")
-        # State is set optimistically in the command above, therefore update
-        # the entity state ahead of receiving the confirming push updates
-        self.async_schedule_update_ha_state()
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the switch on."""
         # geniusclient doesn't (yet) have a way to specify the override for this
         await self._zone.set_mode("override")
-        # State is set optimistically in the command above, therefore update
-        # the entity state ahead of receiving the confirming push updates
-        self.async_schedule_update_ha_state()
