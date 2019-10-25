@@ -17,7 +17,7 @@
                 "description": "Aby zezwolić na dostęp integracji AIS Google Home, do twojego konta w Google należy: \n\n * W przeglądarce internetowej kliknąć **[link uwierzytelniający]({auth_url})** \n\n * Zalogować się na wybrane konto w Google i autoryzować dostęp integracji do konta. \n\n ![AIS logo](/static/icons/ais_google_home.png) \n\n * Wrócić na tę stronę, wkleić **Kod**, który został wygenerowany po autoryzacji dostępu i wcisnąć **SUBMIT**, by zatwierdzić. ",
                 "title": "Uwierzytelnianie użytkownika w Google",
                 "data": {
-                    "token_key": "Kod"
+                    "access_token": "Kod"
                 }
             }
         },

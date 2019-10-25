@@ -23,32 +23,28 @@ def async_setup(hass, config):
     """Register the service."""
 
     @asyncio.coroutine
-    def ask_google_home(service):
+    def command(service):
         """ask service about info"""
-        yield from _process_ask_google_home(hass, service)
+        yield from _process_command(hass, service)
 
-    hass.services.async_register(DOMAIN, "ask_google_home", ask_google_home)
+    hass.services.async_register(DOMAIN, "command", command)
 
     return True
 
 
 @asyncio.coroutine
-def _process_ask_google_home(hass, call):
+def _process_command(hass, call):
     try:
-        question = call.data["question"]
+        question = call.data["text"]
         ws_ret = aisCloudWS.ask_json_gh(question)
         ret = ws_ret.json()
         if ret["success"]:
-            if "response" in ret:
-                m = ret["response"].split("---")[0]
-                yield from hass.services.async_call(
-                    "ais_ai_service", "say_it", {"text": m}
-                )
-            elif "audio" in ret:
+            # play audio returned by Google Assistant
+            if "audio" in ret:
                 _audio_info = {
-                    "IMAGE_URL": "",
+                    # "IMAGE_URL": "",
                     "NAME": "Asystent",
-                    "MEDIA_SOURCE": ais_global.G_AN_BOOKMARK,
+                    "MEDIA_SOURCE": ais_global.G_AN_GOOGLE_ASSISTANT,
                     "media_content_id": "https://powiedz.co" + ret["audio"],
                 }
                 _audio_info = json.dumps(_audio_info)
@@ -61,6 +57,16 @@ def _process_ask_google_home(hass, call):
                         "media_content_id": _audio_info,
                     },
                 )
+
+            # set text info in app
+            if "response" in ret:
+                m = ret["response"]
+                if len(m) > 100:
+                    hass.states.async_set(
+                        "sensor.aisknowledgeanswer", m[0:100] + "...", {"text": m}
+                    )
+                else:
+                    hass.states.async_set("sensor.aisknowledgeanswer", m, {"text": m})
         else:
             _LOGGER.error("Google answer: " + str(ws_ret))
             try:
@@ -71,13 +77,13 @@ def _process_ask_google_home(hass, call):
                 "ais_ai_service",
                 "say_it",
                 {
-                    "text": "Błąd podczas pobierania odpowiedzi z Google, sprawdz w logach"
+                    "text": "Błąd podczas pobierania odpowiedzi z Google, sprawdź w logach."
                 },
             )
     except Exception as e:
         _LOGGER.error("e " + str(e))
         yield from hass.services.async_call(
-            "ais_ai_service", "say_it", {"text": "Brak odpowiedzi z Google"}
+            "ais_ai_service", "say_it", {"text": "Brak odpowiedzi z Google."}
         )
         return
 

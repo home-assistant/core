@@ -134,6 +134,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
         self._media_content_id = None
         self._volume_level = 0.5
         self._shuffle = False
+        self._assistant_audio = False
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -433,7 +434,12 @@ class ExoPlayerDevice(MediaPlayerDevice):
             else:
                 self._stream_image = j_info["IMAGE_URL"]
             self._media_title = j_info["NAME"]
-            self._media_source = j_info["MEDIA_SOURCE"]
+            if j_info["MEDIA_SOURCE"] == ais_global.G_AN_GOOGLE_ASSISTANT:
+                # do no change self._media_source
+                self._assistant_audio = True
+            else:
+                self._assistant_audio = False
+                self._media_source = j_info["MEDIA_SOURCE"]
             self._currentplaylist = j_info["MEDIA_SOURCE"]
             if "ALBUM_NAME" in j_info:
                 self._album_name = j_info["ALBUM_NAME"]
@@ -573,7 +579,8 @@ class ExoPlayerDevice(MediaPlayerDevice):
 
             if "giveMeNextOne" in message:
                 play_next = message.get("giveMeNextOne", False)
-                if play_next is True:
+                # play next audio only if the current was not from assistant
+                if play_next is True and self._assistant_audio is False:
                     # TODO remove bookmark
                     self.hass.async_add_job(
                         self.hass.services.async_call(

@@ -17,7 +17,7 @@
                 "description": "To allow AIS Google Home integration access to your Google account you must: \n\n * In the web browser click **[authentication link]({auth_url})** \n\n * Log in to the selected Google account and authorize account integration access\n. \n\n ![AIS logo](/static/icons/ais_google_home.png) \n\n * Return to this page, paste in ** CODE ** that was generated after access authorization and press **SUBMIT**.",
                 "title": "User authentication in Google",
                 "data": {
-                    "token_key": "Code"
+                    "access_token": "Code"
                 }
             }
         },
