@@ -156,7 +156,10 @@ async def async_setup_entry(hass, entry):
     def close_websocket_session(_):
         websocket.close()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_websocket_session)
+    unsub = hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, close_websocket_session
+    )
+    hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
     return True
 
