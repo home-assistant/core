@@ -17,6 +17,11 @@ from homeassistant.const import (
 from homeassistant.components.climate import const as climate
 from homeassistant.components.alexa import smart_home
 from homeassistant.components.alexa.errors import UnsupportedProperty
+from homeassistant.components.media_player.const import (
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_STOP,
+)
 from tests.common import async_mock_service
 
 from . import (
@@ -642,3 +647,22 @@ async def test_report_alarm_control_panel_state(hass):
 
     properties = await reported_properties(hass, "alarm_control_panel.disarmed")
     properties.assert_equal("Alexa.SecurityPanelController", "armState", "DISARMED")
+
+
+async def test_report_playback_state(hass):
+    """Test PlaybackStateReporter implements playbackState property."""
+    hass.states.async_set(
+        "media_player.test",
+        "off",
+        {
+            "friendly_name": "Test media player",
+            "supported_features": SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP,
+            "volume_level": 0.75,
+        },
+    )
+
+    properties = await reported_properties(hass, "media_player.test")
+
+    properties.assert_equal(
+        "Alexa.PlaybackStateReporter", "playbackState", {"state": "STOPPED"}
+    )

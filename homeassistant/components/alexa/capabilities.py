@@ -12,9 +12,11 @@ from homeassistant.const import (
     STATE_LOCKED,
     STATE_OFF,
     STATE_ON,
+    STATE_PAUSED,
+    STATE_PLAYING,
     STATE_UNAVAILABLE,
-    STATE_UNLOCKED,
     STATE_UNKNOWN,
+    STATE_UNLOCKED,
 )
 import homeassistant.components.climate.const as climate
 import homeassistant.components.media_player.const as media_player
@@ -1137,3 +1139,39 @@ class AlexaDoorbellEventSource(AlexaCapability):
     def capability_proactively_reported(self):
         """Return True for proactively reported capability."""
         return True
+
+
+class AlexaPlaybackStateReporter(AlexaCapability):
+    """Implements Alexa.PlaybackStateReporter.
+
+    https://developer.amazon.com/docs/device-apis/alexa-playbackstatereporter.html
+    """
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.PlaybackStateReporter"
+
+    def properties_supported(self):
+        """Return what properties this entity supports."""
+        return [{"name": "playbackState"}]
+
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
+
+    def properties_retrievable(self):
+        """Return True if properties can be retrieved."""
+        return True
+
+    def get_property(self, name):
+        """Read and return a property."""
+        if name != "playbackState":
+            raise UnsupportedProperty(name)
+
+        playback_state = self.entity.state
+        if playback_state == STATE_PLAYING:
+            return {"state": "PLAYING"}
+        if playback_state == STATE_PAUSED:
+            return {"state": "PAUSED"}
+
+        return {"state": "STOPPED"}
