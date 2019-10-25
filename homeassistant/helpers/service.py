@@ -220,7 +220,7 @@ async def async_get_all_descriptions(hass):
                 # if no description is found check if service name in yaml
                 # ends with '_'. if yes check if key is a substring of service name
                 for key in domain_yaml:
-                    if "_" == key[-1:] and key == service[: len(key)]:
+                    if key[-1:] == "_" and key == service[: len(key)]:
                         yaml_description = domain_yaml.get(key, {})
                         break
 
