@@ -4,6 +4,7 @@
   "documentation": "https://www.home-assistant.io/integrations/config",
   "requirements": [],
   "dependencies": [
+    "frontend",
     "http"
   ],
   "codeowners": [

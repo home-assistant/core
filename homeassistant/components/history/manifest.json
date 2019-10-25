@@ -4,6 +4,7 @@
   "documentation": "https://www.home-assistant.io/integrations/history",
   "requirements": [],
   "dependencies": [
+    "frontend",
     "http",
     "recorder"
   ],

@@ -9,7 +9,6 @@
     "api",
     "auth",
     "http",
-    "lovelace",
     "onboarding",
     "system_log",
     "websocket_api"
