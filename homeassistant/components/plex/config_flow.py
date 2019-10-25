@@ -83,7 +83,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         plex_server = PlexServer(self.hass, server_config)
         try:
-            await self.hass.async_add_executor_job(plex_server.connect, True)
+            await self.hass.async_add_executor_job(plex_server.connect)
 
         except NoServersFound:
             errors["base"] = "no_servers"
