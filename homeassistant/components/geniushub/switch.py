@@ -19,7 +19,7 @@ async def async_setup_platform(
     switches = [
         GeniusSwitch(broker, z)
         for z in broker.client.zone_objs
-        z.data["type"] == GH_ON_OFF_ZONE
+        if z.data["type"] == GH_ON_OFF_ZONE
     ]
 
     async_add_entities(switches)
