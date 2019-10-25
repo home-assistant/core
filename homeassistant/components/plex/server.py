@@ -103,6 +103,8 @@ class PlexServer:
 
     def update_platforms(self):
         """Update the platform entities."""
+        _LOGGER.debug("Updating devices")
+
         available_clients = {}
         new_clients = set()
 
@@ -163,6 +165,11 @@ class PlexServer:
             PLEX_UPDATE_SENSOR_SIGNAL.format(self.machine_identifier),
             sessions,
         )
+
+    @property
+    def plex_server(self):
+        """Return the plexapi PlexServer instance."""
+        return self._plex_server
 
     @property
     def friendly_name(self):
