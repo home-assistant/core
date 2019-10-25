@@ -17,6 +17,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 import homeassistant.components.climate.const as climate
+import homeassistant.components.media_player.const as media_player
 from homeassistant.components.alarm_control_panel import ATTR_CODE_FORMAT, FORMAT_NUMBER
 from homeassistant.components import light, fan, cover
 import homeassistant.util.color as color_util
@@ -110,6 +111,11 @@ class AlexaCapability:
         """Return the Configuration object."""
         return []
 
+    @staticmethod
+    def supported_operations():
+        """Return the supportedOperations object."""
+        return []
+
     def serialize_discovery(self):
         """Serialize according to the Discovery API."""
         result = {"type": "AlexaInterface", "interface": self.name(), "version": "3"}
@@ -149,6 +155,10 @@ class AlexaCapability:
         instance = self.instance
         if instance is not None:
             result["instance"] = instance
+
+        supported_operations = self.supported_operations()
+        if supported_operations:
+            result["supportedOperations"] = supported_operations
 
         return result
 
@@ -483,6 +493,28 @@ class AlexaPlaybackController(AlexaCapability):
     def name(self):
         """Return the Alexa API name of this interface."""
         return "Alexa.PlaybackController"
+
+    def supported_operations(self):
+        """Return the supportedOperations object.
+
+        Supported Operations: FastForward, Next, Pause, Play, Previous, Rewind, StartOver, Stop
+        """
+        supported_features = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+
+        operations = {
+            media_player.SUPPORT_NEXT_TRACK: "Next",
+            media_player.SUPPORT_PAUSE: "Pause",
+            media_player.SUPPORT_PLAY: "Play",
+            media_player.SUPPORT_PREVIOUS_TRACK: "Previous",
+            media_player.SUPPORT_STOP: "Stop",
+        }
+
+        supported_operations = []
+        for operation in operations:
+            if operation & supported_features:
+                supported_operations.append(operations[operation])
+
+        return supported_operations
 
 
 class AlexaInputController(AlexaCapability):
