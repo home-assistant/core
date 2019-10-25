@@ -37,6 +37,7 @@ CONF_REMOTE_API_URL = "remote_api_url"
 CONF_ACME_DIRECTORY_SERVER = "acme_directory_server"
 CONF_ALEXA_ACCESS_TOKEN_URL = "alexa_access_token_url"
 CONF_GOOGLE_ACTIONS_REPORT_STATE_URL = "google_actions_report_state_url"
+CONF_ACCOUNT_LINK_URL = "account_link_url"
 
 MODE_DEV = "development"
 MODE_PROD = "production"

@@ -33,6 +33,8 @@ STAGE_1_INTEGRATIONS = {
     "recorder",
     # To make sure we forward data to other instances
     "mqtt_eventstream",
+    # To provide account link implementations
+    "cloud",
 }
 
 
