@@ -141,6 +141,11 @@ class ONVIFHassCamera(Camera):
         self._profile_index = config.get(CONF_PROFILE)
         self._ptz_service = None
         self._input = None
+        self._media_service = None
+        self._XMAX = 1
+        self._XMIN = -1
+        self._YMAX = 1
+        self._YMIN = -1
 
         _LOGGER.debug(
             "Setting up the ONVIF camera device @ '%s:%s'", self._host, self._port
@@ -167,7 +172,7 @@ class ONVIFHassCamera(Camera):
 
             await self.async_check_date_and_time()
             await self.async_obtain_input_uri()
-            self.setup_ptz()
+            await self.async_setup_ptz()
         except ClientConnectionError as err:
             _LOGGER.warning(
                 "Couldn't connect to camera '%s', but will retry later. Error: %s",
@@ -250,18 +255,14 @@ class ONVIFHassCamera(Camera):
                 "Couldn't get camera '%s' date/time. Error: %s", self._name, err
             )
 
-    async def async_obtain_input_uri(self):
-        """Set the input uri for the camera."""
-        _LOGGER.debug(
-            "Connecting with ONVIF Camera: %s on port %s", self._host, self._port
-        )
-
+    async def async_obtain_profile(self):
+        """Retrieve profile token."""
         try:
             _LOGGER.debug("Retrieving profiles")
 
-            media_service = self._camera.create_media_service()
+            self._media_service = self._camera.create_media_service()
 
-            profiles = await media_service.GetProfiles()
+            profiles = await self._media_service.GetProfiles()
 
             _LOGGER.debug("Retrieved '%d' profiles", len(profiles))
 
@@ -276,16 +277,28 @@ class ONVIFHassCamera(Camera):
 
             _LOGGER.debug("Using profile index '%d'", self._profile_index)
 
-            _LOGGER.debug("Retrieving stream uri")
+            return profiles[self._profile_index]
+        except exceptions.ONVIFError as err:
+            _LOGGER.error("Couldn't setup camera '%s'. Error: %s", self._name, err)
+            return
 
-            req = media_service.create_type("GetStreamUri")
-            req.ProfileToken = profiles[self._profile_index].token
+    async def async_obtain_input_uri(self):
+        """Set the input uri for the camera."""
+        _LOGGER.debug(
+            "Connecting with ONVIF Camera: %s on port %s", self._host, self._port
+        )
+
+        try:
+            profile = await self.async_obtain_profile()
+
+            req = self._media_service.create_type("GetStreamUri")
+            req.ProfileToken = profile.token
             req.StreamSetup = {
                 "Stream": "RTP-Unicast",
                 "Transport": {"Protocol": "RTSP"},
             }
 
-            stream_uri = await media_service.GetStreamUri(req)
+            stream_uri = await self._media_service.GetStreamUri(req)
             uri_no_auth = stream_uri.Uri
             uri_for_log = uri_no_auth.replace("rtsp://", "rtsp://<user>:<password>@", 1)
             self._input = uri_no_auth.replace(
@@ -300,46 +313,87 @@ class ONVIFHassCamera(Camera):
         except exceptions.ONVIFError as err:
             _LOGGER.error("Couldn't setup camera '%s'. Error: %s", self._name, err)
 
-    def setup_ptz(self):
+    async def async_setup_ptz(self):
         """Set up PTZ if available."""
         _LOGGER.debug("Setting up the ONVIF PTZ service")
-        if self._camera.get_service("ptz", create=False) is None:
+        self._ptz_service = self._camera.get_service("ptz")
+        if not self._ptz_service:
             _LOGGER.debug("PTZ is not available")
-        else:
-            self._ptz_service = self._camera.create_ptz_service()
-            _LOGGER.debug("Completed set up of the ONVIF camera component")
+        # self._ptz_service = self._camera.create_ptz_service()
+
+        media_profile = await self.async_obtain_profile()
+        _LOGGER.debug(media_profile)
+
+        # Get PTZ configuration options for getting continuous move range
+        req = self._ptz_service.create_type("GetConfigurationOptions")
+        req.ConfigurationToken = media_profile.PTZConfiguration.token
+        ptz_conf_options = await self._ptz_service.GetConfigurationOptions(req)
+
+        self._XMAX = ptz_conf_options.Spaces.ContinuousPanTiltVelocitySpace[
+            0
+        ].XRange.Max
+        self._XMIN = ptz_conf_options.Spaces.ContinuousPanTiltVelocitySpace[
+            0
+        ].XRange.Min
+        self._YMAX = ptz_conf_options.Spaces.ContinuousPanTiltVelocitySpace[
+            0
+        ].YRange.Max
+        self._YMIN = ptz_conf_options.Spaces.ContinuousPanTiltVelocitySpace[
+            0
+        ].YRange.Min
+
+        _LOGGER.debug("Completed set up of the ONVIF camera component")
 
     async def async_perform_ptz(self, pan, tilt, zoom):
         """Perform a PTZ action on the camera."""
-        if self._ptz_service is None:
+        if not self._ptz_service:
             _LOGGER.warning("PTZ actions are not supported on camera '%s'", self._name)
             return
 
-        if self._ptz_service:
-            pan_val = 1 if pan == DIR_RIGHT else -1 if pan == DIR_LEFT else 0
-            tilt_val = 1 if tilt == DIR_UP else -1 if tilt == DIR_DOWN else 0
-            zoom_val = 1 if zoom == ZOOM_IN else -1 if zoom == ZOOM_OUT else 0
-            req = {
-                "Velocity": {
-                    "PanTilt": {"_x": pan_val, "_y": tilt_val},
-                    "Zoom": {"_x": zoom_val},
-                }
-            }
-            try:
-                _LOGGER.debug(
-                    "Calling PTZ | Pan = %d | Tilt = %d | Zoom = %d",
-                    pan_val,
-                    tilt_val,
-                    zoom_val,
-                )
+        pan_val = (
+            self._XMAX if pan == DIR_RIGHT else self._XMIN if pan == DIR_LEFT else 0
+        )
+        tilt_val = (
+            self._YMAX if tilt == DIR_UP else self._YMIN if tilt == DIR_DOWN else 0
+        )
+        zoom_val = 1 if zoom == ZOOM_IN else -1 if zoom == ZOOM_OUT else 0
 
-                await self._ptz_service.ContinuousMove(req)
-            except exceptions.ONVIFError as err:
-                if "Bad Request" in err.reason:
-                    self._ptz_service = None
-                    _LOGGER.debug("Camera '%s' doesn't support PTZ.", self._name)
-        else:
-            _LOGGER.debug("Camera '%s' doesn't support PTZ.", self._name)
+        profile = await self.async_obtain_profile()
+        # moverequest = self._ptz_service.create_type("ContinuousMove")
+        # moverequest.ProfileToken = profile.token
+        # if moverequest.Velocity is None:
+        #     try:
+        #         moverequest.Velocity = await self._ptz_service.GetStatus(
+        #             {"ProfileToken": profile.token}
+        #         )
+        #         moverequest.Velocity = moverequest.Velocity.Position
+        #     except:
+        #         moverequest.Velocity = {}
+        req = {
+            "ProfileToken": profile.token,
+            "Velocity": {
+                "PanTilt": {"x": pan_val, "y": tilt_val},
+                "Zoom": {"x": zoom_val},
+            },
+            "Timeout": 2,
+        }
+        try:
+            _LOGGER.debug(
+                "Calling PTZ | Pan = %d | Tilt = %d | Zoom = %d",
+                pan_val,
+                tilt_val,
+                zoom_val,
+            )
+
+            await self._ptz_service.ContinuousMove(req)
+            # req = {"ProfileToken": profile.token, "PanTilt": True, "Zoom": False}
+            # await self._ptz_service.Stop(req)
+            await self._ptz_service.Stop({"ProfileToken": profile.token})
+
+        except exceptions.ONVIFError as err:
+            if "Bad Request" in err.reason:
+                self._ptz_service = None
+                _LOGGER.debug("Camera '%s' doesn't support PTZ.", self._name)
 
     async def async_added_to_hass(self):
         """Handle entity addition to hass."""
@@ -352,7 +406,6 @@ class ONVIFHassCamera(Camera):
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-
         _LOGGER.debug("Retrieving image from camera '%s'", self._name)
 
         ffmpeg = ImageFrame(self.hass.data[DATA_FFMPEG].binary, loop=self.hass.loop)
