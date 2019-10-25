@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from time import monotonic
 
-from aiohue import AiohueException
+from aiohue import AiohueException, Unauthorized
 from aiohue.sensors import TYPE_ZLL_PRESENCE
 import async_timeout
 
@@ -13,7 +13,7 @@ from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-from .helpers import remove_devices
+from .helpers import remove_devices, create_config_flow
 
 CURRENT_SENSORS = "current_sensors"
 SENSOR_MANAGER_FORMAT = "{}_sensor_manager"
@@ -80,6 +80,11 @@ class SensorManager:
 
         async def async_update_bridge(now):
             """Will update sensors from the bridge."""
+
+            # don't update when we are not authorized
+            if not self.bridge.authorized:
+                return
+
             await self.async_update_items()
 
             async_track_point_in_utc_time(
@@ -96,6 +101,17 @@ class SensorManager:
             start = monotonic()
             with async_timeout.timeout(4):
                 await api.update()
+        except Unauthorized:
+            if not self.bridge.authorized:
+                # we already created a new config flow, no need to do it again
+                return
+            _LOGGER.error(
+                "Unable to authorize to bridge %s, setup the linking again.",
+                self.bridge.host,
+            )
+            self.bridge.authorized = False
+            create_config_flow(self.hass, self.bridge.host)
+            return
         except (asyncio.TimeoutError, AiohueException) as err:
             _LOGGER.debug("Failed to fetch sensor: %s", err)
 
@@ -220,8 +236,10 @@ class GenericHueSensor:
     @property
     def available(self):
         """Return if sensor is available."""
-        return self.bridge.available and (
-            self.bridge.allow_unreachable or self.sensor.config["reachable"]
+        return (
+            self.bridge.available
+            and self.bridge.authorized
+            and (self.bridge.allow_unreachable or self.sensor.config["reachable"])
         )
 
     @property

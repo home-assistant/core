@@ -30,7 +30,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.util import color
 
-from .helpers import remove_devices
+from .helpers import remove_devices, create_config_flow
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
@@ -189,6 +189,9 @@ async def async_update_items(
     progress_waiting,
 ):
     """Update either groups or lights from the bridge."""
+    if not bridge.authorized:
+        return
+
     if is_group:
         api_type = "group"
         api = bridge.api.groups
@@ -200,6 +203,16 @@ async def async_update_items(
         start = monotonic()
         with async_timeout.timeout(4):
             await api.update()
+    except aiohue.Unauthorized:
+        if not bridge.authorized:
+            # we already created a new config flow, no need to do it again
+            return
+        _LOGGER.error(
+            "Unable to authorize to bridge %s, setup the linking again.", bridge.host
+        )
+        bridge.authorized = False
+        create_config_flow(hass, bridge.host)
+        return
     except (asyncio.TimeoutError, aiohue.AiohueException) as err:
         _LOGGER.debug("Failed to fetch %s: %s", api_type, err)
 
@@ -337,10 +350,14 @@ class HueLight(Light):
     @property
     def available(self):
         """Return if light is available."""
-        return self.bridge.available and (
-            self.is_group
-            or self.bridge.allow_unreachable
-            or self.light.state["reachable"]
+        return (
+            self.bridge.available
+            and self.bridge.authorized
+            and (
+                self.is_group
+                or self.bridge.allow_unreachable
+                or self.light.state["reachable"]
+            )
         )
 
     @property
