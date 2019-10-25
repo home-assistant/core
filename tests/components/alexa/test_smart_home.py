@@ -733,6 +733,7 @@ async def test_media_player(hass):
         "Alexa.Speaker",
         "Alexa.StepSpeaker",
         "Alexa.PlaybackController",
+        "Alexa.PlaybackStateReporter",
         "Alexa.EndpointHealth",
         "Alexa.ChannelController",
     )
@@ -947,6 +948,7 @@ async def test_media_player_power(hass):
         "Alexa.Speaker",
         "Alexa.StepSpeaker",
         "Alexa.PlaybackController",
+        "Alexa.PlaybackStateReporter",
         "Alexa.EndpointHealth",
         "Alexa.ChannelController",
     )

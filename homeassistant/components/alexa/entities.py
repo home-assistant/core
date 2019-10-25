@@ -46,6 +46,7 @@ from .capabilities import (
     AlexaMotionSensor,
     AlexaPercentageController,
     AlexaPlaybackController,
+    AlexaPlaybackStateReporter,
     AlexaPowerController,
     AlexaPowerLevelController,
     AlexaRangeController,
@@ -418,6 +419,7 @@ class MediaPlayerCapabilities(AlexaEntity):
         )
         if supported & playback_features:
             yield AlexaPlaybackController(self.entity)
+            yield AlexaPlaybackStateReporter(self.entity)
 
         if supported & media_player.SUPPORT_SELECT_SOURCE:
             yield AlexaInputController(self.entity)
