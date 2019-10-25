@@ -188,17 +188,18 @@ def async_condition_from_config(
         position = "current_position"
     if config[CONF_TYPE] == "is_tilt_position":
         position = "current_tilt_position"
-    min_pos = config.get(CONF_ABOVE, -1)
-    max_pos = config.get(CONF_BELOW, 101)
+    min_pos = config.get(CONF_ABOVE, None)
+    max_pos = config.get(CONF_BELOW, None)
     value_template = template.Template(  # type: ignore
-        f"{{{{ (state_attr('{config[ATTR_ENTITY_ID]}', '{position}')|int) > {min_pos}"
-        f"and (state_attr('{config[ATTR_ENTITY_ID]}', '{position}')|int) < {max_pos} }}}}"
+        f"{{{{ state.attributes.{position} }}}}"
     )
 
     def template_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Validate template based if-condition."""
         value_template.hass = hass
 
-        return condition.async_template(hass, value_template, variables)
+        return condition.async_numeric_state(
+            hass, config[ATTR_ENTITY_ID], max_pos, min_pos, value_template
+        )
 
     return template_if
