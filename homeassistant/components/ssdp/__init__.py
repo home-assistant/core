@@ -18,6 +18,8 @@ ATTR_HOST = "host"
 ATTR_PORT = "port"
 ATTR_SSDP_DESCRIPTION = "ssdp_description"
 ATTR_ST = "ssdp_st"
+ATTR_SSDP_DATA = "ssdp_data"
+# Deprecated attributes, use from SSDP_DATA directly instead
 ATTR_NAME = "name"
 ATTR_MODEL_NAME = "model_name"
 ATTR_MODEL_NUMBER = "model_number"
@@ -167,6 +169,8 @@ def info_from_entry(entry, device_info):
     }
 
     if device_info:
+        info[ATTR_SSDP_DATA] = device_info
+        # Deprecated below, use from device_info instead
         info[ATTR_NAME] = device_info.get("friendlyName")
         info[ATTR_MODEL_NAME] = device_info.get("modelName")
         info[ATTR_MODEL_NUMBER] = device_info.get("modelNumber")
