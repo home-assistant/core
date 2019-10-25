@@ -56,7 +56,7 @@ def hwtest(cloud_id, install_code, ip_address):
     response = reader.post_cmd("device_list")
     if "Error" in response and "Unknown command" in response["Error"]["Text"]:
         return reader  # Probably a Legacy model
-    elif "device_list" in response:
+    elif "DeviceList" in response:
         return EagleReader(ip_address, cloud_id, install_code)  # Probably Eagle-200
     else:
         _LOGGER.error("Couldn't determine device model.")
