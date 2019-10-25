@@ -7,8 +7,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import (
-    DATA_TRANSMISSION,
-    DATA_UPDATED,
     DOMAIN,
     SENSOR_TYPES,
     STATE_ATTR_TORRENT_INFO,
@@ -51,6 +49,7 @@ class TransmissionSensor(Entity):
     def __init__(
         self,
         sensor_type,
+        tm_client,
         transmission_api,
         client_name,
         sensor_name,
