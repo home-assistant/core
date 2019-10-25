@@ -7,6 +7,8 @@ from homeassistant.components.binary_sensor import BinarySensorDevice, PLATFORM_
 from homeassistant.const import DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 
+from pcal9535a import PCAL9535A
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_INVERT_LOGIC = "invert_logic"
@@ -39,10 +41,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the PCAL9535A binary sensors."""
-    from pcal9535a import PCAL9535A
-
     pull_mode = config[CONF_PULL_MODE]
     invert_logic = config[CONF_INVERT_LOGIC]
     i2c_address = config[CONF_I2C_ADDRESS]
@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             PCAL9535ABinarySensor(pin_name, pin, pull_mode, invert_logic)
         )
 
-    add_devices(binary_sensors, True)
+    add_entities(binary_sensors, True)
 
 
 class PCAL9535ABinarySensor(BinarySensorDevice):
