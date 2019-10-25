@@ -256,6 +256,7 @@ def create_mock_bridge():
     """Create a mock Hue bridge."""
     bridge = Mock(
         available=True,
+        authorized=True,
         allow_unreachable=False,
         allow_groups=False,
         api=Mock(),

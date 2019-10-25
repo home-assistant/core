@@ -180,6 +180,7 @@ def mock_bridge(hass):
     """Mock a Hue bridge."""
     bridge = Mock(
         available=True,
+        authorized=True,
         allow_unreachable=False,
         allow_groups=False,
         api=Mock(),
