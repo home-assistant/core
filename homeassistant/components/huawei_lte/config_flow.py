@@ -18,6 +18,12 @@ from url_normalize import url_normalize
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.ssdp import (
+    ATTR_HOST,
+    ATTR_NAME,
+    ATTR_PRESENTATIONURL,
+    ATTR_UPNP_DEVICE_TYPE,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_RECIPIENT, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
 from .const import DEFAULT_DEVICE_NAME
@@ -51,7 +57,14 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     (
                         (
                             vol.Required(
-                                CONF_URL, default=user_input.get(CONF_URL, "")
+                                CONF_URL,
+                                default=user_input.get(
+                                    CONF_URL,
+                                    # https://github.com/PyCQA/pylint/issues/3167
+                                    self.context.get(  # pylint: disable=no-member
+                                        CONF_URL, ""
+                                    ),
+                                ),
                             ),
                             str,
                         ),
@@ -183,6 +196,29 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.hass.async_add_executor_job(logout)
 
         return self.async_create_entry(title=title, data=user_input)
+
+    async def async_step_ssdp(self, discovery_info):
+        """Handle SSDP initiated config flow."""
+        # Try to distinguish from other non-LTE Huawei router devices
+        if (
+            discovery_info.get(ATTR_UPNP_DEVICE_TYPE)
+            != "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
+            # e.g. "Mobile Wi-Fi"
+            or "mobile" not in discovery_info.get(ATTR_NAME, "").lower()
+        ):
+            return self.async_abort(reason="not_huawei_lte")
+
+        # https://github.com/PyCQA/pylint/issues/3167
+        url = self.context[CONF_URL] = url_normalize(  # pylint: disable=no-member
+            discovery_info.get(
+                ATTR_PRESENTATIONURL, f"http://{discovery_info[ATTR_HOST]}/"
+            )
+        )
+
+        if any(url == flow["context"][CONF_URL] for flow in self._async_in_progress()):
+            return self.async_abort(reason="already_in_progress")
+
+        return await self._async_show_user_form(user_input={CONF_URL: url})
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):

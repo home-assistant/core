@@ -11,6 +11,9 @@ SSDP = {
         "Belkin International Inc.": [
             "wemo"
         ],
+        "Huawei": [
+            "huawei_lte"
+        ],
         "Royal Philips Electronics": [
             "deconz",
             "hue"
