@@ -1504,7 +1504,7 @@ python-digitalocean==1.13.2
 python-ecobee-api==0.1.4
 
 # homeassistant.components.eq3btsmart
-# python-eq3bt==0.1.9
+# python-eq3bt==0.1.11
 
 # homeassistant.components.etherscan
 python-etherscan-api==0.0.3
