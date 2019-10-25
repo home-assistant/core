@@ -235,6 +235,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
     event_id = deconz_event.serial
 
     event_config = {
+        event.CONF_PLATFORM: "event",
         event.CONF_EVENT_TYPE: CONF_DECONZ_EVENT,
         event.CONF_EVENT_DATA: {CONF_UNIQUE_ID: event_id, CONF_EVENT: trigger},
     }
