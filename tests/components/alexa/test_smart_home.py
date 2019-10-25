@@ -10,6 +10,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SEEK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
@@ -726,7 +727,7 @@ async def test_media_player(hass):
     assert appliance["displayCategories"][0] == "TV"
     assert appliance["friendlyName"] == "Test media player"
 
-    assert_endpoint_capabilities(
+    capabilities = assert_endpoint_capabilities(
         appliance,
         "Alexa.InputController",
         "Alexa.PowerController",
@@ -736,6 +737,13 @@ async def test_media_player(hass):
         "Alexa.EndpointHealth",
         "Alexa.ChannelController",
     )
+
+    playback_capability = get_capability(capabilities, "Alexa.PlaybackController")
+    assert playback_capability is not None
+    supported_operations = playback_capability["supportedOperations"]
+    operations = ["Play", "Pause", "Stop", "Next", "Previous"]
+    for operation in operations:
+        assert operation in supported_operations
 
     await assert_power_controller_works(
         "media_player#test", "media_player.turn_on", "media_player.turn_off", hass
