@@ -9,9 +9,9 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
+    PRESET_NONE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    PRESET_NONE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,

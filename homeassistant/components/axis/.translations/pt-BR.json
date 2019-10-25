@@ -12,6 +12,7 @@
             "device_unavailable": "O dispositivo n\u00e3o est\u00e1 dispon\u00edvel",
             "faulty_credentials": "Credenciais do usu\u00e1rio inv\u00e1lidas"
         },
+        "flow_title": "Eixos do dispositivo: {name} ({host})",
         "step": {
             "user": {
                 "data": {

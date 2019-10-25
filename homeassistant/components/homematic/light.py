@@ -54,16 +54,19 @@ class HMLight(HMDevice, Light):
     @property
     def supported_features(self):
         """Flag supported features."""
+        features = SUPPORT_BRIGHTNESS
         if "COLOR" in self._hmdevice.WRITENODE:
-            return SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_EFFECT
-        return SUPPORT_BRIGHTNESS
+            features |= SUPPORT_COLOR
+        if "PROGRAM" in self._hmdevice.WRITENODE:
+            features |= SUPPORT_EFFECT
+        return features
 
     @property
     def hs_color(self):
         """Return the hue and saturation color value [float, float]."""
         if not self.supported_features & SUPPORT_COLOR:
             return None
-        hue, sat = self._hmdevice.get_hs_color()
+        hue, sat = self._hmdevice.get_hs_color(self._channel)
         return hue * 360.0, sat * 100.0
 
     @property
@@ -95,6 +98,7 @@ class HMLight(HMDevice, Light):
             self._hmdevice.set_hs_color(
                 hue=kwargs[ATTR_HS_COLOR][0] / 360.0,
                 saturation=kwargs[ATTR_HS_COLOR][1] / 100.0,
+                channel=self._channel,
             )
         if ATTR_EFFECT in kwargs:
             self._hmdevice.set_effect(kwargs[ATTR_EFFECT])
@@ -110,4 +114,6 @@ class HMLight(HMDevice, Light):
         self._data[self._state] = None
 
         if self.supported_features & SUPPORT_COLOR:
-            self._data.update({"COLOR": None, "PROGRAM": None})
+            self._data.update({"COLOR": None})
+        if self.supported_features & SUPPORT_EFFECT:
+            self._data.update({"PROGRAM": None})

@@ -19,6 +19,7 @@ ECOBEE_MODEL_TO_NAME = {
     "corSmart": "Carrier/Bryant Cor",
     "nikeSmart": "ecobee3 lite Smart",
     "nikeEms": "ecobee3 lite EMS",
+    "apolloSmart": "ecobee4 Smart",
 }
 
 ECOBEE_PLATFORMS = ["binary_sensor", "climate", "sensor", "weather"]

@@ -1,19 +1,21 @@
 """Support for magicseaweed data from magicseaweed.com."""
 from datetime import timedelta
 import logging
+
+import magicseaweed
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_NAME,
-    CONF_MONITORED_CONDITIONS,
     ATTR_ATTRIBUTION,
+    CONF_API_KEY,
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
 )
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -175,8 +177,6 @@ class MagicSeaweedData:
 
     def __init__(self, api_key, spot_id, units):
         """Initialize the data object."""
-        import magicseaweed
-
         self._msw = magicseaweed.MSW_Forecast(api_key, spot_id, None, units)
         self.currently = None
         self.hourly = {}

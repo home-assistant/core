@@ -1,5 +1,6 @@
 """Support for the Airly sensor service."""
 from homeassistant.const import (
+    ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
     CONF_NAME,
     DEVICE_CLASS_HUMIDITY,
@@ -93,7 +94,7 @@ class AirlySensor(Entity):
         self._state = None
         self._icon = None
         self._unit_of_measurement = None
-        self._attrs = {}
+        self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
     def name(self):
@@ -135,11 +136,6 @@ class AirlySensor(Entity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return SENSOR_TYPES[self.kind][ATTR_UNIT]
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION
 
     @property
     def available(self):

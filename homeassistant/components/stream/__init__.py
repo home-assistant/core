@@ -22,8 +22,6 @@ from .const import (
 )
 from .core import PROVIDERS
 from .hls import async_setup_hls
-from .recorder import async_setup_recorder
-from .worker import stream_worker
 
 try:
     import uvloop
@@ -105,6 +103,9 @@ def request_stream(hass, stream_source, *, fmt="hls", keepalive=False, options=N
 
 async def async_setup(hass, config):
     """Set up stream."""
+    # Keep import here so that we can import stream integration without installing reqs
+    from .recorder import async_setup_recorder
+
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][ATTR_ENDPOINTS] = {}
     hass.data[DOMAIN][ATTR_STREAMS] = {}
@@ -182,6 +183,9 @@ class Stream:
 
     def start(self):
         """Start a stream."""
+        # Keep import here so that we can import stream integration without installing reqs
+        from .worker import stream_worker
+
         if self._thread is None or not self._thread.isAlive():
             self._thread_quit = threading.Event()
             self._thread = threading.Thread(

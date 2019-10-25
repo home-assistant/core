@@ -2,14 +2,11 @@
 import asyncio
 from datetime import timedelta
 import logging
-from time import monotonic
 import random
+from time import monotonic
 
 import aiohue
 import async_timeout
-
-from homeassistant.helpers.entity_registry import async_get_registry as get_ent_reg
-from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
 
 from homeassistant.components import hue
 from homeassistant.components.light import (
@@ -17,21 +14,23 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_FLASH,
-    ATTR_TRANSITION,
     ATTR_HS_COLOR,
+    ATTR_TRANSITION,
     EFFECT_COLORLOOP,
     EFFECT_RANDOM,
     FLASH_LONG,
     FLASH_SHORT,
     SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
     SUPPORT_FLASH,
-    SUPPORT_COLOR,
     SUPPORT_TRANSITION,
     Light,
 )
 from homeassistant.util import color
+
+from .helpers import remove_devices
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
@@ -226,7 +225,6 @@ async def async_update_items(
         bridge.available = True
 
     new_items = []
-    removed_items = []
 
     for item_id in api:
         if item_id not in current:
@@ -238,30 +236,10 @@ async def async_update_items(
         elif item_id not in progress_waiting:
             current[item_id].async_schedule_update_ha_state()
 
-    for item_id in current:
-        if item_id in api:
-            continue
-
-        # Device is removed from Hue, so we remove it from Home Assistant
-        entity = current[item_id]
-        removed_items.append(item_id)
-        await entity.async_remove()
-        ent_registry = await get_ent_reg(hass)
-        if entity.entity_id in ent_registry.entities:
-            ent_registry.async_remove(entity.entity_id)
-        dev_registry = await get_dev_reg(hass)
-        device = dev_registry.async_get_device(
-            identifiers={(hue.DOMAIN, entity.unique_id)}, connections=set()
-        )
-        dev_registry.async_update_device(
-            device.id, remove_config_entry_id=config_entry.entry_id
-        )
+    await remove_devices(hass, config_entry, api, current)
 
     if new_items:
         async_add_entities(new_items)
-
-    for item_id in removed_items:
-        del current[item_id]
 
 
 class HueLight(Light):
@@ -300,8 +278,13 @@ class HueLight(Light):
 
     @property
     def unique_id(self):
-        """Return the ID of this Hue light."""
+        """Return the unique ID of this Hue light."""
         return self.light.uniqueid
+
+    @property
+    def device_id(self):
+        """Return the ID of this Hue light."""
+        return self.unique_id
 
     @property
     def name(self):
@@ -384,7 +367,7 @@ class HueLight(Light):
             return None
 
         return {
-            "identifiers": {(hue.DOMAIN, self.unique_id)},
+            "identifiers": {(hue.DOMAIN, self.device_id)},
             "name": self.name,
             "manufacturer": self.light.manufacturername,
             # productname added in Hue Bridge API 1.24

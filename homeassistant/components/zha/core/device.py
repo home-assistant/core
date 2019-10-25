@@ -10,6 +10,10 @@ from enum import Enum
 import logging
 import time
 
+import zigpy.exceptions
+import zigpy.quirks
+from zigpy.profiles import zha, zll
+
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -87,9 +91,7 @@ class ZHADevice(LogMixin):
         self._unsub = async_dispatcher_connect(
             self.hass, self._available_signal, self.async_initialize
         )
-        from zigpy.quirks import CustomDevice
-
-        self.quirk_applied = isinstance(self._zigpy_device, CustomDevice)
+        self.quirk_applied = isinstance(self._zigpy_device, zigpy.quirks.CustomDevice)
         self.quirk_class = "{}.{}".format(
             self._zigpy_device.__class__.__module__,
             self._zigpy_device.__class__.__name__,
@@ -394,7 +396,6 @@ class ZHADevice(LogMixin):
     @callback
     def async_get_std_clusters(self):
         """Get ZHA and ZLL clusters for this device."""
-        from zigpy.profiles import zha, zll
 
         return {
             ep_id: {
@@ -448,8 +449,6 @@ class ZHADevice(LogMixin):
         if cluster is None:
             return None
 
-        from zigpy.exceptions import DeliveryError
-
         try:
             response = await cluster.write_attributes(
                 {attribute: value}, manufacturer=manufacturer
@@ -463,7 +462,7 @@ class ZHADevice(LogMixin):
                 response,
             )
             return response
-        except DeliveryError as exc:
+        except zigpy.exceptions.DeliveryError as exc:
             self.debug(
                 "failed to set attribute: %s %s %s %s %s",
                 f"{ATTR_VALUE}: {value}",

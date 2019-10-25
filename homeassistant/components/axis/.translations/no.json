@@ -12,6 +12,7 @@
             "device_unavailable": "Enheten er ikke tilgjengelig",
             "faulty_credentials": "Ugyldig brukerlegitimasjon"
         },
+        "flow_title": "Akse-enhet: {Name} ({Host})",
         "step": {
             "user": {
                 "data": {

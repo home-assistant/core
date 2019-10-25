@@ -1,0 +1,8 @@
+{
+    "device_automation": {
+        "action_type": {
+            "disarm": "Uitschakelen {entity_name}",
+            "trigger": "Trigger {entity_name}"
+        }
+    }
+}

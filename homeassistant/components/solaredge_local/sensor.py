@@ -24,63 +24,107 @@ from homeassistant.util import Throttle
 DOMAIN = "solaredge_local"
 UPDATE_DELAY = timedelta(seconds=10)
 
+INVERTER_MODES = (
+    "SHUTTING_DOWN",
+    "ERROR",
+    "STANDBY",
+    "PAIRING",
+    "POWER_PRODUCTION",
+    "AC_CHARGING",
+    "NOT_PAIRED",
+    "NIGHT_MODE",
+    "GRID_MONITORING",
+    "IDLE",
+)
+
 # Supported sensor types:
-# Key: ['json_key', 'name', unit, icon]
+# Key: ['json_key', 'name', unit, icon, attribute name]
 SENSOR_TYPES = {
-    "current_power": ["currentPower", "Current Power", POWER_WATT, "mdi:solar-power"],
+    "current_AC_voltage": ["gridvoltage", "Grid Voltage", "V", "mdi:current-ac", None],
+    "current_DC_voltage": ["dcvoltage", "DC Voltage", "V", "mdi:current-dc", None],
+    "current_frequency": [
+        "gridfrequency",
+        "Grid Frequency",
+        "Hz",
+        "mdi:current-ac",
+        None,
+    ],
+    "current_power": [
+        "currentPower",
+        "Current Power",
+        POWER_WATT,
+        "mdi:solar-power",
+        None,
+    ],
     "energy_this_month": [
         "energyThisMonth",
-        "Energy this month",
+        "Energy This Month",
         ENERGY_WATT_HOUR,
         "mdi:solar-power",
+        None,
     ],
     "energy_this_year": [
         "energyThisYear",
-        "Energy this year",
+        "Energy This Year",
         ENERGY_WATT_HOUR,
         "mdi:solar-power",
+        None,
     ],
     "energy_today": [
         "energyToday",
-        "Energy today",
+        "Energy Today",
         ENERGY_WATT_HOUR,
         "mdi:solar-power",
+        None,
     ],
     "inverter_temperature": [
         "invertertemperature",
         "Inverter Temperature",
         TEMP_CELSIUS,
         "mdi:thermometer",
+        "operating_mode",
     ],
     "lifetime_energy": [
         "energyTotal",
-        "Lifetime energy",
+        "Lifetime Energy",
         ENERGY_WATT_HOUR,
         "mdi:solar-power",
+        None,
+    ],
+    "optimizer_connected": [
+        "optimizers",
+        "Optimizers Online",
+        "optimizers",
+        "mdi:solar-panel",
+        "optimizers_connected",
     ],
     "optimizer_current": [
         "optimizercurrent",
         "Average Optimizer Current",
         "A",
         "mdi:solar-panel",
+        None,
     ],
     "optimizer_power": [
         "optimizerpower",
         "Average Optimizer Power",
         POWER_WATT,
         "mdi:solar-panel",
+        None,
     ],
     "optimizer_temperature": [
         "optimizertemperature",
         "Average Optimizer Temperature",
         TEMP_CELSIUS,
         "mdi:solar-panel",
+        None,
     ],
     "optimizer_voltage": [
         "optimizervoltage",
         "Average Optimizer Voltage",
         "V",
         "mdi:solar-panel",
+        None,
     ],
 }
 
@@ -122,7 +166,47 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             "Inverter Temperature",
             TEMP_FAHRENHEIT,
             "mdi:thermometer",
+            "operating_mode",
+            None,
         ]
+
+    try:
+        if status.metersList[0]:
+            sensors["import_current_power"] = [
+                "currentPowerimport",
+                "current import Power",
+                POWER_WATT,
+                "mdi:arrow-collapse-down",
+                None,
+            ]
+            sensors["import_meter_reading"] = [
+                "totalEnergyimport",
+                "total import Energy",
+                ENERGY_WATT_HOUR,
+                "mdi:counter",
+                None,
+            ]
+    except IndexError:
+        _LOGGER.debug("Import meter sensors are not created")
+
+    try:
+        if status.metersList[1]:
+            sensors["export_current_power"] = [
+                "currentPowerexport",
+                "current export Power",
+                POWER_WATT,
+                "mdi:arrow-expand-up",
+                None,
+            ]
+            sensors["export_meter_reading"] = [
+                "totalEnergyexport",
+                "total export Energy",
+                ENERGY_WATT_HOUR,
+                "mdi:counter",
+                None,
+            ]
+    except IndexError:
+        _LOGGER.debug("Export meter sensors are not created")
 
     # Create solaredge data service which will retrieve and update the data.
     data = SolarEdgeData(hass, api)
@@ -137,6 +221,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             sensor_info[1],
             sensor_info[2],
             sensor_info[3],
+            sensor_info[4],
         )
         entities.append(sensor)
 
@@ -146,7 +231,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SolarEdgeSensor(Entity):
     """Representation of an SolarEdge Monitoring API sensor."""
 
-    def __init__(self, platform_name, data, json_key, name, unit, icon):
+    def __init__(self, platform_name, data, json_key, name, unit, icon, attr):
         """Initialize the sensor."""
         self._platform_name = platform_name
         self._data = data
@@ -156,6 +241,7 @@ class SolarEdgeSensor(Entity):
         self._name = name
         self._unit_of_measurement = unit
         self._icon = icon
+        self._attr = attr
 
     @property
     def name(self):
@@ -166,6 +252,16 @@ class SolarEdgeSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        if self._attr:
+            try:
+                return {self._attr: self._data.info[self._json_key]}
+            except KeyError:
+                return None
+        return None
 
     @property
     def icon(self):
@@ -191,6 +287,7 @@ class SolarEdgeData:
         self.hass = hass
         self.api = api
         self.data = {}
+        self.info = {}
 
     @Throttle(UPDATE_DELAY)
     def update(self):
@@ -243,6 +340,28 @@ class SolarEdgeData:
             self.data["invertertemperature"] = round(
                 status.inverters.primary.temperature.value, 2
             )
+            self.data["dcvoltage"] = round(status.inverters.primary.voltage, 2)
+            self.data["gridfrequency"] = round(status.frequencyHz, 2)
+            self.data["gridvoltage"] = round(status.voltage, 2)
+            self.data["optimizers"] = status.optimizersStatus.online
+
+            self.info["optimizers"] = status.optimizersStatus.total
+            self.info["invertertemperature"] = INVERTER_MODES[status.status]
+
+            try:
+                if status.metersList[1]:
+                    self.data["currentPowerimport"] = status.metersList[1].currentPower
+                    self.data["totalEnergyimport"] = status.metersList[1].totalEnergy
+            except IndexError:
+                pass
+
+            try:
+                if status.metersList[0]:
+                    self.data["currentPowerexport"] = status.metersList[0].currentPower
+                    self.data["totalEnergyexport"] = status.metersList[0].totalEnergy
+            except IndexError:
+                pass
+
         if maintenance.system.name:
             self.data["optimizertemperature"] = round(statistics.mean(temperature), 2)
             self.data["optimizervoltage"] = round(statistics.mean(voltage), 2)

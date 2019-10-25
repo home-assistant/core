@@ -12,7 +12,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import HomeAssistantType
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID
 from .hap import HomematicipHAP
@@ -28,7 +28,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP alrm control panel from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
@@ -58,6 +58,17 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
                 self._internal_alarm_zone = security_zone
             else:
                 self._external_alarm_zone = security_zone
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "identifiers": {(HMIPC_DOMAIN, f"ACP {self._home.id}")},
+            "name": self.name,
+            "manufacturer": "eQ-3",
+            "model": CONST_ALARM_CONTROL_PANEL_NAME,
+            "via_device": (HMIPC_DOMAIN, self._home.id),
+        }
 
     @property
     def state(self) -> str:
