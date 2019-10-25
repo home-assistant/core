@@ -3,7 +3,6 @@ from typing import List
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_ABOVE,
     CONF_BELOW,
@@ -22,7 +21,7 @@ from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.components.automation import (
     state as state_automation,
-    template as template_automation,
+    numeric_state as numeric_state_automation,
     AutomationActionType,
 )
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
@@ -196,16 +195,16 @@ async def async_attach_trigger(
         position = "current_tilt_position"
     min_pos = config.get(CONF_ABOVE, -1)
     max_pos = config.get(CONF_BELOW, 101)
-    value_template = (
-        f"{{{{ (state_attr('{config[ATTR_ENTITY_ID]}', '{position}')|int) > {min_pos}"
-        f"and (state_attr('{config[ATTR_ENTITY_ID]}', '{position}')|int) < {max_pos} }}}}"
-    )
+    value_template = f"{{{{ state.attributes.{position} }}}}"
 
-    template_config = {
-        template_automation.CONF_PLATFORM: "template",
-        template_automation.CONF_VALUE_TEMPLATE: value_template,
+    numeric_state_config = {
+        numeric_state_automation.CONF_PLATFORM: "numeric_state",
+        numeric_state_automation.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+        numeric_state_automation.CONF_BELOW: max_pos,
+        numeric_state_automation.CONF_ABOVE: min_pos,
+        numeric_state_automation.CONF_VALUE_TEMPLATE: value_template,
     }
-    template_config = template_automation.TRIGGER_SCHEMA(template_config)
-    return await template_automation.async_attach_trigger(
-        hass, template_config, action, automation_info, platform_type="device"
+    numeric_state_config = numeric_state_automation.TRIGGER_SCHEMA(numeric_state_config)
+    return await numeric_state_automation.async_attach_trigger(
+        hass, numeric_state_config, action, automation_info, platform_type="device"
     )
