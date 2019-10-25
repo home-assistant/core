@@ -1,6 +1,10 @@
 {
     "device_automation": {
         "action_type": {
+            "arm_away": "Armar {entity_name} longe",
+            "arm_home": "Armar {entity_name} casa",
+            "arm_night": "Armar {entity_name} noite",
+            "disarm": "Desarmar {entity_name}",
             "trigger": "Disparar {entidade_nome}"
         }
     }
