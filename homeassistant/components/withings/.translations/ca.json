@@ -7,6 +7,12 @@
             "default": "Autenticaci\u00f3 exitosa amb Withings per al perfil seleccionat."
         },
         "step": {
+            "profile": {
+                "data": {
+                    "profile": "Perfil"
+                },
+                "title": "Perfil d'usuari."
+            },
             "user": {
                 "data": {
                     "profile": "Perfil"
