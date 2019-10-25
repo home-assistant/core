@@ -1,5 +1,6 @@
 """API for Somfy bound to HASS OAuth."""
 from asyncio import run_coroutine_threadsafe
+from typing import Dict, Union
 
 from pymfy.api import somfy_api
 
@@ -7,7 +8,7 @@ from homeassistant import core, config_entries
 from homeassistant.helpers import config_entry_oauth2_flow
 
 
-class ConfigEntrySomfyApi(somfy_api.SomfyApi):
+class ConfigEntrySomfyApi(somfy_api.SomfyApi) -> Dict[str, Union[str, int]]:
     """Provide a Somfy API tied into an OAuth2 based config entry."""
 
     def __init__(
