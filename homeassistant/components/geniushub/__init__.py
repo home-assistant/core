@@ -232,7 +232,7 @@ class GeniusHeatingZone(GeniusZone):
 
     def __init__(self, broker, zone) -> None:
         """Initialize the Zone."""
-        super().__init__()
+        super().__init__(broker, zone)
 
         self._max_temp = self._min_temp = self._supported_features = None
 
