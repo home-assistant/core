@@ -9,6 +9,7 @@ from lyric import Lyric
 
 from homeassistant.components.lyric import config_flow
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers import config_validation as cv, config_entry_oauth2_flow
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -69,12 +70,14 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         hass, entry
     )
 
+    implementation.token = entry.data[CONF_TOKEN]
     implementation.token_cache_file = hass.config.path(CONF_LYRIC_CONFIG_FILE)
 
     lyric = Lyric(
         app_name="Home Assistant",
         client_id=implementation.client_id,
         client_secret=implementation.client_secret,
+        token=implementation.token,
         token_cache_file=implementation.token_cache_file,
     )
 
