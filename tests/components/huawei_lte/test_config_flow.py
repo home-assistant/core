@@ -20,21 +20,26 @@ FIXTURE_USER_INPUT = {
 }
 
 
-async def test_show_set_form(hass):
-    """Test that the setup form is served."""
+@pytest.fixture
+def flow(hass):
+    """Get flow to test."""
     flow = ConfigFlowHandler()
     flow.hass = hass
+    flow.context = {}
+    return flow
+
+
+async def test_show_set_form(flow):
+    """Test that the setup form is served."""
     result = await flow.async_step_user(user_input=None)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
 
-async def test_urlize_plain_host(hass, requests_mock):
+async def test_urlize_plain_host(flow, requests_mock):
     """Test that plain host or IP gets converted to a URL."""
     requests_mock.request(ANY, ANY, exc=ConnectionError())
-    flow = ConfigFlowHandler()
-    flow.hass = hass
     host = "192.168.100.1"
     user_input = {**FIXTURE_USER_INPUT, CONF_URL: host}
     result = await flow.async_step_user(user_input=user_input)
@@ -44,14 +49,12 @@ async def test_urlize_plain_host(hass, requests_mock):
     assert user_input[CONF_URL] == f"http://{host}/"
 
 
-async def test_already_configured(hass):
+async def test_already_configured(flow):
     """Test we reject already configured devices."""
     MockConfigEntry(
         domain=DOMAIN, data=FIXTURE_USER_INPUT, title="Already configured"
-    ).add_to_hass(hass)
+    ).add_to_hass(flow.hass)
 
-    flow = ConfigFlowHandler()
-    flow.hass = hass
     # Tweak URL a bit to check that doesn't fail duplicate detection
     result = await flow.async_step_user(
         user_input={
@@ -64,12 +67,10 @@ async def test_already_configured(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_connection_error(hass, requests_mock):
+async def test_connection_error(flow, requests_mock):
     """Test we show user form on connection error."""
 
     requests_mock.request(ANY, ANY, exc=ConnectionError())
-    flow = ConfigFlowHandler()
-    flow.hass = hass
     result = await flow.async_step_user(user_input=FIXTURE_USER_INPUT)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -107,15 +108,13 @@ def login_requests_mock(requests_mock):
         (ResponseCodeEnum.ERROR_SYSTEM_UNKNOWN, {"base": "response_error"}),
     ),
 )
-async def test_login_error(hass, login_requests_mock, code, errors):
+async def test_login_error(flow, login_requests_mock, code, errors):
     """Test we show user form with appropriate error on response failure."""
     login_requests_mock.request(
         ANY,
         f"{FIXTURE_USER_INPUT[CONF_URL]}api/user/login",
         text=f"<error><code>{code}</code><message/></error>",
     )
-    flow = ConfigFlowHandler()
-    flow.hass = hass
     result = await flow.async_step_user(user_input=FIXTURE_USER_INPUT)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -123,15 +122,13 @@ async def test_login_error(hass, login_requests_mock, code, errors):
     assert result["errors"] == errors
 
 
-async def test_success(hass, login_requests_mock):
+async def test_success(flow, login_requests_mock):
     """Test successful flow provides entry creation data."""
     login_requests_mock.request(
         ANY,
         f"{FIXTURE_USER_INPUT[CONF_URL]}api/user/login",
         text=f"<response>OK</response>",
     )
-    flow = ConfigFlowHandler()
-    flow.hass = hass
     result = await flow.async_step_user(user_input=FIXTURE_USER_INPUT)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
