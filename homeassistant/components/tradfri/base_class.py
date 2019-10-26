@@ -3,7 +3,7 @@ import asyncio
 import logging
 from functools import wraps
 
-from pytradfri.error import PytradfriError, RequestTimeout
+from aiocoap.error import RequestTimedOut
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class TradfriBaseClass(Entity):
-    """Base class for IKEA TRADFRI.
+    """Base class for IKEA TRADFRIRequestTimedOut.
 
     All devices and groups should ultimately inherit from this class.
     """
@@ -30,35 +30,43 @@ class TradfriBaseClass(Entity):
 
         self._refresh(device)
 
-    def _restart(self, error):
-        """Log error and restart observe."""
+    def _restart(self, message):
+        """Log error and restart observation of device."""
         self.async_schedule_update_ha_state()
 
-        _LOGGER.warning(
-            "Observation failed for %s trying again", self._name, exc_info=error
-        )
-        # Wait one second before trying again
-        asyncio.sleep(1)
+        _LOGGER.warning(message)
+        # Wait one half second before trying again
+        asyncio.sleep(0.5)
         self._async_start_observe()
+        return True
 
     @callback
     def _async_start_observe(self, exc=None):
         """Start observation of device."""
         if exc:
-            self._restart(exc)
-            return
+            if type(exc) == AttributeError:
+                message = (
+                    f"Caught an exception with {self._name} due to {exc}. Restarting observation."
+                )
+            elif type(exc) == RequestTimedOut:
+                message = (
+                    f"Time out error with {self._name} due to {exc}. Restarting observation."
+                )
+            else:
+                message = (
+                    f"Undefined error with {self._name} due to {exc}. Restarting observation."
+                )
 
-        try:
-            cmd = self._device.observe(
-                callback=self._observe_update,
-                err_callback=self._async_start_observe,
-                duration=0,
-            )
-            self.hass.async_create_task(self._api(cmd))
-            return True
-        except PytradfriError as err:
-            self._restart(err)
+            self._restart(message)
             return False
+
+        cmd = self._device.observe(
+            callback=self._observe_update,
+            err_callback=self._async_start_observe,
+            duration=0,
+        )
+        self.hass.async_create_task(self._api(cmd))
+        return True
 
     @staticmethod
     def retry_timeout(api, retries=3):
@@ -70,7 +78,8 @@ class TradfriBaseClass(Entity):
             for i in range(1, retries + 1):
                 try:
                     return api(*args, **kwargs)
-                except RequestTimeout:
+                except Exception as e:
+                    _LOGGER.warning("Retrying Tradfri {} due to {}".format(i, e))
                     if i == retries:
                         _LOGGER.warning("Request timeout")
                         raise
