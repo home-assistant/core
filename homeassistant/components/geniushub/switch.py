@@ -1,8 +1,8 @@
 """Support for Genius Hub switch/outlet devices."""
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchDevice, DEVICE_CLASS_OUTLET
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from . import DOMAIN, DEVICE_CLASS_OUTLET, GeniusZone
+from . import DOMAIN, GeniusZone
 
 GH_ON_OFF_ZONE = "on / off"
 
