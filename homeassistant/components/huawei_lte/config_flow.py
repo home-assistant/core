@@ -90,6 +90,14 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle import initiated config flow."""
         return await self.async_step_user(user_input)
 
+    def _already_configured(self, user_input):
+        """See if we already have a router matching user input configured."""
+        existing_urls = {
+            url_normalize(entry.data[CONF_URL], default_scheme="http")
+            for entry in self._async_current_entries()
+        }
+        return user_input[CONF_URL] in existing_urls
+
     async def async_step_user(self, user_input=None):
         """Handle user initiated config flow."""
         if user_input is None:
@@ -107,12 +115,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input=user_input, errors=errors
             )
 
-        # See if we already have a router configured with this URL
-        existing_urls = {  # existing entries
-            url_normalize(entry.data[CONF_URL], default_scheme="http")
-            for entry in self._async_current_entries()
-        }
-        if user_input[CONF_URL] in existing_urls:
+        if self._already_configured(user_input):
             return self.async_abort(reason="already_configured")
 
         conn = None
@@ -220,7 +223,11 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ):
             return self.async_abort(reason="already_in_progress")
 
-        return await self._async_show_user_form(user_input={CONF_URL: url})
+        user_input = {CONF_URL: url}
+        if self._already_configured(user_input):
+            return self.async_abort(reason="already_configured")
+
+        return await self._async_show_user_form(user_input)
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
