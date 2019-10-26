@@ -133,7 +133,7 @@ aioasuswrt==1.1.21
 aioautomatic==0.6.5
 
 # homeassistant.components.aws
-aiobotocore==0.10.2
+aiobotocore==0.10.4
 
 # homeassistant.components.dnsip
 aiodns==2.0.0
@@ -306,9 +306,11 @@ blockchain==1.4.4
 # homeassistant.components.bom
 bomradarloop==0.1.3
 
-# homeassistant.components.amazon_polly
 # homeassistant.components.route53
 boto3==1.9.233
+
+# homeassistant.components.amazon_polly
+boto3==1.9.252
 
 # homeassistant.components.braviatv
 braviarc-homeassistant==0.3.7.dev0
