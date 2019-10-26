@@ -33,6 +33,7 @@ from homeassistant.components import (
 
 from .const import CONF_DESCRIPTION, CONF_DISPLAY_CATEGORIES
 from .capabilities import (
+    Alexa,
     AlexaBrightnessController,
     AlexaChannelController,
     AlexaColorController,
@@ -261,6 +262,7 @@ class GenericCapabilities(AlexaEntity):
         return [
             AlexaPowerController(self.entity),
             AlexaEndpointHealth(self.hass, self.entity),
+            Alexa(self.hass),
         ]
 
 
@@ -277,6 +279,7 @@ class SwitchCapabilities(AlexaEntity):
         return [
             AlexaPowerController(self.entity),
             AlexaEndpointHealth(self.hass, self.entity),
+            Alexa(self.hass),
         ]
 
 
@@ -299,6 +302,7 @@ class ClimateCapabilities(AlexaEntity):
         yield AlexaThermostatController(self.hass, self.entity)
         yield AlexaTemperatureSensor(self.hass, self.entity)
         yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.hass)
 
 
 @ENTITY_ADAPTERS.register(cover.DOMAIN)
@@ -316,6 +320,7 @@ class CoverCapabilities(AlexaEntity):
         if supported & cover.SUPPORT_SET_POSITION:
             yield AlexaPercentageController(self.entity)
         yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.hass)
 
 
 @ENTITY_ADAPTERS.register(light.DOMAIN)
@@ -338,6 +343,7 @@ class LightCapabilities(AlexaEntity):
         if supported & light.SUPPORT_COLOR_TEMP:
             yield AlexaColorTemperatureController(self.entity)
         yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.hass)
 
 
 @ENTITY_ADAPTERS.register(fan.DOMAIN)
@@ -369,6 +375,7 @@ class FanCapabilities(AlexaEntity):
             )
 
         yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.hass)
 
 
 @ENTITY_ADAPTERS.register(lock.DOMAIN)
@@ -384,6 +391,7 @@ class LockCapabilities(AlexaEntity):
         return [
             AlexaLockController(self.entity),
             AlexaEndpointHealth(self.hass, self.entity),
+            Alexa(self.hass),
         ]
 
 
@@ -401,7 +409,6 @@ class MediaPlayerCapabilities(AlexaEntity):
 
     def interfaces(self):
         """Yield the supported interfaces."""
-        yield AlexaEndpointHealth(self.hass, self.entity)
         yield AlexaPowerController(self.entity)
 
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
@@ -435,6 +442,9 @@ class MediaPlayerCapabilities(AlexaEntity):
         if supported & media_player.const.SUPPORT_PLAY_MEDIA:
             yield AlexaChannelController(self.entity)
 
+        yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.hass)
+
 
 @ENTITY_ADAPTERS.register(scene.DOMAIN)
 class SceneCapabilities(AlexaEntity):
@@ -453,7 +463,10 @@ class SceneCapabilities(AlexaEntity):
 
     def interfaces(self):
         """Yield the supported interfaces."""
-        return [AlexaSceneController(self.entity, supports_deactivation=False)]
+        return [
+            AlexaSceneController(self.entity, supports_deactivation=False),
+            Alexa(self.hass),
+        ]
 
 
 @ENTITY_ADAPTERS.register(script.DOMAIN)
@@ -467,7 +480,10 @@ class ScriptCapabilities(AlexaEntity):
     def interfaces(self):
         """Yield the supported interfaces."""
         can_cancel = bool(self.entity.attributes.get("can_cancel"))
-        return [AlexaSceneController(self.entity, supports_deactivation=can_cancel)]
+        return [
+            AlexaSceneController(self.entity, supports_deactivation=can_cancel),
+            Alexa(self.hass),
+        ]
 
 
 @ENTITY_ADAPTERS.register(sensor.DOMAIN)
@@ -486,6 +502,7 @@ class SensorCapabilities(AlexaEntity):
         if attrs.get(ATTR_UNIT_OF_MEASUREMENT) in (TEMP_FAHRENHEIT, TEMP_CELSIUS):
             yield AlexaTemperatureSensor(self.hass, self.entity)
             yield AlexaEndpointHealth(self.hass, self.entity)
+            yield Alexa(self.hass)
 
 
 @ENTITY_ADAPTERS.register(binary_sensor.DOMAIN)
@@ -517,6 +534,7 @@ class BinarySensorCapabilities(AlexaEntity):
                 yield AlexaDoorbellEventSource(self.entity)
 
         yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.hass)
 
     def get_type(self):
         """Return the type of binary sensor."""
@@ -540,3 +558,4 @@ class AlarmControlPanelCapabilities(AlexaEntity):
         if not self.entity.attributes.get("code_arm_required"):
             yield AlexaSecurityPanelController(self.hass, self.entity)
             yield AlexaEndpointHealth(self.hass, self.entity)
+            yield Alexa(self.hass)
