@@ -1,8 +1,10 @@
 """Test HomematicIP Cloud setup process."""
 
+import os
 from unittest.mock import patch
 
 from homeassistant.components import homematicip_cloud as hmipc
+from homeassistant.components.homematicip_cloud import DEFAULT_CONFIG_FILE_PREFIX
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_coro
@@ -150,3 +152,22 @@ async def test_unload_entry(hass):
     assert await hmipc.async_unload_entry(hass, entry)
     assert len(mock_hap.return_value.async_reset.mock_calls) == 1
     assert hass.data[hmipc.DOMAIN] == {}
+
+
+async def test_hmip_dump_hap_config_services(hass, mock_hap_with_service):
+    """Test dump configuration services."""
+    config_file = f"{hass.config.config_dir}/{DEFAULT_CONFIG_FILE_PREFIX}"
+    try:
+        await hass.services.async_call(
+            "homematicip_cloud", "dump_hap_config", {"anonymize": True}, blocking=True
+        )
+        home = mock_hap_with_service.home
+        assert home.mock_calls[-1][0] == "download_configuration"
+        assert len(home.mock_calls) == 8  # pylint: disable=W0212
+
+        assert os.path.isfile(config_file)
+        file_content = open(config_file, "r").readlines()
+        assert file_content
+    finally:
+        os.remove(config_file)
+        assert not os.path.isfile(config_file)
