@@ -1,9 +1,14 @@
 {
     "config": {
+        "error": {
+            "connection_error": "No s'ha pogut connectar amb la inst\u00e0ncia de CoolMasterNet. Comprova l'amfitri\u00f3.",
+            "no_units": "No s'ha pogut trobar cap unitat d'HVAC a l'amfitri\u00f3 de CoolMasterNet."
+        },
         "step": {
             "user": {
                 "data": {
-                    "host": "Amfitri\u00f3"
+                    "host": "Amfitri\u00f3",
+                    "off": "Es pot apagar"
                 }
             }
         },

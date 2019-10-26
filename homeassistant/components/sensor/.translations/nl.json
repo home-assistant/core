@@ -9,7 +9,7 @@
             "is_signal_strength": "{entity_name} signaalsterkte",
             "is_temperature": "{entity_name} temperatuur",
             "is_timestamp": "{entity_name} tijdstip",
-            "is_value": "{entity_name} waarde"
+            "is_value": "Huidige {entity_name} waarde"
         },
         "trigger_type": {
             "battery_level": "{entity_name} batterijniveau",

@@ -4,7 +4,9 @@
             "is_closed": "{entity_name} is closed",
             "is_closing": "{entity_name} is closing",
             "is_open": "{entity_name} is open",
-            "is_opening": "{entity_name} is opening"
+            "is_opening": "{entity_name} is opening",
+            "is_position": "{entity_name} position is",
+            "is_tilt_position": "{entity_name} tilt position is"
         }
     }
 }
