@@ -245,7 +245,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
     async def async_step_creation(self, user_input: dict = None) -> dict:
         """Create config entry from external data."""
         token = await self.flow_impl.async_resolve_external_data(self.external_data)
-        token["expires_at"] = time.time() + token["expires_in"]
+        token["expires_at"] = time.time() + float(token["expires_in"])
 
         self.logger.info("Successfully authenticated")
 
