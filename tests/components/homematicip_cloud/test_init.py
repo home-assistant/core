@@ -164,4 +164,4 @@ async def test_hmip_dump_hap_config_services(hass, mock_hap_with_service):
         home = mock_hap_with_service.home
         assert home.mock_calls[-1][0] == "download_configuration"
         assert len(home.mock_calls) == 8  # pylint: disable=W0212
-        assert len(open_mock.mock_calls) == 2
+        assert len(open_mock.mock_calls) == 1
