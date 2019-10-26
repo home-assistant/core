@@ -263,9 +263,13 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         anonymize = service.data[ATTR_ANONYMIZE]
 
         for hap in hass.data[DOMAIN].values():
-            config_file = (
-                f"{config_path}/{config_file_prefix}_{hap.config_entry.title}.json"
-            )
+            hap_sgtin = hap.config_entry.title
+
+            if anonymize:
+                hap_sgtin = hap_sgtin[-4:]
+
+            config_file = f"{config_path}/{config_file_prefix}_{hap_sgtin}.json"
+
             json_state = await hap.home.download_configuration()
             json_state = handle_config(json_state, anonymize)
             open(config_file, mode="w", encoding="utf8").write(json_state)
