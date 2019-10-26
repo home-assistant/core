@@ -35,9 +35,7 @@ class TradfriBaseClass(Entity):
         self.async_schedule_update_ha_state()
 
         _LOGGER.warning(
-            "Observation failed for %s trying again",
-            self._name,
-            exc_info=error,
+            "Observation failed for %s trying again", self._name, exc_info=error
         )
         # Wait one second before trying again
         asyncio.sleep(1)
