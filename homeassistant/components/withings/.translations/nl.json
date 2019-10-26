@@ -7,6 +7,11 @@
             "default": "Succesvol geverifieerd met Withings voor het geselecteerde profiel."
         },
         "step": {
+            "profile": {
+                "data": {
+                    "profile": "Profiel"
+                }
+            },
             "user": {
                 "data": {
                     "profile": "Profiel"
