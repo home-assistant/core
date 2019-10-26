@@ -66,6 +66,7 @@ FLOWS = [
     "soma",
     "somfy",
     "sonos",
+    "speedtestdotnet",
     "tellduslive",
     "toon",
     "tplink",

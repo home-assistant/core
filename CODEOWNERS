@@ -273,6 +273,7 @@ homeassistant/components/soma/* @ratsept
 homeassistant/components/somfy/* @tetienne
 homeassistant/components/songpal/* @rytilahti
 homeassistant/components/spaceapi/* @fabaff
+homeassistant/components/speedtestdotnet/* @engrbm87
 homeassistant/components/spider/* @peternijssen
 homeassistant/components/sql/* @dgomes
 homeassistant/components/statistics/* @fabaff

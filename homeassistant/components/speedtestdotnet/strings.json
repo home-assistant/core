@@ -1,0 +1,29 @@
+{
+    "config": {
+        "title": "SpeedTest.net",
+        "step": {
+            "user": {
+                "title": "Set up SpeedTest",
+                "description": "Are you sure you want to set up SpeedTest?"
+            }
+        },
+        "abort": {
+            "one_instance_allowed": "Only a single instance is necessary."
+        }
+    },
+    "options": {
+        "title": "Configure options for SpeedTesh",
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Update frequency",
+                    "manual": "Scan Manually",
+                    "server_id": "Specify Server ID"
+                }
+            }
+        },
+        "error": {
+            "wrong_serverid": "Server ID doesn't exist"
+        }
+    }
+}
