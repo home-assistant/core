@@ -14,21 +14,21 @@ from homeassistant.helpers.event import async_track_time_interval
 DOMAIN = "ssdp"
 SCAN_INTERVAL = timedelta(seconds=60)
 
+# Attributes for accessing info from SSDP response
 ATTR_HOST = "host"
 ATTR_PORT = "port"
 ATTR_SSDP_DESCRIPTION = "ssdp_description"
 ATTR_ST = "ssdp_st"
-ATTR_SSDP_DATA = "ssdp_data"
-# Deprecated attributes, use from SSDP_DATA directly instead
-ATTR_NAME = "name"
-ATTR_MODEL_NAME = "model_name"
-ATTR_MODEL_NUMBER = "model_number"
-ATTR_SERIAL = "serial_number"
+# Attributes for accessing info from retrieved UPnP device description
+ATTR_NAME = "friendlyName"
+ATTR_MODEL_NAME = "modelName"
+ATTR_MODEL_NUMBER = "modelNumber"
+ATTR_SERIAL = "serialNumber"
 ATTR_MANUFACTURER = "manufacturer"
 ATTR_MANUFACTURERURL = "manufacturerURL"
-ATTR_UDN = "udn"
-ATTR_UPNP_DEVICE_TYPE = "upnp_device_type"
-ATTR_PRESENTATIONURL = "presentation_url"
+ATTR_UDN = "UDN"
+ATTR_UPNP_DEVICE_TYPE = "deviceType"
+ATTR_PRESENTATIONURL = "presentationURL"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -159,7 +159,7 @@ class Scanner:
 
 
 def info_from_entry(entry, device_info):
-    """Get most important info from an entry."""
+    """Get info from an entry."""
     url = urlparse(entry.location)
     info = {
         ATTR_HOST: url.hostname,
@@ -167,18 +167,7 @@ def info_from_entry(entry, device_info):
         ATTR_SSDP_DESCRIPTION: entry.location,
         ATTR_ST: entry.st,
     }
-
     if device_info:
-        info[ATTR_SSDP_DATA] = device_info
-        # Deprecated below, use from device_info instead
-        info[ATTR_NAME] = device_info.get("friendlyName")
-        info[ATTR_MODEL_NAME] = device_info.get("modelName")
-        info[ATTR_MODEL_NUMBER] = device_info.get("modelNumber")
-        info[ATTR_SERIAL] = device_info.get("serialNumber")
-        info[ATTR_MANUFACTURER] = device_info.get("manufacturer")
-        info[ATTR_MANUFACTURERURL] = device_info.get("manufacturerURL")
-        info[ATTR_UDN] = device_info.get("UDN")
-        info[ATTR_UPNP_DEVICE_TYPE] = device_info.get("deviceType")
-        info[ATTR_PRESENTATIONURL] = device_info.get("presentationURL")
+        info.update(device_info)
 
     return info
