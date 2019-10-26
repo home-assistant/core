@@ -30,11 +30,11 @@ class TradfriBaseClass(Entity):
 
         self._refresh(device)
 
-    def _restart(self, message):
+    def _restart(self, message, exc):
         """Log error and restart observation of device."""
-        self.async_schedule_update_ha_state()
+        self.async_schedule_update_ha_state(force_refresh=True)
 
-        _LOGGER.warning(message)
+        _LOGGER.warning(message, exc_info=exc)
         # Wait one half second before trying again
         asyncio.sleep(0.5)
         self._async_start_observe()
@@ -46,18 +46,14 @@ class TradfriBaseClass(Entity):
         if exc:
             if type(exc) == AttributeError:
                 message = (
-                    f"Caught an exception with {self._name} due to {exc}. Restarting observation."
+                    f"Caught an exception with {self._name}. Restarting observation."
                 )
             elif type(exc) == RequestTimedOut:
-                message = (
-                    f"Time out error with {self._name} due to {exc}. Restarting observation."
-                )
+                message = f"Time out error with {self._name}. Restarting observation."
             else:
-                message = (
-                    f"Undefined error with {self._name} due to {exc}. Restarting observation."
-                )
+                message = f"Undefined error with {self._name}. Restarting observation."
 
-            self._restart(message)
+            self._restart(message, exc)
             return False
 
         cmd = self._device.observe(
