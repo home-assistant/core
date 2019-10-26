@@ -45,23 +45,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     flume_devices = FlumeDeviceList(username, password, client_id, client_secret)
 
-    try:
-        for device in flume_devices.device_list:
-            if device["type"] == FLUME_TYPE_SENSOR:
-                flume = FlumeData(
-                    username,
-                    password,
-                    client_id,
-                    client_secret,
-                    device["id"],
-                    time_zone,
-                    SCAN_INTERVAL,
-                )
-                flume_entity_list.append(FlumeSensor(flume, f"{name} {device['id']}"))
-    except KeyError:
-        LOGGER.error("No Flume Devices Returned of Type: %s", FLUME_TYPE_SENSOR)
+    for device in flume_devices.device_list:
+        if device["type"] == FLUME_TYPE_SENSOR:
+            flume = FlumeData(
+                username,
+                password,
+                client_id,
+                client_secret,
+                device["id"],
+                time_zone,
+                SCAN_INTERVAL,
+            )
+            flume_entity_list.append(FlumeSensor(flume, f"{name} {device['id']}"))
 
-    add_entities(flume_entity_list, True)
+    if len(flume_entity_list) > 0:
+        add_entities(flume_entity_list, True)
 
 
 class FlumeSensor(Entity):
