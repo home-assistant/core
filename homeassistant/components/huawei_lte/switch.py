@@ -103,9 +103,7 @@ class HuaweiLteMobileDataSwitch(HuaweiLteBaseSwitch):
     def _turn(self, state: bool) -> None:
         value = 1 if state else 0
         self.router.client.dial_up.set_mobile_dataswitch(dataswitch=value)
-        self._raw_state = str(
-            value
-        )  # self.router.data[self.key][self.item] = str(value)
+        self._raw_state = str(value)
         self.schedule_update_ha_state()
 
     @property
