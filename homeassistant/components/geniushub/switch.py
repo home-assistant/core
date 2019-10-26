@@ -2,7 +2,7 @@
 from homeassistant.components.switch import SwitchDevice, DEVICE_CLASS_OUTLET
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from . import DOMAIN, DEVICE_CLASS_OUTLET, GeniusZone
+from . import DOMAIN, GeniusZone
 
 ATTR_DURATION = "duration"
 
