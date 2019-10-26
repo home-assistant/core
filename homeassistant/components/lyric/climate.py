@@ -107,7 +107,7 @@ async def async_setup_entry(
 
         for thermostat in target_thermostats:
             # Not using asyncio.wait to avoid flooding the pool with jobs
-            await thermostat.set_preset_period(time)
+            thermostat.set_preset_period(time)
 
     hass.services.async_register(
         DOMAIN, SERVICE_HOLD_TIME, hold_time_service, schema=HOLD_PERIOD_SCHEMA
