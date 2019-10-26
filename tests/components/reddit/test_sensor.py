@@ -3,6 +3,7 @@ import copy
 import unittest
 from unittest.mock import patch
 
+from homeassistant.components.reddit import sensor as reddit_sensor
 from homeassistant.components.reddit.sensor import (
     DOMAIN,
     ATTR_SUBREDDIT,
@@ -161,7 +162,8 @@ class TestRedditSetup(unittest.TestCase):
     @patch("praw.Reddit", new=MockPraw)
     def test_setup_with_valid_config(self, mock_praw):
         """Test the platform setup with Reddit configuration."""
-        setup_component(self.hass, "sensor", VALID_CONFIG)
+        with patch.object(reddit_sensor, "praw", mock_praw):
+            setup_component(self.hass, "sensor", VALID_CONFIG)
 
         state = self.hass.states.get("sensor.reddit_worldnews")
         assert int(state.state) == MOCK_RESULTS_LENGTH
