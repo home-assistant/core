@@ -26,6 +26,7 @@ DEMO_USER_INPUT = {
     "port": PORT,
     "ssl": False,
     "verify_ssl": True,
+    "docker_containers": [],
 }
 
 
