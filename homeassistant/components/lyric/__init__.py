@@ -1,26 +1,30 @@
 """Support for Honeywell Lyric devices."""
+import asyncio
 import logging
 from typing import Any, Dict
+from datetime import timedelta
 
 import voluptuous as vol
 from lyric import Lyric
 
-from homeassistant.const import CONF_TOKEN
+from homeassistant.components.lyric import config_flow
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers import config_validation as cv, config_entry_oauth2_flow
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+
 from .const import (
     DATA_LYRIC_CLIENT,
     DOMAIN,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_LYRIC_CONFIG_FILE,
-    DATA_LYRIC_CONFIG,
     SERVICE_HOLD_TIME,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(seconds=10)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -34,40 +38,49 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+LYRIC_COMPONENTS = ["climate", "sensor"]
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+
+async def async_setup(hass, config):
     """Set up the Lyric component."""
+    hass.data[DOMAIN] = {}
+
     if DOMAIN not in config:
         return True
 
-    conf = config[DOMAIN]
-
-    # Store config to be used during entry setup
-    hass.data[DATA_LYRIC_CONFIG] = conf
+    config_flow.LyricFlowHandler.async_register_implementation(
+        hass,
+        config_entry_oauth2_flow.LocalOAuth2Implementation(
+            hass,
+            DOMAIN,
+            config[DOMAIN][CONF_CLIENT_ID],
+            config[DOMAIN][CONF_CLIENT_SECRET],
+            "https://api.honeywell.com/oauth2/authorize",
+            "https://api.honeywell.com/oauth2/token",
+        ),
+    )
 
     return True
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up Lyric from a config entry."""
-    conf = hass.data[DATA_LYRIC_CONFIG]
+    implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
+        hass, entry
+    )
 
-    client_id = conf[CONF_CLIENT_ID]
-    client_secret = conf[CONF_CLIENT_SECRET]
-    token = entry.data[CONF_TOKEN]
-    token_cache_file = hass.config.path(CONF_LYRIC_CONFIG_FILE)
+    implementation.token_cache_file = hass.config.path(CONF_LYRIC_CONFIG_FILE)
 
     lyric = Lyric(
         app_name="Home Assistant",
-        client_id=client_id,
-        client_secret=client_secret,
-        token=token,
-        token_cache_file=token_cache_file,
+        client_id=implementation.client_id,
+        client_secret=implementation.client_secret,
+        token_cache_file=implementation.token_cache_file,
     )
 
     hass.data.setdefault(DOMAIN, {})[DATA_LYRIC_CLIENT] = LyricClient(lyric)
 
-    for component in "climate", "sensor":
+    for component in LYRIC_COMPONENTS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
@@ -77,8 +90,12 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigType) -> bool:
     """Unload Lyric config entry."""
-    for component in "climate", "sensor":
-        await hass.config_entries.async_forward_entry_unload(entry, component)
+    await asyncio.gather(
+        *[
+            hass.config_entries.async_forward_entry_unload(entry, component)
+            for component in LYRIC_COMPONENTS
+        ]
+    )
 
     # Remove the climate service
     hass.services.async_remove(DOMAIN, SERVICE_HOLD_TIME)
