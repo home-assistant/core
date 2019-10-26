@@ -3,7 +3,7 @@ import asyncio
 import logging
 import functools
 import uuid
-from typing import Any, Callable, List, Optional, Set
+from typing import Any, Callable, Dict, List, Optional, Set
 import weakref
 
 import attr
@@ -18,7 +18,7 @@ from homeassistant.helpers import entity_registry
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
-_UNDEF = object()
+_UNDEF: dict = {}
 
 SOURCE_USER = "user"
 SOURCE_DISCOVERY = "discovery"
@@ -529,8 +529,13 @@ class ConfigEntries:
 
     @callback
     def async_update_entry(
-        self, entry, *, data=_UNDEF, options=_UNDEF, system_options=_UNDEF
-    ):
+        self,
+        entry: ConfigEntry,
+        *,
+        data: dict = _UNDEF,
+        options: dict = _UNDEF,
+        system_options: dict = _UNDEF,
+    ) -> None:
         """Update a config entry."""
         if data is not _UNDEF:
             entry.data = data
@@ -547,7 +552,7 @@ class ConfigEntries:
 
         self._async_schedule_save()
 
-    async def async_forward_entry_setup(self, entry, domain):
+    async def async_forward_entry_setup(self, entry: ConfigEntry, domain: str) -> bool:
         """Forward the setup of an entry to a different component.
 
         By default an entry is setup with the component it belongs to. If that
@@ -567,8 +572,9 @@ class ConfigEntries:
         integration = await loader.async_get_integration(self.hass, domain)
 
         await entry.async_setup(self.hass, integration=integration)
+        return True
 
-    async def async_forward_entry_unload(self, entry, domain):
+    async def async_forward_entry_unload(self, entry: ConfigEntry, domain: str) -> bool:
         """Forward the unloading of an entry to a different component."""
         # It was never loaded.
         if domain not in self.hass.config.components:
@@ -756,11 +762,11 @@ class SystemOptions:
 
     disable_new_entities = attr.ib(type=bool, default=False)
 
-    def update(self, *, disable_new_entities):
+    def update(self, *, disable_new_entities: bool) -> None:
         """Update properties."""
         self.disable_new_entities = disable_new_entities
 
-    def as_dict(self):
+    def as_dict(self) -> Dict[str, Any]:
         """Return dictionary version of this config entrys system options."""
         return {"disable_new_entities": self.disable_new_entities}
 
