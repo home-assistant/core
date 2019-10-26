@@ -1,7 +1,9 @@
 """Base class for IKEA TRADFRI."""
+import asyncio
 import logging
+from functools import wraps
 
-from pytradfri.error import PytradfriError
+from pytradfri.error import PytradfriError, RequestTimeout
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
@@ -18,7 +20,7 @@ class TradfriBaseClass(Entity):
 
     def __init__(self, device, api, gateway_id):
         """Initialize a device."""
-        self._api = api
+        self._api = self.retry_timeout(api)  # Retry API call three times
         self._device = None
         self._device_control = None
         self._device_data = None
@@ -28,12 +30,25 @@ class TradfriBaseClass(Entity):
 
         self._refresh(device)
 
+    def _restart(self, error):
+        """Log error and restart observe."""
+        self.async_schedule_update_ha_state()
+
+        _LOGGER.warning(
+            f"Observation failed for {self._name}, trying again",
+            self._name,
+            exc_info=error,
+        )
+        # Wait one second before trying again
+        asyncio.sleep(1)
+        self._async_start_observe()
+
     @callback
     def _async_start_observe(self, exc=None):
         """Start observation of device."""
         if exc:
-            self.async_schedule_update_ha_state()
-            _LOGGER.warning("Observation failed for %s", self._name, exc_info=exc)
+            self._restart(exc)
+            return
 
         try:
             cmd = self._device.observe(
@@ -42,9 +57,27 @@ class TradfriBaseClass(Entity):
                 duration=0,
             )
             self.hass.async_create_task(self._api(cmd))
+            return True
         except PytradfriError as err:
-            _LOGGER.warning("Observation failed, trying again", exc_info=err)
-            self._async_start_observe()
+            self._restart(err)
+            return False
+
+    @staticmethod
+    def retry_timeout(api, retries=3):
+        """Retry API call when a timeout occurs."""
+
+        @wraps(api)
+        def retry_api(*args, **kwargs):
+            """Retrying API."""
+            for i in range(1, retries + 1):
+                try:
+                    return api(*args, **kwargs)
+                except RequestTimeout:
+                    if i == retries:
+                        _LOGGER.warning("Request timeout")
+                        raise
+
+        return retry_api
 
     async def async_added_to_hass(self):
         """Start thread when added to hass."""
