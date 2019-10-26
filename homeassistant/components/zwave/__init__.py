@@ -14,6 +14,9 @@ from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers.device_registry import (
+    async_get_registry as async_get_device_registry,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     EVENT_HOMEASSISTANT_START,
@@ -479,8 +482,9 @@ async def async_setup_entry(hass, config_entry):
     def node_removed(node):
         node_id = node.node_id
         node_key = f"node-{node_id}"
-        _LOGGER.info("Node Removed: %s", hass.data[DATA_DEVICES][node_key])
         for key in list(hass.data[DATA_DEVICES]):
+            if key is None:
+                continue
             if not key.startswith(f"{node_id}-"):
                 continue
 
@@ -494,6 +498,16 @@ async def async_setup_entry(hass, config_entry):
         entity = hass.data[DATA_DEVICES][node_key]
         hass.add_job(entity.node_removed())
         del hass.data[DATA_DEVICES][node_key]
+
+        hass.add_job(_remove_device(node))
+
+    async def _remove_device(node):
+        dev_reg = await async_get_device_registry(hass)
+        identifier, name = node_device_id_and_name(node)
+        device = dev_reg.async_get_device(identifiers={identifier}, connections=set())
+        if device is not None:
+            _LOGGER.info("Removing Device - %s - %s", device.id, name)
+            dev_reg.async_remove_device(device.id)
 
     def network_ready():
         """Handle the query of all awake nodes."""
