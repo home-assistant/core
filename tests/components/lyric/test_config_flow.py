@@ -6,7 +6,6 @@ import pytest
 from homeassistant import data_entry_flow
 from homeassistant.components.lyric import config_flow
 from homeassistant.components.lyric.const import (
-    DATA_LYRIC_CONFIG,
     DOMAIN,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
@@ -35,20 +34,6 @@ async def setup_component(hass):
         assert await async_setup_component(hass, "api", FIXTURE_API)
         assert await async_setup_component(hass, DOMAIN, FIXTURE_APP)
         await hass.async_block_till_done()
-
-
-async def test_lyric_abort(hass, mock_lyriclib):
-    """Test abort on mising config."""
-    await setup_component(hass)
-
-    flow = config_flow.LyricFlowHandler()
-    flow.hass = hass
-
-    flow.hass.data[DATA_LYRIC_CONFIG] = None
-
-    result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "no_config"
 
 
 async def test_lyric_setup(hass, mock_lyriclib):
