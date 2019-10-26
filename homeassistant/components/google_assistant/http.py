@@ -180,10 +180,13 @@ class GoogleConfig(AbstractConfig):
                 "Response on %s with data %s was %s", url, data, await res.text()
             )
             res.raise_for_status()
+            return res.status
         except ClientResponseError as error:
             _LOGGER.error("Request for %s failed: %d", url, error.status)
+            return error.status
         except (asyncio.TimeoutError, ClientError):
             _LOGGER.error("Could not contact %s", url)
+            return 500
 
     async def async_call_homegraph_api(self, url, data):
         """Call a homegraph api with authenticaiton."""
@@ -199,24 +202,27 @@ class GoogleConfig(AbstractConfig):
                     "Response on %s with data %s was %s", url, data, await res.text()
                 )
                 res.raise_for_status()
+                return res.status
 
         try:
             await self._async_update_token()
             try:
-                await _call()
+                return await _call()
             except ClientResponseError as error:
                 if error.status == 401:
                     _LOGGER.warning(
                         "Request for %s unauthorized, renewing token and retrying", url
                     )
                     await self._async_update_token(True)
-                    await _call()
+                    return await _call()
                 else:
                     raise
         except ClientResponseError as error:
             _LOGGER.error("Request for %s failed: %d", url, error.status)
+            return error.status
         except (asyncio.TimeoutError, ClientError):
             _LOGGER.error("Could not contact %s", url)
+            return 500
 
     async def async_report_state(self, message):
         """Send a state report to Google."""
