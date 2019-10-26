@@ -112,7 +112,7 @@ class HuaweiLteMobileConnectionBinarySensor(HuaweiLteBaseBinarySensor):
 
     @property
     def icon(self):
-        """Return binary sensor icon."""
+        """Return mobile connectivity sensor icon."""
         return "mdi:signal" if self.is_on else "mdi:signal-off"
 
     @property
