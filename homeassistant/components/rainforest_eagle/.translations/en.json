@@ -1,0 +1,23 @@
+{
+    "config": {
+        "error": {
+            "no_eagle": "Failed to connect to Eagle Gateway."
+        },
+        "step": {
+            "confirm": {
+                "description": "Do you want to set up Rainforest Eagle?",
+                "title": "Rainforest Eagle"
+            },
+            "user": {
+                "data": {
+                    "cloud_id": "Cloud ID (6 digits)",
+                    "install_code": "Install Code (16 digits)",
+                    "ip_address": "Gateway IP Address"
+                },
+                "description": "Install Code can be found on the bottom of the device.",
+                "title": "Enter Configuration"
+            }
+        },
+        "title": "Rainforest Eagle"
+    }
+}

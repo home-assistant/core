@@ -5,20 +5,26 @@ from eagle200_reader import EagleReader
 from uEagle import Eagle as LegacyReader
 
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
-
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
 )
 
-# import voluptuous as vol
-# import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 
-from .const import CONF_CLOUD_ID, CONF_INSTALL_CODE, POWER_KILO_WATT, MIN_SCAN_INTERVAL
+from .const import (
+    CONF_CLOUD_ID,
+    CONF_INSTALL_CODE,
+    POWER_KILO_WATT,
+    MIN_SCAN_INTERVAL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +44,47 @@ SENSORS = {
         ENERGY_KILO_WATT_HOUR,
     ),
 }
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_IP_ADDRESS): cv.string,
+        vol.Required(CONF_CLOUD_ID): cv.string,
+        vol.Required(CONF_INSTALL_CODE): cv.string,
+    }
+)
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery=None):
+    """Create the Eagle sensor via yaml."""
+    ip_address = config[CONF_IP_ADDRESS]
+    cloud_id = config[CONF_CLOUD_ID]
+    install_code = config[CONF_INSTALL_CODE]
+
+    # Don't set up if already in the entries database
+    for other_eagle in hass.config_entries.async_entries(DOMAIN):
+        if ip_address == other_eagle.data[CONF_IP_ADDRESS]:
+            return True
+
+    try:
+        eagle_reader = await hwtest(cloud_id, install_code, ip_address)
+    except (ConnectError, HTTPError, Timeout, ValueError) as error:
+        _LOGGER.error("Failed to connect during setup: %s", error)
+        return
+
+    # create cache class to hold readings
+    eagle_data = EagleData(eagle_reader)
+
+    # get first set of data (OPTIONAL?)
+    eagle_data.update()
+
+    # add each 'sensor', actually just different data from same device
+    to_add = []
+    for this_sensor in SENSORS:
+        this_sensor_entity = EagleSensor(
+            eagle_data, this_sensor, SENSORS[this_sensor][0], SENSORS[this_sensor][1]
+        )
+        to_add.append(this_sensor_entity)
+    async_add_entities(to_add)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -66,10 +113,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
         to_add.append(this_sensor_entity)
     async_add_entities(to_add)
-
-
-# OLD STUFF
-# NOT UPDATED
 
 
 async def hwtest(cloud_id, install_code, ip_address):
