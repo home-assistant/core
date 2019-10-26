@@ -35,7 +35,7 @@ class TradfriBaseClass(Entity):
         self.async_schedule_update_ha_state()
 
         _LOGGER.warning(
-            f"Observation failed for {self._name}, trying again",
+            "Observation failed for %s trying again",
             self._name,
             exc_info=error,
         )
