@@ -53,29 +53,30 @@ def main():
 
     # If creating new integration, create config flow too
     if args.template == "integration":
-        if info.authentication or not info.discoverable:
+        if info.oauth2:
+            template = "config_flow_oauth2"
+        elif info.authentication or not info.discoverable:
             template = "config_flow"
         else:
             template = "config_flow_discovery"
 
         generate.generate(template, info)
 
+    pipe_null = "" if args.develop else "> /dev/null"
+
     print("Running hassfest to pick up new information.")
-    subprocess.run("python -m script.hassfest", shell=True)
+    subprocess.run(f"python -m script.hassfest {pipe_null}", shell=True)
     print()
 
-    print("Running tests")
-    print(f"$ pytest -vvv tests/components/{info.domain}")
-    if (
-        subprocess.run(
-            f"pytest -vvv tests/components/{info.domain}", shell=True
-        ).returncode
-        != 0
-    ):
-        return 1
+    print("Running gen_requirements_all to pick up new information.")
+    subprocess.run(f"python -m script.gen_requirements_all {pipe_null}", shell=True)
     print()
 
-    print(f"Done!")
+    if args.develop:
+        print("Running tests")
+        print(f"$ pytest -vvv tests/components/{info.domain}")
+        subprocess.run(f"pytest -vvv tests/components/{info.domain}", shell=True)
+        print()
 
     docs.print_relevant_docs(args.template, info)
 

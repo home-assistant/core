@@ -34,9 +34,16 @@ def gather_info(arguments) -> Info:
             name="Develop Hub",
             codeowner="@developer",
             requirement="aiodevelop==1.2.3",
+            oauth2=True,
         )
 
     return gather_new_integration()
+
+
+YES_NO = {
+    "validators": [["Type either 'yes' or 'no'", lambda value: value in ("yes", "no")]],
+    "convertor": lambda value: value == "yes",
+}
 
 
 def gather_new_integration() -> Info:
@@ -84,24 +91,17 @@ def gather_new_integration() -> Info:
                 "authentication": {
                     "prompt": "Does Home Assistant need the user to authenticate to control the device/service? (yes/no)",
                     "default": "yes",
-                    "validators": [
-                        [
-                            "Type either 'yes' or 'no'",
-                            lambda value: value in ("yes", "no"),
-                        ]
-                    ],
-                    "convertor": lambda value: value == "yes",
+                    **YES_NO,
                 },
                 "discoverable": {
                     "prompt": "Is the device/service discoverable on the local network? (yes/no)",
                     "default": "no",
-                    "validators": [
-                        [
-                            "Type either 'yes' or 'no'",
-                            lambda value: value in ("yes", "no"),
-                        ]
-                    ],
-                    "convertor": lambda value: value == "yes",
+                    **YES_NO,
+                },
+                "oauth2": {
+                    "prompt": "Can the user authenticate the device using OAuth2? (yes/no)",
+                    "default": "no",
+                    **YES_NO,
                 },
             }
         )
