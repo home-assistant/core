@@ -1,15 +1,21 @@
 {
-  "config": {
-    "title": "Rainforest Eagle",
-    "step": {
-      "confirm": {
+    "config": {
         "title": "Rainforest Eagle",
-        "description": "Do you want to set up Rainforest Eagle?"
-      }
-    },
-    "abort": {
-      "single_instance_allowed": "Only a single configuration of Rainforest Eagle is possible.",
-      "no_devices_found": "No Rainforest Eagle devices found on the network."
+        "step": {
+            "confirm": {
+                "title": "Rainforest Eagle",
+                "description": "Do you want to set up Rainforest Eagle?",
+            },
+            "user": {
+                "title": "Enter Configuration",
+                "description": "Install Code can be found on the bottom of the device.",
+                "data": {
+                    "ip_address": "Gateway IP Address",
+                    "cloud_id": "Cloud ID (6 digits)",
+                    "install_code": "Install Code (16 digits)",
+                },
+            },
+        },
+        "error": {"no_eagle": "Failed to connect to Eagle Gateway."},
     }
-  }
 }

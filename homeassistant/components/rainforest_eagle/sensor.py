@@ -1,29 +1,28 @@
-"""Support for the Rainforest Eagle-200 energy monitor."""
-from datetime import timedelta
+"""Support for Rainforest Eagle energy monitors."""
 import logging
 
 from eagle200_reader import EagleReader
-from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
-import voluptuous as vol
+from uEagle import Eagle as LegacyReader
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
+
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
 )
-import homeassistant.helpers.config_validation as cv
+
+# import voluptuous as vol
+# import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-CONF_CLOUD_ID = "cloud_id"
-CONF_INSTALL_CODE = "install_code"
-POWER_KILO_WATT = "kW"
+
+from .const import CONF_CLOUD_ID, CONF_INSTALL_CODE, POWER_KILO_WATT, MIN_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_SCAN_INTERVAL = timedelta(seconds=30)
-
+# {'sensor_label' : ('Nice Name', units)}
 SENSORS = {
     "instantanous_demand": ("Eagle-200 Meter Power Demand", POWER_KILO_WATT),
     "summation_delivered": (
@@ -40,39 +39,50 @@ SENSORS = {
     ),
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Required(CONF_CLOUD_ID): cv.string,
-        vol.Required(CONF_INSTALL_CODE): cv.string,
-    }
-)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Create the Eagle-200 sensor."""
-    ip_address = config[CONF_IP_ADDRESS]
-    cloud_id = config[CONF_CLOUD_ID]
-    install_code = config[CONF_INSTALL_CODE]
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up an Eagle config entry."""
+    ip_address = config_entry.data[CONF_IP_ADDRESS]
+    cloud_id = config_entry.data[CONF_CLOUD_ID]
+    install_code = config_entry.data[CONF_INSTALL_CODE]
 
     try:
-        eagle_reader = EagleReader(ip_address, cloud_id, install_code)
+        eagle_reader = await hwtest(cloud_id, install_code, ip_address)
     except (ConnectError, HTTPError, Timeout, ValueError) as error:
         _LOGGER.error("Failed to connect during setup: %s", error)
         return
 
+    # create cache class to hold readings
     eagle_data = EagleData(eagle_reader)
-    eagle_data.update()
-    monitored_conditions = list(SENSORS)
-    sensors = []
-    for condition in monitored_conditions:
-        sensors.append(
-            EagleSensor(
-                eagle_data, condition, SENSORS[condition][0], SENSORS[condition][1]
-            )
-        )
 
-    add_entities(sensors)
+    # get first set of data (OPTIONAL?)
+    eagle_data.update()
+
+    # add each 'sensor', actually just different data from same device
+    to_add = []
+    for this_sensor in SENSORS:
+        this_sensor_entity = EagleSensor(
+            eagle_data, this_sensor, SENSORS[this_sensor][0], SENSORS[this_sensor][1]
+        )
+        to_add.append(this_sensor_entity)
+    async_add_entities(to_add)
+
+
+# OLD STUFF
+# NOT UPDATED
+
+
+async def hwtest(cloud_id, install_code, ip_address):
+    """Try API call 'device_list' to see if target device is Legacy or Eagle-200."""
+    reader = LeagleReader(cloud_id, install_code, ip_address)
+    response = reader.post_cmd("device_list")
+    if "Error" in response and "Unknown command" in response["Error"]["Text"]:
+        return reader  # Probably a Legacy model
+    elif "device_list" in response:
+        return EagleReader(ip_address, cloud_id, install_code)  # Probably Eagle-200
+    else:
+        _LOGGER.error("Couldn't determine device model.")
+        return False
 
 
 class EagleSensor(Entity):
@@ -138,3 +148,21 @@ class EagleData:
         state = self.data.get(sensor_type)
         _LOGGER.debug("Updating: %s - %s", sensor_type, state)
         return state
+
+
+class LeagleReader(LegacyReader):
+    """Wraps uEagle to make it behave like eagle_reader, offering update()."""
+
+    def update(self):
+        """Fetch and return the four sensor values in a dict."""
+        d = {}
+
+        resp = self.get_instantaneous_demand()["InstantaneousDemand"]
+        d["instantanous_demand"] = resp["Demand"]
+
+        resp = self.get_current_summation()["CurrentSummation"]
+        d["summation_delivered"] = resp["SummationDelivered"]
+        d["summation_received"] = resp["SummationReceived"]
+        d["summation_total"] = d["summation_delivered"] - d["summation_received"]
+
+        return d

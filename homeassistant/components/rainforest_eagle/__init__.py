@@ -1,10 +1,7 @@
 """The Rainforest Eagle integration."""
 import voluptuous as vol
 
-from .const import DOMAIN
-
-
-CONFIG_SCHEMA = vol.Schema({vol.Optional(DOMAIN): {}})
+CONFIG_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
@@ -14,9 +11,11 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up a config entry for NEW_NAME."""
-    # TODO forward the entry for each platform that you want to set up.
-    # hass.async_create_task(
-    #     hass.config_entries.async_forward_entry_setup(entry, "media_player")
-    # )
+    # ip_addr, cloud_id, install_code
+
+    # Only one type of device so far
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(entry, "sensor")
+    )
 
     return True
