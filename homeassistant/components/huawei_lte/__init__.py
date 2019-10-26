@@ -23,6 +23,7 @@ from url_normalize import url_normalize
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry, SOURCE_IMPORT
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -48,6 +49,7 @@ from .const import (
     KEY_DEVICE_BASIC_INFORMATION,
     KEY_DEVICE_INFORMATION,
     KEY_DEVICE_SIGNAL,
+    KEY_DIALUP_MOBILE_DATASWITCH,
     KEY_MONITORING_TRAFFIC_STATISTICS,
     KEY_WLAN_HOST_LIST,
     UPDATE_OPTIONS_SIGNAL,
@@ -158,6 +160,7 @@ class Router:
             self.subscriptions.pop(KEY_DEVICE_BASIC_INFORMATION, None)
         get_data(KEY_DEVICE_BASIC_INFORMATION, self.client.device.basic_information)
         get_data(KEY_DEVICE_SIGNAL, self.client.device.signal)
+        get_data(KEY_DIALUP_MOBILE_DATASWITCH, self.client.dial_up.mobile_dataswitch)
         get_data(
             KEY_MONITORING_TRAFFIC_STATISTICS, self.client.monitoring.traffic_statistics
         )
@@ -273,7 +276,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     router.subscriptions.clear()
 
     # Forward config entry setup to platforms
-    for domain in (DEVICE_TRACKER_DOMAIN, SENSOR_DOMAIN):
+    for domain in (DEVICE_TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, domain)
         )
@@ -316,7 +319,7 @@ async def async_unload_entry(
     """Unload config entry."""
 
     # Forward config entry unload to platforms
-    for domain in (DEVICE_TRACKER_DOMAIN, SENSOR_DOMAIN):
+    for domain in (DEVICE_TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN):
         await hass.config_entries.async_forward_entry_unload(config_entry, domain)
 
     # Forget about the router and invoke its cleanup
@@ -419,7 +422,7 @@ class HuaweiLteBaseEntity(Entity):
     async def _async_maybe_update(self, url: str) -> None:
         """Update state if the update signal comes from our router."""
         if url == self.router.url:
-            await self.async_update()
+            self.async_schedule_update_ha_state(True)
 
     async def _async_maybe_update_options(self, config_entry: ConfigEntry) -> None:
         """Update options if the update signal comes from our router."""
