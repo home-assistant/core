@@ -72,10 +72,7 @@ class HuaweiLteBaseSwitch(HuaweiLteBaseEntity, SwitchDevice):
             self._available = False
             return
         self._available = True
-        new_state = str(value)
-        if self._raw_state != new_state:
-            self._raw_state = new_state
-            self.async_schedule_update_ha_state()
+        self._raw_state = str(value)
 
 
 @attr.s

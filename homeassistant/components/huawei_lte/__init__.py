@@ -422,7 +422,7 @@ class HuaweiLteBaseEntity(Entity):
     async def _async_maybe_update(self, url: str) -> None:
         """Update state if the update signal comes from our router."""
         if url == self.router.url:
-            await self.async_update()
+            self.async_schedule_update_ha_state(True)
 
     async def _async_maybe_update_options(self, config_entry: ConfigEntry) -> None:
         """Update options if the update signal comes from our router."""
