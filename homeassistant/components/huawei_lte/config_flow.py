@@ -215,7 +215,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
         )
 
-        if any(url == flow["context"][CONF_URL] for flow in self._async_in_progress()):
+        if any(url == flow["context"].get(CONF_URL) for flow in self._async_in_progress()):
             return self.async_abort(reason="already_in_progress")
 
         return await self._async_show_user_form(user_input={CONF_URL: url})
