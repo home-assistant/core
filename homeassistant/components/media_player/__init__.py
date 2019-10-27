@@ -75,11 +75,15 @@ from .const import (
     ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
+    ATTR_COMMAND,
+    ATTR_COMMAND_TYPE,
+    ATTR_COMMAND_DATA,
     DOMAIN,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
+    SERVICE_COMMAND,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -96,6 +100,7 @@ from .const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
+    SUPPORT_COMMAND,
 )
 
 
@@ -159,6 +164,15 @@ MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
 MEDIA_PLAYER_SET_SHUFFLE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
     {vol.Required(ATTR_MEDIA_SHUFFLE): cv.boolean}
 )
+
+MEDIA_PLAYER_COMMAND_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+    {
+        vol.Required(ATTR_COMMAND): cv.string,
+        vol.Optional(ATTR_COMMAND_TYPE): cv.string,
+        vol.Optional(ATTR_COMMAND_DATA): cv.string,
+    }
+)
+
 
 ATTR_TO_PROPERTY = [
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -330,6 +344,9 @@ async def async_setup(hass, config):
         MEDIA_PLAYER_SET_SHUFFLE_SCHEMA,
         "async_set_shuffle",
         [SUPPORT_SHUFFLE_SET],
+    )
+    component.async_register_entity_service(
+        SERVICE_COMMAND, MEDIA_PLAYER_COMMAND_SCHEMA, "async_command", [SUPPORT_COMMAND]
     )
 
     return True
@@ -834,6 +851,17 @@ class MediaPlayerDevice(Entity):
         }
 
         return state_attr
+
+    def command(self, command, **kwargs):
+        """Send generic command."""
+        raise NotImplementedError()
+
+    def async_command(self, command, **kwargs):
+        """Send generic command.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(ft.partial(self.command, command, **kwargs))
 
 
 async def _async_fetch_image(hass, url):

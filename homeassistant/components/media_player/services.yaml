@@ -322,3 +322,19 @@ epson_select_cmode:
     cmode:
       description: Name of Cmode
       example: 'cinema'
+      
+command:
+  description: Send command to media device
+  fields:
+    entity_id:
+      description: Name of entity to send command to
+      example: 'media_player.lgtv'
+    command:
+      description: Command to send to device.  Platform dependent.
+      example: 'LEFT'
+    command_type:
+      description: Type of command to send to device.  Platform dependent.
+      example: 'input'
+    command_data:
+      description: Additional data to be sent with command.  Platform dependent.
+      example: "50"
