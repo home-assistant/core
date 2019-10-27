@@ -19,9 +19,13 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Information provided by PostNL"
 
+ATTR_ENTROUTE = "enroute"
+ATTR_DELIVERED = "delivered"
+
 DEFAULT_NAME = "postnl"
 
-ICON = "mdi:package-variant-closed"
+PACKAGE_ICON = "mdi:package-variant-closed"
+LETTER_ICON = "mdi:email"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
@@ -56,15 +60,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class PostNLDelivery(Entity):
-    """Delivery Packages."""
+    """Object holding all PostNL packages for delivery."""
 
     def __init__(self, api, name):
-        """Initialize the PostNL sensor."""
-        self._name = name + "_delivery"
+        """Initialize the PostNL delivery sensor."""
+        self._name = f"{name}_delivery"
         self._attributes = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            "enroute": [],
-            "delivered": [],
+            ATTR_ENTROUTE: [],
+            ATTR_DELIVERED: [],
         }
         self._state = None
         self._api = api
@@ -92,35 +96,35 @@ class PostNLDelivery(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend."""
-        return "mdi:package-variant-closed"
+        return PACKAGE_ICON
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update device state."""
         shipments = self._api.get_deliveries()
 
-        self._attributes["enroute"] = []
-        self._attributes["delivered"] = []
+        self._attributes[ATTR_ENTROUTE] = []
+        self._attributes[ATTR_DELIVERED] = []
 
         for shipment in shipments:
             if shipment.delivery_date is None:
-                self._attributes["enroute"].append(vars(shipment))
+                self._attributes[ATTR_ENTROUTE].append(vars(shipment))
             else:
-                self._attributes["delivered"].append(vars(shipment))
+                self._attributes[ATTR_DELIVERED].append(vars(shipment))
 
-        self._state = len(self._attributes["enroute"])
+        self._state = len(self._attributes[ATTR_ENTROUTE])
 
 
 class PostNLDistribution(Entity):
-    """Distribution Packages."""
+    """Object holding all PostNL packages for distribution."""
 
     def __init__(self, api, name):
-        """Initialize the PostNL sensor."""
-        self._name = name + "_distribution"
+        """Initialize the PostNL distribution sensor."""
+        self._name = f"{name}_distribution"
         self._attributes = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            "enroute": [],
-            "delivered": [],
+            ATTR_ENTROUTE: [],
+            ATTR_DELIVERED: [],
         }
         self._state = None
         self._api = api
@@ -148,31 +152,31 @@ class PostNLDistribution(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend."""
-        return "mdi:package-variant-closed"
+        return PACKAGE_ICON
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update device state."""
         shipments = self._api.get_distributions()
 
-        self._attributes["enroute"] = []
-        self._attributes["delivered"] = []
+        self._attributes[ATTR_ENTROUTE] = []
+        self._attributes[ATTR_DELIVERED] = []
 
         for shipment in shipments:
             if shipment.delivery_date is None:
-                self._attributes["enroute"].append(vars(shipment))
+                self._attributes[ATTR_ENTROUTE].append(vars(shipment))
             else:
-                self._attributes["delivered"].append(vars(shipment))
+                self._attributes[ATTR_DELIVERED].append(vars(shipment))
 
-        self._state = len(self._attributes["enroute"])
+        self._state = len(self._attributes[ATTR_ENTROUTE])
 
 
 class PostNLLetter(Entity):
-    """Letters."""
+    """Object holding all PostNL letters for delivery."""
 
     def __init__(self, api, name):
-        """Initialize the PostNL sensor."""
-        self._name = name + "_letters"
+        """Initialize the PostNL letter sensor."""
+        self._name = f"{name}_letters"
         self._attributes = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
             "letters": [],
@@ -204,7 +208,7 @@ class PostNLLetter(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend."""
-        return "mdi:email"
+        return LETTER_ICON
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
