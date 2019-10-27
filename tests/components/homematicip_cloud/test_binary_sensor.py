@@ -121,7 +121,7 @@ async def test_hmip_shutter_contact(hass, default_mock_hap):
     assert not ha_state.attributes.get(ATTR_SABOTAGE)
     await async_manipulate_test_data(hass, hmip_device, "sabotage", True)
     ha_state = hass.states.get(entity_id)
-    assert ha_state.attributes[ATTR_SABOTAGE] is True
+    assert ha_state.attributes[ATTR_SABOTAGE]
 
 
 async def test_hmip_motion_detector(hass, default_mock_hap):
