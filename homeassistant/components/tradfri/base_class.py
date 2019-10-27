@@ -105,7 +105,9 @@ class TradfriBaseClass(Entity):
     def _observe_update(self, device):
         """Receive new state data for this device."""
         self._refresh(device)
-        self.async_schedule_update_ha_state()
+
+        # Force refresh to handle bug where the GUI is not updated
+        self.async_schedule_update_ha_state(force_refresh=True)
 
     def _refresh(self, device):
         """Refresh the device data."""
