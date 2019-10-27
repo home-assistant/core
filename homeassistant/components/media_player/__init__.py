@@ -346,7 +346,10 @@ async def async_setup(hass, config):
         [SUPPORT_SHUFFLE_SET],
     )
     component.async_register_entity_service(
-        SERVICE_COMMAND, MEDIA_PLAYER_COMMAND_SCHEMA, "async_command", [SUPPORT_COMMAND]
+        SERVICE_COMMAND,
+        MEDIA_PLAYER_COMMAND_SCHEMA,
+        "async_generic_command",
+        [SUPPORT_COMMAND],
     )
 
     return True
@@ -852,16 +855,18 @@ class MediaPlayerDevice(Entity):
 
         return state_attr
 
-    def command(self, command, **kwargs):
+    def generic_command(self, command, **kwargs):
         """Send generic command."""
         raise NotImplementedError()
 
-    def async_command(self, command, **kwargs):
+    def async_generic_command(self, command, **kwargs):
         """Send generic command.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(ft.partial(self.command, command, **kwargs))
+        return self.hass.async_add_job(
+            ft.partial(self.generic_command, command, **kwargs)
+        )
 
 
 async def _async_fetch_image(hass, url):

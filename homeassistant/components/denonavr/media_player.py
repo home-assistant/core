@@ -401,6 +401,6 @@ class DenonDevice(MediaPlayerDevice):
         """Send mute command."""
         return self._receiver.mute(mute)
 
-    def command(self, command):
+    def generic_command(self, command, **kwargs):
         """Send generic command."""
         return self._receiver.send_get_command(command)
