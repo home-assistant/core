@@ -120,7 +120,7 @@ class AbstractConfig:
             self._unsub_report_state()
             self._unsub_report_state = None
 
-    async def async_sync_entities(self, agent_user_id: Optional[str] = None):
+    async def async_sync_entities(self, agent_user_id: str):
         """Sync all entities to Google."""
         # Remove any pending sync
         if self._google_sync_unsub:
