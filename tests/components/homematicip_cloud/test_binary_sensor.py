@@ -321,7 +321,25 @@ async def test_hmip_security_sensor_group(hass, default_mock_hap):
         hass, default_mock_hap, entity_id, entity_name, device_model
     )
 
+    await async_manipulate_test_data(
+        hass,
+        hmip_device,
+        "smokeDetectorAlarmType",
+        SmokeDetectorAlarmType.PRIMARY_ALARM,
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_ON
+
+    assert (
+        ha_state.attributes["smoke_detector_alarm"]
+        == SmokeDetectorAlarmType.PRIMARY_ALARM
+    )
+    await async_manipulate_test_data(
+        hass, hmip_device, "smokeDetectorAlarmType", SmokeDetectorAlarmType.IDLE_OFF
+    )
+    ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_OFF
+
     assert not ha_state.attributes.get(ATTR_LOW_BATTERY)
     assert not ha_state.attributes.get(ATTR_MOTION_DETECTED)
     assert not ha_state.attributes.get(ATTR_PRESENCE_DETECTED)
@@ -353,17 +371,3 @@ async def test_hmip_security_sensor_group(hass, default_mock_hap):
     assert ha_state.attributes[ATTR_GROUP_MEMBER_UNREACHABLE]
     assert ha_state.attributes[ATTR_SABOTAGE]
     assert ha_state.attributes[ATTR_WINDOW_STATE] == WindowState.OPEN
-
-    await async_manipulate_test_data(hass, hmip_device, "lowBat", False)
-    await async_manipulate_test_data(
-        hass,
-        hmip_device,
-        "smokeDetectorAlarmType",
-        SmokeDetectorAlarmType.PRIMARY_ALARM,
-    )
-    ha_state = hass.states.get(entity_id)
-    assert ha_state.state == STATE_ON
-    assert (
-        ha_state.attributes["smoke_detector_alarm"]
-        == SmokeDetectorAlarmType.PRIMARY_ALARM
-    )
