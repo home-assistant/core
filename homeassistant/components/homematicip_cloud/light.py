@@ -28,8 +28,8 @@ from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ENERGY_COUNTER = "energy_counter_kwh"
-ATTR_POWER_CONSUMPTION = "power_consumption"
+ATTR_TODAY_ENERGY_KWH = "today_energy_kwh"
+ATTR_CURRENT_POWER_W = "current_power_w"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -95,11 +95,11 @@ class HomematicipLightMeasuring(HomematicipLight):
         """Return the state attributes of the generic device."""
         state_attr = super().device_state_attributes
 
-        current_power_consumption = self._device.currentPowerConsumption
-        if current_power_consumption > 0.05:
-            state_attr[ATTR_POWER_CONSUMPTION] = round(current_power_consumption, 2)
+        current_power_w = self._device.currentPowerConsumption
+        if current_power_w > 0.05:
+            state_attr[ATTR_CURRENT_POWER_W] = round(current_power_w, 2)
 
-        state_attr[ATTR_ENERGY_COUNTER] = round(self._device.energyCounter, 2)
+        state_attr[ATTR_TODAY_ENERGY_KWH] = round(self._device.energyCounter, 2)
 
         return state_attr
 
