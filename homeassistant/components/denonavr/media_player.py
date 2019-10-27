@@ -22,6 +22,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
+    SUPPORT_COMMAND,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -56,6 +57,7 @@ SUPPORT_DENON = (
     | SUPPORT_TURN_OFF
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_VOLUME_SET
+    | SUPPORT_COMMAND
 )
 
 SUPPORT_MEDIA_MODES = (
@@ -398,3 +400,7 @@ class DenonDevice(MediaPlayerDevice):
     def mute_volume(self, mute):
         """Send mute command."""
         return self._receiver.mute(mute)
+
+    def command(self, command):
+        """Send generic command."""
+        return self._receiver.send_get_command(command)
