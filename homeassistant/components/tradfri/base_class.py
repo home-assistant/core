@@ -4,6 +4,7 @@ import logging
 from functools import wraps
 
 from aiocoap.error import RequestTimedOut
+from pytradfri.error import PytradfriError
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
@@ -32,9 +33,10 @@ class TradfriBaseClass(Entity):
 
     def _restart(self, message, exc):
         """Log error and restart observation of device."""
+        # Force refresh to handle a situation where the GUI is not updated
         self.async_schedule_update_ha_state(force_refresh=True)
 
-        _LOGGER.warning(message, exc_info=exc)
+        _LOGGER.debug(message, exc_info=exc)
         # Wait one half second before trying again
         asyncio.sleep(0.5)
         self._async_start_observe()
@@ -74,8 +76,8 @@ class TradfriBaseClass(Entity):
             for i in range(1, retries + 1):
                 try:
                     return api(*args, **kwargs)
-                except Exception as e:
-                    _LOGGER.warning("Retrying Tradfri {} due to {}".format(i, e))
+                except PytradfriError as e:
+                    _LOGGER.debug("Retrying Tradfri {} due to {}".format(i, e))
                     if i == retries:
                         _LOGGER.warning("Request timeout")
                         raise
@@ -106,7 +108,7 @@ class TradfriBaseClass(Entity):
         """Receive new state data for this device."""
         self._refresh(device)
 
-        # Force refresh to handle bug where the GUI is not updated
+        # Force refresh to handle a situation where the GUI is not updated
         self.async_schedule_update_ha_state(force_refresh=True)
 
     def _refresh(self, device):
