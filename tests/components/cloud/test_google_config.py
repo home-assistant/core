@@ -39,7 +39,7 @@ async def test_sync_entities(aioclient_mock, hass, cloud_prefs):
         ),
     )
 
-    assert await config.async_sync_entities() == 404
+    assert await config.async_sync_entities("user") == 404
 
 
 async def test_google_update_expose_trigger_sync(hass, cloud_prefs):
