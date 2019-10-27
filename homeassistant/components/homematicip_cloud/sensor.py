@@ -39,11 +39,20 @@ from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_CURRENT_ILLUMINATION = "current_illumination"
+ATTR_LOWEST_ILLUMINATION = "lowest_illumination"
+ATTR_HIGHEST_ILLUMINATION = "highest_illumination"
 ATTR_LEFT_COUNTER = "left_counter"
 ATTR_RIGHT_COUNTER = "right_counter"
 ATTR_TEMPERATURE_OFFSET = "temperature_offset"
 ATTR_WIND_DIRECTION = "wind_direction"
 ATTR_WIND_DIRECTION_VARIATION = "wind_direction_variation_in_degree"
+
+ILLUMINATION_DEVICE_ATTRIBUTES = {
+    "currentIllumination": ATTR_CURRENT_ILLUMINATION,
+    "lowestIllumination": ATTR_LOWEST_ILLUMINATION,
+    "highestIllumination": ATTR_HIGHEST_ILLUMINATION,
+}
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -272,6 +281,18 @@ class HomematicipIlluminanceSensor(HomematicipGenericDevice):
     def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
         return "lx"
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the wind speed sensor."""
+        state_attr = super().device_state_attributes
+
+        for attr, attr_key in ILLUMINATION_DEVICE_ATTRIBUTES.items():
+            attr_value = getattr(self._device, attr, None)
+            if attr_value:
+                state_attr[attr_key] = attr_value
+
+        return state_attr
 
 
 class HomematicipPowerSensor(HomematicipGenericDevice):
