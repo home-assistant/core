@@ -2407,7 +2407,7 @@ async def test_image_processing(hass):
     assert appliance["friendlyName"] == "Test face"
 
     assert_endpoint_capabilities(
-        appliance, "Alexa.EventDetectionSensor", "Alexa.EndpointHealth", "Alexa"
+        appliance, "Alexa.EventDetectionSensor", "Alexa.EndpointHealth"
     )
 
 
@@ -2429,7 +2429,6 @@ async def test_motion_sensor_event_detection(hass):
         "Alexa.MotionSensor",
         "Alexa.EventDetectionSensor",
         "Alexa.EndpointHealth",
-        "Alexa",
     )
 
     event_detection_capability = get_capability(
@@ -2456,7 +2455,7 @@ async def test_presence_sensor(hass):
     assert appliance["friendlyName"] == "Test presence sensor"
 
     capabilities = assert_endpoint_capabilities(
-        appliance, "Alexa.EventDetectionSensor", "Alexa.EndpointHealth", "Alexa"
+        appliance, "Alexa.EventDetectionSensor", "Alexa.EndpointHealth"
     )
 
     event_detection_capability = get_capability(

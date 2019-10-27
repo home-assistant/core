@@ -605,4 +605,3 @@ class ImageProcessingCapabilities(AlexaEntity):
         """Yield the supported interfaces."""
         yield AlexaEventDetectionSensor(self.hass, self.entity)
         yield AlexaEndpointHealth(self.hass, self.entity)
-        yield Alexa(self.hass)
