@@ -125,12 +125,11 @@ class ThermostatDevice(ClimateDevice):
         """Return the current action."""
         if self._heating_status:
             return CURRENT_HVAC_HEAT
-        elif self._cooling_status:
+        if self._cooling_status:
             return CURRENT_HVAC_COOL
-        elif self._dhw_status:
+        if self._dhw_status:
             return CURRENT_HVAC_DHW
-        else:
-            return CURRENT_HVAC_IDLE
+        return CURRENT_HVAC_IDLE
 
     @property
     def name(self):
@@ -174,19 +173,17 @@ class ThermostatDevice(ClimateDevice):
         if self._heating_status is not None:
             if self._cooling_status is not None:
                 return self._hvac_modes_2
-            else:
-                return self._hvac_modes_1
+            return self._hvac_modes_1
 
     @property
     def hvac_mode(self):
         """Return current active hvac state."""
         if self._schema_status:
             return HVAC_MODE_AUTO
-        elif self._heating_status is not None:
+        if self._heating_status is not None:
             if self._cooling_status is not None:
                 return HVAC_MODE_HEAT_COOL
-            else:
-                return HVAC_MODE_HEAT
+            return HVAC_MODE_HEAT
 
     @property
     def thermostat_temperature(self):
@@ -213,14 +210,12 @@ class ThermostatDevice(ClimateDevice):
             if self.hvac_mode == HVAC_MODE_AUTO:
                 if self._thermostat_temperature == self._schedule_temperature:
                     return "{}".format(self._selected_schema)
-                elif self._thermostat_temperature == preset_temperature:
+                if self._thermostat_temperature == preset_temperature:
                     return self._preset_mode
-                else:
-                    return "Temporary"
-            elif self._thermostat_temperature != preset_temperature:
                 return "Temporary"
-            else:
-                return self._preset_mode
+            if self._thermostat_temperature != preset_temperature:
+                return "Manual"
+            return self._preset_mode
 
     @property
     def current_temperature(self):
