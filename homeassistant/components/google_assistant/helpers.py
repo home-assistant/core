@@ -101,7 +101,7 @@ class AbstractConfig:
         # pylint: disable=no-self-use
         return True
 
-    async def async_report_state(self, message):
+    async def async_report_state(self, message, agent_user_id: str):
         """Send a state report to Google."""
         raise NotImplementedError
 

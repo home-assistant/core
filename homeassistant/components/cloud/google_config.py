@@ -104,7 +104,7 @@ class CloudGoogleConfig(AbstractConfig):
         entity_config = entity_configs.get(state.entity_id, {})
         return not entity_config.get(PREF_DISABLE_2FA, DEFAULT_DISABLE_2FA)
 
-    async def async_report_state(self, message):
+    async def async_report_state(self, message, agent_user_id: str):
         """Send a state report to Google."""
         try:
             await self._cloud.google_report_state.async_send_message(message)

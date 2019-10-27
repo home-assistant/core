@@ -179,7 +179,7 @@ async def test_report_state(hass, aioclient_mock, hass_storage):
     ) as mock_get_owner:
         mock_get_owner.return_value = owner
 
-        await config.async_report_state(message)
+        await config.async_report_state(message, owner.id)
         mock_call.assert_called_once_with(
             REPORT_STATE_BASE_URL,
             {"requestId": ANY, "agentUserId": owner.id, "payload": message},

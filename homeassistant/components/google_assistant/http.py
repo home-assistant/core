@@ -214,11 +214,11 @@ class GoogleConfig(AbstractConfig):
             _LOGGER.error("Could not contact %s", url)
             return 500
 
-    async def async_report_state(self, message):
+    async def async_report_state(self, message, agent_user_id: str):
         """Send a state report to Google."""
         data = {
             "requestId": uuid4().hex,
-            "agentUserId": (await self.hass.auth.async_get_owner()).id,
+            "agentUserId": agent_user_id,
             "payload": message,
         }
         await self.async_call_homegraph_api(REPORT_STATE_BASE_URL, data)
