@@ -1,6 +1,5 @@
 """Support for Ecobee Thermostats."""
 import collections
-from typing import Optional
 
 import voluptuous as vol
 
@@ -29,6 +28,8 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    STATE_ON,
+    STATE_OFF,
     ATTR_TEMPERATURE,
     STATE_ON,
     TEMP_FAHRENHEIT,
@@ -146,7 +147,6 @@ SET_FAN_MIN_ON_TIME_SCHEMA = vol.Schema(
     }
 )
 
-
 SUPPORT_FLAGS = (
     SUPPORT_TARGET_TEMPERATURE
     | SUPPORT_PRESET_MODE
@@ -162,7 +162,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the ecobee thermostat."""
+    """Set up all ecobee thermostats."""
 
     data = hass.data[DOMAIN]
 
@@ -170,28 +170,28 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_add_entities(devices, True)
 
-    def create_vacation_service(service):
+    async def create_vacation_service(service):
         """Create a vacation on the target thermostat."""
         entity_id = service.data[ATTR_ENTITY_ID]
 
         for thermostat in devices:
             if thermostat.entity_id == entity_id:
-                thermostat.create_vacation(service.data)
-                thermostat.schedule_update_ha_state(True)
+                await thermostat.create_vacation(service.data)
+                thermostat.async_schedule_update_ha_state(True)
                 break
 
-    def delete_vacation_service(service):
+    async def delete_vacation_service(service):
         """Delete a vacation on the target thermostat."""
         entity_id = service.data[ATTR_ENTITY_ID]
         vacation_name = service.data[ATTR_VACATION_NAME]
 
         for thermostat in devices:
             if thermostat.entity_id == entity_id:
-                thermostat.delete_vacation(vacation_name)
-                thermostat.schedule_update_ha_state(True)
+                await thermostat.delete_vacation(vacation_name)
+                thermostat.async_schedule_update_ha_state(True)
                 break
 
-    def fan_min_on_time_set_service(service):
+    async def fan_min_on_time_set_service(service):
         """Set the minimum fan on time on the target thermostats."""
         entity_id = service.data.get(ATTR_ENTITY_ID)
         fan_min_on_time = service.data[ATTR_FAN_MIN_ON_TIME]
@@ -204,11 +204,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             target_thermostats = devices
 
         for thermostat in target_thermostats:
-            thermostat.set_fan_min_on_time(str(fan_min_on_time))
+            await thermostat.set_fan_min_on_time(str(fan_min_on_time))
+            thermostat.async_schedule_update_ha_state(True)
 
-            thermostat.schedule_update_ha_state(True)
-
-    def resume_program_set_service(service):
+    async def resume_program_set_service(service):
         """Resume the program on the target thermostats."""
         entity_id = service.data.get(ATTR_ENTITY_ID)
         resume_all = service.data.get(ATTR_RESUME_ALL)
@@ -221,9 +220,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             target_thermostats = devices
 
         for thermostat in target_thermostats:
-            thermostat.resume_program(resume_all)
-
-            thermostat.schedule_update_ha_state(True)
+            await thermostat.resume_program(resume_all=resume_all)
+            thermostat.async_schedule_update_ha_state(True)
 
     hass.services.async_register(
         DOMAIN,
@@ -255,51 +253,42 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class Thermostat(ClimateDevice):
-    """A thermostat class for Ecobee."""
+    """Thermostat class for ecobee."""
 
-    def __init__(self, data, thermostat_index):
-        """Initialize the thermostat."""
-        self.data = data
-        self.thermostat_index = thermostat_index
-        self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
-        self._name = self.thermostat["name"]
-        self.vacation = None
+    def __init__(self, data, index):
+        """Initialize the ecobee thermostat."""
+        self._data = data
+        self._index = index
+        self._thermostat = self._data.ecobee.get_thermostat(self._index)
+        self._operation_modes = self._create_operation_modes()
+        self._preset_modes = self._create_preset_modes()
         self._last_active_hvac_mode = HVAC_MODE_AUTO
+        self._vacation = None
+        self._update_without_throttle = False
 
-        self._operation_list = []
-        if (
-            self.thermostat["settings"]["heatStages"]
-            or self.thermostat["settings"]["hasHeatPump"]
-        ):
-            self._operation_list.append(HVAC_MODE_HEAT)
-        if self.thermostat["settings"]["coolStages"]:
-            self._operation_list.append(HVAC_MODE_COOL)
-        if len(self._operation_list) == 2:
-            self._operation_list.insert(0, HVAC_MODE_AUTO)
-        self._operation_list.append(HVAC_MODE_OFF)
+    def _create_operation_modes(self) -> list:
+        """Create the operation modes for the thermostat; called in init."""
+        operation_modes = list()
+        if self._thermostat["settings"]["heatStages"]:
+            operation_modes.append(HVAC_MODE_HEAT)
+        if self._thermostat["settings"]["coolStages"]:
+            operation_modes.append(HVAC_MODE_COOL)
+        if len(operation_modes) == 2:
+            operation_modes.insert(0, HVAC_MODE_AUTO)
+        operation_modes.append(HVAC_MODE_OFF)
+        return operation_modes
 
-        self._preset_modes = {
-            comfort["climateRef"]: comfort["name"]
-            for comfort in self.thermostat["program"]["climates"]
-        }
-        self._fan_modes = [FAN_AUTO, FAN_ON]
-        self.update_without_throttle = False
-
-    async def async_update(self):
-        """Get the latest state from the thermostat."""
-        if self.update_without_throttle:
-            await self.data.update(no_throttle=True)
-            self.update_without_throttle = False
-        else:
-            await self.data.update()
-        self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
-        if self.hvac_mode is not HVAC_MODE_OFF:
-            self._last_active_hvac_mode = self.hvac_mode
+    def _create_preset_modes(self) -> dict:
+        """Create the preset modes for the thermostat; called in init."""
+        preset_modes = dict()
+        for comfort in self._thermostat["program"]["climates"]:
+            preset_modes[comfort["climateRef"]] = comfort["name"]
+        return preset_modes
 
     @property
     def available(self):
-        """Return if device is available."""
-        return self.thermostat["runtime"]["connected"]
+        """Return if the thermostat is available."""
+        return self._thermostat["runtime"]["connected"]
 
     @property
     def supported_features(self):
@@ -308,19 +297,21 @@ class Thermostat(ClimateDevice):
 
     @property
     def name(self):
-        """Return the name of the Ecobee Thermostat."""
-        return self.thermostat["name"]
+        """Return the name of the thermostat."""
+        return self._thermostat["name"]
 
     @property
     def unique_id(self):
-        """Return a unique identifier for this ecobee thermostat."""
-        return self.thermostat["identifier"]
+        """Return a unique identifier for the thermostat."""
+        return self._thermostat["identifier"]
 
     @property
     def device_info(self):
-        """Return device information for this ecobee thermostat."""
+        """Return device information for the thermostat."""
         try:
-            model = f"{ECOBEE_MODEL_TO_NAME[self.thermostat['modelNumber']]} Thermostat"
+            model = (
+                f"{ECOBEE_MODEL_TO_NAME[self._thermostat['modelNumber']]} Thermostat"
+            )
         except KeyError:
             _LOGGER.error(
                 "Model number for ecobee thermostat %s not recognized. "
@@ -328,12 +319,12 @@ class Thermostat(ClimateDevice):
                 "https://github.com/home-assistant/home-assistant/issues/27172 "
                 "Unrecognized model number: %s",
                 self.name,
-                self.thermostat["modelNumber"],
+                self._thermostat["modelNumber"],
             )
             return None
 
         return {
-            "identifiers": {(DOMAIN, self.thermostat["identifier"])},
+            "identifiers": {(DOMAIN, self._thermostat["identifier"])},
             "name": self.name,
             "manufacturer": MANUFACTURER,
             "model": model,
@@ -347,20 +338,20 @@ class Thermostat(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self.thermostat["runtime"]["actualTemperature"] / 10.0
+        return self._thermostat["runtime"]["actualTemperature"] / 10.0
 
     @property
     def target_temperature_low(self):
         """Return the lower bound temperature we try to reach."""
         if self.hvac_mode == HVAC_MODE_AUTO:
-            return self.thermostat["runtime"]["desiredHeat"] / 10.0
+            return self._thermostat["runtime"]["desiredHeat"] / 10.0
         return None
 
     @property
     def target_temperature_high(self):
         """Return the upper bound temperature we try to reach."""
         if self.hvac_mode == HVAC_MODE_AUTO:
-            return self.thermostat["runtime"]["desiredCool"] / 10.0
+            return self._thermostat["runtime"]["desiredCool"] / 10.0
         return None
 
     @property
@@ -369,32 +360,32 @@ class Thermostat(ClimateDevice):
         if self.hvac_mode == HVAC_MODE_AUTO:
             return None
         if self.hvac_mode == HVAC_MODE_HEAT:
-            return self.thermostat["runtime"]["desiredHeat"] / 10.0
+            return self._thermostat["runtime"]["desiredHeat"] / 10.0
         if self.hvac_mode == HVAC_MODE_COOL:
-            return self.thermostat["runtime"]["desiredCool"] / 10.0
+            return self._thermostat["runtime"]["desiredCool"] / 10.0
         return None
 
     @property
     def fan(self):
         """Return the current fan status."""
-        if "fan" in self.thermostat["equipmentStatus"]:
+        if "fan" in self._thermostat["equipmentStatus"]:
             return STATE_ON
-        return HVAC_MODE_OFF
+        return STATE_OFF
 
     @property
     def fan_mode(self):
         """Return the fan setting."""
-        return self.thermostat["runtime"]["desiredFanMode"]
+        return self._thermostat["runtime"]["desiredFanMode"]
 
     @property
     def fan_modes(self):
         """Return the available fan modes."""
-        return self._fan_modes
+        return [FAN_AUTO, FAN_ON]
 
     @property
     def preset_mode(self):
-        """Return current preset mode."""
-        events = self.thermostat["events"]
+        """Return the current preset mode."""
+        events = self._thermostat["events"]
         for event in events:
             if not event["running"]:
                 continue
@@ -409,42 +400,44 @@ class Thermostat(ClimateDevice):
                 # All auto modes are treated as holds
                 return event["type"][4:].lower()
             if event["type"] == "vacation":
-                self.vacation = event["name"]
+                self._vacation = event["name"]
                 return PRESET_VACATION
 
-        return self._preset_modes[self.thermostat["program"]["currentClimateRef"]]
+        return self._preset_modes[self._thermostat["program"]["currentClimateRef"]]
+
+    @property
+    def preset_modes(self):
+        """Return the available preset modes."""
+        return list(self._preset_modes.values())
 
     @property
     def hvac_mode(self):
-        """Return current operation."""
-        return ECOBEE_HVAC_TO_HASS[self.thermostat["settings"]["hvacMode"]]
+        """Return the current operation mode."""
+        return ECOBEE_HVAC_TO_HASS[self._thermostat["settings"]["hvacMode"]]
 
     @property
     def hvac_modes(self):
-        """Return the operation modes list."""
-        return self._operation_list
+        """Return the list of operation modes."""
+        return self._operation_modes
 
     @property
-    def current_humidity(self) -> Optional[int]:
+    def current_humidity(self):
         """Return the current humidity."""
-        return self.thermostat["runtime"]["actualHumidity"]
+        return self._thermostat["runtime"]["actualHumidity"]
 
     @property
     def hvac_action(self):
-        """Return current HVAC action.
-
-        Ecobee returns a CSV string with different equipment that is active.
-        We are prioritizing any heating/cooling equipment, otherwase look at
-        drying/fanning. Idle if nothing going on.
-
-        We are unable to map all actions to HA equivalents.
-        """
-        if self.thermostat["equipmentStatus"] == "":
+        """Return the current HVAC action."""
+        # Ecobee returns a CSV string with different equipment that is active.
+        # We are prioritizing any heating/cooling equipment, otherwise look at
+        # drying/fanning. Idle if nothing going on.
+        # We are unable to map all actions to HA equivalents.
+        if self._thermostat["equipmentStatus"] == "":
             return CURRENT_HVAC_IDLE
 
         actions = [
             ECOBEE_HVAC_ACTION_TO_HASS[status]
-            for status in self.thermostat["equipmentStatus"].split(",")
+            for status in self._thermostat["equipmentStatus"].split(",")
             if ECOBEE_HVAC_ACTION_TO_HASS[status] is not None
         ]
 
@@ -462,143 +455,95 @@ class Thermostat(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        status = self.thermostat["equipmentStatus"]
         return {
             "fan": self.fan,
             "climate_mode": self._preset_modes[
-                self.thermostat["program"]["currentClimateRef"]
+                self._thermostat["program"]["currentClimateRef"]
             ],
-            "equipment_running": status,
-            "fan_min_on_time": self.thermostat["settings"]["fanMinOnTime"],
+            "equipment_running": self._thermostat["equipmentStatus"],
+            "fan_min_on_time": self._thermostat["settings"]["fanMinOnTime"],
         }
 
     @property
     def is_aux_heat(self):
         """Return true if aux heater."""
-        return "auxHeat" in self.thermostat["equipmentStatus"]
+        return "auxHeat" in self._thermostat["equipmentStatus"]
 
-    def set_preset_mode(self, preset_mode):
-        """Activate a preset."""
+    async def async_set_preset_mode(self, preset_mode):
+        """Activate a preset mode on the thermostat."""
         if preset_mode == self.preset_mode:
             return
 
-        self.update_without_throttle = True
-
         # If we are currently in vacation mode, cancel it.
         if self.preset_mode == PRESET_VACATION:
-            self.data.ecobee.delete_vacation(self.thermostat_index, self.vacation)
+            await self.delete_vacation(self._vacation)
 
         if preset_mode == PRESET_AWAY:
-            self.data.ecobee.set_climate_hold(
-                self.thermostat_index, "away", "indefinite"
+            await self._data.request(
+                self._data.ecobee.set_climate_hold, self._index, "away", "indefinite"
             )
 
         elif preset_mode == PRESET_TEMPERATURE:
-            self.set_temp_hold(self.current_temperature)
+            await self.set_temp_hold(self.current_temperature)
 
         elif preset_mode in (PRESET_HOLD_NEXT_TRANSITION, PRESET_HOLD_INDEFINITE):
-            self.data.ecobee.set_climate_hold(
-                self.thermostat_index,
+            await self._data.request(
+                self._data.ecobee.set_climate_hold,
+                self._index,
                 PRESET_TO_ECOBEE_HOLD[preset_mode],
                 self.hold_preference(),
             )
 
         elif preset_mode == PRESET_NONE:
-            self.data.ecobee.resume_program(self.thermostat_index)
+            await self.resume_program()
 
         elif preset_mode in self.preset_modes:
             climate_ref = None
 
-            for comfort in self.thermostat["program"]["climates"]:
+            for comfort in self._thermostat["program"]["climates"]:
                 if comfort["name"] == preset_mode:
                     climate_ref = comfort["climateRef"]
                     break
 
             if climate_ref is not None:
-                self.data.ecobee.set_climate_hold(
-                    self.thermostat_index, climate_ref, self.hold_preference()
+                await self._data.request(
+                    self._data.ecobee.set_climate_hold,
+                    self._index,
+                    climate_ref,
+                    self.hold_preference(),
                 )
             else:
                 _LOGGER.warning("Received unknown preset mode: %s", preset_mode)
 
         else:
-            self.data.ecobee.set_climate_hold(
-                self.thermostat_index, preset_mode, self.hold_preference()
+            await self._data.request(
+                self._data.ecobee.set_climate_hold,
+                self._index,
+                preset_mode,
+                self.hold_preference(),
             )
+        self._update_without_throttle = True
 
-    @property
-    def preset_modes(self):
-        """Return available preset modes."""
-        return list(self._preset_modes.values())
-
-    def set_auto_temp_hold(self, heat_temp, cool_temp):
-        """Set temperature hold in auto mode."""
-        if cool_temp is not None:
-            cool_temp_setpoint = cool_temp
-        else:
-            cool_temp_setpoint = self.thermostat["runtime"]["desiredCool"] / 10.0
-
-        if heat_temp is not None:
-            heat_temp_setpoint = heat_temp
-        else:
-            heat_temp_setpoint = self.thermostat["runtime"]["desiredCool"] / 10.0
-
-        self.data.ecobee.set_hold_temp(
-            self.thermostat_index,
-            cool_temp_setpoint,
-            heat_temp_setpoint,
-            self.hold_preference(),
-        )
-        _LOGGER.debug(
-            "Setting ecobee hold_temp to: heat=%s, is=%s, cool=%s, is=%s",
-            heat_temp,
-            isinstance(heat_temp, (int, float)),
-            cool_temp,
-            isinstance(cool_temp, (int, float)),
-        )
-
-        self.update_without_throttle = True
-
-    def set_fan_mode(self, fan_mode):
-        """Set the fan mode.  Valid values are "on" or "auto"."""
+    async def async_set_fan_mode(self, fan_mode):
+        """Set the fan mode. Valid values are "on" or "auto"."""
         if fan_mode.lower() != STATE_ON and fan_mode.lower() != HVAC_MODE_AUTO:
-            error = "Invalid fan_mode value:  Valid values are 'on' or 'auto'"
-            _LOGGER.error(error)
+            _LOGGER.error("Invalid fan_mode value: valid values are 'on' or 'auto'")
             return
 
-        cool_temp = self.thermostat["runtime"]["desiredCool"] / 10.0
-        heat_temp = self.thermostat["runtime"]["desiredHeat"] / 10.0
-        self.data.ecobee.set_fan_mode(
-            self.thermostat_index,
+        cool_temp = self._thermostat["runtime"]["desiredCool"] / 10.0
+        heat_temp = self._thermostat["runtime"]["desiredHeat"] / 10.0
+        _LOGGER.debug("Setting fan mode on thermostat %s to %s", self.name, fan_mode)
+        await self._data.request(
+            self._data.ecobee.set_fan_mode,
+            self._index,
             fan_mode,
             cool_temp,
             heat_temp,
             self.hold_preference(),
         )
+        self._update_without_throttle = True
 
-        _LOGGER.info("Setting fan mode to: %s", fan_mode)
-
-    def set_temp_hold(self, temp):
-        """Set temperature hold in modes other than auto.
-
-        Ecobee API: It is good practice to set the heat and cool hold
-        temperatures to be the same, if the thermostat is in either heat, cool,
-        auxHeatOnly, or off mode. If the thermostat is in auto mode, an
-        additional rule is required. The cool hold temperature must be greater
-        than the heat hold temperature by at least the amount in the
-        heatCoolMinDelta property.
-        https://www.ecobee.com/home/developer/api/examples/ex5.shtml
-        """
-        if self.hvac_mode == HVAC_MODE_HEAT or self.hvac_mode == HVAC_MODE_COOL:
-            heat_temp = temp
-            cool_temp = temp
-        else:
-            delta = self.thermostat["settings"]["heatCoolMinDelta"] / 10
-            heat_temp = temp - delta
-            cool_temp = temp + delta
-        self.set_auto_temp_hold(heat_temp, cool_temp)
-
-    def set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
         high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
@@ -607,44 +552,142 @@ class Thermostat(ClimateDevice):
         if self.hvac_mode == HVAC_MODE_AUTO and (
             low_temp is not None or high_temp is not None
         ):
-            self.set_auto_temp_hold(low_temp, high_temp)
+            await self.set_auto_temp_hold(low_temp, high_temp)
         elif temp is not None:
-            self.set_temp_hold(temp)
+            await self.set_temp_hold(temp)
         else:
             _LOGGER.error("Missing valid arguments for set_temperature in %s", kwargs)
 
-    def set_humidity(self, humidity):
+    async def async_set_humidity(self, humidity):
         """Set the humidity level."""
-        self.data.ecobee.set_humidity(self.thermostat_index, humidity)
+        _LOGGER.debug(
+            "Setting humidity level on thermostat %s to %s", self.name, humidity
+        )
+        await self._data.request(self._data.ecobee.set_humidity, self._index, humidity)
+        self._update_without_throttle = True
 
-    def set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
         ecobee_value = next(
             (k for k, v in ECOBEE_HVAC_TO_HASS.items() if v == hvac_mode), None
         )
         if ecobee_value is None:
-            _LOGGER.error("Invalid mode for set_hvac_mode: %s", hvac_mode)
+            _LOGGER.error("Invalid mode for async_set_hvac_mode: %s", hvac_mode)
             return
-        self.data.ecobee.set_hvac_mode(self.thermostat_index, ecobee_value)
-        self.update_without_throttle = True
-
-    def set_fan_min_on_time(self, fan_min_on_time):
-        """Set the minimum fan on time."""
-        self.data.ecobee.set_fan_min_on_time(self.thermostat_index, fan_min_on_time)
-        self.update_without_throttle = True
-
-    def resume_program(self, resume_all):
-        """Resume the thermostat schedule program."""
-        self.data.ecobee.resume_program(
-            self.thermostat_index, "true" if resume_all else "false"
+        _LOGGER.debug(
+            "Setting HVAC mode on thermostat %s to %s", self.name, ecobee_value
         )
-        self.update_without_throttle = True
+        await self._data.request(
+            self._data.ecobee.set_hvac_mode, self._index, ecobee_value
+        )
+        self._update_without_throttle = True
+
+    async def async_turn_on(self):
+        """Set the thermostat to the last active HVAC mode."""
+        _LOGGER.debug(
+            "Turning on thermostat %s in %s mode",
+            self.name,
+            self._last_active_hvac_mode,
+        )
+        await self.async_set_hvac_mode(self._last_active_hvac_mode)
+        self._update_without_throttle = True
+
+    async def async_turn_off(self):
+        """Turn the thermostat off."""
+        _LOGGER.debug("Turning off thermostat %s", self.name)
+        await self.async_set_hvac_mode(HVAC_MODE_OFF)
+        self._update_without_throttle = True
+
+    async def async_update(self):
+        """Get the latest state data from ecobee."""
+        if self._update_without_throttle:
+            await self._data.update(no_throttle=True)
+            self._update_without_throttle = False
+        else:
+            await self._data.update()
+        self._thermostat = self._data.ecobee.get_thermostat(self._index)
+        if self.hvac_mode is not HVAC_MODE_OFF:
+            self._last_active_hvac_mode = self.hvac_mode
+
+    async def set_auto_temp_hold(self, heat_temp, cool_temp):
+        """Set temperature hold in auto mode."""
+        cool_temp_setpoint = (
+            cool_temp
+            if cool_temp is not None
+            else self._thermostat["runtime"]["desiredCool"] / 10.0
+        )
+
+        heat_temp_setpoint = (
+            heat_temp
+            if heat_temp is not None
+            else self._thermostat["runtime"]["desiredCool"] / 10.0
+        )
+
+        _LOGGER.debug(
+            "Setting hold temperature on thermostat %s to "
+            "heat_temp: %s, cool_temp: %s",
+            self.name,
+            heat_temp_setpoint,
+            cool_temp_setpoint,
+        )
+        await self._data.request(
+            self._data.ecobee.set_hold_temp,
+            self._index,
+            cool_temp_setpoint,
+            heat_temp_setpoint,
+            self.hold_preference(),
+        )
+        self._update_without_throttle = True
+
+    async def set_temp_hold(self, temp):
+        """Set temperature hold in modes other than auto."""
+        # Ecobee API: It is good practice to set the heat and cool hold
+        # temperatures to be the same, if the thermostat is in either heat, cool,
+        # auxHeatOnly, or off mode. If the thermostat is in auto mode, an
+        # additional rule is required. The cool hold temperature must be greater
+        # than the heat hold temperature by at least the amount in the
+        # heatCoolMinDelta property.
+        # https://www.ecobee.com/home/developer/api/examples/ex5.shtml
+        if self.hvac_mode == HVAC_MODE_HEAT or self.hvac_mode == HVAC_MODE_COOL:
+            heat_temp = temp
+            cool_temp = temp
+        else:
+            delta = self._thermostat["settings"]["heatCoolMinDelta"] / 10
+            heat_temp = temp - delta
+            cool_temp = temp + delta
+        await self.set_auto_temp_hold(heat_temp, cool_temp)
+
+    async def set_fan_min_on_time(self, fan_min_on_time):
+        """Set the minimum fan on time."""
+        _LOGGER.debug(
+            "Setting minimum fan on time on thermostat %s to %s",
+            self.name,
+            fan_min_on_time,
+        )
+        await self._data.request(
+            self._data.ecobee.set_fan_min_on_time, self._index, fan_min_on_time
+        )
+        self._update_without_throttle = True
+
+    async def resume_program(self, resume_all: bool = False):
+        """Resume the scheduled thermostat program."""
+        _LOGGER.debug(
+            "Resuming the program on thermostat %s with resume_all %",
+            self.name,
+            resume_all,
+        )
+        await self._data.request(
+            self._data.ecobee.resume_program,
+            self._index,
+            "true" if resume_all else "false",
+        )
+        self._update_without_throttle = True
 
     def hold_preference(self):
         """Return user preference setting for hold time."""
         # Values returned from thermostat are 'useEndTime4hour',
         # 'useEndTime2hour', 'nextTransition', 'indefinite', 'askMe'
-        default = self.thermostat["settings"]["holdAction"]
+        default = self._thermostat["settings"]["holdAction"]
         if default == "nextTransition":
             return default
         # add further conditions if other hold durations should be
@@ -652,7 +695,7 @@ class Thermostat(ClimateDevice):
         # as an indefinite away hold is interpreted as away_mode
         return "nextTransition"
 
-    def create_vacation(self, service_data):
+    async def create_vacation(self, service_data):
         """Create a vacation with user-specified parameters."""
         vacation_name = service_data[ATTR_VACATION_NAME]
         cool_temp = convert(
@@ -686,7 +729,8 @@ class Thermostat(ClimateDevice):
         }
 
         _LOGGER.debug(
-            "Creating a vacation on thermostat %s with name %s, cool temp %s, heat temp %s, "
+            "Creating a vacation on thermostat %s with name %s, "
+            "cool temp %s, heat temp %s, "
             "and the following other parameters: %s",
             self.name,
             vacation_name,
@@ -694,24 +738,24 @@ class Thermostat(ClimateDevice):
             heat_temp,
             kwargs,
         )
-        self.data.ecobee.create_vacation(
-            self.thermostat_index, vacation_name, cool_temp, heat_temp, **kwargs
+        await self._data.request(
+            self._data.ecobee.create_vacation,
+            self._index,
+            vacation_name,
+            cool_temp,
+            heat_temp,
+            **kwargs,
         )
+        self._update_without_throttle = True
 
-    def delete_vacation(self, vacation_name):
+    async def delete_vacation(self, vacation_name):
         """Delete a vacation with the specified name."""
         _LOGGER.debug(
             "Deleting a vacation on thermostat %s with name %s",
             self.name,
             vacation_name,
         )
-        self.data.ecobee.delete_vacation(self.thermostat_index, vacation_name)
-
-    def turn_on(self):
-        """Set the thermostat to the last active HVAC mode."""
-        _LOGGER.debug(
-            "Turning on ecobee thermostat %s in %s mode",
-            self.name,
-            self._last_active_hvac_mode,
+        await self._data.request(
+            self._data.ecobee.delete_vacation, self._index, vacation_name
         )
-        self.set_hvac_mode(self._last_active_hvac_mode)
+        self._update_without_throttle = True

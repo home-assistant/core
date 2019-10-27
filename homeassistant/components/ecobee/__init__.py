@@ -1,9 +1,16 @@
 """Support for ecobee."""
 import asyncio
 from datetime import timedelta
-
-from pyecobee import ECOBEE_API_KEY, ECOBEE_REFRESH_TOKEN, Ecobee, ExpiredTokenError
+import functools
 import voluptuous as vol
+
+from pyecobee import (
+    Ecobee,
+    ECOBEE_API_KEY,
+    ECOBEE_REFRESH_TOKEN,
+    ExpiredTokenError,
+    InvalidTokenError,
+)
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY
@@ -15,6 +22,7 @@ from .const import (
     CONF_REFRESH_TOKEN,
     DATA_ECOBEE_CONFIG,
     DOMAIN,
+    ECOBEE_INVALID_TOKEN_MESSAGE,
     ECOBEE_PLATFORMS,
 )
 
@@ -55,7 +63,13 @@ async def async_setup_entry(hass, entry):
 
     data = EcobeeData(hass, entry, api_key=api_key, refresh_token=refresh_token)
 
-    if not await data.refresh():
+    try:
+        if not await data.refresh():
+            return False
+    except InvalidTokenError:
+        hass.components.persistent_notification.async_create(
+            ECOBEE_INVALID_TOKEN_MESSAGE, title=DOMAIN
+        )
         return False
 
     await data.update()
@@ -93,8 +107,8 @@ class EcobeeData:
     async def update(self):
         """Get the latest data from ecobee.com."""
         try:
-            await self._hass.async_add_executor_job(self.ecobee.update)
             _LOGGER.debug("Updating ecobee")
+            await self._hass.async_add_executor_job(self.ecobee.update)
         except ExpiredTokenError:
             _LOGGER.warning(
                 "Ecobee update failed; attempting to refresh expired tokens"
@@ -115,6 +129,26 @@ class EcobeeData:
             return True
         _LOGGER.error("Error updating ecobee tokens")
         return False
+
+    async def request(self, method, *args, **kwargs):
+        """Wrap calls to the ecobee API to catch token errors and retry."""
+        req = functools.partial(method, *args, **kwargs)
+        try:
+            return await self._hass.async_add_executor_job(req)
+        except ExpiredTokenError:
+            _LOGGER.warning(
+                "Ecobee request failed due to expired token; refreshing and retrying"
+            )
+            if await self.refresh():
+                return await self._hass.async_add_executor_job(req)
+            _LOGGER.error(
+                "Ecobee request failed due to expired token and token could not be refreshed"
+            )
+        except InvalidTokenError:
+            _LOGGER.error(ECOBEE_INVALID_TOKEN_MESSAGE)
+            self._hass.components.persistent_notification.async_create(
+                ECOBEE_INVALID_TOKEN_MESSAGE, title=DOMAIN
+            )
 
 
 async def async_unload_entry(hass, config_entry):

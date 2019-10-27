@@ -9,6 +9,11 @@ DATA_ECOBEE_CONFIG = "ecobee_config"
 CONF_INDEX = "index"
 CONF_REFRESH_TOKEN = "refresh_token"
 
+ECOBEE_INVALID_TOKEN_MESSAGE = (
+    "Your ecobee credentials have expired; "
+    "please remove and re-add the integration to re-authenticate"
+)
+
 ECOBEE_MODEL_TO_NAME = {
     "idtSmart": "ecobee Smart",
     "idtEms": "ecobee Smart EMS",
