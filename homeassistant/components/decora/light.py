@@ -15,6 +15,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_DEVICES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util as util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +59,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     lights = []
     for address, device_config in config[CONF_DEVICES].items():
         device = {}
-        device["name"] = device_config[CONF_NAME]
+        try:
+            device["name"] = device_config[CONF_NAME]
+        except KeyError:
+            device["name"] = util.slugify(address)
         device["key"] = device_config[CONF_API_KEY]
         device["address"] = address
         light = DecoraLight(device)
