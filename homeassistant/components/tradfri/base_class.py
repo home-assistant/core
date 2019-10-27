@@ -46,11 +46,11 @@ class TradfriBaseClass(Entity):
     def _async_start_observe(self, exc=None):
         """Start observation of device."""
         if exc:
-            if type(exc) == AttributeError:
+            if isinstance(exc, AttributeError):
                 message = (
                     f"Caught an exception with {self._name}. Restarting observation."
                 )
-            elif type(exc) == RequestTimedOut:
+            elif isinstance(exc, RequestTimedOut):
                 message = f"Time out error with {self._name}. Restarting observation."
             else:
                 message = f"Undefined error with {self._name}. Restarting observation."
@@ -76,8 +76,8 @@ class TradfriBaseClass(Entity):
             for i in range(1, retries + 1):
                 try:
                     return api(*args, **kwargs)
-                except PytradfriError as e:
-                    _LOGGER.debug("Retrying Tradfri {} due to {}".format(i, e))
+                except PytradfriError as err:
+                    _LOGGER.debug("Retrying Tradfri % due to %" % (i, err))
                     if i == retries:
                         _LOGGER.warning("Request timeout")
                         raise
