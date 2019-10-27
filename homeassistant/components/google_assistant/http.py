@@ -133,13 +133,6 @@ class GoogleConfig(AbstractConfig):
         return True
 
     async def _async_request_sync_devices(self, agent_user_id: str):
-
-        if agent_user_id is None:
-            _LOGGER.warning(
-                "No agent_user_id supplied for request_sync. Call as a user or pass in user id as agent_user_id."
-            )
-            return
-
         if CONF_API_KEY in self._config:
             await self.async_call_homegraph_api_key(
                 REQUEST_SYNC_BASE_URL, {"agentUserId": agent_user_id}
