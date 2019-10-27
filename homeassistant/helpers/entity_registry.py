@@ -51,7 +51,7 @@ class RegistryEntry:
     platform = attr.ib(type=str)
     name = attr.ib(type=str, default=None)
     device_id = attr.ib(type=str, default=None)
-    config_entry_id = attr.ib(type=str, default=None)
+    config_entry_id: Optional[str] = attr.ib(default=None)
     disabled_by = attr.ib(
         type=Optional[str],
         default=None,

@@ -3,7 +3,7 @@ import asyncio
 import logging
 import functools
 import uuid
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable, Dict, List, Optional, Set, cast
 import weakref
 
 import attr
@@ -14,8 +14,8 @@ from homeassistant.exceptions import HomeAssistantError, ConfigEntryNotReady
 from homeassistant.setup import async_setup_component, async_process_deps_reqs
 from homeassistant.util.decorator import Registry
 from homeassistant.helpers import entity_registry
+from homeassistant.helpers.event import Event
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 _UNDEF: dict = {}
@@ -205,7 +205,7 @@ class ConfigEntry:
                 wait_time,
             )
 
-            async def setup_again(now):
+            async def setup_again(now: Any) -> None:
                 """Run setup again."""
                 self._async_cancel_retry_setup = None
                 await self.async_setup(hass, integration=integration, tries=tries)
@@ -357,7 +357,7 @@ class ConfigEntry:
 
         return lambda: self.update_listeners.remove(weak_listener)
 
-    def as_dict(self):
+    def as_dict(self) -> Dict[str, Any]:
         """Return dictionary version of this entry."""
         return {
             "entry_id": self.entry_id,
@@ -418,7 +418,7 @@ class ConfigEntries:
             return list(self._entries)
         return [entry for entry in self._entries if entry.domain == domain]
 
-    async def async_remove(self, entry_id):
+    async def async_remove(self, entry_id: str) -> Dict[str, Any]:
         """Remove an entry."""
         entry = self.async_get_entry(entry_id)
 
@@ -584,7 +584,9 @@ class ConfigEntries:
 
         return await entry.async_unload(self.hass, integration=integration)
 
-    async def _async_finish_flow(self, flow, result):
+    async def _async_finish_flow(
+        self, flow: "ConfigFlow", result: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Finish a config flow and add an entry."""
         # Remove notification if no other discovery config entries in progress
         if not any(
@@ -617,7 +619,9 @@ class ConfigEntries:
         result["result"] = entry
         return result
 
-    async def _async_create_flow(self, handler_key, *, context, data):
+    async def _async_create_flow(
+        self, handler_key: str, *, context: Dict[str, Any], data: Dict[str, Any]
+    ) -> "ConfigFlow":
         """Create a flow for specified handler.
 
         Handler key is the domain of the component that we want to set up.
@@ -660,7 +664,7 @@ class ConfigEntries:
                 notification_id=DISCOVERY_NOTIFICATION_ID,
             )
 
-        flow = handler()
+        flow = cast(ConfigFlow, handler())
         flow.init_step = source
         return flow
 
@@ -669,12 +673,12 @@ class ConfigEntries:
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback
-    def _data_to_save(self):
+    def _data_to_save(self) -> Dict[str, List[Dict[str, Any]]]:
         """Return data to save."""
         return {"entries": [entry.as_dict() for entry in self._entries]}
 
 
-async def _old_conf_migrator(old_config):
+async def _old_conf_migrator(old_config: Dict[str, Any]) -> Dict[str, Any]:
     """Migrate the pre-0.73 config format to the latest version."""
     return {"entries": old_config}
 
@@ -692,18 +696,20 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry: ConfigEntry) -> "OptionsFlow":
         """Get the options flow for this handler."""
         raise data_entry_flow.UnknownHandler
 
     @callback
-    def _async_current_entries(self):
+    def _async_current_entries(self) -> List[ConfigEntry]:
         """Return current entries."""
+        assert self.hass is not None
         return self.hass.config_entries.async_entries(self.handler)
 
     @callback
-    def _async_in_progress(self):
+    def _async_in_progress(self) -> List[Dict]:
         """Return other in progress flows for current domain."""
+        assert self.hass is not None
         return [
             flw
             for flw in self.hass.config_entries.flow.async_progress()
@@ -721,29 +727,33 @@ class OptionsFlowManager:
             hass, self._async_create_flow, self._async_finish_flow
         )
 
-    async def _async_create_flow(self, entry_id, *, context, data):
+    async def _async_create_flow(
+        self, entry_id: str, *, context: Dict[str, Any], data: Dict[str, Any]
+    ) -> Optional["OptionsFlow"]:
         """Create an options flow for a config entry.
 
         Entry_id and flow.handler is the same thing to map entry with flow.
         """
         entry = self.hass.config_entries.async_get_entry(entry_id)
         if entry is None:
-            return
+            return None
 
         if entry.domain not in HANDLERS:
             raise data_entry_flow.UnknownHandler
 
-        flow = HANDLERS[entry.domain].async_get_options_flow(entry)
+        flow = cast(OptionsFlow, HANDLERS[entry.domain].async_get_options_flow(entry))
         return flow
 
-    async def _async_finish_flow(self, flow, result):
+    async def _async_finish_flow(
+        self, flow: "OptionsFlow", result: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         """Finish an options flow and update options for configuration entry.
 
         Flow.handler and entry_id is the same thing to map flow with entry.
         """
         entry = self.hass.config_entries.async_get_entry(flow.handler)
         if entry is None:
-            return
+            return None
         self.hass.config_entries.async_update_entry(entry, options=result["data"])
 
         result["result"] = True
@@ -753,7 +763,7 @@ class OptionsFlowManager:
 class OptionsFlow(data_entry_flow.FlowHandler):
     """Base class for config option flows."""
 
-    pass
+    handler: str
 
 
 @attr.s(slots=True)
@@ -790,7 +800,7 @@ class EntityRegistryDisabledHandler:
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED, self._handle_entry_updated
         )
 
-    async def _handle_entry_updated(self, event):
+    async def _handle_entry_updated(self, event: Event) -> None:
         """Handle entity registry entry update."""
         if (
             event.data["action"] != "update"
@@ -817,6 +827,7 @@ class EntityRegistryDisabledHandler:
         config_entry = self.hass.config_entries.async_get_entry(
             entity_entry.config_entry_id
         )
+        assert config_entry is not None
 
         if config_entry.entry_id not in self.changed and await support_entry_unload(
             self.hass, config_entry.domain
@@ -836,7 +847,7 @@ class EntityRegistryDisabledHandler:
             self.RELOAD_AFTER_UPDATE_DELAY, self._handle_reload
         )
 
-    async def _handle_reload(self, _now):
+    async def _handle_reload(self, _now: Any) -> None:
         """Handle a reload."""
         self._remove_call_later = None
         to_reload = self.changed
