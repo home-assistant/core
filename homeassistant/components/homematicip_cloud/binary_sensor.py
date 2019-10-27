@@ -404,17 +404,22 @@ class HomematicipSecuritySensorGroup(
     def is_on(self) -> bool:
         """Return true if safety issue detected."""
         parent_is_on = super().is_on
+        if parent_is_on:
+            return True
+
         if (
-            parent_is_on
-            or self._device.powerMainsFailure
+            self._device.powerMainsFailure
             or self._device.moistureDetected
             or self._device.waterlevelDetected
             or self._device.lowBat
+            or self._device.dutyCycle
         ):
             return True
+
         if (
             self._device.smokeDetectorAlarmType is not None
             and self._device.smokeDetectorAlarmType != SmokeDetectorAlarmType.IDLE_OFF
         ):
             return True
+
         return False
