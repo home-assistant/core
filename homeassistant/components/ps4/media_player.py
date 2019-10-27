@@ -231,7 +231,7 @@ class PS4Device(MediaPlayerDevice):
         self.schedule_update()
 
     def state_standby(self):
-        """Set states for state off."""
+        """Set states for state standby."""
         self.reset_title()
         self._state = STATE_STANDBY
         self.schedule_update()
