@@ -28,7 +28,6 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     SERVICE_ADD_TORRENT,
-    _TRPC,
 )
 from .errors import AuthenticationError, CannotConnect, UnknownError
 
@@ -310,7 +309,7 @@ class TransmissionData:
         current_down = {}
 
         for torrent in all_torrents:
-            if torrent.status == _TRPC["downloading"]:
+            if torrent.status == "downloading":
                 info = self.started_torrent_dict[torrent.name] = {
                     "added_date": torrent.addedDate,
                     "percent_done": f"{torrent.percentDone * 100:.2f}",
@@ -320,12 +319,6 @@ class TransmissionData:
                 except ValueError:
                     info["eta"] = "unknown"
 
-                current_down[torrent.name] = True
-
-            elif torrent.status == _TRPC["download pending"]:
-                self.started_torrent_dict[torrent.name] = {
-                    "added_date": torrent.addedDate
-                }
                 current_down[torrent.name] = True
 
             elif torrent.name in self.started_torrent_dict:

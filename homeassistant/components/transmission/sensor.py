@@ -6,11 +6,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import (
-    DOMAIN,
-    SENSOR_TYPES,
-    STATE_ATTR_TORRENT_INFO,
-)
+from .const import DOMAIN, SENSOR_TYPES, STATE_ATTR_TORRENT_INFO
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,7 +32,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 name,
                 SENSOR_TYPES[sensor_type][0],
                 SENSOR_TYPES[sensor_type][1],
-                SENSOR_TYPES[sensor_type][2],
             )
         )
 
@@ -47,14 +42,7 @@ class TransmissionSensor(Entity):
     """Representation of a Transmission sensor."""
 
     def __init__(
-        self,
-        sensor_type,
-        tm_client,
-        transmission_api,
-        client_name,
-        sensor_name,
-        unit_of_measurement,
-        torrent_info,
+        self, sensor_type, tm_client, client_name, sensor_name, unit_of_measurement
     ):
         """Initialize the sensor."""
         self._name = sensor_name
@@ -64,7 +52,6 @@ class TransmissionSensor(Entity):
         self._data = None
         self.client_name = client_name
         self.type = sensor_type
-        self._torrent_info = torrent_info
 
     @property
     def name(self):
@@ -99,8 +86,8 @@ class TransmissionSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes, if any."""
-        if self._torrent_info:
-            return {STATE_ATTR_TORRENT_INFO: self._torrent_info}
+        if self._tm_client.api.started_torrent_dict and self.type == "started_torrents":
+            return {STATE_ATTR_TORRENT_INFO: self._tm_client.api.started_torrent_dict}
         return None
 
     async def async_added_to_hass(self):
@@ -122,8 +109,7 @@ class TransmissionSensor(Entity):
         if self.type == "completed_torrents":
             self._state = self._tm_client.api.get_completed_torrent_count()
         elif self.type == "started_torrents":
-            self._state = self._transmission_api.get_started_torrent_count()
-            self._torrent_info = self._transmission_api.started_torrent_dict
+            self._state = self._tm_client.api.get_started_torrent_count()
 
         if self.type == "current_status":
             if self._data:
