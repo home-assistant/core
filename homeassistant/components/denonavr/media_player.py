@@ -34,6 +34,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 import homeassistant.helpers.config_validation as cv
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -150,6 +151,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             _LOGGER.info("Denon receiver at host %s initialized", host)
 
     # Add all freshly discovered receivers
+    hass.data[DOMAIN]["receivers"] = receivers
     if receivers:
         add_entities(receivers)
 
@@ -398,3 +400,7 @@ class DenonDevice(MediaPlayerDevice):
     def mute_volume(self, mute):
         """Send mute command."""
         return self._receiver.mute(mute)
+
+    def get_command(self, command, **kwargs):
+        """Send generic command."""
+        return self._receiver.send_get_command(command)
