@@ -354,7 +354,7 @@ plexwebsocket==0.0.1
 pmsensor==0.4
 
 # homeassistant.components.reddit
-praw==6.3.1
+praw==6.4.0
 
 # homeassistant.components.islamic_prayer_times
 prayer_times_calculator==0.0.3

@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+import praw
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -51,8 +52,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Reddit sensor platform."""
-    import praw
-
     subreddits = config[CONF_SUBREDDITS]
     user_agent = "{}_home_assistant_sensor".format(config[CONF_USERNAME])
     limit = config[CONF_MAXIMUM]
@@ -117,8 +116,6 @@ class RedditSensor(Entity):
 
     def update(self):
         """Update data from Reddit API."""
-        import praw
-
         self._subreddit_data = []
 
         try:
