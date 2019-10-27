@@ -1,0 +1,24 @@
+{
+  "config": {
+    "title": "Unifi LED",
+    "step": {
+      "user": {
+        "title": "Connect to the Unifi LED controller",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Controller is already configured"
+    }
+  }
+}
