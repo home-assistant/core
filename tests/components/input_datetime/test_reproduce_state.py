@@ -36,7 +36,11 @@ async def test_reproducing_states(hass, caplog):
 
     # Test invalid state is handled
     await hass.helpers.state.async_reproduce_state(
-        [State("input_datetime.entity_datetime", "not_supported")], blocking=True
+        [
+            State("input_datetime.entity_datetime", "not_supported"),
+            State("input_datetime.entity_datetime", "2010-25-10 01:20:00"),
+        ],
+        blocking=True,
     )
 
     assert "not_supported" in caplog.text
