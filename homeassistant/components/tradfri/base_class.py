@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class TradfriBaseClass(Entity):
-    """Base class for IKEA TRADFRIRequestTimedOut.
+    """Base class for IKEA TRADFRI.
 
     All devices and groups should ultimately inherit from this class.
     """
