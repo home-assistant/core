@@ -1,10 +1,12 @@
 """The test for the bayesian sensor platform."""
 import unittest
+from datetime import timedelta
 
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.components.bayesian import binary_sensor as bayesian
-from homeassistant.setup import setup_component
+import homeassistant.util.dt as dt_util
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, async_fire_time_changed
 
 
 class TestBayesianBinarySensor(unittest.TestCase):
@@ -259,3 +261,66 @@ class TestBayesianBinarySensor(unittest.TestCase):
             prior = bayesian.update_probability(prior, pt, pf)
 
         assert round(abs(0.9130434782608695 - prior), 7) == 0
+
+
+async def test_state_delay_on(hass):
+    """Test binary sensor template delay on."""
+    config = {
+        "binary_sensor": {
+            "name": "test",
+            "platform": "bayesian",
+            "observations": [
+                {
+                    "platform": "state",
+                    "entity_id": "sensor.test_state",
+                    "to_state": "on",
+                    "prob_given_true": 0.8,
+                    "prob_given_false": 0.2,
+                    "delay_on": 5,
+                }
+            ],
+            "prior": 0.2,
+            "probability_threshold": 0.3,
+        }
+    }
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_start()
+
+    hass.states.async_set("sensor.test_state", "on")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+    future = dt_util.utcnow() + timedelta(seconds=5)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "on"
+
+    # check with time changes
+    hass.states.async_set("sensor.test_state", "off")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+    hass.states.async_set("sensor.test_state", "on")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+    hass.states.async_set("sensor.test_state", "off")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+    future = dt_util.utcnow() + timedelta(seconds=5)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"

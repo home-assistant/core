@@ -18,7 +18,10 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change, async_track_same_state
+import logging
+
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_OBSERVATIONS = "observations"
 ATTR_PROBABILITY = "probability"
@@ -31,6 +34,8 @@ CONF_PROBABILITY_THRESHOLD = "probability_threshold"
 CONF_P_GIVEN_F = "prob_given_false"
 CONF_P_GIVEN_T = "prob_given_true"
 CONF_TO_STATE = "to_state"
+CONF_DELAY_ON = "delay_on"
+CONF_DELAY_OFF = "delay_off"
 
 DEFAULT_NAME = "Bayesian Binary Sensor"
 DEFAULT_PROBABILITY_THRESHOLD = 0.5
@@ -43,6 +48,8 @@ NUMERIC_STATE_SCHEMA = vol.Schema(
         vol.Optional(CONF_BELOW): vol.Coerce(float),
         vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
         vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
+        vol.Optional(CONF_DELAY_ON): vol.All(cv.time_period, cv.positive_timedelta),
+        vol.Optional(CONF_DELAY_OFF): vol.All(cv.time_period, cv.positive_timedelta),
     },
     required=True,
 )
@@ -54,6 +61,8 @@ STATE_SCHEMA = vol.Schema(
         vol.Required(CONF_TO_STATE): cv.string,
         vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
         vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
+        vol.Optional(CONF_DELAY_ON): vol.All(cv.time_period, cv.positive_timedelta),
+        vol.Optional(CONF_DELAY_OFF): vol.All(cv.time_period, cv.positive_timedelta),
     },
     required=True,
 )
@@ -64,6 +73,8 @@ TEMPLATE_SCHEMA = vol.Schema(
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
         vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
         vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
+        vol.Optional(CONF_DELAY_ON): vol.All(cv.time_period, cv.positive_timedelta),
+        vol.Optional(CONF_DELAY_OFF): vol.All(cv.time_period, cv.positive_timedelta),
     },
     required=True,
 )
@@ -163,7 +174,8 @@ class BayesianBinarySensor(BinarySensorDevice):
             for entity_obs in entity_obs_list:
                 platform = entity_obs["platform"]
 
-                self.watchers[platform](entity_obs)
+                should_trigger = self.watchers[platform](entity_obs)
+                self._update_current_obs(entity_obs, should_trigger)
 
             prior = self.prior
             for obs in self.current_obs.values():
@@ -179,8 +191,16 @@ class BayesianBinarySensor(BinarySensorDevice):
     def _update_current_obs(self, entity_observation, should_trigger):
         """Update current observation."""
         obs_id = entity_observation["id"]
+        delay_on = entity_observation.get("delay_on")
+        delay_off = entity_observation.get("delay_off")
 
-        if should_trigger:
+        if entity_observation["platform"] == "template":
+            entity_id = entity_observation.get(CONF_VALUE_TEMPLATE).extract_entities()
+        else:
+            entity_id = entity_observation["entity_id"]
+
+        @callback
+        def add_to_current_obs():
             prob_true = entity_observation["prob_given_true"]
             prob_false = entity_observation.get("prob_given_false", 1 - prob_true)
 
@@ -189,8 +209,40 @@ class BayesianBinarySensor(BinarySensorDevice):
                 "prob_false": prob_false,
             }
 
-        else:
+        @callback
+        def pop_from_current_obs():
             self.current_obs.pop(obs_id, None)
+
+        if should_trigger:
+            if delay_on:
+                period = delay_on
+                async_track_same_state(
+                    self.hass,
+                    period,
+                    add_to_current_obs,
+                    entity_ids=entity_observation["entity_id"],
+                    async_check_same_func=lambda *args: self.watchers[
+                        entity_observation["platform"]
+                    ](entity_observation)
+                    == should_trigger,
+                )
+            else:
+                add_to_current_obs()
+        else:
+            if delay_off:
+                period = delay_off
+                async_track_same_state(
+                    self.hass,
+                    period,
+                    pop_from_current_obs,
+                    entity_ids=entity_id,
+                    async_check_same_func=lambda *args: self.watchers[
+                        entity_observation["platform"]
+                    ](entity_observation)
+                    == should_trigger,
+                )
+            else:
+                pop_from_current_obs()
 
     def _process_numeric_state(self, entity_observation):
         """Add entity to current_obs if numeric state conditions are met."""
@@ -204,8 +256,7 @@ class BayesianBinarySensor(BinarySensorDevice):
             None,
             entity_observation,
         )
-
-        self._update_current_obs(entity_observation, should_trigger)
+        return should_trigger
 
     def _process_state(self, entity_observation):
         """Add entity to current observations if state conditions are met."""
@@ -215,7 +266,7 @@ class BayesianBinarySensor(BinarySensorDevice):
             self.hass, entity, entity_observation.get("to_state")
         )
 
-        self._update_current_obs(entity_observation, should_trigger)
+        return should_trigger
 
     def _process_template(self, entity_observation):
         """Add entity to current_obs if template is true."""
@@ -224,7 +275,8 @@ class BayesianBinarySensor(BinarySensorDevice):
         should_trigger = condition.async_template(
             self.hass, template, entity_observation
         )
-        self._update_current_obs(entity_observation, should_trigger)
+
+        return should_trigger
 
     @property
     def name(self):
