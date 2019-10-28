@@ -46,9 +46,6 @@ DEFAULT_ICON = "mdi:thermometer"
 DEFAULT_MIN_TEMP = 4
 DEFAULT_MAX_TEMP = 30
 
-# New CURRENT_HVAC mode
-CURRENT_HVAC_DHW = "dhw"
-
 # HVAC modes
 ATTR_HVAC_MODES_1 = [HVAC_MODE_HEAT, HVAC_MODE_AUTO]
 ATTR_HVAC_MODES_2 = [HVAC_MODE_HEAT_COOL, HVAC_MODE_AUTO]
@@ -107,7 +104,6 @@ class ThermostatDevice(ClimateDevice):
         self._presets_list = None
         self._heating_status = None
         self._cooling_status = None
-        self._dhw_status = None
         self._schema_names = None
         self._schema_status = None
         self._current_temperature = None
@@ -127,8 +123,6 @@ class ThermostatDevice(ClimateDevice):
             return CURRENT_HVAC_HEAT
         if self._cooling_status:
             return CURRENT_HVAC_COOL
-        if self._dhw_status:
-            return CURRENT_HVAC_DHW
         return CURRENT_HVAC_IDLE
 
     @property
@@ -275,7 +269,6 @@ class ThermostatDevice(ClimateDevice):
         self._presets_list = list(self._api.get_presets(self._domain_objects))
         self._heating_status = self._api.get_heating_status(self._domain_objects)
         self._cooling_status = self._api.get_cooling_status(self._domain_objects)
-        self._dhw_status = self._api.get_domestic_hot_water_status(self._domain_objects)
         self._schema_names = self._api.get_schema_names(self._domain_objects)
         self._schema_status = self._api.get_schema_state(self._domain_objects)
         self._current_temperature = self._api.get_current_temperature(
