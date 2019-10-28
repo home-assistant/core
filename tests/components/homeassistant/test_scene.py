@@ -51,3 +51,9 @@ async def test_apply_service(hass):
     state = hass.states.get("light.bed_light")
     assert state.state == "on"
     assert state.attributes["brightness"] == 50
+
+
+async def test_create_service(hass):
+    """Test the create service."""
+    # TODO
+    pass
