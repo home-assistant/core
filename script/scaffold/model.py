@@ -14,20 +14,16 @@ class Info:
 
     domain: str = attr.ib()
     name: str = attr.ib()
+    is_new: bool = attr.ib()
     codeowner: str = attr.ib(default=None)
     requirement: str = attr.ib(default=None)
     authentication: str = attr.ib(default=None)
     discoverable: str = attr.ib(default=None)
     oauth2: str = attr.ib(default=None)
-    is_new: bool = attr.ib(default=False)
 
     files_added: Set[Path] = attr.ib(factory=set)
     tests_added: Set[Path] = attr.ib(factory=set)
     examples_added: Set[Path] = attr.ib(factory=set)
-
-    def __attrs_post_init__(self):
-        """After init is called."""
-        self.is_new = not self.manifest_path.exists()
 
     @property
     def integration_dir(self) -> Path:

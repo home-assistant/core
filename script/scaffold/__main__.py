@@ -48,19 +48,30 @@ def main():
     args = get_arguments()
 
     info = gather_info.gather_info(args)
+    print()
 
-    generate.generate(args.template, info)
+    # If we are calling scaffold on a non-existing integration,
+    # We're going to first make it. If we're making an integration,
+    # we will also make a config flow to go with it.
 
-    # If creating new integration, create config flow too
-    if args.template == "integration":
-        if info.oauth2:
-            template = "config_flow_oauth2"
-        elif info.authentication or not info.discoverable:
-            template = "config_flow"
-        else:
-            template = "config_flow_discovery"
+    if info.is_new:
+        generate.generate("integration", info)
 
-        generate.generate(template, info)
+        # If it's a new integration and it's not a config flow,
+        # create a config flow too.
+        if not args.template.startswith("config_flow"):
+            if info.oauth2:
+                template = "config_flow_oauth2"
+            elif info.authentication or not info.discoverable:
+                template = "config_flow"
+            else:
+                template = "config_flow_discovery"
+
+            generate.generate(template, info)
+
+    # If we wanted a new integration, we've already done our work.
+    if args.template != "integration":
+        generate.generate(args.template, info)
 
     pipe_null = "" if args.develop else "> /dev/null"
 
