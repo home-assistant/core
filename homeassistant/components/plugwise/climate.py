@@ -46,6 +46,9 @@ DEFAULT_ICON = "mdi:thermometer"
 DEFAULT_MIN_TEMP = 4
 DEFAULT_MAX_TEMP = 30
 
+# New CURRENT_HVAC mode
+CURRENT_HVAC_DHW = "dhw"
+
 # HVAC modes
 ATTR_HVAC_MODES_1 = [HVAC_MODE_HEAT, HVAC_MODE_AUTO]
 ATTR_HVAC_MODES_2 = [HVAC_MODE_HEAT_COOL, HVAC_MODE_AUTO]
@@ -104,6 +107,7 @@ class ThermostatDevice(ClimateDevice):
         self._presets_list = None
         self._heating_status = None
         self._cooling_status = None
+        self._dhw_status = None
         self._schema_names = None
         self._schema_status = None
         self._current_temperature = None
@@ -123,6 +127,8 @@ class ThermostatDevice(ClimateDevice):
             return CURRENT_HVAC_HEAT
         if self._cooling_status:
             return CURRENT_HVAC_COOL
+        if self._dhw_status:
+            return CURRENT_HVAC_DHW
         return CURRENT_HVAC_IDLE
 
     @property
@@ -144,15 +150,15 @@ class ThermostatDevice(ClimateDevice):
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         attributes = {}
-        if self._outdoor_temperature is not None:
+        if self._outdoor_temperature:
             attributes["outdoor_temperature"] = self._outdoor_temperature
         attributes["available_schemas"] = self._schema_names
         attributes["selected_schema"] = self._selected_schema
         if self._illuminance is not None:
             attributes["illuminance"] = self._illuminance
-        if self._boiler_temperature is not None:
+        if self._boiler_temperature:
             attributes["boiler_temperature"] = self._boiler_temperature
-        if self._water_pressure is not None:
+        if self._water_pressure:
             attributes["water_pressure"] = self._water_pressure
         return attributes
 
@@ -174,8 +180,8 @@ class ThermostatDevice(ClimateDevice):
         """Return current active hvac state."""
         if self._schema_status:
             return HVAC_MODE_AUTO
-        if self._heating_status is not None:
-            if self._cooling_status is not None:
+        if self._heating_status:
+            if self._cooling_status:
                 return HVAC_MODE_HEAT_COOL
             return HVAC_MODE_HEAT
 
@@ -198,7 +204,7 @@ class ThermostatDevice(ClimateDevice):
     @property
     def preset_mode(self):
         """Return the active selected schedule-name, or the (temporary) active preset or Temporary in case of a manual change in the set-temperature."""
-        if self._presets is not None:
+        if self._presets:
             presets = self._presets
             preset_temperature = presets.get(self._preset_mode, "none")
             if self.hvac_mode == HVAC_MODE_AUTO:
@@ -269,6 +275,7 @@ class ThermostatDevice(ClimateDevice):
         self._presets_list = list(self._api.get_presets(self._domain_objects))
         self._heating_status = self._api.get_heating_status(self._domain_objects)
         self._cooling_status = self._api.get_cooling_status(self._domain_objects)
+        self._dhw_status = self._api.get_domestic_hot_water_status(self._domain_objects)
         self._schema_names = self._api.get_schema_names(self._domain_objects)
         self._schema_status = self._api.get_schema_state(self._domain_objects)
         self._current_temperature = self._api.get_current_temperature(
