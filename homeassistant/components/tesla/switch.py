@@ -11,39 +11,30 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tesla switch platform."""
-    controller = hass.data[TESLA_DOMAIN]["controller"]
-    devices = []
-    for device in hass.data[TESLA_DOMAIN]["devices"]["switch"]:
-        if device.bin_type == 0x8:
-            devices.append(ChargerSwitch(device, controller))
-            devices.append(UpdateSwitch(device, controller))
-        elif device.bin_type == 0x9:
-            devices.append(RangeSwitch(device, controller))
-    add_entities(devices, True)
-    return True
+    if discovery_info is None:
+        return
 
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up the Tesla binary_sensors by config_entry."""
-    return await hass.async_add_executor_job(
-        setup_platform, hass, config_entry.data, async_add_devices, None
-    )
-
-
-async def async_unload_entry(hass, entry) -> bool:
-    """Unload a config entry."""
-    for device in hass.data[TESLA_DOMAIN]["devices"]["switch"]:
-        await device.async_remove()
-    return True
+    controller = hass.data[TESLA_DOMAIN][config_entry.entry_id]["controller"]
+    devices = []
+    for device in hass.data[TESLA_DOMAIN][config_entry.entry_id]["devices"]["switch"]:
+        if device.bin_type == 0x8:
+            devices.append(ChargerSwitch(device, controller, config_entry))
+            devices.append(UpdateSwitch(device, controller, config_entry))
+        elif device.bin_type == 0x9:
+            devices.append(RangeSwitch(device, controller, config_entry))
+    async_add_devices(devices, True)
 
 
 class ChargerSwitch(TeslaDevice, SwitchDevice):
     """Representation of a Tesla charger switch."""
 
-    def __init__(self, tesla_device, controller):
+    def __init__(self, tesla_device, controller, config_entry=None):
         """Initialise of the switch."""
         self._state = None
-        super().__init__(tesla_device, controller)
+        super().__init__(tesla_device, controller, config_entry)
 
     async def async_turn_on(self, **kwargs):
         """Send the on command."""
@@ -70,10 +61,10 @@ class ChargerSwitch(TeslaDevice, SwitchDevice):
 class RangeSwitch(TeslaDevice, SwitchDevice):
     """Representation of a Tesla max range charging switch."""
 
-    def __init__(self, tesla_device, controller):
+    def __init__(self, tesla_device, controller, config_entry=None):
         """Initialise the switch."""
         self._state = None
-        super().__init__(tesla_device, controller)
+        super().__init__(tesla_device, controller, config_entry)
 
     async def async_turn_on(self, **kwargs):
         """Send the on command."""
@@ -100,23 +91,23 @@ class RangeSwitch(TeslaDevice, SwitchDevice):
 class UpdateSwitch(TeslaDevice, SwitchDevice):
     """Representation of a Tesla update switch."""
 
-    def __init__(self, tesla_device, controller):
+    def __init__(self, tesla_device, controller, config_entry=None):
         """Initialise the switch."""
         self._state = None
         tesla_device.type = "update switch"
-        super().__init__(tesla_device, controller)
+        super().__init__(tesla_device, controller, config_entry)
         self._name = self._name.replace("charger", "update")
         self.tesla_id = self.tesla_id.replace("charger", "update")
 
     async def async_turn_on(self, **kwargs):
         """Send the on command."""
         _LOGGER.debug("Enable updates: %s %s", self._name, self.tesla_device.id())
-        self.controller.set_updates(self.tesla_device.id(), True)
+        await self.controller.set_updates(self.tesla_device.id(), True)
 
     async def async_turn_off(self, **kwargs):
         """Send the off command."""
         _LOGGER.debug("Disable updates: %s %s", self._name, self.tesla_device.id())
-        self.controller.set_updates(self.tesla_device.id(), False)
+        await self.controller.set_updates(self.tesla_device.id(), False)
 
     @property
     def is_on(self):

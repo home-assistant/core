@@ -11,35 +11,37 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tesla lock platform."""
-    devices = [
-        TeslaLock(device, hass.data[TESLA_DOMAIN]["controller"])
-        for device in hass.data[TESLA_DOMAIN]["devices"]["lock"]
-    ]
-    add_entities(devices, True)
-    return True
+    if discovery_info is None:
+        return
 
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up the Tesla binary_sensors by config_entry."""
-    return await hass.async_add_executor_job(
-        setup_platform, hass, config_entry.data, async_add_devices, None
-    )
+    devices = [
+        TeslaLock(
+            device,
+            hass.data[TESLA_DOMAIN][config_entry.entry_id]["controller"],
+            config_entry,
+        )
+        for device in hass.data[TESLA_DOMAIN][config_entry.entry_id]["devices"]["lock"]
+    ]
+    async_add_devices(devices, True)
 
 
-async def async_unload_entry(hass, entry) -> bool:
-    """Unload a config entry."""
-    for device in hass.data[TESLA_DOMAIN]["devices"]["lock"]:
-        await device.async_remove()
-    return True
+# async def async_unload_entry(hass, entry) -> bool:
+#     """Unload a config entry."""
+#     for device in hass.data[TESLA_DOMAIN]["devices"]["lock"]:
+#         await device.async_remove()
+#     return True
 
 
 class TeslaLock(TeslaDevice, LockDevice):
     """Representation of a Tesla door lock."""
 
-    def __init__(self, tesla_device, controller):
+    def __init__(self, tesla_device, controller, config_entry=None):
         """Initialise of the lock."""
         self._state = None
-        super().__init__(tesla_device, controller)
+        super().__init__(tesla_device, controller, config_entry)
 
     async def async_lock(self, **kwargs):
         """Send the lock command."""

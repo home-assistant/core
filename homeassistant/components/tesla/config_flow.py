@@ -1,17 +1,28 @@
 """Tesla Config Flow."""
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 import logging
 
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant import config_entries, core, exceptions
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+)
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import aiohttp_client
 
-DOMAIN = "tesla"
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+DATA_SCHEMA = vol.Schema(
+    OrderedDict(
+        [(vol.Required(CONF_USERNAME), str), (vol.Required(CONF_PASSWORD), str)]
+    )
+)
 
 
 @callback
@@ -21,8 +32,8 @@ def configured_instances(hass):
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class TeslaFlowHandler(config_entries.ConfigFlow):
-    """Handle a Tesla config flow."""
+class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Tesla."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
@@ -31,23 +42,36 @@ class TeslaFlowHandler(config_entries.ConfigFlow):
         """Initialize the config flow."""
         self.login = None
         self.config = OrderedDict()
-        self.data_schema = OrderedDict(
-            [
-                (vol.Required(CONF_USERNAME), str),
-                (vol.Required(CONF_PASSWORD), str),
-                (
-                    vol.Optional(CONF_SCAN_INTERVAL, default=300),
-                    vol.All(cv.positive_int, vol.Clamp(min=300)),
-                ),
-            ]
-        )
+        self.data_schema = DATA_SCHEMA
+
+    async def async_step_import(self, import_config):
+        """Import a config entry from configuration.yaml."""
+        return await self.async_step_user(import_config)
+
+    async def async_step_user(self, user_input=None):
+        """Handle the start of the config flow."""
+
+        if not user_input:
+            return await self._show_form(data_schema=self.data_schema)
+
+        if user_input[CONF_USERNAME] in configured_instances(self.hass):
+            return await self._show_form(errors={CONF_USERNAME: "identifier_exists"})
+
+        self.config[CONF_USERNAME] = user_input[CONF_USERNAME]
+
+        try:
+            info = await validate_input(self.hass, user_input)
+            return self.async_create_entry(title=user_input[CONF_USERNAME], data=info)
+        except CannotConnect:
+            return await self._show_form(errors={"base": "connection_error"})
+        except InvalidAuth:
+            return await self._show_form(errors={"base": "invalid_credentials"})
 
     async def _show_form(
         self, step="user", placeholders=None, errors=None, data_schema=None
     ) -> None:
         """Show the form to the user."""
-        _LOGGER.debug("show_form %s %s %s %s", step, placeholders, errors, data_schema)
-        data_schema = data_schema or vol.Schema(self.data_schema)
+        data_schema = data_schema or self.data_schema
         if step == "user":
             return self.async_show_form(
                 step_id=step,
@@ -56,52 +80,39 @@ class TeslaFlowHandler(config_entries.ConfigFlow):
                 description_placeholders=placeholders if placeholders else {},
             )
 
-    async def async_step_import(self, import_config):
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
 
-    async def async_step_user(self, user_input=None):
-        """Handle the start of the config flow."""
-        from teslajsonpy import Controller as teslaAPI, TeslaException
+async def validate_input(hass: core.HomeAssistant, data):
+    """Validate the user input allows us to connect.
 
-        if not user_input:
-            return await self._show_form(data_schema=vol.Schema(self.data_schema))
+    Data has the keys from DATA_SCHEMA with values provided by the user.
+    """
+    from teslajsonpy import Controller as teslaAPI, TeslaException
 
-        if user_input[CONF_USERNAME] in configured_instances(self.hass):
-            return await self._show_form(errors={CONF_USERNAME: "identifier_exists"})
-
-        self.config[CONF_USERNAME] = user_input[CONF_USERNAME]
-        self.config[CONF_PASSWORD] = user_input[CONF_PASSWORD]
-        from datetime import timedelta
-
-        self.config[CONF_SCAN_INTERVAL] = (
-            user_input[CONF_SCAN_INTERVAL]
-            if not isinstance(user_input[CONF_SCAN_INTERVAL], timedelta)
-            else user_input[CONF_SCAN_INTERVAL].total_seconds()
+    try:
+        config = {}
+        websession = aiohttp_client.async_get_clientsession(hass)
+        controller = teslaAPI(
+            websession,
+            email=data[CONF_USERNAME],
+            password=data[CONF_PASSWORD],
+            update_interval=300,
         )
+        (config[CONF_TOKEN], config[CONF_ACCESS_TOKEN]) = await controller.connect(
+            test_login=True
+        )
+        # config["title"] = data[CONF_USERNAME]
+        _LOGGER.debug("Credentials succesfuly connected to the Tesla API.")
+        return config
+    except TeslaException as ex:
+        if ex.code == 401:
+            _LOGGER.error("Unable to communicate with Tesla API: %s", ex)
+            raise InvalidAuth()
+        raise CannotConnect()
 
-        try:
-            controller = teslaAPI(
-                self.config[CONF_USERNAME],
-                self.config[CONF_PASSWORD],
-                self.config[CONF_SCAN_INTERVAL],
-            )
-            self.hass.data[DOMAIN] = {
-                "controller": controller,
-                "devices": defaultdict(list),
-            }
-            _LOGGER.debug("Connected to the Tesla API.")
-            return self.async_create_entry(
-                title=self.config[CONF_USERNAME], data=self.config
-            )
-        except TeslaException as ex:
-            if ex.code == 401:
-                return await self._show_form(errors={"base": "invalid_credentials"})
-            _LOGGER.error("Unable to communicate with Tesla API: %s", ex.message)
-            return await self._show_form(
-                errors={"base": "connection_error"},
-                placeholders={"message": f"\n> {ex.message}"},
-            )
-        except BaseException as ex:
-            _LOGGER.warning("Unknown error: %s", ex)
-            return await self._show_form(errors={"base": "unknown_error"})
+
+class CannotConnect(exceptions.HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
+class InvalidAuth(exceptions.HomeAssistantError):
+    """Error to indicate there is invalid auth."""
