@@ -10,6 +10,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SEEK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
@@ -711,6 +712,7 @@ async def test_media_player(hass):
             | SUPPORT_PLAY
             | SUPPORT_PLAY_MEDIA
             | SUPPORT_PREVIOUS_TRACK
+            | SUPPORT_SEEK
             | SUPPORT_SELECT_SOURCE
             | SUPPORT_STOP
             | SUPPORT_TURN_OFF
@@ -718,6 +720,7 @@ async def test_media_player(hass):
             | SUPPORT_VOLUME_MUTE
             | SUPPORT_VOLUME_SET,
             "volume_level": 0.75,
+            "media_position": 300,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -728,14 +731,15 @@ async def test_media_player(hass):
 
     capabilities = assert_endpoint_capabilities(
         appliance,
+        "Alexa.ChannelController",
+        "Alexa.EndpointHealth",
         "Alexa.InputController",
-        "Alexa.PowerController",
-        "Alexa.Speaker",
-        "Alexa.StepSpeaker",
         "Alexa.PlaybackController",
         "Alexa.PlaybackStateReporter",
-        "Alexa.EndpointHealth",
-        "Alexa.ChannelController",
+        "Alexa.PowerController",
+        "Alexa.SeekController",
+        "Alexa.Speaker",
+        "Alexa.StepSpeaker",
     )
 
     playback_capability = get_capability(capabilities, "Alexa.PlaybackController")
@@ -930,6 +934,54 @@ async def test_media_player(hass):
         payload={"channelCount": -1},
     )
 
+    # Test seek forward 30 seconds.
+    call, msg = await assert_request_calls_service(
+        "Alexa.SeekController",
+        "AdjustSeekPosition",
+        "media_player#test",
+        "media_player.media_seek",
+        hass,
+        response_type="StateReport",
+        payload={"deltaPositionMilliseconds": 30000},
+    )
+    assert call.data["seek_position"] == 330
+
+    assert "properties" in msg["event"]["payload"]
+    properties = msg["event"]["payload"]["properties"]
+    assert {"name": "positionMilliseconds", "value": 330000} in properties
+
+    # Test seek reverse 30 seconds.
+    call, msg = await assert_request_calls_service(
+        "Alexa.SeekController",
+        "AdjustSeekPosition",
+        "media_player#test",
+        "media_player.media_seek",
+        hass,
+        response_type="StateReport",
+        payload={"deltaPositionMilliseconds": -30000},
+    )
+    assert call.data["seek_position"] == 270
+
+    assert "properties" in msg["event"]["payload"]
+    properties = msg["event"]["payload"]["properties"]
+    assert {"name": "positionMilliseconds", "value": 270000} in properties
+
+    # Test seek more than current position result = 0.
+    call, msg = await assert_request_calls_service(
+        "Alexa.SeekController",
+        "AdjustSeekPosition",
+        "media_player#test",
+        "media_player.media_seek",
+        hass,
+        response_type="StateReport",
+        payload={"deltaPositionMilliseconds": -500000},
+    )
+    assert call.data["seek_position"] == 0
+
+    assert "properties" in msg["event"]["payload"]
+    properties = msg["event"]["payload"]["properties"]
+    assert {"name": "positionMilliseconds", "value": 0} in properties
+
 
 async def test_media_player_power(hass):
     """Test media player discovery with mapped on/off."""
@@ -950,14 +1002,15 @@ async def test_media_player_power(hass):
 
     assert_endpoint_capabilities(
         appliance,
+        "Alexa.ChannelController",
+        "Alexa.EndpointHealth",
         "Alexa.InputController",
-        "Alexa.PowerController",
-        "Alexa.Speaker",
-        "Alexa.StepSpeaker",
         "Alexa.PlaybackController",
         "Alexa.PlaybackStateReporter",
-        "Alexa.EndpointHealth",
-        "Alexa.ChannelController",
+        "Alexa.PowerController",
+        "Alexa.SeekController",
+        "Alexa.Speaker",
+        "Alexa.StepSpeaker",
     )
 
     await assert_request_calls_service(

@@ -1186,3 +1186,39 @@ async def async_api_skipchannel(hass, config, directive, context):
     )
 
     return response
+
+
+@HANDLERS.register(("Alexa.SeekController", "AdjustSeekPosition"))
+async def async_api_seek(hass, config, directive, context):
+    """Process a seek request."""
+    entity = directive.entity
+    position_delta = int(directive.payload["deltaPositionMilliseconds"])
+    current_position = int(entity.attributes.get(media_player.ATTR_MEDIA_POSITION))
+
+    # convert milliseconds to seconds for service media_seek.
+    position_delta = int(position_delta / 1000)
+
+    seek_position = current_position + position_delta
+    if seek_position < 0:
+        seek_position = 0
+
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id,
+        media_player.ATTR_MEDIA_SEEK_POSITION: seek_position,
+    }
+
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        media_player.SERVICE_MEDIA_SEEK,
+        data,
+        blocking=False,
+        context=context,
+    )
+
+    # convert seconds to milliseconds for StateReport.
+    seek_position = int(seek_position * 1000)
+
+    payload = {"properties": [{"name": "positionMilliseconds", "value": seek_position}]}
+    return directive.response(
+        name="StateReport", namespace="Alexa.SeekController", payload=payload
+    )
