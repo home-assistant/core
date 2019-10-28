@@ -37,6 +37,7 @@ TAHOMA_DEVICE_CLASSES = {
     "io:VerticalExteriorAwningIOComponent": DEVICE_CLASS_AWNING,
     "io:WindowOpenerVeluxIOComponent": DEVICE_CLASS_WINDOW,
     "io:GarageOpenerIOComponent": DEVICE_CLASS_GARAGE,
+    "io:DiscreteGarageOpenerIOComponent": DEVICE_CLASS_GARAGE,
     "rts:BlindRTSComponent": DEVICE_CLASS_BLIND,
     "rts:CurtainRTSComponent": DEVICE_CLASS_CURTAIN,
     "rts:DualCurtainRTSComponent": DEVICE_CLASS_CURTAIN,
