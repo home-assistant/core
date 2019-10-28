@@ -143,7 +143,7 @@ async def async_setup_entry(hass, entry):
     # Store token in Almond
     try:
         with async_timeout.timeout(10):
-            resp = await api.async_create_device(
+            await api.async_create_device(
                 {
                     "kind": "io.home-assistant",
                     "hassUrl": hass.config.api.base_url,
@@ -166,12 +166,6 @@ async def async_setup_entry(hass, entry):
     for token in list(user.refresh_tokens.values()):
         if token.id != refresh_token.id:
             await hass.auth.async_remove_refresh_token(token)
-
-    if resp.status != 200:
-        _LOGGER.warning(
-            "Unable to configure Almond to work with Home Assistant: %s", resp.status
-        )
-        return False
 
     conversation.async_set_agent(hass, agent)
     return True
