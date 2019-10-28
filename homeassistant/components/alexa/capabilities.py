@@ -9,9 +9,11 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_CLOSED,
     STATE_LOCKED,
     STATE_OFF,
     STATE_ON,
+    STATE_OPEN,
     STATE_PAUSED,
     STATE_PLAYING,
     STATE_UNAVAILABLE,
@@ -887,6 +889,9 @@ class AlexaModeController(AlexaCapability):
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
             return self.entity.attributes.get(fan.ATTR_DIRECTION)
 
+        if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+            return self.entity.attributes.get(cover.ATTR_POSITION)
+
         return None
 
     def configuration(self):
@@ -900,6 +905,12 @@ class AlexaModeController(AlexaCapability):
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
             capability_resources = [
                 {"type": Catalog.LABEL_ASSET, "value": Catalog.SETTING_DIRECTION}
+            ]
+
+        if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+            capability_resources = [
+                {"type": Catalog.LABEL_ASSET, "value": Catalog.SETTING_MODE},
+                {"type": Catalog.LABEL_ASSET, "value": Catalog.SETTING_PRESET},
             ]
 
         return capability_resources
@@ -921,6 +932,27 @@ class AlexaModeController(AlexaCapability):
                         "value": f"{fan.ATTR_DIRECTION}.{fan.DIRECTION_REVERSE}",
                         "friendly_names": [
                             {"type": Catalog.LABEL_TEXT, "value": fan.DIRECTION_REVERSE}
+                        ],
+                    },
+                ],
+            }
+
+        if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+            mode_resources = {
+                "ordered": False,
+                "resources": [
+                    {
+                        "value": f"{cover.ATTR_POSITION}.{STATE_OPEN}",
+                        "friendly_names": [
+                            {"type": Catalog.LABEL_TEXT, "value": STATE_OPEN},
+                            {"type": Catalog.LABEL_TEXT, "value": "opened"},
+                        ],
+                    },
+                    {
+                        "value": f"{cover.ATTR_POSITION}.{STATE_CLOSED}",
+                        "friendly_names": [
+                            {"type": Catalog.LABEL_TEXT, "value": STATE_CLOSED},
+                            {"type": Catalog.LABEL_TEXT, "value": "close"},
                         ],
                     },
                 ],
