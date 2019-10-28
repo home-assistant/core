@@ -5,10 +5,15 @@ import voluptuous as vol
 import hdate
 
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
-from homeassistant.helpers.discovery import async_load_platform
-import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN
+from .const import (
+    CONF_LANGUAGE,
+    CONF_DIASPORA,
+    CONF_CANDLE_LIGHT_MINUTES,
+    CONF_HAVDALAH_OFFSET_MINUTES,
+    DOMAIN,
+    DATA_SCHEMA,
+)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,49 +44,25 @@ SENSOR_TYPES = {
     },
 }
 
-CONF_DIASPORA = "diaspora"
-CONF_LANGUAGE = "language"
-CONF_CANDLE_LIGHT_MINUTES = "candle_lighting_minutes_before_sunset"
-CONF_HAVDALAH_OFFSET_MINUTES = "havdalah_minutes_after_sunset"
-
-CANDLE_LIGHT_DEFAULT = 18
-
-DEFAULT_NAME = "Jewish Calendar"
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Optional(CONF_DIASPORA, default=False): cv.boolean,
-                vol.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
-                vol.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
-                vol.Optional(CONF_LANGUAGE, default="english"): vol.In(
-                    ["hebrew", "english"]
-                ),
-                vol.Optional(
-                    CONF_CANDLE_LIGHT_MINUTES, default=CANDLE_LIGHT_DEFAULT
-                ): int,
-                # Default of 0 means use 8.5 degrees / 'three_stars' time.
-                vol.Optional(CONF_HAVDALAH_OFFSET_MINUTES, default=0): int,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema(DATA_SCHEMA)}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
     """Set up the Jewish Calendar component."""
-    name = config[DOMAIN][CONF_NAME]
-    language = config[DOMAIN][CONF_LANGUAGE]
+    return True
 
-    latitude = config[DOMAIN].get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config[DOMAIN].get(CONF_LONGITUDE, hass.config.longitude)
-    diaspora = config[DOMAIN][CONF_DIASPORA]
 
-    candle_lighting_offset = config[DOMAIN][CONF_CANDLE_LIGHT_MINUTES]
-    havdalah_offset = config[DOMAIN][CONF_HAVDALAH_OFFSET_MINUTES]
+async def async_setup_entry(hass, entry):
+    """Set up a config entry for Jewish calendar."""
+    name = entry.data[CONF_NAME]
+    language = entry.data[CONF_LANGUAGE]
+
+    latitude = entry.data.get(CONF_LATITUDE, hass.config.latitude)
+    longitude = entry.data.get(CONF_LONGITUDE, hass.config.longitude)
+    diaspora = entry.data[CONF_DIASPORA]
+
+    candle_lighting_offset = entry.data[CONF_CANDLE_LIGHT_MINUTES]
+    havdalah_offset = entry.data[CONF_HAVDALAH_OFFSET_MINUTES]
 
     location = hdate.Location(
         latitude=latitude,
@@ -99,20 +80,18 @@ async def async_setup(hass, config):
         "diaspora": diaspora,
     }
 
-    hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
-
     hass.async_create_task(
-        async_load_platform(hass, "binary_sensor", DOMAIN, {}, config)
+        hass.config_entries.async_forward_entry_setup(entry, "sensor")
+    )
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(entry, "binary_sensor")
     )
 
     return True
 
 
-async def async_setup_entry(hass, entry):
-    """Set up a config entry for NEW_NAME."""
-    # TODO forward the entry for each platform that you want to set up.
-    # hass.async_create_task(
-    #     hass.config_entries.async_forward_entry_setup(entry, "media_player")
-    # )
-
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    await hass.config_entries.async_forward_entry_unload(entry, "sensor")
+    await hass.config_entries.async_forward_entry_unload(entry, "binary_sensor")
     return True

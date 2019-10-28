@@ -4,7 +4,7 @@ from collections import namedtuple
 from contextlib import contextmanager
 from unittest.mock import patch
 
-from homeassistant.components import jewish_calendar
+import homeassistant.components.jewish_calendar.const as jcal_const
 import homeassistant.util.dt as dt_util
 
 
@@ -31,7 +31,7 @@ def make_nyc_test_params(dtime, results, havdalah_offset=0):
         }
     return (
         dtime,
-        jewish_calendar.CANDLE_LIGHT_DEFAULT,
+        jcal_const.CANDLE_LIGHT_DEFAULT,
         havdalah_offset,
         True,
         "America/New_York",
@@ -51,7 +51,7 @@ def make_jerusalem_test_params(dtime, results, havdalah_offset=0):
         }
     return (
         dtime,
-        jewish_calendar.CANDLE_LIGHT_DEFAULT,
+        jcal_const.CANDLE_LIGHT_DEFAULT,
         havdalah_offset,
         False,
         "Asia/Jerusalem",
