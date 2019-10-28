@@ -53,8 +53,6 @@ class AirMonitorB1(AirQualityEntity):
         self._icon = "mdi:cloud"
         self._unit_of_measurement = "μg/m3"
         self._unique_id = None
-        self._model = None
-        self._mac_address = None
         self._carbon_dioxide_equivalent = None
         self._particulate_matter_2_5 = None
         self._total_volatile_organic_compounds = None
