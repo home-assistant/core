@@ -1,5 +1,5 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5)."""
-from miio import AirQualityMonitor, DeviceException
+from miio import AirQualityMonitor, Device, DeviceException
 import voluptuous as vol
 
 from homeassistant.components.air_quality import (
@@ -9,6 +9,7 @@ from homeassistant.components.air_quality import (
     ATTR_PM_2_5,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
 DEFAULT_NAME = "Xiaomi Miio Air Quality Monitor"
@@ -39,20 +40,35 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     name = config.get(CONF_NAME)
 
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
-    device = AirMonitorB1(name, AirQualityMonitor(host, token))
+
+    try:
+        miio_device = Device(host, token)
+        device_info = await hass.async_add_executor_job(miio_device.info)
+        model = device_info.model
+        unique_id = f"{model}-{device_info.mac_address}"
+        _LOGGER.info(
+            "%s %s %s detected",
+            model,
+            device_info.firmware_version,
+            device_info.hardware_version,
+        )
+        device = AirMonitorB1(name, AirQualityMonitor(host, token, model), unique_id)
+    except DeviceException:
+        raise PlatformNotReady
+
     async_add_entities([device], update_before_add=True)
 
 
 class AirMonitorB1(AirQualityEntity):
     """Air Quality class for Xiaomi cgllc.airmonitor.b1 device."""
 
-    def __init__(self, name, device):
+    def __init__(self, name, device, unique_id):
         """Initialize the entity."""
         self._name = name
         self._device = device
+        self._unique_id = unique_id
         self._icon = "mdi:cloud"
         self._unit_of_measurement = "μg/m3"
-        self._unique_id = None
         self._carbon_dioxide_equivalent = None
         self._particulate_matter_2_5 = None
         self._total_volatile_organic_compounds = None
@@ -61,10 +77,6 @@ class AirMonitorB1(AirQualityEntity):
         """Fetch state from the miio device."""
 
         try:
-            if self._unique_id is None:
-                info = await self.hass.async_add_executor_job(self._device.info)
-                self._unique_id = f"{info.model}-{info.mac_address}"
-
             state = await self.hass.async_add_executor_job(self._device.status)
             _LOGGER.debug("Got new state: %s", state)
 

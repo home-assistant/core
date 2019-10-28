@@ -50,7 +50,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     try:
         air_quality_monitor = AirQualityMonitor(host, token)
-        device_info = air_quality_monitor.info()
+        device_info = await hass.async_add_executor_job(air_quality_monitor.info)
         model = device_info.model
         unique_id = f"{model}-{device_info.mac_address}"
         _LOGGER.info(
