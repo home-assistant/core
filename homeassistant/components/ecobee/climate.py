@@ -1,6 +1,7 @@
 """Support for ecobee thermostats."""
 import collections
 
+from pyecobee.const import ECOBEE_MODEL_TO_NAME
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice
@@ -36,28 +37,27 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.temperature import convert
 
-from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
+from .const import (
+    _LOGGER,
+    ATTR_COOL_TEMP,
+    ATTR_END_DATE,
+    ATTR_END_TIME,
+    ATTR_FAN_MIN_ON_TIME,
+    ATTR_FAN_MODE,
+    ATTR_HEAT_TEMP,
+    ATTR_RESUME_ALL,
+    ATTR_START_DATE,
+    ATTR_START_TIME,
+    ATTR_VACATION_NAME,
+    DEFAULT_RESUME_ALL,
+    DOMAIN,
+    MANUFACTURER,
+    PRESET_HOLD_INDEFINITE,
+    PRESET_HOLD_NEXT_TRANSITION,
+    PRESET_TEMPERATURE,
+    PRESET_VACATION,
+)
 from .util import ecobee_date, ecobee_time
-
-ATTR_COOL_TEMP = "cool_temp"
-ATTR_END_DATE = "end_date"
-ATTR_END_TIME = "end_time"
-ATTR_FAN_MIN_ON_TIME = "fan_min_on_time"
-ATTR_FAN_MODE = "fan_mode"
-ATTR_HEAT_TEMP = "heat_temp"
-ATTR_RESUME_ALL = "resume_all"
-ATTR_START_DATE = "start_date"
-ATTR_START_TIME = "start_time"
-ATTR_VACATION_NAME = "vacation_name"
-
-DEFAULT_RESUME_ALL = False
-PRESET_TEMPERATURE = "temp"
-PRESET_VACATION = "vacation"
-PRESET_HOLD_NEXT_TRANSITION = "next_transition"
-PRESET_HOLD_INDEFINITE = "indefinite"
-AWAY_MODE = "awayMode"
-PRESET_HOME = "home"
-PRESET_SLEEP = "sleep"
 
 # Order matters, because for reverse mapping we don't want to map HEAT to AUX
 ECOBEE_HVAC_TO_HASS = collections.OrderedDict(
