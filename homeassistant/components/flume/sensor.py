@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             )
             flume_entity_list.append(FlumeSensor(flume, f"{name} {device['id']}"))
 
-    if len(flume_entity_list) > 0:
+    if flume_entity_list:
         add_entities(flume_entity_list, True)
 
 
