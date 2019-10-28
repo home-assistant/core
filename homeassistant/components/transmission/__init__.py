@@ -336,10 +336,6 @@ class TransmissionData:
         """Get the number of completed torrents."""
         return len(self.completed_torrents)
 
-    def get_started_torrent_info(self):
-        """Return True if there is info in state attribute."""
-        return bool(self.started_torrent_dict)
-
     def start_torrents(self):
         """Start all torrents."""
         self._api.start_all()
