@@ -6,6 +6,14 @@
     "samsungctl[websocket]==0.7.1",
     "wakeonlan==1.1.6"
   ],
+  "ssdp": [
+    {
+      "device_type": "urn:samsung.com:device:RemoteControlReceiver:1"
+    }
+  ],
   "dependencies": [],
-  "codeowners": ["@escoand"]
+  "codeowners": [
+    "@escoand"
+  ],
+  "config_flow": true
 }

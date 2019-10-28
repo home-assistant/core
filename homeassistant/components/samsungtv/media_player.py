@@ -28,6 +28,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     CONF_BROADCAST_ADDRESS,
     CONF_HOST,
+    CONF_ID,
     CONF_MAC,
     CONF_NAME,
     CONF_PORT,
@@ -38,7 +39,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
 
-from .const import LOGGER
+from .const import CONF_MANUFACTURER, CONF_MODEL, DOMAIN, LOGGER, METHODS
 
 DEFAULT_NAME = "Samsung TV Remote"
 DEFAULT_TIMEOUT = 1
@@ -46,7 +47,6 @@ DEFAULT_BROADCAST_ADDRESS = "255.255.255.255"
 
 KEY_PRESS_TIMEOUT = 1.2
 KNOWN_DEVICES_KEY = "samsungtv_known_devices"
-METHODS = ("websocket", "legacy")
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
 
 SUPPORT_SAMSUNGTV = (
@@ -117,10 +117,42 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         LOGGER.info("Ignoring duplicate Samsung TV %s", host)
 
 
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Set up the Samsung TV from a config entry."""
+    host = config_entry.data[CONF_HOST]
+    port = None
+    name = config_entry.title
+    timeout = DEFAULT_TIMEOUT
+    mac = None
+    broadcast = config_entry.data.get(CONF_BROADCAST_ADDRESS, DEFAULT_BROADCAST_ADDRESS)
+    uuid = config_entry.data[CONF_ID]
+    manufacturer = config_entry.data[CONF_MANUFACTURER]
+    model = config_entry.data[CONF_MODEL]
+
+    async_add_devices(
+        [
+            SamsungTVDevice(
+                host, port, name, timeout, mac, broadcast, uuid, manufacturer, model
+            )
+        ]
+    )
+
+
 class SamsungTVDevice(MediaPlayerDevice):
     """Representation of a Samsung TV."""
 
-    def __init__(self, host, port, name, timeout, mac, broadcast, uuid):
+    def __init__(
+        self,
+        host,
+        port,
+        name,
+        timeout,
+        mac,
+        broadcast,
+        uuid,
+        manufacturer=None,
+        model=None,
+    ):
         """Initialize the Samsung device."""
 
         # Save a reference to the imported classes
@@ -216,10 +248,7 @@ class SamsungTVDevice(MediaPlayerDevice):
         except AttributeError:
             # Auto-detect could not find working config yet
             pass
-        except (
-            samsung_exceptions.UnhandledResponse,
-            samsung_exceptions.AccessDenied,
-        ):
+        except (samsung_exceptions.UnhandledResponse, samsung_exceptions.AccessDenied):
             # We got a response so it's on.
             self._state = STATE_ON
             self._remote = None
@@ -251,6 +280,16 @@ class SamsungTVDevice(MediaPlayerDevice):
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "name": self.name,
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "manufacturer": self._manufacturer,
+            "model": self._model,
+        }
 
     @property
     def is_volume_muted(self):

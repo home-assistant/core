@@ -1,0 +1,33 @@
+{
+  "config": {
+    "title": "Samsung TV",
+    "step": {
+      "user": {
+        "title": "Samsung TV",
+        "description": "Enter your Samsung TV information.",
+        "data": {
+            "host": "Host or IP address",
+            "name": "Name"
+        }
+      },
+      "user_auth": {
+        "title": "Samsung TV",
+        "description": "Authentification missing. Please accept the popup on your Samsung TV at host {host}."
+      },
+      "confirm": {
+        "title": "Samsung TV",
+        "description": "Do you want to set up {title}?"
+      },
+      "ssdp_auth": {
+        "title": "Samsung TV",
+        "description": "Authentification missing. Please accept the popup on your Samsung TV {model}."
+      }
+    },
+    "abort": {
+      "already_in_progress": "Samsung TV configuration is already in progress.",
+      "already_configured": "Samsung TV is already configured.",
+      "not_found": "No supported Samsung TV devices found on the network.",
+      "not_supported": "No supported Samsung TV devices found on the network."
+    }
+  }
+}
