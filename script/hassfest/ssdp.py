@@ -24,11 +24,8 @@ def sort_dict(value):
 
 def generate_and_validate(integrations: Dict[str, Integration]):
     """Validate and generate ssdp data."""
-    data = {
-        "st": defaultdict(list),
-        "manufacturer": defaultdict(list),
-        "device_type": defaultdict(list),
-    }
+
+    data = defaultdict(list)
 
     for domain in sorted(integrations):
         integration = integrations[domain]
@@ -56,14 +53,8 @@ def generate_and_validate(integrations: Dict[str, Integration]):
             )
             continue
 
-        for key in "st", "manufacturer", "device_type":
-            if key not in ssdp:
-                continue
+        data[domain].append(sort_dict(ssdp))
 
-            for value in ssdp[key]:
-                data[key][value].append(domain)
-
-    data = sort_dict({key: sort_dict(value) for key, value in data.items()})
     return BASE.format(json.dumps(data, indent=4))
 
 
