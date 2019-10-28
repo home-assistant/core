@@ -28,9 +28,8 @@ async def async_verify_local_connection(hass: core.HomeAssistant, host: str):
         return False
 
 
-class AlmondFlowHandler(
-    config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
-):
+@config_entries.HANDLERS.register(DOMAIN)
+class AlmondFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
     """Implementation of the Almond OAuth2 config flow."""
 
     DOMAIN = DOMAIN
