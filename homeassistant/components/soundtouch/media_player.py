@@ -47,6 +47,8 @@ MAP_STATUS = {
 }
 
 DATA_SOUNDTOUCH = "soundtouch"
+ATTR_SOUNDTOUCH_GROUP = "soundtouch_group"
+ATTR_SOUNDTOUCH_ZONE = "soundtouch_zone"
 
 SOUNDTOUCH_PLAY_EVERYWHERE = vol.Schema({vol.Required("master"): cv.entity_id})
 
@@ -194,6 +196,7 @@ class SoundTouchDevice(MediaPlayerDevice):
         self._status = self._device.status()
         self._volume = self._device.volume()
         self._config = config
+        self._zone = None
 
     @property
     def config(self):
@@ -209,6 +212,7 @@ class SoundTouchDevice(MediaPlayerDevice):
         """Retrieve the latest data."""
         self._status = self._device.status()
         self._volume = self._device.volume()
+        self._zone = self.get_zone_info()
 
     @property
     def volume_level(self):
@@ -393,3 +397,62 @@ class SoundTouchDevice(MediaPlayerDevice):
                 "Adding slaves to zone with master %s", self._device.config.name
             )
             self._device.add_zone_slave([slave.device for slave in slaves])
+
+    @property
+    def device_state_attributes(self):
+        """Return entity specific state attributes."""
+        attributes = {}
+
+        if self._zone and "master" in self._zone:
+            attributes[ATTR_SOUNDTOUCH_ZONE] = self._zone
+            # Compatibility with how other components expose their groups (like SONOS).
+            # First entry is the master, others are slaves
+            group_members = [self._zone["master"]] + self._zone["slaves"]
+            attributes[ATTR_SOUNDTOUCH_GROUP] = group_members
+
+        return attributes
+
+    def get_zone_info(self):
+        """Return the current zone info."""
+        zone_status = self._device.zone_status()
+        if not zone_status:
+            return None
+
+        # Due to a bug in the SoundTouch API itself client devices do NOT return their
+        # siblings as part of the "slaves" list. Only the master has the full list of
+        # slaves for some reason. To compensate for this shortcoming we have to fetch
+        # the zone info from the master when the current device is a slave until this is
+        # fixed in the SoundTouch API or libsoundtouch, or of course until somebody has a
+        # better idea on how to fix this
+        if zone_status.is_master:
+            return self._build_zone_info(self.entity_id, zone_status.slaves)
+
+        master_instance = self._get_instance_by_ip(zone_status.master_ip)
+        master_zone_status = master_instance.device.zone_status()
+        return self._build_zone_info(
+            master_instance.entity_id, master_zone_status.slaves
+        )
+
+    def _get_instance_by_ip(self, ip_address):
+        """Search and return a SoundTouchDevice instace by it's IP address."""
+        for instance in self.hass.data[DATA_SOUNDTOUCH]:
+            if instance and instance.config["host"] == ip_address:
+                return instance
+        return None
+
+    def _build_zone_info(self, master, zone_slaves):
+        """Build the exposed zone attributes."""
+        slaves = []
+
+        for slave in zone_slaves:
+            slave_instance = self._get_instance_by_ip(slave.device_ip)
+            if slave_instance:
+                slaves.append(slave_instance.entity_id)
+
+        attributes = {
+            "master": master,
+            "is_master": master == self.entity_id,
+            "slaves": slaves,
+        }
+
+        return attributes
