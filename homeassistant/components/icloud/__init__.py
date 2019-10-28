@@ -96,7 +96,7 @@ ACCOUNT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_ACCOUNT_NAME): cv.slugify,
+        vol.Optional(CONF_ACCOUNT_NAME): cv.string,
         vol.Optional(CONF_MAX_INTERVAL, default=DEFAULT_MAX_INTERVAL): cv.positive_int,
         vol.Optional(
             CONF_GPS_ACCURACY_THRESHOLD, default=DEFAULT_GPS_ACCURACY_THRESHOLD
