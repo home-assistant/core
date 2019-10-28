@@ -1,13 +1,31 @@
 """Config flow to connect with Home Assistant."""
+import asyncio
 import logging
 
+import async_timeout
+from aiohttp import ClientError
 from yarl import URL
 import voluptuous as vol
+from pyalmond import AlmondLocalAuth, WebAlmondAPI
 
-from homeassistant import data_entry_flow, config_entries
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant import data_entry_flow, config_entries, core
+from homeassistant.helpers import config_entry_oauth2_flow, aiohttp_client
 
 from .const import DOMAIN, TYPE_LOCAL, TYPE_OAUTH2
+
+
+async def async_verify_local_connection(hass: core.HomeAssistant, host: str):
+    """Verify that a local connection works."""
+    websession = aiohttp_client.async_get_clientsession(hass)
+    api = WebAlmondAPI(AlmondLocalAuth(host, websession))
+
+    try:
+        with async_timeout.timeout(10):
+            await api.async_list_apps()
+
+        return True
+    except (asyncio.TimeoutError, ClientError):
+        return False
 
 
 class AlmondFlowHandler(
@@ -63,6 +81,12 @@ class AlmondFlowHandler(
         # Only allow 1 instance.
         if self._async_current_entries():
             return self.async_abort(reason="already_setup")
+
+        if not await async_verify_local_connection(self.hass, user_input["host"]):
+            self.logger.warning(
+                "Aborting import of Almond because we're unable to connect"
+            )
+            return self.async_abort(reason="cannot_connect")
 
         # pylint: disable=invalid-name
         self.CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL

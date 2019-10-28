@@ -1,10 +1,15 @@
 """Test the Almond config flow."""
+import asyncio
+
+from unittest.mock import patch
+
+
 from homeassistant import config_entries, setup, data_entry_flow
 from homeassistant.components.almond.const import DOMAIN
 from homeassistant.components.almond import config_flow
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_coro
 
 CLIENT_ID_VALUE = "1234"
 CLIENT_SECRET_VALUE = "5678"
@@ -12,14 +17,33 @@ CLIENT_SECRET_VALUE = "5678"
 
 async def test_import(hass):
     """Test that we can import a config entry."""
-    assert await setup.async_setup_component(
-        hass, "almond", {"almond": {"type": "local", "host": "http://localhost:3000"}}
-    )
+    with patch("pyalmond.WebAlmondAPI.async_list_apps", side_effect=mock_coro):
+        assert await setup.async_setup_component(
+            hass,
+            "almond",
+            {"almond": {"type": "local", "host": "http://localhost:3000"}},
+        )
+        await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.data["type"] == "local"
     assert entry.data["host"] == "http://localhost:3000"
+
+
+async def test_import_cannot_connect(hass):
+    """Test that we won't import a config entry if we cannot connect."""
+    with patch(
+        "pyalmond.WebAlmondAPI.async_list_apps", side_effect=asyncio.TimeoutError
+    ):
+        assert await setup.async_setup_component(
+            hass,
+            "almond",
+            {"almond": {"type": "local", "host": "http://localhost:3000"}},
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
 async def test_hassio(hass):

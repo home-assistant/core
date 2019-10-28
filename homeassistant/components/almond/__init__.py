@@ -1,14 +1,10 @@
-"""
-Support for Almond.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/almond/
-"""
+"""Support for Almond."""
 import asyncio
 from datetime import timedelta
 import logging
 import time
 
+import async_timeout
 from aiohttp import ClientSession, ClientError
 from pyalmond import AlmondLocalAuth, AbstractAlmondWebAuth, WebAlmondAPI
 import voluptuous as vol
@@ -111,7 +107,8 @@ async def async_setup_entry(hass, entry):
         )
         auth = AlmondOAuth(entry.data["host"], websession, oauth_session)
 
-    agent = AlmondAgent(WebAlmondAPI(auth))
+    api = WebAlmondAPI(auth)
+    agent = AlmondAgent(api)
 
     # Hass.io does its own configuration of Almond.
     if entry.data.get("is_hassio"):
@@ -145,19 +142,17 @@ async def async_setup_entry(hass, entry):
 
     # Store token in Almond
     try:
-        resp = await auth.request(
-            "post",
-            "/api/devices/create",
-            json={
-                "kind": "io.home-assistant",
-                "hassUrl": hass.config.api.base_url,
-                "accessToken": access_token,
-                "refreshToken": "",
-                # 5 years from now in ms.
-                "accessTokenExpires": time.time() + (60 * 60 * 24 * 365 * 5) * 1000,
-            },
-            timeout=10,
-        )
+        with async_timeout.timeout(10):
+            resp = await api.async_create_device(
+                {
+                    "kind": "io.home-assistant",
+                    "hassUrl": hass.config.api.base_url,
+                    "accessToken": access_token,
+                    "refreshToken": "",
+                    # 5 years from now in ms.
+                    "accessTokenExpires": time.time() + (60 * 60 * 24 * 365 * 5) * 1000,
+                }
+            )
     except (asyncio.TimeoutError, ClientError) as err:
         if isinstance(err, asyncio.TimeoutError):
             msg = "Request timeout"
