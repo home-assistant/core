@@ -1,9 +1,11 @@
 """The jewish_calendar component."""
+from copy import deepcopy
 import logging
 
 import voluptuous as vol
 import hdate
 
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 
 from .const import (
@@ -49,6 +51,17 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema(DATA_SCHEMA)}, extra=vol.ALLOW_EX
 
 async def async_setup(hass, config):
     """Set up the Jewish Calendar component."""
+    if DOMAIN not in config:
+        return True
+
+    conf = config[DOMAIN]
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=deepcopy(conf)
+        )
+    )
+
     return True
 
 
