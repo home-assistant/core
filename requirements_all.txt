@@ -676,7 +676,7 @@ hydrawiser==0.1.1
 # i2csense==0.0.4
 
 # homeassistant.components.iaqualink
-iaqualink==0.2.9
+iaqualink==0.3.0
 
 # homeassistant.components.watson_tts
 ibm-watson==3.0.3
