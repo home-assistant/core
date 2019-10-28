@@ -1,7 +1,7 @@
 """Support for displaying weather info from Ecobee API."""
 from datetime import datetime
 
-from pyecobee.const import ECOBEE_STATE_UNKNOWN
+from pyecobee.const import ECOBEE_MODEL_TO_NAME, ECOBEE_STATE_UNKNOWN
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -14,13 +14,7 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import TEMP_FAHRENHEIT
 
-from .const import (
-    _LOGGER,
-    DOMAIN,
-    ECOBEE_MODEL_TO_NAME,
-    ECOBEE_WEATHER_SYMBOL_TO_HASS,
-    MANUFACTURER,
-)
+from .const import _LOGGER, DOMAIN, ECOBEE_WEATHER_SYMBOL_TO_HASS, MANUFACTURER
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
