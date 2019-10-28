@@ -944,15 +944,20 @@ class AlexaModeController(AlexaCapability):
                     {
                         "value": f"{cover.ATTR_POSITION}.{STATE_OPEN}",
                         "friendly_names": [
-                            {"type": Catalog.LABEL_TEXT, "value": STATE_OPEN},
+                            {"type": Catalog.LABEL_TEXT, "value": "open"},
                             {"type": Catalog.LABEL_TEXT, "value": "opened"},
+                            {"type": Catalog.LABEL_TEXT, "value": "raise"},
+                            {"type": Catalog.LABEL_TEXT, "value": "raised"},
                         ],
                     },
                     {
                         "value": f"{cover.ATTR_POSITION}.{STATE_CLOSED}",
                         "friendly_names": [
-                            {"type": Catalog.LABEL_TEXT, "value": STATE_CLOSED},
                             {"type": Catalog.LABEL_TEXT, "value": "close"},
+                            {"type": Catalog.LABEL_TEXT, "value": "closed"},
+                            {"type": Catalog.LABEL_TEXT, "value": "shut"},
+                            {"type": Catalog.LABEL_TEXT, "value": "lower"},
+                            {"type": Catalog.LABEL_TEXT, "value": "lowered"},
                         ],
                     },
                 ],
