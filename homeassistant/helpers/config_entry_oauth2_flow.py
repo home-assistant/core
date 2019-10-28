@@ -399,7 +399,7 @@ class OAuth2Session:
 
         new_token = await self.implementation.async_refresh_token(token)
 
-        self.hass.config_entries.async_update_entry(  # type: ignore
+        self.hass.config_entries.async_update_entry(
             self.config_entry, data={**self.config_entry.data, "token": new_token}
         )
 
