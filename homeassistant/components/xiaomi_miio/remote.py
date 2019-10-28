@@ -75,8 +75,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the Xiaomi IR Remote (Chuangmi IR) platform."""
     from miio import ChuangmiIr, DeviceException
 
-    host = config.get(CONF_HOST)
-    token = config.get(CONF_TOKEN)
+    host = config[CONF_HOST]
+    token = config[CONF_TOKEN]
 
     # Create handler
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
