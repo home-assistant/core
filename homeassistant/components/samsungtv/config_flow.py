@@ -1,6 +1,7 @@
 """Config flow for Samsung TV."""
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
+import socket
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -72,8 +73,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._title = None
 
     def _get_ip(self, host):
-        import socket
-
         if host is None:
             return
         return socket.gethostbyname(host)
@@ -96,18 +95,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._host = user_input[CONF_HOST]
             self._title = user_input[CONF_NAME]
-            self._ip = self._get_ip(self._host)
-
-            result = try_connect(self._host, self._title)
-
-            if result == RESULT_NOT_FOUND:
-                return self.async_abort(reason=RESULT_NOT_FOUND)
-            elif result == RESULT_NOT_SUPPORTED:
-                return self.async_abort(reason=RESULT_NOT_SUPPORTED)
-            elif result == RESULT_AUTH_MISSING:
-                return await self.async_step_user_auth()
-            elif result == RESULT_SUCCESS:
-                return await self._async_get_entry()
+            self._ip = self.context[CONF_IP_ADDRESS] = self._get_ip(self._host)
+            return await self.async_step_user_finish()
 
         errors = {}
         if error is not None:
@@ -117,10 +106,23 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
+    async def async_step_user_finish(self):
+        """Finish auth flow initialized by the user."""
+        result = try_connect(self._host, self._title)
+
+        if result == RESULT_NOT_FOUND:
+            return self.async_abort(reason=RESULT_NOT_FOUND)
+        elif result == RESULT_NOT_SUPPORTED:
+            return self.async_abort(reason=RESULT_NOT_SUPPORTED)
+        elif result == RESULT_AUTH_MISSING:
+            return await self.async_step_user_auth()
+        elif result == RESULT_SUCCESS:
+            return await self._async_get_entry()
+
     async def async_step_user_auth(self, user_input=None):
         """Handle auth flow initialized by the user."""
         if user_input is not None:
-            return self.async_step_user()
+            return await self.async_step_user_finish()
 
         return self.async_show_form(
             step_id="user_auth", description_placeholders={"host": self._host}
@@ -146,10 +148,9 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._ip = ip
         self._manufacturer = user_input[ATTR_MANUFACTURER]
         self._model = user_input[ATTR_MODEL_NAME]
-        if user_input[ATTR_UDN].startswith("uuid:"):
-            self._uuid = user_input[ATTR_UDN][5:]
-        else:
-            self._uuid = user_input[ATTR_UDN]
+        self._uuid = user_input[ATTR_UDN]
+        if self._uuid.startswith("uuid:"):
+            self._uuid = self._uuid[5:]
         self._name = user_input[ATTR_NAME]
         if self._name.startswith("[TV]"):
             self._name = self._name[4:]
