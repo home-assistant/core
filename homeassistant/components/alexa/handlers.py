@@ -54,6 +54,7 @@ from .errors import (
     AlexaSecurityPanelUnauthorizedError,
     AlexaTempRangeError,
     AlexaUnsupportedThermostatModeError,
+    AlexaVideoActionNotPermittedForContentError,
 )
 from .state_report import async_enable_proactive_mode
 
@@ -1193,14 +1194,20 @@ async def async_api_seek(hass, config, directive, context):
     """Process a seek request."""
     entity = directive.entity
     position_delta = int(directive.payload["deltaPositionMilliseconds"])
-    current_position = int(entity.attributes.get(media_player.ATTR_MEDIA_POSITION))
 
-    # convert milliseconds to seconds for service media_seek.
-    position_delta = int(position_delta / 1000)
+    current_position = entity.attributes.get(media_player.ATTR_MEDIA_POSITION)
+    if not current_position:
+        msg = f"{entity} did not return the current media position."
+        raise AlexaVideoActionNotPermittedForContentError(msg)
 
-    seek_position = current_position + position_delta
+    seek_position = int(current_position) + int(position_delta / 1000)
+
     if seek_position < 0:
         seek_position = 0
+
+    media_duration = entity.attributes.get(media_player.ATTR_MEDIA_DURATION)
+    if media_duration and 0 < int(media_duration) < seek_position:
+        seek_position = media_duration
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
