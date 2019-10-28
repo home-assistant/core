@@ -44,7 +44,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     host = config[CONF_HOST]
     token = config[CONF_TOKEN]
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
 
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
 
