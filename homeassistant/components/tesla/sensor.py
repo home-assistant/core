@@ -1,5 +1,4 @@
 """Support for the Tesla sensors."""
-from datetime import timedelta
 import logging
 
 from homeassistant.const import (
@@ -14,10 +13,8 @@ from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=5)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tesla sensor platform."""
     controller = hass.data[TESLA_DOMAIN]["devices"]["controller"]
     devices = []
@@ -34,13 +31,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class TeslaSensor(TeslaDevice, Entity):
     """Representation of Tesla sensors."""
 
-    def __init__(self, tesla_device, controller, sensor_type=None):
+    def __init__(self, tesla_device, controller, sensor_type=None, config_entry=None):
         """Initialize of the sensor."""
         self.current_value = None
         self._unit = None
         self.last_changed_time = None
         self.type = sensor_type
-        super().__init__(tesla_device, controller)
+        super().__init__(tesla_device, controller, config_entry)
 
         if self.type:
             self._name = f"{self.tesla_device.name} ({self.type})"
@@ -62,10 +59,10 @@ class TeslaSensor(TeslaDevice, Entity):
         """Return the unit_of_measurement of the device."""
         return self._unit
 
-    def update(self):
+    async def async_update(self):
         """Update the state from the sensor."""
         _LOGGER.debug("Updating sensor: %s", self._name)
-        self.tesla_device.update()
+        await super().async_update()
         units = self.tesla_device.measurement
 
         if self.tesla_device.bin_type == 0x4:
@@ -86,6 +83,13 @@ class TeslaSensor(TeslaDevice, Entity):
                 self._unit = LENGTH_KILOMETERS
                 self.current_value /= 0.621371
                 self.current_value = round(self.current_value, 2)
+        elif self.tesla_device.bin_type == 0xC:
+            self.current_value = self.tesla_device.charging_rate
+            self._unit = self.tesla_device.measurement
+            self._attributes = {
+                "time_left": self.tesla_device.time_left,
+                "added_range": self.tesla_device.added_range,
+            }
         else:
             self.current_value = self.tesla_device.get_value()
             if self.tesla_device.bin_type == 0x5:
