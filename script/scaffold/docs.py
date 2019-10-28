@@ -13,7 +13,7 @@ DATA = {
     },
     "config_flow_oauth2": {
         "title": "OAuth2 Config Flow",
-        "docs": "https://developers.home-assistant.io/TODO",
+        "docs": "https://developers.home-assistant.io/docs/en/next/config_entries_config_flow_handler.html#configuration-via-oauth2",
     },
     "device_action": {
         "title": "Device Action",
