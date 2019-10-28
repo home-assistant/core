@@ -110,9 +110,15 @@ def _set_gps_from_zone(kwargs, location, zone):
 
 def _decrypt_payload(secret, topic, ciphertext):
     """Decrypt encrypted payload."""
-    if supports_encryption():
-        keylen, decrypt = get_cipher()
-    else:
+    try:
+        if supports_encryption():
+            keylen, decrypt = get_cipher()
+        else:
+            _LOGGER.warning(
+                "Ignoring encrypted payload because nacl not installed"
+            )
+            return None
+    except OSError:
         _LOGGER.warning("Ignoring encrypted payload because nacl not installed")
         return None
 
