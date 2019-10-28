@@ -151,6 +151,17 @@ class HueBridge:
 
         await group.set_action(scene=scene.id)
 
+    async def handle_unauthorized_error(self):
+        """Create a new config flow when the authorization is no longer valid."""
+        if not self.authorized:
+            # we already created a new config flow, no need to do it again
+            return
+        LOGGER.error(
+            f"Unable to authorize to bridge {self.host}, setup the linking again."
+        )
+        self.authorized = False
+        create_config_flow(self.hass, self.host)
+
 
 async def get_bridge(hass, host, username=None):
     """Create a bridge object and verify authentication."""

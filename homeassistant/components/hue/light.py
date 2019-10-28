@@ -30,7 +30,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.util import color
 
-from .helpers import remove_devices, create_config_flow
+from .helpers import remove_devices
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
@@ -204,14 +204,7 @@ async def async_update_items(
         with async_timeout.timeout(4):
             await api.update()
     except aiohue.Unauthorized:
-        if not bridge.authorized:
-            # we already created a new config flow, no need to do it again
-            return
-        _LOGGER.error(
-            "Unable to authorize to bridge %s, setup the linking again.", bridge.host
-        )
-        bridge.authorized = False
-        create_config_flow(hass, bridge.host)
+        await bridge.handle_unauthorized_error()
         return
     except (asyncio.TimeoutError, aiohue.AiohueException) as err:
         _LOGGER.debug("Failed to fetch %s: %s", api_type, err)

@@ -426,6 +426,36 @@ async def test_new_sensor_discovered(hass, mock_bridge):
     assert temperature.state == "17.75"
 
 
+async def test_sensor_removed(hass, mock_bridge):
+    """Test if 2nd update has removed sensor."""
+    mock_bridge.mock_sensor_responses.append(SENSOR_RESPONSE)
+
+    await setup_bridge(hass, mock_bridge)
+    assert len(mock_bridge.mock_requests) == 1
+    assert len(hass.states.async_all()) == 6
+
+    mock_bridge.mock_sensor_responses.clear()
+    keys = ("1", "2", "3")
+    mock_bridge.mock_sensor_responses.append({k: SENSOR_RESPONSE[k] for k in keys})
+
+    # Force updates to run again
+    sm_key = hue_sensor_base.SENSOR_MANAGER_FORMAT.format("mock-host")
+    sm = hass.data[hue.DOMAIN][sm_key]
+    await sm.async_update_items()
+
+    # To flush out the service call to update the group
+    await hass.async_block_till_done()
+
+    assert len(mock_bridge.mock_requests) == 2
+    assert len(hass.states.async_all()) == 3
+
+    sensor = hass.states.get("binary_sensor.living_room_sensor_motion")
+    assert sensor is not None
+
+    removed_sensor = hass.states.get("binary_sensor.kitchen_sensor_motion")
+    assert removed_sensor is None
+
+
 async def test_update_timeout(hass, mock_bridge):
     """Test bridge marked as not available if timeout error during update."""
     mock_bridge.api.sensors.update = Mock(side_effect=asyncio.TimeoutError)
@@ -441,4 +471,4 @@ async def test_update_unauthorized(hass, mock_bridge):
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 0
     assert len(hass.states.async_all()) == 0
-    assert mock_bridge.authorized is False
+    assert len(mock_bridge.handle_unauthorized_error.mock_calls) == 1

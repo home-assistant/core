@@ -13,7 +13,7 @@ from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-from .helpers import remove_devices, create_config_flow
+from .helpers import remove_devices
 
 CURRENT_SENSORS = "current_sensors"
 SENSOR_MANAGER_FORMAT = "{}_sensor_manager"
@@ -102,15 +102,7 @@ class SensorManager:
             with async_timeout.timeout(4):
                 await api.update()
         except Unauthorized:
-            if not self.bridge.authorized:
-                # we already created a new config flow, no need to do it again
-                return
-            _LOGGER.error(
-                "Unable to authorize to bridge %s, setup the linking again.",
-                self.bridge.host,
-            )
-            self.bridge.authorized = False
-            create_config_flow(self.hass, self.bridge.host)
+            await self.bridge.handle_unauthorized_error()
             return
         except (asyncio.TimeoutError, AiohueException) as err:
             _LOGGER.debug("Failed to fetch sensor: %s", err)

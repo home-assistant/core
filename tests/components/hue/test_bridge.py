@@ -91,3 +91,25 @@ async def test_reset_unloads_entry_if_setup():
 
     assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 3
     assert len(hass.services.async_remove.mock_calls) == 1
+
+
+async def test_handle_unauthorized():
+    """Test handling an unauthorized error on update."""
+    hass = Mock()
+    entry = Mock()
+    entry.data = {"host": "1.2.3.4", "username": "mock-username"}
+    hue_bridge = bridge.HueBridge(hass, entry, False, False)
+
+    with patch.object(bridge, "get_bridge", return_value=mock_coro(Mock())):
+        assert await hue_bridge.async_setup() is True
+
+    assert hue_bridge.authorized is True
+
+    await hue_bridge.handle_unauthorized_error()
+
+    assert hue_bridge.authorized is False
+    assert len(hass.async_create_task.mock_calls) == 4
+    assert len(hass.config_entries.flow.async_init.mock_calls) == 1
+    assert hass.config_entries.flow.async_init.mock_calls[0][2]["data"] == {
+        "host": "1.2.3.4"
+    }
