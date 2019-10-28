@@ -214,12 +214,12 @@ class AqualinkEntity(Entity):
     @property
     def assumed_state(self) -> bool:
         """Return whether the state is based on actual reading from the device."""
-        return self.dev.system.last_run_success is False
+        return not self.dev.system.last_run_success
 
     @property
     def available(self) -> bool:
         """Return whether the device is available or not."""
-        return self.dev.system.online is True
+        return self.dev.system.online
 
     @property
     def device_info(self) -> Dict[str, Any]:
