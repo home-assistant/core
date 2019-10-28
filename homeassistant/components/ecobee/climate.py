@@ -1,4 +1,4 @@
-"""Support for Ecobee Thermostats."""
+"""Support for ecobee thermostats."""
 import collections
 
 import voluptuous as vol
@@ -28,9 +28,8 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    STATE_ON,
-    STATE_OFF,
     ATTR_TEMPERATURE,
+    STATE_OFF,
     STATE_ON,
     TEMP_FAHRENHEIT,
 )
