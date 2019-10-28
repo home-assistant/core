@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io",
   "dependencies": ["http", "conversation"],
   "codeowners": ["@gcampax", "@balloob"],
-  "requirements": ["pyalmond==0.0.1"]
+  "requirements": ["pyalmond==0.0.2"]
 }
