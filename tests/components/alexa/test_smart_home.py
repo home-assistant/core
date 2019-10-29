@@ -2013,6 +2013,8 @@ async def test_cover_position(hass):
             "friendlyNames": [
                 {"@type": "text", "value": {"text": "open", "locale": "en-US"}},
                 {"@type": "text", "value": {"text": "opened", "locale": "en-US"}},
+                {"@type": "text", "value": {"text": "raise", "locale": "en-US"}},
+                {"@type": "text", "value": {"text": "raised", "locale": "en-US"}},
             ]
         },
     } in supported_modes
@@ -2020,8 +2022,11 @@ async def test_cover_position(hass):
         "value": "position.closed",
         "modeResources": {
             "friendlyNames": [
-                {"@type": "text", "value": {"text": "closed", "locale": "en-US"}},
                 {"@type": "text", "value": {"text": "close", "locale": "en-US"}},
+                {"@type": "text", "value": {"text": "closed", "locale": "en-US"}},
+                {"@type": "text", "value": {"text": "shut", "locale": "en-US"}},
+                {"@type": "text", "value": {"text": "lower", "locale": "en-US"}},
+                {"@type": "text", "value": {"text": "lowered", "locale": "en-US"}},
             ]
         },
     } in supported_modes
