@@ -53,7 +53,40 @@ async def test_apply_service(hass):
     assert state.attributes["brightness"] == 50
 
 
-async def test_create_service(hass):
+async def test_create_service(hass, caplog):
     """Test the create service."""
-    # TODO
-    pass
+    assert await async_setup_component(hass, "scene", {})
+    assert hass.states.get("scene.hallo") is None
+
+    assert await hass.services.async_call(
+        "scene",
+        "create",
+        {
+            "scene_id": "hallo",
+            "entities": {"light.bed_light": {"state": "on", "brightness": 50}},
+        },
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+    scene = hass.states.get("scene.hallo")
+    assert scene is not None
+    assert scene.domain == "scene"
+    assert scene.name == "hallo"
+    assert scene.state == "scening"
+    assert scene.attributes.get("entity_id") == ["light.bed_light"]
+
+    assert await hass.services.async_call(
+        "scene",
+        "create",
+        {
+            "scene_id": "hallo",
+            "entities": {"light.bed_light": {"state": "on", "brightness": 50}},
+        },
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+    assert "The scene scene.hallo already exists" in caplog.text
+    assert hass.states.get("scene.hallo") is not None
+    assert hass.states.get("scene.hallo_2") is None

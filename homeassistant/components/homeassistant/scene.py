@@ -138,11 +138,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async def create_service(call):
         """Create a scene."""
-        async_add_entities(
-            HomeAssistantScene(
-                hass, SCENECONFIG(call.data[CONF_SCENE_ID], call.data[CONF_ENTITIES])
-            )
-        )
+        scene_config = SCENECONFIG(call.data[CONF_SCENE_ID], call.data[CONF_ENTITIES])
+        entity_id = f"{SCENE_DOMAIN}.{scene_config.name}"
+        if hass.states.get(entity_id) is not None:
+            _LOGGER.warning("The scene %s already exists", entity_id)
+            return
+
+        async_add_entities([HomeAssistantScene(hass, scene_config)])
 
     hass.services.async_register(
         SCENE_DOMAIN, SERVICE_CREATE, create_service, CREATE_SCENE_SCHEMA
