@@ -1,4 +1,5 @@
 """Support for Decora dimmers."""
+import copy
 from functools import wraps
 import logging
 import time
@@ -21,12 +22,28 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_DECORA_LED = SUPPORT_BRIGHTNESS
 
+
+def _name_validator(config):
+    """Validate the name."""
+    config = copy.deepcopy(config)
+    for address, device_config in config[CONF_DEVICES].items():
+        if CONF_NAME not in device_config:
+            device_config[CONF_NAME] = util.slugify(address)
+
+    return config
+
+
 DEVICE_SCHEMA = vol.Schema(
     {vol.Optional(CONF_NAME): cv.string, vol.Required(CONF_API_KEY): cv.string}
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA}}
+PLATFORM_SCHEMA = vol.Schema(
+    vol.All(
+        PLATFORM_SCHEMA.extend(
+            {vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA}}
+        ),
+        _name_validator,
+    )
 )
 
 
@@ -59,12 +76,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     lights = []
     for address, device_config in config[CONF_DEVICES].items():
         device = {}
-        try:
-            device["name"] = device_config[CONF_NAME]
-        except KeyError:
-            device["name"] = util.slugify(address)
+        device["name"] = device_config[CONF_NAME]
         device["key"] = device_config[CONF_API_KEY]
         device["address"] = address
+        _LOGGER.warning(device["name"])
         light = DecoraLight(device)
         lights.append(light)
 
