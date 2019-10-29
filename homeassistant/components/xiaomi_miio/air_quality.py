@@ -39,20 +39,22 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
 
+    miio_device = Device(host, token)
+
     try:
-        miio_device = Device(host, token)
         device_info = await hass.async_add_executor_job(miio_device.info)
-        model = device_info.model
-        unique_id = f"{model}-{device_info.mac_address}"
-        _LOGGER.info(
-            "%s %s %s detected",
-            model,
-            device_info.firmware_version,
-            device_info.hardware_version,
-        )
-        device = AirMonitorB1(name, AirQualityMonitor(host, token, model), unique_id)
     except DeviceException:
         raise PlatformNotReady
+
+    model = device_info.model
+    unique_id = f"{model}-{device_info.mac_address}"
+    _LOGGER.debug(
+        "%s %s %s detected",
+        model,
+        device_info.firmware_version,
+        device_info.hardware_version,
+    )
+    device = AirMonitorB1(name, AirQualityMonitor(host, token, model), unique_id)
 
     async_add_entities([device], update_before_add=True)
 
