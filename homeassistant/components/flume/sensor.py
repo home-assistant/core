@@ -1,10 +1,9 @@
 """Sensor for displaying the number of result from Flume."""
 from datetime import timedelta
 import logging
-
+from pyflume import FlumeData, FlumeDeviceList
 import voluptuous as vol
 
-from pyflume import FlumeDeviceList, FlumeData
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
