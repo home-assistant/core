@@ -17,9 +17,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return
 
     client = hass.data[DOMAIN]["client"]
-    heater = hass.data[DOMAIN]["heater"]
+    heaters = hass.data[DOMAIN]["heaters"]
 
-    async_add_entities([InComfortClimate(client, heater, r) for r in heater.rooms])
+    async_add_entities(
+        [InComfortClimate(client, h, r) for h in heaters for r in h.rooms]
+    )
 
 
 class InComfortClimate(IncomfortChild, ClimateDevice):
