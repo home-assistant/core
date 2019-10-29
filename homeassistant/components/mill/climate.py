@@ -66,6 +66,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         dev.append(MillHeater(heater, mill_data_connection))
     async_add_entities(dev)
 
+    dev = []
+    for room in mill_data_connection.rooms.values():
+        dev.append(MillRoom(room, mill_data_connection))
+    async_add_entities(dev)
+
     async def set_room_temp(service):
         """Set room temp."""
         room_name = service.data.get(ATTR_ROOM_NAME)
@@ -207,3 +212,114 @@ class MillHeater(ClimateDevice):
     async def async_update(self):
         """Retrieve latest state."""
         self._heater = await self._conn.update_device(self._heater.device_id)
+
+class MillRoom(ClimateDevice):
+    """Representation of a Mill Room device."""
+    """Controls temperature on multiple heaters."""
+
+    def __init__(self, room, mill_data_connection):
+        """Initialize the thermostat."""
+        self._room = room
+        self._conn = mill_data_connection
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        """Rooms doesn't have its own connection and are allways available."""
+        return True
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._room.room_id
+
+    @property
+    def name(self):
+        """Return the name of the room."""
+        return self._room.name
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        res = {}
+        return res
+
+    @property
+    def temperature_unit(self):
+        """Return the unit of measurement which this thermostat uses."""
+        return TEMP_CELSIUS
+
+    @property
+    def target_temperature(self):
+        """Return the temperature we try to reach."""
+        return self._room.comfort_temp
+
+    @property
+    def target_temperature_step(self):
+        """Return the supported step of target temperature."""
+        return 1
+
+    @property
+    def current_temperature(self):
+        """Return the current temperature."""
+        return self._room.avg_temp
+
+    @property
+    def fan_mode(self):
+        """Return the fan setting."""
+        return HVAC_MODE_HEAT
+
+    @property
+    def fan_modes(self):
+        """List of available fan modes."""
+        return [FAN_ON, HVAC_MODE_OFF]
+
+    @property
+    def min_temp(self):
+        """Return the minimum temperature."""
+        return MIN_TEMP
+
+    @property
+    def max_temp(self):
+        """Return the maximum temperature."""
+        return MAX_TEMP
+
+    @property
+    def hvac_mode(self) -> str:
+        """Return hvac operation ie. heat, cool mode.
+
+        Need to be one of HVAC_MODE_*.
+        """
+        return HVAC_MODE_HEAT
+
+    @property
+    def hvac_modes(self):
+        """Return the list of available hvac operation modes.
+
+        Need to be a subset of HVAC_MODES.
+        """
+        return [HVAC_MODE_HEAT, HVAC_MODE_OFF]
+
+    async def async_set_temperature(self, **kwargs):
+        """Set new target temperature."""
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        if temperature is None:
+            return
+        await self._conn.set_room_temperatures(self._room.room_id, int(temperature), int(temperature), int(temperature))
+
+    async def async_set_fan_mode(self, fan_mode):
+        """Set new target fan mode."""
+        return
+
+    async def async_set_hvac_mode(self, hvac_mode):
+        """Set new target hvac mode."""
+        return
+
+    async def async_update(self):
+        """Retrieve latest state."""
+        self._room = await self._conn.update_room(self._room.room_id)
