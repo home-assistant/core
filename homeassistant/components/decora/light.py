@@ -79,7 +79,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         device["name"] = device_config[CONF_NAME]
         device["key"] = device_config[CONF_API_KEY]
         device["address"] = address
-        _LOGGER.warning(device["name"])
         light = DecoraLight(device)
         lights.append(light)
 
