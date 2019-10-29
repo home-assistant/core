@@ -13,12 +13,3 @@ async def async_setup_entry(hass, entry):
     )
 
     return True
-
-
-async def async_unload_entry(hass, entry):
-    """Unload a config entry."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_unload(entry, "media_player")
-    )
-
-    return True
