@@ -1,11 +1,14 @@
 """P2PCamera integration."""
 import logging
 
+import p2pcam as p2pcam_req
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, CONF_HOST, CONF_IP_ADDRESS
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util as util
+
 from .const import DEFAULT_NAME
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,10 +34,9 @@ class P2PCam(Camera):
     def __init__(self, hass, config):
         """Init of the P2PCamera."""
         super().__init__()
-        import p2pcam as p2pcam_req
 
         if CONF_HOST not in config:
-            config[CONF_HOST] = get_host_ip()
+            config[CONF_HOST] = util.get_local_ip()
 
         self._name = config[CONF_NAME]
         self._host_ip = config[CONF_HOST]
@@ -50,26 +52,3 @@ class P2PCam(Camera):
     def name(self):
         """Return the name of this camera."""
         return self._name
-
-
-def get_host_ip():
-    """Get the host ip."""
-    import socket
-
-    return [
-        l
-        for l in (
-            [
-                ip
-                for ip in socket.gethostbyname_ex(socket.gethostname())[2]
-                if not ip.startswith("127.")
-            ][:1],
-            [
-                [
-                    (s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close())
-                    for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]
-                ][0][1]
-            ],
-        )
-        if l
-    ][0][0]
