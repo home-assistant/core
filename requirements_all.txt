@@ -1089,6 +1089,9 @@ pyairvisual==3.0.1
 # homeassistant.components.alarmdotcom
 pyalarmdotcom==0.3.2
 
+# homeassistant.components.almond
+pyalmond==0.0.2
+
 # homeassistant.components.arlo
 pyarlo==0.2.3
 
