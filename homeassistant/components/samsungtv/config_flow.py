@@ -17,7 +17,7 @@ from homeassistant.components.ssdp import (
 from .const import CONF_MANUFACTURER, CONF_MODEL, DOMAIN, LOGGER, METHODS
 
 
-DATA_SCHEMA = vol.Schema({CONF_HOST: str, CONF_NAME: str})
+DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
 
 RESULT_AUTH_MISSING = "auth_missing"
 RESULT_SUCCESS = "success"
@@ -25,7 +25,13 @@ RESULT_NOT_FOUND = "not_found"
 RESULT_NOT_SUPPORTED = "not_supported"
 
 
-def try_connect(host, name):
+def _get_ip(host):
+    if host is None:
+        return
+    return socket.gethostbyname(host)
+
+
+def _try_connect(host, name):
     """Try to connect and check auth."""
     for method in METHODS:
         config = {
@@ -72,11 +78,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name = None
         self._title = None
 
-    def _get_ip(self, host):
-        if host is None:
-            return
-        return socket.gethostbyname(host)
-
     async def _async_get_entry(self):
         return self.async_create_entry(
             title=self._title,
@@ -90,17 +91,19 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_user(self, user_input=None, error=None):
+    async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        if user_input is not None:
-            self._host = user_input[CONF_HOST]
-            self._title = user_input[CONF_NAME]
-            self._ip = self.context[CONF_IP_ADDRESS] = self._get_ip(self._host)
-            return await self.async_step_user_finish()
-
         errors = {}
-        if error is not None:
-            errors["base"] = error
+        if user_input is not None:
+            try:
+                DATA_SCHEMA(user_input)
+                self._host = user_input[CONF_HOST]
+                self._title = user_input[CONF_NAME]
+                self._ip = self.context[CONF_IP_ADDRESS] = _get_ip(self._host)
+                return await self.async_step_user_finish()
+            except vol.error.MultipleInvalid as errs:
+                for err in errs.errors:
+                    errors[err.path[0]] = err.msg
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -108,7 +111,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user_finish(self):
         """Finish auth flow initialized by the user."""
-        result = try_connect(self._host, self._title)
+        result = _try_connect(self._host, self._title)
 
         if result == RESULT_NOT_FOUND:
             return self.async_abort(reason=RESULT_NOT_FOUND)
@@ -130,7 +133,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, user_input=None):
         """Handle user-confirmation of discovered node."""
-        ip = self.context[CONF_IP_ADDRESS] = self._get_ip(user_input[ATTR_HOST])
+        ip = self.context[CONF_IP_ADDRESS] = _get_ip(user_input[ATTR_HOST])
 
         if any(
             ip == flow["context"].get(CONF_IP_ADDRESS)
@@ -142,7 +145,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if ip == entry.data.get(CONF_IP_ADDRESS):
                 return self.async_abort(reason="already_configured")
 
-        ip = self.context[CONF_IP_ADDRESS] = self._get_ip(user_input[ATTR_HOST])
+        ip = self.context[CONF_IP_ADDRESS] = _get_ip(user_input[ATTR_HOST])
 
         self._host = user_input[ATTR_HOST]
         self._ip = ip
@@ -160,7 +163,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(self, user_input=None):
         """Handle user-confirmation of discovered node."""
-        result = try_connect(self._host, self._name)
+        result = _try_connect(self._host, self._name)
 
         if result == RESULT_NOT_FOUND:
             return self.async_abort(reason=RESULT_NOT_FOUND)
