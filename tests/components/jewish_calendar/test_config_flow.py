@@ -17,9 +17,6 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.jewish_calendar.config_flow.validate_input",
-        return_value=mock_coro({"title": "Test Title"}),
-    ), patch(
         "homeassistant.components.jewish_calendar.async_setup",
         return_value=mock_coro(True),
     ) as mock_setup, patch(
