@@ -5,14 +5,11 @@ import logging
 import datetime
 
 import growattServer
-import voluptuous as vol
 
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_USERNAME, CONF_PASSWORD
-from .const import CONF_PLANT_ID, DEFAULT_PLANT_ID, DEFAULT_NAME
+from .const import CONF_PLANT_ID, DEFAULT_PLANT_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,15 +45,6 @@ INVERTER_SENSOR_TYPES = {
 }
 
 SENSOR_TYPES = {**TOTAL_SENSOR_TYPES, **INVERTER_SENSOR_TYPES}
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PLANT_ID, default=DEFAULT_PLANT_ID): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-    }
-)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
