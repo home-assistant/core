@@ -455,9 +455,13 @@ class AndroidTVDevice(ADBDevice):
             return
 
         # Get the updated state and attributes.
-        state, self._current_app, self._device, self._is_volume_muted, self._volume_level = (
-            self.aftv.update()
-        )
+        (
+            state,
+            self._current_app,
+            self._device,
+            self._is_volume_muted,
+            self._volume_level,
+        ) = self.aftv.update()
 
         self._state = ANDROIDTV_STATES.get(state)
         if self._state is None:

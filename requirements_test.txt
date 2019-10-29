@@ -4,7 +4,7 @@
 
 # When updating this file, update .pre-commit-config.yaml too
 asynctest==0.13.0
-black==19.3b0
+black==19.10b0
 codecov==2.0.15
 flake8-docstrings==1.5.0
 flake8==3.7.8
