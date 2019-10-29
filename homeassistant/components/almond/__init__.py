@@ -150,7 +150,7 @@ async def async_setup_entry(hass, entry):
                     "accessToken": access_token,
                     "refreshToken": "",
                     # 5 years from now in ms.
-                    "accessTokenExpires": time.time() + (60 * 60 * 24 * 365 * 5) * 1000,
+                    "accessTokenExpires": (time.time() + 60 * 60 * 24 * 365 * 5) * 1000,
                 }
             )
     except (asyncio.TimeoutError, ClientError) as err:
