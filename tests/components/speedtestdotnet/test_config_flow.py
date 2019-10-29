@@ -17,8 +17,12 @@ async def test_flow_works(hass):
     flow = config_flow.SpeedTestFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_user()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+    assert result["type"] == "form", result
 
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] == "create_entry"
     assert result["title"] == "SpeedTest"
 

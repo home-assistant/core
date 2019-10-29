@@ -130,7 +130,7 @@ class SpeedTestClient:
         """Update scan interval."""
 
         def refresh(event_time):
-            """Get the latest data from Transmission."""
+            """Get the latest data from SpeedTest."""
             self.update()
 
         if self.unsub_timer is not None:

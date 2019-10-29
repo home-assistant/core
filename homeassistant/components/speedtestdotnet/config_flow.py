@@ -29,14 +29,16 @@ class SpeedTestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="one_instance_allowed")
+
         if user_input is None:
-            user_input = {}
+            return self.async_show_form(step_id="user")
+
         return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
     async def async_step_import(self, import_config):
-        """Import from Transmission client config."""
+        """Import from SpeedTest config."""
         import_config[CONF_SCAN_INTERVAL] = (
             import_config[CONF_SCAN_INTERVAL].seconds / 60
         )
@@ -47,14 +49,14 @@ class SpeedTestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class SpeedTestOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle Transmission client options."""
+    """Handle SpeedTest options."""
 
     def __init__(self, config_entry):
-        """Initialize Transmission options flow."""
+        """Initialize options flow."""
         self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
-        """Manage the Transmission options."""
+        """Manage the options."""
         errors = {}
         if user_input is not None:
 
