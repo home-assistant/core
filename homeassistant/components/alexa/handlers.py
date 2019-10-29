@@ -964,10 +964,10 @@ async def async_api_set_mode(hass, config, directive, context):
         raise AlexaInvalidDirectiveError(msg)
 
     if instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
-        _, setting = capability_mode.split(".")
-        if setting in [fan.DIRECTION_REVERSE, fan.DIRECTION_FORWARD]:
+        _, direction = capability_mode.split(".")
+        if direction in [fan.DIRECTION_REVERSE, fan.DIRECTION_FORWARD]:
             service = fan.SERVICE_SET_DIRECTION
-            data[fan.ATTR_DIRECTION] = setting
+            data[fan.ATTR_DIRECTION] = direction
 
     if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
         _, position = capability_mode.split(".")
