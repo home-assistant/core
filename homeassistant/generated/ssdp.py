@@ -8,37 +8,27 @@ To update, run python3 -m script.hassfest
 SSDP = {
     "deconz": [
         {
-            "manufacturer": [
-                "Royal Philips Electronics"
-            ]
+            "manufacturer": "Royal Philips Electronics"
         }
     ],
     "heos": [
         {
-            "st": [
-                "urn:schemas-denon-com:device:ACT-Denon:1"
-            ]
+            "st": "urn:schemas-denon-com:device:ACT-Denon:1"
         }
     ],
     "hue": [
         {
-            "manufacturer": [
-                "Royal Philips Electronics"
-            ]
+            "manufacturer": "Royal Philips Electronics"
         }
     ],
     "sonos": [
         {
-            "st": [
-                "urn:schemas-upnp-org:device:ZonePlayer:1"
-            ]
+            "st": "urn:schemas-upnp-org:device:ZonePlayer:1"
         }
     ],
     "wemo": [
         {
-            "manufacturer": [
-                "Belkin International Inc."
-            ]
+            "manufacturer": "Belkin International Inc."
         }
     ]
 }

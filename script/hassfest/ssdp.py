@@ -53,7 +53,8 @@ def generate_and_validate(integrations: Dict[str, Integration]):
             )
             continue
 
-        data[domain].append(sort_dict(ssdp))
+        for matcher in ssdp:
+            data[domain].append(sort_dict(matcher))
 
     return BASE.format(json.dumps(data, indent=4))
 
