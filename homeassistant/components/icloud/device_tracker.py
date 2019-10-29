@@ -5,6 +5,8 @@ from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.const import CONF_USERNAME
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import HomeAssistantType
+
 
 from . import IcloudDevice
 from .const import (
@@ -18,12 +20,14 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_scanner(hass, config, see, discovery_info=None):
+async def async_setup_scanner(
+    hass: HomeAssistantType, config, see, discovery_info=None
+):
     """Old way of setting up the iCloud tracker."""
     pass
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistantType, entry, async_add_entities):
     """Configure a dispatcher connection based on a config entry."""
     username = entry.data[CONF_USERNAME]
 

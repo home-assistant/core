@@ -15,7 +15,7 @@ from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceDataType
 from homeassistant.util import slugify
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.dt import utcnow
@@ -34,6 +34,7 @@ from .const import (
     DEVICE_BATTERY_STATUS,
     DEVICE_CLASS,
     DEVICE_DISPLAY_NAME,
+    DEVICE_ID,
     DEVICE_LOCATION,
     DEVICE_LOCATION_LATITUDE,
     DEVICE_LOCATION_LONGITUDE,
@@ -41,6 +42,7 @@ from .const import (
     DEVICE_LOW_POWER_MODE,
     DEVICE_NAME,
     DEVICE_PERSON_ID,
+    DEVICE_RAW_DEVICE_MODEL,
     DEVICE_STATUS,
     DEVICE_STATUS_SET,
     DEVICE_STATUS_CODES,
@@ -63,20 +65,20 @@ SERVICE_ICLOUD_DISPLAY_MESSAGE = "display_message"
 SERVICE_ICLOUD_LOST_DEVICE = "lost_device"
 SERVICE_ICLOUD_UPDATE = "update"
 SERVICE_ICLOUD_RESET = "reset"
-ATTR_USERNAME = CONF_USERNAME
+ATTR_ACCOUNT = "account"
 ATTR_LOST_DEVICE_MESSAGE = "message"
 ATTR_LOST_DEVICE_NUMBER = "number"
 ATTR_LOST_DEVICE_SOUND = "sound"
 
-SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_USERNAME): cv.string})
+SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ACCOUNT): cv.string})
 
 SERVICE_SCHEMA_PLAY_SOUND = vol.Schema(
-    {vol.Required(ATTR_USERNAME): cv.string, vol.Required(ATTR_DEVICE_NAME): cv.string}
+    {vol.Required(ATTR_ACCOUNT): cv.string, vol.Required(ATTR_DEVICE_NAME): cv.string}
 )
 
 SERVICE_SCHEMA_DISPLAY_MESSAGE = vol.Schema(
     {
-        vol.Required(ATTR_USERNAME): cv.string,
+        vol.Required(ATTR_ACCOUNT): cv.string,
         vol.Required(ATTR_DEVICE_NAME): cv.string,
         vol.Required(ATTR_LOST_DEVICE_MESSAGE): cv.string,
         vol.Optional(ATTR_LOST_DEVICE_SOUND): cv.boolean,
@@ -85,7 +87,7 @@ SERVICE_SCHEMA_DISPLAY_MESSAGE = vol.Schema(
 
 SERVICE_SCHEMA_LOST_DEVICE = vol.Schema(
     {
-        vol.Required(ATTR_USERNAME): cv.string,
+        vol.Required(ATTR_ACCOUNT): cv.string,
         vol.Required(ATTR_DEVICE_NAME): cv.string,
         vol.Required(ATTR_LOST_DEVICE_NUMBER): cv.string,
         vol.Required(ATTR_LOST_DEVICE_MESSAGE): cv.string,
@@ -151,53 +153,72 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
-    def play_sound(service):
+    def play_sound(service: ServiceDataType) -> None:
         """Play sound on the device."""
-        username = entry.data[ATTR_USERNAME]
-        devicename = service.data.get(ATTR_DEVICE_NAME)
-        devicename = slugify(devicename.replace(" ", "", 99))
+        account = service.data[ATTR_ACCOUNT]
+        device_name = service.data.get(ATTR_DEVICE_NAME)
+        device_name = slugify(device_name.replace(" ", "", 99))
 
-        hass.data[DOMAIN][username].devices[devicename].play_sound()
+        for device in _get_account(account).get_devices_with_name(device_name):
+            device.play_sound()
 
-    def display_message(service):
+    def display_message(service: ServiceDataType) -> None:
         """Display a message on the device."""
-        username = entry.data[ATTR_USERNAME]
-        devicename = service.data.get(ATTR_DEVICE_NAME)
-        devicename = slugify(devicename.replace(" ", "", 99))
+        account = service.data[ATTR_ACCOUNT]
+        device_name = service.data.get(ATTR_DEVICE_NAME)
+        device_name = slugify(device_name.replace(" ", "", 99))
         message = service.data.get(ATTR_LOST_DEVICE_MESSAGE)
         sound = service.data.get(ATTR_LOST_DEVICE_SOUND, False)
 
-        hass.data[DOMAIN][username].devices[devicename].display_message(message, sound)
+        for device in _get_account(account).get_devices_with_name(device_name):
+            device.display_message(message, sound)
 
-    def lost_device(service):
+    def lost_device(service: ServiceDataType) -> None:
         """Make the device in lost state."""
-        username = entry.data[ATTR_USERNAME]
-        devicename = service.data.get(ATTR_DEVICE_NAME)
-        devicename = slugify(devicename.replace(" ", "", 99))
+        account = service.data[ATTR_ACCOUNT]
+        device_name = service.data.get(ATTR_DEVICE_NAME)
+        device_name = slugify(device_name.replace(" ", "", 99))
         number = service.data.get(ATTR_LOST_DEVICE_NUMBER)
         message = service.data.get(ATTR_LOST_DEVICE_MESSAGE)
 
-        hass.data[DOMAIN][username].devices[devicename].lost_device(number, message)
+        for device in _get_account(account).get_devices_with_name(device_name):
+            device.lost_device(number, message)
 
-    def update_account(service):
+    def update_account(service: ServiceDataType) -> None:
         """Call the update function of an iCloud account."""
-        username = entry.data.get(ATTR_USERNAME)
+        account = service.data.get(ATTR_ACCOUNT)
 
-        if username is None:
-            for account in hass.data[DOMAIN].items():
-                account.keep_alive(utcnow())
+        if account is None:
+            for account in hass.data[DOMAIN].values():
+                account.keep_alive()
         else:
-            hass.data[DOMAIN][username].keep_alive(utcnow())
+            _get_account(account).keep_alive()
 
-    def reset_account(service):
+    def reset_account(service: ServiceDataType) -> None:
         """Reset an iCloud account."""
-        username = entry.data.get(ATTR_USERNAME)
+        account = service.data.get(ATTR_ACCOUNT)
 
-        if username is None:
-            for account in hass.data[DOMAIN].items():
+        if account is None:
+            for account in hass.data[DOMAIN].values():
                 account.reset_account()
         else:
-            hass.data[DOMAIN][username].reset_account()
+            _get_account(account).reset_account()
+
+    def _get_account(account_identifier: str) -> any:
+        if account_identifier is None:
+            return None
+
+        icloud_account = hass.data[DOMAIN].get(account_identifier, None)
+        if icloud_account is None:
+            for account in hass.data[DOMAIN].values():
+                if account.name == account_identifier:
+                    icloud_account = account
+
+        if icloud_account is None:
+            raise Exception(
+                "No iCloud account with username or name " + account_identifier
+            )
+        return icloud_account
 
     hass.services.async_register(
         DOMAIN, SERVICE_ICLOUD_PLAY_SOUND, play_sound, schema=SERVICE_SCHEMA_PLAY_SOUND
@@ -233,7 +254,7 @@ class IcloudAccount:
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistantType,
         username: str,
         password: str,
         account_name: str,
@@ -285,7 +306,7 @@ class IcloudAccount:
         self._devices = {}
         self.update_devices()
 
-    def update_devices(self):
+    def update_devices(self) -> None:
         """Update iCloud devices."""
         if self.api is None:
             return
@@ -299,31 +320,32 @@ class IcloudAccount:
         # Gets devices infos
         for device in api_devices:
             status = device.status(DEVICE_STATUS_SET)
-            devicename = slugify(status[DEVICE_NAME].replace(" ", "", 99))
+            device_id = status[DEVICE_ID]
+            device_name = status[DEVICE_NAME]
 
-            if self._devices.get(devicename, None) is not None:
+            if self._devices.get(device_id, None) is not None:
                 # Seen device -> updating
-                _LOGGER.debug("Updating iCloud device: %s", devicename)
-                self._devices[devicename].update(status)
+                _LOGGER.debug("Updating iCloud device: %s", device_name)
+                self._devices[device_id].update(status)
             else:
                 # New device, should be unique
-                if devicename in self._devices:
-                    _LOGGER.error("Multiple devices with name: %s", devicename)
-                    continue
-
-                _LOGGER.debug("Adding iCloud device: %s", devicename)
-                self._devices[devicename] = IcloudDevice(self, device, status)
-                self._devices[devicename].update(status)
+                _LOGGER.debug(
+                    "Adding iCloud device: %s [model: %s]",
+                    device_name,
+                    status[DEVICE_RAW_DEVICE_MODEL],
+                )
+                self._devices[device_id] = IcloudDevice(self, device, status)
+                self._devices[device_id].update(status)
 
         dispatcher_send(self.hass, TRACKER_UPDATE)
-        self._fetch_interval = self.determine_interval()
+        self._fetch_interval = self._determine_interval()
         track_point_in_utc_time(
             self.hass,
             self.keep_alive,
             utcnow() + timedelta(minutes=self._fetch_interval),
         )
 
-    def determine_interval(self) -> int:
+    def _determine_interval(self) -> int:
         """Calculate new interval between two API fetch (in minutes)."""
         intervals = {}
         for device in self._devices.values():
@@ -390,7 +412,7 @@ class IcloudAccount:
             self._max_interval,
         )
 
-    def keep_alive(self, now):
+    def keep_alive(self, now=None) -> None:
         """Keep the API alive."""
         if self.api is None:
             self.reset_account()
@@ -400,6 +422,17 @@ class IcloudAccount:
 
         self.api.authenticate()
         self.update_devices()
+
+    def get_devices_with_name(self, name: str) -> [any]:
+        """Get devices by name."""
+        result = []
+        name_slug = slugify(name.replace(" ", "", 99))
+        for device in self.devices.values():
+            if slugify(device.name.replace(" ", "", 99)) == name_slug:
+                result.append(device)
+        if not result:
+            raise Exception("No device with name " + name)
+        return result
 
     @property
     def name(self) -> str:
@@ -437,17 +470,14 @@ class IcloudDevice:
 
     def __init__(self, account: IcloudAccount, device: AppleDevice, status):
         """Initialize the iCloud device."""
-        self.hass = account.hass
         self._account = account
         account_name = account.name
-        account_name_slug = slugify(account_name.partition("@")[0])
 
         self._device = device
         self._status = status
 
         self._name = self._status[DEVICE_NAME]
-        self._dev_id = slugify(self._name.replace(" ", "", 99))  # devicename
-        self._unique_id = f"{account_name_slug}_{self._dev_id}"
+        self._device_id = self._status[DEVICE_ID]
         self._device_class = self._status[DEVICE_CLASS]
         self._device_model = self._status[DEVICE_DISPLAY_NAME]
 
@@ -471,7 +501,7 @@ class IcloudDevice:
             ATTR_OWNER_NAME: owner_fullname,
         }
 
-    def update(self, status):
+    def update(self, status) -> None:
         """Update the iCloud device."""
         self._status = status
 
@@ -496,7 +526,7 @@ class IcloudDevice:
                 location = self._status[DEVICE_LOCATION]
                 self._location = location
 
-    def play_sound(self):
+    def play_sound(self) -> None:
         """Play sound on the device."""
         if self._account.api is None:
             return
@@ -505,7 +535,7 @@ class IcloudDevice:
         _LOGGER.debug("Playing sound for %s", self.name)
         self.device.play_sound()
 
-    def display_message(self, message: str, sound: bool = False):
+    def display_message(self, message: str, sound: bool = False) -> None:
         """Display a message on the device."""
         if self._account.api is None:
             return
@@ -514,7 +544,7 @@ class IcloudDevice:
         _LOGGER.debug("Displaying message for %s", self.name)
         self.device.display_message("Subject not working", message, sound)
 
-    def lost_device(self, number: str, message: str):
+    def lost_device(self, number: str, message: str) -> None:
         """Make the device in lost state."""
         if self._account.api is None:
             return
@@ -529,12 +559,12 @@ class IcloudDevice:
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return self._unique_id
+        return self._device_id
 
     @property
     def dev_id(self) -> str:
         """Return the device ID."""
-        return self._dev_id
+        return self._device_id
 
     @property
     def name(self) -> str:

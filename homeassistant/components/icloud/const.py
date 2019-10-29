@@ -18,6 +18,7 @@ DEVICE_BATTERY_LEVEL = "batteryLevel"
 DEVICE_BATTERY_STATUS = "batteryStatus"
 DEVICE_CLASS = "deviceClass"
 DEVICE_DISPLAY_NAME = "deviceDisplayName"
+DEVICE_ID = "id"
 DEVICE_LOCATION = "location"
 DEVICE_LOCATION_HORIZONTAL_ACCURACY = "horizontalAccuracy"
 DEVICE_LOCATION_LATITUDE = "latitude"
@@ -26,6 +27,7 @@ DEVICE_LOST_MODE_CAPABLE = "lostModeCapable"
 DEVICE_LOW_POWER_MODE = "lowPowerMode"
 DEVICE_NAME = "name"
 DEVICE_PERSON_ID = "prsId"
+DEVICE_RAW_DEVICE_MODEL = "rawDeviceModel"
 DEVICE_STATUS = "deviceStatus"
 
 DEVICE_STATUS_SET = [
@@ -37,9 +39,9 @@ DEVICE_STATUS_SET = [
     "remoteLock",
     "activationLocked",
     DEVICE_CLASS,
-    "id",
+    DEVICE_ID,
     "deviceModel",
-    "rawDeviceModel",
+    DEVICE_RAW_DEVICE_MODEL,
     "passcodeLength",
     "canWipeAfterLock",
     "trackingInfo",

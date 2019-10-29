@@ -45,7 +45,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _configuration_exists(self, username: str, account_name: str) -> bool:
         """Return True if username or account_name exists in configuration."""
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
+        for entry in self._async_current_entries():
             if (
                 entry.data[CONF_USERNAME] == username
                 or entry.data.get(CONF_ACCOUNT_NAME) == account_name
