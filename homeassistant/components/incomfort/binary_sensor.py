@@ -11,9 +11,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if discovery_info is None:
         return
 
-    async_add_entities(
-        [IncomfortFailed(hass.data[DOMAIN]["client"], hass.data[DOMAIN]["heater"])]
-    )
+    client = hass.data[DOMAIN]["client"]
+    heaters = hass.data[DOMAIN]["heaters"]
+
+    async_add_entities([IncomfortFailed(client, h) for h in heaters])
 
 
 class IncomfortFailed(IncomfortChild, BinarySensorDevice):
