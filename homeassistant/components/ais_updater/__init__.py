@@ -18,7 +18,7 @@ import async_timeout
 import voluptuous as vol
 
 from subprocess import PIPE, Popen
-from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_ON, STATE_OFF
 from homeassistant.const import __version__ as current_version
 from homeassistant.helpers import event
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -139,7 +139,10 @@ async def async_setup(hass, config):
             # to prevent the restart loop in case of problem with update
             auto_update = False
         else:
-            auto_update = hass.states.get("input_boolean.ais_auto_update").state
+            if hass.states.get("input_boolean.ais_auto_update").state == STATE_ON:
+                auto_update = True
+            else:
+                auto_update = False
 
         result = await get_newest_version(hass, include_components, auto_update)
 
@@ -220,8 +223,14 @@ async def async_setup(hass, config):
 
     def upgrade_package_task(package):
         _LOGGER.info("upgrade_package_task " + str(package))
+        # to install into the deps folder use
+        # PYTHONUSERBASE=~/AIS/deps pip install --user -U /sdcard/ais-dom-frontend-xxx.tar.gz
         env = os.environ.copy()
+        env["PYTHONUSERBASE"] = os.path.abspath(
+            "/data/data/pl.sviete.dom/files/home/AIS/deps"
+        )
         args = [sys.executable, "-m", "pip", "install", "--quiet", package, "--upgrade"]
+        args += ["--user"]
         process = Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
         _, stderr = process.communicate()
         if process.returncode != 0:
