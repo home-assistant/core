@@ -7,15 +7,15 @@ from homeassistant.components.owntracks.helper import supports_encryption
 
 @pytest.fixture(name="nacl_imported")
 def mock_nacl_imported():
-    """Mock a successful closing session."""
-    with patch("nacl"):
+    """Mock a successful import."""
+    with patch("homeassistant.components.owntracks.helper.nacl"):
         yield
 
 
 @pytest.fixture(name="nacl_not_imported")
 def mock_nacl_not_imported():
-    """Mock a successful closing session."""
-    with patch("nacl", side_effect=ImportError()):
+    """Mock non successful import."""
+    with patch("homeassistant.components.owntracks.helper.nacl", return_value=None):
         yield
 
 
