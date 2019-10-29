@@ -4,9 +4,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_USERNAME, CONF_PASSWORD
-from .const import DOMAIN, CONF_PLANT_ID, DEFAULT_PLANT_ID, DEFAULT_NAME
+from .const import DOMAIN, CONF_PLANT_ID
 
 
 CONFIG_SCHEMA = vol.Schema(
