@@ -964,13 +964,13 @@ async def async_api_set_mode(hass, config, directive, context):
         raise AlexaInvalidDirectiveError(msg)
 
     if instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
-        mode, setting = capability_mode.split(".")
+        _, setting = capability_mode.split(".")
         if setting in [fan.DIRECTION_REVERSE, fan.DIRECTION_FORWARD]:
             service = fan.SERVICE_SET_DIRECTION
             data[fan.ATTR_DIRECTION] = setting
 
     if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
-        mode, setting = capability_mode.split(".")
+        _, setting = capability_mode.split(".")
 
         if setting == STATE_CLOSED:
             service = cover.SERVICE_CLOSE_COVER
@@ -979,7 +979,7 @@ async def async_api_set_mode(hass, config, directive, context):
             service = cover.SERVICE_OPEN_COVER
 
     if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
-        mode, position = mode.split(".")
+        _, position = capability_mode.split(".")
 
         if position == STATE_CLOSED:
             service = cover.SERVICE_CLOSE_COVER
