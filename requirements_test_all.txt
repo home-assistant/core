@@ -581,6 +581,9 @@ solaredge==0.0.2
 # homeassistant.components.honeywell
 somecomfort==0.5.2
 
+# homeassistant.components.speedtestdotnet
+speedtest-cli==2.1.2
+
 # homeassistant.components.recorder
 # homeassistant.components.sql
 sqlalchemy==1.3.10
