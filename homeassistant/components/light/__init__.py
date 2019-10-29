@@ -138,7 +138,7 @@ LIGHT_TURN_OFF_SCHEMA = {
 LIGHT_TOGGLE_SCHEMA = LIGHT_TURN_ON_SCHEMA
 
 PROFILE_SCHEMA = vol.Schema(
-    vol.ExactSequence((str, cv.small_float, cv.small_float, cv.byte))
+    vol.ExactSequence((str, cv.small_float, cv.small_float, cv.byte, cv.byte))
 )
 
 INTENT_SET = "HassLightSet"
@@ -159,6 +159,7 @@ def preprocess_turn_on_alternatives(params):
     if profile is not None:
         params.setdefault(ATTR_XY_COLOR, profile[:2])
         params.setdefault(ATTR_BRIGHTNESS, profile[2])
+        params.setdefault(ATTR_BRIGHTNESS, profile[3])
 
     color_name = params.pop(ATTR_COLOR_NAME, None)
     if color_name is not None:
@@ -382,8 +383,8 @@ class Profiles:
 
                     try:
                         for rec in reader:
-                            profile, color_x, color_y, brightness = PROFILE_SCHEMA(rec)
-                            profiles[profile] = (color_x, color_y, brightness)
+                            profile, color_x, color_y, brightness, white_value = PROFILE_SCHEMA(rec)
+                            profiles[profile] = (color_x, color_y, brightness, white_value)
                     except vol.MultipleInvalid as ex:
                         _LOGGER.error(
                             "Error parsing light profile from %s: %s", profile_path, ex
