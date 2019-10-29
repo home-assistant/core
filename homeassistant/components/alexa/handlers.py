@@ -965,7 +965,7 @@ async def async_api_set_mode(hass, config, directive, context):
 
     if instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
         _, direction = capability_mode.split(".")
-        if direction in [fan.DIRECTION_REVERSE, fan.DIRECTION_FORWARD]:
+        if direction in (fan.DIRECTION_REVERSE, fan.DIRECTION_FORWARD):
             service = fan.SERVICE_SET_DIRECTION
             data[fan.ATTR_DIRECTION] = direction
 
