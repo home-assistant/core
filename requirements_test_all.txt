@@ -184,6 +184,9 @@ feedparser-homeassistant==5.2.2.dev1
 # homeassistant.components.foobot
 foobot_async==0.3.1
 
+# homeassistant.components.generic
+furl==2.1.0
+
 # homeassistant.components.google_translate
 gTTS-token==1.1.3
 

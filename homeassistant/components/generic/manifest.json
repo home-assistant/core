@@ -2,7 +2,7 @@
   "domain": "generic",
   "name": "Generic",
   "documentation": "https://www.home-assistant.io/integrations/generic",
-  "requirements": [],
+  "requirements": ["furl==2.1.0"],
   "dependencies": [],
   "codeowners": []
 }

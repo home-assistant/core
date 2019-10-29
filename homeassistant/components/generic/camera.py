@@ -4,28 +4,29 @@ import logging
 
 import aiohttp
 import async_timeout
+from furl import furl
 import requests
 from requests.auth import HTTPDigestAuth
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_AUTHENTICATION,
-    HTTP_BASIC_AUTHENTICATION,
-    HTTP_DIGEST_AUTHENTICATION,
-    CONF_VERIFY_SSL,
-)
-from homeassistant.exceptions import TemplateError
 from homeassistant.components.camera import (
-    PLATFORM_SCHEMA,
     DEFAULT_CONTENT_TYPE,
+    PLATFORM_SCHEMA,
     SUPPORT_STREAM,
     Camera,
 )
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.const import (
+    CONF_AUTHENTICATION,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    HTTP_BASIC_AUTHENTICATION,
+    HTTP_DIGEST_AUTHENTICATION,
+)
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +34,7 @@ CONF_CONTENT_TYPE = "content_type"
 CONF_LIMIT_REFETCH_TO_URL_CHANGE = "limit_refetch_to_url_change"
 CONF_STILL_IMAGE_URL = "still_image_url"
 CONF_STREAM_SOURCE = "stream_source"
+CONF_AUTH_IN_STREAM = "auth_in_stream"
 CONF_FRAMERATE = "framerate"
 
 DEFAULT_NAME = "Generic Camera"
@@ -41,6 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STILL_IMAGE_URL): cv.template,
         vol.Optional(CONF_STREAM_SOURCE, default=None): vol.Any(None, cv.string),
+        vol.Optional(CONF_AUTH_IN_STREAM, default=False): cv.boolean,
         vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION): vol.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
@@ -60,6 +63,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([GenericCamera(hass, config)])
 
 
+def _parse_stream_source(device_info):
+    url = device_info[CONF_STREAM_SOURCE]
+    if not device_info[CONF_AUTH_IN_STREAM]:
+        return url
+
+    username = device_info.get(CONF_USERNAME)
+    password = device_info.get(CONF_PASSWORD)
+    val = furl(url)
+    val.username = username
+    val.password = password
+    return val.tostr()
+
+
 class GenericCamera(Camera):
     """A generic implementation of an IP camera."""
 
@@ -70,7 +86,7 @@ class GenericCamera(Camera):
         self._authentication = device_info.get(CONF_AUTHENTICATION)
         self._name = device_info.get(CONF_NAME)
         self._still_image_url = device_info[CONF_STILL_IMAGE_URL]
-        self._stream_source = device_info[CONF_STREAM_SOURCE]
+        self._stream_source = _parse_stream_source(device_info)
         self._still_image_url.hass = hass
         self._limit_refetch = device_info[CONF_LIMIT_REFETCH_TO_URL_CHANGE]
         self._frame_interval = 1 / device_info[CONF_FRAMERATE]

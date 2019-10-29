@@ -39,6 +39,55 @@ def test_fetching_url(aioclient_mock, hass, hass_client):
 
 
 @asyncio.coroutine
+def test_auth_in_stream(aioclient_mock, hass, hass_client):
+    """Test that auth is embedded in the stream source."""
+    camera = yield from async_setup_component(
+        hass,
+        "camera",
+        {
+            "camera": {
+                "name": "config_test",
+                "platform": "generic",
+                "still_image_url": "http://example.com",
+                "username": "user",
+                "password": "pass",
+                "stream_source": "http://example.com:554/cam",
+                "auth_in_stream": True,
+            }
+        },
+    )
+
+    camera = hass.data["camera"].get_entity("camera.config_test")
+
+    source = yield from camera.stream_source()
+    assert source == "http://user:pass@example.com:554/cam"
+
+
+@asyncio.coroutine
+def test_no_auth_in_stream(aioclient_mock, hass, hass_client):
+    """Test that auth is not embedded in the stream source."""
+    camera = yield from async_setup_component(
+        hass,
+        "camera",
+        {
+            "camera": {
+                "name": "config_test",
+                "platform": "generic",
+                "still_image_url": "http://example.com",
+                "username": "user",
+                "password": "pass",
+                "stream_source": "http://example.com:554/cam",
+            }
+        },
+    )
+
+    camera = hass.data["camera"].get_entity("camera.config_test")
+
+    source = yield from camera.stream_source()
+    assert source == "http://example.com:554/cam"
+
+
+@asyncio.coroutine
 def test_fetching_without_verify_ssl(aioclient_mock, hass, hass_client):
     """Test that it fetches the given url when ssl verify is off."""
     aioclient_mock.get("https://example.com", text="hello world")

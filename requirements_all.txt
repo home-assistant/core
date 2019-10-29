@@ -527,6 +527,9 @@ freesms==0.1.2
 # homeassistant.components.fritzdect
 fritzhome==1.0.4
 
+# homeassistant.components.generic
+furl==2.1.0
+
 # homeassistant.components.google_translate
 gTTS-token==1.1.3
 
