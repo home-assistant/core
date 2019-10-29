@@ -20,9 +20,11 @@ from homeassistant.helpers.event import Event
 _LOGGER = logging.getLogger(__name__)
 _UNDEF: dict = {}
 
-SOURCE_USER = "user"
 SOURCE_DISCOVERY = "discovery"
 SOURCE_IMPORT = "import"
+SOURCE_SSDP = "ssdp"
+SOURCE_USER = "user"
+SOURCE_ZEROCONF = "zeroconf"
 
 HANDLERS = Registry()
 
@@ -50,7 +52,7 @@ ENTRY_STATE_FAILED_UNLOAD = "failed_unload"
 UNRECOVERABLE_STATES = (ENTRY_STATE_MIGRATION_ERROR, ENTRY_STATE_FAILED_UNLOAD)
 
 DISCOVERY_NOTIFICATION_ID = "config_entry_discovery"
-DISCOVERY_SOURCES = ("ssdp", "zeroconf", SOURCE_DISCOVERY, SOURCE_IMPORT)
+DISCOVERY_SOURCES = (SOURCE_SSDP, SOURCE_ZEROCONF, SOURCE_DISCOVERY, SOURCE_IMPORT)
 
 EVENT_FLOW_DISCOVERED = "config_entry_discovered"
 
