@@ -434,9 +434,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
 
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
-    token = config.get(CONF_TOKEN)
+    host = config[CONF_HOST]
+    token = config[CONF_TOKEN]
+    name = config[CONF_NAME]
     model = config.get(CONF_MODEL)
 
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
@@ -445,7 +445,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if model is None:
         try:
             miio_device = Device(host, token)
-            device_info = miio_device.info()
+            device_info = await hass.async_add_executor_job(miio_device.info)
             model = device_info.model
             unique_id = f"{model}-{device_info.mac_address}"
             _LOGGER.info(

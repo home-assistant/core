@@ -5,7 +5,7 @@
 
 # When updating this file, update .pre-commit-config.yaml too
 asynctest==0.13.0
-black==19.3b0
+black==19.10b0
 codecov==2.0.15
 flake8-docstrings==1.5.0
 flake8==3.7.8
@@ -262,7 +262,7 @@ httplib2==0.10.3
 huawei-lte-api==1.4.3
 
 # homeassistant.components.iaqualink
-iaqualink==0.2.9
+iaqualink==0.3.0
 
 # homeassistant.components.influxdb
 influxdb==5.2.3
@@ -347,7 +347,7 @@ plexapi==3.0.6
 plexauth==0.0.5
 
 # homeassistant.components.plex
-plexwebsocket==0.0.1
+plexwebsocket==0.0.3
 
 # homeassistant.components.mhz19
 # homeassistant.components.serial_pm
@@ -389,6 +389,9 @@ pyRFXtrx==0.23
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.4
+
+# homeassistant.components.almond
+pyalmond==0.0.2
 
 # homeassistant.components.arlo
 pyarlo==0.2.3
