@@ -34,8 +34,13 @@ CONF_TYPE_RATIO = "ratio"
 CONF_TYPE_COUNT = "count"
 CONF_TYPE_KEYS = [CONF_TYPE_TIME, CONF_TYPE_RATIO, CONF_TYPE_COUNT]
 
+CONF_TIME_FMT = "fmt"
+CONF_TIME_H = "hours"
+CONF_TIME_S = "seconds"
+CONF_TIME_FMT_KEYS = [CONF_TIME_H, CONF_TIME_S]
 DEFAULT_NAME = "unnamed statistics"
 UNITS = {CONF_TYPE_TIME: "h", CONF_TYPE_RATIO: "%", CONF_TYPE_COUNT: ""}
+TIME_UNITS = {CONF_TIME_H: "h", CONF_TIME_S: "s"}
 ICON = "mdi:chart-line"
 
 ATTR_VALUE = "value"
@@ -49,7 +54,6 @@ def exactly_two_period_keys(conf):
         )
     return conf
 
-
 PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend(
         {
@@ -60,6 +64,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_DURATION): cv.time_period,
             vol.Optional(CONF_TYPE, default=CONF_TYPE_TIME): vol.In(CONF_TYPE_KEYS),
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_TIME_FMT, default=CONF_TIME_H): vol.In(CONF_TIME_FMT_KEYS),
         }
     ),
     exactly_two_period_keys,
@@ -76,6 +81,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     duration = config.get(CONF_DURATION)
     sensor_type = config.get(CONF_TYPE)
     name = config.get(CONF_NAME)
+    tfmt = config.get(CONF_TIME_FMT)
 
     for template in [start, end]:
         if template is not None:
@@ -84,7 +90,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(
         [
             HistoryStatsSensor(
-                hass, entity_id, entity_state, start, end, duration, sensor_type, name
+                hass, entity_id, entity_state, start, end, duration, sensor_type, name, tfmt
             )
         ]
     )
@@ -96,7 +102,7 @@ class HistoryStatsSensor(Entity):
     """Representation of a HistoryStats sensor."""
 
     def __init__(
-        self, hass, entity_id, entity_state, start, end, duration, sensor_type, name
+        self, hass, entity_id, entity_state, start, end, duration, sensor_type, name, tfmt
     ):
         """Initialize the HistoryStats sensor."""
         self._entity_id = entity_id
@@ -107,6 +113,9 @@ class HistoryStatsSensor(Entity):
         self._type = sensor_type
         self._name = name
         self._unit_of_measurement = UNITS[sensor_type]
+        self._tfmt = tfmt
+        if sensor_type == CONF_TYPE_TIME:
+            self._unit_of_measurement = TIME_UNITS[tfmt]
 
         self._period = (datetime.datetime.now(), datetime.datetime.now())
         self.value = None
@@ -139,7 +148,7 @@ class HistoryStatsSensor(Entity):
             return None
 
         if self._type == CONF_TYPE_TIME:
-            return round(self.value, 2)
+            return HistoryStatsHelper.value_duration(self.value, self._tfmt)
 
         if self._type == CONF_TYPE_RATIO:
             return HistoryStatsHelper.pretty_ratio(self.value, self._period)
@@ -164,7 +173,7 @@ class HistoryStatsSensor(Entity):
             return {}
 
         hsh = HistoryStatsHelper
-        return {ATTR_VALUE: hsh.pretty_duration(self.value)}
+        return {ATTR_VALUE: hsh.pretty_duration(self.value, self._tfmt)}
 
     @property
     def icon(self):
@@ -305,17 +314,29 @@ class HistoryStatsHelper:
     """Static methods to make the HistoryStatsSensor code lighter."""
 
     @staticmethod
-    def pretty_duration(hours):
+    def pretty_duration(hours, fmt):
         """Format a duration in days, hours, minutes, seconds."""
         seconds = int(3600 * hours)
-        days, seconds = divmod(seconds, 86400)
-        hours, seconds = divmod(seconds, 3600)
-        minutes, seconds = divmod(seconds, 60)
-        if days > 0:
-            return "%dd %dh %dm" % (days, hours, minutes)
-        if hours > 0:
-            return "%dh %dm" % (hours, minutes)
-        return "%dm" % minutes
+        if fmt == CONF_TIME_S:
+            return "%ds" % seconds
+        else:
+            days, seconds = divmod(seconds, 86400)
+            hours, seconds = divmod(seconds, 3600)
+            minutes, seconds = divmod(seconds, 60)
+            if days > 0:
+                return "%dd %dh %dm" % (days, hours, minutes)
+            if hours > 0:
+                return "%dh %dm" % (hours, minutes)
+            return "%dm" % minutes
+
+    @staticmethod
+    def value_duration(hours, fmt):
+        """Return the duration in hours or seconds according to the configured fmt"""
+        seconds = int(3600 * hours)
+        if fmt == CONF_TIME_S:
+            return "%d" % seconds
+        else:
+            return "%d" % hours
 
     @staticmethod
     def pretty_ratio(value, period):
