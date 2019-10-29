@@ -102,3 +102,4 @@ night:
   lumo-shade-5pct: 'rgba(41, 41, 41, .05)'
   #Removes Gradient in Calendar/Date-Picker and Drop-down lists
   lumo-tint-5pct: 'var(--darker-grey-color)'
+  card-background-color: "#202020"
