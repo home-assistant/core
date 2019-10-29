@@ -390,6 +390,9 @@ pyRFXtrx==0.23
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.4
 
+# homeassistant.components.almond
+pyalmond==0.0.2
+
 # homeassistant.components.arlo
 pyarlo==0.2.3
 
