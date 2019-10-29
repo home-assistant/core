@@ -190,9 +190,7 @@ class AddItemIntent(intent.IntentHandler):
 
         response = intent_obj.create_response()
         response.async_set_speech(f"I've added {item} to your shopping list")
-        intent_obj.hass.bus.async_fire('shopping_list_item_added', {
-            'item_added': item
-        })
+        intent_obj.hass.bus.async_fire("shopping_list_item_added", {"item_added": item})
         return response
 
 
@@ -294,9 +292,7 @@ def websocket_handle_items(hass, connection, msg):
 def websocket_handle_add(hass, connection, msg):
     """Handle add item to shopping_list."""
     item = hass.data[DOMAIN].async_add(msg["name"])
-    hass.bus.async_fire('shopping_list_item_added', {
-        'item_added': item
-    })
+    hass.bus.async_fire("shopping_list_item_added", {"item_added": item})
     connection.send_message(websocket_api.result_message(msg["id"], item))
 
 
