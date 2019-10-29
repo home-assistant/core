@@ -6,21 +6,21 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DATA_UPDATED, DEFAULT_NAME, DOMAIN, SENSOR_TYPES
+from .const import (
+    ATTR_BYTES_RECEIVED,
+    ATTR_BYTES_SENT,
+    ATTR_SERVER_COUNTRY,
+    ATTR_SERVER_ID,
+    ATTR_SERVER_NAME,
+    ATTRIBUTION,
+    DATA_UPDATED,
+    DEFAULT_NAME,
+    DOMAIN,
+    ICON,
+    SENSOR_TYPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_BYTES_RECEIVED = "bytes_received"
-ATTR_BYTES_SENT = "bytes_sent"
-ATTR_SERVER_COUNTRY = "server_country"
-ATTR_SERVER_HOST = "server_host"
-ATTR_SERVER_ID = "server_id"
-ATTR_SERVER_LATENCY = "latency"
-ATTR_SERVER_NAME = "server_name"
-
-ATTRIBUTION = "Data retrieved from Speedtest.net by Ookla"
-
-ICON = "mdi:speedometer"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info):
@@ -96,7 +96,6 @@ class SpeedtestSensor(RestoreEntity):
                     ATTR_SERVER_NAME: self._data["server"]["name"],
                     ATTR_SERVER_COUNTRY: self._data["server"]["country"],
                     ATTR_SERVER_ID: self._data["server"]["id"],
-                    ATTR_SERVER_LATENCY: self._data["server"]["latency"],
                 }
             )
         return attributes

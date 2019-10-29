@@ -16,7 +16,7 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Update frequency",
+                    "scan_interval": "Update frequency (minutes)",
                     "manual": "Scan Manually",
                     "server_id": "Specify Server ID"
                 }

@@ -634,7 +634,9 @@ omit =
     homeassistant/components/sonos/*
     homeassistant/components/sony_projector/switch.py
     homeassistant/components/spc/*
-    homeassistant/components/speedtestdotnet/*
+    homeassistant/components/speedtestdotnet/__init__.py
+    homeassistant/components/speedtestdotnet/const.py
+    homeassistant/components/speedtestdotnet/sensor.py
     homeassistant/components/spider/*
     homeassistant/components/spotcrime/sensor.py
     homeassistant/components/spotify/media_player.py

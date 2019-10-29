@@ -31,11 +31,18 @@ class SpeedTestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason="one_instance_allowed")
-        return self.async_create_entry(title=DEFAULT_NAME, data={})
+        if user_input is None:
+            user_input = {}
+        return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
     async def async_step_import(self, import_config):
         """Import from Transmission client config."""
-        import_config[CONF_SCAN_INTERVAL] = import_config[CONF_SCAN_INTERVAL].seconds
+        import_config[CONF_SCAN_INTERVAL] = (
+            import_config[CONF_SCAN_INTERVAL].seconds / 60
+        )
+        if import_config[CONF_SCAN_INTERVAL] < 1:
+            import_config[CONF_SCAN_INTERVAL] = 1
+
         return await self.async_step_user(user_input=import_config)
 
 
@@ -50,8 +57,9 @@ class SpeedTestOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the Transmission options."""
         errors = {}
         if user_input is not None:
-            api = speedtest.Speedtest()
+
             try:
+                api = speedtest.Speedtest()
                 api.get_servers([user_input[CONF_SERVER_ID]])
                 return self.async_create_entry(title="", data=user_input)
             except speedtest.NoMatchedServers:
