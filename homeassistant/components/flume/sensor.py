@@ -9,7 +9,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +19,6 @@ CONF_CLIENT_SECRET = "client_secret"
 FLUME_TYPE_SENSOR = 2
 
 SCAN_INTERVAL = timedelta(minutes=1)
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=45)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -86,7 +84,6 @@ class FlumeSensor(Entity):
         """Return the unit the value is expressed in."""
         return "gal"
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data and updates the states."""
         self.flume.update()
