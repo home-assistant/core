@@ -19,7 +19,8 @@ ATTR_NAME = "name"
 DOMAIN = "shopping_list"
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {}}, extra=vol.ALLOW_EXTRA)
-EVENT = "shopping_list_updated"
+EVENT_UPDATE = "shopping_list_updated"
+EVENT_ITEM_ADD = "shopping_list_item_added"
 INTENT_ADD_ITEM = "HassShoppingListAddItem"
 INTENT_LAST_ITEMS = "HassShoppingListLastItems"
 ITEM_UPDATE_SCHEMA = vol.Schema({"complete": bool, ATTR_NAME: str})
@@ -190,7 +191,7 @@ class AddItemIntent(intent.IntentHandler):
 
         response = intent_obj.create_response()
         response.async_set_speech(f"I've added {item} to your shopping list")
-        intent_obj.hass.bus.async_fire("shopping_list_item_added", {"item_added": item})
+        intent_obj.hass.bus.async_fire(EVENT_ITEM_ADD, {"item_added": item})
         return response
 
 
@@ -242,7 +243,7 @@ class UpdateShoppingListItemView(http.HomeAssistantView):
 
         try:
             item = request.app["hass"].data[DOMAIN].async_update(item_id, data)
-            request.app["hass"].bus.async_fire(EVENT)
+            request.app["hass"].bus.async_fire(EVENT_UPDATE)
             return self.json(item)
         except KeyError:
             return self.json_message("Item not found", HTTP_NOT_FOUND)
@@ -261,7 +262,7 @@ class CreateShoppingListItemView(http.HomeAssistantView):
     def post(self, request, data):
         """Create a new shopping list item."""
         item = request.app["hass"].data[DOMAIN].async_add(data["name"])
-        request.app["hass"].bus.async_fire(EVENT)
+        request.app["hass"].bus.async_fire(EVENT_UPDATE)
         return self.json(item)
 
 
@@ -276,7 +277,7 @@ class ClearCompletedItemsView(http.HomeAssistantView):
         """Retrieve if API is running."""
         hass = request.app["hass"]
         hass.data[DOMAIN].async_clear_completed()
-        hass.bus.async_fire(EVENT)
+        hass.bus.async_fire(EVENT_UPDATE)
         return self.json_message("Cleared completed items.")
 
 
@@ -292,7 +293,7 @@ def websocket_handle_items(hass, connection, msg):
 def websocket_handle_add(hass, connection, msg):
     """Handle add item to shopping_list."""
     item = hass.data[DOMAIN].async_add(msg["name"])
-    hass.bus.async_fire("shopping_list_item_added", {"item_added": item})
+    hass.bus.async_fire(EVENT_ITEM_ADD, {"item_added": item})
     connection.send_message(websocket_api.result_message(msg["id"], item))
 
 
@@ -306,7 +307,7 @@ async def websocket_handle_update(hass, connection, msg):
 
     try:
         item = hass.data[DOMAIN].async_update(item_id, data)
-        hass.bus.async_fire(EVENT)
+        hass.bus.async_fire(EVENT_UPDATE)
         connection.send_message(websocket_api.result_message(msg_id, item))
     except KeyError:
         connection.send_message(
@@ -318,5 +319,6 @@ async def websocket_handle_update(hass, connection, msg):
 def websocket_handle_clear(hass, connection, msg):
     """Handle clearing shopping_list items."""
     hass.data[DOMAIN].async_clear_completed()
-    hass.bus.async_fire(EVENT)
+    hass.bus.async_fire
+    
     connection.send_message(websocket_api.result_message(msg["id"]))
