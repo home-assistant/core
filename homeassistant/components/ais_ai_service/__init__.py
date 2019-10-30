@@ -111,6 +111,7 @@ INTENT_CLIMATE_SET_ALL_ON = "AisClimateSetAllOn"
 INTENT_CLIMATE_SET_ALL_OFF = "AisClimateSetAllOff"
 INTENT_SPELL_STATUS = "AisSpellStatusInfo"
 INTENT_RUN_AUTOMATION = "AisRunAutomation"
+INTENT_ASK_GOOGLE = "AisAskGoogle"
 
 REGEX_TYPE = type(re.compile(""))
 
@@ -2466,6 +2467,7 @@ async def async_setup(hass, config):
     hass.helpers.intent.async_register(AisPrev())
     hass.helpers.intent.async_register(AisSceneActive())
     hass.helpers.intent.async_register(AisRunAutomation())
+    hass.helpers.intent.async_register(AisAskGoogle())
     hass.helpers.intent.async_register(AisSayIt())
     hass.helpers.intent.async_register(SpellStatusIntent())
 
@@ -2642,6 +2644,7 @@ async def async_setup(hass, config):
     async_register(
         hass, INTENT_RUN_AUTOMATION, ["Uruchom {item}", "Automatyzacja {item}"]
     )
+    async_register(hass, INTENT_ASK_GOOGLE, ["Google {item}"])
     async_register(
         hass,
         INTENT_NEXT,
@@ -4329,6 +4332,35 @@ class AisRunAutomation(intent.IntentHandler):
             else:
                 message = name + " nie można uruchomić"
         return message, success
+
+
+class AisAskGoogle(intent.IntentHandler):
+    """Handle AisAskGoogle intents."""
+
+    intent_type = INTENT_ASK_GOOGLE
+    slot_schema = {"item": cv.string}
+
+    @asyncio.coroutine
+    def async_handle(self, intent_obj):
+        """Handle the intent."""
+        slots = self.async_validate_slots(intent_obj.slots)
+        hass = intent_obj.hass
+        command = slots["item"]["value"]
+
+        if hass.services.has_service("ais_google_home", "command"):
+            yield from hass.services.async_call(
+                "ais_google_home", "command", {"text": command}
+            )
+            m = ""
+
+        else:
+            m = (
+                "Żeby wysyłać komendy do serwisu Google, dodaj integrację AIS Google Home. Więcej informacji "
+                "znajdziesz w dokumentacji [Asystenta domowego]("
+                "https://sviete.github.io/AIS-docs/docs/en/ais_app_ai_integration_google_home.html). "
+            )
+
+        return m, True
 
 
 class AisSayIt(intent.IntentHandler):

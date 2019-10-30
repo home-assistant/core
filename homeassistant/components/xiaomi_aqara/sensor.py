@@ -19,6 +19,7 @@ SENSOR_TYPES = {
     "illumination": ["lm", None, DEVICE_CLASS_ILLUMINANCE],
     "lux": ["lx", None, DEVICE_CLASS_ILLUMINANCE],
     "pressure": ["hPa", None, DEVICE_CLASS_PRESSURE],
+    "bed_activity": ["μm", None, None],
 }
 
 

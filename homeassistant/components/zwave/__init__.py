@@ -851,7 +851,8 @@ async def async_setup_entry(hass, config_entry):
                     # Need to be in STATE_AWAKED before talking to nodes.
                     _LOGGER.info("Z-Wave ready after %d seconds", waited)
                     break
-                elif waited >= const.NETWORK_READY_WAIT_SECS:
+
+                if waited >= const.NETWORK_READY_WAIT_SECS:
                     # Wait up to NETWORK_READY_WAIT_SECS seconds for the Z-Wave
                     # network to be ready.
                     _LOGGER.warning(
@@ -861,8 +862,8 @@ async def async_setup_entry(hass, config_entry):
                         "final network state: %d %s", network.state, network.state_str
                     )
                     break
-                else:
-                    await asyncio.sleep(1)
+
+                await asyncio.sleep(1)
 
             hass.async_add_job(_finalize_start)
 

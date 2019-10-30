@@ -48,7 +48,7 @@ class SafeLineLoader(yaml.SafeLoader):
     def compose_node(self, parent: yaml.nodes.Node, index: int) -> yaml.nodes.Node:
         """Annotate a node with the first line it was seen."""
         last_line: int = self.line
-        node: yaml.nodes.Node = super(SafeLineLoader, self).compose_node(parent, index)
+        node: yaml.nodes.Node = super().compose_node(parent, index)
         node.__line__ = last_line + 1  # type: ignore
         return node
 

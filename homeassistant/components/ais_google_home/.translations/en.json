@@ -1,0 +1,32 @@
+{
+    "config": {
+        "title": "AIS Google Home",
+        "step": {
+            "confirm": {
+                  "description": "![AIS logo](/static/icons/ais_google_home.png)\n\nThis integration allows you to send commands to the Google Assistant and to send audio notifications to Google Home devices without interrupting the music.\n\n Do you want to set up AIS Google Home integration?",
+                  "title": "AIS Google Home"
+             },
+            "oauth": {
+                "description": "Setting up communication with Google Home requires downloading the JSON OAuth2 file from Google. To do this, follow the [Guide in the Home Assistant documentation](https://sviete.github.io/AIS-docs/docs/en/ais_app_ai_integration_google_home.html)\n\n Then come back to this page and paste in the field ** Certificate oAuth2 for the device ** content from a file downloaded from Google.\n\n In this way the device will be authorized.\n\n![AIS logo](/static/icons/ais_google_home.png)\n\n {error_info}",
+                "title": "Device authentication in Google",
+                "data": {
+                    "oauth_json": "OAuth2 certification for the device"
+                }
+            },
+            "token": {
+                "description": "To allow AIS Google Home integration access to your Google account you must: \n\n * In the web browser click **[authentication link]({auth_url})** \n\n * Log in to the selected Google account and authorize account integration access\n. \n\n ![AIS logo](/static/icons/ais_google_home.png) \n\n * Return to this page, paste in ** CODE ** that was generated after access authorization and press **SUBMIT**.",
+                "title": "User authentication in Google",
+                "data": {
+                    "access_token": "Code"
+                }
+            }
+        },
+        "error": {
+          "oauth_error": "Invalid oAuth data",
+          "token_error": "Invalid code"
+        },
+        "abort": {
+            "single_instance_allowed": "You've already set up Google Home AIS integration.\n\nIf you want to reconfigure, first remove the current integration."
+        }
+    }
+}

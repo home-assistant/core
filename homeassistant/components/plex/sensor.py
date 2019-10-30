@@ -8,21 +8,26 @@ import requests.exceptions
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from .const import DOMAIN as PLEX_DOMAIN, SERVERS
+from .const import CONF_SERVER_IDENTIFIER, DOMAIN as PLEX_DOMAIN, SERVERS
 
-DEFAULT_NAME = "Plex"
 _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Plex sensor."""
-    if discovery_info is None:
-        return
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the Plex sensor platform.
 
-    plexserver = list(hass.data[PLEX_DOMAIN][SERVERS].values())[0]
-    add_entities([PlexSensor(plexserver)], True)
+    Deprecated.
+    """
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Plex sensor from a config entry."""
+    server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
+    sensor = PlexSensor(hass.data[PLEX_DOMAIN][SERVERS][server_id])
+    async_add_entities([sensor], True)
 
 
 class PlexSensor(Entity):
@@ -30,10 +35,10 @@ class PlexSensor(Entity):
 
     def __init__(self, plex_server):
         """Initialize the sensor."""
-        self._name = DEFAULT_NAME
         self._state = None
         self._now_playing = []
         self._server = plex_server
+        self._name = f"Plex ({plex_server.friendly_name})"
         self._unique_id = f"sensor-{plex_server.machine_identifier}"
 
     @property

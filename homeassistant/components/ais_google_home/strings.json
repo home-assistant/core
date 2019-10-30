@@ -1,0 +1,32 @@
+{
+    "config": {
+        "title": "AIS Google Home",
+        "step": {
+            "confirm": {
+                  "description": "![AIS logo](/static/icons/ais_google_home.png)\n\nTa integracja pozwala na wysyłanie poleceń do Asystenta Google oraz na wysyłanie powiadomień audio do urządzeń Google Home, bez przerywania muzyki.\n\n Czy chcesz skonfigurować integrację AIS Google Home?",
+                  "title": "AIS Google Home"
+             },
+            "oauth": {
+                "description": "Konfiguracja komunikacji z Google Home wymaga pobrania pliku JSON OAuth2 z Google. Aby to zrobić, postępuj zgodnie z [przewodnikiem w dokumentacji Asystenta domowego](https://sviete.github.io/AIS-docs/docs/en/ais_app_ai_integration_google_home.html)\n\n ![AIS logo](/static/icons/ais_google_home.png)\n\n Następnie wróć tu i wklej w pole **Poświadczenie oAuth2 dla urządzenia** (zawartość z pliku pobranego z Google).\n\n W ten sposób urządzenie zostanie autoryzowane.\n\n{error_info}",
+                "title": "Uwierzytelnianie urządzenia w Google",
+                "data": {
+                    "oauth_json": "Poświadczenie oAuth2 dla urządzenia"
+                }
+            },
+            "token": {
+                "description": "Aby zezwolić na dostęp integracji AIS Google Home, do twojego konta w Google należy: \n\n * W przeglądarce internetowej kliknąć **[link uwierzytelniający]({auth_url})** \n\n * Zalogować się na wybrane konto w Google i autoryzować dostęp integracji do konta. \n\n ![AIS logo](/static/icons/ais_google_home.png) \n\n * Wrócić na tę stronę, wkleić **Kod**, który został wygenerowany po autoryzacji dostępu i wcisnąć **SUBMIT**, by zatwierdzić. ",
+                "title": "Uwierzytelnianie użytkownika w Google",
+                "data": {
+                    "access_token": "Kod"
+                }
+            }
+        },
+        "error": {
+          "oauth_error": "Niepoprawne dane oAuth",
+          "token_error": "Niepoprawny kod"
+        },
+        "abort": {
+            "single_instance_allowed": "Masz już skonfigurowany AIS Google Home.\n\n Jeśli chcesz skonfigurować ponownie to najpierw usuń bieżącą integrację."
+        }
+    }
+}

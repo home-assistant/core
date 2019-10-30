@@ -1,0 +1,8 @@
+# Describes the format for available AIS Google Home Service
+command:
+  description: Wysłanie pytania/komendy do Asystenta Google
+  fields:
+    text:
+      description: Pytanie/komenda
+      example: '{"text": "Jaką mamy pogodę?"}'
+

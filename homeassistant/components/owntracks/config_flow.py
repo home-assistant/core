@@ -64,7 +64,7 @@ class OwnTracksFlow(config_entries.ConfigFlow):
                 "android_url": "https://play.google.com/store/apps/details?"
                 "id=org.owntracks.android",
                 "ios_url": "https://itunes.apple.com/us/app/owntracks/id692424691?mt=8",
-                "docs_url": "https://sviete.github.io/AIS-docs/docs/en/next/ais_bramka_presence_detection.html",
+                "docs_url": "https://sviete.github.io/AIS-docs/docs/en/ais_bramka_presence_detection.html",
             },
         )
 
@@ -84,13 +84,13 @@ class OwnTracksFlow(config_entries.ConfigFlow):
     async def _get_webhook_id(self):
         """Generate webhook ID."""
         webhook_id = self.hass.components.webhook.async_generate_id()
-        if self.hass.components.cloud.async_active_subscription():
-            webhook_url = await self.hass.components.cloud.async_create_cloudhook(
-                webhook_id
-            )
-            cloudhook = True
-        else:
-            webhook_url = self.hass.components.webhook.async_generate_url(webhook_id)
-            cloudhook = False
+        # if self.hass.components.cloud.async_active_subscription():
+        #     webhook_url = await self.hass.components.cloud.async_create_cloudhook(
+        #         webhook_id
+        #     )
+        #     cloudhook = True
+        # else:
+        webhook_url = self.hass.components.webhook.async_generate_url(webhook_id)
+        cloudhook = False
 
         return webhook_id, webhook_url, cloudhook

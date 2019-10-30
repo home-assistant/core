@@ -18,7 +18,7 @@ import async_timeout
 import voluptuous as vol
 
 from subprocess import PIPE, Popen
-from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_ON, STATE_OFF
 from homeassistant.const import __version__ as current_version
 from homeassistant.helpers import event
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -59,8 +59,11 @@ UPDATER_URL = "https://powiedz.co/ords/dom/dom/updater_new"
 UPDATER_STATUS_FILE = ".ais_update_status"
 UPDATER_DOWNLOAD_FOLDER = "ais_update"
 APT_VERSION_INFO_FILE = ".ais_apt"
-G_CURRENT_ANDROID_VERSION = "0"
-G_CURRENT_LINUX_VERSION = "0"
+G_CURRENT_ANDROID_DOM_V = "0"
+G_CURRENT_ANDROID_LAUNCHER_V = "0"
+G_CURRENT_ANDROID_TTS_V = "0"
+G_CURRENT_ANDROID_STT_V = "0"
+G_CURRENT_LINUX_V = "0"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -136,7 +139,10 @@ async def async_setup(hass, config):
             # to prevent the restart loop in case of problem with update
             auto_update = False
         else:
-            auto_update = hass.states.get("input_boolean.ais_auto_update").state
+            if hass.states.get("input_boolean.ais_auto_update").state == STATE_ON:
+                auto_update = True
+            else:
+                auto_update = False
 
         result = await get_newest_version(hass, include_components, auto_update)
 
@@ -217,8 +223,14 @@ async def async_setup(hass, config):
 
     def upgrade_package_task(package):
         _LOGGER.info("upgrade_package_task " + str(package))
+        # to install into the deps folder use
+        # PYTHONUSERBASE=~/AIS/deps pip install --user -U /sdcard/ais-dom-frontend-xxx.tar.gz
         env = os.environ.copy()
+        env["PYTHONUSERBASE"] = os.path.abspath(
+            "/data/data/pl.sviete.dom/files/home/AIS/deps"
+        )
         args = [sys.executable, "-m", "pip", "install", "--quiet", package, "--upgrade"]
+        args += ["--user"]
         process = Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
         _, stderr = process.communicate()
         if process.returncode != 0:
@@ -307,21 +319,58 @@ def get_current_dt():
 def get_current_android_apk_version():
 
     try:
-        apk_version = subprocess.check_output(
+        apk_dom_version = subprocess.check_output(
             'su -c "dumpsys package pl.sviete.dom | grep versionName"',
             shell=True,
             timeout=15,
         )
-        apk_version = (
-            apk_version.decode("utf-8")
+        apk_dom_version = (
+            apk_dom_version.decode("utf-8")
             .replace("\n", "")
             .strip()
             .replace("versionName=", "")
         )
-        return apk_version
+
+        apk_launcher_version = subprocess.check_output(
+            'su -c "dumpsys package launcher.sviete.pl.domlauncherapp | grep versionName"',
+            shell=True,
+            timeout=15,
+        )
+        apk_launcher_version = (
+            apk_launcher_version.decode("utf-8")
+            .replace("\n", "")
+            .strip()
+            .replace("versionName=", "")
+        )
+
+        apk_tts_version = subprocess.check_output(
+            'su -c "dumpsys package com.google.android.tts | grep versionName"',
+            shell=True,
+            timeout=15,
+        )
+        apk_tts_version = (
+            apk_tts_version.decode("utf-8")
+            .replace("\n", "")
+            .strip()
+            .replace("versionName=", "")
+        )
+
+        apk_stt_version = subprocess.check_output(
+            'su -c "dumpsys package com.google.android.googlequicksearchbox | grep versionName"',
+            shell=True,
+            timeout=15,
+        )
+        apk_stt_version = (
+            apk_stt_version.decode("utf-8")
+            .replace("\n", "")
+            .strip()
+            .replace("versionName=", "")
+        )
+
+        return apk_dom_version, apk_launcher_version, apk_tts_version, apk_stt_version
     except Exception as e:
         _LOGGER.info("Can't get android apk version! " + str(e))
-        return "0"
+        return "0", "0", "0", "0"
 
 
 def get_current_linux_apt_version(hass):
@@ -337,19 +386,27 @@ def get_current_linux_apt_version(hass):
 
 async def get_system_info(hass, include_components):
     """Return info about the system."""
-    global G_CURRENT_ANDROID_VERSION
-    global G_CURRENT_LINUX_VERSION
+    global G_CURRENT_ANDROID_DOM_V
+    global G_CURRENT_ANDROID_LAUNCHER_V
+    global G_CURRENT_ANDROID_TTS_V
+    global G_CURRENT_ANDROID_STT_V
+    global G_CURRENT_LINUX_V
     gate_id = hass.states.get("sensor.ais_secure_android_id_dom").state
-    G_CURRENT_ANDROID_VERSION = get_current_android_apk_version()
-    G_CURRENT_LINUX_VERSION = get_current_linux_apt_version(hass)
+    G_CURRENT_ANDROID_DOM_V, G_CURRENT_ANDROID_LAUNCHER_V, G_CURRENT_ANDROID_TTS_V, G_CURRENT_ANDROID_STT_V = (
+        get_current_android_apk_version()
+    )
+    G_CURRENT_LINUX_V = get_current_linux_apt_version(hass)
     info_object = {
         "arch": platform.machine(),
         "os_name": platform.system(),
         "python_version": platform.python_version(),
         "gate_id": gate_id,
         "dom_app_version": current_version,
-        "android_app_version": G_CURRENT_ANDROID_VERSION,
-        "linux_apt_version": G_CURRENT_LINUX_VERSION,
+        "android_app_version": G_CURRENT_ANDROID_DOM_V,
+        "android_app_launcher_version": G_CURRENT_ANDROID_LAUNCHER_V,
+        "android_app_tts_version": G_CURRENT_ANDROID_TTS_V,
+        "android_app_stt_version": G_CURRENT_ANDROID_STT_V,
+        "linux_apt_version": G_CURRENT_LINUX_V,
     }
 
     if include_components:
@@ -360,16 +417,24 @@ async def get_system_info(hass, include_components):
 
 def get_system_info_sync(hass):
     """Return info about the system."""
-    global G_CURRENT_ANDROID_VERSION
-    global G_CURRENT_LINUX_VERSION
+    global G_CURRENT_ANDROID_DOM_V
+    global G_CURRENT_ANDROID_LAUNCHER_V
+    global G_CURRENT_ANDROID_TTS_V
+    global G_CURRENT_ANDROID_STT_V
+    global G_CURRENT_LINUX_V
     gate_id = hass.states.get("sensor.ais_secure_android_id_dom").state
-    G_CURRENT_ANDROID_VERSION = get_current_android_apk_version()
-    G_CURRENT_LINUX_VERSION = get_current_linux_apt_version(hass)
+    G_CURRENT_ANDROID_DOM_V, G_CURRENT_ANDROID_LAUNCHER_V, G_CURRENT_ANDROID_TTS_V, G_CURRENT_ANDROID_STT_V = (
+        get_current_android_apk_version()
+    )
+    G_CURRENT_LINUX_V = get_current_linux_apt_version(hass)
     info_object = {
         "gate_id": gate_id,
         "dom_app_version": current_version,
-        "android_app_version": G_CURRENT_ANDROID_VERSION,
-        "linux_apt_version": G_CURRENT_LINUX_VERSION,
+        "android_app_version": G_CURRENT_ANDROID_DOM_V,
+        "android_app_launcher_version": G_CURRENT_ANDROID_LAUNCHER_V,
+        "android_app_tts_version": G_CURRENT_ANDROID_TTS_V,
+        "android_app_stt_version": G_CURRENT_ANDROID_STT_V,
+        "linux_apt_version": G_CURRENT_LINUX_V,
     }
     return info_object
 
@@ -392,6 +457,7 @@ async def get_newest_version(hass, include_components, go_to_download):
     release_script = ""
     fix_script = ""
     beta = False
+    force = False
 
     try:
         with async_timeout.timeout(10, loop=hass.loop):
@@ -408,13 +474,14 @@ async def get_newest_version(hass, include_components, go_to_download):
                 "icon": "mdi:update",
                 "dom_app_current_version": current_version,
                 "reinstall_dom_app": False,
-                "android_app_current_version": G_CURRENT_ANDROID_VERSION,
+                "android_app_current_version": G_CURRENT_ANDROID_DOM_V,
                 "reinstall_android_app": False,
-                "linux_apt_current_version": G_CURRENT_LINUX_VERSION,
+                "linux_apt_current_version": G_CURRENT_LINUX_V,
                 "reinstall_linux_apt": False,
                 "release_script": release_script,
                 "fix_script": fix_script,
                 "beta": beta,
+                "force": force,
                 ATTR_UPDATE_STATUS: UPDATE_STATUS_UPDATED,
                 ATTR_UPDATE_CHECK_TIME: get_current_dt(),
             },
@@ -429,14 +496,14 @@ async def get_newest_version(hass, include_components, go_to_download):
         reinstall_linux_apt = False
         if StrictVersion(res["dom_app_version"]) > StrictVersion(current_version):
             reinstall_dom_app = True
-        if G_CURRENT_ANDROID_VERSION != "0":
+        if G_CURRENT_ANDROID_DOM_V != "0":
             if StrictVersion(res["android_app_version"]) > StrictVersion(
-                G_CURRENT_ANDROID_VERSION
+                G_CURRENT_ANDROID_DOM_V
             ):
                 reinstall_android_app = True
-        if G_CURRENT_LINUX_VERSION != "0":
+        if G_CURRENT_LINUX_V != "0":
             if StrictVersion(res["linux_apt_version"]) > StrictVersion(
-                G_CURRENT_LINUX_VERSION
+                G_CURRENT_LINUX_V
             ):
                 reinstall_linux_apt = True
 
@@ -457,6 +524,9 @@ async def get_newest_version(hass, include_components, go_to_download):
         if "beta" in res:
             beta = res["beta"]
 
+        if "force" in res:
+            force = res["force"]
+
         hass.states.async_set(
             ENTITY_ID,
             info,
@@ -466,15 +536,16 @@ async def get_newest_version(hass, include_components, go_to_download):
                 "dom_app_current_version": current_version,
                 "dom_app_newest_version": res["dom_app_version"],
                 "reinstall_dom_app": reinstall_dom_app,
-                "android_app_current_version": G_CURRENT_ANDROID_VERSION,
+                "android_app_current_version": G_CURRENT_ANDROID_DOM_V,
                 "android_app_newest_version": res["android_app_version"],
                 "reinstall_android_app": reinstall_android_app,
-                "linux_apt_current_version": G_CURRENT_LINUX_VERSION,
+                "linux_apt_current_version": G_CURRENT_LINUX_V,
                 "linux_apt_newest_version": res["linux_apt_version"],
                 "reinstall_linux_apt": reinstall_linux_apt,
                 "release_script": release_script,
                 "fix_script": fix_script,
                 "beta": beta,
+                "force": force,
                 ATTR_UPDATE_STATUS: system_status,
                 ATTR_UPDATE_CHECK_TIME: get_current_dt(),
             },
@@ -496,13 +567,14 @@ async def get_newest_version(hass, include_components, go_to_download):
                 "icon": "mdi:update",
                 "dom_app_current_version": current_version,
                 "reinstall_dom_app": False,
-                "android_app_current_version": G_CURRENT_ANDROID_VERSION,
+                "android_app_current_version": G_CURRENT_ANDROID_DOM_V,
                 "reinstall_android_app": False,
-                "linux_apt_current_version": G_CURRENT_LINUX_VERSION,
+                "linux_apt_current_version": G_CURRENT_LINUX_V,
                 "reinstall_linux_apt": False,
                 "release_script": release_script,
                 "fix_script": fix_script,
                 "beta": beta,
+                "force": force,
                 ATTR_UPDATE_STATUS: UPDATE_STATUS_UPDATED,
                 ATTR_UPDATE_CHECK_TIME: get_current_dt(),
             },
@@ -571,14 +643,14 @@ def do_execute_upgrade(hass, call):
         _LOGGER.error(str(StrictVersion(current_version)))
         if StrictVersion(ws_resp["dom_app_version"]) > StrictVersion(current_version):
             reinstall_dom_app = True
-        if G_CURRENT_ANDROID_VERSION != "0":
+        if G_CURRENT_ANDROID_DOM_V != "0":
             if StrictVersion(ws_resp["android_app_version"]) > StrictVersion(
-                G_CURRENT_ANDROID_VERSION
+                G_CURRENT_ANDROID_DOM_V
             ):
                 reinstall_android_app = True
-        if G_CURRENT_LINUX_VERSION != "0":
+        if G_CURRENT_LINUX_V != "0":
             if StrictVersion(ws_resp["linux_apt_version"]) > StrictVersion(
-                G_CURRENT_LINUX_VERSION
+                G_CURRENT_LINUX_V
             ):
                 reinstall_linux_apt = True
 
@@ -599,6 +671,9 @@ def do_execute_upgrade(hass, call):
         beta = False
         if "beta" in ws_resp:
             beta = ws_resp["beta"]
+        force = False
+        if "force" in ws_resp:
+            force = ws_resp["force"]
 
         hass.states.set(
             ENTITY_ID,
@@ -609,15 +684,16 @@ def do_execute_upgrade(hass, call):
                 "dom_app_current_version": current_version,
                 "dom_app_newest_version": ws_resp["dom_app_version"],
                 "reinstall_dom_app": reinstall_dom_app,
-                "android_app_current_version": G_CURRENT_ANDROID_VERSION,
+                "android_app_current_version": G_CURRENT_ANDROID_DOM_V,
                 "android_app_newest_version": ws_resp["android_app_version"],
                 "reinstall_android_app": reinstall_android_app,
-                "linux_apt_current_version": G_CURRENT_LINUX_VERSION,
+                "linux_apt_current_version": G_CURRENT_LINUX_V,
                 "linux_apt_newest_version": ws_resp["linux_apt_version"],
                 "reinstall_linux_apt": reinstall_linux_apt,
                 "release_script": release_script,
                 "fix_script": fix_script,
                 "beta": beta,
+                "force": force,
                 ATTR_UPDATE_STATUS: system_status,
                 ATTR_UPDATE_CHECK_TIME: get_current_dt(),
             },
@@ -688,7 +764,6 @@ def do_download_upgrade(hass, call):
     reinstall_android_app = attr.get("reinstall_android_app", False)
     dom_app_newest_version = attr.get("dom_app_newest_version", "")
     release_script = attr.get("release_script", "")
-    beta = attr.get("beta", False)
 
     # add the grant to save on sdcard
     if reinstall_android_app:
@@ -723,26 +798,9 @@ def do_download_upgrade(hass, call):
             os.makedirs(update_dir)
 
         # download
-        if beta:
-            l_ret = run_shell_command(
-                [
-                    "pip",
-                    "download",
-                    "ais-dom-beta==" + dom_app_newest_version,
-                    "-d",
-                    update_dir,
-                ]
-            )
-        else:
-            l_ret = run_shell_command(
-                [
-                    "pip",
-                    "download",
-                    "ais-dom==" + dom_app_newest_version,
-                    "-d",
-                    update_dir,
-                ]
-            )
+        l_ret = run_shell_command(
+            ["pip", "download", "ais-dom==" + dom_app_newest_version, "-d", update_dir]
+        )
 
     # go next or not
     if l_ret == 0:
@@ -766,6 +824,7 @@ def do_install_upgrade(hass, call):
     reinstall_linux_apt = attr.get("reinstall_linux_apt", False)
     release_script = attr.get("release_script", "")
     beta = attr.get("beta", False)
+    force = attr.get("force", False)
 
     # linux
     if reinstall_linux_apt and release_script != "":
@@ -787,28 +846,16 @@ def do_install_upgrade(hass, call):
     update_dir = hass.config.path(UPDATER_DOWNLOAD_FOLDER)
     if reinstall_dom_app:
         # install
-        if beta:
-            run_shell_command(
-                [
-                    "pip",
-                    "install",
-                    "ais-dom-beta==" + dom_app_newest_version,
-                    "--find-links",
-                    update_dir,
-                    "-U",
-                ]
-            )
-        else:
-            run_shell_command(
-                [
-                    "pip",
-                    "install",
-                    "ais-dom==" + dom_app_newest_version,
-                    "--find-links",
-                    update_dir,
-                    "-U",
-                ]
-            )
+        run_shell_command(
+            [
+                "pip",
+                "install",
+                "ais-dom==" + dom_app_newest_version,
+                "--find-links",
+                update_dir,
+                "-U",
+            ]
+        )
 
     # remove update dir
     update_dir = hass.config.path(UPDATER_DOWNLOAD_FOLDER)
@@ -819,30 +866,23 @@ def do_install_upgrade(hass, call):
     if reinstall_android_app:
         # set update status
         _set_update_status(hass, UPDATE_STATUS_RESTART)
+
+        command = "ais-dom-update"
         if beta:
-            run_shell_command(
-                [
-                    "am",
-                    "start",
-                    "-n",
-                    "launcher.sviete.pl.domlauncherapp/.LauncherActivity",
-                    "-e",
-                    "command",
-                    "ais-dom-update-beta",
-                ]
-            )
-        else:
-            run_shell_command(
-                [
-                    "am",
-                    "start",
-                    "-n",
-                    "launcher.sviete.pl.domlauncherapp/.LauncherActivity",
-                    "-e",
-                    "command",
-                    "ais-dom-update",
-                ]
-            )
+            command = command + "-beta"
+        if force:
+            command = command + "-force"
+        run_shell_command(
+            [
+                "am",
+                "start",
+                "-n",
+                "launcher.sviete.pl.domlauncherapp/.LauncherActivity",
+                "-e",
+                "command",
+                command,
+            ]
+        )
 
     elif reinstall_dom_app:
         # set update status

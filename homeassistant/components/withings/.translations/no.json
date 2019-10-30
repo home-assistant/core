@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "no_flows": "Du m\u00e5 konfigurere Withings f\u00f8r du kan godkjenne med den. Vennligst les dokumentasjonen."
+        },
         "create_entry": {
             "default": "Vellykket autentisering for Withings og den valgte profilen."
         },

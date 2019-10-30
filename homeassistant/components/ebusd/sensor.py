@@ -3,6 +3,7 @@ import logging
 import datetime
 
 from homeassistant.helpers.entity import Entity
+import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 
@@ -68,9 +69,7 @@ class EbusdSensor(Entity):
                 if index < len(time_frame):
                     parsed = datetime.datetime.strptime(time_frame[index], "%H:%M")
                     parsed = parsed.replace(
-                        datetime.datetime.now().year,
-                        datetime.datetime.now().month,
-                        datetime.datetime.now().day,
+                        dt_util.now().year, dt_util.now().month, dt_util.now().day
                     )
                     schedule[item[0]] = parsed.isoformat()
             return schedule

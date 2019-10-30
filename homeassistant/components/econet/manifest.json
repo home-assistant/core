@@ -1,7 +1,7 @@
 {
   "domain": "econet",
   "name": "Econet",
-  "documentation": "https://www.home-assistant.io/components/econet",
+  "documentation": "https://www.home-assistant.io/integrations/econet",
   "requirements": [
     "pyeconet==0.0.11"
   ],

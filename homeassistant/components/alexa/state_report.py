@@ -131,6 +131,10 @@ async def async_send_add_or_update_message(hass, config, entity_ids):
 
     for entity_id in entity_ids:
         domain = entity_id.split(".", 1)[0]
+
+        if domain not in ENTITY_ADAPTERS:
+            continue
+
         alexa_entity = ENTITY_ADAPTERS[domain](hass, config, hass.states.get(entity_id))
         endpoints.append(alexa_entity.serialize_discovery())
 
@@ -161,6 +165,10 @@ async def async_send_delete_message(hass, config, entity_ids):
 
     for entity_id in entity_ids:
         domain = entity_id.split(".", 1)[0]
+
+        if domain not in ENTITY_ADAPTERS:
+            continue
+
         alexa_entity = ENTITY_ADAPTERS[domain](hass, config, hass.states.get(entity_id))
         endpoints.append({"endpointId": alexa_entity.alexa_id()})
 

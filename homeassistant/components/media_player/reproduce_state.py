@@ -36,7 +36,7 @@ from .const import (
 )
 
 
-# mypy: allow-incomplete-defs, allow-untyped-defs
+# mypy: allow-untyped-defs
 
 
 async def _async_reproduce_states(
@@ -44,7 +44,7 @@ async def _async_reproduce_states(
 ) -> None:
     """Reproduce component states."""
 
-    async def call_service(service: str, keys: Iterable):
+    async def call_service(service: str, keys: Iterable) -> None:
         """Call service with set of attributes given."""
         data = {}
         data["entity_id"] = state.entity_id

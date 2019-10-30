@@ -1,0 +1,9 @@
+{
+  "domain": "ais_google_home",
+  "name": "AIS Google Assistant",
+  "config_flow": true,
+  "documentation": "https://www.ai-speaker.com",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

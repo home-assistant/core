@@ -16,5 +16,31 @@
             }
         },
         "title": "ZHA"
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "left": "Links",
+            "open": "Open",
+            "right": "Rechts",
+            "turn_off": "Uitschakelen",
+            "turn_on": "Inschakelen"
+        },
+        "trigger_type": {
+            "device_dropped": "Apparaat gevallen",
+            "device_flipped": "Apparaat omgedraaid \"{subtype}\"",
+            "device_knocked": "Apparaat klopte \"{subtype}\"",
+            "device_rotated": "Apparaat gedraaid \" {subtype} \"",
+            "device_shaken": "Apparaat geschud",
+            "device_slid": "Apparaat geschoven \"{subtype}\"\".",
+            "device_tilted": "Apparaat gekanteld",
+            "remote_button_double_press": "\"{subtype}\" knop dubbel geklikt",
+            "remote_button_long_press": "\" {subtype} \" knop continu ingedrukt",
+            "remote_button_long_release": "\"{subtype}\" knop losgelaten na lang indrukken van de knop",
+            "remote_button_quadruple_press": "\" {subtype} \" knop viervoudig aangeklikt",
+            "remote_button_quintuple_press": "\" {subtype} \" knop vijf keer aangeklikt",
+            "remote_button_short_press": "\" {subtype} \" knop ingedrukt",
+            "remote_button_short_release": "\"{subtype}\" knop losgelaten",
+            "remote_button_triple_press": "\" {subtype} \" knop driemaal geklikt"
+        }
     }
 }

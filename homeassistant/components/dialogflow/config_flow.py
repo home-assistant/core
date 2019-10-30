@@ -8,6 +8,6 @@ config_entry_flow.register_webhook_flow(
     "Dialogflow Webhook",
     {
         "dialogflow_url": "https://dialogflow.com/docs/fulfillment#webhook",
-        "docs_url": "https://www.home-assistant.io/components/dialogflow/",
+        "docs_url": "https://www.home-assistant.io/integrations/dialogflow/",
     },
 )

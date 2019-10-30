@@ -657,14 +657,20 @@ async def test_device_media_player(hass, device_class, google_type):
 
 async def test_query_disconnect(hass):
     """Test a disconnect message."""
-    result = await sh.async_handle_message(
-        hass,
-        BASIC_CONFIG,
-        "test-agent",
-        {"inputs": [{"intent": "action.devices.DISCONNECT"}], "requestId": REQ_ID},
-    )
-
+    config = MockConfig(hass=hass)
+    config.async_enable_report_state()
+    assert config._unsub_report_state is not None
+    with patch.object(
+        config, "async_deactivate_report_state", side_effect=mock_coro
+    ) as mock_deactivate:
+        result = await sh.async_handle_message(
+            hass,
+            config,
+            "test-agent",
+            {"inputs": [{"intent": "action.devices.DISCONNECT"}], "requestId": REQ_ID},
+        )
     assert result is None
+    assert len(mock_deactivate.mock_calls) == 1
 
 
 async def test_trait_execute_adding_query_data(hass):

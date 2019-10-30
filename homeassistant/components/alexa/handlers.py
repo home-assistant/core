@@ -1,5 +1,4 @@
 """Alexa message handlers."""
-from datetime import datetime
 import logging
 import math
 
@@ -28,6 +27,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 import homeassistant.util.color as color_util
+import homeassistant.util.dt as dt_util
 from homeassistant.util.decorator import Registry
 from homeassistant.util.temperature import convert as convert_temperature
 
@@ -275,7 +275,7 @@ async def async_api_activate(hass, config, directive, context):
 
     payload = {
         "cause": {"type": Cause.VOICE_INTERACTION},
-        "timestamp": "%sZ" % (datetime.utcnow().isoformat(),),
+        "timestamp": f"{dt_util.utcnow().replace(tzinfo=None).isoformat()}Z",
     }
 
     return directive.response(
@@ -299,7 +299,7 @@ async def async_api_deactivate(hass, config, directive, context):
 
     payload = {
         "cause": {"type": Cause.VOICE_INTERACTION},
-        "timestamp": "%sZ" % (datetime.utcnow().isoformat(),),
+        "timestamp": f"{dt_util.utcnow().replace(tzinfo=None).isoformat()}Z",
     }
 
     return directive.response(

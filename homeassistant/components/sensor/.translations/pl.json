@@ -1,0 +1,9 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_battery_level": "{entity_name} poziom na\u0142adowania baterii",
+            "is_humidity": "{entity_name} wilgotno\u015b\u0107",
+            "is_temperature": "{entity_name} temperatura"
+        }
+    }
+}

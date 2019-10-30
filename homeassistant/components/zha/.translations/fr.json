@@ -16,5 +16,32 @@
             }
         },
         "title": "ZHA"
+    },
+    "device_automation": {
+        "action_type": {
+            "squawk": "Hurlement",
+            "warn": "Pr\u00e9venir"
+        },
+        "trigger_subtype": {
+            "both_buttons": "Les deux boutons",
+            "button_1": "Premier bouton",
+            "button_2": "Deuxi\u00e8me bouton",
+            "button_3": "Troisi\u00e8me bouton",
+            "button_4": "Quatri\u00e8me bouton",
+            "button_5": "Cinqui\u00e8me bouton",
+            "button_6": "Sixi\u00e8me bouton",
+            "close": "Fermer",
+            "left": "Gauche",
+            "open": "Ouvert",
+            "right": "Droite",
+            "turn_off": "\u00c9teindre",
+            "turn_on": "Allumer"
+        },
+        "trigger_type": {
+            "device_shaken": "Appareil secou\u00e9",
+            "device_tilted": "Dispositif inclin\u00e9",
+            "remote_button_short_release": "Bouton \" {subtype} \" est rel\u00e2ch\u00e9",
+            "remote_button_triple_press": "Bouton\"{sous-type}\" \u00e0 trois clics"
+        }
     }
 }

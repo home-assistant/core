@@ -1,7 +1,7 @@
 {
   "domain": "configurator",
   "name": "Configurator",
-  "documentation": "https://www.home-assistant.io/components/configurator",
+  "documentation": "https://www.home-assistant.io/integrations/configurator",
   "requirements": [],
   "dependencies": [],
   "codeowners": [

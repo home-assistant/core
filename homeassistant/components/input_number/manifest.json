@@ -1,7 +1,7 @@
 {
   "domain": "input_number",
   "name": "Input number",
-  "documentation": "https://www.home-assistant.io/components/input_number",
+  "documentation": "https://www.home-assistant.io/integrations/input_number",
   "requirements": [],
   "dependencies": [],
   "codeowners": [

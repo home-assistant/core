@@ -226,7 +226,8 @@ def async_setup(hass, config):
             else:
                 ais_global.GLOBAL_TTS_VOICE = "pl-pl-x-oda-local"
             # publish to frame
-            hass.services.call("ais_ai_service", "say_it", {"text": new_voice})
+            if ais_global.G_AIS_START_IS_DONE:
+                hass.services.call("ais_ai_service", "say_it", {"text": new_voice})
             hass.services.call(
                 "ais_ai_service",
                 "publish_command_to_frame",
@@ -279,6 +280,7 @@ class AisCloudWS:
     def __init__(self):
         """Initialize the cloud WS connections."""
         self.url = "https://powiedz.co/ords/dom/dom/"
+        self.url_gh = "https://powiedz.co/ords/dom/gh/"
 
     def setCloudToken(self):
         # take the token from secrets
@@ -286,6 +288,66 @@ class AisCloudWS:
         if CLOUD_WS_TOKEN is None:
             CLOUD_WS_TOKEN = ais_global.get_sercure_android_id_dom()
             CLOUD_WS_HEADER = {"Authorization": "{}".format(CLOUD_WS_TOKEN)}
+
+    def gh_ais_add_device(self, oauth_json):
+        self.setCloudToken()
+        payload = {
+            "user": ais_global.get_sercure_android_id_dom(),
+            "oauthJson": oauth_json,
+        }
+        ws_resp = requests.post(
+            self.url_gh + "ais_add_device",
+            json=payload,
+            headers=CLOUD_WS_HEADER,
+            timeout=5,
+        )
+        return ws_resp
+
+    def gh_ais_add_token(self, oauth_code):
+        self.setCloudToken()
+        payload = {
+            "user": ais_global.get_sercure_android_id_dom(),
+            "oauthCode": oauth_code,
+        }
+        ws_resp = requests.post(
+            self.url_gh + "ais_add_token",
+            json=payload,
+            headers=CLOUD_WS_HEADER,
+            timeout=5,
+        )
+        return ws_resp
+
+    def gh_ais_remove_integration(self):
+        self.setCloudToken()
+        payload = {"user": ais_global.get_sercure_android_id_dom()}
+        ws_resp = requests.post(
+            self.url_gh + "ais_remove_integration",
+            json=payload,
+            headers=CLOUD_WS_HEADER,
+            timeout=5,
+        )
+        return ws_resp
+
+    def ask_gh(self, question):
+        self.setCloudToken()
+        payload = {"question": question}
+        ws_resp = requests.get(
+            self.url_gh + "ask", headers=CLOUD_WS_HEADER, params=payload, timeout=5
+        )
+        return ws_resp
+
+    def ask_json_gh(self, question):
+        self.setCloudToken()
+        payload = {
+            "command": question,
+            "user": ais_global.get_sercure_android_id_dom(),
+            "broadcast": False,
+            "converse": True,
+        }
+        ws_resp = requests.post(
+            self.url_gh + "ask_json", json=payload, headers=CLOUD_WS_HEADER, timeout=5
+        )
+        return ws_resp
 
     def ask(self, question, org_answer):
         self.setCloudToken()

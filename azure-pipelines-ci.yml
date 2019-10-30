@@ -37,12 +37,14 @@ stages:
       vmImage: 'ubuntu-latest'
     container: $[ variables['PythonMain'] ]
     steps:
-    - script: |
-        python -m venv venv
+    - template: templates/azp-step-cache.yaml@azure
+      parameters:
+        keyfile: 'requirements_test.txt | homeassistant/package_constraints.txt'
+        build: |
+          python -m venv venv
 
-        . venv/bin/activate
-        pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
-      displayName: 'Setup Env'
+          . venv/bin/activate
+          pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
     - script: |
         . venv/bin/activate
         flake8 homeassistant tests script
@@ -52,12 +54,14 @@ stages:
       vmImage: 'ubuntu-latest'
     container: $[ variables['PythonMain'] ]
     steps:
-    - script: |
-        python -m venv venv
+    - template: templates/azp-step-cache.yaml@azure
+      parameters:
+        keyfile: 'homeassistant/package_constraints.txt'
+        build: |
+          python -m venv venv
 
-        . venv/bin/activate
-        pip install -e .
-      displayName: 'Setup Env'
+          . venv/bin/activate
+          pip install -e .
     - script: |
         . venv/bin/activate
         python -m script.hassfest validate
@@ -71,12 +75,14 @@ stages:
       vmImage: 'ubuntu-latest'
     container: $[ variables['PythonMain'] ]
     steps:
-    - script: |
-        python -m venv venv
+    - template: templates/azp-step-cache.yaml@azure
+      parameters:
+        keyfile: 'requirements_test.txt | homeassistant/package_constraints.txt'
+        build: |
+          python -m venv venv
 
-        . venv/bin/activate
-        pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
-      displayName: 'Setup Env'
+          . venv/bin/activate
+          pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
     - script: |
         . venv/bin/activate
         ./script/check_format
@@ -100,7 +106,7 @@ stages:
     steps:
     - template: templates/azp-step-cache.yaml@azure
       parameters:
-        keyfile: 'requirements_test_all.txt, .cache, homeassistant/package_constraints.txt'
+        keyfile: 'requirements_test_all.txt | homeassistant/package_constraints.txt'
         build: |
           set -e
           python -m venv venv
@@ -112,6 +118,12 @@ stages:
           # Find offending deps with `pipdeptree -r -p typing`
           pip uninstall -y typing
     - script: |
+        . venv/bin/activate
+        pip install -e .
+      displayName: 'Install Home Assistant'
+    - script: |
+        set -e
+
         . venv/bin/activate
         pytest --timeout=9 --durations=10 -qq -o console_output_style=count -p no:sugar tests
         script/check_dirty
@@ -138,7 +150,7 @@ stages:
     steps:
     - template: templates/azp-step-cache.yaml@azure
       parameters:
-        keyfile: 'requirements_all.txt, requirements_test.txt, .cache, homeassistant/package_constraints.txt'
+        keyfile: 'requirements_all.txt | requirements_test.txt | homeassistant/package_constraints.txt'
         build: |
           set -e
           python -m venv venv
@@ -147,6 +159,10 @@ stages:
           pip install -U pip setuptools
           pip install -r requirements_all.txt -c homeassistant/package_constraints.txt
           pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
+    - script: |
+        . venv/bin/activate
+        pip install -e .
+      displayName: 'Install Home Assistant'
     - script: |
         . venv/bin/activate
         pylint homeassistant

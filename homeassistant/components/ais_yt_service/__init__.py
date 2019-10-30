@@ -337,7 +337,8 @@ class YouTubeData:
                 )
             media_url = json_ws_resp["url"]
         except Exception as e:
-            _LOGGER.info("extract_media error: " + str(e))
+            # currently this is normal case
+            _LOGGER.debug("extract_media Exception: " + str(e))
 
         all_ok = False
         if media_url is not None and len(media_url) > 0:
