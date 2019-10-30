@@ -4,7 +4,9 @@
             "is_closed": "{entity_name} ass zou",
             "is_closing": "{entity_name} g\u00ebtt zougemaach",
             "is_open": "{entity_name} ass op",
-            "is_opening": "{entity_name} g\u00ebtt opgemaach"
+            "is_opening": "{entity_name} g\u00ebtt opgemaach",
+            "is_position": "{entity_name} positioun ass",
+            "is_tilt_position": "{entity_name} kipp positioun ass"
         }
     }
 }

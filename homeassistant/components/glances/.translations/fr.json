@@ -14,7 +14,7 @@
                     "name": "Nom",
                     "password": "Mot de passe",
                     "port": "Port",
-                    "ssl": "V\u00e9rifier la certification du syst\u00e8me",
+                    "ssl": "Utiliser SSL / TLS pour se connecter au syst\u00e8me Glances",
                     "username": "Nom d'utilisateur",
                     "verify_ssl": "V\u00e9rifier la certification du syst\u00e8me",
                     "version": "Glances API Version (2 ou 3)"

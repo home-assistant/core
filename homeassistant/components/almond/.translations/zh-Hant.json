@@ -1,0 +1,9 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44 Almond \u5e33\u865f\u3002",
+            "cannot_connect": "\u7121\u6cd5\u9023\u7dda\u81f3 Almond \u4f3a\u670d\u5668\u3002"
+        },
+        "title": "Almond"
+    }
+}

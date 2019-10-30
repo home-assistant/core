@@ -31,7 +31,7 @@
             "init": {
                 "data": {
                     "recipient": "Destinataires des notifications SMS",
-                    "track_new_devices": "Suivre de nouveaux appareils"
+                    "track_new_devices": "Suivre les nouveaux appareils"
                 }
             }
         }
