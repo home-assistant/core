@@ -22,3 +22,12 @@ repos:
           - flake8-docstrings==1.5.0
           - pydocstyle==4.0.1
         files: ^(homeassistant|script|tests)/.+\.py$
+-   repo: https://github.com/PyCQA/bandit
+    rev: 1.6.2
+    hooks:
+      - id: bandit
+        args:
+          - --quiet
+          - --format=custom
+          - --tests=B313,B314,B315,B316,B317,B318,B319,B320
+        files: ^(homeassistant|script|tests)/.+\.py$
