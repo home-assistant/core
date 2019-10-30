@@ -2,6 +2,7 @@
 import logging
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 from pyaehw4a1.aehw4a1 import AehW4a1
 
 from homeassistant import config_entries
@@ -24,20 +25,25 @@ config_entry_flow.register_discovery_flow(
 )
 =======
 import voluptuous as vol
+=======
+from homeassistant.helpers import config_entry_flow
+from homeassistant import config_entries
+>>>>>>> First working release, but there's a lot to do
 
-from homeassistant import core, config_entries, exceptions
+from pyaehw4a1.aehw4a1 import AehW4a1
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO adjust the data schema to the data that you need
-DATA_SCHEMA = vol.Schema({"host": str, "username": str, "password": str})
+
+async def _async_has_devices(hass):
+    """Return if there are devices that can be discovered."""
+    aehw4a1_ip_addresses = AehW4a1().discovery()
+    return len(aehw4a1_ip_addresses) > 0
 
 
-async def validate_input(hass: core.HomeAssistant, data):
-    """Validate the user input allows us to connect.
-
+<<<<<<< HEAD
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     # TODO validate the data can be used to set up a connection.
@@ -85,3 +91,8 @@ class CannotConnect(exceptions.HomeAssistantError):
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
 >>>>>>> First commit
+=======
+config_entry_flow.register_discovery_flow(
+    DOMAIN, "Hisense AEH-W4A1", _async_has_devices, config_entries.CONN_CLASS_LOCAL_POLL
+)
+>>>>>>> First working release, but there's a lot to do

@@ -1,5 +1,9 @@
 """Pyaehw4a1 platform to control of Hisense AEH-W4A1 Climate Devices."""
 
+<<<<<<< HEAD
+=======
+import json
+>>>>>>> First working release, but there's a lot to do
 import logging
 
 from pyaehw4a1.aehw4a1 import AehW4a1
@@ -14,11 +18,15 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_SWING_MODE,
+<<<<<<< HEAD
     SUPPORT_PRESET_MODE,
+=======
+>>>>>>> First working release, but there's a lot to do
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_VERTICAL,
+<<<<<<< HEAD
     FAN_LOW,
     FAN_MEDIUM,
     FAN_HIGH,
@@ -27,6 +35,8 @@ from homeassistant.components.climate.const import (
     PRESET_ECO,
     PRESET_BOOST,
     PRESET_SLEEP,
+=======
+>>>>>>> First working release, but there's a lot to do
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -38,12 +48,16 @@ from homeassistant.const import (
 from .const import DOMAIN
 from . import CONF_IP_ADDRESS, DOMAIN as AEHW4A1_DOMAIN
 
+<<<<<<< HEAD
 SUPPORT_FLAGS = (
     SUPPORT_TARGET_TEMPERATURE
     | SUPPORT_FAN_MODE
     | SUPPORT_SWING_MODE
     | SUPPORT_PRESET_MODE
 )
+=======
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_SWING_MODE
+>>>>>>> First working release, but there's a lot to do
 
 MIN_TEMP_C = 16
 MAX_TEMP_C = 32
@@ -59,6 +73,7 @@ HVAC_MODES = [
     HVAC_MODE_FAN_ONLY,
 ]
 
+<<<<<<< HEAD
 FAN_MODES = [
     "mute",
     FAN_LOW,
@@ -83,6 +98,11 @@ PRESET_MODES = [
     "sleep_3",
     "sleep_4",
 ]
+=======
+FAN_MODES = ["mute", "low", "med", "high", "auto"]
+
+SWING_MODES = [SWING_OFF, SWING_VERTICAL, SWING_HORIZONTAL, SWING_BOTH]
+>>>>>>> First working release, but there's a lot to do
 
 AC_TO_HA_STATE = {
     "0001": HVAC_MODE_HEAT,
@@ -100,19 +120,35 @@ HA_STATE_TO_AC = {
 }
 
 AC_TO_HA_FAN_MODES = {
+<<<<<<< HEAD
     "00000001": FAN_AUTO,
     "00000010": "mute",
     "00000100": FAN_LOW,
     "00000110": FAN_MEDIUM,
     "00001000": FAN_HIGH,
+=======
+    "00000000": "stop",
+    "00000010": "mute",
+    "00000100": "low",
+    "00000110": "med",
+    "00001000": "high",
+    "00000001": "auto",
+>>>>>>> First working release, but there's a lot to do
 }
 
 HA_FAN_MODES_TO_AC = {
     "mute": "speed_mute",
+<<<<<<< HEAD
     FAN_LOW: "speed_low",
     FAN_MEDIUM: "speed_med",
     FAN_HIGH: "speed_max",
     FAN_AUTO: "speed_auto",
+=======
+    "low": "speed_low",
+    "med": "speed_med",
+    "high": "speed_max",
+    "auto": "speed_auto",
+>>>>>>> First working release, but there's a lot to do
 }
 
 AC_TO_HA_SWING = {
@@ -122,12 +158,27 @@ AC_TO_HA_SWING = {
     "11": SWING_BOTH,
 }
 
+<<<<<<< HEAD
+=======
+HA_SWING_TO_AC = {
+    "SWING_VERTICAL_ON": "vert_swing",
+    "SWING_HORIZONTAL_ON": "hor_swing",
+    "SWING_VERTICAL_OFF": "vert_dir",
+    "SWING_HORIZONTAL_OFF": "hor_dir",
+}
+
+>>>>>>> First working release, but there's a lot to do
 _LOGGER = logging.getLogger(__name__)
 
 
 def _build_entity(device):
     _LOGGER.debug("Found device at %s", device)
+<<<<<<< HEAD
     return ClimateAehW4a1(device)
+=======
+    print(device)
+    return Climate_aeh_w4a1(device)
+>>>>>>> First working release, but there's a lot to do
 
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
@@ -144,7 +195,11 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     async_add_devices(all_devices, True)
 
 
+<<<<<<< HEAD
 class ClimateAehW4a1(ClimateDevice):
+=======
+class Climate_aeh_w4a1(ClimateDevice):
+>>>>>>> First working release, but there's a lot to do
     """Representation of a Hisense AEH-W4A1 module for climate device."""
 
     def __init__(self, device):
@@ -154,7 +209,10 @@ class ClimateAehW4a1(ClimateDevice):
         self._hvac_modes = HVAC_MODES
         self._fan_modes = FAN_MODES
         self._swing_modes = SWING_MODES
+<<<<<<< HEAD
         self._preset_modes = PRESET_MODES
+=======
+>>>>>>> First working release, but there's a lot to do
         self._on = None
         self._temperature_unit = None
         self._current_temperature = None
@@ -162,12 +220,20 @@ class ClimateAehW4a1(ClimateDevice):
         self._hvac_mode = None
         self._fan_mode = None
         self._swing_mode = None
+<<<<<<< HEAD
         self._preset_mode = None
         self._previous_state = None
 
     def update(self):
         """Pull state from AEH-W4A1."""
         status = self._device.command("status_102_0")
+=======
+
+    def update(self):
+        """Pull state from AEH-W4A1."""
+        data = self._device.command("status_102_0")
+        status = json.loads(data)
+>>>>>>> First working release, but there's a lot to do
         self._on = status["run_status"]
 
         if status["temperature_Fahrenheit"] == "0":
@@ -175,6 +241,7 @@ class ClimateAehW4a1(ClimateDevice):
         else:
             self._temperature_unit = TEMP_FAHRENHEIT
 
+<<<<<<< HEAD
         if self._on == "1":
             device_mode = status["mode_status"]
             self._hvac_mode = AC_TO_HA_STATE[device_mode]
@@ -222,6 +289,22 @@ class ClimateAehW4a1(ClimateDevice):
                 self._preset_mode = PRESET_NONE
         else:
             self._preset_mode = None
+=======
+        self._current_temperature = int(status["indoor_temperature_status"], 2)
+        self._target_temperature = int(status["indoor_temperature_setting"], 2)
+
+        device_mode = status["mode_status"]
+        if self._on:
+            self._hvac_mode = AC_TO_HA_STATE[device_mode]
+        else:
+            self._hvac_mode = HVAC_MODE_OFF
+
+        fan_mode = status["wind_status"]
+        self._fan_mode = AC_TO_HA_FAN_MODES[fan_mode]
+
+        swing_mode = status["up_down"] + status["left_right"]
+        self._swing_mode = AC_TO_HA_SWING[swing_mode]
+>>>>>>> First working release, but there's a lot to do
 
     @property
     def name(self):
@@ -264,6 +347,7 @@ class ClimateAehW4a1(ClimateDevice):
         return self._fan_modes
 
     @property
+<<<<<<< HEAD
     def preset_mode(self):
         """Return the preset mode if on."""
         return self._preset_mode
@@ -274,6 +358,8 @@ class ClimateAehW4a1(ClimateDevice):
         return self._preset_modes
 
     @property
+=======
+>>>>>>> First working release, but there's a lot to do
     def swing_mode(self):
         """Return swing operation."""
         return self._swing_mode
@@ -288,14 +374,24 @@ class ClimateAehW4a1(ClimateDevice):
         """Return the minimum temperature."""
         if self._temperature_unit == TEMP_CELSIUS:
             return MIN_TEMP_C
+<<<<<<< HEAD
         return MIN_TEMP_F
+=======
+        else:
+            return MIN_TEMP_F
+>>>>>>> First working release, but there's a lot to do
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
         if self._temperature_unit == TEMP_CELSIUS:
             return MAX_TEMP_C
+<<<<<<< HEAD
         return MAX_TEMP_F
+=======
+        else:
+            return MAX_TEMP_F
+>>>>>>> First working release, but there's a lot to do
 
     @property
     def precision(self):
@@ -312,6 +408,7 @@ class ClimateAehW4a1(ClimateDevice):
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None:
             _LOGGER.debug("Setting temp of %s to %s", self._unique_id, str(temp))
+<<<<<<< HEAD
             if self._temperature_unit == TEMP_CELSIUS:
                 self._device.command(f"temp_{str(int(temp))}_C")
             else:
@@ -388,6 +485,47 @@ class ClimateAehW4a1(ClimateDevice):
                     self._device.command("turbo_off")
                 elif self._previous_state in HA_STATE_TO_AC:
                     self._device.command(HA_STATE_TO_AC[self._previous_state])
+=======
+        if self._temperature_unit == TEMP_CELSIUS:
+            self._device.command("temp_{0}_C".format(str(int(temp))))
+        else:
+            self._device.command("temp_{0}_F".format(str(int(temp))))
+
+    def set_fan_mode(self, fan_mode):
+        """Set new fan mode."""
+        if fan_mode is not None:
+            _LOGGER.debug("Setting fan mode of %s to %s", self._unique_id, fan_mode)
+            self._device.command(HA_FAN_MODES_TO_AC[fan_mode])
+
+    def set_swing_mode(self, swing_mode):
+        """Set new target swing operation."""
+        _LOGGER.debug("Setting swing mode of %s to %s", self._unique_id, swing_mode)
+        swing_act = self._swing_mode
+
+        if swing_mode == SWING_OFF and swing_act != SWING_OFF:
+            if swing_act in (SWING_HORIZONTAL, SWING_BOTH):
+                self._device.command(HA_SWING_TO_AC["SWING_HORIZONTAL_OFF"])
+            if swing_act in (SWING_VERTICAL, SWING_BOTH):
+                self._device.command(HA_SWING_TO_AC["SWING_VERTICAL_OFF"])
+
+        if swing_mode == SWING_BOTH and swing_act != SWING_BOTH:
+            if swing_act in (SWING_OFF, SWING_HORIZONTAL):
+                self._device.command(HA_SWING_TO_AC["SWING_VERTICAL_ON"])
+            if swing_act in (SWING_OFF, SWING_VERTICAL):
+                self._device.command(HA_SWING_TO_AC["SWING_HORIZONTAL_ON"])
+
+        if swing_mode == SWING_VERTICAL and swing_act != SWING_VERTICAL:
+            if swing_act in (SWING_OFF, SWING_HORIZONTAL):
+                self._device.command(HA_SWING_TO_AC["SWING_VERTICAL_ON"])
+            if swing_act in (SWING_BOTH, SWING_HORIZONTAL):
+                self._device.command(HA_SWING_TO_AC["SWING_HORIZONTAL_OFF"])
+
+        if swing_mode == SWING_HORIZONTAL and swing_act != SWING_HORIZONTAL:
+            if swing_act in (SWING_BOTH, SWING_VERTICAL):
+                self._device.command(HA_SWING_TO_AC["SWING_VERTICAL_OFF"])
+            if swing_act in (SWING_OFF, SWING_VERTICAL):
+                self._device.command(HA_SWING_TO_AC["SWING_HORIZONTAL_ON"])
+>>>>>>> First working release, but there's a lot to do
 
     def set_hvac_mode(self, hvac_mode):
         """Set new operation mode."""

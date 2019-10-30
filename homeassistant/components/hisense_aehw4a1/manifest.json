@@ -5,10 +5,14 @@
   "documentation": "https://www.home-assistant.io/integrations/hisense_aehw4a1",
   "requirements": [
 <<<<<<< HEAD
+<<<<<<< HEAD
     "pyaehw4a1==0.1.2"
 =======
     "pyaehw4a1==0.0.5"
 >>>>>>> First commit
+=======
+    "pyaehw4a1==0.1.0"
+>>>>>>> First working release, but there's a lot to do
   ],
   "ssdp": {},
   "homekit": {},
@@ -17,7 +21,11 @@
     "@bannhead"
   ]
 <<<<<<< HEAD
+<<<<<<< HEAD
 }
 =======
 }
 >>>>>>> First commit
+=======
+}
+>>>>>>> First working release, but there's a lot to do
