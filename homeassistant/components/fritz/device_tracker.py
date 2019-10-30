@@ -1,15 +1,16 @@
 """Support for FRITZ!Box routers."""
 import logging
 
+from fritzconnection import FritzHosts  # pylint: disable=import-error
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN,
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,11 +42,9 @@ class FritzBoxScanner(DeviceScanner):
         self.password = config[CONF_PASSWORD]
         self.success_init = True
 
-        import fritzconnection as fc  # pylint: disable=import-error
-
         # Establish a connection to the FRITZ!Box.
         try:
-            self.fritz_box = fc.FritzHosts(
+            self.fritz_box = FritzHosts(
                 address=self.host, user=self.username, password=self.password
             )
         except (ValueError, TypeError):

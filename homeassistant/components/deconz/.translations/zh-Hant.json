@@ -11,6 +11,7 @@
         "error": {
             "no_key": "\u7121\u6cd5\u53d6\u5f97 API key"
         },
+        "flow_title": "deCONZ Zigbee \u9598\u9053\u5668\uff08{host}\uff09",
         "step": {
             "hassio_confirm": {
                 "data": {

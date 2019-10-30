@@ -2,11 +2,13 @@
 import logging
 import os
 
+import pykira
 import voluptuous as vol
 from voluptuous.error import Error as VoluptuousError
 import yaml
 
 from homeassistant.const import (
+    CONF_CODE,
     CONF_DEVICE,
     CONF_HOST,
     CONF_NAME,
@@ -15,7 +17,6 @@ from homeassistant.const import (
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
     STATE_UNKNOWN,
-    CONF_CODE,
 )
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
@@ -93,8 +94,6 @@ def load_codes(path):
 
 def setup(hass, config):
     """Set up the KIRA component."""
-    import pykira
-
     sensors = config.get(DOMAIN, {}).get(CONF_SENSORS, [])
     remotes = config.get(DOMAIN, {}).get(CONF_REMOTES, [])
     # If no sensors or remotes were specified, add a sensor

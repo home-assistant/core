@@ -11,6 +11,7 @@
         "error": {
             "no_key": "No se pudo obtener una clave API"
         },
+        "flow_title": "pasarela deCONZ Zigbee ({host})",
         "step": {
             "hassio_confirm": {
                 "data": {

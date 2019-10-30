@@ -1,12 +1,14 @@
 """Reads vehicle status from BMW connected drive portal."""
 import logging
 
+from bimmer_connected.account import ConnectedDriveAccount
+from bimmer_connected.country_selector import get_region_from_name
 import voluptuous as vol
 
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import discovery
-from homeassistant.helpers.event import track_utc_time_change
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import track_utc_time_change
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -118,8 +120,6 @@ class BMWConnectedDriveAccount:
         self, username: str, password: str, region_str: str, name: str, read_only
     ) -> None:
         """Constructor."""
-        from bimmer_connected.account import ConnectedDriveAccount
-        from bimmer_connected.country_selector import get_region_from_name
 
         region = get_region_from_name(region_str)
 
