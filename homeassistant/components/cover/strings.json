@@ -9,10 +9,10 @@
       "is_tilt_position": "Current {entity_name} tilt position is"
     },
     "trigger_type": {
-      "opened": "{entity_name} was opened",
-      "closed": "{entity_name} was closed",
-      "opening": "{entity_name} starts to open",
-      "closing": "{entity_name} starts to close",
+      "opened": "{entity_name} opened",
+      "closed": "{entity_name} closed",
+      "opening": "{entity_name} opening",
+      "closing": "{entity_name} closing",
       "position": "{entity_name} position changes",
       "tilt_position": "{entity_name} tilt position changes"
     }
