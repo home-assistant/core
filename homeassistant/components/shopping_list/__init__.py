@@ -319,6 +319,5 @@ async def websocket_handle_update(hass, connection, msg):
 def websocket_handle_clear(hass, connection, msg):
     """Handle clearing shopping_list items."""
     hass.data[DOMAIN].async_clear_completed()
-    hass.bus.async_fire
-    
+    hass.bus.async_fire(EVENT_UPDATE)
     connection.send_message(websocket_api.result_message(msg["id"]))
