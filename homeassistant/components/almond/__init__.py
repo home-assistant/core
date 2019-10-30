@@ -210,21 +210,13 @@ class AlmondAgent(conversation.AbstractConversationAgent):
         response = await self.api.async_converse_text(text)
 
         buffer = ""
+        extra_data = []
         for message in response["messages"]:
             if message["type"] == "text":
                 buffer += "\n" + message["text"]
-            elif message["type"] == "picture":
-                buffer += "\n Picture: " + message["url"]
-            elif message["type"] == "rdl":
-                buffer += (
-                    "\n Link: "
-                    + message["rdl"]["displayTitle"]
-                    + " "
-                    + message["rdl"]["webCallback"]
-                )
-            elif message["type"] == "choice":
-                buffer += "\n Choice: " + message["title"]
+            else:
+                extra_data.append(message)
 
         intent_result = intent.IntentResponse()
-        intent_result.async_set_speech(buffer.strip())
+        intent_result.async_set_speech(buffer.strip(), extra_data=extra_data)
         return intent_result
