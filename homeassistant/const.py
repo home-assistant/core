@@ -1,10 +1,10 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 100
-PATCH_VERSION = "3"
+MINOR_VERSION = 101
+PATCH_VERSION = "0"
 __short_version__ = "{}.{}".format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = "{}.{}".format(__short_version__, PATCH_VERSION)
-REQUIRED_PYTHON_VER = (3, 6, 0)
+REQUIRED_PYTHON_VER = (3, 6, 1)
 
 # Format for platform files
 PLATFORM_FORMAT = "{platform}.{domain}"
@@ -124,6 +124,7 @@ CONF_RECIPIENT = "recipient"
 CONF_REGION = "region"
 CONF_RESOURCE = "resource"
 CONF_RESOURCES = "resources"
+CONF_RESOURCE_TEMPLATE = "resource_template"
 CONF_RGB = "rgb"
 CONF_ROOM = "room"
 CONF_SCAN_INTERVAL = "scan_interval"
@@ -451,7 +452,6 @@ HTTP_SERVICE_UNAVAILABLE = 503
 HTTP_BASIC_AUTHENTICATION = "basic"
 HTTP_DIGEST_AUTHENTICATION = "digest"
 
-HTTP_HEADER_HA_AUTH = "X-HA-access"
 HTTP_HEADER_X_REQUESTED_WITH = "X-Requested-With"
 
 CONTENT_TYPE_JSON = "application/json"

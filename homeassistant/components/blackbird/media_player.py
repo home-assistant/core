@@ -2,9 +2,11 @@
 import logging
 import socket
 
+from pyblackbird import get_blackbird
+from serial import SerialException
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     DOMAIN,
     SUPPORT_SELECT_SOURCE,
@@ -71,9 +73,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     port = config.get(CONF_PORT)
     host = config.get(CONF_HOST)
-
-    from pyblackbird import get_blackbird
-    from serial import SerialException
 
     connection = None
     if port is not None:

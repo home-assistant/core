@@ -146,10 +146,10 @@ class AfterShipSensor(Entity):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            UPDATE_TOPIC, self.force_update
+            UPDATE_TOPIC, self._force_update
         )
 
-    async def force_update(self):
+    async def _force_update(self):
         """Force update of data."""
         await self.async_update(no_throttle=True)
         await self.async_update_ha_state()

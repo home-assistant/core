@@ -1,20 +1,22 @@
 """Support for KNX/IP climate devices."""
-from typing import Optional, List
+from typing import List, Optional
 
 import voluptuous as vol
+from xknx.devices import Climate as XknxClimate, ClimateMode as XknxClimateMode
+from xknx.knx import HVACOperationMode
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
+    HVAC_MODE_AUTO,
+    HVAC_MODE_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    HVAC_MODE_COOL,
-    HVAC_MODE_AUTO,
-    PRESET_ECO,
-    PRESET_SLEEP,
     PRESET_AWAY,
     PRESET_COMFORT,
+    PRESET_ECO,
+    PRESET_SLEEP,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
@@ -44,6 +46,7 @@ CONF_OPERATION_MODE_COMFORT_ADDRESS = "operation_mode_comfort_address"
 CONF_OPERATION_MODES = "operation_modes"
 CONF_ON_OFF_ADDRESS = "on_off_address"
 CONF_ON_OFF_STATE_ADDRESS = "on_off_state_address"
+CONF_ON_OFF_INVERT = "on_off_invert"
 CONF_MIN_TEMP = "min_temp"
 CONF_MAX_TEMP = "max_temp"
 
@@ -51,6 +54,7 @@ DEFAULT_NAME = "KNX Climate"
 DEFAULT_SETPOINT_SHIFT_STEP = 0.5
 DEFAULT_SETPOINT_SHIFT_MAX = 6
 DEFAULT_SETPOINT_SHIFT_MIN = -6
+DEFAULT_ON_OFF_INVERT = False
 # Map KNX operation modes to HA modes. This list might not be full.
 OPERATION_MODES = {
     # Map DPT 201.105 HVAC control modes
@@ -102,6 +106,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_OPERATION_MODE_COMFORT_ADDRESS): cv.string,
         vol.Optional(CONF_ON_OFF_ADDRESS): cv.string,
         vol.Optional(CONF_ON_OFF_STATE_ADDRESS): cv.string,
+        vol.Optional(CONF_ON_OFF_INVERT, default=DEFAULT_ON_OFF_INVERT): cv.boolean,
         vol.Optional(CONF_OPERATION_MODES): vol.All(
             cv.ensure_list, [vol.In(OPERATION_MODES)]
         ),
@@ -132,9 +137,7 @@ def async_add_entities_discovery(hass, discovery_info, async_add_entities):
 @callback
 def async_add_entities_config(hass, config, async_add_entities):
     """Set up climate for KNX platform configured within platform."""
-    import xknx
-
-    climate_mode = xknx.devices.ClimateMode(
+    climate_mode = XknxClimateMode(
         hass.data[DATA_KNX].xknx,
         name=config[CONF_NAME] + " Mode",
         group_address_operation_mode=config.get(CONF_OPERATION_MODE_ADDRESS),
@@ -162,7 +165,7 @@ def async_add_entities_config(hass, config, async_add_entities):
     )
     hass.data[DATA_KNX].xknx.devices.add(climate_mode)
 
-    climate = xknx.devices.Climate(
+    climate = XknxClimate(
         hass.data[DATA_KNX].xknx,
         name=config[CONF_NAME],
         group_address_temperature=config[CONF_TEMPERATURE_ADDRESS],
@@ -182,6 +185,7 @@ def async_add_entities_config(hass, config, async_add_entities):
         min_temp=config.get(CONF_MIN_TEMP),
         max_temp=config.get(CONF_MAX_TEMP),
         mode=climate_mode,
+        on_off_invert=config[CONF_ON_OFF_INVERT],
     )
     hass.data[DATA_KNX].xknx.devices.add(climate)
 
@@ -298,8 +302,6 @@ class KNXClimate(ClimateDevice):
         elif self.device.supports_on_off and hvac_mode == HVAC_MODE_HEAT:
             await self.device.turn_on()
         elif self.device.mode.supports_operation_mode:
-            from xknx.knx import HVACOperationMode
-
             knx_operation_mode = HVACOperationMode(OPERATION_MODES_INV.get(hvac_mode))
             await self.device.mode.set_operation_mode(knx_operation_mode)
             await self.async_update_ha_state()
@@ -333,8 +335,6 @@ class KNXClimate(ClimateDevice):
         This method must be run in the event loop and returns a coroutine.
         """
         if self.device.mode.supports_operation_mode:
-            from xknx.knx import HVACOperationMode
-
             knx_operation_mode = HVACOperationMode(PRESET_MODES_INV.get(preset_mode))
             await self.device.mode.set_operation_mode(knx_operation_mode)
             await self.async_update_ha_state()

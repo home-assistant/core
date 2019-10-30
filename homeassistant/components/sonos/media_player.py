@@ -8,8 +8,8 @@ import urllib
 
 import async_timeout
 import pysonos
+from pysonos.exceptions import SoCoException, SoCoUPnPException
 import pysonos.snapshot
-from pysonos.exceptions import SoCoUPnPException, SoCoException
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
@@ -40,11 +40,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.dt import utcnow
 
 from . import (
-    CONF_ADVERTISE_ADDR,
-    CONF_HOSTS,
-    CONF_INTERFACE_ADDR,
-    DATA_SERVICE_EVENT,
-    DOMAIN as SONOS_DOMAIN,
     ATTR_ALARM_ID,
     ATTR_ENABLED,
     ATTR_INCLUDE_LINKED_ZONES,
@@ -56,6 +51,11 @@ from . import (
     ATTR_TIME,
     ATTR_VOLUME,
     ATTR_WITH_GROUP,
+    CONF_ADVERTISE_ADDR,
+    CONF_HOSTS,
+    CONF_INTERFACE_ADDR,
+    DATA_SERVICE_EVENT,
+    DOMAIN as SONOS_DOMAIN,
     SERVICE_CLEAR_TIMER,
     SERVICE_JOIN,
     SERVICE_PLAY_QUEUE,
@@ -1161,10 +1161,9 @@ class SonosEntity(MediaPlayerDevice):
     @soco_coordinator
     def set_alarm(self, data):
         """Set the alarm clock on the player."""
-        from pysonos import alarms
 
         alarm = None
-        for one_alarm in alarms.get_alarms(self.soco):
+        for one_alarm in pysonos.alarms.get_alarms(self.soco):
             # pylint: disable=protected-access
             if one_alarm._alarm_id == str(data[ATTR_ALARM_ID]):
                 alarm = one_alarm

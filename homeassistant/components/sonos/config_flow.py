@@ -1,13 +1,14 @@
 """Config flow for SONOS."""
-from homeassistant.helpers import config_entry_flow
+import pysonos
+
 from homeassistant import config_entries
+from homeassistant.helpers import config_entry_flow
+
 from .const import DOMAIN
 
 
 async def _async_has_devices(hass):
     """Return if there are devices that can be discovered."""
-    import pysonos
-
     return await hass.async_add_executor_job(pysonos.discover)
 
 

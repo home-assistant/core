@@ -1,0 +1,11 @@
+{
+    "device_automation": {
+        "action_type": {
+            "arm_away": "{entity_name} \uc678\ucd9c\uacbd\ube44",
+            "arm_home": "{entity_name} \uc7ac\uc2e4\uacbd\ube44",
+            "arm_night": "{entity_name} \uc57c\uac04\uacbd\ube44",
+            "disarm": "{entity_name} \uacbd\ube44\ud574\uc81c",
+            "trigger": "{entity_name} \ud2b8\ub9ac\uac70"
+        }
+    }
+}

@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import logging
 import re
 
+import caldav
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
@@ -62,8 +63,6 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 def setup_platform(hass, config, add_entities, disc_info=None):
     """Set up the WebDav Calendar platform."""
-    import caldav
-
     url = config[CONF_URL]
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -279,6 +278,10 @@ class WebDavCalendarData:
     def to_datetime(obj):
         """Return a datetime."""
         if isinstance(obj, datetime):
+            if obj.tzinfo is None:
+                # floating value, not bound to any time zone in particular
+                # represent same time regardless of which time zone is currently being observed
+                return obj.replace(tzinfo=dt.DEFAULT_TIME_ZONE)
             return obj
         return dt.as_local(dt.dt.datetime.combine(obj, dt.dt.time.min))
 

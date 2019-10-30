@@ -1,6 +1,6 @@
 """Support for Climate devices of (EMEA/EU-based) Honeywell TCC systems."""
 import logging
-from typing import Optional, List
+from typing import List, Optional
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -14,26 +14,26 @@ from homeassistant.components.climate.const import (
     PRESET_ECO,
     PRESET_HOME,
     PRESET_NONE,
-    SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import PRECISION_TENTHS
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util.dt import parse_datetime
 
-from . import CONF_LOCATION_IDX, EvoDevice, EvoChild
+from . import CONF_LOCATION_IDX, EvoChild, EvoDevice
 from .const import (
     DOMAIN,
-    EVO_RESET,
     EVO_AUTO,
     EVO_AUTOECO,
     EVO_AWAY,
     EVO_CUSTOM,
     EVO_DAYOFF,
-    EVO_HEATOFF,
     EVO_FOLLOW,
-    EVO_TEMPOVER,
+    EVO_HEATOFF,
     EVO_PERMOVER,
+    EVO_RESET,
+    EVO_TEMPOVER,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,14 +72,13 @@ async def async_setup_platform(
         return
 
     broker = hass.data[DOMAIN]["broker"]
-    loc_idx = broker.params[CONF_LOCATION_IDX]
 
     _LOGGER.debug(
         "Found the Location/Controller (%s), id=%s, name=%s (location_idx=%s)",
         broker.tcs.modelType,
         broker.tcs.systemId,
         broker.tcs.location.name,
-        loc_idx,
+        broker.params[CONF_LOCATION_IDX],
     )
 
     # special case of RoundModulation/RoundWireless (is a single zone system)
@@ -148,9 +147,12 @@ class EvoZone(EvoChild, EvoClimateDevice):
         self._name = evo_device.name
         self._icon = "mdi:radiator"
 
-        self._precision = self._evo_device.setpointCapabilities["valueResolution"]
         self._supported_features = SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
         self._preset_modes = list(HA_PRESET_TO_EVO)
+        if evo_broker.client_v1:
+            self._precision = PRECISION_TENTHS
+        else:
+            self._precision = self._evo_device.setpointCapabilities["valueResolution"]
 
     @property
     def hvac_mode(self) -> str:

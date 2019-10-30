@@ -74,26 +74,84 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         if device_class != "none"
     ]
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    assert len(triggers) == 8
     assert triggers == expected_triggers
 
 
 async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
-    """Test we get the expected capabilities from a binary_sensor trigger."""
+    """Test we get the expected capabilities from a sensor trigger."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
     device_entry = device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        platform.ENTITIES["battery"].unique_id,
+        device_id=device_entry.id,
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+
     expected_capabilities = {
         "extra_fields": [
-            {"name": "above", "optional": True, "type": "float"},
-            {"name": "below", "optional": True, "type": "float"},
+            {
+                "description": {"suffix": "%"},
+                "name": "above",
+                "optional": True,
+                "type": "float",
+            },
+            {
+                "description": {"suffix": "%"},
+                "name": "below",
+                "optional": True,
+                "type": "float",
+            },
             {"name": "for", "optional": True, "type": "positive_time_period_dict"},
         ]
     }
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    assert len(triggers) == 1
+    for trigger in triggers:
+        capabilities = await async_get_device_automation_capabilities(
+            hass, "trigger", trigger
+        )
+        assert capabilities == expected_capabilities
+
+
+async def test_get_trigger_capabilities_none(hass, device_reg, entity_reg):
+    """Test we get the expected capabilities from a sensor trigger."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+
+    triggers = [
+        {
+            "platform": "device",
+            "device_id": "8770c43885354d5fa27604db6817f63f",
+            "domain": "sensor",
+            "entity_id": "sensor.beer",
+            "type": "is_battery_level",
+        },
+        {
+            "platform": "device",
+            "device_id": "8770c43885354d5fa27604db6817f63f",
+            "domain": "sensor",
+            "entity_id": platform.ENTITIES["none"].entity_id,
+            "type": "is_battery_level",
+        },
+    ]
+
+    expected_capabilities = {}
     for trigger in triggers:
         capabilities = await async_get_device_automation_capabilities(
             hass, "trigger", trigger

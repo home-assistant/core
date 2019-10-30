@@ -5,6 +5,10 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
     STATE_LOCKED,
     STATE_OFF,
     STATE_ON,
@@ -13,24 +17,26 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 import homeassistant.components.climate.const as climate
+from homeassistant.components.alarm_control_panel import ATTR_CODE_FORMAT, FORMAT_NUMBER
 from homeassistant.components import light, fan, cover
 import homeassistant.util.color as color_util
 import homeassistant.util.dt as dt_util
 
 from .const import (
+    Catalog,
     API_TEMP_UNITS,
     API_THERMOSTAT_MODES,
     API_THERMOSTAT_PRESETS,
     DATE_FORMAT,
     PERCENTAGE_FAN_MAP,
+    RANGE_FAN_MAP,
 )
 from .errors import UnsupportedProperty
-
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class AlexaCapibility:
+class AlexaCapability:
     """Base class for Alexa capability interfaces.
 
     The Smart Home Skills API defines a number of "capability interfaces",
@@ -40,9 +46,10 @@ class AlexaCapibility:
     https://developer.amazon.com/docs/device-apis/message-guide.html
     """
 
-    def __init__(self, entity):
-        """Initialize an Alexa capibility."""
+    def __init__(self, entity, instance=None):
+        """Initialize an Alexa capability."""
         self.entity = entity
+        self.instance = instance
 
     def name(self):
         """Return the Alexa API name of this interface."""
@@ -64,6 +71,11 @@ class AlexaCapibility:
         return False
 
     @staticmethod
+    def properties_non_controllable():
+        """Return True if non controllable."""
+        return None
+
+    @staticmethod
     def get_property(name):
         """Read and return a property.
 
@@ -79,23 +91,65 @@ class AlexaCapibility:
         """Applicable only to scenes."""
         return None
 
+    @staticmethod
+    def capability_proactively_reported():
+        """Return True if the capability is proactively reported.
+
+        Set properties_proactively_reported() for proactively reported properties.
+        Applicable to DoorbellEventSource.
+        """
+        return None
+
+    @staticmethod
+    def capability_resources():
+        """Applicable to ToggleController, RangeController, and ModeController interfaces."""
+        return []
+
+    @staticmethod
+    def configuration():
+        """Return the Configuration object."""
+        return []
+
     def serialize_discovery(self):
         """Serialize according to the Discovery API."""
-        result = {
-            "type": "AlexaInterface",
-            "interface": self.name(),
-            "version": "3",
-            "properties": {
+        result = {"type": "AlexaInterface", "interface": self.name(), "version": "3"}
+
+        properties_supported = self.properties_supported()
+        if properties_supported:
+            result["properties"] = {
                 "supported": self.properties_supported(),
                 "proactivelyReported": self.properties_proactively_reported(),
                 "retrievable": self.properties_retrievable(),
-            },
-        }
+            }
+
+        # pylint: disable=assignment-from-none
+        proactively_reported = self.capability_proactively_reported()
+        if proactively_reported is not None:
+            result["proactivelyReported"] = proactively_reported
+
+        # pylint: disable=assignment-from-none
+        non_controllable = self.properties_non_controllable()
+        if non_controllable is not None:
+            result["properties"]["nonControllable"] = non_controllable
 
         # pylint: disable=assignment-from-none
         supports_deactivation = self.supports_deactivation()
         if supports_deactivation is not None:
             result["supportsDeactivation"] = supports_deactivation
+
+        capability_resources = self.serialize_capability_resources()
+        if capability_resources:
+            result["capabilityResources"] = capability_resources
+
+        configuration = self.configuration()
+        if configuration:
+            result["configuration"] = configuration
+
+        # pylint: disable=assignment-from-none
+        instance = self.instance
+        if instance is not None:
+            result["instance"] = instance
+
         return result
 
     def serialize_properties(self):
@@ -105,16 +159,51 @@ class AlexaCapibility:
             # pylint: disable=assignment-from-no-return
             prop_value = self.get_property(prop_name)
             if prop_value is not None:
-                yield {
+                result = {
                     "name": prop_name,
                     "namespace": self.name(),
                     "value": prop_value,
                     "timeOfSample": dt_util.utcnow().strftime(DATE_FORMAT),
                     "uncertaintyInMilliseconds": 0,
                 }
+                instance = self.instance
+                if instance is not None:
+                    result["instance"] = instance
+
+                yield result
+
+    def serialize_capability_resources(self):
+        """Return capabilityResources friendlyNames serialized for an API response."""
+        resources = self.capability_resources()
+        if resources:
+            return {"friendlyNames": self.serialize_friendly_names(resources)}
+
+        return None
+
+    @staticmethod
+    def serialize_friendly_names(resources):
+        """Return capabilityResources, ModeResources, or presetResources friendlyNames serialized for an API response."""
+        friendly_names = []
+        for resource in resources:
+            if resource["type"] == Catalog.LABEL_ASSET:
+                friendly_names.append(
+                    {
+                        "@type": Catalog.LABEL_ASSET,
+                        "value": {"assetId": resource["value"]},
+                    }
+                )
+            else:
+                friendly_names.append(
+                    {
+                        "@type": Catalog.LABEL_TEXT,
+                        "value": {"text": resource["value"], "locale": "en-US"},
+                    }
+                )
+
+        return friendly_names
 
 
-class AlexaEndpointHealth(AlexaCapibility):
+class AlexaEndpointHealth(AlexaCapability):
     """Implements Alexa.EndpointHealth.
 
     https://developer.amazon.com/docs/smarthome/state-reporting-for-a-smart-home-skill.html#report-state-when-alexa-requests-it
@@ -151,7 +240,7 @@ class AlexaEndpointHealth(AlexaCapibility):
         return {"value": "OK"}
 
 
-class AlexaPowerController(AlexaCapibility):
+class AlexaPowerController(AlexaCapability):
     """Implements Alexa.PowerController.
 
     https://developer.amazon.com/docs/device-apis/alexa-powercontroller.html
@@ -187,7 +276,7 @@ class AlexaPowerController(AlexaCapibility):
         return "ON" if is_on else "OFF"
 
 
-class AlexaLockController(AlexaCapibility):
+class AlexaLockController(AlexaCapability):
     """Implements Alexa.LockController.
 
     https://developer.amazon.com/docs/device-apis/alexa-lockcontroller.html
@@ -221,7 +310,7 @@ class AlexaLockController(AlexaCapibility):
         return "JAMMED"
 
 
-class AlexaSceneController(AlexaCapibility):
+class AlexaSceneController(AlexaCapability):
     """Implements Alexa.SceneController.
 
     https://developer.amazon.com/docs/device-apis/alexa-scenecontroller.html
@@ -237,7 +326,7 @@ class AlexaSceneController(AlexaCapibility):
         return "Alexa.SceneController"
 
 
-class AlexaBrightnessController(AlexaCapibility):
+class AlexaBrightnessController(AlexaCapability):
     """Implements Alexa.BrightnessController.
 
     https://developer.amazon.com/docs/device-apis/alexa-brightnesscontroller.html
@@ -268,7 +357,7 @@ class AlexaBrightnessController(AlexaCapibility):
         return 0
 
 
-class AlexaColorController(AlexaCapibility):
+class AlexaColorController(AlexaCapability):
     """Implements Alexa.ColorController.
 
     https://developer.amazon.com/docs/device-apis/alexa-colorcontroller.html
@@ -300,7 +389,7 @@ class AlexaColorController(AlexaCapibility):
         }
 
 
-class AlexaColorTemperatureController(AlexaCapibility):
+class AlexaColorTemperatureController(AlexaCapability):
     """Implements Alexa.ColorTemperatureController.
 
     https://developer.amazon.com/docs/device-apis/alexa-colortemperaturecontroller.html
@@ -329,7 +418,7 @@ class AlexaColorTemperatureController(AlexaCapibility):
         return None
 
 
-class AlexaPercentageController(AlexaCapibility):
+class AlexaPercentageController(AlexaCapability):
     """Implements Alexa.PercentageController.
 
     https://developer.amazon.com/docs/device-apis/alexa-percentagecontroller.html
@@ -363,7 +452,7 @@ class AlexaPercentageController(AlexaCapibility):
         return 0
 
 
-class AlexaSpeaker(AlexaCapibility):
+class AlexaSpeaker(AlexaCapability):
     """Implements Alexa.Speaker.
 
     https://developer.amazon.com/docs/device-apis/alexa-speaker.html
@@ -374,7 +463,7 @@ class AlexaSpeaker(AlexaCapibility):
         return "Alexa.Speaker"
 
 
-class AlexaStepSpeaker(AlexaCapibility):
+class AlexaStepSpeaker(AlexaCapability):
     """Implements Alexa.StepSpeaker.
 
     https://developer.amazon.com/docs/device-apis/alexa-stepspeaker.html
@@ -385,7 +474,7 @@ class AlexaStepSpeaker(AlexaCapibility):
         return "Alexa.StepSpeaker"
 
 
-class AlexaPlaybackController(AlexaCapibility):
+class AlexaPlaybackController(AlexaCapability):
     """Implements Alexa.PlaybackController.
 
     https://developer.amazon.com/docs/device-apis/alexa-playbackcontroller.html
@@ -396,7 +485,7 @@ class AlexaPlaybackController(AlexaCapibility):
         return "Alexa.PlaybackController"
 
 
-class AlexaInputController(AlexaCapibility):
+class AlexaInputController(AlexaCapability):
     """Implements Alexa.InputController.
 
     https://developer.amazon.com/docs/device-apis/alexa-inputcontroller.html
@@ -407,7 +496,7 @@ class AlexaInputController(AlexaCapibility):
         return "Alexa.InputController"
 
 
-class AlexaTemperatureSensor(AlexaCapibility):
+class AlexaTemperatureSensor(AlexaCapability):
     """Implements Alexa.TemperatureSensor.
 
     https://developer.amazon.com/docs/device-apis/alexa-temperaturesensor.html
@@ -457,7 +546,7 @@ class AlexaTemperatureSensor(AlexaCapibility):
         return {"value": temp, "scale": API_TEMP_UNITS[unit]}
 
 
-class AlexaContactSensor(AlexaCapibility):
+class AlexaContactSensor(AlexaCapability):
     """Implements Alexa.ContactSensor.
 
     The Alexa.ContactSensor interface describes the properties and events used
@@ -499,7 +588,7 @@ class AlexaContactSensor(AlexaCapibility):
         return "NOT_DETECTED"
 
 
-class AlexaMotionSensor(AlexaCapibility):
+class AlexaMotionSensor(AlexaCapability):
     """Implements Alexa.MotionSensor.
 
     https://developer.amazon.com/docs/device-apis/alexa-motionsensor.html
@@ -536,7 +625,7 @@ class AlexaMotionSensor(AlexaCapibility):
         return "NOT_DETECTED"
 
 
-class AlexaThermostatController(AlexaCapibility):
+class AlexaThermostatController(AlexaCapability):
     """Implements Alexa.ThermostatController.
 
     https://developer.amazon.com/docs/device-apis/alexa-thermostatcontroller.html
@@ -614,3 +703,378 @@ class AlexaThermostatController(AlexaCapibility):
             return None
 
         return {"value": temp, "scale": API_TEMP_UNITS[unit]}
+
+
+class AlexaPowerLevelController(AlexaCapability):
+    """Implements Alexa.PowerLevelController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-powerlevelcontroller.html
+    """
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.PowerLevelController"
+
+    def properties_supported(self):
+        """Return what properties this entity supports."""
+        return [{"name": "powerLevel"}]
+
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
+
+    def properties_retrievable(self):
+        """Return True if properties can be retrieved."""
+        return True
+
+    def get_property(self, name):
+        """Read and return a property."""
+        if name != "powerLevel":
+            raise UnsupportedProperty(name)
+
+        if self.entity.domain == fan.DOMAIN:
+            speed = self.entity.attributes.get(fan.ATTR_SPEED)
+
+            return PERCENTAGE_FAN_MAP.get(speed, None)
+
+        return None
+
+
+class AlexaSecurityPanelController(AlexaCapability):
+    """Implements Alexa.SecurityPanelController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-securitypanelcontroller.html
+    """
+
+    def __init__(self, hass, entity):
+        """Initialize the entity."""
+        super().__init__(entity)
+        self.hass = hass
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.SecurityPanelController"
+
+    def properties_supported(self):
+        """Return what properties this entity supports."""
+        return [{"name": "armState"}]
+
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
+
+    def properties_retrievable(self):
+        """Return True if properties can be retrieved."""
+        return True
+
+    def get_property(self, name):
+        """Read and return a property."""
+        if name != "armState":
+            raise UnsupportedProperty(name)
+
+        arm_state = self.entity.state
+        if arm_state == STATE_ALARM_ARMED_HOME:
+            return "ARMED_STAY"
+        if arm_state == STATE_ALARM_ARMED_AWAY:
+            return "ARMED_AWAY"
+        if arm_state == STATE_ALARM_ARMED_NIGHT:
+            return "ARMED_NIGHT"
+        if arm_state == STATE_ALARM_ARMED_CUSTOM_BYPASS:
+            return "ARMED_STAY"
+        return "DISARMED"
+
+    def configuration(self):
+        """Return configuration object with supported authorization types."""
+        code_format = self.entity.attributes.get(ATTR_CODE_FORMAT)
+
+        if code_format == FORMAT_NUMBER:
+            return {"supportedAuthorizationTypes": [{"type": "FOUR_DIGIT_PIN"}]}
+        return None
+
+
+class AlexaModeController(AlexaCapability):
+    """Implements Alexa.ModeController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-modecontroller.html
+    """
+
+    def __init__(self, entity, instance, non_controllable=False):
+        """Initialize the entity."""
+        super().__init__(entity, instance)
+        self.properties_non_controllable = lambda: non_controllable
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.ModeController"
+
+    def properties_supported(self):
+        """Return what properties this entity supports."""
+        return [{"name": "mode"}]
+
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
+
+    def properties_retrievable(self):
+        """Return True if properties can be retrieved."""
+
+    def get_property(self, name):
+        """Read and return a property."""
+        if name != "mode":
+            raise UnsupportedProperty(name)
+
+        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
+            return self.entity.attributes.get(fan.ATTR_DIRECTION)
+
+        return None
+
+    def configuration(self):
+        """Return configuration with modeResources."""
+        return self.serialize_mode_resources()
+
+    def capability_resources(self):
+        """Return capabilityResources object."""
+        capability_resources = []
+
+        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
+            capability_resources = [
+                {"type": Catalog.LABEL_ASSET, "value": Catalog.SETTING_DIRECTION}
+            ]
+
+        return capability_resources
+
+    def mode_resources(self):
+        """Return modeResources object."""
+        mode_resources = None
+        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
+            mode_resources = {
+                "ordered": False,
+                "resources": [
+                    {
+                        "value": f"{fan.ATTR_DIRECTION}.{fan.DIRECTION_FORWARD}",
+                        "friendly_names": [
+                            {"type": Catalog.LABEL_TEXT, "value": fan.DIRECTION_FORWARD}
+                        ],
+                    },
+                    {
+                        "value": f"{fan.ATTR_DIRECTION}.{fan.DIRECTION_REVERSE}",
+                        "friendly_names": [
+                            {"type": Catalog.LABEL_TEXT, "value": fan.DIRECTION_REVERSE}
+                        ],
+                    },
+                ],
+            }
+
+        return mode_resources
+
+    def serialize_mode_resources(self):
+        """Return ModeResources, friendlyNames serialized for an API response."""
+        mode_resources = []
+        resources = self.mode_resources()
+        ordered = resources["ordered"]
+        for resource in resources["resources"]:
+            mode_value = resource["value"]
+            friendly_names = resource["friendly_names"]
+            result = {
+                "value": mode_value,
+                "modeResources": {
+                    "friendlyNames": self.serialize_friendly_names(friendly_names)
+                },
+            }
+            mode_resources.append(result)
+
+        return {"ordered": ordered, "supportedModes": mode_resources}
+
+
+class AlexaRangeController(AlexaCapability):
+    """Implements Alexa.RangeController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-rangecontroller.html
+    """
+
+    def __init__(self, entity, instance, non_controllable=False):
+        """Initialize the entity."""
+        super().__init__(entity, instance)
+        self.properties_non_controllable = lambda: non_controllable
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.RangeController"
+
+    def properties_supported(self):
+        """Return what properties this entity supports."""
+        return [{"name": "rangeValue"}]
+
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
+
+    def properties_retrievable(self):
+        """Return True if properties can be retrieved."""
+        return True
+
+    def get_property(self, name):
+        """Read and return a property."""
+        if name != "rangeValue":
+            raise UnsupportedProperty(name)
+
+        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
+            speed = self.entity.attributes.get(fan.ATTR_SPEED)
+            return RANGE_FAN_MAP.get(speed, 0)
+
+        return None
+
+    def configuration(self):
+        """Return configuration with presetResources."""
+        return self.serialize_preset_resources()
+
+    def capability_resources(self):
+        """Return capabilityResources object."""
+        capability_resources = []
+
+        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
+            return [{"type": Catalog.LABEL_ASSET, "value": Catalog.SETTING_FANSPEED}]
+
+        return capability_resources
+
+    def preset_resources(self):
+        """Return presetResources object."""
+        preset_resources = []
+
+        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
+            preset_resources = {
+                "minimumValue": 1,
+                "maximumValue": 3,
+                "precision": 1,
+                "presets": [
+                    {
+                        "rangeValue": 1,
+                        "names": [
+                            {
+                                "type": Catalog.LABEL_ASSET,
+                                "value": Catalog.VALUE_MINIMUM,
+                            },
+                            {"type": Catalog.LABEL_ASSET, "value": Catalog.VALUE_LOW},
+                        ],
+                    },
+                    {
+                        "rangeValue": 2,
+                        "names": [
+                            {"type": Catalog.LABEL_ASSET, "value": Catalog.VALUE_MEDIUM}
+                        ],
+                    },
+                    {
+                        "rangeValue": 3,
+                        "names": [
+                            {
+                                "type": Catalog.LABEL_ASSET,
+                                "value": Catalog.VALUE_MAXIMUM,
+                            },
+                            {"type": Catalog.LABEL_ASSET, "value": Catalog.VALUE_HIGH},
+                        ],
+                    },
+                ],
+            }
+
+        return preset_resources
+
+    def serialize_preset_resources(self):
+        """Return PresetResources, friendlyNames serialized for an API response."""
+        preset_resources = []
+        resources = self.preset_resources()
+        for preset in resources["presets"]:
+            preset_resources.append(
+                {
+                    "rangeValue": preset["rangeValue"],
+                    "presetResources": {
+                        "friendlyNames": self.serialize_friendly_names(preset["names"])
+                    },
+                }
+            )
+
+        return {
+            "supportedRange": {
+                "minimumValue": resources["minimumValue"],
+                "maximumValue": resources["maximumValue"],
+                "precision": resources["precision"],
+            },
+            "presets": preset_resources,
+        }
+
+
+class AlexaToggleController(AlexaCapability):
+    """Implements Alexa.ToggleController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-togglecontroller.html
+    """
+
+    def __init__(self, entity, instance, non_controllable=False):
+        """Initialize the entity."""
+        super().__init__(entity, instance)
+        self.properties_non_controllable = lambda: non_controllable
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.ToggleController"
+
+    def properties_supported(self):
+        """Return what properties this entity supports."""
+        return [{"name": "toggleState"}]
+
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
+
+    def properties_retrievable(self):
+        """Return True if properties can be retrieved."""
+        return True
+
+    def get_property(self, name):
+        """Read and return a property."""
+        if name != "toggleState":
+            raise UnsupportedProperty(name)
+
+        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}":
+            is_on = bool(self.entity.attributes.get(fan.ATTR_OSCILLATING))
+            return "ON" if is_on else "OFF"
+
+        return None
+
+    def capability_resources(self):
+        """Return capabilityResources object."""
+        capability_resources = []
+
+        if self.instance == f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}":
+            capability_resources = [
+                {"type": Catalog.LABEL_ASSET, "value": Catalog.SETTING_OSCILLATE},
+                {"type": Catalog.LABEL_TEXT, "value": "Rotate"},
+                {"type": Catalog.LABEL_TEXT, "value": "Rotation"},
+            ]
+
+        return capability_resources
+
+
+class AlexaChannelController(AlexaCapability):
+    """Implements Alexa.ChannelController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-channelcontroller.html
+    """
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.ChannelController"
+
+
+class AlexaDoorbellEventSource(AlexaCapability):
+    """Implements Alexa.DoorbellEventSource.
+
+    https://developer.amazon.com/docs/device-apis/alexa-doorbelleventsource.html
+    """
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.DoorbellEventSource"
+
+    def capability_proactively_reported(self):
+        """Return True for proactively reported capability."""
+        return True

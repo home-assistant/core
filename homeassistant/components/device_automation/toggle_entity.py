@@ -3,7 +3,10 @@ from typing import Any, Dict, List
 import voluptuous as vol
 
 from homeassistant.core import Context, HomeAssistant, CALLBACK_TYPE
-from homeassistant.components.automation import state, AutomationActionType
+from homeassistant.components.automation import (
+    state as state_automation,
+    AutomationActionType,
+)
 from homeassistant.components.device_automation.const import (
     CONF_IS_OFF,
     CONF_IS_ON,
@@ -14,6 +17,7 @@ from homeassistant.components.device_automation.const import (
     CONF_TURNED_ON,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_CONDITION,
     CONF_ENTITY_ID,
     CONF_FOR,
@@ -21,7 +25,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.helpers.entity_registry import async_entries_for_device
-from homeassistant.helpers import condition, config_validation as cv, service
+from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from . import TRIGGER_BASE_SCHEMA
 
@@ -80,6 +84,7 @@ CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In([CONF_IS_OFF, CONF_IS_ON]),
+        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
@@ -108,19 +113,14 @@ async def async_call_action_from_config(
     else:
         action = "toggle"
 
-    service_action = {
-        service.CONF_SERVICE: "{}.{}".format(domain, action),
-        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-    }
+    service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
 
-    await service.async_call_from_config(
-        hass, service_action, blocking=True, variables=variables, context=context
+    await hass.services.async_call(
+        domain, action, service_data, blocking=True, context=context
     )
 
 
-def async_condition_from_config(
-    config: ConfigType, config_validation: bool
-) -> condition.ConditionCheckerType:
+def async_condition_from_config(config: ConfigType) -> condition.ConditionCheckerType:
     """Evaluate state based on configuration."""
     condition_type = config[CONF_TYPE]
     if condition_type == CONF_IS_ON:
@@ -132,8 +132,10 @@ def async_condition_from_config(
         condition.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
         condition.CONF_STATE: stat,
     }
+    if CONF_FOR in config:
+        state_config[CONF_FOR] = config[CONF_FOR]
 
-    return condition.state_from_config(state_config, config_validation)
+    return condition.state_from_config(state_config)
 
 
 async def async_attach_trigger(
@@ -151,14 +153,16 @@ async def async_attach_trigger(
         from_state = "on"
         to_state = "off"
     state_config = {
-        state.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        state.CONF_FROM: from_state,
-        state.CONF_TO: to_state,
+        state_automation.CONF_PLATFORM: "state",
+        state_automation.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+        state_automation.CONF_FROM: from_state,
+        state_automation.CONF_TO: to_state,
     }
     if CONF_FOR in config:
         state_config[CONF_FOR] = config[CONF_FOR]
 
-    return await state.async_attach_trigger(
+    state_config = state_automation.TRIGGER_SCHEMA(state_config)
+    return await state_automation.async_attach_trigger(
         hass, state_config, action, automation_info, platform_type="device"
     )
 
@@ -201,7 +205,7 @@ async def async_get_actions(
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str, domain: str
-) -> List[dict]:
+) -> List[Dict[str, str]]:
     """List device conditions."""
     return await _async_get_automations(hass, device_id, ENTITY_CONDITIONS, domain)
 
@@ -213,7 +217,16 @@ async def async_get_triggers(
     return await _async_get_automations(hass, device_id, ENTITY_TRIGGERS, domain)
 
 
-async def async_get_trigger_capabilities(hass: HomeAssistant, trigger: dict) -> dict:
+async def async_get_condition_capabilities(hass: HomeAssistant, config: dict) -> dict:
+    """List condition capabilities."""
+    return {
+        "extra_fields": vol.Schema(
+            {vol.Optional(CONF_FOR): cv.positive_time_period_dict}
+        )
+    }
+
+
+async def async_get_trigger_capabilities(hass: HomeAssistant, config: dict) -> dict:
     """List trigger capabilities."""
     return {
         "extra_fields": vol.Schema(

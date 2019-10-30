@@ -5,7 +5,7 @@ from homeassistant.core import callback
 from homeassistant.util.dt import utcnow
 
 from .const import FORMAT_CONTENT_TYPE
-from .core import StreamView, StreamOutput, PROVIDERS
+from .core import PROVIDERS, StreamOutput, StreamView
 
 
 @callback

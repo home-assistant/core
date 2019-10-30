@@ -2,7 +2,6 @@
 import logging
 
 from homematicip.aio.group import AsyncSecurityZoneGroup
-from homematicip.aio.home import AsyncHome
 from homematicip.base.enums import WindowState
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
@@ -13,9 +12,10 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import HomeAssistantType
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID
+from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,18 +28,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP alrm control panel from a config entry."""
-    home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
+    hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
     devices = []
     security_zones = []
-    for group in home.groups:
+    for group in hap.home.groups:
         if isinstance(group, AsyncSecurityZoneGroup):
             security_zones.append(group)
 
     if security_zones:
-        devices.append(HomematicipAlarmControlPanel(home, security_zones))
+        devices.append(HomematicipAlarmControlPanel(hap, security_zones))
 
     if devices:
         async_add_entities(devices)
@@ -48,9 +48,9 @@ async def async_setup_entry(
 class HomematicipAlarmControlPanel(AlarmControlPanel):
     """Representation of an alarm control panel."""
 
-    def __init__(self, home: AsyncHome, security_zones) -> None:
+    def __init__(self, hap: HomematicipHAP, security_zones) -> None:
         """Initialize the alarm control panel."""
-        self._home = home
+        self._home = hap.home
         self.alarm_state = STATE_ALARM_DISARMED
 
         for security_zone in security_zones:
@@ -58,6 +58,17 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
                 self._internal_alarm_zone = security_zone
             else:
                 self._external_alarm_zone = security_zone
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "identifiers": {(HMIPC_DOMAIN, f"ACP {self._home.id}")},
+            "name": self.name,
+            "manufacturer": "eQ-3",
+            "model": CONST_ALARM_CONTROL_PANEL_NAME,
+            "via_device": (HMIPC_DOMAIN, self._home.id),
+        }
 
     @property
     def state(self) -> str:

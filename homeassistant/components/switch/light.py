@@ -21,7 +21,7 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.components.light import PLATFORM_SCHEMA, Light
 
 
-# mypy: allow-untyped-calls, allow-untyped-defs
+# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
