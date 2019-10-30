@@ -16,6 +16,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_TY
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TYPE = "rogers"
+DEFAULT_UIDCOOKIE = "userid"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -44,13 +45,21 @@ class HitronCODADeviceScanner(DeviceScanner):
         """Initialize the scanner."""
         self.last_results = []
         host = config[CONF_HOST]
+        self._baseurl = f"http://{host}/"
         self._url = f"http://{host}/data/getConnectInfo.asp"
         self._loginurl = f"http://{host}/goform/login"
 
+        self._sessreq =  requests.Session() 
         self._username = config.get(CONF_USERNAME)
         self._password = config.get(CONF_PASSWORD)
+        self._model = config.get(CONF_TYPE)
 
-        if config.get(CONF_TYPE) == "shaw":
+        if self._model == "cgnv4":
+            self._uidcookie = "sessionindex"
+        else:
+            self._uidcookie = DEFAULT_UIDCOOKIE
+
+        if self._model in ("shaw", "cgnv4"):
             self._type = "pwd"
         else:
             self._type = "pws"
@@ -78,8 +87,21 @@ class HitronCODADeviceScanner(DeviceScanner):
         _LOGGER.info("Logging in to CODA...")
 
         try:
-            data = [("user", self._username), (self._type, self._password)]
-            res = requests.post(self._loginurl, data=data, timeout=10)
+            # Some (cgnv4, newer ?) devices require passing a cookie received on the initial GET request
+            # to the POST of the login. Also, by using requests.session, received cookies will be
+            # added to all subsequent requests automatically, requiring no explicit handling.
+            # This initial request actually does nothing other than retrieve the cookie
+            if self._model == "cgnv4":
+                res = self._sessreq.get(self._baseurl, allow_redirects=False, timeout=10)
+                try:
+                    cookie = res.cookies['preSession']
+                    data = [("usr", self._username), (self._type, self._password), ("preSession", cookie)]
+                except KeyError:
+                    _LOGGER.error("Failed to retrieve session cookie from router")
+                    return false
+            else:
+                data = [("user", self._username), (self._type, self._password)]
+            res = self._sessreq.post(self._loginurl, data=data, timeout=10)
         except requests.exceptions.Timeout:
             _LOGGER.error("Connection to the router timed out at URL %s", self._url)
             return False
@@ -87,7 +109,7 @@ class HitronCODADeviceScanner(DeviceScanner):
             _LOGGER.error("Connection failed with http code %s", res.status_code)
             return False
         try:
-            self._userid = res.cookies["userid"]
+            self._userid = res.cookies[self._uidcookie]
             return True
         except KeyError:
             _LOGGER.error("Failed to log in to router")
@@ -105,7 +127,7 @@ class HitronCODADeviceScanner(DeviceScanner):
 
         # doing a request
         try:
-            res = requests.get(self._url, timeout=10, cookies={"userid": self._userid})
+            res = self._sessreq.get(self._url, timeout=10)
         except requests.exceptions.Timeout:
             _LOGGER.error("Connection to the router timed out at URL %s", self._url)
             return False
