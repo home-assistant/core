@@ -49,7 +49,7 @@ class HitronCODADeviceScanner(DeviceScanner):
         self._url = f"http://{host}/data/getConnectInfo.asp"
         self._loginurl = f"http://{host}/goform/login"
 
-        self._sessreq =  requests.Session() 
+        self._sessreq = requests.Session()
         self._username = config.get(CONF_USERNAME)
         self._password = config.get(CONF_PASSWORD)
         self._model = config.get(CONF_TYPE)
@@ -92,13 +92,19 @@ class HitronCODADeviceScanner(DeviceScanner):
             # added to all subsequent requests automatically, requiring no explicit handling.
             # This initial request actually does nothing other than retrieve the cookie
             if self._model == "cgnv4":
-                res = self._sessreq.get(self._baseurl, allow_redirects=False, timeout=10)
+                res = self._sessreq.get(
+                    self._baseurl, allow_redirects=False, timeout=10
+                )
                 try:
-                    cookie = res.cookies['preSession']
-                    data = [("usr", self._username), (self._type, self._password), ("preSession", cookie)]
+                    cookie = res.cookies["preSession"]
+                    data = [
+                        ("usr", self._username),
+                        (self._type, self._password),
+                        ("preSession", cookie),
+                    ]
                 except KeyError:
                     _LOGGER.error("Failed to retrieve session cookie from router")
-                    return false
+                    return False
             else:
                 data = [("user", self._username), (self._type, self._password)]
             res = self._sessreq.post(self._loginurl, data=data, timeout=10)
