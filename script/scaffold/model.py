@@ -1,6 +1,7 @@
 """Models for scaffolding."""
 import json
 from pathlib import Path
+from typing import Set
 
 import attr
 
@@ -13,10 +14,16 @@ class Info:
 
     domain: str = attr.ib()
     name: str = attr.ib()
+    is_new: bool = attr.ib()
     codeowner: str = attr.ib(default=None)
     requirement: str = attr.ib(default=None)
     authentication: str = attr.ib(default=None)
     discoverable: str = attr.ib(default=None)
+    oauth2: str = attr.ib(default=None)
+
+    files_added: Set[Path] = attr.ib(factory=set)
+    tests_added: Set[Path] = attr.ib(factory=set)
+    examples_added: Set[Path] = attr.ib(factory=set)
 
     @property
     def integration_dir(self) -> Path:
