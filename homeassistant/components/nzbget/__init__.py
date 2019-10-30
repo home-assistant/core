@@ -154,7 +154,7 @@ class NZBGetData:
         }
 
     def check_completed_downloads(self):
-        """Check that downloads have completed."""
+        """Check history for newly completed downloads."""
 
         actual_completed_downloads = {
             (x["Name"], x["Category"], x["Status"]) for x in self.downloads
