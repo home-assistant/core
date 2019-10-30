@@ -291,6 +291,9 @@ luftdaten==0.6.3
 # homeassistant.components.mythicbeastsdns
 mbddns==0.1.2
 
+# homeassistant.components.meraki
+meraki-sdk==1.4.0
+
 # homeassistant.components.mfi
 mficlient==0.3.0
 

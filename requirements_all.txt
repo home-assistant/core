@@ -810,6 +810,9 @@ maxcube-api==0.1.0
 # homeassistant.components.mythicbeastsdns
 mbddns==0.1.2
 
+# homeassistant.components.meraki
+meraki-sdk==1.4.0
+
 # homeassistant.components.message_bird
 messagebird==1.2.0
 

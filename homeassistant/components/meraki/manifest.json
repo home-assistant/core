@@ -2,7 +2,7 @@
   "domain": "meraki",
   "name": "Meraki",
   "documentation": "https://www.home-assistant.io/integrations/meraki",
-  "requirements": [],
+  "requirements": ["meraki-sdk==1.4.0"],
   "dependencies": ["http"],
   "codeowners": []
 }
