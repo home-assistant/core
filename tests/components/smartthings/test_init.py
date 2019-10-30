@@ -268,6 +268,7 @@ async def test_remove_entry(hass, config_entry, smartthings_mock):
 
 async def test_remove_entry_cloudhook(hass, config_entry, smartthings_mock):
     """Test that the installed app, app, and cloudhook are removed up."""
+    hass.config.components.add("cloud")
     # Arrange
     config_entry.add_to_hass(hass)
     hass.data[DOMAIN][CONF_CLOUDHOOK_URL] = "https://test.cloud"

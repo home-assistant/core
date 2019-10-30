@@ -21,6 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 VICARE_MODE_DHW = "dhw"
 VICARE_MODE_DHWANDHEATING = "dhwAndHeating"
+VICARE_MODE_DHWANDHEATINGCOOLING = "dhwAndHeatingCooling"
 VICARE_MODE_FORCEDREDUCED = "forcedReduced"
 VICARE_MODE_FORCEDNORMAL = "forcedNormal"
 VICARE_MODE_OFF = "standby"
@@ -46,6 +47,7 @@ SUPPORT_FLAGS_HEATING = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 VICARE_TO_HA_HVAC_HEATING = {
     VICARE_MODE_DHW: HVAC_MODE_OFF,
     VICARE_MODE_DHWANDHEATING: HVAC_MODE_AUTO,
+    VICARE_MODE_DHWANDHEATINGCOOLING: HVAC_MODE_AUTO,
     VICARE_MODE_FORCEDREDUCED: HVAC_MODE_OFF,
     VICARE_MODE_FORCEDNORMAL: HVAC_MODE_HEAT,
     VICARE_MODE_OFF: HVAC_MODE_OFF,
@@ -200,9 +202,8 @@ class ViCareClimate(ClimateDevice):
         """Set new target temperatures."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None:
-            self._api.setProgramTemperature(
-                self._current_program, self._target_temperature
-            )
+            self._api.setProgramTemperature(self._current_program, temp)
+            self._target_temperature = temp
 
     @property
     def preset_mode(self):

@@ -1,4 +1,6 @@
 """Support for Wink covers."""
+import pywink
+
 from homeassistant.components.cover import ATTR_POSITION, CoverDevice
 
 from . import DOMAIN, WinkDevice
@@ -6,7 +8,6 @@ from . import DOMAIN, WinkDevice
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink cover platform."""
-    import pywink
 
     for shade in pywink.get_shades():
         _id = shade.object_id() + shade.name()

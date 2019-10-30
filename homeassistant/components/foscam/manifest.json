@@ -6,5 +6,5 @@
     "libpyfoscam==1.0"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@skgsergio"]
 }

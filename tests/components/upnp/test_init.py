@@ -59,17 +59,20 @@ async def test_async_setup_entry_default(hass):
     }
     with MockDependency("netdisco.discovery"), patch(
         "homeassistant.components.upnp.get_local_ip", return_value="192.168.1.10"
-    ):
+    ), patch.object(Device, "async_create_device") as create_device, patch.object(
+        Device, "async_create_device"
+    ) as create_device, patch.object(
+        Device, "async_discover", return_value=mock_coro([])
+    ) as async_discover:
         await async_setup_component(hass, "http", config)
         await async_setup_component(hass, "upnp", config)
         await hass.async_block_till_done()
 
-    # mock homeassistant.components.upnp.device.Device
-    mock_device = MockDevice(udn)
-    discovery_infos = [{"udn": udn, "ssdp_description": "http://192.168.1.1/desc.xml"}]
-    with patch.object(Device, "async_create_device") as create_device, patch.object(
-        Device, "async_discover"
-    ) as async_discover:  # noqa:E125
+        # mock homeassistant.components.upnp.device.Device
+        mock_device = MockDevice(udn)
+        discovery_infos = [
+            {"udn": udn, "ssdp_description": "http://192.168.1.1/desc.xml"}
+        ]
 
         create_device.return_value = mock_coro(return_value=mock_device)
         async_discover.return_value = mock_coro(return_value=discovery_infos)
@@ -100,16 +103,17 @@ async def test_async_setup_entry_port_mapping(hass):
     }
     with MockDependency("netdisco.discovery"), patch(
         "homeassistant.components.upnp.get_local_ip", return_value="192.168.1.10"
-    ):
+    ), patch.object(Device, "async_create_device") as create_device, patch.object(
+        Device, "async_discover", return_value=mock_coro([])
+    ) as async_discover:
         await async_setup_component(hass, "http", config)
         await async_setup_component(hass, "upnp", config)
         await hass.async_block_till_done()
 
-    mock_device = MockDevice(udn)
-    discovery_infos = [{"udn": udn, "ssdp_description": "http://192.168.1.1/desc.xml"}]
-    with patch.object(Device, "async_create_device") as create_device, patch.object(
-        Device, "async_discover"
-    ) as async_discover:  # noqa:E125
+        mock_device = MockDevice(udn)
+        discovery_infos = [
+            {"udn": udn, "ssdp_description": "http://192.168.1.1/desc.xml"}
+        ]
 
         create_device.return_value = mock_coro(return_value=mock_device)
         async_discover.return_value = mock_coro(return_value=discovery_infos)

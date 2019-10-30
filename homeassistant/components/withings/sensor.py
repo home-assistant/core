@@ -397,7 +397,7 @@ class WithingsHealthSensor(Entity):
         ]
 
         if not measure_groups:
-            _LOGGER.warning("No measure groups found, setting state to %s", None)
+            _LOGGER.debug("No measure groups found, setting state to %s", None)
             self._state = None
             return
 
@@ -417,7 +417,7 @@ class WithingsHealthSensor(Entity):
             return
 
         if not data.series:
-            _LOGGER.warning("No sleep data, setting state to %s", None)
+            _LOGGER.debug("No sleep data, setting state to %s", None)
             self._state = None
             return
 
@@ -444,7 +444,7 @@ class WithingsHealthSensor(Entity):
             return
 
         if not data.series:
-            _LOGGER.warning("Sleep data has no series, setting state to %s", None)
+            _LOGGER.debug("Sleep data has no series, setting state to %s", None)
             self._state = None
             return
 

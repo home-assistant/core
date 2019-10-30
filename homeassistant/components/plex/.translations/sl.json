@@ -42,7 +42,7 @@
                     "manual_setup": "Ro\u010dna nastavitev",
                     "token": "Plex \u017eeton"
                 },
-                "description": "Vnesite \u017eeton Plex za samodejno nastavitev ali ro\u010dno konfigurirajte stre\u017enik.",
+                "description": "Nadaljujte z avtorizacijo na plex.tv ali ro\u010dno konfigurirajte stre\u017enik.",
                 "title": "Pove\u017eite stre\u017enik Plex"
             }
         },

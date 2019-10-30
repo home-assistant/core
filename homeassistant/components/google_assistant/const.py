@@ -32,6 +32,10 @@ CONF_API_KEY = "api_key"
 CONF_ROOM_HINT = "room"
 CONF_ALLOW_UNLOCK = "allow_unlock"
 CONF_SECURE_DEVICES_PIN = "secure_devices_pin"
+CONF_REPORT_STATE = "report_state"
+CONF_SERVICE_ACCOUNT = "service_account"
+CONF_CLIENT_EMAIL = "client_email"
+CONF_PRIVATE_KEY = "private_key"
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
@@ -72,7 +76,10 @@ TYPE_ALARM = PREFIX_TYPES + "SECURITYSYSTEM"
 
 SERVICE_REQUEST_SYNC = "request_sync"
 HOMEGRAPH_URL = "https://homegraph.googleapis.com/"
+HOMEGRAPH_SCOPE = "https://www.googleapis.com/auth/homegraph"
+HOMEGRAPH_TOKEN_URL = "https://accounts.google.com/o/oauth2/token"
 REQUEST_SYNC_BASE_URL = HOMEGRAPH_URL + "v1/devices:requestSync"
+REPORT_STATE_BASE_URL = HOMEGRAPH_URL + "v1/devices:reportStateAndNotification"
 
 # Error codes used for SmartHomeError class
 # https://developers.google.com/actions/reference/smarthome/errors-exceptions

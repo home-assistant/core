@@ -3,10 +3,9 @@ import logging
 
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
+import slacker
+from slacker import Slacker
 import voluptuous as vol
-
-from homeassistant.const import CONF_API_KEY, CONF_ICON, CONF_USERNAME
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -15,6 +14,8 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONF_API_KEY, CONF_ICON, CONF_USERNAME
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +46,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_service(hass, config, discovery_info=None):
     """Get the Slack notification service."""
-    import slacker
 
     channel = config.get(CONF_CHANNEL)
     api_key = config.get(CONF_API_KEY)
@@ -67,7 +67,6 @@ class SlackNotificationService(BaseNotificationService):
 
     def __init__(self, default_channel, api_token, username, icon, is_allowed_path):
         """Initialize the service."""
-        from slacker import Slacker
 
         self._default_channel = default_channel
         self._api_token = api_token
@@ -84,7 +83,6 @@ class SlackNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        import slacker
 
         if kwargs.get(ATTR_TARGET) is None:
             targets = [self._default_channel]

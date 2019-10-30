@@ -2,10 +2,12 @@
 import logging
 import re
 
+import pylast as lastfm
+from pylast import WSError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_API_KEY, ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -30,9 +32,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Last.fm sensor platform."""
-    import pylast as lastfm
-    from pylast import WSError
-
     api_key = config[CONF_API_KEY]
     users = config.get(CONF_USERS)
 
@@ -53,11 +52,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class LastfmSensor(Entity):
     """A class for the Last.fm account."""
 
-    def __init__(self, user, lastfm):
+    def __init__(self, user, lastfm_api):
         """Initialize the sensor."""
-        self._user = lastfm.get_user(user)
+        self._user = lastfm_api.get_user(user)
         self._name = user
-        self._lastfm = lastfm
+        self._lastfm = lastfm_api
         self._state = "Not Scrobbling"
         self._playcount = None
         self._lastplayed = None

@@ -5,6 +5,8 @@ import os
 import threading
 from typing import Any, Callable, Optional
 
+import pygtfs
+from sqlalchemy.sql import text
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -128,8 +130,6 @@ def get_next_departure(
     yesterday_date = yesterday.strftime(dt_util.DATE_STR_FORMAT)
     tomorrow = now + datetime.timedelta(days=1)
     tomorrow_date = tomorrow.strftime(dt_util.DATE_STR_FORMAT)
-
-    from sqlalchemy.sql import text
 
     # Fetch all departures for yesterday, today and optionally tomorrow,
     # up to an overkill maximum in case of a departure every minute for those
@@ -353,8 +353,6 @@ def setup_platform(
         _LOGGER.error("The given GTFS data file/folder was not found")
         return
 
-    import pygtfs
-
     (gtfs_root, _) = os.path.splitext(data)
 
     sqlite_file = f"{gtfs_root}.sqlite?check_same_thread=False"
@@ -375,7 +373,7 @@ class GTFSDepartureSensor(Entity):
 
     def __init__(
         self,
-        pygtfs: Any,
+        gtfs: Any,
         name: Optional[Any],
         origin: Any,
         destination: Any,
@@ -383,7 +381,7 @@ class GTFSDepartureSensor(Entity):
         include_tomorrow: bool,
     ) -> None:
         """Initialize the sensor."""
-        self._pygtfs = pygtfs
+        self._pygtfs = gtfs
         self.origin = origin
         self.destination = destination
         self._include_tomorrow = include_tomorrow

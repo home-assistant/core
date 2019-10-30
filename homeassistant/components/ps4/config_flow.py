@@ -2,6 +2,9 @@
 from collections import OrderedDict
 import logging
 
+from pyps4_2ndscreen.errors import CredentialTimeout
+from pyps4_2ndscreen.helpers import Helper
+from pyps4_2ndscreen.media_art import COUNTRIES
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -37,8 +40,6 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
     def __init__(self):
         """Initialize the config flow."""
-        from pyps4_homeassistant import Helper
-
         self.helper = Helper()
         self.creds = None
         self.name = None
@@ -61,8 +62,6 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_creds(self, user_input=None):
         """Return PS4 credentials from 2nd Screen App."""
-        from pyps4_homeassistant.errors import CredentialTimeout
-
         errors = {}
         if user_input is not None:
             try:
@@ -103,8 +102,6 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_link(self, user_input=None):
         """Prompt user input. Create or edit entry."""
-        from pyps4_homeassistant.media_art import COUNTRIES
-
         regions = sorted(COUNTRIES.keys())
         default_region = None
         errors = {}

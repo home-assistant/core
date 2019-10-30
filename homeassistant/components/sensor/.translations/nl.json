@@ -1,0 +1,26 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_battery_level": "Huidige batterijniveau {entity_name}",
+            "is_humidity": "{entity_name} vochtigheidsgraad",
+            "is_illuminance": "{entity_name} verlichtingssterkte",
+            "is_power": "{entity_name}\nvermogen",
+            "is_pressure": "{entity_name} druk",
+            "is_signal_strength": "{entity_name} signaalsterkte",
+            "is_temperature": "{entity_name} temperatuur",
+            "is_timestamp": "{entity_name} tijdstip",
+            "is_value": "{entity_name} waarde"
+        },
+        "trigger_type": {
+            "battery_level": "{entity_name} batterijniveau",
+            "humidity": "{entity_name} vochtigheidsgraad",
+            "illuminance": "{entity_name} verlichtingssterkte",
+            "power": "{entity_name} vermogen",
+            "pressure": "{entity_name} druk",
+            "signal_strength": "{entity_name} signaalsterkte",
+            "temperature": "{entity_name} temperatuur",
+            "timestamp": "{entity_name} tijdstip",
+            "value": "{entity_name} waarde"
+        }
+    }
+}

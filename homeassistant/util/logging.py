@@ -130,7 +130,15 @@ def catch_log_exception(
     """Decorate a callback to catch and log exceptions."""
 
     def log_exception(*args: Any) -> None:
-        module_name = inspect.getmodule(inspect.trace()[1][0]).__name__  # type: ignore
+        module = inspect.getmodule(inspect.stack()[1][0])
+        if module is not None:
+            module_name = module.__name__
+        else:
+            # If Python is unable to access the sources files, the call stack frame
+            # will be missing information, so let's guard.
+            # https://github.com/home-assistant/home-assistant/issues/24982
+            module_name = __name__
+
         # Do not print the wrapper in the traceback
         frames = len(inspect.trace()) - 1
         exc_msg = traceback.format_exc(-frames)
@@ -178,9 +186,15 @@ def catch_log_coro_exception(
         try:
             return await target
         except Exception:  # pylint: disable=broad-except
-            module_name = inspect.getmodule(  # type: ignore
-                inspect.trace()[1][0]
-            ).__name__
+            module = inspect.getmodule(inspect.stack()[1][0])
+            if module is not None:
+                module_name = module.__name__
+            else:
+                # If Python is unable to access the sources files, the frame
+                # will be missing information, so let's guard.
+                # https://github.com/home-assistant/home-assistant/issues/24982
+                module_name = __name__
+
             # Do not print the wrapper in the traceback
             frames = len(inspect.trace()) - 1
             exc_msg = traceback.format_exc(-frames)

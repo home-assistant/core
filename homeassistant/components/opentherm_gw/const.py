@@ -18,6 +18,8 @@ DEVICE_CLASS_COLD = "cold"
 DEVICE_CLASS_HEAT = "heat"
 DEVICE_CLASS_PROBLEM = "problem"
 
+DOMAIN = "opentherm_gw"
+
 SERVICE_RESET_GATEWAY = "reset_gateway"
 SERVICE_SET_CLOCK = "set_clock"
 SERVICE_SET_CONTROL_SETPOINT = "set_control_setpoint"

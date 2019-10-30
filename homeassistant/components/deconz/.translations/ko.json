@@ -11,6 +11,7 @@
         "error": {
             "no_key": "API \ud0a4\ub97c \uac00\uc838\uc62c \uc218 \uc5c6\uc2b5\ub2c8\ub2e4"
         },
+        "flow_title": "deCONZ Zigbee \uac8c\uc774\ud2b8\uc6e8\uc774 ({host})",
         "step": {
             "hassio_confirm": {
                 "data": {
@@ -64,6 +65,7 @@
             "remote_button_quadruple_press": "\"{subtype}\" \ubc84\ud2bc\uc744 \ub124 \ubc88 \ub204\ub984",
             "remote_button_quintuple_press": "\"{subtype}\" \ubc84\ud2bc\uc744 \ub2e4\uc12f \ubc88 \ub204\ub984",
             "remote_button_rotated": "\"{subtype}\" \ubc84\ud2bc\uc744 \ud68c\uc804",
+            "remote_button_rotation_stopped": "\"{subtype}\" \ubc84\ud2bc\uc744 \ud68c\uc804 \uc815\uc9c0",
             "remote_button_short_press": "\"{subtype}\" \ubc84\ud2bc\uc744 \ub204\ub984",
             "remote_button_short_release": "\"{subtype}\" \ubc84\ud2bc\uc744 \ub5cc",
             "remote_button_triple_press": "\"{subtype}\" \ubc84\ud2bc\uc744 \uc138 \ubc88 \ub204\ub984",
