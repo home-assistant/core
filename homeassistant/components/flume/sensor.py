@@ -1,6 +1,7 @@
 """Sensor for displaying the number of result from Flume."""
 from datetime import timedelta
 import logging
+
 from pyflume import FlumeData, FlumeDeviceList
 import voluptuous as vol
 
