@@ -68,6 +68,9 @@ PyQRCode==1.2.1
 # homeassistant.components.rmvtransport
 PyRMVtransport==0.2.9
 
+# homeassistant.components.telegram_bot
+PySocks==1.7.1
+
 # homeassistant.components.switchbot
 # PySwitchbot==0.6.2
 
