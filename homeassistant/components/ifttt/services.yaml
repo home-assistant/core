@@ -1,0 +1,18 @@
+# Describes the format for available ifttt services
+
+
+trigger:
+  description: Triggers the configured IFTTT Webhook
+  fields:
+    event:
+      description: the name of the event to sent
+      example: 'MY_HA_EVENT'
+    value1:
+      description: generic field to send data via the event
+      example: 'Hello World'
+    value2:
+      description: generic field to send data via the event
+      example: 'Some additional data'
+    value3:
+      description: generic field to send data via the event
+      example: 'even more data'
