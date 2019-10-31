@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_POLLING = "polling"
 
-DEFAULT_CACHEDB = ".abodepy.pickle"
+DEFAULT_CACHEDB = "abodepy_cache.pickle"
 
 SERVICE_SETTINGS = "change_setting"
 SERVICE_CAPTURE_IMAGE = "capture_image"
