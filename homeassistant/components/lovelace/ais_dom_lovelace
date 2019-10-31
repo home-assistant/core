@@ -51,26 +51,6 @@
                                 ]
                             },
                             "type": "ais-monster"
-                        },
-                        {
-                            "card": {
-                                "show_header_toggle": false,
-                                "title": "Automatyzacje",
-                                "type": "entities"
-                            },
-                            "filter": {
-                                "exclude": [
-                                    {
-                                        "entity_id": "automation.ais_*"
-                                    }
-                                ],
-                                "include": [
-                                    {
-                                        "domain": "automation"
-                                    }
-                                ]
-                            },
-                            "type": "ais-monster"
                         }
                     ],
                     "icon": "mdi:home-outline",
@@ -771,6 +751,26 @@
                     "cards": [
                         {
                             "cards": [
+                            {
+                                "card": {
+                                    "show_header_toggle": false,
+                                    "title": "Automatyzacje",
+                                    "type": "entities"
+                                },
+                                "filter": {
+                                    "exclude": [
+                                        {
+                                            "entity_id": "automation.ais_*"
+                                        }
+                                    ],
+                                    "include": [
+                                        {
+                                            "domain": "automation"
+                                        }
+                                    ]
+                                },
+                                "type": "ais-monster"
+                            },
                                 {
                                     "entities": [],
                                     "show_header_toggle": false,
@@ -794,7 +794,6 @@
                                     "type": "entities"
                                 }
                             ],
-                            "title": "Urz\u0105dzenia w Twojej sieci",
                             "type": "vertical-stack"
                         },
                         {
@@ -885,7 +884,6 @@
                                 }
                             ],
                             "show_header_toggle": false,
-                            "title": "Dodawanie nowych urz\u0105dze\u0144",
                             "type": "vertical-stack"
                         },
                         {
