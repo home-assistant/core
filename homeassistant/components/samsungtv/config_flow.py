@@ -31,7 +31,7 @@ def _get_ip(host):
     return socket.gethostbyname(host)
 
 
-def _try_connect(host, name):
+async def _async_try_connect(host, name):
     """Try to connect and check auth."""
     for method in METHODS:
         config = {
@@ -100,7 +100,18 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._host = user_input[CONF_HOST]
                 self._title = user_input[CONF_NAME]
                 self._ip = self.context[CONF_IP_ADDRESS] = _get_ip(self._host)
-                return await self.async_step_user_finish()
+
+                result = await _async_try_connect(self._host, self._title)
+
+                if result == RESULT_NOT_FOUND:
+                    return self.async_abort(reason=RESULT_NOT_FOUND)
+                elif result == RESULT_NOT_SUPPORTED:
+                    return self.async_abort(reason=RESULT_NOT_SUPPORTED)
+                elif result == RESULT_AUTH_MISSING:
+                    return self.async_abort(reason=RESULT_AUTH_MISSING)
+                elif result == RESULT_SUCCESS:
+                    return await self._async_get_entry()
+
             except vol.error.MultipleInvalid as errs:
                 for err in errs.errors:
                     errors[err.path[0]] = err.msg
@@ -109,30 +120,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_user_finish(self):
-        """Finish auth flow initialized by the user."""
-        result = _try_connect(self._host, self._title)
-
-        if result == RESULT_NOT_FOUND:
-            return self.async_abort(reason=RESULT_NOT_FOUND)
-        elif result == RESULT_NOT_SUPPORTED:
-            return self.async_abort(reason=RESULT_NOT_SUPPORTED)
-        elif result == RESULT_AUTH_MISSING:
-            return await self.async_step_user_auth()
-        elif result == RESULT_SUCCESS:
-            return await self._async_get_entry()
-
-    async def async_step_user_auth(self, user_input=None):
-        """Handle auth flow initialized by the user."""
-        if user_input is not None:
-            return await self.async_step_user_finish()
-
-        return self.async_show_form(
-            step_id="user_auth", description_placeholders={"host": self._host}
-        )
-
     async def async_step_ssdp(self, user_input=None):
-        """Handle user-confirmation of discovered node."""
+        """Handle a flow initialized by discovery."""
         ip = self.context[CONF_IP_ADDRESS] = _get_ip(user_input[ATTR_HOST])
 
         if any(
@@ -163,26 +152,18 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(self, user_input=None):
         """Handle user-confirmation of discovered node."""
-        result = _try_connect(self._host, self._name)
+        if user_input is not None:
+            result = await _async_try_connect(self._host, self._name)
 
-        if result == RESULT_NOT_FOUND:
-            return self.async_abort(reason=RESULT_NOT_FOUND)
-        elif result == RESULT_NOT_SUPPORTED:
-            return self.async_abort(reason=RESULT_NOT_SUPPORTED)
-        elif result == RESULT_AUTH_MISSING:
-            return await self.async_step_ssdp_auth()
-        elif result == RESULT_SUCCESS and user_input is not None:
-            return await self._async_get_entry()
+            if result == RESULT_NOT_FOUND:
+                return self.async_abort(reason=RESULT_NOT_FOUND)
+            elif result == RESULT_NOT_SUPPORTED:
+                return self.async_abort(reason=RESULT_NOT_SUPPORTED)
+            elif result == RESULT_AUTH_MISSING:
+                return self.async_abort(reason=RESULT_AUTH_MISSING)
+            elif result == RESULT_SUCCESS and user_input is not None:
+                return await self._async_get_entry()
 
         return self.async_show_form(
             step_id="confirm", description_placeholders={"model": self._model}
-        )
-
-    async def async_step_ssdp_auth(self, user_input=None):
-        """Handle auth flow initialized by the user."""
-        if user_input is not None:
-            return await self.async_step_confirm()
-
-        return self.async_show_form(
-            step_id="ssdp_auth", description_placeholders={"model": self._model}
         )
