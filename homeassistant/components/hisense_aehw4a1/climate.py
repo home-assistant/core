@@ -3,7 +3,11 @@
 <<<<<<< HEAD
 =======
 import json
+<<<<<<< HEAD
 >>>>>>> First working release, but there's a lot to do
+=======
+import time
+>>>>>>> Added support for preset_modes
 import logging
 
 from pyaehw4a1.aehw4a1 import AehW4a1
@@ -19,14 +23,21 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_SWING_MODE,
 <<<<<<< HEAD
+<<<<<<< HEAD
     SUPPORT_PRESET_MODE,
 =======
 >>>>>>> First working release, but there's a lot to do
+=======
+    SUPPORT_PRESET_MODE,
+>>>>>>> Added support for preset_modes
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_VERTICAL,
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> Added support for preset_modes
     FAN_LOW,
     FAN_MEDIUM,
     FAN_HIGH,
@@ -35,8 +46,11 @@ from homeassistant.components.climate.const import (
     PRESET_ECO,
     PRESET_BOOST,
     PRESET_SLEEP,
+<<<<<<< HEAD
 =======
 >>>>>>> First working release, but there's a lot to do
+=======
+>>>>>>> Added support for preset_modes
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -49,15 +63,21 @@ from .const import DOMAIN
 from . import CONF_IP_ADDRESS, DOMAIN as AEHW4A1_DOMAIN
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> Added support for preset_modes
 SUPPORT_FLAGS = (
     SUPPORT_TARGET_TEMPERATURE
     | SUPPORT_FAN_MODE
     | SUPPORT_SWING_MODE
     | SUPPORT_PRESET_MODE
 )
+<<<<<<< HEAD
 =======
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_SWING_MODE
 >>>>>>> First working release, but there's a lot to do
+=======
+>>>>>>> Added support for preset_modes
 
 MIN_TEMP_C = 16
 MAX_TEMP_C = 32
@@ -73,6 +93,7 @@ HVAC_MODES = [
     HVAC_MODE_FAN_ONLY,
 ]
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 FAN_MODES = [
     "mute",
@@ -100,9 +121,22 @@ PRESET_MODES = [
 ]
 =======
 FAN_MODES = ["mute", "low", "med", "high", "auto"]
+=======
+FAN_MODES = ["mute", FAN_LOW, FAN_MEDIUM, FAN_HIGH, FAN_AUTO]
+>>>>>>> Added support for preset_modes
 
 SWING_MODES = [SWING_OFF, SWING_VERTICAL, SWING_HORIZONTAL, SWING_BOTH]
 >>>>>>> First working release, but there's a lot to do
+
+PRESET_MODES = [
+    PRESET_NONE,
+    PRESET_ECO,
+    PRESET_BOOST,
+    PRESET_SLEEP,
+    "sleep_2",
+    "sleep_3",
+    "sleep_4",
+]
 
 AC_TO_HA_STATE = {
     "0001": HVAC_MODE_HEAT,
@@ -121,6 +155,7 @@ HA_STATE_TO_AC = {
 
 AC_TO_HA_FAN_MODES = {
 <<<<<<< HEAD
+<<<<<<< HEAD
     "00000001": FAN_AUTO,
     "00000010": "mute",
     "00000100": FAN_LOW,
@@ -134,21 +169,35 @@ AC_TO_HA_FAN_MODES = {
     "00001000": "high",
     "00000001": "auto",
 >>>>>>> First working release, but there's a lot to do
+=======
+    "00000000": "off",
+    "00000010": "mute",
+    "00000100": FAN_LOW,
+    "00000110": FAN_MEDIUM,
+    "00001000": FAN_HIGH,
+    "00000001": FAN_AUTO,
+>>>>>>> Added support for preset_modes
 }
 
 HA_FAN_MODES_TO_AC = {
     "mute": "speed_mute",
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> Added support for preset_modes
     FAN_LOW: "speed_low",
     FAN_MEDIUM: "speed_med",
     FAN_HIGH: "speed_max",
     FAN_AUTO: "speed_auto",
+<<<<<<< HEAD
 =======
     "low": "speed_low",
     "med": "speed_med",
     "high": "speed_max",
     "auto": "speed_auto",
 >>>>>>> First working release, but there's a lot to do
+=======
+>>>>>>> Added support for preset_modes
 }
 
 AC_TO_HA_SWING = {
@@ -159,6 +208,7 @@ AC_TO_HA_SWING = {
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 HA_SWING_TO_AC = {
     "SWING_VERTICAL_ON": "vert_swing",
@@ -168,15 +218,20 @@ HA_SWING_TO_AC = {
 }
 
 >>>>>>> First working release, but there's a lot to do
+=======
+>>>>>>> Added support for preset_modes
 _LOGGER = logging.getLogger(__name__)
 
 
 def _build_entity(device):
     _LOGGER.debug("Found device at %s", device)
 <<<<<<< HEAD
+<<<<<<< HEAD
     return ClimateAehW4a1(device)
 =======
     print(device)
+=======
+>>>>>>> Added support for preset_modes
     return Climate_aeh_w4a1(device)
 >>>>>>> First working release, but there's a lot to do
 
@@ -210,9 +265,13 @@ class Climate_aeh_w4a1(ClimateDevice):
         self._fan_modes = FAN_MODES
         self._swing_modes = SWING_MODES
 <<<<<<< HEAD
+<<<<<<< HEAD
         self._preset_modes = PRESET_MODES
 =======
 >>>>>>> First working release, but there's a lot to do
+=======
+        self._preset_modes = PRESET_MODES
+>>>>>>> Added support for preset_modes
         self._on = None
         self._temperature_unit = None
         self._current_temperature = None
@@ -221,6 +280,7 @@ class Climate_aeh_w4a1(ClimateDevice):
         self._fan_mode = None
         self._swing_mode = None
 <<<<<<< HEAD
+<<<<<<< HEAD
         self._preset_mode = None
         self._previous_state = None
 
@@ -228,6 +288,10 @@ class Climate_aeh_w4a1(ClimateDevice):
         """Pull state from AEH-W4A1."""
         status = self._device.command("status_102_0")
 =======
+=======
+        self._preset_mode = None
+        self._previous_preset = None
+>>>>>>> Added support for preset_modes
 
     def update(self):
         """Pull state from AEH-W4A1."""
@@ -294,7 +358,7 @@ class Climate_aeh_w4a1(ClimateDevice):
         self._target_temperature = int(status["indoor_temperature_setting"], 2)
 
         device_mode = status["mode_status"]
-        if self._on:
+        if self._on == "1":
             self._hvac_mode = AC_TO_HA_STATE[device_mode]
         else:
             self._hvac_mode = HVAC_MODE_OFF
@@ -305,6 +369,21 @@ class Climate_aeh_w4a1(ClimateDevice):
         swing_mode = status["up_down"] + status["left_right"]
         self._swing_mode = AC_TO_HA_SWING[swing_mode]
 >>>>>>> First working release, but there's a lot to do
+
+        if status["low_electricity"] == "1":
+            self._preset_mode = PRESET_ECO
+        elif status["efficient"] == "1":
+            self._preset_mode = PRESET_BOOST
+        elif status["sleep_status"] == "0000001":
+            self._preset_mode = PRESET_SLEEP
+        elif status["sleep_status"] == "0000010":
+            self._preset_mode = "sleep_2"
+        elif status["sleep_status"] == "0000011":
+            self._preset_mode = "sleep_3"
+        elif status["sleep_status"] == "0000100":
+            self._preset_mode = "sleep_4"
+        else:
+            self._preset_mode = PRESET_NONE
 
     @property
     def name(self):
@@ -348,6 +427,9 @@ class Climate_aeh_w4a1(ClimateDevice):
 
     @property
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> Added support for preset_modes
     def preset_mode(self):
         """Return the preset mode if on."""
         return self._preset_mode
@@ -358,8 +440,11 @@ class Climate_aeh_w4a1(ClimateDevice):
         return self._preset_modes
 
     @property
+<<<<<<< HEAD
 =======
 >>>>>>> First working release, but there's a lot to do
+=======
+>>>>>>> Added support for preset_modes
     def swing_mode(self):
         """Return swing operation."""
         return self._swing_mode
@@ -487,9 +572,9 @@ class Climate_aeh_w4a1(ClimateDevice):
                     self._device.command(HA_STATE_TO_AC[self._previous_state])
 =======
         if self._temperature_unit == TEMP_CELSIUS:
-            self._device.command("temp_{0}_C".format(str(int(temp))))
+            self._device.command(f"temp_{str(int(temp))}_C")
         else:
-            self._device.command("temp_{0}_F".format(str(int(temp))))
+            self._device.command(f"temp_{str(int(temp))}_F")
 
     def set_fan_mode(self, fan_mode):
         """Set new fan mode."""
@@ -504,28 +589,67 @@ class Climate_aeh_w4a1(ClimateDevice):
 
         if swing_mode == SWING_OFF and swing_act != SWING_OFF:
             if swing_act in (SWING_HORIZONTAL, SWING_BOTH):
-                self._device.command(HA_SWING_TO_AC["SWING_HORIZONTAL_OFF"])
+                self._device.command("hor_dir")
+                time.sleep(0.5)
             if swing_act in (SWING_VERTICAL, SWING_BOTH):
-                self._device.command(HA_SWING_TO_AC["SWING_VERTICAL_OFF"])
+                self._device.command("vert_dir")
 
         if swing_mode == SWING_BOTH and swing_act != SWING_BOTH:
             if swing_act in (SWING_OFF, SWING_HORIZONTAL):
-                self._device.command(HA_SWING_TO_AC["SWING_VERTICAL_ON"])
+                self._device.command("vert_swing")
+                time.sleep(0.5)
             if swing_act in (SWING_OFF, SWING_VERTICAL):
-                self._device.command(HA_SWING_TO_AC["SWING_HORIZONTAL_ON"])
+                self._device.command("hor_swing")
 
         if swing_mode == SWING_VERTICAL and swing_act != SWING_VERTICAL:
             if swing_act in (SWING_OFF, SWING_HORIZONTAL):
-                self._device.command(HA_SWING_TO_AC["SWING_VERTICAL_ON"])
+                self._device.command("vert_swing")
+                time.sleep(0.5)
             if swing_act in (SWING_BOTH, SWING_HORIZONTAL):
-                self._device.command(HA_SWING_TO_AC["SWING_HORIZONTAL_OFF"])
+                self._device.command("hor_dir")
 
         if swing_mode == SWING_HORIZONTAL and swing_act != SWING_HORIZONTAL:
             if swing_act in (SWING_BOTH, SWING_VERTICAL):
-                self._device.command(HA_SWING_TO_AC["SWING_VERTICAL_OFF"])
+                self._device.command("vert_dir")
+                time.sleep(0.5)
             if swing_act in (SWING_OFF, SWING_VERTICAL):
+<<<<<<< HEAD
                 self._device.command(HA_SWING_TO_AC["SWING_HORIZONTAL_ON"])
 >>>>>>> First working release, but there's a lot to do
+=======
+                self._device.command("hor_swing")
+
+    def set_preset_mode(self, preset_mode):
+        """Set new preset mode."""
+        _LOGGER.debug("Setting preset mode of %s to %s", self._unique_id, preset_mode)
+        if preset_mode == PRESET_ECO:
+            self._device.command("energysave_on")
+            self._previous_preset = preset_mode
+        elif preset_mode == PRESET_BOOST:
+            self._device.command("turbo_on")
+            self._previous_preset = preset_mode
+        elif preset_mode == PRESET_SLEEP:
+            self._device.command("sleep_1")
+            self._previous_preset = self._hvac_mode
+        elif preset_mode == "sleep_2":
+            self._device.command("sleep_2")
+            self._previous_preset = self._hvac_mode
+        elif preset_mode == "sleep_3":
+            self._device.command("sleep_3")
+            self._previous_preset = self._hvac_mode
+        elif preset_mode == "sleep_3":
+            self._device.command("sleep_3")
+            self._previous_preset = self._hvac_mode
+        else:
+            if self._previous_preset == PRESET_ECO:
+                self._device.command("energysave_off")
+            elif self._previous_preset == PRESET_BOOST:
+                self._device.command("turbo_off")
+            elif self._previous_preset == PRESET_BOOST:
+                self._device.command("turbo_off")
+            elif self._previous_preset in HA_STATE_TO_AC:
+                self._device.command(HA_STATE_TO_AC[self._previous_preset])
+>>>>>>> Added support for preset_modes
 
     def set_hvac_mode(self, hvac_mode):
         """Set new operation mode."""
