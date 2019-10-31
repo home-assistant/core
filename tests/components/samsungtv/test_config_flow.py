@@ -42,6 +42,8 @@ def remote_fixture():
         "homeassistant.components.samsungtv.config_flow.socket"
     ) as socket_class:
         remote = mock.Mock()
+        remote.__enter__ = mock.Mock()
+        remote.__exit__ = mock.Mock()
         remote_class.return_value = remote
         socket = mock.Mock()
         socket_class.return_value = socket

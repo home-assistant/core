@@ -45,9 +45,9 @@ async def _async_try_connect(host, name):
         }
         try:
             LOGGER.debug("Try config: %s", config)
-            Remote(config.copy())
-            LOGGER.debug("Working config: %s", config)
-            return RESULT_SUCCESS
+            with Remote(config.copy()):
+                LOGGER.debug("Working config: %s", config)
+                return RESULT_SUCCESS
         except AccessDenied:
             LOGGER.debug("Working but denied config: %s", config)
             return RESULT_AUTH_MISSING
