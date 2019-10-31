@@ -1,15 +1,16 @@
 """The Airly component."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
-import async_timeout
 from aiohttp.client_exceptions import ClientConnectorError
 from airly import Airly
 from airly.exceptions import AirlyError
+import async_timeout
 
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import Config, HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle
 
@@ -44,6 +45,9 @@ async def async_setup_entry(hass, config_entry):
     airly = AirlyData(websession, api_key, latitude, longitude)
 
     await airly.async_update()
+
+    if not airly.data:
+        raise ConfigEntryNotReady()
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA_CLIENT] = {}
@@ -81,7 +85,7 @@ class AirlyData:
         """Update Airly data."""
 
         try:
-            with async_timeout.timeout(10):
+            with async_timeout.timeout(20):
                 measurements = self.airly.create_measurements_session_point(
                     self.latitude, self.longitude
                 )
@@ -104,11 +108,8 @@ class AirlyData:
             self.data[ATTR_API_CAQI_DESCRIPTION] = index["description"]
             self.data[ATTR_API_ADVICE] = index["advice"]
             _LOGGER.debug("Data retrieved from Airly")
-        except (
-            ValueError,
-            AirlyError,
-            asyncio.TimeoutError,
-            ClientConnectorError,
-        ) as error:
+        except asyncio.TimeoutError:
+            _LOGGER.error("Asyncio Timeout Error")
+        except (ValueError, AirlyError, ClientConnectorError) as error:
             _LOGGER.error(error)
             self.data = {}
