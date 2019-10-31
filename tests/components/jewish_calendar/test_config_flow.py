@@ -25,19 +25,19 @@ async def test_form(hass):
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+            {"name": "JCalendar", "diaspora": True, "language": "hebrew"},
         )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Test Title"
+    assert result2["title"] == "JCalendar"
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
+        "name": "JCalendar",
+        "diaspora": True,
+        "language": "hebrew",
+        "candle_lighting_minutes_before_sunset": 18,
+        "havdalah_minutes_after_sunset": 0,
+        "latitude": 32.87336,
+        "longitude": -117.22743,
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
