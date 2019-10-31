@@ -186,12 +186,12 @@ class KNXLight(Light):
         if (
             self.device.supports_color or self.device.supports_rgbw
         ) and self.device.current_color:
-            rgb, w = self.device.current_color
+            rgb, white = self.device.current_color
             values = []
             if rgb is not None:
                 values.extend(rgb)
-            if w is not None:
-                values.append(w)
+            if white is not None:
+                values.append(white)
             if values:
                 return max(values)
         return None
