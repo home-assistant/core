@@ -56,18 +56,18 @@ SERVICE_ATTRIBUTES = {
 }
 
 # Update this dict when new services are added to HA.
-# Each item is a service with a corresponding state.
-SERVICE_TO_STATE = {
-    SERVICE_TURN_ON: STATE_ON,
-    SERVICE_TURN_OFF: STATE_OFF,
-    SERVICE_ALARM_ARM_AWAY: STATE_ALARM_ARMED_AWAY,
-    SERVICE_ALARM_ARM_HOME: STATE_ALARM_ARMED_HOME,
-    SERVICE_ALARM_DISARM: STATE_ALARM_DISARMED,
-    SERVICE_ALARM_TRIGGER: STATE_ALARM_TRIGGERED,
-    SERVICE_LOCK: STATE_LOCKED,
-    SERVICE_UNLOCK: STATE_UNLOCKED,
-    SERVICE_OPEN_COVER: STATE_OPEN,
-    SERVICE_CLOSE_COVER: STATE_CLOSED,
+# Each item is a service corresponding to the key state.
+SERVICE_BY_TARGET_STATE = {
+    STATE_ON: SERVICE_TURN_ON,
+    STATE_OFF: SERVICE_TURN_OFF,
+    STATE_ALARM_ARMED_AWAY: SERVICE_ALARM_ARM_AWAY,
+    STATE_ALARM_ARMED_HOME: SERVICE_ALARM_ARM_HOME,
+    STATE_ALARM_DISARMED: SERVICE_ALARM_DISARM,
+    STATE_ALARM_TRIGGERED: SERVICE_ALARM_TRIGGER,
+    STATE_LOCKED: SERVICE_LOCK,
+    STATE_UNLOCKED: SERVICE_UNLOCK,
+    STATE_OPEN: SERVICE_OPEN_COVER,
+    STATE_CLOSED: SERVICE_CLOSE_COVER,
 }
 
 
@@ -168,6 +168,27 @@ async def async_reproduce_state(
 
 
 @bind_hass
+def find_service_for_state(
+    hass: HomeAssistantType, service_domain: str, state: State
+) -> Optional[str]:
+    """Find the service needed to reproduce the given state."""
+    domain_services = hass.services.async_services().get(service_domain)
+
+    if not domain_services:
+        _LOGGER.warning("reproduce_state: Unable to reproduce state %s (1)", state)
+        return None
+
+    if state.state in SERVICE_BY_TARGET_STATE and state.state in domain_services:
+        return state.state
+
+    for _service in domain_services:
+        if _service in SERVICE_ATTRIBUTES and all(
+            attr in state.attributes for attr in SERVICE_ATTRIBUTES[_service]
+        ):
+            return _service
+
+
+@bind_hass
 async def async_reproduce_state_legacy(
     hass: HomeAssistantType,
     domain: str,
@@ -197,22 +218,7 @@ async def async_reproduce_state_legacy(
             _LOGGER.warning("reproduce_state: Unable to reproduce state %s (1)", state)
             continue
 
-        service = None
-        for _service in domain_services.keys():
-            if (
-                _service in SERVICE_ATTRIBUTES
-                and all(
-                    attr in state.attributes for attr in SERVICE_ATTRIBUTES[_service]
-                )
-                or _service in SERVICE_TO_STATE
-                and SERVICE_TO_STATE[_service] == state.state
-            ):
-                service = _service
-            if (
-                _service in SERVICE_TO_STATE
-                and SERVICE_TO_STATE[_service] == state.state
-            ):
-                break
+        service = find_service_for_state(hass, service_domain, state)
 
         if not service:
             _LOGGER.warning("reproduce_state: Unable to reproduce state %s (2)", state)
