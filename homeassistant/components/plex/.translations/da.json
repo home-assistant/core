@@ -4,6 +4,7 @@
             "all_configured": "Alle linkede servere er allerede konfigureret",
             "already_configured": "Denne Plex-server er allerede konfigureret",
             "already_in_progress": "Plex konfigureres",
+            "discovery_no_file": "Der blev ikke fundet nogen legacy konfigurationsfil",
             "invalid_import": "Importeret konfiguration er ugyldig",
             "token_request_timeout": "Timeout ved hentning af token",
             "unknown": "Mislykkedes af ukendt \u00e5rsag"
@@ -31,6 +32,10 @@
                 },
                 "description": "Flere servere til r\u00e5dighed, v\u00e6lg en:",
                 "title": "V\u00e6lg Plex-server"
+            },
+            "start_website_auth": {
+                "description": "Forts\u00e6t for at autorisere p\u00e5 plex.tv.",
+                "title": "Tilslut Plex-server"
             },
             "user": {
                 "data": {

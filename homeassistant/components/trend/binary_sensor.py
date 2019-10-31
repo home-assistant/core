@@ -3,6 +3,7 @@ from collections import deque
 import logging
 import math
 
+import numpy as np
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -17,9 +18,9 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
-    STATE_UNKNOWN,
-    STATE_UNAVAILABLE,
     CONF_SENSORS,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -207,8 +208,6 @@ class SensorTrend(BinarySensorDevice):
 
         This need run inside executor.
         """
-        import numpy as np
-
         timestamps = np.array([t for t, _ in self.samples])
         values = np.array([s for _, s in self.samples])
         coeffs = np.polyfit(timestamps, values, 1)

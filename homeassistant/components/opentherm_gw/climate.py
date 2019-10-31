@@ -17,6 +17,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    CONF_ID,
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
@@ -33,23 +34,28 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the opentherm_gw device."""
-    gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][discovery_info]
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up an OpenTherm Gateway climate entity."""
+    ents = []
+    ents.append(
+        OpenThermClimate(
+            hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]],
+            config_entry.options,
+        )
+    )
 
-    gateway = OpenThermClimate(gw_dev)
-    async_add_entities([gateway])
+    async_add_entities(ents)
 
 
 class OpenThermClimate(ClimateDevice):
     """Representation of a climate device."""
 
-    def __init__(self, gw_dev):
+    def __init__(self, gw_dev, options):
         """Initialize the device."""
         self._gateway = gw_dev
         self.friendly_name = gw_dev.name
-        self.floor_temp = gw_dev.climate_config[CONF_FLOOR_TEMP]
-        self.temp_precision = gw_dev.climate_config.get(CONF_PRECISION)
+        self.floor_temp = options[CONF_FLOOR_TEMP]
+        self.temp_precision = options.get(CONF_PRECISION)
         self._current_operation = None
         self._current_temperature = None
         self._hvac_mode = HVAC_MODE_HEAT
@@ -60,11 +66,21 @@ class OpenThermClimate(ClimateDevice):
         self._away_state_a = False
         self._away_state_b = False
 
+    @callback
+    def update_options(self, entry):
+        """Update climate entity options."""
+        self.floor_temp = entry.options[CONF_FLOOR_TEMP]
+        self.temp_precision = entry.options.get(CONF_PRECISION)
+        self.async_schedule_update_ha_state()
+
     async def async_added_to_hass(self):
         """Connect to the OpenTherm Gateway device."""
-        _LOGGER.debug("Added device %s", self.friendly_name)
+        _LOGGER.debug("Added OpenTherm Gateway climate device %s", self.friendly_name)
         async_dispatcher_connect(
             self.hass, self._gateway.update_signal, self.receive_report
+        )
+        async_dispatcher_connect(
+            self.hass, self._gateway.options_update_signal, self.update_options
         )
 
     @callback

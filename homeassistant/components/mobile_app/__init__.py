@@ -1,6 +1,6 @@
 """Integrates Native Apps to Home Assistant."""
-from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.components.webhook import async_register as webhook_register
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.helpers import device_registry as dr, discovery
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
@@ -20,7 +20,6 @@ from .const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
-
 from .http_api import RegistrationsView
 from .webhook import handle_webhook
 from .websocket_api import register_websocket_handlers

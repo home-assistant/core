@@ -3,6 +3,12 @@ import time
 from unittest.mock import Mock, patch
 
 from asynctest import CoroutineMock
+import zigpy.profiles.zha
+import zigpy.types
+import zigpy.zcl
+import zigpy.zcl.clusters.general
+import zigpy.zcl.foundation as zcl_f
+import zigpy.zdo.types
 
 from homeassistant.components.zha.core.const import (
     DATA_ZHA,
@@ -10,7 +16,6 @@ from homeassistant.components.zha.core.const import (
     DATA_ZHA_CONFIG,
     DATA_ZHA_DISPATCHERS,
 )
-from homeassistant.components.zha.core.helpers import convert_ieee
 from homeassistant.util import slugify
 
 from tests.common import mock_coro
@@ -21,7 +26,7 @@ class FakeApplication:
 
     def __init__(self):
         """Init fake application."""
-        self.ieee = convert_ieee("00:15:8d:00:02:32:4f:32")
+        self.ieee = zigpy.types.EUI64.convert("00:15:8d:00:02:32:4f:32")
         self.nwk = 0x087D
 
 
@@ -33,8 +38,6 @@ class FakeEndpoint:
 
     def __init__(self, manufacturer, model):
         """Init fake endpoint."""
-        from zigpy.profiles.zha import PROFILE_ID
-
         self.device = None
         self.endpoint_id = 1
         self.in_clusters = {}
@@ -43,14 +46,12 @@ class FakeEndpoint:
         self.status = 1
         self.manufacturer = manufacturer
         self.model = model
-        self.profile_id = PROFILE_ID
+        self.profile_id = zigpy.profiles.zha.PROFILE_ID
         self.device_type = None
 
     def add_input_cluster(self, cluster_id):
         """Add an input cluster."""
-        from zigpy.zcl import Cluster
-
-        cluster = Cluster.from_id(self, cluster_id, is_server=True)
+        cluster = zigpy.zcl.Cluster.from_id(self, cluster_id, is_server=True)
         patch_cluster(cluster)
         self.in_clusters[cluster_id] = cluster
         if hasattr(cluster, "ep_attribute"):
@@ -58,9 +59,7 @@ class FakeEndpoint:
 
     def add_output_cluster(self, cluster_id):
         """Add an output cluster."""
-        from zigpy.zcl import Cluster
-
-        cluster = Cluster.from_id(self, cluster_id, is_server=False)
+        cluster = zigpy.zcl.Cluster.from_id(self, cluster_id, is_server=False)
         patch_cluster(cluster)
         self.out_clusters[cluster_id] = cluster
 
@@ -71,7 +70,6 @@ def patch_cluster(cluster):
     cluster.configure_reporting = CoroutineMock(return_value=[0])
     cluster.deserialize = Mock()
     cluster.handle_cluster_request = Mock()
-    cluster.handle_cluster_general_request = Mock()
     cluster.read_attributes = CoroutineMock()
     cluster.read_attributes_raw = Mock()
     cluster.unbind = CoroutineMock(return_value=[0])
@@ -83,7 +81,7 @@ class FakeDevice:
     def __init__(self, ieee, manufacturer, model):
         """Init fake device."""
         self._application = APPLICATION
-        self.ieee = convert_ieee(ieee)
+        self.ieee = zigpy.types.EUI64.convert(ieee)
         self.nwk = 0xB79C
         self.zdo = Mock()
         self.endpoints = {0: self.zdo}
@@ -94,9 +92,7 @@ class FakeDevice:
         self.initializing = False
         self.manufacturer = manufacturer
         self.model = model
-        from zigpy.zdo.types import NodeDescriptor
-
-        self.node_desc = NodeDescriptor()
+        self.node_desc = zigpy.zdo.types.NodeDescriptor()
 
 
 def make_device(
@@ -150,11 +146,9 @@ async def async_init_zigpy_device(
 
 def make_attribute(attrid, value, status=0):
     """Make an attribute."""
-    from zigpy.zcl.foundation import Attribute, TypeValue
-
-    attr = Attribute()
+    attr = zcl_f.Attribute()
     attr.attrid = attrid
-    attr.value = TypeValue()
+    attr.value = zcl_f.TypeValue()
     attr.value.value = value
     return attr
 
@@ -174,7 +168,7 @@ def make_entity_id(domain, device, cluster, use_suffix=True):
     machine so that we can test state changes.
     """
     ieee = device.ieee
-    ieeetail = "".join(["%02x" % (o,) for o in ieee[-4:]])
+    ieeetail = "".join([f"{o:02x}" for o in ieee[:4]])
     entity_id = "{}.{}_{}_{}_{}{}".format(
         domain,
         slugify(device.manufacturer),
@@ -202,21 +196,18 @@ async def async_test_device_join(
     simulate pairing a new device to the network so that code pathways that
     only trigger during device joins can be tested.
     """
-    from zigpy.zcl.foundation import Status
-    from zigpy.zcl.clusters.general import Basic
-
     # create zigpy device mocking out the zigbee network operations
     with patch(
         "zigpy.zcl.Cluster.configure_reporting",
-        return_value=mock_coro([Status.SUCCESS, Status.SUCCESS]),
+        return_value=mock_coro([zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS]),
     ):
         with patch(
             "zigpy.zcl.Cluster.bind",
-            return_value=mock_coro([Status.SUCCESS, Status.SUCCESS]),
+            return_value=mock_coro([zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS]),
         ):
             zigpy_device = await async_init_zigpy_device(
                 hass,
-                [cluster_id, Basic.cluster_id],
+                [cluster_id, zigpy.zcl.clusters.general.Basic.cluster_id],
                 [],
                 device_type,
                 zha_gateway,
@@ -230,3 +221,12 @@ async def async_test_device_join(
                 domain, zigpy_device, cluster, use_suffix=device_type is None
             )
             assert hass.states.get(entity_id) is not None
+
+
+def make_zcl_header(command_id: int, global_command: bool = True) -> zcl_f.ZCLHeader:
+    """Cluster.handle_message() ZCL Header helper."""
+    if global_command:
+        frc = zcl_f.FrameControl(zcl_f.FrameType.GLOBAL_COMMAND)
+    else:
+        frc = zcl_f.FrameControl(zcl_f.FrameType.CLUSTER_COMMAND)
+    return zcl_f.ZCLHeader(frc, tsn=1, command_id=command_id)

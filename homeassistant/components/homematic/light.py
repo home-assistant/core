@@ -54,9 +54,12 @@ class HMLight(HMDevice, Light):
     @property
     def supported_features(self):
         """Flag supported features."""
+        features = SUPPORT_BRIGHTNESS
         if "COLOR" in self._hmdevice.WRITENODE:
-            return SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_EFFECT
-        return SUPPORT_BRIGHTNESS
+            features |= SUPPORT_COLOR
+        if "PROGRAM" in self._hmdevice.WRITENODE:
+            features |= SUPPORT_EFFECT
+        return features
 
     @property
     def hs_color(self):
@@ -110,4 +113,6 @@ class HMLight(HMDevice, Light):
         self._data[self._state] = None
 
         if self.supported_features & SUPPORT_COLOR:
-            self._data.update({"COLOR": None, "PROGRAM": None})
+            self._data.update({"COLOR": None})
+        if self.supported_features & SUPPORT_EFFECT:
+            self._data.update({"PROGRAM": None})

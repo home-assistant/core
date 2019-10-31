@@ -4,9 +4,8 @@ import logging
 from typing import Any, Dict, Optional
 
 import aiohttp
-import voluptuous as vol
-
 from geniushubclient import GeniusHub
+import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -22,8 +21,8 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_send,
     async_dispatcher_connect,
+    async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
@@ -214,7 +213,7 @@ class GeniusZone(GeniusEntity):
         super().__init__()
 
         self._zone = zone
-        self._unique_id = f"{broker.hub_uid}_device_{zone.id}"
+        self._unique_id = f"{broker.hub_uid}_zone_{zone.id}"
 
         self._max_temp = self._min_temp = self._supported_features = None
 

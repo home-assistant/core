@@ -4,8 +4,8 @@ from urllib.parse import urlparse
 
 import pytest
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components.stream import request_stream
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed

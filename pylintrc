@@ -1,8 +1,11 @@
 [MASTER]
 ignore=tests
+# Use a conservative default here; 2 should speed up most setups and not hurt
+# any too bad. Override on command line as appropriate.
+jobs=2
 
 [BASIC]
-good-names=i,j,k,ex,Run,_,fp
+good-names=id,i,j,k,ex,Run,_,fp
 
 [MESSAGES CONTROL]
 # Reasons disabled:
@@ -18,8 +21,8 @@ good-names=i,j,k,ex,Run,_,fp
 # too-few-* - same as too-many-*
 # abstract-method - with intro of async there are always methods missing
 # inconsistent-return-statements - doesn't handle raise
-# not-an-iterable - https://github.com/PyCQA/pylint/issues/2311
 # unnecessary-pass - readability for functions which only contain pass
+# import-outside-toplevel - TODO
 disable=
   format,
   abstract-class-little-used,
@@ -27,9 +30,9 @@ disable=
   cyclic-import,
   duplicate-code,
   global-statement,
+  import-outside-toplevel,
   inconsistent-return-statements,
   locally-disabled,
-  not-an-iterable,
   not-context-manager,
   redefined-variable-type,
   too-few-public-methods,

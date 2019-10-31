@@ -1,9 +1,11 @@
 """Support for interface with a Panasonic Viera TV."""
 import logging
 
+from panasonic_viera import RemoteControl
 import voluptuous as vol
+import wakeonlan
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_URL,
     SUPPORT_NEXT_TRACK,
@@ -62,8 +64,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Panasonic Viera TV platform."""
-    from panasonic_viera import RemoteControl
-
     mac = config.get(CONF_MAC)
     name = config.get(CONF_NAME)
     port = config.get(CONF_PORT)
@@ -95,8 +95,6 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
 
     def __init__(self, mac, name, remote, host, app_power, uuid=None):
         """Initialize the Panasonic device."""
-        import wakeonlan
-
         # Save a reference to the imported class
         self._wol = wakeonlan
         self._mac = mac

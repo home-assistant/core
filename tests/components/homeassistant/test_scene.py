@@ -28,3 +28,26 @@ async def test_reload_config_service(hass):
 
     assert hass.states.get("scene.hallo") is None
     assert hass.states.get("scene.bye") is not None
+
+
+async def test_apply_service(hass):
+    """Test the apply service."""
+    assert await async_setup_component(hass, "scene", {})
+    assert await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
+
+    assert await hass.services.async_call(
+        "scene", "apply", {"entities": {"light.bed_light": "off"}}, blocking=True
+    )
+
+    assert hass.states.get("light.bed_light").state == "off"
+
+    assert await hass.services.async_call(
+        "scene",
+        "apply",
+        {"entities": {"light.bed_light": {"state": "on", "brightness": 50}}},
+        blocking=True,
+    )
+
+    state = hass.states.get("light.bed_light")
+    assert state.state == "on"
+    assert state.attributes["brightness"] == 50
