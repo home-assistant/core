@@ -10,7 +10,7 @@ PROJECT_PACKAGE_NAME = "ais-dom"
 PROJECT_LICENSE = "Apache License 2.0"
 PROJECT_AUTHOR = "AI-Speaker team"
 PROJECT_COPYRIGHT = " 2016-{}, {}".format(dt.now().year, PROJECT_AUTHOR)
-PROJECT_URL = "https://ai-speaker.com/"
+PROJECT_URL = "https://www.ai-speaker.com"
 PROJECT_EMAIL = "info@sviete.pl"
 
 PROJECT_GITHUB_USERNAME = "sviete"

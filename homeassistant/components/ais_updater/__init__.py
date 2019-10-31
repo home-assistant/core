@@ -255,7 +255,7 @@ async def async_setup(hass, config):
                     "domain": "ais_yt_service",
                     "name": "AIS YouTube",
                     "config_flow": False,
-                    "documentation": "https://ai-speaker.com",
+                    "documentation": "https://www.ai-speaker.com",
                     "requirements": [package],
                     "dependencies": [],
                     "codeowners": [],

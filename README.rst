@@ -14,4 +14,4 @@ To get started:
 
 
 .. |screenshot-states| image:: https://raw.github.com/sviete/AIS-home-assistant/master/docs/screenshots.png
-   :target: https://ai-speaker.com
+   :target: https://www.ai-speaker.com

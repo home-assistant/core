@@ -63,7 +63,7 @@ def setup(hass, config):
 
     params = {
         "version": __version__,
-        "company_url": "https://ai-speaker.com",
+        "company_url": "https://www.ai-speaker.com",
         "gate_id": gate_id,
     }
 

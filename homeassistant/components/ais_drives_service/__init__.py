@@ -3,7 +3,7 @@
 Support for AIS local audio
 
 For more details about this component, please refer to the documentation at
-https://ai-speaker.com
+https://www.ai-speaker.com
 """
 import asyncio
 import logging
