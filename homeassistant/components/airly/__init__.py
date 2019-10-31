@@ -85,7 +85,7 @@ class AirlyData:
         """Update Airly data."""
 
         try:
-            with async_timeout.timeout(10):
+            with async_timeout.timeout(20):
                 measurements = self.airly.create_measurements_session_point(
                     self.latitude, self.longitude
                 )
