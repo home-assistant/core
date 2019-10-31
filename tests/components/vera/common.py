@@ -1,40 +1,38 @@
 """Common code for tests."""
 
-import re
 from copy import deepcopy
-from typing import List
-from typing import NamedTuple, Union, Any, Optional
+import re
+from typing import Any, List, NamedTuple, Optional, Union
 from urllib import parse
 
-import requests_mock
 from pyvera import (
-    CATEGORY_DIMMER,
-    CATEGORY_SWITCH,
     CATEGORY_ARMABLE,
-    CATEGORY_THERMOSTAT,
-    CATEGORY_LOCK,
     CATEGORY_CURTAIN,
-    CATEGORY_SENSOR,
-    CATEGORY_SCENE_CONTROLLER,
+    CATEGORY_DIMMER,
     CATEGORY_HUMIDITY_SENSOR,
-    CATEGORY_TEMPERATURE_SENSOR,
     CATEGORY_LIGHT_SENSOR,
+    CATEGORY_LOCK,
     CATEGORY_POWER_METER,
+    CATEGORY_SCENE_CONTROLLER,
+    CATEGORY_SENSOR,
+    CATEGORY_SWITCH,
+    CATEGORY_TEMPERATURE_SENSOR,
+    CATEGORY_THERMOSTAT,
     CATEGORY_UV_SENSOR,
 )
+import requests_mock
 from requests_mock.request import _RequestObjectProxy
 from requests_mock.response import _Context
 
 from homeassistant.components.vera import (
-    DOMAIN,
     CONF_CONTROLLER,
     CONF_EXCLUDE,
     CONF_LIGHTS,
+    DOMAIN,
+    VERA_CONTROLLER,
 )
-from homeassistant.components.vera import VERA_CONTROLLER
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_METRIC
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
@@ -87,9 +85,8 @@ async def update_device(
 async def publish_device_status(hass: HomeAssistant, device_status: dict) -> None:
     """Instruct pyvera to notify objects that data changed for a device."""
     controller = hass.data[VERA_CONTROLLER]
-    controller.subscription_registry._event(
-        [device_status], []
-    )  # pylint: disable=protected-access
+    # pylint: disable=protected-access
+    controller.subscription_registry._event([device_status], [])
     await hass.async_block_till_done()
 
 
@@ -347,8 +344,6 @@ async def async_configure_component(
 
     await async_process_ha_core_config(hass, hass_config.get("homeassistant"))
     assert await async_setup_component(hass, DOMAIN, hass_config)
-
-    hass.bus.fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
 
     return component_data
