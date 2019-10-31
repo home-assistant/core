@@ -1,0 +1,12 @@
+{
+  "domain": "particle",
+  "name": "Particle Cloud",
+  "documentation": "",
+  "dependencies": [],
+  "codeowners": [
+    "@Schoonology"
+  ],
+  "requirements": [
+    "pyparticleio==0.1.0"
+  ]
+}

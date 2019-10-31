@@ -1,0 +1,12 @@
+call:
+  description: Call a Particle Cloud function
+  fields:
+    entity_id:
+      description: Name of the Particle device hosting the function.
+      example: 'particle.tinker'
+    function:
+      description: Name of the function
+      example: 'toggle'
+    args:
+      description: An array of arguments to send along to the function.
+      example: '["D7"]'
