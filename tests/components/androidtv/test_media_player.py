@@ -6,15 +6,22 @@ from homeassistant.components.androidtv.media_player import (
     ANDROIDTV_DOMAIN,
     CONF_ADB_SERVER_IP,
     CONF_ADBKEY,
+    CONF_APPS,
 )
-from homeassistant.components.media_player.const import DOMAIN
+from homeassistant.components.media_player.const import (
+    ATTR_INPUT_SOURCE,
+    DOMAIN,
+    SERVICE_SELECT_SOURCE,
+)
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
     CONF_HOST,
     CONF_NAME,
     CONF_PLATFORM,
     STATE_IDLE,
     STATE_OFF,
+    STATE_PLAYING,
     STATE_UNAVAILABLE,
 )
 
@@ -276,3 +283,83 @@ async def test_setup_with_adbkey(hass):
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_OFF
+
+
+async def test_firetv_sources(hass):
+    """Test that sources (i.e., apps) are handled correctly for Fire TV devices."""
+    config = CONFIG_FIRETV_ADB_SERVER.copy()
+    config[DOMAIN][CONF_APPS] = {"com.app.test1": "TEST 1"}
+    patch_key, entity_id = _setup(hass, config)
+
+    with patchers.PATCH_ADB_DEVICE, patchers.patch_connect(True)[
+        patch_key
+    ], patchers.patch_shell("")[patch_key]:
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.helpers.entity_component.async_update_entity(entity_id)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_OFF
+
+    with patchers.patch_firetv_update(
+        "playing", "com.app.test1", ["com.app.test1", "com.app.test2"]
+    ):
+        await hass.helpers.entity_component.async_update_entity(entity_id)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_PLAYING
+        assert state.attributes["source"] == "TEST 1"
+        assert state.attributes["source_list"] == ["TEST 1", "com.app.test2"]
+
+    with patchers.patch_firetv_update(
+        "playing", "com.app.test2", ["com.app.test2", "com.app.test1"]
+    ):
+        await hass.helpers.entity_component.async_update_entity(entity_id)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_PLAYING
+        assert state.attributes["source"] == "com.app.test2"
+        assert state.attributes["source_list"] == ["com.app.test2", "TEST 1"]
+
+    with patchers.PATCH_LAUNCH_APP as launch_app:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SELECT_SOURCE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: "com.app.test1"},
+        )
+        launch_app.assert_called_with("com.app.test1")
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SELECT_SOURCE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: "TEST 1"},
+        )
+        launch_app.assert_called_with("com.app.test1")
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SELECT_SOURCE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: "com.app.test2"},
+        )
+        launch_app.assert_called_with("com.app.test2")
+
+    with patchers.PATCH_STOP_APP as stop_app:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SELECT_SOURCE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: "com.app.test1"},
+        )
+        stop_app.assert_called_with("com.app.test1")
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SELECT_SOURCE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: "TEST 1"},
+        )
+        stop_app.assert_called_with("com.app.test1")
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SELECT_SOURCE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: "com.app.test2"},
+        )
+        stop_app.assert_called_with("com.app.test2")
