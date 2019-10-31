@@ -3,10 +3,10 @@ import logging
 import threading
 from datetime import timedelta
 from time import time
-from typing import Dict
 
 import pyatmo
 import requests
+import urllib3
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -22,7 +22,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import call_later
 from homeassistant.util import Throttle
-from .const import DATA_NETATMO_AUTH
+from .const import DATA_NETATMO_AUTH, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -158,7 +158,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 for condition in data.station_data.monitoredConditions(
                     moduleId=module["id"]
                 ):
-                    _LOGGER.info(
+                    _LOGGER.debug(
                         "Adding %s %s",
                         module["module_name"],
                         data.station_data.moduleById(mid=module["id"]),
@@ -199,20 +199,21 @@ class NetatmoSensor(Entity):
 
     def __init__(self, netatmo_data, module_info, sensor_type):
         """Initialize the sensor."""
-        self._name = "Netatmo {} {}".format(
-            module_info["module_name"], SENSOR_TYPES[sensor_type][0]
-        )
         self.netatmo_data = netatmo_data
-        self.module_name = module_info["module_name"]
+        module = self.netatmo_data.station_data.moduleById(mid=module_info["id"])
+        if module["type"] == "NHC":
+            self.module_name = module_info["station_name"]
+        else:
+            self.module_name = module_info["module_name"]
+        self._name = f"{DOMAIN} {self.module_name} {SENSOR_TYPES[sensor_type][0]}"
         self.type = sensor_type
-        self.station_name = netatmo_data.station
         self._state = None
         self._device_class = SENSOR_TYPES[self.type][3]
         self._icon = SENSOR_TYPES[self.type][2]
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
-        module = self.netatmo_data.station_data.moduleById(mid=module_info["id"])
         self._module_type = module["type"]
-        self._unique_id = "{}-{}".format(module["_id"], self.type)
+        self._module_id = module_info["id"]
+        self._unique_id = f"{self._module_id}-{self.type}-{self._module_type}"
 
     @property
     def name(self):
@@ -254,7 +255,7 @@ class NetatmoSensor(Entity):
             self._state = None
             return
 
-        data = self.netatmo_data.data.get(self.module_name)
+        data = self.netatmo_data.data.get(self._module_id)
 
         if data is None:
             _LOGGER.warning("No data found for %s", self.module_name)
@@ -543,7 +544,7 @@ class NetatmoData:
         self._next_update = time()
         self._update_in_progress = threading.Lock()
 
-    def get_module_infos(self) -> Dict[str, Dict[str, str]]:
+    def get_module_infos(self):
         """Return all modules available on the API as a dict."""
         if self.station is not None:
             return self.station_data.getModules(station=self.station)
@@ -567,14 +568,13 @@ class NetatmoData:
                     "No Weather or HomeCoach devices found for %s", str(self.station)
                 )
                 return
-            except requests.exceptions.Timeout:
+            except (requests.exceptions.Timeout, urllib3.exceptions.ReadTimeoutError):
                 _LOGGER.warning("Timed out when connecting to Netatmo server.")
                 return
 
-            if self.station is not None:
-                data = self.station_data.lastData(station=self.station, exclude=3600)
-            else:
-                data = self.station_data.lastData(exclude=3600)
+            data = self.station_data.lastData(
+                station=self.station, exclude=3600, byId=True
+            )
             if not data:
                 self._next_update = time() + NETATMO_UPDATE_INTERVAL
                 return
