@@ -39,7 +39,7 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
         self._unique_id = unique_id
         ieeetail = "".join([f"{o:02x}" for o in zha_device.ieee[:4]])
         ch_names = [ch.cluster.ep_attribute for ch in channels]
-        ch_names = "/".join(sorted(ch_names))
+        ch_names = ", ".join(sorted(ch_names))
         self._name = f"{zha_device.name} {ieeetail} {ch_names}"
         self._state = None
         self._device_state_attributes = {}
