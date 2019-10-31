@@ -10,6 +10,7 @@ from airly.exceptions import AirlyError
 
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import Config, HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle
 
@@ -44,6 +45,9 @@ async def async_setup_entry(hass, config_entry):
     airly = AirlyData(websession, api_key, latitude, longitude)
 
     await airly.async_update()
+    
+    if not airly.data:
+        raise ConfigEntryNotReady()
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA_CLIENT] = {}
