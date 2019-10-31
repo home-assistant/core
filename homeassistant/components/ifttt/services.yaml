@@ -12,7 +12,7 @@ trigger:
       example: 'Hello World'
     value2:
       description: generic field to send data via the event
-      example: 'Some additional data'
+      example: 'some additional data'
     value3:
       description: generic field to send data via the event
       example: 'even more data'
