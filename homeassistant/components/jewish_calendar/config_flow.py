@@ -30,6 +30,7 @@ class JewishCalendarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=user_input.get(CONF_NAME, DEFAULT_NAME),
                 data={
+                    CONF_NAME: user_input[CONF_NAME],
                     CONF_DIASPORA: user_input[CONF_DIASPORA],
                     CONF_LANGUAGE: user_input[CONF_LANGUAGE],
                     CONF_CANDLE_LIGHT_MINUTES: user_input[CONF_CANDLE_LIGHT_MINUTES],
