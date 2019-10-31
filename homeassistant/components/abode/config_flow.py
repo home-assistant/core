@@ -42,7 +42,7 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
         polling = user_input.get(CONF_POLLING, False)
-        cache = hass.config.path(DEFAULT_CACHEDB)
+        cache = self.hass.config.path(DEFAULT_CACHEDB)
 
         try:
             await self.hass.async_add_executor_job(Abode, username, password, True, True, True, cache)
