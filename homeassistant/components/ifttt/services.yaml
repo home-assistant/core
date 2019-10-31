@@ -2,7 +2,7 @@
 
 
 trigger:
-  description: Triggers the configured IFTTT Webhook
+  description: Triggers the configured IFTTT Webhook.
   fields:
     event:
       description: The name of the event to sent.
