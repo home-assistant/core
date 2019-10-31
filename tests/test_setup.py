@@ -527,3 +527,11 @@ async def test_when_setup_already_loaded(hass):
     setup.async_when_setup(hass, "test", mock_callback)
     await hass.async_block_till_done()
     assert calls == ["test", "test"]
+
+
+async def test_setup_import_blows_up(hass):
+    """Test that we handle it correctly when importing integration blows up."""
+    with mock.patch(
+        "homeassistant.loader.Integration.get_component", side_effect=ValueError
+    ):
+        assert not await setup.async_setup_component(hass, "sun", {})
