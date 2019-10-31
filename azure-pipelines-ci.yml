@@ -185,5 +185,5 @@ stages:
           pre-commit install-hooks
     - script: |
         . venv/bin/activate
-        pre-commit run mypy --all-files
+        mypy homeassistant
       displayName: 'Run mypy'
