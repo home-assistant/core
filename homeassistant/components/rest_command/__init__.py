@@ -102,14 +102,18 @@ async def async_setup(hass, config):
                     )
 
                 if response.status < 400:
-                    _LOGGER.info("Success call %s.", response.url)
+                    _LOGGER.info(
+                        "Success. Url: %s. Status code: %d.",
+                        response.url,
+                        response.status,
+                    )
                 else:
                     _LOGGER.warning(
-                        "Error %d on call %s.", response.status, response.url
+                        "Error. Url: %s. Status code %d.", response.url, response.status
                     )
 
             except asyncio.TimeoutError:
-                _LOGGER.warning("Timeout call %s.", response.url)
+                _LOGGER.warning("Timeout call %s.", response.url, exc_info=1)
 
             except aiohttp.ClientError:
                 _LOGGER.error("Client error %s.", request_url, exc_info=1)
