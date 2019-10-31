@@ -1175,3 +1175,14 @@ class AlexaPlaybackStateReporter(AlexaCapability):
             return {"state": "PAUSED"}
 
         return {"state": "STOPPED"}
+
+
+class AlexaSeekController(AlexaCapability):
+    """Implements Alexa.SeekController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-seekcontroller.html
+    """
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.SeekController"
