@@ -16,8 +16,8 @@ DEFAULT_NAME = "Jewish Calendar"
 DOMAIN = "jewish_calendar"
 
 DATA_SCHEMA = {
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_DIASPORA, default=False): cv.boolean,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
+    vol.Optional(CONF_DIASPORA, default=False): bool,
     vol.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
     vol.Optional(CONF_LANGUAGE, default="english"): vol.In(["hebrew", "english"]),
