@@ -45,7 +45,7 @@ async def async_setup_entry(hass, config_entry):
     airly = AirlyData(websession, api_key, latitude, longitude)
 
     await airly.async_update()
-    
+
     if not airly.data:
         raise ConfigEntryNotReady()
 
@@ -108,11 +108,8 @@ class AirlyData:
             self.data[ATTR_API_CAQI_DESCRIPTION] = index["description"]
             self.data[ATTR_API_ADVICE] = index["advice"]
             _LOGGER.debug("Data retrieved from Airly")
-        except (
-            ValueError,
-            AirlyError,
-            asyncio.TimeoutError,
-            ClientConnectorError,
-        ) as error:
+        except asyncio.TimeoutError:
+            _LOGGER.error("Asyncio Timeout Error")
+        except (ValueError, AirlyError, ClientConnectorError) as error:
             _LOGGER.error(error)
             self.data = {}
