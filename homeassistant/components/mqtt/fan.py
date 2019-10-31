@@ -278,6 +278,8 @@ class MqttFan(
                 self._speed = SPEED_HIGH
             elif payload == self._payload["SPEED_OFF"]:
                 self._speed = SPEED_OFF
+            elif payload in self._config[CONF_SPEED_LIST]:
+                self._speed = payload
             self.async_write_ha_state()
 
         if self._topic[CONF_SPEED_STATE_TOPIC] is not None:
