@@ -2061,3 +2061,6 @@ zigpy-zigate==0.5.0
 
 # homeassistant.components.zoneminder
 zm-py==0.3.3
+
+# homeassistant.components.particle
+pyparticleio==0.1.0
