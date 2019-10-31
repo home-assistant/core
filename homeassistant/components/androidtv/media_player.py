@@ -581,7 +581,6 @@ class FireTVDevice(ADBDevice):
         If the source starts with a '!', then it will close the app instead of
         opening it.
         """
-        _LOGGER.critical("select_source(%s)", source)
         if isinstance(source, str):
             if not source.startswith("!"):
                 self.aftv.launch_app(self._app_name_to_id.get(source, source))
