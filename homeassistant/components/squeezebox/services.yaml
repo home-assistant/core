@@ -8,6 +8,6 @@ squeezebox_call_method:
       description: Command to pass to Logitech Media Server (p0 in the CLI documentation).
       example: 'playlist'
     parameters:
-      description: Array of additional parameters to pass to Logitech Media Server (p1, …, pN in the CLI documentation).
+      description: Array of additional parameters to pass to Logitech Media Server (p1, ..., pN in the CLI documentation).
       example: ["loadtracks", "album.titlesearch="]
  
