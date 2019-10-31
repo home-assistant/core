@@ -61,7 +61,6 @@ async def _async_try_connect(host, name):
     return RESULT_NOT_FOUND
 
 
-@config_entries.HANDLERS.register(DOMAIN)
 class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Samsung TV config flow."""
 
