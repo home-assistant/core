@@ -7,17 +7,17 @@
         "step": {
             "user": {
                 "data": {
-                    "candle_lighting_minutes_before_sunset": "Number of minutes before sunset for candle lighthing",
-                    "diaspora": "Is location outside of Israel",
-                    "havdalah_minutes_after_sunset": "Number of minutes after sunset for havdalah (0 - use the time for Tzet Hakochavim)",
-                    "language": "Show holidays and dates in english (latin) or hebrew",
-                    "latitude": "Override the default latitude value set by Home Assistant",
-                    "longitude": "Override the default longitude value set by Home Assistant",
-                    "name": "The name to be used for the sensors"
+                    "candle_lighting_minutes_before_sunset": "Minutes before sunset for candle lighthing",
+                    "diaspora": "Outside of Israel",
+                    "havdalah_minutes_after_sunset": "Minutes after sunset for havdalah",
+                    "language": "Language for holidays and dates",
+                    "latitude": "Override default latitude",
+                    "longitude": "Override default longitude",
+                    "name": "Name to be used for sensors"
                 },
                 "title": "Jewish Calendar settings"
             }
         },
-        "title": "Jewish calendar"
+        "title": "Jewish Calendar"
     }
 }
