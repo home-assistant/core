@@ -3,6 +3,7 @@ import logging
 import threading
 from datetime import timedelta
 from time import time
+from typing import Dict
 
 import pyatmo
 import requests
@@ -144,26 +145,25 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         def find_devices(data):
             """Find all devices."""
-            all_module_names = data.get_module_names()
+            all_module_infos = data.get_module_infos()
+            all_module_names = [e["module_name"] for e in all_module_infos.values()]
             module_names = config.get(CONF_MODULES, all_module_names)
             _dev = []
             for module_name in module_names:
                 if module_name not in all_module_names:
                     _LOGGER.info("Module %s not found", module_name)
+            for module in all_module_infos.values():
+                if module["module_name"] not in module_names:
                     continue
-                for condition in data.station_data.monitoredConditions(module_name):
-                    _LOGGER.debug(
+                for condition in data.station_data.monitoredConditions(
+                    moduleId=module["id"]
+                ):
+                    _LOGGER.info(
                         "Adding %s %s",
-                        module_name,
-                        data.station_data.moduleByName(
-                            station=data.station, module=module_name
-                        ),
+                        module["module_name"],
+                        data.station_data.moduleById(mid=module["id"]),
                     )
-                    _dev.append(
-                        NetatmoSensor(
-                            data, module_name, condition.lower(), data.station
-                        )
-                    )
+                    _dev.append(NetatmoSensor(data, module, condition.lower()))
             return _dev
 
         def _retry(_data):
@@ -197,20 +197,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class NetatmoSensor(Entity):
     """Implementation of a Netatmo sensor."""
 
-    def __init__(self, netatmo_data, module_name, sensor_type, station):
+    def __init__(self, netatmo_data, module_info, sensor_type):
         """Initialize the sensor."""
-        self._name = "Netatmo {} {}".format(module_name, SENSOR_TYPES[sensor_type][0])
+        self._name = "Netatmo {} {}".format(
+            module_info["module_name"], SENSOR_TYPES[sensor_type][0]
+        )
         self.netatmo_data = netatmo_data
-        self.module_name = module_name
+        self.module_name = module_info["module_name"]
         self.type = sensor_type
-        self.station_name = station
+        self.station_name = netatmo_data.station
         self._state = None
         self._device_class = SENSOR_TYPES[self.type][3]
         self._icon = SENSOR_TYPES[self.type][2]
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
-        module = self.netatmo_data.station_data.moduleByName(
-            station=self.station_name, module=module_name
-        )
+        module = self.netatmo_data.station_data.moduleById(mid=module_info["id"])
         self._module_type = module["type"]
         self._unique_id = "{}-{}".format(module["_id"], self.type)
 
@@ -543,11 +543,11 @@ class NetatmoData:
         self._next_update = time()
         self._update_in_progress = threading.Lock()
 
-    def get_module_names(self):
-        """Return all module available on the API as a list."""
+    def get_module_infos(self) -> Dict[str, Dict[str, str]]:
+        """Return all modules available on the API as a dict."""
         if self.station is not None:
-            return self.station_data.modulesNamesList(station=self.station)
-        return self.station_data.modulesNamesList()
+            return self.station_data.getModules(station=self.station)
+        return self.station_data.getModules()
 
     def update(self):
         """Call the Netatmo API to update the data.
