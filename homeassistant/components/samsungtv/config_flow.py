@@ -1,7 +1,8 @@
 """Config flow for Samsung TV."""
+import socket
+
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
-import socket
 import voluptuous as vol
 
 from homeassistant import config_entries
