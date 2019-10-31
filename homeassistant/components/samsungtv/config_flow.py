@@ -77,6 +77,12 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name = None
         self._title = None
 
+    def _is_already_configured(self):
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if self._ip == entry.data.get(CONF_IP_ADDRESS):
+                return True
+        return False
+
     async def _async_get_entry(self):
         return self.async_create_entry(
             title=self._title,
@@ -100,6 +106,9 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._title = user_input[CONF_NAME]
                 self._ip = self.context[CONF_IP_ADDRESS] = _get_ip(self._host)
 
+                if self._is_already_configured():
+                    return self.async_abort(reason="already_configured")
+
                 result = await _async_try_connect(self._host, self._title)
 
                 if result == RESULT_NOT_FOUND:
@@ -121,22 +130,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, user_input=None):
         """Handle a flow initialized by discovery."""
-        ip = self.context[CONF_IP_ADDRESS] = _get_ip(user_input[ATTR_HOST])
-
-        if any(
-            ip == flow["context"].get(CONF_IP_ADDRESS)
-            for flow in self._async_in_progress()
-        ):
-            return self.async_abort(reason="already_in_progress")
-
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if ip == entry.data.get(CONF_IP_ADDRESS):
-                return self.async_abort(reason="already_configured")
-
-        ip = self.context[CONF_IP_ADDRESS] = _get_ip(user_input[ATTR_HOST])
-
         self._host = user_input[ATTR_HOST]
-        self._ip = ip
+        self._ip = self.context[CONF_IP_ADDRESS] = _get_ip(user_input[ATTR_HOST])
         self._manufacturer = user_input[ATTR_MANUFACTURER]
         self._model = user_input[ATTR_MODEL_NAME]
         self._uuid = user_input[ATTR_UDN]
@@ -146,6 +141,15 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._name.startswith("[TV]"):
             self._name = self._name[4:]
         self._title = "{} ({})".format(self._name, self._model)
+
+        if any(
+            self._ip == flow["context"].get(CONF_IP_ADDRESS)
+            for flow in self._async_in_progress()
+        ):
+            return self.async_abort(reason="already_in_progress")
+
+        if self._is_already_configured():
+            return self.async_abort(reason="already_configured")
 
         return await self.async_step_confirm()
 
@@ -160,7 +164,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason=RESULT_NOT_SUPPORTED)
             elif result == RESULT_AUTH_MISSING:
                 return self.async_abort(reason=RESULT_AUTH_MISSING)
-            elif result == RESULT_SUCCESS and user_input is not None:
+            elif result == RESULT_SUCCESS:
                 return await self._async_get_entry()
 
         return self.async_show_form(

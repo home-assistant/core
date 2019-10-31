@@ -100,7 +100,7 @@ async def test_user_error(hass, remote):
 
 
 async def test_user_missing_auth(hass):
-    """Test starting a flow from discovery with authentication."""
+    """Test starting a flow by user with authentication."""
     with patch(
         "homeassistant.components.samsungtv.config_flow.Remote",
         side_effect=AccessDenied("Boom"),
@@ -115,7 +115,7 @@ async def test_user_missing_auth(hass):
 
 
 async def test_user_not_supported(hass):
-    """Test starting a flow from discovery for not supported device."""
+    """Test starting a flow by user for not supported device."""
     with patch(
         "homeassistant.components.samsungtv.config_flow.Remote",
         side_effect=UnhandledResponse("Boom"),
@@ -130,7 +130,7 @@ async def test_user_not_supported(hass):
 
 
 async def test_user_not_found(hass):
-    """Test starting a flow from discovery but no device found."""
+    """Test starting a flow by user but no device found."""
     with patch(
         "homeassistant.components.samsungtv.config_flow.Remote",
         side_effect=OSError("Boom"),
@@ -142,6 +142,23 @@ async def test_user_not_found(hass):
         )
         assert result["type"] == "abort"
         assert result["reason"] == "not_found"
+
+
+async def test_user_already_configured(hass, remote):
+    """Test starting a flow by user when already configured."""
+
+    # entry was added
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+    )
+    assert result["type"] == "create_entry"
+
+    # failed as already configured
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
 
 
 async def test_ssdp(hass, remote):
