@@ -7,6 +7,10 @@ import socket
 import urllib
 
 import aiohttp
+import jsonrpc_base
+import jsonrpc_async
+import jsonrpc_websocket
+
 import voluptuous as vol
 
 from homeassistant.components.kodi import SERVICE_CALL_METHOD
@@ -231,8 +235,6 @@ def cmd(func):
     @wraps(func)
     async def wrapper(obj, *args, **kwargs):
         """Wrap all command methods."""
-        import jsonrpc_base
-
         try:
             await func(obj, *args, **kwargs)
         except jsonrpc_base.jsonrpc.TransportError as exc:
@@ -268,9 +270,6 @@ class KodiDevice(MediaPlayerDevice):
         unique_id=None,
     ):
         """Initialize the Kodi device."""
-        import jsonrpc_async
-        import jsonrpc_websocket
-
         self.hass = hass
         self._name = name
         self._unique_id = unique_id
@@ -389,8 +388,6 @@ class KodiDevice(MediaPlayerDevice):
 
     async def _get_players(self):
         """Return the active player objects or None."""
-        import jsonrpc_base
-
         try:
             return await self.server.Player.GetActivePlayers()
         except jsonrpc_base.jsonrpc.TransportError:
@@ -420,8 +417,6 @@ class KodiDevice(MediaPlayerDevice):
 
     async def async_ws_connect(self):
         """Connect to Kodi via websocket protocol."""
-        import jsonrpc_base
-
         try:
             ws_loop_future = await self._ws_server.ws_connect()
         except jsonrpc_base.jsonrpc.TransportError:
@@ -801,8 +796,6 @@ class KodiDevice(MediaPlayerDevice):
 
     async def async_call_method(self, method, **kwargs):
         """Run Kodi JSONRPC API method with params."""
-        import jsonrpc_base
-
         _LOGGER.debug("Run API method %s, kwargs=%s", method, kwargs)
         result_ok = False
         try:
@@ -850,8 +843,6 @@ class KodiDevice(MediaPlayerDevice):
         All the albums of an artist can be added with
         media_name="ALL"
         """
-        import jsonrpc_base
-
         params = {"playlistid": 0}
         if media_type == "SONG":
             if media_id is None:

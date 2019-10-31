@@ -7,7 +7,7 @@ import random
 import re
 from datetime import datetime
 from functools import wraps
-from typing import Any, Iterable
+from typing import Any, Dict, Iterable, List, Optional, Union
 
 import jinja2
 from jinja2 import contextfilter, contextfunction
@@ -72,7 +72,9 @@ def render_complex(value, variables=None):
     return value.async_render(variables)
 
 
-def extract_entities(template, variables=None):
+def extract_entities(
+    template: Optional[str], variables: Optional[Dict[str, Any]] = None
+) -> Union[str, List[str]]:
     """Extract all entities for state_changed listener from template string."""
     if template is None or _RE_JINJA_DELIMITERS.search(template) is None:
         return []
@@ -86,6 +88,7 @@ def extract_entities(template, variables=None):
     for result in extraction:
         if (
             result[0] == "trigger.entity_id"
+            and variables
             and "trigger" in variables
             and "entity_id" in variables["trigger"]
         ):
@@ -163,7 +166,7 @@ class Template:
         if not isinstance(template, str):
             raise TypeError("Expected template to be a string")
 
-        self.template = template
+        self.template: str = template
         self._compiled_code = None
         self._compiled = None
         self.hass = hass
@@ -187,7 +190,9 @@ class Template:
         except jinja2.exceptions.TemplateSyntaxError as err:
             raise TemplateError(err)
 
-    def extract_entities(self, variables=None):
+    def extract_entities(
+        self, variables: Dict[str, Any] = None
+    ) -> Union[str, List[str]]:
         """Extract all entities for state_changed listener."""
         return extract_entities(self.template, variables)
 
@@ -884,6 +889,16 @@ def ordinal(value):
     )
 
 
+def from_json(value):
+    """Convert a JSON string to an object."""
+    return json.loads(value)
+
+
+def to_json(value):
+    """Convert an object to a JSON string."""
+    return json.dumps(value)
+
+
 @contextfilter
 def random_every_time(context, values):
     """Choose a random value.
@@ -916,6 +931,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["timestamp_custom"] = timestamp_custom
         self.filters["timestamp_local"] = timestamp_local
         self.filters["timestamp_utc"] = timestamp_utc
+        self.filters["to_json"] = to_json
+        self.filters["from_json"] = from_json
         self.filters["is_defined"] = fail_when_undefined
         self.filters["max"] = max
         self.filters["min"] = min

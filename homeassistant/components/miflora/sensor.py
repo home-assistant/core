@@ -1,20 +1,31 @@
 """Support for Xiaomi Mi Flora BLE plant sensor."""
 from datetime import timedelta
 import logging
+
+import btlewrap
+from btlewrap import BluetoothBackendException
+from miflora import miflora_poller
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_FORCE_UPDATE,
+    CONF_MAC,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
-    CONF_MAC,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
+
+try:
+    import bluepy.btle  # noqa: F401 pylint: disable=unused-import
+
+    BACKEND = btlewrap.BluepyBackend
+except ImportError:
+    BACKEND = btlewrap.GatttoolBackend
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,17 +64,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the MiFlora sensor."""
-    from miflora import miflora_poller
-
-    try:
-        import bluepy.btle  # noqa: F401 pylint: disable=unused-import
-        from btlewrap import BluepyBackend
-
-        backend = BluepyBackend
-    except ImportError:
-        from btlewrap import GatttoolBackend
-
-        backend = GatttoolBackend
+    backend = BACKEND
     _LOGGER.debug("Miflora is using %s backend.", backend.__name__)
 
     cache = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL).total_seconds()
@@ -152,8 +153,6 @@ class MiFloraSensor(Entity):
 
         This uses a rolling median over 3 values to filter out outliers.
         """
-        from btlewrap import BluetoothBackendException
-
         try:
             _LOGGER.debug("Polling data for %s", self.name)
             data = self.poller.parameter_value(self.parameter)

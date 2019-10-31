@@ -1,0 +1,12 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_closed": "{entity_name} est ferm\u00e9",
+            "is_closing": "{entity_name} se ferme",
+            "is_open": "{entity_name} est ouvert",
+            "is_opening": "{entity_name} est en train de s'ouvrir",
+            "is_position": "La position de {entity_name} est",
+            "is_tilt_position": "La position d'inclinaison de {entity_name} est"
+        }
+    }
+}

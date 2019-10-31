@@ -17,6 +17,11 @@ from homeassistant.const import (
 from homeassistant.components.climate import const as climate
 from homeassistant.components.alexa import smart_home
 from homeassistant.components.alexa.errors import UnsupportedProperty
+from homeassistant.components.media_player.const import (
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_STOP,
+)
 from tests.common import async_mock_service
 
 from . import (
@@ -305,7 +310,7 @@ async def test_report_colored_temp_light_state(hass):
 
 
 async def test_report_fan_speed_state(hass):
-    """Test PercentageController reports fan speed correctly."""
+    """Test PercentageController, PowerLevelController, RangeController reports fan speed correctly."""
     hass.states.async_set(
         "fan.off",
         "off",
@@ -333,15 +338,82 @@ async def test_report_fan_speed_state(hass):
 
     properties = await reported_properties(hass, "fan.off")
     properties.assert_equal("Alexa.PercentageController", "percentage", 0)
+    properties.assert_equal("Alexa.PowerLevelController", "powerLevel", 0)
+    properties.assert_equal("Alexa.RangeController", "rangeValue", 0)
 
     properties = await reported_properties(hass, "fan.low_speed")
     properties.assert_equal("Alexa.PercentageController", "percentage", 33)
+    properties.assert_equal("Alexa.PowerLevelController", "powerLevel", 33)
+    properties.assert_equal("Alexa.RangeController", "rangeValue", 1)
 
     properties = await reported_properties(hass, "fan.medium_speed")
     properties.assert_equal("Alexa.PercentageController", "percentage", 66)
+    properties.assert_equal("Alexa.PowerLevelController", "powerLevel", 66)
+    properties.assert_equal("Alexa.RangeController", "rangeValue", 2)
 
     properties = await reported_properties(hass, "fan.high_speed")
     properties.assert_equal("Alexa.PercentageController", "percentage", 100)
+    properties.assert_equal("Alexa.PowerLevelController", "powerLevel", 100)
+    properties.assert_equal("Alexa.RangeController", "rangeValue", 3)
+
+
+async def test_report_fan_oscillating(hass):
+    """Test ToggleController reports fan oscillating correctly."""
+    hass.states.async_set(
+        "fan.off",
+        "off",
+        {"friendly_name": "Off fan", "speed": "off", "supported_features": 3},
+    )
+    hass.states.async_set(
+        "fan.low_speed",
+        "on",
+        {
+            "friendly_name": "Low speed fan",
+            "speed": "low",
+            "oscillating": True,
+            "supported_features": 3,
+        },
+    )
+
+    properties = await reported_properties(hass, "fan.off")
+    properties.assert_equal("Alexa.ToggleController", "toggleState", "OFF")
+
+    properties = await reported_properties(hass, "fan.low_speed")
+    properties.assert_equal("Alexa.ToggleController", "toggleState", "ON")
+
+
+async def test_report_fan_direction(hass):
+    """Test ModeController reports fan direction correctly."""
+    hass.states.async_set(
+        "fan.off", "off", {"friendly_name": "Off fan", "supported_features": 4}
+    )
+    hass.states.async_set(
+        "fan.reverse",
+        "on",
+        {
+            "friendly_name": "Fan Reverse",
+            "direction": "reverse",
+            "supported_features": 4,
+        },
+    )
+    hass.states.async_set(
+        "fan.forward",
+        "on",
+        {
+            "friendly_name": "Fan Forward",
+            "direction": "forward",
+            "supported_features": 4,
+        },
+    )
+
+    properties = await reported_properties(hass, "fan.off")
+    properties.assert_not_has_property("Alexa.ModeController", "mode")
+
+    properties = await reported_properties(hass, "fan.reverse")
+    properties.assert_equal("Alexa.ModeController", "mode", "reverse")
+
+    properties = await reported_properties(hass, "fan.forward")
+    properties.assert_equal("Alexa.ModeController", "mode", "forward")
 
 
 async def test_report_cover_percentage_state(hass):
@@ -405,11 +477,7 @@ async def test_report_climate_state(hass):
             {"value": 34.0, "scale": "CELSIUS"},
         )
 
-    for off_modes in (
-        climate.HVAC_MODE_OFF,
-        climate.HVAC_MODE_FAN_ONLY,
-        climate.HVAC_MODE_DRY,
-    ):
+    for off_modes in (climate.HVAC_MODE_OFF, climate.HVAC_MODE_FAN_ONLY):
         hass.states.async_set(
             "climate.downstairs",
             off_modes,
@@ -427,6 +495,23 @@ async def test_report_climate_state(hass):
             "temperature",
             {"value": 34.0, "scale": "CELSIUS"},
         )
+
+    # assert dry is reported as CUSTOM
+    hass.states.async_set(
+        "climate.downstairs",
+        "dry",
+        {
+            "friendly_name": "Climate Downstairs",
+            "supported_features": 91,
+            climate.ATTR_CURRENT_TEMPERATURE: 34,
+            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+        },
+    )
+    properties = await reported_properties(hass, "climate.downstairs")
+    properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "CUSTOM")
+    properties.assert_equal(
+        "Alexa.TemperatureSensor", "temperature", {"value": 34.0, "scale": "CELSIUS"}
+    )
 
     hass.states.async_set(
         "climate.heat",
@@ -562,3 +647,22 @@ async def test_report_alarm_control_panel_state(hass):
 
     properties = await reported_properties(hass, "alarm_control_panel.disarmed")
     properties.assert_equal("Alexa.SecurityPanelController", "armState", "DISARMED")
+
+
+async def test_report_playback_state(hass):
+    """Test PlaybackStateReporter implements playbackState property."""
+    hass.states.async_set(
+        "media_player.test",
+        "off",
+        {
+            "friendly_name": "Test media player",
+            "supported_features": SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP,
+            "volume_level": 0.75,
+        },
+    )
+
+    properties = await reported_properties(hass, "media_player.test")
+
+    properties.assert_equal(
+        "Alexa.PlaybackStateReporter", "playbackState", {"state": "STOPPED"}
+    )

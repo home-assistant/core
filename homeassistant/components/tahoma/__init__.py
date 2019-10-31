@@ -48,6 +48,7 @@ TAHOMA_TYPES = {
     "io:WindowOpenerVeluxIOComponent": "cover",
     "io:GarageOpenerIOComponent": "cover",
     "io:DiscreteGarageOpenerWithPartialPositionIOComponent": "cover",
+    "io:DiscreteGarageOpenerIOComponent": "cover",
     "rtds:RTDSContactSensor": "sensor",
     "rtds:RTDSMotionSensor": "sensor",
     "rtds:RTDSSmokeSensor": "smoke",

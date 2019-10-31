@@ -1,26 +1,26 @@
 {
     "device_automation": {
         "condition_type": {
-            "is_battery_level": "{entity_name} niveau batterie",
-            "is_humidity": "{entity_name} humidit\u00e9",
-            "is_illuminance": "{entity_name} \u00e9clairement",
+            "is_battery_level": "Le niveau de la batterie de {entity_name}",
+            "is_humidity": "L'humidit\u00e9 de {entity_name}",
+            "is_illuminance": "L'\u00e9clairement de {entity_name}",
             "is_power": "{entity_name} puissance",
             "is_pressure": "{entity_name} pression",
             "is_signal_strength": "{entity_name} force du signal",
-            "is_temperature": "{entity_name} temp\u00e9rature",
+            "is_temperature": "La temp\u00e9rature de {entity_name}",
             "is_timestamp": "{entity_name} horodatage",
-            "is_value": "{entity_name} valeur"
+            "is_value": "La valeur actuelle de {entity_name} "
         },
         "trigger_type": {
-            "battery_level": "{entity_name} niveau batterie",
-            "humidity": "{entity_name} humidit\u00e9",
-            "illuminance": "{entity_name} \u00e9clairement",
+            "battery_level": "Le niveau de la batterie de {entity_name}",
+            "humidity": "L'humidit\u00e9 de {entity_name}",
+            "illuminance": "L'\u00e9clairement de {entity_name}",
             "power": "{entity_name} puissance",
             "pressure": "{entity_name} pression",
             "signal_strength": "{entity_name} force du signal",
-            "temperature": "{entity_name} temp\u00e9rature",
+            "temperature": "La temp\u00e9rature de {entity_name}",
             "timestamp": "{entity_name} horodatage",
-            "value": "{entity_name} valeur"
+            "value": "Changements de valeur de {entity_name} "
         }
     }
 }

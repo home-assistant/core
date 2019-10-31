@@ -26,6 +26,7 @@ ATTR_MANUFACTURER = "manufacturer"
 ATTR_MANUFACTURERURL = "manufacturerURL"
 ATTR_UDN = "udn"
 ATTR_UPNP_DEVICE_TYPE = "upnp_device_type"
+ATTR_PRESENTATIONURL = "presentation_url"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -175,5 +176,6 @@ def info_from_entry(entry, device_info):
         info[ATTR_MANUFACTURERURL] = device_info.get("manufacturerURL")
         info[ATTR_UDN] = device_info.get("UDN")
         info[ATTR_UPNP_DEVICE_TYPE] = device_info.get("deviceType")
+        info[ATTR_PRESENTATIONURL] = device_info.get("presentationURL")
 
     return info

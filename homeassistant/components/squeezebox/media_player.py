@@ -41,6 +41,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
@@ -126,18 +127,21 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     # Get IP of host, to prevent duplication of same host (different DNS names)
     try:
         ipaddr = socket.gethostbyname(host)
-    except (OSError) as error:
+    except OSError as error:
         _LOGGER.error("Could not communicate with %s:%d: %s", host, port, error)
-        return False
+        raise PlatformNotReady from error
 
     if ipaddr in known_servers:
         return
 
-    known_servers.add(ipaddr)
     _LOGGER.debug("Creating LMS object for %s", ipaddr)
     lms = LogitechMediaServer(hass, host, port, username, password)
 
     players = await lms.create_players()
+    if players is None:
+        raise PlatformNotReady
+
+    known_servers.add(ipaddr)
 
     hass.data[DATA_SQUEEZEBOX].extend(players)
     async_add_entities(players)
@@ -194,7 +198,7 @@ class LogitechMediaServer:
         result = []
         data = await self.async_query("players", "status")
         if data is False:
-            return result
+            return None
         for players in data.get("players_loop", []):
             player = SqueezeBoxDevice(self, players["playerid"], players["name"])
             await player.async_update()

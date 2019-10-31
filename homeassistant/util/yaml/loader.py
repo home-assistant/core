@@ -225,7 +225,7 @@ def _ordered_dict(loader: SafeLineLoader, node: yaml.nodes.MappingNode) -> Order
 
 def _construct_seq(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
     """Add line number and file name to Load YAML sequence."""
-    obj, = loader.construct_yaml_seq(node)
+    (obj,) = loader.construct_yaml_seq(node)
     return _add_reference(obj, loader, node)
 
 

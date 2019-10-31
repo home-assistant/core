@@ -1,0 +1,12 @@
+{
+    "device_automation": {
+        "action_type": {
+            "lock": "L\u00e5s {entity_name}",
+            "open": "\u00c5ben {entity_name}"
+        },
+        "condition_type": {
+            "is_locked": "{entity_name} er l\u00e5st",
+            "is_unlocked": "{entity_name} er l\u00e5st op"
+        }
+    }
+}

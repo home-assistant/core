@@ -1,34 +1,59 @@
 """Support for Huawei LTE routers."""
 
+from collections import defaultdict
 from datetime import timedelta
-from functools import reduce
+from functools import partial
 from urllib.parse import urlparse
 import ipaddress
 import logging
-import operator
-from typing import Any, Callable
+from typing import Any, Callable, Dict, List, Set
 
 import voluptuous as vol
 import attr
 from getmac import get_mac_address
 from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
 from huawei_lte_api.Client import Client
-from huawei_lte_api.exceptions import ResponseErrorNotSupportedException
+from huawei_lte_api.Connection import Connection
+from huawei_lte_api.exceptions import (
+    ResponseErrorLoginRequiredException,
+    ResponseErrorNotSupportedException,
+)
+from url_normalize import url_normalize
 
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.config_entries import ConfigEntry, SOURCE_IMPORT
 from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_RECIPIENT,
     CONF_URL,
     CONF_USERNAME,
-    CONF_PASSWORD,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.helpers import config_validation as cv
-from homeassistant.util import Throttle
+from homeassistant.core import CALLBACK_TYPE
+from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+    dispatcher_send,
+)
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import HomeAssistantType
 from .const import (
+    ALL_KEYS,
+    DEFAULT_DEVICE_NAME,
     DOMAIN,
+    KEY_DEVICE_BASIC_INFORMATION,
     KEY_DEVICE_INFORMATION,
     KEY_DEVICE_SIGNAL,
+    KEY_DIALUP_MOBILE_DATASWITCH,
     KEY_MONITORING_TRAFFIC_STATISTICS,
     KEY_WLAN_HOST_LIST,
+    UPDATE_OPTIONS_SIGNAL,
+    UPDATE_SIGNAL,
 )
 
 
@@ -38,7 +63,20 @@ _LOGGER = logging.getLogger(__name__)
 # https://github.com/quandyfactory/dicttoxml/issues/60
 logging.getLogger("dicttoxml").setLevel(logging.WARNING)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
+DEFAULT_NAME_TEMPLATE = "Huawei {} {}"
+
+SCAN_INTERVAL = timedelta(seconds=10)
+
+NOTIFY_SCHEMA = vol.Any(
+    None,
+    vol.Schema(
+        {
+            vol.Optional(CONF_RECIPIENT): vol.Any(
+                None, vol.All(cv.ensure_list, [cv.string])
+            )
+        }
+    ),
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -48,8 +86,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Schema(
                     {
                         vol.Required(CONF_URL): cv.url,
-                        vol.Required(CONF_USERNAME): cv.string,
-                        vol.Required(CONF_PASSWORD): cv.string,
+                        vol.Optional(CONF_USERNAME): cv.string,
+                        vol.Optional(CONF_PASSWORD): cv.string,
+                        vol.Optional(NOTIFY_DOMAIN): NOTIFY_SCHEMA,
                     }
                 )
             ],
@@ -60,97 +99,137 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 @attr.s
-class RouterData:
+class Router:
     """Class for router state."""
 
-    client = attr.ib()
-    mac = attr.ib()
-    device_information = attr.ib(init=False, factory=dict)
-    device_signal = attr.ib(init=False, factory=dict)
-    monitoring_traffic_statistics = attr.ib(init=False, factory=dict)
-    wlan_host_list = attr.ib(init=False, factory=dict)
+    connection: Connection = attr.ib()
+    url: str = attr.ib()
+    mac: str = attr.ib()
+    signal_update: CALLBACK_TYPE = attr.ib()
 
-    _subscriptions = attr.ib(init=False, factory=set)
+    data: Dict[str, Any] = attr.ib(init=False, factory=dict)
+    subscriptions: Dict[str, Set[str]] = attr.ib(
+        init=False,
+        factory=lambda: defaultdict(set, ((x, {"initial_scan"}) for x in ALL_KEYS)),
+    )
+    unload_handlers: List[CALLBACK_TYPE] = attr.ib(init=False, factory=list)
+    client: Client
 
-    def __getitem__(self, path: str):
-        """
-        Get value corresponding to a dotted path.
+    def __attrs_post_init__(self):
+        """Set up internal state on init."""
+        self.client = Client(self.connection)
 
-        The first path component designates a member of this class
-        such as device_information, device_signal etc, and the remaining
-        path points to a value in the member's data structure.
-        """
-        root, *rest = path.split(".")
-        try:
-            data = getattr(self, root)
-        except AttributeError as err:
-            raise KeyError from err
-        return reduce(operator.getitem, rest, data)
+    @property
+    def device_name(self) -> str:
+        """Get router device name."""
+        for key, item in (
+            (KEY_DEVICE_BASIC_INFORMATION, "devicename"),
+            (KEY_DEVICE_INFORMATION, "DeviceName"),
+        ):
+            try:
+                return self.data[key][item]
+            except (KeyError, TypeError):
+                pass
+        return DEFAULT_DEVICE_NAME
 
-    def subscribe(self, path: str) -> None:
-        """Subscribe to given router data entries."""
-        self._subscriptions.add(path.split(".")[0])
-
-    def unsubscribe(self, path: str) -> None:
-        """Unsubscribe from given router data entries."""
-        self._subscriptions.discard(path.split(".")[0])
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self) -> None:
-        """Call API to update data."""
-        self._update()
+        """Update router data."""
 
-    def _update(self) -> None:
-        debugging = _LOGGER.isEnabledFor(logging.DEBUG)
-
-        def get_data(path: str, func: Callable[[None], Any]) -> None:
-            if debugging or path in self._subscriptions:
-                try:
-                    setattr(self, path, func())
-                except ResponseErrorNotSupportedException:
-                    _LOGGER.warning("%s not supported by device", path)
-                    self._subscriptions.discard(path)
-                finally:
-                    _LOGGER.debug("%s=%s", path, getattr(self, path))
+        def get_data(key: str, func: Callable[[None], Any]) -> None:
+            if not self.subscriptions[key]:
+                return
+            _LOGGER.debug("Getting %s for subscribers %s", key, self.subscriptions[key])
+            try:
+                self.data[key] = func()
+            except ResponseErrorNotSupportedException:
+                _LOGGER.info(
+                    "%s not supported by device, excluding from future updates", key
+                )
+                self.subscriptions.pop(key)
+            except ResponseErrorLoginRequiredException:
+                _LOGGER.info(
+                    "%s requires authorization, excluding from future updates", key
+                )
+                self.subscriptions.pop(key)
+            finally:
+                _LOGGER.debug("%s=%s", key, self.data.get(key))
 
         get_data(KEY_DEVICE_INFORMATION, self.client.device.information)
+        if self.data.get(KEY_DEVICE_INFORMATION):
+            # Full information includes everything in basic
+            self.subscriptions.pop(KEY_DEVICE_BASIC_INFORMATION, None)
+        get_data(KEY_DEVICE_BASIC_INFORMATION, self.client.device.basic_information)
         get_data(KEY_DEVICE_SIGNAL, self.client.device.signal)
+        get_data(KEY_DIALUP_MOBILE_DATASWITCH, self.client.dial_up.mobile_dataswitch)
         get_data(
             KEY_MONITORING_TRAFFIC_STATISTICS, self.client.monitoring.traffic_statistics
         )
         get_data(KEY_WLAN_HOST_LIST, self.client.wlan.host_list)
+
+        self.signal_update()
+
+    def cleanup(self, *_) -> None:
+        """Clean up resources."""
+
+        self.subscriptions.clear()
+
+        for handler in self.unload_handlers:
+            handler()
+        self.unload_handlers.clear()
+
+        if not isinstance(self.connection, AuthorizedConnection):
+            return
+        try:
+            self.client.user.logout()
+        except ResponseErrorNotSupportedException:
+            _LOGGER.debug("Logout not supported by device", exc_info=True)
+        except ResponseErrorLoginRequiredException:
+            _LOGGER.debug("Logout not supported when not logged in", exc_info=True)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.warning("Logout error", exc_info=True)
 
 
 @attr.s
 class HuaweiLteData:
     """Shared state."""
 
-    data = attr.ib(init=False, factory=dict)
-
-    def get_data(self, config):
-        """Get the requested or the only data value."""
-        if CONF_URL in config:
-            return self.data.get(config[CONF_URL])
-        if len(self.data) == 1:
-            return next(iter(self.data.values()))
-
-        return None
+    hass_config: dict = attr.ib()
+    # Our YAML config, keyed by router URL
+    config: Dict[str, Dict[str, Any]] = attr.ib()
+    routers: Dict[str, Router] = attr.ib(init=False, factory=dict)
 
 
-def setup(hass, config) -> bool:
-    """Set up Huawei LTE component."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = HuaweiLteData()
-    for conf in config.get(DOMAIN, []):
-        _setup_lte(hass, conf)
-    return True
+async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
+    """Set up Huawei LTE component from config entry."""
+    url = config_entry.data[CONF_URL]
 
-
-def _setup_lte(hass, lte_config) -> None:
-    """Set up Huawei LTE router."""
-    url = lte_config[CONF_URL]
-    username = lte_config[CONF_USERNAME]
-    password = lte_config[CONF_PASSWORD]
+    # Override settings from YAML config, but only if they're changed in it
+    # Old values are stored as *_from_yaml in the config entry
+    yaml_config = hass.data[DOMAIN].config.get(url)
+    if yaml_config:
+        # Config values
+        new_data = {}
+        for key in CONF_USERNAME, CONF_PASSWORD:
+            if key in yaml_config:
+                value = yaml_config[key]
+                if value != config_entry.data.get(f"{key}_from_yaml"):
+                    new_data[f"{key}_from_yaml"] = value
+                    new_data[key] = value
+        # Options
+        new_options = {}
+        yaml_recipient = yaml_config.get(NOTIFY_DOMAIN, {}).get(CONF_RECIPIENT)
+        if yaml_recipient is not None and yaml_recipient != config_entry.options.get(
+            f"{CONF_RECIPIENT}_from_yaml"
+        ):
+            new_options[f"{CONF_RECIPIENT}_from_yaml"] = yaml_recipient
+            new_options[CONF_RECIPIENT] = yaml_recipient
+        # Update entry if overrides were found
+        if new_data or new_options:
+            hass.config_entries.async_update_entry(
+                config_entry,
+                data={**config_entry.data, **new_data},
+                options={**config_entry.options, **new_options},
+            )
 
     # Get MAC address for use in unique ids. Being able to use something
     # from the API would be nice, but all of that seems to be available only
@@ -164,19 +243,194 @@ def _setup_lte(hass, lte_config) -> None:
             mode = "ip"
     except ValueError:
         mode = "hostname"
-    mac = get_mac_address(**{mode: host})
+    mac = await hass.async_add_executor_job(partial(get_mac_address, **{mode: host}))
 
-    connection = AuthorizedConnection(url, username=username, password=password)
-    client = Client(connection)
+    def get_connection() -> Connection:
+        """
+        Set up a connection.
 
-    data = RouterData(client, mac)
-    hass.data[DOMAIN].data[url] = data
+        Authorized one if username/pass specified (even if empty), unauthorized one otherwise.
+        """
+        username = config_entry.data.get(CONF_USERNAME)
+        password = config_entry.data.get(CONF_PASSWORD)
+        if username or password:
+            connection = AuthorizedConnection(url, username=username, password=password)
+        else:
+            connection = Connection(url)
+        return connection
 
-    def cleanup(event):
-        """Clean up resources."""
-        try:
-            client.user.logout()
-        except ResponseErrorNotSupportedException as ex:
-            _LOGGER.debug("Logout not supported by device", exc_info=ex)
+    def signal_update() -> None:
+        """Signal updates to data."""
+        dispatcher_send(hass, UPDATE_SIGNAL, url)
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
+    connection = await hass.async_add_executor_job(get_connection)
+
+    # Set up router and store reference to it
+    router = Router(connection, url, mac, signal_update)
+    hass.data[DOMAIN].routers[url] = router
+
+    # Do initial data update
+    await hass.async_add_executor_job(router.update)
+
+    # Clear all subscriptions, enabled entities will push back theirs
+    router.subscriptions.clear()
+
+    # Forward config entry setup to platforms
+    for domain in (DEVICE_TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN):
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, domain)
+        )
+    # Notify doesn't support config entry setup yet, load with discovery for now
+    await discovery.async_load_platform(
+        hass,
+        NOTIFY_DOMAIN,
+        DOMAIN,
+        {CONF_URL: url, CONF_RECIPIENT: config_entry.options.get(CONF_RECIPIENT)},
+        hass.data[DOMAIN].hass_config,
+    )
+
+    # Add config entry options update listener
+    router.unload_handlers.append(
+        config_entry.add_update_listener(async_signal_options_update)
+    )
+
+    def _update_router(*_: Any) -> None:
+        """
+        Update router data.
+
+        Separate passthrough function because lambdas don't work with track_time_interval.
+        """
+        router.update()
+
+    # Set up periodic update
+    router.unload_handlers.append(
+        async_track_time_interval(hass, _update_router, SCAN_INTERVAL)
+    )
+
+    # Clean up at end
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, router.cleanup)
+
+    return True
+
+
+async def async_unload_entry(
+    hass: HomeAssistantType, config_entry: ConfigEntry
+) -> bool:
+    """Unload config entry."""
+
+    # Forward config entry unload to platforms
+    for domain in (DEVICE_TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN):
+        await hass.config_entries.async_forward_entry_unload(config_entry, domain)
+
+    # Forget about the router and invoke its cleanup
+    router = hass.data[DOMAIN].routers.pop(config_entry.data[CONF_URL])
+    await hass.async_add_executor_job(router.cleanup)
+
+    return True
+
+
+async def async_setup(hass: HomeAssistantType, config) -> bool:
+    """Set up Huawei LTE component."""
+
+    # Arrange our YAML config to dict with normalized URLs as keys
+    domain_config = {}
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = HuaweiLteData(hass_config=config, config=domain_config)
+    for router_config in config.get(DOMAIN, []):
+        domain_config[url_normalize(router_config.pop(CONF_URL))] = router_config
+
+    for url, router_config in domain_config.items():
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={
+                    CONF_URL: url,
+                    CONF_USERNAME: router_config.get(CONF_USERNAME),
+                    CONF_PASSWORD: router_config.get(CONF_PASSWORD),
+                },
+            )
+        )
+
+    return True
+
+
+async def async_signal_options_update(
+    hass: HomeAssistantType, config_entry: ConfigEntry
+) -> None:
+    """Handle config entry options update."""
+    async_dispatcher_send(hass, UPDATE_OPTIONS_SIGNAL, config_entry)
+
+
+@attr.s
+class HuaweiLteBaseEntity(Entity):
+    """Huawei LTE entity base class."""
+
+    router: Router = attr.ib()
+
+    _available: bool = attr.ib(init=False, default=True)
+    _unsub_handlers: List[Callable] = attr.ib(init=False, factory=list)
+
+    @property
+    def _entity_name(self) -> str:
+        raise NotImplementedError
+
+    @property
+    def _device_unique_id(self) -> str:
+        """Return unique ID for entity within a router."""
+        raise NotImplementedError
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique ID for entity."""
+        return f"{self.router.mac}-{self._device_unique_id}"
+
+    @property
+    def name(self) -> str:
+        """Return entity name."""
+        return DEFAULT_NAME_TEMPLATE.format(self.router.device_name, self._entity_name)
+
+    @property
+    def available(self) -> bool:
+        """Return whether the entity is available."""
+        return self._available
+
+    @property
+    def should_poll(self) -> bool:
+        """Huawei LTE entities report their state without polling."""
+        return False
+
+    async def async_update(self) -> None:
+        """Update state."""
+        raise NotImplementedError
+
+    async def async_update_options(self, config_entry: ConfigEntry) -> None:
+        """Update config entry options."""
+        pass
+
+    async def async_added_to_hass(self) -> None:
+        """Connect to update signals."""
+        self._unsub_handlers.append(
+            async_dispatcher_connect(self.hass, UPDATE_SIGNAL, self._async_maybe_update)
+        )
+        self._unsub_handlers.append(
+            async_dispatcher_connect(
+                self.hass, UPDATE_OPTIONS_SIGNAL, self._async_maybe_update_options
+            )
+        )
+
+    async def _async_maybe_update(self, url: str) -> None:
+        """Update state if the update signal comes from our router."""
+        if url == self.router.url:
+            self.async_schedule_update_ha_state(True)
+
+    async def _async_maybe_update_options(self, config_entry: ConfigEntry) -> None:
+        """Update options if the update signal comes from our router."""
+        if config_entry.data[CONF_URL] == self.router.url:
+            await self.async_update_options(config_entry)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Invoke unsubscription handlers."""
+        for unsub in self._unsub_handlers:
+            unsub()
+        self._unsub_handlers.clear()

@@ -11,9 +11,11 @@ from decimal import Decimal
 from unittest.mock import Mock
 
 import asynctest
+import pytest
+
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.dsmr.sensor import DerivativeDSMREntity
-import pytest
+
 from tests.common import assert_setup_component
 
 
@@ -34,10 +36,11 @@ def mock_connection_factory(monkeypatch):
 
     # apply the mock to both connection factories
     monkeypatch.setattr(
-        "dsmr_parser.clients.protocol.create_dsmr_reader", connection_factory
+        "homeassistant.components.dsmr.sensor.create_dsmr_reader", connection_factory
     )
     monkeypatch.setattr(
-        "dsmr_parser.clients.protocol.create_tcp_dsmr_reader", connection_factory
+        "homeassistant.components.dsmr.sensor.create_tcp_dsmr_reader",
+        connection_factory,
     )
 
     return connection_factory, transport, protocol
@@ -158,7 +161,8 @@ def test_connection_errors_retry(hass, monkeypatch, mock_connection_factory):
     )
 
     monkeypatch.setattr(
-        "dsmr_parser.clients.protocol.create_dsmr_reader", first_fail_connection_factory
+        "homeassistant.components.dsmr.sensor.create_dsmr_reader",
+        first_fail_connection_factory,
     )
     yield from async_setup_component(hass, "sensor", {"sensor": config})
 

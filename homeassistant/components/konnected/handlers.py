@@ -1,16 +1,16 @@
 """Handle Konnected messages."""
 import logging
 
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.util import decorator
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_STATE,
-    DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.util import decorator
 
-from .const import CONF_INVERSE, SIGNAL_SENSOR_UPDATE, SIGNAL_DS18B20_NEW
+from .const import CONF_INVERSE, SIGNAL_DS18B20_NEW, SIGNAL_SENSOR_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 HANDLERS = decorator.Registry()

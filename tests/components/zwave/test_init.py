@@ -1610,10 +1610,10 @@ class TestZWaveServices(unittest.TestCase):
         self.hass.block_till_done()
 
         assert self.zwave_network.manager.pressButton.called
-        value_id, = self.zwave_network.manager.pressButton.mock_calls.pop(0)[1]
+        (value_id,) = self.zwave_network.manager.pressButton.mock_calls.pop(0)[1]
         assert value_id == reset_value.value_id
         assert self.zwave_network.manager.releaseButton.called
-        value_id, = self.zwave_network.manager.releaseButton.mock_calls.pop(0)[1]
+        (value_id,) = self.zwave_network.manager.releaseButton.mock_calls.pop(0)[1]
         assert value_id == reset_value.value_id
 
     def test_add_association(self):
