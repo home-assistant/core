@@ -103,7 +103,6 @@ frontend:
 config:
 
 http:
-   api_password: dom
    base_url: localhost:8180
    server_port: 8180
 
