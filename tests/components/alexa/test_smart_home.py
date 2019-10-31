@@ -1035,6 +1035,7 @@ async def test_media_player_seek(hass):
 
     assert_endpoint_capabilities(
         appliance,
+        "Alexa",
         "Alexa.EndpointHealth",
         "Alexa.PowerController",
         "Alexa.SeekController",
