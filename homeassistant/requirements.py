@@ -35,13 +35,21 @@ async def async_get_integration_with_requirements(
     This can raise IntegrationNotFound if manifest or integration
     is invalid, RequirementNotFound if there was some type of
     failure to install requirements.
+
+    Does not handle circular dependencies.
     """
     integration = await async_get_integration(hass, domain)
 
-    if hass.config.skip_pip or not integration.requirements:
+    if hass.config.skip_pip:
         return integration
 
-    await async_process_requirements(hass, integration.domain, integration.requirements)
+    if integration.requirements:
+        await async_process_requirements(
+            hass, integration.domain, integration.requirements
+        )
+
+    for dependency in integration.dependencies:
+        await async_get_integration_with_requirements(hass, dependency)
 
     return integration
 
