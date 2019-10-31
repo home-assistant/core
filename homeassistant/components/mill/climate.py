@@ -64,9 +64,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     dev = []
     for heater in mill_data_connection.heaters.values():
         dev.append(MillHeater(heater, mill_data_connection))
-    async_add_entities(dev)
-
-    dev = []
     for room in mill_data_connection.rooms.values():
         dev.append(MillRoom(room, mill_data_connection))
     async_add_entities(dev)
