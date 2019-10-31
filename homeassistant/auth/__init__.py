@@ -45,7 +45,7 @@ async def auth_manager_from_config(
             )
         )
     else:
-        providers = ()
+        providers = []
     # So returned auth providers are in same order as config
     provider_hash: _ProviderDict = OrderedDict()
     for provider in providers:
@@ -57,7 +57,7 @@ async def auth_manager_from_config(
             *(auth_mfa_module_from_config(hass, config) for config in module_configs)
         )
     else:
-        modules = ()
+        modules = []
     # So returned auth modules are in same order as config
     module_hash: _MfaModuleDict = OrderedDict()
     for module in modules:
@@ -85,18 +85,6 @@ class AuthManager:
         self.login_flow = data_entry_flow.FlowManager(
             hass, self._async_create_login_flow, self._async_finish_login_flow
         )
-
-    @property
-    def support_legacy(self) -> bool:
-        """
-        Return if legacy_api_password auth providers are registered.
-
-        Should be removed when we removed legacy_api_password auth providers.
-        """
-        for provider_type, _ in self._providers:
-            if provider_type == "legacy_api_password":
-                return True
-        return False
 
     @property
     def auth_providers(self) -> List[AuthProvider]:

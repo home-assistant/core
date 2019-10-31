@@ -2,9 +2,9 @@
 from typing import List
 
 from homeassistant.components.water_heater import (
-    WaterHeaterDevice,
-    SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    WaterHeaterDevice,
 )
 from homeassistant.const import STATE_OFF
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType

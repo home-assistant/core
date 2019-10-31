@@ -6,7 +6,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import group
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
     ATTR_BATTERY_LEVEL,
     ATTR_COMMAND,
     SERVICE_TOGGLE,
@@ -68,8 +68,6 @@ VACUUM_SEND_COMMAND_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
 
 STATE_CLEANING = "cleaning"
 STATE_DOCKED = "docked"
-STATE_IDLE = STATE_IDLE
-STATE_PAUSED = STATE_PAUSED
 STATE_RETURNING = "returning"
 STATE_ERROR = "error"
 

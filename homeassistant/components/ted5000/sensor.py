@@ -1,9 +1,10 @@
-"""Support gathering ted500 information."""
-import logging
+"""Support gathering ted5000 information."""
 from datetime import timedelta
+import logging
 
 import requests
 import voluptuous as vol
+import xmltodict
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, POWER_WATT
@@ -94,7 +95,6 @@ class Ted5000Gateway:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from the Ted5000 XML API."""
-        import xmltodict
 
         try:
             request = requests.get(self.url, timeout=10)

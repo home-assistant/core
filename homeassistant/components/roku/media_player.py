@@ -20,7 +20,7 @@ from homeassistant.const import (
     STATE_HOME,
     STATE_IDLE,
     STATE_PLAYING,
-    STATE_OFF,
+    STATE_STANDBY,
 )
 
 DEFAULT_PORT = 8060
@@ -98,7 +98,7 @@ class RokuDevice(MediaPlayerDevice):
     def state(self):
         """Return the state of the device."""
         if self._power_state == "Off":
-            return STATE_OFF
+            return STATE_STANDBY
 
         if self.current_app is None:
             return None

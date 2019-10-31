@@ -82,6 +82,7 @@ class HiveSession:
     switch = None
     weather = None
     attributes = None
+    trv = None
 
 
 def setup(hass, config):

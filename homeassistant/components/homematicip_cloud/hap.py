@@ -8,9 +8,10 @@ from homematicip.base.base_connection import HmipConnectionError
 from homematicip.base.enums import EventType
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import COMPONENTS, HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME, HMIPC_PIN
 from .errors import HmipcConnectionError
@@ -53,7 +54,7 @@ class HomematicipAuth:
         except HmipConnectionError:
             return False
 
-    async def get_auth(self, hass, hapid, pin):
+    async def get_auth(self, hass: HomeAssistantType, hapid, pin):
         """Create a HomematicIP access point object."""
         auth = AsyncAuth(hass.loop, async_get_clientsession(hass))
         try:
@@ -69,7 +70,7 @@ class HomematicipAuth:
 class HomematicipHAP:
     """Manages HomematicIP HTTP and WebSocket connection."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistantType, config_entry: ConfigEntry) -> None:
         """Initialize HomematicIP Cloud connection."""
         self.hass = hass
         self.config_entry = config_entry
@@ -79,6 +80,7 @@ class HomematicipHAP:
         self._retry_task = None
         self._tries = 0
         self._accesspoint_connected = True
+        self.hmip_device_by_entity_id = {}
 
     async def async_setup(self, tries: int = 0):
         """Initialize connection."""
@@ -219,10 +221,11 @@ class HomematicipHAP:
             await self.hass.config_entries.async_forward_entry_unload(
                 self.config_entry, component
             )
+        self.hmip_device_by_entity_id = {}
         return True
 
     async def get_hap(
-        self, hass: HomeAssistant, hapid: str, authtoken: str, name: str
+        self, hass: HomeAssistantType, hapid: str, authtoken: str, name: str
     ) -> AsyncHome:
         """Create a HomematicIP access point object."""
         home = AsyncHome(hass.loop, async_get_clientsession(hass))

@@ -2,6 +2,11 @@
 import logging
 from binascii import hexlify, unhexlify
 
+import xbee_helper.const as xb_const
+from xbee_helper import ZigBee
+from xbee_helper.device import convert_adc
+from xbee_helper.exceptions import ZigBeeException, ZigBeeTxFailure
+from serial import Serial, SerialException
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -74,12 +79,6 @@ def setup(hass, config):
     global CONVERT_ADC
     global ZIGBEE_EXCEPTION
     global ZIGBEE_TX_FAILURE
-
-    import xbee_helper.const as xb_const
-    from xbee_helper import ZigBee
-    from xbee_helper.device import convert_adc
-    from xbee_helper.exceptions import ZigBeeException, ZigBeeTxFailure
-    from serial import Serial, SerialException
 
     GPIO_DIGITAL_OUTPUT_LOW = xb_const.GPIO_DIGITAL_OUTPUT_LOW
     GPIO_DIGITAL_OUTPUT_HIGH = xb_const.GPIO_DIGITAL_OUTPUT_HIGH

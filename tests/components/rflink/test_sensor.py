@@ -7,12 +7,13 @@ automatic sensor creation.
 
 from homeassistant.components.rflink import (
     CONF_RECONNECT_INTERVAL,
-    TMP_ENTITY,
     DATA_ENTITY_LOOKUP,
     EVENT_KEY_COMMAND,
     EVENT_KEY_SENSOR,
+    TMP_ENTITY,
 )
 from homeassistant.const import STATE_UNKNOWN
+
 from tests.components.rflink.test_init import mock_rflink
 
 DOMAIN = "sensor"

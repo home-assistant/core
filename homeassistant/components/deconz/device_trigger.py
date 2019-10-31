@@ -204,8 +204,10 @@ def _get_deconz_event_from_device_id(hass, device_id):
     return None
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
-    """Listen for state changes based on configuration."""
+async def async_validate_trigger_config(hass, config):
+    """Validate config."""
+    config = TRIGGER_SCHEMA(config)
+
     device_registry = await hass.helpers.device_registry.async_get_registry()
     device = device_registry.async_get(config[CONF_DEVICE_ID])
 
@@ -213,6 +215,16 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
     if device.model not in REMOTES or trigger not in REMOTES[device.model]:
         raise InvalidDeviceAutomationConfig
+
+    return config
+
+
+async def async_attach_trigger(hass, config, action, automation_info):
+    """Listen for state changes based on configuration."""
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device = device_registry.async_get(config[CONF_DEVICE_ID])
+
+    trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
 
     trigger = REMOTES[device.model][trigger]
 
@@ -222,13 +234,15 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
     event_id = deconz_event.serial
 
-    state_config = {
+    event_config = {
+        event.CONF_PLATFORM: "event",
         event.CONF_EVENT_TYPE: CONF_DECONZ_EVENT,
         event.CONF_EVENT_DATA: {CONF_UNIQUE_ID: event_id, CONF_EVENT: trigger},
     }
 
+    event_config = event.TRIGGER_SCHEMA(event_config)
     return await event.async_attach_trigger(
-        hass, state_config, action, automation_info, platform_type="device"
+        hass, event_config, action, automation_info, platform_type="device"
     )
 
 

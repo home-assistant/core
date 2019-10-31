@@ -1,6 +1,7 @@
 """Support for Nest thermostats."""
 import logging
 
+from nest.nest import APIError
 import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
@@ -232,7 +233,6 @@ class NestThermostat(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        import nest
 
         temp = None
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
@@ -247,7 +247,7 @@ class NestThermostat(ClimateDevice):
         try:
             if temp is not None:
                 self.device.target = temp
-        except nest.nest.APIError as api_error:
+        except APIError as api_error:
             _LOGGER.error("An error occurred while setting temperature: %s", api_error)
             # restore target temperature
             self.schedule_update_ha_state(True)

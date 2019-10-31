@@ -1,6 +1,7 @@
 """Support for AquaLogic switches."""
 import logging
 
+from aqualogic.core import States
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
@@ -50,7 +51,6 @@ class AquaLogicSwitch(SwitchDevice):
 
     def __init__(self, processor, switch_type):
         """Initialize switch."""
-        from aqualogic.core import States
 
         self._processor = processor
         self._type = switch_type

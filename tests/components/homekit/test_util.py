@@ -173,7 +173,7 @@ def test_convert_to_float():
 def test_temperature_to_homekit():
     """Test temperature conversion from HA to HomeKit."""
     assert temperature_to_homekit(20.46, TEMP_CELSIUS) == 20.5
-    assert temperature_to_homekit(92.1, TEMP_FAHRENHEIT) == 33.5
+    assert temperature_to_homekit(92.1, TEMP_FAHRENHEIT) == 33.4
 
 
 def test_temperature_to_states():

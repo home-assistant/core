@@ -2,6 +2,8 @@
 import asyncio
 import logging
 
+import pygatt  # pylint: disable=import-error
+
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.components.device_tracker.legacy import (
     YAML_DEVICES,
@@ -26,8 +28,6 @@ MIN_SEEN_NEW = 5
 
 def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the Bluetooth LE Scanner."""
-    # pylint: disable=import-error
-    import pygatt
 
     new_devices = {}
     hass.data.setdefault(DATA_BLE, {DATA_BLE_ADAPTER: None})

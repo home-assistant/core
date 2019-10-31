@@ -174,7 +174,7 @@ def setup(hass, config):
         hass.helpers.dispatcher.dispatcher_send(SIGNAL_ZONE_RESTORE, zone)
 
     def handle_rel_message(sender, message):
-        """Handle relay message from AlarmDecoder."""
+        """Handle relay or zone expander message from AlarmDecoder."""
         hass.helpers.dispatcher.dispatcher_send(SIGNAL_REL_MESSAGE, message)
 
     controller = False
@@ -195,7 +195,7 @@ def setup(hass, config):
     controller.on_zone_fault += zone_fault_callback
     controller.on_zone_restore += zone_restore_callback
     controller.on_close += handle_closed_connection
-    controller.on_relay_changed += handle_rel_message
+    controller.on_expander_message += handle_rel_message
 
     hass.data[DATA_AD] = controller
 

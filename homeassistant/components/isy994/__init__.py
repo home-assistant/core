@@ -3,6 +3,8 @@ from collections import namedtuple
 import logging
 from urllib.parse import urlparse
 
+import PyISY
+from PyISY.Nodes import Group
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -312,8 +314,6 @@ def _categorize_nodes(
             # Don't import this node as a device at all
             continue
 
-        from PyISY.Nodes import Group
-
         if isinstance(node, Group):
             hass.data[ISY994_NODES][SCENE_DOMAIN].append(node)
             continue
@@ -418,8 +418,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     else:
         _LOGGER.error("isy994 host value in configuration is invalid")
         return False
-
-    import PyISY
 
     # Connect to ISY controller.
     isy = PyISY.ISY(

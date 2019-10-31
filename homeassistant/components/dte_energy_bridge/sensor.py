@@ -1,12 +1,13 @@
 """Support for monitoring energy usage using the DTE energy bridge."""
 import logging
 
+import requests
 import voluptuous as vol
 
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,8 +79,6 @@ class DteEnergyBridgeSensor(Entity):
 
     def update(self):
         """Get the energy usage data from the DTE energy bridge."""
-        import requests
-
         try:
             response = requests.get(self._url, timeout=5)
         except (requests.exceptions.RequestException, ValueError):
