@@ -107,7 +107,7 @@ class HMSensor(HMDevice):
     @property
     def device_class(self):
         """Return the device class to use in the frontend, if any."""
-        return HM_DEVICE_CLASS_HA_CAST.get(self._state, None)
+        return HM_DEVICE_CLASS_HA_CAST.get(self._state)
 
     @property
     def icon(self):
