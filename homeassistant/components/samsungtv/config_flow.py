@@ -148,10 +148,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._name = self._name[4:]
         self._title = "{} ({})".format(self._name, self._model)
 
-        if any(
-            self._ip == flow.ip
-            for flow in self._async_in_progress()
-        ):
+        if any(self._ip == flow.ip for flow in self._async_in_progress()):
             return self.async_abort(reason="already_in_progress")
 
         if self._is_already_configured():
