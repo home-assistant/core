@@ -9,12 +9,12 @@ from homeassistant.components.androidtv.media_player import (
     CONF_APPS,
 )
 from homeassistant.components.media_player.const import (
-    ATTR_INPUT_SOURCE,
+    # ATTR_INPUT_SOURCE,
     DOMAIN,
-    SERVICE_SELECT_SOURCE,
+    # SERVICE_SELECT_SOURCE,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
+    # ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
     CONF_HOST,
     CONF_NAME,
@@ -321,45 +321,51 @@ async def test_firetv_sources(hass):
         assert state.attributes["source_list"] == ["com.app.test2", "TEST 1"]
 
     with patchers.PATCH_LAUNCH_APP as launch_app:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SELECT_SOURCE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: "com.app.test1"},
-        )
+        # await hass.services.async_call(
+        #     DOMAIN,
+        #     SERVICE_SELECT_SOURCE,
+        #     {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: "com.app.test1"},
+        # )
+        hass.data["androidtv"]["127.0.0.1:5555"].select_source("com.app.test1")
         launch_app.assert_called_with("com.app.test1")
 
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SELECT_SOURCE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: "TEST 1"},
-        )
+        # await hass.services.async_call(
+        #     DOMAIN,
+        #     SERVICE_SELECT_SOURCE,
+        #     {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: "TEST 1"},
+        # )
+        hass.data["androidtv"]["127.0.0.1:5555"].select_source("TEST 1")
         launch_app.assert_called_with("com.app.test1")
 
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SELECT_SOURCE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: "com.app.test2"},
-        )
+        # await hass.services.async_call(
+        #     DOMAIN,
+        #     SERVICE_SELECT_SOURCE,
+        #     {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: "com.app.test2"},
+        # )
+        hass.data["androidtv"]["127.0.0.1:5555"].select_source("com.app.test2")
         launch_app.assert_called_with("com.app.test2")
 
     with patchers.PATCH_STOP_APP as stop_app:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SELECT_SOURCE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: "com.app.test1"},
-        )
+        # await hass.services.async_call(
+        #     DOMAIN,
+        #     SERVICE_SELECT_SOURCE,
+        #     {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: "com.app.test1"},
+        # )
+        hass.data["androidtv"]["127.0.0.1:5555"].select_source("!com.app.test1")
         stop_app.assert_called_with("com.app.test1")
 
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SELECT_SOURCE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: "TEST 1"},
-        )
+        # await hass.services.async_call(
+        #     DOMAIN,
+        #     SERVICE_SELECT_SOURCE,
+        #     {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: "TEST 1"},
+        # )
+        hass.data["androidtv"]["127.0.0.1:5555"].select_source("!TEST 1")
         stop_app.assert_called_with("com.app.test1")
 
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SELECT_SOURCE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: "com.app.test2"},
-        )
+        # await hass.services.async_call(
+        #     DOMAIN,
+        #     SERVICE_SELECT_SOURCE,
+        #     {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: "com.app.test2"},
+        # )
+        hass.data["androidtv"]["127.0.0.1:5555"].select_source("!com.app.test2")
         stop_app.assert_called_with("com.app.test2")
