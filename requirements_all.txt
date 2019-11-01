@@ -933,7 +933,7 @@ orvibo==1.1.1
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
-paho-mqtt==1.4.0
+paho-mqtt==1.5.0
 
 # homeassistant.components.panasonic_bluray
 panacotta==0.1
