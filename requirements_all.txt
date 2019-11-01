@@ -1462,7 +1462,7 @@ pysmartthings==0.6.9
 pysmarty==0.8
 
 # homeassistant.components.snmp
-pysnmp==4.4.11
+pysnmp==4.4.12
 
 # homeassistant.components.soma
 pysoma==0.0.10
