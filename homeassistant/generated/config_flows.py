@@ -22,6 +22,7 @@ FLOWS = [
     "ecobee",
     "emulated_roku",
     "esphome",
+    "eufy_security",
     "geofency",
     "geonetnz_quakes",
     "glances",

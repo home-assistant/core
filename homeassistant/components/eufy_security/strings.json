@@ -1,0 +1,19 @@
+{
+  "config": {
+    "title": "Eufy Security",
+    "step": {
+      "user": {
+        "title": "Fill in your information",
+        "data": {
+          "username": "Email Address",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "identifier_exists": "Username already registered",
+      "invalid_credentials": "Invalid username or password"
+    }
+  }
+}
+
