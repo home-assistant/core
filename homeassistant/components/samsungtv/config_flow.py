@@ -79,9 +79,11 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._title = None
 
     def _is_already_configured(self):
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if self._ip == entry.data.get(CONF_IP_ADDRESS):
-                return True
+        if any(
+            self._ip == entry.data.get(CONF_IP_ADDRESS)
+            for entry in self.hass.config_entries.async_entries(DOMAIN)
+        ):
+            return True
         return False
 
     async def _async_get_entry(self):
