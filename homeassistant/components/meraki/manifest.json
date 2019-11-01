@@ -4,5 +4,7 @@
   "documentation": "https://www.home-assistant.io/integrations/meraki",
   "requirements": ["meraki-sdk==1.4.0"],
   "dependencies": ["http"],
-  "codeowners": []
+  "codeowners": [
+    "@coreGreenberet"
+  ]
 }
