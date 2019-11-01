@@ -1,0 +1,9 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_off": "{entity_name} \u00e8 spento",
+            "is_on": "{entity_name} \u00e8 acceso",
+            "is_paused": "{entity_name} \u00e8 in pausa"
+        }
+    }
+}

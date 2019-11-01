@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Questo dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "connection_failed": "Connessione fallita",
+            "incorrect_password": "Password errata",
+            "incorrect_username": "Nome utente errato",
+            "incorrect_username_or_password": "Nome utente o password errati",
+            "invalid_url": "URL non valido"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "url": "URL",
+                    "username": "Nome utente"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "track_new_devices": "Traccia nuovi dispositivi"
+                }
+            }
+        }
+    }
+}
