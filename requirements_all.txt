@@ -1898,7 +1898,7 @@ teslajsonpy==0.0.26
 thermoworks_smoke==0.1.8
 
 # homeassistant.components.thingspeak
-thingspeak==0.4.1
+thingspeak==1.0.0
 
 # homeassistant.components.tikteck
 tikteck==0.4
