@@ -41,7 +41,7 @@ class EufySecurityFlowHandler(config_entries.ConfigFlow):
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
         from eufy_security import async_login
-        from eufy_security.errors import InvalidCredentialsError
+        from eufy_security.errors import EufySecurityError, InvalidCredentialsError
 
         if not user_input:
             return await self._show_form()
@@ -57,5 +57,7 @@ class EufySecurityFlowHandler(config_entries.ConfigFlow):
             )
         except InvalidCredentialsError:
             return await self._show_form({"base": "invalid_credentials"})
+        except EufySecurityError:
+            return await self._show_form({"base": "unknown_error"})
 
         return self.async_create_entry(title=user_input[CONF_USERNAME], data=user_input)

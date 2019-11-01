@@ -12,7 +12,8 @@
     },
     "error": {
       "identifier_exists": "Username already registered",
-      "invalid_credentials": "Invalid username or password"
+      "invalid_credentials": "Invalid username or password",
+      "unknown_error": "An unknown error occurred"
     }
   }
 }

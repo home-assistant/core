@@ -36,7 +36,8 @@ async def test_duplicate_error(hass):
 
 
 @pytest.mark.parametrize(
-    "mock_client_coro", [mock_coro(exception=eufy_security.errors.EufySecurityError)]
+    "mock_client_coro",
+    [mock_coro(exception=eufy_security.errors.InvalidCredentialsError)],
 )
 async def test_invalid_credentials(hass, mock_eufy_security):
     """Test that an invalid API/App Key throws an error."""
@@ -90,3 +91,17 @@ async def test_step_user(hass, mock_eufy_security):
         CONF_USERNAME: "user@host.com",
         CONF_PASSWORD: "password123",
     }
+
+
+@pytest.mark.parametrize(
+    "mock_client_coro", [mock_coro(exception=eufy_security.errors.EufySecurityError)],
+)
+async def test_unknown_error(hass, mock_eufy_security):
+    """Test that an an unknown error shows the correct message."""
+    conf = {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password123"}
+
+    flow = config_flow.EufySecurityFlowHandler()
+    flow.hass = hass
+
+    result = await flow.async_step_user(user_input=conf)
+    assert result["errors"] == {"base": "unknown_error"}
