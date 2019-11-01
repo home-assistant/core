@@ -1,7 +1,7 @@
 """Support switches from meraki"""
 import logging
 from datetime import timedelta
-
+import voluptuous as vol
 
 from meraki_sdk.controllers.switch_ports_controller import SwitchPortsController
 from meraki_sdk.exceptions.api_exception import APIException
@@ -26,16 +26,44 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_get_switch_name(hass, client: MerakiSdkClient, serial: str):
+    """this function will resolve the name of a switch"""
+    organisations = await hass.async_add_executor_job(
+        client.organizations.get_organizations
+    )
+    for org in organisations:
+        networks = await hass.async_add_executor_job(
+            client.networks.get_organization_networks, {"organization_id": org["id"]}
+        )
+        for network in networks:
+            devices = await hass.async_add_executor_job(
+                client.devices.get_network_devices, network["id"]
+            )
+            for device in devices:
+                if device["serial"] == serial:
+                    return device["name"]
+    return None
+
+
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up meraki switches."""
     api_key = config.get(CONF_API_KEY)
     device_id = config.get(CONF_DEVICE_ID)
 
     client = MerakiSdkClient(api_key)
-    switch_port_controller = client.switch_ports()
+
+    switch_name = await async_get_switch_name(hass, client, device_id)
+
+    switch_port_controller = client.switch_ports
     ports = []
-    for p in switch_port_controller.get_device_switch_ports(device_id):
-        ports.append(MerakiSwitchPort(switch_port_controller, device_id, p["number"]))
+    for switch_port in await hass.async_add_executor_job(
+        switch_port_controller.get_device_switch_ports, device_id
+    ):
+        ports.append(
+            MerakiSwitchPort(
+                switch_port_controller, device_id, switch_port["number"], switch_name
+            )
+        )
 
     add_entities(ports)
 
@@ -44,13 +72,18 @@ class MerakiSwitchPort(SwitchDevice):
     """Meraki Switchport"""
 
     def __init__(
-        self, switch_port_controller: SwitchPortsController, serial: str, port: int
+        self,
+        switch_port_controller: SwitchPortsController,
+        serial: str,
+        port: int,
+        switch_name: str = None,
     ):
         self._controller = switch_port_controller
         self._serial = serial
+        self._switch_name = switch_name
         self._port = port
         self._unique_id = f"{serial}-{port}"
-        self._name = None
+        self._name = f"{switch_name}-{port}"
         self._enabled = False
 
     @property
@@ -60,13 +93,8 @@ class MerakiSwitchPort(SwitchDevice):
 
     @property
     def name(self):
-        """Return the name of this Switch device if any."""
-        return self._name or f"{self._serial}-{self._port}"
-
-    @property
-    def device_state_attributes(self):
-        """Show Device Attributes."""
-        return self.attributes
+        """Return the name of this Switch device"""
+        return self._name
 
     @property
     def is_on(self):
@@ -77,12 +105,12 @@ class MerakiSwitchPort(SwitchDevice):
         collect = {}
         collect["serial"] = self._serial
         collect["number"] = self._port
-        collect["update_device_switch_port"] = {"enabled": enabled}
+        collect["update_device_switch_port"] = {"enabled": enable}
         try:
             self._controller.update_device_switch_port(collect)
-            self._enabled = enabled
+            self._enabled = enable
         except APIException:
-            _LOGGING.exception(f"Could not update switchport {self._unique_id}")
+            _LOGGING.exception("Could not update switchport %s", self._unique_id)
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
@@ -93,10 +121,13 @@ class MerakiSwitchPort(SwitchDevice):
         self._update_port(enable=False)
 
     def update(self):
-        """Update all switchport """
+        """Updates the switchport"""
         collect = {}
         collect["serial"] = self._serial
         collect["number"] = self._port
         port = self._controller.get_device_switch_port(collect)
-        self._name = port["name"]
+        if port["name"]:
+            self._name = f"{self._switch_name}-{port['name']}"
+        else:
+            self._name = f"{self._switch_name}-{self._port}"
         self._enabled = port["enabled"]
