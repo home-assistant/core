@@ -1,4 +1,4 @@
-"""Support switches from meraki"""
+"""Support switches from Cisco Meraki."""
 import logging
 from datetime import timedelta
 import voluptuous as vol
@@ -27,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_get_switch_name(hass, client: MerakiSdkClient, serial: str):
-    """this function will resolve the name of a switch"""
+    """Resolve the name of a switch."""
     organisations = await hass.async_add_executor_job(
         client.organizations.get_organizations
     )
@@ -69,7 +69,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class MerakiSwitchPort(SwitchDevice):
-    """Meraki Switchport"""
+    """Cisco Meraki Switchport."""
 
     def __init__(
         self,
@@ -78,6 +78,7 @@ class MerakiSwitchPort(SwitchDevice):
         port: int,
         switch_name: str = None,
     ):
+        """Initialize Cisco Meraki switchport."""
         self._controller = switch_port_controller
         self._serial = serial
         self._switch_name = switch_name
@@ -93,7 +94,7 @@ class MerakiSwitchPort(SwitchDevice):
 
     @property
     def name(self):
-        """Return the name of this Switch device"""
+        """Return the name of this Switch device."""
         return self._name
 
     @property
@@ -121,7 +122,7 @@ class MerakiSwitchPort(SwitchDevice):
         self._update_port(enable=False)
 
     def update(self):
-        """Updates the switchport"""
+        """Update the status of the switchport."""
         collect = {}
         collect["serial"] = self._serial
         collect["number"] = self._port
