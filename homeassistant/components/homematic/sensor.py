@@ -1,7 +1,15 @@
 """Support for HomeMatic sensors."""
 import logging
 
-from homeassistant.const import ENERGY_WATT_HOUR, POWER_WATT, STATE_UNKNOWN
+from homeassistant.const import (
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE,
+    ENERGY_WATT_HOUR,
+    POWER_WATT,
+    STATE_UNKNOWN,
+)
 
 from . import ATTR_DISCOVER_DEVICES, HMDevice
 
@@ -48,20 +56,20 @@ HM_UNIT_HA_CAST = {
     "VALUE": "#",
 }
 
-HM_ICON_HA_CAST = {
-    "WIND_SPEED": "mdi:weather-windy",
-    "HUMIDITY": "mdi:water-percent",
-    "TEMPERATURE": "mdi:thermometer",
-    "ACTUAL_TEMPERATURE": "mdi:thermometer",
-    "LUX": "mdi:weather-sunny",
-    "CURRENT_ILLUMINATION": "mdi:weather-sunny",
-    "AVERAGE_ILLUMINATION": "mdi:weather-sunny",
-    "LOWEST_ILLUMINATION": "mdi:weather-sunny",
-    "HIGHEST_ILLUMINATION": "mdi:weather-sunny",
-    "BRIGHTNESS": "mdi:invert-colors",
-    "POWER": "mdi:flash-red-eye",
-    "CURRENT": "mdi:flash-red-eye",
+HM_DEVICE_CLASS_HA_CAST = {
+    "HUMIDITY": DEVICE_CLASS_HUMIDITY,
+    "TEMPERATURE": DEVICE_CLASS_TEMPERATURE,
+    "ACTUAL_TEMPERATURE": DEVICE_CLASS_TEMPERATURE,
+    "LUX": DEVICE_CLASS_ILLUMINANCE,
+    "CURRENT_ILLUMINATION": DEVICE_CLASS_ILLUMINANCE,
+    "AVERAGE_ILLUMINATION": DEVICE_CLASS_ILLUMINANCE,
+    "LOWEST_ILLUMINATION": DEVICE_CLASS_ILLUMINANCE,
+    "HIGHEST_ILLUMINATION": DEVICE_CLASS_ILLUMINANCE,
+    "POWER": DEVICE_CLASS_POWER,
+    "CURRENT": DEVICE_CLASS_POWER,
 }
+
+HM_ICON_HA_CAST = {"WIND_SPEED": "mdi:weather-windy", "BRIGHTNESS": "mdi:invert-colors"}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -95,6 +103,11 @@ class HMSensor(HMDevice):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return HM_UNIT_HA_CAST.get(self._state, None)
+
+    @property
+    def device_class(self):
+        """Return the device class to use in the frontend, if any."""
+        return HM_DEVICE_CLASS_HA_CAST.get(self._state, None)
 
     @property
     def icon(self):
