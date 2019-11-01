@@ -497,6 +497,9 @@ pyspcwebgw==0.4.0
 # homeassistant.components.ecobee
 python-ecobee-api==0.1.4
 
+# homeassistant.components.eufy_security
+python-eufy-security==0.1.1
+
 # homeassistant.components.darksky
 python-forecastio==1.4.0
 

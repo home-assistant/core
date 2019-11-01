@@ -1515,6 +1515,9 @@ python-ecobee-api==0.1.4
 # homeassistant.components.etherscan
 python-etherscan-api==0.0.3
 
+# homeassistant.components.eufy_security
+python-eufy-security==0.1.1
+
 # homeassistant.components.familyhub
 python-family-hub-local==0.0.2
 
