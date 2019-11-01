@@ -3,7 +3,7 @@
   "name": "Thingspeak",
   "documentation": "https://www.home-assistant.io/integrations/thingspeak",
   "requirements": [
-    "thingspeak==0.4.1"
+    "thingspeak==1.0.0"
   ],
   "dependencies": [],
   "codeowners": []
