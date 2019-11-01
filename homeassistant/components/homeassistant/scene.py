@@ -54,6 +54,8 @@ def _convert_states(states):
     return result
 
 
+CONF_SCENE_ID = "scene_id"
+
 STATES_SCHEMA = vol.All(dict, _convert_states)
 
 PLATFORM_SCHEMA = vol.Schema(
@@ -72,7 +74,12 @@ PLATFORM_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+CREATE_SCENE_SCHEMA = vol.Schema(
+    {vol.Required(CONF_SCENE_ID): cv.slug, vol.Required(CONF_ENTITIES): STATES_SCHEMA}
+)
+
 SERVICE_APPLY = "apply"
+SERVICE_CREATE = "create"
 SCENECONFIG = namedtuple("SceneConfig", [CONF_NAME, STATES])
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,6 +134,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         SERVICE_APPLY,
         apply_service,
         vol.Schema({vol.Required(CONF_ENTITIES): STATES_SCHEMA}),
+    )
+
+    async def create_service(call):
+        """Create a scene."""
+        scene_config = SCENECONFIG(call.data[CONF_SCENE_ID], call.data[CONF_ENTITIES])
+        entity_id = f"{SCENE_DOMAIN}.{scene_config.name}"
+        if hass.states.get(entity_id) is not None:
+            _LOGGER.warning("The scene %s already exists", entity_id)
+            return
+
+        async_add_entities([HomeAssistantScene(hass, scene_config)])
+
+    hass.services.async_register(
+        SCENE_DOMAIN, SERVICE_CREATE, create_service, CREATE_SCENE_SCHEMA
     )
 
 
