@@ -16,6 +16,7 @@ from . import (
     SENSOR_TYPE_CURRENT,
     SENSOR_TYPE_PULSE_COUNTER,
     SENSOR_TYPE_TEMPERATURE,
+    SENSOR_TYPE_VOLTAGE,
     TIME_UNIT_HOUR,
     TIME_UNIT_MINUTE,
     TIME_UNIT_SECOND,
@@ -26,11 +27,13 @@ _LOGGER = logging.getLogger(__name__)
 DATA_PULSES = "pulses"
 DATA_WATT_SECONDS = "watt_seconds"
 
+UNIT_VOLTS = "V"
 UNIT_WATTS = POWER_WATT
 
 COUNTER_ICON = "mdi:counter"
 CURRENT_SENSOR_ICON = "mdi:flash"
 TEMPERATURE_ICON = "mdi:thermometer"
+VOLTAGE_SENSOR_ICON = "mdi:battery-plus"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -69,6 +72,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                     sensor[CONF_NAME],
                     sensor[CONF_TEMPERATURE_UNIT],
                 )
+            )
+        elif sensor_type == SENSOR_TYPE_VOLTAGE:
+            entities.append(
+                VoltageSensor(sensor[CONF_MONITOR_SERIAL_NUMBER], sensor[CONF_NAME])
             )
 
     async_add_entities(entities)
@@ -139,6 +146,35 @@ class GEMSensor(Entity):
 
     def _schedule_update(self):
         self.async_schedule_update_ha_state(False)
+
+
+class VoltageSensor(GEMSensor):
+    """Entity showing voltage being read by the GEM."""
+
+    def __init__(self, monitor_serial_number, name):
+        """Construct the entity."""
+        super().__init__(monitor_serial_number, name, "voltage", 1)
+
+    def _get_sensor(self, monitor):
+        return monitor
+
+    @property
+    def icon(self):
+        """Return the icon that should represent this sensor in the UI."""
+        return VOLTAGE_SENSOR_ICON
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement used by this sensor."""
+        return UNIT_VOLTS
+
+    @property
+    def state(self):
+        """Return the current number of watts being used by the channel."""
+        if not self._sensor:
+            return None
+
+        return self._sensor.voltage
 
 
 class CurrentSensor(GEMSensor):

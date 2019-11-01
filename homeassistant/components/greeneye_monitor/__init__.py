@@ -27,6 +27,7 @@ CONF_SENSORS = "sensors"
 CONF_SENSOR_TYPE = "sensor_type"
 CONF_TEMPERATURE_SENSORS = "temperature_sensors"
 CONF_TIME_UNIT = "time_unit"
+CONF_VOLTAGE_SENSOR = "voltage_sensor"
 
 DATA_GREENEYE_MONITOR = "greeneye_monitor"
 DOMAIN = "greeneye_monitor"
@@ -34,12 +35,15 @@ DOMAIN = "greeneye_monitor"
 SENSOR_TYPE_CURRENT = "current_sensor"
 SENSOR_TYPE_PULSE_COUNTER = "pulse_counter"
 SENSOR_TYPE_TEMPERATURE = "temperature_sensor"
+SENSOR_TYPE_VOLTAGE = "voltage"
 
 TEMPERATURE_UNIT_CELSIUS = "C"
 
 TIME_UNIT_SECOND = "s"
 TIME_UNIT_MINUTE = "min"
 TIME_UNIT_HOUR = "h"
+
+VOLTAGE_SENSOR_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 
 TEMPERATURE_SENSOR_SCHEMA = vol.Schema(
     {vol.Required(CONF_NUMBER): vol.Range(1, 8), vol.Required(CONF_NAME): cv.string}
@@ -90,6 +94,7 @@ MONITOR_SCHEMA = vol.Schema(
             ),
             vol.Coerce(int),
         ),
+        vol.Optional(CONF_VOLTAGE_SENSOR): VOLTAGE_SENSOR_SCHEMA,
         vol.Optional(CONF_CHANNELS, default=[]): CHANNELS_SCHEMA,
         vol.Optional(
             CONF_TEMPERATURE_SENSORS,
@@ -129,6 +134,16 @@ async def async_setup(hass, config):
         monitor_serial_number = {
             CONF_MONITOR_SERIAL_NUMBER: monitor_config[CONF_SERIAL_NUMBER]
         }
+
+        voltage_sensor_config = monitor_config.get(CONF_VOLTAGE_SENSOR)
+        if voltage_sensor_config is not None:
+            all_sensors.append(
+                {
+                    CONF_SENSOR_TYPE: SENSOR_TYPE_VOLTAGE,
+                    **monitor_serial_number,
+                    **voltage_sensor_config,
+                }
+            )
 
         channel_configs = monitor_config[CONF_CHANNELS]
         for channel_config in channel_configs:
