@@ -17,8 +17,8 @@ def mock_client_coro():
 
 @pytest.fixture
 def mock_eufy_security(mock_client_coro):
-    """Mock the aionotion library."""
-    with MockDependency("aionotion") as mock_:
+    """Mock the eufy_security library."""
+    with MockDependency("eufy_security") as mock_:
         mock_.async_login.return_value = mock_client_coro
         yield mock_
 
