@@ -398,6 +398,7 @@ omit =
     homeassistant/components/mcp23017/*
     homeassistant/components/media_extractor/*
     homeassistant/components/mediaroom/media_player.py
+    homeassistant/components/meraki/switch.py
     homeassistant/components/message_bird/notify.py
     homeassistant/components/met/weather.py
     homeassistant/components/meteo_france/*
