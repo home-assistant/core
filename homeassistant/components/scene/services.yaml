@@ -20,3 +20,17 @@ apply:
         light.ceiling:
           state: "on"
           brightness: 80
+
+create:
+  description: Creates a new scene.
+  fields:
+    scene_id:
+      description: The entity_id of the new scene.
+      example: all_lights
+    entities:
+      description: The entities to control with the scene.
+      example:
+        light.tv_back_light: "on"
+        light.ceiling:
+          state: "on"
+          brightness: 200
