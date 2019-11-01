@@ -7,6 +7,12 @@
             "default": "Autenticazione completata con Withings per il profilo selezionato."
         },
         "step": {
+            "profile": {
+                "data": {
+                    "profile": "Profilo"
+                },
+                "title": "Profilo utente."
+            },
             "user": {
                 "data": {
                     "profile": "Profilo"
