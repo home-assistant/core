@@ -569,7 +569,7 @@ async def test_custom_availability_payload(hass, mqtt_mock):
 
 
     async def test_set_target_temperature_low_high_with_templates(hass, mqtt_mock, caplog):
-    """Test setting of new fan mode in pessimistic mode."""
+    """Test setting of temperature high/low templates."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["climate"]["temperature_low_state_topic"] = "temperature-state"
     config["climate"]["temperature_high_state_topic"] = "temperature-state"
