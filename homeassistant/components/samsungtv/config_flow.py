@@ -99,11 +99,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    @property
-    def ip_address(self):
-        """Return IP address of handled TV."""
-        return self._ip
-
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         errors = {}
@@ -112,7 +107,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 DATA_SCHEMA(user_input)
                 self._host = user_input[CONF_HOST]
                 self._title = user_input[CONF_NAME]
-                self._ip = _get_ip(self._host)
+                self._ip = self.context[CONF_IP_ADDRESS] = _get_ip(self._host)
 
                 if self._is_already_configured():
                     return self.async_abort(reason="already_configured")
@@ -139,7 +134,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_ssdp(self, user_input=None):
         """Handle a flow initialized by discovery."""
         self._host = user_input[ATTR_HOST]
-        self._ip = _get_ip(user_input[ATTR_HOST])
+        self._ip = self.context[CONF_IP_ADDRESS] = _get_ip(user_input[ATTR_HOST])
         self._manufacturer = user_input[ATTR_MANUFACTURER]
         self._model = user_input[ATTR_MODEL_NAME]
         self._uuid = user_input[ATTR_UDN]
@@ -150,7 +145,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._name = self._name[4:]
         self._title = "{} ({})".format(self._name, self._model)
 
-        if any(self._ip == flow.ip_address for flow in self._async_in_progress()):
+        if any(
+            self._ip == flow["context"].get(CONF_IP_ADDRESS)
+            for flow in self._async_in_progress()
+        ):
             return self.async_abort(reason="already_in_progress")
 
         if self._is_already_configured():

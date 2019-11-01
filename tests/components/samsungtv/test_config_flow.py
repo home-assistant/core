@@ -273,7 +273,7 @@ async def test_ssdp_not_found(hass):
         assert result["reason"] == "not_found"
 
 
-async def test_discovery_already_in_progress(hass, remote):
+async def test_ssdp_already_in_progress(hass, remote):
     """Test starting a flow from discovery twice."""
 
     # confirm to add the entry
@@ -291,7 +291,7 @@ async def test_discovery_already_in_progress(hass, remote):
     assert result["reason"] == "already_in_progress"
 
 
-async def test_discovery_already_configured(hass, remote):
+async def test_ssdp_already_configured(hass, remote):
     """Test starting a flow from discovery when already configured."""
 
     # entry was added
