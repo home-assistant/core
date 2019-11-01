@@ -114,7 +114,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 result = await _async_try_connect(self._host, self._title)
 
-                if result == RESULT_NOT_FOUND:
+                if result == RESULT_NOT_FOUND:  # pylint: disable=R1705
                     return self.async_abort(reason=RESULT_NOT_FOUND)
                 elif result == RESULT_NOT_SUPPORTED:
                     return self.async_abort(reason=RESULT_NOT_SUPPORTED)
@@ -161,7 +161,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             result = await _async_try_connect(self._host, self._name)
 
-            if result == RESULT_NOT_FOUND:
+            if result == RESULT_NOT_FOUND:  # pylint: disable=R1705
                 return self.async_abort(reason=RESULT_NOT_FOUND)
             elif result == RESULT_NOT_SUPPORTED:
                 return self.async_abort(reason=RESULT_NOT_SUPPORTED)
