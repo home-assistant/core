@@ -6,7 +6,7 @@ from xml.etree.ElementTree import ParseError
 import plexapi.exceptions
 import requests.exceptions
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
@@ -30,6 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -56,10 +57,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Plex media_player from a config entry."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
+    registry = await async_get_registry(hass)
 
     def async_new_media_players(new_entities):
         _async_add_entities(
-            hass, config_entry, async_add_entities, server_id, new_entities
+            hass, registry, config_entry, async_add_entities, server_id, new_entities
         )
 
     unsub = async_dispatcher_connect(
@@ -70,7 +72,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 @callback
 def _async_add_entities(
-    hass, config_entry, async_add_entities, server_id, new_entities
+    hass, registry, config_entry, async_add_entities, server_id, new_entities
 ):
     """Set up Plex media_player entities."""
     entities = []
@@ -78,6 +80,19 @@ def _async_add_entities(
     for entity_params in new_entities:
         plex_mp = PlexMediaPlayer(plexserver, **entity_params)
         entities.append(plex_mp)
+
+        # Migration to per-server unique_ids
+        old_entity_id = registry.async_get_entity_id(
+            MP_DOMAIN, PLEX_DOMAIN, plex_mp.machine_identifier
+        )
+        if old_entity_id is not None:
+            new_unique_id = f"{server_id}:{plex_mp.machine_identifier}"
+            _LOGGER.debug(
+                "Migrating unique_id from [%s] to [%s]",
+                plex_mp.machine_identifier,
+                new_unique_id,
+            )
+            registry.async_update_entity(old_entity_id, new_unique_id=new_unique_id)
 
     async_add_entities(entities, True)
 
@@ -126,6 +141,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         server_id = self.plex_server.machine_identifier
+
         unsub = async_dispatcher_connect(
             self.hass,
             PLEX_UPDATE_MEDIA_PLAYER_SIGNAL.format(self.unique_id),
@@ -315,6 +331,11 @@ class PlexMediaPlayer(MediaPlayerDevice):
     @property
     def unique_id(self):
         """Return the id of this plex client."""
+        return f"{self.plex_server.machine_identifier}:{self._machine_identifier}"
+
+    @property
+    def machine_identifier(self):
+        """Return the Plex-provided identifier of this plex client."""
         return self._machine_identifier
 
     @property
