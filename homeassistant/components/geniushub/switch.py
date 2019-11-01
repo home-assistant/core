@@ -35,16 +35,18 @@ class GeniusSwitch(GeniusZone, SwitchDevice):
 
     @property
     def is_on(self) -> bool:
-        """Return the status of the sensor."""
-        # off, override, timer, footprint
-        # technially this could be untrue, if we're using the timer
-        return self._zone.data["mode"] != "off"
+        """Return the current state of the on/off zone.
+        
+        The zone is considered 'on' if & only if it is override/on (e.g. timer/on is 'off').
+        """
+        return self._zone.data["mode"] == "override" and self._zone.data["setpoint"]
 
     async def async_turn_off(self, **kwargs) -> None:
-        """Turn the switch off."""
-        await self._zone.set_mode("off")
+        """Send the zone to Timer mode.
+        
+        The zone is deemed 'off' in this mode, although the plugs may actually be on. """
+        await self._zone.set_mode("timer")
 
     async def async_turn_on(self, **kwargs) -> None:
-        """Turn the switch on."""
-        # geniusclient doesn't (yet) have a way to specify the override for this
-        await self._zone.set_mode("override")
+        """Set the zone to override/on ({'setpoint': true}) for 3600 seconds."""
+        await self._zone.set_override(1)
