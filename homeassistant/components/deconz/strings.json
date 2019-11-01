@@ -65,7 +65,17 @@
             "remote_button_quintuple_press": "\"{subtype}\" button quintuple clicked",
             "remote_button_rotated": "Button rotated \"{subtype}\"",
             "remote_button_rotation_stopped": "Button rotation \"{subtype}\" stopped",
-            "remote_gyro_activated": "Device shaken"
+            "remote_falling": "Device in free fall",
+            "remote_awakened": "Device awakened",
+            "remote_moved": "Device moved with \"{subtype}\" up",
+            "remote_double_tap": "Device \"{subtype}\" double tapped",
+            "remote_gyro_activated": "Device shaken",
+            "remote_rotate_from_side_1": "Device rotated from \"side 1\" to \"{subtype}\"",
+            "remote_rotate_from_side_2": "Device rotated from \"side 2\" to \"{subtype}\"",
+            "remote_rotate_from_side_3": "Device rotated from \"side 3\" to \"{subtype}\"",
+            "remote_rotate_from_side_4": "Device rotated from \"side 4\" to \"{subtype}\"",
+            "remote_rotate_from_side_5": "Device rotated from \"side 5\" to \"{subtype}\"",
+            "remote_rotate_from_side_6": "Device rotated from \"side 6\" to \"{subtype}\""
         },
         "trigger_subtype": {
             "turn_on": "Turn on",
@@ -80,7 +90,12 @@
             "button_1": "First button",
             "button_2": "Second button",
             "button_3": "Third button",
-            "button_4": "Fourth button"
-        }
+            "button_4": "Fourth button",
+            "side_1": "Side 1",
+            "side_2": "Side 2",
+            "side_3": "Side 3",
+            "side_4": "Side 4",
+            "side_5": "Side 5",
+            "side_6": "Side 6"
     }
 }
