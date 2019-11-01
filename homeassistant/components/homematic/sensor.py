@@ -94,7 +94,7 @@ class HMSensor(HMDevice):
         # Does a cast exist for this class?
         name = self._hmdevice.__class__.__name__
         if name in HM_STATE_HA_CAST:
-            return HM_STATE_HA_CAST[name].get(self._hm_get_state(), None)
+            return HM_STATE_HA_CAST[name].get(self._hm_get_state())
 
         # No cast, return original value
         return self._hm_get_state()
@@ -102,7 +102,7 @@ class HMSensor(HMDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return HM_UNIT_HA_CAST.get(self._state, None)
+        return HM_UNIT_HA_CAST.get(self._state)
 
     @property
     def device_class(self):
@@ -112,7 +112,7 @@ class HMSensor(HMDevice):
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        return HM_ICON_HA_CAST.get(self._state, None)
+        return HM_ICON_HA_CAST.get(self._state)
 
     def _init_data_struct(self):
         """Generate a data dictionary (self._data) from metadata."""

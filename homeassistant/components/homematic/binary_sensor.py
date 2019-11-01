@@ -63,7 +63,7 @@ class HMBinarySensor(HMDevice, BinarySensorDevice):
         # If state is MOTION (Only RemoteMotion working)
         if self._state == "MOTION":
             return DEVICE_CLASS_MOTION
-        return SENSOR_TYPES_CLASS.get(self._hmdevice.__class__.__name__, None)
+        return SENSOR_TYPES_CLASS.get(self._hmdevice.__class__.__name__)
 
     def _init_data_struct(self):
         """Generate the data dictionary (self._data) from metadata."""
