@@ -4,6 +4,8 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import DOMAIN, GeniusZone
 
+ATTR_DURATION = "duration"
+
 GH_ON_OFF_ZONE = "on / off"
 
 
@@ -48,5 +50,5 @@ class GeniusSwitch(GeniusZone, SwitchDevice):
         await self._zone.set_mode("timer")
 
     async def async_turn_on(self, **kwargs) -> None:
-        """Set the zone to override/on ({'setpoint': true}) for 3600 seconds."""
-        await self._zone.set_override(1)
+        """Set the zone to override/on ({'setpoint': true}) for x seconds."""
+        await self._zone.set_override(1, kwargs.get(ATTR_DURATION, 3600))
