@@ -79,7 +79,10 @@ async def test_hmip_notification_light(hass, default_mock_hap):
 
     # Send all color via service call.
     await hass.services.async_call(
-        "light", "turn_on", {"entity_id": entity_id}, blocking=True
+        "light",
+        "turn_on",
+        {"entity_id": entity_id, "brightness_pct": "100", "transition": 100},
+        blocking=True,
     )
     assert hmip_device.mock_calls[-1][0] == "set_rgb_dim_level_with_time"
     assert hmip_device.mock_calls[-1][2] == {
@@ -87,7 +90,7 @@ async def test_hmip_notification_light(hass, default_mock_hap):
         "rgb": "RED",
         "dimLevel": 1.0,
         "onTime": 0,
-        "rampTime": 0.5,
+        "rampTime": 100.0,
     }
 
     color_list = {
@@ -118,14 +121,6 @@ async def test_hmip_notification_light(hass, default_mock_hap):
 
     assert len(hmip_device.mock_calls) == service_call_counter + 8
 
-    assert hmip_device.mock_calls[-1][0] == "set_rgb_dim_level_with_time"
-    assert hmip_device.mock_calls[-1][2] == {
-        "channelIndex": 2,
-        "dimLevel": 0.0392156862745098,
-        "onTime": 0,
-        "rampTime": 0.5,
-        "rgb": "PURPLE",
-    }
     await async_manipulate_test_data(hass, hmip_device, "dimLevel", 1, 2)
     await async_manipulate_test_data(
         hass, hmip_device, "simpleRGBColorState", RGBColorState.PURPLE, 2
@@ -136,7 +131,7 @@ async def test_hmip_notification_light(hass, default_mock_hap):
     assert ha_state.attributes[ATTR_BRIGHTNESS] == 255
 
     await hass.services.async_call(
-        "light", "turn_off", {"entity_id": entity_id}, blocking=True
+        "light", "turn_off", {"entity_id": entity_id, "transition": 100}, blocking=True
     )
     assert len(hmip_device.mock_calls) == service_call_counter + 11
     assert hmip_device.mock_calls[-1][0] == "set_rgb_dim_level_with_time"
@@ -144,7 +139,7 @@ async def test_hmip_notification_light(hass, default_mock_hap):
         "channelIndex": 2,
         "dimLevel": 0.0,
         "onTime": 0,
-        "rampTime": 0.5,
+        "rampTime": 100,
         "rgb": "PURPLE",
     }
     await async_manipulate_test_data(hass, hmip_device, "dimLevel", 0, 2)

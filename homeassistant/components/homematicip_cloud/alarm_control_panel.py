@@ -52,6 +52,8 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
         """Initialize the alarm control panel."""
         self._home = hap.home
         self.alarm_state = STATE_ALARM_DISARMED
+        self._internal_alarm_zone = None
+        self._external_alarm_zone = None
 
         for security_zone in security_zones:
             if security_zone.label == "INTERNAL":
