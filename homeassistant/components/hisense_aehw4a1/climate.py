@@ -1,6 +1,5 @@
 """Pyaehw4a1 platform to control of Hisense AEH-W4A1 Climate Devices."""
 
-import time
 import logging
 
 from pyaehw4a1.aehw4a1 import AehW4a1
@@ -319,7 +318,7 @@ class Climate_aeh_w4a1(ClimateDevice):
 
     def set_fan_mode(self, fan_mode):
         """Set new fan mode."""
-        if self._on == "1" and fan_mode != FAN_OFF:
+        if self._on == "1":
             if self._hvac_mode in (HVAC_MODE_COOL, HVAC_MODE_FAN_ONLY):
                 if self._hvac_mode != HVAC_MODE_FAN_ONLY or fan_mode != FAN_AUTO:
                     _LOGGER.debug(
@@ -336,28 +335,24 @@ class Climate_aeh_w4a1(ClimateDevice):
             if swing_mode == SWING_OFF and swing_act != SWING_OFF:
                 if swing_act in (SWING_HORIZONTAL, SWING_BOTH):
                     self._device.command("hor_dir")
-                    time.sleep(0.5)
                 if swing_act in (SWING_VERTICAL, SWING_BOTH):
                     self._device.command("vert_dir")
 
             if swing_mode == SWING_BOTH and swing_act != SWING_BOTH:
                 if swing_act in (SWING_OFF, SWING_HORIZONTAL):
                     self._device.command("vert_swing")
-                    time.sleep(0.5)
                 if swing_act in (SWING_OFF, SWING_VERTICAL):
                     self._device.command("hor_swing")
 
             if swing_mode == SWING_VERTICAL and swing_act != SWING_VERTICAL:
                 if swing_act in (SWING_OFF, SWING_HORIZONTAL):
                     self._device.command("vert_swing")
-                    time.sleep(0.5)
                 if swing_act in (SWING_BOTH, SWING_HORIZONTAL):
                     self._device.command("hor_dir")
 
             if swing_mode == SWING_HORIZONTAL and swing_act != SWING_HORIZONTAL:
                 if swing_act in (SWING_BOTH, SWING_VERTICAL):
                     self._device.command("vert_dir")
-                    time.sleep(0.5)
                 if swing_act in (SWING_OFF, SWING_VERTICAL):
                     self._device.command("hor_swing")
 
@@ -382,8 +377,8 @@ class Climate_aeh_w4a1(ClimateDevice):
             elif preset_mode == "sleep_3":
                 self._device.command("sleep_3")
                 self._previous_preset = self._hvac_mode
-            elif preset_mode == "sleep_3":
-                self._device.command("sleep_3")
+            elif preset_mode == "sleep_4":
+                self._device.command("sleep_4")
                 self._previous_preset = self._hvac_mode
             else:
                 if self._previous_preset == PRESET_ECO:
