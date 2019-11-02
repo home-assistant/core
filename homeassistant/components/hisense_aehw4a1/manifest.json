@@ -6,6 +6,7 @@
   "requirements": [
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     "pyaehw4a1==0.1.2"
 =======
     "pyaehw4a1==0.0.5"
@@ -13,6 +14,9 @@
 =======
     "pyaehw4a1==0.1.0"
 >>>>>>> First working release, but there's a lot to do
+=======
+    "pyaehw4a1==0.1.1"
+>>>>>>> Refined logic
   ],
   "ssdp": {},
   "homekit": {},
