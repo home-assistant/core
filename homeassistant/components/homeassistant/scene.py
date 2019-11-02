@@ -163,8 +163,8 @@ def _process_scenes_config(hass, async_add_entities, config):
     async_add_entities(
         HomeAssistantScene(
             hass,
-            scene.get(CONF_ID),
             SCENECONFIG(scene[CONF_NAME], scene[CONF_ENTITIES]),
+            scene.get(CONF_ID),
         )
         for scene in scene_config
     )
@@ -173,7 +173,7 @@ def _process_scenes_config(hass, async_add_entities, config):
 class HomeAssistantScene(Scene):
     """A scene is a group of entities and the states we want them to be."""
 
-    def __init__(self, hass, scene_id, scene_config):
+    def __init__(self, hass, scene_config, scene_id):
         """Initialize the scene."""
         self._id = scene_id
         self.hass = hass
