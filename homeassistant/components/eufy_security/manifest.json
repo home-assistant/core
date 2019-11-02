@@ -9,5 +9,7 @@
   "dependencies": [
     "ffmpeg"
   ],
-  "codeowners": []
+  "codeowners": [
+      "@bachya"
+  ]
 }
