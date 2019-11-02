@@ -18,12 +18,7 @@ from url_normalize import url_normalize
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.ssdp import (
-    ATTR_HOST,
-    ATTR_NAME,
-    ATTR_PRESENTATIONURL,
-    ATTR_UPNP_DEVICE_TYPE,
-)
+from homeassistant.components.ssdp import ATTR_HOST, ATTR_NAME, ATTR_PRESENTATIONURL
 from homeassistant.const import CONF_PASSWORD, CONF_RECIPIENT, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
 from .const import DEFAULT_DEVICE_NAME
@@ -202,13 +197,9 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, discovery_info):
         """Handle SSDP initiated config flow."""
-        # Try to distinguish from other non-LTE Huawei router devices
-        if (
-            discovery_info.get(ATTR_UPNP_DEVICE_TYPE)
-            != "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
-            # e.g. "Mobile Wi-Fi"
-            or "mobile" not in discovery_info.get(ATTR_NAME, "").lower()
-        ):
+        # Attempt to distinguish from other non-LTE Huawei router devices, at least
+        # some ones we are interested in have "Mobile Wi-Fi" friendlyName.
+        if "mobile" not in discovery_info.get(ATTR_NAME, "").lower():
             return self.async_abort(reason="not_huawei_lte")
 
         # https://github.com/PyCQA/pylint/issues/3167
