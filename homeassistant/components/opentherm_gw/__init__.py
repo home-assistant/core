@@ -358,11 +358,13 @@ class OpenThermGatewayDevice:
         self.update_signal = f"{DATA_OPENTHERM_GW}_{self.gw_id}_update"
         self.options_update_signal = f"{DATA_OPENTHERM_GW}_{self.gw_id}_options_update"
         self.gateway = pyotgw.pyotgw()
+        self.gw_version = None
 
     async def connect_and_subscribe(self):
         """Connect to serial device and subscribe report handler."""
-        await self.gateway.connect(self.hass.loop, self.device_path)
+        self.status = await self.gateway.connect(self.hass.loop, self.device_path)
         _LOGGER.debug("Connected to OpenTherm Gateway at %s", self.device_path)
+        self.gw_version = self.status.get(gw_vars.OTGW_BUILD)
 
         async def cleanup(event):
             """Reset overrides on the gateway."""

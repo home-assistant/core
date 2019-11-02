@@ -7,6 +7,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 
+from . import DOMAIN
 from .const import DATA_GATEWAYS, DATA_OPENTHERM_GW, SENSOR_INFO
 
 
@@ -68,6 +69,22 @@ class OpenThermSensor(Entity):
     def name(self):
         """Return the friendly name of the sensor."""
         return self._friendly_name
+
+    @property
+    def device_info(self):
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self._gateway.gw_id)},
+            "name": self._gateway.name,
+            "manufacturer": "Schelte Bron",
+            "model": "OpenTherm Gateway",
+            "sw_version": self._gateway.gw_version,
+        }
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return f"{self._gateway.gw_id}-sensor-{self._var}"
 
     @property
     def device_class(self):

@@ -26,6 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+from . import DOMAIN
 from .const import CONF_FLOOR_TEMP, CONF_PRECISION, DATA_GATEWAYS, DATA_OPENTHERM_GW
 
 
@@ -135,6 +136,17 @@ class OpenThermClimate(ClimateDevice):
     def name(self):
         """Return the friendly name."""
         return self.friendly_name
+
+    @property
+    def device_info(self):
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self._gateway.gw_id)},
+            "name": self._gateway.name,
+            "manufacturer": "Schelte Bron",
+            "model": "OpenTherm Gateway",
+            "sw_version": self._gateway.gw_version,
+        }
 
     @property
     def unique_id(self):
