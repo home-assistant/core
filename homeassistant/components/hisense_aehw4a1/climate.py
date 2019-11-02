@@ -1,6 +1,5 @@
 """Pyaehw4a1 platform to control of Hisense AEH-W4A1 Climate Devices."""
 
-import json
 import time
 import logging
 
@@ -21,6 +20,7 @@ from homeassistant.components.climate.const import (
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_VERTICAL,
+    FAN_OFF,
     FAN_LOW,
     FAN_MEDIUM,
     FAN_HIGH,
@@ -61,9 +61,21 @@ HVAC_MODES = [
     HVAC_MODE_FAN_ONLY,
 ]
 
-FAN_MODES = ["mute", FAN_LOW, FAN_MEDIUM, FAN_HIGH, FAN_AUTO]
+FAN_MODES = [
+    FAN_OFF,
+    FAN_LOW,
+    FAN_MEDIUM,
+    FAN_HIGH,
+    FAN_AUTO,
+    "mute",
+]
 
-SWING_MODES = [SWING_OFF, SWING_VERTICAL, SWING_HORIZONTAL, SWING_BOTH]
+SWING_MODES = [
+    SWING_OFF,
+    SWING_VERTICAL,
+    SWING_HORIZONTAL,
+    SWING_BOTH,
+]
 
 PRESET_MODES = [
     PRESET_NONE,
@@ -91,12 +103,12 @@ HA_STATE_TO_AC = {
 }
 
 AC_TO_HA_FAN_MODES = {
-    "00000000": "off",
+    "00000000": FAN_OFF,
+    "00000001": FAN_AUTO,
     "00000010": "mute",
     "00000100": FAN_LOW,
     "00000110": FAN_MEDIUM,
     "00001000": FAN_HIGH,
-    "00000001": FAN_AUTO,
 }
 
 HA_FAN_MODES_TO_AC = {
@@ -159,8 +171,7 @@ class Climate_aeh_w4a1(ClimateDevice):
 
     def update(self):
         """Pull state from AEH-W4A1."""
-        data = self._device.command("status_102_0")
-        status = json.loads(data)
+        status = self._device.command("status_102_0")
         self._on = status["run_status"]
 
         if status["temperature_Fahrenheit"] == "0":
@@ -168,17 +179,26 @@ class Climate_aeh_w4a1(ClimateDevice):
         else:
             self._temperature_unit = TEMP_FAHRENHEIT
 
-        self._current_temperature = int(status["indoor_temperature_status"], 2)
-        self._target_temperature = int(status["indoor_temperature_setting"], 2)
-
         device_mode = status["mode_status"]
         if self._on == "1":
             self._hvac_mode = AC_TO_HA_STATE[device_mode]
         else:
             self._hvac_mode = HVAC_MODE_OFF
 
-        fan_mode = status["wind_status"]
-        self._fan_mode = AC_TO_HA_FAN_MODES[fan_mode]
+        self._current_temperature = int(status["indoor_temperature_status"], 2)
+
+        if self._on == "1" and (
+            self._hvac_mode == HVAC_MODE_COOL or self._hvac_mode == HVAC_MODE_HEAT
+        ):
+            self._target_temperature = int(status["indoor_temperature_setting"], 2)
+        else:
+            self._target_temperature = None
+
+        if self._on == "1" and self._hvac_mode == HVAC_MODE_HEAT:
+            self._fan_mode = FAN_AUTO
+        else:
+            fan_mode = status["wind_status"]
+            self._fan_mode = AC_TO_HA_FAN_MODES[fan_mode]
 
         swing_mode = status["up_down"] + status["left_right"]
         self._swing_mode = AC_TO_HA_SWING[swing_mode]
@@ -289,80 +309,88 @@ class Climate_aeh_w4a1(ClimateDevice):
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None:
             _LOGGER.debug("Setting temp of %s to %s", self._unique_id, str(temp))
-        if self._temperature_unit == TEMP_CELSIUS:
-            self._device.command(f"temp_{str(int(temp))}_C")
-        else:
-            self._device.command(f"temp_{str(int(temp))}_F")
+            if self._temperature_unit == TEMP_CELSIUS:
+                self._device.command(f"temp_{str(int(temp))}_C")
+            else:
+                self._device.command(f"temp_{str(int(temp))}_F")
 
     def set_fan_mode(self, fan_mode):
         """Set new fan mode."""
-        if fan_mode is not None:
-            _LOGGER.debug("Setting fan mode of %s to %s", self._unique_id, fan_mode)
-            self._device.command(HA_FAN_MODES_TO_AC[fan_mode])
+        if self._on == "1" and fan_mode != FAN_OFF:
+            if self._hvac_mode in (HVAC_MODE_COOL, HVAC_MODE_FAN_ONLY):
+                if self._hvac_mode != HVAC_MODE_FAN_ONLY or fan_mode != FAN_AUTO:
+                    _LOGGER.debug(
+                        "Setting fan mode of %s to %s", self._unique_id, fan_mode
+                    )
+                    self._device.command(HA_FAN_MODES_TO_AC[fan_mode])
 
     def set_swing_mode(self, swing_mode):
         """Set new target swing operation."""
-        _LOGGER.debug("Setting swing mode of %s to %s", self._unique_id, swing_mode)
-        swing_act = self._swing_mode
+        if self._on == "1":
+            _LOGGER.debug("Setting swing mode of %s to %s", self._unique_id, swing_mode)
+            swing_act = self._swing_mode
 
-        if swing_mode == SWING_OFF and swing_act != SWING_OFF:
-            if swing_act in (SWING_HORIZONTAL, SWING_BOTH):
-                self._device.command("hor_dir")
-                time.sleep(0.5)
-            if swing_act in (SWING_VERTICAL, SWING_BOTH):
-                self._device.command("vert_dir")
+            if swing_mode == SWING_OFF and swing_act != SWING_OFF:
+                if swing_act in (SWING_HORIZONTAL, SWING_BOTH):
+                    self._device.command("hor_dir")
+                    time.sleep(0.5)
+                if swing_act in (SWING_VERTICAL, SWING_BOTH):
+                    self._device.command("vert_dir")
 
-        if swing_mode == SWING_BOTH and swing_act != SWING_BOTH:
-            if swing_act in (SWING_OFF, SWING_HORIZONTAL):
-                self._device.command("vert_swing")
-                time.sleep(0.5)
-            if swing_act in (SWING_OFF, SWING_VERTICAL):
-                self._device.command("hor_swing")
+            if swing_mode == SWING_BOTH and swing_act != SWING_BOTH:
+                if swing_act in (SWING_OFF, SWING_HORIZONTAL):
+                    self._device.command("vert_swing")
+                    time.sleep(0.5)
+                if swing_act in (SWING_OFF, SWING_VERTICAL):
+                    self._device.command("hor_swing")
 
-        if swing_mode == SWING_VERTICAL and swing_act != SWING_VERTICAL:
-            if swing_act in (SWING_OFF, SWING_HORIZONTAL):
-                self._device.command("vert_swing")
-                time.sleep(0.5)
-            if swing_act in (SWING_BOTH, SWING_HORIZONTAL):
-                self._device.command("hor_dir")
+            if swing_mode == SWING_VERTICAL and swing_act != SWING_VERTICAL:
+                if swing_act in (SWING_OFF, SWING_HORIZONTAL):
+                    self._device.command("vert_swing")
+                    time.sleep(0.5)
+                if swing_act in (SWING_BOTH, SWING_HORIZONTAL):
+                    self._device.command("hor_dir")
 
-        if swing_mode == SWING_HORIZONTAL and swing_act != SWING_HORIZONTAL:
-            if swing_act in (SWING_BOTH, SWING_VERTICAL):
-                self._device.command("vert_dir")
-                time.sleep(0.5)
-            if swing_act in (SWING_OFF, SWING_VERTICAL):
-                self._device.command("hor_swing")
+            if swing_mode == SWING_HORIZONTAL and swing_act != SWING_HORIZONTAL:
+                if swing_act in (SWING_BOTH, SWING_VERTICAL):
+                    self._device.command("vert_dir")
+                    time.sleep(0.5)
+                if swing_act in (SWING_OFF, SWING_VERTICAL):
+                    self._device.command("hor_swing")
 
     def set_preset_mode(self, preset_mode):
         """Set new preset mode."""
-        _LOGGER.debug("Setting preset mode of %s to %s", self._unique_id, preset_mode)
-        if preset_mode == PRESET_ECO:
-            self._device.command("energysave_on")
-            self._previous_preset = preset_mode
-        elif preset_mode == PRESET_BOOST:
-            self._device.command("turbo_on")
-            self._previous_preset = preset_mode
-        elif preset_mode == PRESET_SLEEP:
-            self._device.command("sleep_1")
-            self._previous_preset = self._hvac_mode
-        elif preset_mode == "sleep_2":
-            self._device.command("sleep_2")
-            self._previous_preset = self._hvac_mode
-        elif preset_mode == "sleep_3":
-            self._device.command("sleep_3")
-            self._previous_preset = self._hvac_mode
-        elif preset_mode == "sleep_3":
-            self._device.command("sleep_3")
-            self._previous_preset = self._hvac_mode
-        else:
-            if self._previous_preset == PRESET_ECO:
-                self._device.command("energysave_off")
-            elif self._previous_preset == PRESET_BOOST:
-                self._device.command("turbo_off")
-            elif self._previous_preset == PRESET_BOOST:
-                self._device.command("turbo_off")
-            elif self._previous_preset in HA_STATE_TO_AC:
-                self._device.command(HA_STATE_TO_AC[self._previous_preset])
+        if self._on == "1":
+            _LOGGER.debug(
+                "Setting preset mode of %s to %s", self._unique_id, preset_mode
+            )
+            if preset_mode == PRESET_ECO:
+                self._device.command("energysave_on")
+                self._previous_preset = preset_mode
+            elif preset_mode == PRESET_BOOST:
+                self._device.command("turbo_on")
+                self._previous_preset = preset_mode
+            elif preset_mode == PRESET_SLEEP:
+                self._device.command("sleep_1")
+                self._previous_preset = self._hvac_mode
+            elif preset_mode == "sleep_2":
+                self._device.command("sleep_2")
+                self._previous_preset = self._hvac_mode
+            elif preset_mode == "sleep_3":
+                self._device.command("sleep_3")
+                self._previous_preset = self._hvac_mode
+            elif preset_mode == "sleep_3":
+                self._device.command("sleep_3")
+                self._previous_preset = self._hvac_mode
+            else:
+                if self._previous_preset == PRESET_ECO:
+                    self._device.command("energysave_off")
+                elif self._previous_preset == PRESET_BOOST:
+                    self._device.command("turbo_off")
+                elif self._previous_preset == PRESET_BOOST:
+                    self._device.command("turbo_off")
+                elif self._previous_preset in HA_STATE_TO_AC:
+                    self._device.command(HA_STATE_TO_AC[self._previous_preset])
 
     def set_hvac_mode(self, hvac_mode):
         """Set new operation mode."""
