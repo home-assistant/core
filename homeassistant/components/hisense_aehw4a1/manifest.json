@@ -7,6 +7,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     "pyaehw4a1==0.1.2"
 =======
     "pyaehw4a1==0.0.5"
@@ -17,6 +18,9 @@
 =======
     "pyaehw4a1==0.1.1"
 >>>>>>> Refined logic
+=======
+    "pyaehw4a1==0.1.2"
+>>>>>>> Updated library to latest version
   ],
   "ssdp": {},
   "homekit": {},
