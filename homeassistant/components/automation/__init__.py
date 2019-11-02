@@ -50,6 +50,7 @@ CONF_ACTION = "action"
 CONF_TRIGGER = "trigger"
 CONF_CONDITION_TYPE = "condition_type"
 CONF_INITIAL_STATE = "initial_state"
+CONF_SKIP_CONDITION = "skip_condition"
 
 CONDITION_USE_TRIGGER_VALUES = "use_trigger_values"
 CONDITION_TYPE_AND = "and"
@@ -107,7 +108,10 @@ PLATFORM_SCHEMA = vol.Schema(
 )
 
 TRIGGER_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Optional(ATTR_VARIABLES, default={}): dict}
+    {
+        vol.Optional(ATTR_VARIABLES, default={}): dict,
+        vol.Optional(CONF_SKIP_CONDITION, default=True): bool,
+    }
 )
 
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
@@ -138,7 +142,7 @@ async def async_setup(hass, config):
             tasks.append(
                 entity.async_trigger(
                     service_call.data.get(ATTR_VARIABLES),
-                    skip_condition=True,
+                    skip_condition=service_call.data.get(CONF_SKIP_CONDITION),
                     context=service_call.context,
                 )
             )
