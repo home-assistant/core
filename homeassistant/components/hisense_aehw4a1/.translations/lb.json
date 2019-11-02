@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+<<<<<<< HEAD
             "no_devices_found": "Keng Hisense AEH-W4A1 Apparater am Netzwierk fonnt.",
             "single_instance_allowed": "N\u00ebmmen eng eenzeg Konfiguratioun vun Hisense AEH-W4A1 ass erlaabt."
         },
@@ -13,3 +14,17 @@
         "title": "Hisense AEH-W4A1"
     }
 }
+=======
+            "no_devices_found": "Keng LIFX Apparater am Netzwierk fonnt.",
+            "single_instance_allowed": "N\u00ebmmen eng eenzeg Konfiguratioun vun LIFX ass erlaabt."
+        },
+        "step": {
+            "confirm": {
+                "description": "Soll LIFX konfigur\u00e9iert ginn?",
+                "title": "LIFX"
+            }
+        },
+        "title": "LIFX"
+    }
+}
+>>>>>>> Added translations for config_flow

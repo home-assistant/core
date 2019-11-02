@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+<<<<<<< HEAD
             "no_devices_found": "Inga Hisense AEH-W4A1 enheter hittas i n\u00e4tverket.",
             "single_instance_allowed": "Endast en enda konfiguration av Hisense AEH-W4A1 \u00e4r m\u00f6jlig."
         },
@@ -13,3 +14,17 @@
         "title": "Hisense AEH-W4A1"
     }
 }
+=======
+            "no_devices_found": "Inga LIFX enheter hittas i n\u00e4tverket.",
+            "single_instance_allowed": "Endast en enda konfiguration av LIFX \u00e4r m\u00f6jlig."
+        },
+        "step": {
+            "confirm": {
+                "description": "Vill du st\u00e4lla in LIFX?",
+                "title": "LIFX"
+            }
+        },
+        "title": "LIFX"
+    }
+}
+>>>>>>> Added translations for config_flow
