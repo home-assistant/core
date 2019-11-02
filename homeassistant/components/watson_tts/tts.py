@@ -93,8 +93,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def get_engine(hass, config):
     """Set up IBM Watson TTS component."""
     from ibm_watson import TextToSpeechV1
+    from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 
-    service = TextToSpeechV1(url=config[CONF_URL], iam_apikey=config[CONF_APIKEY])
+    authenticator = IAMAuthenticator(config[CONF_APIKEY])
+    service = TextToSpeechV1(authenticator)
+    service.set_service_url(config[CONF_URL])
 
     supported_languages = list({s[:5] for s in SUPPORTED_VOICES})
     default_voice = config[CONF_VOICE]
