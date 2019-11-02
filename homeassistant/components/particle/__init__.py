@@ -1,100 +1,126 @@
 """Integration with the Particle Cloud."""
-
-DOMAIN = 'particle'
-
 import logging
+
 import voluptuous as vol
-from homeassistant.const import (
-  STATE_ON,
-  STATE_UNAVAILABLE,
-)
+
+from homeassistant.const import CONF_ACCESS_TOKEN, STATE_ON, STATE_UNAVAILABLE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
+DOMAIN = "particle"
+
 _LOGGER = logging.getLogger(DOMAIN)
-CONFIG_SCHEMA = vol.Schema({
-  DOMAIN: vol.Schema({
-    vol.Required('access_token'): cv.string,
-  }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.Schema({vol.Required(CONF_ACCESS_TOKEN): cv.string})},
+    extra=vol.ALLOW_EXTRA,
+)
 
-FUNCTION_CALL_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({
-  vol.Required('function'): cv.string,
-  vol.Optional('args'): vol.All(
-    cv.ensure_list, vol.Length(min=1), [cv.string]
-  ),
-})
+ATTR_ARGS = "args"
+ATTR_FUNCTION = "function"
 
-def setup(hass, config):
-  """Initialize our component while Home Assistant loads."""
-  from pyparticleio.ParticleCloud import ParticleCloud
+FUNCTION_CALL_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+    {
+        vol.Required(ATTR_FUNCTION): cv.string,
+        vol.Optional(ATTR_ARGS): vol.All(
+            cv.ensure_list, vol.Length(min=1), [cv.string]
+        ),
+    }
+)
 
-  access_token = config[DOMAIN]['access_token']
 
-  particle = hass.data[DOMAIN] = ParticleCloud(access_token)
+async def async_setup(hass, config):
+    """Initialize our component while Home Assistant loads."""
+    if DOMAIN not in config:
+        return True
 
-  component = EntityComponent(_LOGGER, DOMAIN, hass)
+    from pyparticleio.ParticleCloud import ParticleCloud
 
-  devices = {}
-  device_list = []
+    access_token = config[DOMAIN][CONF_ACCESS_TOKEN]
 
-  for name, info in particle.devices.items():
-    entity_id = ('particle.' + name).lower()
+    try:
+        particle = hass.data[DOMAIN] = ParticleCloud(access_token)
+    except Exception as ex:
+        _LOGGER.error("Unable to connect to Particle Cloud: %s", str(ex))
+        return False
 
-    device = ParticleDevice(name, info)
-    devices[entity_id] = device
-    device_list.append(device)
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-  component.add_entities(device_list)
-  component.async_register_entity_service(
-    'call',
-    FUNCTION_CALL_SCHEMA,
-    ParticleDevice.call,
-  )
+    devices = {}
+    device_list = []
 
-  return True
+    for name, info in particle.devices.items():
+        entity_id = f"{DOMAIN}.{name.lower()}"
+
+        device = ParticleDevice(name, info)
+        devices[entity_id] = device
+        device_list.append(device)
+
+    if not device_list:
+        return False
+
+    component.async_register_entity_service(
+        "call", FUNCTION_CALL_SCHEMA, ParticleDevice.call
+    )
+
+    await component.async_add_entities(device_list)
+    return True
+
 
 class ParticleDevice(Entity):
-  def __init__(self, name, info):
-    self._name = name
-    self._info = info
-    self._attributes = {}
+    """ParticleDevice represents a single device within the Particle Cloud."""
 
-  @property
-  def name(self):
-    return self._name
+    def __init__(self, name, info):
+        """Initialize the Device from its initial state."""
+        self._name = name
+        self._info = info
+        self._attributes = {}
 
-  @property
-  def icon(self):
-    return 'mdi:star-four-points'
+    @property
+    def name(self):
+        """Return the name of the device."""
+        return self._name
 
-  @property
-  def available(self):
-    return self._info.connected
+    @property
+    def icon(self):
+        """Return an icon representing the device."""
+        return "mdi:star-four-points"
 
-  @property
-  def state(self):
-    if self._info.connected:
-      return STATE_ON
-    else:
-      return STATE_UNAVAILABLE
+    @property
+    def available(self):
+        """Return true if the device is connected, false otherwise."""
+        return self._info.connected
 
-  def call(self, service):
-    function = service.data.get('function')
-    args = service.data.get('args', [])
+    @property
+    def state(self):
+        """Return a high-level state for the device."""
+        if self._info.connected:
+            return STATE_ON
+        else:
+            return STATE_UNAVAILABLE
 
-    source = 'self._info.' + function + '(*args)'
+    def call(self, service):
+        """Call a specified Cloud Function available on the device."""
+        function = service.data.get(ATTR_FUNCTION)
+        args = service.data.get(ATTR_ARGS, [])
 
-    return eval(source, { 'self': self, 'args': args })
+        source = f"self._info.{function}(*args)"
 
-  @property
-  def device_state_attributes(self):
-    return self._attributes
+        return eval(source, {"self": self, "args": args})
 
-  def update(self):
-    if self._info.variables is not None:
-      for name, _ in self._info.variables.items():
-        source = 'self._info.' + name
-        self._attributes[name] = eval(source, { 'self': self })
+    @property
+    def device_state_attributes(self):
+        """Return all Cloud Variables published from the device."""
+        return self._attributes
+
+    def update(self):
+        """Get the latest data from the Particle Cloud for this device."""
+        if self._info.variables is not None:
+            for name, _ in self._info.variables.items():
+                source = f"self._info.{name}"
+                try:
+                    self._attributes[name] = eval(source, {"self": self})
+                except Exception as ex:
+                    _LOGGER.error("Unable to update from Particle Cloud: %s", str(ex))
+                    self._attributes[name] = None

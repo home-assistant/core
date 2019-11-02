@@ -1,7 +1,7 @@
 {
   "domain": "particle",
   "name": "Particle Cloud",
-  "documentation": "",
+  "documentation": "https://www.home-assistant.io/integrations/particle/",
   "dependencies": [],
   "codeowners": [
     "@Schoonology"
