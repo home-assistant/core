@@ -6,11 +6,11 @@
   "requirements": [
     "pywemo==0.4.34"
   ],
-  "ssdp": {
-    "manufacturer": [
-      "Belkin International Inc."
-    ]
-  },
+  "ssdp": [
+    {
+      "manufacturer": "Belkin International Inc."
+    }
+  ],
   "homekit": {
     "models": [
       "Wemo"

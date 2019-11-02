@@ -6,7 +6,7 @@
             "already_in_progress": "Plex jest konfigurowany",
             "discovery_no_file": "Nie znaleziono pliku konfiguracyjnego",
             "invalid_import": "Zaimportowana konfiguracja jest nieprawid\u0142owa",
-            "token_request_timeout": "Przekroczono limit czasu na uzyskanie tokena",
+            "token_request_timeout": "Przekroczono limit czasu na uzyskanie tokena.",
             "unknown": "Nieznany b\u0142\u0105d"
         },
         "error": {

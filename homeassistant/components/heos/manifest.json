@@ -6,11 +6,11 @@
   "requirements": [
     "pyheos==0.6.0"
   ],
-  "ssdp": {
-    "st": [
-      "urn:schemas-denon-com:device:ACT-Denon:1"
-    ]
-  },
+  "ssdp": [
+    {
+      "st": "urn:schemas-denon-com:device:ACT-Denon:1"
+    }
+  ],
   "dependencies": [],
   "codeowners": [
     "@andrewsayre"

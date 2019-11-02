@@ -28,6 +28,7 @@ COMPONENTS_WITH_DEMO_PLATFORM = [
     "switch",
     "tts",
     "mailbox",
+    "water_heater",
 ]
 
 

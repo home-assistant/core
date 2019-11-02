@@ -4,7 +4,17 @@
             "is_closed": "{entity_name} \uc774(\uac00) \ub2eb\ud614\uc2b5\ub2c8\ub2e4",
             "is_closing": "{entity_name} \uc774(\uac00) \ub2eb\ud799\ub2c8\ub2e4",
             "is_open": "{entity_name} \uc774(\uac00) \uc5f4\ub838\uc2b5\ub2c8\ub2e4",
-            "is_opening": "{entity_name} \uc774(\uac00) \uc5f4\ub9bd\ub2c8\ub2e4"
+            "is_opening": "{entity_name} \uc774(\uac00) \uc5f4\ub9bd\ub2c8\ub2e4",
+            "is_position": "{entity_name} \uac1c\ud3d0 \uc704\uce58\ub294",
+            "is_tilt_position": "{entity_name} \uac1c\ud3d0 \uae30\uc6b8\uae30\ub294"
+        },
+        "trigger_type": {
+            "closed": "{entity_name} \uc774(\uac00) \ub2eb\ud798",
+            "closing": "{entity_name} \uc774(\uac00) \ub2eb\ud788\ub294 \uc911",
+            "opened": "{entity_name} \uc774(\uac00) \uc5f4\ub9bc",
+            "opening": "{entity_name} \uc774(\uac00) \uc5f4\ub9ac\ub294 \uc911",
+            "position": "{entity_name} \uac1c\ud3d0 \uc704\uce58 \ubcc0\ud654",
+            "tilt_position": "{entity_name} \uac1c\ud3d0 \uae30\uc6b8\uae30 \ubcc0\ud654"
         }
     }
 }

@@ -1,6 +1,8 @@
 """Support for SNMP enabled switch."""
 import logging
 
+from pyasn1.type.univ import Integer
+
 import pysnmp.hlapi.asyncio as hlapi
 from pysnmp.hlapi.asyncio import (
     CommunityData,
@@ -190,15 +192,20 @@ class SnmpSwitch(SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Turn on the switch."""
-        await self._set(self._command_payload_on)
+        if self._command_payload_on.isdigit():
+            await self._set(Integer(self._command_payload_on))
+        else:
+            await self._set(self._command_payload_on)
 
     async def async_turn_off(self, **kwargs):
         """Turn off the switch."""
-        await self._set(self._command_payload_off)
+        if self._command_payload_on.isdigit():
+            await self._set(Integer(self._command_payload_off))
+        else:
+            await self._set(self._command_payload_off)
 
     async def async_update(self):
         """Update the state."""
-
         errindication, errstatus, errindex, restable = await getCmd(
             *self._request_args, ObjectType(ObjectIdentity(self._baseoid))
         )
@@ -215,7 +222,11 @@ class SnmpSwitch(SwitchDevice):
             for resrow in restable:
                 if resrow[-1] == self._payload_on:
                     self._state = True
+                elif resrow[-1] == Integer(self._payload_on):
+                    self._state = True
                 elif resrow[-1] == self._payload_off:
+                    self._state = False
+                elif resrow[-1] == Integer(self._payload_off):
                     self._state = False
                 else:
                     self._state = None

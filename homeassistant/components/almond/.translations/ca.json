@@ -1,0 +1,9 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Nom\u00e9s pots configurar un \u00fanic compte amb Almond.",
+            "cannot_connect": "No es pot connectar amb el servidor d'Almond."
+        },
+        "title": "Almond"
+    }
+}

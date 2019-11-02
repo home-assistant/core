@@ -19,6 +19,7 @@ homeassistant/components/airly/* @bieniu
 homeassistant/components/airvisual/* @bachya
 homeassistant/components/alarm_control_panel/* @colinodell
 homeassistant/components/alexa/* @home-assistant/cloud @ochlocracy
+homeassistant/components/almond/* @gcampax @balloob
 homeassistant/components/alpha_vantage/* @fabaff
 homeassistant/components/amazon_polly/* @robbiet480
 homeassistant/components/ambiclimate/* @danielhiversen
@@ -158,6 +159,7 @@ homeassistant/components/jewish_calendar/* @tsvi
 homeassistant/components/kaiterra/* @Michsior14
 homeassistant/components/keba/* @dannerph
 homeassistant/components/keenetic_ndms2/* @foxel
+homeassistant/components/keyboard_remote/* @bendavid
 homeassistant/components/knx/* @Julius2342
 homeassistant/components/kodi/* @armills
 homeassistant/components/konnected/* @heythisisnate
@@ -306,7 +308,7 @@ homeassistant/components/tplink/* @rytilahti
 homeassistant/components/traccar/* @ludeeus
 homeassistant/components/tradfri/* @ggravlingen
 homeassistant/components/trafikverket_train/* @endor-force
-homeassistant/components/transmission/* @engrbm87
+homeassistant/components/transmission/* @engrbm87 @JPHutchins
 homeassistant/components/tts/* @robbiet480
 homeassistant/components/twentemilieu/* @frenck
 homeassistant/components/twilio_call/* @robbiet480

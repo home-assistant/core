@@ -2,8 +2,8 @@
 import asyncio
 from functools import wraps
 import logging
+from typing import Any, Dict
 
-from aiohttp import ClientTimeout
 import voluptuous as vol
 
 from iaqualink import (
@@ -26,7 +26,7 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -85,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> None
     sensors = hass.data[DOMAIN][SENSOR_DOMAIN] = []
     switches = hass.data[DOMAIN][SWITCH_DOMAIN] = []
 
-    session = async_create_clientsession(hass, timeout=ClientTimeout(total=5))
+    session = async_get_clientsession(hass)
     aqualink = AqualinkClient(username, password, session)
     try:
         await aqualink.login()
@@ -210,3 +210,24 @@ class AqualinkEntity(Entity):
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
         return f"{self.dev.system.serial}_{self.dev.name}"
+
+    @property
+    def assumed_state(self) -> bool:
+        """Return whether the state is based on actual reading from the device."""
+        return not self.dev.system.last_run_success
+
+    @property
+    def available(self) -> bool:
+        """Return whether the device is available or not."""
+        return self.dev.system.online
+
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "model": self.dev.__class__.__name__.replace("Aqualink", ""),
+            "manufacturer": "Jandy",
+            "via_device": (DOMAIN, self.dev.system.serial),
+        }

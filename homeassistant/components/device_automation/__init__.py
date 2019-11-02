@@ -156,7 +156,11 @@ async def _async_get_device_automation_capabilities(hass, automation_type, autom
         # The device automation has no capabilities
         return {}
 
-    capabilities = await getattr(platform, function_name)(hass, automation)
+    try:
+        capabilities = await getattr(platform, function_name)(hass, automation)
+    except InvalidDeviceAutomationConfig:
+        return {}
+
     capabilities = capabilities.copy()
 
     extra_fields = capabilities.get("extra_fields")

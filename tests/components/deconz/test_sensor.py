@@ -233,3 +233,26 @@ async def test_add_new_sensor(hass):
 
     light_level_sensor = hass.states.get("sensor.light_level_sensor")
     assert light_level_sensor.state == "999.8"
+
+
+async def test_add_battery_later(hass):
+    """Test that a sensor without an initial battery state creates a battery sensor once state exist."""
+    data = deepcopy(DECONZ_WEB_REQUEST)
+    data["sensors"] = {"1": deepcopy(SENSORS["3"])}
+    gateway = await setup_deconz_integration(
+        hass, ENTRY_CONFIG, options={}, get_state_response=data
+    )
+    remote = gateway.api.sensors["1"]
+    assert len(gateway.deconz_ids) == 0
+    assert len(gateway.events) == 1
+    assert len(remote._async_callbacks) == 2
+
+    remote.async_update({"config": {"battery": 50}})
+    await hass.async_block_till_done()
+
+    assert len(gateway.deconz_ids) == 1
+    assert len(gateway.events) == 1
+    assert len(remote._async_callbacks) == 2
+
+    battery_sensor = hass.states.get("sensor.switch_1_battery_level")
+    assert battery_sensor is not None
