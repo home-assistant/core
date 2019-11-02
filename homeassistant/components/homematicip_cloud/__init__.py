@@ -1,5 +1,6 @@
 """Support for HomematicIP Cloud devices."""
 import logging
+from pathlib import Path
 
 from homematicip.aio.group import AsyncHeatingGroup
 from homematicip.base.helpers import handle_config
@@ -105,9 +106,11 @@ SCHEMA_SET_ACTIVE_CLIMATE_PROFILE = vol.Schema(
 
 SCHEMA_DUMP_HAP_CONFIG = vol.Schema(
     {
-        vol.Required(ATTR_CONFIG_OUTPUT_PATH, default=""): cv.string,
-        vol.Required(ATTR_CONFIG_OUTPUT_FILE_PREFIX, default=""): cv.string,
-        vol.Required(ATTR_ANONYMIZE, default=True): cv.boolean,
+        vol.Optional(ATTR_CONFIG_OUTPUT_PATH): cv.string,
+        vol.Optional(
+            ATTR_CONFIG_OUTPUT_FILE_PREFIX, default=DEFAULT_CONFIG_FILE_PREFIX
+        ): cv.string,
+        vol.Optional(ATTR_ANONYMIZE, default=True): cv.boolean,
     }
 )
 
@@ -256,10 +259,10 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
     async def _async_dump_hap_config(service):
         """Service to dump the configuration of a Homematic IP Access Point."""
-        config_path = service.data[ATTR_CONFIG_OUTPUT_PATH] or hass.config.config_dir
-        config_file_prefix = (
-            service.data[ATTR_CONFIG_OUTPUT_FILE_PREFIX] or DEFAULT_CONFIG_FILE_PREFIX
+        config_path = (
+            service.data.get(ATTR_CONFIG_OUTPUT_PATH) or hass.config.config_dir
         )
+        config_file_prefix = service.data[ATTR_CONFIG_OUTPUT_FILE_PREFIX]
         anonymize = service.data[ATTR_ANONYMIZE]
 
         for hap in hass.data[DOMAIN].values():
@@ -268,11 +271,14 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
             if anonymize:
                 hap_sgtin = hap_sgtin[-4:]
 
-            config_file = f"{config_path}/{config_file_prefix}_{hap_sgtin}.json"
+            file_name = f"{config_file_prefix}_{hap_sgtin}.json"
+            path = Path(config_path)
+            config_file = path / file_name
 
             json_state = await hap.home.download_configuration()
             json_state = handle_config(json_state, anonymize)
-            open(config_file, mode="w", encoding="utf8").write(json_state)
+
+            config_file.write_text(json_state, encoding="utf8")
 
     hass.services.async_register(
         DOMAIN,

@@ -155,13 +155,11 @@ async def test_unload_entry(hass):
 async def test_hmip_dump_hap_config_services(hass, mock_hap_with_service):
     """Test dump configuration services."""
 
-    with patch(
-        "homeassistant.components.homematicip_cloud.open", return_value=Mock()
-    ) as open_mock:
+    with patch("pathlib.Path.write_text", return_value=Mock()) as write_mock:
         await hass.services.async_call(
             "homematicip_cloud", "dump_hap_config", {"anonymize": True}, blocking=True
         )
         home = mock_hap_with_service.home
         assert home.mock_calls[-1][0] == "download_configuration"
         assert len(home.mock_calls) == 8  # pylint: disable=W0212
-        assert len(open_mock.mock_calls) == 1
+        assert len(write_mock.mock_calls) > 0
