@@ -118,6 +118,11 @@ class AlexaCapability:
         """Return the supportedOperations object."""
         return []
 
+    @staticmethod
+    def inputs():
+        """Applicable to InputController interface."""
+        return None
+
     def serialize_discovery(self):
         """Serialize according to the Discovery API."""
         result = {"type": "AlexaInterface", "interface": self.name(), "version": "3"}
@@ -148,6 +153,11 @@ class AlexaCapability:
         capability_resources = self.serialize_capability_resources()
         if capability_resources:
             result["capabilityResources"] = capability_resources
+
+        # pylint: disable=assignment-from-none
+        inputs = self.inputs()
+        if inputs is not None:
+            result["inputs"] = inputs
 
         configuration = self.configuration()
         if configuration:
@@ -528,6 +538,12 @@ class AlexaInputController(AlexaCapability):
     def name(self):
         """Return the Alexa API name of this interface."""
         return "Alexa.InputController"
+
+    def inputs(self):
+        """Return sources available on this entity."""
+        source_list = self.entity.attributes.get(media_player.ATTR_INPUT_SOURCE_LIST)
+        if source_list:
+            return [{"name": source} for source in source_list]
 
 
 class AlexaTemperatureSensor(AlexaCapability):
