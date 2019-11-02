@@ -94,9 +94,10 @@ class PlexServer:
 
     def refresh_entity(self, machine_identifier, device, session):
         """Forward refresh dispatch to media_player."""
+        unique_id = f"{self.machine_identifier}:{machine_identifier}"
         dispatcher_send(
             self._hass,
-            PLEX_UPDATE_MEDIA_PLAYER_SIGNAL.format(machine_identifier),
+            PLEX_UPDATE_MEDIA_PLAYER_SIGNAL.format(unique_id),
             device,
             session,
         )

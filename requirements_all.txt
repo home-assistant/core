@@ -456,7 +456,7 @@ enocean==0.50
 enturclient==0.2.0
 
 # homeassistant.components.environment_canada
-env_canada==0.0.27
+env_canada==0.0.29
 
 # homeassistant.components.envirophat
 # envirophat==0.0.6
@@ -622,7 +622,7 @@ hass-nabucasa==0.22
 hbmqtt==0.9.5
 
 # homeassistant.components.jewish_calendar
-hdate==0.9.1
+hdate==0.9.3
 
 # homeassistant.components.heatmiser
 heatmiserV3==0.9.1
@@ -1328,7 +1328,7 @@ pymsteams==0.1.12
 pymusiccast==0.1.6
 
 # homeassistant.components.myq
-pymyq==2.0.0
+pymyq==2.0.1
 
 # homeassistant.components.mysensors
 pymysensors==0.18.0
@@ -1423,7 +1423,7 @@ pyrepetier==3.0.5
 pysabnzbd==1.1.0
 
 # homeassistant.components.saj
-pysaj==0.0.12
+pysaj==0.0.13
 
 # homeassistant.components.sony_projector
 pysdcp==1
@@ -1564,7 +1564,7 @@ python-ripple-api==0.0.3
 python-sochain-api==0.0.2
 
 # homeassistant.components.songpal
-python-songpal==0.11.1
+python-songpal==0.11.2
 
 # homeassistant.components.synologydsm
 python-synology==0.2.0
