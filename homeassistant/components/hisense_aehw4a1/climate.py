@@ -60,11 +60,11 @@ HVAC_MODES = [
 ]
 
 FAN_MODES = [
+    "mute",
     FAN_LOW,
     FAN_MEDIUM,
     FAN_HIGH,
     FAN_AUTO,
-    "mute",
 ]
 
 SWING_MODES = [
@@ -163,7 +163,7 @@ class Climate_aeh_w4a1(ClimateDevice):
         self._fan_mode = None
         self._swing_mode = None
         self._preset_mode = None
-        self._previous_preset = None
+        self._previous_state = None
 
     def update(self):
         """Pull state from AEH-W4A1."""
@@ -367,31 +367,29 @@ class Climate_aeh_w4a1(ClimateDevice):
             )
             if preset_mode == PRESET_ECO:
                 self._device.command("energysave_on")
-                self._previous_preset = preset_mode
+                self._previous_state = preset_mode
             elif preset_mode == PRESET_BOOST:
                 self._device.command("turbo_on")
-                self._previous_preset = preset_mode
+                self._previous_state = preset_mode
             elif preset_mode == PRESET_SLEEP:
                 self._device.command("sleep_1")
-                self._previous_preset = self._hvac_mode
+                self._previous_state = self._hvac_mode
             elif preset_mode == "sleep_2":
                 self._device.command("sleep_2")
-                self._previous_preset = self._hvac_mode
+                self._previous_state = self._hvac_mode
             elif preset_mode == "sleep_3":
                 self._device.command("sleep_3")
-                self._previous_preset = self._hvac_mode
+                self._previous_state = self._hvac_mode
             elif preset_mode == "sleep_4":
                 self._device.command("sleep_4")
-                self._previous_preset = self._hvac_mode
+                self._previous_state = self._hvac_mode
             else:
-                if self._previous_preset == PRESET_ECO:
+                if self._previous_state == PRESET_ECO:
                     self._device.command("energysave_off")
-                elif self._previous_preset == PRESET_BOOST:
+                elif self._previous_state == PRESET_BOOST:
                     self._device.command("turbo_off")
-                elif self._previous_preset == PRESET_BOOST:
-                    self._device.command("turbo_off")
-                elif self._previous_preset in HA_STATE_TO_AC:
-                    self._device.command(HA_STATE_TO_AC[self._previous_preset])
+                elif self._previous_state in HA_STATE_TO_AC:
+                    self._device.command(HA_STATE_TO_AC[self._previous_state])
 
     def set_hvac_mode(self, hvac_mode):
         """Set new operation mode."""
