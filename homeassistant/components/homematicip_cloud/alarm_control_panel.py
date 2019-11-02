@@ -56,7 +56,7 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
         for security_zone in security_zones:
             if security_zone.label == "INTERNAL":
                 self._internal_alarm_zone = security_zone
-            else:
+            elif security_zone.label == "EXTERNAL":
                 self._external_alarm_zone = security_zone
 
     @property
@@ -110,8 +110,10 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self._internal_alarm_zone.on_update(self._async_device_changed)
-        self._external_alarm_zone.on_update(self._async_device_changed)
+        if self._internal_alarm_zone:
+            self._internal_alarm_zone.on_update(self._async_device_changed)
+        if self._external_alarm_zone:
+            self._external_alarm_zone.on_update(self._async_device_changed)
 
     def _async_device_changed(self, *args, **kwargs):
         """Handle device state changes."""
@@ -146,7 +148,7 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
 
 
 def _get_zone_alarm_state(security_zone) -> bool:
-    if security_zone.active:
+    if security_zone and security_zone.active:
         if (
             security_zone.sabotage
             or security_zone.motionDetected

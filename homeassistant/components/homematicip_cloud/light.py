@@ -16,6 +16,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_NAME,
     ATTR_HS_COLOR,
+    ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     Light,
@@ -225,13 +226,28 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
         # Minimum brightness is 10, otherwise the led is disabled
         brightness = max(10, brightness)
         dim_level = brightness / 255.0
+        transition = kwargs.get(ATTR_TRANSITION, 0.5)
 
-        await self._device.set_rgb_dim_level(self.channel, simple_rgb_color, dim_level)
+        await self._device.set_rgb_dim_level_with_time(
+            channelIndex=self.channel,
+            rgb=simple_rgb_color,
+            dimLevel=dim_level,
+            onTime=0,
+            rampTime=transition,
+        )
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
         simple_rgb_color = self._func_channel.simpleRGBColorState
-        await self._device.set_rgb_dim_level(self.channel, simple_rgb_color, 0.0)
+        transition = kwargs.get(ATTR_TRANSITION, 0.5)
+
+        await self._device.set_rgb_dim_level_with_time(
+            channelIndex=self.channel,
+            rgb=simple_rgb_color,
+            dimLevel=0.0,
+            onTime=0,
+            rampTime=transition,
+        )
 
 
 def _convert_color(color) -> RGBColorState:
