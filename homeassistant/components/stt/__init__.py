@@ -154,7 +154,7 @@ class SpeechToTextView(HomeAssistantView):
         self.providers = providers
 
     @staticmethod
-    def _metadat_from_header(request: web.Request) -> Optional[SpeechMetadata]:
+    def _metadata_from_header(request: web.Request) -> Optional[SpeechMetadata]:
         """Extract metadata from header.
 
         X-Speech-Content: format=wav; codec=pcm; samplerate=16000; bitrate=16; language=de_de
@@ -184,7 +184,7 @@ class SpeechToTextView(HomeAssistantView):
         stt_provider: Provider = self.providers[provider]
 
         # Get metadata
-        metadata = self._metadat_from_header(request)
+        metadata = self._metadata_from_header(request)
         if not metadata:
             raise HTTPBadRequest()
 
