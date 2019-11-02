@@ -52,57 +52,82 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     radius = config.get(CONF_RADIUS, DEFAULT_RADIUS)
 
     entities = []
-    for fuel in fuel_types:
-        _LOGGER.debug(
-            "Fetching data for (%s,%s) rad: %s fuel type: %s",
-            latitude,
-            longitude,
-            radius,
-            fuel,
-        )
-        data = pytankerkoenig.getNearbyStations(
-            api_key, latitude, longitude, radius, fuel, "dist"
-        )
+    _LOGGER.debug("Fetching data for (%s,%s) rad: %s", latitude, longitude, radius)
+    data = pytankerkoenig.getNearbyStations(
+        api_key, latitude, longitude, radius, "all", "dist"
+    )
+    _LOGGER.debug("Received data: %s", data)
+    if not data["ok"]:
+        _LOGGER.error("Error fetching data from tankerkoenig.de:\n%s", data["message"])
+        _LOGGER.error("Could not setup sensors")
+        return
 
-        for station in data["stations"]:
-            if len(data["stations"]) <= 0:
-                _LOGGER.error("Could not find any station in range")
-            else:
-                entities.append(
-                    FuelPriceSensorStandalone(
+    master = None
+    for station in data["stations"]:
+        if len(data["stations"]) <= 0:
+            _LOGGER.error("Could not find any station in range")
+        else:
+            for fuel in fuel_types:
+                sensor = None
+                if master is None:
+                    master = FuelPriceSensorMaster(
                         api_key, fuel, station, f"{NAME}_{station['name']}_{fuel}"
                     )
-                )
+                    sensor = master
+                else:
+                    sensor = FuelPriceSensorSlave(
+                        fuel, station, f"{NAME}_{station['name']}_{fuel}"
+                    )
+                    master.add_slave(fuel, sensor)
+                entities.append(sensor)
 
     async_add_entities(entities, True)
 
 
-class FuelPriceSensorStandalone(FuelPriceSensorBase):
-    """Standalone sensor for tankerkoenig prices."""
+class FuelPriceSensorMaster(FuelPriceSensorBase):
+    """Master sensor for tankerkoenig prices. This sensor gets the updated prices and forwards them to any slaves."""
 
     def __init__(self, api_key, fuel_type, station, name=NAME):
         """Initialize the class."""
         super().__init__(fuel_type, station, name)
         self._api_key = api_key
+        self._slaves = {}
 
     @property
     def should_poll(self):
         """Poll regularly for the standalone sensor."""
         return True
 
+    def add_slave(self, fuel_type, slave):
+        """Add an additional slave sensor, that needs to be updated together with this one."""
+        self._slaves[fuel_type] = slave
+
     async def async_update(self):
         """Fetch new prices."""
         _LOGGER.debug("Fetching new prices for standalone sensor")
-        self._station = pytankerkoenig.getNearbyStations(
-            self._api_key, self._latitude, self._longitude, 1, self._fuel_type, "dist"
-        )["stations"][0]
-        if self._station["isOpen"]:
+        data = pytankerkoenig.getPriceList(self._api_key, [self._station_id])
+        if data["ok"]:
+            _LOGGER.debug("Received data: %s", data)
+            self._data = data["prices"][self._station_id]
+            if self._data["status"] == "open":
+                self._is_open = STATE_OPEN
+            else:
+                self._is_open = STATE_CLOSED
+            for fuel_type, slave in self._slaves.items():
+                slave.new_data(self._data)
+        else:
+            _LOGGER.error(
+                "Error fetching data from tankerkoenig.de: %s", data["message"]
+            )
+
+
+class FuelPriceSensorSlave(FuelPriceSensorBase):
+    """Contains prices for fuels in the given station."""
+
+    def new_data(self, data):
+        """Update the internal sensor data."""
+        self._data = data
+        if self._data["status"] == "open":
             self._is_open = STATE_OPEN
         else:
             self._is_open = STATE_CLOSED
-
-
-class FuelPriceSensor(FuelPriceSensorBase):
-    """Contains prices for fuels in the given station."""
-
-    pass

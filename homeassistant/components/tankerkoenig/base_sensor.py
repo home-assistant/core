@@ -28,7 +28,9 @@ class FuelPriceSensorBase(Entity):
 
     def __init__(self, fuel_type, station, name=NAME):
         """Initialize the sensor."""
+        self._data = None
         self._station = station
+        self._station_id = station["id"]
         self._fuel_type = fuel_type
         self._name = name
         self._latitude = station["lat"]
@@ -38,7 +40,7 @@ class FuelPriceSensorBase(Entity):
         else:
             self._is_open = STATE_CLOSED
         self._address = f"{station['street']} {station['houseNumber']}, {station['postCode']} {station['place']}"
-        _LOGGER.debug(f"Setup standalone sensor {name}")
+        _LOGGER.debug("Setup standalone sensor %s", name)
 
     @property
     def name(self):
@@ -58,7 +60,10 @@ class FuelPriceSensorBase(Entity):
     @property
     def state(self):
         """Return the state of the device."""
-        return self._station["price"]
+        if self._data is None:
+            return self._station[self._fuel_type]
+        else:
+            return self._data[self._fuel_type]
 
     @property
     def device_state_attributes(self):
