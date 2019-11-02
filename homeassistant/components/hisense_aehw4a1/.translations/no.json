@@ -2,6 +2,7 @@
     "config": {
         "abort": {
 <<<<<<< HEAD
+<<<<<<< HEAD
             "no_devices_found": "Ingen Hisense AEH-W4A1-enheter funnet p\u00e5 nettverket.",
             "single_instance_allowed": "Kun en konfigurasjon av Hisense AEH-W4A1 er mulig."
         },
@@ -17,14 +18,21 @@
 =======
             "no_devices_found": "Ingen LIFX-enheter funnet p\u00e5 nettverket.",
             "single_instance_allowed": "Kun en konfigurasjon av LIFX er mulig."
+=======
+            "no_devices_found": "Ingen Hisense AEH-W4A1-enheter funnet p\u00e5 nettverket.",
+            "single_instance_allowed": "Kun en konfigurasjon av Hisense AEH-W4A1 er mulig."
+>>>>>>> Updated translations
         },
         "step": {
             "confirm": {
-                "description": "\u00d8nsker du \u00e5 sette opp LIFX?",
-                "title": "LIFX"
+                "description": "\u00d8nsker du \u00e5 sette opp Hisense AEH-W4A1?",
+                "title": "Hisense AEH-W4A1"
             }
         },
-        "title": "LIFX"
+        "title": "Hisense AEH-W4A1"
     }
 }
+<<<<<<< HEAD
 >>>>>>> Added translations for config_flow
+=======
+>>>>>>> Updated translations

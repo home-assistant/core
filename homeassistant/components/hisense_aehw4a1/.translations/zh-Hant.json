@@ -2,6 +2,7 @@
     "config": {
         "abort": {
 <<<<<<< HEAD
+<<<<<<< HEAD
             "no_devices_found": "\u5728\u7db2\u8def\u4e0a\u627e\u4e0d\u5230 Hisense AEH-W4A1 \u8a2d\u5099\u3002",
             "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44 Hisense AEH-W4A1\u3002"
         },
@@ -17,14 +18,21 @@
 =======
             "no_devices_found": "\u5728\u7db2\u8def\u4e0a\u627e\u4e0d\u5230 LIFX \u8a2d\u5099\u3002",
             "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44 LIFX\u3002"
+=======
+            "no_devices_found": "\u5728\u7db2\u8def\u4e0a\u627e\u4e0d\u5230 Hisense AEH-W4A1 \u8a2d\u5099\u3002",
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44 Hisense AEH-W4A1\u3002"
+>>>>>>> Updated translations
         },
         "step": {
             "confirm": {
-                "description": "\u662f\u5426\u8981\u8a2d\u5b9a LIFX\uff1f",
-                "title": "LIFX"
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a Hisense AEH-W4A1\uff1f",
+                "title": "Hisense AEH-W4A1"
             }
         },
-        "title": "LIFX"
+        "title": "Hisense AEH-W4A1"
     }
 }
+<<<<<<< HEAD
 >>>>>>> Added translations for config_flow
+=======
+>>>>>>> Updated translations

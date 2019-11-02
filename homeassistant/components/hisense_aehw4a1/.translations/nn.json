@@ -3,6 +3,7 @@
         "step": {
             "confirm": {
 <<<<<<< HEAD
+<<<<<<< HEAD
                 "title": "Hisense AEH-W4A1"
             }
         },
@@ -11,9 +12,15 @@
 }
 =======
                 "title": "LIFX"
+=======
+                "title": "Hisense AEH-W4A1"
+>>>>>>> Updated translations
             }
         },
-        "title": "LIFX"
+        "title": "Hisense AEH-W4A1"
     }
 }
+<<<<<<< HEAD
 >>>>>>> Added translations for config_flow
+=======
+>>>>>>> Updated translations

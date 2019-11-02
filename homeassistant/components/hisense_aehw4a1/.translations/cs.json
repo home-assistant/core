@@ -2,6 +2,7 @@
     "config": {
         "abort": {
 <<<<<<< HEAD
+<<<<<<< HEAD
             "no_devices_found": "V s\u00edti nejsou nalezena \u017e\u00e1dn\u00e1 za\u0159\u00edzen\u00ed Hisense AEH-W4A1.",
             "single_instance_allowed": "K dispozici je pouze jedna konfigurace Hisense AEH-W4A1."
         },
@@ -17,14 +18,21 @@
 =======
             "no_devices_found": "V s\u00edti nejsou nalezena \u017e\u00e1dn\u00e1 za\u0159\u00edzen\u00ed LIFX.",
             "single_instance_allowed": "K dispozici je pouze jedna konfigurace LIFX."
+=======
+            "no_devices_found": "V s\u00edti nejsou nalezena \u017e\u00e1dn\u00e1 za\u0159\u00edzen\u00ed Hisense AEH-W4A1.",
+            "single_instance_allowed": "K dispozici je pouze jedna konfigurace Hisense AEH-W4A1."
+>>>>>>> Updated translations
         },
         "step": {
             "confirm": {
-                "description": "Chcete nastavit LIFX?",
-                "title": "LIFX"
+                "description": "Chcete nastavit Hisense AEH-W4A1?",
+                "title": "Hisense AEH-W4A1"
             }
         },
-        "title": "LIFX"
+        "title": "Hisense AEH-W4A1"
     }
 }
+<<<<<<< HEAD
 >>>>>>> Added translations for config_flow
+=======
+>>>>>>> Updated translations
