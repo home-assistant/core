@@ -65,7 +65,7 @@ class VodafoneDeviceScanner(DeviceScanner):
             return None
         for client in self.last_results:
             if client.mac == device:
-                return client.name
+                return client.name.replace(" (2.4GHz)", "").replace(" (5GHz)", "")
         return None
 
     def get_extra_attributes(self, device):
