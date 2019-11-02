@@ -23,13 +23,11 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-from .const import ATTRIBUTION, DOMAIN
+from .const import ATTRIBUTION, DOMAIN, DEFAULT_CACHEDB
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_POLLING = "polling"
-
-DEFAULT_CACHEDB = "./abodepy_cache.pickle"
 
 SERVICE_SETTINGS = "change_setting"
 SERVICE_CAPTURE_IMAGE = "capture_image"
