@@ -43,11 +43,14 @@ from homeassistant.components.climate.const import (
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> Added support for preset_modes
 =======
     FAN_OFF,
 >>>>>>> Refined logic
+=======
+>>>>>>> Null states when AC off
     FAN_LOW,
     FAN_MEDIUM,
     FAN_HIGH,
@@ -110,8 +113,11 @@ FAN_MODES = [
     "mute",
 =======
 FAN_MODES = [
+<<<<<<< HEAD
     FAN_OFF,
 >>>>>>> Refined logic
+=======
+>>>>>>> Null states when AC off
     FAN_LOW,
     FAN_MEDIUM,
     FAN_HIGH,
@@ -184,6 +190,7 @@ AC_TO_HA_FAN_MODES = {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     "00000001": FAN_AUTO,
     "00000010": "mute",
     "00000100": FAN_LOW,
@@ -201,6 +208,8 @@ AC_TO_HA_FAN_MODES = {
     "00000000": "off",
 =======
     "00000000": FAN_OFF,
+=======
+>>>>>>> Null states when AC off
     "00000001": FAN_AUTO,
 >>>>>>> Refined logic
     "00000010": "mute",
@@ -425,6 +434,7 @@ class Climate_aeh_w4a1(ClimateDevice):
                 fan_mode = status["wind_status"]
                 self._fan_mode = AC_TO_HA_FAN_MODES[fan_mode]
         else:
+<<<<<<< HEAD
             self._fan_mode = FAN_OFF
 
         swing_mode = status["up_down"] + status["left_right"]
@@ -443,8 +453,33 @@ class Climate_aeh_w4a1(ClimateDevice):
             self._preset_mode = "sleep_3"
         elif status["sleep_status"] == "0000100":
             self._preset_mode = "sleep_4"
+=======
+            self._fan_mode = None
+
+        if self._on == "1":
+            swing_mode = status["up_down"] + status["left_right"]
+            self._swing_mode = AC_TO_HA_SWING[swing_mode]
         else:
-            self._preset_mode = PRESET_NONE
+            self._swing_mode = None
+
+        if self._on == "1":
+            if status["low_electricity"] == "1":
+                self._preset_mode = PRESET_ECO
+            elif status["efficient"] == "1":
+                self._preset_mode = PRESET_BOOST
+            elif status["sleep_status"] == "0000001":
+                self._preset_mode = PRESET_SLEEP
+            elif status["sleep_status"] == "0000010":
+                self._preset_mode = "sleep_2"
+            elif status["sleep_status"] == "0000011":
+                self._preset_mode = "sleep_3"
+            elif status["sleep_status"] == "0000100":
+                self._preset_mode = "sleep_4"
+            else:
+                self._preset_mode = PRESET_NONE
+>>>>>>> Null states when AC off
+        else:
+            self._preset_mode = None
 
     @property
     def name(self):
