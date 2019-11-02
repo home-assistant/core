@@ -194,11 +194,14 @@ class Climate_aeh_w4a1(ClimateDevice):
         else:
             self._target_temperature = None
 
-        if self._on == "1" and self._hvac_mode == HVAC_MODE_HEAT:
-            self._fan_mode = FAN_AUTO
+        if self._on == "1":
+            if self._hvac_mode == HVAC_MODE_HEAT:
+                self._fan_mode = FAN_AUTO
+            else:
+                fan_mode = status["wind_status"]
+                self._fan_mode = AC_TO_HA_FAN_MODES[fan_mode]
         else:
-            fan_mode = status["wind_status"]
-            self._fan_mode = AC_TO_HA_FAN_MODES[fan_mode]
+            self._fan_mode = FAN_OFF
 
         swing_mode = status["up_down"] + status["left_right"]
         self._swing_mode = AC_TO_HA_SWING[swing_mode]
