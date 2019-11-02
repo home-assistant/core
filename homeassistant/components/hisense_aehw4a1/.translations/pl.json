@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "Nie znaleziono w sieci urz\u0105dze\u0144 LIFX.",
-            "single_instance_allowed": "Dozwolona jest tylko jedna konfiguracja LIFX."
+            "no_devices_found": "Nie znaleziono w sieci urz\u0105dze\u0144 Hisense AEH-W4A1.",
+            "single_instance_allowed": "Dozwolona jest tylko jedna konfiguracja Hisense AEH-W4A1."
         },
         "step": {
             "confirm": {
-                "description": "Czy chcesz skonfigurowa\u0107 LIFX?",
-                "title": "LIFX"
+                "description": "Czy chcesz skonfigurowa\u0107 Hisense AEH-W4A1?",
+                "title": "Hisense AEH-W4A1"
             }
         },
-        "title": "LIFX"
+        "title": "Hisense AEH-W4A1"
     }
 }

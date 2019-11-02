@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "Keng LIFX Apparater am Netzwierk fonnt.",
-            "single_instance_allowed": "N\u00ebmmen eng eenzeg Konfiguratioun vun LIFX ass erlaabt."
+            "no_devices_found": "Keng Hisense AEH-W4A1 Apparater am Netzwierk fonnt.",
+            "single_instance_allowed": "N\u00ebmmen eng eenzeg Konfiguratioun vun Hisense AEH-W4A1 ass erlaabt."
         },
         "step": {
             "confirm": {
-                "description": "Soll LIFX konfigur\u00e9iert ginn?",
-                "title": "LIFX"
+                "description": "Soll Hisense AEH-W4A1 konfigur\u00e9iert ginn?",
+                "title": "Hisense AEH-W4A1"
             }
         },
-        "title": "LIFX"
+        "title": "Hisense AEH-W4A1"
     }
 }

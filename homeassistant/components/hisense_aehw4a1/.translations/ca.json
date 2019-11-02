@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "No s'han trobat dispositius LIFX a la xarxa.",
-            "single_instance_allowed": "Nom\u00e9s \u00e9s possible una \u00fanica configuraci\u00f3 de LIFX."
+            "no_devices_found": "No s'han trobat dispositius Hisense AEH-W4A1 a la xarxa.",
+            "single_instance_allowed": "Nom\u00e9s \u00e9s possible una \u00fanica configuraci\u00f3 de Hisense AEH-W4A1."
         },
         "step": {
             "confirm": {
-                "description": "Vols configurar LIFX?",
-                "title": "LIFX"
+                "description": "Vols configurar Hisense AEH-W4A1?",
+                "title": "Hisense AEH-W4A1"
             }
         },
-        "title": "LIFX"
+        "title": "Hisense AEH-W4A1"
     }
 }
