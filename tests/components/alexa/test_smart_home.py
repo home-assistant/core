@@ -970,6 +970,14 @@ async def test_media_player_power(hass):
         hass,
     )
 
+    await assert_request_calls_service(
+        "Alexa.PowerController",
+        "TurnOff",
+        "media_player#test",
+        "media_player.media_stop",
+        hass,
+    )
+
 
 async def test_media_player_inputs(hass):
     """Test media player discovery with source list inputs."""
