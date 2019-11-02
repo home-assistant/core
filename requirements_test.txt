@@ -2,7 +2,7 @@
 # make new things fail. Manually update these pins when pulling in a
 # new version
 
-# When updating this file, update .pre-commit-config.yaml too
+# When updating this file, update .pre-commit-config*.yaml too
 asynctest==0.13.0
 black==19.10b0
 codecov==2.0.15
