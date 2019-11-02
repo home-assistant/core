@@ -346,6 +346,7 @@ class Climate_aeh_w4a1(ClimateDevice):
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         if self._on == "1":
             device_mode = status["mode_status"]
             self._hvac_mode = AC_TO_HA_STATE[device_mode]
@@ -400,7 +401,10 @@ class Climate_aeh_w4a1(ClimateDevice):
 =======
 >>>>>>> Refined logic
         device_mode = status["mode_status"]
+=======
+>>>>>>> Small changes
         if self._on == "1":
+            device_mode = status["mode_status"]
             self._hvac_mode = AC_TO_HA_STATE[device_mode]
         else:
             self._hvac_mode = HVAC_MODE_OFF
