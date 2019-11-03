@@ -137,6 +137,7 @@ datadog==0.15.0
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
 # homeassistant.components.ohmconnect
+# homeassistant.components.ssdp
 defusedxml==0.6.0
 
 # homeassistant.components.directv
