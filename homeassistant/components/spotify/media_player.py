@@ -84,11 +84,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def request_configuration(hass, config, add_entities, oauth):
+def request_configuration(hass, config, add_entities, oauth, name):
     """Request Spotify authorization."""
+    client_id = config.get(CONF_CLIENT_ID)
     configurator = hass.components.configurator
-    hass.data[DOMAIN] = configurator.request_config(
-        DEFAULT_NAME,
+    hass.data[DOMAIN][client_id] = configurator.request_config(
+        name,
         lambda _: None,
         link_name=CONFIGURATOR_LINK_NAME,
         link_url=oauth.get_authorize_url(),
@@ -99,9 +100,14 @@ def request_configuration(hass, config, add_entities, oauth):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Spotify platform."""
-
+    hass.data.setdefault(DOMAIN, {})
+    client_id = config.get(CONF_CLIENT_ID)
+    name = config.get(CONF_NAME, DEFAULT_NAME)
     callback_url = f"{hass.config.api.base_url}{AUTH_CALLBACK_PATH}"
-    cache = config.get(CONF_CACHE_PATH, hass.config.path(DEFAULT_CACHE_PATH))
+    if CONF_CACHE_PATH in config:
+        cache = hass.config.path(config[CONF_CACHE_PATH])
+    else:
+        cache = hass.config.path(DEFAULT_CACHE_PATH)
     oauth = spotipy.oauth2.SpotifyOAuth(
         config.get(CONF_CLIENT_ID),
         config.get(CONF_CLIENT_SECRET),
@@ -111,17 +117,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
     token_info = oauth.get_cached_token()
     if not token_info:
-        _LOGGER.info("no token; requesting authorization")
+        _LOGGER.info(f"no token {cache}; requesting authorization")
         hass.http.register_view(SpotifyAuthCallbackView(config, add_entities, oauth))
-        request_configuration(hass, config, add_entities, oauth)
+        request_configuration(hass, config, add_entities, oauth, name)
         return
-    if hass.data.get(DOMAIN):
+    if hass.data[DOMAIN].get(client_id):
         configurator = hass.components.configurator
-        configurator.request_done(hass.data.get(DOMAIN))
-        del hass.data[DOMAIN]
-    player = SpotifyMediaPlayer(
-        oauth, config.get(CONF_NAME, DEFAULT_NAME), config[CONF_ALIASES]
-    )
+        configurator.request_done(hass.data[DOMAIN][client_id])
+        del hass.data[DOMAIN][client_id]
+    player = SpotifyMediaPlayer(oauth, name, config[CONF_ALIASES])
     add_entities([player], True)
 
     def play_playlist_service(service):
@@ -207,7 +211,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
 
         # Don't true update when token is expired
         if self._oauth.is_token_expired(self._token_info):
-            _LOGGER.warning("Spotify failed to update, token expired.")
+            _LOGGER.warning(f"{self.name} failed to update, token expired.")
             return
 
         # Available devices
@@ -228,7 +232,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
                     if old_devices.get(name, None) is None
                 }
                 if device_diff:
-                    _LOGGER.info("New Devices: %s", str(device_diff))
+                    _LOGGER.info(f"{self.name} new Devices: %s", str(device_diff))
         # Current playback state
         current = self._player.current_playback()
         if current is None:
@@ -298,17 +302,17 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         elif media_type == MEDIA_TYPE_PLAYLIST:
             kwargs["context_uri"] = media_id
         else:
-            _LOGGER.error("media type %s is not supported", media_type)
+            _LOGGER.error(f"{self.name} media type %s is not supported", media_type)
             return
         if not media_id.startswith("spotify:"):
-            _LOGGER.error("media id must be spotify uri")
+            _LOGGER.error(f"{self.name} media id must be spotify uri")
             return
         self._player.start_playback(**kwargs)
 
     def play_playlist(self, media_id, random_song):
         """Play random music in a playlist."""
         if not media_id.startswith("spotify:playlist:"):
-            _LOGGER.error("media id must be spotify playlist uri")
+            _LOGGER.error(f"{self.name} media id must be spotify playlist uri")
             return
         kwargs = {"context_uri": media_id}
         if random_song:
