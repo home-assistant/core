@@ -855,6 +855,9 @@ class BluesoundPlayer(MediaPlayerDevice):
 
     def rebuild_bluesound_group(self):
         """Rebuild the list of entities in speaker group."""
+        if self._group_name is None:
+            return None
+
         bluesound_group = []
 
         device_group = self._group_name.split("+")
