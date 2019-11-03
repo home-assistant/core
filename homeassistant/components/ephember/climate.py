@@ -61,14 +61,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class EphEmberThermostat(ClimateDevice):
-    """Representation of a HeatmiserV3 thermostat."""
+    """Representation of a EphEmber thermostat."""
 
     def __init__(self, ember, zone):
         """Initialize the thermostat."""
+        from pyephember.pyephember import zone_name, zone_is_hot_water
+
         self._ember = ember
-        self._zone_name = zone["name"]
+        self._zone_name = zone_name(zone)
         self._zone = zone
-        self._hot_water = zone["isHotWater"]
+        self._hot_water = zone_is_hot_water(zone)
 
     @property
     def supported_features(self):
@@ -91,12 +93,16 @@ class EphEmberThermostat(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self._zone["currentTemperature"]
+        from pyephember.pyephember import zone_current_temperature
+
+        return zone_current_temperature(self._zone)
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self._zone["targetTemperature"]
+        from pyephember.pyephember import zone_target_temperature
+
+        return zone_target_temperature(self._zone)
 
     @property
     def target_temperature_step(self):
@@ -104,12 +110,14 @@ class EphEmberThermostat(ClimateDevice):
         if self._hot_water:
             return None
 
-        return 1
+        return 0.5
 
     @property
     def hvac_action(self):
         """Return current HVAC action."""
-        if self._zone["isCurrentlyActive"]:
+        from pyephember.pyephember import zone_is_active
+
+        if zone_is_active(self._zone):
             return CURRENT_HVAC_HEAT
 
         return CURRENT_HVAC_IDLE
@@ -117,9 +125,9 @@ class EphEmberThermostat(ClimateDevice):
     @property
     def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
-        from pyephember.pyephember import ZoneMode
+        from pyephember.pyephember import zone_mode
 
-        mode = ZoneMode(self._zone["mode"])
+        mode = zone_mode(self._zone)
         return self.map_mode_eph_hass(mode)
 
     @property
@@ -138,12 +146,16 @@ class EphEmberThermostat(ClimateDevice):
     @property
     def is_aux_heat(self):
         """Return true if aux heater."""
-        return self._zone["isBoostActive"]
+        from pyephember.pyephember import zone_is_boost_active
+
+        return zone_is_boost_active(self._zone)
 
     def turn_aux_heat_on(self):
         """Turn auxiliary heater on."""
+        from pyephember.pyephember import zone_target_temperature
+
         self._ember.activate_boost_by_name(
-            self._zone_name, self._zone["targetTemperature"]
+            self._zone_name, zone_target_temperature(self._zone)
         )
 
     def turn_aux_heat_off(self):
@@ -165,24 +177,28 @@ class EphEmberThermostat(ClimateDevice):
         if temperature > self.max_temp or temperature < self.min_temp:
             return
 
-        self._ember.set_target_temperture_by_name(self._zone_name, int(temperature))
+        self._ember.set_target_temperture_by_name(self._zone_name, temperature)
 
     @property
     def min_temp(self):
         """Return the minimum temperature."""
         # Hot water temp doesn't support being changed
-        if self._hot_water:
-            return self._zone["targetTemperature"]
+        from pyephember.pyephember import zone_target_temperature
 
-        return 5
+        if self._hot_water:
+            return zone_target_temperature(self._zone)
+
+        return 5.0
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        if self._hot_water:
-            return self._zone["targetTemperature"]
+        from pyephember.pyephember import zone_target_temperature
 
-        return 35
+        if self._hot_water:
+            return zone_target_temperature(self._zone)
+
+        return 35.0
 
     def update(self):
         """Get the latest data."""
