@@ -13,6 +13,7 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
     STATE_UNKNOWN,
+    CONF_PENDING_TIME,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -22,6 +23,7 @@ from . import (
     CONF_CODE,
     CONF_PANIC,
     CONF_PARTITIONNAME,
+    CONF_CODE_ARM_REQUIRED,
     DATA_EVL,
     PARTITION_SCHEMA,
     SIGNAL_KEYPAD_UPDATE,
@@ -40,13 +42,18 @@ ALARM_KEYPRESS_SCHEMA = vol.Schema(
     }
 )
 
+ATTR_PRE_PENDING_STATE = "pre_pending_state"
+ATTR_POST_PENDING_STATE = "post_pending_state"
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Perform the setup for Envisalink alarm panels."""
     configured_partitions = discovery_info["partitions"]
     code = discovery_info[CONF_CODE]
     panic_type = discovery_info[CONF_PANIC]
-
+    code_arm_required = discovery_info[CONF_CODE_ARM_REQUIRED]
+    pending_time = discovery_info[CONF_PENDING_TIME]
+    
     devices = []
     for part_num in configured_partitions:
         device_config_data = PARTITION_SCHEMA(configured_partitions[part_num])
@@ -56,6 +63,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             device_config_data[CONF_PARTITIONNAME],
             code,
             panic_type,
+            code_arm_required,
+            pending_time,
             hass.data[DATA_EVL].alarm_state["partition"][part_num],
             hass.data[DATA_EVL],
         )
@@ -90,12 +99,16 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
     """Representation of an Envisalink-based alarm panel."""
 
     def __init__(
-        self, hass, partition_number, alarm_name, code, panic_type, info, controller
+        self, hass, partition_number, alarm_name, code, panic_type, code_arm_required, pending_time, info, controller
     ):
         """Initialize the alarm panel."""
         self._partition_number = partition_number
         self._code = code
         self._panic_type = panic_type
+        self._code_arm_required = code_arm_required
+        self._pending_time = pending_time
+        self._state = STATE_ALARM_DISARMED
+        self._previous_state = self._state
 
         _LOGGER.debug("Setting up alarm: %s", alarm_name)
         super().__init__(alarm_name, info, controller)
@@ -114,11 +127,28 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
             self.async_schedule_update_ha_state()
 
     @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        state_attr = {}
+
+        if self.state == STATE_ALARM_PENDING:
+            state_attr[ATTR_PRE_PENDING_STATE] = self._previous_state
+            state_attr[ATTR_POST_PENDING_STATE] = self._state
+            state_attr[CONF_PENDING_TIME] = self._pending_time
+
+        return state_attr
+
+    @property
     def code_format(self):
         """Regex for code format or None if no code is required."""
         if self._code:
             return None
         return alarm.FORMAT_NUMBER
+    
+    @property
+    def code_arm_required(self):
+        """Whether the code is required for arm actions."""
+        return self._code_arm_required
 
     @property
     def state(self):
@@ -126,18 +156,23 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
         state = STATE_UNKNOWN
 
         if self._info["status"]["alarm"]:
+            self._previous_state = STATE_ALARM_TRIGGERED
             state = STATE_ALARM_TRIGGERED
         elif self._info["status"]["armed_zero_entry_delay"]:
+            self._previous_state = STATE_ALARM_ARMED_NIGHT
             state = STATE_ALARM_ARMED_NIGHT
         elif self._info["status"]["armed_away"]:
+            self._previous_state = STATE_ALARM_ARMED_AWAY
             state = STATE_ALARM_ARMED_AWAY
         elif self._info["status"]["armed_stay"]:
+            self._previous_state = STATE_ALARM_ARMED_HOME
             state = STATE_ALARM_ARMED_HOME
         elif self._info["status"]["exit_delay"]:
             state = STATE_ALARM_PENDING
         elif self._info["status"]["entry_delay"]:
             state = STATE_ALARM_PENDING
         elif self._info["status"]["alpha"]:
+            self._previous_state = STATE_ALARM_DISARMED
             state = STATE_ALARM_DISARMED
         return state
 
@@ -152,6 +187,7 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
+        self._state = STATE_ALARM_ARMED_HOME
         if code:
             self.hass.data[DATA_EVL].arm_stay_partition(
                 str(code), self._partition_number
@@ -163,6 +199,7 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
+        self._state = STATE_ALARM_ARMED_AWAY
         if code:
             self.hass.data[DATA_EVL].arm_away_partition(
                 str(code), self._partition_number
@@ -177,6 +214,7 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
         self.hass.data[DATA_EVL].panic_alarm(self._panic_type)
 
     async def async_alarm_arm_night(self, code=None):
+        self._state = STATE_ALARM_ARMED_NIGHT
         """Send arm night command."""
         self.hass.data[DATA_EVL].arm_night_partition(
             str(code) if code else str(self._code), self._partition_number

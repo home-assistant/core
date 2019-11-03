@@ -1,5 +1,5 @@
 """Helper classes for Google Assistant integration."""
-from asyncio import gather
+import asyncio
 from collections.abc import Mapping
 import logging
 import pprint
@@ -12,6 +12,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.components import webhook
 from homeassistant.const import (
     CONF_NAME,
+    CONF_DELAY_TIME,
     STATE_UNAVAILABLE,
     ATTR_SUPPORTED_FEATURES,
     ATTR_DEVICE_CLASS,
@@ -328,7 +329,7 @@ class GoogleEntity:
             device["roomHint"] = room
             return device
 
-        dev_reg, ent_reg, area_reg = await gather(
+        dev_reg, ent_reg, area_reg = await asyncio.gather(
             self.hass.helpers.device_registry.async_get_registry(),
             self.hass.helpers.entity_registry.async_get_registry(),
             self.hass.helpers.area_registry.async_get_registry(),
@@ -396,6 +397,12 @@ class GoogleEntity:
     def async_update(self):
         """Update the entity with latest info from Home Assistant."""
         self.state = self.hass.states.get(self.entity_id)
+
+        entity_config = self.config.entity_config.get(self.state.entity_id, {})
+        
+        delay_time = entity_config.get(CONF_DELAY_TIME)
+        if delay_time:
+            asyncio.sleep(delay_time) # wait for async events
 
         if self._traits is None:
             return

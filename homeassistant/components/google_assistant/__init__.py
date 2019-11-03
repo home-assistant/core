@@ -11,7 +11,7 @@ import voluptuous as vol
 # Typing imports
 from homeassistant.core import HomeAssistant, ServiceCall
 
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_DELAY_TIME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -48,6 +48,7 @@ ENTITY_SCHEMA = vol.Schema(
         vol.Optional(CONF_EXPOSE): cv.boolean,
         vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_ROOM_HINT): cv.string,
+        vol.Optional(CONF_DELAY_TIME, default=0): cv.positive_int,
     }
 )
 

@@ -941,13 +941,18 @@ class ArmDisArmTrait(_Trait):
 
     def query_attributes(self):
         """Return ArmDisarm query attributes."""
+
+        exit_delay = None
         if "post_pending_state" in self.state.attributes:
             armed_state = self.state.attributes["post_pending_state"]
+            exit_delay = self.state.attributes["pending_time"]
         else:
             armed_state = self.state.state
         response = {"isArmed": armed_state in self.state_to_service}
         if response["isArmed"]:
             response.update({"currentArmLevel": armed_state})
+        if exit_delay:
+            response.update({"exitAllowance": exit_delay})
         return response
 
     async def execute(self, command, data, params, challenge):
@@ -982,7 +987,6 @@ class ArmDisArmTrait(_Trait):
             blocking=True,
             context=data.context,
         )
-
 
 @register_trait
 class FanSpeedTrait(_Trait):

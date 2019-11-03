@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_TIMEOUT, CONF_HOST
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_TIMEOUT, CONF_HOST, CONF_PENDING_TIME
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -39,10 +39,13 @@ DEFAULT_ZONEDUMP_INTERVAL = 30
 DEFAULT_ZONETYPE = "opening"
 DEFAULT_PANIC = "Police"
 DEFAULT_TIMEOUT = 10
+DEFAULT_PENDING_TIME = 60
 
 SIGNAL_ZONE_UPDATE = "envisalink.zones_updated"
 SIGNAL_PARTITION_UPDATE = "envisalink.partition_updated"
 SIGNAL_KEYPAD_UPDATE = "envisalink.keypad_updated"
+
+CONF_CODE_ARM_REQUIRED = "code_arm_required"
 
 ZONE_SCHEMA = vol.Schema(
     {
@@ -78,6 +81,8 @@ CONFIG_SCHEMA = vol.Schema(
                     CONF_ZONEDUMP_INTERVAL, default=DEFAULT_ZONEDUMP_INTERVAL
                 ): vol.Coerce(int),
                 vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
+                vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
+                vol.Optional(CONF_PENDING_TIME, default=DEFAULT_PENDING_TIME): cv.positive_int,
             }
         )
     },
@@ -115,8 +120,10 @@ async def async_setup(hass, config):
     zones = conf.get(CONF_ZONES)
     partitions = conf.get(CONF_PARTITIONS)
     connection_timeout = conf.get(CONF_TIMEOUT)
+    code_arm_required = conf.get(CONF_CODE_ARM_REQUIRED)
+    pending_time = conf.get(CONF_PENDING_TIME)
     sync_connect = asyncio.Future()
-
+    
     controller = EnvisalinkAlarmPanel(
         host,
         port,
@@ -208,7 +215,7 @@ async def async_setup(hass, config):
                 hass,
                 "alarm_control_panel",
                 "envisalink",
-                {CONF_PARTITIONS: partitions, CONF_CODE: code, CONF_PANIC: panic_type},
+                {CONF_PARTITIONS: partitions, CONF_CODE: code, CONF_PANIC: panic_type, CONF_CODE_ARM_REQUIRED: code_arm_required, CONF_PENDING_TIME: pending_time},
                 config,
             )
         )
