@@ -44,7 +44,7 @@ SENSOR_TYPES = {
     "temperature": ["Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
     "windSpeed": ["Wind speed", "m/s", None],
     "windGust": ["Wind gust", "m/s", None],
-    "pressure": ["Pressure", PRESSURE_HPA, None],
+    "pressure": ["Pressure", PRESSURE_HPA, DEVICE_CLASS_PRESSURE],
     "windDirection": ["Wind direction", "°", None],
     "humidity": ["Humidity", "%", DEVICE_CLASS_HUMIDITY],
     "fog": ["Fog", "%", None],
@@ -52,8 +52,11 @@ SENSOR_TYPES = {
     "lowClouds": ["Low clouds", "%", None],
     "mediumClouds": ["Medium clouds", "%", None],
     "highClouds": ["High clouds", "%", None],
-    "dewpointTemperature": ["Dewpoint temperature", TEMP_CELSIUS,
-                            DEVICE_CLASS_TEMPERATURE],
+    "dewpointTemperature": [
+        "Dewpoint temperature",
+        TEMP_CELSIUS,
+        DEVICE_CLASS_TEMPERATURE,
+    ],
 }
 
 CONF_FORECAST = "forecast"
@@ -150,6 +153,7 @@ class YrSensor(Entity):
     def device_class(self):
         """Return the device class of this entity, if any."""
         return self._device_class
+
 
 class YrData:
     """Get the latest data and updates the states."""
