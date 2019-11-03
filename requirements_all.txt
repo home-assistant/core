@@ -1091,10 +1091,14 @@ pyads==3.0.7
 
 # homeassistant.components.hisense_aehw4a1
 <<<<<<< HEAD
+<<<<<<< HEAD
 pyaehw4a1==0.1.2
 =======
 pyaehw4a1==0.1.0
 >>>>>>> First working release, but there's a lot to do
+=======
+pyaehw4a1==0.1.2
+>>>>>>> Latest updates for TOX
 
 # homeassistant.components.aftership
 pyaftership==0.1.2

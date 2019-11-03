@@ -278,6 +278,7 @@ def _build_entity(device):
     _LOGGER.debug("Found device at %s", device)
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     return ClimateAehW4a1(device)
 =======
     print(device)
@@ -285,6 +286,9 @@ def _build_entity(device):
 >>>>>>> Added support for preset_modes
     return Climate_aeh_w4a1(device)
 >>>>>>> First working release, but there's a lot to do
+=======
+    return ClimateAehW4a1(device)
+>>>>>>> Latest updates for TOX
 
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
@@ -302,10 +306,14 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 class ClimateAehW4a1(ClimateDevice):
 =======
 class Climate_aeh_w4a1(ClimateDevice):
 >>>>>>> First working release, but there's a lot to do
+=======
+class ClimateAehW4a1(ClimateDevice):
+>>>>>>> Latest updates for TOX
     """Representation of a Hisense AEH-W4A1 module for climate device."""
 
     def __init__(self, device):
@@ -567,11 +575,15 @@ class Climate_aeh_w4a1(ClimateDevice):
         if self._temperature_unit == TEMP_CELSIUS:
             return MIN_TEMP_C
 <<<<<<< HEAD
+<<<<<<< HEAD
         return MIN_TEMP_F
 =======
         else:
             return MIN_TEMP_F
 >>>>>>> First working release, but there's a lot to do
+=======
+        return MIN_TEMP_F
+>>>>>>> Latest updates for TOX
 
     @property
     def max_temp(self):
@@ -579,11 +591,15 @@ class Climate_aeh_w4a1(ClimateDevice):
         if self._temperature_unit == TEMP_CELSIUS:
             return MAX_TEMP_C
 <<<<<<< HEAD
+<<<<<<< HEAD
         return MAX_TEMP_F
 =======
         else:
             return MAX_TEMP_F
 >>>>>>> First working release, but there's a lot to do
+=======
+        return MAX_TEMP_F
+>>>>>>> Latest updates for TOX
 
     @property
     def precision(self):

@@ -3,6 +3,7 @@ import logging
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 from pyaehw4a1.aehw4a1 import AehW4a1
 
 from homeassistant import config_entries
@@ -29,8 +30,13 @@ import voluptuous as vol
 from homeassistant.helpers import config_entry_flow
 from homeassistant import config_entries
 >>>>>>> First working release, but there's a lot to do
-
+=======
 from pyaehw4a1.aehw4a1 import AehW4a1
+
+from homeassistant import config_entries
+from homeassistant.helpers import config_entry_flow
+>>>>>>> Latest updates for TOX
+
 
 from .const import DOMAIN
 
