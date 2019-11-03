@@ -13,7 +13,9 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.entity_platform import EntityPlatform
-from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers.entity_registry import (
+    async_get_registry as async_get_entity_registry,
+)
 from homeassistant.helpers.device_registry import (
     async_get_registry as async_get_device_registry,
 )
@@ -379,7 +381,7 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DATA_DEVICES] = {}
     hass.data[DATA_ENTITY_VALUES] = []
 
-    registry = await async_get_registry(hass)
+    registry = await async_get_entity_registry(hass)
 
     wsapi.async_load_websocket_api(hass)
 
@@ -1222,7 +1224,7 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         self._name = _value_name(self.values.primary)
         if update_ids:
             # Update entity ID.
-            ent_reg = await async_get_registry(self.hass)
+            ent_reg = await async_get_entity_registry(self.hass)
             new_entity_id = ent_reg.async_generate_entity_id(
                 self.platform.domain,
                 self._name,
