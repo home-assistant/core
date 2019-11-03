@@ -846,7 +846,7 @@ class BluesoundPlayer(MediaPlayerDevice):
     def device_state_attributes(self):
         """List members in group."""
         attributes = {}
-        if self._group_list != []:
+        if self._group_list:
             attributes = {ATTR_BLUESOUND_GROUP: self._group_list}
 
         attributes[ATTR_MASTER] = self._is_master
@@ -855,25 +855,20 @@ class BluesoundPlayer(MediaPlayerDevice):
 
     def rebuild_bluesound_group(self):
         """Rebuild the list of entities in speaker group."""
-        if self._group_name is None:
-            return None
-
-        device_group = []
         bluesound_group = []
 
         device_group = self._group_name.split("+")
-        for entity in self._hass.data[DATA_BLUESOUND]:
-            if (
-                entity.bluesound_device_name in device_group
-                and entity.is_master is True
-            ):
-                bluesound_group.append(entity.name)
-        for entity in self._hass.data[DATA_BLUESOUND]:
-            if (
-                entity.bluesound_device_name in device_group
-                and entity.is_master is False
-            ):
-                bluesound_group.append(entity.name)
+
+        sorted_entities = sorted(
+            self._hass.data[DATA_BLUESOUND],
+            key=lambda entity: entity.is_master,
+            reverse=True,
+        )
+        bluesound_group = [
+            entity.name
+            for entity in sorted_entities
+            if entity.bluesound_device_name in device_group
+        ]
 
         return bluesound_group
 
