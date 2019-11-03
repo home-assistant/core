@@ -18,6 +18,7 @@ from huawei_lte_api.exceptions import (
     ResponseErrorLoginRequiredException,
     ResponseErrorNotSupportedException,
 )
+from requests.exceptions import Timeout
 from url_normalize import url_normalize
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
@@ -33,6 +34,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import CALLBACK_TYPE
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -44,6 +46,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 from .const import (
     ALL_KEYS,
+    CONNECTION_TIMEOUT,
     DEFAULT_DEVICE_NAME,
     DOMAIN,
     KEY_DEVICE_BASIC_INFORMATION,
@@ -254,16 +257,21 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         username = config_entry.data.get(CONF_USERNAME)
         password = config_entry.data.get(CONF_PASSWORD)
         if username or password:
-            connection = AuthorizedConnection(url, username=username, password=password)
+            connection = AuthorizedConnection(
+                url, username=username, password=password, timeout=CONNECTION_TIMEOUT
+            )
         else:
-            connection = Connection(url)
+            connection = Connection(url, timeout=CONNECTION_TIMEOUT)
         return connection
 
     def signal_update() -> None:
         """Signal updates to data."""
         dispatcher_send(hass, UPDATE_SIGNAL, url)
 
-    connection = await hass.async_add_executor_job(get_connection)
+    try:
+        connection = await hass.async_add_executor_job(get_connection)
+    except Timeout as ex:
+        raise ConfigEntryNotReady from ex
 
     # Set up router and store reference to it
     router = Router(connection, url, mac, signal_update)
