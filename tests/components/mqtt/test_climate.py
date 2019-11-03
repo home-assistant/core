@@ -582,7 +582,7 @@ async def test_set_target_temperature_low_high_with_templates(hass, mqtt_mock, c
 
     # Temperature - with valid value
     assert state.attributes.get("target_temp_low") is None
-    assert state.attributes.get("target_temp_hight") is None
+    assert state.attributes.get("target_temp_high") is None
 
     async_fire_mqtt_message(
         hass, "temperature-state", '{"temp_low": "1031", "temp_high": "1032"}'
