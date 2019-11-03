@@ -8,6 +8,7 @@ import urllib
 
 import async_timeout
 import pysonos
+from pysonos import alarms
 from pysonos.exceptions import SoCoException, SoCoUPnPException
 import pysonos.snapshot
 
@@ -1163,7 +1164,7 @@ class SonosEntity(MediaPlayerDevice):
         """Set the alarm clock on the player."""
 
         alarm = None
-        for one_alarm in pysonos.alarms.get_alarms(self.soco):
+        for one_alarm in alarms.get_alarms(self.soco):
             # pylint: disable=protected-access
             if one_alarm._alarm_id == str(data[ATTR_ALARM_ID]):
                 alarm = one_alarm
