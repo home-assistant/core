@@ -597,7 +597,7 @@ async def test_set_target_temperature_low_high_with_templates(hass, mqtt_mock, c
     # ... but the actual value stays unchanged.
     assert state.attributes.get("target_temp_low") == 1031
     assert state.attributes.get("target_temp_high") == 1032
-    
+
     
 async def test_set_with_templates(hass, mqtt_mock, caplog):
     """Test setting of new fan mode in pessimistic mode."""
