@@ -462,7 +462,7 @@ async def async_api_select_input(hass, config, directive, context):
 
     # Attempt to map the ALL UPPERCASE payload name to a source.
     # Strips trailing 1 to match single input devices.
-    source_list = entity.attributes[media_player.const.ATTR_INPUT_SOURCE_LIST] or []
+    source_list = entity.attributes.get(media_player.const.ATTR_INPUT_SOURCE_LIST, [])
     for source in source_list:
         formatted_source = (
             source.lower().replace("-", "").replace("_", "").replace(" ", "")

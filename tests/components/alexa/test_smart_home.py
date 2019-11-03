@@ -995,6 +995,8 @@ async def test_media_player_inputs(hass):
                 "hdmi_2",
                 "hdmi-3",
                 "hdmi4",
+                "hdmi 5",
+                "HDMI 6",
                 "hdmi_arc",
                 "aux",
                 "input 1",
@@ -1023,6 +1025,8 @@ async def test_media_player_inputs(hass):
     assert {"name": "HDMI 2"} in input_capability["inputs"]
     assert {"name": "HDMI 3"} in input_capability["inputs"]
     assert {"name": "HDMI 4"} in input_capability["inputs"]
+    assert {"name": "HDMI 5"} in input_capability["inputs"]
+    assert {"name": "HDMI 6"} in input_capability["inputs"]
     assert {"name": "HDMI ARC"} in input_capability["inputs"]
     assert {"name": "FOO 1"} not in input_capability["inputs"]
     assert {"name": "TV"} in input_capability["inputs"]
@@ -1046,6 +1050,26 @@ async def test_media_player_inputs(hass):
         payload={"input": "HDMI 2"},
     )
     assert call.data["source"] == "hdmi_2"
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.InputController",
+        "SelectInput",
+        "media_player#test",
+        "media_player.select_source",
+        hass,
+        payload={"input": "HDMI 5"},
+    )
+    assert call.data["source"] == "hdmi 5"
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.InputController",
+        "SelectInput",
+        "media_player#test",
+        "media_player.select_source",
+        hass,
+        payload={"input": "HDMI 6"},
+    )
+    assert call.data["source"] == "HDMI 6"
 
     call, _ = await assert_request_calls_service(
         "Alexa.InputController",
