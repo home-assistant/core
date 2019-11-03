@@ -1027,7 +1027,7 @@ async def test_media_player_inputs(hass):
     assert {"name": "FOO 1"} not in input_capability["inputs"]
     assert {"name": "TV"} in input_capability["inputs"]
 
-    await assert_request_calls_service(
+    call, _ = await assert_request_calls_service(
         "Alexa.InputController",
         "SelectInput",
         "media_player#test",
@@ -1035,8 +1035,19 @@ async def test_media_player_inputs(hass):
         hass,
         payload={"input": "HDMI 1"},
     )
+    assert call.data["source"] == "hdmi"
 
-    await assert_request_calls_service(
+    call, _ = await assert_request_calls_service(
+        "Alexa.InputController",
+        "SelectInput",
+        "media_player#test",
+        "media_player.select_source",
+        hass,
+        payload={"input": "HDMI 2"},
+    )
+    assert call.data["source"] == "hdmi_2"
+
+    call, _ = await assert_request_calls_service(
         "Alexa.InputController",
         "SelectInput",
         "media_player#test",
@@ -1044,6 +1055,7 @@ async def test_media_player_inputs(hass):
         hass,
         payload={"input": "TV"},
     )
+    assert call.data["source"] == "tv"
 
 
 async def test_media_player_speaker(hass):
