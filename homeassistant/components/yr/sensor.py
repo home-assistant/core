@@ -22,6 +22,7 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
+    PRESSURE_HPA,
     TEMP_CELSIUS,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
