@@ -568,7 +568,7 @@ async def test_custom_availability_payload(hass, mqtt_mock):
     assert state.state == STATE_UNAVAILABLE
 
 
-    async def test_set_target_temperature_low_high_with_templates(hass, mqtt_mock, caplog):
+async def test_set_target_temperature_low_high_with_templates(hass, mqtt_mock, caplog):
     """Test setting of temperature high/low templates."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["climate"]["temperature_low_state_topic"] = "temperature-state"
