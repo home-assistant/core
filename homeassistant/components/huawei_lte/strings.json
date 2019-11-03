@@ -11,6 +11,7 @@
             "invalid_url": "Invalid URL",
             "login_attempts_exceeded": "Maximum login attempts exceeded, please try again later",
             "response_error": "Unknown error from device",
+            "connection_timeout": "Connection timeout",
             "unknown_connection_error": "Unknown error connecting to device"
         },
         "step": {
