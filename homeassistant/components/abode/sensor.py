@@ -63,6 +63,11 @@ class AbodeSensor(AbodeDevice):
         return self._device_class
 
     @property
+    def unique_id(self):
+        """Return a unique ID to use for this device."""
+        return self._device.device_uuid + self._sensor_type
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         if self._sensor_type == "temp":
