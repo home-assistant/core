@@ -14,7 +14,7 @@ from homeassistant.const import (
     STATE_ON,
     SERVICE_RELOAD,
 )
-from homeassistant.core import State, DOMAIN
+from homeassistant.core import State, DOMAIN as HA_DOMAIN
 from homeassistant import config as conf_util
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_integration
@@ -23,7 +23,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     entity_platform,
 )
-from homeassistant.helpers.state import HASS_DOMAIN, async_reproduce_state
+from homeassistant.helpers.state import async_reproduce_state
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, STATES, Scene
 
 
@@ -60,7 +60,7 @@ STATES_SCHEMA = vol.All(dict, _convert_states)
 
 PLATFORM_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PLATFORM): HASS_DOMAIN,
+        vol.Required(CONF_PLATFORM): HA_DOMAIN,
         vol.Required(STATES): vol.All(
             cv.ensure_list,
             [
@@ -114,7 +114,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
         # Extract only the config for the Home Assistant platform, ignore the rest.
         for p_type, p_config in config_per_platform(conf, SCENE_DOMAIN):
-            if p_type != DOMAIN:
+            if p_type != HA_DOMAIN:
                 continue
 
             _process_scenes_config(hass, async_add_entities, p_config)
