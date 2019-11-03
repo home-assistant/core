@@ -127,7 +127,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def _build_entity(device):
     _LOGGER.debug("Found device at %s", device)
-    return Climate_aeh_w4a1(device)
+    return ClimateAehW4a1(device)
 
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
@@ -144,7 +144,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     async_add_devices(all_devices, True)
 
 
-class Climate_aeh_w4a1(ClimateDevice):
+class ClimateAehW4a1(ClimateDevice):
     """Representation of a Hisense AEH-W4A1 module for climate device."""
 
     def __init__(self, device):
@@ -288,16 +288,14 @@ class Climate_aeh_w4a1(ClimateDevice):
         """Return the minimum temperature."""
         if self._temperature_unit == TEMP_CELSIUS:
             return MIN_TEMP_C
-        else:
-            return MIN_TEMP_F
+        return MIN_TEMP_F
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
         if self._temperature_unit == TEMP_CELSIUS:
             return MAX_TEMP_C
-        else:
-            return MAX_TEMP_F
+        return MAX_TEMP_F
 
     @property
     def precision(self):
