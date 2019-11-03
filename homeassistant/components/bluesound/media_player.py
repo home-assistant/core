@@ -1,6 +1,6 @@
 """Support for Bluesound devices."""
 import asyncio
-from asyncio.futures import CancelledError
+from asyncio import CancelledError
 from datetime import timedelta
 import logging
 from urllib import parse
