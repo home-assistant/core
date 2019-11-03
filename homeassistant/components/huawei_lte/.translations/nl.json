@@ -1,0 +1,10 @@
+{
+    "config": {
+        "error": {
+            "incorrect_password": "Onjuist wachtwoord",
+            "incorrect_username": "Onjuiste gebruikersnaam",
+            "incorrect_username_or_password": "Onjuiste gebruikersnaam of wachtwoord",
+            "invalid_url": "Ongeldige URL"
+        }
+    }
+}

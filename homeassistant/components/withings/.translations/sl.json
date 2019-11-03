@@ -7,6 +7,13 @@
             "default": "Uspe\u0161no overjen z Withings za izbrani profil."
         },
         "step": {
+            "profile": {
+                "data": {
+                    "profile": "Profil"
+                },
+                "description": "Kateri profil ste izbrali na spletni strani Withings? Pomembno je, da se profili ujemajo, sicer bodo podatki napa\u010dno ozna\u010deni.",
+                "title": "Uporabni\u0161ki profil."
+            },
             "user": {
                 "data": {
                     "profile": "Profil"
