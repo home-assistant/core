@@ -369,7 +369,13 @@ class SoundTouchDevice(MediaPlayerDevice):
             _LOGGER.info(
                 "Removing slaves from zone with master %s", self._device.config.name
             )
-            self._device.remove_zone_slave([slave.device for slave in slaves])
+            # SoundTouch API seems to have a bug and won't remove slaves if there are
+            # more than one in the payload. Therefore we have to loop over all slaves
+            # and remove them individually
+            for slave in slaves:
+                # make sure to not try to remove the master (aka current device)
+                if slave.entity_id != self.entity_id:
+                    self._device.remove_zone_slave([slave.device])
 
     def add_zone_slave(self, slaves):
         """
