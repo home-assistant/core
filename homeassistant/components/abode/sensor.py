@@ -34,8 +34,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     devices = []
     for device in data.abode.get_devices(generic_type=CONST.TYPE_SENSOR):
-        for sensor_type in SENSOR_TYPES:
-            devices.append(AbodeSensor(data, device, sensor_type))
+        if CONST.TEMP_STATUS_KEY in device.get_value(CONST.STATUSES_KEY):
+            devices.append(AbodeSensor(data, device, CONST.TEMP_STATUS_KEY))
+        if CONST.HUMI_STATUS_KEY in device.get_value(CONST.STATUSES_KEY):
+            devices.append(AbodeSensor(data, device, CONST.HUMI_STATUS_KEY))
+        if CONST.LUX_STATUS_KEY in device.get_value(CONST.STATUSES_KEY):
+            devices.append(AbodeSensor(data, device, CONST.LUX_STATUS_KEY))
 
     async_add_entities(devices)
 
