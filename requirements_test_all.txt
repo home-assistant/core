@@ -486,6 +486,7 @@ py_nextbusnext==0.1.4
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 # homeassistant.components.hisense_aehw4a1
 pyaehw4a1==0.1.2
@@ -498,6 +499,8 @@ pyaehw4a1==0.1.2
 >>>>>>> new file:   requirements_test_all.txt
 =======
 >>>>>>> Fighting with tox
+=======
+>>>>>>> Fighting with lint
 # homeassistant.components.almond
 pyalmond==0.0.2
 
