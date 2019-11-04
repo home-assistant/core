@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 CONFIGURED_SCENE = {"scene": {"name": "hallo_2", "entities": {"light.kitchen": "on"}}}
@@ -122,6 +123,29 @@ async def test_create_service(hass, caplog, config):
     await hass.async_block_till_done()
 
     assert "The scene scene.hallo_2 already exists" in caplog.text
+    scene = hass.states.get("scene.hallo_2")
+    assert scene is not None
+    assert scene.domain == "scene"
+    assert scene.name == "hallo_2"
+    assert scene.state == "scening"
+    assert scene.attributes.get("entity_id") == ["light.kitchen"]
+
+    with patch(
+        "homeassistant.config.find_config_file",
+        side_effect=HomeAssistantError("testcase"),
+    ):
+        assert await hass.services.async_call(
+            "scene",
+            "create",
+            {
+                "scene_id": "hallo_2",
+                "entities": {"light.bed_light": {"state": "on", "brightness": 50}},
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert "testcase" in caplog.text
     scene = hass.states.get("scene.hallo_2")
     assert scene is not None
     assert scene.domain == "scene"
