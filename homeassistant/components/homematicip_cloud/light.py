@@ -16,6 +16,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_NAME,
     ATTR_HS_COLOR,
+    ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     Light,
@@ -28,8 +29,8 @@ from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ENERGY_COUNTER = "energy_counter_kwh"
-ATTR_POWER_CONSUMPTION = "power_consumption"
+ATTR_TODAY_ENERGY_KWH = "today_energy_kwh"
+ATTR_CURRENT_POWER_W = "current_power_w"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -95,11 +96,11 @@ class HomematicipLightMeasuring(HomematicipLight):
         """Return the state attributes of the generic device."""
         state_attr = super().device_state_attributes
 
-        current_power_consumption = self._device.currentPowerConsumption
-        if current_power_consumption > 0.05:
-            state_attr[ATTR_POWER_CONSUMPTION] = round(current_power_consumption, 2)
+        current_power_w = self._device.currentPowerConsumption
+        if current_power_w > 0.05:
+            state_attr[ATTR_CURRENT_POWER_W] = round(current_power_w, 2)
 
-        state_attr[ATTR_ENERGY_COUNTER] = round(self._device.energyCounter, 2)
+        state_attr[ATTR_TODAY_ENERGY_KWH] = round(self._device.energyCounter, 2)
 
         return state_attr
 
@@ -225,13 +226,28 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
         # Minimum brightness is 10, otherwise the led is disabled
         brightness = max(10, brightness)
         dim_level = brightness / 255.0
+        transition = kwargs.get(ATTR_TRANSITION, 0.5)
 
-        await self._device.set_rgb_dim_level(self.channel, simple_rgb_color, dim_level)
+        await self._device.set_rgb_dim_level_with_time(
+            channelIndex=self.channel,
+            rgb=simple_rgb_color,
+            dimLevel=dim_level,
+            onTime=0,
+            rampTime=transition,
+        )
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
         simple_rgb_color = self._func_channel.simpleRGBColorState
-        await self._device.set_rgb_dim_level(self.channel, simple_rgb_color, 0.0)
+        transition = kwargs.get(ATTR_TRANSITION, 0.5)
+
+        await self._device.set_rgb_dim_level_with_time(
+            channelIndex=self.channel,
+            rgb=simple_rgb_color,
+            dimLevel=0.0,
+            onTime=0,
+            rampTime=transition,
+        )
 
 
 def _convert_color(color) -> RGBColorState:

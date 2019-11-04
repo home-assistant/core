@@ -10,6 +10,8 @@ UPDATE_OPTIONS_SIGNAL = f"{DOMAIN}_options_update"
 UNIT_BYTES = "B"
 UNIT_SECONDS = "s"
 
+CONNECTION_TIMEOUT = 10
+
 KEY_DEVICE_BASIC_INFORMATION = "device_basic_information"
 KEY_DEVICE_INFORMATION = "device_information"
 KEY_DEVICE_SIGNAL = "device_signal"
