@@ -30,7 +30,7 @@ SUPPORT_VOICES = [
     "alyss",
     "nick",
     "alena",
-    "filipp"
+    "filipp",
 ]
 
 SUPPORTED_EMOTION = ["good", "evil", "neutral"]
@@ -117,15 +117,19 @@ class YandexSpeechKitProvider(Provider):
                 }
 
                 bearer__format = "Api-Key {}".format(self._key)
-                request = await websession.post(YANDEX_API_URL,
-                                                headers={"authorization": bearer__format},
-                                                data=url_param
-                                                )
+                request = await websession.post(
+                    YANDEX_API_URL,
+                    headers={"authorization": bearer__format},
+                    data=url_param,
+                )
 
                 if request.status != 200:
                     error = await request.read()
                     _LOGGER.error(
-                        "Error %d on load URL %s. Response %s", request.status, request.url, error
+                        "Error %d on load URL %s. Response %s",
+                        request.status,
+                        request.url,
+                        error,
                     )
                     return (None, None)
                 data = await request.read()
