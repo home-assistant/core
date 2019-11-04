@@ -114,8 +114,8 @@ class LuxtronikBinarySensor(BinarySensorDevice):
     def is_on(self):
         """Return true if binary sensor is on."""
         if self._invert:
-            return not self._sensor
-        return self._sensor
+            return not self._sensor._value
+        return self._sensor._value
 
     @property
     def device_class(self):
