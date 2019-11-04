@@ -2,7 +2,7 @@
 from unittest.mock import patch
 import pytest
 
-from homeassistant.components.owntracks.helper import supports_encryption
+from homeassistant.components.owntracks import helper
 
 
 @pytest.fixture(name="nacl_imported")
@@ -15,15 +15,16 @@ def mock_nacl_imported():
 @pytest.fixture(name="nacl_not_imported")
 def mock_nacl_not_imported():
     """Mock non successful import."""
-    with patch("homeassistant.components.owntracks.helper.nacl", return_value=None):
+    with patch("homeassistant.components.owntracks.helper.nacl"):
+        helper.nacl = None
         yield
 
 
 def test_supports_encryption(nacl_imported):
     """Test if env supports encryption."""
-    assert supports_encryption()
+    assert helper.supports_encryption()
 
 
 def test_supports_encryption_failed(nacl_not_imported):
     """Test if env does not support encryption."""
-    assert not supports_encryption()
+    assert not helper.supports_encryption()

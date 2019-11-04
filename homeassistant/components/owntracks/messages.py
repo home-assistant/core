@@ -114,9 +114,7 @@ def _decrypt_payload(secret, topic, ciphertext):
         if supports_encryption():
             keylen, decrypt = get_cipher()
         else:
-            _LOGGER.warning(
-                "Ignoring encrypted payload because nacl not installed"
-            )
+            _LOGGER.warning("Ignoring encrypted payload because nacl not installed")
             return None
     except OSError:
         _LOGGER.warning("Ignoring encrypted payload because nacl not installed")
