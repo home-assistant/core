@@ -3,6 +3,6 @@
   "name": "signalmessenger",
   "documentation": "https://www.home-assistant.io/integrations/signalmessenger",
   "dependencies": [],
-  "codeowners": ["@bernhard"],
+  "codeowners": ["@bbernhard"],
   "requirements": []
 }
