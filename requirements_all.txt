@@ -1579,7 +1579,7 @@ python-synology==0.2.0
 python-tado==0.2.9
 
 # homeassistant.components.telegram_bot
-python-telegram-bot==11.1.0
+python-telegram-bot==12.2.0
 
 # homeassistant.components.vlc_telnet
 python-telnet-vlc==1.0.4
