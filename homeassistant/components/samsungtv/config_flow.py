@@ -26,6 +26,49 @@ RESULT_NOT_FOUND = "not_found"
 RESULT_NOT_SUPPORTED = "not_supported"
 
 
+def _is_already_configured(hass, ip_address):
+    return any(
+        ip_address == entry.data.get(CONF_IP_ADDRESS)
+        for entry in hass.config_entries.async_entries(DOMAIN)
+    )
+
+
+def _get_ip(host):
+    if host is None:
+        return None
+    return socket.gethostbyname(host)
+
+
+def _try_connect(host, name):
+    """Try to connect and check auth."""
+    for method in METHODS:
+        config = {
+            "name": "HomeAssistant",
+            "description": name,
+            "id": "ha.component.samsung",
+            "host": host,
+            "method": method,
+            "port": None,
+            "timeout": None,
+        }
+        try:
+            LOGGER.debug("Try config: %s", config)
+            with Remote(config.copy()):
+                LOGGER.debug("Working config: %s", config)
+                return RESULT_SUCCESS
+        except AccessDenied:
+            LOGGER.debug("Working but denied config: %s", config)
+            return RESULT_AUTH_MISSING
+        except UnhandledResponse:
+            LOGGER.debug("Working but unsupported config: %s", config)
+            return RESULT_NOT_SUPPORTED
+        except (OSError):
+            LOGGER.debug("Failing config: %s", config)
+
+    LOGGER.debug("No working config found")
+    return RESULT_NOT_FOUND
+
+
 class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Samsung TV config flow."""
 
@@ -44,46 +87,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name = None
         self._title = None
 
-    def _is_already_configured(self, ip_address):
-        return any(
-            ip_address == entry.data.get(CONF_IP_ADDRESS)
-            for entry in self.hass.config_entries.async_entries(DOMAIN)
-        )
-
-    def _get_ip(self, host):
-        if host is None:
-            return None
-        return socket.gethostbyname(host)
-
-    def _try_connect(self, host, name):
-        """Try to connect and check auth."""
-        for method in METHODS:
-            config = {
-                "name": "HomeAssistant",
-                "description": name,
-                "id": "ha.component.samsung",
-                "host": host,
-                "method": method,
-                "port": None,
-                "timeout": None,
-            }
-            try:
-                LOGGER.debug("Try config: %s", config)
-                with Remote(config.copy()):
-                    LOGGER.debug("Working config: %s", config)
-                    return RESULT_SUCCESS
-            except AccessDenied:
-                LOGGER.debug("Working but denied config: %s", config)
-                return RESULT_AUTH_MISSING
-            except UnhandledResponse:
-                LOGGER.debug("Working but unsupported config: %s", config)
-                return RESULT_NOT_SUPPORTED
-            except (OSError):
-                LOGGER.debug("Failing config: %s", config)
-
-        LOGGER.debug("No working config found")
-        return RESULT_NOT_FOUND
-
     def _get_entry(self):
         return self.async_create_entry(
             title=self._title,
@@ -101,10 +104,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         if user_input is not None:
             ip_address = await self.hass.async_add_executor_job(
-                self._get_ip, user_input[ATTR_HOST]
+                _get_ip, user_input[ATTR_HOST]
             )
 
-            if self._is_already_configured(ip_address):
+            if _is_already_configured(self.hass, ip_address):
                 return self.async_abort(reason="already_configured")
 
             self._host = user_input[CONF_HOST]
@@ -112,7 +115,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._ip = self.context[CONF_IP_ADDRESS] = ip_address
 
             result = await self.hass.async_add_executor_job(
-                self._try_connect, self._host, self._title
+                _try_connect, self._host, self._title
             )
 
             if result != RESULT_SUCCESS:
@@ -124,7 +127,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_ssdp(self, user_input=None):
         """Handle a flow initialized by discovery."""
         ip_address = await self.hass.async_add_executor_job(
-            self._get_ip, user_input[ATTR_HOST]
+            _get_ip, user_input[ATTR_HOST]
         )
 
         if any(
@@ -133,7 +136,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         ):
             return self.async_abort(reason="already_in_progress")
 
-        if self._is_already_configured(ip_address):
+        if _is_already_configured(self.hass, ip_address):
             return self.async_abort(reason="already_configured")
 
         self._host = user_input[ATTR_HOST]
@@ -154,7 +157,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle user-confirmation of discovered node."""
         if user_input is not None:
             result = await self.hass.async_add_executor_job(
-                self._try_connect, self._host, self._name
+                _try_connect, self._host, self._name
             )
 
             if result != RESULT_SUCCESS:
