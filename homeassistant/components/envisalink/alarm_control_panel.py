@@ -223,8 +223,8 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
         self.hass.data[DATA_EVL].panic_alarm(self._panic_type)
 
     async def async_alarm_arm_night(self, code=None):
-        self._state = STATE_ALARM_ARMED_NIGHT
         """Send arm night command."""
+        self._state = STATE_ALARM_ARMED_NIGHT
         self.hass.data[DATA_EVL].arm_night_partition(
             str(code) if code else str(self._code), self._partition_number
         )
