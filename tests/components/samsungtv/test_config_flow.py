@@ -73,27 +73,6 @@ async def test_user(hass, remote):
     assert result["data"][CONF_ID] is None
 
 
-async def test_user_error(hass, remote):
-    """Test starting a flow by user with errors."""
-
-    # both input fields missing
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}, data={}
-    )
-    assert result["type"] == "form"
-    assert len(result["errors"]) == 2
-    assert result["errors"][CONF_HOST] is not None
-    assert result["errors"][CONF_NAME] is not None
-
-    # CONF_NAME input field missing
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}, data={CONF_HOST: "test"}
-    )
-    assert result["type"] == "form"
-    assert len(result["errors"]) == 1
-    assert result["errors"][CONF_NAME] is not None
-
-
 async def test_user_missing_auth(hass):
     """Test starting a flow by user with authentication."""
     with patch(
