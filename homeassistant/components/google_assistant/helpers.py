@@ -281,7 +281,7 @@ class GoogleEntity:
             trait.might_2fa(domain, features, device_class) for trait in self.traits()
         )
 
-    async def sync_serialize(self):
+    async def sync_serialize(self, agent_user_id):
         """Serialize entity for a SYNC response.
 
         https://developers.google.com/actions/smarthome/create-app#actiondevicessync
@@ -317,7 +317,7 @@ class GoogleEntity:
                 "webhookId": self.config.local_sdk_webhook_id,
                 "httpPort": self.hass.config.api.port,
                 "httpSSL": self.hass.config.api.use_ssl,
-                "proxyDeviceId": self.config.agent_user_id,
+                "proxyDeviceId": agent_user_id,
             }
 
         for trt in traits:

@@ -19,13 +19,13 @@ async def test_google_entity_sync_serialize_with_local_sdk(hass):
     )
     entity = helpers.GoogleEntity(hass, config, hass.states.get("light.ceiling_lights"))
 
-    serialized = await entity.sync_serialize()
+    serialized = await entity.sync_serialize(None)
     assert "otherDeviceIds" not in serialized
     assert "customData" not in serialized
 
     config.async_enable_local_sdk()
 
-    serialized = await entity.sync_serialize()
+    serialized = await entity.sync_serialize(None)
     assert serialized["otherDeviceIds"] == [{"deviceId": "light.ceiling_lights"}]
     assert serialized["customData"] == {
         "httpPort": 1234,
