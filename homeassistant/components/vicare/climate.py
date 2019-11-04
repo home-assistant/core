@@ -10,6 +10,8 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     HVAC_MODE_HEAT,
     HVAC_MODE_AUTO,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
 )
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE, PRECISION_WHOLE
 
@@ -103,6 +105,7 @@ class ViCareClimate(ClimateDevice):
         self._current_temperature = None
         self._current_program = None
         self._heating_type = heating_type
+        self._current_action = None
 
     def update(self):
         """Let HA know there has been an update from the ViCare API."""
@@ -146,7 +149,8 @@ class ViCareClimate(ClimateDevice):
 
         # Update the specific device attributes
         if self._heating_type == HeatingType.gas:
-            self._attributes["burner_active"] = self._api.getBurnerActive()
+            self._current_action = self._api.getBurnerActive()
+
             self._attributes["burner_modulation"] = self._api.getBurnerModulation()
             self._attributes["boiler_temperature"] = self._api.getBoilerTemperature()
             self._attributes["current_power"] = self._api.getCurrentPower()
@@ -175,7 +179,8 @@ class ViCareClimate(ClimateDevice):
                 "gas_consumption_heating_this_year"
             ] = self._api.getGasConsumptionHeatingThisYear()
         elif self._heating_type == HeatingType.heatpump:
-            self._attributes["compressor_active"] = self._api.getCompressorActive()
+            self._current_action = self._api.getCompressorActive()
+
             self._attributes["return_temperature"] = self._api.getReturnTemperature()
 
     @property
@@ -224,6 +229,13 @@ class ViCareClimate(ClimateDevice):
     def hvac_modes(self):
         """Return the list of available hvac modes."""
         return list(HA_TO_VICARE_HVAC_HEATING)
+
+    @property
+    def hvac_action(self):
+        """Return the current hvac action."""
+        if self._current_action:
+            return CURRENT_HVAC_HEAT
+        return CURRENT_HVAC_IDLE
 
     @property
     def min_temp(self):
