@@ -383,6 +383,7 @@ oauth2client==4.0.0
 # homeassistant.components.shiftr
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 paho-mqtt==1.5.0
 =======
 paho-mqtt==1.4.0
@@ -390,6 +391,9 @@ paho-mqtt==1.4.0
 =======
 paho-mqtt==1.4.0
 >>>>>>> new file:   requirements_test_all.txt
+=======
+paho-mqtt==1.5.0
+>>>>>>> vs Tox round 2
 
 # homeassistant.components.aruba
 # homeassistant.components.cisco_ios
@@ -405,6 +409,7 @@ pilight==0.1.1
 # homeassistant.components.qrcode
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 pillow==6.2.1
 =======
 pillow==6.2.0
@@ -412,6 +417,9 @@ pillow==6.2.0
 =======
 pillow==6.2.0
 >>>>>>> new file:   requirements_test_all.txt
+=======
+pillow==6.2.1
+>>>>>>> vs Tox round 2
 
 # homeassistant.components.plex
 plexapi==3.0.6
