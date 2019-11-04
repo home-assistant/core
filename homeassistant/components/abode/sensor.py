@@ -29,19 +29,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a sensor for an Abode device."""
-
     data = hass.data[DOMAIN]
+    entities = []
 
-    devices = []
     for device in data.abode.get_devices(generic_type=CONST.TYPE_SENSOR):
-        if CONST.TEMP_STATUS_KEY in device.get_value(CONST.STATUSES_KEY):
-            devices.append(AbodeSensor(data, device, CONST.TEMP_STATUS_KEY))
-        if CONST.HUMI_STATUS_KEY in device.get_value(CONST.STATUSES_KEY):
-            devices.append(AbodeSensor(data, device, CONST.HUMI_STATUS_KEY))
-        if CONST.LUX_STATUS_KEY in device.get_value(CONST.STATUSES_KEY):
-            devices.append(AbodeSensor(data, device, CONST.LUX_STATUS_KEY))
+        for sensor_type in SENSOR_TYPES:
+            if sensor_type not in device.get_value(CONST.STATUSES_KEY):
+                continue
+            entities.append(AbodeSensor(data, device, sensor_type))
 
-    async_add_entities(devices)
+    async_add_entities(entities)
 
 
 class AbodeSensor(AbodeDevice):
@@ -69,7 +66,7 @@ class AbodeSensor(AbodeDevice):
     @property
     def unique_id(self):
         """Return a unique ID to use for this device."""
-        return self._device.device_uuid + self._sensor_type
+        return f"{self._device.device_uuid}-{self._sensor_type}"
 
     @property
     def state(self):
