@@ -54,21 +54,6 @@ def _convert_states(states):
     return result
 
 
-async def _part_of_config(hass, name):
-    """Determine whether entity_id was configured manually, return True if an error occurs."""
-    try:
-        conf = await conf_util.async_hass_config_yaml(hass)
-    except HomeAssistantError as err:
-        _LOGGER.error(err)
-        return True
-
-    for _, p_config in config_per_platform(conf, SCENE_DOMAIN):
-        if name == p_config[CONF_NAME]:
-            return True
-
-    return False
-
-
 CONF_SCENE_ID = "scene_id"
 
 STATES_SCHEMA = vol.All(dict, _convert_states)
@@ -155,14 +140,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         """Create a scene."""
         scene_config = SCENECONFIG(call.data[CONF_SCENE_ID], call.data[CONF_ENTITIES])
         entity_id = f"{SCENE_DOMAIN}.{scene_config.name}"
-        if hass.states.get(entity_id) is not None:
-            if await _part_of_config(hass, scene_config.name):
+        old = platform.entities.get(entity_id)
+        if old is not None:
+            if old.from_yaml:
                 _LOGGER.warning("The scene %s already exists", entity_id)
                 return
 
             await platform.async_remove_entity(entity_id)
 
-        async_add_entities([HomeAssistantScene(hass, scene_config)])
+        async_add_entities([HomeAssistantScene(hass, scene_config, from_yaml=False)])
 
     hass.services.async_register(
         SCENE_DOMAIN, SERVICE_CREATE, create_service, CREATE_SCENE_SCHEMA
@@ -186,10 +172,11 @@ def _process_scenes_config(hass, async_add_entities, config):
 class HomeAssistantScene(Scene):
     """A scene is a group of entities and the states we want them to be."""
 
-    def __init__(self, hass, scene_config):
+    def __init__(self, hass, scene_config, from_yaml=True):
         """Initialize the scene."""
         self.hass = hass
         self.scene_config = scene_config
+        self.from_yaml = from_yaml
 
     @property
     def name(self):
