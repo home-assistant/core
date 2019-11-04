@@ -47,8 +47,8 @@ DEFAULT_MIN_TEMP = 4
 DEFAULT_MAX_TEMP = 30
 
 # HVAC modes
-ATTR_HVAC_MODES_1 = [HVAC_MODE_HEAT, HVAC_MODE_AUTO]
-ATTR_HVAC_MODES_2 = [HVAC_MODE_HEAT_COOL, HVAC_MODE_AUTO]
+HVAC_MODES_1 = [HVAC_MODE_HEAT, HVAC_MODE_AUTO]
+HVAC_MODES_2 = [HVAC_MODE_HEAT_COOL, HVAC_MODE_AUTO]
 
 # Read platform configuration
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -65,7 +65,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Add the Plugwise (Anna) Thermostate."""
     api = haanna.Haanna(
         config[CONF_USERNAME],
@@ -84,7 +84,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             api, config[CONF_NAME], config[CONF_MIN_TEMP], config[CONF_MAX_TEMP]
         )
     ]
-    async_add_entities(devices)
+    add_entities(devices, True)
 
 
 class ThermostatDevice(ClimateDevice):
@@ -113,8 +113,6 @@ class ThermostatDevice(ClimateDevice):
         self._water_pressure = None
         self._schedule_temperature = None
         self._hvac_mode = None
-        self._hvac_modes_1 = ATTR_HVAC_MODES_1
-        self._hvac_modes_2 = ATTR_HVAC_MODES_2
 
     @property
     def hvac_action(self):
@@ -148,7 +146,7 @@ class ThermostatDevice(ClimateDevice):
             attributes["outdoor_temperature"] = self._outdoor_temperature
         attributes["available_schemas"] = self._schema_names
         attributes["selected_schema"] = self._selected_schema
-        if self._illuminance is not None:
+        if self._illuminance:
             attributes["illuminance"] = self._illuminance
         if self._boiler_temperature:
             attributes["boiler_temperature"] = self._boiler_temperature
@@ -166,8 +164,9 @@ class ThermostatDevice(ClimateDevice):
         """Return the available hvac modes list."""
         if self._heating_status is not None:
             if self._cooling_status is not None:
-                return self._hvac_modes_2
-            return self._hvac_modes_1
+                return HVAC_MODES_2
+            return HVAC_MODES_1
+        return None
 
     @property
     def hvac_mode(self):
@@ -178,6 +177,7 @@ class ThermostatDevice(ClimateDevice):
             if self._cooling_status:
                 return HVAC_MODE_HEAT_COOL
             return HVAC_MODE_HEAT
+        return None
 
     @property
     def thermostat_temperature(self):
@@ -210,6 +210,7 @@ class ThermostatDevice(ClimateDevice):
             if self._thermostat_temperature != preset_temperature:
                 return "Manual"
             return self._preset_mode
+        return None
 
     @property
     def current_temperature(self):
@@ -231,7 +232,7 @@ class ThermostatDevice(ClimateDevice):
         """Return the unit of measured temperature."""
         return TEMP_CELSIUS
 
-    async def async_set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs):
         """Set new target temperature."""
         _LOGGER.debug("Adjusting temperature")
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -241,7 +242,7 @@ class ThermostatDevice(ClimateDevice):
         else:
             _LOGGER.error("Invalid temperature requested")
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set the hvac mode."""
         _LOGGER.debug("Adjusting hvac_mode (i.e. schedule/schema)")
         schema_mode = "false"
@@ -251,12 +252,12 @@ class ThermostatDevice(ClimateDevice):
             self._domain_objects, self._selected_schema, schema_mode
         )
 
-    async def async_set_preset_mode(self, preset_mode):
+    def set_preset_mode(self, preset_mode):
         """Set the preset mode."""
         _LOGGER.debug("Changing preset mode")
         self._api.set_preset(self._domain_objects, preset_mode)
 
-    async def async_update(self):
+    def update(self):
         """Update the data from the thermostat."""
         _LOGGER.debug("Update called")
         self._domain_objects = self._api.get_domain_objects()
