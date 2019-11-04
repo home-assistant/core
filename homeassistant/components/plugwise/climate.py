@@ -179,16 +179,6 @@ class ThermostatDevice(ClimateDevice):
         return None
 
     @property
-    def thermostat_temperature(self):
-        """Return the thermostat set_temperature.
-
-        This setting directly follows the changes in temperature from the interface or
-        schedule. After a small delay, the target_temperature value will change as well,
-        this is some kind of filter-function.
-        """
-        return self._thermostat_temperature
-
-    @property
     def target_temperature(self):
         """Return the target_temperature.
 
