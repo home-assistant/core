@@ -324,7 +324,7 @@ oauth2client==4.0.0
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
-paho-mqtt==1.4.0
+paho-mqtt==1.5.0
 
 # homeassistant.components.aruba
 # homeassistant.components.cisco_ios
