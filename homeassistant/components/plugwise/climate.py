@@ -192,7 +192,7 @@ class ThermostatDevice(ClimateDevice):
     @property
     def preset_mode(self):
         """Return the active selected schedule-name.
-        
+
         Or return the active preset, or return Temporary in case of a manual change
         in the set-temperature with a weekschedule active,
         or return Manual in case of a manual change and no weekschedule active.
