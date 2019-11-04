@@ -104,7 +104,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._get_ip, user_input[ATTR_HOST]
             )
 
-            if self._is_already_configured(self.hass, ip_address):
+            if self._is_already_configured(ip_address):
                 return self.async_abort(reason="already_configured")
 
             self._host = user_input[CONF_HOST]
@@ -133,7 +133,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         ):
             return self.async_abort(reason="already_in_progress")
 
-        if self._is_already_configured(self.hass, self._ip):
+        if self._is_already_configured(ip_address):
             return self.async_abort(reason="already_configured")
 
         self._host = user_input[ATTR_HOST]
