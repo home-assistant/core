@@ -1,13 +1,11 @@
 """Support for azure service bus notification."""
 import json
-import logging
 
 from azure.servicebus.aio import Message, ServiceBusClient
 import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
-    ATTR_MESSAGE,
     ATTR_TARGET,
     ATTR_TITLE,
     PLATFORM_SCHEMA,
@@ -20,22 +18,27 @@ CONF_CONNECTION_STRING = "connection_string"
 CONF_QUEUE_NAME = "queue"
 CONF_TOPIC_NAME = "topic"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_CONNECTION_STRING): cv.string,
-        vol.Exclusive(
-            CONF_QUEUE_NAME, "output", "Can only send to a queue or a topic."
-        ): cv.string,
-        vol.Exclusive(
-            CONF_TOPIC_NAME, "output", "Can only send to a queue or a topic."
-        ): cv.string,
-    }
+ATTR_ASB_MESSAGE = "message"
+ATTR_ASB_TITLE = "title"
+ATTR_ASB_TARGET = "target"
+
+PLATFORM_SCHEMA = vol.All(
+    cv.has_at_least_one_key(CONF_QUEUE_NAME, CONF_TOPIC_NAME),
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_CONNECTION_STRING): cv.string,
+            vol.Exclusive(
+                CONF_QUEUE_NAME, "output", "Can only send to a queue or a topic."
+            ): cv.string,
+            vol.Exclusive(
+                CONF_TOPIC_NAME, "output", "Can only send to a queue or a topic."
+            ): cv.string,
+        }
+    ),
 )
 
-_LOGGER = logging.getLogger(__name__)
 
-
-def get_service(hass, config, discovery_info=None):
+async def async_get_service(hass, config, discovery_info=None):
     """Get the notification service."""
     connection_string = config[CONF_CONNECTION_STRING]
     queue_name = config.get(CONF_QUEUE_NAME)
@@ -50,9 +53,6 @@ def get_service(hass, config, discovery_info=None):
     elif topic_name:
         client = servicebus.get_topic(topic_name)
     else:
-        _LOGGER.error(
-            "Could not find a topic or queue from the configuration. Please provide one!"
-        )
         return None
 
     return ServiceBusNotificationService(client)
@@ -67,12 +67,12 @@ class ServiceBusNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message, **kwargs):
         """Send a message."""
-        dto = {ATTR_MESSAGE: message}
+        dto = {ATTR_ASB_MESSAGE: message}
 
         if ATTR_TITLE in kwargs:
-            dto[ATTR_TITLE] = kwargs[ATTR_TITLE]
+            dto[ATTR_ASB_TITLE] = kwargs[ATTR_TITLE]
         if ATTR_TARGET in kwargs:
-            dto[ATTR_TARGET] = kwargs[ATTR_TARGET]
+            dto[ATTR_ASB_TARGET] = kwargs[ATTR_TARGET]
 
         data = kwargs.get(ATTR_DATA)
         if data:
