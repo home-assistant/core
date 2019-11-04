@@ -3,6 +3,7 @@ import asyncio
 from unittest.mock import call, patch
 from datetime import timedelta
 
+import logging
 from asynctest import mock
 import pytest
 from samsungctl import exceptions
@@ -269,6 +270,7 @@ async def test_send_key_autodetect_websocket(hass, remote):
 
 async def test_send_key_autodetect_websocket_exception(hass, caplog):
     """Test for send key with autodetection of protocol."""
+    caplog.set_level(logging.DEBUG)
     with patch(
         "homeassistant.components.samsungtv.media_player.SamsungRemote",
         side_effect=[exceptions.AccessDenied("Boom"), mock.DEFAULT],
@@ -467,6 +469,7 @@ async def test_turn_off_legacy(hass, remote):
 
 async def test_turn_off_os_error(hass, remote, caplog):
     """Test for turn_off with OSError."""
+    caplog.set_level(logging.DEBUG)
     await setup_samsungtv(hass, MOCK_CONFIG)
     remote.close = mock.Mock(side_effect=OSError("BOOM"))
     assert await hass.services.async_call(
