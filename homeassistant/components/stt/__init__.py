@@ -21,10 +21,10 @@ from homeassistant.setup import async_prepare_setup_platform
 
 from .const import (
     DOMAIN,
-    AudioBitrates,
+    AudioBitRates,
     AudioCodecs,
     AudioFormats,
-    AudioSamplerates,
+    AudioSampleRates,
     SpeechResultState,
 )
 
@@ -76,8 +76,8 @@ class SpeechMetadata:
     language: str = attr.ib()
     format: AudioFormats = attr.ib()
     codec: AudioCodecs = attr.ib()
-    bitrate: AudioBitrates = attr.ib(converter=int)
-    samplerate: AudioSamplerates = attr.ib(converter=int)
+    bit_rate: AudioBitRates = attr.ib(converter=int)
+    sample_rate: AudioSampleRates = attr.ib(converter=int)
 
 
 @attr.s
@@ -111,13 +111,13 @@ class Provider(ABC):
 
     @property
     @abstractmethod
-    def supported_bitrates(self) -> List[AudioBitrates]:
-        """Return a list of supported bitrates."""
+    def supported_bit_rates(self) -> List[AudioBitRates]:
+        """Return a list of supported bit_rates."""
 
     @property
     @abstractmethod
-    def supported_samplerates(self) -> List[AudioSamplerates]:
-        """Return a list of supported samplerates."""
+    def supported_sample_rates(self) -> List[AudioSampleRates]:
+        """Return a list of supported sample_rates."""
 
     @abstractmethod
     async def async_process_audio_stream(
@@ -135,8 +135,8 @@ class Provider(ABC):
             metadata.language not in self.supported_languages
             or metadata.format not in self.supported_formats
             or metadata.codec not in self.supported_codecs
-            or metadata.bitrate not in self.supported_bitrates
-            or metadata.samplerate not in self.supported_samplerates
+            or metadata.bit_rate not in self.supported_bit_rates
+            or metadata.sample_rate not in self.supported_sample_rates
         ):
             return False
         return True
@@ -211,7 +211,7 @@ class SpeechToTextView(HomeAssistantView):
                 "languages": stt_provider.supported_languages,
                 "formats": stt_provider.supported_formats,
                 "codecs": stt_provider.supported_codecs,
-                "samplerates": stt_provider.supported_samplerates,
-                "bitrates": stt_provider.supported_bitrates,
+                "sample_rates": stt_provider.supported_sample_rates,
+                "bit_rates": stt_provider.supported_bit_rates,
             }
         )
