@@ -66,6 +66,8 @@ class OpenThermClimate(ClimateDevice):
         self._away_mode_b = None
         self._away_state_a = False
         self._away_state_b = False
+        self._unsub_options = None
+        self._unsub_updates = None
 
     @callback
     def update_options(self, entry):
@@ -77,12 +79,18 @@ class OpenThermClimate(ClimateDevice):
     async def async_added_to_hass(self):
         """Connect to the OpenTherm Gateway device."""
         _LOGGER.debug("Added OpenTherm Gateway climate device %s", self.friendly_name)
-        async_dispatcher_connect(
+        self._unsub_updates = async_dispatcher_connect(
             self.hass, self._gateway.update_signal, self.receive_report
         )
-        async_dispatcher_connect(
+        self._unsub_options = async_dispatcher_connect(
             self.hass, self._gateway.options_update_signal, self.update_options
         )
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe from updates from the component."""
+        _LOGGER.debug("Removing OpenTherm Gateway climate %s", self.friendly_name)
+        self._unsub_options()
+        self._unsub_updates()
 
     @callback
     def receive_report(self, status):
