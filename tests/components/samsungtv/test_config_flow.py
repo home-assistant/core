@@ -53,9 +53,16 @@ def remote_fixture():
 async def test_user(hass, remote):
     """Test starting a flow by user."""
 
-    # entry was added
+    # show form
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+        DOMAIN, context={"source": "user"}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    # entry was added
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_DATA
     )
     assert result["type"] == "create_entry"
     assert result["title"] == "fake_name"
@@ -64,18 +71,6 @@ async def test_user(hass, remote):
     assert result["data"][CONF_MANUFACTURER] is None
     assert result["data"][CONF_MODEL] is None
     assert result["data"][CONF_ID] is None
-
-
-async def test_user_empty(hass, remote):
-    """Test starting a flow by user."""
-
-    # show form
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
-    )
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert len(result["errors"]) == 0
 
 
 async def test_user_error(hass, remote):
