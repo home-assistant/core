@@ -491,7 +491,7 @@ async def async_setup_entry(hass, config_entry):
                 continue
 
             entity = hass.data[DATA_DEVICES][key]
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Removing Entity - value: %s - entity_id: %s", key, entity.entity_id
             )
             hass.add_job(entity.node_removed())
@@ -508,7 +508,7 @@ async def async_setup_entry(hass, config_entry):
         identifier, name = node_device_id_and_name(node)
         device = dev_reg.async_get_device(identifiers={identifier}, connections=set())
         if device is not None:
-            _LOGGER.info("Removing Device - %s - %s", device.id, name)
+            _LOGGER.debug("Removing Device - %s - %s", device.id, name)
             dev_reg.async_remove_device(device.id)
 
     def network_ready():
