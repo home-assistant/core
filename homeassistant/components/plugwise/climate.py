@@ -153,8 +153,9 @@ class ThermostatDevice(ClimateDevice):
 
     @property
     def preset_modes(self):
-        """Return the available preset modes list and make the presets with their
-        temperatures available.
+        """Return the available preset modes list.
+        
+        And make the presets with their temperatures available.
         """
         return self._presets_list
 
@@ -190,8 +191,11 @@ class ThermostatDevice(ClimateDevice):
 
     @property
     def preset_mode(self):
-        """Return the active selected schedule-name, or the (temporary) active preset
-        or Temporary in case of a manual change in the set-temperature.
+        """Return the active selected schedule-name.
+        
+        Or return the active preset, or return Temporary in case of a manual change
+        in the set-temperature with a weekschedule active,
+        or return Manual in case of a manual change and no weekschedule active.
         """
         if self._presets:
             presets = self._presets
