@@ -172,7 +172,6 @@ async def test_ssdp(flow):
         }
     )
 
-    print(result)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
     assert flow.context[CONF_URL] == url
