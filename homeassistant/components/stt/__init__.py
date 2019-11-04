@@ -84,7 +84,7 @@ class SpeechMetadata:
 class SpeechResult:
     """Result of audio Speech."""
 
-    text: str = attr.ib()
+    text: Optional[str] = attr.ib()
     result: SpeechResultState = attr.ib()
 
 
