@@ -11,7 +11,6 @@ from . import DOMAIN as VICARE_DOMAIN
 from . import VICARE_API
 from . import VICARE_NAME
 from . import VICARE_HEATING_TYPE
-from . import HeatingType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,34 +84,6 @@ class ViCareWater(WaterHeaterDevice):
         self._target_temperature = self._api.getDomesticHotWaterConfiguredTemperature()
 
         self._current_mode = self._api.getActiveMode()
-
-        # Update the generic device attributes
-        self._attributes = {}
-        if self._heating_type == HeatingType.gas:
-            self._attributes[
-                "gas_consumption_dhw_days"
-            ] = self._api.getGasConsumptionDomesticHotWaterDays()
-            self._attributes[
-                "gas_consumption_dhw_today"
-            ] = self._api.getGasConsumptionDomesticHotWaterToday()
-            self._attributes[
-                "gas_consumption_dhw_weeks"
-            ] = self._api.getGasConsumptionDomesticHotWaterWeeks()
-            self._attributes[
-                "gas_consumption_dhw_this_week"
-            ] = self._api.getGasConsumptionDomesticHotWaterThisWeek()
-            self._attributes[
-                "gas_consumption_dhw_months"
-            ] = self._api.getGasConsumptionDomesticHotWaterMonths()
-            self._attributes[
-                "gas_consumption_dhw_this_month"
-            ] = self._api.getGasConsumptionDomesticHotWaterThisMonth()
-            self._attributes[
-                "gas_consumption_dhw_years"
-            ] = self._api.getGasConsumptionDomesticHotWaterYears()
-            self._attributes[
-                "gas_consumption_dhw_this_year"
-            ] = self._api.getGasConsumptionDomesticHotWaterThisYear()
 
     @property
     def supported_features(self):

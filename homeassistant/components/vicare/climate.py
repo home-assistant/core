@@ -153,31 +153,7 @@ class ViCareClimate(ClimateDevice):
 
             self._attributes["burner_modulation"] = self._api.getBurnerModulation()
             self._attributes["boiler_temperature"] = self._api.getBoilerTemperature()
-            self._attributes["current_power"] = self._api.getCurrentPower()
-            self._attributes[
-                "gas_consumption_heating_days"
-            ] = self._api.getGasConsumptionHeatingDays()
-            self._attributes[
-                "gas_consumption_heating_today"
-            ] = self._api.getGasConsumptionHeatingToday()
-            self._attributes[
-                "gas_consumption_heating_weeks"
-            ] = self._api.getGasConsumptionHeatingWeeks()
-            self._attributes[
-                "gas_consumption_heating_this_week"
-            ] = self._api.getGasConsumptionHeatingThisWeek()
-            self._attributes[
-                "gas_consumption_heating_months"
-            ] = self._api.getGasConsumptionHeatingMonths()
-            self._attributes[
-                "gas_consumption_heating_this_month"
-            ] = self._api.getGasConsumptionHeatingThisMonth()
-            self._attributes[
-                "gas_consumption_heating_years"
-            ] = self._api.getGasConsumptionHeatingYears()
-            self._attributes[
-                "gas_consumption_heating_this_year"
-            ] = self._api.getGasConsumptionHeatingThisYear()
+
         elif self._heating_type == HeatingType.heatpump:
             self._current_action = self._api.getCompressorActive()
 
