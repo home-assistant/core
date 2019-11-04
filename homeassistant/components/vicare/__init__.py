@@ -2,6 +2,7 @@
 import logging
 
 import voluptuous as vol
+import tempfile
 from PyViCare.PyViCareDevice import Device
 
 import homeassistant.helpers.config_validation as cv
@@ -36,7 +37,7 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Create the ViCare component."""
     conf = config[DOMAIN]
-    params = {"token_file": "/tmp/vicare_token.save"}
+    params = {"token_file": tempfile.gettempdir() + "/vicare_token.save"}
     if conf.get(CONF_CIRCUIT) is not None:
         params["circuit"] = conf[CONF_CIRCUIT]
 
