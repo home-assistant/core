@@ -108,6 +108,9 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 ATTR_VAILLANT_MODE = 'vaillant_mode'
+ATTR_VAILLANT_SUB_MODE = 'vaillant_sub_mode'
+ATTR_VAILLANT_NEXT_SUB_MODE = 'next_sub_mode'
+ATTR_VAILLANT_SUB_MODE_END = 'sub_mode_end'
 ATTR_QUICK_VETO_END = 'quick_veto_end'
 ATTR_QUICK_MODE = 'quick_mode'
 ATTR_START_DATE = 'start_date'
@@ -254,10 +257,12 @@ class VaillantHub:
                                          target_temp):
         """Set hot water target temperature.
 
-        If dhw is in ON mode, simply modify the target temperature, otherwise
-        setting mode to ON and changing the target temperature.
+        * If there is a quick mode that impact dhw running on, remove it.
 
-        If there is a quick mode that impact dhw running on, remove it."""
+        * If dhw is ON or AUTO, modify the target temperature
+
+        * If dhw is OFF, change to ON and set target temperature
+        """
         from pymultimatic.model import OperatingModes
 
         touch_quick_mode = False
@@ -267,9 +272,10 @@ class VaillantHub:
             touch_quick_mode = True
             self.system.quick_mode = None
 
-        active_mode = self.system.get_active_mode_hot_water(hot_water)
+        current_mode = self.system.get_active_mode_hot_water(hot_water)\
+            .current_mode
 
-        if active_mode.current_mode != OperatingModes.ON:
+        if current_mode == OperatingModes.OFF or touch_quick_mode:
             self.manager.set_hot_water_operating_mode(hot_water.id,
                                                       OperatingModes.ON)
         self.manager\
@@ -284,12 +290,14 @@ class VaillantHub:
     def set_room_target_temperature(self, entity, room, target_temp):
         """Set target temperature for a room.
 
-        If the room is in MANUAL mode, simply modify the target temperature,
-        if the room is not in MANUAL mode, create à quick veto.
+        * If there is a quick mode that impact room running on, remove it.
 
-        If there is a quick mode that impact room running on, remove it.
+        * If the room is in MANUAL mode, simply modify the target temperature.
+
+        * if the room is not in MANUAL mode, create à quick veto.
+
         """
-        from pymultimatic.model import OperatingModes, QuickVeto
+        from pymultimatic.model import QuickVeto, OperatingModes
 
         touch_quick_mode = False
         if self.system.quick_mode is not None and \
@@ -298,26 +306,40 @@ class VaillantHub:
             touch_quick_mode = True
             self.system.quick_mode = None
 
-        active_mode = self.system.get_active_mode_room(room)
-
-        if active_mode.current_mode == OperatingModes.MANUAL:
-            self.manager.set_room_setpoint_temperature(room.id, target_temp)
-        else:
+        current_mode = self.system.get_active_mode_room(room).current_mode
+        if room.quick_veto is not None or touch_quick_mode \
+                or current_mode == OperatingModes.OFF \
+                or current_mode == OperatingModes.AUTO:
+            if room.quick_veto is not None:
+                self.manager.remove_room_quick_veto(room.id)
             veto = QuickVeto(self._quick_veto_duration, target_temp)
             self.manager.set_room_quick_veto(room.id, veto)
+            room.quick_veto = veto
+        elif current_mode == OperatingModes.MANUAL:
+            self.manager.set_room_setpoint_temperature(room.id, target_temp)
+            room.target_temperature = target_temp
 
         if touch_quick_mode:
             self.refresh_listening_entities()
         else:
-            self.system.set_room(room.id, self.manager.get_room(room.id))
             entity.async_schedule_update_ha_state(True)
 
     def set_zone_target_temperature(self, entity, zone, target_temp):
         """Set target temperature for a zone.
 
-        Create a quick veto with the specified temperature. If there is a
-        quick mode that impact zone running on, remove it.
+        * If there is a quick mode related to zone running, remove it
+
+        * If quick veto running on, remove it and create a new one with the
+            new target temp
+
+        * If mode is DAY, change the setpoint temperature
+
+        * If mode is NIGHT, change the setback temperature
+
+        * If mode is OFF, create a quick veto
         """
+        from pymultimatic.model import QuickVeto, OperatingModes
+
         touch_quick_mode = False
         if self.system.quick_mode is not None and \
                 self.system.quick_mode.for_zone:
@@ -325,24 +347,43 @@ class VaillantHub:
             touch_quick_mode = True
             self.system.quick_mode = None
 
-        self.set_zone_target_high_temperature(entity, zone, target_temp)
+        current_mode = self.system.get_active_mode_zone(zone).current_mode
+        if zone.quick_veto is not None or touch_quick_mode \
+                or current_mode == OperatingModes.OFF:
+            if zone.quick_veto is not None:
+                self.manager.remove_zone_quick_veto(zone.id)
+            veto = QuickVeto(None, target_temp)
+            self.manager.set_zone_quick_veto(zone.id, veto)
+            zone.quick_veto = veto
+        elif current_mode == OperatingModes.DAY:
+            self.manager.set_zone_setpoint_temperature(zone.id, target_temp)
+            zone.target_temperature = target_temp
+        elif current_mode == OperatingModes.NIGHT:
+            self.manager.set_zone_setback_temperature(zone.id, target_temp)
+            zone.target_min_temperature = target_temp
 
         if touch_quick_mode:
             self.refresh_listening_entities()
+        else:
+            entity.async_schedule_update_ha_state(True)
 
     def set_zone_target_high_temperature(self, entity, zone, temperature):
         """Set high target temperature for a zone., create a quick veto."""
         from pymultimatic.model import QuickVeto
 
-        veto = QuickVeto(None, temperature)
-        self.manager.set_zone_quick_veto(zone.id, veto)
-        self.system.set_zone(zone.id, self.manager.get_zone(zone.id))
+        # veto = QuickVeto(None, temperature)
+        # self.manager.set_zone_quick_veto(zone.id, veto)
+        # zone.quick_veto = veto
+        # self.system.set_zone(zone.id, self.manager.get_zone(zone.id))
+        self.manager.set_zone_setpoint_temperature(zone.id, temperature)
+        zone.target_temperature = temperature
         entity.async_schedule_update_ha_state(True)
 
     def set_zone_target_low_temperature(self, entity, zone, temperature):
         """Set low temperature for a zone."""
         self.manager.set_zone_setback_temperature(zone.id, temperature)
-        self.system.set_zone(zone.id, self.manager.get_zone(zone.id))
+        zone.target_min_temperature = temperature
+        # self.system.set_zone(zone.id, self.manager.get_zone(zone.id))
         entity.async_schedule_update_ha_state(True)
 
     def set_hot_water_operating_mode(self, entity, hot_water, mode):

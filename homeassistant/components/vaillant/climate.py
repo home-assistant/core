@@ -3,7 +3,7 @@
 import abc
 import logging
 from typing import Optional, List, Dict, Any
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from pymultimatic.model import (
     System,
@@ -36,7 +36,8 @@ from homeassistant.util import dt as dt_util
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 
 from . import HUB, BaseVaillantEntity, CONF_ROOM_CLIMATE, CONF_ZONE_CLIMATE, \
-    ATTR_VAILLANT_MODE, ATTR_QUICK_VETO_END
+    ATTR_VAILLANT_MODE, ATTR_QUICK_VETO_END, ATTR_VAILLANT_SUB_MODE, \
+    ATTR_VAILLANT_NEXT_SUB_MODE, ATTR_VAILLANT_SUB_MODE_END
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -123,6 +124,27 @@ class VaillantClimate(BaseVaillantEntity, ClimateDevice, abc.ABC):
                 attributes.update({
                     ATTR_QUICK_VETO_END: end_time.isoformat()
                 })
+        elif self._active_mode.current_mode == OperatingModes.AUTO:
+            now = datetime.now()
+            abs_min = now.hour * 60 + now.minute
+            next_setting = self._component.time_program.get_next(now)
+
+            next_start = now
+            # it means, next setting is tomorrow
+            if next_setting.absolute_minutes < abs_min:
+                next_start = next_start + timedelta(days=1)
+            next_start.replace(hour=next_setting.hour,
+                               minute=next_setting.minute)
+            next_start = dt_util.as_utc(next_start)
+
+            attributes.update({
+                ATTR_VAILLANT_SUB_MODE: self._active_mode.sub_mode.name,
+                ATTR_VAILLANT_NEXT_SUB_MODE:
+                    next_setting.setting.name if next_setting.setting else
+                    next_setting.temperature,
+                ATTR_VAILLANT_SUB_MODE_END: next_start.isoformat()
+            })
+
         return attributes
 
     @property
@@ -369,8 +391,8 @@ class VaillantZoneClimate(VaillantClimate):
         """Return the highbound target temperature we try to reach."""
         _LOGGER.debug("Target low temp is %s",
                       self._component.target_min_temperature)
-        if self._active_mode.target_temperature == Zone.MIN_TARGET_TEMP:
-            return self._active_mode.target_temperature
+        # if self._active_mode.target_temperature == Zone.MIN_TARGET_TEMP:
+        #     return self._active_mode.target_temperature
         return self._component.target_min_temperature
 
     def get_active_mode(self):

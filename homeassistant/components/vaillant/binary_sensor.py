@@ -305,17 +305,13 @@ class VaillantBoxOnline(BaseVaillantSystem):
 class VaillantBoilerError(BaseVaillantEntity, BinarySensorDevice):
     """Check if there is some error."""
 
-    async def vaillant_update(self):
-        """Update specific for vaillant."""
-        _LOGGER.debug("new boiler status is %s", self.hub.system.boiler_status)
-        self._boiler_status = self.hub.system.boiler_status
-
     def __init__(self, boiler_status: BoilerStatus):
         """Initialize entity."""
         super().__init__(DOMAIN, DEVICE_CLASS_PROBLEM,
                          boiler_status.device_name, boiler_status.device_name,
                          False)
         self._boiler_status = boiler_status
+        self._state_attrs = {}
 
     @property
     def is_on(self):
@@ -325,11 +321,18 @@ class VaillantBoilerError(BaseVaillantEntity, BinarySensorDevice):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        return {
-            'status_code': self._boiler_status.status_code,
-            'title': self._boiler_status.title,
-            'timestamp': self._boiler_status.timestamp
-        }
+        if self._boiler_status is not None:
+            self._state_attrs = {
+                'status_code': self._boiler_status.status_code,
+                'title': self._boiler_status.title,
+                'timestamp': self._boiler_status.timestamp
+            }
+        return self._state_attrs
+
+    async def vaillant_update(self):
+        """Update specific for vaillant."""
+        _LOGGER.debug("new boiler status is %s", self.hub.system.boiler_status)
+        self._boiler_status = self.hub.system.boiler_status
 
 
 class VaillantSystemErrorHandler:

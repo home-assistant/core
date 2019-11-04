@@ -31,6 +31,7 @@ vaillant:
 
 
 ##Todo's
+- if auto mode, add state_attr 'next_mode' and 'next_mode_at'
 - tests:
     - zone: set mode while quick mode (not for zone) is running
     - zone: set mode while quick mode (for zone) is running
