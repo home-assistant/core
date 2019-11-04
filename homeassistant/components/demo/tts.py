@@ -1,4 +1,4 @@
-"""Support for the demo speech service."""
+"""Support for the demo for text to speech service."""
 import os
 
 import voluptuous as vol
