@@ -165,7 +165,6 @@ async def test_hmip_heating_group_heat(hass, default_mock_hap):
     ha_state = hass.states.get(entity_id)
     assert ha_state.attributes[ATTR_PRESET_MODE] == PRESET_ECO
 
-    # Not required for hmip, but a posiblity to send no temperature.
     await hass.services.async_call(
         "climate",
         "set_preset_mode",
@@ -189,6 +188,44 @@ async def test_hmip_heating_group_heat(hass, default_mock_hap):
 
     ha_state = hass.states.get(entity_id)
     assert ha_state.attributes[ATTR_PRESET_END_TIME] == PERMANENT_END_TIME
+
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {"entity_id": entity_id, "hvac_mode": HVAC_MODE_HEAT},
+        blocking=True,
+    )
+    assert len(hmip_device.mock_calls) == service_call_counter + 19
+    assert hmip_device.mock_calls[-1][0] == "set_control_mode"
+    assert hmip_device.mock_calls[-1][1] == ("MANUAL",)
+    await async_manipulate_test_data(hass, hmip_device, "controlMode", "MANUAL")
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == HVAC_MODE_HEAT
+
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {"entity_id": entity_id, "preset_mode": "Winter"},
+        blocking=True,
+    )
+
+    assert len(hmip_device.mock_calls) == service_call_counter + 22
+    assert hmip_device.mock_calls[-1][0] == "set_active_profile"
+    assert hmip_device.mock_calls[-1][1] == (1,)
+    hmip_device.activeProfile = hmip_device.profiles[0]
+    await async_manipulate_test_data(hass, hmip_device, "controlMode", "AUTOMATIC")
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == HVAC_MODE_AUTO
+
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {"entity_id": entity_id, "hvac_mode": "dry"},
+        blocking=True,
+    )
+    assert len(hmip_device.mock_calls) == service_call_counter + 23
+    # Only fire event from last async_manipulate_test_data available.
+    assert hmip_device.mock_calls[-1][0] == "fire_update_event"
 
 
 async def test_hmip_heating_group_cool(hass, default_mock_hap):
