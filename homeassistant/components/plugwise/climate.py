@@ -154,7 +154,7 @@ class ThermostatDevice(ClimateDevice):
     @property
     def preset_modes(self):
         """Return the available preset modes list.
-        
+
         And make the presets with their temperatures available.
         """
         return self._presets_list
