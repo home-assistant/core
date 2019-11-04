@@ -22,8 +22,6 @@
     "pyaehw4a1==0.1.2"
 >>>>>>> Updated library to latest version
   ],
-  "ssdp": {},
-  "homekit": {},
   "dependencies": [],
   "codeowners": [
     "@bannhead"
