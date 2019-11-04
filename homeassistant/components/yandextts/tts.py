@@ -13,38 +13,24 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-YANDEX_API_URL = "https://tts.voicetech.yandex.net/generate?"
+YANDEX_API_URL = "https://tts.api.cloud.yandex.net/speech/v1/tts:synthesize"
 
-SUPPORT_LANGUAGES = ["ru-RU", "en-US", "tr-TR", "uk-UK"]
+SUPPORT_LANGUAGES = ["ru-RU", "en-US", "tr-TR"]
 
-SUPPORT_CODECS = ["mp3", "wav", "opus"]
+SUPPORT_CODECS = ["lpcm", "oggopus"]
 
 SUPPORT_VOICES = [
-    "jane",
     "oksana",
-    "alyss",
+    "jane",
     "omazh",
     "zahar",
     "ermil",
-    "levitan",
-    "ermilov",
     "silaerkan",
-    "kolya",
-    "kostya",
-    "nastya",
-    "sasha",
-    "nick",
     "erkanyavas",
-    "zhenya",
-    "tanya",
-    "anton_samokhvalov",
-    "tatyana_abramova",
-    "voicesearch",
-    "ermil_with_tuning",
-    "robot",
-    "dude",
-    "zombie",
-    "smoky",
+    "alyss",
+    "nick",
+    "alena",
+    "filipp"
 ]
 
 SUPPORTED_EMOTION = ["good", "evil", "neutral"]
@@ -54,12 +40,12 @@ MAX_SPEED = 3
 
 CONF_CODEC = "codec"
 CONF_VOICE = "voice"
-CONF_EMOTION = "emotion"
+CONF_EMOTION = "neutral"
 CONF_SPEED = "speed"
 
 DEFAULT_LANG = "en-US"
-DEFAULT_CODEC = "mp3"
-DEFAULT_VOICE = "zahar"
+DEFAULT_CODEC = "oggopus"
+DEFAULT_VOICE = "omazh"
 DEFAULT_EMOTION = "neutral"
 DEFAULT_SPEED = 1
 
@@ -96,7 +82,7 @@ class YandexSpeechKitProvider(Provider):
         self._language = conf.get(CONF_LANG)
         self._emotion = conf.get(CONF_EMOTION)
         self._speed = str(conf.get(CONF_SPEED))
-        self.name = "YandexTTS"
+        self.name = "YandexSpeechKit"
 
     @property
     def default_language(self):
@@ -114,7 +100,7 @@ class YandexSpeechKitProvider(Provider):
         return SUPPORTED_OPTIONS
 
     async def async_get_tts_audio(self, message, language, options=None):
-        """Load TTS from yandex."""
+        """Load TTS from yandex speechkit."""
         websession = async_get_clientsession(self.hass)
         actual_language = language
         options = options or {}
@@ -124,18 +110,22 @@ class YandexSpeechKitProvider(Provider):
                 url_param = {
                     "text": message,
                     "lang": actual_language,
-                    "key": self._key,
-                    "speaker": options.get(CONF_VOICE, self._speaker),
+                    "voice": options.get(CONF_VOICE, self._speaker),
                     "format": options.get(CONF_CODEC, self._codec),
                     "emotion": options.get(CONF_EMOTION, self._emotion),
                     "speed": options.get(CONF_SPEED, self._speed),
                 }
 
-                request = await websession.get(YANDEX_API_URL, params=url_param)
+                bearer__format = "Api-Key {}".format(self._key)
+                request = await websession.post(YANDEX_API_URL,
+                                               headers={"authorization": bearer__format},
+                                               data=url_param
+                                               )
 
                 if request.status != 200:
+                    error = await request.read()
                     _LOGGER.error(
-                        "Error %d on load URL %s", request.status, request.url
+                        "Error %d on load URL %s. Response %s", request.status, request.url, error
                     )
                     return (None, None)
                 data = await request.read()
