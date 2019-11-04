@@ -16,9 +16,9 @@ _LOGGER = logging.getLogger(__name__)
 
 # Sensor types: Name, icon
 SENSOR_TYPES = {
-    "temp": ["Temperature", DEVICE_CLASS_TEMPERATURE],
-    "humidity": ["Humidity", DEVICE_CLASS_HUMIDITY],
-    "lux": ["Lux", DEVICE_CLASS_ILLUMINANCE],
+    CONST.TEMP_STATUS_KEY: ["Temperature", DEVICE_CLASS_TEMPERATURE],
+    CONST.HUMI_STATUS_KEY: ["Humidity", DEVICE_CLASS_HUMIDITY],
+    CONST.LUX_STATUS_KEY: ["Lux", DEVICE_CLASS_ILLUMINANCE],
 }
 
 
@@ -34,8 +34,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     devices = []
     for device in data.abode.get_devices(generic_type=CONST.TYPE_SENSOR):
-        if "temp" in device.get_value(CONST.STATUSES_KEY):
-            devices.append(AbodeSensor(data, device, "temp"))
+        if CONST.TEMP_STATUS_KEY in device.get_value(CONST.STATUSES_KEY):
+            devices.append(AbodeSensor(data, device, CONST.TEMP_STATUS_KEY))
         if CONST.HUMI_STATUS_KEY in device.get_value(CONST.STATUSES_KEY):
             devices.append(AbodeSensor(data, device, CONST.HUMI_STATUS_KEY))
         if CONST.LUX_STATUS_KEY in device.get_value(CONST.STATUSES_KEY):
