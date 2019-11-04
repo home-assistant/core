@@ -85,7 +85,6 @@ class SignalNotificationService(BaseNotificationService):
                 with open(filename, "rb") as ofile:
                     data["base64_attachment"] = base64.b64encode(ofile.read())
             resp = requests.post(self._signal_cli_rest_api + "/v1/send", json=data)
-            # _LOGGER.debug("Sending signal message to number %s", self._recp_nrs)
             if resp.status_code != 201:
                 json_resp = resp.json()
                 if "error" in json_resp:
