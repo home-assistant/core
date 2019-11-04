@@ -55,7 +55,7 @@ def _convert_states(states):
 
 
 async def _part_of_config(hass, name):
-    """Determine if entity_id was manually configured, return True in an error occurs."""
+    """Determine whether entity_id was configured manually, return True if an error occurs."""
     try:
         conf = await conf_util.async_hass_config_yaml(hass)
     except HomeAssistantError as err:
