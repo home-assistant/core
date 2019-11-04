@@ -10,6 +10,7 @@ from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE, PRECISION_WHOLE
 from . import DOMAIN as VICARE_DOMAIN
 from . import VICARE_API
 from . import VICARE_NAME
+from . import VICARE_HEATING_TYPE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,22 +47,31 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if discovery_info is None:
         return
     vicare_api = hass.data[VICARE_DOMAIN][VICARE_API]
+    heating_type = hass.data[VICARE_DOMAIN][VICARE_HEATING_TYPE]
     add_entities(
-        [ViCareWater(f"{hass.data[VICARE_DOMAIN][VICARE_NAME]} Water", vicare_api)]
+        [
+            ViCareWater(
+                f"{hass.data[VICARE_DOMAIN][VICARE_NAME]} Water",
+                vicare_api,
+                heating_type,
+            )
+        ]
     )
 
 
 class ViCareWater(WaterHeaterDevice):
     """Representation of the ViCare domestic hot water device."""
 
-    def __init__(self, name, api):
+    def __init__(self, name, api, heating_type):
         """Initialize the DHW water_heater device."""
         self._name = name
         self._state = None
         self._api = api
+        self._attributes = {}
         self._target_temperature = None
         self._current_temperature = None
         self._current_mode = None
+        self._heating_type = heating_type
 
     def update(self):
         """Let HA know there has been an update from the ViCare API."""
