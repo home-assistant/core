@@ -1,11 +1,13 @@
 """Support for the Twitch stream status."""
 import logging
 
+from requests.exceptions import HTTPError
+from twitch import TwitchClient
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,6 +16,7 @@ ATTR_TITLE = "title"
 
 CONF_CHANNELS = "channels"
 CONF_CLIENT_ID = "client_id"
+
 ICON = "mdi:twitch"
 
 STATE_OFFLINE = "offline"
@@ -29,9 +32,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Twitch platform."""
-    from twitch import TwitchClient
-    from requests.exceptions import HTTPError
-
     channels = config.get(CONF_CHANNELS, [])
     client = TwitchClient(client_id=config.get(CONF_CLIENT_ID))
 
