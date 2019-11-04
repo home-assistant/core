@@ -108,7 +108,6 @@ class ThermostatDevice(ClimateDevice):
         self._schema_status = None
         self._current_temperature = None
         self._thermostat_temperature = None
-        self._illuminance = None
         self._boiler_temperature = None
         self._water_pressure = None
         self._schedule_temperature = None
@@ -146,8 +145,6 @@ class ThermostatDevice(ClimateDevice):
             attributes["outdoor_temperature"] = self._outdoor_temperature
         attributes["available_schemas"] = self._schema_names
         attributes["selected_schema"] = self._selected_schema
-        if self._illuminance:
-            attributes["illuminance"] = self._illuminance
         if self._boiler_temperature:
             attributes["boiler_temperature"] = self._boiler_temperature
         if self._water_pressure:
@@ -281,7 +278,6 @@ class ThermostatDevice(ClimateDevice):
         self._schedule_temperature = self._api.get_schedule_temperature(
             self._domain_objects
         )
-        self._illuminance = self._api.get_illuminance(self._domain_objects)
         self._boiler_temperature = self._api.get_boiler_temperature(
             self._domain_objects
         )
