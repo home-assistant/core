@@ -26,42 +26,6 @@ RESULT_NOT_FOUND = "not_found"
 RESULT_NOT_SUPPORTED = "not_supported"
 
 
-def _get_ip(host):
-    if host is None:
-        return
-    return socket.gethostbyname(host)
-
-
-async def _async_try_connect(host, name):
-    """Try to connect and check auth."""
-    for method in METHODS:
-        config = {
-            "name": "HomeAssistant",
-            "description": name,
-            "id": "ha.component.samsung",
-            "host": host,
-            "method": method,
-            "port": None,
-            "timeout": None,
-        }
-        try:
-            LOGGER.debug("Try config: %s", config)
-            with Remote(config.copy()):
-                LOGGER.debug("Working config: %s", config)
-                return RESULT_SUCCESS
-        except AccessDenied:
-            LOGGER.debug("Working but denied config: %s", config)
-            return RESULT_AUTH_MISSING
-        except UnhandledResponse:
-            LOGGER.debug("Working but unsupported config: %s", config)
-            return RESULT_NOT_SUPPORTED
-        except (OSError):
-            LOGGER.debug("Failing config: %s", config)
-
-    LOGGER.debug("No working config found")
-    return RESULT_NOT_FOUND
-
-
 class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Samsung TV config flow."""
 
@@ -80,15 +44,47 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name = None
         self._title = None
 
-    def _is_already_configured(self):
-        if any(
-            self._ip == entry.data.get(CONF_IP_ADDRESS)
+    def _is_already_configured(self, ip_address):
+        return any(
+            ip_address == entry.data.get(CONF_IP_ADDRESS)
             for entry in self.hass.config_entries.async_entries(DOMAIN)
-        ):
-            return True
-        return False
+        )
 
-    async def _async_get_entry(self):
+    def _get_ip(self, host):
+        if host is None:
+            return None
+        return socket.gethostbyname(host)
+
+    def _try_connect(self, host, name):
+        """Try to connect and check auth."""
+        for method in METHODS:
+            config = {
+                "name": "HomeAssistant",
+                "description": name,
+                "id": "ha.component.samsung",
+                "host": host,
+                "method": method,
+                "port": None,
+                "timeout": None,
+            }
+            try:
+                LOGGER.debug("Try config: %s", config)
+                with Remote(config.copy()):
+                    LOGGER.debug("Working config: %s", config)
+                    return RESULT_SUCCESS
+            except AccessDenied:
+                LOGGER.debug("Working but denied config: %s", config)
+                return RESULT_AUTH_MISSING
+            except UnhandledResponse:
+                LOGGER.debug("Working but unsupported config: %s", config)
+                return RESULT_NOT_SUPPORTED
+            except (OSError):
+                LOGGER.debug("Failing config: %s", config)
+
+        LOGGER.debug("No working config found")
+        return RESULT_NOT_FOUND
+
+    def _get_entry(self):
         return self.async_create_entry(
             title=self._title,
             data={
@@ -103,40 +99,45 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        errors = {}
         if user_input is not None:
-            try:
-                DATA_SCHEMA(user_input)
-                self._host = user_input[CONF_HOST]
-                self._title = user_input[CONF_NAME]
-                self._ip = self.context[CONF_IP_ADDRESS] = _get_ip(self._host)
+            ip_address = await self.hass.async_add_executor_job(
+                self._get_ip, user_input[ATTR_HOST]
+            )
 
-                if self._is_already_configured():
-                    return self.async_abort(reason="already_configured")
+            if _is_already_configured(self.hass, ip_address):
+                return self.async_abort(reason="already_configured")
 
-                result = await _async_try_connect(self._host, self._title)
+            self._host = user_input[CONF_HOST]
+            self._title = user_input[CONF_NAME]
+            self._ip = self.context[CONF_IP_ADDRESS] = ip_address
 
-                if result == RESULT_NOT_FOUND:  # pylint: disable=R1705
-                    return self.async_abort(reason=RESULT_NOT_FOUND)
-                elif result == RESULT_NOT_SUPPORTED:
-                    return self.async_abort(reason=RESULT_NOT_SUPPORTED)
-                elif result == RESULT_AUTH_MISSING:
-                    return self.async_abort(reason=RESULT_AUTH_MISSING)
-                elif result == RESULT_SUCCESS:
-                    return await self._async_get_entry()
+            result = await self.hass.async_add_executor_job(
+                self._try_connect, self._host, self._title
+            )
 
-            except vol.error.MultipleInvalid as errs:
-                for err in errs.errors:
-                    errors[err.path[0]] = err.msg
+            if result != RESULT_SUCCESS:
+                return self.async_abort(reason=result)
+            return self._get_entry()
 
-        return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
-        )
+        return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
 
     async def async_step_ssdp(self, user_input=None):
         """Handle a flow initialized by discovery."""
+        ip_address = await self.hass.async_add_executor_job(
+            self._get_ip, user_input[ATTR_HOST]
+        )
+
+        if any(
+            ip_address == flow["context"].get(CONF_IP_ADDRESS)
+            for flow in self._async_in_progress()
+        ):
+            return self.async_abort(reason="already_in_progress")
+
+        if _is_already_configured(self.hass, self._ip):
+            return self.async_abort(reason="already_configured")
+
         self._host = user_input[ATTR_HOST]
-        self._ip = self.context[CONF_IP_ADDRESS] = _get_ip(user_input[ATTR_HOST])
+        self._ip = self.context[CONF_IP_ADDRESS] = ip_address
         self._manufacturer = user_input[ATTR_MANUFACTURER]
         self._model = user_input[ATTR_MODEL_NAME]
         self._uuid = user_input[ATTR_UDN]
@@ -145,32 +146,20 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name = user_input[ATTR_NAME]
         if self._name.startswith("[TV]"):
             self._name = self._name[4:]
-        self._title = "{} ({})".format(self._name, self._model)
-
-        if any(
-            self._ip == flow["context"].get(CONF_IP_ADDRESS)
-            for flow in self._async_in_progress()
-        ):
-            return self.async_abort(reason="already_in_progress")
-
-        if self._is_already_configured():
-            return self.async_abort(reason="already_configured")
+        self._title = f"{self._name} ({self._model})"
 
         return await self.async_step_confirm()
 
     async def async_step_confirm(self, user_input=None):
         """Handle user-confirmation of discovered node."""
         if user_input is not None:
-            result = await _async_try_connect(self._host, self._name)
+            result = await self.hass.async_add_executor_job(
+                self._try_connect, self._host, self._name
+            )
 
-            if result == RESULT_NOT_FOUND:  # pylint: disable=R1705
-                return self.async_abort(reason=RESULT_NOT_FOUND)
-            elif result == RESULT_NOT_SUPPORTED:
-                return self.async_abort(reason=RESULT_NOT_SUPPORTED)
-            elif result == RESULT_AUTH_MISSING:
-                return self.async_abort(reason=RESULT_AUTH_MISSING)
-            elif result == RESULT_SUCCESS:
-                return await self._async_get_entry()
+            if result != RESULT_SUCCESS:
+                return self.async_abort(reason=result)
+            return self._get_entry()
 
         return self.async_show_form(
             step_id="confirm", description_placeholders={"model": self._model}
