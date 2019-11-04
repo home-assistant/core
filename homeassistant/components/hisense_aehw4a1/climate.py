@@ -390,7 +390,7 @@ class ClimateAehW4a1(ClimateDevice):
 =======
         try:
             status = self._device.command("status_102_0")
-        except Exception:
+        except OSError:
             self._available = False
             return
 
