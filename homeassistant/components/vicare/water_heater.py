@@ -140,8 +140,3 @@ class ViCareWater(WaterHeaterDevice):
     def operation_list(self):
         """Return the list of available operation modes."""
         return list(HA_TO_VICARE_HVAC_DHW)
-
-    @property
-    def device_state_attributes(self):
-        """Show Device Attributes."""
-        return self._attributes
