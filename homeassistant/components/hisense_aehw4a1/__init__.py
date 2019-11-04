@@ -2,11 +2,16 @@
 import voluptuous as vol
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 import homeassistant.helpers.config_validation as cv
+=======
+>>>>>>> Isort and updated requirements_test_all.txt
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.components.climate import DOMAIN as CLIMA_DOMAIN
+from homeassistant.const import CONF_IP_ADDRESS
+import homeassistant.helpers.config_validation as cv
+
 from .const import DOMAIN
 
 INTERFACE_SCHEMA = vol.Schema({vol.Optional(CONF_IP_ADDRESS): cv.string})

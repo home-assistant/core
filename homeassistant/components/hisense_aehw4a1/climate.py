@@ -20,12 +20,21 @@ from pyaehw4a1.aehw4a1 import AehW4a1
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
+    FAN_AUTO,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
+    PRESET_BOOST,
+    PRESET_ECO,
+    PRESET_NONE,
+    PRESET_SLEEP,
     SUPPORT_FAN_MODE,
+<<<<<<< HEAD
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_SWING_MODE,
 <<<<<<< HEAD
@@ -36,10 +45,16 @@ from homeassistant.components.climate.const import (
 =======
     SUPPORT_PRESET_MODE,
 >>>>>>> Added support for preset_modes
+=======
+    SUPPORT_PRESET_MODE,
+    SUPPORT_SWING_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+>>>>>>> Isort and updated requirements_test_all.txt
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_VERTICAL,
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -64,16 +79,18 @@ from homeassistant.components.climate.const import (
 >>>>>>> First working release, but there's a lot to do
 =======
 >>>>>>> Added support for preset_modes
+=======
+>>>>>>> Isort and updated requirements_test_all.txt
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    PRECISION_WHOLE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    PRECISION_WHOLE,
 )
 
-from .const import DOMAIN
 from . import CONF_IP_ADDRESS, DOMAIN as AEHW4A1_DOMAIN
+from .const import DOMAIN
 
 <<<<<<< HEAD
 <<<<<<< HEAD
