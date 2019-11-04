@@ -1,7 +1,22 @@
 """Test Home Assistant scenes."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.setup import async_setup_component
+
+CONFIGURED_SCENE = {"scene": {"name": "hallo_2", "entities": {"light.kitchen": "on"}}}
+
+
+@pytest.fixture(name="config")
+def mock_configured_scene():
+    """Mock a configured scene."""
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value=CONFIGURED_SCENE,
+    ), patch("homeassistant.config.find_config_file", return_value=""):
+        yield
 
 
 async def test_reload_config_service(hass):
@@ -53,10 +68,11 @@ async def test_apply_service(hass):
     assert state.attributes["brightness"] == 50
 
 
-async def test_create_service(hass, caplog):
+async def test_create_service(hass, caplog, config):
     """Test the create service."""
-    assert await async_setup_component(hass, "scene", {})
+    assert await async_setup_component(hass, "scene", CONFIGURED_SCENE)
     assert hass.states.get("scene.hallo") is None
+    assert hass.states.get("scene.hallo_2") is not None
 
     assert await hass.services.async_call(
         "scene",
@@ -81,12 +97,34 @@ async def test_create_service(hass, caplog):
         "create",
         {
             "scene_id": "hallo",
+            "entities": {"light.kitchen_light": {"state": "on", "brightness": 100}},
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    scene = hass.states.get("scene.hallo")
+    assert scene is not None
+    assert scene.domain == "scene"
+    assert scene.name == "hallo"
+    assert scene.state == "scening"
+    assert scene.attributes.get("entity_id") == ["light.kitchen_light"]
+
+    assert await hass.services.async_call(
+        "scene",
+        "create",
+        {
+            "scene_id": "hallo_2",
             "entities": {"light.bed_light": {"state": "on", "brightness": 50}},
         },
         blocking=True,
     )
-
     await hass.async_block_till_done()
-    assert "The scene scene.hallo already exists" in caplog.text
-    assert hass.states.get("scene.hallo") is not None
-    assert hass.states.get("scene.hallo_2") is None
+
+    assert "The scene scene.hallo_2 already exists" in caplog.text
+    scene = hass.states.get("scene.hallo_2")
+    assert scene is not None
+    assert scene.domain == "scene"
+    assert scene.name == "hallo_2"
+    assert scene.state == "scening"
+    assert scene.attributes.get("entity_id") == ["light.kitchen"]

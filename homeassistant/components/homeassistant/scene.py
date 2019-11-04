@@ -54,6 +54,21 @@ def _convert_states(states):
     return result
 
 
+async def _part_of_config(hass, name):
+    """Determine if entity_id was manually configured, return True in an error occurs."""
+    try:
+        conf = await conf_util.async_hass_config_yaml(hass)
+    except HomeAssistantError as err:
+        _LOGGER.error(err)
+        return True
+
+    for _, p_config in config_per_platform(conf, SCENE_DOMAIN):
+        if name == p_config[CONF_NAME]:
+            return True
+
+    return False
+
+
 CONF_SCENE_ID = "scene_id"
 
 STATES_SCHEMA = vol.All(dict, _convert_states)
@@ -141,8 +156,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         scene_config = SCENECONFIG(call.data[CONF_SCENE_ID], call.data[CONF_ENTITIES])
         entity_id = f"{SCENE_DOMAIN}.{scene_config.name}"
         if hass.states.get(entity_id) is not None:
-            _LOGGER.warning("The scene %s already exists", entity_id)
-            return
+            if await _part_of_config(hass, scene_config.name):
+                _LOGGER.warning("The scene %s already exists", entity_id)
+                return
+
+            await platform.async_remove_entity(entity_id)
 
         async_add_entities([HomeAssistantScene(hass, scene_config)])
 
