@@ -117,7 +117,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         LOGGER.info("Ignoring duplicate Samsung TV %s", host)
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Samsung TV from a config entry."""
     host = config_entry.data[CONF_HOST]
     port = None
