@@ -3,7 +3,7 @@
   "name": "Asuswrt",
   "documentation": "https://www.home-assistant.io/integrations/asuswrt",
   "requirements": [
-    "aioasuswrt==1.1.21"
+    "aioasuswrt==1.1.22"
   ],
   "dependencies": [],
   "codeowners": [
