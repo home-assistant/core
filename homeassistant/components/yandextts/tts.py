@@ -118,9 +118,9 @@ class YandexSpeechKitProvider(Provider):
 
                 bearer__format = "Api-Key {}".format(self._key)
                 request = await websession.post(YANDEX_API_URL,
-                                               headers={"authorization": bearer__format},
-                                               data=url_param
-                                               )
+                                                headers={"authorization": bearer__format},
+                                                data=url_param
+                                                )
 
                 if request.status != 200:
                     error = await request.read()
