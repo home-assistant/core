@@ -53,7 +53,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     panic_type = discovery_info[CONF_PANIC]
     code_arm_required = discovery_info[CONF_CODE_ARM_REQUIRED]
     pending_time = discovery_info[CONF_PENDING_TIME]
-    
+
     devices = []
     for part_num in configured_partitions:
         device_config_data = PARTITION_SCHEMA(configured_partitions[part_num])
@@ -99,7 +99,16 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
     """Representation of an Envisalink-based alarm panel."""
 
     def __init__(
-        self, hass, partition_number, alarm_name, code, panic_type, code_arm_required, pending_time, info, controller
+        self,
+        hass,
+        partition_number,
+        alarm_name,
+        code,
+        panic_type,
+        code_arm_required,
+        pending_time,
+        info,
+        controller,
     ):
         """Initialize the alarm panel."""
         self._partition_number = partition_number
@@ -144,7 +153,7 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
         if self._code:
             return None
         return alarm.FORMAT_NUMBER
-    
+
     @property
     def code_arm_required(self):
         """Whether the code is required for arm actions."""

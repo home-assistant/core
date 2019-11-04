@@ -990,6 +990,7 @@ class ArmDisArmTrait(_Trait):
             context=data.context,
         )
 
+
 @register_trait
 class FanSpeedTrait(_Trait):
     """Trait to control speed of Fan.

@@ -399,10 +399,10 @@ class GoogleEntity:
         self.state = self.hass.states.get(self.entity_id)
 
         entity_config = self.config.entity_config.get(self.state.entity_id, {})
-        
+
         delay_time = entity_config.get(CONF_DELAY_TIME)
         if delay_time:
-            asyncio.sleep(delay_time) # wait for async events
+            asyncio.sleep(delay_time)  # wait for async events
 
         if self._traits is None:
             return
