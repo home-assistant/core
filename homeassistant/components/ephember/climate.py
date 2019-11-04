@@ -1,23 +1,35 @@
 """Support for the EPH Controls Ember themostats."""
-import logging
 from datetime import timedelta
+import logging
+
+from pyephember.pyephember import (
+    EphEmber,
+    ZoneMode,
+    zone_current_temperature,
+    zone_is_active,
+    zone_is_boost_active,
+    zone_is_hot_water,
+    zone_mode,
+    zone_name,
+    zone_target_temperature,
+)
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    SUPPORT_AUX_HEAT,
-    SUPPORT_TARGET_TEMPERATURE,
-    HVAC_MODE_OFF,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_OFF,
+    SUPPORT_AUX_HEAT,
+    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    TEMP_CELSIUS,
-    CONF_USERNAME,
     CONF_PASSWORD,
+    CONF_USERNAME,
+    TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -43,8 +55,6 @@ HA_STATE_TO_EPH = {value: key for key, value in EPH_TO_HA_STATE.items()}
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ephember thermostat."""
-    from pyephember.pyephember import EphEmber
-
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
@@ -65,8 +75,6 @@ class EphEmberThermostat(ClimateDevice):
 
     def __init__(self, ember, zone):
         """Initialize the thermostat."""
-        from pyephember.pyephember import zone_name, zone_is_hot_water
-
         self._ember = ember
         self._zone_name = zone_name(zone)
         self._zone = zone
@@ -93,15 +101,11 @@ class EphEmberThermostat(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        from pyephember.pyephember import zone_current_temperature
-
         return zone_current_temperature(self._zone)
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        from pyephember.pyephember import zone_target_temperature
-
         return zone_target_temperature(self._zone)
 
     @property
@@ -115,8 +119,6 @@ class EphEmberThermostat(ClimateDevice):
     @property
     def hvac_action(self):
         """Return current HVAC action."""
-        from pyephember.pyephember import zone_is_active
-
         if zone_is_active(self._zone):
             return CURRENT_HVAC_HEAT
 
@@ -125,8 +127,6 @@ class EphEmberThermostat(ClimateDevice):
     @property
     def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
-        from pyephember.pyephember import zone_mode
-
         mode = zone_mode(self._zone)
         return self.map_mode_eph_hass(mode)
 
@@ -146,14 +146,11 @@ class EphEmberThermostat(ClimateDevice):
     @property
     def is_aux_heat(self):
         """Return true if aux heater."""
-        from pyephember.pyephember import zone_is_boost_active
 
         return zone_is_boost_active(self._zone)
 
     def turn_aux_heat_on(self):
         """Turn auxiliary heater on."""
-        from pyephember.pyephember import zone_target_temperature
-
         self._ember.activate_boost_by_name(
             self._zone_name, zone_target_temperature(self._zone)
         )
@@ -183,8 +180,6 @@ class EphEmberThermostat(ClimateDevice):
     def min_temp(self):
         """Return the minimum temperature."""
         # Hot water temp doesn't support being changed
-        from pyephember.pyephember import zone_target_temperature
-
         if self._hot_water:
             return zone_target_temperature(self._zone)
 
@@ -193,8 +188,6 @@ class EphEmberThermostat(ClimateDevice):
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        from pyephember.pyephember import zone_target_temperature
-
         if self._hot_water:
             return zone_target_temperature(self._zone)
 
@@ -207,8 +200,6 @@ class EphEmberThermostat(ClimateDevice):
     @staticmethod
     def map_mode_hass_eph(operation_mode):
         """Map from home assistant mode to eph mode."""
-        from pyephember.pyephember import ZoneMode
-
         return getattr(ZoneMode, HA_STATE_TO_EPH.get(operation_mode), None)
 
     @staticmethod
