@@ -39,7 +39,7 @@ REQUIRES = [
     "certifi>=2019.9.11",
     'contextvars==2.4;python_version<"3.7"',
     "importlib-metadata==0.23",
-    "jinja2>=2.10.1",
+    "jinja2>=2.10.3",
     "PyJWT==1.7.1",
     # PyJWT has loose dependency. We want the latest one.
     "cryptography==2.8",
