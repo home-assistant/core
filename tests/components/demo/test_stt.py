@@ -23,8 +23,8 @@ async def test_demo_settings(hass_client):
     assert response.status == 200
     assert response_data == {
         "languages": ["en", "de"],
-        "bitrates": [16],
-        "samplerates": [16000, 44100],
+        "bit_rates": [16],
+        "sample_rates": [16000, 44100],
         "formats": ["wav"],
         "codecs": ["pcm"],
     }
@@ -45,7 +45,7 @@ async def test_demo_speech_wrong_metadata(hass_client):
     response = await client.post(
         "/api/stt/demo",
         headers={
-            "X-Speech-Content": "format=wav; codec=pcm; samplerate=8000; bitrate=16; language=de"
+            "X-Speech-Content": "format=wav; codec=pcm; sample_rate=8000; bit_rate=16; language=de"
         },
         data=b"Test",
     )
@@ -59,7 +59,7 @@ async def test_demo_speech(hass_client):
     response = await client.post(
         "/api/stt/demo",
         headers={
-            "X-Speech-Content": "format=wav; codec=pcm; samplerate=16000; bitrate=16; language=de"
+            "X-Speech-Content": "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; language=de"
         },
         data=b"Test",
     )
