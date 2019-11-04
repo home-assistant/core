@@ -5,7 +5,6 @@
         },
         "error": {
             "connection_failed": "Connection failed",
-            "connection_timeout": "Connection timeout",
             "incorrect_password": "Incorrect password",
             "incorrect_username": "Incorrect username",
             "incorrect_username_or_password": "Incorrect username or password",
