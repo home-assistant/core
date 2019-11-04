@@ -25,15 +25,16 @@ STATE_STREAMING = "streaming"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_CLIENT_ID): cv.string,
-        vol.Required(CONF_CHANNELS, default=[]): vol.All(cv.ensure_list, [cv.string]),
+        vol.Required(CONF_CHANNELS): vol.All(cv.ensure_list, [cv.string]),
     }
 )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Twitch platform."""
-    channels = config.get(CONF_CHANNELS, [])
-    client = TwitchClient(client_id=config.get(CONF_CLIENT_ID))
+    channels = config[CONF_CHANNELS]
+    client_id = config[CONF_CLIENT_ID]
+    client = TwitchClient(client_id=client_id)
 
     try:
         client.ingests.get_server_list()
@@ -55,8 +56,7 @@ class TwitchSensor(Entity):
         self._user = user
         self._channel = self._user.name
         self._id = self._user.id
-        self._state = STATE_OFFLINE
-        self._preview = self._game = self._title = None
+        self._state = self._preview = self._game = self._title = None
 
     @property
     def should_poll(self):
@@ -83,6 +83,11 @@ class TwitchSensor(Entity):
         """Return the state attributes."""
         if self._state == STATE_STREAMING:
             return {ATTR_GAME: self._game, ATTR_TITLE: self._title}
+
+    @property
+    def unique_id(self):
+        """Return unique ID for this sensor."""
+        return self._id
 
     @property
     def icon(self):
