@@ -8,6 +8,8 @@ import pkgutil
 import re
 import sys
 
+from homeassistant.util.yaml.loader import load_yaml
+
 from script.hassfest.model import Integration
 
 COMMENT_REQUIREMENTS = (
@@ -246,6 +248,24 @@ def requirements_test_output(reqs):
     return "".join(output)
 
 
+def requirements_pre_commit_output():
+    """Generate output for pre-commit dependencies."""
+    source = ".pre-commit-config-all.yaml"
+    pre_commit_conf = load_yaml(source)
+    reqs = []
+    for repo in (x for x in pre_commit_conf["repos"] if x.get("rev")):
+        for hook in repo["hooks"]:
+            reqs.append(f"{hook['id']}=={repo['rev']}")
+            reqs.extend(x for x in hook.get("additional_dependencies", ()))
+    output = [
+        f"# Automatically generated "
+        f"from {source} by {Path(__file__).name}, do not edit",
+        "",
+    ]
+    output.extend(sorted(reqs))
+    return "\n".join(output) + "\n"
+
+
 def gather_constraints():
     """Construct output for constraint file."""
     return (
@@ -285,10 +305,12 @@ def main(validate):
 
     reqs_file = requirements_all_output(data)
     reqs_test_file = requirements_test_output(data)
+    reqs_pre_commit_file = requirements_pre_commit_output()
     constraints = gather_constraints()
 
     files = (
         ("requirements_all.txt", reqs_file),
+        ("requirements_test_pre_commit.txt", reqs_pre_commit_file),
         ("requirements_test_all.txt", reqs_test_file),
         ("homeassistant/package_constraints.txt", constraints),
     )
