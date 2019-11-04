@@ -343,11 +343,15 @@ class ClimateAehW4a1(ClimateDevice):
 <<<<<<< HEAD
 <<<<<<< HEAD
         self._preset_modes = PRESET_MODES
+<<<<<<< HEAD
 =======
 >>>>>>> First working release, but there's a lot to do
 =======
         self._preset_modes = PRESET_MODES
 >>>>>>> Added support for preset_modes
+=======
+        self._available = None
+>>>>>>> Implemented available state
         self._on = None
         self._temperature_unit = None
         self._current_temperature = None
@@ -362,6 +366,7 @@ class ClimateAehW4a1(ClimateDevice):
 
     def update(self):
         """Pull state from AEH-W4A1."""
+<<<<<<< HEAD
         status = self._device.command("status_102_0")
 =======
 =======
@@ -382,6 +387,16 @@ class ClimateAehW4a1(ClimateDevice):
 =======
         status = self._device.command("status_102_0")
 >>>>>>> Refined logic
+=======
+        try:
+            status = self._device.command("status_102_0")
+        except Exception:
+            self._available = False
+            return
+
+        self._available = True
+
+>>>>>>> Implemented available state
         self._on = status["run_status"]
 
         if status["temperature_Fahrenheit"] == "0":
@@ -516,6 +531,11 @@ class ClimateAehW4a1(ClimateDevice):
 >>>>>>> Null states when AC off
         else:
             self._preset_mode = None
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
 
     @property
     def name(self):
