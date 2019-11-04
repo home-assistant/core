@@ -153,7 +153,9 @@ class ThermostatDevice(ClimateDevice):
 
     @property
     def preset_modes(self):
-        """Return the available preset modes list and make the presets with their temperatures available."""
+        """Return the available preset modes list and make the presets with their
+        temperatures available.
+        """
         return self._presets_list
 
     @property
@@ -180,7 +182,9 @@ class ThermostatDevice(ClimateDevice):
     def thermostat_temperature(self):
         """Return the thermostat set_temperature.
 
-        This setting directly follows the changes in temperature from the interface or schedule. After a small delay, the target_temperature value will change as well, this is some kind of filter-function.
+        This setting directly follows the changes in temperature from the interface or
+        schedule. After a small delay, the target_temperature value will change as well,
+        this is some kind of filter-function.
         """
         return self._thermostat_temperature
 
@@ -196,7 +200,9 @@ class ThermostatDevice(ClimateDevice):
 
     @property
     def preset_mode(self):
-        """Return the active selected schedule-name, or the (temporary) active preset or Temporary in case of a manual change in the set-temperature."""
+        """Return the active selected schedule-name, or the (temporary) active preset
+        or Temporary in case of a manual change in the set-temperature.
+        """
         if self._presets:
             presets = self._presets
             preset_temperature = presets.get(self._preset_mode, "none")
