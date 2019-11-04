@@ -188,7 +188,9 @@ class ThermostatDevice(ClimateDevice):
     def target_temperature(self):
         """Return the target_temperature.
 
-        From the XML the thermostat-value is used because it updates 'immediately' compared to the target_temperature-value. This way the information on the card is "immediately" updated after changing the preset, temperature, etc.
+        From the XML the thermostat-value is used because it updates 'immediately'
+        compared to the target_temperature-value. This way the information on the card
+        is "immediately" updated after changing the preset, temperature, etc.
         """
         return self._thermostat_temperature
 
