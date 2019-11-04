@@ -151,14 +151,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         service_handle,
         schema=DYSON_SET_NIGHT_MODE_SCHEMA,
     )
-    if has_purecool_devices:
-        hass.services.register(
-            DYSON_DOMAIN,
-            SERVICE_SET_AUTO_MODE,
-            service_handle,
-            schema=SET_AUTO_MODE_SCHEMA,
-        )
 
+    hass.services.register(
+        DYSON_DOMAIN,
+        SERVICE_SET_AUTO_MODE,
+        service_handle,
+        schema=SET_AUTO_MODE_SCHEMA,
+    )
+    if has_purecool_devices:
         hass.services.register(
             DYSON_DOMAIN, SERVICE_SET_ANGLE, service_handle, schema=SET_ANGLE_SCHEMA
         )
