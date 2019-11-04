@@ -44,6 +44,7 @@ VERSION_PATH = os.path.join(CONFIG_DIR, config_util.VERSION_FILE)
 GROUP_PATH = os.path.join(CONFIG_DIR, config_util.GROUP_CONFIG_PATH)
 AUTOMATIONS_PATH = os.path.join(CONFIG_DIR, config_util.AUTOMATION_CONFIG_PATH)
 SCRIPTS_PATH = os.path.join(CONFIG_DIR, config_util.SCRIPT_CONFIG_PATH)
+SCENES_PATH = os.path.join(CONFIG_DIR, config_util.SCENE_CONFIG_PATH)
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 
 
@@ -74,6 +75,9 @@ def teardown():
 
     if os.path.isfile(SCRIPTS_PATH):
         os.remove(SCRIPTS_PATH)
+
+    if os.path.isfile(SCENES_PATH):
+        os.remove(SCENES_PATH)
 
 
 async def test_create_default_config(hass):

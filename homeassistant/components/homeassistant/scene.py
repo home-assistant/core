@@ -8,6 +8,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_STATE,
     CONF_ENTITIES,
+    CONF_ID,
     CONF_NAME,
     CONF_PLATFORM,
     STATE_OFF,
@@ -164,7 +165,11 @@ def _process_scenes_config(hass, async_add_entities, config):
         return
 
     async_add_entities(
-        HomeAssistantScene(hass, SCENECONFIG(scene[CONF_NAME], scene[CONF_ENTITIES]))
+        HomeAssistantScene(
+            hass,
+            SCENECONFIG(scene[CONF_NAME], scene[CONF_ENTITIES]),
+            scene.get(CONF_ID),
+        )
         for scene in scene_config
     )
 
@@ -172,8 +177,9 @@ def _process_scenes_config(hass, async_add_entities, config):
 class HomeAssistantScene(Scene):
     """A scene is a group of entities and the states we want them to be."""
 
-    def __init__(self, hass, scene_config, from_yaml=True):
+    def __init__(self, hass, scene_config, scene_id=None, from_yaml=True):
         """Initialize the scene."""
+        self._id = scene_id
         self.hass = hass
         self.scene_config = scene_config
         self.from_yaml = from_yaml
@@ -186,7 +192,10 @@ class HomeAssistantScene(Scene):
     @property
     def device_state_attributes(self):
         """Return the scene state attributes."""
-        return {ATTR_ENTITY_ID: list(self.scene_config.states)}
+        attributes = {ATTR_ENTITY_ID: list(self.scene_config.states)}
+        if self._id is not None:
+            attributes[CONF_ID] = self._id
+        return attributes
 
     async def async_activate(self):
         """Activate scene. Try to get entities into requested state."""

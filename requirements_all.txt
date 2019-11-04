@@ -78,7 +78,7 @@ PySocks==1.7.1
 PyTransportNSW==0.1.1
 
 # homeassistant.components.vicare
-PyViCare==0.1.1
+PyViCare==0.1.2
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.12.4
@@ -130,7 +130,7 @@ aio_geojson_geonetnz_quakes==0.10
 aioambient==0.3.2
 
 # homeassistant.components.asuswrt
-aioasuswrt==1.1.21
+aioasuswrt==1.1.22
 
 # homeassistant.components.automatic
 aioautomatic==0.6.5
