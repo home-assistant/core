@@ -5,9 +5,9 @@ from aiohttp import StreamReader
 
 from homeassistant.components.stt import Provider, SpeechMetadata, SpeechResult
 from homeassistant.components.stt.const import (
-    AudioBitrates,
+    AudioBitRates,
     AudioFormats,
-    AudioSamplerates,
+    AudioSampleRates,
     AudioCodecs,
     SpeechResultState,
 )
@@ -39,14 +39,14 @@ class DemoProvider(Provider):
         return [AudioCodecs.PCM]
 
     @property
-    def supported_bitrates(self) -> List[AudioBitrates]:
-        """Return a list of supported bitrates."""
-        return [AudioBitrates.BITRATE_16]
+    def supported_bit_rates(self) -> List[AudioBitRates]:
+        """Return a list of supported bit rates."""
+        return [AudioBitRates.BITRATE_16]
 
     @property
-    def supported_samplerates(self) -> List[AudioSamplerates]:
-        """Return a list of supported samplerates."""
-        return [AudioSamplerates.SAMPLERATE_16000, AudioSamplerates.SAMPLERATE_44100]
+    def supported_sample_rates(self) -> List[AudioSampleRates]:
+        """Return a list of supported sample rates."""
+        return [AudioSampleRates.SAMPLERATE_16000, AudioSampleRates.SAMPLERATE_44100]
 
     async def async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: StreamReader
