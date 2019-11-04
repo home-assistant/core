@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the QRCode image platform."""
     name = config.get(CONF_NAME)
     value_template = config.get(CONF_VALUE_TEMPLATE)
@@ -37,8 +37,7 @@ async def async_setup_platform(hass, config, add_devices, discovery_info=None):
         value_template.hass = hass
     entity_ids = config.get(ATTR_ENTITY_ID) or value_template.extract_entities()
 
-    add_devices([QRCodeCamera(hass, name, value_template, entity_ids)])
-    return True
+    async_add_entities([QRCodeCamera(hass, name, value_template, entity_ids)])
 
 
 class QRCodeCamera(Camera):
@@ -90,6 +89,15 @@ class QRCodeCamera(Camera):
     def turn_on(self):
         """Turn on camera."""
         self._refresh_()
+
+    def turn_off(self):
+        pass
+
+    def enable_motion_detection(self):
+        pass
+
+    def disable_motion_detection(self):
+        pass
 
     def _refresh_(self):
         import pyqrcode

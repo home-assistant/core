@@ -8,6 +8,7 @@ To update, run python3 -m script.hassfest
 FLOWS = [
     "abode",
     "adguard",
+    "airly",
     "ais_dom_device",
     "ais_drives_service",
     "ais_google_home",
@@ -16,7 +17,6 @@ FLOWS = [
     "ais_supla",
     "ais_tauron",
     "ais_wifi_service",
-    "airly",
     "ambiclimate",
     "ambient_station",
     "axis",
