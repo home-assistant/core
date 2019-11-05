@@ -127,8 +127,6 @@ class WLEDEntity(Entity):
     @property
     def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the entity."""
-        if not self._attributes:
-            return None
         return self._attributes
 
     async def async_added_to_hass(self) -> None:
