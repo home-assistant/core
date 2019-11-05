@@ -12,6 +12,7 @@ from homeassistant.components.wled.const import (
     ATTR_MODEL,
     ATTR_SOFTWARE_VERSION,
     DATA_WLED_CLIENT,
+    DATA_WLED_TIMER,
     DATA_WLED_UPDATED,
     DOMAIN,
 )
@@ -72,13 +73,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_dispatcher_send(hass, DATA_WLED_UPDATED, entry.entry_id)
 
     # Schedule update interval
-    async_track_time_interval(hass, interval_update, SCAN_INTERVAL)
+    hass.data[DOMAIN][entry.entry_id][DATA_WLED_TIMER] = async_track_time_interval(
+        hass, interval_update, SCAN_INTERVAL
+    )
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload WLED config entry."""
+
+    # Cancel update timer for this entry/device.
+    cancel_timer = hass.data[DOMAIN][entry.entry_id][DATA_WLED_TIMER]
+    cancel_timer()
 
     # Unload entities for this entry/device.
     await hass.config_entries.async_forward_entry_unload(entry, LIGHT_DOMAIN)
