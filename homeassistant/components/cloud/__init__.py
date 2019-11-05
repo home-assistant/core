@@ -238,7 +238,7 @@ async def async_setup(hass, config):
         """Discover RemoteUI binary sensor."""
         nonlocal loaded
 
-        # Prevent multible discovery
+        # Prevent multiple discovery
         if loaded:
             return
         loaded = True
