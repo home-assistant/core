@@ -60,7 +60,7 @@ class CloudProvider(Provider):
 
     @property
     def supported_options(self):
-        """Return list of supported options like voice, emotionen."""
+        """Return list of supported options like voice, emotion."""
         return [CONF_GENDER]
 
     @property
