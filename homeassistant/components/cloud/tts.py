@@ -14,7 +14,7 @@ SUPPORT_LANGUAGES = ["en-US"]
 SUPPORT_GENDER = ["male", "female"]
 
 DEFAULT_LANG = "en-US"
-DEFAULT_GENDER = "famale"
+DEFAULT_GENDER = "female"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
