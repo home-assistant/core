@@ -2,15 +2,16 @@
 from typing import List
 
 from aiohttp import StreamReader
-from hass_nabucasa.voice import VoiceError
 from hass_nabucasa import Cloud
+from hass_nabucasa.voice import VoiceError
 
 from homeassistant.components.stt import Provider, SpeechMetadata, SpeechResult
 from homeassistant.components.stt.const import (
     AudioBitRates,
+    AudioChannels,
+    AudioCodecs,
     AudioFormats,
     AudioSampleRates,
-    AudioCodecs,
     SpeechResultState,
 )
 
@@ -78,6 +79,11 @@ class CloudProvider(Provider):
     def supported_sample_rates(self) -> List[AudioSampleRates]:
         """Return a list of supported samplerates."""
         return [AudioSampleRates.SAMPLERATE_16000]
+
+    @property
+    def supported_channels(self) -> List[AudioChannels]:
+        """Return a list of supported channels."""
+        return [AudioChannels.CHANNEL_MONO]
 
     async def async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: StreamReader

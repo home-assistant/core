@@ -7,9 +7,9 @@ from typing import Dict, List, Optional
 from aiohttp import StreamReader, web
 from aiohttp.hdrs import istr
 from aiohttp.web_exceptions import (
+    HTTPBadRequest,
     HTTPNotFound,
     HTTPUnsupportedMediaType,
-    HTTPBadRequest,
 )
 import attr
 
@@ -22,6 +22,7 @@ from homeassistant.setup import async_prepare_setup_platform
 from .const import (
     DOMAIN,
     AudioBitRates,
+    AudioChannels,
     AudioCodecs,
     AudioFormats,
     AudioSampleRates,
@@ -88,6 +89,7 @@ class SpeechMetadata:
     codec: AudioCodecs = attr.ib()
     bit_rate: AudioBitRates = attr.ib(converter=int)
     sample_rate: AudioSampleRates = attr.ib(converter=int)
+    channel: AudioChannels = attr.ib(converter=int)
 
 
 @attr.s
@@ -122,12 +124,17 @@ class Provider(ABC):
     @property
     @abstractmethod
     def supported_bit_rates(self) -> List[AudioBitRates]:
-        """Return a list of supported bit_rates."""
+        """Return a list of supported bit rates."""
 
     @property
     @abstractmethod
     def supported_sample_rates(self) -> List[AudioSampleRates]:
-        """Return a list of supported sample_rates."""
+        """Return a list of supported sample rates."""
+
+    @property
+    @abstractmethod
+    def supported_channels(self) -> List[AudioChannels]:
+        """Return a list of supported channels."""
 
     @abstractmethod
     async def async_process_audio_stream(
@@ -147,6 +154,7 @@ class Provider(ABC):
             or metadata.codec not in self.supported_codecs
             or metadata.bit_rate not in self.supported_bit_rates
             or metadata.sample_rate not in self.supported_sample_rates
+            or metadata.channel not in self.supported_channels
         ):
             return False
         return True
@@ -167,7 +175,7 @@ class SpeechToTextView(HomeAssistantView):
     def _metadata_from_header(request: web.Request) -> Optional[SpeechMetadata]:
         """Extract metadata from header.
 
-        X-Speech-Content: format=wav; codec=pcm; samplerate=16000; bitrate=16; language=de_de
+        X-Speech-Content: format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=1; language=de_de
         """
         try:
             data = request.headers[istr("X-Speech-Content")].split(";")
@@ -223,5 +231,6 @@ class SpeechToTextView(HomeAssistantView):
                 "codecs": stt_provider.supported_codecs,
                 "sample_rates": stt_provider.supported_sample_rates,
                 "bit_rates": stt_provider.supported_bit_rates,
+                "channels": stt_provider.supported_channels,
             }
         )
