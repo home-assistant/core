@@ -46,18 +46,16 @@ class TestTTSYandexPlatform:
         """Test service call say."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        url_param = {
+        request_param = {
             "text": "HomeAssistant",
             "lang": "en-US",
             "key": "1234567xx",
-            "speaker": "zahar",
+            "speaker": "alyss",
             "format": "oggopus",
             "emotion": "neutral",
             "speed": 1,
         }
-        aioclient_mock.post(
-            self._base_url, status=200, content=b"test", params=url_param
-        )
+        aioclient_mock.post(self._base_url, status=200, data=request_param)
 
         config = {tts.DOMAIN: {"platform": "yandextts", "api_key": "1234567xx"}}
 
@@ -76,18 +74,16 @@ class TestTTSYandexPlatform:
         """Test service call say."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        url_param = {
+        request_param = {
             "text": "HomeAssistant",
             "lang": "ru-RU",
             "key": "1234567xx",
-            "speaker": "zahar",
+            "speaker": "alyss",
             "format": "oggopus",
             "emotion": "neutral",
             "speed": 1,
         }
-        aioclient_mock.post(
-            self._base_url, status=200, content=b"test", params=url_param
-        )
+        aioclient_mock.post(self._base_url, status=200, data=request_param)
 
         config = {
             tts.DOMAIN: {
@@ -112,18 +108,16 @@ class TestTTSYandexPlatform:
         """Test service call say."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        url_param = {
+        request_param = {
             "text": "HomeAssistant",
             "lang": "ru-RU",
             "key": "1234567xx",
-            "speaker": "zahar",
+            "speaker": "alyss",
             "format": "oggopus",
             "emotion": "neutral",
             "speed": 1,
         }
-        aioclient_mock.post(
-            self._base_url, status=200, content=b"test", params=url_param
-        )
+        aioclient_mock.post(self._base_url, status=200, data=request_param)
 
         config = {tts.DOMAIN: {"platform": "yandextts", "api_key": "1234567xx"}}
 
@@ -144,17 +138,17 @@ class TestTTSYandexPlatform:
         """Test service call say."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        url_param = {
+        request_param = {
             "text": "HomeAssistant",
             "lang": "en-US",
             "key": "1234567xx",
-            "speaker": "zahar",
+            "speaker": "alyss",
             "format": "oggopus",
             "emotion": "neutral",
             "speed": 1,
         }
         aioclient_mock.post(
-            self._base_url, status=200, exc=asyncio.TimeoutError(), params=url_param
+            self._base_url, status=200, exc=asyncio.TimeoutError(), data=request_param
         )
 
         config = {tts.DOMAIN: {"platform": "yandextts", "api_key": "1234567xx"}}
@@ -174,18 +168,16 @@ class TestTTSYandexPlatform:
         """Test service call say."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        url_param = {
+        request_param = {
             "text": "HomeAssistant",
             "lang": "en-US",
             "key": "1234567xx",
-            "speaker": "zahar",
+            "speaker": "alyss",
             "format": "oggopus",
             "emotion": "neutral",
             "speed": 1,
         }
-        aioclient_mock.post(
-            self._base_url, status=403, content=b"test", params=url_param
-        )
+        aioclient_mock.post(self._base_url, status=403, data=request_param)
 
         config = {tts.DOMAIN: {"platform": "yandextts", "api_key": "1234567xx"}}
 
@@ -203,7 +195,7 @@ class TestTTSYandexPlatform:
         """Test service call say."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        url_param = {
+        request_param = {
             "text": "HomeAssistant",
             "lang": "en-US",
             "key": "1234567xx",
@@ -212,9 +204,7 @@ class TestTTSYandexPlatform:
             "emotion": "neutral",
             "speed": 1,
         }
-        aioclient_mock.post(
-            self._base_url, status=200, content=b"test", params=url_param
-        )
+        aioclient_mock.post(self._base_url, status=200, data=request_param)
 
         config = {
             tts.DOMAIN: {
@@ -239,18 +229,16 @@ class TestTTSYandexPlatform:
         """Test service call say."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        url_param = {
+        request_param = {
             "text": "HomeAssistant",
             "lang": "en-US",
             "key": "1234567xx",
-            "speaker": "zahar",
+            "speaker": "alyss",
             "format": "oggopus",
             "emotion": "evil",
             "speed": 1,
         }
-        aioclient_mock.post(
-            self._base_url, status=200, content=b"test", params=url_param
-        )
+        aioclient_mock.post(self._base_url, status=200, data=request_param)
 
         config = {
             tts.DOMAIN: {
@@ -275,17 +263,17 @@ class TestTTSYandexPlatform:
         """Test service call say."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        url_param = {
+        request_param = {
             "text": "HomeAssistant",
             "lang": "en-US",
             "key": "1234567xx",
-            "speaker": "zahar",
+            "speaker": "alyss",
             "format": "oggopus",
             "emotion": "neutral",
             "speed": "0.1",
         }
         aioclient_mock.post(
-            self._base_url, status=200, content=b"test", params=url_param
+            self._base_url, status=200, content=b"test", data=request_param
         )
 
         config = {
@@ -307,17 +295,17 @@ class TestTTSYandexPlatform:
         """Test service call say."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        url_param = {
+        request_param = {
             "text": "HomeAssistant",
             "lang": "en-US",
             "key": "1234567xx",
-            "speaker": "zahar",
+            "speaker": "alyss",
             "format": "oggopus",
             "emotion": "neutral",
             "speed": 2,
         }
         aioclient_mock.post(
-            self._base_url, status=200, content=b"test", params=url_param
+            self._base_url, status=200, content=b"test", data=request_param
         )
 
         config = {
@@ -339,18 +327,16 @@ class TestTTSYandexPlatform:
         """Test service call say with options."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        url_param = {
+        request_param = {
             "text": "HomeAssistant",
             "lang": "en-US",
             "key": "1234567xx",
-            "speaker": "zahar",
+            "speaker": "alyss",
             "format": "oggopus",
             "emotion": "evil",
             "speed": 2,
         }
-        aioclient_mock.post(
-            self._base_url, status=200, content=b"test", params=url_param
-        )
+        aioclient_mock.post(self._base_url, status=200, data=request_param)
         config = {tts.DOMAIN: {"platform": "yandextts", "api_key": "1234567xx"}}
 
         with assert_setup_component(1, tts.DOMAIN):

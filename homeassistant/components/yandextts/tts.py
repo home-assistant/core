@@ -40,7 +40,7 @@ MAX_SPEED = 3
 
 CONF_CODEC = "codec"
 CONF_VOICE = "voice"
-CONF_EMOTION = "neutral"
+CONF_EMOTION = "emotion"
 CONF_SPEED = "speed"
 
 DEFAULT_LANG = "en-US"
@@ -116,10 +116,10 @@ class YandexSpeechKitProvider(Provider):
                     "speed": options.get(CONF_SPEED, self._speed),
                 }
 
-                bearer__format = "Api-Key {}".format(self._key)
+                bearer_format = "Api-Key {}".format(self._key)
                 request = await websession.post(
                     YANDEX_API_URL,
-                    headers={"authorization": bearer__format},
+                    headers={"authorization": bearer_format},
                     data=url_param,
                 )
 
