@@ -58,9 +58,7 @@ class WLEDSensor(WLEDDeviceEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this sensor."""
-        return "_".join(
-            [DOMAIN, self.wled.device.info.mac_address, "sensor", self._key]
-        )
+        return f"{DOMAIN}_{self.wled.device.info.mac_address}_sensor_{self._key}"
 
     @property
     def state(self):
