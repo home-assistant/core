@@ -27,7 +27,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 SCAN_INTERVAL = timedelta(seconds=5)
-PARALLEL_UPDATES = 1
 
 _LOGGER = logging.getLogger(__name__)
 
