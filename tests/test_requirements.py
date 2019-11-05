@@ -144,14 +144,18 @@ async def test_get_integration_with_requirements(hass):
         assert integration.domain == "test_component"
 
     assert len(mock_is_installed.mock_calls) == 3
-    assert mock_is_installed.mock_calls[0][1][0] == "test-comp==1.0.0"
-    assert mock_is_installed.mock_calls[1][1][0] == "test-comp-dep==1.0.0"
-    assert mock_is_installed.mock_calls[2][1][0] == "test-comp-after-dep==1.0.0"
+    assert sorted(mock_call[1][0] for mock_call in mock_is_installed.mock_calls) == [
+        "test-comp-after-dep==1.0.0",
+        "test-comp-dep==1.0.0",
+        "test-comp==1.0.0",
+    ]
 
     assert len(mock_inst.mock_calls) == 3
-    assert mock_inst.mock_calls[0][1][0] == "test-comp==1.0.0"
-    assert mock_inst.mock_calls[1][1][0] == "test-comp-dep==1.0.0"
-    assert mock_inst.mock_calls[2][1][0] == "test-comp-after-dep==1.0.0"
+    assert sorted(mock_call[1][0] for mock_call in mock_inst.mock_calls) == [
+        "test-comp-after-dep==1.0.0",
+        "test-comp-dep==1.0.0",
+        "test-comp==1.0.0",
+    ]
 
 
 async def test_install_with_wheels_index(hass):
