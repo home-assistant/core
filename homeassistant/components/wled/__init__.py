@@ -1,7 +1,7 @@
 """Support for WLED."""
 from datetime import timedelta
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional, Union
 
 from wled import WLED, WLEDConnectionError, WLEDError
 
@@ -19,13 +19,13 @@ from homeassistant.components.wled.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME, CONF_HOST
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -34,12 +34,12 @@ PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the WLED components."""
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up WLED from a config entry."""
 
     # Create WLED instance for this entry
@@ -61,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
-    async def interval_update(now: dt_util.dt.datetime = None):
+    async def interval_update(now: dt_util.dt.datetime = None) -> None:
         """Poll WLED device function, dispatches event after update."""
         try:
             await wled.update()
@@ -78,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigType) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload WLED config entry."""
     # hass.services.async_remove(DOMAIN, SERVICE_EXAMPLE)
 
@@ -99,7 +99,7 @@ class WLEDEntity(Entity):
 
     def __init__(self, entry_id: str, wled: WLED, name: str, icon: str) -> None:
         """Initialize the WLED entity."""
-        self._attributes = {}
+        self._attributes: Dict[str, Union[str, int, float]] = {}
         self._available = True
         self._entry_id = entry_id
         self._icon = icon
@@ -128,7 +128,7 @@ class WLEDEntity(Entity):
         return False
 
     @property
-    def device_state_attributes(self) -> Dict[str, str]:
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the entity."""
         if not self._attributes:
             return None

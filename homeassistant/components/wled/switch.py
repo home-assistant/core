@@ -1,6 +1,6 @@
 """Support for WLED switches."""
 import logging
-from typing import Callable, List
+from typing import Any, Callable, List
 
 from wled import WLED, WLEDError
 
@@ -50,7 +50,7 @@ class WLEDSwitch(ToggleEntity, WLEDDeviceEntity):
         """Return the state of the switch."""
         return self._state
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         try:
             await self._wled_turn_off()
@@ -64,7 +64,7 @@ class WLEDSwitch(ToggleEntity, WLEDDeviceEntity):
         """Turn off the switch."""
         raise NotImplementedError()
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         try:
             await self._wled_turn_on()

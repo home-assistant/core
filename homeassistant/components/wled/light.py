@@ -1,6 +1,6 @@
 """Support for LED lights."""
 import logging
-from typing import Callable, List, Optional, Tuple
+from typing import Any, Callable, List, Optional, Tuple
 
 from wled import WLED, Effect, WLEDError
 
@@ -66,7 +66,9 @@ async def async_setup_entry(
 class WLEDLight(Light, WLEDDeviceEntity):
     """Defines a WLED light."""
 
-    def __init__(self, entry_id, wled, segment: int, rgbw: bool, effects: List[Effect]):
+    def __init__(
+        self, entry_id: str, wled: WLED, segment: int, rgbw: bool, effects: List[Effect]
+    ):
         """Initialize WLED light."""
         self._effects = effects
         self._rgbw = rgbw
@@ -125,9 +127,11 @@ class WLEDLight(Light, WLEDDeviceEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the light."""
+        if self._state is None:
+            return False
         return self._state
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         try:
             await self.wled.light(on=False)
@@ -137,7 +141,7 @@ class WLEDLight(Light, WLEDDeviceEntity):
             self._available = False
         self.schedule_update_ha_state()
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         data = {ATTR_ON: True, ATTR_SEGMENT_ID: self._segment}
 

@@ -1,6 +1,6 @@
 """Config flow to configure the AdGuard Home integration."""
 import logging
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import voluptuous as vol
 from wled import WLED, WLEDConnectionError
@@ -22,11 +22,11 @@ class WLEDFlowHandler(ConfigFlow):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize WLED flow."""
         pass
 
-    async def _show_setup_form(self, errors=None):
+    async def _show_setup_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -34,7 +34,9 @@ class WLEDFlowHandler(ConfigFlow):
             errors=errors or {},
         )
 
-    async def _show_confirm_dialog(self, errors=None):
+    async def _show_confirm_dialog(
+        self, errors: Optional[Dict] = None
+    ) -> Dict[str, Any]:
         """Show the setup form to the user."""
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         name = self.context.get(CONF_NAME)
@@ -44,7 +46,9 @@ class WLEDFlowHandler(ConfigFlow):
             errors=errors or {},
         )
 
-    async def _handle_config_flow(self, user_input: Optional[ConfigType] = None):
+    async def _handle_config_flow(
+        self, user_input: Optional[ConfigType] = None
+    ) -> Dict[str, Any]:
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         source = self.context.get("source")
 
@@ -85,16 +89,25 @@ class WLEDFlowHandler(ConfigFlow):
             title=title, data={CONF_HOST: user_input[CONF_HOST], CONF_MAC: mac_address}
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: Optional[ConfigType] = None
+    ) -> Dict[str, Any]:
         """Handle a flow initiated by the user."""
         return await self._handle_config_flow(user_input)
 
-    async def async_step_zeroconf_confirm(self, user_input: ConfigType = None):
+    async def async_step_zeroconf_confirm(
+        self, user_input: ConfigType = None
+    ) -> Dict[str, Any]:
         """Handle a flow initiated by zeroconf."""
         return await self._handle_config_flow(user_input)
 
-    async def async_step_zeroconf(self, user_input: ConfigType = None):
+    async def async_step_zeroconf(
+        self, user_input: Optional[ConfigType] = None
+    ) -> Dict[str, Any]:
         """Handle zeroconf discovery."""
+        if user_input is None:
+            return self.async_abort(reason="connection_error")
+
         # Hostname is format: wled-livingroom.local.
         host = user_input["hostname"].rstrip(".")
         name, _ = host.rsplit(".")

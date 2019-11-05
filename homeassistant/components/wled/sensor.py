@@ -1,6 +1,6 @@
 """Support for WLED sensors."""
 import logging
-from typing import Callable, List
+from typing import Callable, List, Union
 
 from homeassistant.components.wled import WLED, WLEDDeviceEntity
 from homeassistant.components.wled.const import (
@@ -61,7 +61,7 @@ class WLEDSensor(WLEDDeviceEntity):
         return f"{DOMAIN}_{self.wled.device.info.mac_address}_sensor_{self._key}"
 
     @property
-    def state(self):
+    def state(self) -> Union[None, str, int, float]:
         """Return the state of the sensor."""
         return self._state
 
