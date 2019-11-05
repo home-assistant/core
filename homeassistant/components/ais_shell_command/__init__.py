@@ -619,6 +619,8 @@ def _flush_logs(hass, call):
 
     # pm2
     os.system("pm2 flush")
+    os.system("rm /data/data/pl.sviete.dom/files/home/.pm2/logs/*.log")
+
     # pip cache
     os.system("rm -rf /data/data/pl.sviete.dom/files/home/.cache/pip")
     # recorder.purge
