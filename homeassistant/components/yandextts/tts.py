@@ -45,7 +45,7 @@ CONF_SPEED = "speed"
 
 DEFAULT_LANG = "en-US"
 DEFAULT_CODEC = "oggopus"
-DEFAULT_VOICE = "omazh"
+DEFAULT_VOICE = "alyss"
 DEFAULT_EMOTION = "neutral"
 DEFAULT_SPEED = 1
 
