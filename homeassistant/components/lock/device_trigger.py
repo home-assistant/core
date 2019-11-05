@@ -39,7 +39,6 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
             continue
 
         # Add triggers for each entity that belongs to this integration
-        # TODO add your own triggers.
         triggers.append(
             {
                 CONF_PLATFORM: "device",
