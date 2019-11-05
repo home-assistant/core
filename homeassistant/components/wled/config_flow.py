@@ -24,10 +24,6 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
-    def __init__(self) -> None:
-        """Initialize WLED flow."""
-        pass
-
     async def _show_setup_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
         """Show the setup form to the user."""
         return self.async_show_form(
