@@ -20,7 +20,10 @@ from homeassistant.const import ATTR_NAME, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -66,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         # Even if the update failed, we still send out the event.
         # To allow entities to make themselves unavailable.
-        dispatcher_send(hass, DATA_WLED_UPDATED, entry.entry_id)
+        async_dispatcher_send(hass, DATA_WLED_UPDATED, entry.entry_id)
 
     # Schedule update interval
     async_track_time_interval(hass, interval_update, SCAN_INTERVAL)
