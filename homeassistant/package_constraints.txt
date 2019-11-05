@@ -10,7 +10,7 @@ certifi>=2019.9.11
 contextvars==2.4;python_version<"3.7"
 cryptography==2.8
 distro==1.4.0
-hass-nabucasa==0.23
+hass-nabucasa==0.26
 home-assistant-frontend==20191025.1
 importlib-metadata==0.23
 jinja2>=2.10.3
