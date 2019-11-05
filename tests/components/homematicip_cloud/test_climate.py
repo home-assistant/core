@@ -16,13 +16,11 @@ from homeassistant.components.climate.const import (
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_ECO,
-    PRESET_NONE,
 )
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.components.homematicip_cloud.climate import (
     ATTR_PRESET_END_TIME,
     PERMANENT_END_TIME,
-    PRESET_PARTY,
 )
 from homeassistant.setup import async_setup_component
 
@@ -57,12 +55,7 @@ async def test_hmip_heating_group_heat(hass, default_mock_hap):
     assert ha_state.attributes["temperature"] == 5.0
     assert ha_state.attributes["current_humidity"] == 47
     assert ha_state.attributes[ATTR_PRESET_MODE] == "STD"
-    assert ha_state.attributes[ATTR_PRESET_MODES] == [
-        PRESET_NONE,
-        PRESET_BOOST,
-        "STD",
-        "Winter",
-    ]
+    assert ha_state.attributes[ATTR_PRESET_MODES] == [PRESET_BOOST, "STD", "Winter"]
 
     service_call_counter = len(hmip_device.mock_calls)
 
@@ -121,12 +114,12 @@ async def test_hmip_heating_group_heat(hass, default_mock_hap):
     await hass.services.async_call(
         "climate",
         "set_preset_mode",
-        {"entity_id": entity_id, "preset_mode": PRESET_NONE},
+        {"entity_id": entity_id, "preset_mode": "STD"},
         blocking=True,
     )
-    assert len(hmip_device.mock_calls) == service_call_counter + 9
-    assert hmip_device.mock_calls[-1][0] == "set_boost"
-    assert hmip_device.mock_calls[-1][1] == (False,)
+    assert len(hmip_device.mock_calls) == service_call_counter + 11
+    assert hmip_device.mock_calls[-1][0] == "set_active_profile"
+    assert hmip_device.mock_calls[-1][1] == (0,)
     await async_manipulate_test_data(hass, hmip_device, "boostMode", False)
     ha_state = hass.states.get(entity_id)
     assert ha_state.attributes[ATTR_PRESET_MODE] == "STD"
@@ -139,7 +132,7 @@ async def test_hmip_heating_group_heat(hass, default_mock_hap):
         blocking=True,
     )
     # No new service call should be in mock_calls.
-    assert len(hmip_device.mock_calls) == service_call_counter + 10
+    assert len(hmip_device.mock_calls) == service_call_counter + 12
     # Only fire event from last async_manipulate_test_data available.
     assert hmip_device.mock_calls[-1][0] == "fire_update_event"
 
@@ -172,15 +165,10 @@ async def test_hmip_heating_group_heat(hass, default_mock_hap):
         blocking=True,
     )
 
-    assert len(hmip_device.mock_calls) == service_call_counter + 15
+    assert len(hmip_device.mock_calls) == service_call_counter + 18
     assert hmip_device.mock_calls[-1][0] == "set_active_profile"
     assert hmip_device.mock_calls[-1][1] == (1,)
 
-    await async_manipulate_test_data(hass, hmip_device, "partyMode", True)
-    ha_state = hass.states.get(entity_id)
-    assert ha_state.attributes[ATTR_PRESET_MODE] == PRESET_PARTY
-
-    await async_manipulate_test_data(hass, hmip_device, "partyMode", False)
     default_mock_hap.home.get_functionalHome(
         IndoorClimateHome
     ).absenceType = AbsenceType.PERMANENT
@@ -195,7 +183,7 @@ async def test_hmip_heating_group_heat(hass, default_mock_hap):
         {"entity_id": entity_id, "hvac_mode": HVAC_MODE_HEAT},
         blocking=True,
     )
-    assert len(hmip_device.mock_calls) == service_call_counter + 19
+    assert len(hmip_device.mock_calls) == service_call_counter + 20
     assert hmip_device.mock_calls[-1][0] == "set_control_mode"
     assert hmip_device.mock_calls[-1][1] == ("MANUAL",)
     await async_manipulate_test_data(hass, hmip_device, "controlMode", "MANUAL")
@@ -209,7 +197,7 @@ async def test_hmip_heating_group_heat(hass, default_mock_hap):
         blocking=True,
     )
 
-    assert len(hmip_device.mock_calls) == service_call_counter + 22
+    assert len(hmip_device.mock_calls) == service_call_counter + 23
     assert hmip_device.mock_calls[-1][0] == "set_active_profile"
     assert hmip_device.mock_calls[-1][1] == (1,)
     hmip_device.activeProfile = hmip_device.profiles[0]
@@ -223,7 +211,7 @@ async def test_hmip_heating_group_heat(hass, default_mock_hap):
         {"entity_id": entity_id, "hvac_mode": "dry"},
         blocking=True,
     )
-    assert len(hmip_device.mock_calls) == service_call_counter + 23
+    assert len(hmip_device.mock_calls) == service_call_counter + 24
     # Only fire event from last async_manipulate_test_data available.
     assert hmip_device.mock_calls[-1][0] == "fire_update_event"
 
@@ -288,7 +276,7 @@ async def test_hmip_heating_group_cool(hass, default_mock_hap):
         blocking=True,
     )
 
-    assert len(hmip_device.mock_calls) == service_call_counter + 5
+    assert len(hmip_device.mock_calls) == service_call_counter + 6
     assert hmip_device.mock_calls[-1][0] == "set_active_profile"
     assert hmip_device.mock_calls[-1][1] == (4,)
 
@@ -319,7 +307,7 @@ async def test_hmip_heating_group_cool(hass, default_mock_hap):
         blocking=True,
     )
 
-    assert len(hmip_device.mock_calls) == service_call_counter + 11
+    assert len(hmip_device.mock_calls) == service_call_counter + 12
     # fire_update_event shows that set_active_profile has not been called.
     assert hmip_device.mock_calls[-1][0] == "fire_update_event"
 
@@ -340,7 +328,7 @@ async def test_hmip_heating_group_cool(hass, default_mock_hap):
         blocking=True,
     )
 
-    assert len(hmip_device.mock_calls) == service_call_counter + 15
+    assert len(hmip_device.mock_calls) == service_call_counter + 17
     assert hmip_device.mock_calls[-1][0] == "set_active_profile"
     assert hmip_device.mock_calls[-1][1] == (4,)
 

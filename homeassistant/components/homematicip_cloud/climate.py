@@ -34,7 +34,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_PRESET_END_TIME = "preset_end_time"
 PERMANENT_END_TIME = "permanent"
-PRESET_PARTY = "party"
 
 HMIP_AUTOMATIC_CM = "AUTOMATIC"
 HMIP_MANUAL_CM = "MANUAL"
@@ -143,14 +142,13 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
         """Return the current preset mode."""
         if self._device.boostMode:
             return PRESET_BOOST
-        if self._device.partyMode:
-            return PRESET_PARTY
         if self.hvac_mode in (HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF):
             return PRESET_NONE
         if self._device.controlMode == HMIP_ECO_CM:
             if self._indoor_climate.absenceType == AbsenceType.VACATION:
                 return PRESET_AWAY
             if self._indoor_climate.absenceType in [
+                AbsenceType.PARTY,
                 AbsenceType.PERIOD,
                 AbsenceType.PERMANENT,
             ]:
@@ -167,12 +165,16 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
         """Return a list of available preset modes incl. hmip profiles."""
         # Boost is only available if a radiator thermostat is in the room,
         # and heat mode is enabled.
-        presets = (
-            [PRESET_NONE, PRESET_BOOST]
-            if self._heat_mode_enabled and self._has_radiator_thermostat
-            else []
-        )
-        presets.extend(self._device_profile_names)
+        profile_names = self._device_profile_names
+
+        presets = []
+        if self._heat_mode_enabled and self._has_radiator_thermostat:
+            if profile_names == []:
+                presets.append(PRESET_NONE)
+            presets.append(PRESET_BOOST)
+
+        presets.extend(profile_names)
+
         return presets
 
     @property
@@ -215,7 +217,7 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
             await self._device.set_boost()
         if preset_mode in self._device_profile_names:
             profile_idx = self._get_profile_idx_by_name(preset_mode)
-            if self.hvac_mode != HVAC_MODE_AUTO:
+            if self._device.controlMode != HMIP_AUTOMATIC_CM:
                 await self.async_set_hvac_mode(HVAC_MODE_AUTO)
             await self._device.set_active_profile(profile_idx)
 
