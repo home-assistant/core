@@ -11,6 +11,7 @@ from homeassistant import util
 from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
+    MEDIA_TYPE_URL,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -42,8 +43,13 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SOURCES = "sources"
 CONF_ON_ACTION = "turn_on_action"
 
+BROWSER_APP_ID = "com.webos.app.browser"
 DEFAULT_NAME = "LG webOS Smart TV"
 LIVETV_APP_ID = "com.webos.app.livetv"
+MEDIA_TYPE_YOUTUBE = "youtube"
+MEDIA_TYPE_NETFLIX = "netflix"
+NETFLIX_APP_ID = "netflix"
+YOUTUBE_APP_ID = "youtube.leanback.v4"
 
 WEBOSTV_CONFIG_FILE = "webostv.conf"
 
@@ -419,7 +425,14 @@ class LgWebOSDevice(MediaPlayerDevice):
 
             return
 
-        self._client.launch_app_with_content_id(media_type, media_id)
+        if media_type == MEDIA_TYPE_URL:
+            self._client.launch_app_with_content_id(BROWSER_APP_ID, media_id)
+
+        if media_type == MEDIA_TYPE_NETFLIX:
+            self._client.launch_app_with_content_id(NETFLIX_APP_ID, media_id)
+
+        if media_type == MEDIA_TYPE_YOUTUBE:
+            self._client.launch_app_with_content_id(YOUTUBE_APP_ID, media_id)
 
     def media_play(self):
         """Send play command."""
