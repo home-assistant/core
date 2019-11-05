@@ -24,6 +24,9 @@ requests_mock==1.7.0
 responses==0.10.6
 
 
+# homeassistant.components.broadlink
+BroadlinkWifiThermostat==2.4.1
+
 # homeassistant.components.homekit
 HAP-python==2.6.0
 

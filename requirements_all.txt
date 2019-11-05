@@ -34,6 +34,9 @@ Adafruit-SHT31==1.0.2
 # homeassistant.components.bbb_gpio
 # Adafruit_BBIO==1.0.0
 
+# homeassistant.components.broadlink
+BroadlinkWifiThermostat==2.4.1
+
 # homeassistant.components.homekit
 HAP-python==2.6.0
 
