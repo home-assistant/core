@@ -141,11 +141,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         """Create a scene."""
         scene_config = SCENECONFIG(call.data[CONF_SCENE_ID], call.data[CONF_ENTITIES])
         entity_id = f"{SCENE_DOMAIN}.{scene_config.name}"
-        if hass.states.get(entity_id) is not None:
-            _LOGGER.warning("The scene %s already exists", entity_id)
-            return
-
-        async_add_entities([HomeAssistantScene(hass, scene_config)])
+        old = platform.entities.get(entity_id)
+        if old is not None:
+            if not old.from_service:
+                _LOGGER.warning("The scene %s already exists", entity_id)
+                return
+            await platform.async_remove_entity(entity_id)
+        async_add_entities([HomeAssistantScene(hass, scene_config, from_service=True)])
 
     hass.services.async_register(
         SCENE_DOMAIN, SERVICE_CREATE, create_service, CREATE_SCENE_SCHEMA
@@ -173,11 +175,12 @@ def _process_scenes_config(hass, async_add_entities, config):
 class HomeAssistantScene(Scene):
     """A scene is a group of entities and the states we want them to be."""
 
-    def __init__(self, hass, scene_config, scene_id=None):
+    def __init__(self, hass, scene_config, scene_id=None, from_service=False):
         """Initialize the scene."""
         self._id = scene_id
         self.hass = hass
         self.scene_config = scene_config
+        self.from_service = from_service
 
     @property
     def name(self):
