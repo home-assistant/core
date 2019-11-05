@@ -38,22 +38,22 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-async def async_get_service(hass, config, discovery_info=None):
+def get_service(hass, config, discovery_info=None):
     """Get the notification service."""
     connection_string = config[CONF_CONNECTION_STRING]
     queue_name = config.get(CONF_QUEUE_NAME)
     topic_name = config.get(CONF_TOPIC_NAME)
 
+    # Library can do synchronous IO when creating the clients.
+    # Passes in loop here, but can't run setup on the event loop.
     servicebus = ServiceBusClient.from_connection_string(
         connection_string, loop=hass.loop
     )
 
     if queue_name:
         client = servicebus.get_queue(queue_name)
-    elif topic_name:
-        client = servicebus.get_topic(topic_name)
     else:
-        return None
+        client = servicebus.get_topic(topic_name)
 
     return ServiceBusNotificationService(client)
 
