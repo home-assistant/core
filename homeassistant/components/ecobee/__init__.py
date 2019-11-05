@@ -131,7 +131,7 @@ class EcobeeData:
         try:
             return await self._hass.async_add_executor_job(req)
         except ExpiredTokenError:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "Ecobee request failed due to expired token; refreshing and retrying"
             )
             if await self.refresh():
