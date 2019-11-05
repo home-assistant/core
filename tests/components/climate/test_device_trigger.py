@@ -1,10 +1,11 @@
 """The tests for Climate device triggers."""
+import voluptuous_serialize
 import pytest
 
-from homeassistant.components.climate import DOMAIN, const
+from homeassistant.components.climate import DOMAIN, const, device_trigger
 from homeassistant.setup import async_setup_component
 import homeassistant.components.automation as automation
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry, config_validation as cv
 
 from tests.common import (
     MockConfigEntry,
@@ -184,3 +185,59 @@ async def test_if_fires_on_state_change(hass, calls):
     await hass.async_block_till_done()
     assert len(calls) == 3
     assert calls[2].data["some"] == "current_humidity_changed"
+
+
+async def test_get_trigger_capabilities_hvac_mode(hass):
+    """Test we get the expected capabilities from a climate trigger."""
+    capabilities = await device_trigger.async_get_trigger_capabilities(
+        hass,
+        {
+            "platform": "device",
+            "domain": "climate",
+            "type": "hvac_mode_changed",
+            "entity_id": "climate.upstairs",
+            "to": "heat",
+        },
+    )
+    assert capabilities and "extra_fields" in capabilities
+
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [{"name": "for", "optional": True, "type": "positive_time_period_dict"}]
+
+
+@pytest.mark.parametrize(
+    "type", ["current_temperature_changed", "current_humidity_changed"]
+)
+async def test_get_trigger_capabilities_temp_humid(hass, type):
+    """Test we get the expected capabilities from a climate trigger."""
+    capabilities = await device_trigger.async_get_trigger_capabilities(
+        hass,
+        {
+            "platform": "device",
+            "domain": "climate",
+            "type": "current_temperature_changed",
+            "entity_id": "climate.upstairs",
+            "above": "23",
+        },
+    )
+
+    assert capabilities and "extra_fields" in capabilities
+
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [
+        {
+            "description": {"suffix": "°C"},
+            "name": "above",
+            "optional": True,
+            "type": "float",
+        },
+        {
+            "description": {"suffix": "°C"},
+            "name": "below",
+            "optional": True,
+            "type": "float",
+        },
+        {"name": "for", "optional": True, "type": "positive_time_period_dict"},
+    ]
