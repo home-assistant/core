@@ -1,0 +1,8 @@
+{
+  "device_automation": {
+    "condtion_type": {
+      "is_hvac_mode": "{entity_name} is set to a specific HVAC mode",
+      "is_preset_mode": "{entity_name} is set to a specific preset mode"
+    }
+  }
+}
