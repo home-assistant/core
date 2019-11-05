@@ -67,9 +67,7 @@ async def async_setup_entry(hass, entry):
         if not await data.refresh():
             return False
     except InvalidTokenError:
-        hass.components.persistent_notification.async_create(
-            ECOBEE_INVALID_TOKEN_MESSAGE, title=DOMAIN
-        )
+        _LOGGER.error(ECOBEE_INVALID_TOKEN_MESSAGE)
         return False
 
     await data.update()
@@ -141,9 +139,6 @@ class EcobeeData:
             )
         except InvalidTokenError:
             _LOGGER.error(ECOBEE_INVALID_TOKEN_MESSAGE)
-            self._hass.components.persistent_notification.async_create(
-                ECOBEE_INVALID_TOKEN_MESSAGE, title=DOMAIN
-            )
 
 
 async def async_unload_entry(hass, config_entry):
