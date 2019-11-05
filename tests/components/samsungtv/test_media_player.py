@@ -144,7 +144,6 @@ def wakeonlan_fixture():
     with patch(
         "homeassistant.components.samsungtv.media_player.wakeonlan"
     ) as wakeonlan_class:
-        wakeonlan_class.return_value.send_magic_packet.return_value = None
         yield wakeonlan_class
 
 
