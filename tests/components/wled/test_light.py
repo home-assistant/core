@@ -57,7 +57,7 @@ async def test_light_state(
 
     entry = entity_registry.async_get("light.wled_light")
     assert entry
-    assert entry.unique_id == "wled_aabbccddeeff_light_0"
+    assert entry.unique_id == "aabbccddeeff_0"
 
     # Second segment of the strip
     state = hass.states.get("light.wled_light_1")
@@ -75,7 +75,7 @@ async def test_light_state(
 
     entry = entity_registry.async_get("light.wled_light_1")
     assert entry
-    assert entry.unique_id == "wled_aabbccddeeff_light_1"
+    assert entry.unique_id == "aabbccddeeff_1"
 
 
 async def test_switch_change_state(
