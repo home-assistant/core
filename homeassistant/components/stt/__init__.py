@@ -15,7 +15,7 @@ import attr
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import callback
-from homeassistant.helpers import config_per_platform
+from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_prepare_setup_platform
 
@@ -37,14 +37,17 @@ async def async_setup(hass: HomeAssistantType, config):
     """Set up STT."""
     providers = {}
 
-    async def async_setup_platform(p_type, p_config, disc_info=None):
+    async def async_setup_platform(p_type, p_config=None, discovery_info=None):
         """Set up a TTS platform."""
+        if p_config is None:
+            p_config = {}
+
         platform = await async_prepare_setup_platform(hass, config, DOMAIN, p_type)
         if platform is None:
             return
 
         try:
-            provider = await platform.async_get_engine(hass, p_config)
+            provider = await platform.async_get_engine(hass, p_config, discovery_info)
             if provider is None:
                 _LOGGER.error("Error setting up platform %s", p_type)
                 return
@@ -64,6 +67,13 @@ async def async_setup(hass: HomeAssistantType, config):
 
     if setup_tasks:
         await asyncio.wait(setup_tasks)
+
+    # Add discovery support
+    async def async_platform_discovered(platform, info):
+        """Handle for discovered platform."""
+        await async_setup_platform(platform, discovery_info=info)
+
+    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
 
     hass.http.register_view(SpeechToTextView(providers))
     return True

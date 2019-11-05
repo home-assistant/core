@@ -15,7 +15,7 @@ from homeassistant.components.stt.const import (
 SUPPORT_LANGUAGES = ["en", "de"]
 
 
-async def async_get_engine(hass, config):
+async def async_get_engine(hass, config, discovery_info=None):
     """Set up Demo speech component."""
     return DemoProvider()
 

@@ -7,9 +7,9 @@ from hass_nabucasa import Cloud
 
 from homeassistant.components.stt import Provider, SpeechMetadata, SpeechResult
 from homeassistant.components.stt.const import (
-    AudioBitrates,
+    AudioBitRates,
     AudioFormats,
-    AudioSamplerates,
+    AudioSampleRates,
     AudioCodecs,
     SpeechResultState,
 )
@@ -40,7 +40,7 @@ SUPPORT_LANGUAGES = [
 ]
 
 
-async def async_get_engine(hass, config):
+async def async_get_engine(hass, config, discovery_info=None):
     """Set up Cloud speech component."""
     cloud: Cloud = hass.data[DOMAIN]
 
@@ -70,14 +70,14 @@ class CloudProvider(Provider):
         return [AudioCodecs.PCM, AudioCodecs.OPUS]
 
     @property
-    def supported_bitrates(self) -> List[AudioBitrates]:
+    def supported_bit_rates(self) -> List[AudioBitRates]:
         """Return a list of supported bitrates."""
-        return [AudioBitrates.BITRATE_16]
+        return [AudioBitRates.BITRATE_16]
 
     @property
-    def supported_samplerates(self) -> List[AudioSamplerates]:
+    def supported_sample_rates(self) -> List[AudioSampleRates]:
         """Return a list of supported samplerates."""
-        return [AudioSamplerates.SAMPLERATE_16000]
+        return [AudioSampleRates.SAMPLERATE_16000]
 
     async def async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: StreamReader
