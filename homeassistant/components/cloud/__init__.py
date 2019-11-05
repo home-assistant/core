@@ -230,20 +230,27 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler
     )
 
-    loaded_binary_sensor = False
+    loaded = False
 
     async def _on_connect():
         """Discover RemoteUI binary sensor."""
-        nonlocal loaded_binary_sensor
+        nonlocal loaded
 
-        if loaded_binary_sensor:
+        # Prevent multible discovery
+        if loaded:
             return
+        loaded = True
 
-        loaded_binary_sensor = True
         hass.async_create_task(
             hass.helpers.discovery.async_load_platform(
                 "binary_sensor", DOMAIN, {}, config
             )
+        )
+        hass.async_create_task(
+            hass.helpers.discovery.async_load_platform("stt", DOMAIN, {}, config)
+        )
+        hass.async_create_task(
+            hass.helpers.discovery.async_load_platform("tts", DOMAIN, {}, config)
         )
 
     cloud.iot.register_on_connect(_on_connect)

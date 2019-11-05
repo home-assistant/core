@@ -28,23 +28,30 @@ async def async_get_engine(hass, config, discovery_info=None):
     """Set up Cloud speech component."""
     cloud: Cloud = hass.data[DOMAIN]
 
-    return CloudProvider(cloud, config[CONF_LANG], config[CONF_GENDER])
+    if discovery_info:
+        language = DEFAULT_LANG
+        gender = DEFAULT_GENDER
+    else:
+        language = config[CONF_LANG]
+        gender = config[CONF_GENDER]
+
+    return CloudProvider(cloud, language, gender)
 
 
 class CloudProvider(Provider):
     """NabuCasa Cloud speech API provider."""
 
-    def __init__(self, cloud: Cloud, lang: str, gender: str):
+    def __init__(self, cloud: Cloud, language: str, gender: str):
         """Initialize cloud provider."""
         self.cloud = cloud
         self.name = "Cloud"
-        self._lang = lang
+        self._language = language
         self._gender = gender
 
     @property
     def default_language(self):
         """Return the default language."""
-        return self._lang
+        return self._language
 
     @property
     def supported_languages(self):
