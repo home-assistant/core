@@ -89,9 +89,7 @@ class WLEDLight(Light, WLEDDeviceEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this sensor."""
-        return (
-            f"{DOMAIN}_{self.wled.device.info.mac_address}_light_{str(self._segment)}"
-        )
+        return f"{self.wled.device.info.mac_address}_{self._segment}"
 
     @property
     def hs_color(self) -> Optional[Tuple[float, float]]:
