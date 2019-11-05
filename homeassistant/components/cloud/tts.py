@@ -10,7 +10,7 @@ from .const import DOMAIN
 
 CONF_GENDER = "gender"
 
-SUPPORT_LANGUAGES = ["en-US"]
+SUPPORT_LANGUAGES = ["en-US", "de-DE", "es-ES"]
 SUPPORT_GENDER = ["male", "female"]
 
 DEFAULT_LANG = "en-US"
