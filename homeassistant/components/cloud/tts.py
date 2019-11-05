@@ -28,7 +28,7 @@ async def async_get_engine(hass, config, discovery_info=None):
     """Set up Cloud speech component."""
     cloud: Cloud = hass.data[DOMAIN]
 
-    if discovery_info:
+    if discovery_info is not None:
         language = DEFAULT_LANG
         gender = DEFAULT_GENDER
     else:
