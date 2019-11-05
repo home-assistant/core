@@ -143,8 +143,8 @@ def wakeonlan_fixture():
     """Patch the wakeonlan Remote."""
     with patch(
         "homeassistant.components.samsungtv.media_player.wakeonlan"
-    ) as wakeonlan_class:
-        yield wakeonlan_class
+    ) as wakeonlan_module:
+        yield wakeonlan_module
 
 
 @pytest.fixture
