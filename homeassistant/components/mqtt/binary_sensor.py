@@ -189,11 +189,11 @@ class MqttBinarySensor(
             elif payload == self._config[CONF_PAYLOAD_OFF]:
                 self._state = False
             else:  # Payload is not for this entity
-                _LOGGER.warning(
-                    "No matching payload found" " for entity: %s with state_topic: %s",
-                    self._config[CONF_NAME],
-                    self._config[CONF_STATE_TOPIC],
-                )
+                # _LOGGER.warning(
+                #     "No matching payload found" " for entity: %s with state_topic: %s",
+                #     self._config[CONF_NAME],
+                #     self._config[CONF_STATE_TOPIC],
+                # )
                 return
 
             if self._delay_listener is not None:
