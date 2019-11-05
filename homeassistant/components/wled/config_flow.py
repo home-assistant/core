@@ -1,4 +1,4 @@
-"""Config flow to configure the AdGuard Home integration."""
+"""Config flow to configure the WLED integration."""
 import logging
 from typing import Any, Dict, Optional
 
