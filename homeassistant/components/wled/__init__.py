@@ -52,8 +52,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except WLEDConnectionError as exception:
         raise ConfigEntryNotReady from exception
 
-    hass.data.setdefault(DOMAIN, {}).setdefault(entry.entry_id, {})
-    hass.data[DOMAIN][entry.entry_id][DATA_WLED_CLIENT] = wled
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {DATA_WLED_CLIENT: wled}
 
     # Set up all platforms for this device/entry.
     hass.async_create_task(
