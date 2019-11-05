@@ -82,7 +82,7 @@ async def _async_reproduce_state(
         )
         return
 
-    # Warn if deprecated attributs are used
+    # Warn if deprecated attributes are used
     if any(attr in DEPRECATED_GROUP for attr in state.attributes):
         _LOGGER.warning(DEPRECATION_WARNING)
 
