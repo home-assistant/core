@@ -5,9 +5,12 @@ from typing import Any, Dict, Optional
 import voluptuous as vol
 from wled import WLED, WLEDConnectionError
 
-from homeassistant import config_entries
 from homeassistant.components.wled.const import DOMAIN
-from homeassistant.config_entries import SOURCE_ZEROCONF, ConfigFlow
+from homeassistant.config_entries import (
+    CONN_CLASS_LOCAL_POLL,
+    SOURCE_ZEROCONF,
+    ConfigFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.helpers import ConfigType
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -15,12 +18,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 _LOGGER = logging.getLogger(__name__)
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class WLEDFlowHandler(ConfigFlow):
+class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a WLED config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     def __init__(self) -> None:
         """Initialize WLED flow."""
