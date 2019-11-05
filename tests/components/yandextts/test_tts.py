@@ -9,7 +9,7 @@ from homeassistant.components.media_player.const import (
     SERVICE_PLAY_MEDIA,
     DOMAIN as DOMAIN_MP,
 )
-from tests.common import get_test_home_assistant, assert_setup_component, mock_service
+from tests.common import post_test_home_assistant, assert_setup_component, mock_service
 
 from tests.components.tts.test_init import mutagen_mock  # noqa
 
@@ -19,8 +19,8 @@ class TestTTSYandexPlatform:
 
     def setup_method(self):
         """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self._base_url = "https://tts.voicetech.yandex.net/generate?"
+        self.hass = post_test_home_assistant()
+        self._base_url = "https://tts.api.cloud.yandex.net/speech/v1/tts:synthesize"
 
     def teardown_method(self):
         """Stop everything that was started."""
@@ -53,11 +53,11 @@ class TestTTSYandexPlatform:
             "lang": "en-US",
             "key": "1234567xx",
             "speaker": "zahar",
-            "format": "mp3",
+            "format": "oggopus",
             "emotion": "neutral",
             "speed": 1,
         }
-        aioclient_mock.get(
+        aioclient_mock.post(
             self._base_url, status=200, content=b"test", params=url_param
         )
 
@@ -83,11 +83,11 @@ class TestTTSYandexPlatform:
             "lang": "ru-RU",
             "key": "1234567xx",
             "speaker": "zahar",
-            "format": "mp3",
+            "format": "oggopus",
             "emotion": "neutral",
             "speed": 1,
         }
-        aioclient_mock.get(
+        aioclient_mock.post(
             self._base_url, status=200, content=b"test", params=url_param
         )
 
@@ -119,11 +119,11 @@ class TestTTSYandexPlatform:
             "lang": "ru-RU",
             "key": "1234567xx",
             "speaker": "zahar",
-            "format": "mp3",
+            "format": "oggopus",
             "emotion": "neutral",
             "speed": 1,
         }
-        aioclient_mock.get(
+        aioclient_mock.post(
             self._base_url, status=200, content=b"test", params=url_param
         )
 
@@ -151,11 +151,11 @@ class TestTTSYandexPlatform:
             "lang": "en-US",
             "key": "1234567xx",
             "speaker": "zahar",
-            "format": "mp3",
+            "format": "oggopus",
             "emotion": "neutral",
             "speed": 1,
         }
-        aioclient_mock.get(
+        aioclient_mock.post(
             self._base_url, status=200, exc=asyncio.TimeoutError(), params=url_param
         )
 
@@ -181,11 +181,11 @@ class TestTTSYandexPlatform:
             "lang": "en-US",
             "key": "1234567xx",
             "speaker": "zahar",
-            "format": "mp3",
+            "format": "oggopus",
             "emotion": "neutral",
             "speed": 1,
         }
-        aioclient_mock.get(
+        aioclient_mock.post(
             self._base_url, status=403, content=b"test", params=url_param
         )
 
@@ -210,11 +210,11 @@ class TestTTSYandexPlatform:
             "lang": "en-US",
             "key": "1234567xx",
             "speaker": "alyss",
-            "format": "mp3",
+            "format": "oggopus",
             "emotion": "neutral",
             "speed": 1,
         }
-        aioclient_mock.get(
+        aioclient_mock.post(
             self._base_url, status=200, content=b"test", params=url_param
         )
 
@@ -246,11 +246,11 @@ class TestTTSYandexPlatform:
             "lang": "en-US",
             "key": "1234567xx",
             "speaker": "zahar",
-            "format": "mp3",
+            "format": "oggopus",
             "emotion": "evil",
             "speed": 1,
         }
-        aioclient_mock.get(
+        aioclient_mock.post(
             self._base_url, status=200, content=b"test", params=url_param
         )
 
@@ -282,11 +282,11 @@ class TestTTSYandexPlatform:
             "lang": "en-US",
             "key": "1234567xx",
             "speaker": "zahar",
-            "format": "mp3",
+            "format": "oggopus",
             "emotion": "neutral",
             "speed": "0.1",
         }
-        aioclient_mock.get(
+        aioclient_mock.post(
             self._base_url, status=200, content=b"test", params=url_param
         )
 
@@ -314,11 +314,11 @@ class TestTTSYandexPlatform:
             "lang": "en-US",
             "key": "1234567xx",
             "speaker": "zahar",
-            "format": "mp3",
+            "format": "oggopus",
             "emotion": "neutral",
             "speed": 2,
         }
-        aioclient_mock.get(
+        aioclient_mock.post(
             self._base_url, status=200, content=b"test", params=url_param
         )
 
@@ -346,11 +346,11 @@ class TestTTSYandexPlatform:
             "lang": "en-US",
             "key": "1234567xx",
             "speaker": "zahar",
-            "format": "mp3",
+            "format": "oggopus",
             "emotion": "evil",
             "speed": 2,
         }
-        aioclient_mock.get(
+        aioclient_mock.post(
             self._base_url, status=200, content=b"test", params=url_param
         )
         config = {tts.DOMAIN: {"platform": "yandextts", "api_key": "1234567xx"}}
