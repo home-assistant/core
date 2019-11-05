@@ -308,13 +308,14 @@ class LightTemplate(Light):
 
         if self._temperature_template is None and ATTR_COLOR_TEMP in kwargs:
             _LOGGER.info(
-                f"Optimistically setting color temperature to {kwargs[ATTR_COLOR_TEMP]}"
+                "Optimistically setting color temperature to %s",
+                kwargs[ATTR_COLOR_TEMP],
             )
             self._temperature = kwargs[ATTR_COLOR_TEMP]
             optimistic_set = True
 
         if self._color_template is None and ATTR_HS_COLOR in kwargs:
-            _LOGGER.info(f"Optimistically setting color to {kwargs[ATTR_HS_COLOR]}")
+            _LOGGER.info("Optimistically setting color to %s", kwargs[ATTR_HS_COLOR])
             self._color = kwargs[ATTR_HS_COLOR]
             optimistic_set = True
 
@@ -327,9 +328,10 @@ class LightTemplate(Light):
                 {"color_temp": kwargs[ATTR_COLOR_TEMP]}, context=self._context
             )
         elif ATTR_HS_COLOR in kwargs and self._color_script:
-            hs = kwargs[ATTR_HS_COLOR]
+            hs_value = kwargs[ATTR_HS_COLOR]
             await self._color_script.async_run(
-                {"hs": hs, "h": int(hs[0]), "s": int(hs[1])}, context=self._context
+                {"hs": hs_value, "h": int(hs_value[0]), "s": int(hs_value[1])},
+                context=self._context,
             )
         else:
             await self._on_script.async_run()
@@ -374,7 +376,9 @@ class LightTemplate(Light):
                 ):
                     # Common during HA startup - so just a warning
                     _LOGGER.warning(
-                        f"Could not render {friendly_property_name} template {self._name}, the state is unknown."
+                        "Could not render %s template %s, the state is unknown.",
+                        friendly_property_name,
+                        self._name,
                     )
                     return
 
@@ -382,7 +386,10 @@ class LightTemplate(Light):
                     setattr(self, property_name, getattr(super(), property_name))
                 except AttributeError:
                     _LOGGER.error(
-                        f"Could not render {friendly_property_name} template {self._name}: {ex}"
+                        "Could not render %s template %s: %s",
+                        friendly_property_name,
+                        self._name,
+                        ex,
                     )
 
     async def update_temperature(self):
@@ -398,8 +405,9 @@ class LightTemplate(Light):
                 self._temperature = temperature
             else:
                 _LOGGER.error(
-                    f"Received invalid color temperature : {temperature}. "
-                    f"Expected: 0-{self.max_mireds}"
+                    "Received invalid color temperature : %s. Expected: 0-%s",
+                    temperature,
+                    self.max_mireds,
                 )
                 self._temperature = None
 
@@ -438,8 +446,9 @@ class LightTemplate(Light):
                 self._color = hs_color
             elif hs_color is not None:
                 _LOGGER.error(
-                    f"Received invalid hs_color : ({hs_color[0]}, {hs_color[1]}). "
-                    f"Expected: (0-360, 0-100)"
+                    "Received invalid hs_color : (%s, %s). Expected: (0-360, 0-100)",
+                    hs_color[0],
+                    hs_color[1],
                 )
 
     async def update_state(self):
