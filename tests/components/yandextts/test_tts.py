@@ -4,14 +4,12 @@ import os
 import shutil
 
 import homeassistant.components.tts as tts
-from homeassistant.setup import setup_component
 from homeassistant.components.media_player.const import (
     SERVICE_PLAY_MEDIA,
     DOMAIN as DOMAIN_MP,
 )
-from tests.common import post_test_home_assistant, assert_setup_component, mock_service
-
-from tests.components.tts.test_init import mutagen_mock  # noqa
+from homeassistant.setup import setup_component
+from tests.common import get_test_home_assistant, assert_setup_component, mock_service
 
 
 class TestTTSYandexPlatform:
@@ -19,7 +17,7 @@ class TestTTSYandexPlatform:
 
     def setup_method(self):
         """Set up things to be run when tests are started."""
-        self.hass = post_test_home_assistant()
+        self.hass = get_test_home_assistant()
         self._base_url = "https://tts.api.cloud.yandex.net/speech/v1/tts:synthesize"
 
     def teardown_method(self):
