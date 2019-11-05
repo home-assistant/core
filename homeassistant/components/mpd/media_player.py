@@ -134,7 +134,7 @@ class MpdDevice(MediaPlayerDevice):
         self._currentsong = self._client.currentsong()
 
         position = self._status["time"]
-        if  self._media_position != position:
+        if self._media_position != position:
             self._media_position_updated_at = dt_util.utcnow()
             self._media_position = position
 
