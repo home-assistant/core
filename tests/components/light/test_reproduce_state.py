@@ -1,6 +1,7 @@
 """Test reproduce state for Light."""
 from homeassistant.components.light.reproduce_state import DEPRECATION_WARNING
 from homeassistant.core import State
+
 from tests.common import async_mock_service
 
 VALID_BRIGHTNESS = {"brightness": 180}
