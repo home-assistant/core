@@ -140,10 +140,5 @@ person:
 #  port: 8888
 
 ais_help:
-
 ais_dom_device:
-
-camera:
-  - platform: ais_qrcode
-    name: remote_access
-    value_template: "https://{{states.sensor.ais_secure_android_id_dom.state}}.paczka.pro"
+ais_virtual_devices:
