@@ -1,9 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This device has already been configured",
-            "already_in_progress": "This device is already being configured",
-            "not_huawei_lte": "Not a Huawei LTE device"
+            "already_configured": "This device is already configured"
         },
         "error": {
             "connection_failed": "Connection failed",
