@@ -311,11 +311,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up the AEH-W4A1 climate platform."""
     # Priority 1: manual config
     if hass.data[DOMAIN].get(CONF_IP_ADDRESS):
-        # devices = [hass.data[DOMAIN][CONF_IP_ADDRESS]]
         devices = [hass.data[DOMAIN].get(CONF_IP_ADDRESS)]
-        print("1")
-        print(devices)
-        print("2")
     else:
         # Priority 2: scanned interfaces
         devices = AehW4a1().discovery()
