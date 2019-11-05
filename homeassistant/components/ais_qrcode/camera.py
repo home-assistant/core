@@ -1,16 +1,9 @@
 import logging
 import io
-import voluptuous as vol
 from homeassistant.core import callback
-
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_VALUE_TEMPLATE,
-    ATTR_ENTITY_ID,
-    EVENT_HOMEASSISTANT_START,
-)
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.ais_dom import ais_global
+from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.components.camera import Camera
 from homeassistant.helpers.event import async_track_state_change
 from datetime import timedelta
 
@@ -19,36 +12,22 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "qr_code"
 
 SCAN_INTERVAL = timedelta(seconds=2000)
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    }
-)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the QRCode image platform."""
-    name = config.get(CONF_NAME)
-    value_template = config.get(CONF_VALUE_TEMPLATE)
 
-    if value_template is not None:
-        value_template.hass = hass
-    entity_ids = config.get(ATTR_ENTITY_ID) or value_template.extract_entities()
-
-    async_add_entities([QRCodeCamera(hass, name, value_template, entity_ids)])
+    add_entities([QRCodeCamera(hass, "remote_access", "remote_access")])
 
 
 class QRCodeCamera(Camera):
     """Representation of an QRCode image."""
 
-    def __init__(self, hass, name, template, entity_ids):
+    def __init__(self, hass, name, entity_ids):
         """Initialize the QRCode entity."""
         super().__init__()
         self._hass = hass
         self._name = name
-        self._template = template
         self._entities = entity_ids
         self._image = io.BytesIO()
         self._refresh_()
@@ -80,7 +59,8 @@ class QRCodeCamera(Camera):
 
     @property
     def state(self):
-        return self._template.async_render()
+        gate_id = ais_global.get_sercure_android_id_dom()
+        return "https://" + gate_id + ".paczka.pro"
 
     def camera_image(self):
         """Process the image."""
@@ -103,7 +83,9 @@ class QRCodeCamera(Camera):
         import pyqrcode
         import png
 
-        qr_code = pyqrcode.create(self._template.async_render())
+        gate_id = ais_global.get_sercure_android_id_dom()
+        _template = "https://" + gate_id + ".paczka.pro"
+        qr_code = pyqrcode.create(_template)
         self._image.truncate(0)
         self._image.seek(0)
 
