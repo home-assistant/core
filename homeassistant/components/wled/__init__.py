@@ -79,7 +79,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload WLED config entry."""
-    # hass.services.async_remove(DOMAIN, SERVICE_EXAMPLE)
 
     # Unload entities for this entry/device.
     await hass.config_entries.async_forward_entry_unload(entry, LIGHT_DOMAIN)
