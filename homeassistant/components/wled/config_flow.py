@@ -24,7 +24,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
-    async def _show_setup_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
+    def _show_setup_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -32,9 +32,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def _show_confirm_dialog(
-        self, errors: Optional[Dict] = None
-    ) -> Dict[str, Any]:
+    def _show_confirm_dialog(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
         """Show the setup form to the user."""
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         name = self.context.get(CONF_NAME)
@@ -52,8 +50,8 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is None:
             if source == SOURCE_ZEROCONF:
-                return await self._show_confirm_dialog()
-            return await self._show_setup_form()
+                return self._show_confirm_dialog()
+            return self._show_setup_form()
 
         if source == SOURCE_ZEROCONF:
             # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
@@ -70,7 +68,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             if source == SOURCE_ZEROCONF:
                 return self.async_abort(reason="connection_error")
             errors["base"] = "connection_error"
-            return await self._show_setup_form(errors)
+            return self._show_setup_form(errors)
 
         # Check if already configured
         for entry in self._async_current_entries():
