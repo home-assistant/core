@@ -267,7 +267,7 @@ class Thermostat(ClimateDevice):
 
     def _create_operation_modes(self) -> list:
         """Create the operation modes for the thermostat; called in init."""
-        operation_modes = list()
+        operation_modes = []
         if self._thermostat["settings"]["heatStages"]:
             operation_modes.append(HVAC_MODE_HEAT)
         if self._thermostat["settings"]["coolStages"]:
@@ -279,7 +279,7 @@ class Thermostat(ClimateDevice):
 
     def _create_preset_modes(self) -> dict:
         """Create the preset modes for the thermostat; called in init."""
-        preset_modes = dict()
+        preset_modes = {}
         for comfort in self._thermostat["program"]["climates"]:
             preset_modes[comfort["climateRef"]] = comfort["name"]
         return preset_modes
