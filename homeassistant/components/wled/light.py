@@ -135,7 +135,7 @@ class WLEDLight(Light, WLEDDeviceEntity):
         except WLEDError:
             _LOGGER.error("An error occurred while turning off WLED light.")
             self._available = False
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
@@ -188,7 +188,7 @@ class WLEDLight(Light, WLEDDeviceEntity):
         except WLEDError:
             _LOGGER.error("An error occurred while turning on WLED light.")
             self._available = False
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     async def _wled_update(self) -> None:
         """Update WLED entity."""
