@@ -125,9 +125,7 @@ class WLEDLight(Light, WLEDDeviceEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the light."""
-        if self._state is None:
-            return False
-        return self._state
+        return bool(self._state)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
