@@ -18,14 +18,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Abode cover devices."""
-
     data = hass.data[DOMAIN]
 
-    devices = []
-    for device in data.abode.get_devices(generic_type=CONST.TYPE_COVER):
-        devices.append(AbodeCover(data, device))
+    entities = []
 
-    async_add_entities(devices)
+    for device in data.abode.get_devices(generic_type=CONST.TYPE_COVER):
+        entities.append(AbodeCover(data, device))
+
+    data.entities.extend(entities)
+    async_add_entities(entities)
 
 
 class AbodeCover(AbodeDevice, CoverDevice):

@@ -23,12 +23,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up an alarm control panel for an Abode device."""
+    """Set up Abode alarm control panel device."""
     data = hass.data[DOMAIN]
-
-    async_add_entities(
-        [AbodeAlarm(data, await hass.async_add_executor_job(data.abode.get_alarm))]
-    )
+    entity = [AbodeAlarm(data, await hass.async_add_executor_job(data.abode.get_alarm))]
+    data.entities.extend(entity)
+    async_add_entities(entity)
 
 
 class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanel):

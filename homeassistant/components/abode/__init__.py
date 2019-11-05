@@ -89,7 +89,7 @@ class AbodeSystem:
 
         self.abode = abode
         self.polling = polling
-        self.devices = []
+        self.entities = []
         self.logout_listener = None
 
 
@@ -179,27 +179,27 @@ def setup_hass_services(hass):
         """Capture a new image."""
         entity_ids = call.data.get(ATTR_ENTITY_ID)
 
-        target_devices = [
-            device
-            for device in hass.data[DOMAIN].devices
-            if device.entity_id in entity_ids
+        target_entities = [
+            entity
+            for entity in hass.data[DOMAIN].entities
+            if entity.entity_id in entity_ids
         ]
 
-        for device in target_devices:
-            device.capture()
+        for entity in target_entities:
+            entity.capture()
 
     def trigger_quick_action(call):
         """Trigger a quick action."""
         entity_ids = call.data.get(ATTR_ENTITY_ID, None)
 
-        target_devices = [
-            device
-            for device in hass.data[DOMAIN].devices
-            if device.entity_id in entity_ids
+        target_entities = [
+            entity
+            for entity in hass.data[DOMAIN].entities
+            if entity.entity_id in entity_ids
         ]
 
-        for device in target_devices:
-            device.trigger()
+        for entity in target_entities:
+            entity.trigger()
 
     hass.services.register(
         DOMAIN, SERVICE_SETTINGS, change_setting, schema=CHANGE_SETTING_SCHEMA
