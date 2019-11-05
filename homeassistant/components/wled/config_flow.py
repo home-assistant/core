@@ -63,7 +63,6 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             device = await wled.update()
-            mac_address = device.info.mac_address
         except WLEDConnectionError:
             if source == SOURCE_ZEROCONF:
                 return self.async_abort(reason="connection_error")
@@ -71,6 +70,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_setup_form(errors)
 
         # Check if already configured
+        mac_address = device.info.mac_address
         for entry in self._async_current_entries():
             if entry.data[CONF_MAC] == mac_address:
                 # This mac address is already configured
@@ -113,11 +113,11 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         wled = WLED(host, loop=self.hass.loop, session=session)
         try:
             device = await wled.update()
-            mac_address = device.info.mac_address
         except WLEDConnectionError:
             return self.async_abort(reason="connection_error")
 
         # Check if already configured
+        mac_address = device.info.mac_address
         for entry in self._async_current_entries():
             if entry.data[CONF_MAC] == mac_address:
                 return self.async_abort(reason="already_configured")
