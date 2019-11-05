@@ -67,7 +67,7 @@ class EcobeeWeather(WeatherEntity):
         """Return device information for the ecobee weather platform."""
         thermostat = self.data.ecobee.get_thermostat(self._index)
         try:
-            model = f"{ECOBEE_MODEL_TO_NAME[thermostat['modelNumber']]} Thermostat"
+            model = f"{ECOBEE_MODEL_TO_NAME[thermostat['modelNumber']]}"
         except KeyError:
             _LOGGER.error(
                 "Model number for ecobee thermostat %s not recognized. "

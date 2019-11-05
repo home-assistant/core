@@ -70,9 +70,7 @@ class EcobeeBinarySensor(BinarySensorDevice):
                 thermostat = self.data.ecobee.get_thermostat(self.index)
                 identifier = thermostat["identifier"]
                 try:
-                    model = (
-                        f"{ECOBEE_MODEL_TO_NAME[thermostat['modelNumber']]} Thermostat"
-                    )
+                    model = f"{ECOBEE_MODEL_TO_NAME[thermostat['modelNumber']]}"
                 except KeyError:
                     _LOGGER.error(
                         "Model number for ecobee thermostat %s not recognized. "

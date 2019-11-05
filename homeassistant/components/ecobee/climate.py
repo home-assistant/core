@@ -308,9 +308,7 @@ class Thermostat(ClimateDevice):
     def device_info(self):
         """Return device information for the thermostat."""
         try:
-            model = (
-                f"{ECOBEE_MODEL_TO_NAME[self._thermostat['modelNumber']]} Thermostat"
-            )
+            model = f"{ECOBEE_MODEL_TO_NAME[self._thermostat['modelNumber']]}"
         except KeyError:
             _LOGGER.error(
                 "Model number for ecobee thermostat %s not recognized. "
