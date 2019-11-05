@@ -65,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.debug("An error occurred while updating WLED", exc_info=True)
 
         # Even if the update failed, we still send out the event.
-        # To allow entities to make themselfs unavailable.
+        # To allow entities to make themselves unavailable.
         dispatcher_send(hass, DATA_WLED_UPDATED, entry.entry_id)
 
     # Schedule update interval
