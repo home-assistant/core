@@ -89,8 +89,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 
-from . import CONF_IP_ADDRESS, DOMAIN as AEHW4A1_DOMAIN
-from .const import DOMAIN
+from . import CONF_IP_ADDRESS, DOMAIN
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -311,14 +310,18 @@ def _build_entity(device):
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up the AEH-W4A1 climate platform."""
     # Priority 1: manual config
-    interfaces = hass.data[AEHW4A1_DOMAIN].get(DOMAIN)
-    if not interfaces:
+    if hass.data[DOMAIN].get(CONF_IP_ADDRESS):
+        # devices = [hass.data[DOMAIN][CONF_IP_ADDRESS]]
+        devices = [hass.data[DOMAIN].get(CONF_IP_ADDRESS)]
+        print("1")
+        print(devices)
+        print("2")
+    else:
         # Priority 2: scanned interfaces
         devices = AehW4a1().discovery()
-        interfaces = [{CONF_IP_ADDRESS: ip} for ip in devices]
 
+    interfaces = [{CONF_IP_ADDRESS: ip} for ip in devices]
     all_devices = [_build_entity(interface["ip_address"]) for interface in interfaces]
-
     async_add_devices(all_devices, True)
 
 
