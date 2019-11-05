@@ -85,7 +85,8 @@ def draw_box(
     the bounding box will be `(40, 10)` to `(180, 50)` (in (x,y) coordinates).
     """
 
-    line_width = 5
+    line_width = 3
+    font_height = 8
     y_min, x_min, y_max, x_max = box
     (left, right, top, bottom) = (
         x_min * img_width,
@@ -99,7 +100,9 @@ def draw_box(
         fill=color,
     )
     if text:
-        draw.text((left + line_width, abs(top - line_width)), text, fill=color)
+        draw.text(
+            (left + line_width, abs(top - line_width - font_height)), text, fill=color
+        )
 
 
 async def async_setup(hass, config):
