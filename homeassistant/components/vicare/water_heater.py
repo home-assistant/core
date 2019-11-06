@@ -93,10 +93,8 @@ class ViCareWater(WaterHeaterDevice):
             self._current_mode = self._api.getActiveMode()
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
-            return
         except simplejson.errors.JSONDecodeError:
             _LOGGER.error("Unable to decode data from ViCare server")
-            return
 
     @property
     def supported_features(self):
