@@ -1,7 +1,13 @@
 """Support for azure service bus notification."""
 import json
+import logging
 
 from azure.servicebus.aio import Message, ServiceBusClient
+from azure.servicebus.common.errors import (
+    MessageSendFailed,
+    ServiceBusConnectionError,
+    ServiceBusResourceNotFound,
+)
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -37,6 +43,8 @@ PLATFORM_SCHEMA = vol.All(
     ),
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def get_service(hass, config, discovery_info=None):
     """Get the notification service."""
@@ -50,10 +58,18 @@ def get_service(hass, config, discovery_info=None):
         connection_string, loop=hass.loop
     )
 
-    if queue_name:
-        client = servicebus.get_queue(queue_name)
-    else:
-        client = servicebus.get_topic(topic_name)
+    try:
+        if queue_name:
+            client = servicebus.get_queue(queue_name)
+        else:
+            client = servicebus.get_topic(topic_name)
+    except (ServiceBusConnectionError, ServiceBusResourceNotFound) as err:
+        _LOGGER.exception(
+            "Connection error while creating client for queue/topic '%s'. %s",
+            queue_name or topic_name,
+            err,
+        )
+        return None
 
     return ServiceBusNotificationService(client)
 
@@ -80,4 +96,9 @@ class ServiceBusNotificationService(BaseNotificationService):
 
         queue_message = Message(json.dumps(dto))
         queue_message.properties.content_type = CONTENT_TYPE_JSON
-        await self._client.send(queue_message)
+        try:
+            await self._client.send(queue_message)
+        except MessageSendFailed:
+            _LOGGER.exception(
+                "Could not send service bus notification to %s", self._client.name
+            )
