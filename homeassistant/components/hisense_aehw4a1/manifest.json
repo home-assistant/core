@@ -8,6 +8,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     "pyaehw4a1==0.1.2"
 =======
     "pyaehw4a1==0.0.5"
@@ -21,6 +22,9 @@
 =======
     "pyaehw4a1==0.1.2"
 >>>>>>> Updated library to latest version
+=======
+    "pyaehw4a1==0.2.1"
+>>>>>>> Switched to async
   ],
   "dependencies": [],
   "codeowners": [

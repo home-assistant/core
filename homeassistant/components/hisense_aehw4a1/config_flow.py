@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def _async_has_devices(hass):
     """Return if there are devices that can be discovered."""
-    aehw4a1_ip_addresses = AehW4a1().discovery()
+    aehw4a1_ip_addresses = await AehW4a1().discovery()
     return len(aehw4a1_ip_addresses) > 0
 
 
