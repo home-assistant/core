@@ -801,6 +801,9 @@ lw12==0.9.2
 # homeassistant.components.lyft
 lyft_rides==0.2
 
+# homeassistant.components.magichome
+magichome==0.1.40
+
 # homeassistant.components.magicseaweed
 magicseaweed==1.0.3
 
