@@ -117,7 +117,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
     token_info = oauth.get_cached_token()
     if not token_info:
-        _LOGGER.info(f"no token {cache}; requesting authorization")
+        _LOGGER.info("no token %s; requesting authorization", cache)
         hass.http.register_view(SpotifyAuthCallbackView(config, add_entities, oauth))
         request_configuration(hass, config, add_entities, oauth, name)
         return
@@ -211,7 +211,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
 
         # Don't true update when token is expired
         if self._oauth.is_token_expired(self._token_info):
-            _LOGGER.warning(f"{self.name} failed to update, token expired.")
+            _LOGGER.warning("%s failed to update, token expired.", self.name)
             return
 
         # Available devices
@@ -232,7 +232,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
                     if old_devices.get(name, None) is None
                 }
                 if device_diff:
-                    _LOGGER.info(f"{self.name} new Devices: %s", str(device_diff))
+                    _LOGGER.info("%s new Devices: %s", self.name, str(device_diff))
         # Current playback state
         current = self._player.current_playback()
         if current is None:
@@ -302,17 +302,17 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         elif media_type == MEDIA_TYPE_PLAYLIST:
             kwargs["context_uri"] = media_id
         else:
-            _LOGGER.error(f"{self.name} media type %s is not supported", media_type)
+            _LOGGER.error("%s media type %s is not supported", self.name, media_type)
             return
         if not media_id.startswith("spotify:"):
-            _LOGGER.error(f"{self.name} media id must be spotify uri")
+            _LOGGER.error("%s media id must be spotify uri", self.name)
             return
         self._player.start_playback(**kwargs)
 
     def play_playlist(self, media_id, random_song):
         """Play random music in a playlist."""
         if not media_id.startswith("spotify:playlist:"):
-            _LOGGER.error(f"{self.name} media id must be spotify playlist uri")
+            _LOGGER.error("%s media id must be spotify playlist uri", self.name)
             return
         kwargs = {"context_uri": media_id}
         if random_song:
