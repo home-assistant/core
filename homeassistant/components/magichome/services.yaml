@@ -1,0 +1,7 @@
+# Describes the format for available MagicHome services
+
+pull_devices:
+  description: Pull device list from MagicHome server.
+
+force_update:
+  description: Force all MagicHome devices to pull data.
