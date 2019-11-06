@@ -141,8 +141,8 @@ async def async_setup(hass, config):
         for entity in await component.async_extract_from_service(service_call):
             tasks.append(
                 entity.async_trigger(
-                    service_call.data.get(ATTR_VARIABLES),
-                    skip_condition=service_call.data.get(CONF_SKIP_CONDITION),
+                    service_call.data[ATTR_VARIABLES],
+                    skip_condition=service_call.data[CONF_SKIP_CONDITION],
                     context=service_call.context,
                 )
             )
