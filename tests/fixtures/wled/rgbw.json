@@ -1,7 +1,7 @@
 {
   "state": {
     "on": true,
-    "bri": 127,
+    "bri": 140,
     "transition": 7,
     "ps": -1,
     "pl": -1,
@@ -19,27 +19,13 @@
       {
         "id": 0,
         "start": 0,
-        "stop": 19,
-        "len": 20,
-        "col": [[255, 159, 0], [0, 0, 0], [0, 0, 0]],
-        "fx": 0,
-        "sx": 32,
+        "stop": 13,
+        "len": 13,
+        "col": [[255, 0, 0, 139], [0, 0, 0, 0], [0, 0, 0, 0]],
+        "fx": 9,
+        "sx": 165,
         "ix": 128,
         "pal": 0,
-        "sel": true,
-        "rev": false,
-        "cln": -1
-      },
-      {
-        "id": 1,
-        "start": 20,
-        "stop": 30,
-        "len": 10,
-        "col": [[0, 255, 123], [0, 0, 0], [0, 0, 0]],
-        "fx": 1,
-        "sx": 16,
-        "ix": 64,
-        "pal": 1,
         "sel": true,
         "rev": false,
         "cln": -1
@@ -47,30 +33,30 @@
     ]
   },
   "info": {
-    "ver": "0.8.5",
-    "vid": 1909122,
+    "ver": "0.8.6",
+    "vid": 1910255,
     "leds": {
-      "count": 30,
-      "rgbw": false,
+      "count": 13,
+      "rgbw": true,
       "pin": [2],
-      "pwr": 470,
+      "pwr": 208,
       "maxpwr": 850,
       "maxseg": 10
     },
-    "name": "WLED Light",
+    "name": "WLED RGBW Light",
     "udpport": 21324,
     "live": false,
-    "fxcount": 81,
+    "fxcount": 83,
     "palcount": 50,
     "arch": "esp8266",
-    "core": "2_4_2",
-    "freeheap": 14600,
-    "uptime": 32,
+    "core": "2_5_2",
+    "freeheap": 20136,
+    "uptime": 5591,
     "opt": 119,
     "brand": "WLED",
     "product": "DIY light",
     "btype": "bin",
-    "mac": "aabbccddeeff"
+    "mac": "aabbccddee11"
   },
   "effects": [
     "Solid",
@@ -147,13 +133,15 @@
     "Noise 2",
     "Noise 3",
     "Noise 4",
-    "Colortwinkle",
+    "Colortwinkles",
     "Lake",
     "Meteor",
     "Smooth Meteor",
     "Railway",
     "Ripple",
-    "Twinklefox"
+    "Twinklefox",
+    "Twinklecat",
+    "Halloween Eyes"
   ],
   "palettes": [
     "Default",

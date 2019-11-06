@@ -9,12 +9,17 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def init_integration(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    rgbw: bool = False,
+    skip_setup: bool = False,
 ) -> MockConfigEntry:
     """Set up the WLED integration in Home Assistant."""
+
+    fixture = "wled/rgb.json" if not rgbw else "wled/rgbw.json"
     aioclient_mock.get(
         "http://example.local:80/json/",
-        text=load_fixture("wled.json"),
+        text=load_fixture(fixture),
         headers={"Content-Type": "application/json"},
     )
 
@@ -29,6 +34,9 @@ async def init_integration(
     )
 
     entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
+
+    if not skip_setup:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     return entry

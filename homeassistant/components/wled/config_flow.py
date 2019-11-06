@@ -69,9 +69,6 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self._show_confirm_dialog()
             return self._show_setup_form()
 
-        if user_input is None:
-            user_input = {}
-
         if source == SOURCE_ZEROCONF:
             # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
             user_input[CONF_HOST] = self.context.get(CONF_HOST)
