@@ -771,21 +771,14 @@ class TestTemplateLight:
                                 },
                                 "set_color": [
                                     {
-                                        "service": "light.turn_on",
+                                        "service": "input_number.set_value",
                                         "data_template": {
-                                            "entity_id": "input_number.set_value",
+                                            "entity_id": "input_number.h",
                                             "color_temp": "{{h}}",
                                         },
                                     },
-                                    {
-                                        "service": "input_number.set_value",
-                                        "data_template": {
-                                            "entity_id": "input_number.s",
-                                            "color_temp": "{{s}}",
-                                        },
-                                    },
                                 ],
-                                "color_template": "({{states('input_number.h') | int}}, {{states('input_number.s') | int}})",
+                                "color_template": "({{50}}, {{45}})",
                             }
                         },
                     }
@@ -793,9 +786,6 @@ class TestTemplateLight:
             )
         self.hass.start()
         self.hass.block_till_done()
-
-        self.hass.states.set("input_number.h", 50)
-        self.hass.states.set("input_number.s", 45)
         state = self.hass.states.get("light.test_template_light")
         assert state is not None
 
