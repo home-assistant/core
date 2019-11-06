@@ -43,9 +43,9 @@ REMOTE_CALL = {
 @pytest.fixture(name="remote")
 def remote_fixture():
     """Patch the samsungctl Remote."""
-    with patch("samsungctl.Remote") as remote, patch(
-        "homeassistant.components.samsungtv.config_flow.socket"
-    ):
+    with patch("homeassistant.components.samsungtv.config_flow.socket"), patch(
+        "homeassistant.components.samsungtv.media_player.SamsungRemote"
+    ) as remote, patch("homeassistant.components.samsungtv.media_player.socket"):
         yield remote
 
 

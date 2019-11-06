@@ -160,11 +160,12 @@ class SamsungTVDevice(MediaPlayerDevice):
     ):
         """Initialize the Samsung device."""
 
-        # Save a reference to the imported classes
         self._name = name
         self._mac = mac
         self._broadcast = broadcast
         self._uuid = uuid
+        self._manufacturer = manufacturer
+        self._model = model
         # Assume that the TV is not muted
         self._muted = False
         # Assume that the TV is in Play mode
