@@ -39,12 +39,17 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_MANUFACTURER, CONF_MODEL, DOMAIN, LOGGER, METHODS
+from .const import (
+    CONF_MANUFACTURER,
+    CONF_MODEL,
+    DEFAULT_NAME,
+    DEFAULT_TIMEOUT,
+    DOMAIN,
+    LOGGER,
+    METHODS,
+)
 
-DEFAULT_NAME = "Samsung TV Remote"
-DEFAULT_TIMEOUT = 1
 DEFAULT_BROADCAST_ADDRESS = "255.255.255.255"
-
 KEY_PRESS_TIMEOUT = 1.2
 KNOWN_DEVICES_KEY = "samsungtv_known_devices"
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
@@ -119,15 +124,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Samsung TV from a config entry."""
-    host = config_entry.data[CONF_HOST]
-    port = None
-    name = config_entry.title
-    timeout = DEFAULT_TIMEOUT
-    mac = None
+    host = config_entry.data.get(CONF_HOST)
+    mac = config_entry.data.get(CONF_MAC)
     broadcast = config_entry.data.get(CONF_BROADCAST_ADDRESS, DEFAULT_BROADCAST_ADDRESS)
-    uuid = config_entry.data[CONF_ID]
-    manufacturer = config_entry.data[CONF_MANUFACTURER]
-    model = config_entry.data[CONF_MODEL]
+    manufacturer = config_entry.data.get(CONF_MANUFACTURER)
+    model = config_entry.data.get(CONF_MODEL)
+    name = config_entry.title
+    port = config_entry.data.get(CONF_PORT)
+    timeout = config_entry.data.get(CONF_TIMEOUT)
+    uuid = config_entry.data.get(CONF_ID)
 
     async_add_devices(
         [
