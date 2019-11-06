@@ -108,6 +108,8 @@ class ActiveConnection:
     @callback
     def async_handle_exception(self, msg, err):
         """Handle an exception while processing a handler."""
+        log_handler = self.logger.error
+
         if isinstance(err, Unauthorized):
             code = const.ERR_UNAUTHORIZED
             err_message = "Unauthorized"
@@ -120,6 +122,8 @@ class ActiveConnection:
         else:
             code = const.ERR_UNKNOWN_ERROR
             err_message = "Unknown error"
+            log_handler = self.logger.exception
 
-        self.logger.exception("Error handling message: %s", err_message)
+        log_handler("Error handling message: %s", err_message)
+
         self.send_message(messages.error_message(msg["id"], code, err_message))
