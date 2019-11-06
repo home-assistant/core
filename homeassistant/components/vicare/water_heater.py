@@ -1,5 +1,7 @@
 """Viessmann ViCare water_heater device."""
 import logging
+import requests
+import simplejson
 
 from homeassistant.components.water_heater import (
     SUPPORT_TARGET_TEMPERATURE,
@@ -41,6 +43,8 @@ HA_TO_VICARE_HVAC_DHW = {
     OPERATION_MODE_ON: VICARE_MODE_DHW,
 }
 
+PYVICARE_ERROR = "error"
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the ViCare water_heater devices."""
@@ -75,15 +79,22 @@ class ViCareWater(WaterHeaterDevice):
 
     def update(self):
         """Let HA know there has been an update from the ViCare API."""
-        current_temperature = self._api.getDomesticHotWaterStorageTemperature()
-        if current_temperature is not None and current_temperature != "error":
-            self._current_temperature = current_temperature
-        else:
-            self._current_temperature = None
+        try:
+            current_temperature = self._api.getDomesticHotWaterStorageTemperature()
+            if current_temperature != PYVICARE_ERROR:
+                self._current_temperature = current_temperature
+            else:
+                self._current_temperature = None
 
-        self._target_temperature = self._api.getDomesticHotWaterConfiguredTemperature()
+            self._target_temperature = (
+                self._api.getDomesticHotWaterConfiguredTemperature()
+            )
 
-        self._current_mode = self._api.getActiveMode()
+            self._current_mode = self._api.getActiveMode()
+        except requests.exceptions.ConnectionError:
+            _LOGGER.error("Unable to retrieve data from ViCare server")
+        except simplejson.errors.JSONDecodeError:
+            _LOGGER.error("Unable to decode data from ViCare server")
 
     @property
     def supported_features(self):
