@@ -17,8 +17,13 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     Light,
 )
-from homeassistant.components.wled import WLEDDeviceEntity
-from homeassistant.components.wled.const import (
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
+import homeassistant.util.color as color_util
+
+from . import WLEDDeviceEntity
+from .const import (
     ATTR_COLOR_PRIMARY,
     ATTR_INTENSITY,
     ATTR_ON,
@@ -30,10 +35,6 @@ from homeassistant.components.wled.const import (
     DATA_WLED_CLIENT,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
-import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 

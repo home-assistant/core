@@ -6,16 +6,6 @@ from typing import Any, Dict, Optional, Union
 from wled import WLED, WLEDConnectionError, WLEDError
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.wled.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_SOFTWARE_VERSION,
-    DATA_WLED_CLIENT,
-    DATA_WLED_TIMER,
-    DATA_WLED_UPDATED,
-    DOMAIN,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
@@ -29,6 +19,17 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
+
+from .const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_SOFTWARE_VERSION,
+    DATA_WLED_CLIENT,
+    DATA_WLED_TIMER,
+    DATA_WLED_UPDATED,
+    DOMAIN,
+)
 
 SCAN_INTERVAL = timedelta(seconds=5)
 

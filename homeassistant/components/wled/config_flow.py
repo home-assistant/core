@@ -5,7 +5,6 @@ from typing import Any, Dict, Optional
 import voluptuous as vol
 from wled import WLED, WLEDConnectionError
 
-from homeassistant.components.wled.const import DOMAIN  # pylint: disable=W0611
 from homeassistant.config_entries import (
     CONN_CLASS_LOCAL_POLL,
     SOURCE_ZEROCONF,
@@ -14,6 +13,8 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.helpers import ConfigType
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+from .const import DOMAIN  # pylint: disable=W0611
 
 _LOGGER = logging.getLogger(__name__)
 
