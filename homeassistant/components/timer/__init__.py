@@ -1,5 +1,5 @@
 """Support for Timers."""
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 import logging
 
 import voluptuous as vol
@@ -18,13 +18,22 @@ DOMAIN = "timer"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 DEFAULT_DURATION = 0
+DEFAULT_RESTORE = False
+DEFAULT_RESTORE_GRACE_PERIOD = timedelta(minutes=15)
 ATTR_DURATION = "duration"
 ATTR_REMAINING = "remaining"
+ATTR_RESTORE = "restore"
+ATTR_RESTORE_GRACE_PERIOD = "restore_grace_period"
+ATTR_END = "end"
 CONF_DURATION = "duration"
+CONF_RESTORE = "restore"
+CONF_RESTORE_GRACE_PERIOD = "restore_grace_period"
 
 STATUS_IDLE = "idle"
 STATUS_ACTIVE = "active"
 STATUS_PAUSED = "paused"
+
+VIABLE_STATUSES = [STATUS_IDLE, STATUS_ACTIVE, STATUS_PAUSED ]
 
 EVENT_TIMER_FINISHED = "timer.finished"
 EVENT_TIMER_CANCELLED = "timer.cancelled"
@@ -46,6 +55,12 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_ICON): cv.icon,
                     vol.Optional(
                         CONF_DURATION, timedelta(DEFAULT_DURATION)
+                    ): cv.time_period,
+                    vol.Optional(
+                        CONF_RESTORE, DEFAULT_RESTORE
+                    ): cv.boolean,
+                    vol.Optional(
+                        CONF_RESTORE_GRACE_PERIOD, DEFAULT_RESTORE_GRACE_PERIOD
                     ): cv.time_period,
                 },
                 None,
@@ -109,8 +124,10 @@ async def _async_process_config(hass, config):
         name = cfg.get(CONF_NAME)
         icon = cfg.get(CONF_ICON)
         duration = cfg.get(CONF_DURATION)
+        restore = cfg.get(CONF_RESTORE)
+        restore_grace_period = cfg.get(CONF_RESTORE_GRACE_PERIOD)
 
-        entities.append(Timer(hass, object_id, name, icon, duration))
+        entities.append(Timer(hass, object_id, name, icon, duration, restore, restore_grace_period))
 
     return entities
 
@@ -118,13 +135,22 @@ async def _async_process_config(hass, config):
 class Timer(RestoreEntity):
     """Representation of a timer."""
 
-    def __init__(self, hass, object_id, name, icon, duration):
+    def __init__(self, hass, object_id, name, icon, duration, restore, restore_grace_period):
         """Initialize a timer."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
         self._state = STATUS_IDLE
         self._duration = duration
         self._remaining = self._duration
+        self._restore = restore if restore is not None \
+                        else DEFAULT_RESTORE
+        if self._restore:
+            self._restore_grace_period = restore_grace_period \
+                                    if restore_grace_period is not None \
+                                    else DEFAULT_RESTORE_GRACE_PERIOD
+        else:
+            self._restore_grace_period = None
+        
         self._icon = icon
         self._hass = hass
         self._end = None
@@ -156,16 +182,59 @@ class Timer(RestoreEntity):
         return {
             ATTR_DURATION: str(self._duration),
             ATTR_REMAINING: str(self._remaining),
+            ATTR_RESTORE: str(self._restore),
+            ATTR_RESTORE_GRACE_PERIOD: str(self._restore_grace_period),
+            ATTR_END: str(self._end.replace(tzinfo=timezone.utc).astimezone(tz=None)) \
+                      if self._end is not None \
+                      else None,
         }
 
     async def async_added_to_hass(self):
         """Call when entity is about to be added to Home Assistant."""
-        # If not None, we got an initial value.
-        if self._state is not None:
+        
+        if not self._restore:
+            self._state = STATUS_IDLE
             return
-
+        
+        # Check for previous recorded state
         state = await self.async_get_last_state()
-        self._state = state and state.state == state
+        if state is not None:
+            for check_status in VIABLE_STATUSES:
+                if state.state == check_status:
+                    self._state = state.state
+                    # restore last duration if config doesn't have a default
+                    if not self._duration and not state.attributes.get(ATTR_DURATION) == "None":
+                        duration_data = list(map(int, str(state.attributes.get(ATTR_DURATION)).split(":")))
+                        self._duration = timedelta(hours=duration_data[0], 
+                                                   minutes=duration_data[1], 
+                                                   seconds=duration_data[2])
+                    # restore remaining (needed for paused state)
+                    if self._state == STATUS_PAUSED \
+                       and not state.attributes.get(ATTR_REMAINING) == "None" \
+                       and not state.attributes.get(ATTR_REMAINING) == str(timedelta()):
+                        remaining_dt = datetime.strptime(state.attributes.get(ATTR_REMAINING), "%H:%M:%S.%f")
+                        self._remaining = timedelta(hours=remaining_dt.hour,
+                                                    minutes=remaining_dt.minute,
+                                                    seconds=remaining_dt.second)
+                    else:
+                        self._remaining = timedelta()
+                    self._end = datetime.strptime(state.attributes.get(ATTR_END), "%Y-%m-%d %H:%M:%S.%f%z") \
+                                if not state.attributes.get(ATTR_END) == "None" \
+                                   and state.attributes.get(ATTR_END) is not None \
+                                else None
+
+                    if self._state == STATUS_ACTIVE:
+                        self._remaining = self._end - dt_util.utcnow()
+                        # Only restore if restore_grace_period not exceeded
+                        if self._remaining + self._restore_grace_period >= timedelta():
+                            self._state = STATUS_PAUSED
+                            self._end = None
+                            await self.async_start(None)
+                        else:
+                            self._state = STATUS_IDLE
+                    return
+        # Set state to IDLE if no recorded state, or invalid
+        self._state = STATUS_IDLE
 
     async def async_start(self, duration):
         """Start a timer."""
