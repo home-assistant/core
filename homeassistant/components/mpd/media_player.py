@@ -198,7 +198,11 @@ class MpdDevice(MediaPlayerDevice):
 
     @property
     def media_position(self):
-        """Position of current playing media in seconds."""
+        """Position of current playing media in seconds.
+
+        This is returned as part of the mpd status rather than in the details
+        of the current song.
+        """
         return self._status.get("time")
 
     @property
