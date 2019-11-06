@@ -29,7 +29,7 @@ YesssSMS==0.4.1
 abodepy==0.16.6
 
 # homeassistant.components.androidtv
-adb-shell==0.0.7
+adb-shell==0.0.8
 
 # homeassistant.components.adguard
 adguardhome==0.3.0
