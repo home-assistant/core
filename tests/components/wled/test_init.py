@@ -3,7 +3,7 @@ import aiohttp
 from asynctest import patch
 import pytest
 
-from homeassistant.components.wled import async_setup_entry, async_unload_entry
+from homeassistant.components.wled import async_setup_entry
 from homeassistant.components.wled.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -36,7 +36,7 @@ async def test_unload_config_entry(
     entry = await init_integration(hass, aioclient_mock)
     assert hass.data[DOMAIN]
 
-    await async_unload_entry(hass, entry)
+    await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert not hass.data.get(DOMAIN)
 
@@ -54,6 +54,7 @@ async def test_interval_update(
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "example.local", CONF_MAC: "aabbccddeeff"}
     )
+    entry.add_to_hass(hass)
 
     interval_action = False
 
@@ -65,7 +66,7 @@ async def test_interval_update(
         "homeassistant.components.wled.async_track_time_interval",
         new=async_track_time_interval,
     ):
-        await async_setup_entry(hass, entry)
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert interval_action

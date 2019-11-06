@@ -1,6 +1,5 @@
 """Tests for the WLED integration."""
 
-from homeassistant.components.wled import async_setup_entry
 from homeassistant.components.wled.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
@@ -29,6 +28,7 @@ async def init_integration(
         domain=DOMAIN, data={CONF_HOST: "example.local", CONF_MAC: "aabbccddeeff"}
     )
 
-    await async_setup_entry(hass, entry)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
 
     return entry
