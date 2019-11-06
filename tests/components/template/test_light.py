@@ -1,6 +1,9 @@
 """The tests for the  Template light platform."""
 import logging
 
+import pytest
+
+from homeassistant.core import callback
 from homeassistant import setup
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -641,7 +644,8 @@ class TestTemplateLight:
 
         assert state.attributes.get("brightness") == 42
 
-    def test_temperature_template(self):
+    @pytest.mark.parametrize("temp,is_valid", [(500, True), (501, False)])
+    def test_temperature_template(self, temp, is_valid):
         """Test the template for the temperature."""
         with assert_setup_component(1, "light"):
             assert setup.setup_component(
@@ -668,7 +672,7 @@ class TestTemplateLight:
                                         "color_temp": "{{color_temp}}",
                                     },
                                 },
-                                "temperature_template": "{{345}}",
+                                "temperature_template": f"{{{{{temp}}}}}",
                             }
                         },
                     }
@@ -680,8 +684,10 @@ class TestTemplateLight:
 
         state = self.hass.states.get("light.test_template_light")
         assert state is not None
-
-        assert state.attributes.get("color_temp") == 345
+        if is_valid:
+            assert state.attributes.get("color_temp") == temp
+        else:
+            assert state.attributes.get("color_temp") is None
 
     def test_color_action_no_template(self):
         """Test setting color with optimistic template."""
@@ -749,7 +755,11 @@ class TestTemplateLight:
         assert self.calls[1].data["h"] == "40"
         assert self.calls[1].data["s"] == "50"
 
-    def test_color_template(self):
+    @pytest.mark.parametrize(
+        "h_value,s_value,is_valid",
+        [(360, 100, True), (361, 100, False), (360, 101, False)],
+    )
+    def test_color_template(self, h_value, s_value, is_valid):
         """Test the template for the color."""
         with assert_setup_component(1, "light"):
             assert setup.setup_component(
@@ -776,9 +786,9 @@ class TestTemplateLight:
                                             "entity_id": "input_number.h",
                                             "color_temp": "{{h}}",
                                         },
-                                    },
+                                    }
                                 ],
-                                "color_template": "({{50}}, {{45}})",
+                                "color_template": f"({{{{{h_value}}}}}, {{{{{s_value}}}}})",
                             }
                         },
                     }
@@ -788,8 +798,10 @@ class TestTemplateLight:
         self.hass.block_till_done()
         state = self.hass.states.get("light.test_template_light")
         assert state is not None
-
-        assert state.attributes.get("hs_color") == (50, 45)
+        if is_valid:
+            assert state.attributes.get("hs_color") == (h_value, s_value)
+        else:
+            assert state.attributes.get("hs_color") is None
 
     def test_temperature_action_no_template(self):
         """Test setting temperature with optimistic template."""
