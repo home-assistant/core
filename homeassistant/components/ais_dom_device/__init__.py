@@ -12,6 +12,7 @@ from .const import DOMAIN
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
+from homeassistant.components.mqtt import discovery as mqtt_disco
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,18 +41,14 @@ def async_setup(hass, config):
             hass, call.data["deviceId"], call.data["name"], call.data["codes"]
         )
 
-    async def _handle_entry_remove(event):
-        """Handle the entry remove."""
-        if event.data["action"] != "remove":
+    @asyncio.coroutine
+    async def async_remove_ais_dom_device(call):
+        if "entity_id" not in call.data:
             return
-        # todo check if is a mqtt switch
-        registry = await entity_registry.async_get_registry(hass)
-        entity_entry = await registry.async_get(event.data["entity_id"])
-        await entity_entry.async_remove()
-        # hass.states.async_remove(event.data["entity_id"])
+        await _async_remove_ais_dom_device(hass, call.data["entity_id"])
 
     """Set up the remove handler."""
-    hass.bus.async_listen(EVENT_ENTITY_REGISTRY_UPDATED, _handle_entry_remove)
+    # hass.bus.async_listen(EVENT_ENTITY_REGISTRY_UPDATED, _handle_entry_remove)
 
     hass.services.async_register(
         DOMAIN, "convert_rf_code_b1_to_b0", convert_rf_code_b1_to_b0
@@ -59,12 +56,31 @@ def async_setup(hass, config):
     hass.services.async_register(
         DOMAIN, "add_new_rf433_switch", async_add_new_rf433_switch
     )
+    hass.services.async_register(
+        DOMAIN, "remove_ais_dom_device", async_remove_ais_dom_device
+    )
 
     return True
 
 
 def _convert_rf_code_b1_to_b0(code):
     _LOGGER.info("TODO 123" + str(code))
+
+
+async def _async_remove_ais_dom_device(hass, entity_id):
+    registry = await entity_registry.async_get_registry(hass)
+    if entity_id in registry.entities:
+        entity_entry = registry.async_get(entity_id)
+        unique_id = entity_entry.unique_id
+        domain = entity_entry.domain
+        platform = entity_entry.platform
+        registry.async_remove(entity_id)
+        # remove from already discovered
+        if platform == "mqtt":
+            discovery_hash = (domain, unique_id)
+            mqtt_disco.clear_discovery_hash(hass, discovery_hash)
+
+    hass.states.async_remove(entity_id)
 
 
 async def _async_add_new_rf433_switch(hass, device_id, name, codes):
