@@ -3,6 +3,7 @@
     "trigger_type": {
       "cleaning": "{entity_name} started cleaning",
       "docked": "{entity_name} docked"
+    },
     "action_type": {
       "clean": "Let {entity_name} clean",
       "dock": "Let {entity_name} return to the dock"
