@@ -11,6 +11,7 @@ from homeassistant.util.dt import utcnow
 from tests.common import async_fire_time_changed
 
 HOST = "test"
+HOSTS = ["test"]
 DOMAIN = "bla"
 PASSWORD = "abcdefgh"
 
@@ -18,17 +19,24 @@ PASSWORD = "abcdefgh"
 @pytest.fixture
 def setup_namecheapdns(hass, aioclient_mock):
     """Fixture that sets up NamecheapDNS."""
-    aioclient_mock.get(
-        namecheapdns.UPDATE_URL,
-        params={"host": HOST, "domain": DOMAIN, "password": PASSWORD},
-        text="<interface-response><ErrCount>0</ErrCount></interface-response>",
-    )
+    for host in HOSTS:
+        aioclient_mock.get(
+            namecheapdns.UPDATE_URL,
+            params={"host": host, "domain": DOMAIN, "password": PASSWORD},
+            text="<interface-response><ErrCount>0</ErrCount></interface-response>",
+        )
 
     hass.loop.run_until_complete(
         async_setup_component(
             hass,
             namecheapdns.DOMAIN,
-            {"namecheapdns": {"host": HOST, "domain": DOMAIN, "password": PASSWORD}},
+            {
+                "namecheapdns": {
+                    "domains": [
+                        {"domain": DOMAIN, "hosts": HOSTS, "password": PASSWORD}
+                    ]
+                }
+            },
         )
     )
 
@@ -45,7 +53,11 @@ def test_setup(hass, aioclient_mock):
     result = yield from async_setup_component(
         hass,
         namecheapdns.DOMAIN,
-        {"namecheapdns": {"host": HOST, "domain": DOMAIN, "password": PASSWORD}},
+        {
+            "namecheapdns": {
+                "domains": [{"domain": DOMAIN, "hosts": HOSTS, "password": PASSWORD}]
+            }
+        },
     )
     assert result
     assert aioclient_mock.call_count == 1
@@ -67,7 +79,11 @@ def test_setup_fails_if_update_fails(hass, aioclient_mock):
     result = yield from async_setup_component(
         hass,
         namecheapdns.DOMAIN,
-        {"namecheapdns": {"host": HOST, "domain": DOMAIN, "password": PASSWORD}},
+        {
+            "namecheapdns": {
+                "domains": [{"domain": DOMAIN, "hosts": HOSTS, "password": PASSWORD}]
+            }
+        },
     )
     assert not result
     assert aioclient_mock.call_count == 1
