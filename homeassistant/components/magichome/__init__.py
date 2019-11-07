@@ -35,7 +35,7 @@ MAGICHOME_TYPE_TO_HA = {
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
-            {                
+            {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
                 vol.Optional(CONF_COMPANY, default="ZG001"): cv.string,
@@ -60,8 +60,7 @@ def setup(hass, config):
     hass.data[DATA_MAGICHOME] = magichome
     magichome.init(username, password, company, platform)
     hass.data[DOMAIN] = {"entities": {}}
-    
-    
+
     def load_devices(device_list):
         """Load new devices by device_list."""
         device_type_list = {}
@@ -107,11 +106,8 @@ def setup(hass, config):
         dispatcher_send(hass, SIGNAL_UPDATE_ENTITY)
 
     hass.services.register(DOMAIN, SERVICE_FORCE_UPDATE, force_update)
-    
+
     return True
-
-
-
 
 class MagicHomeDevice(Entity):
     """MagicHome base device."""
