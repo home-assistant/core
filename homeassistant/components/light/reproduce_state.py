@@ -17,10 +17,16 @@ from homeassistant.helpers.typing import HomeAssistantType
 from . import (
     DOMAIN,
     ATTR_BRIGHTNESS,
+    ATTR_BRIGHTNESS_PCT,
+    ATTR_COLOR_NAME,
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
+    ATTR_FLASH,
     ATTR_HS_COLOR,
+    ATTR_KELVIN,
+    ATTR_PROFILE,
     ATTR_RGB_COLOR,
+    ATTR_TRANSITION,
     ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
 )
@@ -28,8 +34,36 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 VALID_STATES = {STATE_ON, STATE_OFF}
-ATTR_GROUP = [ATTR_BRIGHTNESS, ATTR_EFFECT, ATTR_WHITE_VALUE]
-COLOR_GROUP = [ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_RGB_COLOR, ATTR_XY_COLOR]
+
+ATTR_GROUP = [
+    ATTR_BRIGHTNESS,
+    ATTR_BRIGHTNESS_PCT,
+    ATTR_EFFECT,
+    ATTR_FLASH,
+    ATTR_WHITE_VALUE,
+    ATTR_TRANSITION,
+]
+
+COLOR_GROUP = [
+    ATTR_COLOR_NAME,
+    ATTR_COLOR_TEMP,
+    ATTR_HS_COLOR,
+    ATTR_KELVIN,
+    ATTR_PROFILE,
+    ATTR_RGB_COLOR,
+    ATTR_XY_COLOR,
+]
+
+DEPRECATED_GROUP = [
+    ATTR_BRIGHTNESS_PCT,
+    ATTR_COLOR_NAME,
+    ATTR_FLASH,
+    ATTR_KELVIN,
+    ATTR_PROFILE,
+    ATTR_TRANSITION,
+]
+
+DEPRECATION_WARNING = "The use of other attributes than device state attributes is deprecated and will be removed in a future release. Read the logs for further details: https://www.home-assistant.io/integrations/scene/"
 
 
 async def _async_reproduce_state(
@@ -47,6 +81,10 @@ async def _async_reproduce_state(
             "Invalid state specified for %s: %s", state.entity_id, state.state
         )
         return
+
+    # Warn if deprecated attributes are used
+    if any(attr in DEPRECATED_GROUP for attr in state.attributes):
+        _LOGGER.warning(DEPRECATION_WARNING)
 
     # Return if we are already at the right state.
     if cur_state.state == state.state and all(
