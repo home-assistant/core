@@ -1,0 +1,8 @@
+{
+  "domain": "humidity",
+  "name": "Humidity",
+  "documentation": "https://www.home-assistant.io/components/humidity",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": ["@Shulyaka"]
+}

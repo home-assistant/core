@@ -1,0 +1,43 @@
+# Describes the format for available humidity services
+
+set_preset_mode:
+  description: Set preset mode for humidity device.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: 'humidity.kitchen'
+    preset_mode:
+      description: New value of preset mode
+      example: 'away'
+set_humidity:
+  description: Set target humidity of humidity device.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: 'humidity.kitchen'
+    humidity:
+      description: New target humidity for humidity device.
+      example: 60
+set_humidifier_mode:
+  description: Set operation mode for humidity device.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: 'humidity.kitchen'
+    humidifier_mode:
+      description: New value of operation mode.
+      example: humidify
+
+turn_on:
+  description: Turn humidity device on.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: 'humidity.kitchen'
+
+turn_off:
+  description: Turn humidity device off.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: 'humidity.kitchen'
