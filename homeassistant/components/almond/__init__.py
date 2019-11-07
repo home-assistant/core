@@ -217,7 +217,7 @@ class AlmondAgent(conversation.AbstractConversationAgent):
     async def async_get_onboarding(self):
         """Get onboard url if not onboarded."""
         if self.entry.data.get("onboarded"):
-            return False
+            return None
 
         host = self.entry.data["host"]
         if self.entry.data.get("is_hassio"):

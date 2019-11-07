@@ -11,11 +11,11 @@ class AbstractConversationAgent(ABC):
     @property
     def attribution(self):
         """Return the attribution."""
-        return False
+        return None
 
     async def async_get_onboarding(self):
         """Get onboard data."""
-        return False
+        return None
 
     async def async_set_onboarding(self, new_data):
         """Set onboard data."""
