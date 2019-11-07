@@ -602,6 +602,9 @@ async def thingtalk_convert(hass, connection, msg):
     cloud = hass.data[DOMAIN]
 
     with async_timeout.timeout(10):
-        connection.send_result(
-            msg["id"], await thingtalk.async_convert(cloud, msg["query"])
-        )
+        try:
+            connection.send_result(
+                msg["id"], await thingtalk.async_convert(cloud, msg["query"])
+            )
+        except thingtalk.ThingTalkConversionError as err:
+            connection.send_error(msg["id"], ws_const.ERR_UNKNOWN_ERROR, str(err))

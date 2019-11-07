@@ -7,6 +7,7 @@ import pytest
 from jose import jwt
 from hass_nabucasa.auth import Unauthenticated, UnknownError
 from hass_nabucasa.const import STATE_CONNECTED
+from hass_nabucasa import thingtalk
 
 from homeassistant.core import State
 from homeassistant.auth.providers import trusted_networks as tn_auth
@@ -905,3 +906,21 @@ async def test_thingtalk_convert_timeout(hass, hass_ws_client, setup_api):
 
     assert not response["success"]
     assert response["error"]["code"] == "timeout"
+
+
+async def test_thingtalk_convert_internal(hass, hass_ws_client, setup_api):
+    """Test that we can convert a query."""
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.cloud.http_api.thingtalk.async_convert",
+        side_effect=thingtalk.ThingTalkConversionError("Did not understand"),
+    ):
+        await client.send_json(
+            {"id": 5, "type": "cloud/thingtalk/convert", "query": "some-data"}
+        )
+        response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "unknown_error"
+    assert response["error"]["message"] == "Did not understand"
