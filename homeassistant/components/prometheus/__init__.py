@@ -13,6 +13,11 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_ACTIONS,
 )
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.humidifier.const import (
+    ATTR_AVAILABLE_MODES,
+    ATTR_HUMIDITY,
+    ATTR_MODE,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_TEMPERATURE,
@@ -317,6 +322,32 @@ class PrometheusMetrics:
                 metric.labels(**dict(self._labels(state), action=action)).set(
                     float(action == current_action)
                 )
+
+    def _handle_humidifier(self, state):
+        humidity = state.attributes.get(ATTR_HUMIDITY)
+        if humidity:
+            metric = self._metric(
+                "humidity", self.prometheus_cli.Gauge, "Target Relative Humidity"
+            )
+            metric.labels(**self._labels(state)).set(humidity)
+
+        metric = self._metric(
+            "humidifier_state",
+            self.prometheus_cli.Gauge,
+            "State of the humidifier (0/1)",
+        )
+        try:
+            value = self.state_as_number(state)
+        except ValueError:
+            value = 0.0
+        metric.labels(**self._labels(state)).set(value)
+
+        mode = state.attributes.get(ATTR_MODE)
+        modes = state.attributes.get(ATTR_AVAILABLE_MODES)
+        if mode and modes:
+            metric = self._metric("mode", self.prometheus_cli.Gauge, "Humidifier Mode")
+            value = modes.index(mode)
+            metric.labels(**self._labels(state)).set(value)
 
     def _handle_sensor(self, state):
         unit = self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
