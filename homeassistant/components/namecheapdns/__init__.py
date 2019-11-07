@@ -16,6 +16,11 @@ DOMAIN = "namecheapdns"
 
 INTERVAL = timedelta(minutes=5)
 
+ATTR_HOST = "host"
+ATTR_DOMAIN = "domain"
+ATTR_PASSWORD = "password"
+ATTR_IP = "ip"
+
 UPDATE_URL = "https://dynamicdns.park-your-domain.com/update"
 
 CONFIG_SCHEMA = vol.Schema(
@@ -49,6 +54,17 @@ async def async_setup(hass, config):
         """Update the namecheap DNS entry."""
         await _update_namecheapdns(session, host, domain, password)
 
+    async def handle_update(call):
+        """Handle service call to update the namecheap DNS entry."""
+        service_host = call.data.get(ATTR_HOST, host)
+        service_domain = call.data.get(ATTR_DOMAIN, domain)
+        service_password = call.data.get(ATTR_PASSWORD, password)
+        await _update_namecheapdns(
+            session, service_host, service_domain, service_password
+        )
+
+    hass.services.async_register(DOMAIN, "update", handle_update)
+
     async_track_time_interval(hass, update_domain_interval, INTERVAL)
 
     return result
@@ -57,7 +73,7 @@ async def async_setup(hass, config):
 async def _update_namecheapdns(session, host, domain, password):
     """Update namecheap DNS entry."""
     params = {"host": host, "domain": domain, "password": password}
-
+    _LOGGER.debug("Updating %s.%s using namecheapdns", host, domain)
     resp = await session.get(UPDATE_URL, params=params)
     xml_string = await resp.text()
     root = ET.fromstring(xml_string)
@@ -66,5 +82,7 @@ async def _update_namecheapdns(session, host, domain, password):
     if int(err_count) != 0:
         _LOGGER.warning("Updating namecheap domain failed: %s", domain)
         return False
+    else:
+        _LOGGER.debug("Updated %s.%s", host, domain)
 
     return True
