@@ -3,7 +3,7 @@
   "name": "MagicHome",
   "documentation": "https://www.home-assistant.io/components/magichome",
   "requirements": [
-    "magichome==0.1.40"
+    "magichome==0.1.41"
   ],
   "dependencies": [],
   "codeowners": []

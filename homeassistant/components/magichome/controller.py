@@ -63,12 +63,16 @@ class MagicHomeController(MagicHomeDevice, Light):
     @property
     def min_mireds(self):
         """Return color temperature min mireds."""
-        return colorutil.color_temperature_kelvin_to_mired(self.magichome.min_color_temp())
+        return colorutil.color_temperature_kelvin_to_mired(
+            self.magichome.min_color_temp()
+        )
 
     @property
     def max_mireds(self):
         """Return color temperature max mireds."""
-        return colorutil.color_temperature_kelvin_to_mired(self.magichome.max_color_temp())
+        return colorutil.color_temperature_kelvin_to_mired(
+            self.magichome.max_color_temp()
+        )
 
     def turn_on(self, **kwargs):
         """Turn on or control the controller."""
