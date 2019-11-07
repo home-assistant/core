@@ -169,7 +169,7 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
 
         presets = []
         if self._heat_mode_enabled and self._has_radiator_thermostat:
-            if profile_names == []:
+            if not profile_names:
                 presets.append(PRESET_NONE)
             presets.append(PRESET_BOOST)
 
