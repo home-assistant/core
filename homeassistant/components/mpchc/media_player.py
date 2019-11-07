@@ -69,6 +69,7 @@ class MpcHcDevice(MediaPlayerDevice):
         self._name = name
         self._url = url
         self._player_variables = dict()
+        self._available = False
 
     def update(self):
         """Get the latest details."""
@@ -79,8 +80,11 @@ class MpcHcDevice(MediaPlayerDevice):
 
             for var in mpchc_variables:
                 self._player_variables[var[0]] = var[1].lower()
+            self._available = True
         except requests.exceptions.RequestException:
             _LOGGER.error("Could not connect to MPC-HC at: %s", self._url)
+            self._player_variables = dict()
+            self._available = False
 
     def _send_command(self, command_id):
         """Send a command to MPC-HC via its window message ID."""
@@ -110,6 +114,11 @@ class MpcHcDevice(MediaPlayerDevice):
             return STATE_PAUSED
 
         return STATE_IDLE
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
 
     @property
     def media_title(self):
