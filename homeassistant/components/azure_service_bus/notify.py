@@ -64,7 +64,7 @@ def get_service(hass, config, discovery_info=None):
         else:
             client = servicebus.get_topic(topic_name)
     except (ServiceBusConnectionError, ServiceBusResourceNotFound) as err:
-        _LOGGER.exception(
+        _LOGGER.error(
             "Connection error while creating client for queue/topic '%s'. %s",
             queue_name or topic_name,
             err,
@@ -98,7 +98,9 @@ class ServiceBusNotificationService(BaseNotificationService):
         queue_message.properties.content_type = CONTENT_TYPE_JSON
         try:
             await self._client.send(queue_message)
-        except MessageSendFailed:
-            _LOGGER.exception(
-                "Could not send service bus notification to %s", self._client.name
+        except MessageSendFailed as err:
+            _LOGGER.error(
+                "Could not send service bus notification to %s. %s",
+                self._client.name,
+                err,
             )
