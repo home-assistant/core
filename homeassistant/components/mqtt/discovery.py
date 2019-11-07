@@ -185,12 +185,6 @@ async def async_start(
         if "value_template" in payload:
             if payload["value_template"].startswith("{{value_json['ENERGY']"):
                 payload["device_class"] = "battery"
-        if "device" in payload:
-            if "model" in payload["device"]:
-                _LOGGER.info(payload["device"]["model"])
-                if payload["device"]["model"] == "Sonoff Bridge":
-                    # TODO discover the buttons
-                    pass
 
         if discovery_hash in hass.data[ALREADY_DISCOVERED]:
             # Dispatch update
