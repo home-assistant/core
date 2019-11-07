@@ -74,7 +74,7 @@ class StarlineAccount:
 
     async def update(self, unused=None):
         """Update StarLine data."""
-        await self._hass.async_add_job(self._update_data)
+        await self._hass.async_add_executor_job(self._update_data)
 
     def set_update_interval(self, interval: int) -> None:
         """Set StarLine API update interval."""
