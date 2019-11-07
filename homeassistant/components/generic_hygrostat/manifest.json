@@ -1,0 +1,11 @@
+{
+  "domain": "generic_hygrostat",
+  "name": "Generic hygrostat",
+  "documentation": "https://www.home-assistant.io/integrations/generic_hygrostat",
+  "requirements": [],
+  "dependencies": [
+    "sensor",
+    "switch"
+  ],
+  "codeowners": ["@Shulyaka"]
+}
