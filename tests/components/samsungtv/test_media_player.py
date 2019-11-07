@@ -1,12 +1,13 @@
-"""Tests for samsungtv Components."""
+"""Tests for samsungtv component."""
 import asyncio
-from asynctest import mock
+from unittest.mock import call, patch
 from datetime import timedelta
+
 import logging
+from asynctest import mock
 import pytest
 from samsungctl import exceptions
-from tests.common import MockDependency, async_fire_time_changed
-from unittest.mock import call, patch
+from tests.common import async_fire_time_changed
 
 from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.components.media_player.const import (
@@ -62,7 +63,7 @@ MOCK_CONFIG = {
         CONF_NAME: "fake",
         CONF_PORT: 8001,
         CONF_TIMEOUT: 10,
-        CONF_MAC: "fake",
+        CONF_MAC: "38:f9:d3:82:b4:f1",
     }
 }
 
@@ -125,7 +126,9 @@ AUTODETECT_LEGACY = {
 @pytest.fixture(name="remote")
 def remote_fixture():
     """Patch the samsungctl Remote."""
-    with patch("samsungctl.Remote") as remote_class, patch(
+    with patch(
+        "homeassistant.components.samsungtv.media_player.SamsungRemote"
+    ) as remote_class, patch(
         "homeassistant.components.samsungtv.media_player.socket"
     ) as socket_class:
         remote = mock.Mock()
@@ -138,8 +141,10 @@ def remote_fixture():
 @pytest.fixture(name="wakeonlan")
 def wakeonlan_fixture():
     """Patch the wakeonlan Remote."""
-    with MockDependency("wakeonlan") as wakeonlan:
-        yield wakeonlan
+    with patch(
+        "homeassistant.components.samsungtv.media_player.wakeonlan"
+    ) as wakeonlan_module:
+        yield wakeonlan_module
 
 
 @pytest.fixture
@@ -249,9 +254,9 @@ async def test_send_key(hass, remote, wakeonlan):
 
 async def test_send_key_autodetect_websocket(hass, remote):
     """Test for send key with autodetection of protocol."""
-    with patch("samsungctl.Remote") as remote, patch(
-        "homeassistant.components.samsungtv.media_player.socket"
-    ):
+    with patch(
+        "homeassistant.components.samsungtv.media_player.SamsungRemote"
+    ) as remote, patch("homeassistant.components.samsungtv.media_player.socket"):
         await setup_samsungtv(hass, MOCK_CONFIG_AUTO)
         assert await hass.services.async_call(
             DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID_AUTO}, True
@@ -266,7 +271,8 @@ async def test_send_key_autodetect_websocket_exception(hass, caplog):
     """Test for send key with autodetection of protocol."""
     caplog.set_level(logging.DEBUG)
     with patch(
-        "samsungctl.Remote", side_effect=[exceptions.AccessDenied("Boom"), mock.DEFAULT]
+        "homeassistant.components.samsungtv.media_player.SamsungRemote",
+        side_effect=[exceptions.AccessDenied("Boom"), mock.DEFAULT],
     ) as remote, patch("homeassistant.components.samsungtv.media_player.socket"):
         await setup_samsungtv(hass, MOCK_CONFIG_AUTO)
         assert await hass.services.async_call(
@@ -287,7 +293,8 @@ async def test_send_key_autodetect_websocket_exception(hass, caplog):
 async def test_send_key_autodetect_legacy(hass, remote):
     """Test for send key with autodetection of protocol."""
     with patch(
-        "samsungctl.Remote", side_effect=[OSError("Boom"), mock.DEFAULT]
+        "homeassistant.components.samsungtv.media_player.SamsungRemote",
+        side_effect=[OSError("Boom"), mock.DEFAULT],
     ) as remote, patch("homeassistant.components.samsungtv.media_player.socket"):
         await setup_samsungtv(hass, MOCK_CONFIG_AUTO)
         assert await hass.services.async_call(
@@ -304,9 +311,10 @@ async def test_send_key_autodetect_legacy(hass, remote):
 
 async def test_send_key_autodetect_none(hass, remote):
     """Test for send key with autodetection of protocol."""
-    with patch("samsungctl.Remote", side_effect=OSError("Boom")) as remote, patch(
-        "homeassistant.components.samsungtv.media_player.socket"
-    ):
+    with patch(
+        "homeassistant.components.samsungtv.media_player.SamsungRemote",
+        side_effect=OSError("Boom"),
+    ) as remote, patch("homeassistant.components.samsungtv.media_player.socket"):
         await setup_samsungtv(hass, MOCK_CONFIG_AUTO)
         assert await hass.services.async_call(
             DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID_AUTO}, True
@@ -557,7 +565,7 @@ async def test_turn_on_with_mac(hass, remote, wakeonlan):
     )
     # key and update called
     assert wakeonlan.send_magic_packet.call_count == 1
-    assert wakeonlan.send_magic_packet.call_args_list == [call("fake")]
+    assert wakeonlan.send_magic_packet.call_args_list == [call("38:f9:d3:82:b4:f1")]
 
 
 async def test_turn_on_without_mac(hass, remote):

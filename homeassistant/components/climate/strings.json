@@ -1,0 +1,8 @@
+{
+  "device_automation": {
+    "action_type": {
+      "set_hvac_mode": "Change HVAC mode on {entity_name}",
+      "set_preset_mode": "Change preset on {entity_name}"
+    }
+  }
+}
