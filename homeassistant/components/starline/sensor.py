@@ -1,4 +1,5 @@
 """Reads vehicle status from StarLine API."""
+from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level, icon_for_signal_level
@@ -7,11 +8,11 @@ from .const import DOMAIN
 from .entity import StarlineEntity
 
 SENSOR_TYPES = {
-    "battery": ["Battery", "V", "mdi:battery"],
-    "balance": ["Balance", "$", "mdi:cash-multiple"],
-    "ctemp": ["Interior Temperature", TEMP_CELSIUS, "mdi:thermometer"],
-    "etemp": ["Engine Temperature", TEMP_CELSIUS, "mdi:thermometer"],
-    "gsm_lvl": ["GSM Signal", "%", "mdi:signal"],
+    "battery": ["Battery", None, "V", None],
+    "balance": ["Balance", None, None, "mdi:cash-multiple"],
+    "ctemp": ["Interior Temperature", DEVICE_CLASS_TEMPERATURE, None, None],
+    "etemp": ["Engine Temperature", DEVICE_CLASS_TEMPERATURE, None, None],
+    "gsm_lvl": ["GSM Signal", None, "%", None],
 }
 
 
@@ -34,11 +35,13 @@ class StarlineSensor(StarlineEntity, Entity):
         device: StarlineDevice,
         key: str,
         name: str,
+        device_class: str,
         unit: str,
         icon: str,
     ):
         """Constructor."""
         super().__init__(account, device, key, name)
+        self._device_class = device_class
         self._unit = unit
         self._icon = icon
 
@@ -75,6 +78,11 @@ class StarlineSensor(StarlineEntity, Entity):
         if self._key == "balance":
             return self._device.balance["currency"]
         return self._unit
+
+    @property
+    def device_class(self):
+        """Return the class of the sensor."""
+        return self._device_class
 
     @property
     def device_state_attributes(self):
