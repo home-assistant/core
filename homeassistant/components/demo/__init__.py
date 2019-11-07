@@ -19,6 +19,7 @@ COMPONENTS_WITH_DEMO_PLATFORM = [
     "cover",
     "device_tracker",
     "fan",
+    "humidity",
     "image_processing",
     "light",
     "lock",
