@@ -68,7 +68,7 @@ class WLEDSwitch(ToggleEntity, WLEDDeviceEntity):
         except WLEDError:
             _LOGGER.error("An error occurred while turning off WLED switch.")
             self._available = False
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     async def _wled_turn_off(self) -> None:
         """Turn off the switch."""
@@ -82,7 +82,7 @@ class WLEDSwitch(ToggleEntity, WLEDDeviceEntity):
         except WLEDError:
             _LOGGER.error("An error occurred while turning on WLED switch.")
             self._available = False
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     async def _wled_turn_on(self) -> None:
         """Turn on the switch."""
