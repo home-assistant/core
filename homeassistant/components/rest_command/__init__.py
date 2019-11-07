@@ -4,7 +4,6 @@ import logging
 
 import aiohttp
 from aiohttp import hdrs
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -96,21 +95,26 @@ async def async_setup(hass, config):
 
             request_url = template_url.async_render(variables=service.data)
             try:
-                with async_timeout.timeout(timeout):
-                    response = await getattr(websession, method)(
-                        request_url, data=payload, auth=auth, headers=headers
-                    )
+                async with getattr(websession, method)(
+                    request_url,
+                    data=payload,
+                    auth=auth,
+                    headers=headers,
+                    timeout=timeout,
+                ) as response:
 
-                if response.status < 400:
-                    _LOGGER.info(
-                        "Success. Url: %s. Status code: %d.",
-                        response.url,
-                        response.status,
-                    )
-                else:
-                    _LOGGER.warning(
-                        "Error. Url: %s. Status code %d.", response.url, response.status
-                    )
+                    if response.status < 400:
+                        _LOGGER.info(
+                            "Success. Url: %s. Status code: %d.",
+                            response.url,
+                            response.status,
+                        )
+                    else:
+                        _LOGGER.warning(
+                            "Error. Url: %s. Status code %d.",
+                            response.url,
+                            response.status,
+                        )
 
             except asyncio.TimeoutError:
                 _LOGGER.warning("Timeout call %s.", response.url, exc_info=1)
