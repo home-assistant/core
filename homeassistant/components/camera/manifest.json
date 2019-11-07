@@ -6,8 +6,6 @@
   "dependencies": [
     "http"
   ],
-  "after_dependencies": [
-    "stream"
-  ],
+  "after_dependencies": [],
   "codeowners": []
 }
