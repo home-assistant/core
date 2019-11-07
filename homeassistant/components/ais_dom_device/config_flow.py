@@ -32,10 +32,9 @@ async def add_new_device(
     device, name, network, password, secure_android_id, set_option_30, ais_req_id
 ) -> str:
     import requests
-    from homeassistant.components import ais_ai_service as ais_ai_service
 
     # send add request to frame
-    url = ais_ai_service.G_HTTP_REST_SERVICE_BASE_URL.format("127.0.0.1")
+    url = ais_global.G_HTTP_REST_SERVICE_BASE_URL.format("127.0.0.1")
     time.sleep(3)
     try:
         ais_global.G_AIS_NEW_DEVICE_NAME = name

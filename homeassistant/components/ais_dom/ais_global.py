@@ -3,6 +3,7 @@ Support for functionality to cache some data for AI-Speaker.
 """
 import socket
 import logging
+import requests
 
 # LV settings
 G_EMPTY_OPTION = "-"
@@ -96,6 +97,7 @@ G_AIS_NEW_DEVICE_START_ADD_TIME = None
 
 #
 G_AIS_DAY_MEDIA_VOLUME_LEVEL = None
+G_HTTP_REST_SERVICE_BASE_URL = "http://{}:8122"
 
 
 def get_pass_for_ssid(ssid):
@@ -103,6 +105,24 @@ def get_pass_for_ssid(ssid):
         if item["ssid"] == ssid:
             return item["pass"]
     return ""
+
+
+# say the text without Home Assistant
+def say_direct(text):
+    j_data = {
+        "text": text,
+        "pitch": GLOBAL_TTS_PITCH,
+        "rate": GLOBAL_TTS_RATE,
+        "voice": GLOBAL_TTS_VOICE,
+    }
+    try:
+        requests.post(
+            G_HTTP_REST_SERVICE_BASE_URL.format("127.0.0.1") + "/text_to_speech",
+            json=j_data,
+            timeout=1,
+        )
+    except Exception as e:
+        _LOGGER.info("problem to send the text to speech via http: " + str(e))
 
 
 def get_sercure_android_id_dom():
