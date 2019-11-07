@@ -290,7 +290,7 @@ class ADBDevice(MediaPlayerDevice):
         self._app_id_to_name = APPS.copy()
         self._app_id_to_name.update(apps)
         self._app_name_to_id = {
-            value: key for (key, value) in self._app_id_to_name.items()
+            value: key for key, value in self._app_id_to_name.items()
         }
         self._keys = KEYS
 
