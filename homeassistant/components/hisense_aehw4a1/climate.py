@@ -389,7 +389,8 @@ class ClimateAehW4a1(ClimateDevice):
 =======
         try:
             status = await self._device.command("status_102_0")
-        except OSError:
+        except Exception as e:
+            _LOGGER.debug("Unexpected error: %s", e)
             self._available = False
             return
 
@@ -513,10 +514,10 @@ class ClimateAehW4a1(ClimateDevice):
             self._swing_mode = None
 
         if self._on == "1":
-            if status["low_electricity"] == "1":
-                self._preset_mode = PRESET_ECO
-            elif status["efficient"] == "1":
+            if status["efficient"] == "1":
                 self._preset_mode = PRESET_BOOST
+            elif status["low_electricity"] == "1":
+                self._preset_mode = PRESET_ECO
             elif status["sleep_status"] == "0000001":
                 self._preset_mode = PRESET_SLEEP
             elif status["sleep_status"] == "0000010":
