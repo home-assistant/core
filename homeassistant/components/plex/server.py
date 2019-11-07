@@ -12,6 +12,7 @@ from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
+    CONF_CLIENT_IDENTIFIER,
     CONF_SERVER,
     CONF_SHOW_ALL_CONTROLS,
     CONF_USE_EPISODE_ART,
@@ -33,8 +34,6 @@ plexapi.X_PLEX_DEVICE_NAME = X_PLEX_DEVICE_NAME
 plexapi.X_PLEX_PLATFORM = X_PLEX_PLATFORM
 plexapi.X_PLEX_PRODUCT = X_PLEX_PRODUCT
 plexapi.X_PLEX_VERSION = X_PLEX_VERSION
-plexapi.myplex.BASE_HEADERS = plexapi.reset_base_headers()
-plexapi.server.BASE_HEADERS = plexapi.reset_base_headers()
 
 
 class PlexServer:
@@ -51,6 +50,12 @@ class PlexServer:
         self._verify_ssl = server_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
         self.options = options
         self.server_choice = None
+
+        # Header conditionally added as it is not available in config entry v1
+        if CONF_CLIENT_IDENTIFIER in server_config:
+            plexapi.X_PLEX_IDENTIFIER = server_config[CONF_CLIENT_IDENTIFIER]
+        plexapi.myplex.BASE_HEADERS = plexapi.reset_base_headers()
+        plexapi.server.BASE_HEADERS = plexapi.reset_base_headers()
 
     def connect(self):
         """Connect to a Plex server directly, obtaining direct URL if necessary."""
@@ -89,15 +94,18 @@ class PlexServer:
 
     def refresh_entity(self, machine_identifier, device, session):
         """Forward refresh dispatch to media_player."""
+        unique_id = f"{self.machine_identifier}:{machine_identifier}"
         dispatcher_send(
             self._hass,
-            PLEX_UPDATE_MEDIA_PLAYER_SIGNAL.format(machine_identifier),
+            PLEX_UPDATE_MEDIA_PLAYER_SIGNAL.format(unique_id),
             device,
             session,
         )
 
     def update_platforms(self):
         """Update the platform entities."""
+        _LOGGER.debug("Updating devices")
+
         available_clients = {}
         new_clients = set()
 
@@ -158,6 +166,11 @@ class PlexServer:
             PLEX_UPDATE_SENSOR_SIGNAL.format(self.machine_identifier),
             sessions,
         )
+
+    @property
+    def plex_server(self):
+        """Return the plexapi PlexServer instance."""
+        return self._plex_server
 
     @property
     def friendly_name(self):

@@ -7,15 +7,15 @@ The Entity Registry will persist itself 10 seconds after a new entity is
 registered. Registering a new entity while a timer is in progress resets the
 timer.
 """
-from asyncio import Event
+import asyncio
 from collections import OrderedDict
 from itertools import chain
 import logging
-from typing import List, Optional, cast
+from typing import Any, Dict, Iterable, List, Optional, cast
 
 import attr
 
-from homeassistant.core import callback, split_entity_id, valid_entity_id
+from homeassistant.core import Event, callback, split_entity_id, valid_entity_id
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.loader import bind_hass
 from homeassistant.util import ensure_unique_string, slugify
@@ -24,8 +24,7 @@ from homeassistant.util.yaml import load_yaml
 from .typing import HomeAssistantType
 
 
-# mypy: allow-untyped-calls, allow-untyped-defs
-# mypy: no-check-untyped-defs, no-warn-return-any
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 PATH_REGISTRY = "entity_registry.yaml"
 DATA_REGISTRY = "entity_registry"
@@ -51,7 +50,7 @@ class RegistryEntry:
     platform = attr.ib(type=str)
     name = attr.ib(type=str, default=None)
     device_id = attr.ib(type=str, default=None)
-    config_entry_id = attr.ib(type=str, default=None)
+    config_entry_id: Optional[str] = attr.ib(default=None)
     disabled_by = attr.ib(
         type=Optional[str],
         default=None,
@@ -68,12 +67,12 @@ class RegistryEntry:
     domain = attr.ib(type=str, init=False, repr=False)
 
     @domain.default
-    def _domain_default(self):
+    def _domain_default(self) -> str:
         """Compute domain value."""
         return split_entity_id(self.entity_id)[0]
 
     @property
-    def disabled(self):
+    def disabled(self) -> bool:
         """Return if entry is disabled."""
         return self.disabled_by is not None
 
@@ -81,17 +80,17 @@ class RegistryEntry:
 class EntityRegistry:
     """Class to hold a registry of entities."""
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistantType):
         """Initialize the registry."""
         self.hass = hass
-        self.entities = None
+        self.entities: Dict[str, RegistryEntry]
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         self.hass.bus.async_listen(
             EVENT_DEVICE_REGISTRY_UPDATED, self.async_device_removed
         )
 
     @callback
-    def async_is_registered(self, entity_id):
+    def async_is_registered(self, entity_id: str) -> bool:
         """Check if an entity_id is currently registered."""
         return entity_id in self.entities
 
@@ -116,8 +115,11 @@ class EntityRegistry:
 
     @callback
     def async_generate_entity_id(
-        self, domain, suggested_object_id, known_object_ids=None
-    ):
+        self,
+        domain: str,
+        suggested_object_id: str,
+        known_object_ids: Optional[Iterable[str]] = None,
+    ) -> str:
         """Generate an entity ID that does not conflict.
 
         Conflicts checked against registered and currently existing entities.
@@ -195,7 +197,7 @@ class EntityRegistry:
         return entity
 
     @callback
-    def async_remove(self, entity_id):
+    def async_remove(self, entity_id: str) -> None:
         """Remove an entity from registry."""
         self.entities.pop(entity_id)
         self.hass.bus.async_fire(
@@ -204,7 +206,7 @@ class EntityRegistry:
         self.async_schedule_save()
 
     @callback
-    def async_device_removed(self, event):
+    def async_device_removed(self, event: Event) -> None:
         """Handle the removal of a device.
 
         Remove entities from the registry that are associated to a device when
@@ -309,7 +311,7 @@ class EntityRegistry:
 
         return new
 
-    async def async_load(self):
+    async def async_load(self) -> None:
         """Load the entity registry."""
         data = await self.hass.helpers.storage.async_migrator(
             self.hass.config.path(PATH_REGISTRY),
@@ -317,7 +319,7 @@ class EntityRegistry:
             old_conf_load_func=load_yaml,
             old_conf_migrate_func=_async_migrate,
         )
-        entities = OrderedDict()
+        entities: Dict[str, RegistryEntry] = OrderedDict()
 
         if data is not None:
             for entity in data["entities"]:
@@ -334,12 +336,12 @@ class EntityRegistry:
         self.entities = entities
 
     @callback
-    def async_schedule_save(self):
+    def async_schedule_save(self) -> None:
         """Schedule saving the entity registry."""
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback
-    def _data_to_save(self):
+    def _data_to_save(self) -> Dict[str, Any]:
         """Return data of entity registry to store in a file."""
         data = {}
 
@@ -359,7 +361,7 @@ class EntityRegistry:
         return data
 
     @callback
-    def async_clear_config_entry(self, config_entry):
+    def async_clear_config_entry(self, config_entry: str) -> None:
         """Clear config entry from registry entries."""
         for entity_id in [
             entity_id
@@ -375,7 +377,7 @@ async def async_get_registry(hass: HomeAssistantType) -> EntityRegistry:
     reg_or_evt = hass.data.get(DATA_REGISTRY)
 
     if not reg_or_evt:
-        evt = hass.data[DATA_REGISTRY] = Event()
+        evt = hass.data[DATA_REGISTRY] = asyncio.Event()
 
         reg = EntityRegistry(hass)
         await reg.async_load()
@@ -384,7 +386,7 @@ async def async_get_registry(hass: HomeAssistantType) -> EntityRegistry:
         evt.set()
         return reg
 
-    if isinstance(reg_or_evt, Event):
+    if isinstance(reg_or_evt, asyncio.Event):
         evt = reg_or_evt
         await evt.wait()
         return cast(EntityRegistry, hass.data.get(DATA_REGISTRY))
@@ -402,7 +404,7 @@ def async_entries_for_device(
     ]
 
 
-async def _async_migrate(entities):
+async def _async_migrate(entities: Dict[str, Any]) -> Dict[str, List[Dict[str, Any]]]:
     """Migrate the YAML config file to storage helper format."""
     return {
         "entities": [

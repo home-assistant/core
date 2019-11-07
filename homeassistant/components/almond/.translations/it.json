@@ -1,0 +1,9 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "\u00c8 possibile configurare un solo account Almond.",
+            "cannot_connect": "Impossibile connettersi al server Almond."
+        },
+        "title": "Almond"
+    }
+}

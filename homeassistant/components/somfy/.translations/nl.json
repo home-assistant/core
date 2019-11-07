@@ -8,6 +8,11 @@
         "create_entry": {
             "default": "Succesvol geverifieerd met Somfy."
         },
+        "step": {
+            "pick_implementation": {
+                "title": "Kies de authenticatie methode"
+            }
+        },
         "title": "Somfy"
     }
 }

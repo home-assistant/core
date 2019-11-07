@@ -167,7 +167,14 @@ def _init_header(
 
     # filter flags
     for name, value in request.headers.items():
-        if name in (hdrs.CONTENT_LENGTH, hdrs.CONTENT_ENCODING):
+        if name in (
+            hdrs.CONTENT_LENGTH,
+            hdrs.CONTENT_ENCODING,
+            hdrs.SEC_WEBSOCKET_EXTENSIONS,
+            hdrs.SEC_WEBSOCKET_PROTOCOL,
+            hdrs.SEC_WEBSOCKET_VERSION,
+            hdrs.SEC_WEBSOCKET_KEY,
+        ):
             continue
         headers[name] = value
 

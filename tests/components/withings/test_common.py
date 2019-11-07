@@ -1,34 +1,33 @@
 """Tests for the Withings component."""
 from asynctest import MagicMock
-import withings_api as withings
-from oauthlib.oauth2.rfc6749.errors import MissingTokenError
-import pytest
-from requests_oauthlib import TokenUpdated
 
+import pytest
+from withings_api import WithingsApi
+from withings_api.common import UnauthorizedException, TimeoutException
+
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.components.withings.common import (
     NotAuthenticatedError,
-    ServiceError,
     WithingsDataManager,
 )
-from homeassistant.exceptions import PlatformNotReady
 
 
 @pytest.fixture(name="withings_api")
-def withings_api_fixture():
+def withings_api_fixture() -> WithingsApi:
     """Provide withings api."""
-    withings_api = withings.WithingsApi.__new__(withings.WithingsApi)
+    withings_api = WithingsApi.__new__(WithingsApi)
     withings_api.get_measures = MagicMock()
     withings_api.get_sleep = MagicMock()
     return withings_api
 
 
 @pytest.fixture(name="data_manager")
-def data_manager_fixture(hass, withings_api: withings.WithingsApi):
+def data_manager_fixture(hass, withings_api: WithingsApi) -> WithingsDataManager:
     """Provide data manager."""
     return WithingsDataManager(hass, "My Profile", withings_api)
 
 
-def test_print_service():
+def test_print_service() -> None:
     """Test method."""
     # Go from None to True
     WithingsDataManager.service_available = None
@@ -57,54 +56,27 @@ def test_print_service():
     assert not WithingsDataManager.print_service_unavailable()
 
 
-async def test_data_manager_call(data_manager):
+async def test_data_manager_call(data_manager: WithingsDataManager) -> None:
     """Test method."""
-    # Token refreshed.
-    def hello_func():
-        return "HELLO2"
-
-    function = MagicMock(side_effect=[TokenUpdated("my_token"), hello_func()])
-    result = await data_manager.call(function)
-    assert result == "HELLO2"
-    assert function.call_count == 2
-
-    # Too many token refreshes.
-    function = MagicMock(
-        side_effect=[TokenUpdated("my_token"), TokenUpdated("my_token")]
-    )
-    try:
-        result = await data_manager.call(function)
-        assert False, "This should not have ran."
-    except ServiceError:
-        assert True
-    assert function.call_count == 2
-
     # Not authenticated 1.
-    test_function = MagicMock(side_effect=MissingTokenError("Error Code 401"))
-    try:
-        result = await data_manager.call(test_function)
-        assert False, "An exception should have been thrown."
-    except NotAuthenticatedError:
-        assert True
+    test_function = MagicMock(side_effect=UnauthorizedException(401))
+    with pytest.raises(NotAuthenticatedError):
+        await data_manager.call(test_function)
 
     # Not authenticated 2.
-    test_function = MagicMock(side_effect=Exception("Error Code 401"))
-    try:
-        result = await data_manager.call(test_function)
-        assert False, "An exception should have been thrown."
-    except NotAuthenticatedError:
-        assert True
+    test_function = MagicMock(side_effect=TimeoutException(522))
+    with pytest.raises(PlatformNotReady):
+        await data_manager.call(test_function)
 
     # Service error.
     test_function = MagicMock(side_effect=PlatformNotReady())
-    try:
-        result = await data_manager.call(test_function)
-        assert False, "An exception should have been thrown."
-    except PlatformNotReady:
-        assert True
+    with pytest.raises(PlatformNotReady):
+        await data_manager.call(test_function)
 
 
-async def test_data_manager_call_throttle_enabled(data_manager):
+async def test_data_manager_call_throttle_enabled(
+    data_manager: WithingsDataManager,
+) -> None:
     """Test method."""
     hello_func = MagicMock(return_value="HELLO2")
 
@@ -117,7 +89,9 @@ async def test_data_manager_call_throttle_enabled(data_manager):
     assert hello_func.call_count == 1
 
 
-async def test_data_manager_call_throttle_disabled(data_manager):
+async def test_data_manager_call_throttle_disabled(
+    data_manager: WithingsDataManager,
+) -> None:
     """Test method."""
     hello_func = MagicMock(return_value="HELLO2")
 

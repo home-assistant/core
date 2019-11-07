@@ -62,7 +62,7 @@ SENSOR_TYPES = {
         "mdi:thermometer",
         DEVICE_CLASS_TEMPERATURE,
     ],
-    "co2": ["CO2", "ppm", "mdi:cloud", None],
+    "co2": ["CO2", "ppm", "mdi:periodic-table-co2", None],
     "pressure": ["Pressure", "mbar", "mdi:gauge", None],
     "noise": ["Noise", "dB", "mdi:volume-high", None],
     "humidity": ["Humidity", "%", "mdi:water-percent", DEVICE_CLASS_HUMIDITY],

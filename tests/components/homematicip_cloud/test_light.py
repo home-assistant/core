@@ -3,8 +3,8 @@ from homematicip.base.enums import RGBColorState
 
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.components.homematicip_cloud.light import (
-    ATTR_ENERGY_COUNTER,
-    ATTR_POWER_CONSUMPTION,
+    ATTR_CURRENT_POWER_W,
+    ATTR_TODAY_ENERGY_KWH,
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -79,10 +79,19 @@ async def test_hmip_notification_light(hass, default_mock_hap):
 
     # Send all color via service call.
     await hass.services.async_call(
-        "light", "turn_on", {"entity_id": entity_id}, blocking=True
+        "light",
+        "turn_on",
+        {"entity_id": entity_id, "brightness_pct": "100", "transition": 100},
+        blocking=True,
     )
-    assert hmip_device.mock_calls[-1][0] == "set_rgb_dim_level"
-    assert hmip_device.mock_calls[-1][1] == (2, RGBColorState.RED, 1.0)
+    assert hmip_device.mock_calls[-1][0] == "set_rgb_dim_level_with_time"
+    assert hmip_device.mock_calls[-1][2] == {
+        "channelIndex": 2,
+        "rgb": "RED",
+        "dimLevel": 1.0,
+        "onTime": 0,
+        "rampTime": 100.0,
+    }
 
     color_list = {
         RGBColorState.WHITE: [0.0, 0.0],
@@ -101,17 +110,17 @@ async def test_hmip_notification_light(hass, default_mock_hap):
             {"entity_id": entity_id, "hs_color": hs_color},
             blocking=True,
         )
-        assert hmip_device.mock_calls[-1][0] == "set_rgb_dim_level"
-        assert hmip_device.mock_calls[-1][1] == (2, color, 0.0392156862745098)
+        assert hmip_device.mock_calls[-1][0] == "set_rgb_dim_level_with_time"
+        assert hmip_device.mock_calls[-1][2] == {
+            "channelIndex": 2,
+            "dimLevel": 0.0392156862745098,
+            "onTime": 0,
+            "rampTime": 0.5,
+            "rgb": color,
+        }
 
     assert len(hmip_device.mock_calls) == service_call_counter + 8
 
-    assert hmip_device.mock_calls[-1][0] == "set_rgb_dim_level"
-    assert hmip_device.mock_calls[-1][1] == (
-        2,
-        RGBColorState.PURPLE,
-        0.0392156862745098,
-    )
     await async_manipulate_test_data(hass, hmip_device, "dimLevel", 1, 2)
     await async_manipulate_test_data(
         hass, hmip_device, "simpleRGBColorState", RGBColorState.PURPLE, 2
@@ -122,11 +131,17 @@ async def test_hmip_notification_light(hass, default_mock_hap):
     assert ha_state.attributes[ATTR_BRIGHTNESS] == 255
 
     await hass.services.async_call(
-        "light", "turn_off", {"entity_id": entity_id}, blocking=True
+        "light", "turn_off", {"entity_id": entity_id, "transition": 100}, blocking=True
     )
     assert len(hmip_device.mock_calls) == service_call_counter + 11
-    assert hmip_device.mock_calls[-1][0] == "set_rgb_dim_level"
-    assert hmip_device.mock_calls[-1][1] == (2, RGBColorState.PURPLE, 0.0)
+    assert hmip_device.mock_calls[-1][0] == "set_rgb_dim_level_with_time"
+    assert hmip_device.mock_calls[-1][2] == {
+        "channelIndex": 2,
+        "dimLevel": 0.0,
+        "onTime": 0,
+        "rampTime": 100,
+        "rgb": "PURPLE",
+    }
     await async_manipulate_test_data(hass, hmip_device, "dimLevel", 0, 2)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_OFF
@@ -209,8 +224,8 @@ async def test_hmip_light_measuring(hass, default_mock_hap):
     await async_manipulate_test_data(hass, hmip_device, "currentPowerConsumption", 50)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
-    assert ha_state.attributes[ATTR_POWER_CONSUMPTION] == 50
-    assert ha_state.attributes[ATTR_ENERGY_COUNTER] == 6.33
+    assert ha_state.attributes[ATTR_CURRENT_POWER_W] == 50
+    assert ha_state.attributes[ATTR_TODAY_ENERGY_KWH] == 6.33
 
     await hass.services.async_call(
         "light", "turn_off", {"entity_id": entity_id}, blocking=True

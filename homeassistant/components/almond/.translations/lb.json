@@ -1,0 +1,9 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Dir k\u00ebnnt n\u00ebmmen een eenzegen Almond Kont konfigur\u00e9ieren.",
+            "cannot_connect": "Kann sech net mam Almond Server verbannen."
+        },
+        "title": "Almond"
+    }
+}

@@ -7,6 +7,13 @@
             "default": "Successfully authenticated with Withings for the selected profile."
         },
         "step": {
+            "profile": {
+                "data": {
+                    "profile": "Profile"
+                },
+                "description": "Which profile did you select on the Withings website? It's important the profiles match, otherwise data will be mis-labeled.",
+                "title": "User Profile."
+            },
             "user": {
                 "data": {
                     "profile": "Profile"

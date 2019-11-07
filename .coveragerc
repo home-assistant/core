@@ -126,7 +126,9 @@ omit =
     homeassistant/components/comfoconnect/*
     homeassistant/components/concord232/alarm_control_panel.py
     homeassistant/components/concord232/binary_sensor.py
+    homeassistant/components/coolmaster/__init__.py
     homeassistant/components/coolmaster/climate.py
+    homeassistant/components/coolmaster/const.py
     homeassistant/components/cppm_tracker/device_tracker.py
     homeassistant/components/cpuspeed/sensor.py
     homeassistant/components/crimereports/sensor.py
@@ -272,7 +274,6 @@ omit =
     homeassistant/components/growatt_server/sensor.py
     homeassistant/components/gstreamer/media_player.py
     homeassistant/components/gtfs/sensor.py
-    homeassistant/components/gtt/sensor.py
     homeassistant/components/habitica/*
     homeassistant/components/hangouts/*
     homeassistant/components/hangouts/__init__.py
@@ -418,6 +419,7 @@ omit =
     homeassistant/components/mpchc/media_player.py
     homeassistant/components/mpd/media_player.py
     homeassistant/components/mqtt_room/sensor.py
+    homeassistant/components/msteams/notify.py
     homeassistant/components/mvglive/sensor.py
     homeassistant/components/mychevy/*
     homeassistant/components/mycroft/*
@@ -511,6 +513,7 @@ omit =
     homeassistant/components/plex/media_player.py
     homeassistant/components/plex/sensor.py
     homeassistant/components/plex/server.py
+    homeassistant/components/plex/websockets.py
     homeassistant/components/plugwise/*
     homeassistant/components/plum_lightpad/*
     homeassistant/components/pocketcasts/sensor.py
@@ -620,6 +623,7 @@ omit =
     homeassistant/components/solaredge/__init__.py
     homeassistant/components/solaredge/sensor.py
     homeassistant/components/solaredge_local/sensor.py
+    homeassistant/components/solarlog/*
     homeassistant/components/solax/sensor.py
     homeassistant/components/soma/cover.py
     homeassistant/components/soma/__init__.py
@@ -700,7 +704,6 @@ omit =
     homeassistant/components/tradfri/base_class.py
     homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/sensor.py
-    homeassistant/components/transmission/__init__.py
     homeassistant/components/transmission/sensor.py
     homeassistant/components/transmission/switch.py
     homeassistant/components/transmission/const.py
@@ -717,6 +720,7 @@ omit =
     homeassistant/components/uber/sensor.py
     homeassistant/components/ubus/device_tracker.py
     homeassistant/components/ue_smart_radio/media_player.py
+    homeassistant/components/unifiled/*
     homeassistant/components/upcloud/*
     homeassistant/components/upnp/*
     homeassistant/components/upc_connect/*

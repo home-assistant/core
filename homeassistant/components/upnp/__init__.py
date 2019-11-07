@@ -162,6 +162,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
         identifiers={(DOMAIN, device.udn)},
         name=device.name,
         manufacturer=device.manufacturer,
+        model=device.model_name,
     )
 
     # set up sensors

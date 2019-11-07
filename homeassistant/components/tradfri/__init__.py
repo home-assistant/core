@@ -8,6 +8,7 @@ from pytradfri.api.aiocoap_api import APIFactory
 import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.util.json import load_json
 from . import config_flow  # noqa  pylint_disable=unused-import
 from .const import (
@@ -113,8 +114,8 @@ async def async_setup_entry(hass, entry):
     try:
         gateway_info = await api(gateway.get_gateway_info())
     except RequestError:
-        _LOGGER.error("Tradfri setup failed.")
-        return False
+        await factory.shutdown()
+        raise ConfigEntryNotReady
 
     hass.data.setdefault(KEY_API, {})[entry.entry_id] = api
     hass.data.setdefault(KEY_GATEWAY, {})[entry.entry_id] = gateway

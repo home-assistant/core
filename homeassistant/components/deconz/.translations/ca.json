@@ -37,7 +37,7 @@
                     "allow_clip_sensor": "Permet la importaci\u00f3 de sensors virtuals",
                     "allow_deconz_groups": "Permetre la importaci\u00f3 de grups deCONZ"
                 },
-                "title": "Opcions de configuraci\u00f3 addicionals per deCONZ"
+                "title": "Opcions de configuraci\u00f3 addicionals de deCONZ"
             }
         },
         "title": "Passarel\u00b7la d'enlla\u00e7 deCONZ Zigbee"
@@ -55,19 +55,28 @@
             "left": "Esquerra",
             "open": "Obert",
             "right": "Dreta",
+            "side_1": "Costat 1",
+            "side_2": "Costat 2",
+            "side_3": "Costat 3",
+            "side_4": "Costat 4",
+            "side_5": "Costat 5",
+            "side_6": "Costat 6",
             "turn_off": "Desactiva",
             "turn_on": "Activa"
         },
         "trigger_type": {
+            "remote_awakened": "Dispositiu despertat",
             "remote_button_double_press": "Bot\u00f3 \"{subtype}\" clicat dues vegades consecutives",
             "remote_button_long_press": "Bot\u00f3 \"{subtype}\" premut continuament",
             "remote_button_long_release": "Bot\u00f3 \"{subtype}\" alliberat despr\u00e9s d'una estona premut",
             "remote_button_quadruple_press": "Bot\u00f3 \"{subtype}\" clicat quatre vegades consecutives",
             "remote_button_quintuple_press": "Bot\u00f3 \"{subtype}\" clicat cinc vegades consecutives",
             "remote_button_rotated": "Bot\u00f3 \"{subtype}\" girat",
+            "remote_button_rotation_stopped": "La rotaci\u00f3 del bot\u00f3 \"{subtype}\" s'ha aturat",
             "remote_button_short_press": "Bot\u00f3 \"{subtype}\" premut",
             "remote_button_short_release": "Bot\u00f3 \"{subtype}\" alliberat",
             "remote_button_triple_press": "Bot\u00f3 \"{subtype}\" clicat tres vegades consecutives",
+            "remote_falling": "Dispositiu en caiguda lliure",
             "remote_gyro_activated": "Dispositiu sacsejat"
         }
     },

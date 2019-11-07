@@ -1,11 +1,11 @@
 {
   "domain": "samsungtv",
-  "name": "Samsungtv",
+  "name": "Samsung TV",
   "documentation": "https://www.home-assistant.io/integrations/samsungtv",
   "requirements": [
     "samsungctl[websocket]==0.7.1",
     "wakeonlan==1.1.6"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@escoand"]
 }
