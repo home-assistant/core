@@ -19,7 +19,7 @@ class AudioFormats(str, Enum):
 
 
 class AudioBitRates(int, Enum):
-    """Supported Audio bit_rates."""
+    """Supported Audio bit rates."""
 
     BITRATE_8 = 8
     BITRATE_16 = 16
@@ -28,7 +28,7 @@ class AudioBitRates(int, Enum):
 
 
 class AudioSampleRates(int, Enum):
-    """Supported Audio sample_rates."""
+    """Supported Audio sample rates."""
 
     SAMPLERATE_8000 = 8000
     SAMPLERATE_11000 = 11000
@@ -39,6 +39,13 @@ class AudioSampleRates(int, Enum):
     SAMPLERATE_37800 = 37800
     SAMPLERATE_44100 = 44100
     SAMPLERATE_48000 = 48000
+
+
+class AudioChannels(int, Enum):
+    """Supported Audio channel."""
+
+    CHANNEL_MONO = 1
+    CHANNEL_STEREO = 2
 
 
 class SpeechResultState(str, Enum):

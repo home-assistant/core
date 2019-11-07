@@ -3,7 +3,7 @@
   "name": "Media extractor",
   "documentation": "https://www.home-assistant.io/integrations/media_extractor",
   "requirements": [
-    "youtube_dl==2019.10.29"
+    "youtube_dl==2019.11.05"
   ],
   "dependencies": [
     "media_player"

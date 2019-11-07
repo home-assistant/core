@@ -156,6 +156,7 @@ homeassistant/components/iqvia/* @bachya
 homeassistant/components/irish_rail_transport/* @ttroy50
 homeassistant/components/izone/* @Swamp-Ig
 homeassistant/components/jewish_calendar/* @tsvi
+homeassistant/components/juicenet/* @jesserockz
 homeassistant/components/kaiterra/* @Michsior14
 homeassistant/components/keba/* @dannerph
 homeassistant/components/keenetic_ndms2/* @foxel
@@ -229,7 +230,7 @@ homeassistant/components/pi_hole/* @fabaff @johnluetke
 homeassistant/components/plaato/* @JohNan
 homeassistant/components/plant/* @ChristianKuehnel
 homeassistant/components/plex/* @jjlawren
-homeassistant/components/plugwise/* @laetificat @CoMPaTech
+homeassistant/components/plugwise/* @laetificat @CoMPaTech @bouwew
 homeassistant/components/point/* @fredrike
 homeassistant/components/ps4/* @ktnrg45
 homeassistant/components/ptvsd/* @swamp-ig
@@ -338,6 +339,7 @@ homeassistant/components/weblink/* @home-assistant/core
 homeassistant/components/websocket_api/* @home-assistant/core
 homeassistant/components/wemo/* @sqldiablo
 homeassistant/components/withings/* @vangorra
+homeassistant/components/wled/* @frenck
 homeassistant/components/worldclock/* @fabaff
 homeassistant/components/wwlln/* @bachya
 homeassistant/components/xbox_live/* @MartinHjelmare

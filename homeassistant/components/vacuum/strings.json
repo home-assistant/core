@@ -1,0 +1,8 @@
+{
+  "device_automation": {
+    "action_type": {
+      "clean": "Let {entity_name} clean",
+      "dock": "Let {entity_name} return to the dock"
+    }
+  }
+}

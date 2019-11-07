@@ -33,7 +33,7 @@
     {
       "label": "Flake8",
       "type": "shell",
-      "command": "flake8 homeassistant tests",
+      "command": "pre-commit run flake8 --all-files",
       "group": {
         "kind": "test",
         "isDefault": true
