@@ -30,7 +30,23 @@ class StarlineLock(StarlineEntity, LockDevice):
 
     @property
     def device_state_attributes(self):
-        """Return the state attributes of the lock."""
+        """Return the state attributes of the lock.
+
+        Possible dictionary keys:
+        add_h - Additional sensor alarm status (high level)
+        add_l - Additional channel alarm status (low level)
+        door - Doors alarm status
+        hbrake - Hand brake alarm status
+        hijack - Hijack mode status
+        hood - Hood alarm status
+        ign - Ignition alarm status
+        pbrake - Brake pedal alarm status
+        shock_h - Shock sensor alarm status (high level)
+        shock_l - Shock sensor alarm status (low level)
+        tilt - Tilt sensor alarm status
+        trunk - Trunk alarm status
+        Documentation: https://developer.starline.ru/#api-Device-DeviceState
+        """
         return self._device.alarm_state
 
     @property
