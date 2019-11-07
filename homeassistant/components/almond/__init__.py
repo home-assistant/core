@@ -229,10 +229,10 @@ class AlmondAgent(conversation.AbstractConversationAgent):
             "url": f"{host}/conversation",
         }
 
-    async def async_set_onboarding(self, new_data):
+    async def async_set_onboarding(self, shown):
         """Set onboarding status."""
         self.hass.config_entries.async_update_entry(
-            self.entry, data={**self.entry.data, **new_data}
+            self.entry, data={**self.entry.data, **{"onboarded": shown}}
         )
 
         return True

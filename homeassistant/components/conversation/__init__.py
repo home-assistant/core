@@ -39,22 +39,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-WS_TYPE_GET_ONBOARDING = "conversation/onboarding/get"
-WS_TYPE_SET_ONBOARDING = "conversation/onboarding/set"
-WS_TYPE_GET_ATTRIBUTION = "conversation/attribution"
-
-SCHEMA_GET_ONBOARDING = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_GET_ONBOARDING}
-)
-
-SCHEMA_SET_ONBOARDING = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_SET_ONBOARDING, vol.Required("data"): dict}
-)
-
-SCHEMA_GET_ATTRIBUTION = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_GET_ATTRIBUTION}
-)
-
 async_register = bind_hass(async_register)  # pylint: disable=invalid-name
 
 
@@ -63,6 +47,14 @@ async_register = bind_hass(async_register)  # pylint: disable=invalid-name
 def async_set_agent(hass: core.HomeAssistant, agent: AbstractConversationAgent):
     """Set the agent to handle the conversations."""
     hass.data[DATA_AGENT] = agent
+
+
+def get_agent(hass: core.HomeAssistant) -> AbstractConversationAgent:
+    """Get agent."""
+    agent = hass.data.get(DATA_AGENT)
+    if agent is None:
+        agent = hass.data[DATA_AGENT] = DefaultAgent(hass)
+    return agent
 
 
 async def async_setup(hass, config):
@@ -87,62 +79,43 @@ async def async_setup(hass, config):
         except intent.IntentHandleError as err:
             _LOGGER.error("Error processing %s: %s", text, err)
 
-    @websocket_api.async_response
-    async def websocket_get_onboarding(hass, connection, msg):
-        """Do we need onboarding."""
-        agent = hass.data.get(DATA_AGENT)
-
-        if agent is None:
-            agent = hass.data[DATA_AGENT] = DefaultAgent(hass)
-            await agent.async_initialize(config)
-        connection.send_result(msg["id"], await agent.async_get_onboarding())
-
-    @websocket_api.async_response
-    async def websocket_set_onboarding(hass, connection, msg):
-        """Set onboarding status."""
-        agent = hass.data.get(DATA_AGENT)
-
-        if agent is None:
-            agent = hass.data[DATA_AGENT] = DefaultAgent(hass)
-            await agent.async_initialize(config)
-
-        success = await agent.async_set_onboarding(msg.get("data"))
-
-        if success:
-            connection.send_result(msg["id"])
-        else:
-            connection.send_error(msg["id"])
-
-    @websocket_api.async_response
-    async def websocket_get_attribution(hass, connection, msg):
-        """Get attribution data."""
-        agent = hass.data.get(DATA_AGENT)
-
-        if agent is None:
-            agent = hass.data[DATA_AGENT] = DefaultAgent(hass)
-            await agent.async_initialize(config)
-
-        connection.send_result(msg["id"], agent.attribution)
-
     hass.services.async_register(
         DOMAIN, SERVICE_PROCESS, handle_service, schema=SERVICE_PROCESS_SCHEMA
     )
-
     hass.http.register_view(ConversationProcessView(process))
-
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_GET_ATTRIBUTION, websocket_get_attribution, SCHEMA_GET_ATTRIBUTION
-    )
-
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_GET_ONBOARDING, websocket_get_onboarding, SCHEMA_GET_ONBOARDING
-    )
-
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_SET_ONBOARDING, websocket_set_onboarding, SCHEMA_SET_ONBOARDING
-    )
+    hass.components.websocket_api.async_register_command(websocket_get_agent_info)
+    hass.components.websocket_api.async_register_command(websocket_set_onboarding)
 
     return True
+
+
+@websocket_api.async_response
+@websocket_api.websocket_command({"type": "conversation/agent/info"})
+async def websocket_get_agent_info(hass, connection, msg):
+    """Do we need onboarding."""
+    agent = get_agent(hass)
+
+    connection.send_result(
+        msg["id"],
+        {
+            "onboarding": await agent.async_get_onboarding(),
+            "attribution": agent.attribution,
+        },
+    )
+
+
+@websocket_api.async_response
+@websocket_api.websocket_command({"type": "conversation/onboarding/set", "shown": bool})
+async def websocket_set_onboarding(hass, connection, msg):
+    """Set onboarding status."""
+    agent = get_agent(hass)
+
+    success = await agent.async_set_onboarding(msg["shown"])
+
+    if success:
+        connection.send_result(msg["id"])
+    else:
+        connection.send_error(msg["id"])
 
 
 class ConversationProcessView(http.HomeAssistantView):
