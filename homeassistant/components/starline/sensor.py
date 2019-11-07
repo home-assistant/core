@@ -23,7 +23,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         for key, value in SENSOR_TYPES.items():
             entities.append(StarlineSensor(account, device, key, *value))
     async_add_entities(entities)
-    return True
 
 
 class StarlineSensor(StarlineEntity, Entity):

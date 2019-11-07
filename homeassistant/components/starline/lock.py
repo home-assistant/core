@@ -14,7 +14,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         if device.support_state:
             entities.append(StarlineLock(account, device))
     async_add_entities(entities)
-    return True
 
 
 class StarlineLock(StarlineEntity, LockDevice):

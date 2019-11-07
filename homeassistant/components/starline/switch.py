@@ -25,7 +25,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
             for key, value in SWITCH_TYPES.items():
                 entities.append(StarlineSwitch(account, device, key, *value))
     async_add_entities(entities)
-    return True
 
 
 class StarlineSwitch(StarlineEntity, SwitchDevice):

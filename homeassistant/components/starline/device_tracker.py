@@ -15,7 +15,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         if device.support_position:
             entities.append(StarlineDeviceTracker(account, device))
     async_add_entities(entities)
-    return True
 
 
 class StarlineDeviceTracker(StarlineEntity, TrackerEntity, RestoreEntity):

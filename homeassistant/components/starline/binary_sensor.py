@@ -33,7 +33,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
             if key in device.car_state:
                 entities.append(StarlineSensor(account, device, key, *value))
     async_add_entities(entities)
-    return True
 
 
 class StarlineSensor(StarlineEntity, BinarySensorDevice):
