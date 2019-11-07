@@ -7,7 +7,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.core import callback
 
-from .const import (
+from .const import (  # pylint: disable=unused-import
     DOMAIN,
     CONF_APP_ID,
     CONF_APP_SECRET,
