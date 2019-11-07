@@ -124,7 +124,7 @@ adguardhome==0.3.0
 afsapi==0.0.4
 
 # homeassistant.components.geonetnz_quakes
-aio_geojson_geonetnz_quakes==0.10
+aio_geojson_geonetnz_quakes==0.11
 
 # homeassistant.components.ambient_station
 aioambient==0.3.2
