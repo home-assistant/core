@@ -61,10 +61,6 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        return await self.async_step_init(user_input)
-
-    async def async_step_init(self, user_input=None):
-        """Handle a flow initialized by the user."""
         return await self.async_step_auth_app(user_input)
 
     async def async_step_auth_app(self, user_input=None, error=None):
@@ -230,7 +226,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_create_entry(
-            title="Application " + self._app_id,
+            title=f"Application {self._app_id}",
             data={
                 DATA_USER_ID: self._user_id,
                 DATA_SLNET_TOKEN: self._slnet_token,
