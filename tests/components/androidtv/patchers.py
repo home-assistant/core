@@ -140,3 +140,15 @@ def isfile(filepath):
 
 PATCH_ISFILE = patch("os.path.isfile", isfile)
 PATCH_ACCESS = patch("os.access", return_value=True)
+
+
+def patch_firetv_update(state, current_app, running_apps):
+    """Patch the `FireTV.update()` method."""
+    return patch(
+        "androidtv.firetv.FireTV.update",
+        return_value=(state, current_app, running_apps),
+    )
+
+
+PATCH_LAUNCH_APP = patch("androidtv.firetv.FireTV.launch_app")
+PATCH_STOP_APP = patch("androidtv.firetv.FireTV.stop_app")
