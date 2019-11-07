@@ -109,6 +109,7 @@ def setup(hass, config):
 
     return True
 
+
 class MagicHomeDevice(Entity):
     """MagicHome base device."""
 
