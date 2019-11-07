@@ -871,3 +871,37 @@ async def test_enable_alexa_state_report_fail(
 
     assert not response["success"]
     assert response["error"]["code"] == "alexa_relink"
+
+
+async def test_thingtalk_convert(hass, hass_ws_client, setup_api):
+    """Test that we can convert a query."""
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.cloud.http_api.thingtalk.async_convert",
+        return_value=mock_coro({"hello": "world"}),
+    ):
+        await client.send_json(
+            {"id": 5, "type": "cloud/thingtalk/convert", "query": "some-data"}
+        )
+        response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"hello": "world"}
+
+
+async def test_thingtalk_convert_timeout(hass, hass_ws_client, setup_api):
+    """Test that we can convert a query."""
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.cloud.http_api.thingtalk.async_convert",
+        side_effect=asyncio.TimeoutError,
+    ):
+        await client.send_json(
+            {"id": 5, "type": "cloud/thingtalk/convert", "query": "some-data"}
+        )
+        response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "timeout"
