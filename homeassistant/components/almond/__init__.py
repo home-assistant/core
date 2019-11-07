@@ -3,6 +3,7 @@ import asyncio
 from datetime import timedelta
 import logging
 import time
+from typing import Optional
 
 import async_timeout
 from aiohttp import ClientSession, ClientError
@@ -205,9 +206,11 @@ class AlmondAgent(conversation.AbstractConversationAgent):
         """Initialize the agent."""
         self.api = api
 
-    async def async_process(self, text: str) -> intent.IntentResponse:
+    async def async_process(
+        self, text: str, conversation_id: Optional[str] = None
+    ) -> intent.IntentResponse:
         """Process a sentence."""
-        response = await self.api.async_converse_text(text)
+        response = await self.api.async_converse_text(text, conversation_id)
 
         buffer = ""
         for message in response["messages"]:
