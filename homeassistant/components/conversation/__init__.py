@@ -53,7 +53,7 @@ def async_set_agent(hass: core.HomeAssistant, agent: AbstractConversationAgent):
 async def async_setup(hass, config):
     """Register the process service."""
 
-    async def process(hass, text):
+    async def process(hass, text, conversation_id):
         """Process a line of text."""
         agent = hass.data.get(DATA_AGENT)
 
@@ -61,14 +61,14 @@ async def async_setup(hass, config):
             agent = hass.data[DATA_AGENT] = DefaultAgent(hass)
             await agent.async_initialize(config)
 
-        return await agent.async_process(text)
+        return await agent.async_process(text, conversation_id)
 
     async def handle_service(service):
         """Parse text into commands."""
         text = service.data[ATTR_TEXT]
         _LOGGER.debug("Processing: <%s>", text)
         try:
-            await process(hass, text)
+            await process(hass, text, service.context.id)
         except intent.IntentHandleError as err:
             _LOGGER.error("Error processing %s: %s", text, err)
 
@@ -91,13 +91,17 @@ class ConversationProcessView(http.HomeAssistantView):
         """Initialize the conversation process view."""
         self._process = process
 
-    @RequestDataValidator(vol.Schema({vol.Required("text"): str}))
+    @RequestDataValidator(
+        vol.Schema({vol.Required("text"): str, vol.Optional("conversation_id"): str})
+    )
     async def post(self, request, data):
         """Send a request for processing."""
         hass = request.app["hass"]
 
         try:
-            intent_result = await self._process(hass, data["text"])
+            intent_result = await self._process(
+                hass, data["text"], data.get("conversation_id")
+            )
         except intent.IntentHandleError as err:
             intent_result = intent.IntentResponse()
             intent_result.async_set_speech(str(err))
