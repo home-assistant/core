@@ -39,7 +39,7 @@ def test_simple_dict():
 
 
 def test_unhashable_key():
-    """Test an unhasable key."""
+    """Test an unhashable key."""
     files = {YAML_CONFIG_FILE: "message:\n  {{ states.state }}"}
     with pytest.raises(HomeAssistantError), patch_yaml_files(files):
         load_yaml_config_file(YAML_CONFIG_FILE)
