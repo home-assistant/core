@@ -213,7 +213,7 @@ class NetatmoSensor(Entity):
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
         self._module_type = module["type"]
         self._module_id = module_info["id"]
-        self._unique_id = f"{self._module_id}-{self.type}-{self._module_type}"
+        self._unique_id = f"{self._module_id}-{self.type}"
 
     @property
     def name(self):
