@@ -411,6 +411,7 @@ class ClimateAehW4a1(ClimateDevice):
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         if self._on == "1":
             device_mode = status["mode_status"]
             self._hvac_mode = AC_TO_HA_STATE[device_mode]
@@ -467,24 +468,17 @@ class ClimateAehW4a1(ClimateDevice):
         device_mode = status["mode_status"]
 =======
 >>>>>>> Small changes
+=======
+        self._current_temperature = int(status["indoor_temperature_status"], 2)
+
+>>>>>>> Code optimization
         if self._on == "1":
             device_mode = status["mode_status"]
             self._hvac_mode = AC_TO_HA_STATE[device_mode]
-        else:
-            self._hvac_mode = HVAC_MODE_OFF
 
-        self._current_temperature = int(status["indoor_temperature_status"], 2)
-
-        if self._on == "1" and (
-            self._hvac_mode == HVAC_MODE_COOL or self._hvac_mode == HVAC_MODE_HEAT
-        ):
-            self._target_temperature = int(status["indoor_temperature_setting"], 2)
-        else:
-            self._target_temperature = None
-
-        if self._on == "1":
             fan_mode = status["wind_status"]
             self._fan_mode = AC_TO_HA_FAN_MODES[fan_mode]
+<<<<<<< HEAD
         else:
 <<<<<<< HEAD
             self._fan_mode = FAN_OFF
@@ -507,14 +501,17 @@ class ClimateAehW4a1(ClimateDevice):
             self._preset_mode = "sleep_4"
 =======
             self._fan_mode = None
+=======
+>>>>>>> Code optimization
 
-        if self._on == "1":
             swing_mode = status["up_down"] + status["left_right"]
             self._swing_mode = AC_TO_HA_SWING[swing_mode]
-        else:
-            self._swing_mode = None
 
-        if self._on == "1":
+            if self._hvac_mode == HVAC_MODE_COOL or self._hvac_mode == HVAC_MODE_HEAT:
+                self._target_temperature = int(status["indoor_temperature_setting"], 2)
+            else:
+                self._target_temperature = None
+
             if status["efficient"] == "1":
                 self._preset_mode = PRESET_BOOST
             elif status["low_electricity"] == "1":
@@ -531,6 +528,10 @@ class ClimateAehW4a1(ClimateDevice):
                 self._preset_mode = PRESET_NONE
 >>>>>>> Null states when AC off
         else:
+            self._hvac_mode = HVAC_MODE_OFF
+            self._fan_mode = None
+            self._swing_mode = None
+            self._target_temperature = None
             self._preset_mode = None
 
     @property
