@@ -9,6 +9,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     "pyaehw4a1==0.1.2"
 =======
     "pyaehw4a1==0.0.5"
@@ -25,6 +26,9 @@
 =======
     "pyaehw4a1==0.2.1"
 >>>>>>> Switched to async
+=======
+    "pyaehw4a1==0.2.3"
+>>>>>>> Updated library and fixed pylint errors
   ],
   "dependencies": [],
   "codeowners": [

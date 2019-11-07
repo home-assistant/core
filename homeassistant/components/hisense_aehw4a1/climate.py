@@ -214,6 +214,7 @@ AC_TO_HA_FAN_MODES = {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     "00000001": FAN_AUTO,
     "00000010": "mute",
     "00000100": FAN_LOW,
@@ -233,6 +234,9 @@ AC_TO_HA_FAN_MODES = {
     "00000000": FAN_OFF,
 =======
 >>>>>>> Null states when AC off
+=======
+    "00000000": FAN_AUTO,  # fan value for heat mode
+>>>>>>> Updated library and fixed pylint errors
     "00000001": FAN_AUTO,
 >>>>>>> Refined logic
     "00000010": "mute",
@@ -389,8 +393,8 @@ class ClimateAehW4a1(ClimateDevice):
 =======
         try:
             status = await self._device.command("status_102_0")
-        except Exception as e:
-            _LOGGER.debug("Unexpected error: %s", e)
+        except Exception as library_error:  # pylint: disable=broad-except
+            _LOGGER.debug("Unexpected error: %s", library_error)
             self._available = False
             return
 
@@ -479,11 +483,8 @@ class ClimateAehW4a1(ClimateDevice):
             self._target_temperature = None
 
         if self._on == "1":
-            if self._hvac_mode == HVAC_MODE_HEAT:
-                self._fan_mode = FAN_AUTO
-            else:
-                fan_mode = status["wind_status"]
-                self._fan_mode = AC_TO_HA_FAN_MODES[fan_mode]
+            fan_mode = status["wind_status"]
+            self._fan_mode = AC_TO_HA_FAN_MODES[fan_mode]
         else:
 <<<<<<< HEAD
             self._fan_mode = FAN_OFF
@@ -655,8 +656,13 @@ class ClimateAehW4a1(ClimateDevice):
             _LOGGER.debug("Setting temp of %s to %s", self._unique_id, str(temp))
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> Refined logic
+=======
+            if self._preset_mode != PRESET_NONE:
+                await self.async_set_preset_mode(PRESET_NONE)
+>>>>>>> Updated library and fixed pylint errors
             if self._temperature_unit == TEMP_CELSIUS:
                 await self._device.command(f"temp_{str(int(temp))}_C")
             else:
