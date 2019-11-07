@@ -4662,7 +4662,7 @@
                     "enabled": true,
                     "groupId": "00000000-0000-0000-0000-000000000021",
                     "index": "PROFILE_4",
-                    "name": "",
+                    "name": "Cool1",
                     "profileId": "00000000-0000-0000-0000-000000000041",
                     "visible": true
                 },
@@ -4670,9 +4670,9 @@
                     "enabled": true,
                     "groupId": "00000000-0000-0000-0000-000000000021",
                     "index": "PROFILE_5",
-                    "name": "",
+                    "name": "Cool2",
                     "profileId": "00000000-0000-0000-0000-000000000042",
-                    "visible": false
+                    "visible": true
                 },
                 "PROFILE_6": {
                     "enabled": true,
