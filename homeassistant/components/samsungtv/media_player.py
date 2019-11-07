@@ -3,7 +3,9 @@ import asyncio
 from datetime import timedelta
 import socket
 
+from samsungctl import exceptions as samsung_exceptions, Remote as SamsungRemote
 import voluptuous as vol
+import wakeonlan
 
 from homeassistant.components.media_player import (
     MediaPlayerDevice,
@@ -113,17 +115,11 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def __init__(self, host, port, name, timeout, mac, uuid):
         """Initialize the Samsung device."""
-        from samsungctl import exceptions
-        from samsungctl import Remote
-        import wakeonlan
 
         # Save a reference to the imported classes
-        self._exceptions_class = exceptions
-        self._remote_class = Remote
         self._name = name
         self._mac = mac
         self._uuid = uuid
-        self._wol = wakeonlan
         # Assume that the TV is not muted
         self._muted = False
         # Assume that the TV is in Play mode
@@ -163,13 +159,13 @@ class SamsungTVDevice(MediaPlayerDevice):
                 try:
                     self._config["method"] = method
                     LOGGER.debug("Try config: %s", self._config)
-                    self._remote = self._remote_class(self._config.copy())
+                    self._remote = SamsungRemote(self._config.copy())
                     self._state = STATE_ON
                     LOGGER.debug("Found working config: %s", self._config)
                     break
                 except (
-                    self._exceptions_class.UnhandledResponse,
-                    self._exceptions_class.AccessDenied,
+                    samsung_exceptions.UnhandledResponse,
+                    samsung_exceptions.AccessDenied,
                 ):
                     # We got a response so it's working.
                     self._state = STATE_ON
@@ -189,7 +185,7 @@ class SamsungTVDevice(MediaPlayerDevice):
 
         if self._remote is None:
             # We need to create a new instance to reconnect.
-            self._remote = self._remote_class(self._config.copy())
+            self._remote = SamsungRemote(self._config.copy())
 
         return self._remote
 
@@ -205,7 +201,7 @@ class SamsungTVDevice(MediaPlayerDevice):
                 try:
                     self.get_remote().control(key)
                     break
-                except (self._exceptions_class.ConnectionClosed, BrokenPipeError):
+                except (samsung_exceptions.ConnectionClosed, BrokenPipeError):
                     # BrokenPipe can occur when the commands is sent to fast
                     self._remote = None
             self._state = STATE_ON
@@ -213,8 +209,8 @@ class SamsungTVDevice(MediaPlayerDevice):
             # Auto-detect could not find working config yet
             pass
         except (
-            self._exceptions_class.UnhandledResponse,
-            self._exceptions_class.AccessDenied,
+            samsung_exceptions.UnhandledResponse,
+            samsung_exceptions.AccessDenied,
         ):
             # We got a response so it's on.
             self._state = STATE_ON
@@ -343,7 +339,7 @@ class SamsungTVDevice(MediaPlayerDevice):
     def turn_on(self):
         """Turn the media player on."""
         if self._mac:
-            self._wol.send_magic_packet(self._mac)
+            wakeonlan.send_magic_packet(self._mac)
         else:
             self.send_key("KEY_POWERON")
 

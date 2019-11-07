@@ -25,7 +25,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, ENTITY_MATCH_ALL
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform
+from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_prepare_setup_platform
@@ -118,17 +118,24 @@ async def async_setup(hass, config):
     hass.http.register_view(TextToSpeechView(tts))
     hass.http.register_view(TextToSpeechUrlView(tts))
 
-    async def async_setup_platform(p_type, p_config, disc_info=None):
+    async def async_setup_platform(p_type, p_config=None, discovery_info=None):
         """Set up a TTS platform."""
+        if p_config is None:
+            p_config = {}
+
         platform = await async_prepare_setup_platform(hass, config, DOMAIN, p_type)
         if platform is None:
             return
 
         try:
             if hasattr(platform, "async_get_engine"):
-                provider = await platform.async_get_engine(hass, p_config)
+                provider = await platform.async_get_engine(
+                    hass, p_config, discovery_info
+                )
             else:
-                provider = await hass.async_add_job(platform.get_engine, hass, p_config)
+                provider = await hass.async_add_job(
+                    platform.get_engine, hass, p_config, discovery_info
+                )
 
             if provider is None:
                 _LOGGER.error("Error setting up platform %s", p_type)
@@ -177,6 +184,12 @@ async def async_setup(hass, config):
 
     if setup_tasks:
         await asyncio.wait(setup_tasks)
+
+    async def async_platform_discovered(platform, info):
+        """Handle for discovered platform."""
+        await async_setup_platform(platform, discovery_info=info)
+
+    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
 
     async def async_clear_cache_handle(service):
         """Handle clear cache service call."""

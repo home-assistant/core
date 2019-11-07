@@ -111,7 +111,7 @@ async def async_setup_entry(hass, entry):
     agent = AlmondAgent(api)
 
     # Hass.io does its own configuration of Almond.
-    if entry.data.get("is_hassio"):
+    if entry.data.get("is_hassio") or entry.data["type"] != TYPE_LOCAL:
         conversation.async_set_agent(hass, agent)
         return True
 
@@ -192,10 +192,10 @@ class AlmondOAuth(AbstractAlmondWebAuth):
 
     async def async_get_access_token(self):
         """Return a valid access token."""
-        if not self._oauth_session.is_valid:
+        if not self._oauth_session.valid_token:
             await self._oauth_session.async_ensure_token_valid()
 
-        return self._oauth_session.token
+        return self._oauth_session.token["access_token"]
 
 
 class AlmondAgent(conversation.AbstractConversationAgent):
