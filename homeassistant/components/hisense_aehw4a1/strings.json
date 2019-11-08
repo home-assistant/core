@@ -2,8 +2,6 @@
   "config": {
     "title": "Hisense AEH-W4A1",
     "step": {
-<<<<<<< HEAD
-<<<<<<< HEAD
       "confirm": {
         "title": "Hisense AEH-W4A1",
         "description": "Do you want to set up Hisense AEH-W4A1?"
@@ -15,26 +13,3 @@
     }
   }
 }
-=======
-      "user": {
-        "title": "Connect to the device",
-        "data": {
-          "host": "Host"
-        }
-=======
-      "confirm": {
-        "title": "Hisense AEH-W4A1",
-        "description": "Do you want to set up Hisense AEH-W4A1?"
->>>>>>> First working release, but there's a lot to do
-      }
-    },
-    "abort": {
-      "single_instance_allowed": "Only a single configuration of Hisense AEH-W4A1 is possible.",
-      "no_devices_found": "No Hisense AEH-W4A1 devices found on the network."
-    }
-  }
-}
-<<<<<<< HEAD
->>>>>>> First commit
-=======
->>>>>>> First working release, but there's a lot to do

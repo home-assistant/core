@@ -4,42 +4,10 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hisense_aehw4a1",
   "requirements": [
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-    "pyaehw4a1==0.1.2"
-=======
-    "pyaehw4a1==0.0.5"
->>>>>>> First commit
-=======
-    "pyaehw4a1==0.1.0"
->>>>>>> First working release, but there's a lot to do
-=======
-    "pyaehw4a1==0.1.1"
->>>>>>> Refined logic
-=======
-    "pyaehw4a1==0.1.2"
->>>>>>> Updated library to latest version
-=======
-    "pyaehw4a1==0.2.1"
->>>>>>> Switched to async
-=======
     "pyaehw4a1==0.2.3"
->>>>>>> Updated library and fixed pylint errors
   ],
   "dependencies": [],
   "codeowners": [
     "@bannhead"
   ]
-<<<<<<< HEAD
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> First commit
-=======
-}
->>>>>>> First working release, but there's a lot to do
