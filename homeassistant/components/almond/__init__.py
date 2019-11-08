@@ -225,7 +225,7 @@ class AlmondAgent(conversation.AbstractConversationAgent):
         elif self.entry.data["type"] != TYPE_LOCAL:
             host = f"{host}/me"
         return {
-            "text": "Send anonymized commands to the authors of Almond for training.",
+            "text": "Would you like to opt-in to share your anonymized commands with Stanford to improve Almond's responses?",
             "url": f"{host}/conversation",
         }
 
