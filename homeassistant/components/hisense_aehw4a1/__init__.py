@@ -13,11 +13,10 @@ import ipaddress
 
 from homeassistant import config_entries
 from homeassistant.components.climate import DOMAIN as CLIMA_DOMAIN
+from homeassistant.const import CONF_IP_ADDRESS
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
-
-CONF_STATIC = "static"
 
 
 def coerce_ip(value):
@@ -36,7 +35,7 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: {
             CLIMA_DOMAIN: vol.Schema(
                 {
-                    vol.Optional(CONF_STATIC, default=[]): vol.Schema(
+                    vol.Optional(CONF_IP_ADDRESS, default=[]): vol.Schema(
                         [vol.All(cv.string, coerce_ip)]
                     )
                 }
