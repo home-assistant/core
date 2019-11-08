@@ -31,7 +31,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             AbodeAutomationSwitch(data, automation, TIMELINE.AUTOMATION_EDIT_GROUP)
         )
 
-    data.entities.extend(entities)
     async_add_entities(entities)
 
 

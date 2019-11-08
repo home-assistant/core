@@ -39,7 +39,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 continue
             entities.append(AbodeSensor(data, device, sensor_type))
 
-    data.entities.extend(entities)
     async_add_entities(entities)
 
 

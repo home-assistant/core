@@ -7,10 +7,11 @@ import abodepy.helpers.timeline as TIMELINE
 import requests
 
 from homeassistant.components.camera import Camera
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import Throttle
 
 from . import AbodeDevice
-from .const import DOMAIN
+from .const import DOMAIN, SIGNAL_CAPTURE_IMAGE
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=90)
 
@@ -31,7 +32,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for device in data.abode.get_devices(generic_type=CONST.TYPE_CAMERA):
         entities.append(AbodeCamera(data, device, TIMELINE.CAPTURE_IMAGE))
 
-    data.entities.extend(entities)
     async_add_entities(entities)
 
 
@@ -54,6 +54,8 @@ class AbodeCamera(AbodeDevice, Camera):
             self._event,
             self._capture_callback,
         )
+
+        async_dispatcher_connect(self.hass, SIGNAL_CAPTURE_IMAGE, self.capture)
 
     def capture(self):
         """Request a new image capture."""

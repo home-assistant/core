@@ -25,7 +25,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for device in data.abode.get_devices(generic_type=CONST.TYPE_LOCK):
         entities.append(AbodeLock(data, device))
 
-    data.entities.extend(entities)
     async_add_entities(entities)
 
 

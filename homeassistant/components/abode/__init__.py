@@ -20,10 +20,17 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-from .const import ATTRIBUTION, DOMAIN, DEFAULT_CACHEDB
+from .const import (
+    ATTRIBUTION,
+    DOMAIN,
+    DEFAULT_CACHEDB,
+    SIGNAL_CAPTURE_IMAGE,
+    SIGNAL_TRIGGER_QUICK_ACTION,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,7 +96,7 @@ class AbodeSystem:
 
         self.abode = abode
         self.polling = polling
-        self.entities = []
+        self.entity_ids = set()
         self.logout_listener = None
 
 
@@ -180,26 +187,22 @@ def setup_hass_services(hass):
         entity_ids = call.data.get(ATTR_ENTITY_ID)
 
         target_entities = [
-            entity
-            for entity in hass.data[DOMAIN].entities
-            if entity.entity_id in entity_ids
+            entity for entity in hass.data[DOMAIN].entity_ids if entity in entity_ids
         ]
 
         for entity in target_entities:
-            entity.capture()
+            dispatcher_send(hass, SIGNAL_CAPTURE_IMAGE)
 
     def trigger_quick_action(call):
         """Trigger a quick action."""
         entity_ids = call.data.get(ATTR_ENTITY_ID, None)
 
         target_entities = [
-            entity
-            for entity in hass.data[DOMAIN].entities
-            if entity.entity_id in entity_ids
+            entity for entity in hass.data[DOMAIN].entity_ids if entity in entity_ids
         ]
 
         for entity in target_entities:
-            entity.trigger()
+            dispatcher_send(hass, SIGNAL_TRIGGER_QUICK_ACTION)
 
     hass.services.register(
         DOMAIN, SERVICE_SETTINGS, change_setting, schema=CHANGE_SETTING_SCHEMA
@@ -290,6 +293,7 @@ class AbodeDevice(Entity):
             self._device.device_id,
             self._update_callback,
         )
+        self.hass.data[DOMAIN].entity_ids.add(self.entity_id)
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe from device events."""
@@ -352,13 +356,14 @@ class AbodeAutomation(Entity):
         self._event = event
 
     async def async_added_to_hass(self):
-        """Subscribe Abode events."""
+        """Subscribe to a group of Abode timeline events."""
         if self._event:
             self.hass.async_add_job(
                 self._data.abode.events.add_event_callback,
                 self._event,
                 self._update_callback,
             )
+            self.hass.data[DOMAIN].entity_ids.add(self.entity_id)
 
     @property
     def should_poll(self):

@@ -5,9 +5,10 @@ import abodepy.helpers.constants as CONST
 import abodepy.helpers.timeline as TIMELINE
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import AbodeAutomation, AbodeDevice
-from .const import DOMAIN
+from .const import DOMAIN, SIGNAL_TRIGGER_QUICK_ACTION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +42,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             )
         )
 
-    data.entities.extend(entities)
     async_add_entities(entities)
 
 
@@ -61,6 +61,16 @@ class AbodeBinarySensor(AbodeDevice, BinarySensorDevice):
 
 class AbodeQuickActionBinarySensor(AbodeAutomation, BinarySensorDevice):
     """A binary sensor implementation for Abode quick action automations."""
+
+    def __init__(self, data, automation, event):
+        """Initialize the Abode quick action."""
+        AbodeAutomation.__init__(self, data, automation, event)
+        BinarySensorDevice.__init__(self)
+
+    async def async_added_to_hass(self):
+        """Subscribe Abode events."""
+        await super().async_added_to_hass()
+        async_dispatcher_connect(self.hass, SIGNAL_TRIGGER_QUICK_ACTION, self.trigger)
 
     def trigger(self):
         """Trigger a quick automation."""
