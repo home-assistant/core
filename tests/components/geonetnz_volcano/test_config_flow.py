@@ -6,10 +6,8 @@ from asynctest import patch, CoroutineMock
 
 from homeassistant import data_entry_flow
 from homeassistant.components.geonetnz_volcano import (
-    async_setup_entry,
     config_flow,
     DOMAIN,
-    async_unload_entry,
     FEED,
 )
 from homeassistant.const import (
@@ -115,11 +113,11 @@ async def test_component_unload_config_entry(hass, config_entry):
         new_callable=CoroutineMock,
     ) as mock_feed_manager_update:
         # Load config entry.
-        assert await async_setup_entry(hass, config_entry)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         assert mock_feed_manager_update.call_count == 1
         assert hass.data[DOMAIN][FEED][config_entry.entry_id] is not None
         # Unload config entry.
-        assert await async_unload_entry(hass, config_entry)
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
         await hass.async_block_till_done()
         assert hass.data[DOMAIN][FEED].get(config_entry.entry_id) is None
