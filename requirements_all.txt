@@ -1102,7 +1102,7 @@ pyalmond==0.0.2
 pyarlo==0.2.3
 
 # homeassistant.components.netatmo
-pyatmo==2.3.2
+pyatmo==2.3.3
 
 # homeassistant.components.atome
 pyatome==0.1.1
