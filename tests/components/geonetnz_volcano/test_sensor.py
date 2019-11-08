@@ -1,5 +1,5 @@
 """The tests for the GeoNet NZ Volcano Feed integration."""
-from asynctest import patch, CoroutineMock
+from asynctest import CoroutineMock, patch
 
 from homeassistant.components import geonetnz_volcano
 from homeassistant.components.geo_location import ATTR_DISTANCE
@@ -10,19 +10,20 @@ from homeassistant.components.geonetnz_volcano.const import (
     ATTR_HAZARDS,
 )
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START,
-    CONF_RADIUS,
+    ATTR_ATTRIBUTION,
+    ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
-    ATTR_ATTRIBUTION,
-    ATTR_ICON,
+    CONF_RADIUS,
+    EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.setup import async_setup_component
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
-from tests.common import async_fire_time_changed
 import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+
+from tests.common import async_fire_time_changed
 from tests.components.geonetnz_volcano import _generate_mock_feed_entry
 
 CONFIG = {geonetnz_volcano.DOMAIN: {CONF_RADIUS: 200}}
