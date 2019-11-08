@@ -81,7 +81,7 @@ class SwisscomDeviceScanner(DeviceScanner):
         "parameters":{"expression":"lan and not self"}}"""
 
         devices = {}
-        
+
         try:
             request = requests.post(url, headers=headers, data=data, timeout=10)
         except (requests.exceptions.ConnectionError, requests.exceptions.Timeout, requests.exceptions.ConnectTimeout):
