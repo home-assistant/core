@@ -55,7 +55,8 @@ class AbodeCamera(AbodeDevice, Camera):
             self._capture_callback,
         )
 
-        async_dispatcher_connect(self.hass, SIGNAL_CAPTURE_IMAGE, self.capture)
+        signal = SIGNAL_CAPTURE_IMAGE.format(self.entity_id)
+        async_dispatcher_connect(self.hass, signal, self.capture)
 
     def capture(self):
         """Request a new image capture."""

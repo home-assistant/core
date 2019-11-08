@@ -187,22 +187,28 @@ def setup_hass_services(hass):
         entity_ids = call.data.get(ATTR_ENTITY_ID)
 
         target_entities = [
-            entity for entity in hass.data[DOMAIN].entity_ids if entity in entity_ids
+            entity_id
+            for entity_id in hass.data[DOMAIN].entity_ids
+            if entity_id in entity_ids
         ]
 
-        for entity in target_entities:
-            dispatcher_send(hass, SIGNAL_CAPTURE_IMAGE)
+        for entity_id in target_entities:
+            signal = SIGNAL_CAPTURE_IMAGE.format(entity_id)
+            dispatcher_send(hass, signal)
 
     def trigger_quick_action(call):
         """Trigger a quick action."""
         entity_ids = call.data.get(ATTR_ENTITY_ID, None)
 
         target_entities = [
-            entity for entity in hass.data[DOMAIN].entity_ids if entity in entity_ids
+            entity_id
+            for entity_id in hass.data[DOMAIN].entity_ids
+            if entity_id in entity_ids
         ]
 
-        for entity in target_entities:
-            dispatcher_send(hass, SIGNAL_TRIGGER_QUICK_ACTION)
+        for entity_id in target_entities:
+            signal = SIGNAL_TRIGGER_QUICK_ACTION.format(entity_id)
+            dispatcher_send(hass, signal)
 
     hass.services.register(
         DOMAIN, SERVICE_SETTINGS, change_setting, schema=CHANGE_SETTING_SCHEMA
