@@ -2,12 +2,8 @@
 import json
 import logging
 
-try:
-    from nacl.secret import SecretBox
-    from nacl.encoding import Base64Encoder
-except ImportError:
-    SecretBox = None
-    Base64Encoder = None
+from nacl.secret import SecretBox
+from nacl.encoding import Base64Encoder
 
 from homeassistant.components import zone as zone_comp
 from homeassistant.components.device_tracker import (
