@@ -3,7 +3,7 @@
   "name": "Upcloud",
   "documentation": "https://www.home-assistant.io/integrations/upcloud",
   "requirements": [
-    "upcloud-api==0.4.3"
+    "upcloud-api==0.4.5"
   ],
   "dependencies": [],
   "codeowners": [
