@@ -85,10 +85,8 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up the GeoNet NZ Volcano component as config entry."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-    if FEED not in hass.data[DOMAIN]:
-        hass.data[DOMAIN][FEED] = {}
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN].setdefault(FEED, {})
 
     radius = config_entry.data[CONF_RADIUS]
     unit_system = config_entry.data[CONF_UNIT_SYSTEM]
