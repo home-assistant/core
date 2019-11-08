@@ -10,6 +10,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
+    CONF_NAME,
     CONF_TYPE,
     CONF_USERNAME,
     DEVICE_CLASS_POWER,
@@ -48,6 +49,7 @@ SAJ_UNIT_MAPPINGS = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_TYPE, default=INVERTER_TYPES[0]): vol.In(INVERTER_TYPES),
         vol.Inclusive(CONF_USERNAME, "credentials"): cv.string,
         vol.Inclusive(CONF_PASSWORD, "credentials"): cv.string,
@@ -68,10 +70,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     hass_sensors = []
 
     for sensor in sensor_def:
-        hass_sensors.append(SAJsensor(sensor))
+        hass_sensors.append(SAJsensor(sensor, inverter_name=config.get(CONF_NAME)))
 
     kwargs = {}
-
     if wifi:
         kwargs["wifi"] = True
         if config.get(CONF_USERNAME) and config.get(CONF_PASSWORD):
@@ -162,14 +163,18 @@ def async_track_time_interval_backoff(hass, action) -> CALLBACK_TYPE:
 class SAJsensor(Entity):
     """Representation of a SAJ sensor."""
 
-    def __init__(self, pysaj_sensor):
+    def __init__(self, pysaj_sensor, inverter_name=None):
         """Initialize the sensor."""
         self._sensor = pysaj_sensor
+        self._inverter_name = inverter_name
         self._state = self._sensor.value
 
     @property
     def name(self):
         """Return the name of the sensor."""
+        if self._inverter_name:
+            return f"saj_{self._inverter_name}_{self._sensor.name}"
+
         return f"saj_{self._sensor.name}"
 
     @property
@@ -230,4 +235,7 @@ class SAJsensor(Entity):
     @property
     def unique_id(self):
         """Return a unique identifier for this sensor."""
+        if self._inverter_name:
+            return f"{self._inverter_name}_{self._sensor.name}"
+
         return f"{self._sensor.name}"
