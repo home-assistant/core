@@ -33,12 +33,12 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import color, dt
 
+from . import CONF_MODEL
+
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Xiaomi Philips Light"
 DATA_KEY = "light.xiaomi_miio"
-
-CONF_MODEL = "model"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -127,10 +127,21 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
 
+    if discovery_info is not None:
+        config = discovery_info
+
     host = config[CONF_HOST]
     token = config[CONF_TOKEN]
-    name = config[CONF_NAME]
+    name = config.get(CONF_NAME)
     model = config.get(CONF_MODEL)
+
+    if host in hass.data[DATA_KEY]:
+        _LOGGER.warning(
+            "Device at %s (token %s...) already initialized, check your config",
+            host,
+            token[:5],
+        )
+        return
 
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
 
