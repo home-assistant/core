@@ -1,4 +1,5 @@
 """Support for WLED."""
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Any, Dict, Optional, Union
@@ -91,8 +92,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     cancel_timer()
 
     # Unload entities for this entry/device.
-    for component in LIGHT_DOMAIN, SWITCH_DOMAIN:
-        await hass.config_entries.async_forward_entry_unload(entry, component)
+    await asyncio.gather(
+        hass.config_entries.async_forward_entry_unload(entry, LIGHT_DOMAIN),
+        hass.config_entries.async_forward_entry_unload(entry, SWITCH_DOMAIN),
+    )
 
     # Cleanup
     del hass.data[DOMAIN][entry.entry_id]
