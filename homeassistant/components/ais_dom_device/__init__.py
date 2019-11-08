@@ -11,23 +11,27 @@ from .config_flow import configured_service
 from .const import DOMAIN
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.components.mqtt import discovery as mqtt_disco
+from homeassistant.components.mqtt import subscription
+from homeassistant.core import callback
 
 _LOGGER = logging.getLogger(__name__)
+G_SUB_STATE = None
 
 
 @asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Ais Dom devices platform."""
     _LOGGER.info("async_setup Ais Dom devices platform.")
 
     # register services
-    def convert_rf_code_b1_to_b0(call):
-        if "code" not in call.data:
-            _LOGGER.error("No code to convert")
-            return
-        _convert_rf_code_b1_to_b0(call.data["code"])
+    @asyncio.coroutine
+    async def convert_rf_code_b1_to_b0(call):
+        await _convert_rf_code_b1_to_b0(hass)
+
+    @asyncio.coroutine
+    async def send_b0_back_to_app(call):
+        await _send_b0_back_to_app(hass)
 
     @asyncio.coroutine
     async def async_add_new_rf433_switch(call):
@@ -53,6 +57,7 @@ def async_setup(hass, config):
     hass.services.async_register(
         DOMAIN, "convert_rf_code_b1_to_b0", convert_rf_code_b1_to_b0
     )
+    hass.services.async_register(DOMAIN, "send_b0_back_to_app", send_b0_back_to_app)
     hass.services.async_register(
         DOMAIN, "add_new_rf433_switch", async_add_new_rf433_switch
     )
@@ -63,8 +68,58 @@ def async_setup(hass, config):
     return True
 
 
-def _convert_rf_code_b1_to_b0(code):
-    _LOGGER.info("TODO 123" + str(code))
+@asyncio.coroutine
+async def _send_b0_back_to_app(hass, call):
+    _LOGGER.log("OK")
+    # hass.add_job(
+    #     hass.services.call("mqtt", "publish", {"topic": "aisdomrf", "payload": payload})
+    # )
+
+
+async def _convert_rf_code_b1_to_b0(hass):
+    _LOGGER.info("TODO 123")
+
+    await hass.services.async_call(
+        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": "AAB155"}
+    )
+    _LOGGER.info("Call done")
+
+    @callback
+    def decode_rf(msg):
+        """Record calls."""
+        _LOGGER.info("xxx")
+        _LOGGER.info("message: " + str(msg.payload))
+        try:
+            payload = json.loads(msg.payload)
+            if "RfRaw" in payload:
+                code = payload.get("RfRaw")["Data"]
+                # TODO decode
+                _LOGGER.info(code)
+
+                # TODO get device topic from message
+                topic = msg.topic
+                _LOGGER.info(topic)
+                device_topic = "sonoffRFBridge"
+
+                payload = {
+                    "code": "xxx" + code,
+                    "command_topic": "cmnd/" + device_topic + "/Backlog",
+                }
+                # TODO return without blocking...
+                # hass.services.call("ais_dom_device", "send_b0_back_to_app", payload)
+                # return asyncio.run_coroutine_threadsafe(
+                #     _send_b0_back_to_app(hass, json.dumps(payload)), hass.loop
+                # ).result()
+
+        except Exception as e:
+            _LOGGER.info("Error: " + str(e))
+
+    sub_state = None
+    sub_state = await subscription.async_subscribe_topics(
+        hass,
+        sub_state,
+        {"state_topic": {"topic": "+/tele/RESULT", "msg_callback": decode_rf}},
+    )
 
 
 async def _async_remove_ais_dom_device(hass, entity_id):
