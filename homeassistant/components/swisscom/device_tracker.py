@@ -86,7 +86,8 @@ class SwisscomDeviceScanner(DeviceScanner):
             request = requests.post(url, headers=headers, data=data, timeout=10)
         except (
             requests.exceptions.ConnectionError,
-            requests.exceptions.Timeout,requests.exceptions.ConnectTimeout
+            requests.exceptions.Timeout,
+            requests.exceptions.ConnectTimeout,
         ):
             _LOGGER.info("No response from Swisscom Internet Box")
             return devices
