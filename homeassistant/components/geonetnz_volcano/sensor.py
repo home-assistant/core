@@ -2,7 +2,6 @@
 import logging
 from typing import Optional
 
-from homeassistant.components.geo_location import ATTR_DISTANCE
 from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_KILOMETERS,
@@ -17,8 +16,9 @@ from homeassistant.util import dt
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from .const import (
-    ATTR_EXTERNAL_ID,
     ATTR_ACTIVITY,
+    ATTR_DISTANCE,
+    ATTR_EXTERNAL_ID,
     ATTR_HAZARDS,
     DEFAULT_ICON,
     DOMAIN,

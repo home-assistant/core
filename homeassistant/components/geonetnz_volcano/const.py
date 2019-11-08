@@ -6,6 +6,7 @@ DOMAIN = "geonetnz_volcano"
 FEED = "feed"
 
 ATTR_ACTIVITY = "activity"
+ATTR_DISTANCE = "distance"
 ATTR_EXTERNAL_ID = "external_id"
 ATTR_HAZARDS = "hazards"
 
