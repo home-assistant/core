@@ -3,12 +3,19 @@ import asyncio
 from functools import partial
 import logging
 
+from miio import DeviceException, Vacuum  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     ATTR_CLEANED_AREA,
     DOMAIN,
     PLATFORM_SCHEMA,
+    STATE_CLEANING,
+    STATE_DOCKED,
+    STATE_ERROR,
+    STATE_IDLE,
+    STATE_PAUSED,
+    STATE_RETURNING,
     SUPPORT_BATTERY,
     SUPPORT_CLEAN_SPOT,
     SUPPORT_FAN_SPEED,
@@ -16,16 +23,10 @@ from homeassistant.components.vacuum import (
     SUPPORT_PAUSE,
     SUPPORT_RETURN_HOME,
     SUPPORT_SEND_COMMAND,
-    SUPPORT_STOP,
-    SUPPORT_STATE,
     SUPPORT_START,
+    SUPPORT_STATE,
+    SUPPORT_STOP,
     StateVacuumDevice,
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_PAUSED,
-    STATE_IDLE,
-    STATE_RETURNING,
-    STATE_ERROR,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -177,8 +178,6 @@ STATE_CODE_TO_STATE = {
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Xiaomi vacuum cleaner robot platform."""
-    from miio import Vacuum
-
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
 
@@ -348,8 +347,6 @@ class MiroboVacuum(StateVacuumDevice):
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a vacuum command handling error messages."""
-        from miio import DeviceException
-
         try:
             await self.hass.async_add_executor_job(partial(func, *args, **kwargs))
             return True
@@ -450,8 +447,6 @@ class MiroboVacuum(StateVacuumDevice):
 
     def update(self):
         """Fetch state from the device."""
-        from miio import DeviceException
-
         try:
             state = self._vacuum.status()
             self.vacuum_state = state
@@ -469,8 +464,6 @@ class MiroboVacuum(StateVacuumDevice):
 
     async def async_clean_zone(self, zone, repeats=1):
         """Clean selected area for the number of repeats indicated."""
-        from miio import DeviceException
-
         for _zone in zone:
             _zone.append(repeats)
         _LOGGER.debug("Zone with repeats: %s", zone)
