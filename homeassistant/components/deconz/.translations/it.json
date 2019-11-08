@@ -55,10 +55,17 @@
             "left": "Sinistra",
             "open": "Aperto",
             "right": "Destra",
+            "side_1": "Lato 1",
+            "side_2": "Lato 2",
+            "side_3": "Lato 3",
+            "side_4": "Lato 4",
+            "side_5": "Lato 5",
+            "side_6": "Lato 6",
             "turn_off": "Spegnere",
             "turn_on": "Accendere"
         },
         "trigger_type": {
+            "remote_awakened": "Dispositivo risvegliato",
             "remote_button_double_press": "Pulsante \"{subtype}\" cliccato due volte",
             "remote_button_long_press": "Pulsante \"{subtype}\" premuto continuamente",
             "remote_button_long_release": "Pulsante \"{subtype}\" rilasciato dopo una lunga pressione",
@@ -69,7 +76,12 @@
             "remote_button_short_press": "Pulsante \"{subtype}\" premuto",
             "remote_button_short_release": "Pulsante \"{subtype}\" rilasciato",
             "remote_button_triple_press": "Pulsante \"{subtype}\" cliccato tre volte",
-            "remote_gyro_activated": "Dispositivo in vibrazione"
+            "remote_double_tap": "Dispositivo \"{subtype}\" toccato due volte",
+            "remote_falling": "Dispositivo in caduta libera",
+            "remote_gyro_activated": "Dispositivo in vibrazione",
+            "remote_moved": "Dispositivo spostato con \"{subtype}\" verso l'alto",
+            "remote_rotate_from_side_1": "Dispositivo ruotato da \"lato 1\" a \"{subtype}\"",
+            "remote_rotate_from_side_2": "Dispositivo ruotato da \"lato 2\" a \"{subtype}\""
         }
     },
     "options": {
