@@ -1,4 +1,5 @@
 """The Hisense AEH-W4A1 integration."""
+<<<<<<< HEAD
 import voluptuous as vol
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -10,6 +11,10 @@ import homeassistant.helpers.config_validation as cv
 =======
 import ipaddress
 >>>>>>> Implemented static ip addresses in configuration.yaml
+=======
+import ipaddress
+import voluptuous as vol
+>>>>>>> Corrected pylint wrong-import-order
 
 from homeassistant import config_entries
 from homeassistant.components.climate import DOMAIN as CLIMA_DOMAIN
