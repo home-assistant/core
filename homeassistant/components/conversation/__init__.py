@@ -106,10 +106,14 @@ async def get_intent(hass: core.HomeAssistant, text: str, conversation_id: str):
 
 
 @websocket_api.async_response
-@websocket_api.websocket_command({"type": "conversation/process", "text": str, vol.Optional("conversation_id"): str})
+@websocket_api.websocket_command(
+    {"type": "conversation/process", "text": str, vol.Optional("conversation_id"): str}
+)
 async def websocket_process(hass, connection, msg):
     """Process text."""
-    connection.send_result(msg["id"], await get_intent(hass, msg["text"], msg.get("conversation_id")))
+    connection.send_result(
+        msg["id"], await get_intent(hass, msg["text"], msg.get("conversation_id"))
+    )
 
 
 @websocket_api.async_response
@@ -147,10 +151,14 @@ class ConversationProcessView(http.HomeAssistantView):
     url = "/api/conversation/process"
     name = "api:conversation:process"
 
-    @RequestDataValidator(vol.Schema({vol.Required("text"): str, vol.Optional("conversation_id"): str}))
+    @RequestDataValidator(
+        vol.Schema({vol.Required("text"): str, vol.Optional("conversation_id"): str})
+    )
     async def post(self, request, data):
         """Send a request for processing."""
         hass = request.app["hass"]
-        intent_result = await get_intent(hass, data["text"], data.get("conversation_id"))
+        intent_result = await get_intent(
+            hass, data["text"], data.get("conversation_id")
+        )
 
         return self.json(intent_result)
