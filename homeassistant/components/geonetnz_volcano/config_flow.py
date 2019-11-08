@@ -30,8 +30,7 @@ def configured_instances(hass):
     )
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class GeonetnzVolcanoFlowHandler(config_entries.ConfigFlow):
+class GeonetnzVolcanoFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a GeoNet NZ Volcano config flow."""
 
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
