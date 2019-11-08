@@ -1,5 +1,5 @@
 """Support for UpCloud."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 import upcloud_api
@@ -82,6 +82,7 @@ def setup(hass, config):
         dispatcher_send(hass, SIGNAL_UPDATE_UPCLOUD)
 
     # Call the UpCloud API to refresh data
+    upcloud_update(datetime.now())
     track_time_interval(hass, upcloud_update, scan_interval)
 
     return True
