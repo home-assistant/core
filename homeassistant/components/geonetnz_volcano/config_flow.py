@@ -52,7 +52,6 @@ class GeonetnzVolcanoFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
-        _LOGGER.debug("User input: %s", user_input)
         if not user_input:
             return await self._show_form()
 
