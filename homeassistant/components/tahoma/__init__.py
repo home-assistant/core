@@ -33,6 +33,7 @@ CONFIG_SCHEMA = vol.Schema(
 TAHOMA_COMPONENTS = ["scene", "sensor", "cover", "switch", "binary_sensor"]
 
 TAHOMA_TYPES = {
+    "io:AwningValanceIOComponent": "cover",
     "io:ExteriorVenetianBlindIOComponent": "cover",
     "io:HorizontalAwningIOComponent": "cover",
     "io:LightIOSystemSensor": "sensor",
