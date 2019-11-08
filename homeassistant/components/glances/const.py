@@ -29,8 +29,9 @@ SENSOR_TYPES = {
     "process_thread": ["Thread", "Count", "mdi:memory"],
     "process_sleeping": ["Sleeping", "Count", "mdi:memory"],
     "cpu_use_percent": ["CPU used", "%", "mdi:memory"],
-    "cpu_temp": ["CPU Temp", TEMP_CELSIUS, "mdi:thermometer"],
     "docker_active": ["Containers active", "", "mdi:docker"],
     "docker_cpu_use": ["Containers CPU used", "%", "mdi:docker"],
     "docker_memory_use": ["Containers RAM used", "MiB", "mdi:docker"],
 }
+TEMP_SENSORS = {"cpu_temp": ["CPU Temp", TEMP_CELSIUS, "mdi:thermometer"]}
+CPU_TEMP = "cpu_temp"

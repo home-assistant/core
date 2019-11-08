@@ -6,7 +6,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DATA_UPDATED, DOMAIN, SENSOR_TYPES
+from .const import CPU_TEMP, DATA_UPDATED, DOMAIN, SENSOR_TYPES, TEMP_SENSORS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +24,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     dev = []
     for sensor_type in SENSOR_TYPES:
         dev.append(
-            GlancesSensor(glances_data, name, SENSOR_TYPES[sensor_type][0], sensor_type)
+            GlancesSensor(
+                glances_data,
+                name,
+                SENSOR_TYPES[sensor_type][0],
+                sensor_type,
+                SENSOR_TYPES[sensor_type],
+            )
+        )
+
+    for sensor in glances_data.api.data["sensors"]:
+        dev.append(
+            GlancesSensor(
+                glances_data, name, sensor["label"], CPU_TEMP, TEMP_SENSORS[CPU_TEMP]
+            )
         )
 
     async_add_entities(dev, True)
@@ -33,14 +46,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class GlancesSensor(Entity):
     """Implementation of a Glances sensor."""
 
-    def __init__(self, glances_data, name, sensor_name, sensor_type):
+    def __init__(self, glances_data, name, sensor_name, sensor_type, sensor_details):
         """Initialize the sensor."""
         self.glances_data = glances_data
         self._sensor_name = sensor_name
         self._name = name
         self.type = sensor_type
         self._state = None
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self.sensor_details = sensor_details
 
     @property
     def name(self):
@@ -55,12 +68,12 @@ class GlancesSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return SENSOR_TYPES[self.type][2]
+        return self.sensor_details[2]
 
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
+        return self.sensor_details[1]
 
     @property
     def available(self):
@@ -133,22 +146,7 @@ class GlancesSensor(Entity):
                 self._state = value["quicklook"]["cpu"]
             elif self.type == "cpu_temp":
                 for sensor in value["sensors"]:
-                    if sensor["label"] in [
-                        "amdgpu 1",
-                        "aml_thermal",
-                        "Core 0",
-                        "Core 1",
-                        "CPU Temperature",
-                        "CPU",
-                        "cpu-thermal 1",
-                        "cpu_thermal 1",
-                        "exynos-therm 1",
-                        "Package id 0",
-                        "Physical id 0",
-                        "radeon 1",
-                        "soc-thermal 1",
-                        "soc_thermal 1",
-                    ]:
+                    if self._sensor_name == sensor["label"]:
                         self._state = sensor["value"]
             elif self.type == "docker_active":
                 count = 0
