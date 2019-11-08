@@ -25,9 +25,11 @@ COMPONENTS_WITH_DEMO_PLATFORM = [
     "media_player",
     "notify",
     "sensor",
+    "stt",
     "switch",
     "tts",
     "mailbox",
+    "water_heater",
 ]
 
 

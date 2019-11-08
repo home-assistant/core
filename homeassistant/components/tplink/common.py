@@ -4,7 +4,14 @@ from datetime import timedelta
 import logging
 from typing import Any, Callable, List
 
-from pyHS100 import Discover, SmartBulb, SmartDevice, SmartDeviceException, SmartPlug
+from pyHS100 import (
+    Discover,
+    SmartBulb,
+    SmartDevice,
+    SmartDeviceException,
+    SmartPlug,
+    SmartStrip,
+)
 
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -15,6 +22,7 @@ ATTR_CONFIG = "config"
 CONF_DIMMER = "dimmer"
 CONF_DISCOVERY = "discovery"
 CONF_LIGHT = "light"
+CONF_STRIP = "strip"
 CONF_SWITCH = "switch"
 
 
@@ -74,7 +82,10 @@ async def async_discover_devices(
             if existing_devices.has_device_with_host(dev.host):
                 continue
 
-            if isinstance(dev, SmartPlug):
+            if isinstance(dev, SmartStrip):
+                for plug in dev.plugs.values():
+                    switches.append(plug)
+            elif isinstance(dev, SmartPlug):
                 try:
                     if dev.is_dimmable:  # Dimmers act as lights
                         lights.append(dev)
@@ -99,7 +110,7 @@ def get_static_devices(config_data) -> SmartDevices:
     lights = []
     switches = []
 
-    for type_ in [CONF_LIGHT, CONF_SWITCH, CONF_DIMMER]:
+    for type_ in [CONF_LIGHT, CONF_SWITCH, CONF_STRIP, CONF_DIMMER]:
         for entry in config_data[type_]:
             host = entry["host"]
 
@@ -107,6 +118,9 @@ def get_static_devices(config_data) -> SmartDevices:
                 lights.append(SmartBulb(host))
             elif type_ == CONF_SWITCH:
                 switches.append(SmartPlug(host))
+            elif type_ == CONF_STRIP:
+                for plug in SmartStrip(host).plugs.values():
+                    switches.append(plug)
             # Dimmers need to be defined as smart plugs to work correctly.
             elif type_ == CONF_DIMMER:
                 lights.append(SmartPlug(host))

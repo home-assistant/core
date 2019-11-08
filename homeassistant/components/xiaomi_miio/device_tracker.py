@@ -25,8 +25,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def get_scanner(hass, config):
     """Return a Xiaomi MiIO device scanner."""
     scanner = None
-    host = config[DOMAIN].get(CONF_HOST)
-    token = config[DOMAIN].get(CONF_TOKEN)
+    host = config[DOMAIN][CONF_HOST]
+    token = config[DOMAIN][CONF_TOKEN]
 
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
 

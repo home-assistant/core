@@ -25,6 +25,7 @@ SECTIONS = (
     "entity_registry",
     "group",
     "script",
+    "scene",
 )
 ON_DEMAND = ("zwave",)
 

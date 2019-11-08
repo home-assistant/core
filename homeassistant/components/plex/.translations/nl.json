@@ -1,6 +1,10 @@
 {
     "config": {
         "abort": {
+            "all_configured": "Alle gekoppelde servers zijn al geconfigureerd",
+            "already_configured": "Deze Plex-server is al geconfigureerd",
+            "already_in_progress": "Plex wordt geconfigureerd",
+            "discovery_no_file": "Geen legacy configuratiebestand gevonden",
             "invalid_import": "Ge\u00efmporteerde configuratie is ongeldig",
             "token_request_timeout": "Time-out verkrijgen van token",
             "unknown": "Mislukt om onbekende reden"
@@ -16,9 +20,18 @@
                 "data": {
                     "host": "Host",
                     "port": "Poort",
-                    "ssl": "Gebruik SSL"
+                    "ssl": "Gebruik SSL",
+                    "token": "Token (indien nodig)",
+                    "verify_ssl": "Controleer SSL-certificaat"
                 },
                 "title": "Plex server"
+            },
+            "select_server": {
+                "data": {
+                    "server": "Server"
+                },
+                "description": "Meerdere servers beschikbaar, selecteer er een:",
+                "title": "Selecteer Plex server"
             },
             "start_website_auth": {
                 "description": "Ga verder met autoriseren bij plex.tv.",
@@ -26,9 +39,23 @@
             },
             "user": {
                 "data": {
-                    "manual_setup": "Handmatig setup"
+                    "manual_setup": "Handmatig setup",
+                    "token": "Plex token"
                 },
-                "description": "Ga verder met autoriseren bij plex.tv of configureer een server."
+                "description": "Ga verder met autoriseren bij plex.tv of configureer een server.",
+                "title": "Verbind de Plex server"
+            }
+        },
+        "title": "Plex"
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "show_all_controls": "Toon alle bedieningselementen",
+                    "use_episode_art": "Gebruik aflevering kunst"
+                },
+                "description": "Opties voor Plex-mediaspelers"
             }
         }
     }

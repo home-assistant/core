@@ -1,9 +1,10 @@
 """Support for interfacing with an instance of getchannels.com."""
 import logging
 
+from pychannels import Channels
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     DOMAIN,
     MEDIA_TYPE_CHANNEL,
@@ -124,7 +125,6 @@ class ChannelsPlayer(MediaPlayerDevice):
 
     def __init__(self, name, host, port):
         """Initialize the Channels app."""
-        from pychannels import Channels
 
         self._name = name
         self._host = host

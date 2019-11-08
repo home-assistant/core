@@ -12,6 +12,7 @@
             "device_unavailable": "Apparat ass net erreechbar",
             "faulty_credentials": "Ong\u00eblteg Login Informatioune"
         },
+        "flow_title": "Axis Apparat: {name} ({host})",
         "step": {
             "user": {
                 "data": {

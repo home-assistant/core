@@ -3,6 +3,9 @@ import voluptuous as vol
 
 import homeassistant.components.automation.numeric_state as numeric_state_automation
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -11,7 +14,6 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_FOR,
     CONF_TYPE,
-    CONF_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
@@ -73,11 +75,6 @@ TRIGGER_SCHEMA = vol.All(
             ),
             vol.Optional(CONF_BELOW): vol.Any(vol.Coerce(float)),
             vol.Optional(CONF_ABOVE): vol.Any(vol.Coerce(float)),
-            vol.Optional(CONF_FOR): vol.Any(
-                vol.All(cv.time_period, cv.positive_timedelta),
-                cv.template,
-                cv.template_complex,
-            ),
             vol.Optional(CONF_FOR): cv.positive_time_period_dict,
         }
     ),
@@ -152,19 +149,20 @@ async def async_get_trigger_capabilities(hass, config):
     """List trigger capabilities."""
     state = hass.states.get(config[CONF_ENTITY_ID])
     unit_of_measurement = (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) if state else ""
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) if state else None
     )
+
+    if not state or not unit_of_measurement:
+        raise InvalidDeviceAutomationConfig
 
     return {
         "extra_fields": vol.Schema(
             {
                 vol.Optional(
-                    CONF_ABOVE,
-                    description={CONF_UNIT_OF_MEASUREMENT: unit_of_measurement},
+                    CONF_ABOVE, description={"suffix": unit_of_measurement}
                 ): vol.Coerce(float),
                 vol.Optional(
-                    CONF_BELOW,
-                    description={CONF_UNIT_OF_MEASUREMENT: unit_of_measurement},
+                    CONF_BELOW, description={"suffix": unit_of_measurement}
                 ): vol.Coerce(float),
                 vol.Optional(CONF_FOR): cv.positive_time_period_dict,
             }

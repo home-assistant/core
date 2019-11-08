@@ -263,54 +263,37 @@ async def test_http_api_wrong_data(hass, hass_client):
     assert resp.status == 400
 
 
-def test_create_matcher():
-    """Test the create matcher method."""
-    # Basic sentence
-    pattern = conversation.create_matcher("Hello world")
-    assert pattern.match("Hello world") is not None
+async def test_custom_agent(hass, hass_client):
+    """Test a custom conversation agent."""
 
-    # Match a part
-    pattern = conversation.create_matcher("Hello {name}")
-    match = pattern.match("hello world")
-    assert match is not None
-    assert match.groupdict()["name"] == "world"
-    no_match = pattern.match("Hello world, how are you?")
-    assert no_match is None
+    calls = []
 
-    # Optional and matching part
-    pattern = conversation.create_matcher("Turn on [the] {name}")
-    match = pattern.match("turn on the kitchen lights")
-    assert match is not None
-    assert match.groupdict()["name"] == "kitchen lights"
-    match = pattern.match("turn on kitchen lights")
-    assert match is not None
-    assert match.groupdict()["name"] == "kitchen lights"
-    match = pattern.match("turn off kitchen lights")
-    assert match is None
+    class MyAgent(conversation.AbstractConversationAgent):
+        """Test Agent."""
 
-    # Two different optional parts, 1 matching part
-    pattern = conversation.create_matcher("Turn on [the] [a] {name}")
-    match = pattern.match("turn on the kitchen lights")
-    assert match is not None
-    assert match.groupdict()["name"] == "kitchen lights"
-    match = pattern.match("turn on kitchen lights")
-    assert match is not None
-    assert match.groupdict()["name"] == "kitchen lights"
-    match = pattern.match("turn on a kitchen light")
-    assert match is not None
-    assert match.groupdict()["name"] == "kitchen light"
+        async def async_process(self, text, conversation_id):
+            """Process some text."""
+            calls.append((text, conversation_id))
+            response = intent.IntentResponse()
+            response.async_set_speech("Test response")
+            return response
 
-    # Strip plural
-    pattern = conversation.create_matcher("Turn {name}[s] on")
-    match = pattern.match("turn kitchen lights on")
-    assert match is not None
-    assert match.groupdict()["name"] == "kitchen light"
+    conversation.async_set_agent(hass, MyAgent())
 
-    # Optional 2 words
-    pattern = conversation.create_matcher("Turn [the great] {name} on")
-    match = pattern.match("turn the great kitchen lights on")
-    assert match is not None
-    assert match.groupdict()["name"] == "kitchen lights"
-    match = pattern.match("turn kitchen lights on")
-    assert match is not None
-    assert match.groupdict()["name"] == "kitchen lights"
+    assert await async_setup_component(hass, "conversation", {})
+
+    client = await hass_client()
+
+    resp = await client.post(
+        "/api/conversation/process",
+        json={"text": "Test Text", "conversation_id": "test-conv-id"},
+    )
+    assert resp.status == 200
+    assert await resp.json() == {
+        "card": {},
+        "speech": {"plain": {"extra_data": None, "speech": "Test response"}},
+    }
+
+    assert len(calls) == 1
+    assert calls[0][0] == "Test Text"
+    assert calls[0][1] == "test-conv-id"

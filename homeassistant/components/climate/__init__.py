@@ -35,7 +35,7 @@ from .const import (
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
     ATTR_HUMIDITY,
-    ATTR_HVAC_ACTIONS,
+    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_MAX_HUMIDITY,
@@ -239,7 +239,7 @@ class ClimateDevice(Entity):
             data[ATTR_FAN_MODES] = self.fan_modes
 
         if self.hvac_action:
-            data[ATTR_HVAC_ACTIONS] = self.hvac_action
+            data[ATTR_HVAC_ACTION] = self.hvac_action
 
         if supported_features & SUPPORT_PRESET_MODE:
             data[ATTR_PRESET_MODE] = self.preset_mode

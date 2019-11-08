@@ -12,7 +12,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import HomeAssistantType
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID
 from .hap import HomematicipHAP
@@ -28,7 +28,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP alrm control panel from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
@@ -52,12 +52,25 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
         """Initialize the alarm control panel."""
         self._home = hap.home
         self.alarm_state = STATE_ALARM_DISARMED
+        self._internal_alarm_zone = None
+        self._external_alarm_zone = None
 
         for security_zone in security_zones:
             if security_zone.label == "INTERNAL":
                 self._internal_alarm_zone = security_zone
-            else:
+            elif security_zone.label == "EXTERNAL":
                 self._external_alarm_zone = security_zone
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "identifiers": {(HMIPC_DOMAIN, f"ACP {self._home.id}")},
+            "name": self.name,
+            "manufacturer": "eQ-3",
+            "model": CONST_ALARM_CONTROL_PANEL_NAME,
+            "via_device": (HMIPC_DOMAIN, self._home.id),
+        }
 
     @property
     def state(self) -> str:
@@ -99,8 +112,10 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self._internal_alarm_zone.on_update(self._async_device_changed)
-        self._external_alarm_zone.on_update(self._async_device_changed)
+        if self._internal_alarm_zone:
+            self._internal_alarm_zone.on_update(self._async_device_changed)
+        if self._external_alarm_zone:
+            self._external_alarm_zone.on_update(self._async_device_changed)
 
     def _async_device_changed(self, *args, **kwargs):
         """Handle device state changes."""
@@ -135,7 +150,7 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
 
 
 def _get_zone_alarm_state(security_zone) -> bool:
-    if security_zone.active:
+    if security_zone and security_zone.active:
         if (
             security_zone.sabotage
             or security_zone.motionDetected

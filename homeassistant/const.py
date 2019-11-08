@@ -1,6 +1,6 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 101
+MINOR_VERSION = 102
 PATCH_VERSION = "0.dev0"
 __short_version__ = "{}.{}".format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = "{}.{}".format(__short_version__, PATCH_VERSION)
@@ -40,6 +40,8 @@ CONF_BELOW = "below"
 CONF_BINARY_SENSORS = "binary_sensors"
 CONF_BLACKLIST = "blacklist"
 CONF_BRIGHTNESS = "brightness"
+CONF_CLIENT_ID = "client_id"
+CONF_CLIENT_SECRET = "client_secret"
 CONF_CODE = "code"
 CONF_COLOR_TEMP = "color_temp"
 CONF_COMMAND = "command"
@@ -124,6 +126,7 @@ CONF_RECIPIENT = "recipient"
 CONF_REGION = "region"
 CONF_RESOURCE = "resource"
 CONF_RESOURCES = "resources"
+CONF_RESOURCE_TEMPLATE = "resource_template"
 CONF_RGB = "rgb"
 CONF_ROOM = "room"
 CONF_SCAN_INTERVAL = "scan_interval"

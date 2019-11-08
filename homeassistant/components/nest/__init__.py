@@ -4,6 +4,8 @@ import socket
 from datetime import datetime, timedelta
 import threading
 
+from nest import Nest
+from nest.nest import AuthorizationError, APIError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -142,7 +144,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up Nest from a config entry."""
-    from nest import Nest
 
     nest = Nest(access_token=entry.data["tokens"]["access_token"])
 
@@ -286,8 +287,6 @@ class NestDevice:
 
     def initialize(self):
         """Initialize Nest."""
-        from nest.nest import AuthorizationError, APIError
-
         try:
             # Do not optimize next statement, it is here for initialize
             # persistence Nest API connection.
@@ -302,8 +301,6 @@ class NestDevice:
 
     def structures(self):
         """Generate a list of structures."""
-        from nest.nest import AuthorizationError, APIError
-
         try:
             for structure in self.nest.structures:
                 if structure.name not in self.local_structure:
@@ -332,8 +329,6 @@ class NestDevice:
 
     def _devices(self, device_type):
         """Generate a list of Nest devices."""
-        from nest.nest import AuthorizationError, APIError
-
         try:
             for structure in self.nest.structures:
                 if structure.name not in self.local_structure:

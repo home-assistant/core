@@ -2,15 +2,16 @@
 
 import logging
 
+import pyfnip
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, CONF_HOST, CONF_PORT, CONF_DEVICES
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     Light,
-    PLATFORM_SCHEMA,
 )
+from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_NAME, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,8 +69,6 @@ class FutureNowLight(Light):
 
     def __init__(self, device):
         """Initialize the light."""
-        import pyfnip
-
         self._name = device["name"]
         self._dimmable = device["dimmable"]
         self._channel = device["channel"]

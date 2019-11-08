@@ -133,6 +133,7 @@ STATE_TYPES = {
     "TRIM": "Trimming Voltage",
     "BOOST": "Boosting Voltage",
     "FSD": "Forced Shutdown",
+    "ALARM": "Alarm",
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

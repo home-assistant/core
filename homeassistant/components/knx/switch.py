@@ -1,5 +1,6 @@
 """Support for KNX/IP switches."""
 import voluptuous as vol
+from xknx.devices import Switch as XknxSwitch
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_ADDRESS, CONF_NAME
@@ -41,9 +42,7 @@ def async_add_entities_discovery(hass, discovery_info, async_add_entities):
 @callback
 def async_add_entities_config(hass, config, async_add_entities):
     """Set up switch for KNX platform configured within platform."""
-    import xknx
-
-    switch = xknx.devices.Switch(
+    switch = XknxSwitch(
         hass.data[DATA_KNX].xknx,
         name=config[CONF_NAME],
         group_address=config[CONF_ADDRESS],

@@ -226,7 +226,7 @@ async def test_query_message(hass):
         "payload": {
             "devices": {
                 "light.non_existing": {"online": False},
-                "light.demo_light": {"on": False, "online": True},
+                "light.demo_light": {"on": False, "online": True, "brightness": 0},
                 "light.another_light": {
                     "on": True,
                     "online": True,

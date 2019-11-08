@@ -2,6 +2,7 @@
 import logging
 import re
 
+from pyalarmdotcom import Alarmdotcom
 import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
@@ -49,7 +50,6 @@ class AlarmDotCom(alarm.AlarmControlPanel):
 
     def __init__(self, hass, name, code, username, password):
         """Initialize the Alarm.com status."""
-        from pyalarmdotcom import Alarmdotcom
 
         _LOGGER.debug("Setting up Alarm.com...")
         self._hass = hass

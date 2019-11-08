@@ -36,10 +36,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import HomeAssistantType
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
-from .device import ATTR_GROUP_MEMBER_UNREACHABLE
 from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,7 +47,6 @@ ATTR_ACCELERATION_SENSOR_MODE = "acceleration_sensor_mode"
 ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION = "acceleration_sensor_neutral_position"
 ATTR_ACCELERATION_SENSOR_SENSITIVITY = "acceleration_sensor_sensitivity"
 ATTR_ACCELERATION_SENSOR_TRIGGER_ANGLE = "acceleration_sensor_trigger_angle"
-ATTR_LOW_BATTERY = "low_battery"
 ATTR_MOISTURE_DETECTED = "moisture_detected"
 ATTR_MOTION_DETECTED = "motion_detected"
 ATTR_POWER_MAINS_FAILURE = "power_mains_failure"
@@ -59,12 +57,10 @@ ATTR_WATER_LEVEL_DETECTED = "water_level_detected"
 ATTR_WINDOW_STATE = "window_state"
 
 GROUP_ATTRIBUTES = {
-    "lowBat": ATTR_LOW_BATTERY,
     "moistureDetected": ATTR_MOISTURE_DETECTED,
     "motionDetected": ATTR_MOTION_DETECTED,
     "powerMainsFailure": ATTR_POWER_MAINS_FAILURE,
     "presenceDetected": ATTR_PRESENCE_DETECTED,
-    "unreach": ATTR_GROUP_MEMBER_UNREACHABLE,
     "waterlevelDetected": ATTR_WATER_LEVEL_DETECTED,
 }
 
@@ -82,7 +78,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP Cloud binary sensor from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
@@ -408,17 +404,22 @@ class HomematicipSecuritySensorGroup(
     def is_on(self) -> bool:
         """Return true if safety issue detected."""
         parent_is_on = super().is_on
+        if parent_is_on:
+            return True
+
         if (
-            parent_is_on
-            or self._device.powerMainsFailure
+            self._device.powerMainsFailure
             or self._device.moistureDetected
             or self._device.waterlevelDetected
             or self._device.lowBat
+            or self._device.dutyCycle
         ):
             return True
+
         if (
             self._device.smokeDetectorAlarmType is not None
             and self._device.smokeDetectorAlarmType != SmokeDetectorAlarmType.IDLE_OFF
         ):
             return True
+
         return False

@@ -73,8 +73,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Xiaomi IR Remote (Chuangmi IR) platform."""
-    host = config.get(CONF_HOST)
-    token = config.get(CONF_TOKEN)
+    host = config[CONF_HOST]
+    token = config[CONF_TOKEN]
 
     # Create handler
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
@@ -86,7 +86,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     # Check that we can communicate with device.
     try:
-        device_info = device.info()
+        device_info = await hass.async_add_executor_job(device.info)
         model = device_info.model
         unique_id = f"{model}-{device_info.mac_address}"
         _LOGGER.info(

@@ -3,6 +3,38 @@ import collections
 import logging
 from typing import Dict
 
+import insteonplm
+from insteonplm.devices import ALDBStatus
+from insteonplm.states.cover import Cover
+from insteonplm.states.dimmable import (
+    DimmableKeypadA,
+    DimmableRemote,
+    DimmableSwitch,
+    DimmableSwitch_Fan,
+)
+from insteonplm.states.onOff import (
+    OnOffKeypad,
+    OnOffKeypadA,
+    OnOffSwitch,
+    OnOffSwitch_OutletBottom,
+    OnOffSwitch_OutletTop,
+    OpenClosedRelay,
+)
+from insteonplm.states.sensor import (
+    IoLincSensor,
+    LeakSensorDryWet,
+    OnOffSensor,
+    SmokeCO2Sensor,
+    VariableSensor,
+)
+from insteonplm.states.x10 import (
+    X10AllLightsOffSensor,
+    X10AllLightsOnSensor,
+    X10AllUnitsOffSensor,
+    X10DimmableSwitch,
+    X10OnOffSensor,
+    X10OnOffSwitch,
+)
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -16,8 +48,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
-from homeassistant.helpers.dispatcher import dispatcher_send, async_dispatcher_connect
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -240,8 +272,6 @@ STATE_NAME_LABEL_MAP = {
 
 async def async_setup(hass, config):
     """Set up the connection to the modem."""
-    import insteonplm
-
     ipdb = IPDB()
     insteon_modem = None
 
@@ -496,41 +526,6 @@ class IPDB:
 
     def __init__(self):
         """Create the INSTEON Product Database (IPDB)."""
-        from insteonplm.states.cover import Cover
-
-        from insteonplm.states.onOff import (
-            OnOffSwitch,
-            OnOffSwitch_OutletTop,
-            OnOffSwitch_OutletBottom,
-            OpenClosedRelay,
-            OnOffKeypadA,
-            OnOffKeypad,
-        )
-
-        from insteonplm.states.dimmable import (
-            DimmableSwitch,
-            DimmableSwitch_Fan,
-            DimmableRemote,
-            DimmableKeypadA,
-        )
-
-        from insteonplm.states.sensor import (
-            VariableSensor,
-            OnOffSensor,
-            SmokeCO2Sensor,
-            IoLincSensor,
-            LeakSensorDryWet,
-        )
-
-        from insteonplm.states.x10 import (
-            X10DimmableSwitch,
-            X10OnOffSwitch,
-            X10OnOffSensor,
-            X10AllUnitsOffSensor,
-            X10AllLightsOnSensor,
-            X10AllLightsOffSensor,
-        )
-
         self.states = [
             State(Cover, "cover"),
             State(OnOffSwitch_OutletTop, "switch"),
@@ -685,8 +680,6 @@ class InsteonEntity(Entity):
 
 def print_aldb_to_log(aldb):
     """Print the All-Link Database to the log file."""
-    from insteonplm.devices import ALDBStatus
-
     _LOGGER.info("ALDB load status is %s", aldb.status.name)
     if aldb.status not in [ALDBStatus.LOADED, ALDBStatus.PARTIAL]:
         _LOGGER.warning("Device All-Link database not loaded")
