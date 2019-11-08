@@ -148,7 +148,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             all_module_infos = data.get_module_infos()
             all_module_names = [e["module_name"] for e in all_module_infos.values()]
             module_names = config.get(CONF_MODULES, all_module_names)
-            _dev = []
+            entities = []
             for module_name in module_names:
                 if module_name not in all_module_names:
                     _LOGGER.info("Module %s not found", module_name)
@@ -163,18 +163,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                         module["module_name"],
                         data.station_data.moduleById(mid=module["id"]),
                     )
-                    _dev.append(NetatmoSensor(data, module, condition.lower()))
-            return _dev
+                    entities.append(NetatmoSensor(data, module, condition.lower()))
+            return entities
 
         def _retry(_data):
             try:
-                _dev = find_devices(_data)
+                entities = find_devices(_data)
             except requests.exceptions.Timeout:
                 return call_later(
                     hass, NETATMO_UPDATE_INTERVAL, lambda _: _retry(_data)
                 )
-            if _dev:
-                add_entities(_dev, True)
+            if entities:
+                add_entities(entities, True)
 
         for data_class in [pyatmo.WeatherStationData, pyatmo.HomeCoachData]:
             try:
