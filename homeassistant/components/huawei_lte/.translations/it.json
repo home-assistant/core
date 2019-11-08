@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Questo dispositivo \u00e8 gi\u00e0 configurato"
+            "already_configured": "Questo dispositivo \u00e8 gi\u00e0 stato configurato"
         },
         "error": {
             "connection_failed": "Connessione fallita",

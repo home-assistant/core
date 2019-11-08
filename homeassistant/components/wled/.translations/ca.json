@@ -1,0 +1,17 @@
+{
+    "config": {
+        "flow_title": "WLED: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3 o adre\u00e7a IP"
+                },
+                "title": "Enlla\u00e7a el teu WLED"
+            },
+            "zeroconf_confirm": {
+                "title": "Dispositiu WLED descobert"
+            }
+        },
+        "title": "WLED"
+    }
+}
