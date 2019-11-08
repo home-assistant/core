@@ -109,6 +109,7 @@ class UpCloudServerEntity(Entity):
         self._upcloud = upcloud
         self.uuid = uuid
         self.data = None
+        self._unsub_handlers = []
 
     @property
     def unique_id(self) -> str:
@@ -125,9 +126,17 @@ class UpCloudServerEntity(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_UPCLOUD, self._update_callback
+        self._unsub_handlers.append(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_UPDATE_UPCLOUD, self._update_callback
+            )
         )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Invoke unsubscription handlers."""
+        for unsub in self._unsub_handlers:
+            unsub()
+        self._unsub_handlers.clear()
 
     @callback
     def _update_callback(self):
