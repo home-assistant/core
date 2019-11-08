@@ -188,6 +188,7 @@ class FlowHandler:
         data_schema: vol.Schema = None,
         errors: Optional[Dict] = None,
         description_placeholders: Optional[Dict] = None,
+        labels: Optional[Dict[str, str]] = None,
     ) -> Dict[str, Any]:
         """Return the definition of a form to gather user input."""
         return {
@@ -198,6 +199,7 @@ class FlowHandler:
             "data_schema": data_schema,
             "errors": errors,
             "description_placeholders": description_placeholders,
+            "labels": labels,
         }
 
     @callback
@@ -208,6 +210,7 @@ class FlowHandler:
         data: Dict,
         description: Optional[str] = None,
         description_placeholders: Optional[Dict] = None,
+        labels: Optional[Dict] = None,
     ) -> Dict[str, Any]:
         """Finish config flow and create a config entry."""
         return {
@@ -219,11 +222,16 @@ class FlowHandler:
             "data": data,
             "description": description,
             "description_placeholders": description_placeholders,
+            "labels": labels,
         }
 
     @callback
     def async_abort(
-        self, *, reason: str, description_placeholders: Optional[Dict] = None
+        self,
+        *,
+        reason: str,
+        description_placeholders: Optional[Dict] = None,
+        labels: Optional[Dict[str, str]] = None,
     ) -> Dict[str, Any]:
         """Abort the config flow."""
         return {
@@ -236,7 +244,12 @@ class FlowHandler:
 
     @callback
     def async_external_step(
-        self, *, step_id: str, url: str, description_placeholders: Optional[Dict] = None
+        self,
+        *,
+        step_id: str,
+        url: str,
+        description_placeholders: Optional[Dict] = None,
+        labels: Optional[Dict[str, str]] = None,
     ) -> Dict[str, Any]:
         """Return the definition of an external step for the user to take."""
         return {
@@ -246,6 +259,7 @@ class FlowHandler:
             "step_id": step_id,
             "url": url,
             "description_placeholders": description_placeholders,
+            "labels": labels,
         }
 
     @callback
