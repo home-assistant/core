@@ -47,16 +47,16 @@ class GiosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 self._errors[CONF_STATION_ID] = "station_id_exists"
             station_id_valid = await self._test_station_id(
-                websession, user_input["station_id"]
+                websession, user_input[CONF_STATION_ID]
             )
             if station_id_valid:
                 sensors_data_valid = await self._test_sensors_data(
-                    websession, user_input["station_id"]
+                    websession, user_input[CONF_STATION_ID]
                 )
                 if not sensors_data_valid:
-                    self._errors["base"] = "invalid_sensors_data"
+                    self._errors[CONF_STATION_ID] = "invalid_sensors_data"
             else:
-                self._errors["base"] = "wrong_station_id"
+                self._errors[CONF_STATION_ID] = "wrong_station_id"
             if not self._errors:
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input

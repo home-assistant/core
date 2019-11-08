@@ -3,8 +3,8 @@ from homeassistant.components.air_quality import (
     ATTR_CO,
     ATTR_NO2,
     ATTR_OZONE,
-    ATTR_PM_2_5,
     ATTR_PM_10,
+    ATTR_PM_2_5,
     ATTR_SO2,
     AirQualityEntity,
 )
