@@ -203,7 +203,7 @@ async def test_hvac_mode_vs_hvac_action(hass, utcnow):
     helper = await setup_test_component(hass, [create_thermostat_service()])
 
     # Simulate that current temperature is above target temp
-    # Heating might be on, but hvac_action currently 'off'
+    # Heating might be on, but hvac_action currently 'idle'
     helper.characteristics[TEMPERATURE_CURRENT].value = 22
     helper.characteristics[TEMPERATURE_TARGET].value = 21
     helper.characteristics[HEATING_COOLING_CURRENT].value = 0
@@ -213,7 +213,7 @@ async def test_hvac_mode_vs_hvac_action(hass, utcnow):
 
     state = await helper.poll_and_get_state()
     assert state.state == "heat"
-    assert state.attributes["hvac_action"] == "off"
+    assert state.attributes["hvac_action"] == "idle"
 
     # Simulate that current temperature is below target temp
     # Heating might be on and hvac_action currently 'heat'
