@@ -1,4 +1,5 @@
 """Support for WLED."""
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Any, Dict, Optional, Union
@@ -6,6 +7,7 @@ from typing import Any, Dict, Optional, Union
 from wled import WLED, WLEDConnectionError, WLEDError
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
@@ -58,9 +60,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = {DATA_WLED_CLIENT: wled}
 
     # Set up all platforms for this device/entry.
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, LIGHT_DOMAIN)
-    )
+    for component in LIGHT_DOMAIN, SWITCH_DOMAIN:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
 
     async def interval_update(now: dt_util.dt.datetime = None) -> None:
         """Poll WLED device function, dispatches event after update."""
@@ -89,7 +92,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     cancel_timer()
 
     # Unload entities for this entry/device.
-    await hass.config_entries.async_forward_entry_unload(entry, LIGHT_DOMAIN)
+    await asyncio.gather(
+        hass.config_entries.async_forward_entry_unload(entry, LIGHT_DOMAIN),
+        hass.config_entries.async_forward_entry_unload(entry, SWITCH_DOMAIN),
+    )
 
     # Cleanup
     del hass.data[DOMAIN][entry.entry_id]
