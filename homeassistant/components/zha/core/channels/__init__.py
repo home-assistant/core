@@ -395,14 +395,14 @@ class EventRelayChannel(ZigbeeChannel):
 
 
 # pylint: disable=wrong-import-position
-from . import closures  # noqa
-from . import general  # noqa
-from . import homeautomation  # noqa
-from . import hvac  # noqa
-from . import lighting  # noqa
-from . import lightlink  # noqa
-from . import manufacturerspecific  # noqa
-from . import measurement  # noqa
-from . import protocol  # noqa
-from . import security  # noqa
-from . import smartenergy  # noqa
+from . import closures  # noqa: F401
+from . import general  # noqa: F401
+from . import homeautomation  # noqa: F401
+from . import hvac  # noqa: F401
+from . import lighting  # noqa: F401
+from . import lightlink  # noqa: F401
+from . import manufacturerspecific  # noqa: F401
+from . import measurement  # noqa: F401
+from . import protocol  # noqa: F401
+from . import security  # noqa: F401
+from . import smartenergy  # noqa: F401

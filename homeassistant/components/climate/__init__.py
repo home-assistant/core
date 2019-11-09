@@ -17,7 +17,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa
+from homeassistant.helpers.config_validation import (  # noqa: F401
     ENTITY_SERVICE_SCHEMA,
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,

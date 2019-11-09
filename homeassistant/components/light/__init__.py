@@ -19,7 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import UnknownUser, Unauthorized
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa
+from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
     ENTITY_SERVICE_SCHEMA,

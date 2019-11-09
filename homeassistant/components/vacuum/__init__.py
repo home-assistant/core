@@ -18,7 +18,7 @@ from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
 )
 from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa
+from homeassistant.helpers.config_validation import (  # noqa: F401
     ENTITY_SERVICE_SCHEMA,
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,

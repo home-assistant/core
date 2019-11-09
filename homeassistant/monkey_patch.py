@@ -68,6 +68,6 @@ def disable_c_asyncio() -> None:
     sys.path.insert(0, AsyncioImportFinder.PATH_TRIGGER)
 
     try:
-        import _asyncio  # noqa
+        import _asyncio  # noqa: F401
     except ImportError:
         pass

@@ -13,7 +13,7 @@ from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant, assert_setup_component, mock_service
 
-from tests.components.tts.test_init import mutagen_mock  # noqa
+from tests.components.tts.test_init import mutagen_mock  # noqa: F401
 
 
 class TestTTSVoiceRSSPlatform:

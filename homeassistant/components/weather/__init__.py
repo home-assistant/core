@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 
 from homeassistant.const import PRECISION_TENTHS, PRECISION_WHOLE, TEMP_CELSIUS
-from homeassistant.helpers.config_validation import (  # noqa
+from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )

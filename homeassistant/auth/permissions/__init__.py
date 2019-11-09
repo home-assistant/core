@@ -8,7 +8,7 @@ from .const import CAT_ENTITIES
 from .models import PermissionLookup
 from .types import PolicyType
 from .entities import ENTITY_POLICY_SCHEMA, compile_entities
-from .merge import merge_policies  # noqa
+from .merge import merge_policies  # noqa: F401
 from .util import test_all
 
 

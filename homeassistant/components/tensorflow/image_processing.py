@@ -105,7 +105,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         # Display warning that PIL will be used if no OpenCV is found.
         # pylint: disable=unused-import,unused-variable
-        import cv2  # noqa
+        import cv2  # noqa: F401
     except ImportError:
         _LOGGER.warning(
             "No OpenCV library found. TensorFlow will process image with "

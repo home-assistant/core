@@ -4,7 +4,7 @@ import logging
 from typing import Optional
 
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
-from homeassistant.helpers.config_validation import (  # noqa
+from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )

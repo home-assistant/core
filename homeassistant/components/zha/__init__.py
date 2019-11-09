@@ -8,7 +8,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 
 # Loading the config flow file will register the flow
-from . import config_flow  # noqa  # pylint: disable=unused-import
+from . import config_flow  # noqa: F401 pylint: disable=unused-import
 from . import api
 from .core import ZHAGateway
 from .core.const import (
@@ -101,7 +101,7 @@ async def async_setup_entry(hass, config_entry):
         # needs to be done here so that the ZHA module is finished loading
         # before zhaquirks is imported
         # pylint: disable=W0611, W0612
-        import zhaquirks  # noqa
+        import zhaquirks  # noqa: F401
 
     zha_gateway = ZHAGateway(hass, config, config_entry)
     await zha_gateway.async_initialize()
