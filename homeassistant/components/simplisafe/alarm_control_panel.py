@@ -2,7 +2,7 @@
 import logging
 import re
 
-from simplipy.sensor import SensorTypes
+from simplipy.entity import EntityTypes
 from simplipy.system import SystemStates
 
 from homeassistant.components.alarm_control_panel import (
@@ -16,11 +16,10 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.dt import utc_from_timestamp
 
-from .const import DATA_CLIENT, DOMAIN, TOPIC_UPDATE
+from . import SimpliSafeEntity
+from .const import DATA_CLIENT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +32,6 @@ ATTR_LAST_EVENT_SENSOR_TYPE = "last_event_sensor_type"
 ATTR_LAST_EVENT_TIMESTAMP = "last_event_timestamp"
 ATTR_LAST_EVENT_TYPE = "last_event_type"
 ATTR_RF_JAMMING = "rf_jamming"
-ATTR_SYSTEM_ID = "system_id"
 ATTR_WALL_POWER_LEVEL = "wall_power_level"
 ATTR_WIFI_STRENGTH = "wifi_strength"
 
@@ -55,18 +53,16 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-class SimpliSafeAlarm(AlarmControlPanel):
+class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
     """Representation of a SimpliSafe alarm."""
 
     def __init__(self, simplisafe, system, code):
         """Initialize the SimpliSafe alarm."""
-        self._async_unsub_dispatcher_connect = None
-        self._attrs = {ATTR_SYSTEM_ID: system.system_id}
+        super().__init__(system, "Alarm Control Panel")
         self._changed_by = None
         self._code = code
         self._simplisafe = simplisafe
         self._state = None
-        self._system = system
 
         # Some properties only exist for V2 or V3 systems:
         for prop in (
@@ -94,37 +90,9 @@ class SimpliSafeAlarm(AlarmControlPanel):
         return FORMAT_TEXT
 
     @property
-    def device_info(self):
-        """Return device registry information for this entity."""
-        return {
-            "identifiers": {(DOMAIN, self._system.system_id)},
-            "manufacturer": "SimpliSafe",
-            "model": self._system.version,
-            # The name should become more dynamic once we deduce a way to
-            # get various other sensors from SimpliSafe in a reliable manner:
-            "name": "Keypad",
-            "via_device": (DOMAIN, self._system.serial),
-        }
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return self._attrs
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._system.address
-
-    @property
     def state(self):
         """Return the state of the entity."""
         return self._state
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return self._system.system_id
 
     def _validate_code(self, code, state):
         """Validate given code."""
@@ -132,18 +100,6 @@ class SimpliSafeAlarm(AlarmControlPanel):
         if not check:
             _LOGGER.warning("Wrong code entered for %s", state)
         return check
-
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-
-        @callback
-        def update():
-            """Update the state."""
-            self.async_schedule_update_ha_state(True)
-
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE, update
-        )
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
@@ -174,6 +130,7 @@ class SimpliSafeAlarm(AlarmControlPanel):
             self._changed_by = event_data["pinName"]
 
         if self._system.state == SystemStates.error:
+            self._online = False
             return
 
         if self._system.state == SystemStates.off:
@@ -195,15 +152,10 @@ class SimpliSafeAlarm(AlarmControlPanel):
                 ATTR_ALARM_ACTIVE: self._system.alarm_going_off,
                 ATTR_LAST_EVENT_INFO: last_event["info"],
                 ATTR_LAST_EVENT_SENSOR_NAME: last_event["sensorName"],
-                ATTR_LAST_EVENT_SENSOR_TYPE: SensorTypes(last_event["sensorType"]).name,
+                ATTR_LAST_EVENT_SENSOR_TYPE: EntityTypes(last_event["sensorType"]).name,
                 ATTR_LAST_EVENT_TIMESTAMP: utc_from_timestamp(
                     last_event["eventTimestamp"]
                 ),
                 ATTR_LAST_EVENT_TYPE: last_event["eventType"],
             }
         )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect dispatcher listener when removed."""
-        if self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect()
