@@ -138,8 +138,11 @@ def mock_mirobo_is_on():
 def mock_mirobo_errors():
     """Mock mock_mirobo_errors to simulate a bad vacuum status request."""
     mock_vacuum = mock.MagicMock()
-    mock_vacuum.Vacuum().status.side_effect = OSError()
-    with mock.patch.dict("sys.modules", {"miio": mock_vacuum}):
+    mock_vacuum.status.side_effect = OSError()
+    with mock.patch(
+        "homeassistant.components.xiaomi_miio.vacuum.Vacuum"
+    ) as mock_vaccum_cls:
+        mock_vaccum_cls.return_value = mock_vacuum
         yield mock_vacuum
 
 
@@ -159,9 +162,10 @@ def test_xiaomi_exceptions(hass, caplog, mock_mirobo_errors):
             }
         },
     )
+    yield from hass.async_block_till_done()
 
     assert "Initializing with host 127.0.0.1 (token 12345...)" in caplog.text
-    assert str(mock_mirobo_errors.mock_calls[-1]) == "call.Vacuum().status()"
+    assert mock_mirobo_errors.status.call_count == 1
     assert "ERROR" in caplog.text
     assert "Got OSError while fetching the state" in caplog.text
 
