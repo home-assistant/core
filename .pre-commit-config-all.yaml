@@ -33,7 +33,7 @@ repos:
         args:
           - --quiet
           - --format=custom
-          - --tests=B313,B314,B315,B316,B317,B318,B319,B320
+          - --configfile=tests/bandit.yaml
         files: ^(homeassistant|script|tests)/.+\.py$
 # Using a local "system" mypy instead of the mypy hook, because its
 # results depend on what is installed. And the mypy hook runs in a
