@@ -306,6 +306,11 @@ class ClimateAehW4a1(ClimateDevice):
         return PRECISION_WHOLE
 
     @property
+    def target_temperature_step(self):
+        """Return the supported step of target temperature."""
+        return 1
+
+    @property
     def supported_features(self):
         """Return the list of supported features."""
         return SUPPORT_FLAGS
