@@ -130,7 +130,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
             self._changed_by = event_data["pinName"]
 
         if self._system.state == SystemStates.error:
-            self._available = False
+            self._online = False
             return
 
         if self._system.state == SystemStates.off:
