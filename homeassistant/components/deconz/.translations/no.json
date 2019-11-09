@@ -55,10 +55,17 @@
             "left": "Venstre",
             "open": "\u00c5pen",
             "right": "H\u00f8yre",
+            "side_1": "Side 1",
+            "side_2": "Side 2",
+            "side_3": "Side 3",
+            "side_4": "Side 4",
+            "side_5": "Side 5",
+            "side_6": "Side 6",
             "turn_off": "Skru av",
             "turn_on": "Sl\u00e5 p\u00e5"
         },
         "trigger_type": {
+            "remote_awakened": "Enheten ble vekket",
             "remote_button_double_press": "\"{subtype}\"-knappen ble dobbeltklikket",
             "remote_button_long_press": "\"{subtype}\"-knappen ble kontinuerlig trykket",
             "remote_button_long_release": "\"{subtype}\"-knappen sluppet etter langt trykk",
@@ -69,7 +76,16 @@
             "remote_button_short_press": "\"{subtype}\" -knappen ble trykket",
             "remote_button_short_release": "\"{subtype}\"-knappen sluppet",
             "remote_button_triple_press": "\"{subtype}\"-knappen trippel klikket",
-            "remote_gyro_activated": "Enhet er ristet"
+            "remote_double_tap": "Enheten \" {subtype} \" dobbeltklikket",
+            "remote_falling": "Enheten er i fritt fall",
+            "remote_gyro_activated": "Enhet er ristet",
+            "remote_moved": "Enheten ble flyttet med \"{under type}\" opp",
+            "remote_rotate_from_side_1": "Enheten rotert fra \"side 1\" til \" {subtype} \"",
+            "remote_rotate_from_side_2": "Enheten rotert fra \"side 2\" til \" {subtype} \"",
+            "remote_rotate_from_side_3": "Enheten rotert fra \"side 3\" til \" {subtype} \"",
+            "remote_rotate_from_side_4": "Enheten rotert fra \"side 4\" til \" {subtype} \"",
+            "remote_rotate_from_side_5": "Enheten rotert fra \"side 5\" til \" {subtype} \"",
+            "remote_rotate_from_side_6": "Enheten rotert fra \"side 6\" til \" {subtype} \""
         }
     },
     "options": {
