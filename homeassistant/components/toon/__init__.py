@@ -13,7 +13,7 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.dispatcher import dispatcher_send, async_dispatcher_connect
 
-from . import config_flow  # noqa  pylint_disable=unused-import
+from . import config_flow  # noqa
 from .const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
