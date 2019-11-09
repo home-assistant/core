@@ -72,11 +72,13 @@ SERVICE_DISABLE_SCHEMA = vol.Schema(
         vol.Required(SERVICE_DISABLE_ATTR_DURATION): vol.All(
             cv.time_period_str, cv.positive_timedelta
         ),
-        vol.Optional(SERVICE_DISABLE_ATTR_NAME): cv.string,
+        vol.Optional(SERVICE_DISABLE_ATTR_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
-SERVICE_ENABLE_SCHEMA = vol.Schema({vol.Optional(SERVICE_ENABLE_ATTR_NAME): cv.string})
+SERVICE_ENABLE_SCHEMA = vol.Schema(
+    {vol.Optional(SERVICE_ENABLE_ATTR_NAME, default=DEFAULT_NAME): cv.string}
+)
 
 
 async def async_setup(hass, config):
