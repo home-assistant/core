@@ -44,6 +44,7 @@ class PlexServer:
         self._hass = hass
         self._plex_server = None
         self._known_clients = set()
+        self._known_idle = set()
         self._url = server_config.get(CONF_URL)
         self._token = server_config.get(CONF_TOKEN)
         self._server_name = server_config.get(CONF_SERVER)
@@ -122,6 +123,7 @@ class PlexServer:
             return
 
         for device in devices:
+            self._known_idle.discard(device.machineIdentifier)
             available_clients[device.machineIdentifier] = {"device": device}
 
             if device.machineIdentifier not in self._known_clients:
@@ -130,6 +132,7 @@ class PlexServer:
 
         for session in sessions:
             for player in session.players:
+                self._known_idle.discard(player.machineIdentifier)
                 available_clients.setdefault(
                     player.machineIdentifier, {"device": player}
                 )
@@ -150,9 +153,12 @@ class PlexServer:
 
         self._known_clients.update(new_clients)
 
-        idle_clients = self._known_clients.difference(available_clients)
+        idle_clients = self._known_clients.difference(available_clients).difference(
+            self._known_idle
+        )
         for client_id in idle_clients:
             self.refresh_entity(client_id, None, None)
+            self._known_idle.add(client_id)
 
         if new_entity_configs:
             dispatcher_send(
