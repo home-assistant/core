@@ -28,8 +28,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up a sensor for an Abode device."""
+    """Set up Abode sensor devices."""
     data = hass.data[DOMAIN]
+
     entities = []
 
     for device in data.abode.get_devices(generic_type=CONST.TYPE_SENSOR):

@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/abode",
   "requirements": [
-    "abodepy==0.16.6"
+    "abodepy==0.16.7"
   ],
   "dependencies": [],
   "codeowners": [
