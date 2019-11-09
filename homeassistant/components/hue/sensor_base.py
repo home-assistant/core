@@ -4,6 +4,8 @@ from datetime import timedelta
 import logging
 from time import monotonic
 
+from aiohue import AiohueException, Unauthorized
+from aiohue.sensors import TYPE_ZLL_PRESENCE
 import async_timeout
 
 from homeassistant.components import hue
@@ -53,40 +55,11 @@ class SensorManager:
 
     def __init__(self, hass, bridge, config_entry):
         """Initialize the sensor manager."""
-        import aiohue
-        from .binary_sensor import HuePresence, PRESENCE_NAME_FORMAT
-        from .sensor import (
-            HueLightLevel,
-            HueTemperature,
-            LIGHT_LEVEL_NAME_FORMAT,
-            TEMPERATURE_NAME_FORMAT,
-        )
-
         self.hass = hass
         self.bridge = bridge
         self.config_entry = config_entry
         self._component_add_entities = {}
         self._started = False
-
-        self.sensor_config_map.update(
-            {
-                aiohue.sensors.TYPE_ZLL_LIGHTLEVEL: {
-                    "binary": False,
-                    "name_format": LIGHT_LEVEL_NAME_FORMAT,
-                    "class": HueLightLevel,
-                },
-                aiohue.sensors.TYPE_ZLL_TEMPERATURE: {
-                    "binary": False,
-                    "name_format": TEMPERATURE_NAME_FORMAT,
-                    "class": HueTemperature,
-                },
-                aiohue.sensors.TYPE_ZLL_PRESENCE: {
-                    "binary": True,
-                    "name_format": PRESENCE_NAME_FORMAT,
-                    "class": HuePresence,
-                },
-            }
-        )
 
     def register_component(self, binary, async_add_entities):
         """Register async_add_entities methods for components."""
@@ -107,6 +80,11 @@ class SensorManager:
 
         async def async_update_bridge(now):
             """Will update sensors from the bridge."""
+
+            # don't update when we are not authorized
+            if not self.bridge.authorized:
+                return
+
             await self.async_update_items()
 
             async_track_point_in_utc_time(
@@ -117,15 +95,16 @@ class SensorManager:
 
     async def async_update_items(self):
         """Update sensors from the bridge."""
-        import aiohue
-
         api = self.bridge.api.sensors
 
         try:
             start = monotonic()
             with async_timeout.timeout(4):
                 await api.update()
-        except (asyncio.TimeoutError, aiohue.AiohueException) as err:
+        except Unauthorized:
+            await self.bridge.handle_unauthorized_error()
+            return
+        except (asyncio.TimeoutError, AiohueException) as err:
             _LOGGER.debug("Failed to fetch sensor: %s", err)
 
             if not self.bridge.available:
@@ -164,7 +143,7 @@ class SensorManager:
         # finding the remaining ones that may or may not be related to the
         # presence sensors.
         for item_id in api:
-            if api[item_id].type != aiohue.sensors.TYPE_ZLL_PRESENCE:
+            if api[item_id].type != TYPE_ZLL_PRESENCE:
                 continue
 
             primary_sensor_devices[_device_id(api[item_id])] = api[item_id]
@@ -249,8 +228,10 @@ class GenericHueSensor:
     @property
     def available(self):
         """Return if sensor is available."""
-        return self.bridge.available and (
-            self.bridge.allow_unreachable or self.sensor.config["reachable"]
+        return (
+            self.bridge.available
+            and self.bridge.authorized
+            and (self.bridge.allow_unreachable or self.sensor.config["reachable"])
         )
 
     @property

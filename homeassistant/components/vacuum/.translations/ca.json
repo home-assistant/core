@@ -1,0 +1,7 @@
+{
+    "device_automation": {
+        "condtion_type": {
+            "is_cleaning": "{entity_name} est\u00e0 netejant"
+        }
+    }
+}

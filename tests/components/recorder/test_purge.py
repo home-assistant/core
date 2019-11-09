@@ -174,5 +174,5 @@ class TestRecorderPurge(unittest.TestCase):
                 self.hass.data[DATA_INSTANCE].block_till_done()
                 assert (
                     mock_logger.debug.mock_calls[3][1][0]
-                    == "Vacuuming SQLite to free space"
+                    == "Vacuuming SQL DB to free space"
                 )

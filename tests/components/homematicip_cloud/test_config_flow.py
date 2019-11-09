@@ -98,6 +98,15 @@ async def test_init_flow_show_form(hass):
     assert result["type"] == "form"
 
 
+async def test_init_flow_user_show_form(hass):
+    """Test config flow shows up with a form."""
+    flow = config_flow.HomematicipCloudFlowHandler()
+    flow.hass = hass
+
+    result = await flow.async_step_user(user_input=None)
+    assert result["type"] == "form"
+
+
 async def test_init_already_configured(hass):
     """Test accesspoint is already configured."""
     MockConfigEntry(

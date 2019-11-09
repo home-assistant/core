@@ -37,20 +37,18 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the Thingspeak environment."""
-
     conf = config[DOMAIN]
     api_key = conf.get(CONF_API_KEY)
     channel_id = conf.get(CONF_ID)
     entity = conf.get(CONF_WHITELIST)
 
     try:
-        channel = thingspeak.Channel(channel_id, write_key=api_key, timeout=TIMEOUT)
+        channel = thingspeak.Channel(channel_id, api_key=api_key, timeout=TIMEOUT)
         channel.get()
     except RequestException:
         _LOGGER.error(
             "Error while accessing the ThingSpeak channel. "
-            "Please check that the channel exists and your "
-            "API key is correct"
+            "Please check that the channel exists and your API key is correct"
         )
         return False
 

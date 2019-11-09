@@ -132,6 +132,17 @@ async def _async_setup_component(
         log_error(str(err))
         return False
 
+    # Some integrations fail on import because they call functions incorrectly.
+    # So we do it before validating config to catch these errors.
+    try:
+        component = integration.get_component()
+    except ImportError:
+        log_error("Unable to import component", False)
+        return False
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Setup failed for %s: unknown error", domain)
+        return False
+
     processed_config = await conf_util.async_process_component_config(
         hass, config, integration
     )
@@ -142,12 +153,6 @@ async def _async_setup_component(
 
     start = timer()
     _LOGGER.info("Setting up %s", domain)
-
-    try:
-        component = integration.get_component()
-    except ImportError:
-        log_error("Unable to import component", False)
-        return False
 
     if hasattr(component, "PLATFORM_SCHEMA"):
         # Entity components have their own warning

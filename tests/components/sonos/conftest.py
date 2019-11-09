@@ -2,8 +2,8 @@
 from asynctest.mock import Mock, patch as patch
 import pytest
 
-from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
+from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
 
 from tests.common import MockConfigEntry

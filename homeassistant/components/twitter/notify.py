@@ -6,6 +6,7 @@ import logging
 import mimetypes
 import os
 
+from TwitterAPI import TwitterAPI
 import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
@@ -62,8 +63,6 @@ class TwitterNotificationService(BaseNotificationService):
         username,
     ):
         """Initialize the service."""
-        from TwitterAPI import TwitterAPI
-
         self.user = username
         self.hass = hass
         self.api = TwitterAPI(

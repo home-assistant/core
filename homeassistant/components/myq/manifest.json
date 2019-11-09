@@ -3,7 +3,7 @@
   "name": "Myq",
   "documentation": "https://www.home-assistant.io/integrations/myq",
   "requirements": [
-    "pymyq==1.2.1"
+    "pymyq==2.0.1"
   ],
   "dependencies": [],
   "codeowners": []

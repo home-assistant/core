@@ -95,8 +95,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         """Cleanup the socket client on HA stop."""
         await _cleanup_instance(hass, entry)
 
+    # Use async_listen instead of async_listen_once so that we don't deregister
+    # the callback twice when shutting down Home Assistant.
+    # "Unable to remove unknown listener <function EventBus.async_listen_once.<locals>.onetime_listener>"
     entry_data.cleanup_callbacks.append(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_stop)
+        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, on_stop)
     )
 
     @callback
@@ -365,6 +368,7 @@ async def platform_async_setup_entry(
     """
     entry_data: RuntimeEntryData = hass.data[DOMAIN][entry.entry_id]
     entry_data.info[component_key] = {}
+    entry_data.old_info[component_key] = {}
     entry_data.state[component_key] = {}
 
     @callback
@@ -390,7 +394,13 @@ async def platform_async_setup_entry(
         # Remove old entities
         for info in old_infos.values():
             entry_data.async_remove_entity(hass, component_key, info.key)
+
+        # First copy the now-old info into the backup object
+        entry_data.old_info[component_key] = entry_data.info[component_key]
+        # Then update the actual info
         entry_data.info[component_key] = new_infos
+
+        # Add entities to Home Assistant
         async_add_entities(add_entities)
 
     signal = DISPATCHER_ON_LIST.format(entry_id=entry.entry_id)
@@ -524,7 +534,13 @@ class EsphomeEntity(Entity):
 
     @property
     def _static_info(self) -> EntityInfo:
-        return self._entry_data.info[self._component_key][self._key]
+        # Check if value is in info database. Use a single lookup.
+        info = self._entry_data.info[self._component_key].get(self._key)
+        if info is not None:
+            return info
+        # This entity is in the removal project and has been removed from .info
+        # already, look in old_info
+        return self._entry_data.old_info[self._component_key].get(self._key)
 
     @property
     def _device_info(self) -> DeviceInfo:

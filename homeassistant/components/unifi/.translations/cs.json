@@ -22,5 +22,14 @@
             }
         },
         "title": "UniFi \u0159adi\u010d"
+    },
+    "options": {
+        "step": {
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "Vytvo\u0159it senzory vyu\u017eit\u00ed \u0161\u00ed\u0159ky p\u00e1sma pro s\u00ed\u0165ov\u00e9 klienty"
+                }
+            }
+        }
     }
 }

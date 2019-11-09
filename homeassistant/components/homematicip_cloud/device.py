@@ -5,16 +5,19 @@ from typing import Optional
 from homematicip.aio.device import AsyncDevice
 from homematicip.aio.group import AsyncGroup
 
-from homeassistant.components import homematicip_cloud
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import Entity
 
+from .const import DOMAIN as HMIPC_DOMAIN
 from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MODEL_TYPE = "model_type"
+ATTR_LOW_BATTERY = "low_battery"
+ATTR_CONFIG_PENDING = "config_pending"
+ATTR_DUTY_CYCLE_REACHED = "duty_cycle_reached"
 ATTR_ID = "id"
 ATTR_IS_GROUP = "is_group"
 # RSSI HAP -> Device
@@ -26,27 +29,40 @@ ATTR_GROUP_MEMBER_UNREACHABLE = "group_member_unreachable"
 ATTR_DEVICE_OVERHEATED = "device_overheated"
 ATTR_DEVICE_OVERLOADED = "device_overloaded"
 ATTR_DEVICE_UNTERVOLTAGE = "device_undervoltage"
+ATTR_EVENT_DELAY = "event_delay"
 
 DEVICE_ATTRIBUTE_ICONS = {
     "lowBat": "mdi:battery-outline",
-    "sabotage": "mdi:alert",
+    "sabotage": "mdi:shield-alert",
+    "dutyCycle": "mdi:alert",
     "deviceOverheated": "mdi:alert",
     "deviceOverloaded": "mdi:alert",
     "deviceUndervoltage": "mdi:alert",
+    "configPending": "mdi:alert-circle",
 }
 
 DEVICE_ATTRIBUTES = {
     "modelType": ATTR_MODEL_TYPE,
     "sabotage": ATTR_SABOTAGE,
+    "dutyCycle": ATTR_DUTY_CYCLE_REACHED,
     "rssiDeviceValue": ATTR_RSSI_DEVICE,
     "rssiPeerValue": ATTR_RSSI_PEER,
     "deviceOverheated": ATTR_DEVICE_OVERHEATED,
     "deviceOverloaded": ATTR_DEVICE_OVERLOADED,
     "deviceUndervoltage": ATTR_DEVICE_UNTERVOLTAGE,
+    "configPending": ATTR_CONFIG_PENDING,
+    "eventDelay": ATTR_EVENT_DELAY,
     "id": ATTR_ID,
 }
 
-GROUP_ATTRIBUTES = {"modelType": ATTR_MODEL_TYPE}
+GROUP_ATTRIBUTES = {
+    "modelType": ATTR_MODEL_TYPE,
+    "lowBat": ATTR_LOW_BATTERY,
+    "sabotage": ATTR_SABOTAGE,
+    "dutyCycle": ATTR_DUTY_CYCLE_REACHED,
+    "configPending": ATTR_CONFIG_PENDING,
+    "unreach": ATTR_GROUP_MEMBER_UNREACHABLE,
+}
 
 
 class HomematicipGenericDevice(Entity):
@@ -70,13 +86,13 @@ class HomematicipGenericDevice(Entity):
             return {
                 "identifiers": {
                     # Serial numbers of Homematic IP device
-                    (homematicip_cloud.DOMAIN, self._device.id)
+                    (HMIPC_DOMAIN, self._device.id)
                 },
                 "name": self._device.label,
                 "manufacturer": self._device.oem,
                 "model": self._device.modelType,
                 "sw_version": self._device.firmwareVersion,
-                "via_device": (homematicip_cloud.DOMAIN, self._device.homeId),
+                "via_device": (HMIPC_DOMAIN, self._device.homeId),
             }
         return None
 

@@ -26,13 +26,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entity_handler = DeconzEntityHandler(gateway)
 
     @callback
-    def async_add_sensor(sensors):
+    def async_add_sensor(sensors, new=True):
         """Add binary sensor from deCONZ."""
         entities = []
 
         for sensor in sensors:
 
-            if sensor.BINARY:
+            if new and sensor.BINARY:
                 new_sensor = DeconzBinarySensor(sensor, gateway)
                 entity_handler.add_entity(new_sensor)
                 entities.append(new_sensor)

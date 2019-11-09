@@ -19,7 +19,7 @@ matrix:
     - python: "3.6.1"
       env: TOXENV=lint
     - python: "3.6.1"
-      env: TOXENV=pylint
+      env: TOXENV=pylint PYLINT_ARGS=--jobs=0
     - python: "3.6.1"
       env: TOXENV=typing
     - python: "3.6.1"

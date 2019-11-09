@@ -34,8 +34,8 @@ def purge_old_data(instance, purge_days, repack):
             _LOGGER.debug("Deleted %s events", deleted_rows)
 
         # Execute sqlite vacuum command to free up space on disk
-        if repack and instance.engine.driver == "pysqlite":
-            _LOGGER.debug("Vacuuming SQLite to free space")
+        if repack and instance.engine.driver in ("pysqlite", "postgresql"):
+            _LOGGER.debug("Vacuuming SQL DB to free space")
             instance.engine.execute("VACUUM")
 
     except SQLAlchemyError as err:

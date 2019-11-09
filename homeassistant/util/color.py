@@ -441,7 +441,7 @@ def color_temperature_to_hs(color_temperature_kelvin: float) -> Tuple[float, flo
 
 
 def color_temperature_to_rgb(
-    color_temperature_kelvin: float
+    color_temperature_kelvin: float,
 ) -> Tuple[float, float, float]:
     """
     Return an RGB color from a color temperature in Kelvin.

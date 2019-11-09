@@ -26,7 +26,7 @@ from homeassistant.const import (
     CONF_REGION,
     CONF_TOKEN,
     STATE_IDLE,
-    STATE_OFF,
+    STATE_STANDBY,
     STATE_PLAYING,
 )
 from homeassistant.helpers import device_registry, entity_registry
@@ -201,8 +201,8 @@ class PS4Device(MediaPlayerDevice):
                     if self._state != STATE_IDLE:
                         self.idle()
             else:
-                if self._state != STATE_OFF:
-                    self.state_off()
+                if self._state != STATE_STANDBY:
+                    self.state_standby()
 
         elif self._retry > DEFAULT_RETRIES:
             self.state_unknown()
@@ -230,10 +230,10 @@ class PS4Device(MediaPlayerDevice):
         self._state = STATE_IDLE
         self.schedule_update()
 
-    def state_off(self):
-        """Set states for state off."""
+    def state_standby(self):
+        """Set states for state standby."""
         self.reset_title()
-        self._state = STATE_OFF
+        self._state = STATE_STANDBY
         self.schedule_update()
 
     def state_unknown(self):

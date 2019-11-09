@@ -1,5 +1,4 @@
 """Provide CORS support for the HTTP component."""
-import aiohttp_cors
 from aiohttp.web_urldispatcher import Resource, ResourceRoute, StaticResource
 from aiohttp.hdrs import ACCEPT, CONTENT_TYPE, ORIGIN, AUTHORIZATION
 
@@ -22,6 +21,10 @@ VALID_CORS_TYPES = (Resource, ResourceRoute, StaticResource)
 @callback
 def setup_cors(app, origins):
     """Set up CORS."""
+    # This import should remain here. That way the HTTP integration can always
+    # be imported by other integrations without it's requirements being installed.
+    import aiohttp_cors
+
     cors = aiohttp_cors.setup(
         app,
         defaults={

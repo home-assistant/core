@@ -57,6 +57,11 @@ class EsphomeSensor(EsphomeEntity):
         """Return the icon."""
         return self._static_info.icon
 
+    @property
+    def force_update(self) -> bool:
+        """Return if this sensor should force a state update."""
+        return self._static_info.force_update
+
     @esphome_state_property
     def state(self) -> Optional[str]:
         """Return the state of the entity."""

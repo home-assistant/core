@@ -2,8 +2,8 @@
 import asyncio
 from datetime import timedelta
 import logging
-from time import monotonic
 import random
+from time import monotonic
 
 import aiohue
 import async_timeout
@@ -14,21 +14,22 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_FLASH,
-    ATTR_TRANSITION,
     ATTR_HS_COLOR,
+    ATTR_TRANSITION,
     EFFECT_COLORLOOP,
     EFFECT_RANDOM,
     FLASH_LONG,
     FLASH_SHORT,
     SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
     SUPPORT_FLASH,
-    SUPPORT_COLOR,
     SUPPORT_TRANSITION,
     Light,
 )
 from homeassistant.util import color
+
 from .helpers import remove_devices
 
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -188,6 +189,9 @@ async def async_update_items(
     progress_waiting,
 ):
     """Update either groups or lights from the bridge."""
+    if not bridge.authorized:
+        return
+
     if is_group:
         api_type = "group"
         api = bridge.api.groups
@@ -199,6 +203,9 @@ async def async_update_items(
         start = monotonic()
         with async_timeout.timeout(4):
             await api.update()
+    except aiohue.Unauthorized:
+        await bridge.handle_unauthorized_error()
+        return
     except (asyncio.TimeoutError, aiohue.AiohueException) as err:
         _LOGGER.debug("Failed to fetch %s: %s", api_type, err)
 
@@ -336,10 +343,14 @@ class HueLight(Light):
     @property
     def available(self):
         """Return if light is available."""
-        return self.bridge.available and (
-            self.is_group
-            or self.bridge.allow_unreachable
-            or self.light.state["reachable"]
+        return (
+            self.bridge.available
+            and self.bridge.authorized
+            and (
+                self.is_group
+                or self.bridge.allow_unreachable
+                or self.light.state["reachable"]
+            )
         )
 
     @property
