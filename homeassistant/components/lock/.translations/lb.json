@@ -8,6 +8,10 @@
         "condition_type": {
             "is_locked": "{entity_name} ass gespaart",
             "is_unlocked": "{entity_name} ass entspaart"
+        },
+        "trigger_type": {
+            "locked": "{entity_name} gespaart",
+            "unlocked": "{entity_name} entspaart"
         }
     }
 }
