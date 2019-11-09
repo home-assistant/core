@@ -26,5 +26,9 @@ class SimpliSafeLock(SimpliSafeEntity, LockDevice):
 
     def __init__(self, system, lock):
         """Initialize."""
-        super().__init__(system, lock.name)
+        super().__init__(system, lock.name, serial=lock.serial)
         self._lock = lock
+
+    async def async_update(self):
+        """Update lock status."""
+        self._attrs.update({})
