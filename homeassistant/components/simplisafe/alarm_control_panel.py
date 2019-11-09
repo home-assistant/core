@@ -2,7 +2,7 @@
 import logging
 import re
 
-from simplipy.sensor import SensorTypes
+from simplipy.entity import EntityTypes
 from simplipy.system import SystemStates
 
 from homeassistant.components.alarm_control_panel import (
@@ -152,7 +152,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
                 ATTR_ALARM_ACTIVE: self._system.alarm_going_off,
                 ATTR_LAST_EVENT_INFO: last_event["info"],
                 ATTR_LAST_EVENT_SENSOR_NAME: last_event["sensorName"],
-                ATTR_LAST_EVENT_SENSOR_TYPE: SensorTypes(last_event["sensorType"]).name,
+                ATTR_LAST_EVENT_SENSOR_TYPE: EntityTypes(last_event["sensorType"]).name,
                 ATTR_LAST_EVENT_TIMESTAMP: utc_from_timestamp(
                     last_event["eventTimestamp"]
                 ),
