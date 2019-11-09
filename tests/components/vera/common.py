@@ -31,7 +31,6 @@ from homeassistant.components.vera import (
     DOMAIN,
     VERA_CONTROLLER,
 )
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_METRIC
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
@@ -44,7 +43,9 @@ ComponentData = NamedTuple(
 
 def get_entity_id(device: dict, platform: str) -> str:
     """Get an entity id for a vera device."""
-    return platform + "." + slugify(device.get("name")) + "_" + str(device.get("id"))
+    device_name = slugify(device.get("name"))
+    device_id = str(device.get("id"))
+    return f"{platform}.{device_name}_{device_id}"
 
 
 def find_device_object(device_id: int, data_list: list) -> Optional[dict]:
@@ -116,16 +117,9 @@ def assert_state(
     assert state, f"Unknown entity {entity_id}"
 
     if expected_state is not None:
-        assert state.state == expected_state, (
-            "Expected '%s' (type %s) but was '%s' (type %s) for entity '%s'"
-            % (
-                expected_state,
-                type(expected_state),
-                state.state,
-                type(state.state),
-                entity_id,
-            )
-        )
+        assert (
+            state.state == expected_state
+        ), f"Expected '{expected_state}' (type {type(expected_state)}) but was '{state.state}' (type {type(state.state)}) for entity '{entity_id}'"
 
     if expected_brightness is not None:
         assert_state_attribute(state, "brightness", expected_brightness)
@@ -159,15 +153,12 @@ def assert_state(
 
 def assert_state_attribute(state: State, attribute: str, expected: Any) -> None:
     """Assert a state's attribute has a specific value."""
-    assert attribute in state.attributes, "Attribute '%s' was not found." % attribute
+    assert attribute in state.attributes, f"Attribute '{attribute}' was not found."
 
     value = state.attributes.get(attribute)
-    assert value == expected, "Expected %s '%s', but was '%s' for entity '%s'" % (
-        attribute,
-        expected,
-        value,
-        state.entity_id,
-    )
+    assert (
+        value == expected
+    ), f"Expected {attribute} '{expected}', but was '{value}' for entity '{state.entity_id}'"
 
 
 async def async_call_service(
@@ -308,13 +299,12 @@ async def async_configure_component(
             status[status_variable_name] = state_variable_value
 
         # Update the state object.
-        status["states"] = list(
-            filter(
-                lambda state: state.get("service") != service_id
-                and state.get("variable") != state_variable_name,
-                status.get("states", []),
-            )
-        )
+        status["states"] = [
+            state
+            for state in status.get("states", [])
+            if state.get("service") != service_id
+            and state.get("variable") != state_variable_name
+        ]
         status["states"].append(
             {
                 "service": service_id,
@@ -342,7 +332,6 @@ async def async_configure_component(
         },
     }
 
-    await async_process_ha_core_config(hass, hass_config.get("homeassistant"))
     assert await async_setup_component(hass, DOMAIN, hass_config)
     await hass.async_block_till_done()
 
