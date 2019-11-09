@@ -13,8 +13,10 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     Light,
 )
+from homeassistant.components.tplink.const import MIN_TIME_BETWEEN_UPDATES
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util import Throttle
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
     color_temperature_mired_to_kelvin as mired_to_kelvin,
@@ -126,23 +128,27 @@ class TPLinkSmartBulb(Light):
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
+        self._state = True
         self.smartbulb.state = SmartBulb.BULB_STATE_ON
 
         if ATTR_COLOR_TEMP in kwargs:
-            self.smartbulb.color_temp = mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
+            self._color_temp = kwargs.get(ATTR_COLOR_TEMP)
+            self.smartbulb.color_temp = mired_to_kelvin(self._color_temp)
 
-        brightness = brightness_to_percentage(
-            kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255)
-        )
+        brightness_value = kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255)
+        brightness_pct = brightness_to_percentage(brightness_value)
         if ATTR_HS_COLOR in kwargs:
-            hue, sat = kwargs.get(ATTR_HS_COLOR)
-            hsv = (int(hue), int(sat), brightness)
+            self._hs = kwargs.get(ATTR_HS_COLOR)
+            hue, sat = self._hs
+            hsv = (int(hue), int(sat), brightness_pct)
             self.smartbulb.hsv = hsv
         elif ATTR_BRIGHTNESS in kwargs:
-            self.smartbulb.brightness = brightness
+            self._brightness = brightness_value
+            self.smartbulb.brightness = brightness_pct
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
+        self._state = False
         self.smartbulb.state = SmartBulb.BULB_STATE_OFF
 
     @property
@@ -175,8 +181,16 @@ class TPLinkSmartBulb(Light):
         """Return True if device is on."""
         return self._state
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the TP-Link Bulb's state."""
+        if self._supported_features is None:
+            self.do_update()
+        else:
+            self.hass.async_run_job(self.do_update)
+
+    def do_update(self):
+        """Update states."""
         try:
             if self._supported_features is None:
                 self.get_features()
@@ -214,7 +228,7 @@ class TPLinkSmartBulb(Light):
                     # device returned no daily/monthly history
                     pass
 
-            self._available = True
+                self._available = True
 
         except (SmartDeviceException, OSError) as ex:
             if self._available:
