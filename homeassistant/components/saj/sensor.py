@@ -46,9 +46,6 @@ SAJ_UNIT_MAPPINGS = {
     "": None,
 }
 
-ATTR_INVERTER_NAME = "inverter_name"
-ATTR_INVERTER_SN = "inverter_sn"
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
@@ -188,14 +185,6 @@ class SAJsensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def device_state_attributes(self):
-        """Return extra attributes of the sensor."""
-        return {
-            ATTR_INVERTER_NAME: self._inverter_name,
-            ATTR_INVERTER_SN: self._serialnumber,
-        }
 
     @property
     def unit_of_measurement(self):
