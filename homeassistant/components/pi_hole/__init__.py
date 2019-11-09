@@ -71,22 +71,31 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_DISABLE_SCHEMA = vol.Schema(
-    {
-        vol.Required(SERVICE_DISABLE_ATTR_DURATION): vol.All(
-            cv.time_period_str, cv.positive_timedelta
-        ),
-        vol.Optional(SERVICE_DISABLE_ATTR_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
-
-SERVICE_ENABLE_SCHEMA = vol.Schema(
-    {vol.Optional(SERVICE_ENABLE_ATTR_NAME, default=DEFAULT_NAME): cv.string}
-)
-
 
 async def async_setup(hass, config):
     """Set up the pi_hole integration."""
+
+    SERVICE_DISABLE_SCHEMA = vol.Schema(  # pylint: disable=invalid-name
+        vol.All(
+            {
+                vol.Required(SERVICE_DISABLE_ATTR_DURATION): vol.All(
+                    cv.time_period_str, cv.positive_timedelta
+                ),
+                vol.Optional(SERVICE_DISABLE_ATTR_NAME, default=DEFAULT_NAME): vol.In(
+                    list(map(lambda c: c[CONF_NAME], config[DOMAIN]))
+                ),
+            }
+        )
+    )
+
+    SERVICE_ENABLE_SCHEMA = vol.Schema(  # pylint: disable=invalid-name
+        {
+            vol.Optional(SERVICE_ENABLE_ATTR_NAME, default=DEFAULT_NAME): vol.In(
+                list(map(lambda c: c[CONF_NAME], config[DOMAIN]))
+            )
+        }
+    )
+
     hass.data[DOMAIN] = {}
 
     for conf in config[DOMAIN]:
@@ -124,12 +133,8 @@ async def async_setup(hass, config):
         async def do_disable(name):
             """Disable the named Pi-Hole."""
             slug = slugify(name)
-            if slug not in hass.data[DOMAIN]:
-                raise vol.Invalid(
-                    "Pi-hole '{}' not found. Check your configuration.".format(name)
-                )
-
             pi_hole = hass.data[DOMAIN][slug]
+
             if pi_hole.api.api_token is None:
                 raise vol.Invalid(
                     "Pi-hole '{}' must have an api_key provided in configuration to be disabled.".format(
@@ -159,12 +164,8 @@ async def async_setup(hass, config):
         async def do_enable(name):
             """Enable the named Pi-Hole."""
             slug = slugify(name)
-            if slug not in hass.data[DOMAIN]:
-                raise vol.Invalid(
-                    "Pi-hole '{}' not found. Check your configuration.".format(name)
-                )
-
             pi_hole = hass.data[DOMAIN][slug]
+
             if pi_hole.api.api_token is None:
                 raise vol.Invalid(
                     "Pi-hole '{}' must have an api_key provided in configuration to be enabled.".format(
