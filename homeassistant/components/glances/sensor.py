@@ -54,6 +54,7 @@ class GlancesSensor(Entity):
         self.type = sensor_type
         self._state = None
         self.sensor_details = sensor_details
+        self.unsub_update = None
 
     @property
     def name(self):
@@ -92,13 +93,18 @@ class GlancesSensor(Entity):
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
-        async_dispatcher_connect(
+        self.unsub_update = async_dispatcher_connect(
             self.hass, DATA_UPDATED, self._schedule_immediate_update
         )
 
     @callback
     def _schedule_immediate_update(self):
         self.async_schedule_update_ha_state(True)
+
+    async def will_remove_from_hass(self):
+        """Unsubscribe from update dispatcher."""
+        if self.unsub_update:
+            self.unsub_update()
 
     async def async_update(self):
         """Get the latest data from REST API."""
