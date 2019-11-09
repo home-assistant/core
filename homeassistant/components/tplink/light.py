@@ -13,10 +13,8 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     Light,
 )
-from homeassistant.components.tplink.const import MIN_TIME_BETWEEN_UPDATES
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.util import Throttle
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
     color_temperature_mired_to_kelvin as mired_to_kelvin,
@@ -181,7 +179,6 @@ class TPLinkSmartBulb(Light):
         """Return True if device is on."""
         return self._state
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the TP-Link Bulb's state."""
         if self._supported_features is None:
