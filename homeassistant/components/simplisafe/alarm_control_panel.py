@@ -130,7 +130,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
             self._changed_by = event_data["pinName"]
 
         # The V3 system has the offline property, but the V2 system doesn't:
-        offline = getattr(self._system, "offline", False) and self._system.offline
+        offline = self._system.version == 3 and self._system.offline
         if offline or self._system.state == SystemStates.error:
             self._available = False
             return
