@@ -19,7 +19,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util import slugify
 
 from .const import (
     ATTR_TORRENT,
@@ -34,7 +33,9 @@ from .errors import AuthenticationError, CannotConnect, UnknownError
 _LOGGER = logging.getLogger(__name__)
 
 
-SERVICE_ADD_TORRENT_SCHEMA = vol.Schema({vol.Required(ATTR_TORRENT): cv.string})
+SERVICE_ADD_TORRENT_SCHEMA = vol.Schema(
+    {vol.Required(ATTR_TORRENT): cv.string, vol.Required(CONF_HOST): cv.string}
+)
 
 TRANS_SCHEMA = vol.All(
     vol.Schema(
@@ -82,15 +83,15 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload Transmission Entry from config_entry."""
-    client = hass.data[DOMAIN][config_entry.entry_id]
-    hass.services.async_remove(DOMAIN, client.service_name)
+    client = hass.data[DOMAIN].pop(config_entry.entry_id)
     if client.unsub_timer:
         client.unsub_timer()
 
     for component in "sensor", "switch":
         await hass.config_entries.async_forward_entry_unload(config_entry, component)
 
-    hass.data[DOMAIN].pop(config_entry.entry_id)
+    if not hass.data[DOMAIN]:
+        hass.services.async_remove(DOMAIN, SERVICE_ADD_TORRENT)
 
     return True
 
@@ -128,13 +129,9 @@ class TransmissionClient:
         """Initialize the Transmission RPC API."""
         self.hass = hass
         self.config_entry = config_entry
+        self.tm_api = None
         self._tm_data = None
         self.unsub_timer = None
-
-    @property
-    def service_name(self):
-        """Return the service name."""
-        return slugify(f"{SERVICE_ADD_TORRENT}_{self.config_entry.data[CONF_NAME]}")
 
     @property
     def api(self):
@@ -145,13 +142,13 @@ class TransmissionClient:
         """Set up the Transmission client."""
 
         try:
-            api = await get_api(self.hass, self.config_entry.data)
+            self.tm_api = await get_api(self.hass, self.config_entry.data)
         except CannotConnect:
             raise ConfigEntryNotReady
         except (AuthenticationError, UnknownError):
             return False
 
-        self._tm_data = TransmissionData(self.hass, self.config_entry, api)
+        self._tm_data = TransmissionData(self.hass, self.config_entry, self.tm_api)
 
         await self.hass.async_add_executor_job(self._tm_data.init_torrent_list)
         await self.hass.async_add_executor_job(self._tm_data.update)
@@ -167,18 +164,26 @@ class TransmissionClient:
 
         def add_torrent(service):
             """Add new torrent to download."""
-            torrent = service.data[ATTR_TORRENT]
-            if torrent.startswith(
-                ("http", "ftp:", "magnet:")
-            ) or self.hass.config.is_allowed_path(torrent):
-                api.add_torrent(torrent)
+            tm_client = None
+            for entry in self.hass.config_entries.async_entries(DOMAIN):
+                if entry.data[CONF_HOST] == service.data[CONF_HOST]:
+                    tm_client = self.hass.data[DOMAIN][entry.entry_id]
+                    break
+            if tm_client is None:
+                _LOGGER.error("Transmission host is not found")
             else:
-                _LOGGER.warning(
-                    "Could not add torrent: unsupported type or no permission"
-                )
+                torrent = service.data[ATTR_TORRENT]
+                if torrent.startswith(
+                    ("http", "ftp:", "magnet:")
+                ) or self.hass.config.is_allowed_path(torrent):
+                    tm_client.tm_api.add_torrent(torrent)
+                else:
+                    _LOGGER.warning(
+                        "Could not add torrent: unsupported type or no permission"
+                    )
 
         self.hass.services.async_register(
-            DOMAIN, self.service_name, add_torrent, schema=SERVICE_ADD_TORRENT_SCHEMA
+            DOMAIN, SERVICE_ADD_TORRENT, add_torrent, schema=SERVICE_ADD_TORRENT_SCHEMA
         )
 
         self.config_entry.add_update_listener(self.async_options_updated)
@@ -200,7 +205,7 @@ class TransmissionClient:
     def set_scan_interval(self, scan_interval):
         """Update scan interval."""
 
-        async def refresh(event_time):
+        def refresh(event_time):
             """Get the latest data from Transmission."""
             self._tm_data.update()
 

@@ -98,7 +98,6 @@ async def test_flow_works(hass, api):
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == PORT
-    # assert result["data"]["options"][CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
 
     # test with all provided
     result = await flow.async_step_user(MOCK_ENTRY)
@@ -110,7 +109,6 @@ async def test_flow_works(hass, api):
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
     assert result["data"][CONF_PORT] == PORT
-    # assert result["data"]["options"][CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
 
 
 async def test_options(hass):
