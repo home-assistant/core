@@ -4,7 +4,7 @@ from pytest import raises
 from unittest.mock import patch, Mock
 
 import requests
-from requests.exceptions import Timeout, MissingSchema, RequestException
+from requests.exceptions import Timeout, RequestException
 import requests_mock
 
 from homeassistant.exceptions import PlatformNotReady
