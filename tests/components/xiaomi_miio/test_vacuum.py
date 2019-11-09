@@ -54,7 +54,7 @@ from homeassistant.setup import async_setup_component
 PLATFORM = "xiaomi_miio"
 
 # calls made when device status is requested
-status_calls = [
+STATUS_CALLS = [
     mock.call.status(),
     mock.call.consumable_status(),
     mock.call.clean_history(),
@@ -62,8 +62,8 @@ status_calls = [
 ]
 
 
-@pytest.fixture
-def mock_mirobo_is_got_error():
+@pytest.fixture(name="mock_mirobo_is_got_error")
+def mirobo_is_got_error_fixture():
     """Mock mock_mirobo."""
     mock_vacuum = mock.MagicMock()
     mock_vacuum.status().data = {"test": "raw"}
@@ -100,8 +100,8 @@ def mock_mirobo_is_got_error():
         yield mock_vacuum
 
 
-@pytest.fixture
-def mock_mirobo_is_on():
+@pytest.fixture(name="mock_mirobo_is_on")
+def mirobo_is_on_fixture():
     """Mock mock_mirobo."""
     mock_vacuum = mock.MagicMock()
     mock_vacuum.status().data = {"test": "raw"}
@@ -136,8 +136,8 @@ def mock_mirobo_is_on():
         yield mock_vacuum
 
 
-@pytest.fixture
-def mock_mirobo_errors():
+@pytest.fixture(name="mock_mirobo_errors")
+def mirobo_errors_fixture():
     """Mock mock_mirobo_errors to simulate a bad vacuum status request."""
     mock_vacuum = mock.MagicMock()
     mock_vacuum.status.side_effect = OSError()
@@ -227,35 +227,35 @@ def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
     mock_mirobo_is_got_error.assert_has_calls(
         [mock.call.resume_or_start()], any_order=True
     )
-    mock_mirobo_is_got_error.assert_has_calls(status_calls, any_order=True)
+    mock_mirobo_is_got_error.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_got_error.reset_mock()
 
     yield from hass.services.async_call(
         DOMAIN, SERVICE_STOP, {"entity_id": entity_id}, blocking=True
     )
     mock_mirobo_is_got_error.assert_has_calls([mock.call.stop()], any_order=True)
-    mock_mirobo_is_got_error.assert_has_calls(status_calls, any_order=True)
+    mock_mirobo_is_got_error.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_got_error.reset_mock()
 
     yield from hass.services.async_call(
         DOMAIN, SERVICE_RETURN_TO_BASE, {"entity_id": entity_id}, blocking=True
     )
     mock_mirobo_is_got_error.assert_has_calls([mock.call.home()], any_order=True)
-    mock_mirobo_is_got_error.assert_has_calls(status_calls, any_order=True)
+    mock_mirobo_is_got_error.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_got_error.reset_mock()
 
     yield from hass.services.async_call(
         DOMAIN, SERVICE_LOCATE, {"entity_id": entity_id}, blocking=True
     )
     mock_mirobo_is_got_error.assert_has_calls([mock.call.find()], any_order=True)
-    mock_mirobo_is_got_error.assert_has_calls(status_calls, any_order=True)
+    mock_mirobo_is_got_error.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_got_error.reset_mock()
 
     yield from hass.services.async_call(
         DOMAIN, SERVICE_CLEAN_SPOT, {"entity_id": entity_id}, blocking=True
     )
     mock_mirobo_is_got_error.assert_has_calls([mock.call.spot()], any_order=True)
-    mock_mirobo_is_got_error.assert_has_calls(status_calls, any_order=True)
+    mock_mirobo_is_got_error.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_got_error.reset_mock()
 
     # Set speed service:
@@ -268,7 +268,7 @@ def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
     mock_mirobo_is_got_error.assert_has_calls(
         [mock.call.set_fan_speed(60)], any_order=True
     )
-    mock_mirobo_is_got_error.assert_has_calls(status_calls, any_order=True)
+    mock_mirobo_is_got_error.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_got_error.reset_mock()
 
     yield from hass.services.async_call(
@@ -280,7 +280,7 @@ def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
     mock_mirobo_is_got_error.assert_has_calls(
         [mock.call.set_fan_speed(77)], any_order=True
     )
-    mock_mirobo_is_got_error.assert_has_calls(status_calls, any_order=True)
+    mock_mirobo_is_got_error.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_got_error.reset_mock()
 
     assert "ERROR" not in caplog.text
@@ -301,7 +301,7 @@ def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
     mock_mirobo_is_got_error.assert_has_calls(
         [mock.call.raw_command("raw", None)], any_order=True
     )
-    mock_mirobo_is_got_error.assert_has_calls(status_calls, any_order=True)
+    mock_mirobo_is_got_error.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_got_error.reset_mock()
 
     yield from hass.services.async_call(
@@ -313,7 +313,7 @@ def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
     mock_mirobo_is_got_error.assert_has_calls(
         [mock.call.raw_command("raw", {"k1": 2})], any_order=True
     )
-    mock_mirobo_is_got_error.assert_has_calls(status_calls, any_order=True)
+    mock_mirobo_is_got_error.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_got_error.reset_mock()
 
 
@@ -368,7 +368,7 @@ def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     )
 
     mock_mirobo_is_on.assert_has_calls([mock.call.manual_start()], any_order=True)
-    mock_mirobo_is_on.assert_has_calls(status_calls, any_order=True)
+    mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_on.reset_mock()
 
     control = {"duration": 1000, "rotation": -40, "velocity": -0.1}
@@ -378,14 +378,14 @@ def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     mock_mirobo_is_on.manual_control.assert_has_calls(
         [mock.call(**control)], any_order=True
     )
-    mock_mirobo_is_on.assert_has_calls(status_calls, any_order=True)
+    mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_on.reset_mock()
 
     yield from hass.services.async_call(
         DOMAIN, SERVICE_STOP_REMOTE_CONTROL, {}, blocking=True
     )
     mock_mirobo_is_on.assert_has_calls([mock.call.manual_stop()], any_order=True)
-    mock_mirobo_is_on.assert_has_calls(status_calls, any_order=True)
+    mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_on.reset_mock()
 
     control_once = {"duration": 2000, "rotation": 120, "velocity": 0.1}
@@ -395,7 +395,7 @@ def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     mock_mirobo_is_on.manual_control_once.assert_has_calls(
         [mock.call(**control_once)], any_order=True
     )
-    mock_mirobo_is_on.assert_has_calls(status_calls, any_order=True)
+    mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_on.reset_mock()
 
     control = {"zone": [[123, 123, 123, 123]], "repeats": 2}
@@ -405,5 +405,5 @@ def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     mock_mirobo_is_on.zoned_clean.assert_has_calls(
         [mock.call([[123, 123, 123, 123, 2]])], any_order=True
     )
-    mock_mirobo_is_on.assert_has_calls(status_calls, any_order=True)
+    mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_on.reset_mock()
