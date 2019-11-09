@@ -20,6 +20,7 @@ from homeassistant.components.vacuum import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_CLEANING,
 )
 from homeassistant.components.xiaomi_miio.vacuum import (
     ATTR_CLEANED_AREA,
@@ -56,10 +57,10 @@ PLATFORM = "xiaomi_miio"
 
 # calls made when device status is requested
 status_calls = [
-    mock.call.Vacuum().status(),
-    mock.call.Vacuum().consumable_status(),
-    mock.call.Vacuum().clean_history(),
-    mock.call.Vacuum().dnd_status(),
+    mock.call.status(),
+    mock.call.consumable_status(),
+    mock.call.clean_history(),
+    mock.call.dnd_status(),
 ]
 
 
@@ -104,33 +105,35 @@ def mock_mirobo_is_off():
 def mock_mirobo_is_on():
     """Mock mock_mirobo."""
     mock_vacuum = mock.MagicMock()
-    mock_vacuum.Vacuum().status().data = {"test": "raw"}
-    mock_vacuum.Vacuum().status().is_on = True
-    mock_vacuum.Vacuum().status().fanspeed = 99
-    mock_vacuum.Vacuum().status().got_error = False
-    mock_vacuum.Vacuum().status().battery = 32
-    mock_vacuum.Vacuum().status().clean_area = 133.43218
-    mock_vacuum.Vacuum().status().clean_time = timedelta(
-        hours=2, minutes=55, seconds=34
-    )
-    mock_vacuum.Vacuum().consumable_status().main_brush_left = timedelta(
+    mock_vacuum.status().data = {"test": "raw"}
+    mock_vacuum.status().is_on = True
+    mock_vacuum.status().fanspeed = 99
+    mock_vacuum.status().got_error = False
+    mock_vacuum.status().battery = 32
+    mock_vacuum.status().clean_area = 133.43218
+    mock_vacuum.status().clean_time = timedelta(hours=2, minutes=55, seconds=34)
+    mock_vacuum.consumable_status().main_brush_left = timedelta(
         hours=11, minutes=35, seconds=34
     )
-    mock_vacuum.Vacuum().consumable_status().side_brush_left = timedelta(
+    mock_vacuum.consumable_status().side_brush_left = timedelta(
         hours=11, minutes=35, seconds=34
     )
-    mock_vacuum.Vacuum().consumable_status().filter_left = timedelta(
+    mock_vacuum.consumable_status().filter_left = timedelta(
         hours=11, minutes=35, seconds=34
     )
-    mock_vacuum.Vacuum().clean_history().count = "41"
-    mock_vacuum.Vacuum().clean_history().total_area = 323.43218
-    mock_vacuum.Vacuum().clean_history().total_duration = timedelta(
+    mock_vacuum.clean_history().count = "41"
+    mock_vacuum.clean_history().total_area = 323.43218
+    mock_vacuum.clean_history().total_duration = timedelta(
         hours=11, minutes=15, seconds=34
     )
-    mock_vacuum.Vacuum().status().state = "Test Xiaomi Cleaning"
-    mock_vacuum.Vacuum().dnd_status().enabled = False
+    mock_vacuum.status().state = "Test Xiaomi Cleaning"
+    mock_vacuum.status().state_code = 5
+    mock_vacuum.dnd_status().enabled = False
 
-    with mock.patch.dict("sys.modules", {"miio": mock_vacuum}):
+    with mock.patch(
+        "homeassistant.components.xiaomi_miio.vacuum.Vacuum"
+    ) as mock_vaccum_cls:
+        mock_vaccum_cls.return_value = mock_vacuum
         yield mock_vacuum
 
 
@@ -308,7 +311,6 @@ def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_off):
 
 
 @asyncio.coroutine
-@pytest.mark.skip(reason="Fails")
 def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     """Test vacuum supported features."""
     entity_name = "test_vacuum_cleaner_2"
@@ -326,13 +328,14 @@ def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
             }
         },
     )
+    yield from hass.async_block_till_done()
 
     assert "Initializing with host 192.168.1.100 (token 12345" in caplog.text
 
     # Check state attributes
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 2047
+    assert state.state == STATE_CLEANING
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 14204
     assert state.attributes.get(ATTR_DO_NOT_DISTURB) == STATE_OFF
     assert state.attributes.get(ATTR_ERROR) is None
     assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-30"
@@ -357,9 +360,7 @@ def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
         DOMAIN, SERVICE_START_REMOTE_CONTROL, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
 
-    mock_mirobo_is_on.assert_has_calls(
-        [mock.call.Vacuum().manual_start()], any_order=True
-    )
+    mock_mirobo_is_on.assert_has_calls([mock.call.manual_start()], any_order=True)
     mock_mirobo_is_on.assert_has_calls(status_calls, any_order=True)
     mock_mirobo_is_on.reset_mock()
 
@@ -367,8 +368,8 @@ def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     yield from hass.services.async_call(
         DOMAIN, SERVICE_MOVE_REMOTE_CONTROL, control, blocking=True
     )
-    mock_mirobo_is_on.assert_has_calls(
-        [mock.call.Vacuum().manual_control(control)], any_order=True
+    mock_mirobo_is_on.manual_control.assert_has_calls(
+        [mock.call(**control)], any_order=True
     )
     mock_mirobo_is_on.assert_has_calls(status_calls, any_order=True)
     mock_mirobo_is_on.reset_mock()
@@ -376,9 +377,7 @@ def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     yield from hass.services.async_call(
         DOMAIN, SERVICE_STOP_REMOTE_CONTROL, {}, blocking=True
     )
-    mock_mirobo_is_on.assert_has_calls(
-        [mock.call.Vacuum().manual_stop()], any_order=True
-    )
+    mock_mirobo_is_on.assert_has_calls([mock.call.manual_stop()], any_order=True)
     mock_mirobo_is_on.assert_has_calls(status_calls, any_order=True)
     mock_mirobo_is_on.reset_mock()
 
@@ -386,8 +385,8 @@ def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     yield from hass.services.async_call(
         DOMAIN, SERVICE_MOVE_REMOTE_CONTROL_STEP, control_once, blocking=True
     )
-    mock_mirobo_is_on.assert_has_calls(
-        [mock.call.Vacuum().manual_control_once(control_once)], any_order=True
+    mock_mirobo_is_on.manual_control_once.assert_has_calls(
+        [mock.call(**control_once)], any_order=True
     )
     mock_mirobo_is_on.assert_has_calls(status_calls, any_order=True)
     mock_mirobo_is_on.reset_mock()
@@ -396,8 +395,8 @@ def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     yield from hass.services.async_call(
         DOMAIN, SERVICE_CLEAN_ZONE, control, blocking=True
     )
-    mock_mirobo_is_off.assert_has_calls(
-        [mock.call.Vacuum().zoned_clean([[123, 123, 123, 123, 2]])], any_order=True
+    mock_mirobo_is_on.zoned_clean.assert_has_calls(
+        [mock.call([[123, 123, 123, 123, 2]])], any_order=True
     )
-    mock_mirobo_is_off.assert_has_calls(status_calls, any_order=True)
-    mock_mirobo_is_off.reset_mock()
+    mock_mirobo_is_on.assert_has_calls(status_calls, any_order=True)
+    mock_mirobo_is_on.reset_mock()
