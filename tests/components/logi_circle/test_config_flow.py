@@ -76,7 +76,7 @@ async def test_step_import(hass, mock_logi_circle):  # pylint: disable=W0621
 
 async def test_full_flow_implementation(
     hass, mock_logi_circle
-):  # noqa pylint: disable=W0621
+):  # pylint: disable=W0621
     """Test registering an implementation and finishing flow works."""
     config_flow.register_flow_implementation(
         hass,
@@ -154,7 +154,7 @@ async def test_abort_if_already_setup(hass):
 )
 async def test_abort_if_authorize_fails(
     hass, mock_logi_circle, side_effect, error
-):  # noqa pylint: disable=W0621
+):  # pylint: disable=W0621
     """Test we abort if authorizing fails."""
     flow = init_config_flow(hass)
     mock_logi_circle.LogiCircle().authorize.side_effect = side_effect
@@ -206,7 +206,7 @@ async def test_callback_view_rejects_missing_code(hass):
 
 async def test_callback_view_accepts_code(
     hass, mock_logi_circle
-):  # noqa pylint: disable=W0621
+):  # pylint: disable=W0621
     """Test the auth callback view handles requests with auth code."""
     init_config_flow(hass)
     view = LogiCircleAuthCallbackView()

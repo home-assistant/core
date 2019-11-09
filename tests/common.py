@@ -1084,7 +1084,7 @@ class hashdict(dict):
 
     """
 
-    def __key(self):  # noqa: D105 no docstring
+    def __key(self):
         return tuple(sorted(self.items()))
 
     def __repr__(self):  # noqa: D105 no docstring

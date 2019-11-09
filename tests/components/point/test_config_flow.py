@@ -66,9 +66,7 @@ async def test_abort_if_already_setup(hass):
     assert result["reason"] == "already_setup"
 
 
-async def test_full_flow_implementation(
-    hass, mock_pypoint
-):  # noqa pylint: disable=W0621
+async def test_full_flow_implementation(hass, mock_pypoint):  # pylint: disable=W0621
     """Test registering an implementation and finishing flow works."""
     config_flow.register_flow_implementation(hass, "test-other", None, None)
     flow = init_config_flow(hass)
@@ -106,7 +104,7 @@ async def test_step_import(hass, mock_pypoint):  # pylint: disable=W0621
 @pytest.mark.parametrize("is_authorized", [False])
 async def test_wrong_code_flow_implementation(
     hass, mock_pypoint
-):  # noqa pylint: disable=W0621
+):  # pylint: disable=W0621
     """Test wrong code."""
     flow = init_config_flow(hass)
 

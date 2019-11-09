@@ -95,12 +95,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         import tensorflow as tf
         from object_detection.utils import label_map_util
     except ImportError:
-        # pylint: disable=line-too-long
         _LOGGER.error(
             "No TensorFlow Object Detection library found! Install or compile "
             "for your system following instructions here: "
             "https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/installation.md"
-        )  # noqa
+        )
         return
 
     try:

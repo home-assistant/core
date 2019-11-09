@@ -76,14 +76,14 @@ def _add_reference(
     ...
 
 
-@overload  # noqa: F811
+@overload
 def _add_reference(
     obj: Union[str, NodeStrClass], loader: yaml.SafeLoader, node: yaml.nodes.Node
 ) -> NodeStrClass:
     ...
 
 
-@overload  # noqa: F811
+@overload
 def _add_reference(
     obj: DICT_T, loader: yaml.SafeLoader, node: yaml.nodes.Node
 ) -> DICT_T:
@@ -93,7 +93,7 @@ def _add_reference(
 # pylint: enable=pointless-statement
 
 
-def _add_reference(  # type: ignore # noqa: F811
+def _add_reference(  # type: ignore
     obj, loader: SafeLineLoader, node: yaml.nodes.Node
 ):
     """Add file reference information to an object."""
