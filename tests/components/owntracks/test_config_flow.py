@@ -1,5 +1,4 @@
 """Tests for OwnTracks config flow."""
-import logging
 from unittest.mock import Mock, patch
 import pytest
 
@@ -11,8 +10,6 @@ from homeassistant.components.owntracks.const import DOMAIN
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro, MockConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 CONF_WEBHOOK_URL = "webhook_url"
@@ -63,12 +60,10 @@ async def test_user(hass, webhook_id, secret):
     flow = init_config_flow(hass)
 
     result = await flow.async_step_user()
-    _LOGGER.info(result)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
     result = await flow.async_step_user({})
-    _LOGGER.info(result)
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "OwnTracks"
     assert result["data"][CONF_WEBHOOK_ID] == WEBHOOK_ID
@@ -82,7 +77,6 @@ async def test_import(hass, webhook_id, secret):
     flow = init_config_flow(hass)
 
     result = await flow.async_step_import({})
-    _LOGGER.info(result)
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "OwnTracks"
     assert result["data"][CONF_WEBHOOK_ID] == WEBHOOK_ID
@@ -108,13 +102,11 @@ async def test_abort_if_already_setup(hass):
 
     # Should fail, already setup (import)
     result = await flow.async_step_import({})
-    _LOGGER.info(result)
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "one_instance_allowed"
 
     # Should fail, already setup (flow)
     result = await flow.async_step_user({})
-    _LOGGER.info(result)
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "one_instance_allowed"
 
@@ -124,7 +116,6 @@ async def test_user_not_supports_encryption(hass, not_supports_encryption):
     flow = init_config_flow(hass)
 
     result = await flow.async_step_user({})
-    _LOGGER.info(result)
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert (
         result["description_placeholders"]["secret"]
