@@ -253,6 +253,7 @@ class SimpliSafeEntity(Entity):
         """Initialize."""
         self._async_unsub_dispatcher_connect = None
         self._attrs = {ATTR_SYSTEM_ID: system.system_id}
+        self._available = True
         self._name = name
         self._system = system
 
@@ -260,6 +261,11 @@ class SimpliSafeEntity(Entity):
             self._serial = serial
         else:
             self._serial = system.serial
+
+    @property
+    def available(self):
+        """Return whether the entity is available."""
+        return self._available
 
     @property
     def device_info(self):
