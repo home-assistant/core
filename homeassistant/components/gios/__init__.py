@@ -8,13 +8,13 @@ from async_timeout import timeout
 from gios import ApiError, Gios, NoStationError
 
 from homeassistant.core import Config, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle
 
 from .const import CONF_STATION_ID, DATA_CLIENT, DOMAIN
 
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)
+# Term of service GIOŚ allow downloading data no more than twice an hour.
+DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,9 +36,6 @@ async def async_setup_entry(hass, config_entry):
     gios = GiosData(websession, station_id)
 
     await gios.async_update()
-
-    if not gios.available:
-        raise ConfigEntryNotReady()
 
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = gios
 
