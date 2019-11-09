@@ -160,22 +160,22 @@ async def test_unload(hass):
     assert entry.data["webhook_id"] not in hass.data["webhook"]
 
 
-# async def test_with_cloud_sub(hass):
-#     """Test creating a config flow while subscribed."""
-#     hass.config.components.add("cloud")
-#     with patch(
-#         "homeassistant.components.cloud.async_active_subscription", return_value=True
-#     ), patch(
-#         "homeassistant.components.cloud.async_create_cloudhook",
-#         return_value=mock_coro("https://hooks.nabu.casa/ABCD"),
-#     ):
-#         result = await hass.config_entries.flow.async_init(
-#             DOMAIN, context={"source": "user"}, data={}
-#         )
+async def test_with_cloud_sub(hass):
+    """Test creating a config flow while subscribed."""
+    hass.config.components.add("cloud")
+    with patch(
+        "homeassistant.components.cloud.async_active_subscription", return_value=True
+    ), patch(
+        "homeassistant.components.cloud.async_create_cloudhook",
+        return_value=mock_coro("https://hooks.nabu.casa/ABCD"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data={}
+        )
 
-#     entry = result["result"]
-#     assert entry.data["cloudhook"]
-#     assert (
-#         result["description_placeholders"]["webhook_url"]
-#         == "https://hooks.nabu.casa/ABCD"
-#     )
+    entry = result["result"]
+    assert entry.data["cloudhook"]
+    assert (
+        result["description_placeholders"]["webhook_url"]
+        == "https://hooks.nabu.casa/ABCD"
+    )
