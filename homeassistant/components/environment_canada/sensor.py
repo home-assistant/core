@@ -125,7 +125,7 @@ class ECSensor(Entity):
         value = sensor_data.get("value")
 
         if isinstance(value, list):
-            self._state = " | ".join([str(s.get("title")) for s in value])
+            self._state = " | ".join([str(s.get("title")) for s in value])[:255]
             self._attr.update(
                 {
                     ATTR_DETAIL: " | ".join([str(s.get("detail")) for s in value]),
@@ -135,7 +135,7 @@ class ECSensor(Entity):
         elif self.sensor_type == "tendency":
             self._state = str(value).capitalize()
         else:
-            self._state = value
+            self._state = value[:255]
 
         if sensor_data.get("unit") == "C" or self.sensor_type in [
             "wind_chill",
