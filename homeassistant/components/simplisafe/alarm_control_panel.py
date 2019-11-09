@@ -129,10 +129,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
         if event_data.get("pinName"):
             self._changed_by = event_data["pinName"]
 
-        # We can easily detect if the V3 system is offline, but no simple check exists
-        # for the V2 system:
-        offline = self._system.version == 3 and self._system.offline
-        if offline or self._system.state == SystemStates.error:
+        if self._system.state == SystemStates.error:
             self._available = False
             return
 

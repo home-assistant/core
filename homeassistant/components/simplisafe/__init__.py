@@ -253,8 +253,8 @@ class SimpliSafeEntity(Entity):
         """Initialize."""
         self._async_unsub_dispatcher_connect = None
         self._attrs = {ATTR_SYSTEM_ID: system.system_id}
-        self._available = True
         self._name = name
+        self._online = True
         self._system = system
 
         if serial:
@@ -265,7 +265,12 @@ class SimpliSafeEntity(Entity):
     @property
     def available(self):
         """Return whether the entity is available."""
-        return self._available
+        # We can easily detect if the V3 system is offline, but no simple check exists
+        # for the V2 system. Therefore, we mark the entity as available if:
+        #   1. We can verify that the system is online (assuming True if we can't)
+        #   2. We can verify that the entity is online
+        system_offline = self._system.version == 3 and self._system.offline
+        return not system_offline and self._online
 
     @property
     def device_info(self):
