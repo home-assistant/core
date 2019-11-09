@@ -146,12 +146,14 @@ def test_initialize_flow(hass, client):
             schema = OrderedDict()
             schema[vol.Required("username")] = str
             schema[vol.Required("password")] = str
+            schema[vol.Required("my_label")] = bool
 
             return self.async_show_form(
                 step_id="user",
                 data_schema=schema,
                 description_placeholders={"url": "https://example.com"},
                 errors={"username": "Should be unique."},
+                labels={"my_label": "MY LABEL"},
             )
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
@@ -171,9 +173,11 @@ def test_initialize_flow(hass, client):
         "data_schema": [
             {"name": "username", "required": True, "type": "string"},
             {"name": "password", "required": True, "type": "string"},
+            {"name": "my_label", "required": True, "type": "bool"},
         ],
         "description_placeholders": {"url": "https://example.com"},
         "errors": {"username": "Should be unique."},
+        "labels": {"my_label": "MY LABEL"},
     }
 
 
@@ -265,6 +269,7 @@ def test_create_account(hass, client):
         "result": entries[0].entry_id,
         "description": None,
         "description_placeholders": None,
+        "labels": None,
     }
 
 
@@ -303,6 +308,7 @@ def test_two_step_flow(hass, client):
             "data_schema": [{"name": "user_title", "type": "string"}],
             "description_placeholders": None,
             "errors": None,
+            "labels": None,
         }
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
@@ -325,6 +331,7 @@ def test_two_step_flow(hass, client):
             "result": entries[0].entry_id,
             "description": None,
             "description_placeholders": None,
+            "labels": None,
         }
 
 
@@ -362,6 +369,7 @@ async def test_continue_flow_unauth(hass, client, hass_admin_user):
             "data_schema": [{"name": "user_title", "type": "string"}],
             "description_placeholders": None,
             "errors": None,
+            "labels": None,
         }
 
     hass_admin_user.groups = []
@@ -526,6 +534,7 @@ async def test_options_flow(hass, client):
         "data_schema": [{"name": "enabled", "required": True, "type": "boolean"}],
         "description_placeholders": {"enabled": "Set to true to be true"},
         "errors": None,
+        "labels": None,
     }
 
 
@@ -572,6 +581,7 @@ async def test_two_step_options_flow(hass, client):
             "data_schema": [{"name": "enabled", "type": "boolean"}],
             "description_placeholders": None,
             "errors": None,
+            "labels": None,
         }
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
@@ -589,6 +599,7 @@ async def test_two_step_options_flow(hass, client):
             "version": 1,
             "description": None,
             "description_placeholders": None,
+            "labels": None,
         }
 
 
