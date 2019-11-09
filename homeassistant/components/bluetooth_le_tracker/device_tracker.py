@@ -80,6 +80,9 @@ def setup_scanner(hass, config, see, discovery_info=None):
         except RuntimeError as error:
             _LOGGER.error("Error during Bluetooth LE scan: %s", error)
             return {}
+        except pygatt.exceptions.BLEError as error:
+            _LOGGER.error("BLEError during Bluetooth LE scan: %s", error)
+            return {}
         return devices
 
     yaml_path = hass.config.path(YAML_DEVICES)
