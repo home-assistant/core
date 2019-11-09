@@ -249,11 +249,12 @@ class SimpliSafe:
 class SimpliSafeEntity(Entity):
     """Define a base SimpliSafe entity."""
 
-    def __init__(self, system):
+    def __init__(self, system, name):
         """Initialize."""
-        self._system = system
         self._async_unsub_dispatcher_connect = None
         self._attrs = {ATTR_SYSTEM_ID: system.system_id}
+        self._name = name
+        self._system = system
 
     @property
     def device_info(self):
@@ -262,9 +263,7 @@ class SimpliSafeEntity(Entity):
             "identifiers": {(DOMAIN, self._system.system_id)},
             "manufacturer": "SimpliSafe",
             "model": self._system.version,
-            # The name should become more dynamic once we deduce a way to
-            # get various other sensors from SimpliSafe in a reliable manner:
-            "name": "Keypad",
+            "name": self._name,
             "via_device": (DOMAIN, self._system.serial),
         }
 
@@ -276,7 +275,7 @@ class SimpliSafeEntity(Entity):
     @property
     def name(self):
         """Return the name of the entity."""
-        return self._system.address
+        return f"{self._system.address} {self._name}"
 
     @property
     def unique_id(self):
