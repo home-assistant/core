@@ -25,7 +25,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         [
             SimpliSafeLock(system, lock)
             for system in simplisafe.systems.values()
-            for lock in system.lock.values()
+            for lock in system.locks.values()
         ]
     )
 
