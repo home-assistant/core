@@ -14,10 +14,10 @@ from homeassistant.const import (
     CONF_TEMPERATURE_UNIT,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant, callback  # noqa
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType  # noqa
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "elkm1"
 

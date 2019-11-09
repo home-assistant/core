@@ -1,13 +1,11 @@
 """Entity tests for mobile_app."""
-# pylint: disable=redefined-outer-name,unused-import
+
 import logging
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def test_sensor(
-    hass, create_registrations, webhook_client
-):  # noqa: F401, F811, E501
+async def test_sensor(hass, create_registrations, webhook_client):
     """Test that sensors can be registered and updated."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = "/api/webhook/{}".format(webhook_id)
@@ -67,9 +65,7 @@ async def test_sensor(
     assert updated_entity.state == "123"
 
 
-async def test_sensor_must_register(
-    hass, create_registrations, webhook_client  # noqa: F401, F811, E501
-):  # noqa: F401, F811, E501
+async def test_sensor_must_register(hass, create_registrations, webhook_client):
     """Test that sensors must be registered before updating."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = "/api/webhook/{}".format(webhook_id)
@@ -88,9 +84,7 @@ async def test_sensor_must_register(
     assert json["battery_state"]["error"]["code"] == "not_registered"
 
 
-async def test_sensor_id_no_dupes(
-    hass, create_registrations, webhook_client  # noqa: F401, F811, E501
-):  # noqa: F401, F811, E501
+async def test_sensor_id_no_dupes(hass, create_registrations, webhook_client):
     """Test that sensors must have a unique ID."""
     webhook_id = create_registrations[1]["webhook_id"]
     webhook_url = "/api/webhook/{}".format(webhook_id)
