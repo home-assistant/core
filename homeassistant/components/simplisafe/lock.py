@@ -26,5 +26,5 @@ class SimpliSafeLock(SimpliSafeEntity, LockDevice):
 
     def __init__(self, system, lock):
         """Initialize."""
-        super().__init__(system)
+        super().__init__(system, lock.name)
         self._lock = lock
