@@ -225,7 +225,7 @@ class TPLinkSmartBulb(Light):
                     # device returned no daily/monthly history
                     pass
 
-                self._available = True
+            self._available = True
 
         except (SmartDeviceException, OSError) as ex:
             if self._available:
