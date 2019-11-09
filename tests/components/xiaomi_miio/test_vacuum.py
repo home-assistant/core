@@ -152,18 +152,27 @@ def mirobo_errors_fixture():
 def test_xiaomi_exceptions(hass, caplog, mock_mirobo_errors):
     """Test vacuum supported features."""
     entity_name = "test_vacuum_cleaner_error"
-    yield from async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            DOMAIN: {
-                CONF_PLATFORM: PLATFORM,
-                CONF_HOST: "127.0.0.1",
-                CONF_NAME: entity_name,
-                CONF_TOKEN: "12345678901234567890123456789012",
-            }
-        },
-    )
+
+    async def fake_discovery():
+        return []
+
+    with mock.patch(
+        "homeassistant.components.xiaomi_miio.discover_miio_devices",
+        side_effect=fake_discovery,
+    ):
+        yield from async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: {
+                    CONF_PLATFORM: PLATFORM,
+                    CONF_HOST: "127.0.0.1",
+                    CONF_NAME: entity_name,
+                    CONF_TOKEN: "12345678901234567890123456789012",
+                }
+            },
+        )
+
     yield from hass.async_block_till_done()
 
     assert "Initializing with host 127.0.0.1 (token 12345...)" in caplog.text
