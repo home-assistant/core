@@ -173,7 +173,7 @@ def test_initialize_flow(hass, client):
         "data_schema": [
             {"name": "username", "required": True, "type": "string"},
             {"name": "password", "required": True, "type": "string"},
-            {"name": "my_label", "required": True, "type": "bool"},
+            {"name": "my_label", "required": True, "type": "boolean"},
         ],
         "description_placeholders": {"url": "https://example.com"},
         "errors": {"username": "Should be unique."},
