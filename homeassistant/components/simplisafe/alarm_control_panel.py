@@ -58,7 +58,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
 
     def __init__(self, simplisafe, system, code):
         """Initialize the SimpliSafe alarm."""
-        super().__init__(system, "Alarm Control Panel")
+        super().__init__(system, "Alarm Control Panel", system.serial)
         self._changed_by = None
         self._code = code
         self._simplisafe = simplisafe

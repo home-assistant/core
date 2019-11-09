@@ -249,11 +249,12 @@ class SimpliSafe:
 class SimpliSafeEntity(Entity):
     """Define a base SimpliSafe entity."""
 
-    def __init__(self, system, name):
+    def __init__(self, system, name, serial):
         """Initialize."""
         self._async_unsub_dispatcher_connect = None
         self._attrs = {ATTR_SYSTEM_ID: system.system_id}
         self._name = name
+        self._serial = serial
         self._system = system
 
     @property
@@ -280,7 +281,7 @@ class SimpliSafeEntity(Entity):
     @property
     def unique_id(self):
         """Return the unique ID of the entity."""
-        return self._system.system_id
+        return f"{self._system.system_id}_{self._serial}"
 
     async def async_added_to_hass(self):
         """Register callbacks."""
