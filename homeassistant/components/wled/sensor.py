@@ -1,20 +1,23 @@
 """Support for WLED sensors."""
+from datetime import timedelta
 import logging
-from typing import Callable, List, Union
+from typing import Callable, List, Optional, Union
 
-from homeassistant.components.wled import WLED, WLEDDeviceEntity
-from homeassistant.components.wled.const import (
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import DEVICE_CLASS_TIMESTAMP
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util.dt import utcnow
+
+from . import WLED, WLEDDeviceEntity
+from .const import (
     ATTR_LED_COUNT,
     ATTR_MAX_POWER,
     CURRENT_MA,
     DATA_BYTES,
     DATA_WLED_CLIENT,
     DOMAIN,
-    TIME_SECONDS,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,13 +107,19 @@ class WLEDUptimeSensor(WLEDSensor):
             wled,
             f"{wled.device.info.name} Uptime",
             "mdi:clock-outline",
-            TIME_SECONDS,
+            None,
             "uptime",
         )
 
+    @property
+    def device_class(self) -> Optional[str]:
+        """Return the class of this sensor."""
+        return DEVICE_CLASS_TIMESTAMP
+
     async def _wled_update(self) -> None:
         """Update WLED uptime sensor."""
-        self._state = self.wled.device.info.uptime
+        uptime = utcnow() - timedelta(seconds=self.wled.device.info.uptime)
+        self._state = uptime.replace(microsecond=0).isoformat()
 
 
 class WLEDFreeHeapSensor(WLEDSensor):

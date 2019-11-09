@@ -1,13 +1,17 @@
 """Tests for the WLED sensor platform."""
+from datetime import datetime
+
+from asynctest import patch
+
 from homeassistant.components.wled.const import (
     ATTR_LED_COUNT,
     ATTR_MAX_POWER,
     CURRENT_MA,
     DATA_BYTES,
-    TIME_SECONDS,
 )
 from homeassistant.const import ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from tests.components.wled import init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -17,7 +21,10 @@ async def test_sensors(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the creation and values of the WLED sensors."""
-    await init_integration(hass, aioclient_mock)
+
+    test_time = datetime(2019, 11, 11, 9, 10, 32, tzinfo=dt_util.UTC)
+    with patch("homeassistant.components.wled.sensor.utcnow", return_value=test_time):
+        await init_integration(hass, aioclient_mock)
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
@@ -36,8 +43,8 @@ async def test_sensors(
     state = hass.states.get("sensor.wled_rgb_light_uptime")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:clock-outline"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TIME_SECONDS
-    assert state.state == "32"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+    assert state.state == "2019-11-11T09:10:00+00:00"
 
     entry = entity_registry.async_get("sensor.wled_rgb_light_uptime")
     assert entry
