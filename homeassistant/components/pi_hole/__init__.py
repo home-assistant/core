@@ -63,7 +63,11 @@ PI_HOLE_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema(vol.All([PI_HOLE_SCHEMA], ensure_unique_names))},
+    {
+        DOMAIN: vol.Schema(
+            vol.All(cv.ensure_list, [PI_HOLE_SCHEMA], ensure_unique_names)
+        )
+    },
     extra=vol.ALLOW_EXTRA,
 )
 
