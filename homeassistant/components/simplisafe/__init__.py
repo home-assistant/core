@@ -254,8 +254,12 @@ class SimpliSafeEntity(Entity):
         self._async_unsub_dispatcher_connect = None
         self._attrs = {ATTR_SYSTEM_ID: system.system_id}
         self._name = name
-        self._serial = serial
         self._system = system
+
+        if serial:
+            self._serial = serial
+        else:
+            self._serial = system.serial
 
     @property
     def device_info(self):
@@ -281,9 +285,7 @@ class SimpliSafeEntity(Entity):
     @property
     def unique_id(self):
         """Return the unique ID of the entity."""
-        if self._serial:
-            return f"{self._serial}"
-        return f"{self._system.serial}"
+        return self._serial
 
     async def async_added_to_hass(self):
         """Register callbacks."""
