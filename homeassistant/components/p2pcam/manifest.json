@@ -3,7 +3,7 @@
   "name": "p2pcam",
   "documentation": "https://www.home-assistant.io/components/p2pcam",
   "requirements": [
-    "p2pcam==0.0.2"
+    "p2pcam==0.0.3"
   ],
   "dependencies": [],
   "codeowners": [
