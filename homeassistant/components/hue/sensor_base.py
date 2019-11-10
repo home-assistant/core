@@ -15,7 +15,7 @@ from homeassistant.util.dt import utcnow
 
 from .helpers import remove_devices
 
-CURRENT_SENSORS = "current_sensors"
+CURRENT_SENSORS_FORMAT = "{}_current_sensors"
 SENSOR_MANAGER_FORMAT = "{}_sensor_manager"
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,8 +31,9 @@ def _device_id(aiohue_sensor):
 
 async def async_setup_entry(hass, config_entry, async_add_entities, binary=False):
     """Set up the Hue sensors from a config entry."""
+    sensor_key = CURRENT_SENSORS_FORMAT.format(config_entry.data["host"])
     bridge = hass.data[hue.DOMAIN][config_entry.data["host"]]
-    hass.data[hue.DOMAIN].setdefault(CURRENT_SENSORS, {})
+    hass.data[hue.DOMAIN].setdefault(sensor_key, {})
 
     sm_key = SENSOR_MANAGER_FORMAT.format(config_entry.data["host"])
     manager = hass.data[hue.DOMAIN].get(sm_key)
@@ -127,7 +128,8 @@ class SensorManager:
         new_sensors = []
         new_binary_sensors = []
         primary_sensor_devices = {}
-        current = self.hass.data[hue.DOMAIN][CURRENT_SENSORS]
+        sensor_key = CURRENT_SENSORS_FORMAT.format(self.config_entry.data["host"])
+        current = self.hass.data[hue.DOMAIN][sensor_key]
 
         # Physical Hue motion sensors present as three sensors in the API: a
         # presence sensor, a temperature sensor, and a light level sensor. Of
