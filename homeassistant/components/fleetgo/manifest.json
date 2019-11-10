@@ -6,5 +6,7 @@
     "ritassist==0.9.2"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+      "@depl0y"
+  ]
 }
