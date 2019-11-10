@@ -81,7 +81,7 @@ async def async_setup(hass, config):
                 vol.Required(SERVICE_DISABLE_ATTR_DURATION): vol.All(
                     cv.time_period_str, cv.positive_timedelta
                 ),
-                vol.Optional(SERVICE_DISABLE_ATTR_NAME, default=DEFAULT_NAME): vol.In(
+                vol.Optional(SERVICE_DISABLE_ATTR_NAME): vol.In(
                     list(map(lambda c: c[CONF_NAME], config[DOMAIN]))
                 ),
             }
@@ -90,7 +90,7 @@ async def async_setup(hass, config):
 
     SERVICE_ENABLE_SCHEMA = vol.Schema(  # pylint: disable=invalid-name
         {
-            vol.Optional(SERVICE_ENABLE_ATTR_NAME, default=DEFAULT_NAME): vol.In(
+            vol.Optional(SERVICE_ENABLE_ATTR_NAME): vol.In(
                 list(map(lambda c: c[CONF_NAME], config[DOMAIN]))
             )
         }
