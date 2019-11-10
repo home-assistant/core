@@ -70,8 +70,7 @@ def setup(hass, base_config):
     def stop_subscription(event):
         """Shutdown Vera subscriptions and subscription thread on exit."""
         _LOGGER.info("Shutting down subscriptions")
-
-        hass.add_job(hass.data[VERA_CONTROLLER].stop)
+        hass.data[VERA_CONTROLLER].stop()
 
     config = base_config.get(DOMAIN)
 

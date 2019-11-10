@@ -1,10 +1,9 @@
 """Common code for tests."""
 
 from copy import deepcopy
-import re
 from typing import Any, List, NamedTuple, Optional, Union
-from urllib import parse
 
+from mock import MagicMock, patch
 from pyvera import (
     CATEGORY_ARMABLE,
     CATEGORY_CURTAIN,
@@ -19,10 +18,9 @@ from pyvera import (
     CATEGORY_TEMPERATURE_SENSOR,
     CATEGORY_THERMOSTAT,
     CATEGORY_UV_SENSOR,
+    TIMEOUT,
+    VeraController,
 )
-import requests_mock
-from requests_mock.request import _RequestObjectProxy
-from requests_mock.response import _Context
 
 from homeassistant.components.vera import (
     CONF_CONTROLLER,
@@ -182,9 +180,25 @@ async def async_call_service(
     await hass.async_block_till_done()
 
 
+class ResponseStub:
+    """Simple stub."""
+
+    def __init__(self, json=None, text=None):
+        """Init object."""
+        self._json = json
+        self._text = text
+
+    def json(self) -> Any:
+        """Get json."""
+        return self._json
+
+    def text(self) -> str:
+        """Get text."""
+        return self._text
+
+
 async def async_configure_component(
     hass: HomeAssistant,
-    requests_mocker: requests_mock.Mocker,
     response_sdata: dict,
     response_status: dict,
     respone_lu_sdata: dict,
@@ -192,135 +206,115 @@ async def async_configure_component(
     """Configure the component with specific mock data."""
     controller_url = "http://127.0.0.1:123"
 
+    def data_request(payload: dict, timeout=TIMEOUT):
+        nonlocal component_data
+        payload_id = payload.get("id")
+
+        if payload_id == "sdata":
+            return ResponseStub(json=component_data.sdata)
+        if payload_id == "status":
+            return ResponseStub(json=component_data.status)
+        if payload_id == "lu_sdata":
+            return ResponseStub(json=component_data.lu_sdata)
+        if payload_id == "action":
+            return ResponseStub(json={})
+        if payload_id == "variableget":
+            device_id = int(payload.get("DeviceNum"))
+            variable = payload.get("Variable")
+
+            status = get_device_status(device_id, component_data)
+            for state in status.get("states", []):
+                if state.get("variable") == variable:
+                    return state.get("value")
+
+            return ResponseStub(text="")
+        if payload_id == "lu_action":
+            params = payload.copy()
+            params.pop("id")
+            service_id = params.pop("serviceId")
+            action = params.pop("action")
+            device_id = int(params.pop("DeviceNum"))
+            params.pop("output_format")
+            set_state_variable_name = next(
+                key for key in params if key.lower().startswith("new")
+            )
+            state_variable_name = set_state_variable_name[3:]
+            state_variable_value = params.pop(set_state_variable_name)
+            status_variable_name = None
+
+            if service_id == "urn:upnp-org:serviceId:SwitchPower1":
+                if action == "SetTarget":
+                    status_variable_name = "status"
+            elif service_id == "urn:upnp-org:serviceId:Dimming1":
+                if action == "SetLoadLevelTarget":
+                    status_variable_name = "level"
+            elif service_id == "urn:micasaverde-com:serviceId:SecuritySensor1":
+                if action == "SetArmed":
+                    status_variable_name = "armed"
+            elif service_id == "urn:upnp-org:serviceId:WindowCovering1":
+                if action == "SetLoadLevelTarget":
+                    status_variable_name = "level"
+            elif service_id == "urn:micasaverde-com:serviceId:DoorLock1":
+                if action == "NewTarget":
+                    status_variable_name = "locked"
+            elif service_id == "urn:upnp-org:serviceId:HVAC_UserOperatingMode1":
+                if action == "SetModeTarget":
+                    status_variable_name = "mode"
+            elif service_id == "urn:upnp-org:serviceId:HVAC_FanOperatingMode1":
+                if action == "SetMode":
+                    status_variable_name = "fanmode"
+            elif service_id == "urn:upnp-org:serviceId:TemperatureSetpoint1_Cool":
+                pass
+            elif service_id == "urn:upnp-org:serviceId:TemperatureSetpoint1_Heat":
+                pass
+            elif service_id == "urn:upnp-org:serviceId:TemperatureSetpoint1":
+                if action == "SetCurrentSetpoint":
+                    status_variable_name = "setpoint"
+            elif service_id == "urn:micasaverde-com:serviceId:Color1":
+                if action == "SetColorRGB":
+                    status_variable_name = "CurrentColor"
+
+            device = get_device(device_id, component_data)
+            status = get_device_status(device_id, component_data)
+
+            # Update the device and status objects.
+            if status_variable_name is not None:
+                device[status_variable_name] = state_variable_value
+                status[status_variable_name] = state_variable_value
+
+            # Update the state object.
+            status["states"] = [
+                state
+                for state in status.get("states", [])
+                if state.get("service") != service_id
+                or state.get("variable") != state_variable_name
+            ]
+            status["states"].append(
+                {
+                    "service": service_id,
+                    "variable": state_variable_name,
+                    "value": state_variable_value,
+                }
+            )
+
+            return ResponseStub(json={})
+
+        return ResponseStub(json={})
+
+    def init_controller(base_url: str) -> list:
+        nonlocal data_request
+        controller = VeraController(base_url)
+        controller.data_request = MagicMock(side_effect=data_request)
+        controller.start()
+        return [controller, True]
+
     component_data = ComponentData(
         sdata=deepcopy(response_sdata),
         status=deepcopy(response_status),
         lu_sdata=deepcopy(respone_lu_sdata),
     )
 
-    requests_mocker.get(
-        re.compile(controller_url + "/data_request?.*id=sdata(&.*|$)"),
-        json=component_data.sdata,
-        status_code=200,
-    )
-
-    requests_mocker.get(
-        re.compile(controller_url + "/data_request?.*id=status(&.*|$)"),
-        json=component_data.status,
-        status_code=200,
-    )
-
-    requests_mocker.get(
-        re.compile(controller_url + "/data_request?.*id=lu_sdata(&.*|$)"),
-        json=component_data.lu_sdata,
-        status_code=200,
-    )
-
-    requests_mocker.get(
-        re.compile(controller_url + "/data_request?.*id=action(&.*|$)"),
-        json={},
-        status_code=200,
-    )
-
-    def variable_get_callback(request: _RequestObjectProxy, context: _Context):
-        nonlocal component_data
-        params = parse.parse_qs(request.query)
-        device_id = int(params.pop("DeviceNum")[0])
-        variable = params.pop("Variable")[0]
-
-        context.status_code = 200
-
-        status = get_device_status(device_id, component_data)
-        for state in status.get("states", []):
-            if state.get("variable") == variable:
-                return state.get("value")
-
-        return ""
-
-    requests_mocker.register_uri(
-        "GET",
-        re.compile(controller_url + "/data_request?.*id=variableget(&.*|$)"),
-        text=variable_get_callback,
-    )
-
-    def lu_action_callback(request: _RequestObjectProxy, context: _Context):
-        nonlocal component_data
-        params = parse.parse_qs(request.query)
-        params.pop("id")
-        service_id = params.pop("serviceId")[0]
-        action = params.pop("action")[0]
-        device_id = int(params.pop("DeviceNum")[0])
-        params.pop("output_format")
-        set_state_variable_name = next(
-            key for key in params if key.lower().startswith("new")
-        )
-        state_variable_name = set_state_variable_name[3:]
-        state_variable_value = params.pop(set_state_variable_name)[0]
-        status_variable_name = None
-
-        if service_id == "urn:upnp-org:serviceId:SwitchPower1":
-            if action == "SetTarget":
-                status_variable_name = "status"
-        elif service_id == "urn:upnp-org:serviceId:Dimming1":
-            if action == "SetLoadLevelTarget":
-                status_variable_name = "level"
-        elif service_id == "urn:micasaverde-com:serviceId:SecuritySensor1":
-            if action == "SetArmed":
-                status_variable_name = "armed"
-        elif service_id == "urn:upnp-org:serviceId:WindowCovering1":
-            if action == "SetLoadLevelTarget":
-                status_variable_name = "level"
-        elif service_id == "urn:micasaverde-com:serviceId:DoorLock1":
-            if action == "NewTarget":
-                status_variable_name = "locked"
-        elif service_id == "urn:upnp-org:serviceId:HVAC_UserOperatingMode1":
-            if action == "SetModeTarget":
-                status_variable_name = "mode"
-        elif service_id == "urn:upnp-org:serviceId:HVAC_FanOperatingMode1":
-            if action == "SetMode":
-                status_variable_name = "fanmode"
-        elif service_id == "urn:upnp-org:serviceId:TemperatureSetpoint1_Cool":
-            pass
-        elif service_id == "urn:upnp-org:serviceId:TemperatureSetpoint1_Heat":
-            pass
-        elif service_id == "urn:upnp-org:serviceId:TemperatureSetpoint1":
-            if action == "SetCurrentSetpoint":
-                status_variable_name = "setpoint"
-        elif service_id == "urn:micasaverde-com:serviceId:Color1":
-            if action == "SetColorRGB":
-                status_variable_name = "CurrentColor"
-
-        device = get_device(device_id, component_data)
-        status = get_device_status(device_id, component_data)
-
-        # Update the device and status objects.
-        if status_variable_name is not None:
-            device[status_variable_name] = state_variable_value
-            status[status_variable_name] = state_variable_value
-
-        # Update the state object.
-        status["states"] = [
-            state
-            for state in status.get("states", [])
-            if state.get("service") != service_id
-            and state.get("variable") != state_variable_name
-        ]
-        status["states"].append(
-            {
-                "service": service_id,
-                "variable": state_variable_name,
-                "value": state_variable_value,
-            }
-        )
-
-        context.status_code = 200
-        return {}
-
-    requests_mocker.register_uri(
-        "GET",
-        re.compile(controller_url + "/data_request?.+id=lu_action"),
-        json=lu_action_callback,
-    )
+    patch("pyvera.init_controller", side_effect=init_controller).start()
 
     # Setup home assistant.
     hass_config = {
