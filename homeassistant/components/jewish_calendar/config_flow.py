@@ -15,14 +15,13 @@ from .const import (
     DEFAULT_HAVDALAH_OFFSET_MINUTES,
     DEFAULT_LANGUAGE,
     DEFAULT_NAME,
-    DOMAIN,
     DATA_SCHEMA,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class JewishCalendarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class JewishCalendarConfigFlow(config_entries.ConfigFlow):
     """Handle a config flow for Jewish calendar."""
 
     VERSION = 1
