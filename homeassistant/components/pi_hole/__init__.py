@@ -75,6 +75,31 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Set up the pi_hole integration."""
 
+    def get_data():
+        """Retrive component data."""
+        return hass.data[DOMAIN]
+
+    def ensure_api_token(call_data):
+        """Ensure the Pi-Hole to be enabled/disabled has a api_token configured."""
+        data = get_data()
+        if SERVICE_DISABLE_ATTR_NAME not in call_data:
+            for slug in data:
+                call_data[SERVICE_DISABLE_ATTR_NAME] = data[slug].name
+                ensure_api_token(call_data)
+
+            call_data[SERVICE_DISABLE_ATTR_NAME] = None
+        else:
+            slug = slugify(call_data[SERVICE_DISABLE_ATTR_NAME])
+
+            if (data[slug]).api.api_token is None:
+                raise vol.Invalid(
+                    "Pi-hole '{}' must have an api_key provided in configuration to be enabled.".format(
+                        pi_hole.name
+                    )
+                )
+
+        return call_data
+
     SERVICE_DISABLE_SCHEMA = vol.Schema(  # pylint: disable=invalid-name
         vol.All(
             {
@@ -82,16 +107,18 @@ async def async_setup(hass, config):
                     cv.time_period_str, cv.positive_timedelta
                 ),
                 vol.Optional(SERVICE_DISABLE_ATTR_NAME): vol.In(
-                    list(map(lambda c: c[CONF_NAME], config[DOMAIN]))
+                    list(map(lambda c: c[CONF_NAME], config[DOMAIN])),
+                    msg="Unknown Pi-Hole",
                 ),
-            }
+            },
+            ensure_api_token,
         )
     )
 
     SERVICE_ENABLE_SCHEMA = vol.Schema(  # pylint: disable=invalid-name
         {
             vol.Optional(SERVICE_ENABLE_ATTR_NAME): vol.In(
-                list(map(lambda c: c[CONF_NAME], config[DOMAIN]))
+                list(map(lambda c: c[CONF_NAME], config[DOMAIN])), msg="Unknown Pi-Hole"
             )
         }
     )
@@ -135,13 +162,6 @@ async def async_setup(hass, config):
             slug = slugify(name)
             pi_hole = hass.data[DOMAIN][slug]
 
-            if pi_hole.api.api_token is None:
-                raise vol.Invalid(
-                    "Pi-hole '{}' must have an api_key provided in configuration to be disabled.".format(
-                        pi_hole.name
-                    )
-                )
-
             LOGGER.debug(
                 "Disabling Pi-hole '%s' (%s) for %d seconds",
                 name,
@@ -165,13 +185,6 @@ async def async_setup(hass, config):
             """Enable the named Pi-Hole."""
             slug = slugify(name)
             pi_hole = hass.data[DOMAIN][slug]
-
-            if pi_hole.api.api_token is None:
-                raise vol.Invalid(
-                    "Pi-hole '{}' must have an api_key provided in configuration to be enabled.".format(
-                        pi_hole.name
-                    )
-                )
 
             LOGGER.debug("Enabling Pi-hole '%s' (%s)", name, pi_hole.api.host)
             await pi_hole.api.enable()
