@@ -72,6 +72,7 @@ def setup(hass, base_config):
                 if button.name != "Unknown Button" and button.button_type in (
                     "SingleAction",
                     "Toggle",
+                    "SingleSceneRaiseLower",
                 ):
                     # Associate an LED with a button if there is one
                     led = next(
