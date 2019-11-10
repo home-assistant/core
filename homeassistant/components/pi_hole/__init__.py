@@ -100,7 +100,7 @@ async def async_setup(hass, config):
 
         return call_data
 
-    SERVICE_DISABLE_SCHEMA = vol.Schema(  # pylint: disable=invalid-name
+    service_disable_schema = vol.Schema(  # pylint: disable=invalid-name
         vol.All(
             {
                 vol.Required(SERVICE_DISABLE_ATTR_DURATION): vol.All(
@@ -115,7 +115,7 @@ async def async_setup(hass, config):
         )
     )
 
-    SERVICE_ENABLE_SCHEMA = vol.Schema(  # pylint: disable=invalid-name
+    service_enable_schema = vol.Schema(
         {
             vol.Optional(SERVICE_ENABLE_ATTR_NAME): vol.In(
                 list(map(lambda c: c[CONF_NAME], config[DOMAIN])), msg="Unknown Pi-Hole"
@@ -196,11 +196,11 @@ async def async_setup(hass, config):
                 await do_enable(pi_hole.name)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_DISABLE, disable_service_handler, schema=SERVICE_DISABLE_SCHEMA
+        DOMAIN, SERVICE_DISABLE, disable_service_handler, schema=service_disable_schema
     )
 
     hass.services.async_register(
-        DOMAIN, SERVICE_ENABLE, enable_service_handler, schema=SERVICE_ENABLE_SCHEMA
+        DOMAIN, SERVICE_ENABLE, enable_service_handler, schema=service_enable_schema
     )
 
     hass.async_create_task(async_load_platform(hass, SENSOR_DOMAIN, DOMAIN, {}, config))
