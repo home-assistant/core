@@ -5,10 +5,12 @@ from homeassistant.const import DEVICE_DEFAULT_NAME
 
 def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up the demo remotes."""
-    add_entities_callback([
-        DemoRemote('Remote One', False, None),
-        DemoRemote('Remote Two', True, 'mdi:remote'),
-    ])
+    add_entities_callback(
+        [
+            DemoRemote("Remote One", False, None),
+            DemoRemote("Remote Two", True, "mdi:remote"),
+        ]
+    )
 
 
 class DemoRemote(RemoteDevice):
@@ -45,7 +47,7 @@ class DemoRemote(RemoteDevice):
     def device_state_attributes(self):
         """Return device state attributes."""
         if self._last_command_sent is not None:
-            return {'last_command_sent': self._last_command_sent}
+            return {"last_command_sent": self._last_command_sent}
 
     def turn_on(self, **kwargs):
         """Turn the remote on."""

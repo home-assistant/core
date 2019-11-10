@@ -10,23 +10,19 @@ import requests
 from homeassistant.components import sensor
 from homeassistant.components.bom.sensor import BOMCurrentData
 from homeassistant.setup import setup_component
-from tests.common import (
-    assert_setup_component, get_test_home_assistant, load_fixture)
+from tests.common import assert_setup_component, get_test_home_assistant, load_fixture
 
 VALID_CONFIG = {
-    'platform': 'bom',
-    'station': 'IDN60901.94767',
-    'name': 'Fake',
-    'monitored_conditions': [
-        'apparent_t',
-        'press',
-        'weather'
-    ]
+    "platform": "bom",
+    "station": "IDN60901.94767",
+    "name": "Fake",
+    "monitored_conditions": ["apparent_t", "press", "weather"],
 }
 
 
 def mocked_requests(*args, **kwargs):
     """Mock requests.get invocations."""
+
     class MockResponse:
         """Class to represent a mocked response."""
 
@@ -50,10 +46,10 @@ def mocked_requests(*args, **kwargs):
                 raise requests.HTTPError(self.status_code)
 
     url = urlparse(args[0])
-    if re.match(r'^/fwo/[\w]+/[\w.]+\.json', url.path):
-        return MockResponse(json.loads(load_fixture('bom_weather.json')), 200)
+    if re.match(r"^/fwo/[\w]+/[\w.]+\.json", url.path):
+        return MockResponse(json.loads(load_fixture("bom_weather.json")), 200)
 
-    raise NotImplementedError('Unknown route {}'.format(url.path))
+    raise NotImplementedError("Unknown route {}".format(url.path))
 
 
 class TestBOMWeatherSensor(unittest.TestCase):
@@ -68,36 +64,35 @@ class TestBOMWeatherSensor(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @patch('requests.get', side_effect=mocked_requests)
+    @patch("requests.get", side_effect=mocked_requests)
     def test_setup(self, mock_get):
         """Test the setup with custom settings."""
         with assert_setup_component(1, sensor.DOMAIN):
-            assert setup_component(self.hass, sensor.DOMAIN, {
-                'sensor': VALID_CONFIG})
+            assert setup_component(self.hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
 
         fake_entities = [
-            'bom_fake_feels_like_c',
-            'bom_fake_pressure_mb',
-            'bom_fake_weather']
+            "bom_fake_feels_like_c",
+            "bom_fake_pressure_mb",
+            "bom_fake_weather",
+        ]
 
         for entity_id in fake_entities:
-            state = self.hass.states.get('sensor.{}'.format(entity_id))
+            state = self.hass.states.get("sensor.{}".format(entity_id))
             assert state is not None
 
-    @patch('requests.get', side_effect=mocked_requests)
+    @patch("requests.get", side_effect=mocked_requests)
     def test_sensor_values(self, mock_get):
         """Test retrieval of sensor values."""
-        assert setup_component(
-            self.hass, sensor.DOMAIN, {'sensor': VALID_CONFIG})
+        assert setup_component(self.hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
 
-        weather = self.hass.states.get('sensor.bom_fake_weather').state
-        assert 'Fine' == weather
+        weather = self.hass.states.get("sensor.bom_fake_weather").state
+        assert "Fine" == weather
 
-        pressure = self.hass.states.get('sensor.bom_fake_pressure_mb').state
-        assert '1021.7' == pressure
+        pressure = self.hass.states.get("sensor.bom_fake_pressure_mb").state
+        assert "1021.7" == pressure
 
-        feels_like = self.hass.states.get('sensor.bom_fake_feels_like_c').state
-        assert '25.0' == feels_like
+        feels_like = self.hass.states.get("sensor.bom_fake_feels_like_c").state
+        assert "25.0" == feels_like
 
 
 class TestBOMCurrentData(unittest.TestCase):
@@ -105,5 +100,5 @@ class TestBOMCurrentData(unittest.TestCase):
 
     def test_should_update_initial(self):
         """Test that the first update always occurs."""
-        bom_data = BOMCurrentData('IDN60901.94767')
+        bom_data = BOMCurrentData("IDN60901.94767")
         assert bom_data.should_update() is True

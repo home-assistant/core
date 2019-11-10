@@ -8,6 +8,10 @@
             "no_sensors_or_port_mapping": "Activa, com a m\u00ednim, els sensors o l'assignaci\u00f3 de ports",
             "single_instance_allowed": "Nom\u00e9s cal una sola configuraci\u00f3 de UPnP/IGD."
         },
+        "error": {
+            "one": "un",
+            "other": "altre"
+        },
         "step": {
             "confirm": {
                 "description": "Vols configurar UPnP/IGD?",
@@ -22,7 +26,7 @@
                     "enable_sensors": "Afegeix sensors de tr\u00e0nsit",
                     "igd": "UPnP/IGD"
                 },
-                "title": "Opcions de configuraci\u00f3 per a UPnP/IGD"
+                "title": "Opcions de configuraci\u00f3 d'UPnP/IGD"
             }
         },
         "title": "UPnP/IGD"

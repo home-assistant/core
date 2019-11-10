@@ -4,6 +4,8 @@ import logging
 
 import voluptuous as vol
 
+import schiene
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -11,23 +13,25 @@ import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DESTINATION = 'to'
-CONF_START = 'from'
-CONF_OFFSET = 'offset'
+CONF_DESTINATION = "to"
+CONF_START = "from"
+CONF_OFFSET = "offset"
 DEFAULT_OFFSET = timedelta(minutes=0)
-CONF_ONLY_DIRECT = 'only_direct'
+CONF_ONLY_DIRECT = "only_direct"
 DEFAULT_ONLY_DIRECT = False
 
-ICON = 'mdi:train'
+ICON = "mdi:train"
 
 SCAN_INTERVAL = timedelta(minutes=2)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DESTINATION): cv.string,
-    vol.Required(CONF_START): cv.string,
-    vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): cv.time_period,
-    vol.Optional(CONF_ONLY_DIRECT, default=DEFAULT_ONLY_DIRECT): cv.boolean,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_DESTINATION): cv.string,
+        vol.Required(CONF_START): cv.string,
+        vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): cv.time_period,
+        vol.Optional(CONF_ONLY_DIRECT, default=DEFAULT_ONLY_DIRECT): cv.boolean,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -37,8 +41,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     offset = config.get(CONF_OFFSET)
     only_direct = config.get(CONF_ONLY_DIRECT)
 
-    add_entities([DeutscheBahnSensor(start, destination,
-                                     offset, only_direct)], True)
+    add_entities([DeutscheBahnSensor(start, destination, offset, only_direct)], True)
 
 
 class DeutscheBahnSensor(Entity):
@@ -46,7 +49,7 @@ class DeutscheBahnSensor(Entity):
 
     def __init__(self, start, goal, offset, only_direct):
         """Initialize the sensor."""
-        self._name = '{} to {}'.format(start, goal)
+        self._name = f"{start} to {goal}"
         self.data = SchieneData(start, goal, offset, only_direct)
         self._state = None
 
@@ -70,17 +73,17 @@ class DeutscheBahnSensor(Entity):
         """Return the state attributes."""
         connections = self.data.connections[0]
         if len(self.data.connections) > 1:
-            connections['next'] = self.data.connections[1]['departure']
+            connections["next"] = self.data.connections[1]["departure"]
         if len(self.data.connections) > 2:
-            connections['next_on'] = self.data.connections[2]['departure']
+            connections["next_on"] = self.data.connections[2]["departure"]
         return connections
 
     def update(self):
         """Get the latest delay from bahn.de and updates the state."""
         self.data.update()
-        self._state = self.data.connections[0].get('departure', 'Unknown')
-        if self.data.connections[0].get('delay', 0) != 0:
-            self._state += " + {}".format(self.data.connections[0]['delay'])
+        self._state = self.data.connections[0].get("departure", "Unknown")
+        if self.data.connections[0].get("delay", 0) != 0:
+            self._state += " + {}".format(self.data.connections[0]["delay"])
 
 
 class SchieneData:
@@ -88,7 +91,6 @@ class SchieneData:
 
     def __init__(self, start, goal, offset, only_direct):
         """Initialize the sensor."""
-        import schiene
 
         self.start = start
         self.goal = goal
@@ -100,9 +102,11 @@ class SchieneData:
     def update(self):
         """Update the connection data."""
         self.connections = self.schiene.connections(
-            self.start, self.goal,
-            dt_util.as_local(dt_util.utcnow()+self.offset),
-            self.only_direct)
+            self.start,
+            self.goal,
+            dt_util.as_local(dt_util.utcnow() + self.offset),
+            self.only_direct,
+        )
 
         if not self.connections:
             self.connections = [{}]
@@ -110,10 +114,9 @@ class SchieneData:
         for con in self.connections:
             # Detail info is not useful. Having a more consistent interface
             # simplifies usage of template sensors.
-            if 'details' in con:
-                con.pop('details')
-                delay = con.get('delay', {'delay_departure': 0,
-                                          'delay_arrival': 0})
-                con['delay'] = delay['delay_departure']
-                con['delay_arrival'] = delay['delay_arrival']
-                con['ontime'] = con.get('ontime', False)
+            if "details" in con:
+                con.pop("details")
+                delay = con.get("delay", {"delay_departure": 0, "delay_arrival": 0})
+                con["delay"] = delay["delay_departure"]
+                con["delay_arrival"] = delay["delay_arrival"]
+                con["ontime"] = con.get("ontime", False)

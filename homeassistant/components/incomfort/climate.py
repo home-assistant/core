@@ -1,90 +1,93 @@
 """Support for an Intergas boiler via an InComfort/InTouch Lan2RF gateway."""
-from homeassistant.components.climate import ClimateDevice
-from homeassistant.components.climate.const import SUPPORT_TARGET_TEMPERATURE
-from homeassistant.const import (ATTR_TEMPERATURE, TEMP_CELSIUS)
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from typing import Any, Dict, List, Optional
 
-from . import DOMAIN
+from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateDevice
+from homeassistant.components.climate.const import (
+    HVAC_MODE_HEAT,
+    SUPPORT_TARGET_TEMPERATURE,
+)
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
-INTOUCH_SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
-
-INTOUCH_MAX_TEMP = 30.0
-INTOUCH_MIN_TEMP = 5.0
+from . import DOMAIN, IncomfortChild
 
 
-async def async_setup_platform(hass, hass_config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up an InComfort/InTouch climate device."""
-    client = hass.data[DOMAIN]['client']
-    heater = hass.data[DOMAIN]['heater']
+    if discovery_info is None:
+        return
 
-    async_add_entities([InComfortClimate(client, r) for r in heater.rooms])
+    client = hass.data[DOMAIN]["client"]
+    heaters = hass.data[DOMAIN]["heaters"]
+
+    async_add_entities(
+        [InComfortClimate(client, h, r) for h in heaters for r in h.rooms]
+    )
 
 
-class InComfortClimate(ClimateDevice):
+class InComfortClimate(IncomfortChild, ClimateDevice):
     """Representation of an InComfort/InTouch climate device."""
 
-    def __init__(self, client, room):
+    def __init__(self, client, heater, room) -> None:
         """Initialize the climate device."""
+        super().__init__()
+
+        self._unique_id = f"{heater.serial_no}_{room.room_no}"
+        self.entity_id = ENTITY_ID_FORMAT.format(f"{DOMAIN}_{room.room_no}")
+        self._name = f"Thermostat {room.room_no}"
+
         self._client = client
         self._room = room
-        self._name = 'Room {}'.format(room.room_no)
-
-    async def async_added_to_hass(self):
-        """Set up a listener when this entity is added to HA."""
-        async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
-
-    @callback
-    def _refresh(self):
-        self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
-    def name(self):
-        """Return the name of the climate device."""
-        return self._name
-
-    @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the device state attributes."""
-        return {'status': self._room.status}
+        return {"status": self._room.status}
 
     @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return self._room.room_temp
-
-    @property
-    def target_temperature(self):
-        """Return the temperature we try to reach."""
-        return self._room.override
-
-    @property
-    def min_temp(self):
-        """Return max valid temperature that can be set."""
-        return INTOUCH_MIN_TEMP
-
-    @property
-    def max_temp(self):
-        """Return max valid temperature that can be set."""
-        return INTOUCH_MAX_TEMP
-
-    @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         return TEMP_CELSIUS
 
     @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return INTOUCH_SUPPORT_FLAGS
+    def hvac_mode(self) -> str:
+        """Return hvac operation ie. heat, cool mode."""
+        return HVAC_MODE_HEAT
 
-    async def async_set_temperature(self, **kwargs):
+    @property
+    def hvac_modes(self) -> List[str]:
+        """Return the list of available hvac operation modes."""
+        return [HVAC_MODE_HEAT]
+
+    @property
+    def current_temperature(self) -> Optional[float]:
+        """Return the current temperature."""
+        return self._room.room_temp
+
+    @property
+    def target_temperature(self) -> Optional[float]:
+        """Return the temperature we try to reach."""
+        return self._room.setpoint
+
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_TARGET_TEMPERATURE
+
+    @property
+    def min_temp(self) -> float:
+        """Return max valid temperature that can be set."""
+        return 5.0
+
+    @property
+    def max_temp(self) -> float:
+        """Return max valid temperature that can be set."""
+        return 30.0
+
+    async def async_set_temperature(self, **kwargs) -> None:
         """Set a new target temperature for this zone."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         await self._room.set_override(temperature)
 
-    @property
-    def should_poll(self) -> bool:
-        """Return False as this device should never be polled."""
-        return False
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+        """Set new target hvac mode."""
+        pass

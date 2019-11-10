@@ -1,24 +1,25 @@
 """Support for locks through the SmartThings cloud API."""
 from typing import Optional, Sequence
 
+from pysmartthings import Attribute, Capability
+
 from homeassistant.components.lock import LockDevice
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
 
-ST_STATE_LOCKED = 'locked'
+ST_STATE_LOCKED = "locked"
 ST_LOCK_ATTR_MAP = {
-    'codeId': 'code_id',
-    'codeName': 'code_name',
-    'lockName': 'lock_name',
-    'method': 'method',
-    'timeout': 'timeout',
-    'usedCode': 'used_code'
+    "codeId": "code_id",
+    "codeName": "code_name",
+    "lockName": "lock_name",
+    "method": "method",
+    "timeout": "timeout",
+    "usedCode": "used_code",
 }
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Platform uses config entry setup."""
     pass
 
@@ -27,14 +28,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add locks for a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     async_add_entities(
-        [SmartThingsLock(device) for device in broker.devices.values()
-         if broker.any_assigned(device.device_id, 'lock')])
+        [
+            SmartThingsLock(device)
+            for device in broker.devices.values()
+            if broker.any_assigned(device.device_id, "lock")
+        ]
+    )
 
 
 def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
     """Return all capabilities supported if minimum required are present."""
-    from pysmartthings import Capability
-
     if Capability.lock in capabilities:
         return [Capability.lock]
     return None
@@ -61,11 +64,10 @@ class SmartThingsLock(SmartThingsEntity, LockDevice):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        from pysmartthings import Attribute
         state_attrs = {}
         status = self._device.status.attributes[Attribute.lock]
         if status.value:
-            state_attrs['lock_state'] = status.value
+            state_attrs["lock_state"] = status.value
         if isinstance(status.data, dict):
             for st_attr, ha_attr in ST_LOCK_ATTR_MAP.items():
                 data_val = status.data.get(st_attr)

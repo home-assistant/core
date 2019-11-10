@@ -2,34 +2,48 @@
 import logging
 
 import voluptuous as vol
+from pytradfri import Gateway, RequestError
+from pytradfri.api.aiocoap_api import APIFactory
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.util.json import load_json
-
-from .const import (
-    CONF_IMPORT_GROUPS, CONF_IDENTITY, CONF_HOST, CONF_KEY, CONF_GATEWAY_ID)
-
 from . import config_flow  # noqa  pylint_disable=unused-import
+from .const import (
+    DOMAIN,
+    CONFIG_FILE,
+    KEY_GATEWAY,
+    KEY_API,
+    CONF_ALLOW_TRADFRI_GROUPS,
+    DEFAULT_ALLOW_TRADFRI_GROUPS,
+    TRADFRI_DEVICE_TYPES,
+    ATTR_TRADFRI_MANUFACTURER,
+    ATTR_TRADFRI_GATEWAY,
+    ATTR_TRADFRI_GATEWAY_MODEL,
+    CONF_IMPORT_GROUPS,
+    CONF_IDENTITY,
+    CONF_HOST,
+    CONF_KEY,
+    CONF_GATEWAY_ID,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-
-DOMAIN = 'tradfri'
-CONFIG_FILE = '.tradfri_psk.conf'
-KEY_GATEWAY = 'tradfri_gateway'
-KEY_API = 'tradfri_api'
-CONF_ALLOW_TRADFRI_GROUPS = 'allow_tradfri_groups'
-DEFAULT_ALLOW_TRADFRI_GROUPS = False
-
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_ALLOW_TRADFRI_GROUPS,
-                     default=DEFAULT_ALLOW_TRADFRI_GROUPS): cv.boolean,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_HOST): cv.string,
+                vol.Optional(
+                    CONF_ALLOW_TRADFRI_GROUPS, default=DEFAULT_ALLOW_TRADFRI_GROUPS
+                ): cv.boolean,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass, config):
@@ -39,11 +53,13 @@ async def async_setup(hass, config):
     if conf is None:
         return True
 
-    configured_hosts = [entry.data['host'] for entry in
-                        hass.config_entries.async_entries(DOMAIN)]
+    configured_hosts = [
+        entry.data["host"] for entry in hass.config_entries.async_entries(DOMAIN)
+    ]
 
     legacy_hosts = await hass.async_add_executor_job(
-        load_json, hass.config.path(CONFIG_FILE))
+        load_json, hass.config.path(CONFIG_FILE)
+    )
 
     for host, info in legacy_hosts.items():
         if host in configured_hosts:
@@ -52,10 +68,11 @@ async def async_setup(hass, config):
         info[CONF_HOST] = host
         info[CONF_IMPORT_GROUPS] = conf[CONF_ALLOW_TRADFRI_GROUPS]
 
-        hass.async_create_task(hass.config_entries.flow.async_init(
-            DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
-            data=info
-        ))
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=info
+            )
+        )
 
     host = conf.get(CONF_HOST)
     import_groups = conf[CONF_ALLOW_TRADFRI_GROUPS]
@@ -63,10 +80,13 @@ async def async_setup(hass, config):
     if host is None or host in configured_hosts or host in legacy_hosts:
         return True
 
-    hass.async_create_task(hass.config_entries.flow.async_init(
-        DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
-        data={CONF_HOST: host, CONF_IMPORT_GROUPS: import_groups}
-    ))
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={CONF_HOST: host, CONF_IMPORT_GROUPS: import_groups},
+        )
+    )
 
     return True
 
@@ -74,14 +94,12 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, entry):
     """Create a gateway."""
     # host, identity, key, allow_tradfri_groups
-    from pytradfri import Gateway, RequestError  # pylint: disable=import-error
-    from pytradfri.api.aiocoap_api import APIFactory
 
     factory = APIFactory(
         entry.data[CONF_HOST],
         psk_id=entry.data[CONF_IDENTITY],
         psk=entry.data[CONF_KEY],
-        loop=hass.loop
+        loop=hass.loop,
     )
 
     async def on_hass_stop(event):
@@ -96,8 +114,8 @@ async def async_setup_entry(hass, entry):
     try:
         gateway_info = await api(gateway.get_gateway_info())
     except RequestError:
-        _LOGGER.error("Tradfri setup failed.")
-        return False
+        await factory.shutdown()
+        raise ConfigEntryNotReady
 
     hass.data.setdefault(KEY_API, {})[entry.entry_id] = api
     hass.data.setdefault(KEY_GATEWAY, {})[entry.entry_id] = gateway
@@ -106,24 +124,17 @@ async def async_setup_entry(hass, entry):
     dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections=set(),
-        identifiers={
-            (DOMAIN, entry.data[CONF_GATEWAY_ID])
-        },
-        manufacturer='IKEA',
-        name='Gateway',
+        identifiers={(DOMAIN, entry.data[CONF_GATEWAY_ID])},
+        manufacturer=ATTR_TRADFRI_MANUFACTURER,
+        name=ATTR_TRADFRI_GATEWAY,
         # They just have 1 gateway model. Type is not exposed yet.
-        model='E1526',
+        model=ATTR_TRADFRI_GATEWAY_MODEL,
         sw_version=gateway_info.firmware_version,
     )
 
-    hass.async_create_task(hass.config_entries.async_forward_entry_setup(
-        entry, 'light'
-    ))
-    hass.async_create_task(hass.config_entries.async_forward_entry_setup(
-        entry, 'sensor'
-    ))
-    hass.async_create_task(hass.config_entries.async_forward_entry_setup(
-        entry, 'switch'
-    ))
+    for device in TRADFRI_DEVICE_TYPES:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, device)
+        )
 
     return True

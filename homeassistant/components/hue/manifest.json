@@ -2,15 +2,15 @@
   "domain": "hue",
   "name": "Philips Hue",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/hue",
+  "documentation": "https://www.home-assistant.io/integrations/hue",
   "requirements": [
-    "aiohue==1.9.1"
+    "aiohue==1.9.2"
   ],
-  "ssdp": {
-    "manufacturer": [
-      "Royal Philips Electronics"
-    ]
-  },
+  "ssdp": [
+    {
+      "manufacturer": "Royal Philips Electronics"
+    }
+  ],
   "homekit": {
     "models": [
       "BSB002"

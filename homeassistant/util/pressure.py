@@ -15,13 +15,7 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-VALID_UNITS = [
-    PRESSURE_PA,
-    PRESSURE_HPA,
-    PRESSURE_MBAR,
-    PRESSURE_INHG,
-    PRESSURE_PSI,
-]
+VALID_UNITS = [PRESSURE_PA, PRESSURE_HPA, PRESSURE_MBAR, PRESSURE_INHG, PRESSURE_PSI]
 
 UNIT_CONVERSION = {
     PRESSURE_PA: 1,
@@ -35,16 +29,15 @@ UNIT_CONVERSION = {
 def convert(value: float, unit_1: str, unit_2: str) -> float:
     """Convert one unit of measurement to another."""
     if unit_1 not in VALID_UNITS:
-        raise ValueError(
-            UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit_1, PRESSURE))
+        raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit_1, PRESSURE))
     if unit_2 not in VALID_UNITS:
-        raise ValueError(
-            UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit_2, PRESSURE))
+        raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit_2, PRESSURE))
 
     if not isinstance(value, Number):
-        raise TypeError('{} is not of numeric type'.format(value))
+        raise TypeError(f"{value} is not of numeric type")
 
-    if unit_1 == unit_2 or unit_1 not in VALID_UNITS:
+    # type ignore: https://github.com/python/mypy/issues/7207
+    if unit_1 == unit_2 or unit_1 not in VALID_UNITS:  # type: ignore
         return value
 
     pascals = value / UNIT_CONVERSION[unit_1]

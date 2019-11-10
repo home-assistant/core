@@ -3,7 +3,10 @@ import asyncio
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, dispatcher_send, dispatcher_connect)
+    async_dispatcher_connect,
+    dispatcher_send,
+    dispatcher_connect,
+)
 
 from tests.common import get_test_home_assistant
 
@@ -27,16 +30,16 @@ class TestHelpersDispatcher:
             """Test function."""
             calls.append(data)
 
-        dispatcher_connect(self.hass, 'test', test_funct)
-        dispatcher_send(self.hass, 'test', 3)
+        dispatcher_connect(self.hass, "test", test_funct)
+        dispatcher_send(self.hass, "test", 3)
         self.hass.block_till_done()
 
         assert calls == [3]
 
-        dispatcher_send(self.hass, 'test', 'bla')
+        dispatcher_send(self.hass, "test", "bla")
         self.hass.block_till_done()
 
-        assert calls == [3, 'bla']
+        assert calls == [3, "bla"]
 
     def test_simple_function_unsub(self):
         """Test simple function (executor) and unsub."""
@@ -51,10 +54,10 @@ class TestHelpersDispatcher:
             """Test function."""
             calls2.append(data)
 
-        dispatcher_connect(self.hass, 'test1', test_funct1)
-        unsub = dispatcher_connect(self.hass, 'test2', test_funct2)
-        dispatcher_send(self.hass, 'test1', 3)
-        dispatcher_send(self.hass, 'test2', 4)
+        dispatcher_connect(self.hass, "test1", test_funct1)
+        unsub = dispatcher_connect(self.hass, "test2", test_funct2)
+        dispatcher_send(self.hass, "test1", 3)
+        dispatcher_send(self.hass, "test2", 4)
         self.hass.block_till_done()
 
         assert calls1 == [3]
@@ -62,8 +65,8 @@ class TestHelpersDispatcher:
 
         unsub()
 
-        dispatcher_send(self.hass, 'test1', 5)
-        dispatcher_send(self.hass, 'test2', 6)
+        dispatcher_send(self.hass, "test1", 5)
+        dispatcher_send(self.hass, "test2", 6)
         self.hass.block_till_done()
 
         assert calls1 == [3, 5]
@@ -72,8 +75,8 @@ class TestHelpersDispatcher:
         # check don't kill the flow
         unsub()
 
-        dispatcher_send(self.hass, 'test1', 7)
-        dispatcher_send(self.hass, 'test2', 8)
+        dispatcher_send(self.hass, "test1", 7)
+        dispatcher_send(self.hass, "test2", 8)
         self.hass.block_till_done()
 
         assert calls1 == [3, 5, 7]
@@ -88,16 +91,16 @@ class TestHelpersDispatcher:
             """Test function."""
             calls.append(data)
 
-        dispatcher_connect(self.hass, 'test', test_funct)
-        dispatcher_send(self.hass, 'test', 3)
+        dispatcher_connect(self.hass, "test", test_funct)
+        dispatcher_send(self.hass, "test", 3)
         self.hass.block_till_done()
 
         assert calls == [3]
 
-        dispatcher_send(self.hass, 'test', 'bla')
+        dispatcher_send(self.hass, "test", "bla")
         self.hass.block_till_done()
 
-        assert calls == [3, 'bla']
+        assert calls == [3, "bla"]
 
     def test_simple_coro(self):
         """Test simple coro (async)."""
@@ -108,16 +111,16 @@ class TestHelpersDispatcher:
             """Test function."""
             calls.append(data)
 
-        dispatcher_connect(self.hass, 'test', test_funct)
-        dispatcher_send(self.hass, 'test', 3)
+        dispatcher_connect(self.hass, "test", test_funct)
+        dispatcher_send(self.hass, "test", 3)
         self.hass.block_till_done()
 
         assert calls == [3]
 
-        dispatcher_send(self.hass, 'test', 'bla')
+        dispatcher_send(self.hass, "test", "bla")
         self.hass.block_till_done()
 
-        assert calls == [3, 'bla']
+        assert calls == [3, "bla"]
 
     def test_simple_function_multiargs(self):
         """Test simple function (executor)."""
@@ -129,25 +132,24 @@ class TestHelpersDispatcher:
             calls.append(data2)
             calls.append(data3)
 
-        dispatcher_connect(self.hass, 'test', test_funct)
-        dispatcher_send(self.hass, 'test', 3, 2, 'bla')
+        dispatcher_connect(self.hass, "test", test_funct)
+        dispatcher_send(self.hass, "test", 3, 2, "bla")
         self.hass.block_till_done()
 
-        assert calls == [3, 2, 'bla']
+        assert calls == [3, 2, "bla"]
 
 
 async def test_callback_exception_gets_logged(hass, caplog):
     """Test exception raised by signal handler."""
+
     @callback
     def bad_handler(*args):
         """Record calls."""
-        raise Exception('This is a bad message callback')
+        raise Exception("This is a bad message callback")
 
-    async_dispatcher_connect(hass, 'test', bad_handler)
-    dispatcher_send(hass, 'test', 'bad')
+    async_dispatcher_connect(hass, "test", bad_handler)
+    dispatcher_send(hass, "test", "bad")
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    assert \
-        "Exception in bad_handler when dispatching 'test': ('bad',)" \
-        in caplog.text
+    assert "Exception in bad_handler when dispatching 'test': ('bad',)" in caplog.text

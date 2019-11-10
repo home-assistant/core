@@ -1,9 +1,9 @@
 {
   "domain": "arduino",
   "name": "Arduino",
-  "documentation": "https://www.home-assistant.io/components/arduino",
+  "documentation": "https://www.home-assistant.io/integrations/arduino",
   "requirements": [
-    "PyMata==2.14"
+    "PyMata==2.20"
   ],
   "dependencies": [],
   "codeowners": [

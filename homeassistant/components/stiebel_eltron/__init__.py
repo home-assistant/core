@@ -5,20 +5,28 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.modbus import (
-    CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN)
+    CONF_HUB,
+    DEFAULT_HUB,
+    DOMAIN as MODBUS_DOMAIN,
+)
 from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-DOMAIN = 'stiebel_eltron'
+DOMAIN = "stiebel_eltron"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string,
+                vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,11 +42,11 @@ def setup(hass, config):
     modbus_client = hass.data[MODBUS_DOMAIN][config[DOMAIN][CONF_HUB]]
 
     hass.data[DOMAIN] = {
-        'name': name,
-        'ste_data': StiebelEltronData(name, modbus_client)
+        "name": name,
+        "ste_data": StiebelEltronData(name, modbus_client),
     }
 
-    discovery.load_platform(hass, 'climate', DOMAIN, {}, config)
+    discovery.load_platform(hass, "climate", DOMAIN, {}, config)
     return True
 
 
@@ -48,6 +56,7 @@ class StiebelEltronData:
     def __init__(self, name, modbus_client):
         """Init the STIEBEL ELTRON data object."""
         from pystiebeleltron import pystiebeleltron
+
         self.api = pystiebeleltron.StiebelEltronAPI(modbus_client, 1)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)

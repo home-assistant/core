@@ -1,6 +1,9 @@
 """Preference management for camera component."""
 from .const import DOMAIN, PREF_PRELOAD_STREAM
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 _UNDEF = object()
@@ -41,15 +44,14 @@ class CameraPreferences:
 
         self._prefs = prefs
 
-    async def async_update(self, entity_id, *, preload_stream=_UNDEF,
-                           stream_options=_UNDEF):
+    async def async_update(
+        self, entity_id, *, preload_stream=_UNDEF, stream_options=_UNDEF
+    ):
         """Update camera preferences."""
         if not self._prefs.get(entity_id):
             self._prefs[entity_id] = {}
 
-        for key, value in (
-                (PREF_PRELOAD_STREAM, preload_stream),
-        ):
+        for key, value in ((PREF_PRELOAD_STREAM, preload_stream),):
             if value is not _UNDEF:
                 self._prefs[entity_id][key] = value
 

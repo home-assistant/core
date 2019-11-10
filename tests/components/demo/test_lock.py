@@ -7,9 +7,9 @@ from homeassistant.components import lock
 from tests.common import get_test_home_assistant, mock_service
 from tests.components.lock import common
 
-FRONT = 'lock.front_door'
-KITCHEN = 'lock.kitchen_door'
-OPENABLE_LOCK = 'lock.openable_lock'
+FRONT = "lock.front_door"
+KITCHEN = "lock.kitchen_door"
+OPENABLE_LOCK = "lock.openable_lock"
 
 
 class TestLockDemo(unittest.TestCase):
@@ -18,11 +18,7 @@ class TestLockDemo(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        assert setup_component(self.hass, lock.DOMAIN, {
-            'lock': {
-                'platform': 'demo'
-            }
-        })
+        assert setup_component(self.hass, lock.DOMAIN, {"lock": {"platform": "demo"}})
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
@@ -31,10 +27,10 @@ class TestLockDemo(unittest.TestCase):
     def test_is_locked(self):
         """Test if lock is locked."""
         assert lock.is_locked(self.hass, FRONT)
-        self.hass.states.is_state(FRONT, 'locked')
+        self.hass.states.is_state(FRONT, "locked")
 
         assert not lock.is_locked(self.hass, KITCHEN)
-        self.hass.states.is_state(KITCHEN, 'unlocked')
+        self.hass.states.is_state(KITCHEN, "unlocked")
 
     def test_locking(self):
         """Test the locking of a lock."""

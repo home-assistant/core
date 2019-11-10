@@ -12,10 +12,7 @@ from homeassistant.util import dt
 
 # pylint: disable=redefined-outer-name
 
-DEVICE_DATA = {
-    "name": "Private Calendar",
-    "device_id": "Private Calendar",
-}
+DEVICE_DATA = {"name": "Private Calendar", "device_id": "Private Calendar"}
 
 EVENTS = [
     """BEGIN:VCALENDAR
@@ -114,8 +111,20 @@ LOCATION:San Francisco
 DESCRIPTION:Sunny day
 END:VEVENT
 END:VCALENDAR
-"""
-
+""",
+    """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Global Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:8
+DTSTART:20171127T190000
+DTEND:20171127T200000
+SUMMARY:This is a floating Event
+LOCATION:Hamburg
+DESCRIPTION:What a day
+END:VEVENT
+END:VCALENDAR
+""",
 ]
 
 CALDAV_CONFIG = {
@@ -135,18 +144,19 @@ def mock_http(hass):
 def mock_dav_client():
     """Mock the dav client."""
     patch_dav_client = patch(
-        'caldav.DAVClient', return_value=_mocked_dav_client('First', 'Second'))
+        "caldav.DAVClient", return_value=_mocked_dav_client("First", "Second")
+    )
     with patch_dav_client as dav_client:
         yield dav_client
 
 
-@pytest.fixture(name='calendar')
+@pytest.fixture(name="calendar")
 def mock_private_cal():
     """Mock a private calendar."""
     _calendar = _mock_calendar("Private")
     calendars = [_calendar]
     client = _mocked_dav_client(calendars=calendars)
-    patch_dav_client = patch('caldav.DAVClient', return_value=client)
+    patch_dav_client = patch("caldav.DAVClient", return_value=client)
     with patch_dav_client:
         yield _calendar
 
@@ -181,91 +191,64 @@ def _mock_calendar(name):
 
 async def test_setup_component(hass, mock_dav_client):
     """Test setup component with calendars."""
-    assert await async_setup_component(
-        hass, 'calendar', {'calendar': CALDAV_CONFIG})
+    assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
     await hass.async_block_till_done()
 
-    state = hass.states.get('calendar.first')
+    state = hass.states.get("calendar.first")
     assert state.name == "First"
-    state = hass.states.get('calendar.second')
+    state = hass.states.get("calendar.second")
     assert state.name == "Second"
 
 
-async def test_setup_component_with_no_calendar_matching(
-        hass, mock_dav_client):
+async def test_setup_component_with_no_calendar_matching(hass, mock_dav_client):
     """Test setup component with wrong calendar."""
     config = dict(CALDAV_CONFIG)
-    config['calendars'] = ['none']
+    config["calendars"] = ["none"]
 
-    assert await async_setup_component(hass, 'calendar', {'calendar': config})
+    assert await async_setup_component(hass, "calendar", {"calendar": config})
     await hass.async_block_till_done()
 
-    all_calendar_states = hass.states.async_entity_ids('calendar')
+    all_calendar_states = hass.states.async_entity_ids("calendar")
     assert not all_calendar_states
 
 
 async def test_setup_component_with_a_calendar_match(hass, mock_dav_client):
     """Test setup component with right calendar."""
     config = dict(CALDAV_CONFIG)
-    config['calendars'] = ['Second']
+    config["calendars"] = ["Second"]
 
-    assert await async_setup_component(hass, 'calendar', {'calendar': config})
+    assert await async_setup_component(hass, "calendar", {"calendar": config})
     await hass.async_block_till_done()
 
-    all_calendar_states = hass.states.async_entity_ids('calendar')
+    all_calendar_states = hass.states.async_entity_ids("calendar")
     assert len(all_calendar_states) == 1
-    state = hass.states.get('calendar.second')
-    assert state.name == 'Second'
+    state = hass.states.get("calendar.second")
+    assert state.name == "Second"
 
 
 async def test_setup_component_with_one_custom_calendar(hass, mock_dav_client):
     """Test setup component with custom calendars."""
     config = dict(CALDAV_CONFIG)
-    config['custom_calendars'] = [{
-        'name': 'HomeOffice',
-        'calendar': 'Second',
-        'search': 'HomeOffice',
-    }]
+    config["custom_calendars"] = [
+        {"name": "HomeOffice", "calendar": "Second", "search": "HomeOffice"}
+    ]
 
-    assert await async_setup_component(hass, 'calendar', {'calendar': config})
+    assert await async_setup_component(hass, "calendar", {"calendar": config})
     await hass.async_block_till_done()
 
-    all_calendar_states = hass.states.async_entity_ids('calendar')
+    all_calendar_states = hass.states.async_entity_ids("calendar")
     assert len(all_calendar_states) == 1
-    state = hass.states.get('calendar.second_homeoffice')
-    assert state.name == 'HomeOffice'
+    state = hass.states.get("calendar.second_homeoffice")
+    assert state.name == "HomeOffice"
 
 
-@patch('homeassistant.util.dt.now', return_value=_local_datetime(17, 45))
+@patch("homeassistant.util.dt.now", return_value=_local_datetime(17, 45))
 async def test_ongoing_event(mock_now, hass, calendar):
     """Test that the ongoing event is returned."""
-    assert await async_setup_component(
-        hass, 'calendar', {'calendar': CALDAV_CONFIG})
+    assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
     await hass.async_block_till_done()
 
-    state = hass.states.get('calendar.private')
-    assert state.name == calendar.name
-    assert state.state == STATE_ON
-    assert dict(state.attributes) == {
-        "friendly_name": "Private",
-        "message": "This is a normal event",
-        "all_day": False,
-        'offset_reached': False,
-        "start_time": "2017-11-27 17:00:00",
-        "end_time": "2017-11-27 18:00:00",
-        "location": "Hamburg",
-        "description": "Surprisingly rainy",
-    }
-
-
-@patch('homeassistant.util.dt.now', return_value=_local_datetime(17, 30))
-async def test_just_ended_event(mock_now, hass, calendar):
-    """Test that the next ongoing event is returned."""
-    assert await async_setup_component(
-        hass, 'calendar', {'calendar': CALDAV_CONFIG})
-    await hass.async_block_till_done()
-
-    state = hass.states.get('calendar.private')
+    state = hass.states.get("calendar.private")
     assert state.name == calendar.name
     assert state.state == STATE_ON
     assert dict(state.attributes) == {
@@ -280,14 +263,34 @@ async def test_just_ended_event(mock_now, hass, calendar):
     }
 
 
-@patch('homeassistant.util.dt.now', return_value=_local_datetime(17, 00))
-async def test_ongoing_event_different_tz(mock_now, hass, calendar):
-    """Test that the ongoing event with another timezone is returned."""
-    assert await async_setup_component(
-        hass, 'calendar', {'calendar': CALDAV_CONFIG})
+@patch("homeassistant.util.dt.now", return_value=_local_datetime(17, 30))
+async def test_just_ended_event(mock_now, hass, calendar):
+    """Test that the next ongoing event is returned."""
+    assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
     await hass.async_block_till_done()
 
-    state = hass.states.get('calendar.private')
+    state = hass.states.get("calendar.private")
+    assert state.name == calendar.name
+    assert state.state == STATE_ON
+    assert dict(state.attributes) == {
+        "friendly_name": "Private",
+        "message": "This is a normal event",
+        "all_day": False,
+        "offset_reached": False,
+        "start_time": "2017-11-27 17:00:00",
+        "end_time": "2017-11-27 18:00:00",
+        "location": "Hamburg",
+        "description": "Surprisingly rainy",
+    }
+
+
+@patch("homeassistant.util.dt.now", return_value=_local_datetime(17, 00))
+async def test_ongoing_event_different_tz(mock_now, hass, calendar):
+    """Test that the ongoing event with another timezone is returned."""
+    assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("calendar.private")
     assert state.name == calendar.name
     assert state.state == STATE_ON
     assert dict(state.attributes) == {
@@ -302,14 +305,36 @@ async def test_ongoing_event_different_tz(mock_now, hass, calendar):
     }
 
 
-@patch('homeassistant.util.dt.now', return_value=_local_datetime(8, 30))
-async def test_ongoing_event_with_offset(mock_now, hass, calendar):
-    """Test that the offset is taken into account."""
-    assert await async_setup_component(
-        hass, 'calendar', {'calendar': CALDAV_CONFIG})
+@patch("homeassistant.util.dt.now", return_value=_local_datetime(19, 10))
+async def test_ongoing_floating_event_returned(mock_now, hass, calendar):
+    """Test that floating events without timezones work."""
+    assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
     await hass.async_block_till_done()
 
-    state = hass.states.get('calendar.private')
+    state = hass.states.get("calendar.private")
+    print(dt.DEFAULT_TIME_ZONE)
+    print(state)
+    assert state.name == calendar.name
+    assert state.state == STATE_ON
+    assert dict(state.attributes) == {
+        "friendly_name": "Private",
+        "message": "This is a floating Event",
+        "all_day": False,
+        "offset_reached": False,
+        "start_time": "2017-11-27 19:00:00",
+        "end_time": "2017-11-27 20:00:00",
+        "location": "Hamburg",
+        "description": "What a day",
+    }
+
+
+@patch("homeassistant.util.dt.now", return_value=_local_datetime(8, 30))
+async def test_ongoing_event_with_offset(mock_now, hass, calendar):
+    """Test that the offset is taken into account."""
+    assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("calendar.private")
     assert state.name == calendar.name
     assert state.state == STATE_OFF
     assert dict(state.attributes) == {
@@ -324,21 +349,18 @@ async def test_ongoing_event_with_offset(mock_now, hass, calendar):
     }
 
 
-@patch('homeassistant.util.dt.now', return_value=_local_datetime(12, 00))
+@patch("homeassistant.util.dt.now", return_value=_local_datetime(12, 00))
 async def test_matching_filter(mock_now, hass, calendar):
     """Test that the matching event is returned."""
     config = dict(CALDAV_CONFIG)
-    config['custom_calendars'] = [{
-        'name': 'Private',
-        'calendar': 'Private',
-        'search': 'This is a normal event',
-    }]
+    config["custom_calendars"] = [
+        {"name": "Private", "calendar": "Private", "search": "This is a normal event"}
+    ]
 
-    assert await async_setup_component(
-        hass, 'calendar', {'calendar': config})
+    assert await async_setup_component(hass, "calendar", {"calendar": config})
     await hass.async_block_till_done()
 
-    state = hass.states.get('calendar.private_private')
+    state = hass.states.get("calendar.private_private")
     assert state.name == calendar.name
     assert state.state == STATE_OFF
     assert dict(state.attributes) == {
@@ -353,21 +375,18 @@ async def test_matching_filter(mock_now, hass, calendar):
     }
 
 
-@patch('homeassistant.util.dt.now', return_value=_local_datetime(12, 00))
+@patch("homeassistant.util.dt.now", return_value=_local_datetime(12, 00))
 async def test_matching_filter_real_regexp(mock_now, hass, calendar):
     """Test that the event matching the regexp is returned."""
     config = dict(CALDAV_CONFIG)
-    config['custom_calendars'] = [{
-        'name': 'Private',
-        'calendar': 'Private',
-        'search': r'.*rainy',
-    }]
+    config["custom_calendars"] = [
+        {"name": "Private", "calendar": "Private", "search": r".*rainy"}
+    ]
 
-    assert await async_setup_component(
-        hass, 'calendar', {'calendar': config})
+    assert await async_setup_component(hass, "calendar", {"calendar": config})
     await hass.async_block_till_done()
 
-    state = hass.states.get('calendar.private_private')
+    state = hass.states.get("calendar.private_private")
     assert state.name == calendar.name
     assert state.state == STATE_OFF
     assert dict(state.attributes) == {
@@ -382,59 +401,54 @@ async def test_matching_filter_real_regexp(mock_now, hass, calendar):
     }
 
 
-@patch('homeassistant.util.dt.now', return_value=_local_datetime(20, 00))
+@patch("homeassistant.util.dt.now", return_value=_local_datetime(20, 00))
 async def test_filter_matching_past_event(mock_now, hass, calendar):
     """Test that the matching past event is not returned."""
     config = dict(CALDAV_CONFIG)
-    config['custom_calendars'] = [{
-        'name': 'Private',
-        'calendar': 'Private',
-        'search': 'This is a normal event',
-    }]
+    config["custom_calendars"] = [
+        {"name": "Private", "calendar": "Private", "search": "This is a normal event"}
+    ]
 
-    assert await async_setup_component(
-        hass, 'calendar', {'calendar': config})
+    assert await async_setup_component(hass, "calendar", {"calendar": config})
     await hass.async_block_till_done()
 
-    state = hass.states.get('calendar.private_private')
+    state = hass.states.get("calendar.private_private")
     assert state.name == calendar.name
-    assert state.state == 'off'
+    assert state.state == "off"
 
 
-@patch('homeassistant.util.dt.now', return_value=_local_datetime(12, 00))
+@patch("homeassistant.util.dt.now", return_value=_local_datetime(12, 00))
 async def test_no_result_with_filtering(mock_now, hass, calendar):
     """Test that nothing is returned since nothing matches."""
     config = dict(CALDAV_CONFIG)
-    config['custom_calendars'] = [{
-        'name': 'Private',
-        'calendar': 'Private',
-        'search': 'This is a non-existing event',
-    }]
+    config["custom_calendars"] = [
+        {
+            "name": "Private",
+            "calendar": "Private",
+            "search": "This is a non-existing event",
+        }
+    ]
 
-    assert await async_setup_component(
-        hass, 'calendar', {'calendar': config})
+    assert await async_setup_component(hass, "calendar", {"calendar": config})
     await hass.async_block_till_done()
 
-    state = hass.states.get('calendar.private_private')
+    state = hass.states.get("calendar.private_private")
     assert state.name == calendar.name
-    assert state.state == 'off'
+    assert state.state == "off"
 
 
-@patch('homeassistant.util.dt.now', return_value=_local_datetime(17, 30))
+@patch("homeassistant.util.dt.now", return_value=_local_datetime(17, 30))
 async def test_all_day_event_returned(mock_now, hass, calendar):
     """Test that the event lasting the whole day is returned."""
     config = dict(CALDAV_CONFIG)
-    config['custom_calendars'] = [{
-        'name': 'Private',
-        'calendar': 'Private',
-        'search': '.*',
-    }]
+    config["custom_calendars"] = [
+        {"name": "Private", "calendar": "Private", "search": ".*"}
+    ]
 
-    assert await async_setup_component(
-        hass, 'calendar', {'calendar': config})
+    assert await async_setup_component(hass, "calendar", {"calendar": config})
     await hass.async_block_till_done()
 
-    state = hass.states.get('calendar.private_private')
+    state = hass.states.get("calendar.private_private")
     assert state.name == calendar.name
     assert state.state == STATE_ON
     assert dict(state.attributes) == {

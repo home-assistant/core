@@ -5,51 +5,61 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import pilight
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_NAME, CONF_ID, CONF_SWITCHES, CONF_STATE,
-                                 CONF_PROTOCOL, STATE_ON)
+from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_ID,
+    CONF_SWITCHES,
+    CONF_STATE,
+    CONF_PROTOCOL,
+    STATE_ON,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_OFF_CODE = 'off_code'
-CONF_OFF_CODE_RECEIVE = 'off_code_receive'
-CONF_ON_CODE = 'on_code'
-CONF_ON_CODE_RECEIVE = 'on_code_receive'
-CONF_SYSTEMCODE = 'systemcode'
-CONF_UNIT = 'unit'
-CONF_UNITCODE = 'unitcode'
-CONF_ECHO = 'echo'
+CONF_OFF_CODE = "off_code"
+CONF_OFF_CODE_RECEIVE = "off_code_receive"
+CONF_ON_CODE = "on_code"
+CONF_ON_CODE_RECEIVE = "on_code_receive"
+CONF_SYSTEMCODE = "systemcode"
+CONF_UNIT = "unit"
+CONF_UNITCODE = "unitcode"
+CONF_ECHO = "echo"
 
-COMMAND_SCHEMA = vol.Schema({
-    vol.Optional(CONF_PROTOCOL): cv.string,
-    vol.Optional('on'): cv.positive_int,
-    vol.Optional('off'): cv.positive_int,
-    vol.Optional(CONF_UNIT): cv.positive_int,
-    vol.Optional(CONF_UNITCODE): cv.positive_int,
-    vol.Optional(CONF_ID): vol.Any(cv.positive_int, cv.string),
-    vol.Optional(CONF_STATE): cv.string,
-    vol.Optional(CONF_SYSTEMCODE): cv.positive_int,
-}, extra=vol.ALLOW_EXTRA)
+COMMAND_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_PROTOCOL): cv.string,
+        vol.Optional("on"): cv.positive_int,
+        vol.Optional("off"): cv.positive_int,
+        vol.Optional(CONF_UNIT): cv.positive_int,
+        vol.Optional(CONF_UNITCODE): cv.positive_int,
+        vol.Optional(CONF_ID): vol.Any(cv.positive_int, cv.string),
+        vol.Optional(CONF_STATE): cv.string,
+        vol.Optional(CONF_SYSTEMCODE): cv.positive_int,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
-RECEIVE_SCHEMA = COMMAND_SCHEMA.extend({
-    vol.Optional(CONF_ECHO): cv.boolean
-})
+RECEIVE_SCHEMA = COMMAND_SCHEMA.extend({vol.Optional(CONF_ECHO): cv.boolean})
 
-SWITCHES_SCHEMA = vol.Schema({
-    vol.Required(CONF_ON_CODE): COMMAND_SCHEMA,
-    vol.Required(CONF_OFF_CODE): COMMAND_SCHEMA,
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_OFF_CODE_RECEIVE, default=[]): vol.All(cv.ensure_list,
-                                                             [COMMAND_SCHEMA]),
-    vol.Optional(CONF_ON_CODE_RECEIVE, default=[]): vol.All(cv.ensure_list,
-                                                            [COMMAND_SCHEMA])
-})
+SWITCHES_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ON_CODE): COMMAND_SCHEMA,
+        vol.Required(CONF_OFF_CODE): COMMAND_SCHEMA,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_OFF_CODE_RECEIVE, default=[]): vol.All(
+            cv.ensure_list, [COMMAND_SCHEMA]
+        ),
+        vol.Optional(CONF_ON_CODE_RECEIVE, default=[]): vol.All(
+            cv.ensure_list, [COMMAND_SCHEMA]
+        ),
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SWITCHES):
-        vol.Schema({cv.string: SWITCHES_SCHEMA}),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_SWITCHES): vol.Schema({cv.string: SWITCHES_SCHEMA})}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -65,7 +75,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 properties.get(CONF_ON_CODE),
                 properties.get(CONF_OFF_CODE),
                 properties.get(CONF_ON_CODE_RECEIVE),
-                properties.get(CONF_OFF_CODE_RECEIVE)
+                properties.get(CONF_OFF_CODE_RECEIVE),
             )
         )
 
@@ -93,8 +103,9 @@ class _ReceiveHandle:
 class PilightSwitch(SwitchDevice, RestoreEntity):
     """Representation of a Pilight switch."""
 
-    def __init__(self, hass, name, code_on, code_off, code_on_receive,
-                 code_off_receive):
+    def __init__(
+        self, hass, name, code_on, code_off, code_on_receive, code_off_receive
+    ):
         """Initialize the switch."""
         self._hass = hass
         self._name = name
@@ -105,8 +116,10 @@ class PilightSwitch(SwitchDevice, RestoreEntity):
         self._code_on_receive = []
         self._code_off_receive = []
 
-        for code_list, conf in ((self._code_on_receive, code_on_receive),
-                                (self._code_off_receive, code_off_receive)):
+        for code_list, conf in (
+            (self._code_on_receive, code_on_receive),
+            (self._code_off_receive, code_off_receive),
+        ):
             for code in conf:
                 echo = code.pop(CONF_ECHO, True)
                 code_list.append(_ReceiveHandle(code, echo))
@@ -171,11 +184,13 @@ class PilightSwitch(SwitchDevice, RestoreEntity):
         """
         if send_code:
             if turn_on:
-                self._hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME,
-                                         self._code_on, blocking=True)
+                self._hass.services.call(
+                    pilight.DOMAIN, pilight.SERVICE_NAME, self._code_on, blocking=True
+                )
             else:
-                self._hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME,
-                                         self._code_off, blocking=True)
+                self._hass.services.call(
+                    pilight.DOMAIN, pilight.SERVICE_NAME, self._code_off, blocking=True
+                )
 
         self._state = turn_on
         self.schedule_update_ha_state()

@@ -1,1 +1,1 @@
-"""The version component."""
+"""The version integration."""

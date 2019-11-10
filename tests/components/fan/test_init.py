@@ -27,14 +27,14 @@ class TestFanEntity(unittest.TestCase):
 
     def test_fanentity(self):
         """Test fan entity methods."""
-        assert 'off' == self.fan.state
+        assert "off" == self.fan.state
         assert 0 == len(self.fan.speed_list)
         assert 0 == self.fan.supported_features
-        assert {'speed_list': []} == self.fan.state_attributes
+        assert {"speed_list": []} == self.fan.state_attributes
         # Test set_speed not required
         self.fan.oscillate(True)
         with pytest.raises(NotImplementedError):
-            self.fan.set_speed('slow')
+            self.fan.set_speed("slow")
         with pytest.raises(NotImplementedError):
             self.fan.turn_on()
         with pytest.raises(NotImplementedError):

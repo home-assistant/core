@@ -5,7 +5,12 @@ components. Instead call the service directly.
 """
 from homeassistant.components.lock import DOMAIN
 from homeassistant.const import (
-    ATTR_CODE, ATTR_ENTITY_ID, SERVICE_LOCK, SERVICE_UNLOCK, SERVICE_OPEN)
+    ATTR_CODE,
+    ATTR_ENTITY_ID,
+    SERVICE_LOCK,
+    SERVICE_UNLOCK,
+    SERVICE_OPEN,
+)
 from homeassistant.loader import bind_hass
 
 

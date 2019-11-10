@@ -5,34 +5,53 @@ import logging
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_CHANNEL, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
-    SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON)
+    MEDIA_TYPE_CHANNEL,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    STATE_OFF,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Horizon'
+DEFAULT_NAME = "Horizon"
 DEFAULT_PORT = 5900
 
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-SUPPORT_HORIZON = SUPPORT_NEXT_TRACK | SUPPORT_PAUSE | SUPPORT_PLAY | \
-    SUPPORT_PLAY_MEDIA | SUPPORT_PREVIOUS_TRACK | SUPPORT_TURN_ON | \
-    SUPPORT_TURN_OFF
+SUPPORT_HORIZON = (
+    SUPPORT_NEXT_TRACK
+    | SUPPORT_PAUSE
+    | SUPPORT_PLAY
+    | SUPPORT_PLAY_MEDIA
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_TURN_ON
+    | SUPPORT_TURN_OFF
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -142,8 +161,11 @@ class HorizonDevice(MediaPlayerDevice):
             except ValueError:
                 _LOGGER.error("Invalid channel: %s", media_id)
         else:
-            _LOGGER.error("Invalid media type %s. Supported type: %s",
-                          media_type, MEDIA_TYPE_CHANNEL)
+            _LOGGER.error(
+                "Invalid media type %s. Supported type: %s",
+                media_type,
+                MEDIA_TYPE_CHANNEL,
+            )
 
     def _select_channel(self, channel):
         """Select a channel (taken from einder library, thx)."""
@@ -163,8 +185,9 @@ class HorizonDevice(MediaPlayerDevice):
             elif channel:
                 self._client.select_channel(channel)
         except OSError as msg:
-            _LOGGER.error("%s disconnected: %s. Trying to reconnect...",
-                          self._name, msg)
+            _LOGGER.error(
+                "%s disconnected: %s. Trying to reconnect...", self._name, msg
+            )
 
             # for reconnect, first gracefully disconnect
             self._client.disconnect()
@@ -173,8 +196,7 @@ class HorizonDevice(MediaPlayerDevice):
                 self._client.connect()
                 self._client.authorize()
             except AuthenticationError as msg:
-                _LOGGER.error("Authentication to %s failed: %s", self._name,
-                              msg)
+                _LOGGER.error("Authentication to %s failed: %s", self._name, msg)
                 return
             except OSError as msg:
                 # occurs if horizon box is offline

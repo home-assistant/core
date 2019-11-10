@@ -1,7 +1,7 @@
 {
   "domain": "plant",
   "name": "Plant",
-  "documentation": "https://www.home-assistant.io/components/plant",
+  "documentation": "https://www.home-assistant.io/integrations/plant",
   "requirements": [],
   "dependencies": [
     "group",

@@ -1,10 +1,12 @@
 {
   "domain": "buienradar",
   "name": "Buienradar",
-  "documentation": "https://www.home-assistant.io/components/buienradar",
+  "documentation": "https://www.home-assistant.io/integrations/buienradar",
   "requirements": [
-    "buienradar==0.91"
+    "buienradar==1.0.1"
   ],
   "dependencies": [],
-  "codeowners": ["@ties"]
+  "codeowners": [
+    "@mjj4791", "@ties"
+  ]
 }

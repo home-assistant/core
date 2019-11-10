@@ -9,13 +9,12 @@ from . import DATA_UPDATED, DOMAIN as FASTDOTCOM_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-ICON = 'mdi:speedometer'
+ICON = "mdi:speedometer"
 
-UNIT_OF_MEASUREMENT = 'Mbit/s'
+UNIT_OF_MEASUREMENT = "Mbit/s"
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Fast.com sensor."""
     async_add_entities([SpeedtestSensor(hass.data[FASTDOTCOM_DOMAIN])])
 
@@ -25,7 +24,7 @@ class SpeedtestSensor(RestoreEntity):
 
     def __init__(self, speedtest_data):
         """Initialize the sensor."""
-        self._name = 'Fast.com Download'
+        self._name = "Fast.com Download"
         self.speedtest_client = speedtest_data
         self._state = None
 
@@ -71,7 +70,7 @@ class SpeedtestSensor(RestoreEntity):
         data = self.speedtest_client.data
         if data is None:
             return
-        self._state = data['download']
+        self._state = data["download"]
 
     @callback
     def _schedule_immediate_update(self):

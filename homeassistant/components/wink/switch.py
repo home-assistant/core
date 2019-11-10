@@ -1,6 +1,8 @@
 """Support for Wink switches."""
 import logging
 
+import pywink
+
 from homeassistant.helpers.entity import ToggleEntity
 
 from . import DOMAIN, WinkDevice
@@ -10,23 +12,22 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink platform."""
-    import pywink
 
     for switch in pywink.get_switches():
         _id = switch.object_id() + switch.name()
-        if _id not in hass.data[DOMAIN]['unique_ids']:
+        if _id not in hass.data[DOMAIN]["unique_ids"]:
             add_entities([WinkToggleDevice(switch, hass)])
     for switch in pywink.get_powerstrips():
         _id = switch.object_id() + switch.name()
-        if _id not in hass.data[DOMAIN]['unique_ids']:
+        if _id not in hass.data[DOMAIN]["unique_ids"]:
             add_entities([WinkToggleDevice(switch, hass)])
     for sprinkler in pywink.get_sprinklers():
         _id = sprinkler.object_id() + sprinkler.name()
-        if _id not in hass.data[DOMAIN]['unique_ids']:
+        if _id not in hass.data[DOMAIN]["unique_ids"]:
             add_entities([WinkToggleDevice(sprinkler, hass)])
     for switch in pywink.get_binary_switch_groups():
         _id = switch.object_id() + switch.name()
-        if _id not in hass.data[DOMAIN]['unique_ids']:
+        if _id not in hass.data[DOMAIN]["unique_ids"]:
             add_entities([WinkToggleDevice(switch, hass)])
 
 
@@ -35,7 +36,7 @@ class WinkToggleDevice(WinkDevice, ToggleEntity):
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        self.hass.data[DOMAIN]['entities']['switch'].append(self)
+        self.hass.data[DOMAIN]["entities"]["switch"].append(self)
 
     @property
     def is_on(self):
@@ -53,7 +54,7 @@ class WinkToggleDevice(WinkDevice, ToggleEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attributes = super(WinkToggleDevice, self).device_state_attributes
+        attributes = super().device_state_attributes
         try:
             event = self.wink.last_event()
             if event is not None:

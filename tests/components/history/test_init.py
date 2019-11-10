@@ -10,7 +10,10 @@ import homeassistant.util.dt as dt_util
 from homeassistant.components import history, recorder
 
 from tests.common import (
-    init_recorder_component, mock_state_change_event, get_test_home_assistant)
+    init_recorder_component,
+    mock_state_change_event,
+    get_test_home_assistant,
+)
 
 
 class TestComponentHistory(unittest.TestCase):
@@ -37,15 +40,21 @@ class TestComponentHistory(unittest.TestCase):
 
     def test_setup(self):
         """Test setup method of history."""
-        config = history.CONFIG_SCHEMA({
-            # ha.DOMAIN: {},
-            history.DOMAIN: {
-                history.CONF_INCLUDE: {
-                    history.CONF_DOMAINS: ['media_player'],
-                    history.CONF_ENTITIES: ['thermostat.test']},
-                history.CONF_EXCLUDE: {
-                    history.CONF_DOMAINS: ['thermostat'],
-                    history.CONF_ENTITIES: ['media_player.test']}}})
+        config = history.CONFIG_SCHEMA(
+            {
+                # ha.DOMAIN: {},
+                history.DOMAIN: {
+                    history.CONF_INCLUDE: {
+                        history.CONF_DOMAINS: ["media_player"],
+                        history.CONF_ENTITIES: ["thermostat.test"],
+                    },
+                    history.CONF_EXCLUDE: {
+                        history.CONF_DOMAINS: ["thermostat"],
+                        history.CONF_ENTITIES: ["media_player.test"],
+                    },
+                }
+            }
+        )
         self.init_recorder()
         assert setup_component(self.hass, history.DOMAIN, config)
 
@@ -55,13 +64,15 @@ class TestComponentHistory(unittest.TestCase):
         states = []
 
         now = dt_util.utcnow()
-        with patch('homeassistant.components.recorder.dt_util.utcnow',
-                   return_value=now):
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=now
+        ):
             for i in range(5):
                 state = ha.State(
-                    'test.point_in_time_{}'.format(i % 5),
+                    "test.point_in_time_{}".format(i % 5),
                     "State {}".format(i),
-                    {'attribute_test': i})
+                    {"attribute_test": i},
+                )
 
                 mock_state_change_event(self.hass, state)
 
@@ -70,13 +81,15 @@ class TestComponentHistory(unittest.TestCase):
             self.wait_recording_done()
 
         future = now + timedelta(seconds=1)
-        with patch('homeassistant.components.recorder.dt_util.utcnow',
-                   return_value=future):
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=future
+        ):
             for i in range(5):
                 state = ha.State(
-                    'test.point_in_time_{}'.format(i % 5),
+                    "test.point_in_time_{}".format(i % 5),
                     "State {}".format(i),
-                    {'attribute_test': i})
+                    {"attribute_test": i},
+                )
 
                 mock_state_change_event(self.hass, state)
 
@@ -84,18 +97,20 @@ class TestComponentHistory(unittest.TestCase):
 
         # Get states returns everything before POINT
         for state1, state2 in zip(
-                states, sorted(history.get_states(self.hass, future),
-                               key=lambda state: state.entity_id)):
+            states,
+            sorted(
+                history.get_states(self.hass, future), key=lambda state: state.entity_id
+            ),
+        ):
             assert state1 == state2
 
         # Test get_state here because we have a DB setup
-        assert states[0] == \
-            history.get_state(self.hass, future, states[0].entity_id)
+        assert states[0] == history.get_state(self.hass, future, states[0].entity_id)
 
     def test_state_changes_during_period(self):
         """Test state change during period."""
         self.init_recorder()
-        entity_id = 'media_player.test'
+        entity_id = "media_player.test"
 
         def set_state(state):
             """Set the state."""
@@ -107,34 +122,36 @@ class TestComponentHistory(unittest.TestCase):
         point = start + timedelta(seconds=1)
         end = point + timedelta(seconds=1)
 
-        with patch('homeassistant.components.recorder.dt_util.utcnow',
-                   return_value=start):
-            set_state('idle')
-            set_state('YouTube')
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=start
+        ):
+            set_state("idle")
+            set_state("YouTube")
 
-        with patch('homeassistant.components.recorder.dt_util.utcnow',
-                   return_value=point):
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=point
+        ):
             states = [
-                set_state('idle'),
-                set_state('Netflix'),
-                set_state('Plex'),
-                set_state('YouTube'),
+                set_state("idle"),
+                set_state("Netflix"),
+                set_state("Plex"),
+                set_state("YouTube"),
             ]
 
-        with patch('homeassistant.components.recorder.dt_util.utcnow',
-                   return_value=end):
-            set_state('Netflix')
-            set_state('Plex')
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=end
+        ):
+            set_state("Netflix")
+            set_state("Plex")
 
-        hist = history.state_changes_during_period(
-            self.hass, start, end, entity_id)
+        hist = history.state_changes_during_period(self.hass, start, end, entity_id)
 
         assert states == hist[entity_id]
 
     def test_get_last_state_changes(self):
         """Test number of state changes."""
         self.init_recorder()
-        entity_id = 'sensor.test'
+        entity_id = "sensor.test"
 
         def set_state(state):
             """Set the state."""
@@ -146,21 +163,23 @@ class TestComponentHistory(unittest.TestCase):
         point = start + timedelta(minutes=1)
         point2 = point + timedelta(minutes=1)
 
-        with patch('homeassistant.components.recorder.dt_util.utcnow',
-                   return_value=start):
-            set_state('1')
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=start
+        ):
+            set_state("1")
 
         states = []
-        with patch('homeassistant.components.recorder.dt_util.utcnow',
-                   return_value=point):
-            states.append(set_state('2'))
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=point
+        ):
+            states.append(set_state("2"))
 
-        with patch('homeassistant.components.recorder.dt_util.utcnow',
-                   return_value=point2):
-            states.append(set_state('3'))
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=point2
+        ):
+            states.append(set_state("3"))
 
-        hist = history.get_last_state_changes(
-            self.hass, 2, entity_id)
+        hist = history.get_last_state_changes(self.hass, 2, entity_id)
 
         assert states == hist[entity_id]
 
@@ -173,7 +192,8 @@ class TestComponentHistory(unittest.TestCase):
         """
         zero, four, states = self.record_states()
         hist = history.get_significant_states(
-            self.hass, zero, four, filters=history.Filters())
+            self.hass, zero, four, filters=history.Filters()
+        )
         assert states == hist
 
     def test_get_significant_states_with_initial(self):
@@ -187,15 +207,19 @@ class TestComponentHistory(unittest.TestCase):
         one = zero + timedelta(seconds=1)
         one_and_half = zero + timedelta(seconds=1.5)
         for entity_id in states:
-            if entity_id == 'media_player.test':
+            if entity_id == "media_player.test":
                 states[entity_id] = states[entity_id][1:]
             for state in states[entity_id]:
                 if state.last_changed == one:
                     state.last_changed = one_and_half
 
         hist = history.get_significant_states(
-            self.hass, one_and_half, four, filters=history.Filters(),
-            include_start_time_state=True)
+            self.hass,
+            one_and_half,
+            four,
+            filters=history.Filters(),
+            include_start_time_state=True,
+        )
         assert states == hist
 
     def test_get_significant_states_without_initial(self):
@@ -209,38 +233,47 @@ class TestComponentHistory(unittest.TestCase):
         one = zero + timedelta(seconds=1)
         one_and_half = zero + timedelta(seconds=1.5)
         for entity_id in states:
-            states[entity_id] = list(filter(
-                lambda s: s.last_changed != one, states[entity_id]))
-        del states['media_player.test2']
+            states[entity_id] = list(
+                filter(lambda s: s.last_changed != one, states[entity_id])
+            )
+        del states["media_player.test2"]
 
         hist = history.get_significant_states(
-            self.hass, one_and_half, four, filters=history.Filters(),
-            include_start_time_state=False)
+            self.hass,
+            one_and_half,
+            four,
+            filters=history.Filters(),
+            include_start_time_state=False,
+        )
         assert states == hist
 
     def test_get_significant_states_entity_id(self):
         """Test that only significant states are returned for one entity."""
         zero, four, states = self.record_states()
-        del states['media_player.test2']
-        del states['thermostat.test']
-        del states['thermostat.test2']
-        del states['script.can_cancel_this_one']
+        del states["media_player.test2"]
+        del states["thermostat.test"]
+        del states["thermostat.test2"]
+        del states["script.can_cancel_this_one"]
 
         hist = history.get_significant_states(
-            self.hass, zero, four, ['media_player.test'],
-            filters=history.Filters())
+            self.hass, zero, four, ["media_player.test"], filters=history.Filters()
+        )
         assert states == hist
 
     def test_get_significant_states_multiple_entity_ids(self):
         """Test that only significant states are returned for one entity."""
         zero, four, states = self.record_states()
-        del states['media_player.test2']
-        del states['thermostat.test2']
-        del states['script.can_cancel_this_one']
+        del states["media_player.test2"]
+        del states["thermostat.test2"]
+        del states["script.can_cancel_this_one"]
 
         hist = history.get_significant_states(
-            self.hass, zero, four, ['media_player.test', 'thermostat.test'],
-            filters=history.Filters())
+            self.hass,
+            zero,
+            four,
+            ["media_player.test", "thermostat.test"],
+            filters=history.Filters(),
+        )
         assert states == hist
 
     def test_get_significant_states_exclude_domain(self):
@@ -250,13 +283,17 @@ class TestComponentHistory(unittest.TestCase):
         change, but no media player changes.
         """
         zero, four, states = self.record_states()
-        del states['media_player.test']
-        del states['media_player.test2']
+        del states["media_player.test"]
+        del states["media_player.test2"]
 
-        config = history.CONFIG_SCHEMA({
-            ha.DOMAIN: {},
-            history.DOMAIN: {history.CONF_EXCLUDE: {
-                history.CONF_DOMAINS: ['media_player', ]}}})
+        config = history.CONFIG_SCHEMA(
+            {
+                ha.DOMAIN: {},
+                history.DOMAIN: {
+                    history.CONF_EXCLUDE: {history.CONF_DOMAINS: ["media_player"]}
+                },
+            }
+        )
         self.check_significant_states(zero, four, states, config)
 
     def test_get_significant_states_exclude_entity(self):
@@ -266,12 +303,16 @@ class TestComponentHistory(unittest.TestCase):
         player changes.
         """
         zero, four, states = self.record_states()
-        del states['media_player.test']
+        del states["media_player.test"]
 
-        config = history.CONFIG_SCHEMA({
-            ha.DOMAIN: {},
-            history.DOMAIN: {history.CONF_EXCLUDE: {
-                history.CONF_ENTITIES: ['media_player.test', ]}}})
+        config = history.CONFIG_SCHEMA(
+            {
+                ha.DOMAIN: {},
+                history.DOMAIN: {
+                    history.CONF_EXCLUDE: {history.CONF_ENTITIES: ["media_player.test"]}
+                },
+            }
+        )
         self.check_significant_states(zero, four, states, config)
 
     def test_get_significant_states_exclude(self):
@@ -280,15 +321,21 @@ class TestComponentHistory(unittest.TestCase):
         We should not get back every thermostat and media player test changes.
         """
         zero, four, states = self.record_states()
-        del states['media_player.test']
-        del states['thermostat.test']
-        del states['thermostat.test2']
+        del states["media_player.test"]
+        del states["thermostat.test"]
+        del states["thermostat.test2"]
 
-        config = history.CONFIG_SCHEMA({
-            ha.DOMAIN: {},
-            history.DOMAIN: {history.CONF_EXCLUDE: {
-                history.CONF_DOMAINS: ['thermostat', ],
-                history.CONF_ENTITIES: ['media_player.test', ]}}})
+        config = history.CONFIG_SCHEMA(
+            {
+                ha.DOMAIN: {},
+                history.DOMAIN: {
+                    history.CONF_EXCLUDE: {
+                        history.CONF_DOMAINS: ["thermostat"],
+                        history.CONF_ENTITIES: ["media_player.test"],
+                    }
+                },
+            }
+        )
         self.check_significant_states(zero, four, states, config)
 
     def test_get_significant_states_exclude_include_entity(self):
@@ -297,19 +344,22 @@ class TestComponentHistory(unittest.TestCase):
         We should not get back every thermostat and media player test changes.
         """
         zero, four, states = self.record_states()
-        del states['media_player.test2']
-        del states['thermostat.test']
-        del states['thermostat.test2']
-        del states['script.can_cancel_this_one']
+        del states["media_player.test2"]
+        del states["thermostat.test"]
+        del states["thermostat.test2"]
+        del states["script.can_cancel_this_one"]
 
-        config = history.CONFIG_SCHEMA({
-            ha.DOMAIN: {},
-            history.DOMAIN: {
-                history.CONF_INCLUDE: {
-                    history.CONF_ENTITIES: ['media_player.test',
-                                            'thermostat.test']},
-                history.CONF_EXCLUDE: {
-                    history.CONF_DOMAINS: ['thermostat']}}})
+        config = history.CONFIG_SCHEMA(
+            {
+                ha.DOMAIN: {},
+                history.DOMAIN: {
+                    history.CONF_INCLUDE: {
+                        history.CONF_ENTITIES: ["media_player.test", "thermostat.test"]
+                    },
+                    history.CONF_EXCLUDE: {history.CONF_DOMAINS: ["thermostat"]},
+                },
+            }
+        )
         self.check_significant_states(zero, four, states, config)
 
     def test_get_significant_states_include_domain(self):
@@ -319,13 +369,19 @@ class TestComponentHistory(unittest.TestCase):
         player changes.
         """
         zero, four, states = self.record_states()
-        del states['media_player.test']
-        del states['media_player.test2']
+        del states["media_player.test"]
+        del states["media_player.test2"]
 
-        config = history.CONFIG_SCHEMA({
-            ha.DOMAIN: {},
-            history.DOMAIN: {history.CONF_INCLUDE: {
-                history.CONF_DOMAINS: ['thermostat', 'script']}}})
+        config = history.CONFIG_SCHEMA(
+            {
+                ha.DOMAIN: {},
+                history.DOMAIN: {
+                    history.CONF_INCLUDE: {
+                        history.CONF_DOMAINS: ["thermostat", "script"]
+                    }
+                },
+            }
+        )
         self.check_significant_states(zero, four, states, config)
 
     def test_get_significant_states_include_entity(self):
@@ -334,15 +390,19 @@ class TestComponentHistory(unittest.TestCase):
         We should only get back changes of the media_player.test entity.
         """
         zero, four, states = self.record_states()
-        del states['media_player.test2']
-        del states['thermostat.test']
-        del states['thermostat.test2']
-        del states['script.can_cancel_this_one']
+        del states["media_player.test2"]
+        del states["thermostat.test"]
+        del states["thermostat.test2"]
+        del states["script.can_cancel_this_one"]
 
-        config = history.CONFIG_SCHEMA({
-            ha.DOMAIN: {},
-            history.DOMAIN: {history.CONF_INCLUDE: {
-                history.CONF_ENTITIES: ['media_player.test']}}})
+        config = history.CONFIG_SCHEMA(
+            {
+                ha.DOMAIN: {},
+                history.DOMAIN: {
+                    history.CONF_INCLUDE: {history.CONF_ENTITIES: ["media_player.test"]}
+                },
+            }
+        )
         self.check_significant_states(zero, four, states, config)
 
     def test_get_significant_states_include(self):
@@ -352,14 +412,20 @@ class TestComponentHistory(unittest.TestCase):
         thermostat domain.
         """
         zero, four, states = self.record_states()
-        del states['media_player.test2']
-        del states['script.can_cancel_this_one']
+        del states["media_player.test2"]
+        del states["script.can_cancel_this_one"]
 
-        config = history.CONFIG_SCHEMA({
-            ha.DOMAIN: {},
-            history.DOMAIN: {history.CONF_INCLUDE: {
-                history.CONF_DOMAINS: ['thermostat'],
-                history.CONF_ENTITIES: ['media_player.test']}}})
+        config = history.CONFIG_SCHEMA(
+            {
+                ha.DOMAIN: {},
+                history.DOMAIN: {
+                    history.CONF_INCLUDE: {
+                        history.CONF_DOMAINS: ["thermostat"],
+                        history.CONF_ENTITIES: ["media_player.test"],
+                    }
+                },
+            }
+        )
         self.check_significant_states(zero, four, states, config)
 
     def test_get_significant_states_include_exclude_domain(self):
@@ -369,19 +435,21 @@ class TestComponentHistory(unittest.TestCase):
         media_player domain but also exclude it.
         """
         zero, four, states = self.record_states()
-        del states['media_player.test']
-        del states['media_player.test2']
-        del states['thermostat.test']
-        del states['thermostat.test2']
-        del states['script.can_cancel_this_one']
+        del states["media_player.test"]
+        del states["media_player.test2"]
+        del states["thermostat.test"]
+        del states["thermostat.test2"]
+        del states["script.can_cancel_this_one"]
 
-        config = history.CONFIG_SCHEMA({
-            ha.DOMAIN: {},
-            history.DOMAIN: {
-                history.CONF_INCLUDE: {
-                    history.CONF_DOMAINS: ['media_player']},
-                history.CONF_EXCLUDE: {
-                    history.CONF_DOMAINS: ['media_player']}}})
+        config = history.CONFIG_SCHEMA(
+            {
+                ha.DOMAIN: {},
+                history.DOMAIN: {
+                    history.CONF_INCLUDE: {history.CONF_DOMAINS: ["media_player"]},
+                    history.CONF_EXCLUDE: {history.CONF_DOMAINS: ["media_player"]},
+                },
+            }
+        )
         self.check_significant_states(zero, four, states, config)
 
     def test_get_significant_states_include_exclude_entity(self):
@@ -391,19 +459,25 @@ class TestComponentHistory(unittest.TestCase):
         media_player.test but also exclude it.
         """
         zero, four, states = self.record_states()
-        del states['media_player.test']
-        del states['media_player.test2']
-        del states['thermostat.test']
-        del states['thermostat.test2']
-        del states['script.can_cancel_this_one']
+        del states["media_player.test"]
+        del states["media_player.test2"]
+        del states["thermostat.test"]
+        del states["thermostat.test2"]
+        del states["script.can_cancel_this_one"]
 
-        config = history.CONFIG_SCHEMA({
-            ha.DOMAIN: {},
-            history.DOMAIN: {
-                history.CONF_INCLUDE: {
-                    history.CONF_ENTITIES: ['media_player.test']},
-                history.CONF_EXCLUDE: {
-                    history.CONF_ENTITIES: ['media_player.test']}}})
+        config = history.CONFIG_SCHEMA(
+            {
+                ha.DOMAIN: {},
+                history.DOMAIN: {
+                    history.CONF_INCLUDE: {
+                        history.CONF_ENTITIES: ["media_player.test"]
+                    },
+                    history.CONF_EXCLUDE: {
+                        history.CONF_ENTITIES: ["media_player.test"]
+                    },
+                },
+            }
+        )
         self.check_significant_states(zero, four, states, config)
 
     def test_get_significant_states_include_exclude(self):
@@ -412,21 +486,45 @@ class TestComponentHistory(unittest.TestCase):
         We should only get back changes of the media_player.test2 entity.
         """
         zero, four, states = self.record_states()
-        del states['media_player.test']
-        del states['thermostat.test']
-        del states['thermostat.test2']
-        del states['script.can_cancel_this_one']
+        del states["media_player.test"]
+        del states["thermostat.test"]
+        del states["thermostat.test2"]
+        del states["script.can_cancel_this_one"]
 
-        config = history.CONFIG_SCHEMA({
-            ha.DOMAIN: {},
-            history.DOMAIN: {
-                history.CONF_INCLUDE: {
-                    history.CONF_DOMAINS: ['media_player'],
-                    history.CONF_ENTITIES: ['thermostat.test']},
-                history.CONF_EXCLUDE: {
-                    history.CONF_DOMAINS: ['thermostat'],
-                    history.CONF_ENTITIES: ['media_player.test']}}})
+        config = history.CONFIG_SCHEMA(
+            {
+                ha.DOMAIN: {},
+                history.DOMAIN: {
+                    history.CONF_INCLUDE: {
+                        history.CONF_DOMAINS: ["media_player"],
+                        history.CONF_ENTITIES: ["thermostat.test"],
+                    },
+                    history.CONF_EXCLUDE: {
+                        history.CONF_DOMAINS: ["thermostat"],
+                        history.CONF_ENTITIES: ["media_player.test"],
+                    },
+                },
+            }
+        )
         self.check_significant_states(zero, four, states, config)
+
+    def test_get_significant_states_are_ordered(self):
+        """Test order of results from get_significant_states.
+
+        When entity ids are given, the results should be returned with the data
+        in the same order.
+        """
+        zero, four, states = self.record_states()
+        entity_ids = ["media_player.test", "media_player.test2"]
+        hist = history.get_significant_states(
+            self.hass, zero, four, entity_ids, filters=history.Filters()
+        )
+        assert list(hist.keys()) == entity_ids
+        entity_ids = ["media_player.test2", "media_player.test"]
+        hist = history.get_significant_states(
+            self.hass, zero, four, entity_ids, filters=history.Filters()
+        )
+        assert list(hist.keys()) == entity_ids
 
     def check_significant_states(self, zero, four, states, config):
         """Check if significant states are retrieved."""
@@ -440,8 +538,7 @@ class TestComponentHistory(unittest.TestCase):
             filters.included_entities = include.get(history.CONF_ENTITIES, [])
             filters.included_domains = include.get(history.CONF_DOMAINS, [])
 
-        hist = history.get_significant_states(
-            self.hass, zero, four, filters=filters)
+        hist = history.get_significant_states(self.hass, zero, four, filters=filters)
         assert states == hist
 
     def record_states(self):
@@ -451,13 +548,13 @@ class TestComponentHistory(unittest.TestCase):
         thermostat.
         """
         self.init_recorder()
-        mp = 'media_player.test'
-        mp2 = 'media_player.test2'
-        therm = 'thermostat.test'
-        therm2 = 'thermostat.test2'
-        zone = 'zone.home'
-        script_nc = 'script.cannot_cancel_this_one'
-        script_c = 'script.can_cancel_this_one'
+        mp = "media_player.test"
+        mp2 = "media_player.test2"
+        therm = "thermostat.test"
+        therm2 = "thermostat.test2"
+        zone = "zone.home"
+        script_nc = "script.cannot_cancel_this_one"
+        script_c = "script.can_cancel_this_one"
 
         def set_state(entity_id, state, **kwargs):
             """Set the state."""
@@ -472,55 +569,84 @@ class TestComponentHistory(unittest.TestCase):
         four = three + timedelta(seconds=1)
 
         states = {therm: [], therm2: [], mp: [], mp2: [], script_c: []}
-        with patch('homeassistant.components.recorder.dt_util.utcnow',
-                   return_value=one):
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=one
+        ):
             states[mp].append(
-                set_state(mp, 'idle',
-                          attributes={'media_title': str(sentinel.mt1)}))
+                set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
+            )
             states[mp].append(
-                set_state(mp, 'YouTube',
-                          attributes={'media_title': str(sentinel.mt2)}))
+                set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt2)})
+            )
             states[mp2].append(
-                set_state(mp2, 'YouTube',
-                          attributes={'media_title': str(sentinel.mt2)}))
+                set_state(mp2, "YouTube", attributes={"media_title": str(sentinel.mt2)})
+            )
             states[therm].append(
-                set_state(therm, 20, attributes={'current_temperature': 19.5}))
+                set_state(therm, 20, attributes={"current_temperature": 19.5})
+            )
 
-        with patch('homeassistant.components.recorder.dt_util.utcnow',
-                   return_value=two):
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=two
+        ):
             # This state will be skipped only different in time
-            set_state(mp, 'YouTube',
-                      attributes={'media_title': str(sentinel.mt3)})
+            set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt3)})
             # This state will be skipped because domain blacklisted
-            set_state(zone, 'zoning')
-            set_state(script_nc, 'off')
+            set_state(zone, "zoning")
+            set_state(script_nc, "off")
             states[script_c].append(
-                set_state(script_c, 'off', attributes={'can_cancel': True}))
+                set_state(script_c, "off", attributes={"can_cancel": True})
+            )
             states[therm].append(
-                set_state(therm, 21, attributes={'current_temperature': 19.8}))
+                set_state(therm, 21, attributes={"current_temperature": 19.8})
+            )
             states[therm2].append(
-                set_state(therm2, 20, attributes={'current_temperature': 19}))
+                set_state(therm2, 20, attributes={"current_temperature": 19})
+            )
 
-        with patch('homeassistant.components.recorder.dt_util.utcnow',
-                   return_value=three):
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=three
+        ):
             states[mp].append(
-                set_state(mp, 'Netflix',
-                          attributes={'media_title': str(sentinel.mt4)}))
+                set_state(mp, "Netflix", attributes={"media_title": str(sentinel.mt4)})
+            )
             # Attributes changed even though state is the same
             states[therm].append(
-                set_state(therm, 21, attributes={'current_temperature': 20}))
+                set_state(therm, 21, attributes={"current_temperature": 20})
+            )
             # state will be skipped since entity is hidden
-            set_state(therm, 22, attributes={'current_temperature': 21,
-                                             'hidden': True})
+            set_state(therm, 22, attributes={"current_temperature": 21, "hidden": True})
         return zero, four, states
 
 
 async def test_fetch_period_api(hass, hass_client):
     """Test the fetch period view for history."""
     await hass.async_add_job(init_recorder_component, hass)
-    await async_setup_component(hass, 'history', {})
+    await async_setup_component(hass, "history", {})
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get(
-        '/api/history/period/{}'.format(dt_util.utcnow().isoformat()))
+        "/api/history/period/{}".format(dt_util.utcnow().isoformat())
+    )
+    assert response.status == 200
+
+
+async def test_fetch_period_api_with_include_order(hass, hass_client):
+    """Test the fetch period view for history."""
+    await hass.async_add_job(init_recorder_component, hass)
+    await async_setup_component(
+        hass,
+        "history",
+        {
+            "history": {
+                "use_include_order": True,
+                "include": {"entities": ["light.kitchen"]},
+            }
+        },
+    )
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    client = await hass_client()
+    response = await client.get(
+        "/api/history/period/{}".format(dt_util.utcnow().isoformat()),
+        params={"filter_entity_id": "non.existing,something.else"},
+    )
     assert response.status == 200

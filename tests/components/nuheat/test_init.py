@@ -1,17 +1,13 @@
 """NuHeat component tests."""
 import unittest
-
 from unittest.mock import patch
-from tests.common import get_test_home_assistant, MockDependency
 
 from homeassistant.components import nuheat
 
+from tests.common import MockDependency, get_test_home_assistant
+
 VALID_CONFIG = {
-    "nuheat": {
-        "username": "warm",
-        "password": "feet",
-        "devices": "thermostat123"
-    }
+    "nuheat": {"username": "warm", "password": "feet", "devices": "thermostat123"}
 }
 
 
@@ -31,13 +27,15 @@ class TestNuHeat(unittest.TestCase):
     @patch("homeassistant.helpers.discovery.load_platform")
     def test_setup(self, mocked_nuheat, mocked_load):
         """Test setting up the NuHeat component."""
-        nuheat.setup(self.hass, self.config)
+        with patch.object(nuheat, "nuheat", mocked_nuheat):
+            nuheat.setup(self.hass, self.config)
 
         mocked_nuheat.NuHeat.assert_called_with("warm", "feet")
         assert nuheat.DOMAIN in self.hass.data
-        assert 2 == len(self.hass.data[nuheat.DOMAIN])
-        assert isinstance(self.hass.data[nuheat.DOMAIN][0],
-                          type(mocked_nuheat.NuHeat()))
+        assert len(self.hass.data[nuheat.DOMAIN]) == 2
+        assert isinstance(
+            self.hass.data[nuheat.DOMAIN][0], type(mocked_nuheat.NuHeat())
+        )
         assert self.hass.data[nuheat.DOMAIN][1] == "thermostat123"
 
         mocked_load.assert_called_with(

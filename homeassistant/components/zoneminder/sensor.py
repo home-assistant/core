@@ -17,19 +17,23 @@ CONF_INCLUDE_ARCHIVED = "include_archived"
 DEFAULT_INCLUDE_ARCHIVED = False
 
 SENSOR_TYPES = {
-    'all': ['Events'],
-    'hour': ['Events Last Hour'],
-    'day': ['Events Last Day'],
-    'week': ['Events Last Week'],
-    'month': ['Events Last Month'],
+    "all": ["Events"],
+    "hour": ["Events Last Hour"],
+    "day": ["Events Last Day"],
+    "week": ["Events Last Week"],
+    "month": ["Events Last Month"],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_INCLUDE_ARCHIVED, default=DEFAULT_INCLUDE_ARCHIVED):
-        cv.boolean,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=['all']):
-        vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(
+            CONF_INCLUDE_ARCHIVED, default=DEFAULT_INCLUDE_ARCHIVED
+        ): cv.boolean,
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=["all"]): vol.All(
+            cv.ensure_list, [vol.In(list(SENSOR_TYPES))]
+        ),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -40,15 +44,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for zm_client in hass.data[ZONEMINDER_DOMAIN].values():
         monitors = zm_client.get_monitors()
         if not monitors:
-            _LOGGER.warning('Could not fetch any monitors from ZoneMinder')
+            _LOGGER.warning("Could not fetch any monitors from ZoneMinder")
 
         for monitor in monitors:
             sensors.append(ZMSensorMonitors(monitor))
 
             for sensor in config[CONF_MONITORED_CONDITIONS]:
-                sensors.append(
-                    ZMSensorEvents(monitor, include_archived, sensor)
-                )
+                sensors.append(ZMSensorEvents(monitor, include_archived, sensor))
 
         sensors.append(ZMSensorRunState(zm_client))
     add_entities(sensors)
@@ -66,7 +68,7 @@ class ZMSensorMonitors(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} Status'.format(self._monitor.name)
+        return f"{self._monitor.name} Status"
 
     @property
     def state(self):
@@ -94,6 +96,7 @@ class ZMSensorEvents(Entity):
     def __init__(self, monitor, include_archived, sensor_type):
         """Initialize event sensor."""
         from zoneminder.monitor import TimePeriod
+
         self._monitor = monitor
         self._include_archived = include_archived
         self.time_period = TimePeriod.get_time_period(sensor_type)
@@ -102,12 +105,12 @@ class ZMSensorEvents(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self._monitor.name, self.time_period.title)
+        return f"{self._monitor.name} {self.time_period.title}"
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return 'Events'
+        return "Events"
 
     @property
     def state(self):
@@ -116,8 +119,7 @@ class ZMSensorEvents(Entity):
 
     def update(self):
         """Update the sensor."""
-        self._state = self._monitor.get_events(
-            self.time_period, self._include_archived)
+        self._state = self._monitor.get_events(self.time_period, self._include_archived)
 
 
 class ZMSensorRunState(Entity):
@@ -132,7 +134,7 @@ class ZMSensorRunState(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return 'Run State'
+        return "Run State"
 
     @property
     def state(self):

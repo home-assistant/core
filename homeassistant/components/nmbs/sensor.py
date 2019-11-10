@@ -5,32 +5,38 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_NAME,
-    CONF_SHOW_ON_MAP)
+    ATTR_ATTRIBUTION,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    CONF_NAME,
+    CONF_SHOW_ON_MAP,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'NMBS'
+DEFAULT_NAME = "NMBS"
 
 DEFAULT_ICON = "mdi:train"
 DEFAULT_ICON_ALERT = "mdi:alert-octagon"
 
-CONF_STATION_FROM = 'station_from'
-CONF_STATION_TO = 'station_to'
-CONF_STATION_LIVE = 'station_live'
-CONF_EXCLUDE_VIAS = 'exclude_vias'
+CONF_STATION_FROM = "station_from"
+CONF_STATION_TO = "station_to"
+CONF_STATION_LIVE = "station_live"
+CONF_EXCLUDE_VIAS = "exclude_vias"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_STATION_FROM): cv.string,
-    vol.Required(CONF_STATION_TO): cv.string,
-    vol.Optional(CONF_STATION_LIVE): cv.string,
-    vol.Optional(CONF_EXCLUDE_VIAS, default=False): cv.boolean,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_STATION_FROM): cv.string,
+        vol.Required(CONF_STATION_TO): cv.string,
+        vol.Optional(CONF_STATION_LIVE): cv.string,
+        vol.Optional(CONF_EXCLUDE_VIAS, default=False): cv.boolean,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
+    }
+)
 
 
 def get_time_until(departure_time=None):
@@ -50,7 +56,8 @@ def get_delay_in_minutes(delay=0):
 def get_ride_duration(departure_time, arrival_time, delay=0):
     """Calculate the total travel time in minutes."""
     duration = dt_util.utc_from_timestamp(
-        int(arrival_time)) - dt_util.utc_from_timestamp(int(departure_time))
+        int(arrival_time)
+    ) - dt_util.utc_from_timestamp(int(departure_time))
     duration_time = int(round((duration.total_seconds() / 60)))
     return duration_time + get_delay_in_minutes(delay)
 
@@ -58,6 +65,7 @@ def get_ride_duration(departure_time, arrival_time, delay=0):
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NMBS sensor with iRail API."""
     from pyrail import iRail
+
     api_client = iRail()
 
     name = config[CONF_NAME]
@@ -67,8 +75,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     station_live = config.get(CONF_STATION_LIVE)
     excl_vias = config[CONF_EXCLUDE_VIAS]
 
-    sensors = [NMBSSensor(
-        api_client, name, show_on_map, station_from, station_to, excl_vias)]
+    sensors = [
+        NMBSSensor(api_client, name, show_on_map, station_from, station_to, excl_vias)
+    ]
 
     if station_live is not None:
         sensors.append(NMBSLiveBoard(api_client, station_live))
@@ -95,7 +104,7 @@ class NMBSLiveBoard(Entity):
     @property
     def icon(self):
         """Return the default icon or an alert icon if delays."""
-        if self._attrs and int(self._attrs['delay']) > 0:
+        if self._attrs and int(self._attrs["delay"]) > 0:
             return DEFAULT_ICON_ALERT
 
         return DEFAULT_ICON
@@ -112,36 +121,38 @@ class NMBSLiveBoard(Entity):
             return None
 
         delay = get_delay_in_minutes(self._attrs["delay"])
-        departure = get_time_until(self._attrs['time'])
+        departure = get_time_until(self._attrs["time"])
 
         attrs = {
-            'departure': "In {} minutes".format(departure),
-            'extra_train': int(self._attrs['isExtra']) > 0,
-            'vehicle_id': self._attrs['vehicle'],
-            'monitored_station': self._station,
+            "departure": f"In {departure} minutes",
+            "extra_train": int(self._attrs["isExtra"]) > 0,
+            "vehicle_id": self._attrs["vehicle"],
+            "monitored_station": self._station,
             ATTR_ATTRIBUTION: "https://api.irail.be/",
         }
 
         if delay > 0:
-            attrs['delay'] = "{} minutes".format(delay)
+            attrs["delay"] = f"{delay} minutes"
 
         return attrs
 
     def update(self):
         """Set the state equal to the next departure."""
         liveboard = self._api_client.get_liveboard(self._station)
-        next_departure = liveboard['departures']['departure'][0]
+        next_departure = liveboard["departures"]["departure"][0]
 
         self._attrs = next_departure
         self._state = "Track {} - {}".format(
-            next_departure['platform'], next_departure['station'])
+            next_departure["platform"], next_departure["station"]
+        )
 
 
 class NMBSSensor(Entity):
     """Get the the total travel time for a given connection."""
 
-    def __init__(self, api_client, name, show_on_map,
-                 station_from, station_to, excl_vias):
+    def __init__(
+        self, api_client, name, show_on_map, station_from, station_to, excl_vias
+    ):
         """Initialize the NMBS connection sensor."""
         self._name = name
         self._show_on_map = show_on_map
@@ -161,13 +172,13 @@ class NMBSSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return 'min'
+        return "min"
 
     @property
     def icon(self):
         """Return the sensor default icon or an alert icon if any delay."""
         if self._attrs:
-            delay = get_delay_in_minutes(self._attrs['departure']['delay'])
+            delay = get_delay_in_minutes(self._attrs["departure"]["delay"])
             if delay > 0:
                 return "mdi:alert-octagon"
 
@@ -179,16 +190,16 @@ class NMBSSensor(Entity):
         if self._state is None or not self._attrs:
             return None
 
-        delay = get_delay_in_minutes(self._attrs['departure']['delay'])
-        departure = get_time_until(self._attrs['departure']['time'])
+        delay = get_delay_in_minutes(self._attrs["departure"]["delay"])
+        departure = get_time_until(self._attrs["departure"]["time"])
 
         attrs = {
-            'departure': "In {} minutes".format(departure),
-            'destination': self._station_to,
-            'direction': self._attrs['departure']['direction']['name'],
-            "platform_arriving": self._attrs['arrival']['platform'],
-            "platform_departing": self._attrs['departure']['platform'],
-            "vehicle_id": self._attrs['departure']['vehicle'],
+            "departure": f"In {departure} minutes",
+            "destination": self._station_to,
+            "direction": self._attrs["departure"]["direction"]["name"],
+            "platform_arriving": self._attrs["arrival"]["platform"],
+            "platform_departing": self._attrs["departure"]["platform"],
+            "vehicle_id": self._attrs["departure"]["vehicle"],
             ATTR_ATTRIBUTION: "https://api.irail.be/",
         }
 
@@ -197,17 +208,17 @@ class NMBSSensor(Entity):
             attrs[ATTR_LONGITUDE] = self.station_coordinates[1]
 
         if self.is_via_connection and not self._excl_vias:
-            via = self._attrs['vias']['via'][0]
+            via = self._attrs["vias"]["via"][0]
 
-            attrs['via'] = via['station']
-            attrs['via_arrival_platform'] = via['arrival']['platform']
-            attrs['via_transfer_platform'] = via['departure']['platform']
-            attrs['via_transfer_time'] = get_delay_in_minutes(
-                via['timeBetween']
-            ) + get_delay_in_minutes(via['departure']['delay'])
+            attrs["via"] = via["station"]
+            attrs["via_arrival_platform"] = via["arrival"]["platform"]
+            attrs["via_transfer_platform"] = via["departure"]["platform"]
+            attrs["via_transfer_time"] = get_delay_in_minutes(
+                via["timeBetween"]
+            ) + get_delay_in_minutes(via["departure"]["delay"])
 
         if delay > 0:
-            attrs['delay'] = "{} minutes".format(delay)
+            attrs["delay"] = f"{delay} minutes"
 
         return attrs
 
@@ -222,8 +233,8 @@ class NMBSSensor(Entity):
         if self._state is None or not self._attrs:
             return []
 
-        latitude = float(self._attrs['departure']['stationinfo']['locationY'])
-        longitude = float(self._attrs['departure']['stationinfo']['locationX'])
+        latitude = float(self._attrs["departure"]["stationinfo"]["locationY"])
+        longitude = float(self._attrs["departure"]["stationinfo"]["locationX"])
         return [latitude, longitude]
 
     @property
@@ -232,29 +243,32 @@ class NMBSSensor(Entity):
         if not self._attrs:
             return False
 
-        return 'vias' in self._attrs and int(self._attrs['vias']['number']) > 0
+        return "vias" in self._attrs and int(self._attrs["vias"]["number"]) > 0
 
     def update(self):
         """Set the state to the duration of a connection."""
         connections = self._api_client.get_connections(
-            self._station_from, self._station_to)
+            self._station_from, self._station_to
+        )
 
-        if int(connections['connection'][0]['departure']['left']) > 0:
-            next_connection = connections['connection'][1]
+        if int(connections["connection"][0]["departure"]["left"]) > 0:
+            next_connection = connections["connection"][1]
         else:
-            next_connection = connections['connection'][0]
+            next_connection = connections["connection"][0]
 
         self._attrs = next_connection
 
         if self._excl_vias and self.is_via_connection:
-            _LOGGER.debug("Skipping update of NMBSSensor \
-                because this connection is a via")
+            _LOGGER.debug(
+                "Skipping update of NMBSSensor \
+                because this connection is a via"
+            )
             return
 
         duration = get_ride_duration(
-            next_connection['departure']['time'],
-            next_connection['arrival']['time'],
-            next_connection['departure']['delay'],
+            next_connection["departure"]["time"],
+            next_connection["arrival"]["time"],
+            next_connection["departure"]["delay"],
         )
 
         self._state = duration

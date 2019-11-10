@@ -21,14 +21,14 @@ def registry(hass):
 async def create_registrations(authed_api_client):
     """Return two new registrations."""
     enc_reg = await authed_api_client.post(
-        '/api/mobile_app/registrations', json=REGISTER
+        "/api/mobile_app/registrations", json=REGISTER
     )
 
     assert enc_reg.status == 201
     enc_reg_json = await enc_reg.json()
 
     clear_reg = await authed_api_client.post(
-        '/api/mobile_app/registrations', json=REGISTER_CLEARTEXT
+        "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
     )
 
     assert clear_reg.status == 201
@@ -56,5 +56,5 @@ async def authed_api_client(hass, hass_client):
 @pytest.fixture(autouse=True)
 async def setup_ws(hass):
     """Configure the websocket_api component."""
-    assert await async_setup_component(hass, 'websocket_api', {})
+    assert await async_setup_component(hass, "websocket_api", {})
     await hass.async_block_till_done()

@@ -1,18 +1,30 @@
 """Support for Openhome Devices."""
 import logging
 
-from homeassistant.components.media_player import (
-    MediaPlayerDevice)
+from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP)
-from homeassistant.const import (
-    STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_STOP,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP,
+)
+from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 
-SUPPORT_OPENHOME = SUPPORT_SELECT_SOURCE | \
-    SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
-    SUPPORT_TURN_OFF | SUPPORT_TURN_ON
+SUPPORT_OPENHOME = (
+    SUPPORT_SELECT_SOURCE
+    | SUPPORT_VOLUME_STEP
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_VOLUME_SET
+    | SUPPORT_TURN_OFF
+    | SUPPORT_TURN_ON
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,8 +38,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if not discovery_info:
         return True
 
-    name = discovery_info.get('name')
-    description = discovery_info.get('ssdp_description')
+    name = discovery_info.get("name")
+    description = discovery_info.get("ssdp_description")
     _LOGGER.info("Openhome device found: %s", name)
     device = Device(description)
 
@@ -70,7 +82,7 @@ class OpenhomeDevice(MediaPlayerDevice):
         self._volume_level = self._device.VolumeLevel()
         self._volume_muted = self._device.IsMuted()
         self._source = self._device.Source()
-        self._name = self._device.Room().decode('utf-8')
+        self._name = self._device.Room().decode("utf-8")
         self._supported_features = SUPPORT_OPENHOME
         source_index = {}
         source_names = list()
@@ -85,16 +97,20 @@ class OpenhomeDevice(MediaPlayerDevice):
         if self._source["type"] == "Radio":
             self._supported_features |= SUPPORT_STOP | SUPPORT_PLAY
         if self._source["type"] in ("Playlist", "Cloud"):
-            self._supported_features |= SUPPORT_PREVIOUS_TRACK | \
-                SUPPORT_NEXT_TRACK | SUPPORT_PAUSE | SUPPORT_PLAY
+            self._supported_features |= (
+                SUPPORT_PREVIOUS_TRACK
+                | SUPPORT_NEXT_TRACK
+                | SUPPORT_PAUSE
+                | SUPPORT_PLAY
+            )
 
         if self._in_standby:
             self._state = STATE_OFF
-        elif self._transport_state == 'Paused':
+        elif self._transport_state == "Paused":
             self._state = STATE_PAUSED
-        elif self._transport_state in ('Playing', 'Buffering'):
+        elif self._transport_state in ("Playing", "Buffering"):
             self._state = STATE_PLAYING
-        elif self._transport_state == 'Stopped':
+        elif self._transport_state == "Stopped":
             self._state = STATE_IDLE
         else:
             # Device is playing an external source with no transport controls
@@ -165,29 +181,29 @@ class OpenhomeDevice(MediaPlayerDevice):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        return self._track_information.get('albumArtwork')
+        return self._track_information.get("albumArtwork")
 
     @property
     def media_artist(self):
         """Artist of current playing media, music track only."""
-        artists = self._track_information.get('artist')
+        artists = self._track_information.get("artist")
         if artists:
             return artists[0]
 
     @property
     def media_album_name(self):
         """Album name of current playing media, music track only."""
-        return self._track_information.get('albumTitle')
+        return self._track_information.get("albumTitle")
 
     @property
     def media_title(self):
         """Title of current playing media."""
-        return self._track_information.get('title')
+        return self._track_information.get("title")
 
     @property
     def source(self):
         """Name of the current input source."""
-        return self._source.get('name')
+        return self._source.get("name")
 
     @property
     def volume_level(self):

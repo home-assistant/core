@@ -1,7 +1,7 @@
 {
   "domain": "script",
   "name": "Script",
-  "documentation": "https://www.home-assistant.io/components/script",
+  "documentation": "https://www.home-assistant.io/integrations/script",
   "requirements": [],
   "dependencies": [
     "group"

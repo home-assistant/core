@@ -4,8 +4,12 @@ import logging
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMING, STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED)
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMING,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_PENDING,
+    STATE_ALARM_TRIGGERED,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -14,13 +18,12 @@ from . import DATA_NESS, SIGNAL_ARMING_STATE_CHANGED
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Ness Alarm alarm control panel devices."""
     if discovery_info is None:
         return
 
-    device = NessAlarmPanel(hass.data[DATA_NESS], 'Alarm Panel')
+    device = NessAlarmPanel(hass.data[DATA_NESS], "Alarm Panel")
     async_add_entities([device])
 
 
@@ -36,8 +39,8 @@ class NessAlarmPanel(alarm.AlarmControlPanel):
     async def async_added_to_hass(self):
         """Register callbacks."""
         async_dispatcher_connect(
-            self.hass, SIGNAL_ARMING_STATE_CHANGED,
-            self._handle_arming_state_change)
+            self.hass, SIGNAL_ARMING_STATE_CHANGED, self._handle_arming_state_change
+        )
 
     @property
     def name(self):

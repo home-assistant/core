@@ -3,6 +3,7 @@
 To update, run python3 -m script.hassfest
 """
 
+# fmt: off
 
 ZEROCONF = {
     "_axis-video._tcp.local.": [
@@ -19,6 +20,9 @@ ZEROCONF = {
     ],
     "_hap._tcp.local.": [
         "homekit_controller"
+    ],
+    "_wled._tcp.local.": [
+        "wled"
     ]
 }
 

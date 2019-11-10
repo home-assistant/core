@@ -3,38 +3,60 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    STATE_AUTO, STATE_ECO, STATE_MANUAL, SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE)
-from homeassistant.const import (
-    ATTR_TEMPERATURE, STATE_OFF, STATE_ON, TEMP_CELSIUS)
+    HVAC_MODE_AUTO,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    PRESET_ECO,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+)
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
 from . import DOMAIN as STE_DOMAIN
 
-DEPENDENCIES = ['stiebel_eltron']
+DEPENDENCIES = ["stiebel_eltron"]
 
 _LOGGER = logging.getLogger(__name__)
 
+PRESET_DAY = "day"
+PRESET_SETBACK = "setback"
+PRESET_EMERGENCY = "emergency"
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
-OPERATION_MODES = [STATE_AUTO, STATE_MANUAL, STATE_ECO, STATE_OFF]
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+SUPPORT_HVAC = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
+SUPPORT_PRESET = [PRESET_ECO, PRESET_DAY, PRESET_EMERGENCY, PRESET_SETBACK]
 
-# Mapping STIEBEL ELTRON states to homeassistant states.
-STE_TO_HA_STATE = {'AUTOMATIC': STATE_AUTO,
-                   'MANUAL MODE': STATE_MANUAL,
-                   'STANDBY': STATE_ECO,
-                   'DAY MODE': STATE_ON,
-                   'SETBACK MODE': STATE_ON,
-                   'DHW': STATE_OFF,
-                   'EMERGENCY OPERATION': STATE_ON}
+# Mapping STIEBEL ELTRON states to homeassistant states/preset.
+STE_TO_HA_HVAC = {
+    "AUTOMATIC": HVAC_MODE_AUTO,
+    "MANUAL MODE": HVAC_MODE_HEAT,
+    "STANDBY": HVAC_MODE_AUTO,
+    "DAY MODE": HVAC_MODE_AUTO,
+    "SETBACK MODE": HVAC_MODE_AUTO,
+    "DHW": HVAC_MODE_OFF,
+    "EMERGENCY OPERATION": HVAC_MODE_AUTO,
+}
 
-# Mapping homeassistant states to STIEBEL ELTRON states.
-HA_TO_STE_STATE = {value: key for key, value in STE_TO_HA_STATE.items()}
+STE_TO_HA_PRESET = {
+    "STANDBY": PRESET_ECO,
+    "DAY MODE": PRESET_DAY,
+    "SETBACK MODE": PRESET_SETBACK,
+    "EMERGENCY OPERATION": PRESET_EMERGENCY,
+}
+
+HA_TO_STE_HVAC = {
+    HVAC_MODE_AUTO: "AUTOMATIC",
+    HVAC_MODE_HEAT: "MANUAL MODE",
+    HVAC_MODE_OFF: "DHW",
+}
+
+HA_TO_STE_PRESET = {k: i for i, k in STE_TO_HA_PRESET.items()}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the StiebelEltron platform."""
-    name = hass.data[STE_DOMAIN]['name']
-    ste_data = hass.data[STE_DOMAIN]['ste_data']
+    name = hass.data[STE_DOMAIN]["name"]
+    ste_data = hass.data[STE_DOMAIN]["ste_data"]
 
     add_entities([StiebelEltron(name, ste_data)], True)
 
@@ -48,8 +70,7 @@ class StiebelEltron(ClimateDevice):
         self._target_temperature = None
         self._current_temperature = None
         self._current_humidity = None
-        self._operation_modes = OPERATION_MODES
-        self._current_operation = None
+        self._operation = None
         self._filter_alarm = None
         self._force_update = False
         self._ste_data = ste_data
@@ -68,17 +89,16 @@ class StiebelEltron(ClimateDevice):
         self._current_temperature = self._ste_data.api.get_current_temp()
         self._current_humidity = self._ste_data.api.get_current_humidity()
         self._filter_alarm = self._ste_data.api.get_filter_alarm_status()
-        self._current_operation = self._ste_data.api.get_operation()
+        self._operation = self._ste_data.api.get_operation()
 
-        _LOGGER.debug("Update %s, current temp: %s", self._name,
-                      self._current_temperature)
+        _LOGGER.debug(
+            "Update %s, current temp: %s", self._name, self._current_temperature
+        )
 
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        return {
-            'filter_alarm': self._filter_alarm
-        }
+        return {"filter_alarm": self._filter_alarm}
 
     @property
     def name(self):
@@ -116,6 +136,40 @@ class StiebelEltron(ClimateDevice):
         """Return the maximum temperature."""
         return 30.0
 
+    @property
+    def current_humidity(self):
+        """Return the current humidity."""
+        return float(f"{self._current_humidity:.1f}")
+
+    @property
+    def hvac_modes(self):
+        """List of the operation modes."""
+        return SUPPORT_HVAC
+
+    @property
+    def hvac_mode(self):
+        """Return current operation ie. heat, cool, idle."""
+        return STE_TO_HA_HVAC.get(self._operation)
+
+    @property
+    def preset_mode(self):
+        """Return the current preset mode, e.g., home, away, temp."""
+        return STE_TO_HA_PRESET.get(self._operation)
+
+    @property
+    def preset_modes(self):
+        """Return a list of available preset modes."""
+        return SUPPORT_PRESET
+
+    def set_hvac_mode(self, hvac_mode):
+        """Set new operation mode."""
+        if self.preset_mode:
+            return
+        new_mode = HA_TO_STE_HVAC.get(hvac_mode)
+        _LOGGER.debug("set_hvac_mode: %s -> %s", self._operation, new_mode)
+        self._ste_data.api.set_operation(new_mode)
+        self._force_update = True
+
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         target_temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -124,26 +178,9 @@ class StiebelEltron(ClimateDevice):
             self._ste_data.api.set_target_temp(target_temperature)
             self._force_update = True
 
-    @property
-    def current_humidity(self):
-        """Return the current humidity."""
-        return float("{0:.1f}".format(self._current_humidity))
-
-    # Handle SUPPORT_OPERATION_MODE
-    @property
-    def operation_list(self):
-        """List of the operation modes."""
-        return self._operation_modes
-
-    @property
-    def current_operation(self):
-        """Return current operation ie. heat, cool, idle."""
-        return STE_TO_HA_STATE.get(self._current_operation)
-
-    def set_operation_mode(self, operation_mode):
-        """Set new operation mode."""
-        new_mode = HA_TO_STE_STATE.get(operation_mode)
-        _LOGGER.debug("set_operation_mode: %s -> %s", self._current_operation,
-                      new_mode)
+    def set_preset_mode(self, preset_mode: str):
+        """Set new preset mode."""
+        new_mode = HA_TO_STE_PRESET.get(preset_mode)
+        _LOGGER.debug("set_hvac_mode: %s -> %s", self._operation, new_mode)
         self._ste_data.api.set_operation(new_mode)
         self._force_update = True

@@ -7,6 +7,7 @@
             "cannot_connect": "Connexion au pont impossible",
             "discover_timeout": "D\u00e9tection de ponts Philips Hue impossible",
             "no_bridges": "Aucun pont Philips Hue n'a \u00e9t\u00e9 d\u00e9couvert",
+            "not_hue_bridge": "Pas de pont Hue",
             "unknown": "Une erreur inconnue s'est produite"
         },
         "error": {

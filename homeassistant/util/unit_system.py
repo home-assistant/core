@@ -5,11 +5,27 @@ from typing import Optional
 from numbers import Number
 
 from homeassistant.const import (
-    TEMP_CELSIUS, TEMP_FAHRENHEIT, LENGTH_MILES, LENGTH_KILOMETERS,
-    PRESSURE_PA, PRESSURE_PSI, VOLUME_LITERS, VOLUME_GALLONS,
-    MASS_GRAMS, MASS_KILOGRAMS, MASS_OUNCES, MASS_POUNDS,
-    CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL, LENGTH, MASS, PRESSURE,
-    VOLUME, TEMPERATURE, UNIT_NOT_RECOGNIZED_TEMPLATE)
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    LENGTH_MILES,
+    LENGTH_KILOMETERS,
+    PRESSURE_PA,
+    PRESSURE_PSI,
+    VOLUME_LITERS,
+    VOLUME_GALLONS,
+    MASS_GRAMS,
+    MASS_KILOGRAMS,
+    MASS_OUNCES,
+    MASS_POUNDS,
+    CONF_UNIT_SYSTEM_METRIC,
+    CONF_UNIT_SYSTEM_IMPERIAL,
+    LENGTH,
+    MASS,
+    PRESSURE,
+    VOLUME,
+    TEMPERATURE,
+    UNIT_NOT_RECOGNIZED_TEMPLATE,
+)
 from homeassistant.util import temperature as temperature_util
 from homeassistant.util import distance as distance_util
 from homeassistant.util import pressure as pressure_util
@@ -19,21 +35,13 @@ _LOGGER = logging.getLogger(__name__)
 
 LENGTH_UNITS = distance_util.VALID_UNITS
 
-MASS_UNITS = [
-    MASS_POUNDS,
-    MASS_OUNCES,
-    MASS_KILOGRAMS,
-    MASS_GRAMS,
-]
+MASS_UNITS = [MASS_POUNDS, MASS_OUNCES, MASS_KILOGRAMS, MASS_GRAMS]
 
 PRESSURE_UNITS = pressure_util.VALID_UNITS
 
 VOLUME_UNITS = volume_util.VALID_UNITS
 
-TEMPERATURE_UNITS = [
-    TEMP_FAHRENHEIT,
-    TEMP_CELSIUS,
-]
+TEMPERATURE_UNITS = [TEMP_FAHRENHEIT, TEMP_CELSIUS]
 
 
 def is_valid_unit(unit: str, unit_type: str) -> bool:
@@ -57,18 +65,27 @@ def is_valid_unit(unit: str, unit_type: str) -> bool:
 class UnitSystem:
     """A container for units of measure."""
 
-    def __init__(self, name: str, temperature: str, length: str,
-                 volume: str, mass: str, pressure: str) -> None:
+    def __init__(
+        self,
+        name: str,
+        temperature: str,
+        length: str,
+        volume: str,
+        mass: str,
+        pressure: str,
+    ) -> None:
         """Initialize the unit system object."""
-        errors = \
-            ', '.join(UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit, unit_type)
-                      for unit, unit_type in [
-                          (temperature, TEMPERATURE),
-                          (length, LENGTH),
-                          (volume, VOLUME),
-                          (mass, MASS),
-                          (pressure, PRESSURE), ]
-                      if not is_valid_unit(unit, unit_type))  # type: str
+        errors: str = ", ".join(
+            UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit, unit_type)
+            for unit, unit_type in [
+                (temperature, TEMPERATURE),
+                (length, LENGTH),
+                (volume, VOLUME),
+                (mass, MASS),
+                (pressure, PRESSURE),
+            ]
+            if not is_valid_unit(unit, unit_type)
+        )
 
         if errors:
             raise ValueError(errors)
@@ -88,34 +105,42 @@ class UnitSystem:
     def temperature(self, temperature: float, from_unit: str) -> float:
         """Convert the given temperature to this unit system."""
         if not isinstance(temperature, Number):
-            raise TypeError(
-                '{} is not a numeric value.'.format(str(temperature)))
+            raise TypeError("{} is not a numeric value.".format(str(temperature)))
 
-        return temperature_util.convert(temperature,
-                                        from_unit, self.temperature_unit)
+        # type ignore: https://github.com/python/mypy/issues/7207
+        return temperature_util.convert(  # type: ignore
+            temperature, from_unit, self.temperature_unit
+        )
 
     def length(self, length: Optional[float], from_unit: str) -> float:
         """Convert the given length to this unit system."""
         if not isinstance(length, Number):
-            raise TypeError('{} is not a numeric value.'.format(str(length)))
+            raise TypeError("{} is not a numeric value.".format(str(length)))
 
-        return distance_util.convert(length, from_unit,
-                                     self.length_unit)
+        # type ignore: https://github.com/python/mypy/issues/7207
+        return distance_util.convert(  # type: ignore
+            length, from_unit, self.length_unit
+        )
 
     def pressure(self, pressure: Optional[float], from_unit: str) -> float:
         """Convert the given pressure to this unit system."""
         if not isinstance(pressure, Number):
-            raise TypeError('{} is not a numeric value.'.format(str(pressure)))
+            raise TypeError("{} is not a numeric value.".format(str(pressure)))
 
-        return pressure_util.convert(pressure, from_unit,
-                                     self.pressure_unit)
+        # type ignore: https://github.com/python/mypy/issues/7207
+        return pressure_util.convert(  # type: ignore
+            pressure, from_unit, self.pressure_unit
+        )
 
     def volume(self, volume: Optional[float], from_unit: str) -> float:
         """Convert the given volume to this unit system."""
         if not isinstance(volume, Number):
-            raise TypeError('{} is not a numeric value.'.format(str(volume)))
+            raise TypeError("{} is not a numeric value.".format(str(volume)))
 
-        return volume_util.convert(volume, from_unit, self.volume_unit)
+        # type ignore: https://github.com/python/mypy/issues/7207
+        return volume_util.convert(  # type: ignore
+            volume, from_unit, self.volume_unit
+        )
 
     def as_dict(self) -> dict:
         """Convert the unit system to a dictionary."""
@@ -124,14 +149,24 @@ class UnitSystem:
             MASS: self.mass_unit,
             PRESSURE: self.pressure_unit,
             TEMPERATURE: self.temperature_unit,
-            VOLUME: self.volume_unit
+            VOLUME: self.volume_unit,
         }
 
 
-METRIC_SYSTEM = UnitSystem(CONF_UNIT_SYSTEM_METRIC, TEMP_CELSIUS,
-                           LENGTH_KILOMETERS, VOLUME_LITERS, MASS_GRAMS,
-                           PRESSURE_PA)
+METRIC_SYSTEM = UnitSystem(
+    CONF_UNIT_SYSTEM_METRIC,
+    TEMP_CELSIUS,
+    LENGTH_KILOMETERS,
+    VOLUME_LITERS,
+    MASS_GRAMS,
+    PRESSURE_PA,
+)
 
-IMPERIAL_SYSTEM = UnitSystem(CONF_UNIT_SYSTEM_IMPERIAL, TEMP_FAHRENHEIT,
-                             LENGTH_MILES, VOLUME_GALLONS, MASS_POUNDS,
-                             PRESSURE_PSI)
+IMPERIAL_SYSTEM = UnitSystem(
+    CONF_UNIT_SYSTEM_IMPERIAL,
+    TEMP_FAHRENHEIT,
+    LENGTH_MILES,
+    VOLUME_GALLONS,
+    MASS_POUNDS,
+    PRESSURE_PSI,
+)

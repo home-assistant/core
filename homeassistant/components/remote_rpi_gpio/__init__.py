@@ -3,15 +3,15 @@ import logging
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_BOUNCETIME = 'bouncetime'
-CONF_INVERT_LOGIC = 'invert_logic'
-CONF_PULL_MODE = 'pull_mode'
+CONF_BOUNCETIME = "bouncetime"
+CONF_INVERT_LOGIC = "invert_logic"
+CONF_PULL_MODE = "pull_mode"
 
 DEFAULT_BOUNCETIME = 50
 DEFAULT_INVERT_LOGIC = False
 DEFAULT_PULL_MODE = "UP"
 
-DOMAIN = 'remote_rpi_gpio'
+DOMAIN = "remote_rpi_gpio"
 
 
 def setup(hass, config):
@@ -25,8 +25,7 @@ def setup_output(address, port, invert_logic):
     from gpiozero.pins.pigpio import PiGPIOFactory
 
     try:
-        return LED(port, active_high=invert_logic,
-                   pin_factory=PiGPIOFactory(address))
+        return LED(port, active_high=invert_logic, pin_factory=PiGPIOFactory(address))
     except (ValueError, IndexError, KeyError):
         return None
 
@@ -42,11 +41,13 @@ def setup_input(address, port, pull_mode, bouncetime):
         pull_gpio_up = False
 
     try:
-        return Button(port,
-                      pull_up=pull_gpio_up,
-                      bounce_time=bouncetime,
-                      pin_factory=PiGPIOFactory(address))
-    except (ValueError, IndexError, KeyError, IOError):
+        return Button(
+            port,
+            pull_up=pull_gpio_up,
+            bounce_time=bouncetime,
+            pin_factory=PiGPIOFactory(address),
+        )
+    except (ValueError, IndexError, KeyError, OSError):
         return None
 
 

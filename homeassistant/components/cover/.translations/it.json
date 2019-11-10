@@ -1,0 +1,20 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_closed": "{entity_name} \u00e8 chiuso",
+            "is_closing": "{entity_name} si sta chiudendo",
+            "is_open": "{entity_name} \u00e8 aperto",
+            "is_opening": "{entity_name} si sta aprendo",
+            "is_position": "La posizione attuale di {entity_name} \u00e8",
+            "is_tilt_position": "La posizione d'inclinazione attuale di {entity_name} \u00e8"
+        },
+        "trigger_type": {
+            "closed": "{entity_name} chiuso",
+            "closing": "{entity_name} in chiusura",
+            "opened": "{entity_name} aperto",
+            "opening": "{entity_name} in apertura",
+            "position": "{entity_name} cambiamenti della posizione",
+            "tilt_position": "{entity_name} cambiamenti della posizione d'inclinazione"
+        }
+    }
+}

@@ -1,12 +1,14 @@
 {
   "domain": "glances",
   "name": "Glances",
-  "documentation": "https://www.home-assistant.io/components/glances",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/glances",
   "requirements": [
     "glances_api==0.2.0"
   ],
   "dependencies": [],
   "codeowners": [
-    "@fabaff"
+    "@fabaff",
+    "@engrbm87"
   ]
 }

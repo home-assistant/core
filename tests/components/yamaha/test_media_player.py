@@ -35,9 +35,10 @@ class TestYamahaMediaPlayer(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.main_zone = _create_zone_mock('Main zone', 'http://main')
+        self.main_zone = _create_zone_mock("Main zone", "http://main")
         self.device = FakeYamahaDevice(
-            'http://receiver', 'Receiver', zones=[self.main_zone])
+            "http://receiver", "Receiver", zones=[self.main_zone]
+        )
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -46,36 +47,28 @@ class TestYamahaMediaPlayer(unittest.TestCase):
     def enable_output(self, port, enabled):
         """Enable output on a specific port."""
         data = {
-            'entity_id': 'media_player.yamaha_receiver_main_zone',
-            'port': port,
-            'enabled': enabled
+            "entity_id": "media_player.yamaha_receiver_main_zone",
+            "port": port,
+            "enabled": enabled,
         }
 
-        self.hass.services.call(yamaha.DOMAIN,
-                                yamaha.SERVICE_ENABLE_OUTPUT,
-                                data,
-                                True)
+        self.hass.services.call(yamaha.DOMAIN, yamaha.SERVICE_ENABLE_OUTPUT, data, True)
 
     def create_receiver(self, mock_rxv):
         """Create a mocked receiver."""
         mock_rxv.return_value = self.device
 
-        config = {
-            'media_player': {
-                'platform': 'yamaha',
-                'host': '127.0.0.1'
-            }
-        }
+        config = {"media_player": {"platform": "yamaha", "host": "127.0.0.1"}}
 
         assert setup_component(self.hass, mp.DOMAIN, config)
 
-    @patch('rxv.RXV')
+    @patch("rxv.RXV")
     def test_enable_output(self, mock_rxv):
         """Test enabling and disabling outputs."""
         self.create_receiver(mock_rxv)
 
-        self.enable_output('hdmi1', True)
-        self.main_zone.enable_output.assert_called_with('hdmi1', True)
+        self.enable_output("hdmi1", True)
+        self.main_zone.enable_output.assert_called_with("hdmi1", True)
 
-        self.enable_output('hdmi2', False)
-        self.main_zone.enable_output.assert_called_with('hdmi2', False)
+        self.enable_output("hdmi2", False)
+        self.main_zone.enable_output.assert_called_with("hdmi2", False)

@@ -2,42 +2,46 @@
 import logging
 from datetime import datetime
 
+import ephem
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_TYPE
 from homeassistant.helpers.entity import Entity
 from homeassistant import util
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-NORTHERN = 'northern'
-SOUTHERN = 'southern'
-EQUATOR = 'equator'
-STATE_SPRING = 'spring'
-STATE_SUMMER = 'summer'
-STATE_AUTUMN = 'autumn'
-STATE_WINTER = 'winter'
-TYPE_ASTRONOMICAL = 'astronomical'
-TYPE_METEOROLOGICAL = 'meteorological'
+NORTHERN = "northern"
+SOUTHERN = "southern"
+EQUATOR = "equator"
+STATE_SPRING = "spring"
+STATE_SUMMER = "summer"
+STATE_AUTUMN = "autumn"
+STATE_WINTER = "winter"
+TYPE_ASTRONOMICAL = "astronomical"
+TYPE_METEOROLOGICAL = "meteorological"
 VALID_TYPES = [TYPE_ASTRONOMICAL, TYPE_METEOROLOGICAL]
 
-HEMISPHERE_SEASON_SWAP = {STATE_WINTER: STATE_SUMMER,
-                          STATE_SPRING: STATE_AUTUMN,
-                          STATE_AUTUMN: STATE_SPRING,
-                          STATE_SUMMER: STATE_WINTER}
+HEMISPHERE_SEASON_SWAP = {
+    STATE_WINTER: STATE_SUMMER,
+    STATE_SPRING: STATE_AUTUMN,
+    STATE_AUTUMN: STATE_SPRING,
+    STATE_SUMMER: STATE_WINTER,
+}
 
 SEASON_ICONS = {
-    STATE_SPRING: 'mdi:flower',
-    STATE_SUMMER: 'mdi:sunglasses',
-    STATE_AUTUMN: 'mdi:leaf',
-    STATE_WINTER: 'mdi:snowflake'
+    STATE_SPRING: "mdi:flower",
+    STATE_SUMMER: "mdi:sunglasses",
+    STATE_AUTUMN: "mdi:leaf",
+    STATE_WINTER: "mdi:snowflake",
 }
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_TYPE, default=TYPE_ASTRONOMICAL): vol.In(VALID_TYPES)
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_TYPE, default=TYPE_ASTRONOMICAL): vol.In(VALID_TYPES)}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -64,9 +68,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 def get_season(date, hemisphere, season_tracking_type):
     """Calculate the current season."""
-    import ephem
 
-    if hemisphere == 'equator':
+    if hemisphere == "equator":
         return None
 
     if season_tracking_type == TYPE_ASTRONOMICAL:
@@ -102,7 +105,7 @@ class Season(Entity):
         """Initialize the season."""
         self.hass = hass
         self.hemisphere = hemisphere
-        self.datetime = datetime.now()
+        self.datetime = dt_util.utcnow().replace(tzinfo=None)
         self.type = season_tracking_type
         self.season = get_season(self.datetime, self.hemisphere, self.type)
 
@@ -119,9 +122,9 @@ class Season(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return SEASON_ICONS.get(self.season, 'mdi:cloud')
+        return SEASON_ICONS.get(self.season, "mdi:cloud")
 
     def update(self):
         """Update season."""
-        self.datetime = datetime.utcnow()
+        self.datetime = dt_util.utcnow().replace(tzinfo=None)
         self.season = get_season(self.datetime, self.hemisphere, self.type)

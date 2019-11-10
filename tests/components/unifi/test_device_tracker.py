@@ -1,267 +1,324 @@
-"""The tests for the Unifi WAP device tracker platform."""
-from unittest import mock
-from datetime import datetime, timedelta
+"""The tests for the UniFi device tracker platform."""
+from copy import copy
+from datetime import timedelta
 
-import pytest
-import voluptuous as vol
+from homeassistant import config_entries
+from homeassistant.components import unifi
+from homeassistant.components.unifi.const import (
+    CONF_SSID_FILTER,
+    CONF_TRACK_DEVICES,
+    CONF_TRACK_WIRED_CLIENTS,
+)
+from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.helpers import entity_registry
+from homeassistant.setup import async_setup_component
 
+import homeassistant.components.device_tracker as device_tracker
 import homeassistant.util.dt as dt_util
-from homeassistant.components.device_tracker import DOMAIN
-import homeassistant.components.unifi.device_tracker as unifi
-from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
-                                 CONF_PLATFORM, CONF_VERIFY_SSL,
-                                 CONF_MONITORED_CONDITIONS)
 
-from tests.common import mock_coro
-from asynctest import CoroutineMock
-from aiounifi.clients import Clients
+from .test_controller import ENTRY_CONFIG, SITES, setup_unifi_integration
 
 DEFAULT_DETECTION_TIME = timedelta(seconds=300)
 
+CLIENT_1 = {
+    "essid": "ssid",
+    "hostname": "client_1",
+    "ip": "10.0.0.1",
+    "is_wired": False,
+    "last_seen": 1562600145,
+    "mac": "00:00:00:00:00:01",
+}
+CLIENT_2 = {
+    "hostname": "client_2",
+    "ip": "10.0.0.2",
+    "is_wired": True,
+    "last_seen": 1562600145,
+    "mac": "00:00:00:00:00:02",
+    "name": "Wired Client",
+}
+CLIENT_3 = {
+    "essid": "ssid2",
+    "hostname": "client_3",
+    "ip": "10.0.0.3",
+    "is_wired": False,
+    "last_seen": 1562600145,
+    "mac": "00:00:00:00:00:03",
+}
 
-@pytest.fixture
-def mock_ctrl():
-    """Mock pyunifi."""
-    with mock.patch('aiounifi.Controller') as mock_control:
-        mock_control.return_value.login.return_value = mock_coro()
-        mock_control.return_value.initialize.return_value = mock_coro()
-        yield mock_control
+DEVICE_1 = {
+    "board_rev": 3,
+    "device_id": "mock-id",
+    "has_fan": True,
+    "fan_level": 0,
+    "ip": "10.0.1.1",
+    "last_seen": 1562600145,
+    "mac": "00:00:00:00:01:01",
+    "model": "US16P150",
+    "name": "device_1",
+    "overheating": True,
+    "state": 1,
+    "type": "usw",
+    "upgradable": True,
+    "version": "4.0.42.10433",
+}
+DEVICE_2 = {
+    "board_rev": 3,
+    "device_id": "mock-id",
+    "has_fan": True,
+    "ip": "10.0.1.1",
+    "mac": "00:00:00:00:01:01",
+    "model": "US16P150",
+    "name": "device_1",
+    "state": 0,
+    "type": "usw",
+    "version": "4.0.42.10433",
+}
 
 
-@pytest.fixture
-def mock_scanner():
-    """Mock UnifyScanner."""
-    with mock.patch('homeassistant.components.unifi.device_tracker'
-                    '.UnifiScanner') as scanner:
-        yield scanner
+async def test_platform_manually_configured(hass):
+    """Test that nothing happens when configuring unifi through device tracker platform."""
+    assert (
+        await async_setup_component(
+            hass, device_tracker.DOMAIN, {device_tracker.DOMAIN: {"platform": "unifi"}}
+        )
+        is False
+    )
+    assert unifi.DOMAIN not in hass.data
 
 
-@mock.patch('os.access', return_value=True)
-@mock.patch('os.path.isfile', mock.Mock(return_value=True))
-async def test_config_valid_verify_ssl(hass, mock_scanner, mock_ctrl):
-    """Test the setup with a string for ssl_verify.
+async def test_no_clients(hass):
+    """Test the update_clients function when no clients are found."""
+    await setup_unifi_integration(
+        hass,
+        ENTRY_CONFIG,
+        options={},
+        sites=SITES,
+        clients_response=[],
+        devices_response=[],
+        clients_all_response=[],
+    )
 
-    Representing the absolute path to a CA certificate bundle.
+    assert len(hass.states.async_all()) == 2
+
+
+async def test_tracked_devices(hass):
+    """Test the update_items function with some clients."""
+    controller = await setup_unifi_integration(
+        hass,
+        ENTRY_CONFIG,
+        options={CONF_SSID_FILTER: ["ssid"]},
+        sites=SITES,
+        clients_response=[CLIENT_1, CLIENT_2, CLIENT_3],
+        devices_response=[DEVICE_1, DEVICE_2],
+        clients_all_response={},
+    )
+    assert len(hass.states.async_all()) == 5
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1 is not None
+    assert client_1.state == "not_home"
+
+    client_2 = hass.states.get("device_tracker.wired_client")
+    assert client_2 is not None
+    assert client_2.state == "not_home"
+
+    client_3 = hass.states.get("device_tracker.client_3")
+    assert client_3 is None
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1 is not None
+    assert device_1.state == "not_home"
+
+    client_1_copy = copy(CLIENT_1)
+    client_1_copy["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
+    device_1_copy = copy(DEVICE_1)
+    device_1_copy["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
+    controller.mock_client_responses.append([client_1_copy])
+    controller.mock_device_responses.append([device_1_copy])
+    await controller.async_update()
+    await hass.async_block_till_done()
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1.state == "home"
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1.state == "home"
+
+    device_1_copy = copy(DEVICE_1)
+    device_1_copy["disabled"] = True
+    controller.mock_client_responses.append({})
+    controller.mock_device_responses.append([device_1_copy])
+    await controller.async_update()
+    await hass.async_block_till_done()
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1.state == STATE_UNAVAILABLE
+
+    controller.config_entry.add_update_listener(controller.async_options_updated)
+    hass.config_entries.async_update_entry(
+        controller.config_entry,
+        options={
+            CONF_SSID_FILTER: [],
+            CONF_TRACK_WIRED_CLIENTS: False,
+            CONF_TRACK_DEVICES: False,
+        },
+    )
+    await hass.async_block_till_done()
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1
+    client_2 = hass.states.get("device_tracker.wired_client")
+    assert client_2 is None
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1 is None
+
+
+async def test_wireless_client_go_wired_issue(hass):
+    """Test the solution to catch wireless device go wired UniFi issue.
+
+    UniFi has a known issue that when a wireless device goes away it sometimes gets marked as wired.
     """
-    config = {
-        DOMAIN: unifi.PLATFORM_SCHEMA({
-            CONF_PLATFORM: unifi.DOMAIN,
-            CONF_USERNAME: 'foo',
-            CONF_PASSWORD: 'password',
-            CONF_VERIFY_SSL: "/tmp/unifi.crt"
-        })
-    }
-    result = await unifi.async_get_scanner(hass, config)
-    assert mock_scanner.return_value == result
-    assert mock_ctrl.call_count == 1
+    client_1_client = copy(CLIENT_1)
+    client_1_client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
 
-    assert mock_scanner.call_count == 1
-    assert mock_scanner.call_args == mock.call(mock_ctrl.return_value,
-                                               DEFAULT_DETECTION_TIME,
-                                               None, None)
+    controller = await setup_unifi_integration(
+        hass,
+        ENTRY_CONFIG,
+        options={},
+        sites=SITES,
+        clients_response=[client_1_client],
+        devices_response=[],
+        clients_all_response=[],
+    )
+    assert len(hass.states.async_all()) == 3
 
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1 is not None
+    assert client_1.state == "home"
 
-async def test_config_minimal(hass, mock_scanner, mock_ctrl):
-    """Test the setup with minimal configuration."""
-    config = {
-        DOMAIN: unifi.PLATFORM_SCHEMA({
-            CONF_PLATFORM: unifi.DOMAIN,
-            CONF_USERNAME: 'foo',
-            CONF_PASSWORD: 'password',
-        })
-    }
+    client_1_client["is_wired"] = True
+    client_1_client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
+    controller.mock_client_responses.append([client_1_client])
+    controller.mock_device_responses.append({})
+    await controller.async_update()
+    await hass.async_block_till_done()
 
-    result = await unifi.async_get_scanner(hass, config)
-    assert mock_scanner.return_value == result
-    assert mock_ctrl.call_count == 1
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1.state == "not_home"
 
-    assert mock_scanner.call_count == 1
-    assert mock_scanner.call_args == mock.call(mock_ctrl.return_value,
-                                               DEFAULT_DETECTION_TIME,
-                                               None, None)
+    client_1_client["is_wired"] = False
+    client_1_client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
+    controller.mock_client_responses.append([client_1_client])
+    controller.mock_device_responses.append({})
+    await controller.async_update()
+    await hass.async_block_till_done()
 
-
-async def test_config_full(hass, mock_scanner, mock_ctrl):
-    """Test the setup with full configuration."""
-    config = {
-        DOMAIN: unifi.PLATFORM_SCHEMA({
-            CONF_PLATFORM: unifi.DOMAIN,
-            CONF_USERNAME: 'foo',
-            CONF_PASSWORD: 'password',
-            CONF_HOST: 'myhost',
-            CONF_VERIFY_SSL: False,
-            CONF_MONITORED_CONDITIONS: ['essid', 'signal'],
-            'port': 123,
-            'site_id': 'abcdef01',
-            'detection_time': 300,
-        })
-    }
-    result = await unifi.async_get_scanner(hass, config)
-    assert mock_scanner.return_value == result
-    assert mock_ctrl.call_count == 1
-
-    assert mock_scanner.call_count == 1
-    assert mock_scanner.call_args == mock.call(
-        mock_ctrl.return_value,
-        DEFAULT_DETECTION_TIME,
-        None,
-        config[DOMAIN][CONF_MONITORED_CONDITIONS])
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1.state == "home"
 
 
-def test_config_error():
-    """Test for configuration errors."""
-    with pytest.raises(vol.Invalid):
-        unifi.PLATFORM_SCHEMA({
-            # no username
-            CONF_PLATFORM: unifi.DOMAIN,
-            CONF_HOST: 'myhost',
-            'port': 123,
-        })
-    with pytest.raises(vol.Invalid):
-        unifi.PLATFORM_SCHEMA({
-            CONF_PLATFORM: unifi.DOMAIN,
-            CONF_USERNAME: 'foo',
-            CONF_PASSWORD: 'password',
-            CONF_HOST: 'myhost',
-            'port': 'foo',  # bad port!
-        })
-    with pytest.raises(vol.Invalid):
-        unifi.PLATFORM_SCHEMA({
-            CONF_PLATFORM: unifi.DOMAIN,
-            CONF_USERNAME: 'foo',
-            CONF_PASSWORD: 'password',
-            CONF_VERIFY_SSL: "dfdsfsdfsd",  # Invalid ssl_verify (no file)
-        })
+async def test_restoring_client(hass):
+    """Test the update_items function with some clients."""
+    config_entry = config_entries.ConfigEntry(
+        version=1,
+        domain=unifi.DOMAIN,
+        title="Mock Title",
+        data=ENTRY_CONFIG,
+        source="test",
+        connection_class=config_entries.CONN_CLASS_LOCAL_POLL,
+        system_options={},
+        options={},
+        entry_id=1,
+    )
+
+    registry = await entity_registry.async_get_registry(hass)
+    registry.async_get_or_create(
+        device_tracker.DOMAIN,
+        unifi.DOMAIN,
+        "{}-site_id".format(CLIENT_1["mac"]),
+        suggested_object_id=CLIENT_1["hostname"],
+        config_entry=config_entry,
+    )
+    registry.async_get_or_create(
+        device_tracker.DOMAIN,
+        unifi.DOMAIN,
+        "{}-site_id".format(CLIENT_2["mac"]),
+        suggested_object_id=CLIENT_2["hostname"],
+        config_entry=config_entry,
+    )
+
+    await setup_unifi_integration(
+        hass,
+        ENTRY_CONFIG,
+        options={unifi.CONF_BLOCK_CLIENT: True},
+        sites=SITES,
+        clients_response=[CLIENT_2],
+        devices_response=[],
+        clients_all_response=[CLIENT_1],
+    )
+    assert len(hass.states.async_all()) == 4
+
+    device_1 = hass.states.get("device_tracker.client_1")
+    assert device_1 is not None
 
 
-async def test_config_controller_failed(hass, mock_ctrl, mock_scanner):
-    """Test for controller failure."""
-    config = {
-        'device_tracker': {
-            CONF_PLATFORM: unifi.DOMAIN,
-            CONF_USERNAME: 'foo',
-            CONF_PASSWORD: 'password',
-        }
-    }
-    mock_ctrl.side_effect = unifi.CannotConnect
-    result = await unifi.async_get_scanner(hass, config)
-    assert result is False
+async def test_dont_track_clients(hass):
+    """Test dont track clients config works."""
+    await setup_unifi_integration(
+        hass,
+        ENTRY_CONFIG,
+        options={unifi.controller.CONF_TRACK_CLIENTS: False},
+        sites=SITES,
+        clients_response=[CLIENT_1],
+        devices_response=[DEVICE_1],
+        clients_all_response=[],
+    )
+    assert len(hass.states.async_all()) == 3
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1 is None
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1 is not None
+    assert device_1.state == "not_home"
 
 
-async def test_scanner_update():
-    """Test the scanner update."""
-    ctrl = mock.MagicMock()
-    fake_clients = [
-        {'mac': '123', 'essid': 'barnet',
-         'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
-        {'mac': '234', 'essid': 'barnet',
-         'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
-    ]
-    ctrl.clients = Clients([], CoroutineMock(return_value=fake_clients))
-    scnr = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None, None)
-    await scnr.async_update()
-    assert len(scnr._clients) == 2
+async def test_dont_track_devices(hass):
+    """Test dont track devices config works."""
+    await setup_unifi_integration(
+        hass,
+        ENTRY_CONFIG,
+        options={unifi.controller.CONF_TRACK_DEVICES: False},
+        sites=SITES,
+        clients_response=[CLIENT_1],
+        devices_response=[DEVICE_1],
+        clients_all_response=[],
+    )
+    assert len(hass.states.async_all()) == 3
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1 is not None
+    assert client_1.state == "not_home"
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1 is None
 
 
-def test_scanner_update_error():
-    """Test the scanner update for error."""
-    ctrl = mock.MagicMock()
-    ctrl.get_clients.side_effect = unifi.aiounifi.AiounifiException
-    unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None, None)
+async def test_dont_track_wired_clients(hass):
+    """Test dont track wired clients config works."""
+    await setup_unifi_integration(
+        hass,
+        ENTRY_CONFIG,
+        options={unifi.controller.CONF_TRACK_WIRED_CLIENTS: False},
+        sites=SITES,
+        clients_response=[CLIENT_1, CLIENT_2],
+        devices_response=[],
+        clients_all_response=[],
+    )
+    assert len(hass.states.async_all()) == 3
 
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1 is not None
+    assert client_1.state == "not_home"
 
-async def test_scan_devices():
-    """Test the scanning for devices."""
-    ctrl = mock.MagicMock()
-    fake_clients = [
-        {'mac': '123', 'essid': 'barnet',
-         'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
-        {'mac': '234', 'essid': 'barnet',
-         'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
-    ]
-    ctrl.clients = Clients([], CoroutineMock(return_value=fake_clients))
-    scnr = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None, None)
-    await scnr.async_update()
-    assert set(await scnr.async_scan_devices()) == set(['123', '234'])
-
-
-async def test_scan_devices_filtered():
-    """Test the scanning for devices based on SSID."""
-    ctrl = mock.MagicMock()
-    fake_clients = [
-        {'mac': '123', 'essid': 'foonet',
-         'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
-        {'mac': '234', 'essid': 'foonet',
-         'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
-        {'mac': '567', 'essid': 'notnet',
-         'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
-        {'mac': '890', 'essid': 'barnet',
-         'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
-    ]
-
-    ssid_filter = ['foonet', 'barnet']
-    ctrl.clients = Clients([], CoroutineMock(return_value=fake_clients))
-    scnr = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, ssid_filter, None)
-    await scnr.async_update()
-    assert set(await scnr.async_scan_devices()) == set(['123', '234', '890'])
-
-
-async def test_get_device_name():
-    """Test the getting of device names."""
-    ctrl = mock.MagicMock()
-    fake_clients = [
-        {'mac': '123',
-         'hostname': 'foobar',
-         'essid': 'barnet',
-         'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
-        {'mac': '234',
-         'name': 'Nice Name',
-         'essid': 'barnet',
-         'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
-        {'mac': '456',
-         'essid': 'barnet',
-         'last_seen': '1504786810'},
-    ]
-    ctrl.clients = Clients([], CoroutineMock(return_value=fake_clients))
-    scnr = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None, None)
-    await scnr.async_update()
-    assert scnr.get_device_name('123') == 'foobar'
-    assert scnr.get_device_name('234') == 'Nice Name'
-    assert scnr.get_device_name('456') is None
-    assert scnr.get_device_name('unknown') is None
-
-
-async def test_monitored_conditions():
-    """Test the filtering of attributes."""
-    ctrl = mock.MagicMock()
-    fake_clients = [
-        {'mac': '123',
-         'hostname': 'foobar',
-         'essid': 'barnet',
-         'signal': -60,
-         'last_seen': dt_util.as_timestamp(dt_util.utcnow()),
-         'latest_assoc_time': 946684800.0},
-        {'mac': '234',
-         'name': 'Nice Name',
-         'essid': 'barnet',
-         'signal': -42,
-         'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
-        {'mac': '456',
-         'hostname': 'wired',
-         'essid': 'barnet',
-         'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
-    ]
-    ctrl.clients = Clients([], CoroutineMock(return_value=fake_clients))
-    scnr = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None,
-                              ['essid', 'signal', 'latest_assoc_time'])
-    await scnr.async_update()
-    assert scnr.get_extra_attributes('123') == {
-        'essid': 'barnet',
-        'signal': -60,
-        'latest_assoc_time': datetime(2000, 1, 1, 0, 0, tzinfo=dt_util.UTC)
-    }
-    assert scnr.get_extra_attributes('234') == {
-        'essid': 'barnet',
-        'signal': -42
-    }
-    assert scnr.get_extra_attributes('456') == {'essid': 'barnet'}
+    client_2 = hass.states.get("device_tracker.client_2")
+    assert client_2 is None

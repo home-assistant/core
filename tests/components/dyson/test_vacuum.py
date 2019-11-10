@@ -83,14 +83,14 @@ class DysonTest(unittest.TestCase):
 
     def test_setup_component(self):
         """Test setup component with devices."""
+
         def _add_device(devices):
             assert len(devices) == 1
             assert devices[0].name == "Device_Vacuum"
 
         device_vacuum = _get_vacuum_device_cleaning()
         device_non_vacuum = _get_non_vacuum_device()
-        self.hass.data[dyson.DYSON_DEVICES] = [device_vacuum,
-                                               device_non_vacuum]
+        self.hass.data[dyson.DYSON_DEVICES] = [device_vacuum, device_non_vacuum]
         dyson.setup_platform(self.hass, {}, _add_device)
 
     def test_on_message(self):
@@ -123,8 +123,7 @@ class DysonTest(unittest.TestCase):
         assert component.battery_level == 85
         assert component.fan_speed == "Quiet"
         assert component.fan_speed_list == ["Quiet", "Max"]
-        assert component.device_state_attributes['position'] == \
-            '(0, 0)'
+        assert component.device_state_attributes["position"] == "(0, 0)"
         assert component.available
         assert component.supported_features == 255
         assert component.battery_icon == "mdi:battery-80"

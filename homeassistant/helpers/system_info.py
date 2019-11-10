@@ -13,24 +13,24 @@ from .typing import HomeAssistantType
 async def async_get_system_info(hass: HomeAssistantType) -> Dict:
     """Return info about the system."""
     info_object = {
-        'version': current_version,
-        'dev': 'dev' in current_version,
-        'hassio': hass.components.hassio.is_hassio(),
-        'virtualenv': is_virtual_env(),
-        'python_version': platform.python_version(),
-        'docker': False,
-        'arch': platform.machine(),
-        'timezone': str(hass.config.time_zone),
-        'os_name': platform.system(),
+        "version": current_version,
+        "dev": "dev" in current_version,
+        "hassio": hass.components.hassio.is_hassio(),
+        "virtualenv": is_virtual_env(),
+        "python_version": platform.python_version(),
+        "docker": False,
+        "arch": platform.machine(),
+        "timezone": str(hass.config.time_zone),
+        "os_name": platform.system(),
     }
 
-    if platform.system() == 'Windows':
-        info_object['os_version'] = platform.win32_ver()[0]
-    elif platform.system() == 'Darwin':
-        info_object['os_version'] = platform.mac_ver()[0]
-    elif platform.system() == 'FreeBSD':
-        info_object['os_version'] = platform.release()
-    elif platform.system() == 'Linux':
-        info_object['docker'] = os.path.isfile('/.dockerenv')
+    if platform.system() == "Windows":
+        info_object["os_version"] = platform.win32_ver()[0]
+    elif platform.system() == "Darwin":
+        info_object["os_version"] = platform.mac_ver()[0]
+    elif platform.system() == "FreeBSD":
+        info_object["os_version"] = platform.release()
+    elif platform.system() == "Linux":
+        info_object["docker"] = os.path.isfile("/.dockerenv")
 
     return info_object

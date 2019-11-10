@@ -1,30 +1,47 @@
 """DuneHD implementation of the media player."""
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON)
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING)
+    CONF_HOST,
+    CONF_NAME,
+    STATE_OFF,
+    STATE_ON,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
 import homeassistant.helpers.config_validation as cv
 
-DEFAULT_NAME = 'DuneHD'
+DEFAULT_NAME = "DuneHD"
 
-CONF_SOURCES = 'sources'
+CONF_SOURCES = "sources"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_SOURCES): vol.Schema({cv.string: cv.string}),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_SOURCES): vol.Schema({cv.string: cv.string}),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
-DUNEHD_PLAYER_SUPPORT = \
-    SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
-    SUPPORT_SELECT_SOURCE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_PLAY
+DUNEHD_PLAYER_SUPPORT = (
+    SUPPORT_PAUSE
+    | SUPPORT_TURN_ON
+    | SUPPORT_TURN_OFF
+    | SUPPORT_SELECT_SOURCE
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_NEXT_TRACK
+    | SUPPORT_PLAY
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -59,13 +76,13 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
     def state(self):
         """Return player state."""
         state = STATE_OFF
-        if 'playback_position' in self._state:
+        if "playback_position" in self._state:
             state = STATE_PLAYING
-        if self._state['player_state'] in ('playing', 'buffering'):
+        if self._state["player_state"] in ("playing", "buffering"):
             state = STATE_PLAYING
-        if int(self._state.get('playback_speed', 1234)) == 0:
+        if int(self._state.get("playback_speed", 1234)) == 0:
             state = STATE_PAUSED
-        if self._state['player_state'] == 'navigator':
+        if self._state["player_state"] == "navigator":
             state = STATE_ON
         return state
 
@@ -77,12 +94,12 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Return the volume level of the media player (0..1)."""
-        return int(self._state.get('playback_volume', 0)) / 100
+        return int(self._state.get("playback_volume", 0)) / 100
 
     @property
     def is_volume_muted(self):
         """Return a boolean if volume is currently muted."""
-        return int(self._state.get('playback_mute', 0)) == 1
+        return int(self._state.get("playback_mute", 0)) == 1
 
     @property
     def source_list(self):
@@ -133,16 +150,16 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
         self.__update_title()
         if self._media_title:
             return self._media_title
-        return self._state.get('playback_url', 'Not playing')
+        return self._state.get("playback_url", "Not playing")
 
     def __update_title(self):
-        if self._state['player_state'] == 'bluray_playback':
-            self._media_title = 'Blu-Ray'
-        elif 'playback_url' in self._state:
+        if self._state["player_state"] == "bluray_playback":
+            self._media_title = "Blu-Ray"
+        elif "playback_url" in self._state:
             sources = self._sources
             sval = sources.values()
             skey = sources.keys()
-            pburl = self._state['playback_url']
+            pburl = self._state["playback_url"]
             if pburl in sval:
                 self._media_title = list(skey)[list(sval).index(pburl)]
             else:

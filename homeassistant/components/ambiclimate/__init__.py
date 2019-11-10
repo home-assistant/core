@@ -12,11 +12,12 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-            vol.Schema({
+        DOMAIN: vol.Schema(
+            {
                 vol.Required(CONF_CLIENT_ID): cv.string,
                 vol.Required(CONF_CLIENT_SECRET): cv.string,
-            })
+            }
+        )
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -30,15 +31,16 @@ async def async_setup(hass, config):
     conf = config[DOMAIN]
 
     config_flow.register_flow_implementation(
-        hass, conf[CONF_CLIENT_ID],
-        conf[CONF_CLIENT_SECRET])
+        hass, conf[CONF_CLIENT_ID], conf[CONF_CLIENT_SECRET]
+    )
 
     return True
 
 
 async def async_setup_entry(hass, entry):
     """Set up Ambiclimate from a config entry."""
-    hass.async_create_task(hass.config_entries.async_forward_entry_setup(
-        entry, 'climate'))
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(entry, "climate")
+    )
 
     return True

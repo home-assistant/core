@@ -4,8 +4,7 @@ import json
 
 import pytest
 
-from homeassistant.components.meraki.device_tracker import (
-    CONF_VALIDATOR, CONF_SECRET)
+from homeassistant.components.meraki.device_tracker import CONF_VALIDATOR, CONF_SECRET
 from homeassistant.setup import async_setup_component
 import homeassistant.components.device_tracker as device_tracker
 from homeassistant.const import CONF_PLATFORM

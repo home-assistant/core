@@ -8,7 +8,7 @@
             "port_997_bind_error": "Nie mo\u017cna powi\u0105za\u0107 z portem 997."
         },
         "error": {
-            "credential_timeout": "Up\u0142yn\u0105\u0142 limit czasu us\u0142ugi po\u015bwiadcze\u0144. Naci\u015bnij przycisk Prze\u015blij, aby ponownie uruchomi\u0107.",
+            "credential_timeout": "Przekroczono limit czasu us\u0142ugi po\u015bwiadcze\u0144. Naci\u015bnij przycisk Prze\u015blij, aby ponowi\u0107.",
             "login_failed": "Nie uda\u0142o si\u0119 sparowa\u0107 z PlayStation 4. Sprawd\u017a, czy PIN jest poprawny.",
             "no_ipaddress": "Wprowad\u017a adres IP PlayStation 4, kt\u00f3ry chcesz skonfigurowa\u0107.",
             "not_ready": "PlayStation 4 nie jest w\u0142\u0105czona lub po\u0142\u0105czona z sieci\u0105."

@@ -4,8 +4,6 @@ from .const import DOMAIN
 
 config_entry_flow.register_webhook_flow(
     DOMAIN,
-    'Webhook',
-    {
-        'docs_url': 'https://www.home-assistant.io/components/plaato/'
-    }
+    "Webhook",
+    {"docs_url": "https://www.home-assistant.io/integrations/plaato/"},
 )

@@ -1,21 +1,29 @@
 """Platform to control a Zehnder ComfoAir Q350/450/600 ventilation unit."""
 import logging
 
+from pycomfoconnect import (
+    CMD_FAN_MODE_AWAY,
+    CMD_FAN_MODE_HIGH,
+    CMD_FAN_MODE_LOW,
+    CMD_FAN_MODE_MEDIUM,
+    SENSOR_FAN_SPEED_MODE,
+)
+
 from homeassistant.components.fan import (
-    SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF, SUPPORT_SET_SPEED,
-    FanEntity)
+    SPEED_HIGH,
+    SPEED_LOW,
+    SPEED_MEDIUM,
+    SPEED_OFF,
+    SUPPORT_SET_SPEED,
+    FanEntity,
+)
 from homeassistant.helpers.dispatcher import dispatcher_connect
 
 from . import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge
 
 _LOGGER = logging.getLogger(__name__)
 
-SPEED_MAPPING = {
-    0: SPEED_OFF,
-    1: SPEED_LOW,
-    2: SPEED_MEDIUM,
-    3: SPEED_HIGH
-}
+SPEED_MAPPING = {0: SPEED_OFF, 1: SPEED_LOW, 2: SPEED_MEDIUM, 3: SPEED_HIGH}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -30,7 +38,6 @@ class ComfoConnectFan(FanEntity):
 
     def __init__(self, hass, name, ccb: ComfoConnectBridge) -> None:
         """Initialize the ComfoConnect fan."""
-        from pycomfoconnect import SENSOR_FAN_SPEED_MODE
 
         self._ccb = ccb
         self._name = name
@@ -44,8 +51,7 @@ class ComfoConnectFan(FanEntity):
                 self.schedule_update_ha_state()
 
         # Register for dispatcher updates
-        dispatcher_connect(
-            hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, _handle_update)
+        dispatcher_connect(hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, _handle_update)
 
     @property
     def name(self):
@@ -55,7 +61,7 @@ class ComfoConnectFan(FanEntity):
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        return 'mdi:air-conditioner'
+        return "mdi:air-conditioner"
 
     @property
     def supported_features(self) -> int:
@@ -65,7 +71,6 @@ class ComfoConnectFan(FanEntity):
     @property
     def speed(self):
         """Return the current fan mode."""
-        from pycomfoconnect import (SENSOR_FAN_SPEED_MODE)
 
         try:
             speed = self._ccb.data[SENSOR_FAN_SPEED_MODE]
@@ -90,11 +95,7 @@ class ComfoConnectFan(FanEntity):
 
     def set_speed(self, speed: str):
         """Set fan speed."""
-        _LOGGER.debug('Changing fan speed to %s.', speed)
-
-        from pycomfoconnect import (
-            CMD_FAN_MODE_AWAY, CMD_FAN_MODE_LOW, CMD_FAN_MODE_MEDIUM,
-            CMD_FAN_MODE_HIGH)
+        _LOGGER.debug("Changing fan speed to %s.", speed)
 
         if speed == SPEED_OFF:
             self._ccb.comfoconnect.cmd_rmi_request(CMD_FAN_MODE_AWAY)

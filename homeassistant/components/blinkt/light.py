@@ -6,35 +6,40 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_COLOR,
-    Light, PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS,
+    SUPPORT_BRIGHTNESS,
+    ATTR_HS_COLOR,
+    SUPPORT_COLOR,
+    Light,
+    PLATFORM_SCHEMA,
+)
 from homeassistant.const import CONF_NAME
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_BLINKT = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR)
+SUPPORT_BLINKT = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
-DEFAULT_NAME = 'blinkt'
+DEFAULT_NAME = "blinkt"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Blinkt Light platform."""
     # pylint: disable=no-member
-    blinkt = importlib.import_module('blinkt')
+    blinkt = importlib.import_module("blinkt")
 
     # ensure that the lights are off when exiting
     blinkt.set_clear_on_exit()
 
     name = config.get(CONF_NAME)
 
-    add_entities([
-        BlinktLight(blinkt, name, index) for index in range(blinkt.NUM_PIXELS)
-    ])
+    add_entities(
+        [BlinktLight(blinkt, name, index) for index in range(blinkt.NUM_PIXELS)]
+    )
 
 
 class BlinktLight(Light):
@@ -46,7 +51,7 @@ class BlinktLight(Light):
         Default brightness and white color.
         """
         self._blinkt = blinkt
-        self._name = "{}_{}".format(name, index)
+        self._name = f"{name}_{index}"
         self._index = index
         self._is_on = False
         self._brightness = 255
@@ -97,13 +102,11 @@ class BlinktLight(Light):
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
 
-        percent_bright = (self._brightness / 255)
+        percent_bright = self._brightness / 255
         rgb_color = color_util.color_hs_to_RGB(*self._hs_color)
-        self._blinkt.set_pixel(self._index,
-                               rgb_color[0],
-                               rgb_color[1],
-                               rgb_color[2],
-                               percent_bright)
+        self._blinkt.set_pixel(
+            self._index, rgb_color[0], rgb_color[1], rgb_color[2], percent_bright
+        )
 
         self._blinkt.show()
 

@@ -1,0 +1,20 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_closed": "{entity_name} est\u00e0 tancat/da",
+            "is_closing": "{entity_name} est\u00e0 tancant-se",
+            "is_open": "{entity_name} est\u00e0 obert/a",
+            "is_opening": "{entity_name} s'est\u00e0 obrint",
+            "is_position": "La posici\u00f3 de {entity_name} \u00e9s",
+            "is_tilt_position": "La posici\u00f3 d'inclinaci\u00f3 de {entity_name} \u00e9s"
+        },
+        "trigger_type": {
+            "closed": "{entity_name} tancat/da",
+            "closing": "{entity_name} tancant-se",
+            "opened": "{entity_name} s'ha obert",
+            "opening": "{entity_name} obrint-se",
+            "position": "Canvia la posici\u00f3 de {entity_name}",
+            "tilt_position": "Canvia la inclinaci\u00f3 de {entity_name}"
+        }
+    }
+}

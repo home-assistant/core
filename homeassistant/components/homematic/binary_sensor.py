@@ -1,28 +1,34 @@
 """Support for HomeMatic binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.homematic import (
-    ATTR_DISCOVERY_TYPE, DISCOVER_BATTERY)
-from homeassistant.const import DEVICE_CLASS_BATTERY
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_PRESENCE,
+    DEVICE_CLASS_SMOKE,
+    BinarySensorDevice,
+)
+from homeassistant.components.homematic import ATTR_DISCOVERY_TYPE, DISCOVER_BATTERY
 
 from . import ATTR_DISCOVER_DEVICES, HMDevice
 
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES_CLASS = {
-    'IPShutterContact': 'opening',
-    'MaxShutterContact': 'opening',
-    'Motion': 'motion',
-    'MotionV2': 'motion',
-    'PresenceIP': 'motion',
-    'Remote': None,
-    'RemoteMotion': None,
-    'ShutterContact': 'opening',
-    'Smoke': 'smoke',
-    'SmokeV2': 'smoke',
-    'TiltSensor': None,
-    'WeatherSensor': None,
+    "IPShutterContact": DEVICE_CLASS_OPENING,
+    "IPShutterContactSabotage": DEVICE_CLASS_OPENING,
+    "MaxShutterContact": DEVICE_CLASS_OPENING,
+    "Motion": DEVICE_CLASS_MOTION,
+    "MotionV2": DEVICE_CLASS_MOTION,
+    "PresenceIP": DEVICE_CLASS_PRESENCE,
+    "Remote": None,
+    "RemoteMotion": None,
+    "ShutterContact": DEVICE_CLASS_OPENING,
+    "Smoke": DEVICE_CLASS_SMOKE,
+    "SmokeV2": DEVICE_CLASS_SMOKE,
+    "TiltSensor": None,
+    "WeatherSensor": None,
 }
 
 
@@ -55,9 +61,9 @@ class HMBinarySensor(HMDevice, BinarySensorDevice):
     def device_class(self):
         """Return the class of this sensor from DEVICE_CLASSES."""
         # If state is MOTION (Only RemoteMotion working)
-        if self._state == 'MOTION':
-            return 'motion'
-        return SENSOR_TYPES_CLASS.get(self._hmdevice.__class__.__name__, None)
+        if self._state == "MOTION":
+            return DEVICE_CLASS_MOTION
+        return SENSOR_TYPES_CLASS.get(self._hmdevice.__class__.__name__)
 
     def _init_data_struct(self):
         """Generate the data dictionary (self._data) from metadata."""

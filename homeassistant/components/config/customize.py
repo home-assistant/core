@@ -6,19 +6,21 @@ import homeassistant.helpers.config_validation as cv
 
 from . import EditKeyBasedConfigView
 
-CONFIG_PATH = 'customize.yaml'
+CONFIG_PATH = "customize.yaml"
 
 
 async def async_setup(hass):
     """Set up the Customize config API."""
+
     async def hook(hass):
         """post_write_hook for Config View that reloads groups."""
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD_CORE_CONFIG)
 
-    hass.http.register_view(CustomizeConfigView(
-        'customize', 'config', CONFIG_PATH, cv.entity_id, dict,
-        post_write_hook=hook
-    ))
+    hass.http.register_view(
+        CustomizeConfigView(
+            "customize", "config", CONFIG_PATH, cv.entity_id, dict, post_write_hook=hook
+        )
+    )
 
     return True
 
@@ -29,7 +31,7 @@ class CustomizeConfigView(EditKeyBasedConfigView):
     def _get_value(self, hass, data, config_key):
         """Get value."""
         customize = hass.data.get(DATA_CUSTOMIZE, {}).get(config_key) or {}
-        return {'global': customize, 'local': data.get(config_key, {})}
+        return {"global": customize, "local": data.get(config_key, {})}
 
     def _write_value(self, hass, data, config_key, new_value):
         """Set value."""

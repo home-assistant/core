@@ -1,7 +1,7 @@
 {
   "domain": "yamaha_musiccast",
   "name": "Yamaha musiccast",
-  "documentation": "https://www.home-assistant.io/components/yamaha_musiccast",
+  "documentation": "https://www.home-assistant.io/integrations/yamaha_musiccast",
   "requirements": [
     "pymusiccast==0.1.6"
   ],

@@ -20,11 +20,14 @@ from .const import ATTR_ADDON, ATTR_PASSWORD, ATTR_USERNAME
 _LOGGER = logging.getLogger(__name__)
 
 
-SCHEMA_API_AUTH = vol.Schema({
-    vol.Required(ATTR_USERNAME): cv.string,
-    vol.Required(ATTR_PASSWORD): cv.string,
-    vol.Required(ATTR_ADDON): cv.string,
-}, extra=vol.ALLOW_EXTRA)
+SCHEMA_API_AUTH = vol.Schema(
+    {
+        vol.Required(ATTR_USERNAME): cv.string,
+        vol.Required(ATTR_PASSWORD): cv.string,
+        vol.Required(ATTR_ADDON): cv.string,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 @callback
@@ -47,10 +50,9 @@ class HassIOAuth(HomeAssistantView):
     @RequestDataValidator(SCHEMA_API_AUTH)
     async def post(self, request, data):
         """Handle new discovery requests."""
-        hassio_ip = os.environ['HASSIO'].split(':')[0]
+        hassio_ip = os.environ["HASSIO"].split(":")[0]
         if request[KEY_REAL_IP] != ip_address(hassio_ip):
-            _LOGGER.error(
-                "Invalid auth request from %s", request[KEY_REAL_IP])
+            _LOGGER.error("Invalid auth request from %s", request[KEY_REAL_IP])
             raise HTTPForbidden()
 
         await self._check_login(data[ATTR_USERNAME], data[ATTR_PASSWORD])
@@ -58,7 +60,7 @@ class HassIOAuth(HomeAssistantView):
 
     def _get_provider(self):
         """Return Homeassistant auth provider."""
-        prv = self.hass.auth.get_auth_provider('homeassistant', None)
+        prv = self.hass.auth.get_auth_provider("homeassistant", None)
         if prv is not None:
             return prv
 

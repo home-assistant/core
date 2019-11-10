@@ -22,23 +22,27 @@ ATTR_ACC_OWNER_BIRTH_DATE = "owner_birth_date"
 ATTR_ACC_OWNER_EMAIL = "owner_email"
 ATTR_ACC_OWNER_PHONE_NUMBER = "owner_phone_number"
 
-ICON_ACCOUNT = 'mdi:currency-eur'
-ICON_CARD = 'mdi:credit-card'
-ICON_SPACE = 'mdi:crop-square'
+ICON_ACCOUNT = "mdi:currency-eur"
+ICON_CARD = "mdi:credit-card"
+ICON_SPACE = "mdi:crop-square"
 
 
-def setup_platform(
-        hass, config, add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the N26 sensor platform."""
-    api_data = hass.data[DOMAIN][DATA]
+    if discovery_info is None:
+        return
 
-    sensor_entities = [N26Account(api_data)]
+    api_list = hass.data[DOMAIN][DATA]
 
-    for card in api_data.cards:
-        sensor_entities.append(N26Card(api_data, card))
+    sensor_entities = []
+    for api_data in api_list:
+        sensor_entities.append(N26Account(api_data))
 
-    for space in api_data.spaces["spaces"]:
-        sensor_entities.append(N26Space(api_data, space))
+        for card in api_data.cards:
+            sensor_entities.append(N26Card(api_data, card))
+
+        for space in api_data.spaces["spaces"]:
+            sensor_entities.append(N26Space(api_data, space))
 
     add_entities(sensor_entities)
 
@@ -93,16 +97,16 @@ class N26Account(Entity):
             ATTR_BANK_BALANCE: self._data.balance.get("bankBalance"),
             ATTR_USABLE_BALANCE: self._data.balance.get("usableBalance"),
             ATTR_ACC_OWNER_TITLE: self._data.account_info.get("title"),
-            ATTR_ACC_OWNER_FIRST_NAME:
-                self._data.account_info.get("kycFirstName"),
-            ATTR_ACC_OWNER_LAST_NAME:
-                self._data.account_info.get("kycLastName"),
+            ATTR_ACC_OWNER_FIRST_NAME: self._data.account_info.get("kycFirstName"),
+            ATTR_ACC_OWNER_LAST_NAME: self._data.account_info.get("kycLastName"),
             ATTR_ACC_OWNER_GENDER: self._data.account_info.get("gender"),
             ATTR_ACC_OWNER_BIRTH_DATE: timestamp_ms_to_date(
-                self._data.account_info.get("birthDate")),
+                self._data.account_info.get("birthDate")
+            ),
             ATTR_ACC_OWNER_EMAIL: self._data.account_info.get("email"),
-            ATTR_ACC_OWNER_PHONE_NUMBER:
-                self._data.account_info.get("mobilePhoneNumber"),
+            ATTR_ACC_OWNER_PHONE_NUMBER: self._data.account_info.get(
+                "mobilePhoneNumber"
+            ),
         }
 
         for limit in self._data.limits:
@@ -139,8 +143,7 @@ class N26Card(Entity):
     @property
     def name(self) -> str:
         """Friendly name of the sensor."""
-        return "{}_card_{}".format(
-            self._account_name.lower(), self._card["id"])
+        return "{}_card_{}".format(self._account_name.lower(), self._card["id"])
 
     @property
     def state(self) -> float:
@@ -152,26 +155,25 @@ class N26Card(Entity):
         """Additional attributes of the sensor."""
         attributes = {
             "apple_pay_eligible": self._card.get("applePayEligible"),
-            "card_activated": timestamp_ms_to_date(
-                self._card.get("cardActivated")),
+            "card_activated": timestamp_ms_to_date(self._card.get("cardActivated")),
             "card_product": self._card.get("cardProduct"),
             "card_product_type": self._card.get("cardProductType"),
             "card_settings_id": self._card.get("cardSettingsId"),
             "card_Type": self._card.get("cardType"),
             "design": self._card.get("design"),
-            "exceet_actual_delivery_date":
-                self._card.get("exceetActualDeliveryDate"),
+            "exceet_actual_delivery_date": self._card.get("exceetActualDeliveryDate"),
             "exceet_card_status": self._card.get("exceetCardStatus"),
-            "exceet_expected_delivery_date":
-                self._card.get("exceetExpectedDeliveryDate"),
-            "exceet_express_card_delivery":
-                self._card.get("exceetExpressCardDelivery"),
-            "exceet_express_card_delivery_email_sent":
-                self._card.get("exceetExpressCardDeliveryEmailSent"),
-            "exceet_express_card_delivery_tracking_id":
-                self._card.get("exceetExpressCardDeliveryTrackingId"),
-            "expiration_date": timestamp_ms_to_date(
-                self._card.get("expirationDate")),
+            "exceet_expected_delivery_date": self._card.get(
+                "exceetExpectedDeliveryDate"
+            ),
+            "exceet_express_card_delivery": self._card.get("exceetExpressCardDelivery"),
+            "exceet_express_card_delivery_email_sent": self._card.get(
+                "exceetExpressCardDeliveryEmailSent"
+            ),
+            "exceet_express_card_delivery_tracking_id": self._card.get(
+                "exceetExpressCardDeliveryTrackingId"
+            ),
+            "expiration_date": timestamp_ms_to_date(self._card.get("expirationDate")),
             "google_pay_eligible": self._card.get("googlePayEligible"),
             "masked_pan": self._card.get("maskedPan"),
             "membership": self._card.get("membership"),
@@ -204,7 +206,9 @@ class N26Space(Entity):
     @property
     def unique_id(self):
         """Return the unique ID of the entity."""
-        return "space_{}".format(self._space["name"].lower())
+        return "space_{}_{}".format(
+            self._data.balance["iban"][-4:], self._space["name"].lower()
+        )
 
     @property
     def name(self) -> str:
