@@ -1,8 +1,7 @@
 """Signal Messenger for notify component."""
 import logging
-import base64
-import requests
 import voluptuous as vol
+from pysignalclirestapi import SignalCliRestApi
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -34,9 +33,9 @@ def get_service(hass, config, discovery_info=None):
 
     sender_nr = config.get(CONF_SENDER_NR)
     recp_nrs = config.get(CONF_RECP_NR)
-    signal_cli_rest_api = config.get(CONF_SIGNAL_CLI_REST_API)
+    signal_cli_rest_api_url = config.get(CONF_SIGNAL_CLI_REST_API)
 
-    if signal_cli_rest_api is None:
+    if signal_cli_rest_api_url is None:
         _LOGGER.error("Please specify the URL to the signal-cli REST API")
         return None
 
@@ -48,18 +47,19 @@ def get_service(hass, config, discovery_info=None):
         _LOGGER.error("Please provide a sender number")
         return None
 
-    return SignalNotificationService(sender_nr, recp_nrs, signal_cli_rest_api)
+    return SignalNotificationService(sender_nr, recp_nrs, signal_cli_rest_api_url)
 
 
 class SignalNotificationService(BaseNotificationService):
     """Implement the notification service for SignalMessenger."""
 
-    def __init__(self, sender_nr, recp_nrs, signal_cli_rest_api):
+    def __init__(self, sender_nr, recp_nrs, signal_cli_rest_api_url):
         """Initialize the service."""
 
-        self._sender_nr = sender_nr
         self._recp_nrs = recp_nrs
-        self._signal_cli_rest_api = signal_cli_rest_api
+        self._signal_cli_rest_api = SignalCliRestApi(
+            signal_cli_rest_api_url, sender_nr, api_version=1
+        )
 
     def send_message(self, message="", **kwargs):
         """Send a message to a one or more recipients.
@@ -76,20 +76,7 @@ class SignalNotificationService(BaseNotificationService):
             filename = data[ATTR_FILENAME]
 
         try:
-            data = {
-                "message": message,
-                "number": self._sender_nr,
-                "recipients": self._recp_nrs,
-            }
-            if filename is not None:
-                with open(filename, "rb") as ofile:
-                    data["base64_attachment"] = base64.b64encode(ofile.read())
-            resp = requests.post(self._signal_cli_rest_api + "/v1/send", json=data)
-            if resp.status_code != 201:
-                json_resp = resp.json()
-                if "error" in json_resp:
-                    raise Exception(json_resp["error"])
-                raise Exception("unknown error while sending signal message")
+            self._signal_cli_rest_api.send_message(message, self._recp_nrs, filename)
         except Exception as ex:
             _LOGGER.error("%s", ex)
             raise ex
