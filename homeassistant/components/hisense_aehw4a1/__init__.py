@@ -46,9 +46,7 @@ async def async_setup(hass, config):
     if conf is not None:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data={CONF_IP_ADDRESS: conf[CONF_IP_ADDRESS]},
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT},
             )
         )
 
