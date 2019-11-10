@@ -62,6 +62,11 @@ class OpenThermSensor(Entity):
         _LOGGER.debug("Removing OpenTherm Gateway sensor %s", self._friendly_name)
         self._unsub_updates()
 
+    @property
+    def entity_registry_enabled_default(self):
+        """Disable sensors by default."""
+        return False
+
     @callback
     def receive_report(self, status):
         """Handle status updates from the component."""

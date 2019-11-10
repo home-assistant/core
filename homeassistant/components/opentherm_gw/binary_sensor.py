@@ -61,6 +61,11 @@ class OpenThermBinarySensor(BinarySensorDevice):
         )
         self._unsub_updates()
 
+    @property
+    def entity_registry_enabled_default(self):
+        """Disable binary_sensors by default."""
+        return False
+
     @callback
     def receive_report(self, status):
         """Handle status updates from the component."""

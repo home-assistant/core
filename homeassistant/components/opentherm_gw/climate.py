@@ -3,7 +3,7 @@ import logging
 
 from pyotgw import vars as gw_vars
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateDevice, ENTITY_ID_FORMAT
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
@@ -25,6 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import async_generate_entity_id
 
 from . import DOMAIN
 from .const import CONF_FLOOR_TEMP, CONF_PRECISION, DATA_GATEWAYS, DATA_OPENTHERM_GW
@@ -54,6 +55,9 @@ class OpenThermClimate(ClimateDevice):
     def __init__(self, gw_dev, options):
         """Initialize the device."""
         self._gateway = gw_dev
+        self.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, gw_dev.gw_id, hass=gw_dev.hass
+        )
         self.friendly_name = gw_dev.name
         self.floor_temp = options[CONF_FLOOR_TEMP]
         self.temp_precision = options.get(CONF_PRECISION)
