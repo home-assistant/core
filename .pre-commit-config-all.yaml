@@ -57,3 +57,9 @@ repos:
         types: [python]
         require_serial: true
         files: ^homeassistant/.+\.py$
+    -   id: translations_develop
+        name: translations_develop
+        entry: script/translations_develop
+        language: script
+        files: /(strings(\.\w+)?|\.translations/en)\.json$
+        pass_filenames: false

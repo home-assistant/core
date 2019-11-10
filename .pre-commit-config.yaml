@@ -39,3 +39,11 @@ repos:
     rev: v2.4.0
     hooks:
     -   id: check-json
+-   repo: local
+    hooks:
+    -   id: translations_develop
+        name: translations_develop
+        entry: script/translations_develop
+        language: script
+        files: /(strings(\.\w+)?|\.translations/en)\.json$
+        pass_filenames: false

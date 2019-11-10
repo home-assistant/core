@@ -60,6 +60,10 @@ stages:
         . venv/bin/activate
         pre-commit run check-json --all-files
       displayName: 'Run check-json'
+    - script: |
+        . venv/bin/activate
+        pre-commit run translations_develop --all-files --show-diff-on-failure
+      displayName: 'Run translations_develop'
   - job: 'Validate'
     pool:
       vmImage: 'ubuntu-latest'
