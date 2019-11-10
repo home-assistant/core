@@ -31,7 +31,7 @@ def make_nyc_test_params(dtime, results, havdalah_offset=0):
         }
     return (
         dtime,
-        jcal_const.CANDLE_LIGHT_DEFAULT,
+        jcal_const.DEFAULT_CANDLE_LIGHT,
         havdalah_offset,
         True,
         "America/New_York",
@@ -51,7 +51,7 @@ def make_jerusalem_test_params(dtime, results, havdalah_offset=0):
         }
     return (
         dtime,
-        jcal_const.CANDLE_LIGHT_DEFAULT,
+        jcal_const.DEFAULT_CANDLE_LIGHT,
         havdalah_offset,
         False,
         "Asia/Jerusalem",

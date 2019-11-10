@@ -10,6 +10,10 @@ from .const import (
     CONF_LANGUAGE,
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_HAVDALAH_OFFSET_MINUTES,
+    DEFAULT_CANDLE_LIGHT,
+    DEFAULT_DIASPORA,
+    DEFAULT_HAVDALAH_OFFSET_MINUTES,
+    DEFAULT_LANGUAGE,
     DEFAULT_NAME,
     DOMAIN,
     DATA_SCHEMA,
@@ -30,13 +34,15 @@ class JewishCalendarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=user_input.get(CONF_NAME, DEFAULT_NAME),
                 data={
-                    CONF_NAME: user_input[CONF_NAME],
-                    CONF_DIASPORA: user_input[CONF_DIASPORA],
-                    CONF_LANGUAGE: user_input[CONF_LANGUAGE],
-                    CONF_CANDLE_LIGHT_MINUTES: user_input[CONF_CANDLE_LIGHT_MINUTES],
-                    CONF_HAVDALAH_OFFSET_MINUTES: user_input[
-                        CONF_HAVDALAH_OFFSET_MINUTES
-                    ],
+                    CONF_NAME: user_input.get(CONF_NAME, DEFAULT_NAME),
+                    CONF_DIASPORA: user_input.get(CONF_DIASPORA, DEFAULT_DIASPORA),
+                    CONF_LANGUAGE: user_input.get(CONF_LANGUAGE, DEFAULT_LANGUAGE),
+                    CONF_CANDLE_LIGHT_MINUTES: user_input.get(
+                        CONF_CANDLE_LIGHT_MINUTES, DEFAULT_CANDLE_LIGHT
+                    ),
+                    CONF_HAVDALAH_OFFSET_MINUTES: user_input.get(
+                        CONF_HAVDALAH_OFFSET_MINUTES, DEFAULT_HAVDALAH_OFFSET_MINUTES
+                    ),
                     CONF_LATITUDE: user_input.get(
                         CONF_LATITUDE, self.hass.config.latitude
                     ),
