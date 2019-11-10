@@ -60,10 +60,9 @@ class FuelPriceSensorBase(Entity):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._data is None:
+        if self._data is None or self._fuel_type not in self._data.keys():
             return self._station[self._fuel_type]
-        else:
-            return self._data[self._fuel_type]
+        return self._data[self._fuel_type]
 
     @property
     def device_state_attributes(self):

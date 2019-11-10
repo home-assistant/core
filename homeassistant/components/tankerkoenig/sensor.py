@@ -67,6 +67,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         if len(data["stations"]) <= 0:
             _LOGGER.error("Could not find any station in range")
         else:
+            station_id = station["id"]
             for fuel in fuel_types:
                 sensor = None
                 if master is None:
@@ -78,7 +79,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                     sensor = FuelPriceSensorSlave(
                         fuel, station, f"{NAME}_{station['name']}_{fuel}"
                     )
-                    master.add_slave(fuel, sensor)
+                    master.add_slave(station_id, sensor)
                 entities.append(sensor)
 
     async_add_entities(entities, True)
@@ -92,20 +93,25 @@ class FuelPriceSensorMaster(FuelPriceSensorBase):
         super().__init__(fuel_type, station, name)
         self._api_key = api_key
         self._slaves = {}
+        self._monitored_stations = [self._station_id]
 
     @property
     def should_poll(self):
         """Poll regularly for the standalone sensor."""
         return True
 
-    def add_slave(self, fuel_type, slave):
+    def add_slave(self, station_id, slave):
         """Add an additional slave sensor, that needs to be updated together with this one."""
-        self._slaves[fuel_type] = slave
+        if station_id not in self._slaves:
+            self._slaves[station_id] = [slave]
+        else:
+            self._slaves[station_id].append(slave)
+        self._monitored_stations = list(set(self._monitored_stations) | {station_id})
 
     async def async_update(self):
         """Fetch new prices."""
         _LOGGER.debug("Fetching new prices for standalone sensor")
-        data = pytankerkoenig.getPriceList(self._api_key, [self._station_id])
+        data = pytankerkoenig.getPriceList(self._api_key, self._monitored_stations)
         if data["ok"]:
             _LOGGER.debug("Received data: %s", data)
             self._data = data["prices"][self._station_id]
@@ -113,8 +119,9 @@ class FuelPriceSensorMaster(FuelPriceSensorBase):
                 self._is_open = STATE_OPEN
             else:
                 self._is_open = STATE_CLOSED
-            for fuel_type, slave in self._slaves.items():
-                slave.new_data(self._data)
+            for station_id, slave_list in self._slaves.items():
+                for slave in slave_list:
+                    slave.new_data(data["prices"][station_id])
         else:
             _LOGGER.error(
                 "Error fetching data from tankerkoenig.de: %s", data["message"]
