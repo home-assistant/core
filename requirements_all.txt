@@ -917,7 +917,7 @@ openwrt-luci-rpc==1.1.1
 orvibo==1.1.1
 
 # homeassistant.components.p2pcam
-p2pcam==0.0.2
+p2pcam==0.0.3
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
