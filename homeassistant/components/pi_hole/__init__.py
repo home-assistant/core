@@ -107,8 +107,7 @@ async def async_setup(hass, config):
                     cv.time_period_str, cv.positive_timedelta
                 ),
                 vol.Optional(SERVICE_DISABLE_ATTR_NAME): vol.In(
-                    list(map(lambda c: c[CONF_NAME], config[DOMAIN])),
-                    msg="Unknown Pi-Hole",
+                    [conf[CONF_NAME] for conf in config[DOMAIN]], msg="Unknown Pi-Hole",
                 ),
             },
             ensure_api_token,
@@ -118,7 +117,7 @@ async def async_setup(hass, config):
     service_enable_schema = vol.Schema(
         {
             vol.Optional(SERVICE_ENABLE_ATTR_NAME): vol.In(
-                list(map(lambda c: c[CONF_NAME], config[DOMAIN])), msg="Unknown Pi-Hole"
+                [conf[CONF_NAME] for conf in config[DOMAIN]], msg="Unknown Pi-Hole"
             )
         }
     )
