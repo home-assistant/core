@@ -141,9 +141,7 @@ async def test_setup_imperial(hass):
     with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
         "aio_geojson_client.feed.GeoJsonFeed.update", new_callable=CoroutineMock
     ) as mock_feed_update, patch(
-        "aio_geojson_client.feed.GeoJsonFeed.__init__",
-        new_callable=CoroutineMock,
-        create=True,
+        "aio_geojson_client.feed.GeoJsonFeed.__init__"
     ) as mock_feed_init:
         mock_feed_update.return_value = "OK", [mock_entry_1]
         assert await async_setup_component(hass, geonetnz_volcano.DOMAIN, CONFIG)
