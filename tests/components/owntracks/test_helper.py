@@ -15,8 +15,7 @@ def mock_nacl_imported():
 @pytest.fixture(name="nacl_not_imported")
 def mock_nacl_not_imported():
     """Mock non successful import."""
-    with patch("homeassistant.components.owntracks.helper.nacl"):
-        helper.nacl = None
+    with patch("homeassistant.components.owntracks.helper.nacl", new=None):
         yield
 
 
