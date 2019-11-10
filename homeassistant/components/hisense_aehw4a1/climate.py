@@ -130,17 +130,17 @@ def _build_entity(device):
     return ClimateAehW4a1(device)
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the AEH-W4A1 climate platform."""
     # Priority 1: manual config
     if hass.data[DOMAIN].get(CONF_IP_ADDRESS):
-        devices = hass.data[DOMAIN].get(CONF_IP_ADDRESS, [])
+        devices = hass.data[DOMAIN][CONF_IP_ADDRESS]
     else:
         # Priority 2: scanned interfaces
         devices = await AehW4a1().discovery()
 
-    all_devices = [_build_entity(device) for device in devices]
-    async_add_devices(all_devices, True)
+    entities = [_build_entity(device) for device in devices]
+    async_add_entities(entities, True)
 
 
 class ClimateAehW4a1(ClimateDevice):
@@ -169,8 +169,10 @@ class ClimateAehW4a1(ClimateDevice):
         """Pull state from AEH-W4A1."""
         try:
             status = await self._device.command("status_102_0")
-        except Exception as library_error:  # pylint: disable=broad-except
-            _LOGGER.debug("Unexpected error: %s", library_error)
+        except ConnectionError as library_error:
+            _LOGGER.warning(
+                "Unexpected error of %s: %s", self._unique_id, library_error
+            )
             self._available = False
             return
 
@@ -192,10 +194,10 @@ class ClimateAehW4a1(ClimateDevice):
             fan_mode = status["wind_status"]
             self._fan_mode = AC_TO_HA_FAN_MODES[fan_mode]
 
-            swing_mode = status["up_down"] + status["left_right"]
+            swing_mode = f'{status["up_down"]}{status["left_right"]}'
             self._swing_mode = AC_TO_HA_SWING[swing_mode]
 
-            if self._hvac_mode == HVAC_MODE_COOL or self._hvac_mode == HVAC_MODE_HEAT:
+            if self._hvac_mode in (HVAC_MODE_COOL, HVAC_MODE_HEAT):
                 self._target_temperature = int(status["indoor_temperature_setting"], 2)
             else:
                 self._target_temperature = None
@@ -319,23 +321,22 @@ class ClimateAehW4a1(ClimateDevice):
         """Set new target temperatures."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None:
-            _LOGGER.debug("Setting temp of %s to %s", self._unique_id, str(temp))
+            _LOGGER.debug("Setting temp of %s to %s", self._unique_id, temp)
             if self._preset_mode != PRESET_NONE:
                 await self.async_set_preset_mode(PRESET_NONE)
             if self._temperature_unit == TEMP_CELSIUS:
-                await self._device.command(f"temp_{str(int(temp))}_C")
+                await self._device.command(f"temp_{int(temp)}_C")
             else:
-                await self._device.command(f"temp_{str(int(temp))}_F")
+                await self._device.command(f"temp_{int(temp)}_F")
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new fan mode."""
         if self._on == "1":
-            if self._hvac_mode in (HVAC_MODE_COOL, HVAC_MODE_FAN_ONLY):
-                if self._hvac_mode != HVAC_MODE_FAN_ONLY or fan_mode != FAN_AUTO:
-                    _LOGGER.debug(
-                        "Setting fan mode of %s to %s", self._unique_id, fan_mode
-                    )
-                    await self._device.command(HA_FAN_MODES_TO_AC[fan_mode])
+            if self._hvac_mode in (HVAC_MODE_COOL, HVAC_MODE_FAN_ONLY) and (
+                self._hvac_mode != HVAC_MODE_FAN_ONLY or fan_mode != FAN_AUTO
+            ):
+                _LOGGER.debug("Setting fan mode of %s to %s", self._unique_id, fan_mode)
+                await self._device.command(HA_FAN_MODES_TO_AC[fan_mode])
 
     async def async_set_swing_mode(self, swing_mode):
         """Set new target swing operation."""
@@ -402,12 +403,11 @@ class ClimateAehW4a1(ClimateDevice):
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new operation mode."""
         _LOGGER.debug("Setting operation mode of %s to %s", self._unique_id, hvac_mode)
-        if hvac_mode is not None:
-            if hvac_mode == HVAC_MODE_OFF:
-                await self.async_turn_off()
-            else:
-                await self._device.command(HA_STATE_TO_AC[hvac_mode])
-                await self.async_turn_on()
+        if hvac_mode == HVAC_MODE_OFF:
+            await self.async_turn_off()
+        else:
+            await self._device.command(HA_STATE_TO_AC[hvac_mode])
+            await self.async_turn_on()
 
     async def async_turn_on(self):
         """Turn on."""

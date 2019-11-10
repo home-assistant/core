@@ -1,9 +1,10 @@
 """The Hisense AEH-W4A1 integration."""
 import ipaddress
+
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.climate import DOMAIN as CLIMA_DOMAIN
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
 import homeassistant.helpers.config_validation as cv
 
@@ -24,10 +25,10 @@ def coerce_ip(value):
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: {
-            CLIMA_DOMAIN: vol.Schema(
+            CLIMATE_DOMAIN: vol.Schema(
                 {
-                    vol.Optional(CONF_IP_ADDRESS, default=[]): vol.Schema(
-                        [vol.All(cv.string, coerce_ip)]
+                    vol.Optional(CONF_IP_ADDRESS, default=[]): vol.All(
+                        cv.ensure_list, [vol.All(cv.string, coerce_ip)]
                     )
                 }
             )
@@ -40,13 +41,14 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Set up the Hisense AEH-W4A1 integration."""
     conf = config.get(DOMAIN)
-
     hass.data[DOMAIN] = conf or {}
 
     if conf is not None:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                data={CONF_IP_ADDRESS: conf[CONF_IP_ADDRESS]},
             )
         )
 
@@ -56,7 +58,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, entry):
     """Set up a config entry for Hisense AEH-W4A1."""
     hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, CLIMA_DOMAIN)
+        hass.config_entries.async_forward_entry_setup(entry, CLIMATE_DOMAIN)
     )
 
     return True
@@ -64,4 +66,4 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    return await hass.config_entries.async_forward_entry_unload(entry, CLIMA_DOMAIN)
+    return await hass.config_entries.async_forward_entry_unload(entry, CLIMATE_DOMAIN)
