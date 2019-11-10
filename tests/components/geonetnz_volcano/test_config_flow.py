@@ -1,10 +1,8 @@
 """Define tests for the GeoNet NZ Volcano config flow."""
 from datetime import timedelta
 
-import pytest
-
 from homeassistant import data_entry_flow
-from homeassistant.components.geonetnz_volcano import config_flow, DOMAIN
+from homeassistant.components.geonetnz_volcano import config_flow
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -12,23 +10,6 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_UNIT_SYSTEM,
 )
-from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def config_entry():
-    """Create a mock GeoNet NZ Volcano config entry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_LATITUDE: -41.2,
-            CONF_LONGITUDE: 174.7,
-            CONF_RADIUS: 25,
-            CONF_UNIT_SYSTEM: "metric",
-            CONF_SCAN_INTERVAL: 300.0,
-        },
-        title="-41.2, 174.7",
-    )
 
 
 async def test_duplicate_error(hass, config_entry):
