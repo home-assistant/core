@@ -153,8 +153,8 @@ class PlexServer:
 
         self._known_clients.update(new_clients)
 
-        idle_clients = self._known_clients.difference(available_clients).difference(
-            self._known_idle
+        idle_clients = (self._known_clients - self._known_idle).difference(
+            available_clients
         )
         for client_id in idle_clients:
             self.refresh_entity(client_id, None, None)
