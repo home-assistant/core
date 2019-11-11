@@ -52,7 +52,7 @@ async def async_setup(hass, config):
                 await AehW4a1(device).check()
             except pyaehw4a1.exceptions.ConnectionError:
                 conf[CONF_IP_ADDRESS].remove(device)
-        if conf[CONF_IP_ADDRESS] is not None:
+        if not conf[CONF_IP_ADDRESS]:
             hass.data[DOMAIN] = conf
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
