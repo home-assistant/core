@@ -3,7 +3,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.auth.util import generate_secret
 
-from .const import DOMAIN
+from .const import DOMAIN  # noqa pylint: disable=unused-import
 
 CONF_SECRET = "secret"
 CONF_CLOUDHOOK = "cloudhook"
@@ -26,7 +26,7 @@ class OwnTracksFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a user initiated set up flow to create OwnTracks webhook."""
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="one_instance_allowed")
 
         if user_input is None:
@@ -59,7 +59,7 @@ class OwnTracksFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Import a config flow from configuration."""
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="one_instance_allowed")
         webhook_id, _webhook_url, cloudhook = await self._get_webhook_id()
         secret = generate_secret(16)
