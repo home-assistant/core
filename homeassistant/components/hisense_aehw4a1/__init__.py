@@ -1,5 +1,6 @@
 """The Hisense AEH-W4A1 integration."""
 import ipaddress
+import logging
 
 from pyaehw4a1.aehw4a1 import AehW4a1
 import pyaehw4a1.exceptions
@@ -11,6 +12,8 @@ from homeassistant.const import CONF_IP_ADDRESS
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def coerce_ip(value):
@@ -52,7 +55,8 @@ async def async_setup(hass, config):
                 await AehW4a1(device).check()
             except pyaehw4a1.exceptions.ConnectionError:
                 conf[CONF_IP_ADDRESS].remove(device)
-        if not conf[CONF_IP_ADDRESS]:
+                _LOGGER.warning("Hisense AEH-W4A1 at %s not found", device)
+        if conf[CONF_IP_ADDRESS]:
             hass.data[DOMAIN] = conf
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
