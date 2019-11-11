@@ -2,6 +2,7 @@
 import logging
 
 import voluptuous as vol
+
 from homeassistant.const import (CONF_DEVICE_CLASS, CONF_ICON, CONF_ID,
                                  CONF_NAME, CONF_PASSWORD, CONF_SCAN_INTERVAL,
                                  CONF_TYPE, CONF_USERNAME)
@@ -34,10 +35,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_HOUSEHOLD_ID): cv.positive_int,
-        vol.Required(CONF_FLAPS): vol.Schema(
-            vol.All(cv.ensure_list, [FLAP_SCHEMA])),
-        vol.Required(CONF_PETS): vol.Schema(
-            vol.All(cv.ensure_list, [PET_SCHEMA])),
+        vol.Required(CONF_FLAPS): vol.All(cv.ensure_list, [FLAP_SCHEMA]),
+        vol.Required(CONF_PETS): vol.All(cv.ensure_list, [PET_SCHEMA]),
         vol.Optional(CONF_DEVICE_CLASS, default="door"): cv.string,
         vol.Optional(CONF_ICON, default="mdi:door"): cv.string,
         vol.Optional(
