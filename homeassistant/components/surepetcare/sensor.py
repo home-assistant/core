@@ -8,9 +8,9 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import (BATTERY_ICON, CONF_HOUSEHOLD_ID, DATA_SURE_PETCARE,
-                    DATA_SUREPY, SURE_BATT_VOLTAGE_DIFF, SURE_BATT_VOLTAGE_LOW,
-                    SURE_IDS, TOPIC_UPDATE, SureThingID)
+from .const import (BATTERY_ICON, CONF_DATA, CONF_HOUSEHOLD_ID,
+                    DATA_SURE_PETCARE, SURE_BATT_VOLTAGE_DIFF,
+                    SURE_BATT_VOLTAGE_LOW, SURE_IDS, TOPIC_UPDATE, SureThingID)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,21 +21,19 @@ async def async_setup_platform(hass, config, async_add_entities,
     if not discovery_info:
         return
 
-    from surepy import SurePetcare
-
     entities = []
-    surepy: SurePetcare = hass.data[DATA_SURE_PETCARE][DATA_SUREPY]
 
     for thing in hass.data[DATA_SURE_PETCARE][SURE_IDS]:
         sure_id = thing[CONF_ID]
         sure_type = thing[CONF_TYPE]
+        sure_data = thing[CONF_DATA]
 
         if sure_type != SureThingID.FLAP.name:
             continue
 
         if sure_id not in hass.data[DATA_SURE_PETCARE][sure_type]:
             hass.data[DATA_SURE_PETCARE][
-                sure_type][sure_id] = await surepy.get_flap_data(sure_id)
+                sure_type][sure_id] = sure_data
 
         entities.append(FlapBattery(sure_id, thing[CONF_NAME], hass=hass))
 

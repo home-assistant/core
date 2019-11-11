@@ -12,7 +12,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import (CONF_FLAPS, CONF_HOUSEHOLD_ID, CONF_PETS,
+from .const import (CONF_FLAPS, CONF_DATA, CONF_HOUSEHOLD_ID, CONF_PETS,
                     DATA_SURE_PETCARE, DATA_SUREPY, DEFAULT_SCAN_INTERVAL,
                     DOMAIN, SURE_IDS, TOPIC_UPDATE, SureThingID)
 
@@ -74,6 +74,8 @@ async def async_setup(hass, config):
             CONF_NAME: flap[CONF_NAME],
             CONF_ID: flap[CONF_ID],
             CONF_TYPE: SureThingID.FLAP.name,
+            CONF_DATA: await hass.data[DATA_SURE_PETCARE][
+                DATA_SUREPY].get_flap_data(flap[CONF_ID])
         }
         for flap in conf[CONF_FLAPS]]
 
@@ -83,6 +85,8 @@ async def async_setup(hass, config):
             CONF_NAME: pet[CONF_NAME],
             CONF_ID: pet[CONF_ID],
             CONF_TYPE: SureThingID.PET.name,
+            CONF_DATA: await hass.data[DATA_SURE_PETCARE][
+                DATA_SUREPY].get_pet_data(pet[CONF_ID])
         } for pet in conf[CONF_PETS]])
 
     spc_api = SurePetcareAPI(hass)
@@ -107,15 +111,7 @@ class SurePetcareAPI:
 
     async def async_update(self, args):
         """Refresh Sure Petcare data."""
-        if self._hass.data[DATA_SURE_PETCARE][DATA_SUREPY]:
-            surepy = self._hass.data[DATA_SURE_PETCARE][DATA_SUREPY]
-        else:
-            surepy = SurePetcare(
-                self._hass.data[DATA_SURE_PETCARE][CONF_USERNAME],
-                self._hass.data[DATA_SURE_PETCARE][CONF_PASSWORD],
-                self._hass.data[DATA_SURE_PETCARE][CONF_HOUSEHOLD_ID],
-                self._hass.loop, async_get_clientsession(self._hass),
-                debug=True)
+        surepy = self._hass.data[DATA_SURE_PETCARE][DATA_SUREPY]
 
         if SureThingID.FLAP.name not in self._hass.data[DATA_SURE_PETCARE]:
             self._hass.data[DATA_SURE_PETCARE][SureThingID.FLAP.name] = {}

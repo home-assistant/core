@@ -7,7 +7,7 @@ from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import (CONF_HOUSEHOLD_ID, DATA_SURE_PETCARE, DATA_SUREPY,
+from .const import (CONF_DATA, CONF_HOUSEHOLD_ID, DATA_SURE_PETCARE,
                     DEFAULT_DEVICE_CLASS, DEFAULT_ICON, SURE_IDS, TOPIC_UPDATE,
                     SureLocationID, SureLockStateID, SureThingID)
 
@@ -20,24 +20,19 @@ async def async_setup_platform(hass, config, async_add_entities,
     if not discovery_info:
         return
 
-    from surepy import SurePetcare
-
     entities = []
-    surepy: SurePetcare = hass.data[DATA_SURE_PETCARE][DATA_SUREPY]
 
     for thing in hass.data[DATA_SURE_PETCARE][SURE_IDS]:
         sure_id = thing[CONF_ID]
         sure_type = thing[CONF_TYPE]
+        sure_data = thing[CONF_DATA]
 
         if sure_id not in hass.data[DATA_SURE_PETCARE][sure_type]:
-
             if sure_type == SureThingID.FLAP.name:
-                hass.data[DATA_SURE_PETCARE][
-                    sure_type][sure_id] = await surepy.get_flap_data(sure_id)
+                hass.data[DATA_SURE_PETCARE][sure_type][sure_id] = sure_data
                 entities.append(Flap(sure_id, thing[CONF_NAME], hass=hass))
             elif sure_type == SureThingID.PET.name:
-                hass.data[DATA_SURE_PETCARE][
-                    sure_type][sure_id] = await surepy.get_pet_data(sure_id)
+                hass.data[DATA_SURE_PETCARE][sure_type][sure_id] = sure_data
                 entities.append(Pet(sure_id, thing[CONF_NAME], hass=hass))
 
     async_add_entities(entities, True)
