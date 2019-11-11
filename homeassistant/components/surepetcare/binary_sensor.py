@@ -20,7 +20,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Set up Sure PetCare Flaps sensors based on a config entry."""
     from surepy import SurePetcare
 
-    entities = list()
+    entities = []
     surepy: SurePetcare = hass.data[DATA_SURE_PETCARE][DATA_SUREPY]
 
     for thing in hass.data[DATA_SURE_PETCARE][SURE_IDS]:

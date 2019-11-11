@@ -47,7 +47,7 @@ CONFIG_SCHEMA = vol.Schema({
 async def async_setup(hass, config):
     """Initialize the Sure Petcare component."""
     # config file data
-    conf = config.get(DOMAIN, {})
+    conf = config[DOMAIN]
 
     # shared data
     hass.data[DOMAIN] = {}
