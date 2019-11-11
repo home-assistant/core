@@ -93,6 +93,9 @@ class TeslaSensor(TeslaDevice, Entity):
             self._attributes = {
                 "time_left": self.tesla_device.time_left,
                 "added_range": self.tesla_device.added_range,
+                "charge_current_request": self.tesla_device.charge_current_request,
+                "charger_actual_current": self.tesla_device.charger_actual_current,
+                "charger_voltage": self.tesla_device.charger_voltage,
             }
         else:
             self.current_value = self.tesla_device.get_value()
