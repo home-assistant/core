@@ -43,7 +43,7 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Set up the Hisense AEH-W4A1 integration."""
     conf = config.get(DOMAIN)
-    hass.data[DOMAIN] = conf or {}
+    hass.data[DOMAIN] = {}
 
     if conf is not None:
         devices = conf[CONF_IP_ADDRESS][:]
@@ -59,8 +59,6 @@ async def async_setup(hass, config):
                     DOMAIN, context={"source": config_entries.SOURCE_IMPORT},
                 )
             )
-        else:
-            hass.data[DOMAIN] = {}
 
     return True
 
