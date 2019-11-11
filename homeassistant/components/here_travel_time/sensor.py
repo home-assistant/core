@@ -306,9 +306,7 @@ class HERETravelTimeSensor(Entity):
 
         await self.hass.async_add_executor_job(self._here_data.update)
 
-    async def _get_location_from_entity(
-        self, entity_id: str, recursion_history: Optional[list] = None
-    ) -> Optional[str]:
+    async def _get_location_from_entity(self, entity_id: str) -> Optional[str]:
         """Get the location from the entity state or attributes."""
         entity = self.hass.states.get(entity_id)
 
@@ -327,22 +325,6 @@ class HERETravelTimeSensor(Entity):
                 "%s is in %s, getting zone location", entity_id, zone_entity.entity_id
             )
             return self._get_location_from_attributes(zone_entity)
-
-        # Resolve nested entity
-        if recursion_history is None:
-            recursion_history = []
-        recursion_history.append(entity_id)
-        if entity.state in recursion_history:
-            _LOGGER.error(
-                "Circular Reference detected. The state of %s has already been checked.",
-                entity.state,
-            )
-            return None
-        _LOGGER.debug("Getting nested entity for state: %s", entity.state)
-        nested_entity = self.hass.states.get(entity.state)
-        if nested_entity is not None:
-            _LOGGER.debug("Resolving nested entity_id: %s", entity.state)
-            return await self._get_location_from_entity(entity.state, recursion_history)
 
         # Check if state is valid coordinate set
         if self._entity_state_is_valid_coordinate_set(entity.state):
