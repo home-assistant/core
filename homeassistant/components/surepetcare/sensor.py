@@ -74,7 +74,7 @@ class FlapBattery(Entity):
             voltage_diff = per_battery_voltage - SURE_BATT_VOLTAGE_LOW
             battery_percent = int(voltage_diff / SURE_BATT_VOLTAGE_DIFF * 100)
         except (KeyError, TypeError):
-            battery_percent = False
+            battery_percent = None
 
         return battery_percent
 
