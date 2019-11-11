@@ -13,14 +13,16 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "dsmr_reader"
 ATTR_UPDATED = "updated"
 
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up DSMR Reader sensors."""
-    
+
     sensors = []
-    for k in DEFINITIONS.keys():
+    for k in DEFINITIONS:
         sensors.append(DSMRSensor(k))
 
     async_add_entities(sensors)
+
 
 class DSMRSensor(Entity):
     """Representation of a DSMR sensor that is updated via MQTT."""
@@ -36,7 +38,7 @@ class DSMRSensor(Entity):
         self._state = 0
         self._topic = topic
         self._updated = dt.utcnow()
-        
+
         self._definition = {}
         if topic in DEFINITIONS:
             self._definition = DEFINITIONS[topic]
@@ -66,9 +68,7 @@ class DSMRSensor(Entity):
             """Handle new MQTT messages."""
             update_state(msg.payload)
 
-        return await mqtt.async_subscribe(
-            self.hass, self._topic, message_received, 1
-        )
+        return await mqtt.async_subscribe(self.hass, self._topic, message_received, 1)
 
     @property
     def name(self):
@@ -78,12 +78,11 @@ class DSMRSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {
-            ATTR_UPDATED: self._updated
-        }
-        
+        return {ATTR_UPDATED: self._updated}
+
     @property
     def entity_id(self):
+        """Return the entity ID of the sensor."""
         return f"sensor.{self._entity_id}"
 
     @property
