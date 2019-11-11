@@ -61,6 +61,8 @@ class SimpliSafeLock(SimpliSafeEntity, LockDevice):
             self._online = False
             return
 
+        self._online = True
+
         self._attrs.update(
             {
                 ATTR_LOCK_LOW_BATTERY: self._lock.lock_low_battery,
