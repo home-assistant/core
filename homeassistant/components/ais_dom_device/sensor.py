@@ -56,7 +56,7 @@ class MqttAisDomSensor(Entity):
                 if "RfRaw" in payload:
                     b1_code = payload.get("RfRaw")["Data"]
                     topic = msg.topic
-                    b0_code = rf_b1_to_b0(b1_code)
+                    b0_code = get_b0_from_b1(b1_code)
                     code = {"topic": topic, "B1": b1_code, "B0": b0_code}
                     G_RF_CODES.append(code)
                     self._state = payload
@@ -135,5 +135,24 @@ class MqttAisDomSensor(Entity):
 
 
 # transfer b0 to b1 code
-def rf_b1_to_b0(code):
-    return code + "b0000000"
+def get_b0_from_b1(b1):
+    b1 = b1.strip()
+    iNbrOfBuckets = int(b1[4:6], 16)
+    arrBuckets = []
+
+    # Start packing
+    sz_out_aux = " %0.2X " % iNbrOfBuckets
+    sz_out_aux += "%0.2X " % int(8)
+
+    for i in range(0, iNbrOfBuckets):
+        sz_out_aux += b1[6 + i * 4 : 10 + i * 4] + " "
+        arrBuckets.append(int(b1[6 + i * 4 : 10 + i * 4], 16))
+
+    sz_out_aux += b1[10 + i * 4 : -2]
+
+    szDataStr = sz_out_aux.replace(" ", "")
+    sz_out_aux += " 55"
+    iLength = int(len(szDataStr) / 2)
+    sz_out_aux = "AA B0 " + "%0.2X" % iLength + sz_out_aux
+
+    return sz_out_aux
