@@ -91,11 +91,7 @@ DEFINITIONS = {
         "icon": "mdi:fire",
         "unit": "m3",
     },
-    "dsmr/consumption/gas/read_at": {
-        "name":
-        "Gas meter read",
-        "icon": "mdi:clock"
-    },
+    "dsmr/consumption/gas/read_at": {"name": "Gas meter read", "icon": "mdi:clock"},
     "dsmr/day-consumption/electricity1": {
         "name": "Low tariff usage",
         "icon": "mdi:counter",
