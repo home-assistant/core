@@ -110,29 +110,6 @@ class FlapBattery(Entity):
 
         return attributes
 
-    @property
-    def device_info(self):
-        """Return information about the device."""
-        try:
-            device_info = {
-                "name": self._name,
-                "model": SureProductID.PET_FLAP,
-                "manufacturer": 'Sure Petcare',
-                "connections": {
-                    (dr.CONNECTION_NETWORK_MAC,
-                     self._state["mac_address"] or "DEAD1337BEEF1337")
-                },
-                "sw_version": self._state["version"] or 0,
-            }
-
-        except (KeyError, TypeError) as error:
-            device_info = None
-            _LOGGER.debug(
-                "error while getting device info from %s: %s",
-                self._name, error)
-
-        return device_info
-
     async def async_update(self):
         """Get the latest data and update the state."""
         try:

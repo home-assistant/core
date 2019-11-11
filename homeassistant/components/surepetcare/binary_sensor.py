@@ -2,7 +2,8 @@
 import logging
 
 import homeassistant.helpers.device_registry as dr
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import (DEVICE_CLASS_LOCK,
+                                                    BinarySensorDevice)
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -103,7 +104,7 @@ class SurePetcareBinarySensor(BinarySensorDevice):
             self._state = self._hass.data[
                 DATA_SURE_PETCARE][self._sure_type][self._id]
         except (AttributeError, KeyError, TypeError) as error:
-            _LOGGER.debug("async_update error: %s", error)
+            _LOGGER.debug("Async_update error: %s", error)
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -130,8 +131,7 @@ class Flap(SurePetcareBinarySensor):
         super().__init__(
             _id,
             f"Flap {name.capitalize()}",
-            icon="mdi:lock",
-            device_class="lock",
+            device_class=DEVICE_CLASS_LOCK,
             sure_type=SureThingID.FLAP.name,
             hass=hass,
         )
@@ -143,29 +143,7 @@ class Flap(SurePetcareBinarySensor):
             return bool(
                 self._state["locking"]["mode"] == SureLockStateID.UNLOCKED)
         except (KeyError, TypeError):
-            return "unknown"
-
-    @property
-    def device_info(self):
-        """Return information about the device."""
-        try:
-            device_info = {
-                "name": self._name,
-                "model": SureProductID.PET_FLAP,
-                "manufacturer": 'Sure Petcare',
-                "connections": {
-                    (dr.CONNECTION_NETWORK_MAC,
-                     self._state["mac_address"] or "DEAD1337BEEF1337")
-                },
-                "sw_version": self._state["version"] or 0,
-            }
-        except TypeError as error:
-            device_info = None
-            _LOGGER.debug(
-                "error getting device info from %s: %s\n\n%s",
-                self._name, error, self._state)
-
-        return device_info
+            return None
 
     @property
     def device_state_attributes(self):
@@ -182,7 +160,7 @@ class Flap(SurePetcareBinarySensor):
 
         except (KeyError, TypeError) as error:
             _LOGGER.debug(
-                "error getting device state attributes from %s: %s\n\n%s",
+                "Error getting device state attributes from %s: %s\n\n%s",
                 self._name, error, self._state)
             attributes = {"error": self._state}
 
