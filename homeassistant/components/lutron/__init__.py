@@ -73,6 +73,7 @@ def setup(hass, base_config):
                     "SingleAction",
                     "Toggle",
                     "SingleSceneRaiseLower",
+                    "MasterRaiseLower",
                 ):
                     # Associate an LED with a button if there is one
                     led = next(
