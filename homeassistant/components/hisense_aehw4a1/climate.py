@@ -3,6 +3,7 @@
 import logging
 
 from pyaehw4a1.aehw4a1 import AehW4a1
+import pyaehw4a1.exceptions
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -135,12 +136,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     # Priority 1: manual config
     if hass.data[DOMAIN].get(CONF_IP_ADDRESS):
         devices = hass.data[DOMAIN][CONF_IP_ADDRESS]
-        try:
-            for device in devices:
-                await AehW4a1(device).check()
-        except ConnectionError as fail:
-            _LOGGER.warning("Unexpected error of %s: %s", device, fail)
-            return False
     else:
         # Priority 2: scanned interfaces
         devices = await AehW4a1().discovery()
@@ -175,7 +170,7 @@ class ClimateAehW4a1(ClimateDevice):
         """Pull state from AEH-W4A1."""
         try:
             status = await self._device.command("status_102_0")
-        except ConnectionError as library_error:
+        except pyaehw4a1.exceptions.ConnectionError as library_error:
             _LOGGER.warning(
                 "Unexpected error of %s: %s", self._unique_id, library_error
             )

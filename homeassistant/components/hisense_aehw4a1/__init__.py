@@ -1,6 +1,8 @@
 """The Hisense AEH-W4A1 integration."""
 import ipaddress
 
+from pyaehw4a1.aehw4a1 import AehW4a1
+import pyaehw4a1.exceptions
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -44,11 +46,21 @@ async def async_setup(hass, config):
     hass.data[DOMAIN] = conf or {}
 
     if conf is not None:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT},
+        devices = conf[CONF_IP_ADDRESS][:]
+        for device in devices:
+            try:
+                await AehW4a1(device).check()
+            except pyaehw4a1.exceptions.ConnectionError:
+                conf[CONF_IP_ADDRESS].remove(device)
+        if conf[CONF_IP_ADDRESS] is not None:
+            hass.data[DOMAIN] = conf
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": config_entries.SOURCE_IMPORT},
+                )
             )
-        )
+        else:
+            hass.data[DOMAIN] = {}
 
     return True
 
