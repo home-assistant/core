@@ -11,7 +11,7 @@ from pycomfoconnect import (
 )
 
 from homeassistant.const import CONF_RESOURCES, TEMP_CELSIUS
-from homeassistant.helpers.dispatcher import dispatcher_connect
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from . import (
@@ -106,16 +106,16 @@ class ComfoConnectSensor(Entity):
         self._sensor_id = SENSOR_TYPES[self._sensor_type][3]
         self._name = name
 
-        # Register the requested sensor
+    async def async_added_to_hass(self):
+        """Register for sensor updates."""
         self._ccb.comfoconnect.register_sensor(self._sensor_id)
+        async_dispatcher_connect(self.hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, self._handle_update)
 
-        def _handle_update(var):
-            if var == self._sensor_id:
-                _LOGGER.debug("Dispatcher update for %s.", var)
-                self.schedule_update_ha_state()
-
-        # Register for dispatcher updates
-        dispatcher_connect(hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, _handle_update)
+    def _handle_update(self, var):
+        """Handle update callbacks."""
+        if var == self._sensor_id:
+            _LOGGER.debug("Dispatcher update for %s.", var)
+            self.schedule_update_ha_state()
 
     @property
     def state(self):

@@ -17,7 +17,7 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
-from homeassistant.helpers.dispatcher import dispatcher_connect
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge
 
@@ -30,28 +30,28 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ComfoConnect fan platform."""
     ccb = hass.data[DOMAIN]
 
-    add_entities([ComfoConnectFan(hass, name=ccb.name, ccb=ccb)], True)
+    add_entities([ComfoConnectFan(ccb.name, ccb)], True)
 
 
 class ComfoConnectFan(FanEntity):
     """Representation of the ComfoConnect fan platform."""
 
-    def __init__(self, hass, name, ccb: ComfoConnectBridge) -> None:
+    def __init__(self, name, ccb: ComfoConnectBridge) -> None:
         """Initialize the ComfoConnect fan."""
 
         self._ccb = ccb
         self._name = name
 
-        # Ask the bridge to keep us updated
+    async def async_added_to_hass(self):
+        """Register for sensor updates."""
         self._ccb.comfoconnect.register_sensor(SENSOR_FAN_SPEED_MODE)
+        async_dispatcher_connect(self.hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, self._handle_update)
 
-        def _handle_update(var):
-            if var == SENSOR_FAN_SPEED_MODE:
-                _LOGGER.debug("Dispatcher update for %s", var)
-                self.schedule_update_ha_state()
-
-        # Register for dispatcher updates
-        dispatcher_connect(hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, _handle_update)
+    def _handle_update(self, var):
+        """Handle update callbacks."""
+        if var == SENSOR_FAN_SPEED_MODE:
+            _LOGGER.debug("Dispatcher update for %s", var)
+            self.schedule_update_ha_state()
 
     @property
     def name(self):
