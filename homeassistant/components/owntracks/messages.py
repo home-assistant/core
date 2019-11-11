@@ -107,7 +107,7 @@ def _decrypt_payload(secret, topic, ciphertext):
     try:
         keylen, decrypt = get_cipher()
     except OSError:
-        _LOGGER.warning("Ignoring encrypted payload because libsodium not installed")
+        _LOGGER.warning("Ignoring encrypted payload because nacl not installed")
         return None
 
     if isinstance(secret, dict):
@@ -117,8 +117,7 @@ def _decrypt_payload(secret, topic, ciphertext):
 
     if key is None:
         _LOGGER.warning(
-            "Ignoring encrypted payload because no decryption key known "
-            "for topic %s",
+            "Ignoring encrypted payload because no decryption key known for topic %s",
             topic,
         )
         return None
@@ -134,8 +133,7 @@ def _decrypt_payload(secret, topic, ciphertext):
         return message
     except ValueError:
         _LOGGER.warning(
-            "Ignoring encrypted payload because unable to decrypt using "
-            "key for topic %s",
+            "Ignoring encrypted payload because unable to decrypt using key for topic %s",
             topic,
         )
         return None
