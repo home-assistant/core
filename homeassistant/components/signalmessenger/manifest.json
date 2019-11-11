@@ -5,6 +5,6 @@
   "dependencies": [],
   "codeowners": ["@bbernhard"],
   "requirements": [
-    "pysignalclirestapi==0.1.2"
+    "pysignalclirestapi==0.1.3"
   ]
 }
