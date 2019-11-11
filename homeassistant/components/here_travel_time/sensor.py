@@ -6,11 +6,27 @@ from typing import Callable, Dict, Optional, Union
 import herepy
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.travel_time import (
+    PLATFORM_SCHEMA,
+    TravelTimeEntity,
+    ICON_BICYCLE,
+    ICON_CAR,
+    ICON_PEDESTRIAN,
+    ICON_PUBLIC,
+    ICON_TRUCK,
+    ATTR_DURATION,
+    ATTR_DISTANCE,
+    ATTR_ROUTE,
+    ATTR_ORIGIN,
+    ATTR_DESTINATION,
+    ATTR_UNIT_SYSTEM,
+    ATTR_DURATION_IN_TRAFFIC,
+    ATTR_ORIGIN_NAME,
+    ATTR_DESTINATION_NAME,
+    UNIT_OF_MEASUREMENT,
+    get_location_from_entity,
+)
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     ATTR_MODE,
     CONF_MODE,
     CONF_NAME,
@@ -21,7 +37,6 @@ from homeassistant.const import (
     TIME_MINUTES,
 )
 from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.helpers import location
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import DiscoveryInfoType
@@ -68,12 +83,6 @@ TRAFFIC_MODE_DISABLED = "traffic_disabled"
 ROUTE_MODE_FASTEST = "fastest"
 ROUTE_MODE_SHORTEST = "shortest"
 ROUTE_MODE = [ROUTE_MODE_FASTEST, ROUTE_MODE_SHORTEST]
-
-ICON_BICYCLE = "mdi:bike"
-ICON_CAR = "mdi:car"
-ICON_PEDESTRIAN = "mdi:walk"
-ICON_PUBLIC = "mdi:bus"
-ICON_TRUCK = "mdi:truck"
 
 UNITS = [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]
 
@@ -214,7 +223,7 @@ def _are_valid_client_credentials(here_client: herepy.RoutingApi) -> bool:
     return True
 
 
-class HERETravelTimeSensor(Entity):
+class HERETravelTimeSensor(TravelTimeEntity):
     """Representation of a HERE travel time sensor."""
 
     def __init__(
@@ -272,30 +281,40 @@ class HERETravelTimeSensor(Entity):
         return self._name
 
     @property
-    def device_state_attributes(
-        self,
-    ) -> Optional[Dict[str, Union[None, float, str, bool]]]:
-        """Return the state attributes."""
+    def attribution(self) -> str:
+        """Get the attribution of the travel_time entity."""
         if self._here_data.base_time is None:
-            return None
-
-        res = self._attrs
-        if self._here_data.attribution is not None:
-            res[ATTR_ATTRIBUTION] = self._here_data.attribution
-        res[ATTR_DURATION] = self._here_data.base_time / 60
-        res[ATTR_DISTANCE] = self._here_data.distance
-        res[ATTR_ROUTE] = self._here_data.route
-        res[ATTR_DURATION_IN_TRAFFIC] = self._here_data.traffic_time / 60
-        res[ATTR_ORIGIN] = self._here_data.origin
-        res[ATTR_DESTINATION] = self._here_data.destination
-        res[ATTR_ORIGIN_NAME] = self._here_data.origin_name
-        res[ATTR_DESTINATION_NAME] = self._here_data.destination_name
-        return res
+            return self._here_data.units
 
     @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
+    def destination(self) -> str:
+        """Get the destination coordinates of the travel_time entity."""
+        if self._here_data.base_time is None:
+            return self._here_data.units
+
+    @property
+    def destination_name(self) -> str:
+        """Get the destination name of the travel_time entity."""
+        if self._here_data.base_time is None:
+            return self._here_data.units
+
+    @property
+    def distance(self) -> str:
+        """Get the distance of the travel_time entity."""
+        if self._here_data.base_time is None:
+            return self._here_data.units
+
+    @property
+    def duration(self) -> str:
+        """Get the duration without traffic of the travel_time entity."""
+        if self._here_data.base_time is None:
+            return self._here_data.units
+
+    @property
+    def duration_in_traffic(self) -> str:
+        """Get the duration with traffic of the travel_time entity."""
+        if self._here_data.base_time is None:
+            return self._here_data.units
 
     @property
     def icon(self) -> str:
@@ -310,16 +329,57 @@ class HERETravelTimeSensor(Entity):
             return ICON_TRUCK
         return ICON_CAR
 
+    @property
+    def name(self) -> str:
+        """Get the name of the travel_time entity."""
+        if self._here_data.base_time is None:
+            return self._here_data.units
+
+    @property
+    def origin(self) -> str:
+        """Get the origin coordinates of the travel_time entity."""
+        if self._here_data.base_time is None:
+            return self._here_data.units
+
+    @property
+    def origin_name(self) -> str:
+        """Get the origin name of the travel_time entity."""
+        if self._here_data.base_time is None:
+            return self._here_data.units
+
+    @property
+    def route(self) -> str:
+        """Get the route of the travel_time entity."""
+        if self._here_data.base_time is None:
+            return self._here_data.units
+
+    @property
+    def state(self) -> Optional[str]:
+        """Return the state of the travel_time entity."""
+        if self._here_data.base_time is None:
+            return self._here_data.units
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit this state is expressed in."""
+        return self._unit_of_measurement
+
+    @property
+    def unit_system(self) -> str:
+        """Get the unit system of the travel_time entity."""
+        if self._here_data.base_time is None:
+            return self._here_data.units
+
     async def async_update(self) -> None:
         """Update Sensor Information."""
         # Convert device_trackers to HERE friendly location
         if self._origin_entity_id is not None:
-            self._here_data.origin = await self._get_location_from_entity(
+            self._here_data.origin = await get_location_from_entity(
                 self._origin_entity_id
             )
 
         if self._destination_entity_id is not None:
-            self._here_data.destination = await self._get_location_from_entity(
+            self._here_data.destination = await get_location_from_entity(
                 self._destination_entity_id
             )
 

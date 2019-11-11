@@ -1,0 +1,10 @@
+{
+  "domain": "travel_time",
+  "name": "travel_time",
+  "documentation": "https://www.home-assistant.io/integrations/travel_time",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@eifinger"
+  ]
+}

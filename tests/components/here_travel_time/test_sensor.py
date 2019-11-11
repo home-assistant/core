@@ -45,7 +45,7 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed, load_fixture
 
-DOMAIN = "sensor"
+DOMAIN = "travel_time"
 
 PLATFORM = "here_travel_time"
 
