@@ -498,6 +498,7 @@ async def test_unavailable_state_doesnt_sync(hass):
 async def test_device_class_switch(hass, device_class, google_type):
     """Test that a cover entity syncs to the correct device type."""
     sensor = DemoSwitch(
+        None,
         "Demo Sensor",
         state=False,
         icon="mdi:switch",
@@ -545,7 +546,9 @@ async def test_device_class_switch(hass, device_class, google_type):
 )
 async def test_device_class_binary_sensor(hass, device_class, google_type):
     """Test that a binary entity syncs to the correct device type."""
-    sensor = DemoBinarySensor("Demo Sensor", state=False, device_class=device_class)
+    sensor = DemoBinarySensor(
+        None, "Demo Sensor", state=False, device_class=device_class
+    )
     sensor.hass = hass
     sensor.entity_id = "binary_sensor.demo_sensor"
     await sensor.async_update_ha_state()
@@ -585,7 +588,7 @@ async def test_device_class_binary_sensor(hass, device_class, google_type):
 )
 async def test_device_class_cover(hass, device_class, google_type):
     """Test that a binary entity syncs to the correct device type."""
-    sensor = DemoCover(hass, "Demo Sensor", device_class=device_class)
+    sensor = DemoCover(None, hass, "Demo Sensor", device_class=device_class)
     sensor.hass = hass
     sensor.entity_id = "cover.demo_sensor"
     await sensor.async_update_ha_state()
