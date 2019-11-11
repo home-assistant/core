@@ -272,13 +272,13 @@ class EntityPlatform:
         entity.platform = self
 
         # Async entity
-        # PARALLEL_UPDATE == None: entity.parallel_updates = None
-        # PARALLEL_UPDATE == 0:    entity.parallel_updates = None
-        # PARALLEL_UPDATE > 0:     entity.parallel_updates = Semaphore(p)
+        # PARALLEL_UPDATES == None: entity.parallel_updates = None
+        # PARALLEL_UPDATES == 0:    entity.parallel_updates = None
+        # PARALLEL_UPDATES > 0:     entity.parallel_updates = Semaphore(p)
         # Sync entity
-        # PARALLEL_UPDATE == None: entity.parallel_updates = Semaphore(1)
-        # PARALLEL_UPDATE == 0:    entity.parallel_updates = None
-        # PARALLEL_UPDATE > 0:     entity.parallel_updates = Semaphore(p)
+        # PARALLEL_UPDATES == None: entity.parallel_updates = Semaphore(1)
+        # PARALLEL_UPDATES == 0:    entity.parallel_updates = None
+        # PARALLEL_UPDATES > 0:     entity.parallel_updates = Semaphore(p)
         if hasattr(entity, "async_update") and not self.parallel_updates:
             entity.parallel_updates = None
         elif not hasattr(entity, "async_update") and self.parallel_updates == 0:
