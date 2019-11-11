@@ -115,7 +115,7 @@ async def async_setup_entry(hass, config_entry):
             _LOGGER.warning("Unable to communicate with Tesla API: %s", ex.message)
             return False
 
-    all_devices = await hass.data[DOMAIN][config_entry.entry_id][
+    all_devices = hass.data[DOMAIN][config_entry.entry_id][
         "controller"
     ].get_homeassistant_components()
 
@@ -221,8 +221,8 @@ class TeslaDevice(Entity):
 
     async def async_update(self):
         """Update the state of the device."""
-        if self.config_entry and await self.controller.is_token_refreshed():
-            (refresh_token, access_token) = await self.controller.get_tokens()
+        if self.config_entry and self.controller.is_token_refreshed():
+            (refresh_token, access_token) = self.controller.get_tokens()
             _async_save_refresh_token(
                 self.hass, self.config_entry, access_token, refresh_token
             )
