@@ -1,7 +1,6 @@
 """Support for Sure PetCare Flaps binary sensors."""
 import logging
 
-import homeassistant.helpers.device_registry as dr
 from homeassistant.components.binary_sensor import (DEVICE_CLASS_LOCK,
                                                     BinarySensorDevice)
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
@@ -10,8 +9,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (CONF_HOUSEHOLD_ID, DATA_SURE_PETCARE, DATA_SUREPY,
                     DEFAULT_DEVICE_CLASS, DEFAULT_ICON, SURE_IDS, TOPIC_UPDATE,
-                    SureLocationID, SureLockStateID, SureProductID,
-                    SureThingID)
+                    SureLocationID, SureLockStateID, SureThingID)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,7 +94,12 @@ class SurePetcareBinarySensor(BinarySensorDevice):
     @property
     def unique_id(self):
         """Return an unique ID."""
-        return "{}-{}".format(self._household_id, self._id)
+        return f"{self._household_id}-{self._id}"
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return self._unit_of_measurement
 
     async def async_update(self):
         """Get the latest data and update the state."""

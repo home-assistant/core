@@ -2,7 +2,6 @@
 import logging
 import pprint
 
-import homeassistant.helpers.device_registry as dr
 from homeassistant.const import (ATTR_VOLTAGE, CONF_ID, CONF_NAME, CONF_TYPE,
                                  DEVICE_CLASS_BATTERY)
 from homeassistant.core import callback
@@ -11,7 +10,7 @@ from homeassistant.helpers.entity import Entity
 
 from .const import (BATTERY_ICON, CONF_HOUSEHOLD_ID, DATA_SURE_PETCARE,
                     DATA_SUREPY, SURE_BATT_VOLTAGE_DIFF, SURE_BATT_VOLTAGE_LOW,
-                    SURE_IDS, TOPIC_UPDATE, SureProductID, SureThingID)
+                    SURE_IDS, TOPIC_UPDATE, SureThingID)
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,12 +1,12 @@
 """Support for Sure Petcare cat/pet flaps."""
 import logging
 
-from surepy import SurePetcare
 import voluptuous as vol
 
-from homeassistant.const import (CONF_DEVICE_CLASS, CONF_ICON, CONF_ID,
-                                 CONF_NAME, CONF_PASSWORD, CONF_SCAN_INTERVAL,
-                                 CONF_TYPE, CONF_USERNAME)
+from surepy import SurePetcare, SurePetcareError
+
+from homeassistant.const import (CONF_ID, CONF_NAME, CONF_PASSWORD,
+                                 CONF_SCAN_INTERVAL, CONF_TYPE, CONF_USERNAME)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
