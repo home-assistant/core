@@ -57,7 +57,7 @@ class SimpliSafeLock(SimpliSafeEntity, LockDevice):
 
     async def async_update(self):
         """Update lock status."""
-        if self._lock.disabled:
+        if self._lock.offline or self._lock.disabled:
             self._online = False
             return
 
