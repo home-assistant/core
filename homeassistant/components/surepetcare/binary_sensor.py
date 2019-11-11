@@ -57,7 +57,7 @@ class SurePetcareBinarySensor(BinarySensorDevice):
         self._household_id = hass.data[DATA_SURE_PETCARE][CONF_HOUSEHOLD_ID]
         self._sure_type = sure_type
 
-        self._state = dict()
+        self._state = {}
         self._data = hass.data[DATA_SURE_PETCARE][sure_type]
 
     @property
@@ -171,20 +171,20 @@ class Flap(SurePetcareBinarySensor):
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         try:
-            attributes = dict(
-                battery_voltage=self._state["battery"] / 4,
-                locking_mode=self._state["locking"]["mode"],
-                device_rssi=self._state["signal"]["device_rssi"],
-                hub_rssi=self._state["signal"]["hub_rssi"],
-                mac_address=self._state["mac_address"],
-                version=self._state["version"],
-            )
+            attributes = {
+                "battery_voltage": self._state["battery"] / 4,
+                "locking_mode": self._state["locking"]["mode"],
+                "device_rssi": self._state["signal"]["device_rssi"],
+                "hub_rssi": self._state["signal"]["hub_rssi"],
+                "mac_address": self._state["mac_address"],
+                "version": self._state["version"],
+            }
 
         except (KeyError, TypeError) as error:
             _LOGGER.debug(
                 "error getting device state attributes from %s: %s\n\n%s",
                 self._name, error, self._state)
-            attributes = dict(error=self._state)
+            attributes = {"error": self._state}
 
         return attributes
 

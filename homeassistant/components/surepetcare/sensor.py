@@ -21,7 +21,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Set up Sure PetCare Flaps sensors based on a config entry."""
     from surepy import SurePetcare
 
-    entities = list()
+    entities = []
     surepy: SurePetcare = hass.data[DATA_SURE_PETCARE][DATA_SUREPY]
 
     for thing in hass.data[DATA_SURE_PETCARE][SURE_IDS]:
@@ -50,11 +50,10 @@ class FlapBattery(Entity):
         self._name = f"Flap {name.capitalize()} Battery Level"
         self._unit_of_measurement = "%"
         self._icon = BATTERY_ICON
-        self._device_class = DEVICE_CLASS_BATTERY
 
         self._household_id = hass.data[DATA_SURE_PETCARE][CONF_HOUSEHOLD_ID]
 
-        self._state = dict()
+        self._state = {}
         self._data = hass.data[DATA_SURE_PETCARE][SureThingID.FLAP.name]
 
     @property
@@ -88,6 +87,11 @@ class FlapBattery(Entity):
     def unique_id(self):
         """Return an unique ID."""
         return "{}-{}-battery-level".format(self._household_id, self._id)
+
+    @property
+    def device_classe(self):
+        """Return the device class."""
+        return DEVICE_CLASS_BATTERY
 
     @property
     def device_state_attributes(self):

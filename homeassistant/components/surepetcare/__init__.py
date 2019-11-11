@@ -1,6 +1,7 @@
 """Support for Sure Petcare cat/pet flaps."""
 import logging
 
+from surepy import SurePetcare
 import voluptuous as vol
 
 from homeassistant.const import (CONF_DEVICE_CLASS, CONF_ICON, CONF_ID,
@@ -37,8 +38,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_HOUSEHOLD_ID): cv.positive_int,
         vol.Required(CONF_FLAPS): vol.All(cv.ensure_list, [FLAP_SCHEMA]),
         vol.Required(CONF_PETS): vol.All(cv.ensure_list, [PET_SCHEMA]),
-        vol.Optional(CONF_DEVICE_CLASS, default="door"): cv.string,
-        vol.Optional(CONF_ICON, default="mdi:door"): cv.string,
         vol.Optional(
             CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
     }),
@@ -47,8 +46,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Initialize the Sure Petcare component."""
-    from surepy import SurePetcare
-
     # config file data
     conf = config.get(DOMAIN, {})
 
@@ -66,6 +63,10 @@ async def async_setup(hass, config):
     hass.data[DATA_SURE_PETCARE][DATA_SUREPY] = SurePetcare(
         conf[CONF_USERNAME], conf[CONF_PASSWORD], conf[CONF_HOUSEHOLD_ID],
         hass.loop, async_get_clientsession(hass), debug=True)
+
+    if not hass.data[DATA_SURE_PETCARE][DATA_SUREPY]:
+        _LOGGER.error("Unable to connect to surepetcare.io: Wrong credentials?!",)
+        return False
 
     # add flaps
     hass.data[DATA_SURE_PETCARE][SURE_IDS] = [
@@ -89,10 +90,10 @@ async def async_setup(hass, config):
     async_track_time_interval(hass, spc_api.async_update, SCAN_INTERVAL)
 
     # load platforms
-    await hass.helpers.discovery.async_load_platform(
-        'binary_sensor', DOMAIN, {}, config)
-    await hass.helpers.discovery.async_load_platform(
-        'sensor', DOMAIN, {}, config)
+    hass.async_create_task(hass.helpers.discovery.async_load_platform(
+        'binary_sensor', DOMAIN, {}, config))
+    hass.async_create_task(hass.helpers.discovery.async_load_platform(
+        'sensor', DOMAIN, {}, config))
 
     return True
 
@@ -106,12 +107,9 @@ class SurePetcareAPI:
 
     async def async_update(self, args):
         """Refresh Sure Petcare data."""
-        from surepy import SurePetcareError
-
         if self._hass.data[DATA_SURE_PETCARE][DATA_SUREPY]:
             surepy = self._hass.data[DATA_SURE_PETCARE][DATA_SUREPY]
         else:
-            from surepy import SurePetcare
             surepy = SurePetcare(
                 self._hass.data[DATA_SURE_PETCARE][CONF_USERNAME],
                 self._hass.data[DATA_SURE_PETCARE][CONF_PASSWORD],
