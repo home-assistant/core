@@ -56,18 +56,6 @@ class SureLockStateID(IntEnum):
     CURFEW_UNKNOWN = -3
 
 
-# class SureEventID(IntEnum):
-#     """Sure Petcare API Event IDs."""
-
-#     MOVE = 0
-#     MOVE_UNKNOWN_ANIMAL = 7     # movement of unknown animal
-#     BATTERY_WARNING = 1
-#     LOCK_ST = 6
-#     USR_IFO = 12
-#     USR_NEW = 17
-#     CURFEW = 20
-
-
 class SureThingID(IntEnum):
     """Sure Petcare thing Types."""
 
