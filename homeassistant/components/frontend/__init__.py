@@ -52,6 +52,7 @@ MANIFEST_JSON = {
             "src": "/static/icons/favicon-{size}x{size}.png".format(size=size),
             "sizes": "{size}x{size}".format(size=size),
             "type": "image/png",
+            "purpose": "maskable any",
         }
         for size in (192, 384, 512, 1024)
     ],
