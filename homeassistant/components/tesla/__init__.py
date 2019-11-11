@@ -18,6 +18,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_call_later
 from homeassistant.util import slugify
 
 from .config_flow import configured_instances
@@ -51,11 +52,22 @@ def _async_save_refresh_token(hass, config_entry, access_token, token):
 
 async def async_setup(hass, base_config):
     """Set up of Tesla component."""
+
+    def _update_entry(email, scan_interval=300, data=None, options=None):
+        data = data or {}
+        options = options or {CONF_SCAN_INTERVAL: scan_interval}
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if email == entry.title:
+                hass.config_entries.async_update_entry(
+                    entry, data=data, options=options
+                )
+
     config = base_config.get(DOMAIN)
     if not config:
         return True
     email = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
+    scan_interval = config.get(CONF_SCAN_INTERVAL, 300)
     if email in configured_instances(hass):
         for entry in hass.config_entries.async_entries(DOMAIN):
             if email == entry.title:
@@ -73,6 +85,7 @@ async def async_setup(hass, base_config):
                             CONF_ACCESS_TOKEN: access_token,
                             CONF_TOKEN: refresh_token,
                         },
+                        options={CONF_SCAN_INTERVAL: scan_interval},
                     )
                 except TeslaException as ex:
                     _LOGGER.warning(
@@ -88,6 +101,7 @@ async def async_setup(hass, base_config):
                 data={CONF_USERNAME: email, CONF_PASSWORD: password},
             )
         )
+        async_call_later(hass, 15, lambda _: _update_entry(email, scan_interval))
     return True
 
 
@@ -101,15 +115,18 @@ async def async_setup_entry(hass, config_entry):
         try:
             websession = aiohttp_client.async_get_clientsession(hass)
             controller = teslaAPI(
-                websession, refresh_token=config[CONF_TOKEN], update_interval=300
+                websession,
+                refresh_token=config[CONF_TOKEN],
+                update_interval=config_entry.options.get(CONF_SCAN_INTERVAL, 300),
             )
             (refresh_token, access_token) = await controller.connect()
             _async_save_refresh_token(hass, config_entry, access_token, refresh_token)
             hass.data[DOMAIN][config_entry.entry_id] = {
                 "controller": controller,
                 "devices": defaultdict(list),
-                DATA_LISTENER: list,
+                DATA_LISTENER: [config_entry.add_update_listener(update_listener)],
             }
+
             _LOGGER.debug("Connected to the Tesla API.")
         except TeslaException as ex:
             _LOGGER.warning("Unable to communicate with Tesla API: %s", ex.message)
@@ -146,6 +163,18 @@ async def async_unload_entry(hass, config_entry) -> bool:
     hass.data[DOMAIN].pop(config_entry.entry_id)
     _LOGGER.debug("Unloaded entry for %s", username)
     return True
+
+
+async def update_listener(hass, config_entry):
+    """Update when config_entry options update."""
+    controller = hass.data[DOMAIN][config_entry.entry_id]["controller"]
+    old_update_interval = controller.update_interval
+    controller.update_interval = config_entry.options.get(CONF_SCAN_INTERVAL)
+    _LOGGER.debug(
+        "Changing scan_interval from %s to %s",
+        old_update_interval,
+        controller.update_interval,
+    )
 
 
 class TeslaDevice(Entity):

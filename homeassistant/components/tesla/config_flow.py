@@ -8,11 +8,12 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import DOMAIN
 
@@ -80,6 +81,42 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders=placeholders if placeholders else {},
             )
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a option flow for Tesla."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data_schema = vol.Schema(
+            OrderedDict(
+                [
+                    (
+                        vol.Optional(
+                            CONF_SCAN_INTERVAL,
+                            default=self.config_entry.options.get(
+                                CONF_SCAN_INTERVAL, 300
+                            ),
+                        ),
+                        vol.All(cv.positive_int, vol.Clamp(min=300)),
+                    )
+                ]
+            )
+        )
+        return self.async_show_form(step_id="init", data_schema=data_schema)
+
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
@@ -100,7 +137,6 @@ async def validate_input(hass: core.HomeAssistant, data):
         (config[CONF_TOKEN], config[CONF_ACCESS_TOKEN]) = await controller.connect(
             test_login=True
         )
-        # config["title"] = data[CONF_USERNAME]
         _LOGGER.debug("Credentials succesfuly connected to the Tesla API.")
         return config
     except TeslaException as ex:

@@ -10,13 +10,21 @@
       "user": {
         "data": {
           "username": "Email Address",
-          "password": "Password",
-          "scan_interval": "Seconds between scans"
+          "password": "Password"
         },
         "description": "Please enter your information.",
         "title": "Tesla - Configuration"
       }
     },
     "title": "Tesla"
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Seconds between scans"
+        }
+      }
+    }
   }
 }
