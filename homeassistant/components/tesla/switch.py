@@ -96,12 +96,12 @@ class UpdateSwitch(TeslaDevice, SwitchDevice):
     async def async_turn_on(self, **kwargs):
         """Send the on command."""
         _LOGGER.debug("Enable updates: %s %s", self._name, self.tesla_device.id())
-        await self.controller.set_updates(self.tesla_device.id(), True)
+        self.controller.set_updates(self.tesla_device.id(), True)
 
     async def async_turn_off(self, **kwargs):
         """Send the off command."""
         _LOGGER.debug("Disable updates: %s %s", self._name, self.tesla_device.id())
-        await self.controller.set_updates(self.tesla_device.id(), False)
+        self.controller.set_updates(self.tesla_device.id(), False)
 
     @property
     def is_on(self):
@@ -113,4 +113,4 @@ class UpdateSwitch(TeslaDevice, SwitchDevice):
         car_id = self.tesla_device.id()
         _LOGGER.debug("Updating state for: %s %s", self._name, car_id)
         await super().async_update()
-        self._state = bool(await self.controller.get_updates(car_id))
+        self._state = bool(self.controller.get_updates(car_id))
