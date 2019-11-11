@@ -78,14 +78,9 @@ class FlapBattery(Entity):
         return battery_percent
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
-
-    @property
     def unique_id(self):
         """Return an unique ID."""
-        return "{}-{}-battery-level".format(self._household_id, self._id)
+        return f"{self._household_id}-{self._id}"
 
     @property
     def device_classe(self):
@@ -108,6 +103,11 @@ class FlapBattery(Entity):
                 self._name, error, self._state)
 
         return attributes
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return self._unit_of_measurement
 
     async def async_update(self):
         """Get the latest data and update the state."""
