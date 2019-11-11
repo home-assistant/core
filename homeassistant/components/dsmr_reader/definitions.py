@@ -71,30 +71,30 @@ DEFINITIONS = {
     },
     "dsmr/reading/phase_voltage_l2": {
         "name": "Voltage L2",
-        "icon": "mdi:flash", 
+        "icon": "mdi:flash",
         "unit": "V"
     },
     "dsmr/reading/phase_voltage_l3": {
         "name": "Voltage L3",
-        "icon": "mdi:flash", 
+        "icon": "mdi:flash",
         "unit": "V"
     },
-    
+
     "dsmr/consumption/gas/delivered": {
         "name": "Gas usage",
         "icon": "mdi:fire",
-        "unit": "m3" 
+        "unit": "m3"
     },
     "dsmr/consumption/gas/currently_delivered": {
         "name": "Current gas usage",
         "icon": "mdi:fire",
-        "unit": "m3" 
+        "unit": "m3"
     },
     "dsmr/consumption/gas/read_at": {
         "name": "Gas meter read",
         "icon": "mdi:clock",
     },
-    
+
     "dsmr/day-consumption/electricity1": {
         "name": "Low tariff usage",
         "icon": "mdi:counter",
@@ -154,8 +154,38 @@ DEFINITIONS = {
         "name": "Total cost",
         "icon":  "mdi:currency-eur",
         "unit": "€"
-    }, 
-    
+    },
+
+    "dsmr/day-consumption/energy_supplier_price_electricity_delivered_1": {
+        "name": "Low tariff delivered price",
+        "icon": "mdi:currency-eur",
+        "unit": "€"
+    },
+
+    "dsmr/day-consumption/energy_supplier_price_electricity_delivered_2": {
+        "name": "High tariff delivered price",
+        "icon": "mdi:currency-eur",
+        "unit": "€"
+    },
+
+    "dsmr/day-consumption/energy_supplier_price_electricity_returned_1": {
+        "name": "Low tariff returned price",
+        "icon": "mdi:currency-eur",
+        "unit": "€"
+    },
+
+    "dsmr/day-consumption/energy_supplier_price_electricity_returned_2": {
+        "name": "High tariff returned price",
+        "icon": "mdi:currency-eur",
+        "unit": "€"
+    },
+
+    "dsmr/day-consumption/energy_supplier_price_gas": {
+        "name": "Gas price",
+        "icon": "mdi:currency-eur",
+        "unit": "€"
+    },
+
     "dsmr/meter-stats/dsmr_version": {
         "name": "DSMR version",
         "icon":  "mdi:alert-circle",
