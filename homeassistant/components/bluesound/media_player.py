@@ -53,6 +53,7 @@ import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_BLUESOUND_GROUP = "bluesound_group"
 ATTR_MASTER = "master"
 
 DATA_BLUESOUND = "bluesound"
@@ -219,6 +220,8 @@ class BluesoundPlayer(MediaPlayerDevice):
         self._master = None
         self._is_master = False
         self._group_name = None
+        self._group_list = []
+        self._bluesound_device_name = None
 
         self._init_callback = init_callback
         if self.port is None:
@@ -247,6 +250,8 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         if not self._name:
             self._name = self._sync_status.get("@name", self.host)
+        if not self._bluesound_device_name:
+            self._bluesound_device_name = self._sync_status.get("@name", self.host)
         if not self._icon:
             self._icon = self._sync_status.get("@icon", self.host)
 
@@ -331,7 +336,6 @@ class BluesoundPlayer(MediaPlayerDevice):
         self, method, raise_timeout=False, allow_offline=False
     ):
         """Send command to the player."""
-
         if not self._is_online and not allow_offline:
             return
 
@@ -371,7 +375,6 @@ class BluesoundPlayer(MediaPlayerDevice):
 
     async def async_update_status(self):
         """Use the poll session to always get the status of the player."""
-
         response = None
 
         url = "Status"
@@ -402,6 +405,10 @@ class BluesoundPlayer(MediaPlayerDevice):
                 if group_name != self._group_name:
                     _LOGGER.debug("Group name change detected on device: %s", self.host)
                     self._group_name = group_name
+
+                    # rebuild ordered list of entity_ids that are in the group, master is first
+                    self._group_list = self.rebuild_bluesound_group()
+
                     # the sleep is needed to make sure that the
                     # devices is synced
                     await asyncio.sleep(1)
@@ -660,6 +667,11 @@ class BluesoundPlayer(MediaPlayerDevice):
         return self._name
 
     @property
+    def bluesound_device_name(self):
+        """Return the device name as returned by the device."""
+        return self._bluesound_device_name
+
+    @property
     def icon(self):
         """Return the icon of the device."""
         return self._icon
@@ -690,7 +702,6 @@ class BluesoundPlayer(MediaPlayerDevice):
     @property
     def source(self):
         """Name of the current input source."""
-
         if self._status is None or (self.is_grouped and not self.is_master):
             return None
 
@@ -830,6 +841,39 @@ class BluesoundPlayer(MediaPlayerDevice):
             await master_device[0].async_add_slave(self)
         else:
             _LOGGER.error("Master not found %s", master_device)
+
+    @property
+    def device_state_attributes(self):
+        """List members in group."""
+        attributes = {}
+        if self._group_list:
+            attributes = {ATTR_BLUESOUND_GROUP: self._group_list}
+
+        attributes[ATTR_MASTER] = self._is_master
+
+        return attributes
+
+    def rebuild_bluesound_group(self):
+        """Rebuild the list of entities in speaker group."""
+        if self._group_name is None:
+            return None
+
+        bluesound_group = []
+
+        device_group = self._group_name.split("+")
+
+        sorted_entities = sorted(
+            self._hass.data[DATA_BLUESOUND],
+            key=lambda entity: entity.is_master,
+            reverse=True,
+        )
+        bluesound_group = [
+            entity.name
+            for entity in sorted_entities
+            if entity.bluesound_device_name in device_group
+        ]
+
+        return bluesound_group
 
     async def async_unjoin(self):
         """Unjoin the player from a group."""

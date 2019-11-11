@@ -43,6 +43,7 @@ homeassistant/components/awair/* @danielsjf
 homeassistant/components/aws/* @awarecan @robbiet480
 homeassistant/components/axis/* @kane610
 homeassistant/components/azure_event_hub/* @eavanvalkenburg
+homeassistant/components/azure_service_bus/* @hfurubotten
 homeassistant/components/beewi_smartclim/* @alemuro
 homeassistant/components/bitcoin/* @fabaff
 homeassistant/components/bizkaibus/* @UgaitzEtxebarria
@@ -156,6 +157,7 @@ homeassistant/components/iqvia/* @bachya
 homeassistant/components/irish_rail_transport/* @ttroy50
 homeassistant/components/izone/* @Swamp-Ig
 homeassistant/components/jewish_calendar/* @tsvi
+homeassistant/components/juicenet/* @jesserockz
 homeassistant/components/kaiterra/* @Michsior14
 homeassistant/components/keba/* @dannerph
 homeassistant/components/keenetic_ndms2/* @foxel
@@ -175,6 +177,7 @@ homeassistant/components/logi_circle/* @evanjd
 homeassistant/components/lovelace/* @home-assistant/frontend
 homeassistant/components/luci/* @fbradyirl @mzdrale
 homeassistant/components/luftdaten/* @fabaff
+homeassistant/components/lutron/* @JonGilmore
 homeassistant/components/magichome/* @ZNEGGE-SDK
 homeassistant/components/mastodon/* @fabaff
 homeassistant/components/matrix/* @tinloaf
@@ -224,13 +227,14 @@ homeassistant/components/oru/* @bvlaicu
 homeassistant/components/owlet/* @oblogic7
 homeassistant/components/panel_custom/* @home-assistant/frontend
 homeassistant/components/panel_iframe/* @home-assistant/frontend
+homeassistant/components/pcal9535a/* @Shulyaka
 homeassistant/components/persistent_notification/* @home-assistant/core
 homeassistant/components/philips_js/* @elupus
 homeassistant/components/pi_hole/* @fabaff @johnluetke
 homeassistant/components/plaato/* @JohNan
 homeassistant/components/plant/* @ChristianKuehnel
 homeassistant/components/plex/* @jjlawren
-homeassistant/components/plugwise/* @laetificat @CoMPaTech
+homeassistant/components/plugwise/* @laetificat @CoMPaTech @bouwew
 homeassistant/components/point/* @fredrike
 homeassistant/components/ps4/* @ktnrg45
 homeassistant/components/ptvsd/* @swamp-ig
@@ -281,6 +285,7 @@ homeassistant/components/sql/* @dgomes
 homeassistant/components/statistics/* @fabaff
 homeassistant/components/stiebel_eltron/* @fucm
 homeassistant/components/stream/* @hunterjm
+homeassistant/components/stt/* @pvizeli
 homeassistant/components/suez_water/* @ooii
 homeassistant/components/sun/* @Swamp-Ig
 homeassistant/components/supla/* @mwegrzynek
@@ -338,6 +343,7 @@ homeassistant/components/weblink/* @home-assistant/core
 homeassistant/components/websocket_api/* @home-assistant/core
 homeassistant/components/wemo/* @sqldiablo
 homeassistant/components/withings/* @vangorra
+homeassistant/components/wled/* @frenck
 homeassistant/components/worldclock/* @fabaff
 homeassistant/components/wwlln/* @bachya
 homeassistant/components/xbox_live/* @MartinHjelmare

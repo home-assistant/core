@@ -9,7 +9,7 @@ from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_HUMIDITY,
-    ATTR_HVAC_ACTIONS,
+    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODES,
     ATTR_MAX_HUMIDITY,
     ATTR_MAX_TEMP,
@@ -233,7 +233,7 @@ async def test_set_hvac_bad_attr_and_state(hass):
     Also check the state.
     """
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get(ATTR_HVAC_ACTIONS) == CURRENT_HVAC_COOL
+    assert state.attributes.get(ATTR_HVAC_ACTION) == CURRENT_HVAC_COOL
     assert state.state == HVAC_MODE_COOL
 
     with pytest.raises(vol.Invalid):
@@ -241,7 +241,7 @@ async def test_set_hvac_bad_attr_and_state(hass):
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get(ATTR_HVAC_ACTIONS) == CURRENT_HVAC_COOL
+    assert state.attributes.get(ATTR_HVAC_ACTION) == CURRENT_HVAC_COOL
     assert state.state == HVAC_MODE_COOL
 
 

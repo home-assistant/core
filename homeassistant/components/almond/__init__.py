@@ -3,12 +3,14 @@ import asyncio
 from datetime import timedelta
 import logging
 import time
+from typing import Optional
 
 import async_timeout
 from aiohttp import ClientSession, ClientError
 from pyalmond import AlmondLocalAuth, AbstractAlmondWebAuth, WebAlmondAPI
 import voluptuous as vol
 
+from homeassistant import core
 from homeassistant.const import CONF_TYPE, CONF_HOST
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.auth.const import GROUP_ID_ADMIN
@@ -94,9 +96,9 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, entry):
     """Set up Almond config entry."""
     websession = aiohttp_client.async_get_clientsession(hass)
+
     if entry.data["type"] == TYPE_LOCAL:
         auth = AlmondLocalAuth(entry.data["host"], websession)
-
     else:
         # OAuth2
         implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -108,10 +110,10 @@ async def async_setup_entry(hass, entry):
         auth = AlmondOAuth(entry.data["host"], websession, oauth_session)
 
     api = WebAlmondAPI(auth)
-    agent = AlmondAgent(api)
+    agent = AlmondAgent(hass, api, entry)
 
     # Hass.io does its own configuration of Almond.
-    if entry.data.get("is_hassio"):
+    if entry.data.get("is_hassio") or entry.data["type"] != TYPE_LOCAL:
         conversation.async_set_agent(hass, agent)
         return True
 
@@ -192,22 +194,54 @@ class AlmondOAuth(AbstractAlmondWebAuth):
 
     async def async_get_access_token(self):
         """Return a valid access token."""
-        if not self._oauth_session.is_valid:
+        if not self._oauth_session.valid_token:
             await self._oauth_session.async_ensure_token_valid()
 
-        return self._oauth_session.token
+        return self._oauth_session.token["access_token"]
 
 
 class AlmondAgent(conversation.AbstractConversationAgent):
     """Almond conversation agent."""
 
-    def __init__(self, api: WebAlmondAPI):
+    def __init__(self, hass: core.HomeAssistant, api: WebAlmondAPI, entry):
         """Initialize the agent."""
+        self.hass = hass
         self.api = api
+        self.entry = entry
 
-    async def async_process(self, text: str) -> intent.IntentResponse:
+    @property
+    def attribution(self):
+        """Return the attribution."""
+        return {"name": "Powered by Almond", "url": "https://almond.stanford.edu/"}
+
+    async def async_get_onboarding(self):
+        """Get onboard url if not onboarded."""
+        if self.entry.data.get("onboarded"):
+            return None
+
+        host = self.entry.data["host"]
+        if self.entry.data.get("is_hassio"):
+            host = "/core_almond"
+        elif self.entry.data["type"] != TYPE_LOCAL:
+            host = f"{host}/me"
+        return {
+            "text": "Would you like to opt-in to share your anonymized commands with Stanford to improve Almond's responses?",
+            "url": f"{host}/conversation",
+        }
+
+    async def async_set_onboarding(self, shown):
+        """Set onboarding status."""
+        self.hass.config_entries.async_update_entry(
+            self.entry, data={**self.entry.data, "onboarded": shown}
+        )
+
+        return True
+
+    async def async_process(
+        self, text: str, conversation_id: Optional[str] = None
+    ) -> intent.IntentResponse:
         """Process a sentence."""
-        response = await self.api.async_converse_text(text)
+        response = await self.api.async_converse_text(text, conversation_id)
 
         buffer = ""
         for message in response["messages"]:

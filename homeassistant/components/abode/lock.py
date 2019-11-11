@@ -18,14 +18,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Abode lock devices."""
-
     data = hass.data[DOMAIN]
 
-    devices = []
-    for device in data.abode.get_devices(generic_type=CONST.TYPE_LOCK):
-        devices.append(AbodeLock(data, device))
+    entities = []
 
-    async_add_entities(devices)
+    for device in data.abode.get_devices(generic_type=CONST.TYPE_LOCK):
+        entities.append(AbodeLock(data, device))
+
+    async_add_entities(entities)
 
 
 class AbodeLock(AbodeDevice, LockDevice):

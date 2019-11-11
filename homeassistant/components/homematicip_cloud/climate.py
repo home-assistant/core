@@ -4,13 +4,15 @@ from typing import Awaitable
 
 from homematicip.aio.device import AsyncHeatingThermostat, AsyncHeatingThermostatCompact
 from homematicip.aio.group import AsyncHeatingGroup
-from homematicip.base.enums import AbsenceType, GroupType
+from homematicip.base.enums import AbsenceType
 from homematicip.functionalHomes import IndoorClimateHome
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
+    HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_ECO,
@@ -29,6 +31,9 @@ HEATING_PROFILES = {"PROFILE_1": 0, "PROFILE_2": 1, "PROFILE_3": 2}
 COOLING_PROFILES = {"PROFILE_4": 3, "PROFILE_5": 4, "PROFILE_6": 5}
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_PRESET_END_TIME = "preset_end_time"
+PERMANENT_END_TIME = "permanent"
 
 HMIP_AUTOMATIC_CM = "AUTOMATIC"
 HMIP_MANUAL_CM = "MANUAL"
@@ -55,15 +60,20 @@ async def async_setup_entry(
 
 
 class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
-    """Representation of a HomematicIP heating group."""
+    """Representation of a HomematicIP heating group.
+
+    Heat mode is supported for all heating devices incl. their defined profiles.
+    Boost is available for radiator thermostats only.
+    Cool mode is only available for floor heating systems, if basically enabled in the hmip app.
+    """
 
     def __init__(self, hap: HomematicipHAP, device: AsyncHeatingGroup) -> None:
         """Initialize heating group."""
         device.modelType = "HmIP-Heating-Group"
+        super().__init__(hap, device)
         self._simple_heating = None
         if device.actualTemperature is None:
-            self._simple_heating = _get_first_heating_thermostat(device)
-        super().__init__(hap, device)
+            self._simple_heating = self._get_first_radiator_thermostat()
 
     @property
     def device_info(self):
@@ -105,54 +115,66 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
 
     @property
     def hvac_mode(self) -> str:
-        """Return hvac operation ie. heat, cool mode.
-
-        Need to be one of HVAC_MODE_*.
-        """
+        """Return hvac operation ie."""
+        if self._disabled_by_cooling_mode:
+            return HVAC_MODE_OFF
         if self._device.boostMode:
             return HVAC_MODE_HEAT
         if self._device.controlMode == HMIP_MANUAL_CM:
-            return HVAC_MODE_HEAT
+            return HVAC_MODE_HEAT if self._heat_mode_enabled else HVAC_MODE_COOL
 
         return HVAC_MODE_AUTO
 
     @property
     def hvac_modes(self):
-        """Return the list of available hvac operation modes.
+        """Return the list of available hvac operation modes."""
+        if self._disabled_by_cooling_mode:
+            return [HVAC_MODE_OFF]
 
-        Need to be a subset of HVAC_MODES.
-        """
-        return [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
+        return (
+            [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
+            if self._heat_mode_enabled
+            else [HVAC_MODE_AUTO, HVAC_MODE_COOL]
+        )
 
     @property
     def preset_mode(self):
-        """Return the current preset mode, e.g., home, away, temp.
-
-        Requires SUPPORT_PRESET_MODE.
-        """
+        """Return the current preset mode."""
         if self._device.boostMode:
             return PRESET_BOOST
-        if self.hvac_mode == HVAC_MODE_HEAT:
+        if self.hvac_mode in (HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF):
             return PRESET_NONE
         if self._device.controlMode == HMIP_ECO_CM:
-            absence_type = self._home.get_functionalHome(IndoorClimateHome).absenceType
-            if absence_type == AbsenceType.VACATION:
+            if self._indoor_climate.absenceType == AbsenceType.VACATION:
                 return PRESET_AWAY
-            if absence_type in [
+            if self._indoor_climate.absenceType in [
+                AbsenceType.PARTY,
                 AbsenceType.PERIOD,
                 AbsenceType.PERMANENT,
-                AbsenceType.PARTY,
             ]:
                 return PRESET_ECO
 
-        if self._device.activeProfile:
-            return self._device.activeProfile.name
+        return (
+            self._device.activeProfile.name
+            if self._device.activeProfile.name in self._device_profile_names
+            else None
+        )
 
     @property
     def preset_modes(self):
-        """Return a list of available preset modes incl profiles."""
-        presets = [PRESET_NONE, PRESET_BOOST]
-        presets.extend(self._device_profile_names)
+        """Return a list of available preset modes incl. hmip profiles."""
+        # Boost is only available if a radiator thermostat is in the room,
+        # and heat mode is enabled.
+        profile_names = self._device_profile_names
+
+        presets = []
+        if self._heat_mode_enabled and self._has_radiator_thermostat:
+            if not profile_names:
+                presets.append(PRESET_NONE)
+            presets.append(PRESET_BOOST)
+
+        presets.extend(profile_names)
+
         return presets
 
     @property
@@ -170,10 +192,15 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-        await self._device.set_point_temperature(temperature)
+
+        if self.min_temp <= temperature <= self.max_temp:
+            await self._device.set_point_temperature(temperature)
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> Awaitable[None]:
         """Set new target hvac mode."""
+        if hvac_mode not in self.hvac_modes:
+            return
+
         if hvac_mode == HVAC_MODE_AUTO:
             await self._device.set_control_mode(HMIP_AUTOMATIC_CM)
         else:
@@ -181,18 +208,44 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
 
     async def async_set_preset_mode(self, preset_mode: str) -> Awaitable[None]:
         """Set new preset mode."""
+        if preset_mode not in self.preset_modes:
+            return
+
         if self._device.boostMode and preset_mode != PRESET_BOOST:
             await self._device.set_boost(False)
         if preset_mode == PRESET_BOOST:
             await self._device.set_boost()
         if preset_mode in self._device_profile_names:
             profile_idx = self._get_profile_idx_by_name(preset_mode)
-            await self.async_set_hvac_mode(HVAC_MODE_AUTO)
+            if self._device.controlMode != HMIP_AUTOMATIC_CM:
+                await self.async_set_hvac_mode(HVAC_MODE_AUTO)
             await self._device.set_active_profile(profile_idx)
 
     @property
+    def device_state_attributes(self):
+        """Return the state attributes of the access point."""
+        state_attr = super().device_state_attributes
+
+        if self._device.controlMode == HMIP_ECO_CM:
+            if self._indoor_climate.absenceType in [
+                AbsenceType.PARTY,
+                AbsenceType.PERIOD,
+                AbsenceType.VACATION,
+            ]:
+                state_attr[ATTR_PRESET_END_TIME] = self._indoor_climate.absenceEndTime
+            elif self._indoor_climate.absenceType == AbsenceType.PERMANENT:
+                state_attr[ATTR_PRESET_END_TIME] = PERMANENT_END_TIME
+
+        return state_attr
+
+    @property
+    def _indoor_climate(self):
+        """Return the hmip indoor climate functional home of this group."""
+        return self._home.get_functionalHome(IndoorClimateHome)
+
+    @property
     def _device_profiles(self):
-        """Return the relevant profiles of the device."""
+        """Return the relevant profiles."""
         return [
             profile
             for profile in self._device.profiles
@@ -218,17 +271,36 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
         return relevant_index[index_name[0]]
 
     @property
-    def _relevant_profile_group(self):
-        """Return the relevant profile groups."""
-        return (
-            HEATING_PROFILES
-            if self._device.groupType == GroupType.HEATING
-            else COOLING_PROFILES
+    def _heat_mode_enabled(self):
+        """Return, if heating mode is enabled."""
+        return not self._device.cooling
+
+    @property
+    def _disabled_by_cooling_mode(self):
+        """Return, if group is disabled by the cooling mode."""
+        return self._device.cooling and (
+            self._device.coolingIgnored or not self._device.coolingAllowed
         )
 
+    @property
+    def _relevant_profile_group(self):
+        """Return the relevant profile groups."""
+        if self._disabled_by_cooling_mode:
+            return []
 
-def _get_first_heating_thermostat(heating_group: AsyncHeatingGroup):
-    """Return the first HeatingThermostat from a HeatingGroup."""
-    for device in heating_group.devices:
-        if isinstance(device, (AsyncHeatingThermostat, AsyncHeatingThermostatCompact)):
-            return device
+        return HEATING_PROFILES if self._heat_mode_enabled else COOLING_PROFILES
+
+    @property
+    def _has_radiator_thermostat(self) -> bool:
+        """Return, if a radiator thermostat is in the hmip heating group."""
+        return bool(self._get_first_radiator_thermostat())
+
+    def _get_first_radiator_thermostat(self):
+        """Return the first radiator thermostat from the hmip heating group."""
+        for device in self._device.devices:
+            if isinstance(
+                device, (AsyncHeatingThermostat, AsyncHeatingThermostatCompact)
+            ):
+                return device
+
+        return None

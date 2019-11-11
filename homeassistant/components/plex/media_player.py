@@ -75,6 +75,7 @@ def _async_add_entities(
     hass, registry, config_entry, async_add_entities, server_id, new_entities
 ):
     """Set up Plex media_player entities."""
+    _LOGGER.debug("New entities: %s", new_entities)
     entities = []
     plexserver = hass.data[PLEX_DOMAIN][SERVERS][server_id]
     for entity_params in new_entities:
@@ -142,6 +143,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
         """Run when about to be added to hass."""
         server_id = self.plex_server.machine_identifier
 
+        _LOGGER.debug("Added %s [%s]", self.entity_id, self.unique_id)
         unsub = async_dispatcher_connect(
             self.hass,
             PLEX_UPDATE_MEDIA_PLAYER_SIGNAL.format(self.unique_id),
@@ -152,6 +154,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
     @callback
     def async_refresh_media_player(self, device, session):
         """Set instance objects and trigger an entity state update."""
+        _LOGGER.debug("Refreshing %s [%s / %s]", self.entity_id, device, session)
         self.device = device
         self.session = session
         self.async_schedule_update_ha_state(True)

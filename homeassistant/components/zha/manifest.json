@@ -5,7 +5,7 @@
   "documentation": "https://www.home-assistant.io/integrations/zha",
   "requirements": [
     "bellows-homeassistant==0.10.0",
-    "zha-quirks==0.0.26",
+    "zha-quirks==0.0.27",
     "zigpy-deconz==0.6.0",
     "zigpy-homeassistant==0.10.0",
     "zigpy-xbee-homeassistant==0.6.0",

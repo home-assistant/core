@@ -1,10 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "D\u00ebsen Apparat ass scho konfigur\u00e9iert"
+            "already_configured": "D\u00ebsen Apparat ass scho konfigur\u00e9iert",
+            "already_in_progress": "D\u00ebsen Apparat g\u00ebtt scho konfigur\u00e9iert",
+            "not_huawei_lte": "Ken Huawei LTE Apparat"
         },
         "error": {
             "connection_failed": "Feeler bei der Verbindung",
+            "connection_timeout": "Z\u00e4it Iwwerschreidung beim verbannen",
             "incorrect_password": "Ong\u00ebltegt Passwuert",
             "incorrect_username": "Ong\u00ebltege Benotzernumm",
             "incorrect_username_or_password": "Ong\u00ebltege Benotzernumm oder Passwuert",

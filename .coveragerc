@@ -69,6 +69,7 @@ omit =
     homeassistant/components/avea/light.py
     homeassistant/components/avion/light.py
     homeassistant/components/azure_event_hub/*
+    homeassistant/components/azure_service_bus/*
     homeassistant/components/baidu/tts.py
     homeassistant/components/beewi_smartclim/sensor.py
     homeassistant/components/bbb_gpio/*
@@ -498,6 +499,7 @@ omit =
     homeassistant/components/panasonic_bluray/media_player.py
     homeassistant/components/panasonic_viera/media_player.py
     homeassistant/components/pandora/media_player.py
+    homeassistant/components/pcal9535a/*
     homeassistant/components/pencom/switch.py
     homeassistant/components/philips_js/media_player.py
     homeassistant/components/pi_hole/sensor.py

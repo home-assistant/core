@@ -69,6 +69,7 @@ DATA_CUSTOMIZE = "hass_customize"
 GROUP_CONFIG_PATH = "groups.yaml"
 AUTOMATION_CONFIG_PATH = "automations.yaml"
 SCRIPT_CONFIG_PATH = "scripts.yaml"
+SCENE_CONFIG_PATH = "scenes.yaml"
 
 DEFAULT_CONFIG = f"""
 # Configure a default setup of Home Assistant (frontend, api, etc)
@@ -85,6 +86,7 @@ tts:
 group: !include {GROUP_CONFIG_PATH}
 automation: !include {AUTOMATION_CONFIG_PATH}
 script: !include {SCRIPT_CONFIG_PATH}
+scene: !include {SCENE_CONFIG_PATH}
 """
 DEFAULT_SECRETS = """
 # Use this file to store secrets like usernames and passwords.
@@ -261,6 +263,7 @@ def _write_default_config(config_dir: str) -> Optional[str]:
     group_yaml_path = os.path.join(config_dir, GROUP_CONFIG_PATH)
     automation_yaml_path = os.path.join(config_dir, AUTOMATION_CONFIG_PATH)
     script_yaml_path = os.path.join(config_dir, SCRIPT_CONFIG_PATH)
+    scene_yaml_path = os.path.join(config_dir, SCENE_CONFIG_PATH)
 
     # Writing files with YAML does not create the most human readable results
     # So we're hard coding a YAML template.
@@ -281,6 +284,9 @@ def _write_default_config(config_dir: str) -> Optional[str]:
             fil.write("[]")
 
         with open(script_yaml_path, "wt"):
+            pass
+
+        with open(scene_yaml_path, "wt"):
             pass
 
         return config_path

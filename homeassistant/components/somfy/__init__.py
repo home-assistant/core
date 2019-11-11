@@ -9,6 +9,7 @@ import logging
 from datetime import timedelta
 
 import voluptuous as vol
+from requests import HTTPError
 
 from homeassistant.helpers import config_validation as cv, config_entry_oauth2_flow
 from homeassistant.components.somfy import config_flow
@@ -156,13 +157,8 @@ class SomfyEntity(Entity):
 @Throttle(SCAN_INTERVAL)
 async def update_all_devices(hass):
     """Update all the devices."""
-    from requests import HTTPError
-    from oauthlib.oauth2 import TokenExpiredError
-
     try:
         data = hass.data[DOMAIN]
         data[DEVICES] = await hass.async_add_executor_job(data[API].get_devices)
-    except TokenExpiredError:
-        _LOGGER.warning("Cannot update devices due to expired token")
-    except HTTPError:
-        _LOGGER.warning("Cannot update devices")
+    except HTTPError as err:
+        _LOGGER.warning("Cannot update devices: %s", err.response.status_code)
