@@ -1,0 +1,8 @@
+{
+  "domain": "efesto",
+  "name": "Efesto",
+  "documentation": "https://www.home-assistant.io/components/efesto",
+  "requirements": ["efestoclient==0.0.8"],
+  "dependencies": [],
+  "codeowners": ["@fredericvl"]
+}
