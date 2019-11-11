@@ -50,17 +50,17 @@ async def async_setup(hass, config):
     from surepy import SurePetcare
 
     # config file data
-    conf = config.get(DOMAIN, dict())
+    conf = config.get(DOMAIN, {})
 
     # shared data
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][CONF_SCAN_INTERVAL] = conf[CONF_SCAN_INTERVAL]
     hass.data[DATA_SURE_PETCARE] = {}
-    hass.data[DATA_SURE_PETCARE][CONF_USERNAME] = CONF_USERNAME
-    hass.data[DATA_SURE_PETCARE][CONF_PASSWORD] = CONF_PASSWORD
+    hass.data[DATA_SURE_PETCARE][CONF_USERNAME] = conf[CONF_USERNAME]
+    hass.data[DATA_SURE_PETCARE][CONF_PASSWORD] = conf[CONF_PASSWORD]
     hass.data[DATA_SURE_PETCARE][CONF_HOUSEHOLD_ID] = conf[CONF_HOUSEHOLD_ID]
-    hass.data[DATA_SURE_PETCARE][SureThingID.FLAP.name] = dict()
-    hass.data[DATA_SURE_PETCARE][SureThingID.PET.name] = dict()
+    hass.data[DATA_SURE_PETCARE][SureThingID.FLAP.name] = {}
+    hass.data[DATA_SURE_PETCARE][SureThingID.PET.name] = {}
 
     # sure petcare api connection
     hass.data[DATA_SURE_PETCARE][DATA_SUREPY] = SurePetcare(
@@ -120,10 +120,10 @@ class SurePetcareAPI:
                 debug=True)
 
         if SureThingID.FLAP.name not in self._hass.data[DATA_SURE_PETCARE]:
-            self._hass.data[DATA_SURE_PETCARE][SureThingID.FLAP.name] = dict()
+            self._hass.data[DATA_SURE_PETCARE][SureThingID.FLAP.name] = {}
 
         if SureThingID.PET.name not in self._hass.data[DATA_SURE_PETCARE]:
-            self._hass.data[DATA_SURE_PETCARE][SureThingID.PET.name] = dict()
+            self._hass.data[DATA_SURE_PETCARE][SureThingID.PET.name] = {}
 
         for thing in self._hass.data[DATA_SURE_PETCARE][SURE_IDS]:
             sure_id = thing[CONF_ID]
