@@ -79,7 +79,10 @@ class FuelPriceSensorBase(Entity):
         }
         return attrs
 
-    @property
-    def should_poll(self):
-        """Do not poll regularly for the base class."""
-        return False
+    def new_data(self, data):
+        """Update the internal sensor data."""
+        self._data = data
+        if self._data["status"] == "open":
+            self._is_open = STATE_OPEN
+        else:
+            self._is_open = STATE_CLOSED

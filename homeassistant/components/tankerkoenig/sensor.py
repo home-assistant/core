@@ -130,11 +130,3 @@ class FuelPriceSensorMaster(FuelPriceSensorBase):
 
 class FuelPriceSensorSlave(FuelPriceSensorBase):
     """Contains prices for fuels in the given station."""
-
-    def new_data(self, data):
-        """Update the internal sensor data."""
-        self._data = data
-        if self._data["status"] == "open":
-            self._is_open = STATE_OPEN
-        else:
-            self._is_open = STATE_CLOSED
