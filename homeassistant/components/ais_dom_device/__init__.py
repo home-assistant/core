@@ -99,13 +99,13 @@ async def async_setup(hass, config):
 
 
 async def _async_start_rf_sniffing(hass):
-    # start Bucket sniffing using command 0xB1
-    await hass.services.async_call(
-        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": 177}
-    )
     # beep (00C0 is the length of the sound)
     await hass.services.async_call(
         "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": "AAC000C055"}
+    )
+    # start Bucket sniffing using command 0xB1
+    await hass.services.async_call(
+        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": "AAB155"}
     )
     # say info
     await hass.services.async_call(
@@ -116,13 +116,13 @@ async def _async_start_rf_sniffing(hass):
 
 
 async def _async_stop_rf_sniffing(hass, clear):
-    #  bucket Transmitting using command 0xB0
-    await hass.services.async_call(
-        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": 176}
-    )
     # beep (00C0 is the length of the sound)
     await hass.services.async_call(
         "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": "AAC000C055"}
+    )
+    #  bucket Transmitting using command 0xB0
+    await hass.services.async_call(
+        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": 176}
     )
     # say info
     await hass.services.async_call(
