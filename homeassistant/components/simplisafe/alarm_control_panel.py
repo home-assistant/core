@@ -133,6 +133,8 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
             self._online = False
             return
 
+        self._online = True
+
         if self._system.state == SystemStates.off:
             self._state = STATE_ALARM_DISARMED
         elif self._system.state in (SystemStates.home, SystemStates.home_count):
