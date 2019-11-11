@@ -4,7 +4,7 @@ import logging
 from simplipy.lock import LockStates
 
 from homeassistant.components.lock import LockDevice
-from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.const import STATE_LOCKED, STATE_UNKNOWN, STATE_UNLOCKED
 
 from . import SimpliSafeEntity
 from .const import DATA_CLIENT, DOMAIN
@@ -15,7 +15,11 @@ ATTR_LOCK_LOW_BATTERY = "lock_low_battery"
 ATTR_JAMMED = "jammed"
 ATTR_PIN_PAD_LOW_BATTERY = "pin_pad_low_battery"
 
-STATE_MAP = {LockStates.locked: STATE_LOCKED, LockStates.unlocked: STATE_UNLOCKED}
+STATE_MAP = {
+    LockStates.locked: STATE_LOCKED,
+    LockStates.unknown: STATE_UNKNOWN,
+    LockStates.unlocked: STATE_UNLOCKED,
+}
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
