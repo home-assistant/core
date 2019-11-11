@@ -48,6 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 "chuangmi.plug.v2",
                 "chuangmi.plug.v3",
                 "chuangmi.plug.hmi205",
+                "chuangmi.plug.hmi206",
                 "lumi.acpartner.v3",
             ]
         ),
@@ -158,6 +159,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         "chuangmi.plug.m3",
         "chuangmi.plug.v2",
         "chuangmi.plug.hmi205",
+        "chuangmi.plug.hmi206",
     ]:
         plug = ChuangmiPlug(host, token, model=model)
         device = XiaomiPlugGenericSwitch(name, plug, model, unique_id)
