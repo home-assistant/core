@@ -17,6 +17,9 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up Sure PetCare Flaps sensors based on a config entry."""
+    if not discovery_info:
+        return
+
     from surepy import SurePetcare
 
     entities = []
