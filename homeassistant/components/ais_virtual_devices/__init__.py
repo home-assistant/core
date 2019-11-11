@@ -17,6 +17,13 @@ async def async_setup(hass, config):
         hass.helpers.discovery.async_load_platform("camera", "ais_qrcode", {}, config)
     )
 
+    # Set up ais dom devices (RF codes)
+    hass.async_create_task(
+        hass.helpers.discovery.async_load_platform(
+            "sensor", "ais_dom_device", {}, config
+        )
+    )
+
     return True
 
     # TODO see demo platform

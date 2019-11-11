@@ -832,6 +832,36 @@
                                         "domain": "sensor"
                                     },
                                     {
+                                        "attributes": {
+                                            "device_class": "timestamp"
+                                        },
+                                        "domain": "sensor"
+                                    },
+                                    {
+                                        "attributes": {
+                                            "device_class": "battery"
+                                        },
+                                        "domain": "sensor"
+                                    },
+                                    {
+                                        "attributes": {
+                                            "device_class": "illuminance"
+                                        },
+                                        "domain": "sensor"
+                                    },
+                                    {
+                                        "attributes": {
+                                            "device_class": "power"
+                                        },
+                                        "domain": "sensor"
+                                    },
+                                    {
+                                        "attributes": {
+                                            "device_class": "pressure"
+                                        },
+                                        "domain": "sensor"
+                                    },
+                                    {
                                         "entity_id": "sensor.*_status"
                                     }
                                 ]
