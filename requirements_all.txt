@@ -1756,6 +1756,9 @@ sharp_aquos_rc==0.3.2
 # homeassistant.components.shodan
 shodan==1.19.0
 
+# homeassistant.components.signalmessenger
+pysignalclirestapi==0.1.3
+
 # homeassistant.components.simplepush
 simplepush==1.1.4
 
