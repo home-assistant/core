@@ -177,6 +177,7 @@ homeassistant/components/logi_circle/* @evanjd
 homeassistant/components/lovelace/* @home-assistant/frontend
 homeassistant/components/luci/* @fbradyirl @mzdrale
 homeassistant/components/luftdaten/* @fabaff
+homeassistant/components/lutron/* @JonGilmore
 homeassistant/components/mastodon/* @fabaff
 homeassistant/components/matrix/* @tinloaf
 homeassistant/components/mcp23017/* @jardiamj
