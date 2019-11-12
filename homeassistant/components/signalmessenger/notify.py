@@ -31,9 +31,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def get_service(hass, config, discovery_info=None):
     """Get the SignalMessenger notification service."""
 
-    sender_nr = config.get(CONF_SENDER_NR)
-    recp_nrs = config.get(CONF_RECP_NR)
-    signal_cli_rest_api_url = config.get(CONF_SIGNAL_CLI_REST_API)
+    sender_nr = config[CONF_SENDER_NR]
+    recp_nrs = config[CONF_RECP_NR]
+    signal_cli_rest_api_url = config[CONF_SIGNAL_CLI_REST_API]
 
     signal_cli_rest_api = SignalCliRestApi(
         signal_cli_rest_api_url, sender_nr, api_version=1
