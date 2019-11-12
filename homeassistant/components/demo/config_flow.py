@@ -4,7 +4,8 @@ from homeassistant import config_entries
 from . import DOMAIN
 
 
-class DemoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+@config_entries.HANDLERS.register(DOMAIN)
+class DemoConfigFlow(config_entries.ConfigFlow):
     """Demo configuration flow."""
 
     VERSION = 1
