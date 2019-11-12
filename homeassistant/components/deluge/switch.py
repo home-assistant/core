@@ -4,9 +4,9 @@ import logging
 from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-
 from homeassistant.helpers.entity import ToggleEntity
-from .const import DOMAIN, DELUGE_SWITCH
+
+from .const import DELUGE_SWITCH, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

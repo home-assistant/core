@@ -14,7 +14,7 @@ from homeassistant.core import callback
 
 from . import get_api
 from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
-from .errors import UserNameError, PasswordError, CannotConnect, UnknownError
+from .errors import CannotConnect, PasswordError, UnknownError, UserNameError
 
 DATA_SCHEMA = vol.Schema(
     {

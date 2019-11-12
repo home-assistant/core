@@ -1,12 +1,19 @@
-"""Constants for the Transmission Bittorent Client component."""
+"""Constants for the Deluge Client component."""
 DOMAIN = "deluge"
 
+ATTR_TORRENT = "torrent"
+
 DEFAULT_NAME = "Deluge"
+DELUGE_SWITCH = "Switch"
 DEFAULT_PORT = 58846
 DEFAULT_SCAN_INTERVAL = 120
 
 DHT_UPLOAD = 1000
 DHT_DOWNLOAD = 1000
+
+SERVICE_ADD_TORRENT = "add_torrent"
+
+DATA_UPDATED = "deluge_data_updated"
 
 SENSOR_TYPES = {
     "active_torrents": ["Active Torrents", None],
@@ -18,9 +25,3 @@ SENSOR_TYPES = {
     "completed_torrents": ["Completed Torrents", None],
     "started_torrents": ["Started Torrents", None],
 }
-DELUGE_SWITCH = "Switch"
-
-ATTR_TORRENT = "torrent"
-SERVICE_ADD_TORRENT = "add_torrent"
-
-DATA_UPDATED = "deluge_data_updated"

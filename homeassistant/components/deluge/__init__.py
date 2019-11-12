@@ -23,14 +23,14 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     ATTR_TORRENT,
+    DATA_UPDATED,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    DATA_UPDATED,
     SERVICE_ADD_TORRENT,
 )
-from .errors import UserNameError, PasswordError, CannotConnect, UnknownError
+from .errors import CannotConnect, PasswordError, UnknownError, UserNameError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -170,14 +170,20 @@ class DelugeClient:
         def add_torrent(service):
             """Add new torrent to download."""
             torrent = service.data[ATTR_TORRENT]
+            deluge_client = None
+            for entry in self.hass.config_entries.async_entries(DOMAIN):
+                if entry.data[CONF_HOST] == service.data[CONF_HOST]:
+                    deluge_client = self.hass.data[DOMAIN][entry.entry_id]
+                    break
+            if deluge_client is None:
+                _LOGGER.error("Deluge host is not found")
+                return
             if torrent.startswith(("http", "ftp:")):
                 deluge_api.core.add_torrent_url(torrent, {})
             elif torrent.startswith(("magnet:")):
                 deluge_api.core.add_torrent_magnet(torrent, {})
             else:
-                _LOGGER.warning(
-                    "Could not add torrent: unsupported type or no permission"
-                )
+                _LOGGER.warning("Could not add torrent: unsupported type")
 
         self.hass.services.async_register(
             DOMAIN, SERVICE_ADD_TORRENT, add_torrent, schema=SERVICE_ADD_TORRENT_SCHEMA
