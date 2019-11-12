@@ -38,7 +38,7 @@ from homeassistant.components.here_travel_time.sensor import (
     TRAVEL_MODE_TRUCK,
     UNIT_OF_MEASUREMENT,
 )
-from homeassistant.const import ATTR_ICON
+from homeassistant.const import ATTR_ICON, EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -176,13 +176,14 @@ async def test_car(hass, requests_mock_car_disabled_response):
             "app_code": APP_CODE,
         }
     }
-
     assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
 
     sensor = hass.states.get("sensor.test")
     assert sensor.state == "30"
     assert sensor.attributes.get("unit_of_measurement") == UNIT_OF_MEASUREMENT
-
     assert sensor.attributes.get(ATTR_ATTRIBUTION) is None
     assert sensor.attributes.get(ATTR_DURATION) == 30.05
     assert sensor.attributes.get(ATTR_DISTANCE) == 23.903
@@ -241,8 +242,10 @@ async def test_traffic_mode_enabled(hass, requests_mock_credentials_check):
     }
     assert await async_setup_component(hass, DOMAIN, config)
 
-    sensor = hass.states.get("sensor.test")
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
 
+    sensor = hass.states.get("sensor.test")
     # Test traffic mode enabled
     assert sensor.attributes.get(ATTR_DURATION) != sensor.attributes.get(
         ATTR_DURATION_IN_TRAFFIC
@@ -265,6 +268,9 @@ async def test_imperial(hass, requests_mock_car_disabled_response):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
 
     sensor = hass.states.get("sensor.test")
     assert sensor.attributes.get(ATTR_DISTANCE) == 14.852635608048994
@@ -295,6 +301,9 @@ async def test_route_mode_shortest(hass, requests_mock_credentials_check):
     }
     assert await async_setup_component(hass, DOMAIN, config)
 
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
     sensor = hass.states.get("sensor.test")
     assert sensor.attributes.get(ATTR_DISTANCE) == 18.388
 
@@ -324,6 +333,9 @@ async def test_route_mode_fastest(hass, requests_mock_credentials_check):
     }
     assert await async_setup_component(hass, DOMAIN, config)
 
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
     sensor = hass.states.get("sensor.test")
     assert sensor.attributes.get(ATTR_DISTANCE) == 23.381
 
@@ -344,6 +356,10 @@ async def test_truck(hass, requests_mock_truck_response):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
     sensor = hass.states.get("sensor.test")
     _assert_truck_sensor(sensor)
 
@@ -372,6 +388,9 @@ async def test_public_transport(hass, requests_mock_credentials_check):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
 
     sensor = hass.states.get("sensor.test")
     assert sensor.state == "89"
@@ -421,6 +440,9 @@ async def test_public_transport_time_table(hass, requests_mock_credentials_check
     }
     assert await async_setup_component(hass, DOMAIN, config)
 
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
     sensor = hass.states.get("sensor.test")
     assert sensor.state == "80"
     assert sensor.attributes.get("unit_of_measurement") == UNIT_OF_MEASUREMENT
@@ -466,7 +488,11 @@ async def test_pedestrian(hass, requests_mock_credentials_check):
             "mode": TRAVEL_MODE_PEDESTRIAN,
         }
     }
+
     assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
 
     sensor = hass.states.get("sensor.test")
     assert sensor.state == "211"
@@ -517,6 +543,9 @@ async def test_bicycle(hass, requests_mock_credentials_check):
     }
     assert await async_setup_component(hass, DOMAIN, config)
 
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
     sensor = hass.states.get("sensor.test")
     assert sensor.state == "55"
     assert sensor.attributes.get("unit_of_measurement") == UNIT_OF_MEASUREMENT
@@ -564,8 +593,6 @@ async def test_location_zone(hass, requests_mock_truck_response):
                 },
             ]
         }
-        assert await async_setup_component(hass, "zone", zone_config)
-
         config = {
             DOMAIN: {
                 "platform": PLATFORM,
@@ -577,7 +604,11 @@ async def test_location_zone(hass, requests_mock_truck_response):
                 "mode": TRAVEL_MODE_TRUCK,
             }
         }
+        assert await async_setup_component(hass, "zone", zone_config)
         assert await async_setup_component(hass, DOMAIN, config)
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
 
         sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
@@ -615,6 +646,9 @@ async def test_location_sensor(hass, requests_mock_truck_response):
             }
         }
         assert await async_setup_component(hass, DOMAIN, config)
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
 
         sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
@@ -662,6 +696,9 @@ async def test_location_person(hass, requests_mock_truck_response):
         }
         assert await async_setup_component(hass, DOMAIN, config)
 
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+
         sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
 
@@ -708,6 +745,9 @@ async def test_location_device_tracker(hass, requests_mock_truck_response):
         }
         assert await async_setup_component(hass, DOMAIN, config)
 
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+
         sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
 
@@ -739,6 +779,9 @@ async def test_location_device_tracker_added_after_update(
             }
         }
         assert await async_setup_component(hass, DOMAIN, config)
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
 
         sensor = hass.states.get("sensor.test")
         assert len(caplog.records) == 2
@@ -806,6 +849,9 @@ async def test_location_device_tracker_in_zone(
     }
     assert await async_setup_component(hass, DOMAIN, config)
 
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
     sensor = hass.states.get("sensor.test")
     _assert_truck_sensor(sensor)
     assert ", getting zone location" in caplog.text
@@ -836,6 +882,10 @@ async def test_route_not_found(hass, requests_mock_credentials_check, caplog):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
     assert len(caplog.records) == 1
     assert NO_ROUTE_ERROR_MESSAGE in caplog.text
 
@@ -940,8 +990,95 @@ async def test_attribution(hass, requests_mock_credentials_check):
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
     sensor = hass.states.get("sensor.test")
     assert (
         sensor.attributes.get(ATTR_ATTRIBUTION)
         == "With the support of HERE Technologies. All information is provided without warranty of any kind."
     )
+
+
+async def test_pattern_entity_state(hass, requests_mock_truck_response, caplog):
+    """Test that pattern matching the state of an entity works."""
+    caplog.set_level(logging.ERROR)
+    hass.states.async_set("sensor.origin", "invalid")
+
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin_entity_id": "sensor.origin",
+            "destination_latitude": TRUCK_DESTINATION_LATITUDE,
+            "destination_longitude": TRUCK_DESTINATION_LONGITUDE,
+            "app_id": APP_ID,
+            "app_code": APP_CODE,
+            "mode": TRAVEL_MODE_TRUCK,
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert len(caplog.records) == 1
+    assert "is not a valid set of coordinates" in caplog.text
+
+
+async def test_pattern_entity_state_with_space(hass, requests_mock_truck_response):
+    """Test that pattern matching the state including a space of an entity works."""
+    hass.states.async_set(
+        "sensor.origin", ", ".join([TRUCK_ORIGIN_LATITUDE, TRUCK_ORIGIN_LONGITUDE])
+    )
+
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin_entity_id": "sensor.origin",
+            "destination_latitude": TRUCK_DESTINATION_LATITUDE,
+            "destination_longitude": TRUCK_DESTINATION_LONGITUDE,
+            "app_id": APP_ID,
+            "app_code": APP_CODE,
+            "mode": TRAVEL_MODE_TRUCK,
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+
+
+async def test_delayed_update(hass, requests_mock_truck_response, caplog):
+    """Test that delayed update does not complain about missing entities."""
+    caplog.set_level(logging.WARNING)
+
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin_entity_id": "sensor.origin",
+            "destination_latitude": TRUCK_DESTINATION_LATITUDE,
+            "destination_longitude": TRUCK_DESTINATION_LONGITUDE,
+            "app_id": APP_ID,
+            "app_code": APP_CODE,
+            "mode": TRAVEL_MODE_TRUCK,
+        }
+    }
+    sensor_config = {
+        "sensor": {
+            "platform": "template",
+            "sensors": [
+                {"template_sensor": {"value_template": "{{states('sensor.origin')}}"}}
+            ],
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+    assert await async_setup_component(hass, "sensor", sensor_config)
+    hass.states.async_set(
+        "sensor.origin", ",".join([TRUCK_ORIGIN_LATITUDE, TRUCK_ORIGIN_LONGITUDE])
+    )
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert "Unable to find entity" not in caplog.text
