@@ -51,10 +51,14 @@ def dict_merge(dct, merge_dct):
                         )
                         dct[k] = merge_dct[k]
             else:
-                dct[k] = merge_dct[k]
-                _LOGGER.info(
-                    str(k) + " this was not in ais config - we are going to include it"
-                )
+                if k != "discovery":
+                    dct[k] = merge_dct[k]
+                    _LOGGER.info(
+                        str(k)
+                        + " this was not in ais config - we are going to include it"
+                    )
+                else:
+                    _LOGGER.info(str(k) + " discovery is disabled ")
     except Exception as e:
         _LOGGER.error("Merge configurations problem: " + str(e))
     return dct
