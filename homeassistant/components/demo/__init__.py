@@ -37,16 +37,6 @@ COMPONENTS_WITH_DEMO_PLATFORM = [
 ]
 
 
-async def async_setup_entry(hass, config_entry):
-    """Set the config entry up."""
-    # Set up demo platforms with config entry
-    for component in COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM:
-        hass.async_add_job(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
-        )
-    return True
-
-
 async def async_setup(hass, config):
     """Set up the demo environment."""
     if DOMAIN not in config:
@@ -194,6 +184,16 @@ async def async_setup(hass, config):
 
     hass.bus.async_listen(EVENT_HOMEASSISTANT_START, demo_start_listener)
 
+    return True
+
+
+async def async_setup_entry(hass, config_entry):
+    """Set the config entry up."""
+    # Set up demo platforms with config entry
+    for component in COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, component)
+        )
     return True
 
 

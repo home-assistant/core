@@ -5,7 +5,7 @@ from . import DOMAIN
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class DemoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class DemoConfigFlow(config_entries.ConfigFlow):
     """Demo configuration flow."""
 
     VERSION = 1

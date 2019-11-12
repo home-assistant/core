@@ -9,14 +9,9 @@ from homeassistant.helpers.entity import Entity
 from . import DOMAIN
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Demo config entry."""
-    setup_platform(hass, {}, async_add_entities)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Demo sensors."""
-    add_entities(
+    async_add_entities(
         [
             DemoSensor(
                 "sensor_1",
@@ -31,6 +26,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             ),
         ]
     )
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Demo config entry."""
+    await async_setup_platform(hass, {}, async_add_entities)
 
 
 class DemoSensor(Entity):

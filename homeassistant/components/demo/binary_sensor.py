@@ -3,19 +3,19 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 from . import DOMAIN
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Demo config entry."""
-    setup_platform(hass, {}, async_add_entities)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Demo binary sensor platform."""
-    add_entities(
+    async_add_entities(
         [
             DemoBinarySensor("binary_1", "Basement Floor Wet", False, "moisture"),
             DemoBinarySensor("binary_2", "Movement Backyard", True, "motion"),
         ]
     )
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Demo config entry."""
+    await async_setup_platform(hass, {}, async_add_entities)
 
 
 class DemoBinarySensor(BinarySensorDevice):

@@ -27,14 +27,9 @@ SUPPORT_FLAGS = 0
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Demo climate devices config entry."""
-    setup_platform(hass, {}, async_add_entities)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Demo climate devices."""
-    add_entities(
+    async_add_entities(
         [
             DemoClimate(
                 unique_id="climate_1",
@@ -93,6 +88,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             ),
         ]
     )
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Demo climate devices config entry."""
+    await async_setup_platform(hass, {}, async_add_entities)
 
 
 class DemoClimate(ClimateDevice):

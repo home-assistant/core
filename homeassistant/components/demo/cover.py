@@ -11,14 +11,9 @@ from homeassistant.components.cover import (
 from . import DOMAIN
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Demo config entry."""
-    setup_platform(hass, {}, async_add_entities)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Demo covers."""
-    add_entities(
+    async_add_entities(
         [
             DemoCover(hass, "cover_1", "Kitchen Window"),
             DemoCover(hass, "cover_2", "Hall Window", 10),
@@ -32,6 +27,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             ),
         ]
     )
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Demo config entry."""
+    await async_setup_platform(hass, {}, async_add_entities)
 
 
 class DemoCover(CoverDevice):

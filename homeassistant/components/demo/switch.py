@@ -4,19 +4,19 @@ from homeassistant.const import DEVICE_DEFAULT_NAME
 from . import DOMAIN
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Demo config entry."""
-    setup_platform(hass, {}, async_add_entities)
-
-
-def setup_platform(hass, config, add_entities_callback, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the demo switches."""
-    add_entities_callback(
+    async_add_entities(
         [
             DemoSwitch("swith1", "Decorative Lights", True, None, True),
             DemoSwitch("swith2", "AC", False, "mdi:air-conditioner", False),
         ]
     )
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Demo config entry."""
+    await async_setup_platform(hass, {}, async_add_entities)
 
 
 class DemoSwitch(SwitchDevice):
