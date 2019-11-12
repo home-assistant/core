@@ -17,7 +17,7 @@ from homeassistant.const import (
     STATE_CLOSED,
     STATE_OPEN,
 )
-from .const import NAME, CONF_TYPES, FUEL_TYPES
+from .const import NAME, CONF_STATIONS, CONF_TYPES, FUEL_TYPES
 from .base_sensor import FuelPriceSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,6 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             cv.positive_int, vol.Range(min=1)
         ),
         vol.Optional(CONF_SCAN_INTERVAL, SCAN_INTERVAL): cv.time_period,
+        vol.Optional(CONF_STATIONS, default=[]): vol.All(cv.ensure_list, [cv.string]),
     }
 )
 
@@ -52,6 +53,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     radius = config.get(CONF_RADIUS, DEFAULT_RADIUS)
+    additional_stations = config.get(CONF_STATIONS, [])
 
     master = None
     entities = []
@@ -73,6 +75,28 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     else:
         for station in data["stations"]:
             master = add_station(station, api_key, fuel_types, entities, master)
+
+    for additional_station_id in additional_stations:
+        try:
+            additional_station_data = pytankerkoenig.getStationData(
+                api_key, additional_station_id
+            )
+        except pytankerkoenig.customException as err:
+            additional_station_data = {"ok": False, "message": err, "exception": True}
+        if not additional_station_data["ok"]:
+            _LOGGER.warning(
+                "Error when adding station %s: %s",
+                additional_station_id,
+                additional_station_data["message"],
+            )
+        else:
+            master = add_station(
+                additional_station_data["station"],
+                api_key,
+                fuel_types,
+                entities,
+                master,
+            )
 
     async_add_entities(entities, True)
 
