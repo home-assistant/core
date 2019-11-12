@@ -94,7 +94,7 @@ arcam-fmj==0.4.3
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.upnp
-async-upnp-client==0.14.11
+async-upnp-client==0.14.12
 
 # homeassistant.components.stream
 av==6.1.2
