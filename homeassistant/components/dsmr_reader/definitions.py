@@ -1,4 +1,17 @@
-"""Definitions for sensors added to MQTT."""
+"""Definitions for DSMR Reader sensors added to MQTT."""
+
+
+def dsmr_transform(value):
+    """Transform DSMR version value to right format."""
+    return float(value) / 10
+
+
+def tariff_transform(value):
+    """Transform tariff from number to description."""
+    if value == "1":
+        return "low"
+    return "high"
+
 
 DEFINITIONS = {
     "dsmr/reading/electricity_delivered_1": {
@@ -32,32 +45,32 @@ DEFINITIONS = {
         "unit": "kW",
     },
     "dsmr/reading/phase_currently_delivered_l1": {
-        "name": "Power usage L1",
+        "name": "Current power usage L1",
         "icon": "mdi:flash",
         "unit": "kW",
     },
     "dsmr/reading/phase_currently_delivered_l2": {
-        "name": "Power usage L2",
+        "name": "Current power usage L2",
         "icon": "mdi:flash",
         "unit": "kW",
     },
     "dsmr/reading/phase_currently_delivered_l3": {
-        "name": "Power usage L3",
+        "name": "Current power usage L3",
         "icon": "mdi:flash",
         "unit": "kW",
     },
     "dsmr/reading/phase_currently_returned_l1": {
-        "name": "Power return L1",
+        "name": "Current power return L1",
         "icon": "mdi:flash-outline",
         "unit": "kW",
     },
     "dsmr/reading/phase_currently_returned_l2": {
-        "name": "Power return L2",
+        "name": "Current power return L2",
         "icon": "mdi:flash-outline",
         "unit": "kW",
     },
     "dsmr/reading/phase_currently_returned_l3": {
-        "name": "Power return L3",
+        "name": "Current power return L3",
         "icon": "mdi:flash-outline",
         "unit": "kW",
     },
@@ -67,17 +80,17 @@ DEFINITIONS = {
         "unit": "m3",
     },
     "dsmr/reading/phase_voltage_l1": {
-        "name": "Voltage L1",
+        "name": "Current voltage L1",
         "icon": "mdi:flash",
         "unit": "V",
     },
     "dsmr/reading/phase_voltage_l2": {
-        "name": "Voltage L2",
+        "name": "Current voltage L2",
         "icon": "mdi:flash",
         "unit": "V",
     },
     "dsmr/reading/phase_voltage_l3": {
-        "name": "Voltage L3",
+        "name": "Current voltage L3",
         "icon": "mdi:flash",
         "unit": "V",
     },
@@ -91,7 +104,7 @@ DEFINITIONS = {
         "icon": "mdi:fire",
         "unit": "m3",
     },
-    "dsmr/consumption/gas/read_at": {"name": "Gas meter read", "icon": "mdi:clock"},
+    "dsmr/consumption/gas/read_at": {"name": "Gas meter read", "icon": "mdi:clock",},
     "dsmr/day-consumption/electricity1": {
         "name": "Low tariff usage",
         "icon": "mdi:counter",
@@ -180,10 +193,12 @@ DEFINITIONS = {
     "dsmr/meter-stats/dsmr_version": {
         "name": "DSMR version",
         "icon": "mdi:alert-circle",
+        "transform": dsmr_transform,
     },
     "dsmr/meter-stats/electricity_tariff": {
         "name": "Electricity tariff",
         "icon": "mdi:flash",
+        "transform": tariff_transform,
     },
     "dsmr/meter-stats/power_failure_count": {
         "name": "Power failure count",

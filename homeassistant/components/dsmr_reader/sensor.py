@@ -12,6 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "dsmr_reader"
 ATTR_UPDATED = "updated"
+ATTR_BEFORE_TRANSFORM = "before_transform"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -38,6 +39,8 @@ class DSMRSensor(Entity):
         self._state = 0
         self._topic = topic
         self._updated = dt.utcnow()
+        self._transform = None
+        self._original_value = None
 
         self._definition = {}
         if topic in DEFINITIONS:
@@ -52,6 +55,8 @@ class DSMRSensor(Entity):
             self._icon = self._definition["icon"]
         if "name" in self._definition:
             self._friendly_name = self._definition["name"]
+        if "transform" in self._definition:
+            self._transform = self._definition["transform"]
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
@@ -59,7 +64,12 @@ class DSMRSensor(Entity):
         @callback
         def update_state(value):
             """Update the sensor state."""
-            self._state = value
+            if self._transform is not None:
+                self._original_value = value
+                self._state = self._transform(value)
+            else:
+                self._state = value
+
             self._updated = dt.utcnow()
             self.async_schedule_update_ha_state()
 
@@ -78,11 +88,16 @@ class DSMRSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {ATTR_UPDATED: self._updated}
+        result = {ATTR_UPDATED: self._updated}
+
+        if self._original_value is not None:
+            result[ATTR_BEFORE_TRANSFORM] = self._original_value
+
+        return result
 
     @property
     def entity_id(self):
-        """Return the entity ID of the sensor."""
+        """Return the entity ID for this sensor."""
         return f"sensor.{self._entity_id}"
 
     @property
