@@ -35,66 +35,12 @@ ais_intro:
 # Enables a map showing the location of tracked devices
 map:
 
-# for restore_state on input_select (radio stations etc.)
-recorder:
-  purge_keep_days: 3
-  exclude:
-    entities:
-      - sensor.time
-      - sensor.ais_drives
-      - input_select.radio_type
-      - input_select.radio_player
-      - input_select.podcast_type
-      - input_select.rss_news_category
-      - input_select.rss_news_channel
-      - input_select.book_autor
-      - input_select.book_name
-      - input_select.book_chapter
-      - sensor.radiolist
-      - sensor.podcastlist
-      - sensor.youtubelist
-      - sensor.spotifysearchlist
-      - sensor.spotifylist
-      - sensor.rssnewslist
-      - sensor.audiobookslist
-      - sensor.audiobookschapterslist
-      - sensor.podcastnamelist
-      - sensor.aisbookmarkslist
-      - sensor.aisfavoriteslist
-    domains:
-      - mqtt
-history:
-  exclude:
-    entities:
-      - sensor.time
-      - sensor.ais_drives
-      - input_select.radio_type
-      - input_select.radio_player
-      - input_select.podcast_type
-      - input_select.podcast_name
-      - input_select.rss_news_category
-      - input_select.rss_news_channel
-      - input_select.book_autor
-      - input_select.book_name
-      - input_select.book_chapter
-      - sensor.radiolist
-      - sensor.podcastlist
-      - sensor.youtubelist
-      - sensor.spotifysearchlist
-      - sensor.spotifylist
-      - sensor.rssnewslist
-      - sensor.audiobookslist
-      - sensor.audiobookschapterslist
-      - sensor.podcastnamelist
-      - sensor.aisbookmarkslist
-      - sensor.aisfavoriteslist
-    domains:
-      - mqtt
+#
 media_extractor:
 
 # Enables the frontend
 frontend:
-  development_repo: /home/andrzej/Projects/AIS-home-assistant-polymer
+  # development_repo: /home/andrzej/Projects/AIS-home-assistant-polymer
   javascript_version: latest
   themes: !include_dir_merge_named themes
 

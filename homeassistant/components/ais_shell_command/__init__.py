@@ -623,10 +623,11 @@ def _flush_logs(hass, call):
 
     # pip cache
     os.system("rm -rf /data/data/pl.sviete.dom/files/home/.cache/pip")
-    # recorder.purge
-    yield from hass.services.async_call(
-        "recorder", "purge", {"keep_days": 3, "repack": True}
-    )
+    # recorder.purge if recorder exists
+    if hass.services.has_service("recorder", "purge"):
+        yield from hass.services.async_call(
+            "recorder", "purge", {"keep_days": 3, "repack": True}
+        )
 
 
 @asyncio.coroutine
