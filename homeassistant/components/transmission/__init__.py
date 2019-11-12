@@ -27,6 +27,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     SERVICE_ADD_TORRENT,
+    DATA_UPDATED,
 )
 from .errors import AuthenticationError, CannotConnect, UnknownError
 
@@ -55,6 +56,8 @@ TRANS_SCHEMA = vol.All(
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.All(cv.ensure_list, [TRANS_SCHEMA])}, extra=vol.ALLOW_EXTRA
 )
+
+PLATFORMS = ["sensor", "switch"]
 
 
 async def async_setup(hass, config):
@@ -87,8 +90,8 @@ async def async_unload_entry(hass, config_entry):
     if client.unsub_timer:
         client.unsub_timer()
 
-    for component in "sensor", "switch":
-        await hass.config_entries.async_forward_entry_unload(config_entry, component)
+    for platform in PLATFORMS:
+        await hass.config_entries.async_forward_entry_unload(config_entry, platform)
 
     if not hass.data[DOMAIN]:
         hass.services.async_remove(DOMAIN, SERVICE_ADD_TORRENT)
@@ -155,7 +158,7 @@ class TransmissionClient:
         self.add_options()
         self.set_scan_interval(self.config_entry.options[CONF_SCAN_INTERVAL])
 
-        for platform in ["sensor", "switch"]:
+        for platform in PLATFORMS:
             self.hass.async_create_task(
                 self.hass.config_entries.async_forward_entry_setup(
                     self.config_entry, platform
@@ -245,9 +248,9 @@ class TransmissionData:
         return self.config.data[CONF_HOST]
 
     @property
-    def signal_options_update(self):
-        """Option update signal per transmission entry."""
-        return f"tm-options-{self.host}"
+    def signal_update(self):
+        """Update signal per transmission entry."""
+        return f"{DATA_UPDATED}-{self.host}"
 
     def update(self):
         """Get the latest data from Transmission instance."""
@@ -265,7 +268,7 @@ class TransmissionData:
         except TransmissionError:
             self.available = False
             _LOGGER.error("Unable to connect to Transmission client %s", self.host)
-        dispatcher_send(self.hass, self.signal_options_update)
+        dispatcher_send(self.hass, self.signal_update)
 
     def init_torrent_list(self):
         """Initialize torrent lists."""

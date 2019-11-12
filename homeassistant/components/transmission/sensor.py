@@ -95,7 +95,7 @@ class TransmissionSensor(Entity):
         """Handle entity which will be added."""
         self.unsub_update = async_dispatcher_connect(
             self.hass,
-            self._tm_client.api.signal_options_update,
+            self._tm_client.api.signal_update,
             self._schedule_immediate_update,
         )
 
