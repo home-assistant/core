@@ -1020,7 +1020,7 @@ prometheus_client==0.7.1
 protobuf==3.6.1
 
 # homeassistant.components.systemmonitor
-psutil==5.6.3
+psutil==5.6.5
 
 # homeassistant.components.ptvsd
 ptvsd==4.2.8
