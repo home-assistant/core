@@ -9,7 +9,7 @@ from tests.common import mock_coro
 
 
 async def test_creating_entry_sets_up_climate_discovery(hass):
-    """Test setting up Hisense AEH-W4A1 loads the sensor component."""
+    """Test setting up Hisense AEH-W4A1 loads the climate component."""
     with patch(
         "homeassistant.components.hisense_aehw4a1.climate.async_setup_entry",
         return_value=mock_coro(True),
@@ -32,11 +32,11 @@ async def test_creating_entry_sets_up_climate_discovery(hass):
 async def test_configuring_hisense_w4a1_create_entry(hass):
     """Test that specifying config will create an entry."""
     with patch(
-        "homeassistant.components.hisense_aehw4a1.async_setup_entry",
+        "homeassistant.components.hisense_aehw4a1.config_flow.AehW4a1.check",
         return_value=mock_coro(True),
     ):
         with patch(
-            "homeassistant.components.hisense_aehw4a1.config_flow.AehW4a1.check",
+            "homeassistant.components.hisense_aehw4a1.async_setup_entry",
             return_value=mock_coro(True),
         ) as mock_setup:
             await async_setup_component(
