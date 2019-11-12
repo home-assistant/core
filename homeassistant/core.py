@@ -420,6 +420,21 @@ class HomeAssistant:
                 # This may not work
                 _LOGGER.warning("async_stop called before startup is complete")
 
+        # # ais dom
+        if ais_command is not None:
+            if ais_command == "restart":
+                import subprocess
+
+                subprocess.Popen(
+                    "sleep 7 && su -c reboot", shell=True, stdout=None, stderr=None
+                )
+            if ais_command == "stop":
+                import subprocess
+
+                subprocess.Popen(
+                    "sleep 7 &&  su -c reboot -p'", shell=True, stdout=None, stderr=None
+                )
+
         # stage 1
         self.state = CoreState.stopping
         self.async_track_tasks()
@@ -436,18 +451,6 @@ class HomeAssistant:
             self._stopped.set()
         else:
             self.loop.stop()
-        # ais dom
-        if ais_command is not None:
-            if ais_command == "restart":
-                import subprocess
-
-                subprocess.Popen("su -c reboot", shell=True, stdout=None, stderr=None)
-            if ais_command == "stop":
-                import subprocess
-
-                subprocess.Popen(
-                    "su -c 'reboot -p'", shell=True, stdout=None, stderr=None
-                )
 
 
 @attr.s(slots=True, frozen=True)
