@@ -59,7 +59,7 @@ class JewishCalendarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
         if self._async_current_entries():
-            _LOGGER.warning("Only one configuration of Jewish calendar is allowed.")
+            _LOGGER.warning("Only one configuration of Jewish calendar is allowed")
             return self.async_abort(reason="single_instance_allowed")
 
         return await self.async_step_user(import_config)
