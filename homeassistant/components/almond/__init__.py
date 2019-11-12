@@ -242,7 +242,9 @@ class AlmondOAuth(AbstractAlmondWebAuth):
 class AlmondAgent(conversation.AbstractConversationAgent):
     """Almond conversation agent."""
 
-    def __init__(self, hass: HomeAssistant, api: WebAlmondAPI, entry):
+    def __init__(
+        self, hass: HomeAssistant, api: WebAlmondAPI, entry: config_entries.ConfigEntry
+    ):
         """Initialize the agent."""
         self.hass = hass
         self.api = api
