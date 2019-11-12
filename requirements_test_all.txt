@@ -155,7 +155,7 @@ eebrightbox==0.0.4
 emulated_roku==0.1.8
 
 # homeassistant.components.season
-ephem==3.7.6.0
+ephem==3.7.7.0
 
 # homeassistant.components.feedreader
 feedparser-homeassistant==5.2.2.dev1
