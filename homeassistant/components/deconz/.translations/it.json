@@ -81,7 +81,11 @@
             "remote_gyro_activated": "Dispositivo in vibrazione",
             "remote_moved": "Dispositivo spostato con \"{subtype}\" verso l'alto",
             "remote_rotate_from_side_1": "Dispositivo ruotato da \"lato 1\" a \"{subtype}\"",
-            "remote_rotate_from_side_2": "Dispositivo ruotato da \"lato 2\" a \"{subtype}\""
+            "remote_rotate_from_side_2": "Dispositivo ruotato da \"lato 2\" a \"{subtype}\"",
+            "remote_rotate_from_side_3": "Dispositivo ruotato da \"lato 3\" a \"{subtype}\"",
+            "remote_rotate_from_side_4": "Dispositivo ruotato da \"lato 4\" a \"{subtype}\"",
+            "remote_rotate_from_side_5": "Dispositivo ruotato da \"lato 5\" a \"{subtype}\"",
+            "remote_rotate_from_side_6": "Dispositivo ruotato da \"lato 6\" a \"{subtype}\""
         }
     },
     "options": {
