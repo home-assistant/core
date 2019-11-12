@@ -1,108 +1,62 @@
 """The travel_time integration."""
-import voluptuous as vol
 from datetime import timedelta
 import logging
-from typing import Callable, Dict, Optional, Union
-from homeassistant.core import HomeAssistant, State
+from typing import Dict, Optional, Union
 
+import voluptuous as vol
+
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.core import State
 from homeassistant.helpers import location
-from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    ATTR_MODE,
-    CONF_MODE,
-    CONF_NAME,
-    CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
-    EVENT_HOMEASSISTANT_START,
-)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.loader import bind_hass
 
-from .const import DOMAIN
+from .const import (
+    ATTR_DESTINATION,
+    ATTR_DESTINATION_NAME,
+    ATTR_DISTANCE,
+    ATTR_DURATION,
+    ATTR_DURATION_IN_TRAFFIC,
+    ATTR_MODE,
+    ATTR_ORIGIN,
+    ATTR_ORIGIN_NAME,
+    ATTR_ROUTE,
+    ATTR_ROUTE_MODE,
+    ATTR_TRAFFIC_MODE,
+    ATTR_UNIT_SYSTEM,
+    DOMAIN,
+    UNIT_OF_MEASUREMENT,
+)
 
-CONF_DESTINATION_LATITUDE = "destination_latitude"
-CONF_DESTINATION_LONGITUDE = "destination_longitude"
-CONF_DESTINATION_ENTITY_ID = "destination_entity_id"
-CONF_ORIGIN_LATITUDE = "origin_latitude"
-CONF_ORIGIN_LONGITUDE = "origin_longitude"
-CONF_ORIGIN_ENTITY_ID = "origin_entity_id"
-
-UNITS = [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]
-
-ICON_BICYCLE = "mdi:bike"
-ICON_CAR = "mdi:car"
-ICON_PEDESTRIAN = "mdi:walk"
-ICON_PUBLIC = "mdi:bus"
-ICON_TRUCK = "mdi:truck"
-
-ATTR_DURATION = "duration"
-ATTR_DISTANCE = "distance"
-ATTR_ROUTE = "route"
-ATTR_ORIGIN = "origin"
-ATTR_DESTINATION = "destination"
-
-ATTR_UNIT_SYSTEM = CONF_UNIT_SYSTEM
-
-ATTR_DURATION_IN_TRAFFIC = "duration_in_traffic"
-ATTR_ORIGIN_NAME = "origin_name"
-ATTR_DESTINATION_NAME = "destination_name"
-
-UNIT_OF_MEASUREMENT = "min"
+_LOGGER = logging.getLogger(__name__)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-PLATFORM_SCHEMA = vol.Schema(
-    {
-        vol.All(
-            cv.has_at_least_one_key(
-                CONF_DESTINATION_LATITUDE, CONF_DESTINATION_ENTITY_ID
-            ),
-            cv.has_at_least_one_key(CONF_ORIGIN_LATITUDE, CONF_ORIGIN_ENTITY_ID),
-            cv.PLATFORM_SCHEMA.extend(
-                {
-                    vol.Inclusive(
-                        CONF_DESTINATION_LATITUDE, "destination_coordinates"
-                    ): cv.latitude,
-                    vol.Inclusive(
-                        CONF_DESTINATION_LONGITUDE, "destination_coordinates"
-                    ): cv.longitude,
-                    vol.Exclusive(
-                        CONF_DESTINATION_LATITUDE, "destination"
-                    ): cv.latitude,
-                    vol.Exclusive(
-                        CONF_DESTINATION_ENTITY_ID, "destination"
-                    ): cv.entity_id,
-                    vol.Inclusive(
-                        CONF_ORIGIN_LATITUDE, "origin_coordinates"
-                    ): cv.latitude,
-                    vol.Inclusive(
-                        CONF_ORIGIN_LONGITUDE, "origin_coordinates"
-                    ): cv.longitude,
-                    vol.Exclusive(CONF_ORIGIN_LATITUDE, "origin"): cv.latitude,
-                    vol.Exclusive(CONF_ORIGIN_ENTITY_ID, "origin"): cv.entity_id,
-                    vol.Optional(CONF_UNIT_SYSTEM): vol.In(UNITS),
-                }
-            ),
-        ),
-    }
-)
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
-    """Set up the travel_time integration."""
+    """Track states and offer events for sensors."""
+    component = hass.data[DOMAIN] = EntityComponent(
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL
+    )
+
+    await component.async_setup(config)
     return True
 
 
 async def async_setup_entry(hass, entry):
-    """Set up a config entry for travel_time."""
-    return True
+    """Set up a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
 @bind_hass
@@ -142,21 +96,18 @@ async def get_location_from_entity(
     nested_entity = hass.states.get(entity.state)
     if nested_entity is not None:
         _LOGGER.debug("Resolving nested entity_id: %s", entity.state)
-        return await _get_location_from_entity(entity.state, recursion_history)
+        return await get_location_from_entity(hass, entity.state, recursion_history)
 
     # Check if state is valid coordinate set
     if _entity_state_is_valid_coordinate_set(entity.state):
         return entity.state
 
     _LOGGER.error(
-        "The state of %s is not a valid set of coordinates: %s",
-        entity_id,
-        entity.state,
+        "The state of %s is not a valid set of coordinates: %s", entity_id, entity.state
     )
     return None
 
 
-@staticmethod
 def _entity_state_is_valid_coordinate_set(state: str) -> bool:
     """Check that the given string is a valid set of coordinates."""
     schema = vol.Schema(cv.gps)
@@ -168,7 +119,6 @@ def _entity_state_is_valid_coordinate_set(state: str) -> bool:
         return False
 
 
-@staticmethod
 def _get_location_from_attributes(entity: State) -> str:
     """Get the lat/long string from an entities attributes."""
     attr = entity.attributes
@@ -211,7 +161,12 @@ class TravelTimeEntity(Entity):
     @property
     def icon(self) -> str:
         """Icon to use in the frontend."""
-        return ICON_CAR
+        return None
+
+    @property
+    def mode(self) -> str:
+        """Get the mode of travelling e.g car for this entity."""
+        return None
 
     @property
     def name(self) -> str:
@@ -234,14 +189,24 @@ class TravelTimeEntity(Entity):
         return None
 
     @property
+    def route_mode(self) -> str:
+        """Get the route_mode e.g fastest of the travel_time entity."""
+        return None
+
+    @property
     def state(self) -> Optional[str]:
         """Return the state of the travel_time entity."""
         return None
 
     @property
+    def traffic_mode(self) -> Optional[str]:
+        """Return if traffic_mode is enabled for this travel_time entity."""
+        return None
+
+    @property
     def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
+        return UNIT_OF_MEASUREMENT
 
     @property
     def unit_system(self) -> str:
@@ -270,6 +235,9 @@ class TravelTimeEntity(Entity):
         if self.duration_in_traffic is not None:
             res[ATTR_DURATION_IN_TRAFFIC] = self.duration_in_traffic
 
+        if self.mode is not None:
+            res[ATTR_MODE] = self.mode
+
         if self.origin is not None:
             res[ATTR_ORIGIN] = self.origin
 
@@ -278,6 +246,12 @@ class TravelTimeEntity(Entity):
 
         if self.route is not None:
             res[ATTR_ROUTE] = self.route
+
+        if self.route_mode is not None:
+            res[ATTR_ROUTE_MODE] = self.route_mode
+
+        if self.traffic_mode is not None:
+            res[ATTR_TRAFFIC_MODE] = self.traffic_mode
 
         if self.unit_system is not None:
             res[ATTR_UNIT_SYSTEM] = self.unit_system
