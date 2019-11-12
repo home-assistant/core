@@ -3,9 +3,9 @@ import logging
 from typing import Awaitable
 
 from homematicip.aio.device import AsyncHeatingThermostat, AsyncHeatingThermostatCompact
-from homematicip.device import Switch
 from homematicip.aio.group import AsyncHeatingGroup
 from homematicip.base.enums import AbsenceType
+from homematicip.device import Switch
 from homematicip.functionalHomes import IndoorClimateHome
 
 from homeassistant.components.climate import ClimateDevice
