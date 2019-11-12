@@ -63,7 +63,9 @@ def install_package(
     _LOGGER.info("Attempting install of %s", package)
     from homeassistant.components.ais_dom import ais_global
 
-    ais_global.say_direct("Instaluje zależności; poczekaj.")
+    ais_global.say_direct(
+        "Instaluje zależności pakietu: " + str(package) + "; poczekaj."
+    )
 
     env = os.environ.copy()
     args = [sys.executable, "-m", "pip", "install", "--quiet", package]
