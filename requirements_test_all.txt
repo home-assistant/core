@@ -309,6 +309,9 @@ logi_circle==0.2.2
 # homeassistant.components.luftdaten
 luftdaten==0.6.3
 
+# homeassistant.components.luxtronik
+luxtronik==0.2.5
+
 # homeassistant.components.mythicbeastsdns
 mbddns==0.1.2
 
