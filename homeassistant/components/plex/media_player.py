@@ -289,12 +289,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
             self._media_content_type = MEDIA_TYPE_TVSHOW
 
             # season number (00)
-            if callable(self.session.season):
-                self._media_season = str((self.session.season()).index).zfill(2)
-            elif self.session.parentIndex is not None:
-                self._media_season = self.session.parentIndex.zfill(2)
-            else:
-                self._media_season = None
+            self._media_season = self.session.seasonNumber
             # show name
             self._media_series_title = self.session.grandparentTitle
             # episode number (00)
