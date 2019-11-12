@@ -1446,6 +1446,9 @@ pysesame2==1.0.1
 # homeassistant.components.goalfeed
 pysher==1.0.1
 
+# homeassistant.components.signalmessenger
+pysignalclirestapi==0.1.4
+
 # homeassistant.components.sma
 pysma==0.3.4
 
@@ -1755,9 +1758,6 @@ sharp_aquos_rc==0.3.2
 
 # homeassistant.components.shodan
 shodan==1.19.0
-
-# homeassistant.components.signalmessenger
-pysignalclirestapi==0.1.4
 
 # homeassistant.components.simplepush
 simplepush==1.1.4
