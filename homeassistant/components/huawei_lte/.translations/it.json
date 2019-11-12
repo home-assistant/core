@@ -1,10 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Questo dispositivo \u00e8 gi\u00e0 stato configurato"
+            "already_configured": "Questo dispositivo \u00e8 gi\u00e0 stato configurato",
+            "already_in_progress": "Questo dispositivo \u00e8 gi\u00e0 in fase di configurazione",
+            "not_huawei_lte": "Non \u00e8 un dispositivo Huawei LTE"
         },
         "error": {
             "connection_failed": "Connessione fallita",
+            "connection_timeout": "Timeout di connessione",
             "incorrect_password": "Password errata",
             "incorrect_username": "Nome utente errato",
             "incorrect_username_or_password": "Nome utente o password errati",
