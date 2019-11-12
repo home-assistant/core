@@ -1,5 +1,6 @@
 """The jewish_calendar component."""
 from copy import deepcopy
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -105,6 +106,8 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    await hass.config_entries.async_forward_entry_unload(entry, "sensor")
-    await hass.config_entries.async_forward_entry_unload(entry, "binary_sensor")
+    await asyncio.gather(
+        hass.config_entries.async_forward_entry_unload(entry, "sensor"),
+        hass.config_entries.async_forward_entry_unload(entry, "binary_sensor"),
+    )
     return True
