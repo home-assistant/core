@@ -251,7 +251,6 @@
   action:
     - service: ais_shell_command.flush_logs
 
-
 - id: '20181205122942123'
   alias: 'AIS Execute process command web hook'
   initial_state: True
@@ -337,3 +336,16 @@
     entity_id: input_boolean.ais_audio_mono
   action:
     - service: ais_amplifier_service.change_audio_to_mono
+
+- id: '201911121415123'
+  alias: 'AIS set WiFi config for devices'
+  initial_state: True
+  hide_entity: True
+  trigger:
+    platform: time
+    at: '18:35:00'
+  action:
+    - service: mqtt.publish
+      data:
+        payload: 4
+        topic: dom/cmnd/WifiConfig
