@@ -1,0 +1,36 @@
+{
+  "config": {
+    "title": "Deluge",
+    "step": {
+      "user": {
+        "title": "Setup Deluge Client",
+        "data": {
+          "name": "Name",
+          "host": "Host",
+          "username": "Username",
+          "password": "Password",
+          "port": "Port"
+        }
+      }
+    },
+    "error": {
+      "name_exists": "Name already exists",
+      "user_error": "Username doesn't exist",
+      "password_error": "Incorrect password",
+      "cannot_connect": "Unable to Connect to host"
+    },
+    "abort": {
+      "already_configured": "Host is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure options for Deluge",
+        "data": {
+          "scan_interval": "Update frequency"
+        }
+      }
+    }
+  }
+}

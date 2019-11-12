@@ -139,6 +139,9 @@ datadog==0.15.0
 # homeassistant.components.ohmconnect
 defusedxml==0.6.0
 
+# homeassistant.components.deluge
+deluge-client==1.7.1
+
 # homeassistant.components.directv
 directpy==0.5
 

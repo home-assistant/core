@@ -6,5 +6,8 @@
     "deluge-client==1.7.1"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@engrbm87"
+  ],
+  "config_flow": true
 }

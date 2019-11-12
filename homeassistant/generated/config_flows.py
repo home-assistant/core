@@ -18,6 +18,7 @@ FLOWS = [
     "coolmaster",
     "daikin",
     "deconz",
+    "deluge",
     "dialogflow",
     "ecobee",
     "emulated_roku",

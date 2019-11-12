@@ -1,77 +1,60 @@
 """Support for setting the Deluge BitTorrent client in Pause."""
 import logging
 
-import voluptuous as vol
+from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from homeassistant.components.switch import PLATFORM_SCHEMA
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    STATE_OFF,
-    STATE_ON,
-)
 from homeassistant.helpers.entity import ToggleEntity
-import homeassistant.helpers.config_validation as cv
+from .const import DOMAIN, DELUGE_SWITCH
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Deluge Switch"
-DEFAULT_PORT = 58846
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
+async def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Import config from configuration.yaml."""
+    pass
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Deluge switch."""
-    from deluge_client import DelugeRPCClient
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Deluge switch."""
 
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    port = config.get(CONF_PORT)
+    client = hass.data[DOMAIN][config_entry.entry_id]
+    name = config_entry.data[CONF_NAME]
 
-    deluge_api = DelugeRPCClient(host, port, username, password)
-    try:
-        deluge_api.connect()
-    except ConnectionRefusedError:
-        _LOGGER.error("Connection to Deluge Daemon failed")
-        raise PlatformNotReady
-
-    add_entities([DelugeSwitch(deluge_api, name)])
+    async_add_entities([DelugeSwitch(client, name)])
 
 
 class DelugeSwitch(ToggleEntity):
     """Representation of a Deluge switch."""
 
-    def __init__(self, deluge_client, name):
+    def __init__(self, client, name):
         """Initialize the Deluge switch."""
         self._name = name
-        self.deluge_client = deluge_client
+        self.client = client
         self._state = STATE_OFF
         self._available = False
+        self.unsub_dispatcher = None
 
     @property
     def name(self):
         """Return the name of the switch."""
-        return self._name
+        return f"{self._name} {DELUGE_SWITCH}"
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the entity."""
+        return f"{self.client.api.host}-{self.name}"
 
     @property
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @property
+    def should_poll(self):
+        """Poll for status regularly."""
+        return False
 
     @property
     def is_on(self):
@@ -81,35 +64,38 @@ class DelugeSwitch(ToggleEntity):
     @property
     def available(self):
         """Return true if device is available."""
-        return self._available
+        return self.client.api.available
 
     def turn_on(self, **kwargs):
-        """Turn the device on."""
-        torrent_ids = self.deluge_client.call("core.get_session_state")
-        self.deluge_client.call("core.resume_torrent", torrent_ids)
+        """Start all torrents."""
+        _LOGGER.debug("Starting all torrents")
+        self.client.api.start_torrents()
+        self.client.api.update()
 
     def turn_off(self, **kwargs):
-        """Turn the device off."""
-        torrent_ids = self.deluge_client.call("core.get_session_state")
-        self.deluge_client.call("core.pause_torrent", torrent_ids)
+        """Stop all torrents."""
+        _LOGGER.debug("Stoping all torrents")
+        self.client.api.stop_torrents()
+        self.client.api.update()
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        self.unsub_dispatcher = async_dispatcher_connect(
+            self.hass, self.client.api.signal_update, self._schedule_immediate_update,
+        )
+
+    @callback
+    def _schedule_immediate_update(self):
+        self.async_schedule_update_ha_state(True)
 
     def update(self):
         """Get the latest data from deluge and updates the state."""
-        from deluge_client import FailedToReconnectException
+        if self.client.api.get_active_torrents_count() > 0:
+            self._state = STATE_ON
+        else:
+            self._state = STATE_OFF
 
-        try:
-            torrent_list = self.deluge_client.call(
-                "core.get_torrents_status", {}, ["paused"]
-            )
-            self._available = True
-        except FailedToReconnectException:
-            _LOGGER.error("Connection to Deluge Daemon Lost")
-            self._available = False
-            return
-        for torrent in torrent_list.values():
-            item = torrent.popitem()
-            if not item[1]:
-                self._state = STATE_ON
-                return
-
-        self._state = STATE_OFF
+    async def will_remove_from_hass(self):
+        """Unsub from update dispatcher."""
+        if self.unsub_dispatcher:
+            self.unsub_dispatcher()
