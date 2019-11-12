@@ -6,7 +6,5 @@
     "magichome==0.1.41"
   ],
   "dependencies": [],
-  "codeowners": [
-    "@ZNEGGE-SDK"
-  ]
+  "codeowners": ["@ZNEGGE-SDK"]
 }
