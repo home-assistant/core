@@ -18,6 +18,15 @@ set_humidity:
     humidity:
       description: New target humidity for humidity device.
       example: 60
+set_fan_mode:
+  description: Set fan operation for humidity device.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: 'humidity.kitchen'
+    fan_mode:
+      description: New value of fan mode.
+      example: On Low
 set_humidifier_mode:
   description: Set operation mode for humidity device.
   fields:

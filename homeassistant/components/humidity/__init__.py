@@ -18,6 +18,8 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import (
     ATTR_CURRENT_HUMIDITY,
+    ATTR_FAN_MODE,
+    ATTR_FAN_MODES,
     ATTR_HUMIDITY,
     ATTR_HUMIDIFIER_ACTIONS,
     ATTR_HUMIDIFIER_MODE,
@@ -32,9 +34,11 @@ from .const import (
     HUMIDIFIER_MODE_HUMIDIFY_DRY,
     HUMIDIFIER_MODE_OFF,
     HUMIDIFIER_MODES,
+    SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_HUMIDIFIER_MODE,
     SERVICE_SET_PRESET_MODE,
+    SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_HUMIDITY,
 )
@@ -47,6 +51,9 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 _LOGGER = logging.getLogger(__name__)
 
+SET_FAN_MODE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+    {vol.Required(ATTR_FAN_MODE): cv.string}
+)
 SET_PRESET_MODE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
     {vol.Required(ATTR_PRESET_MODE): cv.string}
 )
@@ -70,6 +77,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         SERVICE_TURN_OFF, ENTITY_SERVICE_SCHEMA, "async_turn_off"
+    )
+    component.async_register_entity_service(
+        SERVICE_SET_FAN_MODE, SET_FAN_MODE_SCHEMA, "async_set_fan_mode"
     )
     component.async_register_entity_service(
         SERVICE_SET_HUMIDIFIER_MODE,
@@ -123,6 +133,10 @@ class HumidityDevice(Entity):
         if self.humidifier_action:
             data[ATTR_HUMIDIFIER_ACTIONS] = self.humidifier_action
 
+        if supported_features & SUPPORT_FAN_MODE:
+            data[ATTR_FAN_MODE] = self.fan_mode
+            data[ATTR_FAN_MODES] = self.fan_modes
+
         if supported_features & SUPPORT_PRESET_MODE:
             data[ATTR_PRESET_MODE] = self.preset_mode
             data[ATTR_PRESET_MODES] = self.preset_modes
@@ -138,6 +152,22 @@ class HumidityDevice(Entity):
     def target_humidity(self) -> Optional[int]:
         """Return the humidity we try to reach."""
         return None
+
+    @property
+    def fan_mode(self) -> Optional[str]:
+        """Return the fan setting.
+
+        Requires SUPPORT_FAN_MODE.
+        """
+        raise NotImplementedError
+
+    @property
+    def fan_modes(self) -> Optional[List[str]]:
+        """Return the list of available fan modes.
+
+        Requires SUPPORT_FAN_MODE.
+        """
+        raise NotImplementedError
 
     @property
     def humidifier_mode(self) -> str:
@@ -196,6 +226,14 @@ class HumidityDevice(Entity):
         await self.hass.async_add_executor_job(
             self.set_humidifier_mode, humidifier_mode
         )
+
+    def set_fan_mode(self, fan_mode: str) -> None:
+        """Set new target fan mode."""
+        raise NotImplementedError()
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set new target fan mode."""
+        await self.hass.async_add_executor_job(self.set_fan_mode, fan_mode)
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
