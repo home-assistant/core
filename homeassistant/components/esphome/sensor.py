@@ -67,6 +67,8 @@ class EsphomeSensor(EsphomeEntity):
         """Return the state of the entity."""
         if math.isnan(self._state.state):
             return None
+        if self._state.missing_state:
+            return None
         return "{:.{prec}f}".format(
             self._state.state, prec=self._static_info.accuracy_decimals
         )
@@ -96,4 +98,6 @@ class EsphomeTextSensor(EsphomeEntity):
     @esphome_state_property
     def state(self) -> Optional[str]:
         """Return the state of the entity."""
+        if self._state.missing_state:
+            return None
         return self._state.state
