@@ -414,7 +414,7 @@ denonavr==0.7.10
 directpy==0.5
 
 # homeassistant.components.discogs
-discogs_client==2.2.1
+discogs_client==2.2.2
 
 # homeassistant.components.discord
 discord.py==1.2.4
