@@ -99,7 +99,6 @@ homeassistant/components/file/* @fabaff
 homeassistant/components/filter/* @dgomes
 homeassistant/components/fitbit/* @robbiet480
 homeassistant/components/fixer/* @fabaff
-homeassistant/components/fleetgo/* @depl0y
 homeassistant/components/flock/* @fabaff
 homeassistant/components/flunearyou/* @bachya
 homeassistant/components/fortigate/* @kifeo
@@ -220,7 +219,6 @@ homeassistant/components/obihai/* @dshokouhi
 homeassistant/components/ohmconnect/* @robbiet480
 homeassistant/components/ombi/* @larssont
 homeassistant/components/onboarding/* @home-assistant/core
-homeassistant/components/openhardwaremonitor/* @depl0y
 homeassistant/components/opentherm_gw/* @mvn23
 homeassistant/components/openuv/* @bachya
 homeassistant/components/openweathermap/* @fabaff
