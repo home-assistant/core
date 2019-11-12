@@ -37,7 +37,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Inclusive(
             CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
         ): cv.longitude,
-        vol.Optional(CONF_RADIUS, DEFAULT_RADIUS): cv.positive_int,
+        vol.Optional(CONF_RADIUS, DEFAULT_RADIUS): vol.All(
+            cv.positive_int, vol.Range(min=1)
+        ),
         vol.Optional(CONF_SCAN_INTERVAL, SCAN_INTERVAL): cv.time_period,
     }
 )
@@ -51,38 +53,50 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     radius = config.get(CONF_RADIUS, DEFAULT_RADIUS)
 
+    master = None
     entities = []
     _LOGGER.debug("Fetching data for (%s,%s) rad: %s", latitude, longitude, radius)
-    data = pytankerkoenig.getNearbyStations(
-        api_key, latitude, longitude, radius, "all", "dist"
-    )
+    try:
+        data = pytankerkoenig.getNearbyStations(
+            api_key, latitude, longitude, radius, "all", "dist"
+        )
+    except pytankerkoenig.customException as err:
+        data = {"ok": False, "message": err, "exception": True}
     _LOGGER.debug("Received data: %s", data)
     if not data["ok"]:
         _LOGGER.error("Error fetching data from tankerkoenig.de:\n%s", data["message"])
         _LOGGER.error("Could not setup sensors")
         return
 
-    master = None
-    for station in data["stations"]:
-        if len(data["stations"]) <= 0:
-            _LOGGER.error("Could not find any station in range")
-        else:
-            station_id = station["id"]
-            for fuel in fuel_types:
-                sensor = None
-                if master is None:
-                    master = FuelPriceSensorMaster(
-                        api_key, fuel, station, f"{NAME}_{station['name']}_{fuel}"
-                    )
-                    sensor = master
-                else:
-                    sensor = FuelPriceSensorSlave(
-                        fuel, station, f"{NAME}_{station['name']}_{fuel}"
-                    )
-                    master.add_slave(station_id, sensor)
-                entities.append(sensor)
+    if len(data["stations"]) <= 0:
+        _LOGGER.warning("Could not find any station in range")
+    else:
+        for station in data["stations"]:
+            master = add_station(station, api_key, fuel_types, entities, master)
 
     async_add_entities(entities, True)
+
+
+def add_station(station, api_key, fuel_types, entities, master):
+    """Add fuel station to the entity list."""
+    _LOGGER.debug(
+        "Add_station called for station: %s and fuel types: %s", station, fuel_types
+    )
+    station_id = station["id"]
+    for fuel in fuel_types:
+        sensor = None
+        if master is None:
+            master = FuelPriceSensorMaster(
+                api_key, fuel, station, f"{NAME}_{station['name']}_{fuel}"
+            )
+            sensor = master
+        else:
+            sensor = FuelPriceSensorSlave(
+                fuel, station, f"{NAME}_{station['name']}_{fuel}"
+            )
+            master.add_slave(station_id, sensor)
+        entities.append(sensor)
+    return master
 
 
 class FuelPriceSensorMaster(FuelPriceSensorBase):
