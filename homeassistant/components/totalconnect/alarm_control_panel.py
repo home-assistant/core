@@ -68,7 +68,7 @@ class TotalConnectAlarm(alarm.AlarmControlPanel):
 
         if status in (self._client.DISARMED, self._client.DISARMED_BYPASS):
             state = STATE_ALARM_DISARMED
-        elif status in (self._client.ARMED_STAY, 
+        elif status in (self._client.ARMED_STAY,
                         self._client.ARMED_STAY_INSTANT,
                         self._client.ARMED_STAY_INSTANT_BYPASS):
             state = STATE_ALARM_ARMED_HOME
