@@ -243,6 +243,7 @@ class AlmondAgent(conversation.AbstractConversationAgent):
         """Process a sentence."""
         response = await self.api.async_converse_text(text, conversation_id)
 
+        first_choice = True
         buffer = ""
         for message in response["messages"]:
             if message["type"] == "text":
@@ -257,7 +258,11 @@ class AlmondAgent(conversation.AbstractConversationAgent):
                     + message["rdl"]["webCallback"]
                 )
             elif message["type"] == "choice":
-                buffer += "\n Choice: " + message["title"]
+                if first_choice:
+                    first_choice = False
+                else:
+                    buffer += ","
+                buffer += f" {message['title']}"
 
         intent_result = intent.IntentResponse()
         intent_result.async_set_speech(buffer.strip())
