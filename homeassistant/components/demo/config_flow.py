@@ -1,11 +1,12 @@
 """Config flow to configure demo component."""
 
 from homeassistant import config_entries
+
+# pylint: disable=unused-import
 from . import DOMAIN
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class DemoConfigFlow(config_entries.ConfigFlow):
+class DemoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Demo configuration flow."""
 
     VERSION = 1
