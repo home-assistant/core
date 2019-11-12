@@ -4,23 +4,21 @@ import logging
 from homeassistant.components import mqtt
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import dt, slugify
+from homeassistant.util import slugify
 
 from .definitions import DEFINITIONS
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "dsmr_reader"
-ATTR_UPDATED = "updated"
-ATTR_BEFORE_TRANSFORM = "before_transform"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up DSMR Reader sensors."""
 
     sensors = []
-    for k in DEFINITIONS:
-        sensors.append(DSMRSensor(k))
+    for topic in DEFINITIONS:
+        sensors.append(DSMRSensor(topic))
 
     async_add_entities(sensors)
 
@@ -31,69 +29,42 @@ class DSMRSensor(Entity):
     def __init__(self, topic):
         """Initialize the sensor."""
 
-        self._name = ""
+        self._definition = DEFINITIONS[topic]
+
         self._entity_id = slugify(topic.replace("/", "_"))
-        self._friendly_name = ""
-        self._icon = ""
-        self._unit_of_measurement = ""
-        self._state = 0
         self._topic = topic
-        self._updated = dt.utcnow()
-        self._transform = None
-        self._original_value = None
 
-        self._definition = {}
-        if topic in DEFINITIONS:
-            self._definition = DEFINITIONS[topic]
+        self._name = self._definition["name"]
+        self._unit_of_measurement = (
+            self._definition["unit"] if "unit" in self._definition else ""
+        )
+        self._icon = self._definition["icon"] if "icon" in self._definition else None
+        self._transform = (
+            self._definition["transform"] if "transform" in self._definition else None
+        )
 
-        parts = topic.split("/")
-        self._name = parts[-1]
-
-        if "unit" in self._definition:
-            self._unit_of_measurement = self._definition["unit"]
-        if "icon" in self._definition:
-            self._icon = self._definition["icon"]
-        if "name" in self._definition:
-            self._friendly_name = self._definition["name"]
-        if "transform" in self._definition:
-            self._transform = self._definition["transform"]
+        self._state = None
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
 
         @callback
-        def update_state(value):
-            """Update the sensor state."""
-            if self._transform is not None:
-                self._original_value = value
-                self._state = self._transform(value)
-            else:
-                self._state = value
-
-            self._updated = dt.utcnow()
-            self.async_schedule_update_ha_state()
-
-        @callback
-        def message_received(msg):
+        def message_received(message):
             """Handle new MQTT messages."""
-            update_state(msg.payload)
+
+            if self._transform is not None:
+                self._state = self._transform(message.payload)
+            else:
+                self._state = message.payload
+
+            self.async_schedule_update_ha_state()
 
         return await mqtt.async_subscribe(self.hass, self._topic, message_received, 1)
 
     @property
     def name(self):
         """Return the name of the sensor supplied in constructor."""
-        return self._friendly_name
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        result = {ATTR_UPDATED: self._updated}
-
-        if self._original_value is not None:
-            result[ATTR_BEFORE_TRANSFORM] = self._original_value
-
-        return result
+        return self._name
 
     @property
     def entity_id(self):
@@ -112,5 +83,5 @@ class DSMRSensor(Entity):
 
     @property
     def icon(self):
-        """Return the icon for this sensor."""
+        """Return the icon of this sensor."""
         return self._icon
