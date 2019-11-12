@@ -9,7 +9,7 @@ from tests.common import mock_coro
 
 
 async def test_creating_entry_sets_up_climate_discovery(hass):
-    """Test setting up hisense_aehw4a1 loads the climate component."""
+    """Test setting up Hisense AEH-W4A1 loads the sensor component."""
     with patch(
         "homeassistant.components.hisense_aehw4a1.climate.async_setup_entry",
         return_value=mock_coro(True),
@@ -34,13 +34,17 @@ async def test_configuring_hisense_w4a1_create_entry(hass):
     with patch(
         "homeassistant.components.hisense_aehw4a1.async_setup_entry",
         return_value=mock_coro(True),
-    ) as mock_setup:
-        await async_setup_component(
-            hass,
-            hisense_aehw4a1.DOMAIN,
-            {"hisense_aehw4a1": {"ip_address": ["1.2.3.4"]}},
-        )
-        await hass.async_block_till_done()
+    ):
+        with patch(
+            "homeassistant.components.hisense_aehw4a1.config_flow.AehW4a1.check",
+            return_value=mock_coro(True),
+        ) as mock_setup:
+            await async_setup_component(
+                hass,
+                hisense_aehw4a1.DOMAIN,
+                {"hisense_aehw4a1": {"ip_address": ["1.2.3.4"]}},
+            )
+            await hass.async_block_till_done()
 
     assert len(mock_setup.mock_calls) == 1
 
@@ -48,15 +52,19 @@ async def test_configuring_hisense_w4a1_create_entry(hass):
 async def test_configuring_hisense_w4a1_not_create_entry_for_device_not_found(hass):
     """Test that specifying config will not create an entry."""
     with patch(
-        "homeassistant.components.hisense_aehw4a1.async_setup_entry",
-        return_value=mock_coro(True),
-    ) as mock_setup:
-        await async_setup_component(
-            hass,
-            hisense_aehw4a1.DOMAIN,
-            {"hisense_aehw4a1": {"ip_address": ["1.2.3.4"]}},
-        )
-        await hass.async_block_till_done()
+        "homeassistant.components.hisense_aehw4a1.config_flow.AehW4a1.check",
+        return_value=mock_coro(exception="ConnectionError"),
+    ):
+        with patch(
+            "homeassistant.components.hisense_aehw4a1.async_setup_entry",
+            return_value=mock_coro(True),
+        ) as mock_setup:
+            await async_setup_component(
+                hass,
+                hisense_aehw4a1.DOMAIN,
+                {"hisense_aehw4a1": {"ip_address": ["1.2.3.4"]}},
+            )
+            await hass.async_block_till_done()
 
     assert len(mock_setup.mock_calls) == 0
 
