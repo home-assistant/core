@@ -54,7 +54,7 @@ async def async_setup(hass, base_config):
                 password=password,
                 update_interval=update_interval,
             )
-            await controller.connect(test_login=True)
+            await controller.connect(test_login=False)
             hass.data[DOMAIN] = {"controller": controller, "devices": defaultdict(list)}
             _LOGGER.debug("Connected to the Tesla API.")
         except TeslaException as ex:
@@ -77,7 +77,6 @@ async def async_setup(hass, base_config):
             _LOGGER.error("Unable to communicate with Tesla API: %s", ex.message)
             return False
     all_devices = controller.get_homeassistant_components()
-
     if not all_devices:
         return False
 
