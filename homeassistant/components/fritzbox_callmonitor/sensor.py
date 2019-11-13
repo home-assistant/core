@@ -60,6 +60,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Fritz!Box call monitor sensor platform."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
+    # Check that host is a valid IP address; otherwise try to resolve it.
+    try:
+        socket.inet_pton(socket.AF_INET, host)
+    except socket.error:
+        host = socket.gethostbyname(host)
+
     port = config.get(CONF_PORT)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
