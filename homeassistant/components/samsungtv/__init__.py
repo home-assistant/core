@@ -34,7 +34,7 @@ async def async_setup(hass, config):
     if DOMAIN in config:
         for entry_config in config[DOMAIN]:
             await hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": "import"}, data=entry_config
+                DOMAIN, context={"source": "user"}, data=entry_config
             )
 
     return True

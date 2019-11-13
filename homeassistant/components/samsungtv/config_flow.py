@@ -124,9 +124,12 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if _is_already_configured(self.hass, ip_address):
                 return self.async_abort(reason="already_configured")
 
-            self._host = user_input[CONF_HOST]
+            self._host = user_input.get(CONF_HOST)
             self._ip = self.context[CONF_IP_ADDRESS] = ip_address
-            self._title = user_input[CONF_NAME]
+            self._mac = user_input.get(CONF_MAC)
+            self._port = user_input.get(CONF_PORT)
+            self._timeout = user_input.get(CONF_TIMEOUT)
+            self._title = user_input.get(CONF_NAME)
 
             result = await self.hass.async_add_executor_job(
                 _try_connect, self._host, self._title
@@ -181,18 +184,3 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="confirm", description_placeholders={"model": self._model}
         )
-
-    async def async_step_import(self, user_input):
-        """Handle a flow initialized by config import."""
-        ip_address = await self.hass.async_add_executor_job(
-            _get_ip, user_input.get(CONF_HOST)
-        )
-
-        self._host = user_input.get(CONF_HOST)
-        self._ip = self.context[CONF_IP_ADDRESS] = ip_address
-        self._mac = user_input.get(CONF_MAC)
-        self._port = user_input.get(CONF_PORT)
-        self._timeout = user_input.get(CONF_TIMEOUT)
-        self._title = user_input.get(CONF_NAME)
-
-        return self._get_entry()
