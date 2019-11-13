@@ -44,6 +44,7 @@ FLOWS = [
     "ios",
     "ipma",
     "iqvia",
+    "islamic_prayer_times",
     "izone",
     "life360",
     "lifx",
