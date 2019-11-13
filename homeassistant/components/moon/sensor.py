@@ -28,7 +28,7 @@ MOON_ICONS = {
     STATE_FIRST_QUARTER: "mdi:moon-first-quarter",
     STATE_WAXING_GIBBOUS: "mdi:moon-waxing-gibbous",
     STATE_FULL_MOON: "mdi:moon-full",
-    STATE_WANING_GIBBOUS: "moon-waning-gibbous",
+    STATE_WANING_GIBBOUS: "mdi:moon-waning-gibbous",
     STATE_LAST_QUARTER: "mdi:moon-last-quarter",
     STATE_WANING_CRESCENT: "mdi:moon-waning-crescent"
 }
