@@ -66,7 +66,7 @@ async def test_configuring_hisense_w4a1_not_creates_entry_for_device_not_found(h
     """Test that specifying config will not create an entry."""
     with patch(
         "homeassistant.components.hisense_aehw4a1.config_flow.AehW4a1.check",
-        side_effect=Exception(exceptions.ConnectionError),
+        side_effect=exceptions.ConnectionError,
     ):
         with patch(
             "homeassistant.components.hisense_aehw4a1.async_setup_entry",
