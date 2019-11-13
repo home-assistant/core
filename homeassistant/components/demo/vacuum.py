@@ -76,6 +76,11 @@ DEMO_VACUUM_NONE = "4_Fourth_floor"
 DEMO_VACUUM_STATE = "5_Fifth_floor"
 
 
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Demo config entry."""
+    setup_platform(hass, {}, async_add_entities)
+
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo vacuums."""
     add_entities(
