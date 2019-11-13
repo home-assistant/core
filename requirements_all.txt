@@ -1411,7 +1411,7 @@ pypck==0.6.3
 pypjlink2==1.2.0
 
 # homeassistant.components.point
-pypoint==1.1.1
+pypoint==1.1.2
 
 # homeassistant.components.ps4
 pyps4-2ndscreen==1.0.1
