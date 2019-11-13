@@ -7,10 +7,14 @@ from maxcube.device import (
     MAX_DEVICE_MODE_BOOST,
     MAX_DEVICE_MODE_MANUAL,
     MAX_DEVICE_MODE_VACATION,
+    MAX_THERMOSTAT,
+    MAX_THERMOSTAT_PLUS,
 )
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
     HVAC_MODE_AUTO,
     PRESET_AWAY,
     PRESET_BOOST,
@@ -103,6 +107,20 @@ class MaxCubeClimate(ClimateDevice):
     def hvac_modes(self):
         """Return the list of available operation modes."""
         return self._operation_list
+
+    @property
+    def hvac_action(self):
+        """Return the current running hvac operation if supported."""
+        device = self._cubehandle.cube.device_by_rf(self._rf_address)
+
+        if device.type in [MAX_THERMOSTAT, MAX_THERMOSTAT_PLUS]:
+            # Assume heating when valve is open
+            if device.valve_position > 0:
+                return CURRENT_HVAC_HEAT
+            else:
+                return CURRENT_HVAC_IDLE
+
+        return None
 
     @property
     def target_temperature(self):
