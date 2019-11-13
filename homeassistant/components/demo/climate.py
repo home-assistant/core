@@ -1,4 +1,5 @@
 """Demo platform that offers a fake climate device."""
+import logging
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
@@ -20,15 +21,18 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from . import DOMAIN
 
 SUPPORT_FLAGS = 0
+_LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Demo climate devices."""
-    add_entities(
+    async_add_entities(
         [
             DemoClimate(
+                unique_id="climate_1",
                 name="HeatPump",
                 target_temperature=68,
                 unit_of_measurement=TEMP_FAHRENHEIT,
@@ -46,6 +50,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 hvac_modes=[HVAC_MODE_HEAT, HVAC_MODE_OFF],
             ),
             DemoClimate(
+                unique_id="climate_2",
                 name="Hvac",
                 target_temperature=21,
                 unit_of_measurement=TEMP_CELSIUS,
@@ -63,6 +68,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 hvac_modes=[mode for mode in HVAC_MODES if mode != HVAC_MODE_HEAT_COOL],
             ),
             DemoClimate(
+                unique_id="climate_3",
                 name="Ecobee",
                 target_temperature=None,
                 unit_of_measurement=TEMP_CELSIUS,
@@ -84,11 +90,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Demo climate devices config entry."""
+    await async_setup_platform(hass, {}, async_add_entities)
+
+
 class DemoClimate(ClimateDevice):
     """Representation of a demo climate device."""
 
     def __init__(
         self,
+        unique_id,
         name,
         target_temperature,
         unit_of_measurement,
@@ -107,6 +119,7 @@ class DemoClimate(ClimateDevice):
         preset_modes=None,
     ):
         """Initialize the climate device."""
+        self._unique_id = unique_id
         self._name = name
         self._support_flags = SUPPORT_FLAGS
         if target_temperature is not None:
@@ -142,6 +155,22 @@ class DemoClimate(ClimateDevice):
         self._swing_modes = ["Auto", "1", "2", "3", "Off"]
         self._target_temperature_high = target_temp_high
         self._target_temperature_low = target_temp_low
+
+    @property
+    def device_info(self):
+        """Return device info."""
+        return {
+            "identifiers": {
+                # Serial numbers are unique identifiers within a specific domain
+                (DOMAIN, self.unique_id)
+            },
+            "name": self.name,
+        }
+
+    @property
+    def unique_id(self):
+        """Return the unique id."""
+        return self._unique_id
 
     @property
     def supported_features(self):
