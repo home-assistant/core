@@ -15,14 +15,19 @@ FULL_SUPPORT = SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_DIRECTION
 LIMITED_SUPPORT = SUPPORT_SET_SPEED
 
 
-def setup_platform(hass, config, add_entities_callback, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the demo fan platform."""
-    add_entities_callback(
+    async_add_entities(
         [
             DemoFan(hass, "Living Room Fan", FULL_SUPPORT),
             DemoFan(hass, "Ceiling Fan", LIMITED_SUPPORT),
         ]
     )
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Demo config entry."""
+    await async_setup_platform(hass, {}, async_add_entities)
 
 
 class DemoFan(FanEntity):
