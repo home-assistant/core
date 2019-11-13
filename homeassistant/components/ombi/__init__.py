@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
+    CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
@@ -57,9 +58,10 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Required(CONF_API_KEY): cv.string,
                 vol.Required(CONF_HOST): cv.string,
                 vol.Required(CONF_USERNAME): cv.string,
+                vol.Optional(CONF_API_KEY): cv.string,
+                vol.Optional(CONF_PASSWORD): cv.string,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                 vol.Optional(CONF_URLBASE, default=DEFAULT_URLBASE): urlbase,
                 vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
@@ -73,16 +75,25 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Set up the Ombi component platform."""
 
+    password = config[DOMAIN].get(CONF_PASSWORD)
+    api_key = config[DOMAIN].get(CONF_API_KEY)
+
+    if password is None and api_key is None:
+        _LOGGER.warning("Unable to setup Ombi. Neither api_key nor password supplied.")
+        return False
+
     ombi = pyombi.Ombi(
         ssl=config[DOMAIN][CONF_SSL],
         host=config[DOMAIN][CONF_HOST],
         port=config[DOMAIN][CONF_PORT],
-        api_key=config[DOMAIN][CONF_API_KEY],
-        username=config[DOMAIN][CONF_USERNAME],
         urlbase=config[DOMAIN][CONF_URLBASE],
+        username=config[DOMAIN][CONF_USERNAME],
+        password=password,
+        api_key=api_key,
     )
 
     try:
+        ombi.authenticate()
         ombi.test_connection()
     except pyombi.OmbiError as err:
         _LOGGER.warning("Unable to setup Ombi: %s", err)
