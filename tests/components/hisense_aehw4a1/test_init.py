@@ -11,20 +11,26 @@ from tests.common import mock_coro
 async def test_creating_entry_sets_up_climate_discovery(hass):
     """Test setting up Hisense AEH-W4A1 loads the climate component."""
     with patch(
-        "homeassistant.components.hisense_aehw4a1.climate.async_setup_entry",
-        return_value=mock_coro(True),
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_init(
-            hisense_aehw4a1.DOMAIN, context={"source": config_entries.SOURCE_DISCOVERY}
-        )
+        "homeassistant.components.hisense_aehw4a1.config_flow.AehW4a1.discovery",
+        return_value=mock_coro(["1.2.3.4"]),
+    ):
+        with patch(
+            "homeassistant.components.hisense_aehw4a1.climate.async_setup_entry",
+            return_value=mock_coro(True),
+        ) as mock_setup:
+            result = await hass.config_entries.flow.async_init(
+                hisense_aehw4a1.DOMAIN, context={"source": config_entries.SOURCE_USER}
+            )
 
-        # Confirmation form
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+            # Confirmation form
+            assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {}
+            )
+            assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
-        await hass.async_block_till_done()
+            await hass.async_block_till_done()
 
     assert len(mock_setup.mock_calls) == 1
 
@@ -53,7 +59,7 @@ async def test_configuring_hisense_w4a1_not_create_entry_for_device_not_found(ha
     """Test that specifying config will not create an entry."""
     with patch(
         "homeassistant.components.hisense_aehw4a1.config_flow.AehW4a1.check",
-        return_value=mock_coro(exception="ConnectionError"),
+        side_effect=Exception("ConnectionError"),
     ):
         with patch(
             "homeassistant.components.hisense_aehw4a1.async_setup_entry",
