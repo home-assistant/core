@@ -13,7 +13,16 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Moon"
 
-ICON = "mdi:brightness-3"
+MOON_ICONS = {
+    STATE_NEW_MOON: "mdi:moon-new",
+    STATE_WAXING_CRESCENT: "mdi:moon-waxing-crescent",
+    STATE_FIRST_QUARTER: "mdi:moon-first-quarter",
+    STATE_WAXING_GIBBOUS: "mdi:moon-waxing-gibbous",
+    STATE_FULL_MOON: "mdi:moon-full",
+    STATE_WANING_GIBBOUS: "moon-waning-gibbous",
+    STATE_LAST_QUARTER: "mdi:moon-last-quarter",
+    STATE_WANING_CRESCENT: "mdi:moon-waning-crescent"
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}
@@ -62,7 +71,7 @@ class MoonSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return ICON
+        return MOON_ICONS.get(self._state, "mdi:brightness-3")
 
     async def async_update(self):
         """Get the time and updates the states."""
