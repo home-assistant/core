@@ -45,7 +45,7 @@ class SimpliSafeLock(SimpliSafeEntity, LockDevice):
     @property
     def is_locked(self):
         """Return true if the lock is locked."""
-        return STATE_MAP[self._lock.state] == STATE_LOCKED
+        return STATE_MAP.get(self._lock.state) == STATE_LOCKED
 
     async def async_lock(self, **kwargs):
         """Lock the lock."""
