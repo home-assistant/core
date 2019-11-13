@@ -233,8 +233,12 @@ async def async_unload_entry(hass, config_entry):
     """Unload an OpenUV config entry."""
     hass.data[DOMAIN][DATA_OPENUV_CLIENT].pop(config_entry.entry_id)
 
-    for component in ("binary_sensor", "sensor"):
-        await hass.config_entries.async_forward_entry_unload(config_entry, component)
+    tasks = [
+        hass.config_entries.async_forward_entry_unload(config_entry, component)
+        for component in ("binary_sensor", "sensor")
+    ]
+
+    await asyncio.gather(*tasks)
 
     return True
 
