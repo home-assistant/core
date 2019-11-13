@@ -1,23 +1,33 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Device is already configured"
-        },
-        "error": {},
-        "step": {
-            "user": {
-                "data": {
-                    "candle_lighting_minutes_before_sunset": "Minutes before sunset for candle lighthing",
-                    "diaspora": "Outside of Israel",
-                    "havdalah_minutes_after_sunset": "Minutes after sunset for havdalah",
-                    "language": "Language for holidays and dates",
-                    "latitude": "Override default latitude",
-                    "longitude": "Override default longitude",
-                    "name": "Name to be used for sensors"
-                },
-                "title": "Jewish Calendar settings"
-            }
-        },
-        "title": "Jewish Calendar"
+  "config": {
+    "title": "Jewish Calendar",
+    "step": {
+      "user": {
+        "title": "Jewish Calendar settings",
+        "data": {
+          "name": "Name to be used for sensors",
+          "diaspora": "Outside of Israel",
+          "language": "Language for holidays and dates",
+        }
+    },
+    "error": {
+      "name_exists": "Name already exists",
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure options for Jewish Calendar",
+        "data": {
+          "candle_lighting_minutes_before_sunset": "Minutes before sunset for candle lighthing",
+          "havdalah_minutes_after_sunset": "Minutes after sunset for havdalah",
+          "latitude": "Override default latitude",
+          "longitude": "Override default longitude"
+        }
+      }
+    }
+  }
 }
