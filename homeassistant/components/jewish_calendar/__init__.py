@@ -1,5 +1,4 @@
 """The jewish_calendar component."""
-from copy import deepcopy
 import asyncio
 import logging
 
@@ -8,14 +7,19 @@ import hdate
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_LANGUAGE,
     CONF_DIASPORA,
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_HAVDALAH_OFFSET_MINUTES,
+    DEFAULT_NAME,
+    DEFAULT_LANGUAGE,
+    DEFAULT_DIASPORA,
+    DEFAULT_CANDLE_LIGHT,
+    DEFAULT_HAVDALAH_OFFSET_MINUTES,
     DOMAIN,
-    DATA_SCHEMA,
 )
 
 
@@ -47,7 +51,24 @@ SENSOR_TYPES = {
     },
 }
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema(DATA_SCHEMA)}, extra=vol.ALLOW_EXTRA)
+JEWISH_CALENDAR_SCHEMA = {
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_DIASPORA, default=DEFAULT_DIASPORA): cv.boolean,
+    vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(
+        ["hebrew", "english"]
+    ),
+    vol.Optional(CONF_CANDLE_LIGHT_MINUTES, default=DEFAULT_CANDLE_LIGHT): int,
+    # Default of 0 means use 8.5 degrees / 'three_stars' time.
+    vol.Optional(
+        CONF_HAVDALAH_OFFSET_MINUTES, default=DEFAULT_HAVDALAH_OFFSET_MINUTES
+    ): int,
+    vol.Optional(CONF_LATITUDE): cv.latitude,
+    vol.Optional(CONF_LONGITUDE): cv.longitude,
+}
+
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.All(cv.ensure_list, [JEWISH_CALENDAR_SCHEMA])}, extra=vol.ALLOW_EXTRA
+)
 
 
 async def async_setup(hass, config):
@@ -55,28 +76,40 @@ async def async_setup(hass, config):
     if DOMAIN not in config:
         return True
 
-    conf = config[DOMAIN]
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=deepcopy(conf)
+    for entry in config[DOMAIN]:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
+            )
         )
-    )
 
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass, config_entry):
     """Set up a config entry for Jewish calendar."""
-    name = entry.data[CONF_NAME]
-    language = entry.data[CONF_LANGUAGE]
+    name = config_entry.data[CONF_NAME]
+    language = config_entry.data[CONF_LANGUAGE]
+    diaspora = config_entry.data[CONF_DIASPORA]
 
-    latitude = entry.data.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = entry.data.get(CONF_LONGITUDE, hass.config.longitude)
-    diaspora = entry.data[CONF_DIASPORA]
+    if not config_entry.options:
+        latitude = config_entry.data.pop(CONF_LATITUDE, hass.config.latitude)
+        longitude = config_entry.data.pop(CONF_LONGITUDE, hass.config.longitude)
+        candle_lighting_offset = config_entry.data.pop(
+            CONF_CANDLE_LIGHT_MINUTES, DEFAULT_CANDLE_LIGHT
+        )
+        havdalah_offset = config_entry.data.pop(
+            CONF_HAVDALAH_OFFSET_MINUTES, DEFAULT_HAVDALAH_OFFSET_MINUTES
+        )
 
-    candle_lighting_offset = entry.data[CONF_CANDLE_LIGHT_MINUTES]
-    havdalah_offset = entry.data[CONF_HAVDALAH_OFFSET_MINUTES]
+        options = {
+            CONF_LATITUDE: latitude,
+            CONF_LONGITUDE: longitude,
+            CONF_CANDLE_LIGHT_MINUTES: candle_lighting_offset,
+            CONF_HAVDALAH_OFFSET_MINUTES: havdalah_offset,
+        }
+
+        hass.config_entries.async_update_entry(config_entry, options=options)
 
     location = hdate.Location(
         latitude=latitude,
@@ -85,7 +118,7 @@ async def async_setup_entry(hass, entry):
         diaspora=diaspora,
     )
 
-    hass.data[DOMAIN] = {
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
         "location": location,
         "name": name,
         "language": language,
@@ -95,19 +128,20 @@ async def async_setup_entry(hass, entry):
     }
 
     hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "sensor")
+        hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
     )
     hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "binary_sensor")
+        hass.config_entries.async_forward_entry_setup(config_entry, "binary_sensor")
     )
 
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
     await asyncio.gather(
-        hass.config_entries.async_forward_entry_unload(entry, "sensor"),
-        hass.config_entries.async_forward_entry_unload(entry, "binary_sensor"),
+        hass.config_entries.async_forward_entry_unload(config_entry, "sensor"),
+        hass.config_entries.async_forward_entry_unload(config_entry, "binary_sensor"),
     )
+    hass.data[DOMAIN].pop(config_entry.entry_id)
     return True
