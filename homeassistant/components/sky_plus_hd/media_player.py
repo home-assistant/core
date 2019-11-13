@@ -14,14 +14,11 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_HOST, STATE_OFF, STATE_ON
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_NAME = "Sky+HD"
-
-SERVICE_RECORD = ""
 
 SUPPORT_SKYPLUSHD = (
     SUPPORT_NEXT_TRACK
@@ -33,31 +30,28 @@ SUPPORT_SKYPLUSHD = (
     | SUPPORT_TURN_ON
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sky+HD platform."""
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
+    host = config[CONF_HOST]
 
-    sky = PySkyPlusHD.SkyBox(host)
+    try:
+        sky = PySkyPlusHD.SkyBox(host)
+    except RuntimeError:
+        _LOGGER.error("Could not connect to the Sky box.")
+        raise PlatformNotReady
 
-    add_entities([SkyPlusHD(sky, name)])
+    add_entities([SkyPlusHD(sky)])
 
 
 class SkyPlusHD(MediaPlayerDevice):
     """Representation of a Sky+HD box."""
 
-    def __init__(self, sky, name):
+    def __init__(self, sky):
         """Initialize the Sky+HD box."""
         self._sky = sky
-        self._name = name
         self._state = None
 
     def update(self):
@@ -65,9 +59,14 @@ class SkyPlusHD(MediaPlayerDevice):
         self._state = STATE_ON if self._sky.getState() else STATE_OFF
 
     @property
+    def unique_id(self):
+        """Return the unique ID of the device."""
+        return self._sky.serial
+
+    @property
     def name(self):
         """Return the name of the device."""
-        return self._name
+        return f"Sky+HD {self._sky.serial}"
 
     @property
     def state(self):
