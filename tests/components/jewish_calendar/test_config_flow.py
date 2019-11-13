@@ -8,8 +8,6 @@ from homeassistant.components.jewish_calendar.const import (
     CONF_LANGUAGE,
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_HAVDALAH_OFFSET_MINUTES,
-    DEFAULT_CANDLE_LIGHT,
-    DEFAULT_HAVDALAH_OFFSET_MINUTES,
     DOMAIN,
 )
 from homeassistant.components.jewish_calendar import config_flow
@@ -57,7 +55,7 @@ async def test_step_user(hass):
 
 @pytest.mark.parametrize("diaspora", [True, False])
 @pytest.mark.parametrize("language", ["hebrew", "english"])
-async def test_step_import(hass, language, diaspora):
+async def test_step_import_no_options(hass, language, diaspora):
     """Test that the import step works."""
     conf = {
         DOMAIN: {CONF_NAME: "test", CONF_LANGUAGE: language, CONF_DIASPORA: diaspora}
@@ -73,8 +71,33 @@ async def test_step_import(hass, language, diaspora):
         CONF_NAME: "test",
         CONF_LANGUAGE: language,
         CONF_DIASPORA: diaspora,
-        CONF_CANDLE_LIGHT_MINUTES: DEFAULT_CANDLE_LIGHT,
-        CONF_HAVDALAH_OFFSET_MINUTES: DEFAULT_HAVDALAH_OFFSET_MINUTES,
-        CONF_LATITUDE: 32.87336,
-        CONF_LONGITUDE: -117.22743,
+    }
+
+
+async def test_step_import_with_options(hass):
+    """Test that the import step works."""
+    conf = {
+        DOMAIN: {
+            CONF_NAME: "test",
+            CONF_CANDLE_LIGHT_MINUTES: 20,
+            CONF_HAVDALAH_OFFSET_MINUTES: 50,
+            CONF_LATITUDE: 31.76,
+            CONF_LONGITUDE: 35.235,
+        }
+    }
+
+    flow = config_flow.JewishCalendarConfigFlow()
+    flow.hass = hass
+
+    result = await flow.async_step_import(import_config=conf[DOMAIN])
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "test"
+    assert result["data"] == {
+        CONF_NAME: "test",
+        CONF_LANGUAGE: "english",
+        CONF_DIASPORA: False,
+        CONF_CANDLE_LIGHT_MINUTES: 20,
+        CONF_HAVDALAH_OFFSET_MINUTES: 50,
+        CONF_LATITUDE: 31.76,
+        CONF_LONGITUDE: 35.235,
     }
