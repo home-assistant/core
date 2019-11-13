@@ -1,9 +1,9 @@
-"""The tests for the demo humidity component."""
+"""The tests for the demo humidifier component."""
 
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.humidity.const import (
+from homeassistant.components.humidifier.const import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_FAN_MODE,
     ATTR_HUMIDITY,
@@ -27,18 +27,18 @@ from homeassistant.components.humidity.const import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.setup import async_setup_component
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
-ENTITY_DEHUMIDIFIER = "humidity.dehumidifier"
-ENTITY_HYGROSTAT = "humidity.hygrostat"
-ENTITY_HUMIDIFIER = "humidity.humidifier"
+ENTITY_DEHUMIDIFIER = "humidifier.dehumidifier"
+ENTITY_HYGROSTAT = "humidifier.hygrostat"
+ENTITY_HUMIDIFIER = "humidifier.humidifier"
 
 
 @pytest.fixture(autouse=True)
-async def setup_demo_humidity(hass):
-    """Initialize setup demo humidity."""
-    hass.config.units = METRIC_SYSTEM
-    assert await async_setup_component(hass, DOMAIN, {"humidity": {"platform": "demo"}})
+async def setup_demo_humidifier(hass):
+    """Initialize setup demo humidifier."""
+    assert await async_setup_component(
+        hass, DOMAIN, {"humidifier": {"platform": "demo"}}
+    )
 
 
 def test_setup_params(hass):

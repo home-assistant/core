@@ -1,4 +1,4 @@
-"""Provides functionality to interact with humidity devices."""
+"""Provides functionality to interact with humidifier devices."""
 from datetime import timedelta
 import logging
 from typing import Any, Dict, List, Optional
@@ -66,7 +66,7 @@ SET_HUMIDITY_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Set up humidity devices."""
+    """Set up humidifier devices."""
     component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
@@ -106,8 +106,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry):
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
-class HumidityDevice(Entity):
-    """Representation of a humidity device."""
+class HumidifierDevice(Entity):
+    """Representation of a humidifier device."""
 
     @property
     def state(self) -> str:

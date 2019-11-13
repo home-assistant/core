@@ -88,7 +88,7 @@ ATTR_HUMIDIFIER_MODE = "humidifier_mode"
 DEFAULT_MIN_HUMIDITY = 30
 DEFAULT_MAX_HUMIDITY = 99
 
-DOMAIN = "humidity"
+DOMAIN = "humidifier"
 
 SERVICE_SET_PRESET_MODE = "set_preset_mode"
 SERVICE_SET_FAN_MODE = "set_fan_mode"

@@ -38,7 +38,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SIGNIFICANT_DOMAINS = ("thermostat", "climate", "humidity", "water_heater")
+SIGNIFICANT_DOMAINS = ("thermostat", "climate", "humidifier", "water_heater")
 IGNORE_DOMAINS = ("zone", "scene")
 
 

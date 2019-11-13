@@ -2,8 +2,8 @@
 
 import pytest
 
-from homeassistant.components.humidity.reproduce_state import async_reproduce_states
-from homeassistant.components.humidity.const import (
+from homeassistant.components.humidifier.reproduce_state import async_reproduce_states
+from homeassistant.components.humidifier.const import (
     ATTR_HUMIDITY,
     ATTR_PRESET_MODE,
     DOMAIN,
@@ -18,8 +18,8 @@ from homeassistant.core import Context, State
 
 from tests.common import async_mock_service
 
-ENTITY_1 = "humidity.test1"
-ENTITY_2 = "humidity.test2"
+ENTITY_1 = "humidifier.test1"
+ENTITY_2 = "humidifier.test2"
 
 
 @pytest.mark.parametrize(

@@ -1,6 +1,6 @@
-"""Demo platform that offers a fake humidity device."""
-from homeassistant.components.humidity import HumidityDevice
-from homeassistant.components.humidity.const import (
+"""Demo platform that offers a fake humidifier device."""
+from homeassistant.components.humidifier import HumidifierDevice
+from homeassistant.components.humidifier.const import (
     CURRENT_HUMIDIFIER_DRY,
     CURRENT_HUMIDIFIER_HUMIDIFY,
     HUMIDIFIER_MODE_DRY,
@@ -16,10 +16,10 @@ SUPPORT_FLAGS = 0
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Demo humidity devices."""
+    """Set up the Demo humidifier devices."""
     add_entities(
         [
-            DemoHumidity(
+            DemoHumidifier(
                 name="Humidifier",
                 preset=None,
                 fan_mode=None,
@@ -29,7 +29,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 humidifier_action=CURRENT_HUMIDIFIER_HUMIDIFY,
                 humidifier_modes=[HUMIDIFIER_MODE_HUMIDIFY, HUMIDIFIER_MODE_OFF],
             ),
-            DemoHumidity(
+            DemoHumidifier(
                 name="Dehumidifier",
                 preset=None,
                 fan_mode="On High",
@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 humidifier_action=CURRENT_HUMIDIFIER_DRY,
                 humidifier_modes=[HUMIDIFIER_MODE_DRY, HUMIDIFIER_MODE_OFF],
             ),
-            DemoHumidity(
+            DemoHumidifier(
                 name="Hygrostat",
                 preset="home",
                 preset_modes=["home", "eco"],
@@ -58,8 +58,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class DemoHumidity(HumidityDevice):
-    """Representation of a demo humidity device."""
+class DemoHumidifier(HumidifierDevice):
+    """Representation of a demo humidifier device."""
 
     def __init__(
         self,
@@ -73,7 +73,7 @@ class DemoHumidity(HumidityDevice):
         humidifier_modes,
         preset_modes=None,
     ):
-        """Initialize the humidity device."""
+        """Initialize the humidifier device."""
         self._name = name
         self._support_flags = SUPPORT_FLAGS
         if preset is not None:
