@@ -33,6 +33,11 @@ sensor:
          entity_id: sensor.date
          friendly_name: 'Numer tygodnia w roku'
          value_template: "{{ now().isocalendar()[1] }}"
+binary_sensor:
+  - platform: workday
+    name: "Dzień tygodnia"
+    country: PL
+
 group:
   day_info:
     control: hidden

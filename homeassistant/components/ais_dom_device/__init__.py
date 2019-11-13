@@ -137,11 +137,14 @@ async def _async_send_rf_code(hass, long_topic, b0_code):
     # get the first part of topic
     topic = long_topic.split("/")[0]
     # the command is like
-    # cmnd/sonoffRFBridge/Backlog RfRaw AAB0210314016703F92411100110010101100110011001010110010101100255; RfRaw 0
+    # cmnd/sonoffRFBridge/Backlog RfRaw AAB0210314016703F9241110011001010110011010110010101100255; RfRaw 0; RfRaw 1
     await hass.services.async_call(
         "mqtt",
         "publish",
-        {"topic": topic + "/cmnd/Backlog", "payload": "RfRaw " + b0_code + "; RfRaw 0"},
+        {
+            "topic": topic + "/cmnd/Backlog",
+            "payload": "RfRaw " + b0_code + "; RfRaw 0; RfRaw 1",
+        },
     )
 
 
@@ -185,8 +188,8 @@ async def _async_add_ais_dom_entity(hass, device_id, name, b0_code, topic, entit
             "name": name,
             "command_topic": unique_topic + "/cmnd/Backlog",
             "uniq_id": uniq_id,
-            "payload_on": "RfRaw " + b0_code + "; RfRaw 0",
-            "payload_off": "RfRaw " + b0_code + "; RfRaw 0",
+            "payload_on": "RfRaw " + b0_code + "; RfRaw 0; RfRaw 1",
+            "payload_off": "RfRaw " + b0_code + "; RfRaw 0; RfRaw 1",
             "device": {"identifiers": [identifier]},
         }
     else:
