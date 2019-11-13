@@ -3,7 +3,7 @@
   "name": "Opentherm Gateway",
   "documentation": "https://www.home-assistant.io/integrations/opentherm_gw",
   "requirements": [
-    "pyotgw==0.5b0"
+    "pyotgw==0.5b1"
   ],
   "dependencies": [],
   "codeowners": [
