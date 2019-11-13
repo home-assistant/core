@@ -16,11 +16,15 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Jewish calendar sensor platform."""
     sensors = [
-        JewishCalendarSensor(hass.data[DOMAIN], sensor, sensor_info)
+        JewishCalendarSensor(
+            hass.data[DOMAIN][config_entry.entry_id], sensor, sensor_info
+        )
         for sensor, sensor_info in SENSOR_TYPES["data"].items()
     ]
     sensors.extend(
-        JewishCalendarTimeSensor(hass.data[DOMAIN], sensor, sensor_info)
+        JewishCalendarTimeSensor(
+            hass.data[DOMAIN][config_entry.entry_id], sensor, sensor_info
+        )
         for sensor, sensor_info in SENSOR_TYPES["time"].items()
     )
 

@@ -15,7 +15,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Jewish Calendar binary sensor devices."""
     async_add_entities(
         [
-            JewishCalendarBinarySensor(hass.data[DOMAIN], sensor, sensor_info)
+            JewishCalendarBinarySensor(
+                hass.data[DOMAIN][config_entry.entry_id], sensor, sensor_info
+            )
             for sensor, sensor_info in SENSOR_TYPES["binary"].items()
         ]
     )
