@@ -62,7 +62,7 @@ class JewishCalendarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
-            errors={},
+            errors=errors,
         )
 
     async def async_step_import(self, import_config):
