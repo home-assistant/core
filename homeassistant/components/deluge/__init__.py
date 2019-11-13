@@ -1,5 +1,4 @@
 """The Deluge integration."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -30,7 +29,7 @@ from .const import (
     DOMAIN,
     SERVICE_ADD_TORRENT,
 )
-from .errors import CannotConnect, PasswordError, UnknownError, UserNameError
+from .errors import CannotConnect, PasswordError, UserNameError, UnknownError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,20 +85,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
-    if unload_ok:
-        client = hass.data[DOMAIN].pop(entry.entry_id)
-        if client.unsub_timer:
-            client.unsub_timer()
+    for platform in PLATFORMS:
+        await hass.config_entries.async_forward_entry_unload(entry, platform)
 
-    return unload_ok
+    client = hass.data[DOMAIN].pop(entry.entry_id)
+    if client.unsub_timer:
+        client.unsub_timer()
+
+    return True
 
 
 async def get_api(hass, entry):
@@ -111,7 +104,7 @@ async def get_api(hass, entry):
 
     try:
         api = await hass.async_add_executor_job(
-            DelugeRPCClient, host, port, username, password
+            DelugeRPCClient, host, port, username, password, True
         )
         api.connect()
         _LOGGER.debug("Successfully connected to %s", host)
@@ -121,11 +114,12 @@ async def get_api(hass, entry):
         _LOGGER.error(error)
         raise CannotConnect
     except Exception as error:  # pylint: disable=broad-except
-        _LOGGER.error(str(error))
+        _LOGGER.error(error)
         if "Username does not exist" in str(error):
             raise UserNameError
         if "Password does not match" in str(error):
             raise PasswordError
+        raise UnknownError
 
 
 class DelugeClient:
@@ -278,22 +272,22 @@ class DelugeData:
         """Initialize torrent lists."""
         self.torrents = self._api.core.get_torrents_status({}, ["name", "state"])
         self.completed_torrents = [
-            self.torrents[var][b"name"].decode("utf8")
+            self.torrents[var]["name"]
             for var in self.torrents
-            if self.torrents[var][b"state"].decode("utf8") == "Seeding"
+            if self.torrents[var]["state"] == "Seeding"
         ]
         self.started_torrents = [
-            self.torrents[var][b"name"].decode("utf8")
+            self.torrents[var]["name"]
             for var in self.torrents
-            if self.torrents[var][b"state"].decode("utf8") == "Downloading"
+            if self.torrents[var]["state"] == "Downloading"
         ]
 
     def check_completed_torrent(self):
         """Get completed torrent functionality."""
         completed_torrents = [
-            self.torrents[var][b"name"].decode("utf8")
+            self.torrents[var]["name"]
             for var in self.torrents
-            if self.torrents[var][b"state"].decode("utf8") == "Seeding"
+            if self.torrents[var]["state"] == "Seeding"
         ]
 
         tmp_completed_torrents = list(
@@ -308,9 +302,9 @@ class DelugeData:
     def check_started_torrent(self):
         """Get started torrent functionality."""
         started_torrents = [
-            self.torrents[var][b"name"].decode("utf8")
+            self.torrents[var]["name"]
             for var in self.torrents
-            if self.torrents[var][b"state"].decode("utf8") == "Downloading"
+            if self.torrents[var]["state"] == "Downloading"
         ]
 
         tmp_started_torrents = list(
@@ -336,18 +330,18 @@ class DelugeData:
     def get_paused_torrents_count(self):
         """Get the number of paused torrents."""
         paused_torrents = [
-            self.torrents[var][b"name"].decode("utf8")
+            self.torrents[var]["name"]
             for var in self.torrents
-            if self.torrents[var][b"state"].decode("utf8") == "Paused"
+            if self.torrents[var]["state"] == "Paused"
         ]
         return len(paused_torrents)
 
     def get_active_torrents_count(self):
         """Get the number of active torrents."""
         active_torrents = [
-            self.torrents[var][b"name"].decode("utf8")
+            self.torrents[var]["name"]
             for var in self.torrents
-            if self.torrents[var][b"state"].decode("utf8") in ["Seeding", "Downloading"]
+            if self.torrents[var]["state"] in ["Seeding", "Downloading"]
         ]
         return len(active_torrents)
 

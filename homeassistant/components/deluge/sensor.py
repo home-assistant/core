@@ -93,8 +93,8 @@ class DelugeSensor(Entity):
             self._state = self.client.api.get_started_torrent_count()
 
         if self.data:
-            upload = self.data[b"upload_rate"] - self.data[b"dht_upload_rate"]
-            download = self.data[b"download_rate"] - self.data[b"dht_download_rate"]
+            upload = self.data["upload_rate"] - self.data["dht_upload_rate"]
+            download = self.data["download_rate"] - self.data["dht_download_rate"]
 
         if self.type == "current_status":
             if self.data:
