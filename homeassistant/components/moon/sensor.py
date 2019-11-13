@@ -13,6 +13,15 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Moon"
 
+STATE_NEW_MOON = "new_moon"
+STATE_WAXING_CRESCENT = "waxing_crescent"
+STATE_FIRST_QUARTER = "first_quarter"
+STATE_WAXING_GIBBOUS = "waxing_gibbous"
+STATE_FULL_MOON = "full_moon"
+STATE_WANING_GIBBOUS = "waning_gibbous"
+STATE_LAST_QUARTER = "last_quarter"
+STATE_WANING_CRESCENT = "waning_crescent"
+
 MOON_ICONS = {
     STATE_NEW_MOON: "mdi:moon-new",
     STATE_WAXING_CRESCENT: "mdi:moon-waxing-crescent",
