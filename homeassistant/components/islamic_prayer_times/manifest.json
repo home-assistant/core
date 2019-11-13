@@ -6,5 +6,8 @@
     "prayer_times_calculator==0.0.3"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@engrbm87"
+  ],
+  "config_flow": true
 }

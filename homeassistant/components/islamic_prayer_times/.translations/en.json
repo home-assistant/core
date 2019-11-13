@@ -1,0 +1,27 @@
+{
+    "config": {
+        "title": "Islamic Prayer Times",
+        "step": {
+            "user": {
+                "title": "Set up Islamic Prayer Times",
+                "description": "Are you sure you want to set up Islamic Prayer Times?"
+            }
+        },
+        "abort": {
+            "one_instance_allowed": "Only a single instance is necessary."
+        }
+    },
+    "options": {
+        "title": "Configure options for Islamic Prayer Times",
+        "step": {
+            "init": {
+                "data": {
+                    "calculation_method": "Prayer calculation method"
+                }
+            }
+        },
+        "error": {
+            "wrong_method": "possible values [karachi, isna, mwl, makkah]"
+        }
+    }
+}
