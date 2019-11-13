@@ -44,8 +44,12 @@ REMOTE_CALL = {
 def remote_fixture():
     """Patch the samsungctl Remote."""
     with patch("homeassistant.components.samsungtv.config_flow.socket"), patch(
+        "homeassistant.components.samsungtv.config_flow.Remote"
+    ), patch(
         "homeassistant.components.samsungtv.media_player.SamsungRemote"
-    ) as remote, patch("homeassistant.components.samsungtv.media_player.socket"):
+    ) as remote, patch(
+        "homeassistant.components.samsungtv.media_player.socket"
+    ):
         yield remote
 
 
