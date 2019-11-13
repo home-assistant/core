@@ -47,7 +47,7 @@ OPENALPR_REGIONS = [
     "vn2",
 ]
 
-CONF_ALPR_BIN = "alp_bin"
+CONF_ALPR_BIN = "alpr_bin"
 
 DEFAULT_BINARY = "alpr"
 
