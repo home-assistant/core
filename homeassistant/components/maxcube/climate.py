@@ -12,6 +12,9 @@ from maxcube.device import (
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
+    PRESET_AWAY,
+    PRESET_BOOST,
+    PRESET_NONE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
@@ -22,8 +25,6 @@ from . import DATA_KEY
 _LOGGER = logging.getLogger(__name__)
 
 PRESET_MANUAL = "manual"
-PRESET_BOOST = "boost"
-PRESET_VACATION = "vacation"
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
@@ -95,7 +96,7 @@ class MaxCubeClimate(ClimateDevice):
 
     @property
     def hvac_mode(self):
-        """Return current operation (auto, manual, boost, vacation)."""
+        """Return current operation mode."""
         return HVAC_MODE_AUTO
 
     @property
@@ -135,7 +136,7 @@ class MaxCubeClimate(ClimateDevice):
     @property
     def preset_modes(self):
         """Return available preset modes."""
-        return [PRESET_BOOST, PRESET_MANUAL, PRESET_VACATION]
+        return [PRESET_NONE, PRESET_MANUAL, PRESET_BOOST, PRESET_AWAY]
 
     def set_preset_mode(self, preset_mode):
         """Set new operation mode."""
@@ -164,9 +165,11 @@ class MaxCubeClimate(ClimateDevice):
     @staticmethod
     def map_mode_hass_max(mode):
         """Map Home Assistant Operation Modes to MAX! Operation Modes."""
-        if mode == PRESET_MANUAL:
+        if mode == PRESET_NONE:
+            mode = MAX_DEVICE_MODE_AUTOMATIC
+        elif mode == PRESET_MANUAL:
             mode = MAX_DEVICE_MODE_MANUAL
-        elif mode == PRESET_VACATION:
+        elif mode == PRESET_AWAY:
             mode = MAX_DEVICE_MODE_VACATION
         elif mode == PRESET_BOOST:
             mode = MAX_DEVICE_MODE_BOOST
@@ -178,10 +181,12 @@ class MaxCubeClimate(ClimateDevice):
     @staticmethod
     def map_mode_max_hass(mode):
         """Map MAX! Operation Modes to Home Assistant Operation Modes."""
-        if mode == MAX_DEVICE_MODE_MANUAL:
+        if mode == MAX_DEVICE_MODE_AUTOMATIC:
+            operation_mode = PRESET_NONE
+        elif mode == MAX_DEVICE_MODE_MANUAL:
             operation_mode = PRESET_MANUAL
         elif mode == MAX_DEVICE_MODE_VACATION:
-            operation_mode = PRESET_VACATION
+            operation_mode = PRESET_AWAY
         elif mode == MAX_DEVICE_MODE_BOOST:
             operation_mode = PRESET_BOOST
         else:
