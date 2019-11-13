@@ -1,4 +1,4 @@
-"""Config flow for Transmission Bittorent Client."""
+"""Config flow for Deluge Client."""
 import voluptuous as vol
 
 from homeassistant import config_entries

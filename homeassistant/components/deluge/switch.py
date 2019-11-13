@@ -1,4 +1,4 @@
-"""Support for setting the Deluge BitTorrent client in Pause."""
+"""Support for starting/stoping the Deluge client torrents."""
 import logging
 
 from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON

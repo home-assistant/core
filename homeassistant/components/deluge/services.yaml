@@ -1,5 +1,5 @@
 add_torrent:
-  description: Add a new torrent to download (URL, magnet link or Base64 encoded).
+  description: Add a new torrent to download (URL, magnet link).
   fields:
     host:
       description: client host name as entered during entry config

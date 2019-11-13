@@ -1,4 +1,4 @@
-"""Tests for Transmission config flow."""
+"""Tests for Deluge config flow."""
 from datetime import timedelta
 from unittest.mock import patch
 
