@@ -343,6 +343,7 @@ async def test_hmip_heating_group_heat_with_switch(hass, default_mock_hap):
         hass, default_mock_hap, entity_id, entity_name, device_model
     )
 
+    assert hmip_device
     assert ha_state.state == HVAC_MODE_AUTO
     assert ha_state.attributes["current_temperature"] == 24.7
     assert ha_state.attributes["min_temp"] == 5.0
