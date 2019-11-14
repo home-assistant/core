@@ -44,6 +44,7 @@ class PlexServer:
         self._hass = hass
         self._plex_server = None
         self._known_clients = set()
+        self._known_idle = set()
         self._url = server_config.get(CONF_URL)
         self._token = server_config.get(CONF_TOKEN)
         self._server_name = server_config.get(CONF_SERVER)
@@ -94,15 +95,19 @@ class PlexServer:
 
     def refresh_entity(self, machine_identifier, device, session):
         """Forward refresh dispatch to media_player."""
+        unique_id = f"{self.machine_identifier}:{machine_identifier}"
+        _LOGGER.debug("Refreshing %s", unique_id)
         dispatcher_send(
             self._hass,
-            PLEX_UPDATE_MEDIA_PLAYER_SIGNAL.format(machine_identifier),
+            PLEX_UPDATE_MEDIA_PLAYER_SIGNAL.format(unique_id),
             device,
             session,
         )
 
     def update_platforms(self):
         """Update the platform entities."""
+        _LOGGER.debug("Updating devices")
+
         available_clients = {}
         new_clients = set()
 
@@ -119,6 +124,7 @@ class PlexServer:
             return
 
         for device in devices:
+            self._known_idle.discard(device.machineIdentifier)
             available_clients[device.machineIdentifier] = {"device": device}
 
             if device.machineIdentifier not in self._known_clients:
@@ -127,6 +133,7 @@ class PlexServer:
 
         for session in sessions:
             for player in session.players:
+                self._known_idle.discard(player.machineIdentifier)
                 available_clients.setdefault(
                     player.machineIdentifier, {"device": player}
                 )
@@ -147,9 +154,12 @@ class PlexServer:
 
         self._known_clients.update(new_clients)
 
-        idle_clients = self._known_clients.difference(available_clients)
+        idle_clients = (self._known_clients - self._known_idle).difference(
+            available_clients
+        )
         for client_id in idle_clients:
             self.refresh_entity(client_id, None, None)
+            self._known_idle.add(client_id)
 
         if new_entity_configs:
             dispatcher_send(
@@ -163,6 +173,11 @@ class PlexServer:
             PLEX_UPDATE_SENSOR_SIGNAL.format(self.machine_identifier),
             sessions,
         )
+
+    @property
+    def plex_server(self):
+        """Return the plexapi PlexServer instance."""
+        return self._plex_server
 
     @property
     def friendly_name(self):

@@ -111,3 +111,10 @@ class AlexaInvalidDirectiveError(AlexaError):
 
     namespace = "Alexa"
     error_type = "INVALID_DIRECTIVE"
+
+
+class AlexaVideoActionNotPermittedForContentError(AlexaError):
+    """Class to represent action not permitted for content errors."""
+
+    namespace = "Alexa.Video"
+    error_type = "ACTION_NOT_PERMITTED_FOR_CONTENT"

@@ -9,6 +9,12 @@
     "stringcase==1.2.0",
     "url-normalize==1.4.1"
   ],
+  "ssdp": [
+    {
+      "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+      "manufacturer": "Huawei"
+    }
+  ],
   "dependencies": [],
   "codeowners": [
     "@scop"

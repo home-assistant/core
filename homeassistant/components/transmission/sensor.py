@@ -6,7 +6,8 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, SENSOR_TYPES
+from .const import DOMAIN, SENSOR_TYPES, STATE_ATTR_TORRENT_INFO
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,6 +82,13 @@ class TransmissionSensor(Entity):
     def available(self):
         """Could the device be accessed during the last update call."""
         return self._tm_client.api.available
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes, if any."""
+        if self._tm_client.api.started_torrent_dict and self.type == "started_torrents":
+            return {STATE_ATTR_TORRENT_INFO: self._tm_client.api.started_torrent_dict}
+        return None
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""

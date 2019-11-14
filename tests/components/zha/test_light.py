@@ -14,8 +14,8 @@ from .common import (
     async_enable_traffic,
     async_init_zigpy_device,
     async_test_device_join,
+    find_entity_id,
     make_attribute,
-    make_entity_id,
     make_zcl_header,
 )
 
@@ -35,6 +35,7 @@ async def test_light(hass, config_entry, zha_gateway, monkeypatch):
         [],
         zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT,
         zha_gateway,
+        ieee="00:0d:6f:11:0a:90:69:e6",
     )
 
     zigpy_device_level = await async_init_zigpy_device(
@@ -58,10 +59,9 @@ async def test_light(hass, config_entry, zha_gateway, monkeypatch):
 
     # on off light
     on_off_device_on_off_cluster = zigpy_device_on_off.endpoints.get(1).on_off
-    on_off_entity_id = make_entity_id(
-        DOMAIN, zigpy_device_on_off, on_off_device_on_off_cluster, use_suffix=False
-    )
     on_off_zha_device = zha_gateway.get_device(zigpy_device_on_off.ieee)
+    on_off_entity_id = await find_entity_id(DOMAIN, on_off_zha_device, hass)
+    assert on_off_entity_id is not None
 
     # dimmable light
     level_device_on_off_cluster = zigpy_device_level.endpoints.get(1).on_off
@@ -78,10 +78,9 @@ async def test_light(hass, config_entry, zha_gateway, monkeypatch):
     )
     monkeypatch.setattr(level_device_on_off_cluster, "request", on_off_mock)
     monkeypatch.setattr(level_device_level_cluster, "request", level_mock)
-    level_entity_id = make_entity_id(
-        DOMAIN, zigpy_device_level, level_device_on_off_cluster, use_suffix=False
-    )
     level_zha_device = zha_gateway.get_device(zigpy_device_level.ieee)
+    level_entity_id = await find_entity_id(DOMAIN, level_zha_device, hass)
+    assert level_entity_id is not None
 
     # test that the lights were created and that they are unavailable
     assert hass.states.get(on_off_entity_id).state == STATE_UNAVAILABLE
@@ -125,7 +124,7 @@ async def test_light(hass, config_entry, zha_gateway, monkeypatch):
         hass,
         zha_gateway,
         general.OnOff.cluster_id,
-        DOMAIN,
+        on_off_entity_id,
         device_type=zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT,
     )
 

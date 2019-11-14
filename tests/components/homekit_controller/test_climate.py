@@ -213,7 +213,7 @@ async def test_hvac_mode_vs_hvac_action(hass, utcnow):
 
     state = await helper.poll_and_get_state()
     assert state.state == "heat"
-    assert state.attributes["hvac_action"] == "off"
+    assert state.attributes["hvac_action"] == "idle"
 
     # Simulate that current temperature is below target temp
     # Heating might be on and hvac_action currently 'heat'

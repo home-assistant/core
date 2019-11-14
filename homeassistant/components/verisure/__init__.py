@@ -2,9 +2,9 @@
 import logging
 import threading
 from datetime import timedelta
-
 from jsonpath import jsonpath
 import verisure
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -39,6 +39,8 @@ MIN_SCAN_INTERVAL = timedelta(minutes=1)
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 
 SERVICE_CAPTURE_SMARTCAM = "capture_smartcam"
+SERVICE_DISABLE_AUTOLOCK = "disable_autolock"
+SERVICE_ENABLE_AUTOLOCK = "enable_autolock"
 
 HUB = None
 
@@ -68,7 +70,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-CAPTURE_IMAGE_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_SERIAL): cv.string})
+DEVICE_SERIAL_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_SERIAL): cv.string})
 
 
 def setup(hass, config):
@@ -93,16 +95,44 @@ def setup(hass, config):
     ):
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
-    def capture_smartcam(service):
+    async def capture_smartcam(service):
         """Capture a new picture from a smartcam."""
-        device_id = service.data.get(ATTR_DEVICE_SERIAL)
-        HUB.smartcam_capture(device_id)
-        _LOGGER.debug("Capturing new image from %s", ATTR_DEVICE_SERIAL)
+        device_id = service.data[ATTR_DEVICE_SERIAL]
+        try:
+            await hass.async_add_executor_job(HUB.smartcam_capture, device_id)
+            _LOGGER.debug("Capturing new image from %s", ATTR_DEVICE_SERIAL)
+        except verisure.Error as ex:
+            _LOGGER.error("Could not capture image, %s", ex)
 
     hass.services.register(
-        DOMAIN, SERVICE_CAPTURE_SMARTCAM, capture_smartcam, schema=CAPTURE_IMAGE_SCHEMA
+        DOMAIN, SERVICE_CAPTURE_SMARTCAM, capture_smartcam, schema=DEVICE_SERIAL_SCHEMA
     )
 
+    async def disable_autolock(service):
+        """Disable autolock on a doorlock."""
+        device_id = service.data[ATTR_DEVICE_SERIAL]
+        try:
+            await hass.async_add_executor_job(HUB.disable_autolock, device_id)
+            _LOGGER.debug("Disabling autolock on%s", ATTR_DEVICE_SERIAL)
+        except verisure.Error as ex:
+            _LOGGER.error("Could not disable autolock, %s", ex)
+
+    hass.services.register(
+        DOMAIN, SERVICE_DISABLE_AUTOLOCK, disable_autolock, schema=DEVICE_SERIAL_SCHEMA
+    )
+
+    async def enable_autolock(service):
+        """Enable autolock on a doorlock."""
+        device_id = service.data[ATTR_DEVICE_SERIAL]
+        try:
+            await hass.async_add_executor_job(HUB.enable_autolock, device_id)
+            _LOGGER.debug("Enabling autolock on %s", ATTR_DEVICE_SERIAL)
+        except verisure.Error as ex:
+            _LOGGER.error("Could not enable autolock, %s", ex)
+
+    hass.services.register(
+        DOMAIN, SERVICE_ENABLE_AUTOLOCK, enable_autolock, schema=DEVICE_SERIAL_SCHEMA
+    )
     return True
 
 
@@ -174,6 +204,14 @@ class VerisureHub:
     def smartcam_capture(self, device_id):
         """Capture a new image from a smartcam."""
         self.session.capture_image(device_id)
+
+    def disable_autolock(self, device_id):
+        """Disable autolock."""
+        self.session.set_lock_config(device_id, auto_lock_enabled=False)
+
+    def enable_autolock(self, device_id):
+        """Enable autolock."""
+        self.session.set_lock_config(device_id, auto_lock_enabled=True)
 
     def get(self, jpath, *args):
         """Get values from the overview that matches the jsonpath."""

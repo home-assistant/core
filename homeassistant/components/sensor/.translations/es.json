@@ -17,10 +17,10 @@
             "illuminance": "{entity_name} iluminancia",
             "power": "{entity_name} alimentaci\u00f3n",
             "pressure": "{entity_name} presi\u00f3n",
-            "signal_strength": "{entity_name} intensidad de la se\u00f1al",
-            "temperature": "{entity_name} temperatura",
-            "timestamp": "{entity_name} marca de tiempo",
-            "value": "{entity_name} valor"
+            "signal_strength": "cambios de la intensidad de se\u00f1al de {entity_name} ",
+            "temperature": "{entity_name} cambios de temperatura",
+            "timestamp": "{entity_name} cambios de fecha y hora",
+            "value": "Cambios de valor de la {entity_name}"
         }
     }
 }

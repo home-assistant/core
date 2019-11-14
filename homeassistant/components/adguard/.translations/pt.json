@@ -4,7 +4,9 @@
             "user": {
                 "data": {
                     "host": "Servidor",
-                    "port": "Porta"
+                    "password": "Palavra-passe",
+                    "port": "Porta",
+                    "username": "Nome de Utilizador"
                 }
             }
         }

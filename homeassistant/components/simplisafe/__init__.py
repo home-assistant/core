@@ -22,7 +22,11 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import verify_domain_control
 
@@ -150,11 +154,10 @@ async def async_setup_entry(hass, config_entry):
     await simplisafe.async_update()
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = simplisafe
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(
-            config_entry, "alarm_control_panel"
+    for component in ("alarm_control_panel", "lock"):
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
-    )
 
     async def refresh(event_time):
         """Refresh data from the SimpliSafe account."""
@@ -195,7 +198,12 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, entry):
     """Unload a SimpliSafe config entry."""
-    await hass.config_entries.async_forward_entry_unload(entry, "alarm_control_panel")
+    tasks = [
+        hass.config_entries.async_forward_entry_unload(entry, component)
+        for component in ("alarm_control_panel", "lock")
+    ]
+
+    await asyncio.gather(*tasks)
 
     hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
     remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id)
@@ -240,3 +248,73 @@ class SimpliSafe:
         tasks = [self._update_system(system) for system in self.systems.values()]
 
         await asyncio.gather(*tasks)
+
+
+class SimpliSafeEntity(Entity):
+    """Define a base SimpliSafe entity."""
+
+    def __init__(self, system, name, *, serial=None):
+        """Initialize."""
+        self._async_unsub_dispatcher_connect = None
+        self._attrs = {ATTR_SYSTEM_ID: system.system_id}
+        self._name = name
+        self._online = True
+        self._system = system
+
+        if serial:
+            self._serial = serial
+        else:
+            self._serial = system.serial
+
+    @property
+    def available(self):
+        """Return whether the entity is available."""
+        # We can easily detect if the V3 system is offline, but no simple check exists
+        # for the V2 system. Therefore, we mark the entity as available if:
+        #   1. We can verify that the system is online (assuming True if we can't)
+        #   2. We can verify that the entity is online
+        system_offline = self._system.version == 3 and self._system.offline
+        return not system_offline and self._online
+
+    @property
+    def device_info(self):
+        """Return device registry information for this entity."""
+        return {
+            "identifiers": {(DOMAIN, self._system.system_id)},
+            "manufacturer": "SimpliSafe",
+            "model": self._system.version,
+            "name": self._name,
+            "via_device": (DOMAIN, self._system.serial),
+        }
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return self._attrs
+
+    @property
+    def name(self):
+        """Return the name of the entity."""
+        return f"{self._system.address} {self._name}"
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of the entity."""
+        return self._serial
+
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+
+        @callback
+        def update():
+            """Update the state."""
+            self.async_schedule_update_ha_state(True)
+
+        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
+            self.hass, TOPIC_UPDATE, update
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect dispatcher listener when removed."""
+        if self._async_unsub_dispatcher_connect:
+            self._async_unsub_dispatcher_connect()

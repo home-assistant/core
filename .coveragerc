@@ -69,6 +69,7 @@ omit =
     homeassistant/components/avea/light.py
     homeassistant/components/avion/light.py
     homeassistant/components/azure_event_hub/*
+    homeassistant/components/azure_service_bus/*
     homeassistant/components/baidu/tts.py
     homeassistant/components/beewi_smartclim/sensor.py
     homeassistant/components/bbb_gpio/*
@@ -274,7 +275,6 @@ omit =
     homeassistant/components/growatt_server/sensor.py
     homeassistant/components/gstreamer/media_player.py
     homeassistant/components/gtfs/sensor.py
-    homeassistant/components/gtt/sensor.py
     homeassistant/components/habitica/*
     homeassistant/components/hangouts/*
     homeassistant/components/hangouts/__init__.py
@@ -499,6 +499,7 @@ omit =
     homeassistant/components/panasonic_bluray/media_player.py
     homeassistant/components/panasonic_viera/media_player.py
     homeassistant/components/pandora/media_player.py
+    homeassistant/components/pcal9535a/*
     homeassistant/components/pencom/switch.py
     homeassistant/components/philips_js/media_player.py
     homeassistant/components/pi_hole/sensor.py
@@ -514,6 +515,7 @@ omit =
     homeassistant/components/plex/media_player.py
     homeassistant/components/plex/sensor.py
     homeassistant/components/plex/server.py
+    homeassistant/components/plex/websockets.py
     homeassistant/components/plugwise/*
     homeassistant/components/plum_lightpad/*
     homeassistant/components/pocketcasts/sensor.py
@@ -603,6 +605,7 @@ omit =
     homeassistant/components/simplepush/notify.py
     homeassistant/components/simplisafe/__init__.py
     homeassistant/components/simplisafe/alarm_control_panel.py
+    homeassistant/components/simplisafe/lock.py
     homeassistant/components/simulated/sensor.py
     homeassistant/components/sisyphus/*
     homeassistant/components/sky_hub/device_tracker.py

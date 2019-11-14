@@ -120,6 +120,6 @@ class IssData:
             self.next_rise = iss.next_rise(self.latitude, self.longitude)
             self.number_of_people_in_space = iss.number_of_people_in_space()
             self.position = iss.current_location()
-        except requests.exceptions.HTTPError as error:
-            _LOGGER.error(error)
+        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError):
+            _LOGGER.error("Unable to retrieve data")
             return False

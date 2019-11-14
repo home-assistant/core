@@ -57,6 +57,7 @@ class UnifiLedLight(Light):
         self._name = light["name"]
         self._unique_id = light["id"]
         self._state = light["status"]["output"]
+        self._available = light["isOnline"]
         self._brightness = self._api.convertfrom100to255(light["status"]["led"])
         self._features = SUPPORT_BRIGHTNESS
 
@@ -64,6 +65,11 @@ class UnifiLedLight(Light):
     def name(self):
         """Return the display name of this light."""
         return self._name
+
+    @property
+    def available(self):
+        """Return the available state of this light."""
+        return self._available
 
     @property
     def brightness(self):
@@ -103,3 +109,4 @@ class UnifiLedLight(Light):
         self._brightness = self._api.convertfrom100to255(
             self._api.getlightbrightness(self._unique_id)
         )
+        self._available = self._api.getlightavailable(self._unique_id)

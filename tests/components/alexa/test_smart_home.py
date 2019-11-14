@@ -10,6 +10,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SEEK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
@@ -726,16 +727,24 @@ async def test_media_player(hass):
     assert appliance["displayCategories"][0] == "TV"
     assert appliance["friendlyName"] == "Test media player"
 
-    assert_endpoint_capabilities(
+    capabilities = assert_endpoint_capabilities(
         appliance,
+        "Alexa.ChannelController",
+        "Alexa.EndpointHealth",
         "Alexa.InputController",
+        "Alexa.PlaybackController",
+        "Alexa.PlaybackStateReporter",
         "Alexa.PowerController",
         "Alexa.Speaker",
         "Alexa.StepSpeaker",
-        "Alexa.PlaybackController",
-        "Alexa.EndpointHealth",
-        "Alexa.ChannelController",
     )
+
+    playback_capability = get_capability(capabilities, "Alexa.PlaybackController")
+    assert playback_capability is not None
+    supported_operations = playback_capability["supportedOperations"]
+    operations = ["Play", "Pause", "Stop", "Next", "Previous"]
+    for operation in operations:
+        assert operation in supported_operations
 
     await assert_power_controller_works(
         "media_player#test", "media_player.turn_on", "media_player.turn_off", hass
@@ -942,13 +951,15 @@ async def test_media_player_power(hass):
 
     assert_endpoint_capabilities(
         appliance,
+        "Alexa.ChannelController",
+        "Alexa.EndpointHealth",
         "Alexa.InputController",
+        "Alexa.PlaybackController",
+        "Alexa.PlaybackStateReporter",
         "Alexa.PowerController",
+        "Alexa.SeekController",
         "Alexa.Speaker",
         "Alexa.StepSpeaker",
-        "Alexa.PlaybackController",
-        "Alexa.EndpointHealth",
-        "Alexa.ChannelController",
     )
 
     await assert_request_calls_service(
@@ -966,6 +977,139 @@ async def test_media_player_power(hass):
         "media_player.media_stop",
         hass,
     )
+
+
+async def test_media_player_speaker(hass):
+    """Test media player discovery with device class speaker."""
+    device = (
+        "media_player.test",
+        "off",
+        {
+            "friendly_name": "Test media player",
+            "supported_features": 51765,
+            "volume_level": 0.75,
+            "device_class": "speaker",
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "media_player#test"
+    assert appliance["displayCategories"][0] == "SPEAKER"
+    assert appliance["friendlyName"] == "Test media player"
+
+
+async def test_media_player_seek(hass):
+    """Test media player seek capability."""
+    device = (
+        "media_player.test_seek",
+        "playing",
+        {
+            "friendly_name": "Test media player seek",
+            "supported_features": SUPPORT_SEEK,
+            "media_position": 300,  # 5min
+            "media_duration": 600,  # 10min
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "media_player#test_seek"
+    assert appliance["displayCategories"][0] == "TV"
+    assert appliance["friendlyName"] == "Test media player seek"
+
+    assert_endpoint_capabilities(
+        appliance,
+        "Alexa.EndpointHealth",
+        "Alexa.PowerController",
+        "Alexa.SeekController",
+    )
+
+    # Test seek forward 30 seconds.
+    call, msg = await assert_request_calls_service(
+        "Alexa.SeekController",
+        "AdjustSeekPosition",
+        "media_player#test_seek",
+        "media_player.media_seek",
+        hass,
+        response_type="StateReport",
+        payload={"deltaPositionMilliseconds": 30000},
+    )
+    assert call.data["seek_position"] == 330
+    assert "properties" in msg["event"]["payload"]
+    properties = msg["event"]["payload"]["properties"]
+    assert {"name": "positionMilliseconds", "value": 330000} in properties
+
+    # Test seek reverse 30 seconds.
+    call, msg = await assert_request_calls_service(
+        "Alexa.SeekController",
+        "AdjustSeekPosition",
+        "media_player#test_seek",
+        "media_player.media_seek",
+        hass,
+        response_type="StateReport",
+        payload={"deltaPositionMilliseconds": -30000},
+    )
+    assert call.data["seek_position"] == 270
+    assert "properties" in msg["event"]["payload"]
+    properties = msg["event"]["payload"]["properties"]
+    assert {"name": "positionMilliseconds", "value": 270000} in properties
+
+    # Test seek backwards more than current position (5 min.) result = 0.
+    call, msg = await assert_request_calls_service(
+        "Alexa.SeekController",
+        "AdjustSeekPosition",
+        "media_player#test_seek",
+        "media_player.media_seek",
+        hass,
+        response_type="StateReport",
+        payload={"deltaPositionMilliseconds": -500000},
+    )
+    assert call.data["seek_position"] == 0
+    assert "properties" in msg["event"]["payload"]
+    properties = msg["event"]["payload"]["properties"]
+    assert {"name": "positionMilliseconds", "value": 0} in properties
+
+    # Test seek forward more than current duration (10 min.) result = 600 sec.
+    call, msg = await assert_request_calls_service(
+        "Alexa.SeekController",
+        "AdjustSeekPosition",
+        "media_player#test_seek",
+        "media_player.media_seek",
+        hass,
+        response_type="StateReport",
+        payload={"deltaPositionMilliseconds": 800000},
+    )
+    assert call.data["seek_position"] == 600
+    assert "properties" in msg["event"]["payload"]
+    properties = msg["event"]["payload"]["properties"]
+    assert {"name": "positionMilliseconds", "value": 600000} in properties
+
+
+async def test_media_player_seek_error(hass):
+    """Test media player seek capability for media_position Error."""
+    device = (
+        "media_player.test_seek",
+        "playing",
+        {"friendly_name": "Test media player seek", "supported_features": SUPPORT_SEEK},
+    )
+    await discovery_test(device, hass)
+
+    # Test for media_position error.
+    with pytest.raises(AssertionError):
+        call, msg = await assert_request_calls_service(
+            "Alexa.SeekController",
+            "AdjustSeekPosition",
+            "media_player#test_seek",
+            "media_player.media_seek",
+            hass,
+            response_type="StateReport",
+            payload={"deltaPositionMilliseconds": 30000},
+        )
+
+        assert "event" in msg
+        msg = msg["event"]
+        assert msg["header"]["name"] == "ErrorResponse"
+        assert msg["header"]["namespace"] == "Alexa.Video"
+        assert msg["payload"]["type"] == "ACTION_NOT_PERMITTED_FOR_CONTENT"
 
 
 async def test_alert(hass):
@@ -1241,7 +1385,7 @@ async def test_thermostat(hass):
             "current_temperature": 75.0,
             "friendly_name": "Test Thermostat",
             "supported_features": 1 | 2 | 4 | 128,
-            "hvac_modes": ["heat", "cool", "auto", "off"],
+            "hvac_modes": ["off", "heat", "cool", "auto", "dry"],
             "preset_mode": None,
             "preset_modes": ["eco"],
             "min_temp": 50,
@@ -1254,7 +1398,7 @@ async def test_thermostat(hass):
     assert appliance["displayCategories"][0] == "THERMOSTAT"
     assert appliance["friendlyName"] == "Test Thermostat"
 
-    assert_endpoint_capabilities(
+    capabilities = assert_endpoint_capabilities(
         appliance,
         "Alexa.PowerController",
         "Alexa.ThermostatController",
@@ -1272,6 +1416,15 @@ async def test_thermostat(hass):
     properties.assert_equal(
         "Alexa.TemperatureSensor", "temperature", {"value": 75.0, "scale": "FAHRENHEIT"}
     )
+
+    thermostat_capability = get_capability(capabilities, "Alexa.ThermostatController")
+    assert thermostat_capability is not None
+    configuration = thermostat_capability["configuration"]
+    assert configuration["supportsScheduling"] is False
+
+    supported_modes = ["OFF", "HEAT", "COOL", "AUTO", "ECO", "CUSTOM"]
+    for mode in supported_modes:
+        assert mode in configuration["supportedModes"]
 
     call, msg = await assert_request_calls_service(
         "Alexa.ThermostatController",
@@ -1421,6 +1574,30 @@ async def test_thermostat(hass):
     properties = ReportedProperties(msg["context"]["properties"])
     properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "HEAT")
 
+    # Assert we can call custom modes
+    call, msg = await assert_request_calls_service(
+        "Alexa.ThermostatController",
+        "SetThermostatMode",
+        "climate#test_thermostat",
+        "climate.set_hvac_mode",
+        hass,
+        payload={"thermostatMode": {"value": "CUSTOM", "customName": "DEHUMIDIFY"}},
+    )
+    assert call.data["hvac_mode"] == "dry"
+    properties = ReportedProperties(msg["context"]["properties"])
+    properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "CUSTOM")
+
+    # assert unsupported custom mode
+    msg = await assert_request_fails(
+        "Alexa.ThermostatController",
+        "SetThermostatMode",
+        "climate#test_thermostat",
+        "climate.set_hvac_mode",
+        hass,
+        payload={"thermostatMode": {"value": "CUSTOM", "customName": "INVALID"}},
+    )
+    assert msg["event"]["payload"]["type"] == "UNSUPPORTED_THERMOSTAT_MODE"
+
     msg = await assert_request_fails(
         "Alexa.ThermostatController",
         "SetThermostatMode",
@@ -1430,7 +1607,6 @@ async def test_thermostat(hass):
         payload={"thermostatMode": {"value": "INVALID"}},
     )
     assert msg["event"]["payload"]["type"] == "UNSUPPORTED_THERMOSTAT_MODE"
-    hass.config.units.temperature_unit = TEMP_CELSIUS
 
     call, _ = await assert_request_calls_service(
         "Alexa.ThermostatController",
@@ -1452,6 +1628,9 @@ async def test_thermostat(hass):
         payload={"thermostatMode": "ECO"},
     )
     assert call.data["preset_mode"] == "eco"
+
+    # Reset config temperature_unit back to CELSIUS, required for additional tests outside this component.
+    hass.config.units.temperature_unit = TEMP_CELSIUS
 
 
 async def test_exclude_filters(hass):

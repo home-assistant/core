@@ -266,11 +266,14 @@ async def test_http_api_wrong_data(hass, hass_client):
 async def test_custom_agent(hass, hass_client):
     """Test a custom conversation agent."""
 
+    calls = []
+
     class MyAgent(conversation.AbstractConversationAgent):
         """Test Agent."""
 
-        async def async_process(self, text):
+        async def async_process(self, text, conversation_id):
             """Process some text."""
+            calls.append((text, conversation_id))
             response = intent.IntentResponse()
             response.async_set_speech("Test response")
             return response
@@ -281,9 +284,16 @@ async def test_custom_agent(hass, hass_client):
 
     client = await hass_client()
 
-    resp = await client.post("/api/conversation/process", json={"text": "Test Text"})
+    resp = await client.post(
+        "/api/conversation/process",
+        json={"text": "Test Text", "conversation_id": "test-conv-id"},
+    )
     assert resp.status == 200
     assert await resp.json() == {
         "card": {},
         "speech": {"plain": {"extra_data": None, "speech": "Test response"}},
     }
+
+    assert len(calls) == 1
+    assert calls[0][0] == "Test Text"
+    assert calls[0][1] == "test-conv-id"

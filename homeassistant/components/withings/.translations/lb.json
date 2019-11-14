@@ -7,6 +7,13 @@
             "default": "Erfollegr\u00e4ich mam ausgewielte Profile mat Withings authentifiz\u00e9iert."
         },
         "step": {
+            "profile": {
+                "data": {
+                    "profile": "Profil"
+                },
+                "description": "W\u00e9ie Profil hutt dir op der Withings Webs\u00e4it ausgewielt? Et ass wichteg dass Profiller passen, soss ginn Donn\u00e9e\u00eb falsch gekennzeechent.",
+                "title": "Benotzer Profil."
+            },
             "user": {
                 "data": {
                     "profile": "Profil"

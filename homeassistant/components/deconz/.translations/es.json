@@ -55,10 +55,17 @@
             "left": "Izquierda",
             "open": "Abierto",
             "right": "Derecha",
+            "side_1": "Lado 1",
+            "side_2": "Lado 2",
+            "side_3": "Lado 3",
+            "side_4": "Lado 4",
+            "side_5": "Lado 5",
+            "side_6": "Lado 6",
             "turn_off": "Apagar",
             "turn_on": "Encender"
         },
         "trigger_type": {
+            "remote_awakened": "Dispositivo despertado",
             "remote_button_double_press": "Bot\u00f3n \"{subtype}\" pulsado dos veces consecutivas",
             "remote_button_long_press": "Bot\u00f3n \"{subtype}\" pulsado continuamente",
             "remote_button_long_release": "Bot\u00f3n \"{subtype}\" liberado despu\u00e9s de un rato pulsado",
@@ -69,7 +76,16 @@
             "remote_button_short_press": "Bot\u00f3n \"{subtype}\" pulsado",
             "remote_button_short_release": "Bot\u00f3n \"{subtype}\" liberado",
             "remote_button_triple_press": "Bot\u00f3n \"{subtype}\" pulsado cuatro veces consecutivas",
-            "remote_gyro_activated": "Dispositivo sacudido"
+            "remote_double_tap": "Dispositivo \" {subtype} \" doble pulsaci\u00f3n",
+            "remote_falling": "Dispositivo en ca\u00edda libre",
+            "remote_gyro_activated": "Dispositivo sacudido",
+            "remote_moved": "Dispositivo movido con \"{subtipo}\" hacia arriba",
+            "remote_rotate_from_side_1": "Dispositivo girado del \"lado 1\" al \" {subtype} \"",
+            "remote_rotate_from_side_2": "Dispositivo girado del \"lado 2\" al \" {subtype} \"",
+            "remote_rotate_from_side_3": "Dispositivo girado del \"lado 3\" al \" {subtype} \"",
+            "remote_rotate_from_side_4": "Dispositivo girado del \"lado 4\" al \" {subtype} \"",
+            "remote_rotate_from_side_5": "Dispositivo girado del \"lado 5\" al \" {subtype} \"",
+            "remote_rotate_from_side_6": "Dispositivo girado de \"lado 6\" a \" {subtype} \""
         }
     },
     "options": {

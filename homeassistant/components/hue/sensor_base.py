@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from time import monotonic
 
-from aiohue import AiohueException
+from aiohue import AiohueException, Unauthorized
 from aiohue.sensors import TYPE_ZLL_PRESENCE
 import async_timeout
 
@@ -15,7 +15,7 @@ from homeassistant.util.dt import utcnow
 
 from .helpers import remove_devices
 
-CURRENT_SENSORS = "current_sensors"
+CURRENT_SENSORS_FORMAT = "{}_current_sensors"
 SENSOR_MANAGER_FORMAT = "{}_sensor_manager"
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,8 +31,9 @@ def _device_id(aiohue_sensor):
 
 async def async_setup_entry(hass, config_entry, async_add_entities, binary=False):
     """Set up the Hue sensors from a config entry."""
+    sensor_key = CURRENT_SENSORS_FORMAT.format(config_entry.data["host"])
     bridge = hass.data[hue.DOMAIN][config_entry.data["host"]]
-    hass.data[hue.DOMAIN].setdefault(CURRENT_SENSORS, {})
+    hass.data[hue.DOMAIN].setdefault(sensor_key, {})
 
     sm_key = SENSOR_MANAGER_FORMAT.format(config_entry.data["host"])
     manager = hass.data[hue.DOMAIN].get(sm_key)
@@ -80,6 +81,11 @@ class SensorManager:
 
         async def async_update_bridge(now):
             """Will update sensors from the bridge."""
+
+            # don't update when we are not authorized
+            if not self.bridge.authorized:
+                return
+
             await self.async_update_items()
 
             async_track_point_in_utc_time(
@@ -96,6 +102,9 @@ class SensorManager:
             start = monotonic()
             with async_timeout.timeout(4):
                 await api.update()
+        except Unauthorized:
+            await self.bridge.handle_unauthorized_error()
+            return
         except (asyncio.TimeoutError, AiohueException) as err:
             _LOGGER.debug("Failed to fetch sensor: %s", err)
 
@@ -119,7 +128,8 @@ class SensorManager:
         new_sensors = []
         new_binary_sensors = []
         primary_sensor_devices = {}
-        current = self.hass.data[hue.DOMAIN][CURRENT_SENSORS]
+        sensor_key = CURRENT_SENSORS_FORMAT.format(self.config_entry.data["host"])
+        current = self.hass.data[hue.DOMAIN][sensor_key]
 
         # Physical Hue motion sensors present as three sensors in the API: a
         # presence sensor, a temperature sensor, and a light level sensor. Of
@@ -220,8 +230,10 @@ class GenericHueSensor:
     @property
     def available(self):
         """Return if sensor is available."""
-        return self.bridge.available and (
-            self.bridge.allow_unreachable or self.sensor.config["reachable"]
+        return (
+            self.bridge.available
+            and self.bridge.authorized
+            and (self.bridge.allow_unreachable or self.sensor.config["reachable"])
         )
 
     @property
