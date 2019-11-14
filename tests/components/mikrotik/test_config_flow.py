@@ -152,6 +152,20 @@ async def test_host_already_configured(hass, auth_error):
     assert result["reason"] == "already_configured"
 
 
+async def test_name_exists(hass, api):
+    """Test name already configured."""
+
+    entry = MOCK_ENTRY
+    entry.add_to_hass(hass)
+    flow = init_config_flow(hass)
+    user_input = DEMO_USER_INPUT.copy()
+    user_input[CONF_HOST] = "0.0.0.1"
+    result = await flow.async_step_user(user_input)
+
+    assert result["type"] == "form"
+    assert result["errors"] == {CONF_NAME: "name_exists"}
+
+
 async def test_connection_error(hass, conn_error):
     """Test error when connection is unsuccesful."""
 

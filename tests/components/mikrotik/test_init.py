@@ -25,23 +25,8 @@ async def test_setup_with_no_config(hass):
     assert mikrotik.DOMAIN not in hass.data
 
 
-async def test_setup_with_config(hass):
-    """Test that we do not discover anything or try to set up a hub."""
-    config = {
-        mikrotik.DOMAIN: {
-            mikrotik.CONF_HOST: "0.0.0.0",
-            mikrotik.CONF_USERNAME: "user",
-            mikrotik.CONF_PASSWORD: "pass",
-            mikrotik.CONF_ARP_PING: True,
-            mikrotik.CONF_TRACK_DEVICES: True,
-            mikrotik.CONF_DETECTION_TIME: 30,
-        }
-    }
-    assert await async_setup_component(hass, mikrotik.DOMAIN, config) is True
-
-
 async def test_successful_config_entry(hass):
-    """Test that configured options for a host are loaded via config entry."""
+    """Test config entry successfull setup."""
     entry = MOCK_ENTRY
     entry.add_to_hass(hass)
     mock_registry = Mock()
@@ -83,7 +68,7 @@ async def test_hub_fail_setup(hass):
         mock_hub.return_value.async_setup.return_value = mock_coro(False)
         assert await mikrotik.async_setup_entry(hass, entry) is False
 
-    assert entry.data[mikrotik.CONF_HOST] in hass.data[mikrotik.DOMAIN]
+    assert entry.entry_id in hass.data[mikrotik.DOMAIN]
 
 
 async def test_unload_entry(hass):
@@ -104,6 +89,5 @@ async def test_unload_entry(hass):
 
     assert len(mock_hub.return_value.mock_calls) == 1
 
-    mock_hub.return_value.async_reset.return_value = mock_coro(True)
     assert await mikrotik.async_unload_entry(hass, entry)
-    assert hass.data[mikrotik.DOMAIN] == {}
+    assert entry.entry_id not in hass.data[mikrotik.DOMAIN]

@@ -100,3 +100,30 @@ DEVICE_2_WIRELESS = {
 DHCP_DATA = [DEVICE_1_DHCP, DEVICE_2_DHCP]
 
 WIRELESS_DATA = [DEVICE_1_WIRELESS]
+
+ARP_DATA = [
+    {
+        ".id": "*1",
+        "address": "0.0.0.1",
+        "mac-address": "00:00:00:00:00:01",
+        "interface": "bridge",
+        "published": False,
+        "invalid": False,
+        "DHCP": True,
+        "dynamic": True,
+        "complete": True,
+        "disabled": False,
+    },
+    {
+        ".id": "*2",
+        "address": "0.0.0.2",
+        "mac-address": "00:00:00:00:00:02",
+        "interface": "bridge",
+        "published": False,
+        "invalid": False,
+        "DHCP": True,
+        "dynamic": True,
+        "complete": True,
+        "disabled": False,
+    },
+]

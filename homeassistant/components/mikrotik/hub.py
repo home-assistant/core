@@ -237,7 +237,7 @@ class MikrotikData:
             librouteros.exceptions.TrapError,
             librouteros.exceptions.MultiTrapError,
         ) as api_error:
-            _LOGGER.error(
+            _LOGGER.warning(
                 "Mikrotik %s failed to retrieve data. cmd=[%s] Error: %s",
                 self._host,
                 cmd,
@@ -303,7 +303,7 @@ class MikrotikHub:
 
     @property
     def signal_update(self):
-        """Event specific per Mikrotik entry to signal new options."""
+        """Event specific per Mikrotik entry to signal updates."""
         return f"mikrotik-update-{self.host}"
 
     @property
