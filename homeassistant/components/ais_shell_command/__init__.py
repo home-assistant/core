@@ -69,10 +69,6 @@ def async_setup(hass, config):
         yield from _flush_logs(hass, service)
 
     @asyncio.coroutine
-    def change_remote_access(service):
-        yield from _change_remote_access(hass, service)
-
-    @asyncio.coroutine
     def ssh_remote_access(service):
         yield from _ssh_remote_access(hass, service)
 
@@ -95,6 +91,9 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def disable_irda_remote(service):
         yield from _disable_irda_remote(hass, service)
+
+    def change_remote_access(service):
+        _change_remote_access(hass, service)
 
     # register services
     hass.services.async_register(DOMAIN, "change_host_name", change_host_name)
@@ -141,7 +140,6 @@ def _change_host_name(hass, call):
     process.wait()
 
 
-@asyncio.coroutine
 def _change_remote_access(hass, call):
     import os
 
@@ -154,7 +152,7 @@ def _change_remote_access(hass, call):
         text = "Zatrzymuje " + text
 
     if ais_global.G_AIS_START_IS_DONE:
-        yield from hass.services.async_call("ais_ai_service", "say_it", {"text": text})
+        hass.services.call("ais_ai_service", "say_it", {"text": text})
 
     if access == "on":
         os.system("pm2 delete tunnel")
