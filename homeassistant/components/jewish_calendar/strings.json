@@ -7,11 +7,12 @@
         "data": {
           "name": "Name to be used for sensors",
           "diaspora": "Outside of Israel",
-          "language": "Language for holidays and dates",
+          "language": "Language for holidays and dates"
         }
+      }
     },
     "error": {
-      "name_exists": "Name already exists",
+      "name_exists": "Name already exists"
     },
     "abort": {
       "already_configured": "Device is already configured"
