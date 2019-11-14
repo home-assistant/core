@@ -11,9 +11,10 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Set up the Tesla tracker."""
-    TeslaDeviceTracker(
+    tracker = TeslaDeviceTracker(
         hass, config, async_see, hass.data[TESLA_DOMAIN]["devices"]["devices_tracker"]
     )
+    async_track_utc_time_change(hass, tracker.update_info, second=range(0, 60, 30))
     return True
 
 
@@ -26,11 +27,7 @@ class TeslaDeviceTracker:
         self.see = see
         self.devices = tesla_devices
 
-        async_track_utc_time_change(
-            self.hass, self._update_info, second=range(0, 60, 30)
-        )
-
-    async def _update_info(self, now=None):
+    async def update_info(self, now=None):
         """Update the device info."""
         for device in self.devices:
             await device.async_update()
