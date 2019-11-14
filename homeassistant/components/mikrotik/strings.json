@@ -16,6 +16,7 @@
             }
         },
         "error": {
+            "name_exists": "Name exists",
             "cannot_connect": "Connection Unsuccessful",
             "wrong_credentials": "Wrong Credentials"
         },

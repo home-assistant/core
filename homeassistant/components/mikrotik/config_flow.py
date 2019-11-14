@@ -49,8 +49,10 @@ class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             for entry in self.hass.config_entries.async_entries(DOMAIN):
                 if entry.data[CONF_HOST] == user_input[CONF_HOST]:
                     return self.async_abort(reason="already_configured")
+                if entry.data[CONF_NAME] == user_input[CONF_NAME]:
+                    errors[CONF_NAME] = "name_exists"
 
-            errors = self.validate_user_input(user_input)
+            errors.update(self.validate_user_input(user_input))
             if not errors:
                 return self.async_create_entry(
                     title=self.config[CONF_NAME], data=self.config

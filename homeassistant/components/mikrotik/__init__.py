@@ -48,7 +48,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass, config):
-    """Import the Transmission Component from config."""
+    """Import the Mikrotik component from config."""
 
     if DOMAIN in config:
         for entry in config[DOMAIN]:
@@ -65,7 +65,7 @@ async def async_setup_entry(hass, config_entry):
     """Set up the Mikrotik component."""
 
     hub = MikrotikHub(hass, config_entry)
-    hass.data.setdefault(DOMAIN, {})[config_entry.data[CONF_HOST]] = hub
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = hub
 
     if not await hub.async_setup():
         return False
@@ -87,6 +87,6 @@ async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
     await hass.config_entries.async_forward_entry_unload(config_entry, "device_tracker")
 
-    hass.data[DOMAIN].pop(config_entry.data[CONF_HOST])
+    hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return True
