@@ -19,10 +19,10 @@ def dict_merge(dct, merge_dct):
     """
     try:
         for k, v in merge_dct.items():
-            _LOGGER.info(str(k) + ": " + str(v))
+            _LOGGER.debug(str(k) + ": " + str(v))
             if k in dct:
                 if isinstance(merge_dct[k], dict):
-                    _LOGGER.info(
+                    _LOGGER.debug(
                         str(k)
                         + " this is already in ais config, checking if we should merge..."
                     )
@@ -30,19 +30,19 @@ def dict_merge(dct, merge_dct):
                         if isinstance(merge_dct[k], collections.Mapping) or isinstance(
                             merge_dct[k], collections.OrderedDict
                         ):
-                            _LOGGER.info(
+                            _LOGGER.debug(
                                 "isinstance collection, we are going to recursive merge ... "
                             )
                             dct[k] = dict_merge(dct[k], merge_dct[k])
-                            _LOGGER.info("After merge, len: " + str(len(dct)))
+                            _LOGGER.debug("After merge, len: " + str(len(dct)))
                     else:
-                        _LOGGER.info("dct is empty, no need to merge ")
+                        _LOGGER.debug("dct is empty, no need to merge ")
                 else:
                     if str(k) in ["automation", "script"]:
                         # concatenate the Nodes, type -> homeassistant.util.yaml.NodeListClass
                         dct[k] = dct[k] + merge_dct[k]
                     else:
-                        _LOGGER.info(
+                        _LOGGER.debug(
                             str(k)
                             + " new value: "
                             + str(v)
@@ -53,12 +53,12 @@ def dict_merge(dct, merge_dct):
             else:
                 if k != "discovery":
                     dct[k] = merge_dct[k]
-                    _LOGGER.info(
+                    _LOGGER.debug(
                         str(k)
                         + " this was not in ais config - we are going to include it"
                     )
                 else:
-                    _LOGGER.info(str(k) + " discovery is disabled ")
+                    _LOGGER.debug(str(k) + " discovery is disabled ")
     except Exception as e:
         _LOGGER.error("Merge configurations problem: " + str(e))
     return dct
