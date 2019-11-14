@@ -92,6 +92,10 @@ class SwisscomDeviceScanner(DeviceScanner):
             _LOGGER.info("No response from Swisscom Internet Box")
             return devices
 
+        if "status" not in request.json():
+            _LOGGER.info("No status in response from Swisscom Internet Box")
+            return devices
+
         for device in request.json()["status"]:
             try:
                 devices[device["Key"]] = {
