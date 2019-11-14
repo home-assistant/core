@@ -408,7 +408,8 @@ class ClimateAehW4a1(ClimateDevice):
             await self.async_turn_off()
         else:
             await self._device.command(HA_STATE_TO_AC[hvac_mode])
-            await self.async_turn_on()
+            if self._on != "1":
+                await self.async_turn_on()
 
     async def async_turn_on(self):
         """Turn on."""
