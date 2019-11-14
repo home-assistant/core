@@ -60,12 +60,13 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_HOST): cv.string,
                 vol.Required(CONF_USERNAME): cv.string,
-                vol.Optional(CONF_API_KEY): cv.string,
-                vol.Optional(CONF_PASSWORD): cv.string,
+                vol.Exclusive(CONF_API_KEY, "auth"): cv.string,
+                vol.Exclusive(CONF_PASSWORD, "auth"): cv.string,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                 vol.Optional(CONF_URLBASE, default=DEFAULT_URLBASE): urlbase,
                 vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-            }
+            },
+            cv.has_at_least_one_key("auth"),
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -75,21 +76,14 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Set up the Ombi component platform."""
 
-    password = config[DOMAIN].get(CONF_PASSWORD)
-    api_key = config[DOMAIN].get(CONF_API_KEY)
-
-    if password is None and api_key is None:
-        _LOGGER.warning("Unable to setup Ombi. Neither api_key nor password supplied.")
-        return False
-
     ombi = pyombi.Ombi(
         ssl=config[DOMAIN][CONF_SSL],
         host=config[DOMAIN][CONF_HOST],
         port=config[DOMAIN][CONF_PORT],
         urlbase=config[DOMAIN][CONF_URLBASE],
         username=config[DOMAIN][CONF_USERNAME],
-        password=password,
-        api_key=api_key,
+        password=config[DOMAIN].get(CONF_PASSWORD),
+        api_key=config[DOMAIN].get(CONF_API_KEY),
     )
 
     try:
