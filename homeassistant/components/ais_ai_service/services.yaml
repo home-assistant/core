@@ -6,6 +6,9 @@ say_it:
     text:
       description: Tekst do przeczytania.
       example: 'Cześć, jak się masz?'
+    img:
+      description: URL zdjęcia do wyświetlenia.
+      example: 'http://ai-speaker.com/images/logo_ais.png'
 
 process:
   description: Zamiana tekstu na komendę do wykonania.
