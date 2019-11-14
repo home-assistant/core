@@ -95,7 +95,7 @@ class OpenThermSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return f"{self._gateway.gw_id}-sensor-{self._var}"
+        return f"{self._gateway.gw_id}-{self._var}"
 
     @property
     def device_class(self):

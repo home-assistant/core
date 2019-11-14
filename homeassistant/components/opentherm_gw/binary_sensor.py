@@ -91,7 +91,7 @@ class OpenThermBinarySensor(BinarySensorDevice):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return f"{self._gateway.gw_id}-binary-sensor-{self._var}"
+        return f"{self._gateway.gw_id}-{self._var}"
 
     @property
     def is_on(self):
