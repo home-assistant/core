@@ -21,10 +21,10 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 class TeslaLock(TeslaDevice, LockDevice):
     """Representation of a Tesla door lock."""
 
-    def __init__(self, tesla_device, controller, config_entry=None):
+    def __init__(self, tesla_device, controller):
         """Initialise of the lock."""
         self._state = None
-        super().__init__(tesla_device, controller, config_entry)
+        super().__init__(tesla_device, controller)
 
     async def async_lock(self, **kwargs):
         """Send the lock command."""

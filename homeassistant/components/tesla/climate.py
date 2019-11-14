@@ -28,9 +28,9 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 class TeslaThermostat(TeslaDevice, ClimateDevice):
     """Representation of a Tesla climate."""
 
-    def __init__(self, tesla_device, controller, config_entry=None):
+    def __init__(self, tesla_device, controller):
         """Initialize the Tesla device."""
-        super().__init__(tesla_device, controller, config_entry)
+        super().__init__(tesla_device, controller)
         self._target_temperature = None
         self._temperature = None
 

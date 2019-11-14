@@ -23,7 +23,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
         if device.bin_type == 0x4:
             devices.append(TeslaSensor(device, controller, "inside"))
             devices.append(TeslaSensor(device, controller, "outside"))
-        else:
+        elif device.bin_type == 0x5:
             devices.append(TeslaSensor(device, controller))
     add_entities(devices, True)
 
@@ -31,13 +31,13 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 class TeslaSensor(TeslaDevice, Entity):
     """Representation of Tesla sensors."""
 
-    def __init__(self, tesla_device, controller, sensor_type=None, config_entry=None):
+    def __init__(self, tesla_device, controller, sensor_type=None):
         """Initialize of the sensor."""
         self.current_value = None
         self._unit = None
         self.last_changed_time = None
         self.type = sensor_type
-        super().__init__(tesla_device, controller, config_entry)
+        super().__init__(tesla_device, controller)
 
         if self.type:
             self._name = f"{self.tesla_device.name} ({self.type})"

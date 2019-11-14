@@ -20,9 +20,9 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 class TeslaBinarySensor(TeslaDevice, BinarySensorDevice):
     """Implement an Tesla binary sensor for parking and charger."""
 
-    def __init__(self, tesla_device, controller, sensor_type, config_entry=None):
+    def __init__(self, tesla_device, controller, sensor_type):
         """Initialise of a Tesla binary sensor."""
-        super().__init__(tesla_device, controller, config_entry)
+        super().__init__(tesla_device, controller)
         self._state = False
         self._sensor_type = sensor_type
 

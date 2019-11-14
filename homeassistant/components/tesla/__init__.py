@@ -15,7 +15,7 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv, disco
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-from .const import DOMAIN, SENSOR_ICONS, TESLA_COMPONENTS
+from .const import DOMAIN, TESLA_COMPONENTS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,26 +84,21 @@ async def async_setup(hass, base_config):
         hass.data[DOMAIN]["devices"][device.hass_type].append(device)
 
     for component in TESLA_COMPONENTS:
-        discovery.load_platform(hass, component, DOMAIN, {}, base_config)
-
+        hass.async_create_task(
+            discovery.async_load_platform(hass, component, DOMAIN, {}, base_config)
+        )
     return True
 
 
 class TeslaDevice(Entity):
     """Representation of a Tesla device."""
 
-    def __init__(self, tesla_device, controller, config_entry=None):
+    def __init__(self, tesla_device, controller):
         """Initialise the Tesla device."""
         self.tesla_device = tesla_device
         self.controller = controller
-        self.config_entry = config_entry
         self._name = self.tesla_device.name
         self.tesla_id = slugify(self.tesla_device.uniq_name)
-        self._icon = (
-            SENSOR_ICONS[self.tesla_device.type]
-            if self.tesla_device.type and self.tesla_device.type in SENSOR_ICONS.keys()
-            else None
-        )
         self._attributes = {}
 
     @property
@@ -115,11 +110,6 @@ class TeslaDevice(Entity):
     def unique_id(self) -> str:
         """Return a unique ID."""
         return self.tesla_id
-
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return self._icon
 
     @property
     def should_poll(self):
@@ -134,24 +124,13 @@ class TeslaDevice(Entity):
             attr[ATTR_BATTERY_LEVEL] = self.tesla_device.battery_level()
         return attr
 
-    @property
-    def device_info(self):
-        """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, self.tesla_device.id())},
-            "name": self.tesla_device.car_name(),
-            "manufacturer": "Tesla",
-            "model": self.tesla_device.car_type,
-            "sw_version": self.tesla_device.car_version,
-        }
-
     async def async_added_to_hass(self):
         """Register state update callback."""
-        await super().async_added_to_hass()
+        pass
 
     async def async_will_remove_from_hass(self):
         """Prepare for unload."""
-        await super().async_will_remove_from_hass()
+        pass
 
     async def async_update(self):
         """Update the state of the device."""

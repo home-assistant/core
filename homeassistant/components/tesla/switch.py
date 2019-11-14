@@ -25,10 +25,10 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 class ChargerSwitch(TeslaDevice, SwitchDevice):
     """Representation of a Tesla charger switch."""
 
-    def __init__(self, tesla_device, controller, config_entry=None):
+    def __init__(self, tesla_device, controller):
         """Initialise of the switch."""
         self._state = None
-        super().__init__(tesla_device, controller, config_entry)
+        super().__init__(tesla_device, controller)
 
     async def async_turn_on(self, **kwargs):
         """Send the on command."""
@@ -55,10 +55,10 @@ class ChargerSwitch(TeslaDevice, SwitchDevice):
 class RangeSwitch(TeslaDevice, SwitchDevice):
     """Representation of a Tesla max range charging switch."""
 
-    def __init__(self, tesla_device, controller, config_entry=None):
+    def __init__(self, tesla_device, controller):
         """Initialise the switch."""
         self._state = None
-        super().__init__(tesla_device, controller, config_entry)
+        super().__init__(tesla_device, controller)
 
     async def async_turn_on(self, **kwargs):
         """Send the on command."""
@@ -85,11 +85,11 @@ class RangeSwitch(TeslaDevice, SwitchDevice):
 class UpdateSwitch(TeslaDevice, SwitchDevice):
     """Representation of a Tesla update switch."""
 
-    def __init__(self, tesla_device, controller, config_entry=None):
+    def __init__(self, tesla_device, controller):
         """Initialise the switch."""
         self._state = None
         tesla_device.type = "update switch"
-        super().__init__(tesla_device, controller, config_entry)
+        super().__init__(tesla_device, controller)
         self._name = self._name.replace("charger", "update")
         self.tesla_id = self.tesla_id.replace("charger", "update")
 
