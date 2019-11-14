@@ -3,9 +3,15 @@ from datetime import timedelta
 import logging
 from typing import Optional
 
+from aio_geojson_nsw_rfs_incidents import NswRuralFireServiceIncidentsFeedManager
 import voluptuous as vol
 
 from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
+from homeassistant.components.nsw_rural_fire_service_feed.const import (
+    SIGNAL_DELETE_ENTITY,
+    SIGNAL_NEW_GEOLOCATION,
+    SIGNAL_UPDATE_ENTITY,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LOCATION,
@@ -16,9 +22,13 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers import ConfigType, aiohttp_client, config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,9 +49,6 @@ DEFAULT_UNIT_OF_MEASUREMENT = "km"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-SIGNAL_DELETE_ENTITY = "nsw_rural_fire_service_feed_delete_{}"
-SIGNAL_UPDATE_ENTITY = "nsw_rural_fire_service_feed_update_{}"
-
 SOURCE = "nsw_rural_fire_service_feed"
 
 VALID_CATEGORIES = ["Advice", "Emergency Warning", "Not Applicable", "Watch and Act"]
@@ -58,8 +65,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the NSW Rural Fire Service Feed platform."""
+async def async_setup_platform(
+    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+):
+    """Set up the GeoNet NZ Quakes Feed platform."""
     scan_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     coordinates = (
         config.get(CONF_LATITUDE, hass.config.latitude),
@@ -68,30 +77,41 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     radius_in_km = config[CONF_RADIUS]
     categories = config.get(CONF_CATEGORIES)
     # Initialize the entity manager.
-    feed = NswRuralFireServiceFeedEntityManager(
-        hass, add_entities, scan_interval, coordinates, radius_in_km, categories
+    manager = NswRuralFireServiceFeedEntityManager(
+        hass, scan_interval, coordinates, radius_in_km, categories
     )
 
-    def start_feed_manager(event):
+    async def start_feed_manager(event):
         """Start feed manager."""
-        feed.startup()
+        await manager.async_init()
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_feed_manager)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_feed_manager)
+
+    @callback
+    def async_add_geolocation(feed_manager, external_id):
+        """Add gelocation entity from feed."""
+        new_entity = NswRuralFireServiceLocationEvent(feed_manager, external_id)
+        _LOGGER.debug("Adding geolocation %s", new_entity)
+        async_add_entities([new_entity], True)
+
+    manager.listeners.append(
+        async_dispatcher_connect(
+            hass, manager.async_event_new_entity(), async_add_geolocation
+        )
+    )
+    hass.async_create_task(manager.async_update())
 
 
 class NswRuralFireServiceFeedEntityManager:
     """Feed Entity Manager for NSW Rural Fire Service GeoJSON feed."""
 
-    def __init__(
-        self, hass, add_entities, scan_interval, coordinates, radius_in_km, categories
-    ):
+    def __init__(self, hass, scan_interval, coordinates, radius_in_km, categories):
         """Initialize the Feed Entity Manager."""
-        from geojson_client.nsw_rural_fire_service_feed import (
-            NswRuralFireServiceFeedManager,
-        )
-
         self._hass = hass
-        self._feed_manager = NswRuralFireServiceFeedManager(
+        self._config_entry_id = "abc"
+        websession = aiohttp_client.async_get_clientsession(hass)
+        self._feed_manager = NswRuralFireServiceIncidentsFeedManager(
+            websession,
             self._generate_entity,
             self._update_entity,
             self._remove_entity,
@@ -99,37 +119,60 @@ class NswRuralFireServiceFeedEntityManager:
             filter_radius=radius_in_km,
             filter_categories=categories,
         )
-        self._add_entities = add_entities
         self._scan_interval = scan_interval
+        self._track_time_remove_callback = None
+        self.listeners = []
 
-    def startup(self):
-        """Start up this manager."""
-        self._feed_manager.update()
-        self._init_regular_updates()
+    async def async_init(self):
+        """Schedule initial and regular updates based on configured time interval."""
 
-    def _init_regular_updates(self):
-        """Schedule regular updates at the specified interval."""
-        track_time_interval(
-            self._hass, lambda now: self._feed_manager.update(), self._scan_interval
+        async def update(event_time):
+            """Update."""
+            await self.async_update()
+
+        # Trigger updates at regular intervals.
+        self._track_time_remove_callback = async_track_time_interval(
+            self._hass, update, self._scan_interval
         )
+
+        _LOGGER.debug("Feed entity manager initialized")
+
+    async def async_update(self):
+        """Refresh data."""
+        await self._feed_manager.update()
+        _LOGGER.debug("Feed entity manager updated")
+
+    async def async_stop(self):
+        """Stop this feed entity manager from refreshing."""
+        for unsub_dispatcher in self.listeners:
+            unsub_dispatcher()
+        self.listeners = []
+        if self._track_time_remove_callback:
+            self._track_time_remove_callback()
+        _LOGGER.debug("Feed entity manager stopped")
+
+    @callback
+    def async_event_new_entity(self):
+        """Return manager specific event to signal new entity."""
+        return SIGNAL_NEW_GEOLOCATION.format(self._config_entry_id)
 
     def get_entry(self, external_id):
         """Get feed entry by external id."""
         return self._feed_manager.feed_entries.get(external_id)
 
-    def _generate_entity(self, external_id):
+    async def _generate_entity(self, external_id):
         """Generate new entity."""
-        new_entity = NswRuralFireServiceLocationEvent(self, external_id)
-        # Add new entities to HA.
-        self._add_entities([new_entity], True)
+        async_dispatcher_send(
+            self._hass, self.async_event_new_entity(), self, external_id
+        )
 
-    def _update_entity(self, external_id):
+    async def _update_entity(self, external_id):
         """Update entity."""
-        dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY.format(external_id))
+        async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY.format(external_id))
 
-    def _remove_entity(self, external_id):
+    async def _remove_entity(self, external_id):
         """Remove entity."""
-        dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
+        async_dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
 
 
 class NswRuralFireServiceLocationEvent(GeolocationEvent):
@@ -169,11 +212,14 @@ class NswRuralFireServiceLocationEvent(GeolocationEvent):
             self._update_callback,
         )
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Call when entity will be removed from hass."""
+        self._remove_signal_delete()
+        self._remove_signal_update()
+
     @callback
     def _delete_callback(self):
         """Remove this entity."""
-        self._remove_signal_delete()
-        self._remove_signal_update()
         self.hass.async_create_task(self.async_remove())
 
     @callback

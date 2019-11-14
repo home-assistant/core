@@ -40,6 +40,9 @@ aio_geojson_geonetnz_quakes==0.11
 # homeassistant.components.geonetnz_volcano
 aio_geojson_geonetnz_volcano==0.5
 
+# homeassistant.components.nsw_rural_fire_service_feed
+aio_geojson_nsw_rfs_incidents==0.1
+
 # homeassistant.components.ambient_station
 aioambient==0.3.2
 
@@ -171,7 +174,6 @@ foobot_async==0.3.1
 gTTS-token==1.1.3
 
 # homeassistant.components.geo_json_events
-# homeassistant.components.nsw_rural_fire_service_feed
 # homeassistant.components.usgs_earthquakes_feed
 geojson_client==0.4
 
