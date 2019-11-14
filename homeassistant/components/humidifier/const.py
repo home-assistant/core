@@ -7,7 +7,7 @@ HUMIDIFIER_MODE_OFF = "off"
 HUMIDIFIER_MODE_HUMIDIFY_DRY = "humidify_dry"
 
 # The humidity is set based on a schedule, learned behavior, AI or some
-# other related mechanism. User is not able to adjust the temperature
+# other related mechanism. User is not able to adjust the humidity
 HUMIDIFIER_MODE_AUTO = "auto"
 
 # Device is in Dry mode
@@ -16,7 +16,7 @@ HUMIDIFIER_MODE_DRY = "dry"
 # Device is in Humidification/Misting mode
 HUMIDIFIER_MODE_HUMIDIFY = "humidify"
 
-# Only the fan is on, not fan and another mode like cool
+# Only the fan is on, not fan and another mode like humidify
 HUMIDIFIER_MODE_FAN_ONLY = "fan_only"
 
 HUMIDIFIER_MODES = [

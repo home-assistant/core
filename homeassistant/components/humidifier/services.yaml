@@ -5,7 +5,7 @@ set_preset_mode:
   fields:
     entity_id:
       description: Name(s) of entities to change.
-      example: 'humidifier.kitchen'
+      example: 'humidifier.bedroom'
     preset_mode:
       description: New value of preset mode
       example: 'away'
@@ -14,16 +14,16 @@ set_humidity:
   fields:
     entity_id:
       description: Name(s) of entities to change.
-      example: 'humidifier.kitchen'
+      example: 'humidifier.bedroom'
     humidity:
       description: New target humidity for humidifier device.
-      example: 60
+      example: 50
 set_fan_mode:
   description: Set fan operation for humidifier device.
   fields:
     entity_id:
       description: Name(s) of entities to change.
-      example: 'humidifier.kitchen'
+      example: 'humidifier.bedroom'
     fan_mode:
       description: New value of fan mode.
       example: On Low
@@ -32,7 +32,7 @@ set_humidifier_mode:
   fields:
     entity_id:
       description: Name(s) of entities to change.
-      example: 'humidifier.kitchen'
+      example: 'humidifier.bedroom'
     humidifier_mode:
       description: New value of operation mode.
       example: humidify
@@ -42,11 +42,11 @@ turn_on:
   fields:
     entity_id:
       description: Name(s) of entities to change.
-      example: 'humidifier.kitchen'
+      example: 'humidifier.bedroom'
 
 turn_off:
   description: Turn humidifier device off.
   fields:
     entity_id:
       description: Name(s) of entities to change.
-      example: 'humidifier.kitchen'
+      example: 'humidifier.bedroom'

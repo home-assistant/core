@@ -41,10 +41,9 @@ from .const import (
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_HUMIDITY,
+    DEFAULT_MIN_HUMIDITY,
+    DEFAULT_MAX_HUMIDITY,
 )
-
-DEFAULT_MIN_HUMIDITY = 30
-DEFAULT_MAX_HUMIDITY = 99
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -121,8 +120,6 @@ class HumidifierDevice(Entity):
         data = {
             ATTR_HUMIDIFIER_MODES: self.humidifier_modes,
             ATTR_CURRENT_HUMIDITY: self.current_humidity,
-            ATTR_MIN_HUMIDITY: self.min_humidity,
-            ATTR_MAX_HUMIDITY: self.max_humidity,
         }
 
         if supported_features & SUPPORT_TARGET_HUMIDITY:
