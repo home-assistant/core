@@ -81,7 +81,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         port,
         password,
         client_info=f"Home Assistant {const.__version__}",
-        client_version=1,
     )
 
     # Store client in per-config-entry hass.data
