@@ -108,7 +108,7 @@ def has_all_unique_names(value):
 
 
 SENSOR_TYPES = {
-    # Type, Unit, Icon
+    # Type, Unit, Icon, post
     "bed_temperature": ["temperature", TEMP_CELSIUS, "mdi:thermometer", "_bed_"],
     "extruder_temperature": [
         "temperature",
@@ -215,6 +215,7 @@ class PrinterAPI:
             prop_data = getattr(printer, prop)
             if attr == "temp_data":
                 temp_methods = methods["temp_data"]
+                temp_id = temp_id - 1
                 for temp_prop, temp_attr in temp_methods.items():
                     data[temp_attr] = getattr(prop_data[temp_id], temp_prop)
             else:
@@ -248,6 +249,7 @@ class PrinterAPI:
                     if prop_data is None:
                         continue
                     for idx, _ in enumerate(prop_data):
+                        _LOGGER.debug("%s idx %s", sensor_type, idx)
                         info["temp_id"] = idx
                         sensor_info.append(info)
                 else:
