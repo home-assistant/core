@@ -23,7 +23,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
         if device.bin_type == 0x4:
             devices.append(TeslaSensor(device, controller, "inside"))
             devices.append(TeslaSensor(device, controller, "outside"))
-        elif device.bin_type == 0x5:
+        elif device.bin_type in [0xA, 0xB, 0x5]:
             devices.append(TeslaSensor(device, controller))
     add_entities(devices, True)
 
