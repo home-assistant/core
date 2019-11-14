@@ -1,13 +1,12 @@
 {
     "config": {
         "error": {
-            "name_exists": "A localiza\u00e7\u00e3o j\u00e1 existe"
+            "invalid_credentials": "Nome de utilizador ou palavra passe incorretos"
         },
         "step": {
             "user": {
                 "data": {
-                    "latitude": "Latitude",
-                    "longitude": "Longitude"
+                    "password": "Palavra-passe"
                 }
             }
         }
