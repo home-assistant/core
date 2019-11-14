@@ -474,7 +474,7 @@ env_canada==0.0.30
 envoy_reader==0.8.6
 
 # homeassistant.components.season
-ephem==3.7.6.0
+ephem==3.7.7.0
 
 # homeassistant.components.epson
 epson-projector==0.1.3
