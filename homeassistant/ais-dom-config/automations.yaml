@@ -349,3 +349,18 @@
       data:
         payload: 4
         topic: dom/cmnd/WifiConfig
+
+- id: '201911151800123'
+  alias: 'AIS IFTTT info'
+  initial_state: True
+  hide_entity: True
+  trigger:
+    platform: event
+    event_type: ifttt_webhook_received
+    event_data:
+      action: say_it
+  action:
+    - data_template:
+        text: '{{ trigger.event.data.text }}'
+        img: '{{ trigger.event.data.img }}'
+      service: "ais_ai_service.say_it"
