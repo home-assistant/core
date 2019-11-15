@@ -14,6 +14,7 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     tracker = TeslaDeviceTracker(
         hass, config, async_see, hass.data[TESLA_DOMAIN]["devices"]["devices_tracker"]
     )
+    await tracker.update_info()
     async_track_utc_time_change(hass, tracker.update_info, second=range(0, 60, 30))
     return True
 
