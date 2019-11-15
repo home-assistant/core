@@ -109,7 +109,9 @@ class ComfoConnectSensor(Entity):
     async def async_added_to_hass(self):
         """Register for sensor updates."""
         self._ccb.comfoconnect.register_sensor(self._sensor_id)
-        async_dispatcher_connect(self.hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, self._handle_update)
+        async_dispatcher_connect(
+            self.hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, self._handle_update
+        )
 
     def _handle_update(self, var):
         """Handle update callbacks."""
