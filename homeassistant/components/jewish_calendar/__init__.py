@@ -92,12 +92,12 @@ async def async_setup_entry(hass, config_entry):
     language = config_entry.data[CONF_LANGUAGE]
     diaspora = config_entry.data[CONF_DIASPORA]
 
-    latitude = config_entry.data.pop(CONF_LATITUDE, hass.config.latitude)
-    longitude = config_entry.data.pop(CONF_LONGITUDE, hass.config.longitude)
-    candle_lighting_offset = config_entry.data.pop(
+    latitude = config_entry.data.get(CONF_LATITUDE, hass.config.latitude)
+    longitude = config_entry.data.get(CONF_LONGITUDE, hass.config.longitude)
+    candle_lighting_offset = config_entry.data.get(
         CONF_CANDLE_LIGHT_MINUTES, DEFAULT_CANDLE_LIGHT
     )
-    havdalah_offset = config_entry.data.pop(
+    havdalah_offset = config_entry.data.get(
         CONF_HAVDALAH_OFFSET_MINUTES, DEFAULT_HAVDALAH_OFFSET_MINUTES
     )
 
