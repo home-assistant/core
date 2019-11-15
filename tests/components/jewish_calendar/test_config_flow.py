@@ -43,10 +43,6 @@ async def test_step_user(hass):
         "name": "JCalendar",
         "diaspora": True,
         "language": "hebrew",
-        "candle_lighting_minutes_before_sunset": 18,
-        "havdalah_minutes_after_sunset": 0,
-        "latitude": 32.87336,
-        "longitude": -117.22743,
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -94,8 +90,6 @@ async def test_step_import_with_options(hass):
     assert result["title"] == "test"
     assert result["data"] == {
         CONF_NAME: "test",
-        CONF_LANGUAGE: "english",
-        CONF_DIASPORA: False,
         CONF_CANDLE_LIGHT_MINUTES: 20,
         CONF_HAVDALAH_OFFSET_MINUTES: 50,
         CONF_LATITUDE: 31.76,
