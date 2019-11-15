@@ -49,7 +49,7 @@ class Fan(HomeAccessory):
     """
 
     def __init__(self, *args):
-        """Initialize a new Light accessory object."""
+        """Initialize a new Fan accessory object."""
         super().__init__(*args, category=CATEGORY_FAN)
         self._flag = {
             CHAR_ACTIVE: False,
@@ -70,7 +70,8 @@ class Fan(HomeAccessory):
             speed_list = self.hass.states.get(self.entity_id).attributes.get(
                 ATTR_SPEED_LIST
             )
-            self.speed_mapping = HomeKitSpeedMapping(speed_list)
+            if speed_list is not None:
+                self.speed_mapping = HomeKitSpeedMapping(speed_list)
             chars.append(CHAR_ROTATION_SPEED)
 
         serv_fan = self.add_preload_service(SERV_FANV2, chars)
