@@ -5,6 +5,11 @@
             "cannot_connect": "Ni mogo\u010de vzpostaviti povezave s stre\u017enikom Almond.",
             "missing_configuration": "Prosimo, preverite dokumentacijo o tem, kako nastaviti Almond."
         },
+        "step": {
+            "pick_implementation": {
+                "title": "Izberite na\u010din preverjanja pristnosti"
+            }
+        },
         "title": "Almond"
     }
 }
