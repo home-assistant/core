@@ -1,8 +1,9 @@
 """Tests for the iCloud config flow."""
 import logging
-from unittest.mock import patch, MagicMock, PropertyMock
+from unittest.mock import patch, MagicMock
 import pytest
 
+from pyicloud import PyiCloudService
 from pyicloud.exceptions import PyiCloudFailedLoginException
 
 from homeassistant import data_entry_flow
@@ -37,6 +38,15 @@ TRUSTED_DEVICES = [
 ]
 
 
+def mock_icloud_service_with_cookie():
+    """Return a mocked iCloud service."""
+    service = MagicMock(
+        spec=PyiCloudService, requires_2fa=False, trusted_devices=TRUSTED_DEVICES
+    )
+    service.return_value.authenticate.return_value = None
+    return service
+
+
 @pytest.fixture(name="session")
 def mock_controller_session():
     """Mock a successful session."""
@@ -60,20 +70,11 @@ def mock_controller_service():
 def mock_controller_service_with_cookie():
     """Mock a successful service while already authenticate."""
     with patch(
-        "pyicloud.base.PyiCloudService", MagicMock(requires_2fa=False)
-    ) as service_mock, patch(
-        "pyicloud.base.PyiCloudService.requires_2fa",
-        new_callable=PropertyMock,
-        return_value=False,
-    ) as requires_2fa_mock:
-        # requires_2fa_mock.set(False)
-        # requires_2fa_mock.return_value = False
-
-        # type(service_mock.return_value).requires_2fa = PropertyMock(return_value=False)
-
-        service_mock.return_value.authenticate.return_value = None
-        service_mock.return_value.requires_2fa = requires_2fa_mock
-        yield service_mock
+        "pyicloud.base.PyiCloudService",
+        autospec=True,
+        side_effect=mock_icloud_service_with_cookie,
+    ):
+        yield
 
 
 @pytest.fixture(name="service_send_verification_code_failed")
