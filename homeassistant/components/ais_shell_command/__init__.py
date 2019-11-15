@@ -155,13 +155,16 @@ def _change_remote_access(hass, call):
         hass.services.call("ais_ai_service", "say_it", {"text": text})
 
     if access == "on":
+        os.system("pm2 stop tunnel")
         os.system("pm2 delete tunnel")
-        os.system(
-            "pm2 start lt --name tunnel --restart-delay=30000 -- -h http://paczka.pro -p 8180 -s "
-            + gate_id
+        cmd = (
+            "pm2 start lt --name tunnel --output NULL --error NULL --restart-delay=30000 -- "
+            "-h http://paczka.pro -p 8180 -s {}".format(gate_id)
         )
+        os.system(cmd)
         os.system("pm2 save")
     else:
+        os.system("pm2 stop tunnel")
         os.system("pm2 delete tunnel")
         os.system("pm2 save")
 
