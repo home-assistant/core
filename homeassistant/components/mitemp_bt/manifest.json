@@ -3,7 +3,7 @@
   "name": "Mitemp bt",
   "documentation": "https://www.home-assistant.io/integrations/mitemp_bt",
   "requirements": [
-    "mitemp_bt==0.0.1"
+    "mitemp_bt==0.0.3"
   ],
   "dependencies": [],
   "codeowners": []
