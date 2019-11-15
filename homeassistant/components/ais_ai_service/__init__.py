@@ -12,6 +12,8 @@ import datetime
 import requests
 from homeassistant import core
 from homeassistant.loader import bind_hass
+
+# from homeassistant.helpers import template
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -2125,9 +2127,20 @@ async def async_setup(hass, config):
 
     def say_it(service):
         """Info to the user."""
-        text = service.data[ATTR_TEXT]
+        text = ""
+        if ATTR_TEXT in service.data:
+            text = service.data[ATTR_TEXT]
+        # TODO else:
+        #     # check message template
+        #     if "template_text" in service.data:
+        #         tpl = template.Template(service.data["template_text"], hass)
+        #         message = tpl.async_render()
+        #     else:
+        #         return
         if "img" in service.data:
             img = service.data["img"]
+            if len(img) < 3:
+                img = None
         else:
             img = None
         _say_it(hass, text, img)
