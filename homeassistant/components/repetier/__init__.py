@@ -249,13 +249,12 @@ class PrinterAPI:
                     if prop_data is None:
                         continue
                     for idx, _ in enumerate(prop_data):
-                        _LOGGER.debug("%s idx %s", sensor_type, idx)
-                        info["temp_id"] = idx
-                        sensor_info.append(info)
+                        prop_info = info.copy()
+                        prop_info["temp_id"] = idx
+                        sensor_info.append(prop_info)
                 else:
                     info["temp_id"] = None
                     sensor_info.append(info)
-
                 self._known_entities.add(known)
 
         if not sensor_info:

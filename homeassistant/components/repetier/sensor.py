@@ -28,16 +28,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         "job_start": RepetierJobStartSensor,
     }
 
-    ent_id = {
-        "bed_temperature": 0,
-        "extruder_temperature": 0,
-        "chamber_temperature": 0,
-        "current_state": None,
-        "current_job": None,
-        "job_end": None,
-        "job_start": None,
-    }
-
     entities = []
     for info in discovery_info:
         printer_name = info["printer_name"]
@@ -47,11 +37,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         temp_id = info["temp_id"]
         name = f"{info['name']}{SENSOR_TYPES[sensor_type][3]}"
         if temp_id is not None:
-            _LOGGER.debug("%s Temp_id: %s", sensor_type, ent_id[sensor_type])
-            name = f"{name}{ent_id[sensor_type]}"
-            ent_id[sensor_type] = ent_id[sensor_type] + 1
+            _LOGGER.debug("%s Temp_id: %s", sensor_type, temp_id)
+            name = f"{name}{temp_id}"
         sensor_class = sensor_map[sensor_type]
-        entity = sensor_class(api, ent_id[sensor_type], name, printer_id, sensor_type)
+        entity = sensor_class(api, temp_id, name, printer_id, sensor_type)
         entities.append(entity)
 
     add_entities(entities, True)
