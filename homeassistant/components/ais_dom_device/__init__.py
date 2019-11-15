@@ -103,7 +103,14 @@ async def _async_start_rf_sniffing(hass):
     await hass.services.async_call(
         "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": "AAC000C055"}
     )
-    # start Bucket sniffing using command 0xB1
+    # set Portisch firmware support and messages
+    await hass.services.async_call(
+        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": 1}
+    )
+    # start Bucket sniffing
+    await hass.services.async_call(
+        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": 177}
+    )
     await hass.services.async_call(
         "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": "AAB155"}
     )
@@ -120,9 +127,16 @@ async def _async_stop_rf_sniffing(hass, clear):
     await hass.services.async_call(
         "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": "AAC000C055"}
     )
+    # set Portisch firmware support and messages
+    await hass.services.async_call(
+        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": 1}
+    )
     #  bucket Transmitting using command 0xB0
     await hass.services.async_call(
         "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": 176}
+    )
+    await hass.services.async_call(
+        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": "AAB055"}
     )
     # say info
     await hass.services.async_call(
