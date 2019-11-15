@@ -208,8 +208,7 @@ class GoogleConfig(AbstractConfig):
                     )
                     await self._async_update_token(True)
                     return await _call()
-                else:
-                    raise
+                raise
         except ClientResponseError as error:
             _LOGGER.error("Request for %s failed: %d", url, error.status)
             return error.status
