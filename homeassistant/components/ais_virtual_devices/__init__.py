@@ -24,6 +24,13 @@ async def async_setup(hass, config):
         )
     )
 
+    # Set up ais dom notify
+    # hass.async_create_task(
+    #     hass.helpers.discovery.async_load_platform(
+    #         "notify", "ais_ai_service", {}, config
+    #     )
+    # )
+
     return True
 
     # TODO see demo platform
