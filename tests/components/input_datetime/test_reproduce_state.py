@@ -38,12 +38,17 @@ async def test_reproducing_states(hass, caplog):
     await hass.helpers.state.async_reproduce_state(
         [
             State("input_datetime.entity_datetime", "not_supported"),
-            State("input_datetime.entity_datetime", "2010-25-10 01:20:00"),
+            State("input_datetime.entity_datetime", "not-valid-date"),
+            State("input_datetime.entity_datetime", "not:valid:time"),
+            State("input_datetime.entity_datetime", "1234-56-78 90:12:34"),
         ],
         blocking=True,
     )
 
     assert "not_supported" in caplog.text
+    assert "not-valid-date" in caplog.text
+    assert "not:valid:time" in caplog.text
+    assert "1234-56-78 90:12:34" in caplog.text
     assert len(datetime_calls) == 0
 
     # Make sure correct services are called
