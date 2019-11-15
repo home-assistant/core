@@ -70,7 +70,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 def test_jpeg1(h, f):
-    """JPEG data in JFIF format"""
+    """JPEG data in JFIF format."""
     if b"JFIF" in h[:23]:
         return "jpeg"
 
@@ -82,13 +82,13 @@ JPEG_MARK = (
 
 
 def test_jpeg2(h, f):
-    """JPEG with small header"""
+    """JPEG with small header."""
     if len(h) >= 32 and 67 == h[5] and h[:32] == JPEG_MARK:
         return "jpeg"
 
 
 def test_jpeg3(h, f):
-    """JPEG data in JFIF or Exif format"""
+    """JPEG data in JFIF or Exif format."""
     if h[6:10] in (b"JFIF", b"Exif") or h[:2] == b"\xff\xd8":
         return "jpeg"
 
