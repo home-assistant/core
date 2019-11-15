@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_USERNAME,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -200,11 +199,6 @@ class TeslaDevice(Entity):
         return self.tesla_id
 
     @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return self._icon
-
-    @property
     def should_poll(self):
         """Return the polling state."""
         return self.tesla_device.should_poll
@@ -216,18 +210,6 @@ class TeslaDevice(Entity):
         if self.tesla_device.has_battery():
             attr[ATTR_BATTERY_LEVEL] = self.tesla_device.battery_level()
         return attr
-
-    async def async_added_to_hass(self):
-        """Register state update callback."""
-        pass
-
-    async def async_will_remove_from_hass(self):
-        """Prepare for unload."""
-        pass
-
-    async def async_update(self):
-        """Update the state of the device."""
-        await self.tesla_device.async_update()
 
     @property
     def device_info(self):
@@ -242,11 +224,11 @@ class TeslaDevice(Entity):
 
     async def async_added_to_hass(self):
         """Register state update callback."""
-        await super().async_added_to_hass()
+        pass
 
     async def async_will_remove_from_hass(self):
         """Prepare for unload."""
-        await super().async_will_remove_from_hass()
+        pass
 
     async def async_update(self):
         """Update the state of the device."""
