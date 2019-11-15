@@ -247,6 +247,7 @@ class VenstarThermostat(ClimateDevice):
             return PRESET_AWAY
         if self._client.schedule == 0:
             return HOLD_MODE_TEMPERATURE
+        return PRESET_NONE
 
     @property
     def preset_modes(self):
@@ -277,7 +278,7 @@ class VenstarThermostat(ClimateDevice):
         temperature = kwargs.get(ATTR_TEMPERATURE)
 
         if operation_mode and self._mode_map.get(operation_mode) != self._client.mode:
-            set_temp = self._set_operation_mode(self._mode_map.get(operation_mode))
+            set_temp = self._set_operation_mode(operation_mode)
 
         if set_temp:
             if (
@@ -332,13 +333,11 @@ class VenstarThermostat(ClimateDevice):
         if preset_mode == PRESET_AWAY:
             success = self._client.set_away(self._client.AWAY_AWAY)
         elif preset_mode == HOLD_MODE_TEMPERATURE:
-            success = self._client.set_schedule(0)
+            success = self._client.set_away(self._client.AWAY_HOME)
+            success = success and self._client.set_schedule(0)
         elif preset_mode == PRESET_NONE:
-            success = False
-            if self._client.away:
-                success = self._client.set_away(self._client.AWAY_HOME)
-            if self._client.schedule == 0:
-                success = success and self._client.set_schedule(1)
+            success = self._client.set_away(self._client.AWAY_HOME)
+            success = success and self._client.set_schedule(1)
         else:
             _LOGGER.error("Unknown hold mode: %s", preset_mode)
             success = False

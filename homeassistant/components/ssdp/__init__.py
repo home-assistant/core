@@ -104,28 +104,27 @@ class Scanner:
 
     async def _process_entry(self, entry):
         """Process a single entry."""
-        domains = set(SSDP["st"].get(entry.st, []))
 
-        xml_location = entry.location
+        info = {"st": entry.st}
 
-        if not xml_location:
-            if domains:
-                return (entry, info_from_entry(entry, None), domains)
-            return None
+        if entry.location:
 
-        # Multiple entries usually share same location. Make sure
-        # we fetch it only once.
-        info_req = self._description_cache.get(xml_location)
+            # Multiple entries usually share same location. Make sure
+            # we fetch it only once.
+            info_req = self._description_cache.get(entry.location)
 
-        if info_req is None:
-            info_req = self._description_cache[
-                xml_location
-            ] = self.hass.async_create_task(self._fetch_description(xml_location))
+            if info_req is None:
+                info_req = self._description_cache[
+                    entry.location
+                ] = self.hass.async_create_task(self._fetch_description(entry.location))
 
-        info = await info_req
+            info.update(await info_req)
 
-        domains.update(SSDP["manufacturer"].get(info.get("manufacturer"), []))
-        domains.update(SSDP["device_type"].get(info.get("deviceType"), []))
+        domains = set()
+        for domain, matchers in SSDP.items():
+            for matcher in matchers:
+                if all(info.get(k) == v for (k, v) in matcher.items()):
+                    domains.add(domain)
 
         if domains:
             return (entry, info_from_entry(entry, info), domains)

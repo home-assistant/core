@@ -3,6 +3,6 @@
   "name": "Plugwise",
   "documentation": "https://www.home-assistant.io/integrations/plugwise",
   "dependencies": [],
-  "codeowners": ["@laetificat","@CoMPaTech"],
-  "requirements": ["haanna==0.10.1"]
+  "codeowners": ["@laetificat","@CoMPaTech","@bouwew"],
+  "requirements": ["haanna==0.13.5"]
 }

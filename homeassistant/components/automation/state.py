@@ -27,8 +27,8 @@ TRIGGER_SCHEMA = vol.All(
             vol.Required(CONF_PLATFORM): "state",
             vol.Required(CONF_ENTITY_ID): cv.entity_ids,
             # These are str on purpose. Want to catch YAML conversions
-            vol.Optional(CONF_FROM): str,
-            vol.Optional(CONF_TO): str,
+            vol.Optional(CONF_FROM): vol.Any(str, [str]),
+            vol.Optional(CONF_TO): vol.Any(str, [str]),
             vol.Optional(CONF_FOR): vol.Any(
                 vol.All(cv.time_period, cv.positive_timedelta),
                 cv.template,

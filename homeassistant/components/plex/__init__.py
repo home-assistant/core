@@ -160,7 +160,10 @@ async def async_setup_entry(hass, entry):
         async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
 
     session = async_get_clientsession(hass)
-    websocket = PlexWebsocket(plex_server.plex_server, update_plex, session)
+    verify_ssl = server_config.get(CONF_VERIFY_SSL)
+    websocket = PlexWebsocket(
+        plex_server.plex_server, update_plex, session=session, verify_ssl=verify_ssl
+    )
     hass.loop.create_task(websocket.listen())
     hass.data[PLEX_DOMAIN][WEBSOCKETS][server_id] = websocket
 

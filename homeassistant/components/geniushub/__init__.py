@@ -93,7 +93,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
     async_track_time_interval(hass, broker.async_update, SCAN_INTERVAL)
 
-    for platform in ["climate", "water_heater", "sensor", "binary_sensor"]:
+    for platform in ["climate", "water_heater", "sensor", "binary_sensor", "switch"]:
         hass.async_create_task(async_load_platform(hass, platform, DOMAIN, {}, config))
 
     return True
@@ -215,8 +215,6 @@ class GeniusZone(GeniusEntity):
         self._zone = zone
         self._unique_id = f"{broker.hub_uid}_zone_{zone.id}"
 
-        self._max_temp = self._min_temp = self._supported_features = None
-
     @property
     def name(self) -> str:
         """Return the name of the climate device."""
@@ -227,6 +225,16 @@ class GeniusZone(GeniusEntity):
         """Return the device state attributes."""
         status = {k: v for k, v in self._zone.data.items() if k in GH_ZONE_ATTRS}
         return {"status": status}
+
+
+class GeniusHeatingZone(GeniusZone):
+    """Base for Genius Heating Zones."""
+
+    def __init__(self, broker, zone) -> None:
+        """Initialize the Zone."""
+        super().__init__(broker, zone)
+
+        self._max_temp = self._min_temp = self._supported_features = None
 
     @property
     def current_temperature(self) -> Optional[float]:

@@ -48,8 +48,12 @@ async def async_get_integration_with_requirements(
             hass, integration.domain, integration.requirements
         )
 
-    for dependency in integration.dependencies:
-        await async_get_integration_with_requirements(hass, dependency)
+    deps = integration.dependencies + (integration.after_dependencies or [])
+
+    if deps:
+        await asyncio.gather(
+            *[async_get_integration_with_requirements(hass, dep) for dep in deps]
+        )
 
     return integration
 

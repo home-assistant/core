@@ -44,6 +44,8 @@ class EsphomeBinarySensor(EsphomeEntity, BinarySensorDevice):
             return self._entry_data.available
         if self._state is None:
             return None
+        if self._state.missing_state:
+            return None
         return self._state.state
 
     @property
