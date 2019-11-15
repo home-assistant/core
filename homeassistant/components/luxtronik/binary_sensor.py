@@ -107,15 +107,15 @@ class LuxtronikBinarySensor(BinarySensorDevice):
     def name(self):
         """Return the name of the sensor."""
         if not self._name:
-            return ENTITY_ID_FORMAT.format(slugify(self._sensor.name))
+            return self._sensor.name
         return self._name
 
     @property
     def is_on(self):
         """Return true if binary sensor is on."""
         if self._invert:
-            return not self._sensor._value
-        return self._sensor._value
+            return not self._sensor.value
+        return self._sensor.value
 
     @property
     def device_class(self):

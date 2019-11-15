@@ -98,7 +98,7 @@ class LuxtronikSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         if not self._name:
-            return ENTITY_ID_FORMAT.format(slugify(self._sensor.name))
+            return self._sensor.name
         return self._name
 
     @property
@@ -130,7 +130,7 @@ class LuxtronikSensor(Entity):
     @property
     def state(self):
         """Return the sensor state."""
-        return self._sensor
+        return self._sensor.value
 
     @property
     def device_class(self):
