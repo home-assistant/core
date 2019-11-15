@@ -91,6 +91,9 @@ class PostNLSensor(Entity):
     def update(self):
         """Update device state."""
         shipments = self._api.get_relevant_deliveries()
+
+        self._attributes["shipments"] = []
+
         for shipment in shipments:
             self._attributes["shipments"].append(vars(shipment))
 
