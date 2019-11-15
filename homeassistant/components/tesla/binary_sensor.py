@@ -10,8 +10,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tesla binary sensor."""
-    if discovery_info is None:
-        return
+    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
