@@ -54,8 +54,8 @@ def test_setup_params(hass):
 def test_default_setup_params(hass):
     """Test the setup with default parameters."""
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert 30 == state.attributes.get(ATTR_MIN_HUMIDITY)
-    assert 99 == state.attributes.get(ATTR_MAX_HUMIDITY)
+    assert 0 == state.attributes.get(ATTR_MIN_HUMIDITY)
+    assert 100 == state.attributes.get(ATTR_MAX_HUMIDITY)
 
 
 async def test_set_target_humidity_bad_attr(hass):
