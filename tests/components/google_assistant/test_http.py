@@ -106,7 +106,8 @@ async def test_call_homegraph_api(hass, aioclient_mock, hass_storage):
 
         aioclient_mock.post(MOCK_URL, status=200, json={})
 
-        await config.async_call_homegraph_api(MOCK_URL, MOCK_JSON)
+        res = await config.async_call_homegraph_api(MOCK_URL, MOCK_JSON)
+        assert res == 200
 
         assert mock_get_token.call_count == 1
         assert aioclient_mock.call_count == 1
