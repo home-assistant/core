@@ -320,6 +320,11 @@ class ClimateAehW4a1(ClimateDevice):
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperatures."""
+        if self._on != "1":
+            _LOGGER.warning(
+                "AC at %s is off, could not set temperature", self._unique_id
+            )
+            return
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None:
             _LOGGER.debug("Setting temp of %s to %s", self._unique_id, temp)
@@ -332,74 +337,85 @@ class ClimateAehW4a1(ClimateDevice):
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new fan mode."""
-        if self._on == "1":
-            if self._hvac_mode in (HVAC_MODE_COOL, HVAC_MODE_FAN_ONLY) and (
-                self._hvac_mode != HVAC_MODE_FAN_ONLY or fan_mode != FAN_AUTO
-            ):
-                _LOGGER.debug("Setting fan mode of %s to %s", self._unique_id, fan_mode)
-                await self._device.command(HA_FAN_MODES_TO_AC[fan_mode])
+        if self._on != "1":
+            _LOGGER.warning("AC at %s is off, could not set fan mode", self._unique_id)
+            return
+        if self._hvac_mode in (HVAC_MODE_COOL, HVAC_MODE_FAN_ONLY) and (
+            self._hvac_mode != HVAC_MODE_FAN_ONLY or fan_mode != FAN_AUTO
+        ):
+            _LOGGER.debug("Setting fan mode of %s to %s", self._unique_id, fan_mode)
+            await self._device.command(HA_FAN_MODES_TO_AC[fan_mode])
 
     async def async_set_swing_mode(self, swing_mode):
         """Set new target swing operation."""
-        if self._on == "1":
-            _LOGGER.debug("Setting swing mode of %s to %s", self._unique_id, swing_mode)
-            swing_act = self._swing_mode
+        if self._on != "1":
+            _LOGGER.warning(
+                "AC at %s is off, could not set swing mode", self._unique_id
+            )
+            return
 
-            if swing_mode == SWING_OFF and swing_act != SWING_OFF:
-                if swing_act in (SWING_HORIZONTAL, SWING_BOTH):
-                    await self._device.command("hor_dir")
-                if swing_act in (SWING_VERTICAL, SWING_BOTH):
-                    await self._device.command("vert_dir")
+        _LOGGER.debug("Setting swing mode of %s to %s", self._unique_id, swing_mode)
+        swing_act = self._swing_mode
 
-            if swing_mode == SWING_BOTH and swing_act != SWING_BOTH:
-                if swing_act in (SWING_OFF, SWING_HORIZONTAL):
-                    await self._device.command("vert_swing")
-                if swing_act in (SWING_OFF, SWING_VERTICAL):
-                    await self._device.command("hor_swing")
+        if swing_mode == SWING_OFF and swing_act != SWING_OFF:
+            if swing_act in (SWING_HORIZONTAL, SWING_BOTH):
+                await self._device.command("hor_dir")
+            if swing_act in (SWING_VERTICAL, SWING_BOTH):
+                await self._device.command("vert_dir")
 
-            if swing_mode == SWING_VERTICAL and swing_act != SWING_VERTICAL:
-                if swing_act in (SWING_OFF, SWING_HORIZONTAL):
-                    await self._device.command("vert_swing")
-                if swing_act in (SWING_BOTH, SWING_HORIZONTAL):
-                    await self._device.command("hor_dir")
+        if swing_mode == SWING_BOTH and swing_act != SWING_BOTH:
+            if swing_act in (SWING_OFF, SWING_HORIZONTAL):
+                await self._device.command("vert_swing")
+            if swing_act in (SWING_OFF, SWING_VERTICAL):
+                await self._device.command("hor_swing")
 
-            if swing_mode == SWING_HORIZONTAL and swing_act != SWING_HORIZONTAL:
-                if swing_act in (SWING_BOTH, SWING_VERTICAL):
-                    await self._device.command("vert_dir")
-                if swing_act in (SWING_OFF, SWING_VERTICAL):
-                    await self._device.command("hor_swing")
+        if swing_mode == SWING_VERTICAL and swing_act != SWING_VERTICAL:
+            if swing_act in (SWING_OFF, SWING_HORIZONTAL):
+                await self._device.command("vert_swing")
+            if swing_act in (SWING_BOTH, SWING_HORIZONTAL):
+                await self._device.command("hor_dir")
+
+        if swing_mode == SWING_HORIZONTAL and swing_act != SWING_HORIZONTAL:
+            if swing_act in (SWING_BOTH, SWING_VERTICAL):
+                await self._device.command("vert_dir")
+            if swing_act in (SWING_OFF, SWING_VERTICAL):
+                await self._device.command("hor_swing")
 
     async def async_set_preset_mode(self, preset_mode):
         """Set new preset mode."""
-        if self._on == "1":
-            _LOGGER.debug(
-                "Setting preset mode of %s to %s", self._unique_id, preset_mode
-            )
-            if preset_mode == PRESET_ECO:
-                await self._device.command("energysave_on")
-                self._previous_state = preset_mode
-            elif preset_mode == PRESET_BOOST:
-                await self._device.command("turbo_on")
-                self._previous_state = preset_mode
-            elif preset_mode == PRESET_SLEEP:
-                await self._device.command("sleep_1")
-                self._previous_state = self._hvac_mode
-            elif preset_mode == "sleep_2":
-                await self._device.command("sleep_2")
-                self._previous_state = self._hvac_mode
-            elif preset_mode == "sleep_3":
-                await self._device.command("sleep_3")
-                self._previous_state = self._hvac_mode
-            elif preset_mode == "sleep_4":
-                await self._device.command("sleep_4")
-                self._previous_state = self._hvac_mode
-            else:
-                if self._previous_state == PRESET_ECO:
-                    await self._device.command("energysave_off")
-                elif self._previous_state == PRESET_BOOST:
-                    await self._device.command("turbo_off")
-                elif self._previous_state in HA_STATE_TO_AC:
-                    await self._device.command(HA_STATE_TO_AC[self._previous_state])
+        if self._on != "1":
+            if preset_mode == PRESET_NONE:
+                return
+            await self.async_turn_on()
+
+        _LOGGER.debug("Setting preset mode of %s to %s", self._unique_id, preset_mode)
+
+        if preset_mode == PRESET_ECO:
+            await self._device.command("energysave_on")
+            self._previous_state = preset_mode
+        elif preset_mode == PRESET_BOOST:
+            await self._device.command("turbo_on")
+            self._previous_state = preset_mode
+        elif preset_mode == PRESET_SLEEP:
+            await self._device.command("sleep_1")
+            self._previous_state = self._hvac_mode
+        elif preset_mode == "sleep_2":
+            await self._device.command("sleep_2")
+            self._previous_state = self._hvac_mode
+        elif preset_mode == "sleep_3":
+            await self._device.command("sleep_3")
+            self._previous_state = self._hvac_mode
+        elif preset_mode == "sleep_4":
+            await self._device.command("sleep_4")
+            self._previous_state = self._hvac_mode
+        elif self._previous_state is not None:
+            if self._previous_state == PRESET_ECO:
+                await self._device.command("energysave_off")
+            elif self._previous_state == PRESET_BOOST:
+                await self._device.command("turbo_off")
+            elif self._previous_state in HA_STATE_TO_AC:
+                await self._device.command(HA_STATE_TO_AC[self._previous_state])
+            self._previous_state = None
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new operation mode."""
