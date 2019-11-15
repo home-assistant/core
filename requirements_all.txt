@@ -999,7 +999,7 @@ pmsensor==0.4
 pocketcasts==0.1
 
 # homeassistant.components.postnl
-postnl_api==1.0.2
+postnl_api==1.2.2
 
 # homeassistant.components.reddit
 praw==6.4.0
