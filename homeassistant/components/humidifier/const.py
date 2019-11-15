@@ -7,7 +7,7 @@ HUMIDIFIER_MODE_OFF = "off"
 HUMIDIFIER_MODE_HUMIDIFY_DRY = "humidify_dry"
 
 # The humidity is set based on a schedule, learned behavior, AI or some
-# other related mechanism. User is not able to adjust the humidity
+# other related mechanism. User is not able to adjust the target humidity
 HUMIDIFIER_MODE_AUTO = "auto"
 
 # Device is in Dry mode
@@ -48,9 +48,6 @@ PRESET_HOME = "home"
 
 # Device is prepared for sleep
 PRESET_SLEEP = "sleep"
-
-# Device is reacting to activity (e.g. movement sensors)
-PRESET_ACTIVITY = "activity"
 
 
 # Possible fan state
