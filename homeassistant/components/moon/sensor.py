@@ -30,7 +30,7 @@ MOON_ICONS = {
     STATE_WANING_CRESCENT: "mdi:moon-waning-crescent",
     STATE_WANING_GIBBOUS: "mdi:moon-waning-gibbous",
     STATE_WAXING_CRESCENT: "mdi:moon-waxing-crescent",
-    STATE_WAXING_GIBBOUS: "mdi:moon-waxing-gibbous"
+    STATE_WAXING_GIBBOUS: "mdi:moon-waxing-gibbous",
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
