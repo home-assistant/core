@@ -102,6 +102,9 @@ async def test_handler_google_actions(hass):
     reqid = "5711642932632160983"
     data = {"requestId": reqid, "inputs": [{"intent": "action.devices.SYNC"}]}
 
+    # very much unsure why this is needed
+    await cloud.client.google_config.async_initialize()
+
     with patch(
         "hass_nabucasa.Cloud._decode_claims",
         return_value={"cognito:username": "myUserName"},

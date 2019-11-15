@@ -664,8 +664,8 @@ async def test_query_disconnect(hass):
     config.async_enable_report_state()
     assert config._unsub_report_state is not None
     with patch.object(
-        config, "async_deactivate_report_state", side_effect=mock_coro
-    ) as mock_deactivate:
+        config, "async_disconnect_agent_user", side_effect=mock_coro
+    ) as mock_disconnect:
         result = await sh.async_handle_message(
             hass,
             config,
@@ -673,7 +673,7 @@ async def test_query_disconnect(hass):
             {"inputs": [{"intent": "action.devices.DISCONNECT"}], "requestId": REQ_ID},
         )
     assert result is None
-    assert len(mock_deactivate.mock_calls) == 1
+    assert len(mock_disconnect.mock_calls) == 1
 
 
 async def test_trait_execute_adding_query_data(hass):

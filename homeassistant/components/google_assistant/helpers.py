@@ -10,6 +10,7 @@ from aiohttp.web import json_response
 from homeassistant.core import Context, callback, HomeAssistant, State
 from homeassistant.helpers.event import async_call_later
 from homeassistant.components import webhook
+from homeassistant.helpers.storage import Store
 from homeassistant.const import (
     CONF_NAME,
     STATE_UNAVAILABLE,
@@ -26,6 +27,7 @@ from .const import (
     ERR_FUNCTION_NOT_SUPPORTED,
     DEVICE_CLASS_TO_GOOGLE_TYPES,
     CONF_ROOM_HINT,
+    STORE_AGENT_USER_IDS,
 )
 from .error import SmartHomeError
 
@@ -41,8 +43,14 @@ class AbstractConfig:
     def __init__(self, hass):
         """Initialize abstract config."""
         self.hass = hass
+        self._store = None
         self._google_sync_unsub = {}
         self._local_sdk_active = False
+
+    async def async_initialize(self):
+        """Perform async initialization of config."""
+        self._store = GoogleConfigStore(self.hass)
+        await self._store.async_load()
 
     @property
     def enabled(self):
@@ -105,6 +113,14 @@ class AbstractConfig:
         """Send a state report to Google."""
         raise NotImplementedError
 
+    async def async_report_state_all(self, message):
+        """Send a state report to Google for all previously synced users."""
+        jobs = [
+            self.async_report_state(message, agent_user_id)
+            for agent_user_id in self._store.agent_user_ids
+        ]
+        await gather(*jobs)
+
     def async_enable_report_state(self):
         """Enable proactive mode."""
         # Circular dep
@@ -123,8 +139,17 @@ class AbstractConfig:
         """Sync all entities to Google."""
         # Remove any pending sync
         self._google_sync_unsub.pop(agent_user_id, lambda: None)()
-
         return await self._async_request_sync_devices(agent_user_id)
+
+    async def async_sync_entities_all(self):
+        """Sync all entities to Google for all registered agents."""
+        res = await gather(
+            *[
+                self.async_sync_entities(agent_user_id)
+                for agent_user_id in self._store.agent_user_ids
+            ]
+        )
+        return max(res, default=204)
 
     @callback
     def async_schedule_google_sync(self, agent_user_id: str):
@@ -141,6 +166,12 @@ class AbstractConfig:
             self.hass, SYNC_DELAY, _schedule_callback
         )
 
+    @callback
+    def async_schedule_google_sync_all(self):
+        """Schedule a sync for all registered agents."""
+        for agent_user_id in self._store.agent_user_ids:
+            self.async_schedule_google_sync(agent_user_id)
+
     async def _async_request_sync_devices(self, agent_user_id: str) -> int:
         """Trigger a sync with Google.
 
@@ -148,11 +179,19 @@ class AbstractConfig:
         """
         raise NotImplementedError
 
-    async def async_deactivate_report_state(self):
+    async def async_connect_agent_user(self, agent_user_id: str):
+        """Add an synced and known agent_user_id.
+
+        Called when a completed sync response have been sent to Google.
+        """
+        self._store.add_agent_user_id(agent_user_id)
+
+    async def async_disconnect_agent_user(self, agent_user_id: str):
         """Turn off report state and disable further state reporting.
 
         Called when the user disconnects their account from Google.
         """
+        self._store.pop_agent_user_id(agent_user_id)
 
     @callback
     def async_enable_local_sdk(self):
@@ -197,6 +236,48 @@ class AbstractConfig:
             _LOGGER.debug("Responding to local message:\n%s\n", pprint.pformat(result))
 
         return json_response(result)
+
+
+class GoogleConfigStore:
+    """A configuration store for google assistant."""
+
+    _STORAGE_VERSION = 1
+    _STORAGE_KEY = DOMAIN
+
+    def __init__(self, hass):
+        """Initialize a configuration store."""
+        self._hass = hass
+        self._store = Store(hass, self._STORAGE_VERSION, self._STORAGE_KEY)
+        self._data = {STORE_AGENT_USER_IDS: {}}
+
+    @property
+    def agent_user_ids(self):
+        """Return a list of connected agent user_ids."""
+        return self._data[STORE_AGENT_USER_IDS]
+
+    @callback
+    def add_agent_user_id(self, agent_user_id):
+        """Add an agent user id to store."""
+        if agent_user_id not in self._data[STORE_AGENT_USER_IDS]:
+            self._data[STORE_AGENT_USER_IDS][agent_user_id] = {}
+            self._store.async_delay_save(self._data)
+
+    @callback
+    def pop_agent_user_id(self, agent_user_id):
+        """Remove agent user id from store."""
+        if agent_user_id in self._data[STORE_AGENT_USER_IDS]:
+            self._data[STORE_AGENT_USER_IDS].pop(agent_user_id, None)
+            self._store.async_delay_save(self._data)
+
+    async def async_load(self):
+        """Store current configuration to disk."""
+        data = await self._store.async_load()
+        if data:
+            self._data = data
+
+    async def async_save(self):
+        """Save current configuration to disk."""
+        await self._store.async_save(self._data)
 
 
 class RequestData:

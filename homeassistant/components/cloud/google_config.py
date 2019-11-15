@@ -132,13 +132,6 @@ class CloudGoogleConfig(AbstractConfig):
                 _LOGGER.debug("Finished requesting syncing: %s", req.status)
                 return req.status
 
-    async def async_deactivate_report_state(self):
-        """Turn off report state and disable further state reporting.
-
-        Called when the user disconnects their account from Google.
-        """
-        await self._prefs.async_update(google_report_state=False)
-
     async def _async_prefs_updated(self, prefs):
         """Handle updated preferences."""
         if self.should_report_state != self.is_reporting_state:

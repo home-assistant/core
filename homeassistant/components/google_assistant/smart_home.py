@@ -92,6 +92,8 @@ async def async_devices_sync(hass, data, payload):
         "devices": devices,
     }
 
+    await data.config.async_connect_agent_user(response["agentUserId"])
+
     return response
 
 
@@ -197,7 +199,9 @@ async def async_devices_disconnect(hass, data: RequestData, payload):
 
     https://developers.google.com/assistant/smarthome/develop/process-intents#DISCONNECT
     """
-    await data.config.async_deactivate_report_state()
+    await data.config.async_disconnect_agent_user(
+        data.config.agent_user_id or data.context.user_id
+    )
     return None
 
 

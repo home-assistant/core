@@ -1,5 +1,6 @@
 """Test Google Assistant helpers."""
-from unittest.mock import Mock
+from asynctest.mock import Mock, patch, call
+import pytest
 from homeassistant.setup import async_setup_component
 from homeassistant.components.google_assistant import helpers
 from homeassistant.components.google_assistant.const import EVENT_COMMAND_RECEIVED
@@ -128,3 +129,66 @@ async def test_config_local_sdk_if_disabled(hass, hass_client):
     resp = await client.post("/api/webhook/mock-webhook-id")
     assert resp.status == 200
     assert await resp.read() == b""
+
+
+async def test_agent_user_id_storage(hass):
+    """Test a disconnect message."""
+    with patch("homeassistant.helpers.storage.Store.async_load") as mock_load, patch(
+        "homeassistant.helpers.storage.Store.async_delay_save"
+    ) as mock_save:
+        store = helpers.GoogleConfigStore(hass)
+
+        mock_load.return_value = {"agent_user_ids": {"agent_1": {}}}
+        await store.async_load()
+        assert store.agent_user_ids == {"agent_1": {}}
+
+        store.add_agent_user_id("agent_2")
+        assert mock_save.call_args == call(
+            {"agent_user_ids": {"agent_1": {}, "agent_2": {}}}
+        )
+
+
+async def test_agent_user_id_connect():
+    """Test the connection and disconnection of users."""
+    config = MockConfig()
+    store = config._store
+
+    await config.async_connect_agent_user("agent_2")
+    assert store.add_agent_user_id.call_args == call("agent_2")
+
+    await config.async_connect_agent_user("agent_1")
+    assert store.add_agent_user_id.call_args == call("agent_1")
+
+    await config.async_disconnect_agent_user("agent_2")
+    assert store.pop_agent_user_id.call_args == call("agent_2")
+
+    await config.async_disconnect_agent_user("agent_1")
+    assert store.pop_agent_user_id.call_args == call("agent_1")
+
+
+@pytest.mark.parametrize("agents", [{}, {"1"}, {"1", "2"}])
+async def test_report_state_all(agents):
+    """Test a disconnect message."""
+    config = MockConfig(agent_user_ids=agents)
+    data = {}
+    with patch.object(config, "async_report_state") as mock:
+        await config.async_report_state_all(data)
+        assert sorted(mock.mock_calls) == sorted(
+            [call(data, agent) for agent in agents]
+        )
+
+
+@pytest.mark.parametrize(
+    "agents, result", [({}, 204), ({"1": 200}, 200), ({"1": 200, "2": 300}, 300)],
+)
+async def test_sync_entities_all(agents, result):
+    """Test sync entities ."""
+    config = MockConfig(agent_user_ids=set(agents.keys()))
+    with patch.object(
+        config,
+        "async_sync_entities",
+        side_effect=lambda agent_user_id: agents[agent_user_id],
+    ) as mock:
+        res = await config.async_sync_entities_all()
+        assert sorted(mock.mock_calls) == sorted([call(agent) for agent in agents])
+        assert res == result
