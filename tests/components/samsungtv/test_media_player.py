@@ -543,7 +543,7 @@ async def test_media_next_track(hass, remote):
     )
     # key and update called
     assert remote.control.call_count == 2
-    assert remote.control.call_args_list == [call("KEY_FF"), call("KEY")]
+    assert remote.control.call_args_list == [call("KEY_CHUP"), call("KEY")]
 
 
 async def test_media_previous_track(hass, remote):
@@ -554,7 +554,7 @@ async def test_media_previous_track(hass, remote):
     )
     # key and update called
     assert remote.control.call_count == 2
-    assert remote.control.call_args_list == [call("KEY_REWIND"), call("KEY")]
+    assert remote.control.call_args_list == [call("KEY_CHDOWN"), call("KEY")]
 
 
 async def test_turn_on_with_mac(hass, remote, wakeonlan):
