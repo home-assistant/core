@@ -1,9 +1,8 @@
 """Tests for the iCloud config flow."""
 import logging
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock, PropertyMock
 import pytest
 
-from pyicloud import PyiCloudService
 from pyicloud.exceptions import PyiCloudFailedLoginException
 
 from homeassistant import data_entry_flow
@@ -48,46 +47,57 @@ def mock_controller_session():
 @pytest.fixture(name="service")
 def mock_controller_service():
     """Mock a successful service."""
-    with patch("pyicloud.base.PyiCloudService"):
-        PyiCloudService.authenticate.return_value = None
-        PyiCloudService.requires_2fa = True
-        PyiCloudService.trusted_devices = TRUSTED_DEVICES
-        PyiCloudService.send_verification_code.return_value = True
-        PyiCloudService.validate_verification_code.return_value = True
-        yield PyiCloudService
+    with patch("pyicloud.base.PyiCloudService") as service_mock:
+        service_mock.return_value.authenticate.return_value = None
+        service_mock.return_value.requires_2fa = True
+        service_mock.return_value.trusted_devices = TRUSTED_DEVICES
+        service_mock.return_value.send_verification_code.return_value = True
+        service_mock.return_value.validate_verification_code.return_value = True
+        yield service_mock
 
 
 @pytest.fixture(name="service_with_cookie")
 def mock_controller_service_with_cookie():
     """Mock a successful service while already authenticate."""
-    with patch("pyicloud.base.PyiCloudService"):
-        PyiCloudService.authenticate.return_value = None
-        PyiCloudService.requires_2fa = False
-        yield PyiCloudService
+    with patch(
+        "pyicloud.base.PyiCloudService", MagicMock(requires_2fa=False)
+    ) as service_mock, patch(
+        "pyicloud.base.PyiCloudService.requires_2fa",
+        new_callable=PropertyMock,
+        return_value=False,
+    ) as requires_2fa_mock:
+        # requires_2fa_mock.set(False)
+        # requires_2fa_mock.return_value = False
+
+        # type(service_mock.return_value).requires_2fa = PropertyMock(return_value=False)
+
+        service_mock.return_value.authenticate.return_value = None
+        service_mock.return_value.requires_2fa = requires_2fa_mock
+        yield service_mock
 
 
 @pytest.fixture(name="service_send_verification_code_failed")
 def mock_controller_service_send_verification_code_failed():
     """Mock a failed service during sending verification code step."""
-    with patch("pyicloud.base.PyiCloudService"):
-        PyiCloudService.authenticate.return_value = None
-        PyiCloudService.requires_2fa = False
-        PyiCloudService.trusted_devices = TRUSTED_DEVICES
-        PyiCloudService.send_verification_code.return_value = False
-        PyiCloudService.validate_verification_code.return_value = False
-        yield PyiCloudService
+    with patch("pyicloud.base.PyiCloudService") as service_mock:
+        service_mock.return_value.authenticate.return_value = None
+        service_mock.return_value.requires_2fa = False
+        service_mock.return_value.trusted_devices = TRUSTED_DEVICES
+        service_mock.return_value.send_verification_code.return_value = False
+        service_mock.return_value.validate_verification_code.return_value = False
+        yield service_mock
 
 
 @pytest.fixture(name="service_validate_verification_code_failed")
 def mock_controller_service_validate_verification_code_failed():
     """Mock a failed service during validation of verification code step."""
-    with patch("pyicloud.base.PyiCloudService"):
-        PyiCloudService.authenticate.return_value = None
-        PyiCloudService.requires_2fa = False
-        PyiCloudService.trusted_devices = TRUSTED_DEVICES
-        PyiCloudService.send_verification_code.return_value = True
-        PyiCloudService.validate_verification_code.return_value = False
-        yield PyiCloudService
+    with patch("pyicloud.base.PyiCloudService") as service_mock:
+        service_mock.return_value.authenticate.return_value = None
+        service_mock.return_value.requires_2fa = False
+        service_mock.return_value.trusted_devices = TRUSTED_DEVICES
+        service_mock.return_value.send_verification_code.return_value = True
+        service_mock.return_value.validate_verification_code.return_value = False
+        yield service_mock.return_value
 
 
 def init_config_flow(hass):
@@ -121,6 +131,7 @@ async def test_user_with_cookie(hass, session, service_with_cookie):
     result = await flow.async_step_user(
         {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
     )
+    _LOGGER.info(result)
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
@@ -163,6 +174,7 @@ async def test_import_with_cookie(hass, session, service_with_cookie):
     result = await flow.async_step_import(
         {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
     )
+    _LOGGER.info(result)
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
@@ -248,6 +260,16 @@ async def test_trusted_device(hass, session, service):
     assert result["step_id"] == CONF_TRUSTED_DEVICE
 
 
+async def test_trusted_device_success(hass, session, service):
+    """Test trusted_device step success."""
+    flow = init_config_flow(hass)
+    flow.api = service
+
+    result = await flow.async_step_trusted_device({CONF_TRUSTED_DEVICE: 0})
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == CONF_VERIFICATION_CODE
+
+
 async def test_abort_on_send_verification_code_failed(
     hass, session, service_send_verification_code_failed
 ):
@@ -258,6 +280,7 @@ async def test_abort_on_send_verification_code_failed(
     result = await flow.async_step_trusted_device({CONF_TRUSTED_DEVICE: 0})
     _LOGGER.info(result)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == CONF_TRUSTED_DEVICE
     assert result["errors"] == {CONF_TRUSTED_DEVICE: "send_verification_code"}
 
 
