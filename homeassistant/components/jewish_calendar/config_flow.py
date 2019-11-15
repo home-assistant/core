@@ -78,11 +78,11 @@ class JewishCalendarOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Jewish Calendar options."""
 
     def __init__(self, config_entry):
-        """Initialize Transmission options flow."""
+        """Initialize Jewidh Calendar options flow."""
         self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
-        """Manage the Transmission options."""
+        """Manage the Jewish Calendar options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
