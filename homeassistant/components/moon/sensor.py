@@ -27,11 +27,10 @@ MOON_ICONS = {
     STATE_FULL_MOON: "mdi:moon-full",
     STATE_LAST_QUARTER: "mdi:moon-last-quarter",
     STATE_NEW_MOON: "mdi:moon-new",
-    STATE_WANING_CRESCENT: "mdi:moon-waning-crescent",   
+    STATE_WANING_CRESCENT: "mdi:moon-waning-crescent",
     STATE_WANING_GIBBOUS: "mdi:moon-waning-gibbous",
     STATE_WAXING_CRESCENT: "mdi:moon-waxing-crescent",
     STATE_WAXING_GIBBOUS: "mdi:moon-waxing-gibbous"
-    
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
