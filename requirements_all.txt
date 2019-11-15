@@ -832,7 +832,7 @@ luftdaten==0.6.3
 lupupy==0.0.18
 
 # homeassistant.components.luxtronik
-luxtronik==0.2.5
+luxtronik==0.2.6
 
 # homeassistant.components.lw12wifi
 lw12==0.9.2
