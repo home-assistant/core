@@ -319,7 +319,7 @@ class ADBDevice(MediaPlayerDevice):
 
         # Property attributes
         self._adb_response = None
-        self._available = self.aftv.available
+        self._available = True
         self._current_app = None
         self._state = None
 
