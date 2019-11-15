@@ -69,9 +69,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     # Use all sensors by default
     hass_sensors = []
 
-    for sensor in sensor_def:
-        hass_sensors.append(SAJsensor(sensor, inverter_name=config.get(CONF_NAME)))
-
     kwargs = {}
     if wifi:
         kwargs["wifi"] = True
@@ -81,7 +78,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     try:
         saj = pysaj.SAJ(config[CONF_HOST], **kwargs)
-        await saj.read(sensor_def)
+        done = await saj.read(sensor_def)
     except pysaj.UnauthorizedException:
         _LOGGER.error("Username and/or password is wrong.")
         return
@@ -91,7 +88,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
         return
 
-    async_add_entities(hass_sensors)
+    if done:
+        for sensor in sensor_def:
+            hass_sensors.append(
+                SAJsensor(saj.serialnumber, sensor, inverter_name=config.get(CONF_NAME))
+            )
+
+        async_add_entities(hass_sensors)
 
     async def async_saj():
         """Update all the SAJ sensors."""
@@ -163,10 +166,11 @@ def async_track_time_interval_backoff(hass, action) -> CALLBACK_TYPE:
 class SAJsensor(Entity):
     """Representation of a SAJ sensor."""
 
-    def __init__(self, pysaj_sensor, inverter_name=None):
+    def __init__(self, serialnumber, pysaj_sensor, inverter_name=None):
         """Initialize the sensor."""
         self._sensor = pysaj_sensor
         self._inverter_name = inverter_name
+        self._serialnumber = serialnumber
         self._state = self._sensor.value
 
     @property
@@ -235,7 +239,4 @@ class SAJsensor(Entity):
     @property
     def unique_id(self):
         """Return a unique identifier for this sensor."""
-        if self._inverter_name:
-            return f"{self._inverter_name}_{self._sensor.name}"
-
-        return f"{self._sensor.name}"
+        return f"{self._serialnumber}_{self._sensor.name}"
