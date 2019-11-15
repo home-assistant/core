@@ -1,7 +1,7 @@
 """Support for tracking Tesla cars."""
 import logging
 
-from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.util import slugify
 
 from . import DOMAIN as TESLA_DOMAIN
@@ -9,11 +9,13 @@ from . import DOMAIN as TESLA_DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_scanner(hass, config, see, discovery_info=None):
+async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Set up the Tesla tracker."""
-    TeslaDeviceTracker(
-        hass, config, see, hass.data[TESLA_DOMAIN]["devices"]["devices_tracker"]
+    tracker = TeslaDeviceTracker(
+        hass, config, async_see, hass.data[TESLA_DOMAIN]["devices"]["devices_tracker"]
     )
+    await tracker.update_info()
+    async_track_utc_time_change(hass, tracker.update_info, second=range(0, 60, 30))
     return True
 
 
@@ -25,14 +27,11 @@ class TeslaDeviceTracker:
         self.hass = hass
         self.see = see
         self.devices = tesla_devices
-        self._update_info()
 
-        track_utc_time_change(self.hass, self._update_info, second=range(0, 60, 30))
-
-    def _update_info(self, now=None):
+    async def update_info(self, now=None):
         """Update the device info."""
         for device in self.devices:
-            device.update()
+            await device.async_update()
             name = device.name
             _LOGGER.debug("Updating device position: %s", name)
             dev_id = slugify(device.uniq_name)
@@ -41,6 +40,6 @@ class TeslaDeviceTracker:
                 lat = location["latitude"]
                 lon = location["longitude"]
                 attrs = {"trackr_id": dev_id, "id": dev_id, "name": name}
-                self.see(
+                await self.see(
                     dev_id=dev_id, host_name=name, gps=(lat, lon), attributes=attrs
                 )

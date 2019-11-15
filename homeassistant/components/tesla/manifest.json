@@ -2,7 +2,7 @@
   "domain": "tesla",
   "name": "Tesla",
   "documentation": "https://www.home-assistant.io/integrations/tesla",
-  "requirements": ["teslajsonpy==0.0.26"],
+  "requirements": ["teslajsonpy==0.2.0"],
   "dependencies": [],
   "codeowners": ["@zabuldon"]
 }
