@@ -215,7 +215,6 @@ class PrinterAPI:
             prop_data = getattr(printer, prop)
             if attr == "temp_data":
                 temp_methods = methods["temp_data"]
-                temp_id = temp_id - 1
                 for temp_prop, temp_attr in temp_methods.items():
                     data[temp_attr] = getattr(prop_data[temp_id], temp_prop)
             else:
