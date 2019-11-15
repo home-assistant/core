@@ -117,6 +117,7 @@ class SmartPlugSwitch(SwitchDevice):
 
     @property
     def _plug_from_context(self):
+        """Return the plug from the context."""
         children = self.smartplug.sys_info["children"]
         return next(c for c in children if c["id"] == self.smartplug.context)
 
