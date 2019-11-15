@@ -747,7 +747,12 @@
                     "title": "Audio"
                 },
                 {
-                    "badges": [],
+                "badges": [
+                    "sensor.time",
+                    "sensor.daytodisplay",
+                    "binary_sensor.dzien_pracujacy",
+                    "sun.sun"
+                ],
                     "cards": [
                         {
                             "cards": [

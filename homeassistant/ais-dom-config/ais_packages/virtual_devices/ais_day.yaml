@@ -35,7 +35,7 @@ sensor:
          value_template: "{{ now().isocalendar()[1] }}"
 binary_sensor:
   - platform: workday
-    name: "Dzień tygodnia"
+    name: "Dzień pracujący"
     country: PL
 
 group:
@@ -47,3 +47,4 @@ group:
       - sensor.nextsunset
       - sensor.dayofyear
       - sensor.weekofyear
+      - binary_sensor.dzien_pracujacy
