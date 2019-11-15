@@ -41,7 +41,7 @@ class AbstractConfig:
     def __init__(self, hass):
         """Initialize abstract config."""
         self.hass = hass
-        self._google_sync_unsub = None
+        self._google_sync_unsub = {}
         self._local_sdk_active = False
 
     @property
@@ -123,25 +123,23 @@ class AbstractConfig:
     async def async_sync_entities(self, agent_user_id: str):
         """Sync all entities to Google."""
         # Remove any pending sync
-        if self._google_sync_unsub:
-            self._google_sync_unsub()
-            self._google_sync_unsub = None
+        self._google_sync_unsub.pop(agent_user_id, lambda: None)()
 
         return await self._async_request_sync_devices(agent_user_id)
 
-    async def _schedule_callback(self, _now):
-        """Handle a scheduled sync callback."""
-        self._google_sync_unsub = None
-        await self.async_sync_entities()
-
     @callback
-    def async_schedule_google_sync(self):
+    def async_schedule_google_sync(self, agent_user_id: str):
         """Schedule a sync."""
-        if self._google_sync_unsub:
-            self._google_sync_unsub()
 
-        self._google_sync_unsub = async_call_later(
-            self.hass, SYNC_DELAY, self._schedule_callback
+        async def _schedule_callback(_now):
+            """Handle a scheduled sync callback."""
+            self._google_sync_unsub.pop(agent_user_id)
+            await self.async_sync_entities(agent_user_id)
+
+        self._google_sync_unsub.pop(agent_user_id, lambda: None)()
+
+        self._google_sync_unsub[agent_user_id] = async_call_later(
+            self.hass, SYNC_DELAY, _schedule_callback
         )
 
     async def _async_request_sync_devices(self, agent_user_id: str) -> int:

@@ -151,7 +151,7 @@ class CloudGoogleConfig(AbstractConfig):
             self._cur_entity_prefs is not prefs.google_entity_configs
             and self._config["filter"].empty_filter
         ):
-            self.async_schedule_google_sync()
+            self.async_schedule_google_sync(self.agent_user_id)
 
         if self.enabled and not self.is_local_sdk_active:
             self.async_enable_local_sdk()
