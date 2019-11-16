@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "comfoconnect"
 
-SIGNAL_COMFOCONNECT_UPDATE_RECEIVED = "comfoconnect_update_received"
+SIGNAL_COMFOCONNECT_UPDATE_RECEIVED = "comfoconnect_update_received_{}"
 
 CONF_USER_AGENT = "user_agent"
 
@@ -115,4 +115,7 @@ class ComfoConnectBridge:
 
     def sensor_callback(self, var, value):
         """Notify listeners that we have received an update."""
-        dispatcher_send(self.hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, var, value)
+        _LOGGER.debug("Received update for %s: %s", var, value)
+        dispatcher_send(
+            self.hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED.format(var), value
+        )

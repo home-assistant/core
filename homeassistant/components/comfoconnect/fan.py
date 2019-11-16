@@ -47,15 +47,14 @@ class ComfoConnectFan(FanEntity):
             self._ccb.comfoconnect.register_sensor, SENSOR_FAN_SPEED_MODE
         )
         async_dispatcher_connect(
-            self.hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, self._handle_update
+            self.hass,
+            SIGNAL_COMFOCONNECT_UPDATE_RECEIVED.format(SENSOR_FAN_SPEED_MODE),
+            self._handle_update,
         )
 
-    def _handle_update(self, var, value):
+    def _handle_update(self, value):
         """Handle update callbacks."""
-        if var != SENSOR_FAN_SPEED_MODE:
-            return
-        _LOGGER.debug("Received update for %s: %s", var, value)
-        self._ccb.data[var] = value
+        self._ccb.data[SENSOR_FAN_SPEED_MODE] = value
         self.schedule_update_ha_state()
 
     @property

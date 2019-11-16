@@ -232,15 +232,14 @@ class ComfoConnectSensor(Entity):
             self._ccb.comfoconnect.register_sensor, self._sensor_id
         )
         async_dispatcher_connect(
-            self.hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, self._handle_update
+            self.hass,
+            SIGNAL_COMFOCONNECT_UPDATE_RECEIVED.format(self._sensor_id),
+            self._handle_update,
         )
 
-    def _handle_update(self, var, value):
+    def _handle_update(self, value):
         """Handle update callbacks."""
-        if var != self._sensor_id:
-            return
-        _LOGGER.debug("Received update for %s: %s", var, value)
-        self._ccb.data[var] = round(
+        self._ccb.data[self._sensor_id] = round(
             value * SENSOR_TYPES[self._sensor_type].get(ATTR_MULTIPLIER, 1), 2
         )
         self.schedule_update_ha_state()
