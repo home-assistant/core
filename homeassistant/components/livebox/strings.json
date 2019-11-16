@@ -26,4 +26,15 @@
       "cannot_connect": "Unable to connect to the livebox"
     }
   }
+  "options": {
+    "step": {
+        "user": {
+            "title": "Device Tracking - Track devices on lan",
+            "description": "you want tracking  yours wired devices in addition to wireless devices",
+            "data": {
+                "lan_tracking": "Wired tracking"
+            }
+        }
+    }
+  }  
 }

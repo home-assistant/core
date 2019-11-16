@@ -19,6 +19,7 @@ from .const import (
     DEFAULT_USERNAME,
     DEFAULT_HOST,
     DEFAULT_PORT,
+    CONF_LAN_TRACKING,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,6 +33,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                 vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
+                vol.Required(CONF_LAN_TRACKING, default=False): cv.boolean,
             }
         )
     },
@@ -108,12 +110,21 @@ class LiveboxData:
     async def async_devices(self, device=None):
         """Get devices datas."""
 
-        parameters = {"parameters": {"expression": {"wifi": "wifi"}}}
+        parameters = {
+            "parameters": {
+                "expression": {"wifi": "wifi", "eth": 'eth and .DeviceType!=""'}
+            }
+        }
+        lan_tracking = self._entry.options.get("lan_tracking", False)
+
         if device is not None:
             parameters = {
                 "parameters": {
                     "expression": {
-                        "wifi": 'wifi and .PhysAddress=="' + device["PhysAddress"] + '"'
+                        "wifi": 'wifi and .PhysAddress=="'
+                        + device["PhysAddress"]
+                        + '"',
+                        "eth": 'eth and .PhysAddress=="' + device["PhysAddress"] + '"',
                     }
                 }
             }
@@ -127,8 +138,11 @@ class LiveboxData:
             return None
 
         devices = await self._box.system.get_devices(parameters)
-
-        return devices.get("status", {}).get("wifi", {})
+        device_wifi = devices.get("status", {}).get("wifi", {})
+        device_eth = devices.get("status", {}).get("eth", {})
+        if lan_tracking:
+            return device_wifi + device_eth
+        return device_wifi
 
     async def async_infos(self):
         """Get infos."""
