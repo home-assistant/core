@@ -13,6 +13,7 @@ from pycomfoconnect import (
 from homeassistant.const import CONF_RESOURCES, TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+
 from . import (
     ATTR_AIR_FLOW_EXHAUST,
     ATTR_AIR_FLOW_SUPPLY,
