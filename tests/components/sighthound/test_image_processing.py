@@ -1,7 +1,10 @@
 """Tests for the Sighthound integration."""
+from unittest.mock import patch
+
+import pytest
 
 import homeassistant.components.image_processing as ip
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY
 from homeassistant.setup import async_setup_component
 
 VALID_CONFIG = {
@@ -15,8 +18,75 @@ VALID_CONFIG = {
 
 VALID_ENTITY_ID = "image_processing.sighthound_demo_camera"
 
+MOCK_DETECTIONS = {
+    "image": {"width": 960, "height": 480, "orientation": 1},
+    "objects": [
+        {
+            "type": "face",
+            "boundingBox": {"x": 305, "y": 151, "height": 28, "width": 30},
+            "attributes": {
+                "gender": "male",
+                "genderConfidence": 0.9733,
+                "age": 33,
+                "ageConfidence": 0.7801,
+                "frontal": True,
+            },
+        },
+        {
+            "type": "face",
+            "boundingBox": {"x": 855, "y": 147, "height": 29, "width": 24},
+            "attributes": {
+                "gender": "male",
+                "genderConfidence": 0.9834,
+                "age": 37,
+                "ageConfidence": 0.5096,
+                "frontal": False,
+            },
+        },
+        {
+            "type": "person",
+            "boundingBox": {"x": 227, "y": 133, "height": 245, "width": 125},
+        },
+        {
+            "type": "person",
+            "boundingBox": {"x": 833, "y": 137, "height": 268, "width": 93},
+        },
+    ],
+    "requestId": "545cec700eac4d389743e2266264e84b",
+}
+
+
+@pytest.fixture
+def mock_detections():
+    """Return a mock detection."""
+    with patch(
+        "simplehound.core.cloud.detect", return_value=MOCK_DETECTIONS
+    ) as detection:
+        yield detection
+
+
+@pytest.fixture
+def mock_image():
+    """Return a mock camera image."""
+    with patch(
+        "homeassistant.components.demo.camera.DemoCamera.camera_image",
+        return_value=b"Test",
+    ) as image:
+        yield image
+
 
 async def test_setup_platform(hass):
     """Set up platform with one entity."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     assert hass.states.get(VALID_ENTITY_ID)
+
+
+async def test_process_image(hass, mock_image, mock_detections):
+    """Process an image."""
+    await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+    assert hass.states.get(VALID_ENTITY_ID)
+    data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
+    await hass.services.async_call(ip.DOMAIN, ip.SERVICE_SCAN, service_data=data)
+    await hass.async_block_till_done()
+    state = hass.states.get(VALID_ENTITY_ID)
+    assert state.state == "2"
