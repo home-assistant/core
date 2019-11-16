@@ -18,7 +18,6 @@ from homeassistant.components.fan import (
     FanEntity,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-
 from . import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,13 +37,14 @@ class ComfoConnectFan(FanEntity):
 
     def __init__(self, name, ccb: ComfoConnectBridge) -> None:
         """Initialize the ComfoConnect fan."""
-
         self._ccb = ccb
         self._name = name
 
     async def async_added_to_hass(self):
         """Register for sensor updates."""
-        self._ccb.comfoconnect.register_sensor(SENSOR_FAN_SPEED_MODE)
+        await self.hass.async_add_executor_job(
+            self._ccb.comfoconnect.register_sensor, SENSOR_FAN_SPEED_MODE
+        )
         async_dispatcher_connect(
             self.hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, self._handle_update
         )
@@ -52,8 +52,13 @@ class ComfoConnectFan(FanEntity):
     def _handle_update(self, var):
         """Handle update callbacks."""
         if var == SENSOR_FAN_SPEED_MODE:
-            _LOGGER.debug("Dispatcher update for %s", var)
+            _LOGGER.debug("Received update for %s", var)
             self.schedule_update_ha_state()
+
+    @property
+    def should_poll(self) -> bool:
+        """Do not poll."""
+        return False
 
     @property
     def name(self):
@@ -73,7 +78,6 @@ class ComfoConnectFan(FanEntity):
     @property
     def speed(self):
         """Return the current fan mode."""
-
         try:
             speed = self._ccb.data[SENSOR_FAN_SPEED_MODE]
             return SPEED_MAPPING[speed]
@@ -97,7 +101,7 @@ class ComfoConnectFan(FanEntity):
 
     def set_speed(self, speed: str):
         """Set fan speed."""
-        _LOGGER.debug("Changing fan speed to %s.", speed)
+        _LOGGER.debug("Changing fan speed to %s", speed)
 
         if speed == SPEED_OFF:
             self._ccb.comfoconnect.cmd_rmi_request(CMD_FAN_MODE_AWAY)

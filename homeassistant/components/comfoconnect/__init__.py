@@ -1,14 +1,15 @@
 """Support to control a Zehnder ComfoAir Q350/450/600 ventilation unit."""
 import logging
 
+import voluptuous as vol
 from pycomfoconnect import (
     SENSOR_TEMPERATURE_EXTRACT,
     SENSOR_TEMPERATURE_OUTDOOR,
     Bridge,
     ComfoConnect,
 )
-import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -17,7 +18,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,7 +102,6 @@ class ComfoConnectBridge:
 
     def __init__(self, hass, bridge, name, token, friendly_name, pin):
         """Initialize the ComfoConnect bridge."""
-
         self.data = {}
         self.name = name
         self.hass = hass

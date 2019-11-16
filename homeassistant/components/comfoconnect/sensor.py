@@ -13,7 +13,6 @@ from pycomfoconnect import (
 from homeassistant.const import CONF_RESOURCES, TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-
 from . import (
     ATTR_AIR_FLOW_EXHAUST,
     ATTR_AIR_FLOW_SUPPLY,
@@ -81,7 +80,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         sensor_type = resource.lower()
 
         if sensor_type not in SENSOR_TYPES:
-            _LOGGER.warning("Sensor type: %s is not a valid sensor.", sensor_type)
+            _LOGGER.warning("Sensor type: %s is not a valid sensor", sensor_type)
             continue
 
         sensors.append(
@@ -108,7 +107,9 @@ class ComfoConnectSensor(Entity):
 
     async def async_added_to_hass(self):
         """Register for sensor updates."""
-        self._ccb.comfoconnect.register_sensor(self._sensor_id)
+        await self.hass.async_add_executor_job(
+            self._ccb.comfoconnect.register_sensor, self._sensor_id
+        )
         async_dispatcher_connect(
             self.hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, self._handle_update
         )
@@ -116,7 +117,7 @@ class ComfoConnectSensor(Entity):
     def _handle_update(self, var):
         """Handle update callbacks."""
         if var == self._sensor_id:
-            _LOGGER.debug("Dispatcher update for %s.", var)
+            _LOGGER.debug("Received update for %s", var)
             self.schedule_update_ha_state()
 
     @property
@@ -126,6 +127,11 @@ class ComfoConnectSensor(Entity):
             return self._ccb.data[self._sensor_id]
         except KeyError:
             return None
+
+    @property
+    def should_poll(self) -> bool:
+        """Do not poll."""
+        return False
 
     @property
     def name(self):
