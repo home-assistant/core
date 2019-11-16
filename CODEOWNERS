@@ -62,6 +62,7 @@ homeassistant/components/ciscospark/* @fbradyirl
 homeassistant/components/cloud/* @home-assistant/cloud
 homeassistant/components/cloudflare/* @ludeeus
 homeassistant/components/comfoconnect/* @michaelarnauts
+homeassistant/components/coned/* @bvlaicu
 homeassistant/components/config/* @home-assistant/core
 homeassistant/components/configurator/* @home-assistant/core
 homeassistant/components/conversation/* @home-assistant/core
