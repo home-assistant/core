@@ -38,31 +38,31 @@ from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge
 
-ATTR_CURRENT_TEMPERATURE = "current_temperature"
-ATTR_CURRENT_HUMIDITY = "current_humidity"
-ATTR_OUTSIDE_TEMPERATURE = "outside_temperature"
-ATTR_OUTSIDE_HUMIDITY = "outside_humidity"
-ATTR_SUPPLY_TEMPERATURE = "supply_temperature"
-ATTR_SUPPLY_HUMIDITY = "supply_humidity"
-ATTR_SUPPLY_FAN_SPEED = "supply_fan_speed"
-ATTR_SUPPLY_FAN_DUTY = "supply_fan_duty"
-ATTR_EXHAUST_TEMPERATURE = "exhaust_temperature"
-ATTR_EXHAUST_HUMIDITY = "exhaust_humidity"
-ATTR_EXHAUST_FAN_SPEED = "exhaust_fan_speed"
-ATTR_EXHAUST_FAN_DUTY = "exhaust_fan_duty"
-ATTR_AIR_FLOW_SUPPLY = "air_flow_supply"
 ATTR_AIR_FLOW_EXHAUST = "air_flow_exhaust"
+ATTR_AIR_FLOW_SUPPLY = "air_flow_supply"
 ATTR_BYPASS_STATE = "bypass_state"
+ATTR_CURRENT_HUMIDITY = "current_humidity"
+ATTR_CURRENT_TEMPERATURE = "current_temperature"
 ATTR_DAYS_TO_REPLACE_FILTER = "days_to_replace_filter"
+ATTR_EXHAUST_FAN_DUTY = "exhaust_fan_duty"
+ATTR_EXHAUST_FAN_SPEED = "exhaust_fan_speed"
+ATTR_EXHAUST_HUMIDITY = "exhaust_humidity"
+ATTR_EXHAUST_TEMPERATURE = "exhaust_temperature"
+ATTR_OUTSIDE_HUMIDITY = "outside_humidity"
+ATTR_OUTSIDE_TEMPERATURE = "outside_temperature"
 ATTR_POWER_CURRENT = "power_usage"
+ATTR_SUPPLY_FAN_DUTY = "supply_fan_duty"
+ATTR_SUPPLY_FAN_SPEED = "supply_fan_speed"
+ATTR_SUPPLY_HUMIDITY = "supply_humidity"
+ATTR_SUPPLY_TEMPERATURE = "supply_temperature"
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_LABEL = "label"
 ATTR_ICON = "icon"
-ATTR_UNIT = "unit"
 ATTR_ID = "id"
+ATTR_LABEL = "label"
 ATTR_MULTIPLIER = "multiplier"
+ATTR_UNIT = "unit"
 
 SENSOR_TYPES = {
     ATTR_CURRENT_TEMPERATURE: {
@@ -157,14 +157,14 @@ SENSOR_TYPES = {
         ATTR_DEVICE_CLASS: None,
         ATTR_LABEL: "Supply airflow",
         ATTR_UNIT: "m³/h",
-        ATTR_ICON: "mdi:air-conditioner",
+        ATTR_ICON: "mdi:fan",
         ATTR_ID: SENSOR_FAN_SUPPLY_FLOW,
     },
     ATTR_AIR_FLOW_EXHAUST: {
         ATTR_DEVICE_CLASS: None,
         ATTR_LABEL: "Exhaust airflow",
         ATTR_UNIT: "m³/h",
-        ATTR_ICON: "mdi:air-conditioner",
+        ATTR_ICON: "mdi:fan",
         ATTR_ID: SENSOR_FAN_EXHAUST_FLOW,
     },
     ATTR_BYPASS_STATE: {
@@ -185,7 +185,7 @@ SENSOR_TYPES = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
         ATTR_LABEL: "Power usage",
         ATTR_UNIT: POWER_WATT,
-        ATTR_ICON: "mdi:calendar",
+        ATTR_ICON: "mdi:flash",
         ATTR_ID: SENSOR_POWER_CURRENT,
     },
 }
