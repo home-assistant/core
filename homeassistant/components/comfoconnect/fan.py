@@ -44,13 +44,13 @@ class ComfoConnectFan(FanEntity):
     async def async_added_to_hass(self):
         """Register for sensor updates."""
         _LOGGER.debug("Registering for fan speed")
-        await self.hass.async_add_executor_job(
-            self._ccb.comfoconnect.register_sensor, SENSOR_FAN_SPEED_MODE
-        )
         async_dispatcher_connect(
             self.hass,
             SIGNAL_COMFOCONNECT_UPDATE_RECEIVED.format(SENSOR_FAN_SPEED_MODE),
             self._handle_update,
+        )
+        await self.hass.async_add_executor_job(
+            self._ccb.comfoconnect.register_sensor, SENSOR_FAN_SPEED_MODE
         )
 
     def _handle_update(self, value):
