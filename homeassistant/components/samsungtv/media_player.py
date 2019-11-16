@@ -101,6 +101,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         port = None
         timeout = DEFAULT_TIMEOUT
         mac = None
+        broadcast = DEFAULT_BROADCAST_ADDRESS
         uuid = discovery_info.get("udn")
         if uuid and uuid.startswith("uuid:"):
             uuid = uuid[len("uuid:") :]
