@@ -1,14 +1,24 @@
 """Interfaces with TotalConnect sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import (BinarySensorDevice,
-    DEVICE_CLASS_DOOR, DEVICE_CLASS_SMOKE, DEVICE_CLASS_GAS)
+from homeassistant.components.binary_sensor import (
+    BinarySensorDevice,
+    DEVICE_CLASS_DOOR,
+    DEVICE_CLASS_SMOKE,
+    DEVICE_CLASS_GAS,
+)
 
-from total_connect_client.TotalConnectClient import (ZONE_TYPE_SECURITY,
-    ZONE_TYPE_FIRE_SMOKE, ZONE_TYPE_CARBON_MONOXIDE,
-    ZONE_STATUS_NORMAL, ZONE_STATUS_BYPASSED, ZONE_STATUS_FAULT,
-    ZONE_STATUS_TAMPER, ZONE_STATUS_TROUBLE_LOW_BATTERY,
-    ZONE_STATUS_TRIGGERED)
+from total_connect_client.TotalConnectClient import (
+    ZONE_TYPE_SECURITY,
+    ZONE_TYPE_FIRE_SMOKE,
+    ZONE_TYPE_CARBON_MONOXIDE,
+    ZONE_STATUS_NORMAL,
+    ZONE_STATUS_BYPASSED,
+    ZONE_STATUS_FAULT,
+    ZONE_STATUS_TAMPER,
+    ZONE_STATUS_TROUBLE_LOW_BATTERY,
+    ZONE_STATUS_TRIGGERED,
+)
 
 from . import DOMAIN as TOTALCONNECT_DOMAIN
 
@@ -45,11 +55,13 @@ class TotalConnectBinarySensor(BinarySensorDevice):
         self._zone_id = zone_id
         self._location_id = location_id
         self._locations = locations
-        self._name = 'TC {} zone {}'.format(
-            locations[location_id].location_name, zone_id)
+        self._name = "TC {} zone {}".format(
+            locations[location_id].location_name, zone_id
+        )
         self._state = locations[location_id].zones[zone_id].status
-        self._unique_id = 'TC {} zone {}'.format(
-            locations[location_id].location_name, zone_id)
+        self._unique_id = "TC {} zone {}".format(
+            locations[location_id].location_name, zone_id
+        )
         self._device_class = locations[location_id].zones[zone_id].zone_type_id
         self._is_low_battery = False
         self._is_tampered = False
@@ -76,8 +88,8 @@ class TotalConnectBinarySensor(BinarySensorDevice):
         status = self._locations[self._location_id].zones[self._zone_id].status
 
         self._is_on = not status == ZONE_STATUS_BYPASSED
-        self._is_tampered = (status == ZONE_STATUS_TAMPER)
-        self._is_low_battery = (status == ZONE_STATUS_TROUBLE_LOW_BATTERY)
+        self._is_tampered = status == ZONE_STATUS_TAMPER
+        self._is_low_battery = status == ZONE_STATUS_TROUBLE_LOW_BATTERY
 
         if status == ZONE_STATUS_NORMAL:
             self._state = False
@@ -85,8 +97,7 @@ class TotalConnectBinarySensor(BinarySensorDevice):
             self._state = True
         else:
             self._state = False
-            _LOGGER.info('Unknown Total Connect zone status %s returned.',
-                         status)
+            _LOGGER.info("Unknown Total Connect zone status %s returned.", status)
 
     @property
     def is_on(self):

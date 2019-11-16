@@ -308,6 +308,7 @@ homeassistant/components/tile/* @bachya
 homeassistant/components/time_date/* @fabaff
 homeassistant/components/todoist/* @boralyl
 homeassistant/components/toon/* @frenck
+homeassistant/components/totalconnect/* @austinmroczek
 homeassistant/components/tplink/* @rytilahti
 homeassistant/components/traccar/* @ludeeus
 homeassistant/components/tradfri/* @ggravlingen
