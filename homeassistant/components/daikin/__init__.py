@@ -15,7 +15,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
-from . import config_flow  # noqa  pylint_disable=unused-import
+from . import config_flow  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -15,7 +15,7 @@ from typing import (
     TypeVar,
     Callable,
     KeysView,
-    Union,  # noqa
+    Union,
     Iterable,
     Coroutine,
 )
