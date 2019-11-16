@@ -44,6 +44,7 @@ disable=
   too-many-public-methods,
   too-many-return-statements,
   too-many-statements,
+  too-many-boolean-expressions,
   unnecessary-pass,
   unused-argument
 

@@ -94,7 +94,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_engine(hass, config):
+def get_engine(hass, config, discovery_info=None):
     """Set up Microsoft speech component."""
     return MicrosoftProvider(
         config[CONF_API_KEY],

@@ -55,10 +55,17 @@
             "left": "Gauche",
             "open": "Ouvert",
             "right": "Droite",
+            "side_1": "Face 1",
+            "side_2": "Face 2",
+            "side_3": "Face 3",
+            "side_4": "Face 4",
+            "side_5": "Face 5",
+            "side_6": "Face 6",
             "turn_off": "\u00c9teint",
             "turn_on": "Allum\u00e9"
         },
         "trigger_type": {
+            "remote_awakened": "Appareil r\u00e9veill\u00e9",
             "remote_button_double_press": "Bouton \"{subtype}\" double cliqu\u00e9",
             "remote_button_long_press": "Bouton \"{subtype}\" appuy\u00e9 continuellement",
             "remote_button_long_release": "Bouton \"{subtype}\" rel\u00e2ch\u00e9 apr\u00e8s appui long",

@@ -12,7 +12,9 @@
             "closed": "{entity_name} tancat/da",
             "closing": "{entity_name} tancant-se",
             "opened": "{entity_name} s'ha obert",
-            "opening": "{entity_name} obrint-se"
+            "opening": "{entity_name} obrint-se",
+            "position": "Canvia la posici\u00f3 de {entity_name}",
+            "tilt_position": "Canvia la inclinaci\u00f3 de {entity_name}"
         }
     }
 }

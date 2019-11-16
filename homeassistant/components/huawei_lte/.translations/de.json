@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dieses Ger\u00e4t wurde bereits konfiguriert",
+            "already_in_progress": "Dieses Ger\u00e4t wurde bereits konfiguriert"
+        },
+        "error": {
+            "connection_failed": "Verbindung fehlgeschlagen.",
+            "connection_timeout": "Verbindungszeit\u00fcberschreitung",
+            "incorrect_password": "Ung\u00fcltiges Passwort",
+            "incorrect_username": "Ung\u00fcltiger Benutzername",
+            "incorrect_username_or_password": "Ung\u00fcltiger Benutzername oder Kennwort",
+            "invalid_url": "Ung\u00fcltige URL"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "url": "URL",
+                    "username": "Benutzername"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "recipient": "SMS-Benachrichtigungsempf\u00e4nger"
+                }
+            }
+        }
+    }
+}

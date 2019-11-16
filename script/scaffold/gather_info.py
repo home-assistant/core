@@ -120,7 +120,7 @@ def _load_existing_integration(domain) -> Info:
 
     manifest = json.loads((COMPONENT_DIR / domain / "manifest.json").read_text())
 
-    return Info(domain=domain, name=manifest["name"])
+    return Info(domain=domain, name=manifest["name"], is_new=False)
 
 
 def _gather_info(fields) -> dict:

@@ -287,8 +287,11 @@ class ADBDevice(MediaPlayerDevice):
         """Initialize the Android TV / Fire TV device."""
         self.aftv = aftv
         self._name = name
-        self._apps = APPS.copy()
-        self._apps.update(apps)
+        self._app_id_to_name = APPS.copy()
+        self._app_id_to_name.update(apps)
+        self._app_name_to_id = {
+            value: key for key, value in self._app_id_to_name.items()
+        }
         self._keys = KEYS
 
         self._device_properties = self.aftv.device_properties
@@ -328,7 +331,7 @@ class ADBDevice(MediaPlayerDevice):
     @property
     def app_name(self):
         """Return the friendly name of the current app."""
-        return self._apps.get(self._current_app, self._current_app)
+        return self._app_id_to_name.get(self._current_app, self._current_app)
 
     @property
     def available(self):
@@ -518,7 +521,7 @@ class FireTVDevice(ADBDevice):
         super().__init__(aftv, name, apps, turn_on_command, turn_off_command)
 
         self._get_sources = get_sources
-        self._running_apps = None
+        self._sources = None
 
     @adb_decorator(override_available=True)
     def update(self):
@@ -538,23 +541,28 @@ class FireTVDevice(ADBDevice):
             return
 
         # Get the `state`, `current_app`, and `running_apps`.
-        state, self._current_app, self._running_apps = self.aftv.update(
-            self._get_sources
-        )
+        state, self._current_app, running_apps = self.aftv.update(self._get_sources)
 
         self._state = ANDROIDTV_STATES.get(state)
         if self._state is None:
             self._available = False
 
+        if running_apps:
+            self._sources = [
+                self._app_id_to_name.get(app_id, app_id) for app_id in running_apps
+            ]
+        else:
+            self._sources = None
+
     @property
     def source(self):
         """Return the current app."""
-        return self._current_app
+        return self._app_id_to_name.get(self._current_app, self._current_app)
 
     @property
     def source_list(self):
         """Return a list of running apps."""
-        return self._running_apps
+        return self._sources
 
     @property
     def supported_features(self):
@@ -575,6 +583,7 @@ class FireTVDevice(ADBDevice):
         """
         if isinstance(source, str):
             if not source.startswith("!"):
-                self.aftv.launch_app(source)
+                self.aftv.launch_app(self._app_name_to_id.get(source, source))
             else:
-                self.aftv.stop_app(source[1:].lstrip())
+                source_ = source[1:].lstrip()
+                self.aftv.stop_app(self._app_name_to_id.get(source_, source_))

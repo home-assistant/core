@@ -118,9 +118,16 @@ async def test_get_integration_with_requirements(hass):
     mock_integration(
         hass,
         MockModule(
+            "test_component_after_dep", requirements=["test-comp-after-dep==1.0.0"]
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
             "test_component",
             requirements=["test-comp==1.0.0"],
             dependencies=["test_component_dep"],
+            partial_manifest={"after_dependencies": ["test_component_after_dep"]},
         ),
     )
 
@@ -136,13 +143,19 @@ async def test_get_integration_with_requirements(hass):
         assert integration
         assert integration.domain == "test_component"
 
-    assert len(mock_is_installed.mock_calls) == 2
-    assert mock_is_installed.mock_calls[0][1][0] == "test-comp==1.0.0"
-    assert mock_is_installed.mock_calls[1][1][0] == "test-comp-dep==1.0.0"
+    assert len(mock_is_installed.mock_calls) == 3
+    assert sorted(mock_call[1][0] for mock_call in mock_is_installed.mock_calls) == [
+        "test-comp-after-dep==1.0.0",
+        "test-comp-dep==1.0.0",
+        "test-comp==1.0.0",
+    ]
 
-    assert len(mock_inst.mock_calls) == 2
-    assert mock_inst.mock_calls[0][1][0] == "test-comp==1.0.0"
-    assert mock_inst.mock_calls[1][1][0] == "test-comp-dep==1.0.0"
+    assert len(mock_inst.mock_calls) == 3
+    assert sorted(mock_call[1][0] for mock_call in mock_inst.mock_calls) == [
+        "test-comp-after-dep==1.0.0",
+        "test-comp-dep==1.0.0",
+        "test-comp==1.0.0",
+    ]
 
 
 async def test_install_with_wheels_index(hass):

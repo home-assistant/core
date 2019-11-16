@@ -10,7 +10,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
-from .const import DOMAIN  # pylint: disable=W0611
+from .const import DOMAIN, DEFAULT_CACHEDB  # pylint: disable=W0611
 
 CONF_POLLING = "polling"
 
@@ -42,9 +42,12 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
         polling = user_input.get(CONF_POLLING, False)
+        cache = self.hass.config.path(DEFAULT_CACHEDB)
 
         try:
-            await self.hass.async_add_executor_job(Abode, username, password, True)
+            await self.hass.async_add_executor_job(
+                Abode, username, password, True, True, True, cache
+            )
 
         except (AbodeException, ConnectTimeout, HTTPError) as ex:
             _LOGGER.error("Unable to connect to Abode: %s", str(ex))

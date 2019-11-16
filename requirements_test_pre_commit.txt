@@ -1,0 +1,6 @@
+# Automatically generated from .pre-commit-config-all.yaml by gen_requirements_all.py, do not edit
+
+black==19.10b0
+flake8-docstrings==1.5.0
+flake8==3.7.9
+pydocstyle==4.0.1
