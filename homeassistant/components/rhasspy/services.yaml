@@ -1,0 +1,2 @@
+train:
+  description: Generates voice commands and re-trains Rhasspy server.

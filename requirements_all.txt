@@ -889,6 +889,9 @@ nsw-fuel-api-client==1.0.10
 # homeassistant.components.nuheat
 nuheat==0.3.0
 
+# homeassistant.components.rhasspy
+num2words==0.5.10
+
 # homeassistant.components.iqvia
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
@@ -1160,6 +1163,9 @@ pydaikin==1.6.1
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
+
+# homeassistant.components.rhasspy
+pydash==4.7.5
 
 # homeassistant.components.deconz
 pydeconz==64
