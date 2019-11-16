@@ -579,7 +579,9 @@ async def test_turn_on_with_mac(hass, remote, wakeonlan):
     )
     # key and update called
     assert wakeonlan.send_magic_packet.call_count == 1
-    assert wakeonlan.send_magic_packet.call_args_list == [call("38:f9:d3:82:b4:f1", ip_address="255.255.255.255")]
+    assert wakeonlan.send_magic_packet.call_args_list == [
+        call("38:f9:d3:82:b4:f1", ip_address="255.255.255.255")
+    ]
 
 
 async def test_turn_on_with_mac_and_broadcast(hass, remote, wakeonlan):
@@ -590,7 +592,9 @@ async def test_turn_on_with_mac_and_broadcast(hass, remote, wakeonlan):
     )
     # key and update called
     assert wakeonlan.send_magic_packet.call_count == 1
-    assert wakeonlan.send_magic_packet.call_args_list == [call("38:f9:d3:82:b4:f1", ip_address="192.168.5.255")]
+    assert wakeonlan.send_magic_packet.call_args_list == [
+        call("38:f9:d3:82:b4:f1", ip_address="192.168.5.255")
+    ]
 
 
 async def test_turn_on_without_mac(hass, remote):
