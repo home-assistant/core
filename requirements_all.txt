@@ -1794,6 +1794,9 @@ smarthab==0.20
 # homeassistant.components.raspihats
 # smbus-cffi==0.5.1
 
+# homeassistant.components.pi4ioe5v9xxxx
+smbus2==0.3.0
+
 # homeassistant.components.smhi
 smhi-pkg==1.0.10
 

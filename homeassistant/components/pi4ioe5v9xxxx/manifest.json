@@ -1,0 +1,12 @@
+{
+  "domain": "pi4ioe5v9xxxx",
+  "name": "pi4ioe5v9xxxx IO Expander",
+  "documentation": "https://www.home-assistant.io/integrations/pi4ioe5v9xxxx",
+  "requirements": [
+    "smbus2==0.3.0"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@antonverburg"
+  ]
+}
