@@ -50,11 +50,13 @@ class ComfoConnectFan(FanEntity):
             self.hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, self._handle_update
         )
 
-    def _handle_update(self, var):
+    def _handle_update(self, var, value):
         """Handle update callbacks."""
-        if var == SENSOR_FAN_SPEED_MODE:
-            _LOGGER.debug("Received update for %s", var)
-            self.schedule_update_ha_state()
+        if var != SENSOR_FAN_SPEED_MODE:
+            return
+        _LOGGER.debug("Received update for %s: %s", var, value)
+        self._ccb.data[var] = value
+        self.schedule_update_ha_state()
 
     @property
     def should_poll(self) -> bool:
