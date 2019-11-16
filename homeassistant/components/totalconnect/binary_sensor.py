@@ -1,13 +1,6 @@
 """Interfaces with TotalConnect sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_SMOKE,
-    DEVICE_CLASS_GAS,
-)
-
 from total_connect_client.TotalConnectClient import (
     ZONE_TYPE_SECURITY,
     ZONE_TYPE_FIRE_SMOKE,
@@ -18,6 +11,13 @@ from total_connect_client.TotalConnectClient import (
     ZONE_STATUS_TAMPER,
     ZONE_STATUS_TROUBLE_LOW_BATTERY,
     ZONE_STATUS_TRIGGERED,
+)
+
+from homeassistant.components.binary_sensor import (
+    BinarySensorDevice,
+    DEVICE_CLASS_DOOR,
+    DEVICE_CLASS_SMOKE,
+    DEVICE_CLASS_GAS,
 )
 
 from . import DOMAIN as TOTALCONNECT_DOMAIN
