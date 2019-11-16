@@ -16,11 +16,12 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.util import Throttle, slugify
+from homeassistant.util import Throttle
 
 from .const import (
     DOMAIN,
     CONF_LOCATION,
+    CONF_SLUG,
     DEFAULT_LOCATION,
     DEFAULT_NAME,
     DEFAULT_SSL,
@@ -34,38 +35,52 @@ from .const import (
 )
 
 
-def ensure_unique_names(config):
+def ensure_unique_names_and_slugs(config):
     """Ensure that each configuration dict contains a unique `name` value."""
     names = {}
+    slugs = {}
     for conf in config:
-        if conf[CONF_NAME] not in names:
+        if conf[CONF_NAME] not in names and conf[CONF_SLUG] not in slugs:
             names[conf[CONF_NAME]] = conf[CONF_HOST]
+            slugs[conf[CONF_SLUG]] = conf[CONF_HOST]
         else:
             raise vol.Invalid(
-                "Duplicate name '{}' for '{}' (already in use by '{}'). Each configured Pi-hole must have a unique name.".format(
-                    conf[CONF_NAME], conf[CONF_HOST], names[conf[CONF_NAME]]
+                "Duplicate name '{}' (or slug '{}') for '{}' (already in use by '{}'). Each configured Pi-hole must have a unique name.".format(
+                    conf[CONF_NAME],
+                    conf[CONF_SLUG],
+                    conf[CONF_HOST],
+                    names.get(conf[CONF_NAME], slugs[conf[CONF_SLUG]]),
                 )
             )
+    return config
+
+
+def coerce_slug(config):
+    """Coerce the name of the Pi-Hole into a slug."""
+    config[CONF_SLUG] = cv.slugify(config[CONF_NAME])
     return config
 
 
 LOGGER = logging.getLogger(__name__)
 
 PI_HOLE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_LOCATION, default=DEFAULT_LOCATION): cv.string,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    }
+    vol.All(
+        {
+            vol.Required(CONF_HOST): cv.string,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_API_KEY): cv.string,
+            vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+            vol.Optional(CONF_LOCATION, default=DEFAULT_LOCATION): cv.string,
+            vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        },
+        coerce_slug,
+    )
 )
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
-            vol.All(cv.ensure_list, [PI_HOLE_SCHEMA], ensure_unique_names)
+            vol.All(cv.ensure_list, [PI_HOLE_SCHEMA], ensure_unique_names_and_slugs)
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -89,7 +104,7 @@ async def async_setup(hass, config):
 
             call_data[SERVICE_DISABLE_ATTR_NAME] = None
         else:
-            slug = slugify(call_data[SERVICE_DISABLE_ATTR_NAME])
+            slug = cv.slugify(call_data[SERVICE_DISABLE_ATTR_NAME])
 
             if (data[slug]).api.api_token is None:
                 raise vol.Invalid(
@@ -126,6 +141,7 @@ async def async_setup(hass, config):
 
     for conf in config[DOMAIN]:
         name = conf[CONF_NAME]
+        slug = conf[CONF_SLUG]
         host = conf[CONF_HOST]
         use_tls = conf[CONF_SSL]
         verify_tls = conf[CONF_VERIFY_SSL]
@@ -149,7 +165,7 @@ async def async_setup(hass, config):
 
         await pi_hole.async_update()
 
-        hass.data[DOMAIN][slugify(name)] = pi_hole
+        hass.data[DOMAIN][slug] = pi_hole
 
     async def disable_service_handler(call):
         """Handle the service call to disable a single Pi-Hole or all configured Pi-Holes."""
@@ -158,7 +174,7 @@ async def async_setup(hass, config):
 
         async def do_disable(name):
             """Disable the named Pi-Hole."""
-            slug = slugify(name)
+            slug = cv.slugify(name)
             pi_hole = hass.data[DOMAIN][slug]
 
             LOGGER.debug(
@@ -182,7 +198,7 @@ async def async_setup(hass, config):
 
         async def do_enable(name):
             """Enable the named Pi-Hole."""
-            slug = slugify(name)
+            slug = cv.slugify(name)
             pi_hole = hass.data[DOMAIN][slug]
 
             LOGGER.debug("Enabling Pi-hole '%s' (%s)", name, pi_hole.api.host)
