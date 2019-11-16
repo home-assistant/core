@@ -228,6 +228,9 @@ class ComfoConnectSensor(Entity):
 
     async def async_added_to_hass(self):
         """Register for sensor updates."""
+        _LOGGER.debug(
+            "Registering for sensor %s (%d)", self._sensor_type, self._sensor_id,
+        )
         await self.hass.async_add_executor_job(
             self._ccb.comfoconnect.register_sensor, self._sensor_id
         )
@@ -239,6 +242,12 @@ class ComfoConnectSensor(Entity):
 
     def _handle_update(self, value):
         """Handle update callbacks."""
+        _LOGGER.debug(
+            "Handle update for sensor %s (%d): %s",
+            self._sensor_type,
+            self._sensor_id,
+            value,
+        )
         self._ccb.data[self._sensor_id] = round(
             value * SENSOR_TYPES[self._sensor_type].get(ATTR_MULTIPLIER, 1), 2
         )
