@@ -1,16 +1,13 @@
 """Signal Messenger for notify component."""
+import homeassistant.helpers.config_validation as cv
 import logging
 import voluptuous as vol
-from pysignalclirestapi import SignalCliRestApi, SignalCliRestApiError
-
 from homeassistant.components.notify import (
     ATTR_DATA,
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = []
+from pysignalclirestapi import SignalCliRestApi, SignalCliRestApiError
 
 _LOGGER = logging.getLogger(__name__)
 
