@@ -64,12 +64,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         host = socket.gethostbyname(host)
     except socket.error:
-        _LOGGER.warning(
-            "Could not resolve hostname: %s.\nTrying default address %s",
-            host,
-            DEFAULT_HOST,
-        )
-        host = DEFAULT_HOST
+        _LOGGER.error("Could not resolve hostname %s", host)
     port = config.get(CONF_PORT)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
