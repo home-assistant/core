@@ -85,8 +85,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         sensors.append(
             ComfoConnectSensor(
-                hass,
-                name="%s %s" % (ccb.name, SENSOR_TYPES[sensor_type][0]),
+                name=f"{ccb.name} {SENSOR_TYPES[sensor_type][0]}",
                 ccb=ccb,
                 sensor_type=sensor_type,
             )
@@ -98,7 +97,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ComfoConnectSensor(Entity):
     """Representation of a ComfoConnect sensor."""
 
-    def __init__(self, hass, name, ccb: ComfoConnectBridge, sensor_type) -> None:
+    def __init__(self, name, ccb: ComfoConnectBridge, sensor_type) -> None:
         """Initialize the ComfoConnect sensor."""
         self._ccb = ccb
         self._sensor_type = sensor_type
