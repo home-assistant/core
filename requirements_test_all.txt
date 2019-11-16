@@ -47,10 +47,10 @@ aioasuswrt==1.1.22
 aioautomatic==0.6.5
 
 # homeassistant.components.aws
-aiobotocore==0.10.2
+aiobotocore==0.10.4
 
 # homeassistant.components.esphome
-aioesphomeapi==2.4.2
+aioesphomeapi==2.5.0
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -94,7 +94,7 @@ arcam-fmj==0.4.3
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.upnp
-async-upnp-client==0.14.11
+async-upnp-client==0.14.12
 
 # homeassistant.components.stream
 av==6.1.2
@@ -103,7 +103,7 @@ av==6.1.2
 axis==25
 
 # homeassistant.components.zha
-bellows-homeassistant==0.10.0
+bellows-homeassistant==0.11.0
 
 # homeassistant.components.bom
 bomradarloop==0.1.3
@@ -155,7 +155,7 @@ eebrightbox==0.0.4
 emulated_roku==0.1.8
 
 # homeassistant.components.season
-ephem==3.7.6.0
+ephem==3.7.7.0
 
 # homeassistant.components.feedreader
 feedparser-homeassistant==5.2.2.dev1
@@ -222,7 +222,7 @@ hole==0.5.0
 holidays==0.9.11
 
 # homeassistant.components.frontend
-home-assistant-frontend==20191108.0
+home-assistant-frontend==20191115.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.4
@@ -320,13 +320,13 @@ pilight==0.1.1
 pillow==6.2.1
 
 # homeassistant.components.plex
-plexapi==3.0.6
+plexapi==3.3.0
 
 # homeassistant.components.plex
 plexauth==0.0.5
 
 # homeassistant.components.plex
-plexwebsocket==0.0.4
+plexwebsocket==0.0.5
 
 # homeassistant.components.mhz19
 # homeassistant.components.serial_pm
@@ -368,6 +368,9 @@ pyRFXtrx==0.23
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.4
+
+# homeassistant.components.hisense_aehw4a1
+pyaehw4a1==0.3.1
 
 # homeassistant.components.almond
 pyalmond==0.0.2
@@ -460,7 +463,7 @@ pynx584==0.4
 pyopenuv==1.0.9
 
 # homeassistant.components.opentherm_gw
-pyotgw==0.5b0
+pyotgw==0.5b1
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
@@ -468,7 +471,7 @@ pyotgw==0.5b0
 pyotp==2.3.0
 
 # homeassistant.components.point
-pypoint==1.1.1
+pypoint==1.1.2
 
 # homeassistant.components.ps4
 pyps4-2ndscreen==1.0.1
@@ -546,7 +549,7 @@ rxv==0.6.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.simplisafe
-simplisafe-python==5.0.1
+simplisafe-python==5.2.0
 
 # homeassistant.components.sleepiq
 sleepyq==0.7
@@ -562,7 +565,7 @@ somecomfort==0.5.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.3.10
+sqlalchemy==1.3.11
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -637,16 +640,16 @@ yahooweather==0.10
 zeroconf==0.23.0
 
 # homeassistant.components.zha
-zha-quirks==0.0.27
+zha-quirks==0.0.28
 
 # homeassistant.components.zha
-zigpy-deconz==0.6.0
+zigpy-deconz==0.7.0
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.10.0
+zigpy-homeassistant==0.11.0
 
 # homeassistant.components.zha
-zigpy-xbee-homeassistant==0.6.0
+zigpy-xbee-homeassistant==0.7.0
 
 # homeassistant.components.zha
 zigpy-zigate==0.5.0

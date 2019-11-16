@@ -58,7 +58,7 @@ class PostNLSensor(Entity):
     def __init__(self, api, name):
         """Initialize the PostNL sensor."""
         self._name = name
-        self._attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._attributes = {ATTR_ATTRIBUTION: ATTRIBUTION, "shipments": []}
         self._state = None
         self._api = api
 
@@ -90,6 +90,11 @@ class PostNLSensor(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update device state."""
-        shipments = self._api.get_relevant_shipments()
-        self._attributes["shipments"] = shipments
+        shipments = self._api.get_relevant_deliveries()
+
+        self._attributes["shipments"] = []
+
+        for shipment in shipments:
+            self._attributes["shipments"].append(vars(shipment))
+
         self._state = len(shipments)
