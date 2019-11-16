@@ -25,7 +25,7 @@
       "unknown": "Unknown error occurred",
       "cannot_connect": "Unable to connect to the livebox"
     }
-  }
+  },
   "options": {
     "step": {
         "user": {
