@@ -68,7 +68,7 @@ from homeassistant.util.async_ import run_callback_threadsafe, fire_coroutine_th
 from homeassistant import util
 import homeassistant.util.dt as dt_util
 from homeassistant.util import location, slugify
-from homeassistant.util.unit_system import (  # NOQA
+from homeassistant.util.unit_system import (
     UnitSystem,
     IMPERIAL_SYSTEM,
     METRIC_SYSTEM,

@@ -12,7 +12,7 @@ CONF_CLOUDHOOK = "cloudhook"
 def supports_encryption():
     """Test if we support encryption."""
     try:
-        import nacl  # noqa pylint: disable=unused-import
+        import nacl  # noqa: F401 pylint: disable=unused-import
 
         return True
     except OSError:

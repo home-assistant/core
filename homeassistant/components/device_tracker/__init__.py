@@ -13,11 +13,11 @@ from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.const import ATTR_GPS_ACCURACY, STATE_HOME
 
 from . import legacy, setup
-from .config_entry import (  # noqa  # pylint: disable=unused-import
+from .config_entry import (  # noqa: F401 pylint: disable=unused-import
     async_setup_entry,
     async_unload_entry,
 )
-from .legacy import DeviceScanner  # noqa  # pylint: disable=unused-import
+from .legacy import DeviceScanner  # noqa: F401 pylint: disable=unused-import
 from .const import (
     ATTR_ATTRIBUTES,
     ATTR_BATTERY,
