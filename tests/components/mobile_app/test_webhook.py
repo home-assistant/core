@@ -1,5 +1,5 @@
 """Webhook tests for mobile_app."""
-# pylint: disable=redefined-outer-name,unused-import
+
 import logging
 import pytest
 
@@ -29,9 +29,7 @@ async def test_webhook_handle_render_template(create_registrations, webhook_clie
     assert json == {"one": "Hello world"}
 
 
-async def test_webhook_handle_call_services(
-    hass, create_registrations, webhook_client
-):  # noqa: E501 F811
+async def test_webhook_handle_call_services(hass, create_registrations, webhook_client):
     """Test that we call services properly."""
     calls = async_mock_service(hass, "test", "mobile_app")
 
@@ -68,9 +66,7 @@ async def test_webhook_handle_fire_event(hass, create_registrations, webhook_cli
     assert events[0].data["hello"] == "yo world"
 
 
-async def test_webhook_update_registration(
-    webhook_client, hass_client
-):  # noqa: E501 F811
+async def test_webhook_update_registration(webhook_client, hass_client):
     """Test that a we can update an existing registration via webhook."""
     authed_api_client = await hass_client()
     register_resp = await authed_api_client.post(
@@ -156,7 +152,7 @@ async def test_webhook_handle_get_config(hass, create_registrations, webhook_cli
 
 async def test_webhook_returns_error_incorrect_json(
     webhook_client, create_registrations, caplog
-):  # noqa: E501 F811
+):
     """Test that an error is returned when JSON is invalid."""
     resp = await webhook_client.post(
         "/api/webhook/{}".format(create_registrations[1]["webhook_id"]), data="not json"
@@ -171,9 +167,8 @@ async def test_webhook_returns_error_incorrect_json(
 async def test_webhook_handle_decryption(webhook_client, create_registrations):
     """Test that we can encrypt/decrypt properly."""
     try:
-        # pylint: disable=unused-import
-        from nacl.secret import SecretBox  # noqa: F401
-        from nacl.encoding import Base64Encoder  # noqa: F401
+        from nacl.secret import SecretBox
+        from nacl.encoding import Base64Encoder
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
         return

@@ -5,7 +5,7 @@ import jinja2
 # pylint: disable=using-constant-test
 if TYPE_CHECKING:
     # pylint: disable=unused-import
-    from .core import Context  # noqa
+    from .core import Context  # noqa: F401
 
 
 class HomeAssistantError(Exception):
