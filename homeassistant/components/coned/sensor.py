@@ -9,19 +9,26 @@ from coned import MeterError
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import ENERGY_KILO_WATT_HOUR
+from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION, ENERGY_KILO_WATT_HOUR
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTRIBUTION = "Data provided by ConEdison"
 
 CONF_METER_NUMBER = "meter_number"
 
 SCAN_INTERVAL = timedelta(minutes=15)
 
-SENSOR_NAME = "ConEdison Current Energy Usage"
+DEFAULT_NAME = "ConEdison Current Energy Usage"
 SENSOR_ICON = "mdi:counter"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_METER_NUMBER): cv.string})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_METER_NUMBER): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -36,7 +43,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Unable to create ConEd meter")
         return
 
-    add_entities([CurrentEnergyUsageSensor(meter)], True)
+    name = config[CONF_NAME]
+
+    add_entities([CurrentEnergyUsageSensor(meter, name)], True)
 
     _LOGGER.debug("ConEd meter_number = %s", meter_number)
 
@@ -44,9 +53,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class CurrentEnergyUsageSensor(Entity):
     """Representation of the sensor."""
 
-    def __init__(self, meter):
+    def __init__(self, meter, name):
         """Initialize the sensor."""
         self._state = None
+        self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._name = name
         self._available = None
         self.meter = meter
 
@@ -58,7 +69,12 @@ class CurrentEnergyUsageSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return SENSOR_NAME
+        return self._name
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return self._attrs
 
     @property
     def icon(self):
