@@ -1,27 +1,31 @@
 """Support for tracking which astronomical or meteorological season it is."""
-import logging
 from datetime import datetime
+import logging
 
 import ephem
 import voluptuous as vol
 
+from homeassistant import util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_TYPE
 from homeassistant.helpers.entity import Entity
-from homeassistant import util
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-NORTHERN = "northern"
-SOUTHERN = "southern"
 EQUATOR = "equator"
+
+NORTHERN = "northern"
+
+SOUTHERN = "southern"
+STATE_AUTUMN = "autumn"
 STATE_SPRING = "spring"
 STATE_SUMMER = "summer"
-STATE_AUTUMN = "autumn"
 STATE_WINTER = "winter"
+
 TYPE_ASTRONOMICAL = "astronomical"
 TYPE_METEOROLOGICAL = "meteorological"
+
 VALID_TYPES = [TYPE_ASTRONOMICAL, TYPE_METEOROLOGICAL]
 
 HEMISPHERE_SEASON_SWAP = {

@@ -278,7 +278,7 @@ class VenstarThermostat(ClimateDevice):
         temperature = kwargs.get(ATTR_TEMPERATURE)
 
         if operation_mode and self._mode_map.get(operation_mode) != self._client.mode:
-            set_temp = self._set_operation_mode(self._mode_map.get(operation_mode))
+            set_temp = self._set_operation_mode(operation_mode)
 
         if set_temp:
             if (

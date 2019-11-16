@@ -5,6 +5,7 @@ from typing import Awaitable
 from homematicip.aio.device import AsyncHeatingThermostat, AsyncHeatingThermostatCompact
 from homematicip.aio.group import AsyncHeatingGroup
 from homematicip.base.enums import AbsenceType
+from homematicip.device import Switch
 from homematicip.functionalHomes import IndoorClimateHome
 
 from homeassistant.components.climate import ClimateDevice
@@ -116,7 +117,7 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
     @property
     def hvac_mode(self) -> str:
         """Return hvac operation ie."""
-        if self._disabled_by_cooling_mode:
+        if self._disabled_by_cooling_mode and not self._has_switch:
             return HVAC_MODE_OFF
         if self._device.boostMode:
             return HVAC_MODE_HEAT
@@ -128,7 +129,7 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
     @property
     def hvac_modes(self):
         """Return the list of available hvac operation modes."""
-        if self._disabled_by_cooling_mode:
+        if self._disabled_by_cooling_mode and not self._has_switch:
             return [HVAC_MODE_OFF]
 
         return (
@@ -168,7 +169,9 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
         profile_names = self._device_profile_names
 
         presets = []
-        if self._heat_mode_enabled and self._has_radiator_thermostat:
+        if (
+            self._heat_mode_enabled and self._has_radiator_thermostat
+        ) or self._has_switch:
             if not profile_names:
                 presets.append(PRESET_NONE)
             presets.append(PRESET_BOOST)
@@ -289,6 +292,15 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
             return []
 
         return HEATING_PROFILES if self._heat_mode_enabled else COOLING_PROFILES
+
+    @property
+    def _has_switch(self) -> bool:
+        """Return, if a switch is in the hmip heating group."""
+        for device in self._device.devices:
+            if isinstance(device, Switch):
+                return True
+
+        return False
 
     @property
     def _has_radiator_thermostat(self) -> bool:

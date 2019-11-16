@@ -312,11 +312,11 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def media_next_track(self):
         """Send next track command."""
-        self.send_key("KEY_FF")
+        self.send_key("KEY_CHUP")
 
     def media_previous_track(self):
         """Send the previous track command."""
-        self.send_key("KEY_REWIND")
+        self.send_key("KEY_CHDOWN")
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Support changing a channel."""

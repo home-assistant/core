@@ -13,7 +13,7 @@ from homeassistant.helpers import device_registry as dr
 from .config_flow import HomekitControllerFlowHandler  # noqa: F401
 from .connection import get_accessory_information, HKDevice
 from .const import CONTROLLER, ENTITY_MAP, KNOWN_DEVICES
-from .const import DOMAIN  # noqa: pylint: disable=unused-import
+from .const import DOMAIN
 from .storage import EntityMapStorage
 
 _LOGGER = logging.getLogger(__name__)
