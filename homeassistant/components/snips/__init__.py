@@ -150,22 +150,22 @@ async def async_setup(hass, config):
             )
             if "plain" in intent_response.speech:
                 snips_response = intent_response.speech["plain"]["speech"]
+
+            notification = {"sessionId": request.get("sessionId", "default")}
+
+            if snips_response:
+                notification["text"] = snips_response
+
+            _LOGGER.debug("send_response %s", json.dumps(notification))
+            mqtt.async_publish(
+                hass, "hermes/dialogueManager/endSession", json.dumps(notification)
+            )
         except intent.UnknownIntent:
             _LOGGER.warning(
                 "Received unknown intent %s", request["intent"]["intentName"]
             )
         except intent.IntentError:
             _LOGGER.exception("Error while handling intent: %s.", intent_type)
-
-        notification = {"sessionId": request.get("sessionId", "default")}
-
-        if snips_response:
-            notification["text"] = snips_response
-
-        _LOGGER.debug("send_response %s", json.dumps(notification))
-        mqtt.async_publish(
-            hass, "hermes/dialogueManager/endSession", json.dumps(notification)
-        )
 
     await hass.components.mqtt.async_subscribe(INTENT_TOPIC, message_received)
 
