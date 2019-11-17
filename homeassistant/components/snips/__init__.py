@@ -135,7 +135,6 @@ async def async_setup(hass, config):
             intent_type = request["intent"]["intentName"].split("__")[-1]
         else:
             intent_type = request["intent"]["intentName"].split(":")[-1]
-        snips_response = None
         slots = {}
         for slot in request.get("slots", []):
             slots[slot["slotName"]] = {"value": resolve_slot_values(slot)}
@@ -148,13 +147,10 @@ async def async_setup(hass, config):
             intent_response = await intent.async_handle(
                 hass, DOMAIN, intent_type, slots, request["input"]
             )
-            if "plain" in intent_response.speech:
-                snips_response = intent_response.speech["plain"]["speech"]
-
             notification = {"sessionId": request.get("sessionId", "default")}
 
-            if snips_response:
-                notification["text"] = snips_response
+            if "plain" in intent_response.speech:
+                notification["text"] = intent_response.speech["plain"]["speech"]
 
             _LOGGER.debug("send_response %s", json.dumps(notification))
             mqtt.async_publish(
