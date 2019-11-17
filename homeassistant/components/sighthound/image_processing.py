@@ -26,8 +26,6 @@ CONF_ACCOUNT_TYPE = "account_type"
 DEV = "dev"
 PROD = "prod"
 
-DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
-
 SCAN_INTERVAL = timedelta(days=365)  # NEVER SCAN.
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
