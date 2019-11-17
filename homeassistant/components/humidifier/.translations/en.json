@@ -1,0 +1,18 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_humidifier_mode": "Change humidifier mode on {entity_name}",
+            "set_preset_mode": "Change preset on {entity_name}"
+        },
+        "condtion_type": {
+            "is_humidifier_mode": "{entity_name} is set to a specific humidifier mode",
+            "is_preset_mode": "{entity_name} is set to a specific preset mode"
+        },
+        "trigger_type": {
+            "current_humidity_changed": "{entity_name} measured humidity changed",
+            "current_temperature_changed": "{entity_name} measured temperature changed",
+            "humidifier_mode_changed": "{entity_name} humidifier mode changed",
+            "water_level_changed": "{entity_name} water level changed"
+        }
+    }
+}
