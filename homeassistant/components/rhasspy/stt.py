@@ -13,7 +13,6 @@ import wave
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.components import http
 from homeassistant.components.stt import Provider, SpeechMetadata, SpeechResult
 from homeassistant.components.stt.const import (
     AudioBitRates,
@@ -50,7 +49,6 @@ async def async_get_engine(hass, config, discovery_info):
     _LOGGER.debug("Loaded Rhasspy stt provider")
 
     # Register WAV speech to text test endpoint
-    hass.http.register_view(RhasspyWavView(hass))
 
     return provider
 
@@ -163,35 +161,3 @@ class RhasspySTTProvider(Provider):
     def supported_channels(self) -> List[AudioChannels]:
         """Return a list of supported channels."""
         return list(AudioChannels)
-
-
-# -----------------------------------------------------------------------------
-
-
-class RhasspyWavView(http.HomeAssistantView):
-    """View to test speech to text with WAV files."""
-
-    url = "/api/stt/rhasspy/wav"
-    name = "api:stt:rhasspy:wav"
-
-    def __init__(self, hass):
-        """Create POST endpoint for testing speech to text."""
-        super().__init__()
-        self.hass = hass
-        self.speech_url = None
-        self.headers = {"Content-Type": "audio/wav"}
-
-    async def post(self, request):
-        """Send WAV file to Rhasspy to speech to text."""
-        wav_data = await request.read()
-
-        if self.speech_url is None:
-            self.speech_url = get_speech_url(self.hass)
-
-        # POST to Rhasspy server
-        session = async_get_clientsession(self.hass)
-        async with session.post(
-            self.speech_url, headers=self.headers, data=wav_data
-        ) as res:
-            res.raise_for_status()
-            return await res.text()
