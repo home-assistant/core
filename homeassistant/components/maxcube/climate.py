@@ -113,10 +113,9 @@ class MaxCubeClimate(ClimateDevice):
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
         if device.target_temperature == OFF_TEMPERATURE:
             return HVAC_MODE_OFF
-        elif device.target_temperature == ON_TEMPERATURE:
+        if device.target_temperature == ON_TEMPERATURE:
             return HVAC_MODE_HEAT
-        else:
-            return HVAC_MODE_AUTO
+        return HVAC_MODE_AUTO
 
     @property
     def hvac_modes(self):
@@ -136,11 +135,11 @@ class MaxCubeClimate(ClimateDevice):
             temp = ON_TEMPERATURE
             mode = MAX_DEVICE_MODE_MANUAL
         else:
-            # Reset the temperature to a sane value
-            # TODO: Ideally, we should send 0 and the device will
-            # set its temperature according to the schedule. However
-            # current version of the library has a bug which causes
-            # an exception when setting values below 8.
+            # Reset the temperature to a sane value.
+            # Ideally, we should send 0 and the device will set its
+            # temperature according to the schedule. However, current
+            # version of the library has a bug which causes an
+            # exception when setting values below 8.
             if temp in [OFF_TEMPERATURE, ON_TEMPERATURE]:
                 temp = device.eco_temperature
             mode = MAX_DEVICE_MODE_AUTOMATIC
@@ -167,14 +166,16 @@ class MaxCubeClimate(ClimateDevice):
                 if cube.is_thermostat(device) and device.valve_position > 0:
                     valve = device.valve_position
                     break
+        else:
+            return None
 
         # Assume heating when valve is open
         if valve > 0:
             return CURRENT_HVAC_HEAT
-        else:
-            return CURRENT_HVAC_OFF if self.hvac_mode == HVAC_MODE_OFF else CURRENT_HVAC_IDLE
 
-        return None
+        return (
+            CURRENT_HVAC_OFF if self.hvac_mode == HVAC_MODE_OFF else CURRENT_HVAC_IDLE
+        )
 
     @property
     def target_temperature(self):
@@ -209,7 +210,7 @@ class MaxCubeClimate(ClimateDevice):
         if device.mode == MAX_DEVICE_MODE_MANUAL:
             if device.target_temperature == device.comfort_temperature:
                 return PRESET_COMFORT
-            elif device.target_temperature == device.eco_temperature:
+            if device.target_temperature == device.eco_temperature:
                 return PRESET_ECO
 
         return self.map_mode_max_hass(device.mode)
@@ -217,7 +218,14 @@ class MaxCubeClimate(ClimateDevice):
     @property
     def preset_modes(self):
         """Return available preset modes."""
-        return [PRESET_NONE, PRESET_BOOST, PRESET_COMFORT, PRESET_ECO, PRESET_MANUAL, PRESET_AWAY]
+        return [
+            PRESET_NONE,
+            PRESET_BOOST,
+            PRESET_COMFORT,
+            PRESET_ECO,
+            PRESET_MANUAL,
+            PRESET_AWAY,
+        ]
 
     def set_preset_mode(self, preset_mode):
         """Set new operation mode."""
