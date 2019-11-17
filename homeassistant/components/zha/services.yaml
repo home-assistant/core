@@ -83,6 +83,26 @@ issue_zigbee_cluster_command:
       description: manufacturer code
       example: 0x00FC
 
+issue_zigbee_group_command:
+  description: >-
+    Issue command on the specified cluster on the specified group.
+  fields:
+    group:
+      description: Hexadecimal address of the group
+      example: 0x0222
+    cluster_id:
+      description: ZCL cluster to send command to
+      example: 6
+    command:
+      description: id of the command to execute
+      example: 0
+    args:
+      description: args to pass to the command
+      example: {}
+    manufacturer:
+      description: manufacturer code
+      example: 0x00FC
+
 warning_device_squawk:
   description: >-
     This service uses the WD capabilities to emit a quick audible/visible pulse called a "squawk". The squawk command has no effect if the WD is currently active (warning in progress).
