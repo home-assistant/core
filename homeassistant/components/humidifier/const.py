@@ -71,6 +71,7 @@ CURRENT_HUMIDIFIER_FAN = "fan"
 
 
 ATTR_CURRENT_HUMIDITY = "current_humidity"
+ATTR_CURRENT_TEMPERATURE = "current_temperature"
 ATTR_FAN_MODES = "fan_modes"
 ATTR_FAN_MODE = "fan_mode"
 ATTR_PRESET_MODE = "preset_mode"
@@ -78,9 +79,10 @@ ATTR_PRESET_MODES = "preset_modes"
 ATTR_HUMIDITY = "humidity"
 ATTR_MAX_HUMIDITY = "max_humidity"
 ATTR_MIN_HUMIDITY = "min_humidity"
-ATTR_HUMIDIFIER_ACTIONS = "humidifier_action"
+ATTR_HUMIDIFIER_ACTION = "humidifier_action"
 ATTR_HUMIDIFIER_MODES = "humidifier_modes"
 ATTR_HUMIDIFIER_MODE = "humidifier_mode"
+ATTR_WATER_LEVEL = "water_level"
 
 DEFAULT_MIN_HUMIDITY = 0
 DEFAULT_MAX_HUMIDITY = 100

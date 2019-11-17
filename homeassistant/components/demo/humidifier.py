@@ -38,6 +38,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 humidifier_mode=HUMIDIFIER_MODE_DRY,
                 humidifier_action=CURRENT_HUMIDIFIER_DRY,
                 humidifier_modes=[HUMIDIFIER_MODE_DRY, HUMIDIFIER_MODE_OFF],
+                current_temperature=25,
+                water_level=30,
             ),
             DemoHumidifier(
                 name="Hygrostat",
@@ -71,7 +73,9 @@ class DemoHumidifier(HumidifierDevice):
         humidifier_mode,
         humidifier_action,
         humidifier_modes,
+        current_temperature=None,
         preset_modes=None,
+        water_level=None,
     ):
         """Initialize the humidifier device."""
         self._name = name
@@ -86,11 +90,13 @@ class DemoHumidifier(HumidifierDevice):
         self._preset = preset
         self._preset_modes = preset_modes
         self._current_humidity = current_humidity
+        self._current_temperature = current_temperature
         self._current_fan_mode = fan_mode
         self._fan_modes = ["On Low", "On High", "Auto Low", "Auto High", "Off"]
         self._humidifier_action = humidifier_action
         self._humidifier_mode = humidifier_mode
         self._humidifier_modes = humidifier_modes
+        self._water_level = water_level
 
     @property
     def supported_features(self):
@@ -111,6 +117,11 @@ class DemoHumidifier(HumidifierDevice):
     def current_humidity(self):
         """Return the current humidity."""
         return self._current_humidity
+
+    @property
+    def current_temperature(self):
+        """Return the current temperature."""
+        return self._current_temperature
 
     @property
     def target_humidity(self):
@@ -151,6 +162,11 @@ class DemoHumidifier(HumidifierDevice):
     def fan_modes(self):
         """Return the list of available fan modes."""
         return self._fan_modes
+
+    @property
+    def water_level(self):
+        """Return the current water level."""
+        return self._water_level
 
     async def async_set_humidity(self, humidity):
         """Set new humidity level."""

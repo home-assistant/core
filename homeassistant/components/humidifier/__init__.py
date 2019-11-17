@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa
+from homeassistant.helpers.config_validation import (  # noqa: F401
     ENTITY_SERVICE_SCHEMA,
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -18,16 +18,18 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import (
     ATTR_CURRENT_HUMIDITY,
+    ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
     ATTR_HUMIDITY,
-    ATTR_HUMIDIFIER_ACTIONS,
+    ATTR_HUMIDIFIER_ACTION,
     ATTR_HUMIDIFIER_MODE,
     ATTR_HUMIDIFIER_MODES,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
+    ATTR_WATER_LEVEL,
     DOMAIN,
     HUMIDIFIER_MODE_HUMIDIFY,
     HUMIDIFIER_MODE_DRY,
@@ -128,7 +130,7 @@ class HumidifierDevice(Entity):
             data[ATTR_MAX_HUMIDITY] = self.max_humidity
 
         if self.humidifier_action:
-            data[ATTR_HUMIDIFIER_ACTIONS] = self.humidifier_action
+            data[ATTR_HUMIDIFIER_ACTION] = self.humidifier_action
 
         if supported_features & SUPPORT_FAN_MODE:
             data[ATTR_FAN_MODE] = self.fan_mode
@@ -138,6 +140,11 @@ class HumidifierDevice(Entity):
             data[ATTR_PRESET_MODE] = self.preset_mode
             data[ATTR_PRESET_MODES] = self.preset_modes
 
+        if self.current_temperature is not None:
+            data[ATTR_CURRENT_TEMPERATURE] = self.current_temperature
+
+        if self.water_level is not None:
+            data[ATTR_WATER_LEVEL] = self.water_level
         return data
 
     @property
@@ -148,6 +155,21 @@ class HumidifierDevice(Entity):
     @property
     def target_humidity(self) -> Optional[int]:
         """Return the humidity we try to reach."""
+        return None
+
+    @property
+    def current_temperature(self) -> Optional[int]:
+        """Return the current temperature."""
+        return None
+
+    @property
+    def temperature_unit(self) -> str:
+        """Return the unit of measurement used by the platform."""
+        raise NotImplementedError()
+
+    @property
+    def water_level(self) -> Optional[int]:
+        """Return the water level."""
         return None
 
     @property

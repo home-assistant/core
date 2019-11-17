@@ -5,9 +5,10 @@ import voluptuous as vol
 
 from homeassistant.components.humidifier.const import (
     ATTR_CURRENT_HUMIDITY,
+    ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_HUMIDITY,
-    ATTR_HUMIDIFIER_ACTIONS,
+    ATTR_HUMIDIFIER_ACTION,
     ATTR_HUMIDIFIER_MODE,
     ATTR_HUMIDIFIER_MODES,
     ATTR_MAX_HUMIDITY,
@@ -48,6 +49,7 @@ def test_setup_params(hass):
     assert "On High" == state.attributes.get(ATTR_FAN_MODE)
     assert 54 == state.attributes.get(ATTR_HUMIDITY)
     assert 67 == state.attributes.get(ATTR_CURRENT_HUMIDITY)
+    assert 25 == state.attributes.get(ATTR_CURRENT_TEMPERATURE)
     assert state.attributes.get(ATTR_HUMIDIFIER_MODES) == ["dry", "off"]
 
 
@@ -134,7 +136,7 @@ async def test_set_humidifier_bad_attr_and_state(hass):
     Also check the state.
     """
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert state.attributes.get(ATTR_HUMIDIFIER_ACTIONS) == CURRENT_HUMIDIFIER_DRY
+    assert state.attributes.get(ATTR_HUMIDIFIER_ACTION) == CURRENT_HUMIDIFIER_DRY
     assert state.state == HUMIDIFIER_MODE_DRY
 
     with pytest.raises(vol.Invalid):
@@ -147,7 +149,7 @@ async def test_set_humidifier_bad_attr_and_state(hass):
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert state.attributes.get(ATTR_HUMIDIFIER_ACTIONS) == CURRENT_HUMIDIFIER_DRY
+    assert state.attributes.get(ATTR_HUMIDIFIER_ACTION) == CURRENT_HUMIDIFIER_DRY
     assert state.state == HUMIDIFIER_MODE_DRY
 
 
