@@ -34,7 +34,7 @@ def printc(the_color, *args):
         print(escape_codes[the_color] + msg + escape_codes["reset"])
     except KeyError:
         print(msg)
-        raise ValueError("Invalid color {}".format(the_color))
+        raise ValueError(f"Invalid color {the_color}")
 
 
 def validate_requirements_ok():
@@ -145,7 +145,7 @@ async def lint(files):
 
     lint_ok = True
     for err in res:
-        err_msg = "{} {}:{} {}".format(err.file, err.line, err.col, err.msg)
+        err_msg = f"{err.file} {err.line}:{err.col} {err.msg}"
 
         # tests/* does not have to pass lint
         if err.skip:

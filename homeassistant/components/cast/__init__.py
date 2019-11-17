@@ -1,6 +1,7 @@
 """Component to embed Google Cast."""
 from homeassistant import config_entries
 
+from . import home_assistant_cast
 from .const import DOMAIN
 
 
@@ -20,8 +21,10 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
     """Set up Cast from a config entry."""
+    await home_assistant_cast.async_setup_ha_cast(hass, entry)
+
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "media_player")
     )

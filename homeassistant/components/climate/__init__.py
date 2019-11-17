@@ -70,7 +70,6 @@ from .const import (
     SUPPORT_TARGET_TEMPERATURE_RANGE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from .reproduce_state import async_reproduce_states  # noqa
 
 DEFAULT_MIN_TEMP = 7
 DEFAULT_MAX_TEMP = 35

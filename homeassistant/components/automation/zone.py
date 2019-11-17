@@ -12,6 +12,9 @@ from homeassistant.const import (
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers import condition, config_validation as cv, location
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 EVENT_ENTER = "enter"
 EVENT_LEAVE = "leave"
 DEFAULT_EVENT = EVENT_ENTER
@@ -28,7 +31,7 @@ TRIGGER_SCHEMA = vol.Schema(
 )
 
 
-async def async_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
     zone_entity_id = config.get(CONF_ZONE)

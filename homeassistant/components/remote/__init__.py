@@ -22,6 +22,9 @@ from homeassistant.helpers.config_validation import (  # noqa
     PLATFORM_SCHEMA_BASE,
 )
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ACTIVITY = "activity"

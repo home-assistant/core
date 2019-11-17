@@ -10,7 +10,6 @@ from homeassistant import requirements, core, loader, config as conf_util
 from homeassistant.config import async_notify_setup_error
 from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.async_ import run_coroutine_threadsafe
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +24,7 @@ SLOW_SETUP_WARNING = 10
 
 def setup_component(hass: core.HomeAssistant, domain: str, config: Dict) -> bool:
     """Set up a component and all its dependencies."""
-    return run_coroutine_threadsafe(  # type: ignore
+    return asyncio.run_coroutine_threadsafe(
         async_setup_component(hass, domain, config), hass.loop
     ).result()
 
@@ -133,6 +132,17 @@ async def _async_setup_component(
         log_error(str(err))
         return False
 
+    # Some integrations fail on import because they call functions incorrectly.
+    # So we do it before validating config to catch these errors.
+    try:
+        component = integration.get_component()
+    except ImportError:
+        log_error("Unable to import component", False)
+        return False
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Setup failed for %s: unknown error", domain)
+        return False
+
     processed_config = await conf_util.async_process_component_config(
         hass, config, integration
     )
@@ -143,12 +153,6 @@ async def _async_setup_component(
 
     start = timer()
     _LOGGER.info("Setting up %s", domain)
-
-    try:
-        component = integration.get_component()
-    except ImportError:
-        log_error("Unable to import component", False)
-        return False
 
     if hasattr(component, "PLATFORM_SCHEMA"):
         # Entity components have their own warning
@@ -240,7 +244,7 @@ async def async_prepare_setup_platform(
     try:
         platform = integration.get_platform(domain)
     except ImportError as exc:
-        log_error("Platform not found ({}).".format(exc))
+        log_error(f"Platform not found ({exc}).")
         return None
 
     # Already loaded
@@ -253,7 +257,7 @@ async def async_prepare_setup_platform(
         try:
             component = integration.get_component()
         except ImportError as exc:
-            log_error("Unable to import the component ({}).".format(exc))
+            log_error(f"Unable to import the component ({exc}).")
             return None
 
         if hasattr(component, "setup") or hasattr(component, "async_setup"):
@@ -283,14 +287,10 @@ async def async_process_deps_reqs(
     ):
         raise HomeAssistantError("Could not set up all dependencies.")
 
-    if (
-        not hass.config.skip_pip
-        and integration.requirements
-        and not await requirements.async_process_requirements(
+    if not hass.config.skip_pip and integration.requirements:
+        await requirements.async_process_requirements(
             hass, integration.domain, integration.requirements
         )
-    ):
-        raise HomeAssistantError("Could not install all requirements.")
 
     processed.add(integration.domain)
 

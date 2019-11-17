@@ -136,7 +136,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             miio_device = Device(host, token)
             device_info = miio_device.info()
             model = device_info.model
-            unique_id = "{}-{}".format(model, device_info.mac_address)
+            unique_id = f"{model}-{device_info.mac_address}"
             _LOGGER.info(
                 "%s %s %s detected",
                 model,
@@ -731,7 +731,7 @@ class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
 
     def __init__(self, name, light, model, unique_id):
         """Initialize the light device."""
-        name = "{} Ambient Light".format(name)
+        name = f"{name} Ambient Light"
         if unique_id is not None:
             unique_id = "{}-{}".format(unique_id, "ambient")
         super().__init__(name, light, model, unique_id)

@@ -5,23 +5,24 @@ from unittest.mock import patch, MagicMock, call
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
 from homeassistant.components.qld_bushfire.geo_location import (
-    ATTR_EXTERNAL_ID,
-    SCAN_INTERVAL,
     ATTR_CATEGORY,
-    ATTR_STATUS,
+    ATTR_EXTERNAL_ID,
     ATTR_PUBLICATION_DATE,
+    ATTR_STATUS,
     ATTR_UPDATED_DATE,
+    SCAN_INTERVAL,
 )
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START,
-    CONF_RADIUS,
+    ATTR_ATTRIBUTION,
+    ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
-    ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    CONF_RADIUS,
+    EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.setup import async_setup_component
 from tests.common import assert_setup_component, async_fire_time_changed
@@ -122,6 +123,7 @@ async def test_setup(hass):
                 ATTR_STATUS: "Status 1",
                 ATTR_UNIT_OF_MEASUREMENT: "km",
                 ATTR_SOURCE: "qld_bushfire",
+                ATTR_ICON: "mdi:fire",
             }
             assert float(state.state) == 15.5
 
@@ -135,6 +137,7 @@ async def test_setup(hass):
                 ATTR_FRIENDLY_NAME: "Title 2",
                 ATTR_UNIT_OF_MEASUREMENT: "km",
                 ATTR_SOURCE: "qld_bushfire",
+                ATTR_ICON: "mdi:fire",
             }
             assert float(state.state) == 20.5
 
@@ -148,6 +151,7 @@ async def test_setup(hass):
                 ATTR_FRIENDLY_NAME: "Title 3",
                 ATTR_UNIT_OF_MEASUREMENT: "km",
                 ATTR_SOURCE: "qld_bushfire",
+                ATTR_ICON: "mdi:fire",
             }
             assert float(state.state) == 25.5
 

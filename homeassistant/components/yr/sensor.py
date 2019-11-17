@@ -7,6 +7,7 @@ from xml.parsers.expat import ExpatError
 
 import aiohttp
 import async_timeout
+import xmltodict
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -106,7 +107,7 @@ class YrSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self.client_name, self._name)
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):
@@ -155,7 +156,6 @@ class YrData:
 
     async def fetching_data(self, *_):
         """Get the latest data from yr.no."""
-        import xmltodict
 
         def try_again(err: str):
             """Retry in 15 to 20 minutes."""
@@ -168,7 +168,7 @@ class YrData:
             with async_timeout.timeout(10):
                 resp = await websession.get(self._url, params=self._urlparams)
             if resp.status != 200:
-                try_again("{} returned {}".format(resp.url, resp.status))
+                try_again(f"{resp.url} returned {resp.status}")
                 return
             text = await resp.text()
 

@@ -27,6 +27,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
+    SUPPORT_PRESET_MODE,
     PRESET_NONE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS
@@ -62,7 +63,7 @@ SUPPORT_FLAGS_THERMOSTAT = (
 SUPPORT_FAN_THERMOSTAT = [FAN_AUTO, FAN_ON]
 SUPPORT_PRESET_THERMOSTAT = [PRESET_AWAY, PRESET_ECO]
 
-SUPPORT_FLAGS_AC = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
+SUPPORT_FLAGS_AC = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_PRESET_MODE
 SUPPORT_FAN_AC = [FAN_HIGH, FAN_LOW, FAN_MEDIUM]
 SUPPORT_PRESET_AC = [PRESET_NONE, PRESET_ECO]
 
@@ -282,10 +283,6 @@ class WinkThermostat(WinkDevice, ClimateDevice):
                 target_temp_high = target_temp
             if self.hvac_mode == HVAC_MODE_HEAT:
                 target_temp_low = target_temp
-        if target_temp_low is not None:
-            target_temp_low = target_temp_low
-        if target_temp_high is not None:
-            target_temp_high = target_temp_high
         self.wink.set_temperature(target_temp_low, target_temp_high)
 
     def set_hvac_mode(self, hvac_mode):
@@ -415,10 +412,13 @@ class WinkAC(WinkDevice, ClimateDevice):
     @property
     def preset_mode(self):
         """Return the current preset mode, e.g., home, away, temp."""
+        if not self.wink.is_on():
+            return PRESET_NONE
+
         mode = self.wink.current_mode()
         if mode == "auto_eco":
             return PRESET_ECO
-        return None
+        return PRESET_NONE
 
     @property
     def preset_modes(self):
@@ -436,7 +436,7 @@ class WinkAC(WinkDevice, ClimateDevice):
 
         wink_mode = self.wink.current_mode()
         if wink_mode == "auto_eco":
-            return HVAC_MODE_AUTO
+            return HVAC_MODE_COOL
         return WINK_HVAC_TO_HA.get(wink_mode)
 
     @property
@@ -476,6 +476,8 @@ class WinkAC(WinkDevice, ClimateDevice):
         """Set new preset mode."""
         if preset_mode == PRESET_ECO:
             self.wink.set_operation_mode("auto_eco")
+        elif self.hvac_mode == HVAC_MODE_COOL and preset_mode == PRESET_NONE:
+            self.set_hvac_mode(HVAC_MODE_COOL)
 
     @property
     def target_temperature(self):

@@ -46,7 +46,7 @@ def _async_setup_entities(devices, async_add_entities):
             dev_list.append(VeSyncLightSwitch(dev))
         else:
             _LOGGER.warning(
-                "%s - Unkown device type - %s", dev.device_name, dev.device_type
+                "%s - Unknown device type - %s", dev.device_name, dev.device_type
             )
             continue
 

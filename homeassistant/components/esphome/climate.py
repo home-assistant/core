@@ -17,6 +17,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE_RANGE,
     PRESET_AWAY,
     HVAC_MODE_OFF,
+    PRESET_HOME,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -96,7 +97,7 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
     @property
     def preset_modes(self):
         """Return preset modes."""
-        return [PRESET_AWAY] if self._static_info.supports_away else []
+        return [PRESET_AWAY, PRESET_HOME] if self._static_info.supports_away else []
 
     @property
     def target_temperature_step(self) -> float:
@@ -125,6 +126,9 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
         if self._static_info.supports_away:
             features |= SUPPORT_PRESET_MODE
         return features
+
+    # https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
+    # pylint: disable=invalid-overridden-method
 
     @esphome_state_property
     def hvac_mode(self) -> Optional[str]:

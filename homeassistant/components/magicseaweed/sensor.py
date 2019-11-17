@@ -1,19 +1,21 @@
 """Support for magicseaweed data from magicseaweed.com."""
 from datetime import timedelta
 import logging
+
+import magicseaweed
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_NAME,
-    CONF_MONITORED_CONDITIONS,
     ATTR_ATTRIBUTION,
+    CONF_API_KEY,
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
 )
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,10 +110,10 @@ class MagicSeaweedSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         if self.hour is None and "forecast" in self.type:
-            return "{} {}".format(self.client_name, self._name)
+            return f"{self.client_name} {self._name}"
         if self.hour is None:
-            return "Current {} {}".format(self.client_name, self._name)
-        return "{} {} {}".format(self.hour, self.client_name, self._name)
+            return f"Current {self.client_name} {self._name}"
+        return f"{self.hour} {self.client_name} {self._name}"
 
     @property
     def state(self):
@@ -175,8 +177,6 @@ class MagicSeaweedData:
 
     def __init__(self, api_key, spot_id, units):
         """Initialize the data object."""
-        import magicseaweed
-
         self._msw = magicseaweed.MSW_Forecast(api_key, spot_id, None, units)
         self.currently = None
         self.hourly = {}

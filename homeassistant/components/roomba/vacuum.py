@@ -199,7 +199,7 @@ class RoombaVacuum(VacuumDevice):
         await self.hass.async_add_job(self.vacuum.send_command, "resume")
         self._is_on = True
 
-    async def async_pause(self, **kwargs):
+    async def async_pause(self):
         """Pause the cleaning cycle."""
         await self.hass.async_add_job(self.vacuum.send_command, "pause")
         self._is_on = False
@@ -327,7 +327,7 @@ class RoombaVacuum(VacuumDevice):
             pos_y = pos_state.get("point", {}).get("y")
             theta = pos_state.get("theta")
             if all(item is not None for item in [pos_x, pos_y, theta]):
-                position = "({}, {}, {})".format(pos_x, pos_y, theta)
+                position = f"({pos_x}, {pos_y}, {theta})"
             self._state_attrs[ATTR_POSITION] = position
 
         # Not all Roombas have a bin full sensor

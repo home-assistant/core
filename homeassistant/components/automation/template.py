@@ -10,6 +10,9 @@ from homeassistant.helpers import condition
 from homeassistant.helpers.event import async_track_same_state, async_track_template
 from homeassistant.helpers import config_validation as cv, template
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
 TRIGGER_SCHEMA = IF_ACTION_SCHEMA = vol.Schema(
@@ -25,7 +28,7 @@ TRIGGER_SCHEMA = IF_ACTION_SCHEMA = vol.Schema(
 )
 
 
-async def async_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     value_template = config.get(CONF_VALUE_TEMPLATE)
     value_template.hass = hass

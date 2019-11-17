@@ -1,0 +1,25 @@
+{
+    "config": {
+        "title": "Certificate Expiry",
+        "step": {
+            "user": {
+                "title": "Define the certificate to test",
+                "data": {
+                    "name": "The name of the certificate",
+                    "host": "The hostname of the certificate",
+                    "port": "The port of the certificate"
+                }
+            }
+        },
+        "error": {
+            "host_port_exists": "This host and port combination is already configured",
+            "resolve_failed": "This host can not be resolved",
+            "connection_timeout": "Timeout when connecting to this host",
+            "certificate_error": "Certificate could not be validated",
+            "wrong_host": "Certificate does not match hostname"
+        },
+        "abort": {
+            "host_port_exists": "This host and port combination is already configured"
+        }
+    }
+}

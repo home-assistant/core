@@ -124,7 +124,7 @@ class ArcamFmj(MediaPlayerDevice):
         return support
 
     async def async_added_to_hass(self):
-        """Once registed add listener for events."""
+        """Once registered, add listener for events."""
         await self._state.start()
 
         @callback
@@ -319,7 +319,7 @@ class ArcamFmj(MediaPlayerDevice):
         channel = self.media_channel
 
         if channel:
-            value = "{} - {}".format(source.name, channel)
+            value = f"{source.name} - {channel}"
         else:
             value = source.name
         return value

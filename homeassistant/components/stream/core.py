@@ -2,17 +2,17 @@
 import asyncio
 from collections import deque
 import io
-from typing import List, Any
+from typing import Any, List
 
-import attr
 from aiohttp import web
+import attr
 
-from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.decorator import Registry
 
-from .const import DOMAIN, ATTR_STREAMS
+from .const import ATTR_STREAMS, DOMAIN
 
 PROVIDERS = Registry()
 
@@ -114,7 +114,7 @@ class StreamOutput:
     @callback
     def put(self, segment: Segment) -> None:
         """Store output."""
-        # Start idle timeout when we start recieving data
+        # Start idle timeout when we start receiving data
         if self._unsub is None:
             self._unsub = async_call_later(
                 self._stream.hass, self.timeout, self._timeout

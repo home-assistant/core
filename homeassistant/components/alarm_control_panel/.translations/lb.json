@@ -1,0 +1,11 @@
+{
+    "device_automation": {
+        "action_type": {
+            "arm_away": "{entity_name} fir \u00ebnnerwee uschalten",
+            "arm_home": "{entity_name} fir doheem uschalten",
+            "arm_night": "{entity_name} fir Nuecht uschalten",
+            "disarm": "{entity_name} entsch\u00e4rfen",
+            "trigger": "{entity_name} ausl\u00e9isen"
+        }
+    }
+}

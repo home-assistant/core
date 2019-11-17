@@ -8,6 +8,10 @@
             "no_sensors_or_port_mapping": "Activer au moins les capteurs ou la cartographie des ports",
             "single_instance_allowed": "Une seule configuration UPnP / IGD est n\u00e9cessaire."
         },
+        "error": {
+            "one": "Vide",
+            "other": "Vide"
+        },
         "step": {
             "confirm": {
                 "description": "Voulez-vous configurer UPnP / IGD?",

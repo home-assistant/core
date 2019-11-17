@@ -18,7 +18,7 @@
                 "title": "\u8f38\u5165\u5bc6\u78bc"
             },
             "discovery_confirm": {
-                "description": "\u662f\u5426\u8981\u5c07 ESPHome \u7bc0\u9ede\u300c{name}\u300d\u65b0\u589e\u81f3 Home Assistant\uff1f",
+                "description": "\u662f\u5426\u8981\u5c07 ESPHome \u7bc0\u9ede `{name}` \u65b0\u589e\u81f3 Home Assistant\uff1f",
                 "title": "\u767c\u73fe\u5230 ESPHome \u7bc0\u9ede"
             },
             "user": {

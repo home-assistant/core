@@ -137,7 +137,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
         is_allowed_path,
     ):
         """Initialize the service."""
-        self._target = "http://{}:7676".format(remoteip)
+        self._target = f"http://{remoteip}:7676"
         self._default_duration = duration
         self._default_fontsize = fontsize
         self._default_position = position

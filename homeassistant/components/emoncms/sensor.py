@@ -135,7 +135,7 @@ class EmonCmsSensor(Entity):
             id_for_name = "" if str(sensorid) == "1" else sensorid
             # Use the feed name assigned in EmonCMS or fall back to the feed ID
             feed_name = elem.get("name") or "Feed {}".format(elem["id"])
-            self._name = "EmonCMS{} {}".format(id_for_name, feed_name)
+            self._name = f"EmonCMS{id_for_name} {feed_name}"
         else:
             self._name = name
         self._identifier = get_id(
@@ -225,7 +225,7 @@ class EmonCmsData:
     def __init__(self, hass, url, apikey, interval):
         """Initialize the data object."""
         self._apikey = apikey
-        self._url = "{}/feed/list.json".format(url)
+        self._url = f"{url}/feed/list.json"
         self._interval = interval
         self._hass = hass
         self.data = None

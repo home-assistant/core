@@ -20,6 +20,7 @@ from tests.common import (
     MockEntity,
     mock_integration,
     mock_entity_platform,
+    mock_registry,
 )
 
 
@@ -521,31 +522,32 @@ async def test_discovery_notification(hass):
     mock_entity_platform(hass, "config_flow.test", None)
     await async_setup_component(hass, "persistent_notification", {})
 
-    class TestFlow(config_entries.ConfigFlow):
-        VERSION = 5
+    with patch.dict(config_entries.HANDLERS):
 
-        async def async_step_discovery(self, user_input=None):
-            if user_input is not None:
-                return self.async_create_entry(
-                    title="Test Title", data={"token": "abcd"}
-                )
-            return self.async_show_form(step_id="discovery")
+        class TestFlow(config_entries.ConfigFlow, domain="test"):
+            VERSION = 5
 
-    with patch.dict(config_entries.HANDLERS, {"test": TestFlow}):
+            async def async_step_discovery(self, user_input=None):
+                if user_input is not None:
+                    return self.async_create_entry(
+                        title="Test Title", data={"token": "abcd"}
+                    )
+                return self.async_show_form(step_id="discovery")
+
         result = await hass.config_entries.flow.async_init(
             "test", context={"source": config_entries.SOURCE_DISCOVERY}
         )
 
-    await hass.async_block_till_done()
-    state = hass.states.get("persistent_notification.config_entry_discovery")
-    assert state is not None
+        await hass.async_block_till_done()
+        state = hass.states.get("persistent_notification.config_entry_discovery")
+        assert state is not None
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
-    await hass.async_block_till_done()
-    state = hass.states.get("persistent_notification.config_entry_discovery")
-    assert state is None
+        await hass.async_block_till_done()
+        state = hass.states.get("persistent_notification.config_entry_discovery")
+        assert state is None
 
 
 async def test_discovery_notification_not_created(hass):
@@ -594,6 +596,22 @@ async def test_updating_entry_data(manager):
 
     manager.async_update_entry(entry, data={"second": True})
     assert entry.data == {"second": True}
+
+
+async def test_updating_entry_system_options(manager):
+    """Test that we can update an entry data."""
+    entry = MockConfigEntry(
+        domain="test",
+        data={"first": True},
+        state=config_entries.ENTRY_STATE_SETUP_ERROR,
+        system_options={"disable_new_entities": True},
+    )
+    entry.add_to_manager(manager)
+
+    assert entry.system_options.disable_new_entities
+
+    entry.system_options.update(disable_new_entities=False)
+    assert not entry.system_options.disable_new_entities
 
 
 async def test_update_entry_options_and_trigger_listener(hass, manager):
@@ -666,12 +684,11 @@ async def test_entry_options(hass, manager):
     class TestFlow:
         @staticmethod
         @callback
-        def async_get_options_flow(config, options):
+        def async_get_options_flow(config_entry):
             class OptionsFlowHandler(data_entry_flow.FlowHandler):
-                def __init__(self, config, options):
-                    pass
+                pass
 
-            return OptionsFlowHandler(config, options)
+            return OptionsFlowHandler()
 
     config_entries.HANDLERS["test"] = TestFlow()
     flow = await manager.options._async_create_flow(
@@ -909,3 +926,78 @@ async def test_init_custom_integration(hass):
             return_value=mock_coro(integration),
         ):
             await hass.config_entries.flow.async_init("bla")
+
+
+async def test_support_entry_unload(hass):
+    """Test unloading entry."""
+    assert await config_entries.support_entry_unload(hass, "light")
+    assert not await config_entries.support_entry_unload(hass, "auth")
+
+
+async def test_reload_entry_entity_registry_ignores_no_entry(hass):
+    """Test reloading entry in entity registry skips if no config entry linked."""
+    handler = config_entries.EntityRegistryDisabledHandler(hass)
+    registry = mock_registry(hass)
+
+    # Test we ignore entities without config entry
+    entry = registry.async_get_or_create("light", "hue", "123")
+    registry.async_update_entity(entry.entity_id, disabled_by="user")
+    await hass.async_block_till_done()
+    assert not handler.changed
+    assert handler._remove_call_later is None
+
+
+async def test_reload_entry_entity_registry_works(hass):
+    """Test we schedule an entry to be reloaded if disabled_by is updated."""
+    handler = config_entries.EntityRegistryDisabledHandler(hass)
+    handler.async_setup()
+    registry = mock_registry(hass)
+
+    config_entry = MockConfigEntry(
+        domain="comp", state=config_entries.ENTRY_STATE_LOADED
+    )
+    config_entry.add_to_hass(hass)
+    mock_setup_entry = MagicMock(return_value=mock_coro(True))
+    mock_unload_entry = MagicMock(return_value=mock_coro(True))
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=mock_setup_entry,
+            async_unload_entry=mock_unload_entry,
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    # Only changing disabled_by should update trigger
+    entity_entry = registry.async_get_or_create(
+        "light", "hue", "123", config_entry=config_entry
+    )
+    registry.async_update_entity(entity_entry.entity_id, name="yo")
+    await hass.async_block_till_done()
+    assert not handler.changed
+    assert handler._remove_call_later is None
+
+    # Disable entity, we should not do anything, only act when enabled.
+    registry.async_update_entity(entity_entry.entity_id, disabled_by="user")
+    await hass.async_block_till_done()
+    assert not handler.changed
+    assert handler._remove_call_later is None
+
+    # Enable entity, check we are reloading config entry.
+    registry.async_update_entity(entity_entry.entity_id, disabled_by=None)
+    await hass.async_block_till_done()
+    assert handler.changed == {config_entry.entry_id}
+    assert handler._remove_call_later is not None
+
+    async_fire_time_changed(
+        hass,
+        dt.utcnow()
+        + timedelta(
+            seconds=config_entries.EntityRegistryDisabledHandler.RELOAD_AFTER_UPDATE_DELAY
+            + 1
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert len(mock_unload_entry.mock_calls) == 1

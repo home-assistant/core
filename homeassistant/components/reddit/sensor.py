@@ -94,7 +94,7 @@ class RedditSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "reddit_{}".format(self._subreddit)
+        return f"reddit_{self._subreddit}"
 
     @property
     def state(self):

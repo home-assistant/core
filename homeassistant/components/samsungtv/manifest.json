@@ -1,7 +1,7 @@
 {
   "domain": "samsungtv",
   "name": "Samsungtv",
-  "documentation": "https://www.home-assistant.io/components/samsungtv",
+  "documentation": "https://www.home-assistant.io/integrations/samsungtv",
   "requirements": [
     "samsungctl[websocket]==0.7.1",
     "wakeonlan==1.1.6"

@@ -78,9 +78,9 @@ DISCOVERY_SCHEMAS = [
                     ],
                     const.DISC_OPTIONAL: True,
                 },
-                "fan_state": {
+                "fan_action": {
                     const.DISC_COMMAND_CLASS: [
-                        const.COMMAND_CLASS_THERMOSTAT_FAN_STATE
+                        const.COMMAND_CLASS_THERMOSTAT_FAN_ACTION
                     ],
                     const.DISC_OPTIONAL: True,
                 },
@@ -277,6 +277,7 @@ DISCOVERY_SCHEMAS = [
                         const.COMMAND_CLASS_ALARM,
                         const.COMMAND_CLASS_SENSOR_ALARM,
                         const.COMMAND_CLASS_INDICATOR,
+                        const.COMMAND_CLASS_BATTERY,
                     ],
                     const.DISC_GENRE: const.GENRE_USER,
                 }

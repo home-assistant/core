@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         hass.data["pjlink"] = {}
     hass_data = hass.data["pjlink"]
 
-    device_label = "{}:{}".format(host, port)
+    device_label = f"{host}:{port}"
     if device_label in hass_data:
         return
 
@@ -65,7 +65,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 def format_input_source(input_source_name, input_source_number):
     """Format input source for display in UI."""
-    return "{} {}".format(input_source_name, input_source_number)
+    return f"{input_source_name} {input_source_number}"
 
 
 class PjLinkDevice(MediaPlayerDevice):
@@ -105,10 +105,12 @@ class PjLinkDevice(MediaPlayerDevice):
                 pwstate = projector.get_power()
                 if pwstate in ("on", "warm-up"):
                     self._pwstate = STATE_ON
+                    self._muted = projector.get_mute()[1]
+                    self._current_source = format_input_source(*projector.get_input())
                 else:
                     self._pwstate = STATE_OFF
-                self._muted = projector.get_mute()[1]
-                self._current_source = format_input_source(*projector.get_input())
+                    self._muted = False
+                    self._current_source = None
             except KeyError as err:
                 if str(err) == "'OK'":
                     self._pwstate = STATE_OFF

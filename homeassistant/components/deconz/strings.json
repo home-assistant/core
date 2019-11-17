@@ -1,6 +1,7 @@
 {
     "config": {
         "title": "deCONZ Zigbee gateway",
+        "flow_title": "deCONZ Zigbee gateway ({host})",
         "step": {
             "init": {
                 "title": "Define deCONZ gateway",
@@ -39,6 +40,47 @@
             "not_deconz_bridge": "Not a deCONZ bridge",
             "one_instance_only": "Component only supports one deCONZ instance",
             "updated_instance": "Updated deCONZ instance with new host address"
+        }
+    },
+    "options": {
+        "step": {
+            "deconz_devices": {
+                "description": "Configure visibility of deCONZ device types",
+                "data": {
+                    "allow_clip_sensor": "Allow deCONZ CLIP sensors",
+                    "allow_deconz_groups": "Allow deCONZ light groups"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "remote_button_short_press": "\"{subtype}\" button pressed",
+            "remote_button_short_release": "\"{subtype}\" button released",
+            "remote_button_long_press": "\"{subtype}\" button continuously pressed",
+            "remote_button_long_release": "\"{subtype}\" button released after long press",
+            "remote_button_double_press": "\"{subtype}\" button double clicked",
+            "remote_button_triple_press": "\"{subtype}\" button triple clicked",
+            "remote_button_quadruple_press": "\"{subtype}\" button quadruple clicked",
+            "remote_button_quintuple_press": "\"{subtype}\" button quintuple clicked",
+            "remote_button_rotated": "Button rotated \"{subtype}\"",
+            "remote_button_rotation_stopped": "Button rotation \"{subtype}\" stopped",
+            "remote_gyro_activated": "Device shaken"
+        },
+        "trigger_subtype": {
+            "turn_on": "Turn on",
+            "turn_off": "Turn off",
+            "dim_up": "Dim up",
+            "dim_down": "Dim down",
+            "left": "Left",
+            "right": "Right",
+            "open": "Open",
+            "close": "Close",
+            "both_buttons": "Both buttons",
+            "button_1": "First button",
+            "button_2": "Second button",
+            "button_3": "Third button",
+            "button_4": "Fourth button"
         }
     }
 }

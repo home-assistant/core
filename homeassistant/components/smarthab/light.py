@@ -2,14 +2,17 @@
 Support for SmartHab device integration.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/smarthab/
+https://home-assistant.io/integrations/smarthab/
 """
-import logging
 from datetime import timedelta
+import logging
+
+import pysmarthab
 from requests.exceptions import Timeout
 
 from homeassistant.components.light import Light
-from . import DOMAIN, DATA_HUB
+
+from . import DATA_HUB, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +21,6 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the SmartHab lights platform."""
-    import pysmarthab
 
     hub = hass.data[DOMAIN][DATA_HUB]
     devices = hub.get_device_list()

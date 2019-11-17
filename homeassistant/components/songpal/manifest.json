@@ -1,9 +1,9 @@
 {
   "domain": "songpal",
   "name": "Songpal",
-  "documentation": "https://www.home-assistant.io/components/songpal",
+  "documentation": "https://www.home-assistant.io/integrations/songpal",
   "requirements": [
-    "python-songpal==0.0.9.1"
+    "python-songpal==0.11.2"
   ],
   "dependencies": [],
   "codeowners": [

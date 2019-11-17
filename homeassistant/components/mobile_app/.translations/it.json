@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "install_app": "Apri l'app per dispositivi mobili per configurare l'integrazione con Home Assistant. Vedi [i documenti] ( {apps_url} ) per un elenco di app compatibili."
+            "install_app": "Apri l'App per dispositivi mobili per configurare l'integrazione con Home Assistant. Vedi [i documenti]({apps_url}) per un elenco di app compatibili."
         },
         "step": {
             "confirm": {
-                "description": "Vuoi configurare il componente Mobile App?",
+                "description": "Si desidera configurare il componente App per dispositivi mobili?",
                 "title": "App per dispositivi mobili"
             }
         },

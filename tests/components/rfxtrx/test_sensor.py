@@ -3,9 +3,9 @@ import unittest
 
 import pytest
 
-from homeassistant.setup import setup_component
 from homeassistant.components import rfxtrx as rfxtrx_core
 from homeassistant.const import TEMP_CELSIUS
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant, mock_component
 

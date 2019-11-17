@@ -118,15 +118,15 @@ class TimeDateSensor(Entity):
         elif self.type == "date":
             self._state = date
         elif self.type == "date_time":
-            self._state = "{}, {}".format(date, time)
+            self._state = f"{date}, {time}"
         elif self.type == "time_date":
-            self._state = "{}, {}".format(time, date)
+            self._state = f"{time}, {date}"
         elif self.type == "time_utc":
             self._state = time_utc
         elif self.type == "beat":
-            self._state = "@{0:03d}".format(beat)
+            self._state = f"@{beat:03d}"
         elif self.type == "date_time_iso":
-            self._state = dt_util.parse_datetime("{} {}".format(date, time)).isoformat()
+            self._state = dt_util.parse_datetime(f"{date} {time}").isoformat()
 
     @callback
     def point_in_time_listener(self, time_date):

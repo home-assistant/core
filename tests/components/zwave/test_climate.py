@@ -43,7 +43,7 @@ def device(hass, mock_openzwave):
         ),
         fan_mode=MockValue(data="test2", data_items=[3, 4, 5], node=node),
         operating_state=MockValue(data=CURRENT_HVAC_HEAT, node=node),
-        fan_state=MockValue(data=7, node=node),
+        fan_action=MockValue(data=7, node=node),
     )
     device = climate.get_device(hass, node=node, values=values, node_config={})
 
@@ -70,7 +70,7 @@ def device_zxt_120(hass, mock_openzwave):
         ),
         fan_mode=MockValue(data="test2", data_items=[3, 4, 5], node=node),
         operating_state=MockValue(data=CURRENT_HVAC_HEAT, node=node),
-        fan_state=MockValue(data=7, node=node),
+        fan_action=MockValue(data=7, node=node),
         zxt_120_swing_mode=MockValue(data="test3", data_items=[6, 7, 8], node=node),
     )
     device = climate.get_device(hass, node=node, values=values, node_config={})
@@ -92,7 +92,7 @@ def device_mapping(hass, mock_openzwave):
         ),
         fan_mode=MockValue(data="test2", data_items=[3, 4, 5], node=node),
         operating_state=MockValue(data="heating", node=node),
-        fan_state=MockValue(data=7, node=node),
+        fan_action=MockValue(data=7, node=node),
     )
     device = climate.get_device(hass, node=node, values=values, node_config={})
 
@@ -113,7 +113,7 @@ def device_unknown(hass, mock_openzwave):
         ),
         fan_mode=MockValue(data="test2", data_items=[3, 4, 5], node=node),
         operating_state=MockValue(data="test4", node=node),
-        fan_state=MockValue(data=7, node=node),
+        fan_action=MockValue(data=7, node=node),
     )
     device = climate.get_device(hass, node=node, values=values, node_config={})
 
@@ -140,7 +140,7 @@ def device_heat_cool(hass, mock_openzwave):
         ),
         fan_mode=MockValue(data="test2", data_items=[3, 4, 5], node=node),
         operating_state=MockValue(data="test4", node=node),
-        fan_state=MockValue(data=7, node=node),
+        fan_action=MockValue(data=7, node=node),
     )
     device = climate.get_device(hass, node=node, values=values, node_config={})
 
@@ -442,3 +442,11 @@ def test_hvac_action_value_changed_unknown(device_unknown):
     device.values.operating_state.data = "another_hvac_action"
     value_changed(device.values.operating_state)
     assert device.hvac_action == "another_hvac_action"
+
+
+def test_fan_action_value_changed(device):
+    """Test values changed for climate device."""
+    assert device.device_state_attributes[climate.ATTR_FAN_ACTION] == 7
+    device.values.fan_action.data = 9
+    value_changed(device.values.fan_action)
+    assert device.device_state_attributes[climate.ATTR_FAN_ACTION] == 9

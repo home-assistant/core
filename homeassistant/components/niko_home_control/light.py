@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+import nikohomecontrol
 import voluptuous as vol
 
 # Import the device class from the component that you want to support
@@ -20,8 +21,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Niko Home Control light platform."""
-    import nikohomecontrol
-
     host = config[CONF_HOST]
 
     try:
@@ -46,7 +45,7 @@ class NikoHomeControlLight(Light):
         """Set up the Niko Home Control light platform."""
         self._data = data
         self._light = light
-        self._unique_id = "light-{}".format(light.id)
+        self._unique_id = f"light-{light.id}"
         self._name = light.name
         self._state = light.is_on
         self._brightness = None

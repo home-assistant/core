@@ -2,10 +2,10 @@
 
 from unittest.mock import patch
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import homematicip_cloud as hmipc
+from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro, MockConfigEntry
+from tests.common import MockConfigEntry, mock_coro
 
 
 async def test_config_with_accesspoint_passed_to_config_entry(hass):
@@ -53,7 +53,7 @@ async def test_config_already_registered_not_passed_to_config_entry(hass):
         )
 
     # No flow started
-    assert len(mock_config_entries.flow.mock_calls) == 0
+    assert not mock_config_entries.flow.mock_calls
 
 
 async def test_setup_entry_successful(hass):
@@ -68,7 +68,13 @@ async def test_setup_entry_successful(hass):
     )
     entry.add_to_hass(hass)
     with patch.object(hmipc, "HomematicipHAP") as mock_hap:
-        mock_hap.return_value.async_setup.return_value = mock_coro(True)
+        instance = mock_hap.return_value
+        instance.async_setup.return_value = mock_coro(True)
+        instance.home.id = "1"
+        instance.home.modelType = "mock-type"
+        instance.home.name = "mock-name"
+        instance.home.currentAPVersion = "mock-ap-version"
+
         assert (
             await async_setup_component(
                 hass,
@@ -129,7 +135,13 @@ async def test_unload_entry(hass):
     entry.add_to_hass(hass)
 
     with patch.object(hmipc, "HomematicipHAP") as mock_hap:
-        mock_hap.return_value.async_setup.return_value = mock_coro(True)
+        instance = mock_hap.return_value
+        instance.async_setup.return_value = mock_coro(True)
+        instance.home.id = "1"
+        instance.home.modelType = "mock-type"
+        instance.home.name = "mock-name"
+        instance.home.currentAPVersion = "mock-ap-version"
+
         assert await async_setup_component(hass, hmipc.DOMAIN, {}) is True
 
     assert len(mock_hap.return_value.mock_calls) >= 1

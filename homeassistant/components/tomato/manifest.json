@@ -1,7 +1,7 @@
 {
   "domain": "tomato",
   "name": "Tomato",
-  "documentation": "https://www.home-assistant.io/components/tomato",
+  "documentation": "https://www.home-assistant.io/integrations/tomato",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

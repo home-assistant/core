@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
+from homeassistant.const import CONF_ID
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
@@ -12,19 +13,23 @@ from .const import DATA_GATEWAYS, DATA_OPENTHERM_GW, SENSOR_INFO
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the OpenTherm Gateway sensors."""
-    if discovery_info is None:
-        return
-    gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][discovery_info]
     sensors = []
     for var, info in SENSOR_INFO.items():
         device_class = info[0]
         unit = info[1]
         friendly_name_format = info[2]
         sensors.append(
-            OpenThermSensor(gw_dev, var, device_class, unit, friendly_name_format)
+            OpenThermSensor(
+                hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]],
+                var,
+                device_class,
+                unit,
+                friendly_name_format,
+            )
         )
+
     async_add_entities(sensors)
 
 
@@ -34,7 +39,7 @@ class OpenThermSensor(Entity):
     def __init__(self, gw_dev, var, device_class, unit, friendly_name_format):
         """Initialize the OpenTherm Gateway sensor."""
         self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, "{}_{}".format(var, gw_dev.gw_id), hass=gw_dev.hass
+            ENTITY_ID_FORMAT, f"{var}_{gw_dev.gw_id}", hass=gw_dev.hass
         )
         self._gateway = gw_dev
         self._var = var
@@ -55,7 +60,7 @@ class OpenThermSensor(Entity):
         """Handle status updates from the component."""
         value = status.get(self._var)
         if isinstance(value, float):
-            value = "{:2.1f}".format(value)
+            value = f"{value:2.1f}"
         self._value = value
         self.async_schedule_update_ha_state()
 

@@ -8,11 +8,11 @@
                 "data": {
                     "latitude": "Szeroko\u015b\u0107 geograficzna",
                     "longitude": "D\u0142ugo\u015b\u0107 geograficzna",
-                    "radius": "Promie\u0144"
+                    "radius": "Promie\u0144 (przy u\u017cyciu systemu jednostki bazowej)"
                 },
-                "title": "Wprowad\u017a dane o swojej lokalizacji."
+                "title": "Wprowad\u017a informacje o lokalizacji."
             }
         },
-        "title": "World Wide Lightning Location Network (WWLLN)"
+        "title": "\u015awiatowa sie\u0107 lokalizacji wy\u0142adowa\u0144 atmosferycznych (WWLLN)"
     }
 }

@@ -1,7 +1,8 @@
-"""Suport for Netgear LTE notifications."""
+"""Support for Netgear LTE notifications."""
 import logging
 
 import attr
+import eternalegypt
 
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService, DOMAIN
 
@@ -27,7 +28,6 @@ class NetgearNotifyService(BaseNotificationService):
 
     async def async_send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        import eternalegypt
 
         modem_data = self.hass.data[DATA_KEY].get_modem_data(self.config)
         if not modem_data:

@@ -53,7 +53,7 @@ class CommandLineAuthProvider(AuthProvider):
         attributes provided by external programs.
         """
         super().__init__(*args, **kwargs)
-        self._user_meta = {}  # type: Dict[str, Dict[str, Any]]
+        self._user_meta: Dict[str, Dict[str, Any]] = {}
 
     async def async_login_flow(self, context: Optional[dict]) -> LoginFlow:
         """Return a flow to login."""
@@ -85,7 +85,7 @@ class CommandLineAuthProvider(AuthProvider):
             raise InvalidAuthError
 
         if self.config[CONF_META]:
-            meta = {}  # type: Dict[str, str]
+            meta: Dict[str, str] = {}
             for _line in stdout.splitlines():
                 try:
                     line = _line.decode().lstrip()
@@ -146,7 +146,7 @@ class CommandLineLoginFlow(LoginFlow):
                 user_input.pop("password")
                 return await self.async_finish(user_input)
 
-        schema = collections.OrderedDict()  # type: Dict[str, type]
+        schema: Dict[str, type] = collections.OrderedDict()
         schema["username"] = str
         schema["password"] = str
 

@@ -18,7 +18,7 @@ from .const import ATTR_SOURCE_TYPE, DOMAIN, LOGGER
 
 async def async_setup_entry(hass, entry):
     """Set up an entry."""
-    component = hass.data.get(DOMAIN)  # type: Optional[EntityComponent]
+    component: Optional[EntityComponent] = hass.data.get(DOMAIN)
 
     if component is None:
         component = hass.data[DOMAIN] = EntityComponent(LOGGER, DOMAIN, hass)

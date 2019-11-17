@@ -1,7 +1,7 @@
 {
   "domain": "yweather",
   "name": "Yweather",
-  "documentation": "https://www.home-assistant.io/components/yweather",
+  "documentation": "https://www.home-assistant.io/integrations/yweather",
   "requirements": [
     "yahooweather==0.10"
   ],

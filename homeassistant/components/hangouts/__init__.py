@@ -7,6 +7,7 @@ from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import dispatcher, intent
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components.conversation.util import create_matcher
 
 # We need an import from .config_flow, without it .config_flow is never loaded.
 from .intents import HelpIntent
@@ -54,8 +55,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Hangouts bot component."""
-    from homeassistant.components.conversation import create_matcher
-
     config = config.get(DOMAIN)
     if config is None:
         hass.data[DOMAIN] = {

@@ -1,6 +1,5 @@
 """Support for DLNA DMR (Device Media Renderer)."""
 import asyncio
-from datetime import datetime
 from datetime import timedelta
 import functools
 import logging
@@ -43,6 +42,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 from homeassistant.util import get_local_ip
 
 _LOGGER = logging.getLogger(__name__)
@@ -241,14 +241,14 @@ class DlnaDmrDevice(MediaPlayerDevice):
             return
 
         # do we need to (re-)subscribe?
-        now = datetime.now()
+        now = dt_util.utcnow()
         should_renew = (
             self._subscription_renew_time and now >= self._subscription_renew_time
         )
         if should_renew or not was_available and self._available:
             try:
                 timeout = await self._device.async_subscribe_services()
-                self._subscription_renew_time = datetime.now() + timeout / 2
+                self._subscription_renew_time = dt_util.utcnow() + timeout / 2
             except (asyncio.TimeoutError, aiohttp.ClientError):
                 self._available = False
                 _LOGGER.debug("Could not (re)subscribe")

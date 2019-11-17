@@ -1,15 +1,17 @@
 """Support for testing internet speed via Speedtest.net."""
-import logging
 from datetime import timedelta
+import logging
 
+import speedtest
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+
 from .const import DATA_UPDATED, DOMAIN, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,7 +74,6 @@ class SpeedtestData:
 
     def update(self, now=None):
         """Get the latest data from speedtest.net."""
-        import speedtest
 
         _LOGGER.debug("Executing speedtest.net speed test")
         speed = speedtest.Speedtest()

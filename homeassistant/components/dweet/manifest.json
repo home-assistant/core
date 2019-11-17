@@ -1,7 +1,7 @@
 {
   "domain": "dweet",
   "name": "Dweet",
-  "documentation": "https://www.home-assistant.io/components/dweet",
+  "documentation": "https://www.home-assistant.io/integrations/dweet",
   "requirements": [
     "dweepy==0.3.0"
   ],

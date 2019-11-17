@@ -6,6 +6,7 @@ from asynctest import Mock, patch
 from pysmartthings import APIResponseError
 
 from homeassistant import data_entry_flow
+from homeassistant.setup import async_setup_component
 from homeassistant.components import cloud
 from homeassistant.components.smartthings import smartapp
 from homeassistant.components.smartthings.config_flow import SmartThingsFlowHandler
@@ -83,7 +84,10 @@ async def test_token_unauthorized(hass, smartthings_mock):
     flow = SmartThingsFlowHandler()
     flow.hass = hass
 
-    smartthings_mock.apps.side_effect = ClientResponseError(None, None, status=401)
+    request_info = Mock(real_url="http://example.com")
+    smartthings_mock.apps.side_effect = ClientResponseError(
+        request_info=request_info, history=None, status=401
+    )
 
     result = await flow.async_step_user({"access_token": str(uuid4())})
 
@@ -97,7 +101,10 @@ async def test_token_forbidden(hass, smartthings_mock):
     flow = SmartThingsFlowHandler()
     flow.hass = hass
 
-    smartthings_mock.apps.side_effect = ClientResponseError(None, None, status=403)
+    request_info = Mock(real_url="http://example.com")
+    smartthings_mock.apps.side_effect = ClientResponseError(
+        request_info=request_info, history=None, status=403
+    )
 
     result = await flow.async_step_user({"access_token": str(uuid4())})
 
@@ -112,7 +119,10 @@ async def test_webhook_error(hass, smartthings_mock):
     flow.hass = hass
 
     data = {"error": {}}
-    error = APIResponseError(None, None, data=data, status=422)
+    request_info = Mock(real_url="http://example.com")
+    error = APIResponseError(
+        request_info=request_info, history=None, data=data, status=422
+    )
     error.is_target_error = Mock(return_value=True)
 
     smartthings_mock.apps.side_effect = error
@@ -130,7 +140,10 @@ async def test_api_error(hass, smartthings_mock):
     flow.hass = hass
 
     data = {"error": {}}
-    error = APIResponseError(None, None, data=data, status=400)
+    request_info = Mock(real_url="http://example.com")
+    error = APIResponseError(
+        request_info=request_info, history=None, data=data, status=400
+    )
 
     smartthings_mock.apps.side_effect = error
 
@@ -146,7 +159,10 @@ async def test_unknown_api_error(hass, smartthings_mock):
     flow = SmartThingsFlowHandler()
     flow.hass = hass
 
-    smartthings_mock.apps.side_effect = ClientResponseError(None, None, status=404)
+    request_info = Mock(real_url="http://example.com")
+    smartthings_mock.apps.side_effect = ClientResponseError(
+        request_info=request_info, history=None, status=404
+    )
 
     result = await flow.async_step_user({"access_token": str(uuid4())})
 
@@ -189,6 +205,8 @@ async def test_cloudhook_app_created_then_show_wait_form(
     hass, app, app_oauth_client, smartthings_mock
 ):
     """Test SmartApp is created with a cloudhoko and shows wait form."""
+    hass.config.components.add("cloud")
+
     # Unload the endpoint so we can reload it under the cloud.
     await smartapp.unload_smartapp_endpoint(hass)
 
@@ -288,6 +306,7 @@ async def test_multiple_config_entry_created_when_installed(
     hass, app, locations, installed_apps, smartthings_mock
 ):
     """Test a config entries are created for multiple installs."""
+    assert await async_setup_component(hass, "persistent_notification", {})
     flow = SmartThingsFlowHandler()
     flow.hass = hass
     flow.access_token = str(uuid4())

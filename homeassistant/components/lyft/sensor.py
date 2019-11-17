@@ -85,7 +85,7 @@ class LyftSensor(Entity):
         self._sensortype = sensorType
         self._name = "{} {}".format(self._product["display_name"], self._sensortype)
         if "lyft" not in self._name.lower():
-            self._name = "Lyft{}".format(self._name)
+            self._name = f"Lyft{self._name}"
         if self._sensortype == "time":
             self._unit_of_measurement = "min"
         elif self._sensortype == "price":

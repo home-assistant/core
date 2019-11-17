@@ -1,7 +1,7 @@
 {
   "domain": "blinksticklight",
   "name": "Blinksticklight",
-  "documentation": "https://www.home-assistant.io/components/blinksticklight",
+  "documentation": "https://www.home-assistant.io/integrations/blinksticklight",
   "requirements": [
     "blinkstick==1.1.8"
   ],

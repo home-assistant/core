@@ -1,7 +1,7 @@
 {
   "domain": "airvisual",
   "name": "Airvisual",
-  "documentation": "https://www.home-assistant.io/components/airvisual",
+  "documentation": "https://www.home-assistant.io/integrations/airvisual",
   "requirements": [
     "pyairvisual==3.0.1"
   ],

@@ -53,7 +53,7 @@ class ZMSwitchMonitors(SwitchDevice):
     @property
     def name(self):
         """Return the name of the switch."""
-        return "{} State".format(self._monitor.name)
+        return f"{self._monitor.name} State"
 
     def update(self):
         """Update the switch value."""

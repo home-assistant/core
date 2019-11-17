@@ -174,14 +174,22 @@ def test_initial_state_overrules_restore_state(hass):
 @asyncio.coroutine
 def test_restore_state_overrules_initial_state(hass):
     """Ensure states are restored on startup."""
+
+    attr = {"initial": 6, "minimum": 1, "maximum": 8, "step": 2}
+
     mock_restore_cache(
-        hass, (State("counter.test1", "11"), State("counter.test2", "-22"))
+        hass,
+        (
+            State("counter.test1", "11"),
+            State("counter.test2", "-22"),
+            State("counter.test3", "5", attr),
+        ),
     )
 
     hass.state = CoreState.starting
 
     yield from async_setup_component(
-        hass, DOMAIN, {DOMAIN: {"test1": {}, "test2": {CONF_INITIAL: 10}}}
+        hass, DOMAIN, {DOMAIN: {"test1": {}, "test2": {CONF_INITIAL: 10}, "test3": {}}}
     )
 
     state = hass.states.get("counter.test1")
@@ -191,6 +199,14 @@ def test_restore_state_overrules_initial_state(hass):
     state = hass.states.get("counter.test2")
     assert state
     assert int(state.state) == -22
+
+    state = hass.states.get("counter.test3")
+    assert state
+    assert int(state.state) == 5
+    assert state.attributes.get("initial") == 6
+    assert state.attributes.get("minimum") == 1
+    assert state.attributes.get("maximum") == 8
+    assert state.attributes.get("step") == 2
 
 
 @asyncio.coroutine
@@ -379,11 +395,45 @@ async def test_configure(hass, hass_admin_user):
     assert state.state == "5"
     assert 3 == state.attributes.get("step")
 
+    # update value
+    await hass.services.async_call(
+        "counter",
+        "configure",
+        {"entity_id": state.entity_id, "value": 6},
+        True,
+        Context(user_id=hass_admin_user.id),
+    )
+
+    state = hass.states.get("counter.test")
+    assert state is not None
+    assert state.state == "6"
+
+    # update initial
+    await hass.services.async_call(
+        "counter",
+        "configure",
+        {"entity_id": state.entity_id, "initial": 5},
+        True,
+        Context(user_id=hass_admin_user.id),
+    )
+
+    state = hass.states.get("counter.test")
+    assert state is not None
+    assert state.state == "6"
+    assert 5 == state.attributes.get("initial")
+
     # update all
     await hass.services.async_call(
         "counter",
         "configure",
-        {"entity_id": state.entity_id, "step": 5, "minimum": 0, "maximum": 9},
+        {
+            "entity_id": state.entity_id,
+            "step": 5,
+            "minimum": 0,
+            "maximum": 9,
+            "value": 5,
+            "initial": 6,
+        },
         True,
         Context(user_id=hass_admin_user.id),
     )
@@ -394,3 +444,4 @@ async def test_configure(hass, hass_admin_user):
     assert 5 == state.attributes.get("step")
     assert 0 == state.attributes.get("minimum")
     assert 9 == state.attributes.get("maximum")
+    assert 6 == state.attributes.get("initial")

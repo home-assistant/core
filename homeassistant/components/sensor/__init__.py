@@ -21,6 +21,9 @@ from homeassistant.helpers.config_validation import (  # noqa
 )
 from homeassistant.helpers.entity_component import EntityComponent
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "sensor"

@@ -1,7 +1,8 @@
 """Support for sending data to Dweet.io."""
-import logging
 from datetime import timedelta
+import logging
 
+import dweepy
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -10,8 +11,8 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_UNKNOWN,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import state as state_helper
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,8 +70,6 @@ def setup(hass, config):
 @Throttle(MIN_TIME_BETWEEN_UPDATES)
 def send_data(name, msg):
     """Send the collected data to Dweet.io."""
-    import dweepy
-
     try:
         dweepy.dweet_for(name, msg)
     except dweepy.DweepyError:

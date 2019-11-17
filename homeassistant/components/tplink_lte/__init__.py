@@ -4,6 +4,7 @@ import logging
 
 import aiohttp
 import attr
+import tp_connected
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -106,7 +107,6 @@ async def async_setup(hass, config):
 
 async def _setup_lte(hass, lte_config, delay=0):
     """Set up a TP-Link LTE modem."""
-    import tp_connected
 
     host = lte_config[CONF_HOST]
     password = lte_config[CONF_PASSWORD]
@@ -145,7 +145,6 @@ async def _login(hass, modem_data, password):
 
 async def _retry_login(hass, modem_data, password):
     """Sleep and retry setup."""
-    import tp_connected
 
     _LOGGER.warning("Could not connect to %s. Will keep trying.", modem_data.host)
 

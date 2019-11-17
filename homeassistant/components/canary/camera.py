@@ -3,6 +3,8 @@ import asyncio
 from datetime import timedelta
 import logging
 
+from haffmpeg.camera import CameraMjpeg
+from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
@@ -81,8 +83,6 @@ class CanaryCamera(Camera):
         """Return a still image response from the camera."""
         self.renew_live_stream_session()
 
-        from haffmpeg.tools import ImageFrame, IMAGE_JPEG
-
         ffmpeg = ImageFrame(self._ffmpeg.binary, loop=self.hass.loop)
         image = await asyncio.shield(
             ffmpeg.get_image(
@@ -97,8 +97,6 @@ class CanaryCamera(Camera):
         """Generate an HTTP MJPEG stream from the camera."""
         if self._live_stream_session is None:
             return
-
-        from haffmpeg.camera import CameraMjpeg
 
         stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
         await stream.open_camera(

@@ -5,7 +5,8 @@
                 "data": {
                     "host": "Vert",
                     "password": "Passord",
-                    "port": "Port"
+                    "port": "Port",
+                    "username": "Brukarnamn"
                 }
             }
         }

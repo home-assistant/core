@@ -45,9 +45,9 @@ class OctoPrintBinarySensor(BinarySensorDevice):
         """Initialize a new OctoPrint sensor."""
         self.sensor_name = sensor_name
         if tool is None:
-            self._name = "{} {}".format(sensor_name, condition)
+            self._name = f"{sensor_name} {condition}"
         else:
-            self._name = "{} {}".format(sensor_name, condition)
+            self._name = f"{sensor_name} {condition}"
         self.sensor_type = sensor_type
         self.api = api
         self._state = False

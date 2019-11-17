@@ -2,7 +2,7 @@
   "domain": "rainmachine",
   "name": "Rainmachine",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/rainmachine",
+  "documentation": "https://www.home-assistant.io/integrations/rainmachine",
   "requirements": [
     "regenmaschine==1.5.1"
   ],

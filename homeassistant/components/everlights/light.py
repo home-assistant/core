@@ -1,25 +1,26 @@
 """Support for EverLights lights."""
-import logging
 from datetime import timedelta
+import logging
 from typing import Tuple
 
+import pyeverlights
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOSTS
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_HS_COLOR,
     ATTR_EFFECT,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_EFFECT,
-    SUPPORT_COLOR,
-    Light,
+    ATTR_HS_COLOR,
     PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_EFFECT,
+    Light,
 )
+from homeassistant.const import CONF_HOSTS
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,8 +47,6 @@ def color_int_to_rgb(value: int) -> Tuple[int, int, int]:
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the EverLights lights from configuration.yaml."""
-    import pyeverlights
-
     lights = []
 
     for ipaddr in config[CONF_HOSTS]:
@@ -87,7 +86,7 @@ class EverLightsLight(Light):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return "{}-{}".format(self._mac, self._channel)
+        return f"{self._mac}-{self._channel}"
 
     @property
     def available(self) -> bool:
@@ -102,7 +101,7 @@ class EverLightsLight(Light):
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._status["ch{}Active".format(self._channel)] == 1
+        return self._status[f"ch{self._channel}Active"] == 1
 
     @property
     def brightness(self):
@@ -159,8 +158,6 @@ class EverLightsLight(Light):
 
     async def async_update(self):
         """Synchronize state with control box."""
-        import pyeverlights
-
         try:
             self._status = await self._api.get_status()
         except pyeverlights.ConnectionError:

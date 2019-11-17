@@ -6,7 +6,13 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import DOMAIN, PLATFORM_SCHEMA, SwitchDevice
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_MODE,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_TOKEN,
+)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
@@ -44,7 +50,6 @@ ATTR_POWER = "power"
 ATTR_TEMPERATURE = "temperature"
 ATTR_LOAD_POWER = "load_power"
 ATTR_MODEL = "model"
-ATTR_MODE = "mode"
 ATTR_POWER_MODE = "power_mode"
 ATTR_WIFI_LED = "wifi_led"
 ATTR_POWER_PRICE = "power_price"
@@ -117,7 +122,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             miio_device = Device(host, token)
             device_info = miio_device.info()
             model = device_info.model
-            unique_id = "{}-{}".format(model, device_info.mac_address)
+            unique_id = f"{model}-{device_info.mac_address}"
             _LOGGER.info(
                 "%s %s %s detected",
                 model,
@@ -426,7 +431,7 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
 
     def __init__(self, name, plug, model, unique_id, channel_usb):
         """Initialize the plug switch."""
-        name = "{} USB".format(name) if channel_usb else name
+        name = f"{name} USB" if channel_usb else name
 
         if unique_id is not None and channel_usb:
             unique_id = "{}-{}".format(unique_id, "usb")

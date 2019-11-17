@@ -1,7 +1,7 @@
 {
   "domain": "travisci",
   "name": "Travisci",
-  "documentation": "https://www.home-assistant.io/components/travisci",
+  "documentation": "https://www.home-assistant.io/integrations/travisci",
   "requirements": [
     "TravisPy==0.3.5"
   ],

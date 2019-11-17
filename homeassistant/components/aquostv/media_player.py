@@ -1,6 +1,8 @@
 """Support for interface with an Aquos TV."""
 import logging
 
+import sharp_aquos_rc
+
 import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
@@ -77,7 +79,6 @@ SOURCES = {
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sharp Aquos TV platform."""
-    import sharp_aquos_rc
 
     name = config.get(CONF_NAME)
     port = config.get(CONF_PORT)

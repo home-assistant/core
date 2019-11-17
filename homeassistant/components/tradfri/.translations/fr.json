@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Le pont est d\u00e9j\u00e0 configur\u00e9."
+            "already_configured": "Le pont est d\u00e9j\u00e0 configur\u00e9.",
+            "already_in_progress": "La configuration du pont est d\u00e9j\u00e0 en cours."
         },
         "error": {
             "cannot_connect": "Impossible de se connecter \u00e0 la passerelle.",

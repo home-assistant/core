@@ -1,11 +1,12 @@
 """Support for Recollect Waste curbside collection pickup."""
 import logging
 
+import recollect_waste
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,9 +30,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Recollect Waste platform."""
-    import recollect_waste
-
-    # pylint: disable=no-member
     client = recollect_waste.RecollectWasteClient(
         config[CONF_PLACE_ID], config[CONF_SERVICE_ID]
     )
@@ -40,7 +38,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # with given place_id and service_id.
     try:
         client.get_next_pickup()
-    # pylint: disable=no-member
     except recollect_waste.RecollectWasteException as ex:
         _LOGGER.error("Recollect Waste platform error. %s", ex)
         return
@@ -66,7 +63,7 @@ class RecollectWasteSensor(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return "{}{}".format(self.client.place_id, self.client.service_id)
+        return f"{self.client.place_id}{self.client.service_id}"
 
     @property
     def state(self):
@@ -85,8 +82,6 @@ class RecollectWasteSensor(Entity):
 
     def update(self):
         """Update device state."""
-        import recollect_waste
-
         try:
             pickup_event = self.client.get_next_pickup()
             self._state = pickup_event.event_date
@@ -96,6 +91,5 @@ class RecollectWasteSensor(Entity):
                     ATTR_AREA_NAME: pickup_event.area_name,
                 }
             )
-        # pylint: disable=no-member
         except recollect_waste.RecollectWasteException as ex:
             _LOGGER.error("Recollect Waste platform error. %s", ex)

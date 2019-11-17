@@ -5,8 +5,6 @@ from pprint import pformat
 from homeassistant.components.cover import ATTR_POSITION, CoverDevice
 from homeassistant.components.supla import SuplaChannel
 
-DEPENDENCIES = ["supla"]
-
 _LOGGER = logging.getLogger(__name__)
 
 

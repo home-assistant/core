@@ -2,12 +2,14 @@
 import logging
 from datetime import datetime
 
+import ephem
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_TYPE
 from homeassistant.helpers.entity import Entity
 from homeassistant import util
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,7 +68,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 def get_season(date, hemisphere, season_tracking_type):
     """Calculate the current season."""
-    import ephem
 
     if hemisphere == "equator":
         return None
@@ -104,7 +105,7 @@ class Season(Entity):
         """Initialize the season."""
         self.hass = hass
         self.hemisphere = hemisphere
-        self.datetime = datetime.now()
+        self.datetime = dt_util.utcnow().replace(tzinfo=None)
         self.type = season_tracking_type
         self.season = get_season(self.datetime, self.hemisphere, self.type)
 
@@ -125,5 +126,5 @@ class Season(Entity):
 
     def update(self):
         """Update season."""
-        self.datetime = datetime.utcnow()
+        self.datetime = dt_util.utcnow().replace(tzinfo=None)
         self.season = get_season(self.datetime, self.hemisphere, self.type)

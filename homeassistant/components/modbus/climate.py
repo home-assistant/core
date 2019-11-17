@@ -170,7 +170,7 @@ class ModbusThermostat(ClimateDevice):
             [x.to_bytes(2, byteorder="big") for x in result.registers]
         )
         val = struct.unpack(self._structure, byte_string)[0]
-        register_value = format(val, ".{}f".format(self._precision))
+        register_value = format(val, f".{self._precision}f")
         return register_value
 
     def write_register(self, register, value):

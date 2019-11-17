@@ -1,4 +1,4 @@
-"""Support for switchs that can be controlled using the RaspyRFM rc module."""
+"""Support for switches that can be controlled using the RaspyRFM rc module."""
 import logging
 
 import voluptuous as vol

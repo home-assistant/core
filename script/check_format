@@ -7,4 +7,4 @@ black \
   --check \
   --fast \
   --quiet \
-  homeassistant tests script
+  homeassistant tests script *.py

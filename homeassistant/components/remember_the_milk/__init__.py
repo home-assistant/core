@@ -3,6 +3,7 @@ import json
 import logging
 import os
 
+from rtmapi import Rtm, RtmRequestFailedException
 import voluptuous as vol
 
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME, CONF_TOKEN, STATE_OK
@@ -87,13 +88,13 @@ def _create_instance(
     component.add_entities([entity])
     hass.services.register(
         DOMAIN,
-        "{}_create_task".format(account_name),
+        f"{account_name}_create_task",
         entity.create_task,
         schema=SERVICE_SCHEMA_CREATE_TASK,
     )
     hass.services.register(
         DOMAIN,
-        "{}_complete_task".format(account_name),
+        f"{account_name}_complete_task",
         entity.complete_task,
         schema=SERVICE_SCHEMA_COMPLETE_TASK,
     )
@@ -102,8 +103,6 @@ def _create_instance(
 def _register_new_account(
     hass, account_name, api_key, shared_secret, stored_rtm_config, component
 ):
-    from rtmapi import Rtm
-
     request_id = None
     configurator = hass.components.configurator
     api = Rtm(api_key, shared_secret, "write", None)
@@ -137,7 +136,7 @@ def _register_new_account(
         configurator.request_done(request_id)
 
     request_id = configurator.async_request_config(
-        "{} - {}".format(DOMAIN, account_name),
+        f"{DOMAIN} - {account_name}",
         callback=register_account_callback,
         description="You need to log in to Remember The Milk to"
         + "connect your account. \n\n"
@@ -240,14 +239,12 @@ class RememberTheMilk(Entity):
 
     def __init__(self, name, api_key, shared_secret, token, rtm_config):
         """Create new instance of Remember The Milk component."""
-        import rtmapi
-
         self._name = name
         self._api_key = api_key
         self._shared_secret = shared_secret
         self._token = token
         self._rtm_config = rtm_config
-        self._rtm_api = rtmapi.Rtm(api_key, shared_secret, "delete", token)
+        self._rtm_api = Rtm(api_key, shared_secret, "delete", token)
         self._token_valid = None
         self._check_token()
         _LOGGER.debug("Instance created for account %s", self._name)
@@ -277,8 +274,6 @@ class RememberTheMilk(Entity):
         e.g. "my task #some_tag ^today" will add tag "some_tag" and set the
         due date to today.
         """
-        import rtmapi
-
         try:
             task_name = call.data.get(CONF_NAME)
             hass_id = call.data.get(CONF_ID)
@@ -316,7 +311,7 @@ class RememberTheMilk(Entity):
                     self.name,
                     task_name,
                 )
-        except rtmapi.RtmRequestFailedException as rtm_exception:
+        except RtmRequestFailedException as rtm_exception:
             _LOGGER.error(
                 "Error creating new Remember The Milk task for " "account %s: %s",
                 self._name,
@@ -327,8 +322,6 @@ class RememberTheMilk(Entity):
 
     def complete_task(self, call):
         """Complete a task that was previously created by this component."""
-        import rtmapi
-
         hass_id = call.data.get(CONF_ID)
         rtm_id = self._rtm_config.get_rtm_id(self._name, hass_id)
         if rtm_id is None:
@@ -352,7 +345,7 @@ class RememberTheMilk(Entity):
             _LOGGER.debug(
                 "Completed task with id %s in account %s", hass_id, self._name
             )
-        except rtmapi.RtmRequestFailedException as rtm_exception:
+        except RtmRequestFailedException as rtm_exception:
             _LOGGER.error(
                 "Error creating new Remember The Milk task for " "account %s: %s",
                 self._name,

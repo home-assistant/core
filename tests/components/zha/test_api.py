@@ -1,32 +1,39 @@
 """Test ZHA API."""
 import pytest
+import zigpy.zcl.clusters.general as general
+
 from homeassistant.components.switch import DOMAIN
-from homeassistant.components.zha.api import async_load_api, ATTR_IEEE, TYPE, ID
+from homeassistant.components.websocket_api import const
+from homeassistant.components.zha.api import ID, TYPE, async_load_api
 from homeassistant.components.zha.core.const import (
     ATTR_CLUSTER_ID,
     ATTR_CLUSTER_TYPE,
-    IN,
-    IEEE,
-    MODEL,
-    NAME,
-    QUIRK_APPLIED,
-    ATTR_MANUFACTURER,
     ATTR_ENDPOINT_ID,
+    ATTR_IEEE,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_QUIRK_APPLIED,
+    CLUSTER_TYPE_IN,
 )
+
 from .common import async_init_zigpy_device
 
 
 @pytest.fixture
 async def zha_client(hass, config_entry, zha_gateway, hass_ws_client):
     """Test zha switch platform."""
-    from zigpy.zcl.clusters.general import OnOff, Basic
 
     # load the ZHA API
     async_load_api(hass)
 
     # create zigpy device
     await async_init_zigpy_device(
-        hass, [OnOff.cluster_id, Basic.cluster_id], [], None, zha_gateway
+        hass,
+        [general.OnOff.cluster_id, general.Basic.cluster_id],
+        [],
+        None,
+        zha_gateway,
     )
 
     # load up switch domain
@@ -49,14 +56,14 @@ async def test_device_clusters(hass, config_entry, zha_gateway, zha_client):
     cluster_infos = sorted(msg["result"], key=lambda k: k[ID])
 
     cluster_info = cluster_infos[0]
-    assert cluster_info[TYPE] == IN
+    assert cluster_info[TYPE] == CLUSTER_TYPE_IN
     assert cluster_info[ID] == 0
-    assert cluster_info[NAME] == "Basic"
+    assert cluster_info[ATTR_NAME] == "Basic"
 
     cluster_info = cluster_infos[1]
-    assert cluster_info[TYPE] == IN
+    assert cluster_info[TYPE] == CLUSTER_TYPE_IN
     assert cluster_info[ID] == 6
-    assert cluster_info[NAME] == "OnOff"
+    assert cluster_info[ATTR_NAME] == "OnOff"
 
 
 async def test_device_cluster_attributes(hass, config_entry, zha_gateway, zha_client):
@@ -68,7 +75,7 @@ async def test_device_cluster_attributes(hass, config_entry, zha_gateway, zha_cl
             ATTR_ENDPOINT_ID: 1,
             ATTR_IEEE: "00:0d:6f:00:0a:90:69:e7",
             ATTR_CLUSTER_ID: 6,
-            ATTR_CLUSTER_TYPE: IN,
+            ATTR_CLUSTER_TYPE: CLUSTER_TYPE_IN,
         }
     )
 
@@ -79,7 +86,7 @@ async def test_device_cluster_attributes(hass, config_entry, zha_gateway, zha_cl
 
     for attribute in attributes:
         assert attribute[ID] is not None
-        assert attribute[NAME] is not None
+        assert attribute[ATTR_NAME] is not None
 
 
 async def test_device_cluster_commands(hass, config_entry, zha_gateway, zha_client):
@@ -91,7 +98,7 @@ async def test_device_cluster_commands(hass, config_entry, zha_gateway, zha_clie
             ATTR_ENDPOINT_ID: 1,
             ATTR_IEEE: "00:0d:6f:00:0a:90:69:e7",
             ATTR_CLUSTER_ID: 6,
-            ATTR_CLUSTER_TYPE: IN,
+            ATTR_CLUSTER_TYPE: CLUSTER_TYPE_IN,
         }
     )
 
@@ -102,7 +109,7 @@ async def test_device_cluster_commands(hass, config_entry, zha_gateway, zha_clie
 
     for command in commands:
         assert command[ID] is not None
-        assert command[NAME] is not None
+        assert command[ATTR_NAME] is not None
         assert command[TYPE] is not None
 
 
@@ -116,13 +123,32 @@ async def test_list_devices(hass, config_entry, zha_gateway, zha_client):
     assert len(devices) == 1
 
     for device in devices:
-        assert device[IEEE] is not None
+        assert device[ATTR_IEEE] is not None
         assert device[ATTR_MANUFACTURER] is not None
-        assert device[MODEL] is not None
-        assert device[NAME] is not None
-        assert device[QUIRK_APPLIED] is not None
+        assert device[ATTR_MODEL] is not None
+        assert device[ATTR_NAME] is not None
+        assert device[ATTR_QUIRK_APPLIED] is not None
         assert device["entities"] is not None
 
         for entity_reference in device["entities"]:
-            assert entity_reference[NAME] is not None
+            assert entity_reference[ATTR_NAME] is not None
             assert entity_reference["entity_id"] is not None
+
+        await zha_client.send_json(
+            {ID: 6, TYPE: "zha/device", ATTR_IEEE: device[ATTR_IEEE]}
+        )
+        msg = await zha_client.receive_json()
+        device2 = msg["result"]
+        assert device == device2
+
+
+async def test_device_not_found(hass, config_entry, zha_gateway, zha_client):
+    """Test not found response from get device API."""
+    await zha_client.send_json(
+        {ID: 6, TYPE: "zha/device", ATTR_IEEE: "28:6d:97:00:01:04:11:8c"}
+    )
+    msg = await zha_client.receive_json()
+    assert msg["id"] == 6
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == const.ERR_NOT_FOUND

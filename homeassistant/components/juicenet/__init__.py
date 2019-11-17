@@ -1,12 +1,13 @@
 """Support for Juicenet cloud."""
 import logging
 
+import pyjuicenet
 import voluptuous as vol
 
-from homeassistant.helpers import discovery
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,8 +21,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the Juicenet component."""
-    import pyjuicenet
-
     hass.data[DOMAIN] = {}
 
     access_token = config[DOMAIN].get(CONF_ACCESS_TOKEN)

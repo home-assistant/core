@@ -2,9 +2,9 @@
   "domain": "sonos",
   "name": "Sonos",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/sonos",
+  "documentation": "https://www.home-assistant.io/integrations/sonos",
   "requirements": [
-    "pysonos==0.0.22"
+    "pysonos==0.0.24"
   ],
   "dependencies": [],
   "ssdp": {
@@ -12,7 +12,5 @@
       "urn:schemas-upnp-org:device:ZonePlayer:1"
     ]
   },
-  "codeowners": [
-    "@amelchio"
-  ]
+  "codeowners": []
 }

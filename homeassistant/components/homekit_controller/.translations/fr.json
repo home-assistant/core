@@ -24,7 +24,7 @@
                 "data": {
                     "pairing_code": "Code d\u2019appairage"
                 },
-                "description": "Entrez votre code de jumelage HomeKit pour utiliser cet accessoire.",
+                "description": "Entrez votre code de jumelage HomeKit (au format XXX-XX-XXX) pour utiliser cet accessoire.",
                 "title": "Appairer avec l'accessoire HomeKit"
             },
             "user": {

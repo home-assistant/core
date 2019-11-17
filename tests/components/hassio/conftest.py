@@ -9,7 +9,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.components.hassio.handler import HassIO, HassioAPIError
 
 from tests.common import mock_coro
-from . import API_PASSWORD, HASSIO_TOKEN
+from . import HASSIO_TOKEN
 
 
 @pytest.fixture
@@ -39,23 +39,19 @@ def hassio_stubs(hassio_env, hass, hass_client, aioclient_mock):
         side_effect=HassioAPIError(),
     ):
         hass.state = CoreState.starting
-        hass.loop.run_until_complete(
-            async_setup_component(
-                hass, "hassio", {"http": {"api_password": API_PASSWORD}}
-            )
-        )
+        hass.loop.run_until_complete(async_setup_component(hass, "hassio", {}))
 
 
 @pytest.fixture
 def hassio_client(hassio_stubs, hass, hass_client):
     """Return a Hass.io HTTP client."""
-    yield hass.loop.run_until_complete(hass_client())
+    return hass.loop.run_until_complete(hass_client())
 
 
 @pytest.fixture
 def hassio_noauth_client(hassio_stubs, hass, aiohttp_client):
     """Return a Hass.io HTTP client without auth."""
-    yield hass.loop.run_until_complete(aiohttp_client(hass.http.app))
+    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @pytest.fixture

@@ -76,7 +76,7 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorDevice):
     @property
     def unique_id(self) -> str:
         """Return a unique, HASS-friendly identifier for this entity."""
-        return "{0}_{1}_{2}".format(self._latitude, self._longitude, self._sensor_type)
+        return f"{self._latitude}_{self._longitude}_{self._sensor_type}"
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -101,6 +101,11 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorDevice):
 
         if not data:
             return
+
+        for key in ("from_time", "to_time", "from_uv", "to_uv"):
+            if not data.get(key):
+                _LOGGER.info("Skipping update due to missing data: %s", key)
+                return
 
         if self._sensor_type == TYPE_PROTECTION_WINDOW:
             self._state = (

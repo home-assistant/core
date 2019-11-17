@@ -19,7 +19,7 @@ CONF_SANDBOX = "sandbox"
 
 DEFAULT_SANDBOX = False
 
-MESSAGE_RECEIVED = "{}_message_received".format(DOMAIN)
+MESSAGE_RECEIVED = f"{DOMAIN}_message_received"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -75,7 +75,7 @@ async def verify_webhook(hass, token=None, timestamp=None, signature=None):
 
     hmac_digest = hmac.new(
         key=bytes(hass.data[DOMAIN][CONF_API_KEY], "utf-8"),
-        msg=bytes("{}{}".format(timestamp, token), "utf-8"),
+        msg=bytes(f"{timestamp}{token}", "utf-8"),
         digestmod=hashlib.sha256,
     ).hexdigest()
 

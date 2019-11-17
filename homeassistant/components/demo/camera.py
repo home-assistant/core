@@ -28,7 +28,7 @@ class DemoCamera(Camera):
         self._images_index = (self._images_index + 1) % 4
 
         image_path = os.path.join(
-            os.path.dirname(__file__), "demo_{}.jpg".format(self._images_index)
+            os.path.dirname(__file__), f"demo_{self._images_index}.jpg"
         )
         _LOGGER.debug("Loading camera_image: %s", image_path)
         with open(image_path, "rb") as file:

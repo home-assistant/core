@@ -170,7 +170,7 @@ class SimpliSafeAlarm(AlarmControlPanel):
         """Update alarm status."""
         event_data = self._simplisafe.last_event_data[self._system.system_id]
 
-        if event_data["pinName"]:
+        if event_data.get("pinName"):
             self._changed_by = event_data["pinName"]
 
         if self._system.state == SystemStates.error:

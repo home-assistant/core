@@ -1,7 +1,8 @@
 """Support for Repetier-Server sensors."""
-import logging
 from datetime import timedelta
+import logging
 
+import pyrepetier
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -160,8 +161,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the Repetier Server component."""
-    import pyrepetier
-
     hass.data[REPETIER_API] = {}
 
     for repetier in config[DOMAIN]:
@@ -239,7 +238,7 @@ class PrinterAPI:
                 info["name"] = printer.slug
                 info["printer_name"] = self.conf_name
 
-                known = "{}-{}".format(printer.slug, sensor_type)
+                known = f"{printer.slug}-{sensor_type}"
                 if known in self._known_entities:
                     continue
 

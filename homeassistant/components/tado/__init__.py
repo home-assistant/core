@@ -125,12 +125,22 @@ class TadoDataStore:
         self.tado.resetZoneOverlay(zone_id)
         self.update(no_throttle=True)  # pylint: disable=unexpected-keyword-arg
 
-    def set_zone_overlay(self, zone_id, mode, temperature=None, duration=None):
+    def set_zone_overlay(
+        self,
+        zone_id,
+        overlay_mode,
+        temperature=None,
+        duration=None,
+        device_type="HEATING",
+        mode=None,
+    ):
         """Wrap for setZoneOverlay(..)."""
-        self.tado.setZoneOverlay(zone_id, mode, temperature, duration)
+        self.tado.setZoneOverlay(
+            zone_id, overlay_mode, temperature, duration, device_type, "ON", mode
+        )
         self.update(no_throttle=True)  # pylint: disable=unexpected-keyword-arg
 
-    def set_zone_off(self, zone_id, mode):
+    def set_zone_off(self, zone_id, overlay_mode, device_type="HEATING"):
         """Set a zone to off."""
-        self.tado.setZoneOverlay(zone_id, mode, None, None, "HEATING", "OFF")
+        self.tado.setZoneOverlay(zone_id, overlay_mode, None, None, device_type, "OFF")
         self.update(no_throttle=True)  # pylint: disable=unexpected-keyword-arg

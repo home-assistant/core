@@ -23,7 +23,7 @@ class LutronSwitch(LutronDevice, SwitchDevice):
 
     def __init__(self, area_name, lutron_device, controller):
         """Initialize the switch."""
-        self._is_on = False
+        self._prev_state = None
         super().__init__(area_name, lutron_device, controller)
 
     def turn_on(self, **kwargs):
@@ -48,4 +48,5 @@ class LutronSwitch(LutronDevice, SwitchDevice):
 
     def update(self):
         """Call when forcing a refresh of the device."""
-        self._is_on = self._lutron_device.level > 0
+        if self._prev_state is None:
+            self._prev_state = self._lutron_device.level > 0

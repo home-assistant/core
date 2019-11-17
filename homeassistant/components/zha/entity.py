@@ -13,11 +13,11 @@ from homeassistant.util import slugify
 
 from .core.const import (
     ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
     DATA_ZHA,
     DATA_ZHA_BRIDGE_ID,
     DOMAIN,
-    MODEL,
-    NAME,
     SIGNAL_REMOVE,
 )
 from .core.helpers import LogMixin
@@ -40,7 +40,7 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
         self._unique_id = unique_id
         if not skip_entity_id:
             ieee = zha_device.ieee
-            ieeetail = "".join(["%02x" % (o,) for o in ieee[-4:]])
+            ieeetail = "".join([f"{o:02x}" for o in ieee[:4]])
             self.entity_id = "{}.{}_{}_{}_{}{}".format(
                 self._domain,
                 slugify(zha_device.manufacturer),
@@ -99,8 +99,8 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
             "connections": {(CONNECTION_ZIGBEE, ieee)},
             "identifiers": {(DOMAIN, ieee)},
             ATTR_MANUFACTURER: zha_device_info[ATTR_MANUFACTURER],
-            MODEL: zha_device_info[MODEL],
-            NAME: zha_device_info[NAME],
+            ATTR_MODEL: zha_device_info[ATTR_MODEL],
+            ATTR_NAME: zha_device_info[ATTR_NAME],
             "via_device": (DOMAIN, self.hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID]),
         }
 
@@ -189,7 +189,7 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
             unsub = async_dispatcher_connect(self.hass, signal, func)
         else:
             unsub = async_dispatcher_connect(
-                self.hass, "{}_{}".format(channel.unique_id, signal), func
+                self.hass, f"{channel.unique_id}_{signal}", func
             )
         self._unsubs.append(unsub)
 

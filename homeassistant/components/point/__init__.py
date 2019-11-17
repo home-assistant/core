@@ -182,7 +182,7 @@ class MinutPointClient:
 
         async def new_device(device_id, component):
             """Load new device."""
-            config_entries_key = "{}.{}".format(component, DOMAIN)
+            config_entries_key = f"{component}.{DOMAIN}"
             async with self._hass.data[DATA_CONFIG_ENTRY_LOCK]:
                 if config_entries_key not in self._hass.data[CONFIG_ENTRY_IS_SETUP]:
                     await self._hass.config_entries.async_forward_entry_setup(
@@ -247,7 +247,7 @@ class MinutPointEntity(Entity):
 
     def __str__(self):
         """Return string representation of device."""
-        return "MinutPoint {}".format(self.name)
+        return f"MinutPoint {self.name}"
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
@@ -333,7 +333,7 @@ class MinutPointEntity(Entity):
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return "point.{}-{}".format(self._id, self.device_class)
+        return f"point.{self._id}-{self.device_class}"
 
     @property
     def value(self):

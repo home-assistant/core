@@ -4,6 +4,9 @@ from datetime import timedelta
 from functools import partial
 import logging
 
+from dsmr_parser import obis_references as obis_ref
+from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
+import serial
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -52,10 +55,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     # Suppress logging
     logging.getLogger("dsmr_parser").setLevel(logging.ERROR)
 
-    from dsmr_parser import obis_references as obis_ref
-    from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
-    import serial
-
     dsmr_version = config[CONF_DSMR_VERSION]
 
     # Define list of name,obis mappings to generate entities
@@ -63,6 +62,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         ["Power Consumption", obis_ref.CURRENT_ELECTRICITY_USAGE],
         ["Power Production", obis_ref.CURRENT_ELECTRICITY_DELIVERY],
         ["Power Tariff", obis_ref.ELECTRICITY_ACTIVE_TARIFF],
+        ["Power Consumption (total)", obis_ref.ELECTRICITY_IMPORTED_TOTAL],
         ["Power Consumption (low)", obis_ref.ELECTRICITY_USED_TARIFF_1],
         ["Power Consumption (normal)", obis_ref.ELECTRICITY_USED_TARIFF_2],
         ["Power Production (low)", obis_ref.ELECTRICITY_DELIVERED_TARIFF_1],
@@ -211,11 +211,9 @@ class DSMREntity(Entity):
     @property
     def state(self):
         """Return the state of sensor, if available, translate if needed."""
-        from dsmr_parser import obis_references as obis
-
         value = self.get_dsmr_object_attr("value")
 
-        if self._obis == obis.ELECTRICITY_ACTIVE_TARIFF:
+        if self._obis == obis_ref.ELECTRICITY_ACTIVE_TARIFF:
             return self.translate_tariff(value)
 
         try:

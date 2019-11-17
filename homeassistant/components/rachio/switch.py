@@ -72,7 +72,7 @@ class RachioSwitch(SwitchDevice):
     @property
     def name(self) -> str:
         """Get a name for this switch."""
-        return "Switch on {}".format(self._controller.name)
+        return f"Switch on {self._controller.name}"
 
     @property
     def is_on(self) -> bool:
@@ -113,12 +113,12 @@ class RachioStandbySwitch(RachioSwitch):
     @property
     def name(self) -> str:
         """Return the name of the standby switch."""
-        return "{} in standby mode".format(self._controller.name)
+        return f"{self._controller.name} in standby mode"
 
     @property
     def unique_id(self) -> str:
-        """Return a unique id by combinining controller id and purpose."""
-        return "{}-standby".format(self._controller.controller_id)
+        """Return a unique id by combining controller id and purpose."""
+        return f"{self._controller.controller_id}-standby"
 
     @property
     def icon(self) -> str:
@@ -182,8 +182,8 @@ class RachioZone(RachioSwitch):
 
     @property
     def unique_id(self) -> str:
-        """Return a unique id by combinining controller id and zone number."""
-        return "{}-zone-{}".format(self._controller.controller_id, self.zone_id)
+        """Return a unique id by combining controller id and zone number."""
+        return f"{self._controller.controller_id}-zone-{self.zone_id}"
 
     @property
     def icon(self) -> str:

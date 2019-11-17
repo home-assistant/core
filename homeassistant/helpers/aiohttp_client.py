@@ -1,9 +1,9 @@
 """Helper for aiohttp webclient stuff."""
 import asyncio
 import sys
-from ssl import SSLContext  # noqa: F401
+from ssl import SSLContext
 from typing import Any, Awaitable, Optional, cast
-from typing import Union  # noqa: F401
+from typing import Union
 
 import aiohttp
 from aiohttp.hdrs import USER_AGENT, CONTENT_TYPE
@@ -171,7 +171,7 @@ def _async_get_connector(
         return cast(aiohttp.BaseConnector, hass.data[key])
 
     if verify_ssl:
-        ssl_context = ssl_util.client_context()  # type: Union[bool, SSLContext]
+        ssl_context: Union[bool, SSLContext] = ssl_util.client_context()
     else:
         ssl_context = False
 

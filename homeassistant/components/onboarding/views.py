@@ -122,7 +122,7 @@ class UserOnboardingView(_BaseOnboardingView):
 
             for area in DEFAULT_AREAS:
                 area_registry.async_create(
-                    translations["component.onboarding.area.{}".format(area)]
+                    translations[f"component.onboarding.area.{area}"]
                 )
 
             await self._async_mark_done(hass)

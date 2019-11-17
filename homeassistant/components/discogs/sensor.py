@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 import random
 
+import discogs_client
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -65,19 +66,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Discogs sensor."""
-    import discogs_client
 
     token = config[CONF_TOKEN]
     name = config[CONF_NAME]
 
     try:
-        discogs_client = discogs_client.Client(SERVER_SOFTWARE, user_token=token)
+        _discogs_client = discogs_client.Client(SERVER_SOFTWARE, user_token=token)
 
         discogs_data = {
-            "user": discogs_client.identity().name,
-            "folders": discogs_client.identity().collection_folders,
-            "collection_count": discogs_client.identity().num_collection,
-            "wantlist_count": discogs_client.identity().num_wantlist,
+            "user": _discogs_client.identity().name,
+            "folders": _discogs_client.identity().collection_folders,
+            "collection_count": _discogs_client.identity().num_collection,
+            "wantlist_count": _discogs_client.identity().num_wantlist,
         }
     except discogs_client.exceptions.HTTPError:
         _LOGGER.error("API token is not valid")

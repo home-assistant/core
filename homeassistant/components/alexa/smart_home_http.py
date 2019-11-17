@@ -57,6 +57,11 @@ class AlexaConfig(AbstractConfig):
         """If an entity should be exposed."""
         return self._config[CONF_FILTER](entity_id)
 
+    @core.callback
+    def async_invalidate_access_token(self):
+        """Invalidate access token."""
+        self._auth.async_invalidate_access_token()
+
     async def async_get_access_token(self):
         """Get an access token."""
         return await self._auth.async_get_access_token()

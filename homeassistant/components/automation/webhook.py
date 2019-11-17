@@ -11,6 +11,9 @@ import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN as AUTOMATION_DOMAIN
 
+
+# mypy: allow-untyped-defs
+
 DEPENDENCIES = ("webhook",)
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,7 +36,7 @@ async def _handle_webhook(action, hass, webhook_id, request):
     hass.async_run_job(action, {"trigger": result})
 
 
-async def async_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(hass, config, action, automation_info):
     """Trigger based on incoming webhooks."""
     webhook_id = config.get(CONF_WEBHOOK_ID)
     hass.components.webhook.async_register(

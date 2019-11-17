@@ -124,7 +124,7 @@ class NMBSLiveBoard(Entity):
         departure = get_time_until(self._attrs["time"])
 
         attrs = {
-            "departure": "In {} minutes".format(departure),
+            "departure": f"In {departure} minutes",
             "extra_train": int(self._attrs["isExtra"]) > 0,
             "vehicle_id": self._attrs["vehicle"],
             "monitored_station": self._station,
@@ -132,7 +132,7 @@ class NMBSLiveBoard(Entity):
         }
 
         if delay > 0:
-            attrs["delay"] = "{} minutes".format(delay)
+            attrs["delay"] = f"{delay} minutes"
 
         return attrs
 
@@ -194,7 +194,7 @@ class NMBSSensor(Entity):
         departure = get_time_until(self._attrs["departure"]["time"])
 
         attrs = {
-            "departure": "In {} minutes".format(departure),
+            "departure": f"In {departure} minutes",
             "destination": self._station_to,
             "direction": self._attrs["departure"]["direction"]["name"],
             "platform_arriving": self._attrs["arrival"]["platform"],
@@ -218,7 +218,7 @@ class NMBSSensor(Entity):
             ) + get_delay_in_minutes(via["departure"]["delay"])
 
         if delay > 0:
-            attrs["delay"] = "{} minutes".format(delay)
+            attrs["delay"] = f"{delay} minutes"
 
         return attrs
 

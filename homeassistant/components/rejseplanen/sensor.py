@@ -7,17 +7,18 @@ https://help.rejseplanen.dk/hc/en-us/articles/214174465-Rejseplanen-s-API
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.rejseplanen/
 """
+from datetime import datetime, timedelta
 import logging
-from datetime import timedelta, datetime
 from operator import itemgetter
 
+import rjpl
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -166,8 +167,6 @@ class PublicTransportData:
 
     def update(self):
         """Get the latest data from rejseplanen."""
-        import rjpl
-
         self.info = []
 
         def intersection(lst1, lst2):
@@ -192,7 +191,7 @@ class PublicTransportData:
             _LOGGER.debug("API returned error: %s", error)
             return
         except (rjpl.rjplConnectionError, rjpl.rjplHTTPError):
-            _LOGGER.debug("Error occured while connecting to the API")
+            _LOGGER.debug("Error occurred while connecting to the API")
             return
 
         # Filter result
@@ -220,7 +219,7 @@ class PublicTransportData:
                 and due_at_time is not None
                 and route is not None
             ):
-                due_at = "{} {}".format(due_at_date, due_at_time)
+                due_at = f"{due_at_date} {due_at_time}"
 
                 departure_data = {
                     ATTR_DUE_IN: due_in_minutes(due_at),

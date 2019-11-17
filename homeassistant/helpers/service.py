@@ -18,12 +18,12 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import template, typing
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.yaml import load_yaml
+from homeassistant.util.yaml.loader import JSON_TYPE
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.async_ import run_coroutine_threadsafe
 from homeassistant.helpers.typing import HomeAssistantType
 
 
-# mypy: allow-incomplete-defs, allow-untyped-defs, no-check-untyped-defs
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 CONF_SERVICE = "service"
 CONF_SERVICE_TEMPLATE = "service_template"
@@ -41,7 +41,7 @@ def call_from_config(
     hass, config, blocking=False, variables=None, validate_config=True
 ):
     """Call a service based on a config hash."""
-    run_coroutine_threadsafe(
+    asyncio.run_coroutine_threadsafe(
         async_call_from_config(hass, config, blocking, variables, validate_config),
         hass.loop,
     ).result()
@@ -104,7 +104,7 @@ def extract_entity_ids(hass, service_call, expand_group=True):
 
     Will convert group entity ids to the entity ids it represents.
     """
-    return run_coroutine_threadsafe(
+    return asyncio.run_coroutine_threadsafe(
         async_extract_entity_ids(hass, service_call, expand_group), hass.loop
     ).result()
 
@@ -161,7 +161,7 @@ async def async_extract_entity_ids(hass, service_call, expand_group=True):
     return extracted
 
 
-async def _load_services_file(hass: HomeAssistantType, domain: str):
+async def _load_services_file(hass: HomeAssistantType, domain: str) -> JSON_TYPE:
     """Load services file for an integration."""
     integration = await async_get_integration(hass, domain)
     try:
@@ -228,6 +228,20 @@ async def async_get_all_descriptions(hass):
             descriptions[domain][service] = description
 
     return descriptions
+
+
+@ha.callback
+@bind_hass
+def async_set_service_schema(hass, domain, service, schema):
+    """Register a description for a service."""
+    hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
+
+    description = {
+        "description": schema.get("description") or "",
+        "fields": schema.get("fields") or {},
+    }
+
+    hass.data[SERVICE_DESCRIPTION_CACHE]["{}.{}".format(domain, service)] = description
 
 
 @bind_hass

@@ -1,13 +1,12 @@
 """Webhook handlers for mobile_app."""
 import logging
 
-from aiohttp.web import HTTPBadRequest, Response, Request
+from aiohttp.web import HTTPBadRequest, Request, Response
 import voluptuous as vol
 
-from homeassistant.components.cloud import async_remote_ui_url, CloudNotAvailable
+from homeassistant.components.cloud import CloudNotAvailable, async_remote_ui_url
 from homeassistant.components.frontend import MANIFEST_JSON
 from homeassistant.components.zone.const import DOMAIN as ZONE_DOMAIN
-
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_SERVICE,
@@ -50,10 +49,10 @@ from .const import (
     ERR_ENCRYPTION_REQUIRED,
     ERR_SENSOR_DUPLICATE_UNIQUE_ID,
     ERR_SENSOR_NOT_REGISTERED,
+    SIGNAL_LOCATION_UPDATE,
     SIGNAL_SENSOR_UPDATE,
     WEBHOOK_PAYLOAD_SCHEMA,
     WEBHOOK_SCHEMAS,
-    WEBHOOK_TYPES,
     WEBHOOK_TYPE_CALL_SERVICE,
     WEBHOOK_TYPE_FIRE_EVENT,
     WEBHOOK_TYPE_GET_CONFIG,
@@ -63,10 +62,8 @@ from .const import (
     WEBHOOK_TYPE_UPDATE_LOCATION,
     WEBHOOK_TYPE_UPDATE_REGISTRATION,
     WEBHOOK_TYPE_UPDATE_SENSOR_STATES,
-    SIGNAL_LOCATION_UPDATE,
+    WEBHOOK_TYPES,
 )
-
-
 from .helpers import (
     _decrypt_payload,
     empty_okay_response,
@@ -76,7 +73,6 @@ from .helpers import (
     savable_state,
     webhook_response,
 )
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -220,13 +216,13 @@ async def handle_webhook(
 
         unique_id = data[ATTR_SENSOR_UNIQUE_ID]
 
-        unique_store_key = "{}_{}".format(webhook_id, unique_id)
+        unique_store_key = f"{webhook_id}_{unique_id}"
 
         if unique_store_key in hass.data[DOMAIN][entity_type]:
             _LOGGER.error("Refusing to re-register existing sensor %s!", unique_id)
             return error_response(
                 ERR_SENSOR_DUPLICATE_UNIQUE_ID,
-                "{} {} already exists!".format(entity_type, unique_id),
+                f"{entity_type} {unique_id} already exists!",
                 status=409,
             )
 
@@ -257,13 +253,13 @@ async def handle_webhook(
 
             unique_id = sensor[ATTR_SENSOR_UNIQUE_ID]
 
-            unique_store_key = "{}_{}".format(webhook_id, unique_id)
+            unique_store_key = f"{webhook_id}_{unique_id}"
 
             if unique_store_key not in hass.data[DOMAIN][entity_type]:
                 _LOGGER.error(
                     "Refusing to update non-registered sensor: %s", unique_store_key
                 )
-                err_msg = "{} {} is not registered".format(entity_type, unique_id)
+                err_msg = f"{entity_type} {unique_id} is not registered"
                 resp[unique_id] = {
                     "success": False,
                     "error": {"code": ERR_SENSOR_NOT_REGISTERED, "message": err_msg},

@@ -9,31 +9,30 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
 )
 
-from . import ATTRIBUTION, DOMAIN as ABODE_DOMAIN, AbodeDevice
+from . import AbodeDevice
+from .const import ATTRIBUTION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 ICON = "mdi:security"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Platform uses config entry setup."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up an alarm control panel for an Abode device."""
-    data = hass.data[ABODE_DOMAIN]
+    data = hass.data[DOMAIN]
 
-    alarm_devices = [AbodeAlarm(data, data.abode.get_alarm(), data.name)]
-
-    data.devices.extend(alarm_devices)
-
-    add_entities(alarm_devices)
+    async_add_entities(
+        [AbodeAlarm(data, await hass.async_add_executor_job(data.abode.get_alarm))]
+    )
 
 
 class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanel):
     """An alarm_control_panel implementation for Abode."""
-
-    def __init__(self, data, device, name):
-        """Initialize the alarm control panel."""
-        super().__init__(data, device)
-        self._name = name
 
     @property
     def icon(self):
@@ -64,11 +63,6 @@ class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanel):
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         self._device.set_away()
-
-    @property
-    def name(self):
-        """Return the name of the alarm."""
-        return self._name or super().name
 
     @property
     def device_state_attributes(self):

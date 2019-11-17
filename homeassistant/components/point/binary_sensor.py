@@ -106,7 +106,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorDevice):
         _device_id = data.get("event", {}).get("device_id")
         if _type not in self._events or _device_id != self.device.device_id:
             return
-        _LOGGER.debug("Recieved webhook: %s", _type)
+        _LOGGER.debug("Received webhook: %s", _type)
         if _type == self._events[0]:
             self._is_on = True
         if _type == self._events[1]:

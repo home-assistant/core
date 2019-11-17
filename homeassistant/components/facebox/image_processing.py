@@ -168,7 +168,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     port = config[CONF_PORT]
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    url_health = "http://{}:{}/healthz".format(ip_address, port)
+    url_health = f"http://{ip_address}:{port}/healthz"
     hostname = check_box_health(url_health, username, password)
     if hostname is None:
         return
@@ -214,8 +214,8 @@ class FaceClassifyEntity(ImageProcessingFaceEntity):
     ):
         """Init with the API key and model id."""
         super().__init__()
-        self._url_check = "http://{}:{}/{}/check".format(ip_address, port, CLASSIFIER)
-        self._url_teach = "http://{}:{}/{}/teach".format(ip_address, port, CLASSIFIER)
+        self._url_check = f"http://{ip_address}:{port}/{CLASSIFIER}/check"
+        self._url_teach = f"http://{ip_address}:{port}/{CLASSIFIER}/teach"
         self._username = username
         self._password = password
         self._hostname = hostname
@@ -224,7 +224,7 @@ class FaceClassifyEntity(ImageProcessingFaceEntity):
             self._name = name
         else:
             camera_name = split_entity_id(camera_entity)[1]
-            self._name = "{} {}".format(CLASSIFIER, camera_name)
+            self._name = f"{CLASSIFIER} {camera_name}"
         self._matched = {}
 
     def process_image(self, image):

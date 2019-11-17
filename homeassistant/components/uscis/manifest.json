@@ -1,7 +1,7 @@
 {
   "domain": "uscis",
   "name": "Uscis",
-  "documentation": "https://www.home-assistant.io/components/uscis",
+  "documentation": "https://www.home-assistant.io/integrations/uscis",
   "requirements": [
     "uscisstatus==0.1.1"
   ],

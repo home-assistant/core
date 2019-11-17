@@ -61,7 +61,7 @@ class QSBinarySensor(QSEntity, BinarySensorDevice):
     @property
     def unique_id(self):
         """Return a unique identifier for this sensor."""
-        return "qs{}:{}".format(self.qsid, self.channel)
+        return f"qs{self.qsid}:{self.channel}"
 
     @property
     def device_class(self):

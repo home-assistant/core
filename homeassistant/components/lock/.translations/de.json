@@ -1,0 +1,8 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_locked": "{entity_name} ist gesperrt",
+            "is_unlocked": "{entity_name} ist entsperrt"
+        }
+    }
+}

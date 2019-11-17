@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
 
-    url = "http://{}:{}".format(host, port)
+    url = f"http://{host}:{port}"
 
     try:
         add_entities([NX584Alarm(hass, url, name)])

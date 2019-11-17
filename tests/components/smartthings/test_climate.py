@@ -214,14 +214,14 @@ async def test_legacy_thermostat_entity_state(hass, legacy_thermostat):
         | SUPPORT_TARGET_TEMPERATURE_RANGE
         | SUPPORT_TARGET_TEMPERATURE
     )
-    assert state.attributes[ATTR_HVAC_ACTIONS] == "idle"
-    assert state.attributes[ATTR_HVAC_MODES] == {
+    assert state.attributes[ATTR_HVAC_ACTIONS] == CURRENT_HVAC_IDLE
+    assert sorted(state.attributes[ATTR_HVAC_MODES]) == [
         HVAC_MODE_AUTO,
         HVAC_MODE_COOL,
-        HVAC_MODE_HEAT_COOL,
         HVAC_MODE_HEAT,
+        HVAC_MODE_HEAT_COOL,
         HVAC_MODE_OFF,
-    }
+    ]
     assert state.attributes[ATTR_FAN_MODE] == "auto"
     assert state.attributes[ATTR_FAN_MODES] == ["auto", "on"]
     assert state.attributes[ATTR_TARGET_TEMP_LOW] == 20  # celsius
@@ -239,12 +239,12 @@ async def test_basic_thermostat_entity_state(hass, basic_thermostat):
         == SUPPORT_TARGET_TEMPERATURE_RANGE | SUPPORT_TARGET_TEMPERATURE
     )
     assert ATTR_HVAC_ACTIONS not in state.attributes
-    assert state.attributes[ATTR_HVAC_MODES] == {
-        HVAC_MODE_OFF,
-        HVAC_MODE_HEAT_COOL,
-        HVAC_MODE_HEAT,
+    assert sorted(state.attributes[ATTR_HVAC_MODES]) == [
         HVAC_MODE_COOL,
-    }
+        HVAC_MODE_HEAT,
+        HVAC_MODE_HEAT_COOL,
+        HVAC_MODE_OFF,
+    ]
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.1  # celsius
 
 
@@ -260,13 +260,13 @@ async def test_thermostat_entity_state(hass, thermostat):
         | SUPPORT_TARGET_TEMPERATURE
     )
     assert state.attributes[ATTR_HVAC_ACTIONS] == CURRENT_HVAC_IDLE
-    assert state.attributes[ATTR_HVAC_MODES] == {
+    assert sorted(state.attributes[ATTR_HVAC_MODES]) == [
         HVAC_MODE_AUTO,
         HVAC_MODE_COOL,
         HVAC_MODE_HEAT,
         HVAC_MODE_HEAT_COOL,
         HVAC_MODE_OFF,
-    }
+    ]
     assert state.attributes[ATTR_FAN_MODE] == "on"
     assert state.attributes[ATTR_FAN_MODES] == ["auto", "on"]
     assert state.attributes[ATTR_TEMPERATURE] == 20  # celsius
@@ -286,6 +286,7 @@ async def test_buggy_thermostat_entity_state(hass, buggy_thermostat):
     assert state.state is STATE_UNKNOWN
     assert state.attributes[ATTR_TEMPERATURE] is None
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.1  # celsius
+    assert state.attributes[ATTR_HVAC_MODES] == []
 
 
 async def test_buggy_thermostat_invalid_mode(hass, buggy_thermostat):
@@ -295,7 +296,7 @@ async def test_buggy_thermostat_invalid_mode(hass, buggy_thermostat):
     )
     await setup_platform(hass, CLIMATE_DOMAIN, devices=[buggy_thermostat])
     state = hass.states.get("climate.buggy_thermostat")
-    assert state.attributes[ATTR_HVAC_MODES] == {"heat"}
+    assert state.attributes[ATTR_HVAC_MODES] == [HVAC_MODE_HEAT]
 
 
 async def test_air_conditioner_entity_state(hass, air_conditioner):

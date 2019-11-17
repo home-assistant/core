@@ -40,6 +40,8 @@ class TuyaLight(TuyaDevice, Light):
     @property
     def brightness(self):
         """Return the brightness of the light."""
+        if self.tuya.brightness() is None:
+            return None
         return int(self.tuya.brightness())
 
     @property
