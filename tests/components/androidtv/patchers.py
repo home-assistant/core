@@ -1,6 +1,5 @@
 """Define patches used for androidtv tests."""
 
-from socket import error as socket_error
 from unittest.mock import mock_open, patch
 
 
@@ -25,7 +24,7 @@ class AdbDeviceFake:
 
 
 class ClientFakeSuccess:
-    """A fake of the `adb_messenger.client.Client` class when the connection and shell commands succeed."""
+    """A fake of the `ppadb.client.Client` class when the connection and shell commands succeed."""
 
     def __init__(self, host="127.0.0.1", port=5037):
         """Initialize a `ClientFakeSuccess` instance."""
@@ -43,7 +42,7 @@ class ClientFakeSuccess:
 
 
 class ClientFakeFail:
-    """A fake of the `adb_messenger.client.Client` class when the connection and shell commands fail."""
+    """A fake of the `ppadb.client.Client` class when the connection and shell commands fail."""
 
     def __init__(self, host="127.0.0.1", port=5037):
         """Initialize a `ClientFakeFail` instance."""
@@ -59,7 +58,7 @@ class ClientFakeFail:
 
 
 class DeviceFake:
-    """A fake of the `adb_messenger.device.Device` class."""
+    """A fake of the `ppadb.device.Device` class."""
 
     def __init__(self, host):
         """Initialize a `DeviceFake` instance."""
@@ -75,7 +74,7 @@ class DeviceFake:
 
 
 def patch_connect(success):
-    """Mock the `adb_shell.adb_device.AdbDevice` and `adb_messenger.client.Client` classes."""
+    """Mock the `adb_shell.adb_device.AdbDevice` and `ppadb.client.Client` classes."""
 
     def connect_success_python(self, *args, **kwargs):
         """Mock the `AdbDeviceFake.connect` method when it succeeds."""
@@ -83,7 +82,7 @@ def patch_connect(success):
 
     def connect_fail_python(self, *args, **kwargs):
         """Mock the `AdbDeviceFake.connect` method when it fails."""
-        raise socket_error
+        raise OSError
 
     if success:
         return {
