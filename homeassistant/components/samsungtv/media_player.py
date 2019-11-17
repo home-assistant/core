@@ -26,6 +26,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
+    CONF_BROADCAST_ADDRESS,
     CONF_HOST,
     CONF_MAC,
     CONF_NAME,
@@ -41,6 +42,7 @@ from .const import LOGGER
 
 DEFAULT_NAME = "Samsung TV Remote"
 DEFAULT_TIMEOUT = 1
+DEFAULT_BROADCAST_ADDRESS = "255.255.255.255"
 
 KEY_PRESS_TIMEOUT = 1.2
 KNOWN_DEVICES_KEY = "samsungtv_known_devices"
@@ -65,6 +67,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_MAC): cv.string,
+        vol.Optional(
+            CONF_BROADCAST_ADDRESS, default=DEFAULT_BROADCAST_ADDRESS
+        ): cv.string,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }
 )
@@ -84,6 +89,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         port = config.get(CONF_PORT)
         name = config.get(CONF_NAME)
         mac = config.get(CONF_MAC)
+        broadcast = config.get(CONF_BROADCAST_ADDRESS)
         timeout = config.get(CONF_TIMEOUT)
     elif discovery_info is not None:
         tv_name = discovery_info.get("name")
@@ -95,6 +101,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         port = None
         timeout = DEFAULT_TIMEOUT
         mac = None
+        broadcast = DEFAULT_BROADCAST_ADDRESS
         uuid = discovery_info.get("udn")
         if uuid and uuid.startswith("uuid:"):
             uuid = uuid[len("uuid:") :]
@@ -104,7 +111,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     ip_addr = socket.gethostbyname(host)
     if ip_addr not in known_devices:
         known_devices.add(ip_addr)
-        add_entities([SamsungTVDevice(host, port, name, timeout, mac, uuid)])
+        add_entities([SamsungTVDevice(host, port, name, timeout, mac, broadcast, uuid)])
         LOGGER.info("Samsung TV %s added as '%s'", host, name)
     else:
         LOGGER.info("Ignoring duplicate Samsung TV %s", host)
@@ -113,12 +120,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SamsungTVDevice(MediaPlayerDevice):
     """Representation of a Samsung TV."""
 
-    def __init__(self, host, port, name, timeout, mac, uuid):
+    def __init__(self, host, port, name, timeout, mac, broadcast, uuid):
         """Initialize the Samsung device."""
 
         # Save a reference to the imported classes
         self._name = name
         self._mac = mac
+        self._broadcast = broadcast
         self._uuid = uuid
         # Assume that the TV is not muted
         self._muted = False
@@ -339,7 +347,7 @@ class SamsungTVDevice(MediaPlayerDevice):
     def turn_on(self):
         """Turn the media player on."""
         if self._mac:
-            wakeonlan.send_magic_packet(self._mac)
+            wakeonlan.send_magic_packet(self._mac, ip_address=self._broadcast)
         else:
             self.send_key("KEY_POWERON")
 

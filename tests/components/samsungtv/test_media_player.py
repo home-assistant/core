@@ -32,6 +32,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
+    CONF_BROADCAST_ADDRESS,
     CONF_HOST,
     CONF_MAC,
     CONF_NAME,
@@ -64,6 +65,19 @@ MOCK_CONFIG = {
         CONF_PORT: 8001,
         CONF_TIMEOUT: 10,
         CONF_MAC: "38:f9:d3:82:b4:f1",
+    }
+}
+
+ENTITY_ID_BROADCAST = f"{DOMAIN}.fake_broadcast"
+MOCK_CONFIG_BROADCAST = {
+    DOMAIN: {
+        CONF_PLATFORM: SAMSUNGTV_DOMAIN,
+        CONF_HOST: "fake_broadcast",
+        CONF_NAME: "fake_broadcast",
+        CONF_PORT: 8001,
+        CONF_TIMEOUT: 10,
+        CONF_MAC: "38:f9:d3:82:b4:f1",
+        CONF_BROADCAST_ADDRESS: "192.168.5.255",
     }
 }
 
@@ -565,7 +579,22 @@ async def test_turn_on_with_mac(hass, remote, wakeonlan):
     )
     # key and update called
     assert wakeonlan.send_magic_packet.call_count == 1
-    assert wakeonlan.send_magic_packet.call_args_list == [call("38:f9:d3:82:b4:f1")]
+    assert wakeonlan.send_magic_packet.call_args_list == [
+        call("38:f9:d3:82:b4:f1", ip_address="255.255.255.255")
+    ]
+
+
+async def test_turn_on_with_mac_and_broadcast(hass, remote, wakeonlan):
+    """Test turn on."""
+    await setup_samsungtv(hass, MOCK_CONFIG_BROADCAST)
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID_BROADCAST}, True
+    )
+    # key and update called
+    assert wakeonlan.send_magic_packet.call_count == 1
+    assert wakeonlan.send_magic_packet.call_args_list == [
+        call("38:f9:d3:82:b4:f1", ip_address="192.168.5.255")
+    ]
 
 
 async def test_turn_on_without_mac(hass, remote):
