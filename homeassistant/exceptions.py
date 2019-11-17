@@ -3,8 +3,7 @@ from typing import Optional, Tuple, TYPE_CHECKING
 import jinja2
 
 if TYPE_CHECKING:
-    # pylint: disable=unused-import
-    from .core import Context  # noqa: F401
+    from .core import Context  # noqa: F401 pylint: disable=unused-import
 
 
 class HomeAssistantError(Exception):
