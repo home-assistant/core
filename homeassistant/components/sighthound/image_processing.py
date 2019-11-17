@@ -12,7 +12,7 @@ from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY
 from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
 
@@ -20,6 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 EVENT_PERSON_DETECTED = "image_processing.person_detected"
 
+ATTR_BOUNDING_BOX = "bounding_box"
 ATTR_PEOPLE = "people"
 CONF_ACCOUNT_TYPE = "account_type"
 DEV = "dev"
@@ -66,16 +67,32 @@ class SighthoundEntity(ImageProcessingEntity):
             self._camera_name = split_entity_id(camera_entity)[1]
             self._name = f"sighthound_{self._camera_name}"
         self._state = None
+        self._image_width = None
+        self._image_height = None
 
     def process_image(self, image):
         """Process an image."""
-        try:
-            detections = self._api.detect(image)
-            people = hound.get_people(detections)
-            self._state = len(people)
+        detections = self._api.detect(image)
+        people = hound.get_people(detections)
+        self._state = len(people)
 
-        except hound.SimplehoundException as exc:
-            _LOGGER.error(str(exc))
+        metadata = hound.get_metadata(detections)
+        self._image_width = metadata["image_width"]
+        self._image_height = metadata["image_height"]
+        for person in people:
+            self.fire_person_detected_event(person)
+
+    def fire_person_detected_event(self, person):
+        """Send event with detected total_persons."""
+        self.hass.bus.fire(
+            EVENT_PERSON_DETECTED,
+            {
+                ATTR_ENTITY_ID: self.entity_id,
+                ATTR_BOUNDING_BOX: hound.bbox_to_tf_style(
+                    person["boundingBox"], self._image_width, self._image_height
+                ),
+            },
+        )
 
     @property
     def camera_entity(self):

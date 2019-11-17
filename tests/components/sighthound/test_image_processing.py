@@ -4,7 +4,9 @@ from unittest.mock import patch
 import pytest
 
 import homeassistant.components.image_processing as ip
+import homeassistant.components.sighthound.image_processing as sh
 from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY
+from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 
 VALID_CONFIG = {
@@ -21,28 +23,6 @@ VALID_ENTITY_ID = "image_processing.sighthound_demo_camera"
 MOCK_DETECTIONS = {
     "image": {"width": 960, "height": 480, "orientation": 1},
     "objects": [
-        {
-            "type": "face",
-            "boundingBox": {"x": 305, "y": 151, "height": 28, "width": 30},
-            "attributes": {
-                "gender": "male",
-                "genderConfidence": 0.9733,
-                "age": 33,
-                "ageConfidence": 0.7801,
-                "frontal": True,
-            },
-        },
-        {
-            "type": "face",
-            "boundingBox": {"x": 855, "y": 147, "height": 29, "width": 24},
-            "attributes": {
-                "gender": "male",
-                "genderConfidence": 0.9834,
-                "age": 37,
-                "ageConfidence": 0.5096,
-                "frontal": False,
-            },
-        },
         {
             "type": "person",
             "boundingBox": {"x": 227, "y": 133, "height": 245, "width": 125},
@@ -85,8 +65,20 @@ async def test_process_image(hass, mock_image, mock_detections):
     """Process an image."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     assert hass.states.get(VALID_ENTITY_ID)
+
+    person_events = []
+
+    @callback
+    def capture_person_event(event):
+        """Mock event."""
+        person_events.append(event)
+
+    hass.bus.async_listen(sh.EVENT_PERSON_DETECTED, capture_person_event)
+
     data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
     await hass.services.async_call(ip.DOMAIN, ip.SERVICE_SCAN, service_data=data)
     await hass.async_block_till_done()
+
     state = hass.states.get(VALID_ENTITY_ID)
     assert state.state == "2"
+    assert len(person_events) == 2
