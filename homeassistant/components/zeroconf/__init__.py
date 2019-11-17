@@ -78,8 +78,8 @@ def setup(hass, config):
         try:
             zeroconf.register_service(info)
         except NonUniqueNameException:
-            _LOGGER.warning(
-                "Other Home Assistant instance present in the local network"
+            _LOGGER.error(
+                "Home Assistant instance with identical name present in the local network"
             )
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, zeroconf_hass_start)
