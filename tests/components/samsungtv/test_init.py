@@ -5,6 +5,7 @@ from unittest.mock import call, patch
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
+    CONF_BROADCAST_ADDRESS,
     CONF_HOST,
     CONF_MAC,
     CONF_NAME,
@@ -21,6 +22,7 @@ ENTITY_ID = f"{DOMAIN}.fake_name"
 MOCK_CONFIG = {
     SAMSUNGTV_DOMAIN: [
         {
+            CONF_BROADCAST_ADDRESS: "fake_broadcast",
             CONF_HOST: "fake_host",
             CONF_MAC: "fake_mac",
             CONF_NAME: "fake_name",

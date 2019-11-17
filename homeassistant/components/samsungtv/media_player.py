@@ -134,7 +134,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     timeout = config_entry.data.get(CONF_TIMEOUT)
     uuid = config_entry.data.get(CONF_ID)
 
-    async_add_devices(
+    async_add_entities(
         [
             SamsungTVDevice(
                 host, port, name, timeout, mac, broadcast, uuid, manufacturer, model
