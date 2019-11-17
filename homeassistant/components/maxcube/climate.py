@@ -31,7 +31,9 @@ from . import DATA_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_VALVE_POSITION = "valve_position"
 PRESET_MANUAL = "manual"
+
 # There are two magic temperature values, which indicate:
 # Off (valve fully closed)
 OFF_TEMPERATURE = 4.5
@@ -170,7 +172,7 @@ class MaxCubeClimate(ClimateDevice):
         if valve > 0:
             return CURRENT_HVAC_HEAT
         else:
-            return CURRENT_HVAC_IDLE if self.hvac_mode == HVAC_MODE_AUTO else CURRENT_HVAC_OFF
+            return CURRENT_HVAC_OFF if self.hvac_mode == HVAC_MODE_OFF else CURRENT_HVAC_IDLE
 
         return None
 
@@ -238,6 +240,18 @@ class MaxCubeClimate(ClimateDevice):
             except (socket.timeout, OSError):
                 _LOGGER.error("Setting operation mode failed")
                 return
+
+    @property
+    def state_attributes(self):
+        """Return the optional state attributes."""
+        cube = self._cubehandle.cube
+        device = cube.device_by_rf(self._rf_address)
+        attributes = super().state_attributes
+
+        if cube.is_thermostat(device):
+            attributes[ATTR_VALVE_POSITION] = device.valve_position
+
+        return attributes
 
     def update(self):
         """Get latest data from MAX! Cube."""
