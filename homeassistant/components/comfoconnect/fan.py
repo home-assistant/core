@@ -69,7 +69,7 @@ class ComfoConnectFan(FanEntity):
     @property
     def unique_id(self):
         """Return a unique_id for this entity."""
-        return f"{self._ccb.unique_id}-fan"
+        return self._ccb.unique_id
 
     @property
     def name(self):
