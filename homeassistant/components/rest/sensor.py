@@ -205,8 +205,10 @@ class RestSensor(Entity):
                         }
                         self._attributes = attrs
                     else:
-                        _LOGGER.warning("JSON result was not a dictionary" +
-                                        " or list with 0th element a dictionary")
+                        _LOGGER.warning(
+                            "JSON result was not a dictionary"
+                            + " or list with 0th element a dictionary"
+                        )
                 except ValueError:
                     _LOGGER.warning("REST result could not be parsed as JSON")
                     _LOGGER.debug("Erroneous JSON: %s", value)
