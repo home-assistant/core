@@ -209,7 +209,7 @@ ambiclimate==0.2.1
 amcrest==1.5.3
 
 # homeassistant.components.androidtv
-androidtv==0.0.32
+androidtv==0.0.34
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -1027,6 +1027,9 @@ ptvsd==4.2.8
 
 # homeassistant.components.wink
 pubnubsub-handler==1.0.8
+
+# homeassistant.components.androidtv
+pure-python-adb==0.2.2.dev0
 
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
