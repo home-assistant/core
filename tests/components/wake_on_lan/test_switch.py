@@ -30,7 +30,7 @@ def system():
     return "Windows"
 
 
-class TestWOLSwitch(unittest.TestCase):
+class TestWolSwitch(unittest.TestCase):
     """Test the wol switch."""
 
     def setUp(self):
