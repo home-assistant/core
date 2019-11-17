@@ -54,7 +54,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         device_info.firmware_version,
         device_info.hardware_version,
     )
-    device = AirMonitorB1(name, AirQualityMonitor(host, token, model), unique_id)
+    device = AirMonitorB1(name, AirQualityMonitor(host, token, model=model), unique_id)
 
     async_add_entities([device], update_before_add=True)
 
