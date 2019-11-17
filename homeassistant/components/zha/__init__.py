@@ -100,7 +100,7 @@ async def async_setup_entry(hass, config_entry):
     if config.get(CONF_ENABLE_QUIRKS, True):
         # needs to be done here so that the ZHA module is finished loading
         # before zhaquirks is imported
-        # pylint: disable=W0611, W0612
+        # pylint: disable=W0611
         import zhaquirks  # noqa: F401
 
     zha_gateway = ZHAGateway(hass, config, config_entry)

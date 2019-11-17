@@ -148,7 +148,6 @@ async def handle_webhook(
                 blocking=True,
                 context=context,
             )
-        # noqa: E722 pylint: disable=broad-except
         except (vol.Invalid, ServiceNotFound, Exception) as ex:
             _LOGGER.error(
                 "Error when calling service during mobile_app "
@@ -174,7 +173,6 @@ async def handle_webhook(
                 tpl = item[ATTR_TEMPLATE]
                 attach(hass, tpl)
                 resp[key] = tpl.async_render(item.get(ATTR_TEMPLATE_VARIABLES))
-            # noqa: E722 pylint: disable=broad-except
             except TemplateError as ex:
                 resp[key] = {"error": str(ex)}
 
