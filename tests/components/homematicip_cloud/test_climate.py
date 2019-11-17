@@ -367,7 +367,7 @@ async def test_hmip_climate_services(hass, mock_hap_with_service):
     )
     assert home.mock_calls[-1][0] == "activate_absence_with_duration"
     assert home.mock_calls[-1][1] == (60,)
-    assert len(home._connection.mock_calls) == 1  # pylint: disable=W0212
+    assert len(home._connection.mock_calls) == 1  # pylint: disable=protected-access
 
     await hass.services.async_call(
         "homematicip_cloud",
@@ -377,7 +377,7 @@ async def test_hmip_climate_services(hass, mock_hap_with_service):
     )
     assert home.mock_calls[-1][0] == "activate_absence_with_duration"
     assert home.mock_calls[-1][1] == (60,)
-    assert len(home._connection.mock_calls) == 2  # pylint: disable=W0212
+    assert len(home._connection.mock_calls) == 2  # pylint: disable=protected-access
 
     await hass.services.async_call(
         "homematicip_cloud",
@@ -387,7 +387,7 @@ async def test_hmip_climate_services(hass, mock_hap_with_service):
     )
     assert home.mock_calls[-1][0] == "activate_absence_with_period"
     assert home.mock_calls[-1][1] == (datetime.datetime(2019, 2, 17, 14, 0),)
-    assert len(home._connection.mock_calls) == 3  # pylint: disable=W0212
+    assert len(home._connection.mock_calls) == 3  # pylint: disable=protected-access
 
     await hass.services.async_call(
         "homematicip_cloud",
@@ -397,7 +397,7 @@ async def test_hmip_climate_services(hass, mock_hap_with_service):
     )
     assert home.mock_calls[-1][0] == "activate_absence_with_period"
     assert home.mock_calls[-1][1] == (datetime.datetime(2019, 2, 17, 14, 0),)
-    assert len(home._connection.mock_calls) == 4  # pylint: disable=W0212
+    assert len(home._connection.mock_calls) == 4  # pylint: disable=protected-access
 
     await hass.services.async_call(
         "homematicip_cloud",
@@ -407,7 +407,7 @@ async def test_hmip_climate_services(hass, mock_hap_with_service):
     )
     assert home.mock_calls[-1][0] == "activate_vacation"
     assert home.mock_calls[-1][1] == (datetime.datetime(2019, 2, 17, 14, 0), 18.5)
-    assert len(home._connection.mock_calls) == 5  # pylint: disable=W0212
+    assert len(home._connection.mock_calls) == 5  # pylint: disable=protected-access
 
     await hass.services.async_call(
         "homematicip_cloud",
@@ -417,7 +417,7 @@ async def test_hmip_climate_services(hass, mock_hap_with_service):
     )
     assert home.mock_calls[-1][0] == "activate_vacation"
     assert home.mock_calls[-1][1] == (datetime.datetime(2019, 2, 17, 14, 0), 18.5)
-    assert len(home._connection.mock_calls) == 6  # pylint: disable=W0212
+    assert len(home._connection.mock_calls) == 6  # pylint: disable=protected-access
 
     await hass.services.async_call(
         "homematicip_cloud",
@@ -427,14 +427,14 @@ async def test_hmip_climate_services(hass, mock_hap_with_service):
     )
     assert home.mock_calls[-1][0] == "deactivate_absence"
     assert home.mock_calls[-1][1] == ()
-    assert len(home._connection.mock_calls) == 7  # pylint: disable=W0212
+    assert len(home._connection.mock_calls) == 7  # pylint: disable=protected-access
 
     await hass.services.async_call(
         "homematicip_cloud", "deactivate_eco_mode", blocking=True
     )
     assert home.mock_calls[-1][0] == "deactivate_absence"
     assert home.mock_calls[-1][1] == ()
-    assert len(home._connection.mock_calls) == 8  # pylint: disable=W0212
+    assert len(home._connection.mock_calls) == 8  # pylint: disable=protected-access
 
     await hass.services.async_call(
         "homematicip_cloud",
@@ -444,14 +444,14 @@ async def test_hmip_climate_services(hass, mock_hap_with_service):
     )
     assert home.mock_calls[-1][0] == "deactivate_vacation"
     assert home.mock_calls[-1][1] == ()
-    assert len(home._connection.mock_calls) == 9  # pylint: disable=W0212
+    assert len(home._connection.mock_calls) == 9  # pylint: disable=protected-access
 
     await hass.services.async_call(
         "homematicip_cloud", "deactivate_vacation", blocking=True
     )
     assert home.mock_calls[-1][0] == "deactivate_vacation"
     assert home.mock_calls[-1][1] == ()
-    assert len(home._connection.mock_calls) == 10  # pylint: disable=W0212
+    assert len(home._connection.mock_calls) == 10  # pylint: disable=protected-access
 
     not_existing_hap_id = "5555F7110000000000000001"
     await hass.services.async_call(
@@ -463,7 +463,7 @@ async def test_hmip_climate_services(hass, mock_hap_with_service):
     assert home.mock_calls[-1][0] == "deactivate_vacation"
     assert home.mock_calls[-1][1] == ()
     # There is no further call on connection.
-    assert len(home._connection.mock_calls) == 10  # pylint: disable=W0212
+    assert len(home._connection.mock_calls) == 10  # pylint: disable=protected-access
 
 
 async def test_hmip_heating_group_services(hass, mock_hap_with_service):
@@ -485,7 +485,9 @@ async def test_hmip_heating_group_services(hass, mock_hap_with_service):
     )
     assert hmip_device.mock_calls[-1][0] == "set_active_profile"
     assert hmip_device.mock_calls[-1][1] == (1,)
-    assert len(hmip_device._connection.mock_calls) == 2  # pylint: disable=W0212
+    assert (
+        len(hmip_device._connection.mock_calls) == 2  # pylint: disable=protected-access
+    )
 
     await hass.services.async_call(
         "homematicip_cloud",
@@ -495,4 +497,7 @@ async def test_hmip_heating_group_services(hass, mock_hap_with_service):
     )
     assert hmip_device.mock_calls[-1][0] == "set_active_profile"
     assert hmip_device.mock_calls[-1][1] == (1,)
-    assert len(hmip_device._connection.mock_calls) == 12  # pylint: disable=W0212
+    assert (
+        len(hmip_device._connection.mock_calls)  # pylint: disable=protected-access
+        == 12
+    )
