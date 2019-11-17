@@ -1,10 +1,10 @@
 """Test pi_hole component."""
 
-from asyncio import Future
+from asynctest import CoroutineMock
 
 from homeassistant.components import pi_hole
 from tests.common import async_setup_component, mock_coro_func
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 
 ZERO_DATA = {
     "ads_blocked_today": 0,
@@ -100,8 +100,7 @@ async def test_setup_name_config(hass):
 async def test_disable_service_call(hass):
     """Test disable service call with no Pi-hole named."""
     with patch("homeassistant.components.pi_hole.Hole") as _hole:
-        mock_disable = Mock(return_value=Future())
-        mock_disable.return_value.set_result(True)
+        mock_disable = CoroutineMock(return_value=True)
         _hole.return_value.disable = mock_disable
         _hole.return_value.get_data = mock_coro_func(return_value=True)
         _hole.return_value.data = ZERO_DATA
@@ -134,8 +133,7 @@ async def test_disable_service_call(hass):
 async def test_enable_service_call(hass):
     """Test enable service call with no Pi-hole named."""
     with patch("homeassistant.components.pi_hole.Hole") as _hole:
-        mock_enable = Mock(return_value=Future())
-        mock_enable.return_value.set_result(True)
+        mock_enable = CoroutineMock(return_value=True)
         _hole.return_value.enable = mock_enable
         _hole.return_value.get_data = mock_coro_func(return_value=True)
         _hole.return_value.data = ZERO_DATA
