@@ -142,7 +142,7 @@ aiobotocore==0.10.4
 aiodns==2.0.0
 
 # homeassistant.components.esphome
-aioesphomeapi==2.5.0
+aioesphomeapi==2.6.0
 
 # homeassistant.components.freebox
 aiofreepybox==0.0.8
