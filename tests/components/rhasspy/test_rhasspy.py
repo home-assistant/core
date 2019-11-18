@@ -4,6 +4,9 @@ Tests for Rhasspy voice assistant integration.
 For more details about this integration, please refer to the documentation at
 https://home-assistant.io/integrations/rhasspy/
 """
+import asyncio
+from unittest.mock import MagicMock, patch
+
 from homeassistant.components.rhasspy import RhasspyProvider
 from homeassistant.components.rhasspy.const import (
     CONF_CUSTOM_WORDS,
@@ -31,53 +34,67 @@ async def test_setup_component(hass):
     assert isinstance(provider, RhasspyProvider)
 
 
-async def test_service_train(hass, aioclient_mock):
+async def test_service_train(hass):
     """Test rhasspy.train service with sentences, slots, and custom words."""
+    intent_commands = {"TestIntent": {KEY_COMMAND: "release the moogles $direction"}}
+    custom_words = {"moogles": "M UW G AH L Z"}
+    slots = {"direction": ["left", "right"]}
+
     config = {
         "rhasspy": {
             CONF_MAKE_INTENT_COMMANDS: False,
-            CONF_INTENT_COMMANDS: {
-                "TestIntent": {KEY_COMMAND: "release the moogles $direction"}
-            },
-            CONF_CUSTOM_WORDS: {"moogles": "M UW G AH L Z"},
-            CONF_SLOTS: {"direction": ["left", "right"]},
+            CONF_INTENT_COMMANDS: intent_commands,
+            CONF_CUSTOM_WORDS: custom_words,
+            CONF_SLOTS: slots,
         }
     }
 
     assert await async_setup_component(hass, "rhasspy", config)
-    provider = hass.data[DOMAIN]
 
-    aioclient_mock.post(provider.sentences_url, status=200, data="")
-    aioclient_mock.post(provider.custom_words_url, status=200, data="")
-    aioclient_mock.post(provider.slots_url, status=200, data="")
-    aioclient_mock.post(provider.train_url, status=200, data="")
-    await hass.services.async_call(DOMAIN, SERVICE_TRAIN, {}, blocking=True)
-    assert aioclient_mock.call_count == 4
+    with patch(
+        "homeassistant.components.rhasspy.training.RhasspyClient"
+    ) as make_mock_rhasspyclient:
+        mock_rhasspyclient = make_mock_rhasspyclient.return_value
 
-    # Verify POST-ed data
-    assert (
-        aioclient_mock.mock_calls[0][2]
-        == "[TestIntent]\nrelease the moogles $direction\n\n"
-    )
-    assert aioclient_mock.mock_calls[1][2] == "moogles M UW G AH L Z\n"
-    slots = aioclient_mock.mock_calls[2][2]
-    assert "direction" in slots
-    assert sorted(slots["direction"]) == ["left", "right"]
+        mock_rhasspyclient.set_sentences = MagicMock(return_value=asyncio.Future())
+        mock_rhasspyclient.set_sentences.return_value.set_result("")
+
+        mock_rhasspyclient.set_custom_words = MagicMock(return_value=asyncio.Future())
+        mock_rhasspyclient.set_custom_words.return_value.set_result("")
+
+        mock_rhasspyclient.set_slots = MagicMock(return_value=asyncio.Future())
+        mock_rhasspyclient.set_slots.return_value.set_result("")
+
+        mock_rhasspyclient.train = MagicMock(return_value=asyncio.Future())
+        mock_rhasspyclient.train.return_value.set_result("")
+
+        await hass.services.async_call(DOMAIN, SERVICE_TRAIN, {}, blocking=True)
+
+        # Verify data
+        assert mock_rhasspyclient.set_sentences.call_args[0][0] == {
+            "TestIntent": ["release the moogles $direction"]
+        }
+        assert mock_rhasspyclient.set_custom_words.call_args[0][0] == custom_words
+        assert (
+            mock_rhasspyclient.set_slots.call_args[0][0]["direction"]
+            == slots["direction"]
+        )
+        assert mock_rhasspyclient.train.called
 
 
-async def test_conversation(hass, aioclient_mock):
+async def test_conversation(hass):
     """Test conversation integration."""
     config = {"rhasspy": {CONF_REGISTER_CONVERSATION: True}, "conversation": {}}
 
     assert await async_setup_component(hass, "conversation", config)
     assert await async_setup_component(hass, "rhasspy", config)
-    provider = hass.data[DOMAIN]
 
     test_intent = "TestIntent"
 
     # Register handler for test intent
     class TestIntent(intent.IntentHandler):
         """Handle TestIntent by setting a boolean."""
+
         intent_type = test_intent
 
         def __init__(self):
@@ -92,18 +109,23 @@ async def test_conversation(hass, aioclient_mock):
     # Test conversation/process pass-through to rhasspy
     assert hass.services.has_service("conversation", "process")
 
-    aioclient_mock.post(
-        provider.intent_url, status=200, json={"intent": {"name": test_intent}}
-    )
+    with patch(
+        "homeassistant.components.rhasspy.conversation.RhasspyClient"
+    ) as make_mock_rhasspyclient:
+        mock_rhasspyclient = make_mock_rhasspyclient.return_value
 
-    test_sentence = "this is a test"
-    await hass.services.async_call(
-        "conversation", "process", {"text": test_sentence}, blocking=True
-    )
+        mock_rhasspyclient.text_to_intent = MagicMock(return_value=asyncio.Future())
+        mock_rhasspyclient.text_to_intent.return_value.set_result(
+            {"intent": {"name": test_intent}}
+        )
 
-    # Verify call to Rhasspy API
-    assert aioclient_mock.call_count == 1
-    assert aioclient_mock.mock_calls[0][2] == test_sentence
+        test_sentence = "this is a test"
+        await hass.services.async_call(
+            "conversation", "process", {"text": test_sentence}, blocking=True
+        )
 
-    # Verify intent handled
-    assert test_handler.handled
+        # Verify call to Rhasspy
+        assert mock_rhasspyclient.text_to_intent.call_args[0][0] == test_sentence
+
+        # Verify intent handled
+        assert test_handler.handled

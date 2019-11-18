@@ -2,7 +2,7 @@
     "domain": "rhasspy",
     "name": "rhasspy",
     "documentation": "https://www.home-assistant.io/integrations/rhasspy",
-    "requirements": ["pydash==4.7.5", "num2words==0.5.10"],
+    "requirements": ["pydash==4.7.5", "num2words==0.5.10", "rhasspy-client==1.0.0"],
     "dependencies": ["http"],
     "codeowners": []
 }

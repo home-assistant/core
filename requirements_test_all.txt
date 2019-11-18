@@ -545,6 +545,9 @@ restrictedpython==5.0
 # homeassistant.components.rflink
 rflink==0.0.46
 
+# homeassistant.components.rhasspy
+rhasspy-client==1.0.0
+
 # homeassistant.components.ring
 ring_doorbell==0.2.3
 

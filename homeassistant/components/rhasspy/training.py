@@ -5,9 +5,10 @@ For more details about this integration, please refer to the documentation at
 https://home-assistant.io/integrations/rhasspy/
 """
 from collections import defaultdict
-import io
 import logging
 from typing import Dict, List
+
+from rhasspyclient import RhasspyClient
 
 from homeassistant.components.shopping_list import INTENT_ADD_ITEM
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -42,6 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 async def train_rhasspy(provider):
     """Generate voice commands and train a remote Rhasspy server."""
     session = async_get_clientsession(provider.hass)
+    client = RhasspyClient(provider.api_url, session)
 
     sentences_by_intent: Dict[str, List[str]] = defaultdict(list)
     make_default_commands = provider.config.get(
@@ -114,53 +116,17 @@ async def train_rhasspy(provider):
     # Check for custom sentences
     num_sentences = sum(len(s) for s in sentences_by_intent.values())
     if num_sentences > 0:
-        _LOGGER.debug("Writing sentences (%s)", provider.sentences_url)
-
-        # Generate custom sentences.ini
-        with io.StringIO() as sentences_file:
-            for intent_type in sorted(sentences_by_intent):
-                print(f"[{intent_type}]", file=sentences_file)
-
-                # Write in sorted order so Rhasspy can avoid re-training.
-                for sentence in sorted(sentences_by_intent[intent_type]):
-                    if sentence.startswith("["):
-                        # Escape "[" at start
-                        sentence = f"\\{sentence}"
-
-                    print(sentence, file=sentences_file)
-
-                print("", file=sentences_file)
-
-            # POST sentences.ini
-            async with session.post(
-                provider.sentences_url, data=sentences_file.getvalue()
-            ) as res:
-                _LOGGER.debug("Sentences result: %s", await res.text())
+        # Write sentences.ini
+        result = await client.set_sentences(sentences_by_intent)
+        _LOGGER.debug("Sentences result: %s", result)
     else:
         _LOGGER.warning("No commands generated. Not overwriting sentences.")
 
     # Check for custom words
     custom_words = provider.config.get("custom_words", {})
     if len(custom_words) > 0:
-        _LOGGER.debug("Writing custom words (%s)", provider.custom_words_url)
-
-        with io.StringIO() as custom_words_file:
-            for word in sorted(custom_words):
-                pronunciations = custom_words[word]
-
-                # Accept either string or list of strings
-                if isinstance(pronunciations, str):
-                    pronunciations = [pronunciations]
-
-                # word P1 P2 P3...
-                for pronunciation in sorted(pronunciations):
-                    print(word.strip(), pronunciation.strip(), file=custom_words_file)
-
-            # POST custom_words.txt
-            async with session.post(
-                provider.custom_words_url, data=custom_words_file.getvalue()
-            ) as res:
-                _LOGGER.debug("Custom words result: %s", await res.text())
+        result = await client.set_custom_words(custom_words)
+        _LOGGER.debug("Custom words result: %s", result)
 
     # Check for slots
     slots = dict(DEFAULT_SLOTS)
@@ -168,20 +134,12 @@ async def train_rhasspy(provider):
         slots[slot_name] = slot_values
 
     if len(slots) > 0:
-        _LOGGER.debug("Writing slots (%s)", provider.slots_url)
-        for slot_name, slot_values in list(slots.items()):
-            # Accept either string or list of strings
-            if isinstance(slot_values, str):
-                slots[slot_name] = [slot_values]
-
-        # POST slots (JSON)
-        async with session.post(provider.slots_url, json=slots) as res:
-            _LOGGER.debug("Slots result: %s", await res.text())
+        result = await client.set_slots(slots)
+        _LOGGER.debug("Slots result: %s", result)
 
     # Train profile
-    _LOGGER.debug("Training profile (%s)", provider.train_url)
-    async with session.post(provider.train_url) as res:
-        _LOGGER.debug("Training result: %s", await res.text())
+    result = await client.train()
+    _LOGGER.debug("Training result: %s", result)
 
     # Fire event
     provider.hass.bus.async_fire(EVENT_RHASSPY_TRAINED, {})

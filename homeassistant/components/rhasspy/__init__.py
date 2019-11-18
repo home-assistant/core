@@ -8,7 +8,6 @@ import asyncio
 import logging
 import re
 from typing import Dict, Optional
-from urllib.parse import urljoin
 
 from num2words import num2words
 import voluptuous as vol
@@ -217,7 +216,7 @@ async def async_setup(hass, config):
 
     if register_conversation:
         # Register converation agent
-        agent = RhasspyConversationAgent(hass, provider.intent_url)
+        agent = RhasspyConversationAgent(hass, provider.api_url)
         async_set_agent(hass, agent)
         _LOGGER.debug("Registered Rhasspy conversation agent")
 
@@ -252,21 +251,6 @@ class RhasspyProvider:
 
         # Base URL of Rhasspy web server
         self.api_url: str = config.get(CONF_API_URL, DEFAULT_API_URL)
-
-        # URL to POST sentences.ini
-        self.sentences_url: str = urljoin(self.api_url, "sentences")
-
-        # URL to POST custom_words.txt
-        self.custom_words_url: str = urljoin(self.api_url, "custom-words")
-
-        # URL to POST slots
-        self.slots_url: str = urljoin(self.api_url, "slots")
-
-        # URL to train profile
-        self.train_url: str = urljoin(self.api_url, "train")
-
-        # URL for intent recognition
-        self.intent_url: str = urljoin(self.api_url, "text-to-intent")
 
         # e.g., en-US
         self.language: str = config.get(CONF_LANGUAGE, DEFAULT_LANGUAGE)
