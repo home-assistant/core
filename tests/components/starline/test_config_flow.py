@@ -125,23 +125,3 @@ async def test_step_auth_user_falls(hass):
         assert result["type"] == "form"
         assert result["step_id"] == "auth_user"
         assert result["errors"] == {"base": "error_auth_user"}
-
-
-async def test_options_flow(hass):
-    """Test config flow options."""
-    entry = MockConfigEntry(domain=config_flow.DOMAIN, data={}, options=None)
-    hass.config_entries._entries.append(entry)
-
-    flow = await hass.config_entries.options._async_create_flow(
-        entry.entry_id, context={"source": "test"}, data=None
-    )
-
-    result = await flow.async_step_init()
-    assert result["type"] == "form"
-    assert result["step_id"] == "settings"
-
-    result = await flow.async_step_settings(
-        user_input={config_flow.CONF_SCAN_INTERVAL: 90}
-    )
-    assert result["type"] == "create_entry"
-    assert result["data"] == {config_flow.CONF_SCAN_INTERVAL: 90}
