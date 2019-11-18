@@ -12,7 +12,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entities = []
     for device in account.api.devices.values():
         if device.support_state:
-            entities.append(StarlineLock(account, device))
+            lock = StarlineLock(account, device)
+            if lock.is_locked is not None:
+                entities.append(lock)
     async_add_entities(entities)
 
 
@@ -59,7 +61,7 @@ class StarlineLock(StarlineEntity, LockDevice):
     @property
     def is_locked(self):
         """Return true if lock is locked."""
-        return self._device.car_state["arm"]
+        return self._device.car_state.get("arm")
 
     def lock(self, **kwargs):
         """Lock the car."""

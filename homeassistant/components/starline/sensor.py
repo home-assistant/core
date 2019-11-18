@@ -21,7 +21,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entities = []
     for device in account.api.devices.values():
         for key, value in SENSOR_TYPES.items():
-            entities.append(StarlineSensor(account, device, key, *value))
+            sensor = StarlineSensor(account, device, key, *value)
+            if sensor.state is not None:
+                entities.append(sensor)
     async_add_entities(entities)
 
 
@@ -50,7 +52,7 @@ class StarlineSensor(StarlineEntity, Entity):
         if self._key == "battery":
             return icon_for_battery_level(
                 battery_level=self._device.battery_level_percent,
-                charging=self._device.car_state["ign"],
+                charging=self._device.car_state.get("ign", False),
             )
         if self._key == "gsm_lvl":
             return icon_for_signal_level(signal_level=self._device.gsm_level_percent)
@@ -62,7 +64,7 @@ class StarlineSensor(StarlineEntity, Entity):
         if self._key == "battery":
             return self._device.battery_level
         if self._key == "balance":
-            return self._device.balance["value"]
+            return self._device.balance.get("value")
         if self._key == "ctemp":
             return self._device.temp_inner
         if self._key == "etemp":
@@ -75,7 +77,7 @@ class StarlineSensor(StarlineEntity, Entity):
     def unit_of_measurement(self):
         """Get the unit of measurement."""
         if self._key == "balance":
-            return self._device.balance["currency"]
+            return self._device.balance.get("currency") or "₽"
         return self._unit
 
     @property

@@ -31,7 +31,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     for device in account.api.devices.values():
         for key, value in SENSOR_TYPES.items():
             if key in device.car_state:
-                entities.append(StarlineSensor(account, device, key, *value))
+                sensor = StarlineSensor(account, device, key, *value)
+                if sensor.is_on is not None:
+                    entities.append(sensor)
     async_add_entities(entities)
 
 
@@ -67,4 +69,4 @@ class StarlineSensor(StarlineEntity, BinarySensorDevice):
     @property
     def is_on(self):
         """Return the state of the binary sensor."""
-        return self._device.car_state[self._key]
+        return self._device.car_state.get(self._key)

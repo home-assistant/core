@@ -23,7 +23,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     for device in account.api.devices.values():
         if device.support_state:
             for key, value in SWITCH_TYPES.items():
-                entities.append(StarlineSwitch(account, device, key, *value))
+                switch = StarlineSwitch(account, device, key, *value)
+                if switch.is_on is not None:
+                    entities.append(switch)
     async_add_entities(entities)
 
 
@@ -71,7 +73,7 @@ class StarlineSwitch(StarlineEntity, SwitchDevice):
         """Return True if entity is on."""
         if self._key == "poke":
             return False
-        return self._device.car_state[self._key]
+        return self._device.car_state.get(self._key)
 
     def turn_on(self, **kwargs):
         """Turn the entity on."""

@@ -118,9 +118,9 @@ class StarlineAccount:
     def balance_attrs(device: StarlineDevice) -> Dict[str, Any]:
         """Attributes for balance sensor."""
         return {
-            "operator": device.balance["operator"],
-            "state": device.balance["state"],
-            "updated": device.balance["ts"],
+            "operator": device.balance.get("operator"),
+            "state": device.balance.get("state"),
+            "updated": device.balance.get("ts"),
         }
 
     @staticmethod
@@ -137,6 +137,6 @@ class StarlineAccount:
     def engine_attrs(device: StarlineDevice) -> Dict[str, Any]:
         """Attributes for engine switch."""
         return {
-            "autostart": device.car_state["r_start"],
-            "ignition": device.car_state["run"],
+            "autostart": device.car_state.get("r_start"),
+            "ignition": device.car_state.get("run"),
         }
