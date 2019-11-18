@@ -216,10 +216,7 @@ class SamsungTVDevice(MediaPlayerDevice):
         except AttributeError:
             # Auto-detect could not find working config yet
             pass
-        except (
-            samsung_exceptions.UnhandledResponse,
-            samsung_exceptions.AccessDenied,
-        ):
+        except (samsung_exceptions.UnhandledResponse, samsung_exceptions.AccessDenied):
             # We got a response so it's on.
             self._state = STATE_ON
             self._remote = None

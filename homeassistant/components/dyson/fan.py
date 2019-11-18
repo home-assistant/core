@@ -153,10 +153,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
     hass.services.register(
-        DYSON_DOMAIN,
-        SERVICE_SET_AUTO_MODE,
-        service_handle,
-        schema=SET_AUTO_MODE_SCHEMA,
+        DYSON_DOMAIN, SERVICE_SET_AUTO_MODE, service_handle, schema=SET_AUTO_MODE_SCHEMA
     )
     if has_purecool_devices:
         hass.services.register(
