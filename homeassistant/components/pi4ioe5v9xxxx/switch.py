@@ -6,7 +6,6 @@ import voluptuous as vol
 from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.components import pi4ioe5v9xxxx
 import homeassistant.helpers.config_validation as cv
 
 from smbus2 import SMBus  # pylint: disable=import-error
@@ -87,6 +86,7 @@ def write_mem(pin, value):
 
 
 def write_output():
+    """Write memory content to hardware"""
     global _bus
     global _PORT_VALUE
     global _I2C_ADDR
@@ -94,7 +94,7 @@ def write_output():
     if _bus:
         _bus.i2c_rdwr(msg)
     else:
-        _LOGGER.error("I2C bus %d not available!!", config.get(CONF_I2CBUS))
+        _LOGGER.error("I2C bus not available!!")
 
 
 class pi4ioe5v9Switch(ToggleEntity):
