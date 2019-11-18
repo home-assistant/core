@@ -1,8 +1,10 @@
 ais_update_system:
   alias: 'Sprawdz/Zainstaluj aktualizację'
   sequence:
-    - service: ais_update_system.execute_upgrade
-
+    - service: ais_updater.check_version
+      data:
+        autoUpdate: false
+        sayIt: true
 ais_restart_system:
   alias: 'Restart bramki'
   sequence:
@@ -19,7 +21,6 @@ ais_cloud_sync:
     - service: ais_ai_service.say_it
       data:
         text: "Synchronizuje treści i ustawienia z Portalem Integratora."
-    - service: ais_updater.check_version
     - service: ais_cloud.get_radio_types
     - service: ais_cloud.get_podcast_types
     - service: ais_cloud.get_rss_news_category
