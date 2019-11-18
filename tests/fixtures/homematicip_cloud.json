@@ -5265,7 +5265,7 @@
             "setPointTemperature": 5.0,
             "type": "HEATING",
             "unreach": false,
-            "valvePosition": 0.0,
+            "valvePosition": 0.1,
             "valveSilentModeEnabled": false,
             "valveSilentModeSupported": false,
             "heatingFailureSupported": true,
