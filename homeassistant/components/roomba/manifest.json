@@ -3,7 +3,7 @@
   "name": "Roomba",
   "documentation": "https://www.home-assistant.io/integrations/roomba",
   "requirements": [
-    "roombapy-delay==1.4.0"
+    "roombapy==1.4.1"
   ],
   "dependencies": [],
   "codeowners": [
