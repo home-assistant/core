@@ -55,12 +55,6 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Any(
             vol.Schema(
                 {
-                    vol.Required(CONF_IOT_HUB_CON_STRING): cv.string,
-                    vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
-                }
-            ),
-            vol.Schema(
-                {
                     vol.Required(CONF_EVENT_HUB_CON_STRING): cv.string,
                     vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
                 }
@@ -85,35 +79,17 @@ def setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     config = yaml_config[DOMAIN]
 
     entities_filter = config[CONF_FILTER]
-    # if CONF_IOT_HUB_CON_STRING in config:
-    #     client = EventHubProducerClient.from_iot_connection_string(
-    #         config[CONF_IOT_HUB_CON_STRING], keep_alive=KEEP_ALIVE_INTERVAL
-    #     )
-    # if CONF_EVENT_HUB_CON_STRING in config:
-    #     client = EventHubProducerClient.from_connection_string(
-    #         config[CONF_EVENT_HUB_CON_STRING], keep_alive=KEEP_ALIVE_INTERVAL
-    #     )
-    # else:
-        # event_hub_address = "amqps://{}.servicebus.windows.net/{}".format(
-        #     config[CONF_EVENT_HUB_NAMESPACE], config[CONF_EVENT_HUB_INSTANCE_NAME]
-        # )
-    host_name = "{}.servicebus.windows.net".format(config[CONF_EVENT_HUB_NAMESPACE])
-    # client = EventHubProducerClient(
-    #     host=host_name,
-    #     credential=EventHubSharedKeyCredential(
-    #         policy=config[CONF_EVENT_HUB_SAS_POLICY],
-    #         key=config[CONF_EVENT_HUB_SAS_KEY],
-    #     ),
-    #     event_hub_path=config[CONF_EVENT_HUB_INSTANCE_NAME],
-    # )
-    client_args = {
-        "host": host_name,
-        "credential": EventHubSharedKeyCredential(
-            policy=config[CONF_EVENT_HUB_SAS_POLICY],
-            key=config[CONF_EVENT_HUB_SAS_KEY],
-        ),
-        "event_hub_path": config[CONF_EVENT_HUB_INSTANCE_NAME],
-    }
+    if CONF_EVENT_HUB_CON_STRING in config:
+        client_args = {"conn_str": config[CONF_EVENT_HUB_CON_STRING]}
+    else:
+        client_args = {
+            "host": f"{config[CONF_EVENT_HUB_NAMESPACE]}.servicebus.windows.net",
+            "credential": EventHubSharedKeyCredential(
+                policy=config[CONF_EVENT_HUB_SAS_POLICY],
+                key=config[CONF_EVENT_HUB_SAS_KEY],
+            ),
+            "event_hub_path": config[CONF_EVENT_HUB_INSTANCE_NAME],
+        }
 
     # encoder = JSONEncoder()
     _LOGGER.debug("    Client created.")
@@ -191,7 +167,7 @@ class AEHThread(threading.Thread):
         count = 0
         dropped = 0
         # if not self.queue.empty():
-        _LOGGER.debug("    Queue size:" + str(self.queue.qsize()))
+        _LOGGER.debug("    Queue size: %s", str(self.queue.qsize()))
         can_add = True
         try:
             while can_add and not self.shutdown:
@@ -206,7 +182,7 @@ class AEHThread(threading.Thread):
                     try:
                         if age < queue_seconds:
                             event_data = self.event_to_event_data(event)
-                            _LOGGER.debug("      Event data json: " + str(event_data))
+                            _LOGGER.debug("      Event data json: %s", str(event_data))
                             if event_data:
                                 event_data_batch.try_add(event_data)
                                 count += 1
@@ -223,11 +199,14 @@ class AEHThread(threading.Thread):
 
     def send(self):
         """Write preprocessed events to eventhub, with retry."""
-        client = EventHubProducerClient(**self.client_args)
+        if "conn_str" in self.client_args:
+            client = EventHubProducerClient.from_connection_string(**self.client_args)
+        else:
+            client = EventHubProducerClient(**self.client_args)
 
         count, batch_data = self.create_batch(client)
         if count > 0:
-            _LOGGER.debug("    Sending messages count: " + str(count))
+            _LOGGER.debug("    Sending messages count: %s", str(count))
             with client:
                 client.send(batch_data)
                 client.close()
@@ -289,7 +268,7 @@ class AEHThread(threading.Thread):
             # count, events = self.get_events_json()
             # if events:
             count = self.send()
-            _LOGGER.debug("    Sent message count:" + str(count))
+            _LOGGER.debug("    Sent message count: %s", str(count))
             for _ in range(count):
                 self.queue.task_done()
             if count == 0:
