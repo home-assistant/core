@@ -35,7 +35,6 @@ from homeassistant.util import dt as dt_util
 
 from .const import CONF_MANUFACTURER, CONF_MODEL, DOMAIN, LOGGER, METHODS
 
-DEFAULT_BROADCAST_ADDRESS = "255.255.255.255"
 KEY_PRESS_TIMEOUT = 1.2
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
 
