@@ -217,16 +217,13 @@ class SamsungTVDevice(MediaPlayerDevice):
         except AttributeError:
             # Auto-detect could not find working config yet
             pass
-        except (
-            samsung_exceptions.UnhandledResponse,
-            samsung_exceptions.AccessDenied,
-        ):
+        except (samsung_exceptions.UnhandledResponse, samsung_exceptions.AccessDenied):
             # We got a response so it's on.
             self._state = STATE_ON
             self._remote = None
             LOGGER.debug("Failed sending command %s", key, exc_info=True)
             return
-        except OSError, WebSocketException:
+        except (OSError, WebSocketException):
             self._state = STATE_OFF
             self._remote = None
         if self._power_off_in_progress():
