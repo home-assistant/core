@@ -86,7 +86,7 @@ def write_mem(pin, value):
 
 
 def write_output():
-    """Write memory content to hardware"""
+    """Write memory content to hardware."""
     global _bus
     global _PORT_VALUE
     global _I2C_ADDR
