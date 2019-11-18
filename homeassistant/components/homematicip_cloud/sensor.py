@@ -1,5 +1,6 @@
 """Support for HomematicIP Cloud sensors."""
 import logging
+from typing import Any, Dict
 
 from homematicip.aio.device import (
     AsyncBrandSwitchMeasuring,
@@ -55,7 +56,9 @@ ILLUMINATION_DEVICE_ATTRIBUTES = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass, config, async_add_entities, discovery_info=None
+) -> None:
     """Set up the HomematicIP Cloud sensors devices."""
     pass
 
@@ -127,7 +130,7 @@ class HomematicipAccesspointStatus(HomematicipGenericDevice):
         super().__init__(hap, hap.home)
 
     @property
-    def device_info(self):
+    def device_info(self) -> Dict[str, Any]:
         """Return device specific attributes."""
         # Adds a sensor to the existing HAP device
         return {
@@ -158,7 +161,7 @@ class HomematicipAccesspointStatus(HomematicipGenericDevice):
         return "%"
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the access point."""
         state_attr = super().device_state_attributes
 
@@ -246,7 +249,7 @@ class HomematicipTemperatureSensor(HomematicipGenericDevice):
         return TEMP_CELSIUS
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the windspeed sensor."""
         state_attr = super().device_state_attributes
 
@@ -283,7 +286,7 @@ class HomematicipIlluminanceSensor(HomematicipGenericDevice):
         return "lx"
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the wind speed sensor."""
         state_attr = super().device_state_attributes
 
@@ -336,7 +339,7 @@ class HomematicipWindspeedSensor(HomematicipGenericDevice):
         return "km/h"
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the wind speed sensor."""
         state_attr = super().device_state_attributes
 
@@ -378,7 +381,7 @@ class HomematicipPassageDetectorDeltaCounter(HomematicipGenericDevice):
         return self._device.leftRightCounterDelta
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the delta counter."""
         state_attr = super().device_state_attributes
 

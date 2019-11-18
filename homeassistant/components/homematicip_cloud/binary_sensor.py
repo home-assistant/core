@@ -1,5 +1,6 @@
 """Support for HomematicIP Cloud binary sensor."""
 import logging
+from typing import Any, Dict
 
 from homematicip.aio.device import (
     AsyncAccelerationSensor,
@@ -72,7 +73,9 @@ SAM_DEVICE_ATTRIBUTES = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass, config, async_add_entities, discovery_info=None
+) -> None:
     """Set up the HomematicIP Cloud binary sensor devices."""
     pass
 
@@ -142,7 +145,7 @@ class HomematicipAccelerationSensor(HomematicipGenericDevice, BinarySensorDevice
         return self._device.accelerationSensorTriggered
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the acceleration sensor."""
         state_attr = super().device_state_attributes
 
@@ -296,7 +299,7 @@ class HomematicipSunshineSensor(HomematicipGenericDevice, BinarySensorDevice):
         return self._device.sunshine
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the illuminance sensor."""
         state_attr = super().device_state_attributes
 
@@ -346,7 +349,7 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice, BinarySensorD
         return True
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the security zone group."""
         state_attr = super().device_state_attributes
 
@@ -390,7 +393,7 @@ class HomematicipSecuritySensorGroup(
         super().__init__(hap, device, "Sensors")
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the security group."""
         state_attr = super().device_state_attributes
 

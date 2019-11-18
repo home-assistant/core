@@ -1,5 +1,6 @@
 """Support for HomematicIP Cloud switches."""
 import logging
+from typing import Any, Dict
 
 from homematicip.aio.device import (
     AsyncBrandSwitchMeasuring,
@@ -24,7 +25,9 @@ from .hap import HomematicipHAP
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass, config, async_add_entities, discovery_info=None
+) -> None:
     """Set up the HomematicIP Cloud switch devices."""
     pass
 
@@ -79,11 +82,11 @@ class HomematicipSwitch(HomematicipGenericDevice, SwitchDevice):
         """Return true if device is on."""
         return self._device.on
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn the device on."""
         await self._device.turn_on()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn the device off."""
         await self._device.turn_off()
 
@@ -111,7 +114,7 @@ class HomematicipGroupSwitch(HomematicipGenericDevice, SwitchDevice):
         return True
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the switch-group."""
         state_attr = super().device_state_attributes
 
@@ -120,11 +123,11 @@ class HomematicipGroupSwitch(HomematicipGenericDevice, SwitchDevice):
 
         return state_attr
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn the group on."""
         await self._device.turn_on()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn the group off."""
         await self._device.turn_off()
 
@@ -148,7 +151,7 @@ class HomematicipSwitchMeasuring(HomematicipSwitch):
 class HomematicipMultiSwitch(HomematicipGenericDevice, SwitchDevice):
     """Representation of a HomematicIP Cloud multi switch device."""
 
-    def __init__(self, hap: HomematicipHAP, device, channel: int):
+    def __init__(self, hap: HomematicipHAP, device, channel: int) -> None:
         """Initialize the multi switch device."""
         self.channel = channel
         super().__init__(hap, device, f"Channel{channel}")
@@ -163,10 +166,10 @@ class HomematicipMultiSwitch(HomematicipGenericDevice, SwitchDevice):
         """Return true if device is on."""
         return self._device.functionalChannels[self.channel].on
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn the device on."""
         await self._device.turn_on(self.channel)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn the device off."""
         await self._device.turn_off(self.channel)
