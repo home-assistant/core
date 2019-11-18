@@ -100,17 +100,16 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._show_setup_form(user_input, errors)
 
         try:
-            self.api = await self.hass.async_add_executor_job(
-                PyiCloudService, self._username, self._password, icloud_dir
-            )
+            if self.api is None:
+                self.api = await self.hass.async_add_executor_job(
+                    PyiCloudService, self._username, self._password, icloud_dir
+                )
         except PyiCloudFailedLoginException as error:
             _LOGGER.error("Error logging into iCloud service: %s", error)
             self.api = None
             errors[CONF_USERNAME] = "login"
             return await self._show_setup_form(user_input, errors)
 
-        _LOGGER.info("self.api.requires_2fa")
-        _LOGGER.info(self.api.requires_2fa)
         if self.api.requires_2fa:
             try:
                 if self._trusted_device is None:
@@ -159,8 +158,6 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         trusted_devices = {}
         devices = self.api.trusted_devices
-        _LOGGER.info("self.api.trusted_devices")
-        _LOGGER.info(devices)
         for i, device in enumerate(devices):
             trusted_devices[i] = device.get(
                 "deviceName", f"SMS to {device.get('phoneNumber')}"
@@ -175,10 +172,6 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             int(user_input[CONF_TRUSTED_DEVICE])
         ]
 
-        _LOGGER.info("self._trusted_device")
-        _LOGGER.info(self._trusted_device)
-        _LOGGER.info("self.api.send_verification_code(self._trusted_device)")
-        _LOGGER.info(self.api.send_verification_code(self._trusted_device))
         if not self.api.send_verification_code(self._trusted_device):
             _LOGGER.error("Failed to send verification code")
             self._trusted_device = None
