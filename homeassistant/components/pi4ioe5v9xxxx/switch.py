@@ -3,13 +3,13 @@ import logging
 
 import voluptuous as vol
 
+from smbus2 import SMBus  # pylint: disable=import-error
+from smbus2 import i2c_msg  # pylint: disable=import-error
+
 from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
-
-from smbus2 import SMBus  # pylint: disable=import-error
-from smbus2 import i2c_msg  # pylint: disable=import-error
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,14 +37,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 # Default value per 8-bits port
 _PORT_VALUE = [0xFF]
-_bus = None
+_BUS = None
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the swiches devices."""
     global _PORT_VALUE
     global _I2C_ADDR
-    global _bus
+    global _BUS
     invert_logic = config.get(CONF_INVERT_LOGIC)
     switches = []
     pins = config.get(CONF_PINS)
@@ -56,9 +56,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         # Increase array size
     _PORT_VALUE *= int(bits / 8)
     # Set up I2C bus connectivity
-    _bus = SMBus(config.get(CONF_I2CBUS))
+    _BUS = SMBus(config.get(CONF_I2CBUS))
     for pin, name in pins.items():
-        switches.append(pi4ioe5v9Switch(name, pin, invert_logic))
+        switches.append(Pi4ioe5v9Switch(name, pin, invert_logic))
     add_entities(switches)
 
 
@@ -87,17 +87,17 @@ def write_mem(pin, value):
 
 def write_output():
     """Write memory content to hardware."""
-    global _bus
+    global _BUS
     global _PORT_VALUE
     global _I2C_ADDR
     msg = i2c_msg.write(_I2C_ADDR, _PORT_VALUE)
-    if _bus:
-        _bus.i2c_rdwr(msg)
+    if _BUS:
+        _BUS.i2c_rdwr(msg)
     else:
         _LOGGER.error("I2C bus not available!!")
 
 
-class pi4ioe5v9Switch(ToggleEntity):
+class Pi4ioe5v9Switch(ToggleEntity):
     """Representation of a  pi4ioe5v9 IO expansion IO."""
 
     def __init__(self, name, pin, invert_logic):
