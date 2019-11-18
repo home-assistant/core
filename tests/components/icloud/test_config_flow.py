@@ -1,7 +1,8 @@
 """Tests for the iCloud config flow."""
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, PropertyMock
 import pytest
 
+from pyicloud.base import PyiCloudService
 from pyicloud.exceptions import PyiCloudFailedLoginException
 
 from homeassistant import data_entry_flow
@@ -40,16 +41,22 @@ TRUSTED_DEVICES = [
 def mock_controller_service():
     """Mock a successful service."""
     with patch("pyicloud.base.PyiCloudSession"):
-        with patch("pyicloud.base.PyiCloudService", requires_2fa=True) as service_mock:
-            yield service_mock
+        with patch.object(
+            PyiCloudService, "requires_2fa", new_callable=PropertyMock
+        ) as mock:
+            mock.return_value = True
+            yield mock
 
 
 @pytest.fixture(name="service_with_cookie")
 def mock_controller_service_with_cookie():
     """Mock a successful service while already authenticate."""
     with patch("pyicloud.base.PyiCloudSession"):
-        with patch("pyicloud.base.PyiCloudService", requires_2fa=False) as service_mock:
-            yield service_mock
+        with patch.object(
+            PyiCloudService, "requires_2fa", new_callable=PropertyMock
+        ) as mock:
+            mock.return_value = False
+            yield mock
 
 
 @pytest.fixture(name="service_send_verification_code_failed")
@@ -79,17 +86,16 @@ def mock_controller_service_validate_verification_code_failed():
             yield service_mock
 
 
-def init_config_flow(hass: HomeAssistantType, service: MagicMock):
+def init_config_flow(hass: HomeAssistantType):
     """Init a configuration flow."""
     flow = config_flow.IcloudFlowHandler()
     flow.hass = hass
-    flow.api = service
     return flow
 
 
 async def test_user(hass, service):
     """Test user config."""
-    flow = init_config_flow(hass, service)
+    flow = init_config_flow(hass)
 
     result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -105,7 +111,7 @@ async def test_user(hass, service):
 
 async def test_user_with_cookie(hass, service_with_cookie):
     """Test user config with presence of a cookie."""
-    flow = init_config_flow(hass, service_with_cookie)
+    flow = init_config_flow(hass)
 
     # test with all provided
     result = await flow.async_step_user(
@@ -122,7 +128,7 @@ async def test_user_with_cookie(hass, service_with_cookie):
 
 async def test_import(hass, service):
     """Test import step."""
-    flow = init_config_flow(hass, service)
+    flow = init_config_flow(hass)
 
     # import with username and password
     result = await flow.async_step_import(
@@ -147,7 +153,7 @@ async def test_import(hass, service):
 
 async def test_import_with_cookie(hass, service_with_cookie):
     """Test import step with presence of a cookie."""
-    flow = init_config_flow(hass, service_with_cookie)
+    flow = init_config_flow(hass)
 
     # import with username and password
     result = await flow.async_step_import(
@@ -182,7 +188,7 @@ async def test_import_with_cookie(hass, service_with_cookie):
 
 async def test_abort_if_already_setup(hass):
     """Test we abort if the account is already setup."""
-    flow = init_config_flow(hass, None)
+    flow = init_config_flow(hass)
     MockConfigEntry(
         domain=DOMAIN, data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
     ).add_to_hass(hass)
@@ -215,7 +221,7 @@ async def test_abort_if_already_setup(hass):
 
 async def test_abort_on_login_failed(hass):
     """Test when we have errors during login."""
-    flow = init_config_flow(hass, None)
+    flow = init_config_flow(hass)
 
     with patch(
         "pyicloud.base.PyiCloudService.authenticate",
@@ -230,7 +236,8 @@ async def test_abort_on_login_failed(hass):
 
 async def test_trusted_device(hass, service):
     """Test trusted_device step."""
-    flow = init_config_flow(hass, service)
+    flow = init_config_flow(hass)
+    flow.api = service
 
     result = await flow.async_step_trusted_device()
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -239,7 +246,8 @@ async def test_trusted_device(hass, service):
 
 async def test_trusted_device_success(hass, service):
     """Test trusted_device step success."""
-    flow = init_config_flow(hass, service)
+    flow = init_config_flow(hass)
+    flow.api = service
 
     result = await flow.async_step_trusted_device({CONF_TRUSTED_DEVICE: 0})
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -250,7 +258,8 @@ async def test_abort_on_send_verification_code_failed(
     hass, service_send_verification_code_failed
 ):
     """Test when we have errors during send_verification_code."""
-    flow = init_config_flow(hass, service_send_verification_code_failed)
+    flow = init_config_flow(hass)
+    flow.api = service_send_verification_code_failed
 
     result = await flow.async_step_trusted_device({CONF_TRUSTED_DEVICE: 0})
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -260,7 +269,7 @@ async def test_abort_on_send_verification_code_failed(
 
 async def test_verification_code(hass):
     """Test verification_code step."""
-    flow = init_config_flow(hass, None)
+    flow = init_config_flow(hass)
 
     result = await flow.async_step_verification_code()
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -271,7 +280,8 @@ async def test_abort_on_validate_verification_code_failed(
     hass, service_validate_verification_code_failed
 ):
     """Test when we have errors during validate_verification_code."""
-    flow = init_config_flow(hass, service_validate_verification_code_failed)
+    flow = init_config_flow(hass)
+    flow.api = service_validate_verification_code_failed
 
     result = await flow.async_step_verification_code({CONF_VERIFICATION_CODE: 0})
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

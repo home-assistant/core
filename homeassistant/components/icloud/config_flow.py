@@ -100,10 +100,9 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._show_setup_form(user_input, errors)
 
         try:
-            if self.api is None:
-                self.api = await self.hass.async_add_executor_job(
-                    PyiCloudService, self._username, self._password, icloud_dir
-                )
+            self.api = await self.hass.async_add_executor_job(
+                PyiCloudService, self._username, self._password, icloud_dir
+            )
         except PyiCloudFailedLoginException as error:
             _LOGGER.error("Error logging into iCloud service: %s", error)
             self.api = None
