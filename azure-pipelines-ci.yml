@@ -50,6 +50,10 @@ stages:
         . venv/bin/activate
         pre-commit run flake8 --all-files
       displayName: 'Run flake8'
+    - script: |
+        . venv/bin/activate
+        pre-commit run bandit --all-files
+      displayName: 'Run bandit'
   - job: 'Validate'
     pool:
       vmImage: 'ubuntu-latest'
