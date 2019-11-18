@@ -244,6 +244,16 @@ class TestRestSensor(unittest.TestCase):
         assert "updated_state" == self.sensor.state
         assert self.sensor.available
 
+    def test_update_when_list_value_changed(self):
+        """Test state gets updated when sensor's new status is a dict in list."""
+        self.rest.update = Mock(
+            "rest.RestData.update",
+            side_effect=self.update_side_effect('[{ "key": "updated_state" }]'),
+        )
+        self.sensor.update()
+        assert "updated_state" == self.sensor.state
+        assert self.sensor.available
+
     def test_update_with_no_template(self):
         """Test update when there is no value template."""
         self.rest.update = Mock(
