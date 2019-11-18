@@ -110,25 +110,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._show_setup_form(user_input, errors)
 
         if self.api.requires_2fa:
-            try:
-                if self._trusted_device is None:
-                    return await self.async_step_trusted_device()
-
-                if self._verification_code is None:
-                    return await self.async_step_verification_code()
-
-                self.api.authenticate()
-                if self.api.requires_2fa:
-                    errors["base"] = "unknown"
-                    return await self._show_setup_form(user_input, errors)
-
-                self._trusted_device = None
-                self._verification_code = None
-
-            except PyiCloudException as error:
-                _LOGGER.error("Error setting up 2FA: %s", error)
-                errors["base"] = "2fa"
-                return await self._show_setup_form(user_input, errors)
+            return await self.async_step_trusted_device()
 
         return self.async_create_entry(
             title=self._username,
@@ -180,7 +162,6 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 trusted_devices, user_input, errors
             )
 
-        # Trigger the next step immediately
         return await self.async_step_verification_code()
 
     async def _show_trusted_device_form(
@@ -221,7 +202,6 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._verification_code = None
             errors["base"] = "validate_verification_code"
 
-            # Trigger the next step immediately
             return await self.async_step_trusted_device(None, errors)
 
         return await self.async_step_user(

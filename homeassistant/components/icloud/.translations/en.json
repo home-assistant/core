@@ -4,10 +4,8 @@
             "username_exists": "Account already configured"
         },
         "error": {
-            "2fa": "Error setting up 2FA: please check that your iCloud account has a trusted phone number",
             "login": "Login error: please check your email & password",
             "send_verification_code": "Failed to send verification code",
-            "unknown": "Unknown error: please check your credentials and/or retry later",
             "username_exists": "Account already configured",
             "validate_verification_code": "Failed to verify your verification code, choose a trust device and start the verification again"
         },
