@@ -18,9 +18,20 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 
-from homeassistant.components.azure_event_hub import DOMAIN, CONFIG_SCHEMA, CONF_EVENT_HUB_NAMESPACE, CONF_EVENT_HUB_INSTANCE_NAME, CONF_EVENT_HUB_SAS_POLICY, CONF_EVENT_HUB_SAS_KEY, CONF_EVENT_HUB_CON_STRING, CONF_IOT_HUB_CON_STRING, CONF_FILTER
+from homeassistant.components.azure_event_hub import (
+    DOMAIN,
+    CONFIG_SCHEMA,
+    CONF_EVENT_HUB_NAMESPACE,
+    CONF_EVENT_HUB_INSTANCE_NAME,
+    CONF_EVENT_HUB_SAS_POLICY,
+    CONF_EVENT_HUB_SAS_KEY,
+    CONF_EVENT_HUB_CON_STRING,
+    CONF_IOT_HUB_CON_STRING,
+    CONF_FILTER,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
 
 @config_entries.HANDLERS.register(DOMAIN)
 class EventHubFlowHandler(ConfigFlow):
@@ -37,10 +48,7 @@ class EventHubFlowHandler(ConfigFlow):
 
     async def _show_setup_form(self, errors=None):
         """Show the setup form to the user."""
-        return self.async_show_form(
-            step_id="user",
-            data_schema=CONFIG_SCHEMA
-        )
+        return self.async_show_form(step_id="user", data_schema=CONFIG_SCHEMA)
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
@@ -63,19 +71,20 @@ class EventHubFlowHandler(ConfigFlow):
             )
         else:
             event_hub_address = "amqps://{}.servicebus.windows.net/{}".format(
-                user_input[CONF_EVENT_HUB_NAMESPACE], user_input[CONF_EVENT_HUB_INSTANCE_NAME]
+                user_input[CONF_EVENT_HUB_NAMESPACE],
+                user_input[CONF_EVENT_HUB_INSTANCE_NAME],
             )
             client = EventHubClientAsync(
                 event_hub_address,
                 username=user_input[CONF_EVENT_HUB_SAS_POLICY],
                 password=user_input[CONF_EVENT_HUB_SAS_KEY],
             )
-    
+
         async_sender = client.add_async_sender()
         await client.run_async()
 
         # encoder = JSONEncoder()
-    
+
         async def async_send_to_event_hub(event: Event):
             """Send states to Event Hub."""
             state = event.data.get("new_state")
@@ -85,7 +94,7 @@ class EventHubFlowHandler(ConfigFlow):
                 or not entities_filter(state.entity_id)
             ):
                 return
-    
+
             event_data = EventData(
                 json.dumps(obj=state, cls=JSONEncoder).encode("utf-8")
                 # json.dumps(obj=state.as_dict(), default=encoder.default).encode("utf-8")
@@ -95,13 +104,12 @@ class EventHubFlowHandler(ConfigFlow):
             except AttributeError:
                 await async_sender.reconnect_async()
                 await async_sender.send(event_data)
-    
+
         async def async_shutdown(event: Event):
             """Shut down the client."""
             await client.stop_async()
-    
+
         hass.bus.async_listen(EVENT_STATE_CHANGED, async_send_to_event_hub)
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_shutdown)
-    
+
         return True
-    

@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
     "domain": "azure_event_hub",
     "name": "Azure Event Hub",
     "documentation": "https://www.home-assistant.io/integrations/azure_event_hub",
@@ -6,3 +7,16 @@
     "dependencies": [],
     "codeowners": ["@eavanvalkenburg"]
   }
+=======
+  "domain": "azure_event_hub",
+  "name": "Azure Event Hub",
+  "documentation": "https://www.home-assistant.io/components/azure_event_hub",
+  "requirements": [
+    "azure-eventhub==5.0.0b5"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@eavanvalkenburg"
+  ]
+}
+>>>>>>> update to aeh
