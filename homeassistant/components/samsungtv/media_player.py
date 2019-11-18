@@ -6,6 +6,7 @@ import socket
 from samsungctl import exceptions as samsung_exceptions, Remote as SamsungRemote
 import voluptuous as vol
 import wakeonlan
+from websocket._exceptions import WebSocketException
 
 from homeassistant.components.media_player import (
     MediaPlayerDevice,
@@ -225,7 +226,7 @@ class SamsungTVDevice(MediaPlayerDevice):
             self._remote = None
             LOGGER.debug("Failed sending command %s", key, exc_info=True)
             return
-        except OSError:
+        except OSError, WebSocketException:
             self._state = STATE_OFF
             self._remote = None
         if self._power_off_in_progress():
