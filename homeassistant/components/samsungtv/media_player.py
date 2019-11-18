@@ -51,7 +51,9 @@ SUPPORT_SAMSUNGTV = (
 )
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass, config, add_entities, discovery_info=None
+):  # pragma: no cover
     """Set up the Samsung TV platform."""
     pass
 
