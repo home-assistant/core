@@ -1,17 +1,12 @@
 """Support for interface with an Samsung TV."""
 import asyncio
 from datetime import timedelta
-import socket
 
 from samsungctl import exceptions as samsung_exceptions, Remote as SamsungRemote
 import voluptuous as vol
 import wakeonlan
 
-from homeassistant.components.media_player import (
-    MediaPlayerDevice,
-    PLATFORM_SCHEMA,
-    DEVICE_CLASS_TV,
-)
+from homeassistant.components.media_player import MediaPlayerDevice, DEVICE_CLASS_TV
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
@@ -30,7 +25,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
     CONF_MAC,
-    CONF_NAME,
     CONF_PORT,
     CONF_TIMEOUT,
     STATE_OFF,
@@ -39,19 +33,10 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    CONF_MANUFACTURER,
-    CONF_MODEL,
-    DEFAULT_NAME,
-    DEFAULT_TIMEOUT,
-    DOMAIN,
-    LOGGER,
-    METHODS,
-)
+from .const import CONF_MANUFACTURER, CONF_MODEL, DOMAIN, LOGGER, METHODS
 
 DEFAULT_BROADCAST_ADDRESS = "255.255.255.255"
 KEY_PRESS_TIMEOUT = 1.2
-KNOWN_DEVICES_KEY = "samsungtv_known_devices"
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
 
 SUPPORT_SAMSUNGTV = (
@@ -66,67 +51,17 @@ SUPPORT_SAMSUNGTV = (
     | SUPPORT_PLAY_MEDIA
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
-        vol.Optional(CONF_MAC): cv.string,
-        vol.Optional(
-            CONF_BROADCAST_ADDRESS, default=DEFAULT_BROADCAST_ADDRESS
-        ): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    }
-)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Samsung TV platform."""
-    known_devices = hass.data.get(KNOWN_DEVICES_KEY)
-    if known_devices is None:
-        known_devices = set()
-        hass.data[KNOWN_DEVICES_KEY] = known_devices
-
-    uuid = None
-    # Is this a manual configuration?
-    if config.get(CONF_HOST) is not None:
-        host = config.get(CONF_HOST)
-        port = config.get(CONF_PORT)
-        name = config.get(CONF_NAME)
-        mac = config.get(CONF_MAC)
-        broadcast = config.get(CONF_BROADCAST_ADDRESS)
-        timeout = config.get(CONF_TIMEOUT)
-    elif discovery_info is not None:
-        tv_name = discovery_info.get("name")
-        model = discovery_info.get("model_name")
-        host = discovery_info.get("host")
-        name = f"{tv_name} ({model})"
-        if name.startswith("[TV]"):
-            name = name[4:]
-        port = None
-        timeout = DEFAULT_TIMEOUT
-        mac = None
-        broadcast = DEFAULT_BROADCAST_ADDRESS
-        uuid = discovery_info.get("udn")
-        if uuid and uuid.startswith("uuid:"):
-            uuid = uuid[len("uuid:") :]
-
-    # Only add a device once, so discovered devices do not override manual
-    # config.
-    ip_addr = socket.gethostbyname(host)
-    if ip_addr not in known_devices:
-        known_devices.add(ip_addr)
-        add_entities([SamsungTVDevice(host, port, name, timeout, mac, broadcast, uuid)])
-        LOGGER.info("Samsung TV %s added as '%s'", host, name)
-    else:
-        LOGGER.info("Ignoring duplicate Samsung TV %s", host)
+    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Samsung TV from a config entry."""
-    host = config_entry.data.get(CONF_HOST)
+    host = config_entry.data[CONF_HOST]
     mac = config_entry.data.get(CONF_MAC)
-    broadcast = config_entry.data.get(CONF_BROADCAST_ADDRESS, DEFAULT_BROADCAST_ADDRESS)
+    broadcast = config_entry.data.get(CONF_BROADCAST_ADDRESS) or wakeonlan.BROADCAST_IP
     manufacturer = config_entry.data.get(CONF_MANUFACTURER)
     model = config_entry.data.get(CONF_MODEL)
     name = config_entry.title

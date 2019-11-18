@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
+    CONF_BROADCAST_ADDRESS,
     CONF_HOST,
     CONF_ID,
     CONF_IP_ADDRESS,
@@ -87,6 +88,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize flow."""
+        self._broadcast = None
         self._host = None
         self._ip = None
         self._mac = None
@@ -102,6 +104,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=self._title,
             data={
+                CONF_BROADCAST_ADDRESS: self._broadcast,
                 CONF_HOST: self._host,
                 CONF_ID: self._uuid,
                 CONF_IP_ADDRESS: self._ip,
@@ -124,6 +127,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if _is_already_configured(self.hass, ip_address):
                 return self.async_abort(reason="already_configured")
 
+            self._broadcast = user_input.get(CONF_BROADCAST_ADDRESS)
             self._host = user_input.get(CONF_HOST)
             self._ip = self.context[CONF_IP_ADDRESS] = ip_address
             self._mac = user_input.get(CONF_MAC)

@@ -8,6 +8,7 @@ from asynctest import mock
 import pytest
 from samsungctl import exceptions
 from tests.common import async_fire_time_changed
+import wakeonlan
 
 from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.components.media_player.const import (
@@ -22,6 +23,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_URL,
 )
+from homeassistant.components import samsungtv
 from homeassistant.components.samsungtv.const import DOMAIN as SAMSUNGTV_DOMAIN
 from homeassistant.components.samsungtv.media_player import (
     CONF_TIMEOUT,
@@ -36,7 +38,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
     CONF_NAME,
-    CONF_PLATFORM,
     CONF_PORT,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
@@ -51,70 +52,75 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNKNOWN,
 )
-from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 
 ENTITY_ID = f"{DOMAIN}.fake"
 MOCK_CONFIG = {
-    DOMAIN: {
-        CONF_PLATFORM: SAMSUNGTV_DOMAIN,
-        CONF_HOST: "fake",
-        CONF_NAME: "fake",
-        CONF_PORT: 8001,
-        CONF_TIMEOUT: 10,
-        CONF_MAC: "38:f9:d3:82:b4:f1",
-    }
+    SAMSUNGTV_DOMAIN: [
+        {
+            CONF_HOST: "fake",
+            CONF_NAME: "fake",
+            CONF_PORT: 8001,
+            CONF_TIMEOUT: 10,
+            CONF_MAC: "38:f9:d3:82:b4:f1",
+        }
+    ]
 }
 
 ENTITY_ID_BROADCAST = f"{DOMAIN}.fake_broadcast"
 MOCK_CONFIG_BROADCAST = {
-    DOMAIN: {
-        CONF_PLATFORM: SAMSUNGTV_DOMAIN,
-        CONF_HOST: "fake_broadcast",
-        CONF_NAME: "fake_broadcast",
-        CONF_PORT: 8001,
-        CONF_TIMEOUT: 10,
-        CONF_MAC: "38:f9:d3:82:b4:f1",
-        CONF_BROADCAST_ADDRESS: "192.168.5.255",
-    }
+    SAMSUNGTV_DOMAIN: [
+        {
+            CONF_HOST: "fake_broadcast",
+            CONF_NAME: "fake_broadcast",
+            CONF_PORT: 8001,
+            CONF_TIMEOUT: 10,
+            CONF_MAC: "38:f9:d3:82:b4:f1",
+            CONF_BROADCAST_ADDRESS: "192.168.5.255",
+        }
+    ]
 }
 
 ENTITY_ID_NOMAC = f"{DOMAIN}.fake_nomac"
 MOCK_CONFIG_NOMAC = {
-    DOMAIN: {
-        CONF_PLATFORM: SAMSUNGTV_DOMAIN,
-        CONF_HOST: "fake_nomac",
-        CONF_NAME: "fake_nomac",
-        CONF_PORT: 55000,
-        CONF_TIMEOUT: 10,
-    }
+    SAMSUNGTV_DOMAIN: [
+        {
+            CONF_HOST: "fake_nomac",
+            CONF_NAME: "fake_nomac",
+            CONF_PORT: 55000,
+            CONF_TIMEOUT: 10,
+        }
+    ]
 }
 
 ENTITY_ID_AUTO = f"{DOMAIN}.fake_auto"
 MOCK_CONFIG_AUTO = {
-    DOMAIN: {
-        CONF_PLATFORM: SAMSUNGTV_DOMAIN,
-        CONF_HOST: "fake_auto",
-        CONF_NAME: "fake_auto",
-    }
+    SAMSUNGTV_DOMAIN: [{CONF_HOST: "fake_auto", CONF_NAME: "fake_auto"}]
 }
 
 ENTITY_ID_DISCOVERY = f"{DOMAIN}.fake_discovery_fake_model"
 MOCK_CONFIG_DISCOVERY = {
-    "name": "fake_discovery",
-    "model_name": "fake_model",
-    "host": "fake_host",
-    "udn": "fake_uuid",
+    SAMSUNGTV_DOMAIN: [
+        {
+            "name": "fake_discovery",
+            "model_name": "fake_model",
+            "host": "fake_host",
+            "udn": "fake_uuid",
+        }
+    ]
 }
 
 ENTITY_ID_DISCOVERY_PREFIX = f"{DOMAIN}.fake_discovery_prefix_fake_model_prefix"
 MOCK_CONFIG_DISCOVERY_PREFIX = {
-    "name": "[TV]fake_discovery_prefix",
-    "model_name": "fake_model_prefix",
-    "host": "fake_host_prefix",
-    "udn": "uuid:fake_uuid_prefix",
+    DOMAIN: [
+        {
+            "name": "[TV]fake_discovery_prefix",
+            "model_name": "fake_model_prefix",
+            "host": "fake_host_prefix",
+            "udn": "uuid:fake_uuid_prefix",
+        }
+    ]
 }
 
 AUTODETECT_WEBSOCKET = {
@@ -124,7 +130,7 @@ AUTODETECT_WEBSOCKET = {
     "method": "websocket",
     "port": None,
     "host": "fake_auto",
-    "timeout": 1,
+    "timeout": None,
 }
 AUTODETECT_LEGACY = {
     "name": "HomeAssistant",
@@ -133,22 +139,20 @@ AUTODETECT_LEGACY = {
     "method": "legacy",
     "port": None,
     "host": "fake_auto",
-    "timeout": 1,
+    "timeout": None,
 }
 
 
 @pytest.fixture(name="remote")
 def remote_fixture():
     """Patch the samsungctl Remote."""
-    with patch(
+    with patch("homeassistant.components.samsungtv.config_flow.socket"), patch(
+        "homeassistant.components.samsungtv.config_flow.Remote"
+    ), patch(
         "homeassistant.components.samsungtv.media_player.SamsungRemote"
-    ) as remote_class, patch(
-        "homeassistant.components.samsungtv.media_player.socket"
-    ) as socket_class:
+    ) as remote_class:
         remote = mock.Mock()
         remote_class.return_value = remote
-        socket = mock.Mock()
-        socket_class.return_value = socket
         yield remote
 
 
@@ -158,6 +162,7 @@ def wakeonlan_fixture():
     with patch(
         "homeassistant.components.samsungtv.media_player.wakeonlan"
     ) as wakeonlan_module:
+        wakeonlan_module.BROADCAST_IP = wakeonlan.BROADCAST_IP
         yield wakeonlan_module
 
 
@@ -169,7 +174,7 @@ def mock_now():
 
 async def setup_samsungtv(hass, config):
     """Set up mock Samsung TV."""
-    await async_setup_component(hass, "media_player", config)
+    await samsungtv.async_setup(hass, config)
     await hass.async_block_till_done()
 
 
@@ -181,49 +186,21 @@ async def test_setup_with_mac(hass, remote):
 
 async def test_setup_duplicate(hass, remote, caplog):
     """Test duplicate setup of platform."""
-    DUPLICATE = {DOMAIN: [MOCK_CONFIG[DOMAIN], MOCK_CONFIG[DOMAIN]]}
+    DUPLICATE = {
+        SAMSUNGTV_DOMAIN: [
+            MOCK_CONFIG[SAMSUNGTV_DOMAIN][0],
+            MOCK_CONFIG[SAMSUNGTV_DOMAIN][0],
+        ]
+    }
     await setup_samsungtv(hass, DUPLICATE)
-    assert "Ignoring duplicate Samsung TV fake" in caplog.text
+    assert hass.states.get(ENTITY_ID)
+    assert len(hass.states.async_all()) == 1
 
 
 async def test_setup_without_mac(hass, remote):
     """Test setup of platform."""
     await setup_samsungtv(hass, MOCK_CONFIG_NOMAC)
     assert hass.states.get(ENTITY_ID_NOMAC)
-
-
-async def test_setup_discovery(hass, remote):
-    """Test setup of platform with discovery."""
-    hass.async_create_task(
-        async_load_platform(
-            hass, DOMAIN, SAMSUNGTV_DOMAIN, MOCK_CONFIG_DISCOVERY, {DOMAIN: {}}
-        )
-    )
-    await hass.async_block_till_done()
-    state = hass.states.get(ENTITY_ID_DISCOVERY)
-    assert state
-    assert state.name == "fake_discovery (fake_model)"
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
-    entry = entity_registry.async_get(ENTITY_ID_DISCOVERY)
-    assert entry
-    assert entry.unique_id == "fake_uuid"
-
-
-async def test_setup_discovery_prefix(hass, remote):
-    """Test setup of platform with discovery."""
-    hass.async_create_task(
-        async_load_platform(
-            hass, DOMAIN, SAMSUNGTV_DOMAIN, MOCK_CONFIG_DISCOVERY_PREFIX, {DOMAIN: {}}
-        )
-    )
-    await hass.async_block_till_done()
-    state = hass.states.get(ENTITY_ID_DISCOVERY_PREFIX)
-    assert state
-    assert state.name == "fake_discovery_prefix (fake_model_prefix)"
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
-    entry = entity_registry.async_get(ENTITY_ID_DISCOVERY_PREFIX)
-    assert entry
-    assert entry.unique_id == "fake_uuid_prefix"
 
 
 async def test_update_on(hass, remote, mock_now):
@@ -268,9 +245,9 @@ async def test_send_key(hass, remote, wakeonlan):
 
 async def test_send_key_autodetect_websocket(hass, remote):
     """Test for send key with autodetection of protocol."""
-    with patch(
-        "homeassistant.components.samsungtv.media_player.SamsungRemote"
-    ) as remote, patch("homeassistant.components.samsungtv.media_player.socket"):
+    with patch("homeassistant.components.samsungtv.config_flow.socket"), patch(
+        "homeassistant.components.samsungtv.config_flow.Remote"
+    ), patch("homeassistant.components.samsungtv.media_player.SamsungRemote") as remote:
         await setup_samsungtv(hass, MOCK_CONFIG_AUTO)
         assert await hass.services.async_call(
             DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID_AUTO}, True
@@ -284,10 +261,12 @@ async def test_send_key_autodetect_websocket(hass, remote):
 async def test_send_key_autodetect_websocket_exception(hass, caplog):
     """Test for send key with autodetection of protocol."""
     caplog.set_level(logging.DEBUG)
-    with patch(
+    with patch("homeassistant.components.samsungtv.config_flow.socket"), patch(
+        "homeassistant.components.samsungtv.config_flow.Remote"
+    ), patch(
         "homeassistant.components.samsungtv.media_player.SamsungRemote",
         side_effect=[exceptions.AccessDenied("Boom"), mock.DEFAULT],
-    ) as remote, patch("homeassistant.components.samsungtv.media_player.socket"):
+    ) as remote:
         await setup_samsungtv(hass, MOCK_CONFIG_AUTO)
         assert await hass.services.async_call(
             DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID_AUTO}, True
@@ -306,10 +285,12 @@ async def test_send_key_autodetect_websocket_exception(hass, caplog):
 
 async def test_send_key_autodetect_legacy(hass, remote):
     """Test for send key with autodetection of protocol."""
-    with patch(
+    with patch("homeassistant.components.samsungtv.config_flow.socket"), patch(
+        "homeassistant.components.samsungtv.config_flow.Remote"
+    ), patch(
         "homeassistant.components.samsungtv.media_player.SamsungRemote",
         side_effect=[OSError("Boom"), mock.DEFAULT],
-    ) as remote, patch("homeassistant.components.samsungtv.media_player.socket"):
+    ) as remote:
         await setup_samsungtv(hass, MOCK_CONFIG_AUTO)
         assert await hass.services.async_call(
             DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID_AUTO}, True
@@ -325,10 +306,12 @@ async def test_send_key_autodetect_legacy(hass, remote):
 
 async def test_send_key_autodetect_none(hass, remote):
     """Test for send key with autodetection of protocol."""
-    with patch(
+    with patch("homeassistant.components.samsungtv.config_flow.socket"), patch(
+        "homeassistant.components.samsungtv.config_flow.Remote"
+    ), patch(
         "homeassistant.components.samsungtv.media_player.SamsungRemote",
         side_effect=OSError("Boom"),
-    ) as remote, patch("homeassistant.components.samsungtv.media_player.socket"):
+    ) as remote:
         await setup_samsungtv(hass, MOCK_CONFIG_AUTO)
         assert await hass.services.async_call(
             DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID_AUTO}, True
