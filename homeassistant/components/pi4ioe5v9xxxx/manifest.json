@@ -4,5 +4,5 @@
     "documentation": "https://www.home-assistant.io/integrations/pi4ioe5v9xxxx",
     "requirements": ["smbus2==0.3.0"],
     "dependencies": [],
-    "codeowners": ["@antonverburg"],
+    "codeowners": ["@antonverburg"]
 }
