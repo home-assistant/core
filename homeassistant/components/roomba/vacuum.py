@@ -39,9 +39,11 @@ CAP_CARPET_BOOST = "carpet_boost"
 
 CONF_CERT = "certificate"
 CONF_CONTINUOUS = "continuous"
+CONF_DELAY = "delay"
 
 DEFAULT_CERT = "/etc/ssl/certs/ca-certificates.crt"
 DEFAULT_CONTINUOUS = True
+DEFAULT_DELAY = 1
 DEFAULT_NAME = "Roomba"
 
 PLATFORM = "roomba"
@@ -59,6 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_CERT, default=DEFAULT_CERT): cv.string,
         vol.Optional(CONF_CONTINUOUS, default=DEFAULT_CONTINUOUS): cv.boolean,
+        vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): cv.positive_int,
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -93,6 +96,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     password = config.get(CONF_PASSWORD)
     certificate = config.get(CONF_CERT)
     continuous = config.get(CONF_CONTINUOUS)
+    delay = config.get(CONF_DELAY)
 
     roomba = Roomba(
         address=host,
@@ -100,6 +104,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         password=password,
         cert_name=certificate,
         continuous=continuous,
+        delay=delay,
     )
     _LOGGER.debug("Initializing communication with host %s", host)
 
