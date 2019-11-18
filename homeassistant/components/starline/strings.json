@@ -38,14 +38,5 @@
             "error_auth_user": "Incorrect username or password",
             "error_auth_mfa": "Incorrect code"
         }
-    },
-    "options": {
-        "step": {
-            "settings": {
-                "data": {
-                    "scan_interval": "Update frequency (in seconds)"
-                }
-            }
-        }
     }
 }

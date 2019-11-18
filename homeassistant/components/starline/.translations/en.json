@@ -38,14 +38,5 @@
             }
         },
         "title": "StarLine"
-    },
-    "options": {
-        "step": {
-            "settings": {
-                "data": {
-                    "scan_interval": "Update frequency (in seconds)"
-                }
-            }
-        }
     }
 }

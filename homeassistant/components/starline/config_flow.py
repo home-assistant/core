@@ -5,7 +5,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
-from homeassistant.core import callback
 
 from .const import (  # pylint: disable=unused-import
     DOMAIN,
@@ -14,8 +13,6 @@ from .const import (  # pylint: disable=unused-import
     CONF_MFA_CODE,
     CONF_CAPTCHA_CODE,
     LOGGER,
-    CONF_SCAN_INTERVAL,
-    DEFAULT_SCAN_INTERVAL,
     ERROR_AUTH_APP,
     ERROR_AUTH_USER,
     ERROR_AUTH_MFA,
@@ -52,12 +49,6 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._phone_number = None
 
         self._auth = StarlineAuth()
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry):
-        """Get the options flow for this handler."""
-        return StarlineOptionsFlowHandler(config_entry)
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -235,37 +226,4 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 DATA_SLID_TOKEN: self._user_slid,
                 DATA_EXPIRES: self._slnet_token_expires,
             },
-        )
-
-
-class StarlineOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle StarLine options."""
-
-    def __init__(self, config_entry):
-        """Initialize StarLine options flow."""
-        self.config_entry = config_entry
-        self.options = dict(config_entry.options)
-
-    async def async_step_init(self, user_input=None):
-        """Manage the StarLine options."""
-        return await self.async_step_settings()
-
-    async def async_step_settings(self, user_input=None):
-        """Manage the StarLine options."""
-        if user_input is not None:
-            self.options[CONF_SCAN_INTERVAL] = user_input[CONF_SCAN_INTERVAL]
-            return self.async_create_entry(title="", data=self.options)
-
-        return self.async_show_form(
-            step_id="settings",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_SCAN_INTERVAL,
-                        default=self.config_entry.options.get(
-                            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                        ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=10))
-                }
-            ),
         )
