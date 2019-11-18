@@ -82,7 +82,7 @@ def write_mem(pin, value):
             bit_nr,
             byte_nr,
             len(_PORT_VALUE),
-            len(_PORT_VALUE)*8
+            len(_PORT_VALUE) * 8,
         )
 
 
