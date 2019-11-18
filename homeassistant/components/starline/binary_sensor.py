@@ -1,7 +1,7 @@
 """Reads vehicle status from StarLine API."""
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice,
-    DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_DOOR,
     DEVICE_CLASS_LOCK,
     DEVICE_CLASS_PROBLEM,
     DEVICE_CLASS_POWER,
@@ -11,16 +11,11 @@ from .const import DOMAIN
 from .entity import StarlineEntity
 
 SENSOR_TYPES = {
-    "hbrake": [
-        "Hand Brake",
-        DEVICE_CLASS_POWER,
-        "mdi:car-brake-parking",
-        "mdi:car-brake-parking",
-    ],
-    "hood": ["Hood", DEVICE_CLASS_OPENING, "mdi:car", "mdi:car"],
-    "trunk": ["Trunk", DEVICE_CLASS_OPENING, "mdi:car-back", "mdi:car-back"],
-    "alarm": ["Alarm", DEVICE_CLASS_PROBLEM, "mdi:car-connected", "mdi:car"],
-    "door": ["Doors", DEVICE_CLASS_LOCK, "mdi:car-door", "mdi:car-door-lock"],
+    "hbrake": ["Hand Brake", DEVICE_CLASS_POWER],
+    "hood": ["Hood", DEVICE_CLASS_DOOR],
+    "trunk": ["Trunk", DEVICE_CLASS_DOOR],
+    "alarm": ["Alarm", DEVICE_CLASS_PROBLEM],
+    "door": ["Doors", DEVICE_CLASS_LOCK],
 }
 
 
@@ -47,19 +42,10 @@ class StarlineSensor(StarlineEntity, BinarySensorDevice):
         key: str,
         name: str,
         device_class: str,
-        icon_on: str,
-        icon_off: str,
     ):
         """Constructor."""
         super().__init__(account, device, key, name)
         self._device_class = device_class
-        self._icon_on = icon_on
-        self._icon_off = icon_off
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon_on if self.is_on else self._icon_off
 
     @property
     def device_class(self):
