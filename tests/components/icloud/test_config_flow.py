@@ -1,6 +1,7 @@
 """Tests for the iCloud config flow."""
-from unittest.mock import patch, PropertyMock
+from unittest.mock import patch, MagicMock, PropertyMock
 import pytest
+
 
 from pyicloud.base import PyiCloudService
 from pyicloud.exceptions import PyiCloudFailedLoginException
@@ -37,53 +38,65 @@ TRUSTED_DEVICES = [
 ]
 
 
-@pytest.fixture(name="service")
-def mock_controller_service():
-    """Mock a successful service."""
+@pytest.fixture(name="not_create_cookie")
+def mock_controller_not_create_cookie():
+    """Mock a non cookie creation."""
+    with patch("os.path.exists") as exists_mock:
+        exists_mock.return_value = True
+        with patch("pyicloud.base.cookielib"):
+            yield
+
+
+@pytest.fixture(name="session")
+def mock_controller_session(not_create_cookie: MagicMock):
+    """Mock a successful session."""
     with patch("pyicloud.base.PyiCloudSession"):
-        with patch.object(
-            PyiCloudService, "requires_2fa", new_callable=PropertyMock
-        ) as mock:
-            mock.return_value = True
-            yield mock
+        yield
+
+
+@pytest.fixture(name="service")
+def mock_controller_service(session: MagicMock):
+    """Mock a successful service."""
+    with patch.object(
+        PyiCloudService, "requires_2fa", new_callable=PropertyMock
+    ) as mock:
+        mock.return_value = True
+        yield mock
 
 
 @pytest.fixture(name="service_with_cookie")
-def mock_controller_service_with_cookie():
+def mock_controller_service_with_cookie(session: MagicMock):
     """Mock a successful service while already authenticate."""
-    with patch("pyicloud.base.PyiCloudSession"):
-        with patch.object(
-            PyiCloudService, "requires_2fa", new_callable=PropertyMock
-        ) as mock:
-            mock.return_value = False
-            yield mock
+    with patch.object(
+        PyiCloudService, "requires_2fa", new_callable=PropertyMock
+    ) as mock:
+        mock.return_value = False
+        yield mock
 
 
 @pytest.fixture(name="service_send_verification_code_failed")
-def mock_controller_service_send_verification_code_failed():
+def mock_controller_service_send_verification_code_failed(session: MagicMock):
     """Mock a failed service during sending verification code step."""
-    with patch("pyicloud.base.PyiCloudSession"):
-        with patch(
-            "pyicloud.base.PyiCloudService",
-            requires_2fa=False,
-            trusted_devices=TRUSTED_DEVICES,
-        ) as service_mock:
-            service_mock.send_verification_code.return_value = False
-            yield service_mock
+    with patch(
+        "pyicloud.base.PyiCloudService",
+        requires_2fa=False,
+        trusted_devices=TRUSTED_DEVICES,
+    ) as service_mock:
+        service_mock.send_verification_code.return_value = False
+        yield service_mock
 
 
 @pytest.fixture(name="service_validate_verification_code_failed")
-def mock_controller_service_validate_verification_code_failed():
+def mock_controller_service_validate_verification_code_failed(session: MagicMock):
     """Mock a failed service during validation of verification code step."""
-    with patch("pyicloud.base.PyiCloudSession"):
-        with patch(
-            "pyicloud.base.PyiCloudService",
-            requires_2fa=False,
-            trusted_devices=TRUSTED_DEVICES,
-        ) as service_mock:
-            service_mock.send_verification_code.return_value = True
-            service_mock.validate_verification_code.return_value = False
-            yield service_mock
+    with patch(
+        "pyicloud.base.PyiCloudService",
+        requires_2fa=False,
+        trusted_devices=TRUSTED_DEVICES,
+    ) as service_mock:
+        service_mock.send_verification_code.return_value = True
+        service_mock.validate_verification_code.return_value = False
+        yield service_mock
 
 
 def init_config_flow(hass: HomeAssistantType):
@@ -93,7 +106,7 @@ def init_config_flow(hass: HomeAssistantType):
     return flow
 
 
-async def test_user(hass, service):
+async def test_user(hass: HomeAssistantType, service: MagicMock):
     """Test user config."""
     flow = init_config_flow(hass)
 
@@ -109,7 +122,9 @@ async def test_user(hass, service):
     assert result["step_id"] == CONF_TRUSTED_DEVICE
 
 
-async def test_user_with_cookie(hass, service_with_cookie):
+async def test_user_with_cookie(
+    hass: HomeAssistantType, service_with_cookie: MagicMock
+):
     """Test user config with presence of a cookie."""
     flow = init_config_flow(hass)
 
@@ -126,7 +141,7 @@ async def test_user_with_cookie(hass, service_with_cookie):
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
 
-async def test_import(hass, service):
+async def test_import(hass: HomeAssistantType, service: MagicMock):
     """Test import step."""
     flow = init_config_flow(hass)
 
@@ -151,7 +166,9 @@ async def test_import(hass, service):
     assert result["step_id"] == "trusted_device"
 
 
-async def test_import_with_cookie(hass, service_with_cookie):
+async def test_import_with_cookie(
+    hass: HomeAssistantType, service_with_cookie: MagicMock
+):
     """Test import step with presence of a cookie."""
     flow = init_config_flow(hass)
 
@@ -186,7 +203,7 @@ async def test_import_with_cookie(hass, service_with_cookie):
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == GPS_ACCURACY_THRESHOLD
 
 
-async def test_abort_if_already_setup(hass):
+async def test_abort_if_already_setup(hass: HomeAssistantType):
     """Test we abort if the account is already setup."""
     flow = init_config_flow(hass)
     MockConfigEntry(
@@ -219,7 +236,7 @@ async def test_abort_if_already_setup(hass):
     assert result["errors"] == {CONF_USERNAME: "username_exists"}
 
 
-async def test_abort_on_login_failed(hass):
+async def test_abort_on_login_failed(hass: HomeAssistantType):
     """Test when we have errors during login."""
     flow = init_config_flow(hass)
 
@@ -234,7 +251,7 @@ async def test_abort_on_login_failed(hass):
         assert result["errors"] == {CONF_USERNAME: "login"}
 
 
-async def test_trusted_device(hass, service):
+async def test_trusted_device(hass: HomeAssistantType, service: MagicMock):
     """Test trusted_device step."""
     flow = init_config_flow(hass)
     flow.api = service
@@ -244,7 +261,7 @@ async def test_trusted_device(hass, service):
     assert result["step_id"] == CONF_TRUSTED_DEVICE
 
 
-async def test_trusted_device_success(hass, service):
+async def test_trusted_device_success(hass: HomeAssistantType, service: MagicMock):
     """Test trusted_device step success."""
     flow = init_config_flow(hass)
     flow.api = service
@@ -255,7 +272,7 @@ async def test_trusted_device_success(hass, service):
 
 
 async def test_abort_on_send_verification_code_failed(
-    hass, service_send_verification_code_failed
+    hass: HomeAssistantType, service_send_verification_code_failed: MagicMock
 ):
     """Test when we have errors during send_verification_code."""
     flow = init_config_flow(hass)
@@ -267,7 +284,7 @@ async def test_abort_on_send_verification_code_failed(
     assert result["errors"] == {CONF_TRUSTED_DEVICE: "send_verification_code"}
 
 
-async def test_verification_code(hass):
+async def test_verification_code(hass: HomeAssistantType):
     """Test verification_code step."""
     flow = init_config_flow(hass)
 
@@ -277,7 +294,7 @@ async def test_verification_code(hass):
 
 
 async def test_abort_on_validate_verification_code_failed(
-    hass, service_validate_verification_code_failed
+    hass: HomeAssistantType, service_validate_verification_code_failed: MagicMock
 ):
     """Test when we have errors during validate_verification_code."""
     flow = init_config_flow(hass)
