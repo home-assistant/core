@@ -114,6 +114,10 @@ async def _async_start_rf_sniffing(hass):
     await hass.services.async_call(
         "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": "AAB155"}
     )
+    await asyncio.sleep(2)
+    await hass.services.async_call(
+        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": 177}
+    )
     # say info
     await hass.services.async_call(
         "ais_ai_service", "say_it", {"text": "Bramka RF w trybie nasłuchiwania"}
@@ -137,6 +141,10 @@ async def _async_stop_rf_sniffing(hass, clear):
     )
     await hass.services.async_call(
         "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": "AAB055"}
+    )
+    await asyncio.sleep(2)
+    await hass.services.async_call(
+        "mqtt", "publish", {"topic": "dom/cmnd/RfRaw", "payload": 176}
     )
     # say info
     await hass.services.async_call(
