@@ -204,7 +204,9 @@ class NetatmoSensor(Entity):
         if module["type"] == "NHC":
             self.module_name = module_info["station_name"]
         else:
-            self.module_name = module_info["module_name"]
+            self.module_name = (
+                f"{module_info['station_name']} {module_info['module_name']}"
+            )
         self._name = f"{DOMAIN} {self.module_name} {SENSOR_TYPES[sensor_type][0]}"
         self.type = sensor_type
         self._state = None
