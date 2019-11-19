@@ -380,8 +380,9 @@ class Entity:
                 state = str(round(temp) if prec == 0 else round(temp, prec))
                 attr[ATTR_UNIT_OF_MEASUREMENT] = units.temperature_unit
         except ValueError:
-            # Could not convert state to float
-            pass
+            # Could not convert state to float - avoid passing along invalid
+            # unit_of_measurement in this case
+            attr[ATTR_UNIT_OF_MEASUREMENT] = None
 
         if (
             self._context is not None

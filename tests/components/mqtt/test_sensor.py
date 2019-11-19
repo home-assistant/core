@@ -6,10 +6,16 @@ from unittest.mock import ANY, patch
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt.discovery import async_start
 import homeassistant.components.sensor as sensor
-from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+
+from homeassistant.const import (
+    EVENT_STATE_CHANGED,
+    STATE_UNAVAILABLE,
+    TEMP_CELSIUS,
+)
 
 from tests.common import (
     MockConfigEntry,
@@ -40,6 +46,29 @@ async def test_setting_sensor_value_via_mqtt_message(hass, mqtt_mock):
 
     assert state.state == "100"
     assert state.attributes.get("unit_of_measurement") == "fav unit"
+
+
+async def test_temperature_unit_value_unavailable(hass, mqtt_mock):
+    """Test unit for non-numeric temperature state."""
+    hass.config.units = IMPERIAL_SYSTEM
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            sensor.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "test-topic",
+                "unit_of_measurement": TEMP_CELSIUS,
+            }
+        },
+    )
+
+    async_fire_mqtt_message(hass, "test-topic", "unavailable")
+    state = hass.states.get("sensor.test")
+
+    assert state.state == "unavailable"
+    assert state.attributes.get("unit_of_measurement") is None
 
 
 async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
