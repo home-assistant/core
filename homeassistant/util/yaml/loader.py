@@ -211,7 +211,7 @@ def _ordered_dict(loader: SafeLineLoader, node: yaml.nodes.MappingNode) -> Order
 
         if key in seen:
             fname = getattr(loader.stream, "name", "")
-            _LOGGER.error(
+            _LOGGER.warning(
                 'YAML file %s contains duplicate key "%s". ' "Check lines %d and %d.",
                 fname,
                 key,
