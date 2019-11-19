@@ -160,7 +160,7 @@ class HumidifierDevice(Entity):
         return None
 
     @property
-    def current_temperature(self) -> Optional[int]:
+    def current_temperature(self) -> Optional[float]:
         """Return the current temperature."""
         return None
 

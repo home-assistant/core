@@ -62,7 +62,7 @@ FAN_FOCUS = "focus"
 FAN_DIFFUSE = "diffuse"
 
 
-# This are support current states of HUMIDIFIER
+# This are support current states of humidifier
 CURRENT_HUMIDIFIER_OFF = "off"
 CURRENT_HUMIDIFIER_DRY = "drying"
 CURRENT_HUMIDIFIER_HUMIDIFY = "humidifying"
