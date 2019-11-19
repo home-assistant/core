@@ -1,9 +1,14 @@
 """Support for the PRT Heatmiser themostats using the V3 protocol."""
 import logging
+from typing import List
 
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import (
+    ClimateDevice,
+    PLATFORM_SCHEMA,
+    HVAC_MODE_HEAT,
+)
 from homeassistant.components.climate.const import SUPPORT_TARGET_TEMPERATURE
 from homeassistant.const import (
     TEMP_CELSIUS,
@@ -81,6 +86,22 @@ class HeatmiserV3Thermostat(ClimateDevice):
     def temperature_unit(self):
         """Return the unit of measurement which this thermostat uses."""
         return TEMP_CELSIUS
+
+    @property
+    def hvac_mode(self) -> str:
+        """Return hvac operation ie. heat, cool mode.
+
+        Need to be one of HVAC_MODE_*.
+        """
+        return HVAC_MODE_HEAT
+
+    @property
+    def hvac_modes(self) -> List[str]:
+        """Return the list of available hvac operation modes.
+
+        Need to be a subset of HVAC_MODES.
+        """
+        return [HVAC_MODE_HEAT]
 
     @property
     def current_temperature(self):
