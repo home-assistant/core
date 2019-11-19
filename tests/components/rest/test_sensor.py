@@ -244,16 +244,6 @@ class TestRestSensor(unittest.TestCase):
         assert "updated_state" == self.sensor.state
         assert self.sensor.available
 
-    def test_update_when_list_value_changed(self):
-        """Test state gets updated when sensor's new status is a dict in list."""
-        self.rest.update = Mock(
-            "rest.RestData.update",
-            side_effect=self.update_side_effect('[{ "key": "updated_state" }]'),
-        )
-        self.sensor.update()
-        assert "updated_state" == self.sensor.state
-        assert self.sensor.available
-
     def test_update_with_no_template(self):
         """Test update when there is no value template."""
         self.rest.update = Mock(
@@ -293,6 +283,26 @@ class TestRestSensor(unittest.TestCase):
         )
         self.sensor.update()
         assert "some_json_value" == self.sensor.device_state_attributes["key"]
+
+    def test_update_with_json_attrs_list_dict(self):
+        """Test attributes get extracted from a JSON list[0] result."""
+        self.rest.update = Mock(
+            "rest.RestData.update",
+            side_effect=self.update_side_effect('[{ "key": "another_value" }]'),
+        )
+        self.sensor = rest.RestSensor(
+            self.hass,
+            self.rest,
+            self.name,
+            self.unit_of_measurement,
+            self.device_class,
+            None,
+            ["key"],
+            self.force_update,
+            self.resource_template,
+        )
+        self.sensor.update()
+        assert "another_value" == self.sensor.device_state_attributes["key"]
 
     @patch("homeassistant.components.rest.sensor._LOGGER")
     def test_update_with_json_attrs_no_data(self, mock_logger):
