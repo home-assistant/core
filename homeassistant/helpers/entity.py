@@ -1,5 +1,5 @@
 """An abstract class for entities."""
-
+from abc import ABC
 import asyncio
 from datetime import datetime, timedelta
 import logging
@@ -85,7 +85,7 @@ def async_generate_entity_id(
     return ensure_unique_string(entity_id_format.format(slugify(name)), current_ids)
 
 
-class Entity:
+class Entity(ABC):
     """An abstract class for Home Assistant entities."""
 
     # SAFE TO OVERWRITE
