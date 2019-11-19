@@ -11,7 +11,7 @@ contextvars==2.4;python_version<"3.7"
 cryptography==2.8
 distro==1.4.0
 hass-nabucasa==0.29
-home-assistant-frontend==20191118.0
+home-assistant-frontend==20191119.0
 importlib-metadata==0.23
 jinja2>=2.10.3
 netdisco==2.6.0
