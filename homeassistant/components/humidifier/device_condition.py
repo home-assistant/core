@@ -16,13 +16,13 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from . import DOMAIN, const
 
-CONDITION_TYPES = {"is_humidifier_mode", "is_preset_mode"}
+CONDITION_TYPES = {"is_operation_mode", "is_preset_mode"}
 
-HUMIDIFIER_MODE_CONDITION = DEVICE_CONDITION_BASE_SCHEMA.extend(
+OPERATION_MODE_CONDITION = DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Required(CONF_TYPE): "is_humidifier_mode",
-        vol.Required(const.ATTR_HUMIDIFIER_MODE): vol.In(const.HUMIDIFIER_MODES),
+        vol.Required(CONF_TYPE): "is_operation_mode",
+        vol.Required(const.ATTR_OPERATION_MODE): vol.In(const.OPERATION_MODES),
     }
 )
 
@@ -34,7 +34,7 @@ PRESET_MODE_CONDITION = DEVICE_CONDITION_BASE_SCHEMA.extend(
     }
 )
 
-CONDITION_SCHEMA = vol.Any(HUMIDIFIER_MODE_CONDITION, PRESET_MODE_CONDITION)
+CONDITION_SCHEMA = vol.Any(OPERATION_MODE_CONDITION, PRESET_MODE_CONDITION)
 
 
 async def async_get_conditions(
@@ -57,7 +57,7 @@ async def async_get_conditions(
                 CONF_DEVICE_ID: device_id,
                 CONF_DOMAIN: DOMAIN,
                 CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "is_humidifier_mode",
+                CONF_TYPE: "is_operation_mode",
             }
         )
 
@@ -82,8 +82,8 @@ def async_condition_from_config(
     if config_validation:
         config = CONDITION_SCHEMA(config)
 
-    if config[CONF_TYPE] == "is_humidifier_mode":
-        attribute = const.ATTR_HUMIDIFIER_MODE
+    if config[CONF_TYPE] == "is_operation_mode":
+        attribute = const.ATTR_OPERATION_MODE
     else:
         attribute = const.ATTR_PRESET_MODE
 
@@ -102,11 +102,9 @@ async def async_get_condition_capabilities(hass, config):
 
     fields = {}
 
-    if condition_type == "is_humidifier_mode":
-        humidifier_modes = (
-            state.attributes[const.ATTR_HUMIDIFIER_MODES] if state else []
-        )
-        fields[vol.Required(const.ATTR_HUMIDIFIER_MODE)] = vol.In(humidifier_modes)
+    if condition_type == "is_operation_mode":
+        operation_modes = state.attributes[const.ATTR_OPERATION_MODES] if state else []
+        fields[vol.Required(const.ATTR_OPERATION_MODE)] = vol.In(operation_modes)
 
     elif condition_type == "is_preset_mode":
         if state:

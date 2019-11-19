@@ -26,15 +26,15 @@ from . import DOMAIN, const
 TRIGGER_TYPES = {
     "current_temperature_changed",
     "current_humidity_changed",
-    "humidifier_mode_changed",
+    "operation_mode_changed",
     "water_level_changed",
 }
 
-HUMIDIFIER_MODE_TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+OPERATION_MODE_TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Required(CONF_TYPE): "humidifier_mode_changed",
-        vol.Required(state_automation.CONF_TO): vol.In(const.HUMIDIFIER_MODES),
+        vol.Required(CONF_TYPE): "operation_mode_changed",
+        vol.Required(state_automation.CONF_TO): vol.In(const.OPERATION_MODES),
     }
 )
 
@@ -57,7 +57,7 @@ CURRENT_TRIGGER_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
 )
 
-TRIGGER_SCHEMA = vol.Any(HUMIDIFIER_MODE_TRIGGER_SCHEMA, CURRENT_TRIGGER_SCHEMA)
+TRIGGER_SCHEMA = vol.Any(OPERATION_MODE_TRIGGER_SCHEMA, CURRENT_TRIGGER_SCHEMA)
 
 
 async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
@@ -79,7 +79,7 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
                 CONF_DEVICE_ID: device_id,
                 CONF_DOMAIN: DOMAIN,
                 CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "humidifier_mode_changed",
+                CONF_TYPE: "operation_mode_changed",
             }
         )
 
@@ -128,14 +128,14 @@ async def async_attach_trigger(
     config = TRIGGER_SCHEMA(config)
     trigger_type = config[CONF_TYPE]
 
-    if trigger_type == "humidifier_mode_changed":
+    if trigger_type == "operation_mode_changed":
         state_config = {
             state_automation.CONF_PLATFORM: "state",
             state_automation.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
             state_automation.CONF_TO: config[state_automation.CONF_TO],
             state_automation.CONF_FROM: [
                 mode
-                for mode in const.HUMIDIFIER_MODES
+                for mode in const.OPERATION_MODES
                 if mode != config[state_automation.CONF_TO]
             ],
         }
@@ -184,7 +184,7 @@ async def async_get_trigger_capabilities(hass: HomeAssistant, config):
     if trigger_type == "humidifier_action_changed":
         return None
 
-    if trigger_type == "humidifier_mode_changed":
+    if trigger_type == "operation_mode_changed":
         return {
             "extra_fields": vol.Schema(
                 {vol.Optional(CONF_FOR): cv.positive_time_period_dict}

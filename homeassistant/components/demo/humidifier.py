@@ -3,10 +3,10 @@ from homeassistant.components.humidifier import HumidifierDevice
 from homeassistant.components.humidifier.const import (
     CURRENT_HUMIDIFIER_DRY,
     CURRENT_HUMIDIFIER_HUMIDIFY,
-    HUMIDIFIER_MODE_DRY,
-    HUMIDIFIER_MODE_HUMIDIFY,
-    HUMIDIFIER_MODE_HUMIDIFY_DRY,
-    HUMIDIFIER_MODE_OFF,
+    OPERATION_MODE_DRY,
+    OPERATION_MODE_HUMIDIFY,
+    OPERATION_MODE_HUMIDIFY_DRY,
+    OPERATION_MODE_OFF,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_HUMIDITY,
@@ -27,9 +27,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 fan_mode=None,
                 target_humidity=68,
                 current_humidity=77,
-                humidifier_mode=HUMIDIFIER_MODE_HUMIDIFY,
+                operation_mode=OPERATION_MODE_HUMIDIFY,
                 humidifier_action=CURRENT_HUMIDIFIER_HUMIDIFY,
-                humidifier_modes=[HUMIDIFIER_MODE_HUMIDIFY, HUMIDIFIER_MODE_OFF],
+                operation_modes=[OPERATION_MODE_HUMIDIFY, OPERATION_MODE_OFF],
             ),
             DemoHumidifier(
                 name="Dehumidifier",
@@ -37,9 +37,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 fan_mode="On High",
                 target_humidity=54,
                 current_humidity=67,
-                humidifier_mode=HUMIDIFIER_MODE_DRY,
+                operation_mode=OPERATION_MODE_DRY,
                 humidifier_action=CURRENT_HUMIDIFIER_DRY,
-                humidifier_modes=[HUMIDIFIER_MODE_DRY, HUMIDIFIER_MODE_OFF],
+                operation_modes=[OPERATION_MODE_DRY, OPERATION_MODE_OFF],
                 current_temperature=25,
                 water_level=30,
             ),
@@ -50,12 +50,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 fan_mode="Auto Low",
                 target_humidity=50,
                 current_humidity=49,
-                humidifier_mode=HUMIDIFIER_MODE_HUMIDIFY_DRY,
+                operation_mode=OPERATION_MODE_HUMIDIFY_DRY,
                 humidifier_action=None,
-                humidifier_modes=[
-                    HUMIDIFIER_MODE_HUMIDIFY_DRY,
-                    HUMIDIFIER_MODE_DRY,
-                    HUMIDIFIER_MODE_HUMIDIFY,
+                operation_modes=[
+                    OPERATION_MODE_HUMIDIFY_DRY,
+                    OPERATION_MODE_DRY,
+                    OPERATION_MODE_HUMIDIFY,
                 ],
             ),
         ]
@@ -72,9 +72,9 @@ class DemoHumidifier(HumidifierDevice):
         fan_mode,
         target_humidity,
         current_humidity,
-        humidifier_mode,
+        operation_mode,
         humidifier_action,
-        humidifier_modes,
+        operation_modes,
         current_temperature=None,
         preset_modes=None,
         water_level=None,
@@ -100,8 +100,8 @@ class DemoHumidifier(HumidifierDevice):
         self._current_fan_mode = fan_mode
         self._fan_modes = ["On Low", "On High", "Auto Low", "Auto High", "Off"]
         self._humidifier_action = humidifier_action
-        self._humidifier_mode = humidifier_mode
-        self._humidifier_modes = humidifier_modes
+        self._operation_mode = operation_mode
+        self._operation_modes = operation_modes
         self._water_level = water_level
 
     @property
@@ -140,14 +140,14 @@ class DemoHumidifier(HumidifierDevice):
         return self._humidifier_action
 
     @property
-    def humidifier_mode(self):
+    def operation_mode(self):
         """Return humidifier target humidifier state."""
-        return self._humidifier_mode
+        return self._operation_mode
 
     @property
-    def humidifier_modes(self):
+    def operation_modes(self):
         """Return the list of available operation modes."""
-        return self._humidifier_modes
+        return self._operation_modes
 
     @property
     def preset_mode(self):
@@ -184,9 +184,9 @@ class DemoHumidifier(HumidifierDevice):
         self._current_fan_mode = fan_mode
         self.async_write_ha_state()
 
-    async def async_set_humidifier_mode(self, humidifier_mode):
+    async def async_set_operation_mode(self, operation_mode):
         """Set new operation mode."""
-        self._humidifier_mode = humidifier_mode
+        self._operation_mode = operation_mode
         self.async_write_ha_state()
 
     async def async_set_preset_mode(self, preset_mode):

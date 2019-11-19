@@ -14,13 +14,13 @@ from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from . import DOMAIN, const
 
-ACTION_TYPES = {"set_humidifier_mode", "set_preset_mode"}
+ACTION_TYPES = {"set_operation_mode", "set_preset_mode"}
 
-SET_HUMIDIFIER_MODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
+SET_OPERATION_MODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): "set_humidifier_mode",
+        vol.Required(CONF_TYPE): "set_operation_mode",
         vol.Required(CONF_ENTITY_ID): cv.entity_domain(DOMAIN),
-        vol.Required(const.ATTR_HUMIDIFIER_MODE): vol.In(const.HUMIDIFIER_MODES),
+        vol.Required(const.ATTR_OPERATION_MODE): vol.In(const.OPERATION_MODES),
     }
 )
 
@@ -32,7 +32,7 @@ SET_PRESET_MODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     }
 )
 
-ACTION_SCHEMA = vol.Any(SET_HUMIDIFIER_MODE_SCHEMA, SET_PRESET_MODE_SCHEMA)
+ACTION_SCHEMA = vol.Any(SET_OPERATION_MODE_SCHEMA, SET_PRESET_MODE_SCHEMA)
 
 
 async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
@@ -47,7 +47,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
 
         state = hass.states.get(entry.entity_id)
 
-        # We need a state or else we can't populate the HUMIDIFIER and preset modes.
+        # We need a state or else we can't populate the operation and preset modes.
         if state is None:
             continue
 
@@ -56,7 +56,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
                 CONF_DEVICE_ID: device_id,
                 CONF_DOMAIN: DOMAIN,
                 CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "set_humidifier_mode",
+                CONF_TYPE: "set_operation_mode",
             }
         )
         actions.append(
@@ -79,9 +79,9 @@ async def async_call_action_from_config(
 
     service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
 
-    if config[CONF_TYPE] == "set_humidifier_mode":
-        service = const.SERVICE_SET_HUMIDIFIER_MODE
-        service_data[const.ATTR_HUMIDIFIER_MODE] = config[const.ATTR_HUMIDIFIER_MODE]
+    if config[CONF_TYPE] == "set_operation_mode":
+        service = const.SERVICE_SET_OPERATION_MODE
+        service_data[const.ATTR_OPERATION_MODE] = config[const.ATTR_OPERATION_MODE]
     elif config[CONF_TYPE] == "set_preset_mode":
         service = const.SERVICE_SET_PRESET_MODE
         service_data[const.ATTR_PRESET_MODE] = config[const.ATTR_PRESET_MODE]
@@ -98,11 +98,9 @@ async def async_get_action_capabilities(hass, config):
 
     fields = {}
 
-    if action_type == "set_humidifier_mode":
-        humidifier_modes = (
-            state.attributes[const.ATTR_HUMIDIFIER_MODES] if state else []
-        )
-        fields[vol.Required(const.ATTR_HUMIDIFIER_MODE)] = vol.In(humidifier_modes)
+    if action_type == "set_operation_mode":
+        operation_modes = state.attributes[const.ATTR_OPERATION_MODES] if state else []
+        fields[vol.Required(const.ATTR_OPERATION_MODE)] = vol.In(operation_modes)
     elif action_type == "set_preset_mode":
         if state:
             preset_modes = state.attributes.get(const.ATTR_PRESET_MODES, [])

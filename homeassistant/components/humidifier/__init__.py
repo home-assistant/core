@@ -23,22 +23,22 @@ from .const import (
     ATTR_FAN_MODES,
     ATTR_HUMIDITY,
     ATTR_HUMIDIFIER_ACTION,
-    ATTR_HUMIDIFIER_MODE,
-    ATTR_HUMIDIFIER_MODES,
+    ATTR_OPERATION_MODE,
+    ATTR_OPERATION_MODES,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
     ATTR_WATER_LEVEL,
     DOMAIN,
-    HUMIDIFIER_MODE_HUMIDIFY,
-    HUMIDIFIER_MODE_DRY,
-    HUMIDIFIER_MODE_HUMIDIFY_DRY,
-    HUMIDIFIER_MODE_OFF,
-    HUMIDIFIER_MODES,
+    OPERATION_MODE_HUMIDIFY,
+    OPERATION_MODE_DRY,
+    OPERATION_MODE_HUMIDIFY_DRY,
+    OPERATION_MODE_OFF,
+    OPERATION_MODES,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
-    SERVICE_SET_HUMIDIFIER_MODE,
+    SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_PRESET_MODE,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
@@ -60,8 +60,8 @@ SET_FAN_MODE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
 SET_PRESET_MODE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
     {vol.Required(ATTR_PRESET_MODE): cv.string}
 )
-SET_HUMIDIFIER_MODE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_HUMIDIFIER_MODE): vol.In(HUMIDIFIER_MODES)}
+SET_OPERATION_MODE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+    {vol.Required(ATTR_OPERATION_MODE): vol.In(OPERATION_MODES)}
 )
 SET_HUMIDITY_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
     {vol.Required(ATTR_HUMIDITY): vol.Coerce(float)}
@@ -85,9 +85,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         SERVICE_SET_FAN_MODE, SET_FAN_MODE_SCHEMA, "async_set_fan_mode"
     )
     component.async_register_entity_service(
-        SERVICE_SET_HUMIDIFIER_MODE,
-        SET_HUMIDIFIER_MODE_SCHEMA,
-        "async_set_humidifier_mode",
+        SERVICE_SET_OPERATION_MODE,
+        SET_OPERATION_MODE_SCHEMA,
+        "async_set_operation_mode",
     )
     component.async_register_entity_service(
         SERVICE_SET_PRESET_MODE, SET_PRESET_MODE_SCHEMA, "async_set_preset_mode"
@@ -115,14 +115,14 @@ class HumidifierDevice(Entity):
     @property
     def state(self) -> str:
         """Return the current state."""
-        return self.humidifier_mode
+        return self.operation_mode
 
     @property
     def state_attributes(self) -> Dict[str, Any]:
         """Return the optional state attributes."""
         supported_features = self.supported_features
         data = {
-            ATTR_HUMIDIFIER_MODES: self.humidifier_modes,
+            ATTR_OPERATION_MODES: self.operation_modes,
             ATTR_CURRENT_HUMIDITY: self.current_humidity,
         }
 
@@ -191,18 +191,18 @@ class HumidifierDevice(Entity):
         raise NotImplementedError
 
     @property
-    def humidifier_mode(self) -> str:
+    def operation_mode(self) -> str:
         """Return humidifier operation ie. humidify, dry mode.
 
-        Need to be one of HUMIDIFIER_MODE_*.
+        Need to be one of OPERATION_MODE_*.
         """
         raise NotImplementedError()
 
     @property
-    def humidifier_modes(self) -> List[str]:
+    def operation_modes(self) -> List[str]:
         """Return the list of available humidifier operation modes.
 
-        Need to be a subset of HUMIDIFIER_MODES.
+        Need to be a subset of OPERATION_MODES.
         """
         raise NotImplementedError()
 
@@ -238,15 +238,13 @@ class HumidifierDevice(Entity):
         """Set new target humidity."""
         await self.hass.async_add_executor_job(self.set_humidity, humidity)
 
-    def set_humidifier_mode(self, humidifier_mode: str) -> None:
-        """Set new target humidifier mode."""
+    def set_operation_mode(self, operation_mode: str) -> None:
+        """Set new target operation mode."""
         raise NotImplementedError()
 
-    async def async_set_humidifier_mode(self, humidifier_mode: str) -> None:
-        """Set new target humidifier mode."""
-        await self.hass.async_add_executor_job(
-            self.set_humidifier_mode, humidifier_mode
-        )
+    async def async_set_operation_mode(self, operation_mode: str) -> None:
+        """Set new target operation mode."""
+        await self.hass.async_add_executor_job(self.set_operation_mode, operation_mode)
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
@@ -273,13 +271,13 @@ class HumidifierDevice(Entity):
 
         # Fake turn on
         for mode in (
-            HUMIDIFIER_MODE_HUMIDIFY_DRY,
-            HUMIDIFIER_MODE_HUMIDIFY,
-            HUMIDIFIER_MODE_DRY,
+            OPERATION_MODE_HUMIDIFY_DRY,
+            OPERATION_MODE_HUMIDIFY,
+            OPERATION_MODE_DRY,
         ):
-            if mode not in self.humidifier_modes:
+            if mode not in self.operation_modes:
                 continue
-            await self.async_set_humidifier_mode(mode)
+            await self.async_set_operation_mode(mode)
             break
 
     async def async_turn_off(self) -> None:
@@ -290,8 +288,8 @@ class HumidifierDevice(Entity):
             return
 
         # Fake turn off
-        if HUMIDIFIER_MODE_OFF in self.humidifier_modes:
-            await self.async_set_humidifier_mode(HUMIDIFIER_MODE_OFF)
+        if OPERATION_MODE_OFF in self.operation_modes:
+            await self.async_set_operation_mode(OPERATION_MODE_OFF)
 
     @property
     def supported_features(self) -> int:

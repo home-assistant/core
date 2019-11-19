@@ -47,7 +47,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
     entity_id = f"{DOMAIN}.test_5678"
     hass.states.async_set(
         entity_id,
-        const.HUMIDIFIER_MODE_DRY,
+        const.OPERATION_MODE_DRY,
         {
             const.ATTR_HUMIDIFIER_ACTION: const.CURRENT_HUMIDIFIER_IDLE,
             const.ATTR_CURRENT_HUMIDITY: 23,
@@ -59,7 +59,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         {
             "platform": "device",
             "domain": DOMAIN,
-            "type": "humidifier_mode_changed",
+            "type": "operation_mode_changed",
             "device_id": device_entry.id,
             "entity_id": entity_id,
         },
@@ -93,7 +93,7 @@ async def test_if_fires_on_state_change(hass, calls):
     """Test for turn_on and turn_off triggers firing."""
     hass.states.async_set(
         "humidifier.entity",
-        const.HUMIDIFIER_MODE_DRY,
+        const.OPERATION_MODE_DRY,
         {
             const.ATTR_HUMIDIFIER_ACTION: const.CURRENT_HUMIDIFIER_IDLE,
             const.ATTR_CURRENT_HUMIDITY: 23,
@@ -113,12 +113,12 @@ async def test_if_fires_on_state_change(hass, calls):
                         "domain": DOMAIN,
                         "device_id": "",
                         "entity_id": "humidifier.entity",
-                        "type": "humidifier_mode_changed",
-                        "to": const.HUMIDIFIER_MODE_AUTO,
+                        "type": "operation_mode_changed",
+                        "to": const.OPERATION_MODE_AUTO,
                     },
                     "action": {
                         "service": "test.automation",
-                        "data_template": {"some": "humidifier_mode_changed"},
+                        "data_template": {"some": "operation_mode_changed"},
                     },
                 },
                 {
@@ -167,10 +167,10 @@ async def test_if_fires_on_state_change(hass, calls):
         },
     )
 
-    # Fake that the HUMIDIFIER mode is changing
+    # Fake that the operation mode is changing
     hass.states.async_set(
         "humidifier.entity",
-        const.HUMIDIFIER_MODE_AUTO,
+        const.OPERATION_MODE_AUTO,
         {
             const.ATTR_HUMIDIFIER_ACTION: const.CURRENT_HUMIDIFIER_DRY,
             const.ATTR_CURRENT_HUMIDITY: 23,
@@ -180,12 +180,12 @@ async def test_if_fires_on_state_change(hass, calls):
     )
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0].data["some"] == "humidifier_mode_changed"
+    assert calls[0].data["some"] == "operation_mode_changed"
 
     # Fake that the temperature is changing
     hass.states.async_set(
         "humidifier.entity",
-        const.HUMIDIFIER_MODE_AUTO,
+        const.OPERATION_MODE_AUTO,
         {
             const.ATTR_HUMIDIFIER_ACTION: const.CURRENT_HUMIDIFIER_DRY,
             const.ATTR_CURRENT_HUMIDITY: 23,
@@ -200,7 +200,7 @@ async def test_if_fires_on_state_change(hass, calls):
     # Fake that the humidity is changing
     hass.states.async_set(
         "humidifier.entity",
-        const.HUMIDIFIER_MODE_AUTO,
+        const.OPERATION_MODE_AUTO,
         {
             const.ATTR_HUMIDIFIER_ACTION: const.CURRENT_HUMIDIFIER_DRY,
             const.ATTR_CURRENT_HUMIDITY: 7,
@@ -215,7 +215,7 @@ async def test_if_fires_on_state_change(hass, calls):
     # Fake that the water level is changing
     hass.states.async_set(
         "humidifier.entity",
-        const.HUMIDIFIER_MODE_AUTO,
+        const.OPERATION_MODE_AUTO,
         {
             const.ATTR_HUMIDIFIER_ACTION: const.CURRENT_HUMIDIFIER_DRY,
             const.ATTR_CURRENT_HUMIDITY: 7,
@@ -228,14 +228,14 @@ async def test_if_fires_on_state_change(hass, calls):
     assert calls[3].data["some"] == "water_level_changed"
 
 
-async def test_get_trigger_capabilities_humidifier_mode(hass):
+async def test_get_trigger_capabilities_operation_mode(hass):
     """Test we get the expected capabilities from a humidifier trigger."""
     capabilities = await device_trigger.async_get_trigger_capabilities(
         hass,
         {
             "platform": "device",
             "domain": "humidifier",
-            "type": "humidifier_mode_changed",
+            "type": "operation_mode_changed",
             "entity_id": "humidifier.upstairs",
             "to": "heat",
         },

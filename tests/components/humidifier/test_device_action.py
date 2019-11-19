@@ -38,11 +38,11 @@ async def test_get_actions(hass, device_reg, entity_reg):
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
-    hass.states.async_set("humidifier.test_5678", const.HUMIDIFIER_MODE_DRY, {})
+    hass.states.async_set("humidifier.test_5678", const.OPERATION_MODE_DRY, {})
     expected_actions = [
         {
             "domain": DOMAIN,
-            "type": "set_humidifier_mode",
+            "type": "set_operation_mode",
             "device_id": device_entry.id,
             "entity_id": "humidifier.test_5678",
         },
@@ -61,11 +61,11 @@ async def test_action(hass):
     """Test for actions."""
     hass.states.async_set(
         "humidifier.entity",
-        const.HUMIDIFIER_MODE_DRY,
+        const.OPERATION_MODE_DRY,
         {
-            const.ATTR_HUMIDIFIER_MODES: [
-                const.HUMIDIFIER_MODE_DRY,
-                const.HUMIDIFIER_MODE_OFF,
+            const.ATTR_OPERATION_MODES: [
+                const.OPERATION_MODE_DRY,
+                const.OPERATION_MODE_OFF,
             ],
             const.ATTR_PRESET_MODES: [const.PRESET_HOME, const.PRESET_AWAY],
         },
@@ -79,14 +79,14 @@ async def test_action(hass):
                 {
                     "trigger": {
                         "platform": "event",
-                        "event_type": "test_event_set_humidifier_mode",
+                        "event_type": "test_event_set_operation_mode",
                     },
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "abcdefgh",
                         "entity_id": "humidifier.entity",
-                        "type": "set_humidifier_mode",
-                        "humidifier_mode": const.HUMIDIFIER_MODE_OFF,
+                        "type": "set_operation_mode",
+                        "operation_mode": const.OPERATION_MODE_OFF,
                     },
                 },
                 {
@@ -106,19 +106,19 @@ async def test_action(hass):
         },
     )
 
-    set_humidifier_mode_calls = async_mock_service(
-        hass, "humidifier", "set_humidifier_mode"
+    set_operation_mode_calls = async_mock_service(
+        hass, "humidifier", "set_operation_mode"
     )
     set_preset_mode_calls = async_mock_service(hass, "humidifier", "set_preset_mode")
 
-    hass.bus.async_fire("test_event_set_humidifier_mode")
+    hass.bus.async_fire("test_event_set_operation_mode")
     await hass.async_block_till_done()
-    assert len(set_humidifier_mode_calls) == 1
+    assert len(set_operation_mode_calls) == 1
     assert len(set_preset_mode_calls) == 0
 
     hass.bus.async_fire("test_event_set_preset_mode")
     await hass.async_block_till_done()
-    assert len(set_humidifier_mode_calls) == 1
+    assert len(set_operation_mode_calls) == 1
     assert len(set_preset_mode_calls) == 1
 
 
@@ -126,24 +126,24 @@ async def test_capabilities(hass):
     """Test getting capabilities."""
     hass.states.async_set(
         "humidifier.entity",
-        const.HUMIDIFIER_MODE_DRY,
+        const.OPERATION_MODE_DRY,
         {
-            const.ATTR_HUMIDIFIER_MODES: [
-                const.HUMIDIFIER_MODE_DRY,
-                const.HUMIDIFIER_MODE_OFF,
+            const.ATTR_OPERATION_MODES: [
+                const.OPERATION_MODE_DRY,
+                const.OPERATION_MODE_OFF,
             ],
             const.ATTR_PRESET_MODES: [const.PRESET_HOME, const.PRESET_AWAY],
         },
     )
 
-    # Set HUMIDIFIER mode
+    # Set operation mode
     capabilities = await device_action.async_get_action_capabilities(
         hass,
         {
             "domain": DOMAIN,
             "device_id": "abcdefgh",
             "entity_id": "humidifier.entity",
-            "type": "set_humidifier_mode",
+            "type": "set_operation_mode",
         },
     )
 
@@ -153,7 +153,7 @@ async def test_capabilities(hass):
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
-            "name": "humidifier_mode",
+            "name": "operation_mode",
             "options": [("dry", "dry"), ("off", "off")],
             "required": True,
             "type": "select",

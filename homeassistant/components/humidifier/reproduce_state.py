@@ -7,11 +7,11 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     ATTR_PRESET_MODE,
-    ATTR_HUMIDIFIER_MODE,
+    ATTR_OPERATION_MODE,
     ATTR_HUMIDITY,
-    HUMIDIFIER_MODES,
+    OPERATION_MODES,
     SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_HUMIDIFIER_MODE,
+    SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_HUMIDITY,
     DOMAIN,
 )
@@ -34,9 +34,9 @@ async def _async_reproduce_states(
             DOMAIN, service, data, blocking=True, context=context
         )
 
-    if state.state in HUMIDIFIER_MODES:
+    if state.state in OPERATION_MODES:
         await call_service(
-            SERVICE_SET_HUMIDIFIER_MODE, [], {ATTR_HUMIDIFIER_MODE: state.state}
+            SERVICE_SET_OPERATION_MODE, [], {ATTR_OPERATION_MODE: state.state}
         )
 
     if ATTR_PRESET_MODE in state.attributes:

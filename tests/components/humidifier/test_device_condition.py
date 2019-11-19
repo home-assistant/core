@@ -46,9 +46,9 @@ async def test_get_conditions(hass, device_reg, entity_reg):
     entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
     hass.states.async_set(
         f"{DOMAIN}.test_5678",
-        const.HUMIDIFIER_MODE_DRY,
+        const.OPERATION_MODE_DRY,
         {
-            const.ATTR_HUMIDIFIER_MODE: const.HUMIDIFIER_MODE_DRY,
+            const.ATTR_OPERATION_MODE: const.OPERATION_MODE_DRY,
             const.ATTR_PRESET_MODE: const.PRESET_AWAY,
             const.ATTR_PRESET_MODES: [const.PRESET_HOME, const.PRESET_AWAY],
         },
@@ -57,7 +57,7 @@ async def test_get_conditions(hass, device_reg, entity_reg):
         {
             "condition": "device",
             "domain": DOMAIN,
-            "type": "is_humidifier_mode",
+            "type": "is_operation_mode",
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },
@@ -77,9 +77,9 @@ async def test_if_state(hass, calls):
     """Test for turn_on and turn_off conditions."""
     hass.states.async_set(
         "humidifier.entity",
-        const.HUMIDIFIER_MODE_DRY,
+        const.OPERATION_MODE_DRY,
         {
-            const.ATTR_HUMIDIFIER_MODE: const.HUMIDIFIER_MODE_DRY,
+            const.ATTR_OPERATION_MODE: const.OPERATION_MODE_DRY,
             const.ATTR_PRESET_MODE: const.PRESET_AWAY,
         },
     )
@@ -97,14 +97,14 @@ async def test_if_state(hass, calls):
                             "domain": DOMAIN,
                             "device_id": "",
                             "entity_id": "humidifier.entity",
-                            "type": "is_humidifier_mode",
-                            "humidifier_mode": "dry",
+                            "type": "is_operation_mode",
+                            "operation_mode": "dry",
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_humidifier_mode - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": "is_operation_mode - {{ trigger.platform }} - {{ trigger.event.event_type }}"
                         },
                     },
                 },
@@ -133,13 +133,13 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0].data["some"] == "is_humidifier_mode - event - test_event1"
+    assert calls[0].data["some"] == "is_operation_mode - event - test_event1"
 
     hass.states.async_set(
         "humidifier.entity",
-        const.HUMIDIFIER_MODE_AUTO,
+        const.OPERATION_MODE_AUTO,
         {
-            const.ATTR_HUMIDIFIER_MODE: const.HUMIDIFIER_MODE_AUTO,
+            const.ATTR_OPERATION_MODE: const.OPERATION_MODE_AUTO,
             const.ATTR_PRESET_MODE: const.PRESET_AWAY,
         },
     )
@@ -157,9 +157,9 @@ async def test_if_state(hass, calls):
 
     hass.states.async_set(
         "humidifier.entity",
-        const.HUMIDIFIER_MODE_AUTO,
+        const.OPERATION_MODE_AUTO,
         {
-            const.ATTR_HUMIDIFIER_MODE: const.HUMIDIFIER_MODE_AUTO,
+            const.ATTR_OPERATION_MODE: const.OPERATION_MODE_AUTO,
             const.ATTR_PRESET_MODE: const.PRESET_HOME,
         },
     )
@@ -174,19 +174,19 @@ async def test_capabilities(hass):
     """Bla."""
     hass.states.async_set(
         "humidifier.entity",
-        const.HUMIDIFIER_MODE_DRY,
+        const.OPERATION_MODE_DRY,
         {
-            const.ATTR_HUMIDIFIER_MODE: const.HUMIDIFIER_MODE_DRY,
+            const.ATTR_OPERATION_MODE: const.OPERATION_MODE_DRY,
             const.ATTR_PRESET_MODE: const.PRESET_AWAY,
-            const.ATTR_HUMIDIFIER_MODES: [
-                const.HUMIDIFIER_MODE_DRY,
-                const.HUMIDIFIER_MODE_OFF,
+            const.ATTR_OPERATION_MODES: [
+                const.OPERATION_MODE_DRY,
+                const.OPERATION_MODE_OFF,
             ],
             const.ATTR_PRESET_MODES: [const.PRESET_HOME, const.PRESET_AWAY],
         },
     )
 
-    # Test humidifier mode
+    # Test operation mode
     capabilities = await device_condition.async_get_condition_capabilities(
         hass,
         {
@@ -194,7 +194,7 @@ async def test_capabilities(hass):
             "domain": DOMAIN,
             "device_id": "",
             "entity_id": "humidifier.entity",
-            "type": "is_humidifier_mode",
+            "type": "is_operation_mode",
         },
     )
 
@@ -204,7 +204,7 @@ async def test_capabilities(hass):
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
-            "name": "humidifier_mode",
+            "name": "operation_mode",
             "options": [("dry", "dry"), ("off", "off")],
             "required": True,
             "type": "select",

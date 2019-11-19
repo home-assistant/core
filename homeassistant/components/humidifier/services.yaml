@@ -27,13 +27,13 @@ set_fan_mode:
     fan_mode:
       description: New value of fan mode.
       example: On Low
-set_humidifier_mode:
+set_operation_mode:
   description: Set operation mode for humidifier device.
   fields:
     entity_id:
       description: Name(s) of entities to change.
       example: 'humidifier.bedroom'
-    humidifier_mode:
+    operation_mode:
       description: New value of operation mode.
       example: humidify
 
