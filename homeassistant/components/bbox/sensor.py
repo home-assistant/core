@@ -45,6 +45,8 @@ SENSOR_TYPES = {
         BANDWIDTH_MEGABITS_SECONDS,
         "mdi:upload",
     ],
+    "uptime": ["Uptime", None, "mdi:clock",],
+    "number_of_reboots": ["Number of reboot", None, "mdi:restart",],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -126,6 +128,12 @@ class BboxSensor(Entity):
             self._state = round(self.bbox_data.data["rx"]["bandwidth"] / 1000, 2)
         elif self.type == "current_up_bandwidth":
             self._state = round(self.bbox_data.data["tx"]["bandwidth"] / 1000, 2)
+        elif self.type == "uptime":
+            self._state = str(
+                timedelta(seconds=self.bbox_data.router_infos["device"]["uptime"])
+            )
+        elif self.type == "number_of_reboots":
+            self._state = self.bbox_data.router_infos["device"]["numberofboots"]
 
 
 class BboxData:
@@ -134,6 +142,7 @@ class BboxData:
     def __init__(self):
         """Initialize the data object."""
         self.data = None
+        self.router_infos = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -142,7 +151,9 @@ class BboxData:
         try:
             box = pybbox.Bbox()
             self.data = box.get_ip_stats()
+            self.router_infos = box.get_bbox_info()
         except requests.exceptions.HTTPError as error:
             _LOGGER.error(error)
             self.data = None
+            self.router_infos = None
             return False
