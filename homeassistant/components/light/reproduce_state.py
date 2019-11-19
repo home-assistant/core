@@ -44,14 +44,16 @@ ATTR_GROUP = [
     ATTR_TRANSITION,
 ]
 
+# This list needs to be ordered by the precision of the color models
 COLOR_GROUP = [
-    ATTR_COLOR_NAME,
-    ATTR_COLOR_TEMP,
-    ATTR_HS_COLOR,
-    ATTR_KELVIN,
-    ATTR_PROFILE,
     ATTR_RGB_COLOR,
     ATTR_XY_COLOR,
+    ATTR_HS_COLOR,
+    ATTR_COLOR_TEMP,
+    # The following color models are deprecated
+    ATTR_PROFILE,
+    ATTR_COLOR_NAME,
+    ATTR_KELVIN,
 ]
 
 DEPRECATED_GROUP = [
