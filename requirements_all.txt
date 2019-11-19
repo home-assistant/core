@@ -1655,6 +1655,9 @@ pyuptimerobot==0.0.5
 # homeassistant.components.vera
 pyvera==0.3.6
 
+# homeassistant.components.versasense
+pyversasense==0.0.6
+
 # homeassistant.components.vesync
 pyvesync==1.1.0
 
