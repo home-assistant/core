@@ -51,8 +51,8 @@ SENSOR_TYPES = {
         BANDWIDTH_MEGABITS_SECONDS,
         "mdi:upload",
     ],
-    "uptime": ["Uptime", None, "mdi:clock", ],
-    "number_of_reboots": ["Number of reboot", None, "mdi:restart", ],
+    "uptime": ["Uptime", None, "mdi:clock"],
+    "number_of_reboots": ["Number of reboot", None, "mdi:restart"],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
