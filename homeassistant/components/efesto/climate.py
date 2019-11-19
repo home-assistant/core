@@ -4,6 +4,7 @@ import voluptuous as vol
 import efestoclient
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
@@ -21,8 +22,23 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
+    EVENT_HOMEASSISTANT_START,
     PRECISION_WHOLE,
     TEMP_CELSIUS,
+)
+from homeassistant.core import callback
+
+from .const import (
+    ATTR_DEVICE_STATUS,
+    ATTR_HUMAN_DEVICE_STATUS,
+    ATTR_REAL_POWER,
+    ATTR_SMOKE_TEMP,
+    DOMAIN,
+    FAN_1,
+    FAN_2,
+    FAN_3,
+    FAN_4,
+    FAN_5,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,18 +53,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-ATTR_DEVICE_STATUS = "device_status"
-ATTR_HUMAN_DEVICE_STATUS = "human_device_status"
-ATTR_REAL_POWER = "real_power"
-ATTR_SMOKE_TEMP = "smoke_temperature"
-
-DOMAIN = "Efesto"
-
-FAN_1 = 1
-FAN_2 = 2
-FAN_3 = 3
-FAN_4 = 4
-FAN_5 = 5
 FAN_MODES = [
     FAN_1,
     FAN_2,
@@ -65,19 +69,60 @@ CURRENT_HVAC_MAP_EFESTO_HEAT = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Efesto device."""
-    url = config.get(CONF_URL)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    device = config.get(CONF_DEVICE)
-    name = config.get(CONF_NAME)
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up Efesto climate."""
+
+    @callback
+    def do_import(_):
+        """Process YAML import after HA is fully started."""
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config)
+            )
+        )
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, do_import)
+
+
+# def setup_platform(hass, config, add_entities, discovery_info=None):
+#     """Set up the Efesto device."""
+#     url = config.get(CONF_URL)
+#     username = config.get(CONF_USERNAME)
+#     password = config.get(CONF_PASSWORD)
+#     device = config.get(CONF_DEVICE)
+#     name = config.get(CONF_NAME)
+
+#     try:
+#         client = efestoclient.EfestoClient(url, username, password, device, False)
+#         add_entities([EfestoHeatingDevice(client, name, device)], True)
+#     except efestoclient.Error as err:
+#         _LOGGER.error("Error while connecting to the Efesto web service: %s", err)
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Add Efesto device entry."""
+    url = entry.data[CONF_URL]
+    username = entry.data[CONF_USERNAME]
+    password = entry.data[CONF_PASSWORD]
+    device = entry.data[CONF_DEVICE]
+    name = entry.title
 
     try:
-        client = efestoclient.EfestoClient(url, username, password, device, False)
-        add_entities([EfestoHeatingDevice(client, name, device)], True)
+        client = efestoclient.EfestoClient(url, username, password, device)
+        client.get_status()
+        async_add_entities(
+            [EfestoHeatingDevice(client, name, device)], True,
+        )
+    except efestoclient.UnauthorizedError:
+        _LOGGER.error("Wrong credentials for device %s", device)
+        return False
+    except efestoclient.ConnectionError:
+        _LOGGER.error("Connection to %s not possible", url)
+        return False
     except efestoclient.Error as err:
-        _LOGGER.error("Error while connecting to the Efesto web service: %s", err)
+        _LOGGER.error("Error: %s", err)
+        return False
+    return True
 
 
 class EfestoHeatingDevice(ClimateDevice):
@@ -201,41 +246,37 @@ class EfestoHeatingDevice(ClimateDevice):
     def turn_off(self):
         """Turn device off."""
         try:
-            json = self.client.set_off()
-            _LOGGER.debug("Turn off response: %s", json)
-            if json["status"] > 0:
-                _LOGGER.error("Failed to turn off device (%s)", json["message"])
-        except ValueError:
-            _LOGGER.error("Failed to turn off device")
+            self.client.set_off()
+        except efestoclient.Error as err:
+            _LOGGER.error("Failed to turn off device (original message: %s)", err)
 
     def turn_on(self):
         """Turn device on."""
         try:
-            json = self.client.set_on()
-            _LOGGER.debug("Turn on response: %s", json)
-            if json["status"] > 0:
-                _LOGGER.error("Failed to turn on device (%s)", json["message"])
-        except ValueError:
-            _LOGGER.error("Failed to turn on device")
+            self.client.set_on()
+        except efestoclient.Error as err:
+            _LOGGER.error("Failed to turn on device (original message: %s)", err)
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-        json = self.client.set_temperature(round(temperature))
-        _LOGGER.debug("Set temperature response: %s", json)
-        if json["status"] > 0:
-            _LOGGER.error("Failed to set temperature")
+
+        try:
+            self.client.set_temperature(round(temperature))
+        except efestoclient.Error as err:
+            _LOGGER.error("Failed to set temperature (original message: %s)", err)
 
     def set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
         if fan_mode is None:
             return
-        json = self.client.set_power(fan_mode)
-        _LOGGER.debug("Set fan (power) response: %s", json)
-        if json["status"] > 0:
-            _LOGGER.error("Failed to set fan (power)")
+
+        try:
+            self.client.set_power(fan_mode)
+        except efestoclient.Error as err:
+            _LOGGER.error("Failed to set temperature (original message: %s)", err)
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
@@ -247,38 +288,32 @@ class EfestoHeatingDevice(ClimateDevice):
     def update(self):
         """Get the latest data."""
         try:
-            json = self.client.get_status()
-            _LOGGER.debug("Get status response: %s", json)
+            device = self.client.get_status()
 
-            if json["status"] != 0:
-                _LOGGER.error("Update failed (%s)", json["message"])
-                return
-
-            self._device_status = json["deviceStatus"]
-
-            if json["airTemperature"]:
-                self._current_temperature = json["airTemperature"]
-            if json["lastSetAirTemperature"]:
-                self._target_temperature = json["lastSetAirTemperature"]
-            if json["deviceStatusTranslated"]:
-                self._human_device_status = json["deviceStatusTranslated"]
-            if json["smokeTemperature"]:
-                self._smoke_temperature = json["smokeTemperature"]
-            if json["realPower"]:
-                self._real_power = json["realPower"]
-            if json["lastSetPower"]:
-                self._current_power = json["lastSetPower"]
+            self._device_status = device.device_status
+            self._current_temperature = device.air_temperature
+            self._target_temperature = device.last_set_air_temperature
+            self._human_device_status = device.device_status_human
+            self._smoke_temperature = device.smoke_temperature
+            self._real_power = device.real_power
+            self._current_power = device.last_set_power
 
             if self._device_status == 0:
                 self._on = False
             else:
                 self._on = True
-                if "idle_info" in json:
-                    self._idle_info = json["idle_info"]
-                    self._human_device_status = json["idle_info"]
+                if device.idle_info:
+                    self._idle_info = device.idle_info
+                    self._human_device_status = device.idle_info
                     if self._idle_info == "TURNING OFF":
                         self._on = False
-        except ValueError:
-            _LOGGER.error(
-                "Update failed (wrong device id or no connection to Efesto server)"
-            )
+        except efestoclient.UnauthorizedError:
+            _LOGGER.error("Wrong credentials for device %s", device)
+            return False
+        except efestoclient.ConnectionError:
+            _LOGGER.error("Connection to %s not possible", self.client.url)
+            return False
+        except efestoclient.Error as err:
+            _LOGGER.error("Error: %s", err)
+            return False
+        return True

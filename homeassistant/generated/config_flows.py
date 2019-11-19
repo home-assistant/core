@@ -22,6 +22,7 @@ FLOWS = [
     "dialogflow",
     "dynalite",
     "ecobee",
+    "efesto",
     "elgato",
     "emulated_roku",
     "esphome",

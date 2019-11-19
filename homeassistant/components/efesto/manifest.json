@@ -2,7 +2,8 @@
   "domain": "efesto",
   "name": "Efesto",
   "documentation": "https://www.home-assistant.io/components/efesto",
-  "requirements": ["efestoclient==0.0.8"],
+  "requirements": ["efestoclient==0.0.9"],
   "dependencies": [],
-  "codeowners": ["@fredericvl"]
+  "codeowners": ["@fredericvl"],
+  "config_flow": true
 }

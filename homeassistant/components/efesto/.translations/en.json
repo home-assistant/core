@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "device_already_configured": "Device is already configured."
+        },
+        "error": {
+            "efesto_error": "Failed to connect to Efesto with current parameters."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device": "Device ID of Efesto heater",
+                    "name": "Friendly name for the Efesto heater",
+                    "password": "Password",
+                    "url": "URL of Efesto web application",
+                    "username": "Username"
+                },
+                "title": "Fill in Efesto parameters"
+            }
+        },
+        "title": "Efesto"
+    }
+}
