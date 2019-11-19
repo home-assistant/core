@@ -151,7 +151,7 @@ SERVICE_SCHEMAS = {
             vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
             vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
             vol.Required(ATTR_COMMAND): cv.positive_int,
-            vol.Optional(ATTR_ARGS, default=""): cv.string,
+            vol.Optional(ATTR_ARGS, default=[]): cv.ensure_list,
             vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
         }
     ),
