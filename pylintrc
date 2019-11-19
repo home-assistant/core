@@ -24,6 +24,7 @@ good-names=id,i,j,k,ex,Run,_,fp
 # inconsistent-return-statements - doesn't handle raise
 # unnecessary-pass - readability for functions which only contain pass
 # import-outside-toplevel - TODO
+# too-many-ancestors - it's too strict.
 disable=
   format,
   abstract-class-little-used,
@@ -37,6 +38,7 @@ disable=
   not-context-manager,
   redefined-variable-type,
   too-few-public-methods,
+  too-many-ancestors,
   too-many-arguments,
   too-many-branches,
   too-many-instance-attributes,
