@@ -104,7 +104,7 @@ async def async_setup(hass, config):
                 ) as response:
 
                     if response.status < 400:
-                        _LOGGER.info(
+                        _LOGGER.debug(
                             "Success. Url: %s. Status code: %d.",
                             response.url,
                             response.status,
