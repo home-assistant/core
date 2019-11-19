@@ -24,6 +24,7 @@ FLOWS = [
     "esphome",
     "geofency",
     "geonetnz_quakes",
+    "geonetnz_volcano",
     "glances",
     "gpslogger",
     "hangouts",
