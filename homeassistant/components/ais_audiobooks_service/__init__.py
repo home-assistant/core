@@ -211,30 +211,24 @@ class AudioBooksData:
             download_book_list = True
             # download book list only one per 2 weeks
             if os.path.isfile(path):
-                # check if the file is older than 14 days
-                if time.time() - os.path.getmtime(path) < 14 * 24 * 3600:
+                # check if the file is older than 14 days (14 * 24 * 3600)
+                if int(time.time()) - int(os.path.getmtime(path)) < 1209600:
                     download_book_list = False
 
             if download_book_list is True:
                 try:
-                    ws_resp = requests.get(AUDIOBOOKS_WS_URL, timeout=10)
+                    ws_resp = requests.get(AUDIOBOOKS_WS_URL, timeout=30)
                     data = ws_resp.json()
                     with open(path, "w+") as my_file:
                         json.dump(data, my_file)
                 except Exception as e:
-                    _LOGGER.info("Can't load books list: " + str(e))
+                    _LOGGER.warning("Can't load books list: " + str(e))
 
             if not os.path.isfile(path):
                 return
 
             with open(path) as file:
                 self.all_books = json.loads(file.read())
-
-            #  TODO data validation
-            # self.all_books =
-            # for book in books:
-            #     b = {}
-            #     self.all_books.append(b)
 
             authors = [ais_global.G_FAVORITE_OPTION]
             for item in self.all_books:

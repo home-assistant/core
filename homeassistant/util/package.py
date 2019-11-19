@@ -64,7 +64,7 @@ def install_package(
     from homeassistant.components.ais_dom import ais_global
 
     ais_global.say_direct(
-        "Instaluje zależności pakietu: " + str(package) + "; poczekaj."
+        "Instaluje zależności pakietu: " + str(package).split("==")[0] + "; poczekaj."
     )
 
     env = os.environ.copy()
