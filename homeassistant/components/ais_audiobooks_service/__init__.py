@@ -32,6 +32,10 @@ def async_setup(hass, config):
     yield from data.async_load_all_books()
 
     # register services
+    def get_authors(call):
+        _LOGGER.info("get_authors")
+        data.get_authors(call)
+
     def get_books(call):
         _LOGGER.info("get_books")
         data.get_books(call)
@@ -44,6 +48,7 @@ def async_setup(hass, config):
         _LOGGER.info("select_chapter")
         data.select_chapter(call)
 
+    hass.services.async_register(DOMAIN, "get_authors", get_authors)
     hass.services.async_register(DOMAIN, "get_books", get_books)
     hass.services.async_register(DOMAIN, "get_chapters", get_chapters)
     hass.services.async_register(DOMAIN, "select_chapter", select_chapter)
@@ -58,6 +63,25 @@ class AudioBooksData:
         """Initialize the books authors."""
         self.hass = hass
         self.all_books = []
+
+    def get_authors(self, call):
+        """Load books authors list"""
+        path = self.hass.config.path() + PERSISTENCE_AUDIOBOOKS
+        if not os.path.isfile(path):
+            return
+
+        with open(path) as file:
+            self.all_books = json.loads(file.read())
+
+        authors = [ais_global.G_FAVORITE_OPTION]
+        for item in self.all_books:
+            if item["author"] not in authors:
+                authors.append(item["author"])
+        self.hass.services.call(
+            "input_select",
+            "set_options",
+            {"entity_id": "input_select.book_autor", "options": authors},
+        )
 
     def get_books(self, call):
         """Load books for the selected author."""
@@ -97,11 +121,12 @@ class AudioBooksData:
 
         if ais_ai.CURR_ENTITIE == "input_select.book_autor":
             ais_ai.set_curr_entity(self.hass, "sensor.audiobookslist")
-            self.hass.services.call(
-                "ais_ai_service",
-                "say_it",
-                {"text": "Mamy " + str(len(list_info)) + " , wybierz książkę"},
-            )
+            if ais_global.G_AIS_START_IS_DONE:
+                self.hass.services.call(
+                    "ais_ai_service",
+                    "say_it",
+                    {"text": "Mamy " + str(len(list_info)) + " , wybierz książkę"},
+                )
 
     def get_chapters(self, call):
         """Load chapters for the selected book."""
@@ -223,21 +248,5 @@ class AudioBooksData:
                         json.dump(data, my_file)
                 except Exception as e:
                     _LOGGER.warning("Can't load books list: " + str(e))
-
-            if not os.path.isfile(path):
-                return
-
-            with open(path) as file:
-                self.all_books = json.loads(file.read())
-
-            authors = [ais_global.G_FAVORITE_OPTION]
-            for item in self.all_books:
-                if item["author"] not in authors:
-                    authors.append(item["author"])
-            self.hass.services.call(
-                "input_select",
-                "set_options",
-                {"entity_id": "input_select.book_autor", "options": authors},
-            )
 
         yield from self.hass.async_add_job(load)
