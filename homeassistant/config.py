@@ -456,7 +456,7 @@ def _format_config_error(ex: Exception, domain: str, config: Dict) -> str:
     )
 
     if domain != CONF_CORE:
-        integration = domain.rsplit(".")[-1]
+        integration = domain.split(".")[-1]
         message += (
             "Please check the docs at "
             f"https://home-assistant.io/integrations/{integration}/"
