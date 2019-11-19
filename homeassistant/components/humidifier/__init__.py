@@ -43,6 +43,8 @@ from .const import (
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_HUMIDITY,
+    SUPPORT_TEMPERATURE,
+    SUPPORT_WATER_LEVEL,
     DEFAULT_MIN_HUMIDITY,
     DEFAULT_MAX_HUMIDITY,
 )
@@ -140,10 +142,10 @@ class HumidifierDevice(Entity):
             data[ATTR_PRESET_MODE] = self.preset_mode
             data[ATTR_PRESET_MODES] = self.preset_modes
 
-        if self.current_temperature is not None:
+        if supported_features & SUPPORT_TEMPERATURE:
             data[ATTR_CURRENT_TEMPERATURE] = self.current_temperature
 
-        if self.water_level is not None:
+        if supported_features & SUPPORT_WATER_LEVEL:
             data[ATTR_WATER_LEVEL] = self.water_level
         return data
 

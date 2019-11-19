@@ -83,6 +83,16 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
             }
         )
 
+        triggers.append(
+            {
+                CONF_PLATFORM: "device",
+                CONF_DEVICE_ID: device_id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_ENTITY_ID: entry.entity_id,
+                CONF_TYPE: "current_humidity_changed",
+            }
+        )
+
         if state and const.ATTR_CURRENT_TEMPERATURE in state.attributes:
             triggers.append(
                 {
@@ -91,17 +101,6 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
                     CONF_DOMAIN: DOMAIN,
                     CONF_ENTITY_ID: entry.entity_id,
                     CONF_TYPE: "current_temperature_changed",
-                }
-            )
-
-        if state and const.ATTR_CURRENT_HUMIDITY in state.attributes:
-            triggers.append(
-                {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "current_humidity_changed",
                 }
             )
 

@@ -10,6 +10,8 @@ from homeassistant.components.humidifier.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_HUMIDITY,
+    SUPPORT_TEMPERATURE,
+    SUPPORT_WATER_LEVEL,
 )
 
 SUPPORT_FLAGS = 0
@@ -86,6 +88,10 @@ class DemoHumidifier(HumidifierDevice):
             self._support_flags = self._support_flags | SUPPORT_FAN_MODE
         if target_humidity is not None:
             self._support_flags = self._support_flags | SUPPORT_TARGET_HUMIDITY
+        if current_temperature is not None:
+            self._support_flags = self._support_flags | SUPPORT_TEMPERATURE
+        if water_level is not None:
+            self._support_flags = self._support_flags | SUPPORT_WATER_LEVEL
         self._target_humidity = target_humidity
         self._preset = preset
         self._preset_modes = preset_modes
