@@ -110,16 +110,6 @@ class MicrosoftFaceIdentifyEntity(ImageProcessingFaceEntity):
         """Return the name of the entity."""
         return self._name
 
-    @property
-    def recognition_model(self):
-        """Return the recognition model of the entity."""
-        return self._recognition_model
-
-    @property
-    def detection_model(self):
-        """Return the detection model of the entity."""
-        return self._detection_model
-
     async def async_process_image(self, image):
         """Process image.
 
