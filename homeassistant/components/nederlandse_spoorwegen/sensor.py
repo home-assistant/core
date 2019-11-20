@@ -168,7 +168,9 @@ class NSDepartureSensor(Entity):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """If looking for a specific trip time, update around that trip time only."""
+        """Get the trip information."""
+
+        # If looking for a specific trip time, update around that trip time only.
         if self._time and (
             (datetime.now() + timedelta(minutes=30)).time() < self._time
             or (datetime.now() - timedelta(minutes=30)).time() > self._time
@@ -177,7 +179,7 @@ class NSDepartureSensor(Entity):
             self._trips = None
             return
 
-        """Set the search parameter to search from a specific trip time or to just search for next trip."""
+        # Set the search parameter to search from a specific trip time or to just search for next trip.
         if self._time:
             trip_time = (
                 datetime.today()
@@ -187,7 +189,6 @@ class NSDepartureSensor(Entity):
         else:
             trip_time = datetime.now().strftime("%d-%m-%Y %H:%M")
 
-        """Get the trip information."""
         try:
             self._trips = self._nsapi.get_trips(
                 trip_time, self._departure, self._via, self._heading, True, 0,
