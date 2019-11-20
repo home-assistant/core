@@ -4,7 +4,10 @@
             "device_already_configured": "Device is already configured."
         },
         "error": {
-            "efesto_error": "Failed to connect to Efesto with current parameters."
+            "connection_error": "Connection to URL not possible.",
+            "invalid_url": "Given URL is not a valid Efesto URL.",
+            "unauthorized": "Failed to login, please check credentials.",
+            "unknown_error": "Unkown error, please double check device id."
         },
         "step": {
             "user": {

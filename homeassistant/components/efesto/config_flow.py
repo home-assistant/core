@@ -1,5 +1,6 @@
 """Config flow for Efesto."""
 from collections import OrderedDict
+import logging
 import efestoclient
 import voluptuous as vol
 
@@ -11,11 +12,11 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
 
-@callback
+
 def device_entries(hass):
     """Return the host,port tuples for the domain."""
     return set(
@@ -46,15 +47,13 @@ class EfestoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
             device_id = user_input[CONF_DEVICE]
-            name = user_input.get(CONF_NAME, "Efesto")
+            name = user_input.get(CONF_NAME, device_id)
 
             if self._entry_in_configuration_exists(user_input):
                 return self.async_abort(reason="device_already_configured")
 
             try:
-                client = efestoclient.EfestoClient(
-                    url, username, password, device_id, False
-                )
+                client = efestoclient.EfestoClient(url, username, password, device_id)
                 client.get_status()
                 return self.async_create_entry(
                     title=name,
@@ -65,8 +64,14 @@ class EfestoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_DEVICE: device_id,
                     },
                 )
+            except efestoclient.UnauthorizedError:
+                errors["base"] = "unauthorized"
+            except efestoclient.ConnectionError:
+                errors["base"] = "connection_error"
+            except efestoclient.InvalidURLError:
+                errors["base"] = "invalid_url"
             except efestoclient.Error:
-                errors["base"] = "efesto_error"
+                errors["base"] = "unknown_error"
         else:
             user_input = {}
 
@@ -81,22 +86,10 @@ class EfestoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         data_schema[
             vol.Required(CONF_DEVICE, default=user_input.get(CONF_DEVICE))
         ] = str
-        data_schema[vol.Optional(CONF_NAME, default=user_input.get(CONF_NAME))] = str
+        data_schema[
+            vol.Optional(CONF_NAME, default=user_input.get(CONF_NAME, ""))
+        ] = str
 
         return self.async_show_form(
             step_id="user", data_schema=vol.Schema(data_schema), errors=errors
-        )
-
-    async def async_step_import(self, user_input=None):
-        """Import a config entry."""
-        if self._entry_in_configuration_exists(user_input):
-            return self.async_abort(reason="device_already_configured")
-        return self.async_create_entry(
-            title=user_input.get(CONF_NAME, "Efesto"),
-            data={
-                CONF_URL: user_input[CONF_URL],
-                CONF_USERNAME: user_input[CONF_USERNAME],
-                CONF_PASSWORD: user_input[CONF_PASSWORD],
-                CONF_DEVICE: user_input[CONF_DEVICE],
-            },
         )

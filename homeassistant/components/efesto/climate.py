@@ -4,7 +4,6 @@ import voluptuous as vol
 import efestoclient
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
@@ -22,11 +21,9 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
-    EVENT_HOMEASSISTANT_START,
     PRECISION_WHOLE,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
 
 from .const import (
     ATTR_DEVICE_STATUS,
@@ -70,18 +67,7 @@ CURRENT_HVAC_MAP_EFESTO_HEAT = {
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up Efesto climate."""
-
-    @callback
-    def do_import(_):
-        """Process YAML import after HA is fully started."""
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config)
-            )
-        )
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, do_import)
+    """Set up Efesto climate, nothing to do."""
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -104,8 +90,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
     except efestoclient.ConnectionError:
         _LOGGER.error("Connection to %s not possible", url)
         return False
+    except efestoclient.InvalidURLError:
+        _LOGGER.error("Invalid Efesto URL: %s", url)
+        return False
     except efestoclient.Error as err:
-        _LOGGER.error("Error: %s", err)
+        _LOGGER.error("Unknown Efesto error: %s", err)
         return False
     return True
 
@@ -160,7 +149,8 @@ class EfestoHeatingDevice(ClimateDevice):
         return {
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
-            "manufacturer": "Efesto",
+            "manufacturer": "Micronova",
+            "model": "Efesto",
         }
 
     @property
