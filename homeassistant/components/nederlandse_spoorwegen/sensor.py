@@ -19,6 +19,7 @@ CONF_ROUTES = "routes"
 CONF_FROM = "from"
 CONF_TO = "to"
 CONF_VIA = "via"
+CONF_TIME = "time"
 
 ICON = "mdi:train"
 
@@ -30,6 +31,7 @@ ROUTE_SCHEMA = vol.Schema(
         vol.Required(CONF_FROM): cv.string,
         vol.Required(CONF_TO): cv.string,
         vol.Optional(CONF_VIA): cv.string,
+        vol.Optional(CONF_TIME): cv.time,
     }
 )
 
@@ -72,6 +74,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 departure.get(CONF_FROM),
                 departure.get(CONF_TO),
                 departure.get(CONF_VIA),
+                departure.get(CONF_TIME),
             )
         )
     if sensors:
@@ -92,13 +95,14 @@ def valid_stations(stations, given_stations):
 class NSDepartureSensor(Entity):
     """Implementation of a NS Departure Sensor."""
 
-    def __init__(self, nsapi, name, departure, heading, via):
+    def __init__(self, nsapi, name, departure, heading, via, time):
         """Initialize the sensor."""
         self._nsapi = nsapi
         self._name = name
         self._departure = departure
         self._via = via
         self._heading = heading
+        self._time = time
         self._state = None
         self._trips = None
 
@@ -164,10 +168,27 @@ class NSDepartureSensor(Entity):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
+        """If looking for a specific trip time, update around that trip time only."""
+        if self._time \
+                and ((datetime.now() + timedelta(minutes=30)).time() < self._time \
+                    or (datetime.now() - timedelta(minutes=30)).time() > self._time):
+            self._state = None
+            self._trips = None
+            return
+
+        """Set the search parameter to search from a specific trip time or to just search for next trip."""
+        if self._time:
+            trip_time = datetime.today().replace(
+                hour=self._time.hour,
+                minute=self._time.minute,
+            ).strftime("%d-%m-%Y %H:%M")
+        else:
+            trip_time = datetime.now().strftime("%d-%m-%Y %H:%M")
+
         """Get the trip information."""
         try:
             self._trips = self._nsapi.get_trips(
-                datetime.now().strftime("%d-%m-%Y %H:%M"),
+                trip_time,
                 self._departure,
                 self._via,
                 self._heading,
