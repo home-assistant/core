@@ -71,8 +71,8 @@ def _build_mock_url(origin, destination, modes, app_id, app_code, departure):
     """Construct a url for HERE."""
     base_url = "https://route.cit.api.here.com/routing/7.2/calculateroute.json?"
     parameters = {
-        "waypoint0": origin,
-        "waypoint1": destination,
+        "waypoint0": f"geo!{origin}",
+        "waypoint1": f"geo!{destination}",
         "mode": ";".join(str(herepy.RouteMode[mode]) for mode in modes),
         "app_id": app_id,
         "app_code": app_code,
