@@ -1,4 +1,5 @@
 """Component that will help set the Microsoft face for verify processing."""
+import copy
 import logging
 
 import voluptuous as vol
@@ -21,8 +22,34 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 CONF_GROUP = "group"
+CONF_RECOGNITION_MODEL = "recognition_model"
+SUPPORTED_RECOGNITION_MODELS = ["recognition_01", "recognition_02"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_GROUP): cv.slugify})
+
+def validate_recognition_model(config):
+    """Validate recognition model."""
+    config = copy.deepcopy(config)
+
+    if config[CONF_RECOGNITION_MODEL] not in SUPPORTED_RECOGNITION_MODELS:
+        config[CONF_RECOGNITION_MODEL] = "recognition_02"
+
+    _LOGGER.warning("recognition model %s", config[CONF_RECOGNITION_MODEL])
+    return config
+
+
+PLATFORM_SCHEMA = vol.Schema(
+    vol.All(
+        PLATFORM_SCHEMA.extend(
+            {
+                vol.Required(CONF_GROUP): cv.slugify,
+                vol.Optional(
+                    CONF_RECOGNITION_MODEL, default="recognition_02"
+                ): cv.string,
+            }
+        ),
+        validate_recognition_model,
+    )
+)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -30,6 +57,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     api = hass.data[DATA_MICROSOFT_FACE]
     face_group = config[CONF_GROUP]
     confidence = config[CONF_CONFIDENCE]
+    recognition_model = config[CONF_RECOGNITION_MODEL]
 
     entities = []
     for camera in config[CONF_SOURCE]:
@@ -39,6 +67,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 api,
                 face_group,
                 confidence,
+                recognition_model,
                 camera.get(CONF_NAME),
             )
         )
@@ -49,7 +78,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class MicrosoftFaceIdentifyEntity(ImageProcessingFaceEntity):
     """Representation of the Microsoft Face API entity for identify."""
 
-    def __init__(self, camera_entity, api, face_group, confidence, name=None):
+    def __init__(
+        self, camera_entity, api, face_group, confidence, recognition_model, name=None
+    ):
         """Initialize the Microsoft Face API."""
         super().__init__()
 
@@ -57,6 +88,8 @@ class MicrosoftFaceIdentifyEntity(ImageProcessingFaceEntity):
         self._camera = camera_entity
         self._confidence = confidence
         self._face_group = face_group
+        self._recognition_model = recognition_model
+        self._detection_model = "detection" + self._recognition_model[-3:]
 
         if name:
             self._name = name
@@ -78,6 +111,16 @@ class MicrosoftFaceIdentifyEntity(ImageProcessingFaceEntity):
         """Return the name of the entity."""
         return self._name
 
+    @property
+    def recognition_model(self):
+        """Return the recognition model of the entity."""
+        return self._recognition_model
+
+    @property
+    def detection_model(self):
+        """Return the detection model of the entity."""
+        return self._detection_model
+
     async def async_process_image(self, image):
         """Process image.
 
@@ -85,7 +128,16 @@ class MicrosoftFaceIdentifyEntity(ImageProcessingFaceEntity):
         """
         detect = []
         try:
-            face_data = await self._api.call_api("post", "detect", image, binary=True)
+            face_data = await self._api.call_api(
+                "post",
+                "detect",
+                image,
+                binary=True,
+                params={
+                    "recognitionModel": self._recognition_model,
+                    "detectionModel": self._detection_model,
+                },
+            )
 
             if face_data:
                 face_ids = [data["faceId"] for data in face_data]
