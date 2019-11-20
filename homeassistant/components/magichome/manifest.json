@@ -2,9 +2,7 @@
   "domain": "magichome",
   "name": "MagicHome",
   "documentation": "https://www.home-assistant.io/components/magichome",
-  "requirements": [
-    "magichome==0.1.42"
-  ],
+  "requirements": ["magichome==0.1.42"],
   "dependencies": [],
   "codeowners": ["@ZNEGGE-SDK"]
 }
