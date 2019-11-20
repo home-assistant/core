@@ -2,9 +2,9 @@
   "domain": "homematicip_cloud",
   "name": "Homematicip cloud",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/homematicip_cloud",
+  "documentation": "https://www.home-assistant.io/integrations/homematicip_cloud",
   "requirements": [
-    "homematicip==0.10.10"
+    "homematicip==0.10.13"
   ],
   "dependencies": [],
   "codeowners": [

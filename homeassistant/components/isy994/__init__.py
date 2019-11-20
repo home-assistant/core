@@ -3,6 +3,8 @@ from collections import namedtuple
 import logging
 from urllib.parse import urlparse
 
+import PyISY
+from PyISY.Nodes import Group
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -312,8 +314,6 @@ def _categorize_nodes(
             # Don't import this node as a device at all
             continue
 
-        from PyISY.Nodes import Group
-
         if isinstance(node, Group):
             hass.data[ISY994_NODES][SCENE_DOMAIN].append(node)
             continue
@@ -323,9 +323,9 @@ def _categorize_nodes(
             # determine if it should be a binary_sensor.
             if _is_sensor_a_binary_sensor(hass, node):
                 continue
-            else:
-                hass.data[ISY994_NODES]["sensor"].append(node)
-                continue
+
+            hass.data[ISY994_NODES]["sensor"].append(node)
+            continue
 
         # We have a bunch of different methods for determining the device type,
         # each of which works with different ISY firmware versions or device
@@ -418,8 +418,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     else:
         _LOGGER.error("isy994 host value in configuration is invalid")
         return False
-
-    import PyISY
 
     # Connect to ISY controller.
     isy = PyISY.ISY(

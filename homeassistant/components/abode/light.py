@@ -2,6 +2,8 @@
 import logging
 from math import ceil
 
+import abodepy.helpers.constants as CONST
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -16,31 +18,27 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin,
 )
 
-from . import DOMAIN as ABODE_DOMAIN, AbodeDevice
+from . import AbodeDevice
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Platform uses config entry setup."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Abode light devices."""
-    import abodepy.helpers.constants as CONST
+    data = hass.data[DOMAIN]
 
-    data = hass.data[ABODE_DOMAIN]
+    entities = []
 
-    device_types = [CONST.TYPE_LIGHT, CONST.TYPE_SWITCH]
+    for device in data.abode.get_devices(generic_type=CONST.TYPE_LIGHT):
+        entities.append(AbodeLight(data, device))
 
-    devices = []
-
-    # Get all regular lights that are not excluded or switches marked as lights
-    for device in data.abode.get_devices(generic_type=device_types):
-        if data.is_excluded(device) or not data.is_light(device):
-            continue
-
-        devices.append(AbodeLight(data, device))
-
-    data.devices.extend(devices)
-
-    add_entities(devices)
+    async_add_entities(entities)
 
 
 class AbodeLight(AbodeDevice, Light):

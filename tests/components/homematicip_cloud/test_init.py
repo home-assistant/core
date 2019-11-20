@@ -2,10 +2,10 @@
 
 from unittest.mock import patch
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import homematicip_cloud as hmipc
+from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro, MockConfigEntry
+from tests.common import Mock, MockConfigEntry, mock_coro
 
 
 async def test_config_with_accesspoint_passed_to_config_entry(hass):
@@ -53,7 +53,7 @@ async def test_config_already_registered_not_passed_to_config_entry(hass):
         )
 
     # No flow started
-    assert len(mock_config_entries.flow.mock_calls) == 0
+    assert not mock_config_entries.flow.mock_calls
 
 
 async def test_setup_entry_successful(hass):
@@ -150,3 +150,16 @@ async def test_unload_entry(hass):
     assert await hmipc.async_unload_entry(hass, entry)
     assert len(mock_hap.return_value.async_reset.mock_calls) == 1
     assert hass.data[hmipc.DOMAIN] == {}
+
+
+async def test_hmip_dump_hap_config_services(hass, mock_hap_with_service):
+    """Test dump configuration services."""
+
+    with patch("pathlib.Path.write_text", return_value=Mock()) as write_mock:
+        await hass.services.async_call(
+            "homematicip_cloud", "dump_hap_config", {"anonymize": True}, blocking=True
+        )
+        home = mock_hap_with_service.home
+        assert home.mock_calls[-1][0] == "download_configuration"
+        assert home.mock_calls
+        assert write_mock.mock_calls

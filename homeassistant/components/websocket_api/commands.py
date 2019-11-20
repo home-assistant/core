@@ -12,6 +12,9 @@ from homeassistant.helpers.event import async_track_state_change
 from . import const, decorators, messages
 
 
+# mypy: allow-untyped-calls, allow-untyped-defs
+
+
 @callback
 def async_register_commands(hass, async_reg):
     """Register commands."""
@@ -129,7 +132,9 @@ async def handle_call_service(hass, connection, msg):
             blocking,
             connection.context(msg),
         )
-        connection.send_message(messages.result_message(msg["id"]))
+        connection.send_message(
+            messages.result_message(msg["id"], {"context": connection.context(msg)})
+        )
     except ServiceNotFound as err:
         if err.domain == msg["domain"] and err.service == msg["service"]:
             connection.send_message(

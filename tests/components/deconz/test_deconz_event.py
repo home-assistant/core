@@ -1,60 +1,74 @@
 """Test deCONZ remote events."""
-from unittest.mock import Mock
+from copy import deepcopy
 
-from homeassistant.components.deconz.deconz_event import CONF_DECONZ_EVENT, DeconzEvent
-from homeassistant.core import callback
+from asynctest import Mock
+
+from homeassistant.components.deconz.deconz_event import CONF_DECONZ_EVENT
+
+from .test_gateway import ENTRY_CONFIG, DECONZ_WEB_REQUEST, setup_deconz_integration
+
+SENSORS = {
+    "1": {
+        "id": "Switch 1 id",
+        "name": "Switch 1",
+        "type": "ZHASwitch",
+        "state": {"buttonevent": 1000},
+        "config": {},
+        "uniqueid": "00:00:00:00:00:00:00:01-00",
+    },
+    "2": {
+        "id": "Switch 2 id",
+        "name": "Switch 2",
+        "type": "ZHASwitch",
+        "state": {"buttonevent": 1000},
+        "config": {"battery": 100},
+        "uniqueid": "00:00:00:00:00:00:00:02-00",
+    },
+}
 
 
-async def test_create_event(hass):
-    """Successfully created a deCONZ event."""
-    mock_remote = Mock()
-    mock_remote.name = "Name"
+async def test_deconz_events(hass):
+    """Test successful creation of deconz events."""
+    data = deepcopy(DECONZ_WEB_REQUEST)
+    data["sensors"] = deepcopy(SENSORS)
+    gateway = await setup_deconz_integration(
+        hass, ENTRY_CONFIG, options={}, get_state_response=data
+    )
+    assert "sensor.switch_1" not in gateway.deconz_ids
+    assert "sensor.switch_1_battery_level" not in gateway.deconz_ids
+    assert "sensor.switch_2" not in gateway.deconz_ids
+    assert "sensor.switch_2_battery_level" in gateway.deconz_ids
+    assert len(hass.states.async_all()) == 1
+    assert len(gateway.events) == 2
 
-    mock_gateway = Mock()
-    mock_gateway.hass = hass
+    switch_1 = hass.states.get("sensor.switch_1")
+    assert switch_1 is None
 
-    event = DeconzEvent(mock_remote, mock_gateway)
+    switch_1_battery_level = hass.states.get("sensor.switch_1_battery_level")
+    assert switch_1_battery_level is None
 
-    assert event.event_id == "name"
+    switch_2 = hass.states.get("sensor.switch_2")
+    assert switch_2 is None
 
+    switch_2_battery_level = hass.states.get("sensor.switch_2_battery_level")
+    assert switch_2_battery_level.state == "100"
 
-async def test_update_event(hass):
-    """Successfully update a deCONZ event."""
-    mock_remote = Mock()
-    mock_remote.name = "Name"
+    mock_listener = Mock()
+    unsub = hass.bus.async_listen(CONF_DECONZ_EVENT, mock_listener)
 
-    mock_gateway = Mock()
-    mock_gateway.hass = hass
-
-    event = DeconzEvent(mock_remote, mock_gateway)
-    mock_remote.changed_keys = {"state": True}
-
-    calls = []
-
-    @callback
-    def listener(event):
-        """Mock listener."""
-        calls.append(event)
-
-    unsub = hass.bus.async_listen(CONF_DECONZ_EVENT, listener)
-
-    event.async_update_callback()
+    gateway.api.sensors["1"].async_update({"state": {"buttonevent": 2000}})
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
+    assert len(mock_listener.mock_calls) == 1
+    assert mock_listener.mock_calls[0][1][0].data == {
+        "id": "switch_1",
+        "unique_id": "00:00:00:00:00:00:00:01",
+        "event": 2000,
+    }
 
     unsub()
 
+    await gateway.async_reset()
 
-async def test_remove_event(hass):
-    """Successfully update a deCONZ event."""
-    mock_remote = Mock()
-    mock_remote.name = "Name"
-
-    mock_gateway = Mock()
-    mock_gateway.hass = hass
-
-    event = DeconzEvent(mock_remote, mock_gateway)
-    event.async_will_remove_from_hass()
-
-    assert event._device is None
+    assert len(hass.states.async_all()) == 0
+    assert len(gateway.events) == 0

@@ -40,6 +40,11 @@
                     "other": "OSTALO",
                     "two": "DVA"
                 }
+            },
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "Ustvarite senzorje porabe pasovne \u0161irine za omre\u017ene odjemalce"
+                }
             }
         }
     }

@@ -5,6 +5,7 @@ from datetime import timedelta
 
 import aiohttp
 import voluptuous as vol
+from waqiasync import WaqiClient
 
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -60,13 +61,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the requested World Air Quality Index locations."""
-    import waqiasync
 
     token = config.get(CONF_TOKEN)
     station_filter = config.get(CONF_STATIONS)
     locations = config.get(CONF_LOCATIONS)
 
-    client = waqiasync.WaqiClient(token, async_get_clientsession(hass), timeout=TIMEOUT)
+    client = WaqiClient(token, async_get_clientsession(hass), timeout=TIMEOUT)
     dev = []
     try:
         for location_name in locations:
@@ -127,6 +127,16 @@ class WaqiSensor(Entity):
         if self._data is not None:
             return self._data.get("aqi")
         return None
+
+    @property
+    def available(self):
+        """Return sensor availability."""
+        return self._data is not None
+
+    @property
+    def unique_id(self):
+        """Return unique ID."""
+        return self.uid
 
     @property
     def unit_of_measurement(self):

@@ -1,6 +1,8 @@
 """Support for BMW car locks with BMW ConnectedDrive."""
 import logging
 
+from bimmer_connected.state import LockState
+
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 
@@ -87,7 +89,6 @@ class BMWLock(LockDevice):
 
     def update(self):
         """Update state of the lock."""
-        from bimmer_connected.state import LockState
 
         _LOGGER.debug("%s: updating data for %s", self._vehicle.name, self._attribute)
         vehicle_state = self._vehicle.state

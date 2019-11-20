@@ -5,10 +5,11 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.const import EVENT_COMPONENT_LOADED, CONF_ID
-from homeassistant.setup import ATTR_COMPONENT
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.const import EVENT_COMPONENT_LOADED, CONF_ID
+from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.setup import ATTR_COMPONENT
 from homeassistant.util.yaml import load_yaml, dump
 
 DOMAIN = "config"
@@ -24,6 +25,7 @@ SECTIONS = (
     "entity_registry",
     "group",
     "script",
+    "scene",
 )
 ON_DEMAND = ("zwave",)
 
@@ -80,6 +82,7 @@ class BaseEditConfigView(HomeAssistantView):
         data_schema,
         *,
         post_write_hook=None,
+        data_validator=None,
     ):
         """Initialize a config view."""
         self.url = f"/api/config/{component}/{config_type}/{{config_key}}"
@@ -88,6 +91,7 @@ class BaseEditConfigView(HomeAssistantView):
         self.key_schema = key_schema
         self.data_schema = data_schema
         self.post_write_hook = post_write_hook
+        self.data_validator = data_validator
 
     def _empty_config(self):
         """Empty config if file not found."""
@@ -128,14 +132,18 @@ class BaseEditConfigView(HomeAssistantView):
         except vol.Invalid as err:
             return self.json_message(f"Key malformed: {err}", 400)
 
+        hass = request.app["hass"]
+
         try:
             # We just validate, we don't store that data because
             # we don't want to store the defaults.
-            self.data_schema(data)
-        except vol.Invalid as err:
+            if self.data_validator:
+                await self.data_validator(hass, data)
+            else:
+                self.data_schema(data)
+        except (vol.Invalid, HomeAssistantError) as err:
             return self.json_message(f"Message malformed: {err}", 400)
 
-        hass = request.app["hass"]
         path = hass.config.path(self.path)
 
         current = await self.read_config(hass)

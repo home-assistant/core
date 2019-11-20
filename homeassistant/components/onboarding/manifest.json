@@ -1,7 +1,7 @@
 {
   "domain": "onboarding",
   "name": "Onboarding",
-  "documentation": "https://www.home-assistant.io/components/onboarding",
+  "documentation": "https://www.home-assistant.io/integrations/onboarding",
   "requirements": [],
   "dependencies": [
     "auth",

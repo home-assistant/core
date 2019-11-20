@@ -5,14 +5,14 @@ from unittest.mock import Mock
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.rflink import (
     CONF_RECONNECT_INTERVAL,
-    SERVICE_SEND_COMMAND,
-    RflinkCommand,
-    TMP_ENTITY,
     DATA_ENTITY_LOOKUP,
     EVENT_KEY_COMMAND,
     EVENT_KEY_SENSOR,
+    SERVICE_SEND_COMMAND,
+    TMP_ENTITY,
+    RflinkCommand,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_STOP_COVER
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_STOP_COVER, SERVICE_TURN_OFF
 
 
 async def mock_rflink(
@@ -46,7 +46,9 @@ async def mock_rflink(
             return transport, protocol
 
     mock_create = Mock(wraps=create_rflink_connection)
-    monkeypatch.setattr("rflink.protocol.create_rflink_connection", mock_create)
+    monkeypatch.setattr(
+        "homeassistant.components.rflink.create_rflink_connection", mock_create
+    )
 
     await async_setup_component(hass, "rflink", config)
     await async_setup_component(hass, domain, config)

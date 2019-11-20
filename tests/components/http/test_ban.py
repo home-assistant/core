@@ -148,6 +148,8 @@ async def test_failed_login_attempts_counter(hass, aiohttp_client):
     assert resp.status == 200
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 2
 
+    # This used to check that with trusted networks we reset login attempts
+    # We no longer support trusted networks.
     resp = await client.get("/auth_true")
     assert resp.status == 200
-    assert remote_ip not in app[KEY_FAILED_LOGIN_ATTEMPTS]
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 2

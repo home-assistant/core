@@ -2,9 +2,11 @@
 import logging
 import socket
 
+import snapcast.control
+from snapcast.control.server import CONTROL_PORT
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_VOLUME_MUTE,
@@ -24,12 +26,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
-    DOMAIN,
-    SERVICE_SNAPSHOT,
-    SERVICE_RESTORE,
-    SERVICE_JOIN,
-    SERVICE_UNJOIN,
     ATTR_MASTER,
+    DOMAIN,
+    SERVICE_JOIN,
+    SERVICE_RESTORE,
+    SERVICE_SNAPSHOT,
+    SERVICE_UNJOIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,8 +57,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Snapcast platform."""
-    import snapcast.control
-    from snapcast.control.server import CONTROL_PORT
 
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT, CONTROL_PORT)

@@ -10,10 +10,10 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ON,
     STATE_OFF,
+    STATE_ON,
 )
-from homeassistant.core import callback, State, CoreState
+from homeassistant.core import CoreState, State, callback
 
 from tests.common import mock_restore_cache
 from tests.components.rflink.test_init import mock_rflink

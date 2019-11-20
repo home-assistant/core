@@ -1,7 +1,7 @@
 {
   "domain": "dlink",
   "name": "Dlink",
-  "documentation": "https://www.home-assistant.io/components/dlink",
+  "documentation": "https://www.home-assistant.io/integrations/dlink",
   "requirements": [
     "pyW215==0.6.0"
   ],

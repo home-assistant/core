@@ -50,6 +50,7 @@ CONFIG_ENTRY_HANDLERS = {
     SERVICE_DAIKIN: "daikin",
     SERVICE_TELLDUSLIVE: "tellduslive",
     SERVICE_IGD: "upnp",
+    SERVICE_PLEX: "plex",
 }
 
 SERVICE_HANDLERS = {
@@ -69,7 +70,6 @@ SERVICE_HANDLERS = {
     SERVICE_FREEBOX: ("freebox", None),
     SERVICE_YEELIGHT: ("yeelight", None),
     "panasonic_viera": ("media_player", "panasonic_viera"),
-    SERVICE_PLEX: ("plex", None),
     "yamaha": ("media_player", "yamaha"),
     "logitech_mediaserver": ("media_player", "squeezebox"),
     "directv": ("media_player", "directv"),

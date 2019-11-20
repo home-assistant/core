@@ -4,6 +4,8 @@ from datetime import timedelta
 import logging
 from typing import List
 
+import pybbox
+
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -74,8 +76,6 @@ class BboxDeviceScanner(DeviceScanner):
         Returns boolean if scanning successful.
         """
         _LOGGER.info("Scanning...")
-
-        import pybbox
 
         box = pybbox.Bbox(ip=self.host)
         result = box.get_all_connected_devices()

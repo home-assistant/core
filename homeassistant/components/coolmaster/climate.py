@@ -2,16 +2,16 @@
 
 import logging
 
-import voluptuous as vol
+from pycoolmasternet import CoolMasterNet
 
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_OFF,
-    HVAC_MODE_HEAT_COOL,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_OFF,
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
@@ -22,20 +22,10 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-import homeassistant.helpers.config_validation as cv
+
+from .const import CONF_SUPPORTED_MODES, DOMAIN
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
-
-DEFAULT_PORT = 10102
-
-AVAILABLE_MODES = [
-    HVAC_MODE_OFF,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_FAN_ONLY,
-]
 
 CM_TO_HA_STATE = {
     "heat": HVAC_MODE_HEAT,
@@ -49,17 +39,6 @@ HA_STATE_TO_CM = {value: key for key, value in CM_TO_HA_STATE.items()}
 
 FAN_MODES = ["low", "med", "high", "auto"]
 
-CONF_SUPPORTED_MODES = "supported_modes"
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_SUPPORTED_MODES, default=AVAILABLE_MODES): vol.All(
-            cv.ensure_list, [vol.In(AVAILABLE_MODES)]
-        ),
-    }
-)
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -68,19 +47,17 @@ def _build_entity(device, supported_modes):
     return CoolmasterClimate(device, supported_modes)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up the CoolMasterNet climate platform."""
-    from pycoolmasternet import CoolMasterNet
-
-    supported_modes = config.get(CONF_SUPPORTED_MODES)
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
+    supported_modes = config_entry.data.get(CONF_SUPPORTED_MODES)
+    host = config_entry.data[CONF_HOST]
+    port = config_entry.data[CONF_PORT]
     cool = CoolMasterNet(host, port=port)
-    devices = cool.devices()
+    devices = await hass.async_add_executor_job(cool.devices)
 
     all_devices = [_build_entity(device, supported_modes) for device in devices]
 
-    add_entities(all_devices, True)
+    async_add_devices(all_devices, True)
 
 
 class CoolmasterClimate(ClimateDevice):
@@ -117,6 +94,16 @@ class CoolmasterClimate(ClimateDevice):
             self._unit = TEMP_CELSIUS
         else:
             self._unit = TEMP_FAHRENHEIT
+
+    @property
+    def device_info(self):
+        """Return device info for this device."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": "CoolAutomation",
+            "model": "CoolMasterNet",
+        }
 
     @property
     def unique_id(self):

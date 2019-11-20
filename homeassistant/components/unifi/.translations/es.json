@@ -35,8 +35,13 @@
             },
             "init": {
                 "data": {
-                    "one": "uno",
-                    "other": "otro"
+                    "one": "vac\u00edo",
+                    "other": "vac\u00edo"
+                }
+            },
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "Crear sensores para monitorizar uso de ancho de banda de clientes de red"
                 }
             }
         }

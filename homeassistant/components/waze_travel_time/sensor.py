@@ -3,21 +3,22 @@ from datetime import timedelta
 import logging
 import re
 
+import WazeRouteCalculator
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    CONF_NAME,
-    CONF_REGION,
-    EVENT_HOMEASSISTANT_START,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    CONF_UNIT_SYSTEM_METRIC,
+    CONF_NAME,
+    CONF_REGION,
     CONF_UNIT_SYSTEM_IMPERIAL,
+    CONF_UNIT_SYSTEM_METRIC,
+    EVENT_HOMEASSISTANT_START,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import location
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -237,7 +238,6 @@ class WazeTravelTimeData:
         vehicle_type,
     ):
         """Set up WazeRouteCalculator."""
-        import WazeRouteCalculator
 
         self._calc = WazeRouteCalculator
 

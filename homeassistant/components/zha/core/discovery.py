@@ -2,10 +2,13 @@
 Device discovery functions for Zigbee Home Automation.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zha/
+https://home-assistant.io/integrations/zha/
 """
 
 import logging
+
+import zigpy.profiles
+from zigpy.zcl.clusters.general import OnOff, PowerConfiguration
 
 from homeassistant import const as ha_const
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
@@ -52,8 +55,6 @@ def async_process_endpoint(
     is_new_join,
 ):
     """Process an endpoint on a zigpy device."""
-    import zigpy.profiles
-
     if endpoint_id == 0:  # ZDO
         _async_create_cluster_channel(
             endpoint, zha_device, is_new_join, channel_class=ZDOChannel
@@ -179,8 +180,6 @@ def _async_handle_single_cluster_matches(
     hass, endpoint, zha_device, profile_clusters, device_key, is_new_join
 ):
     """Dispatch single cluster matches to HA components."""
-    from zigpy.zcl.clusters.general import OnOff, PowerConfiguration
-
     cluster_matches = []
     cluster_match_results = []
     matched_power_configuration = False
@@ -199,11 +198,13 @@ def _async_handle_single_cluster_matches(
                 zha_device.is_mains_powered or matched_power_configuration
             ):
                 continue
-            elif (
+
+            if (
                 cluster.cluster_id == PowerConfiguration.cluster_id
                 and not zha_device.is_mains_powered
             ):
                 matched_power_configuration = True
+
             cluster_match_results.append(
                 _async_handle_single_cluster_match(
                     hass,

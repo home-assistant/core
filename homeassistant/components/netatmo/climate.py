@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 from typing import Optional, List
 
+import pyatmo
 import requests
 import voluptuous as vol
 
@@ -103,8 +104,6 @@ NA_VALVE = "NRV"
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NetAtmo Thermostat."""
-    import pyatmo
-
     homes_conf = config.get(CONF_HOMES)
 
     auth = hass.data[DATA_NETATMO_AUTH]
@@ -365,8 +364,6 @@ class HomeData:
 
     def setup(self):
         """Retrieve HomeData by NetAtmo API."""
-        import pyatmo
-
         try:
             self.homedata = pyatmo.HomeData(self.auth)
             self.home_id = self.homedata.gethomeId(self.home)
@@ -408,8 +405,6 @@ class ThermostatData:
 
     def setup(self):
         """Retrieve HomeData and HomeStatus by NetAtmo API."""
-        import pyatmo
-
         try:
             self.homedata = pyatmo.HomeData(self.auth)
             self.homestatus = pyatmo.HomeStatus(self.auth, home_id=self.home_id)
@@ -423,8 +418,6 @@ class ThermostatData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Call the NetAtmo API to update the data."""
-        import pyatmo
-
         try:
             self.homestatus = pyatmo.HomeStatus(self.auth, home_id=self.home_id)
         except TypeError:

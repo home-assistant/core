@@ -1,4 +1,5 @@
 """Provides functionality to interact with climate devices."""
+from abc import abstractmethod
 from datetime import timedelta
 import functools as ft
 import logging
@@ -17,7 +18,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa
+from homeassistant.helpers.config_validation import (  # noqa: F401
     ENTITY_SERVICE_SCHEMA,
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -35,7 +36,7 @@ from .const import (
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
     ATTR_HUMIDITY,
-    ATTR_HVAC_ACTIONS,
+    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_MAX_HUMIDITY,
@@ -239,7 +240,7 @@ class ClimateDevice(Entity):
             data[ATTR_FAN_MODES] = self.fan_modes
 
         if self.hvac_action:
-            data[ATTR_HVAC_ACTIONS] = self.hvac_action
+            data[ATTR_HVAC_ACTION] = self.hvac_action
 
         if supported_features & SUPPORT_PRESET_MODE:
             data[ATTR_PRESET_MODE] = self.preset_mode
@@ -270,20 +271,20 @@ class ClimateDevice(Entity):
         return None
 
     @property
+    @abstractmethod
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
         """
-        raise NotImplementedError()
 
     @property
+    @abstractmethod
     def hvac_modes(self) -> List[str]:
         """Return the list of available hvac operation modes.
 
         Need to be a subset of HVAC_MODES.
         """
-        raise NotImplementedError()
 
     @property
     def hvac_action(self) -> Optional[str]:

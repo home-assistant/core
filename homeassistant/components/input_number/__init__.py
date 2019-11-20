@@ -7,6 +7,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    ATTR_MODE,
     CONF_ICON,
     CONF_NAME,
     CONF_MODE,
@@ -32,7 +33,6 @@ ATTR_VALUE = "value"
 ATTR_MIN = "min"
 ATTR_MAX = "max"
 ATTR_STEP = "step"
-ATTR_MODE = "mode"
 
 SERVICE_SET_VALUE = "set_value"
 SERVICE_INCREMENT = "increment"

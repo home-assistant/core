@@ -1,8 +1,7 @@
 """Tests for HomematicIP Cloud config flow."""
 from unittest.mock import patch
 
-from homeassistant.components.homematicip_cloud import hap as hmipc
-from homeassistant.components.homematicip_cloud import config_flow, const
+from homeassistant.components.homematicip_cloud import config_flow, const, hap as hmipc
 
 from tests.common import MockConfigEntry, mock_coro
 
@@ -96,6 +95,15 @@ async def test_init_flow_show_form(hass):
     flow.hass = hass
 
     result = await flow.async_step_init(user_input=None)
+    assert result["type"] == "form"
+
+
+async def test_init_flow_user_show_form(hass):
+    """Test config flow shows up with a form."""
+    flow = config_flow.HomematicipCloudFlowHandler()
+    flow.hass = hass
+
+    result = await flow.async_step_user(user_input=None)
     assert result["type"] == "form"
 
 

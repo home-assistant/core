@@ -20,7 +20,6 @@ from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.yaml import load_yaml
 from homeassistant.util.yaml.loader import JSON_TYPE
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.async_ import run_coroutine_threadsafe
 from homeassistant.helpers.typing import HomeAssistantType
 
 
@@ -42,7 +41,7 @@ def call_from_config(
     hass, config, blocking=False, variables=None, validate_config=True
 ):
     """Call a service based on a config hash."""
-    run_coroutine_threadsafe(
+    asyncio.run_coroutine_threadsafe(
         async_call_from_config(hass, config, blocking, variables, validate_config),
         hass.loop,
     ).result()
@@ -105,7 +104,7 @@ def extract_entity_ids(hass, service_call, expand_group=True):
 
     Will convert group entity ids to the entity ids it represents.
     """
-    return run_coroutine_threadsafe(
+    return asyncio.run_coroutine_threadsafe(
         async_extract_entity_ids(hass, service_call, expand_group), hass.loop
     ).result()
 

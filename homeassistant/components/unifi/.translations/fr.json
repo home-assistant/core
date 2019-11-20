@@ -32,6 +32,17 @@
                     "track_devices": "Suivre les p\u00e9riph\u00e9riques r\u00e9seau (p\u00e9riph\u00e9riques Ubiquiti)",
                     "track_wired_clients": "Inclure les clients du r\u00e9seau filaire"
                 }
+            },
+            "init": {
+                "data": {
+                    "one": "Vide",
+                    "other": "Vide"
+                }
+            },
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "Cr\u00e9er des capteurs d'utilisation de la bande passante pour les clients r\u00e9seau"
+                }
             }
         }
     }

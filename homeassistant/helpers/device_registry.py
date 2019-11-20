@@ -157,6 +157,7 @@ class DeviceRegistry:
         name_by_user=_UNDEF,
         new_identifiers=_UNDEF,
         via_device_id=_UNDEF,
+        remove_config_entry_id=_UNDEF,
     ):
         """Update properties of a device."""
         return self._async_update_device(
@@ -166,6 +167,7 @@ class DeviceRegistry:
             name_by_user=name_by_user,
             new_identifiers=new_identifiers,
             via_device_id=via_device_id,
+            remove_config_entry_id=remove_config_entry_id,
         )
 
     @callback
@@ -203,6 +205,10 @@ class DeviceRegistry:
             remove_config_entry_id is not _UNDEF
             and remove_config_entry_id in config_entries
         ):
+            if config_entries == {remove_config_entry_id}:
+                self.async_remove_device(device_id)
+                return
+
             config_entries = config_entries - {remove_config_entry_id}
 
         if config_entries is not old.config_entries:

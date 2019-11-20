@@ -1,15 +1,16 @@
 """Proxy camera platform that enables image processing of camera data."""
 import asyncio
+from datetime import timedelta
+import io
 import logging
 
-from datetime import timedelta
+from PIL import Image
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_MODE
+from homeassistant.const import CONF_ENTITY_ID, CONF_MODE, CONF_NAME
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.util.async_ import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,9 +60,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 def _precheck_image(image, opts):
     """Perform some pre-checks on the given image."""
-    from PIL import Image
-    import io
-
     if not opts:
         raise ValueError()
     try:
@@ -78,9 +76,6 @@ def _precheck_image(image, opts):
 
 def _resize_image(image, opts):
     """Resize image."""
-    from PIL import Image
-    import io
-
     try:
         img = _precheck_image(image, opts)
     except ValueError:
@@ -126,8 +121,6 @@ def _resize_image(image, opts):
 
 def _crop_image(image, opts):
     """Crop image."""
-    import io
-
     try:
         img = _precheck_image(image, opts)
     except ValueError:
@@ -220,7 +213,7 @@ class ProxyCamera(Camera):
 
     def camera_image(self):
         """Return camera image."""
-        return run_coroutine_threadsafe(
+        return asyncio.run_coroutine_threadsafe(
             self.async_camera_image(), self.hass.loop
         ).result()
 

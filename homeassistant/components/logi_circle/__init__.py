@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.camera import ATTR_FILENAME, CAMERA_SERVICE_SCHEMA
 from homeassistant.const import (
+    ATTR_MODE,
     CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
     EVENT_HOMEASSISTANT_STOP,
@@ -42,7 +43,6 @@ SERVICE_SET_CONFIG = "set_config"
 SERVICE_LIVESTREAM_SNAPSHOT = "livestream_snapshot"
 SERVICE_LIVESTREAM_RECORD = "livestream_record"
 
-ATTR_MODE = "mode"
 ATTR_VALUE = "value"
 ATTR_DURATION = "duration"
 

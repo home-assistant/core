@@ -32,6 +32,17 @@
                     "track_devices": "Spore nettverksenheter (Ubiquiti-enheter)",
                     "track_wired_clients": "Inkluder kablede nettverksklienter"
                 }
+            },
+            "init": {
+                "data": {
+                    "one": "en",
+                    "other": "andre"
+                }
+            },
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "Opprett b\u00e5ndbreddesensorer for nettverksklienter"
+                }
             }
         }
     }

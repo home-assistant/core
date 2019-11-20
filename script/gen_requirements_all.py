@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """Generate an updated requirements_all.txt."""
+import difflib
 import importlib
 import os
-import pathlib
+from pathlib import Path
 import pkgutil
 import re
 import sys
+
+from homeassistant.util.yaml.loader import load_yaml
 
 from script.hassfest.model import Integration
 
@@ -41,147 +44,7 @@ COMMENT_REQUIREMENTS = (
     "VL53L1X2",
 )
 
-TEST_REQUIREMENTS = (
-    "adguardhome",
-    "aio_geojson_geonetnz_quakes",
-    "aioambient",
-    "aioautomatic",
-    "aiobotocore",
-    "aioesphomeapi",
-    "aiohttp_cors",
-    "aiohue",
-    "aionotion",
-    "aioswitcher",
-    "aiounifi",
-    "aiowwlln",
-    "ambiclimate",
-    "androidtv",
-    "apns2",
-    "aprslib",
-    "av",
-    "axis",
-    "bellows-homeassistant",
-    "caldav",
-    "coinmarketcap",
-    "defusedxml",
-    "dsmr_parser",
-    "eebrightbox",
-    "emulated_roku",
-    "enocean",
-    "ephem",
-    "evohomeclient",
-    "feedparser-homeassistant",
-    "foobot_async",
-    "geojson_client",
-    "geopy",
-    "georss_generic_client",
-    "georss_ign_sismologia_client",
-    "georss_qld_bushfire_alert_client",
-    "getmac",
-    "google-api-python-client",
-    "gTTS-token",
-    "ha-ffmpeg",
-    "hangups",
-    "HAP-python",
-    "hass-nabucasa",
-    "haversine",
-    "hbmqtt",
-    "hdate",
-    "hole",
-    "holidays",
-    "home-assistant-frontend",
-    "homekit[IP]",
-    "homematicip",
-    "httplib2",
-    "huawei-lte-api",
-    "iaqualink",
-    "influxdb",
-    "jsonpath",
-    "libpurecool",
-    "libsoundtouch",
-    "luftdaten",
-    "mbddns",
-    "mficlient",
-    "minio",
-    "netdisco",
-    "nokia",
-    "numpy",
-    "oauth2client",
-    "paho-mqtt",
-    "pexpect",
-    "pilight",
-    "pmsensor",
-    "prometheus_client",
-    "ptvsd",
-    "pushbullet.py",
-    "py-canary",
-    "py17track",
-    "pyblackbird",
-    "pychromecast",
-    "pydeconz",
-    "pydispatcher",
-    "pyheos",
-    "pyhomematic",
-    "pyHS100",
-    "pyiqvia",
-    "pylinky",
-    "pylitejet",
-    "pyMetno",
-    "pymfy",
-    "pymonoprice",
-    "PyNaCl",
-    "pynws",
-    "pynx584",
-    "pyopenuv",
-    "pyotp",
-    "pyps4-homeassistant",
-    "pyqwikswitch",
-    "PyRMVtransport",
-    "pysma",
-    "pysmartapp",
-    "pysmartthings",
-    "pysonos",
-    "pyspcwebgw",
-    "python_awair",
-    "python-forecastio",
-    "python-nest",
-    "python-velbus",
-    "pythonwhois",
-    "pytradfri[async]",
-    "PyTransportNSW",
-    "pyunifi",
-    "pyupnp-async",
-    "pyvesync",
-    "pywebpush",
-    "regenmaschine",
-    "restrictedpython",
-    "rflink",
-    "ring_doorbell",
-    "ruamel.yaml",
-    "rxv",
-    "simplisafe-python",
-    "sleepyq",
-    "smhi-pkg",
-    "solaredge",
-    "somecomfort",
-    "sqlalchemy",
-    "srpenergy",
-    "statsd",
-    "toonapilib",
-    "twentemilieu",
-    "uvcclient",
-    "vsure",
-    "vultr",
-    "wakeonlan",
-    "warrant",
-    "YesssSMS",
-    "zeroconf",
-    "zigpy-homeassistant",
-)
-
 IGNORE_PIN = ("colorlog>2.1,<3", "keyring>=9.3,<10.0", "urllib3")
-
-IGNORE_REQ = ("colorama<=1",)  # Windows only requirement in check_config
 
 URL_PIN = (
     "https://developers.home-assistant.io/docs/"
@@ -200,10 +63,29 @@ enum34==1000000000.0.0
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
-
-# Contains code to modify Home Assistant to work around our rules
-python-systemair-savecair==1000000000.0.0
 """
+
+
+def has_tests(module: str):
+    """Test if a module has tests.
+
+    Module format: homeassistant.components.hue
+    Test if exists: tests/components/hue
+    """
+    path = Path(module.replace(".", "/").replace("homeassistant", "tests"))
+    if not path.exists():
+        return False
+
+    if not path.is_dir():
+        return True
+
+    # Dev environments might have stale directories around
+    # from removed tests. Check for that.
+    content = [f.name for f in path.glob("*")]
+
+    # Directories need to contain more than `__pycache__`
+    # to exist in Git and so be seen by CI.
+    return content != ["__pycache__"]
 
 
 def explore_module(package, explore_children):
@@ -226,8 +108,9 @@ def explore_module(package, explore_children):
 
 def core_requirements():
     """Gather core requirements out of setup.py."""
-    with open("setup.py") as inp:
-        reqs_raw = re.search(r"REQUIRES = \[(.*?)\]", inp.read(), re.S).group(1)
+    reqs_raw = re.search(
+        r"REQUIRES = \[(.*?)\]", Path("setup.py").read_text(), re.S
+    ).group(1)
     return [x[1] for x in re.findall(r"(['\"])(.*?)\1", reqs_raw)]
 
 
@@ -237,7 +120,7 @@ def gather_recursive_requirements(domain, seen=None):
         seen = set()
 
     seen.add(domain)
-    integration = Integration(pathlib.Path(f"homeassistant/components/{domain}"))
+    integration = Integration(Path(f"homeassistant/components/{domain}"))
     integration.load_manifest()
     reqs = set(integration.manifest["requirements"])
     for dep_domain in integration.manifest["dependencies"]:
@@ -272,7 +155,7 @@ def gather_modules():
 
 def gather_requirements_from_manifests(errors, reqs):
     """Gather all of the requirements from manifests."""
-    integrations = Integration.load_dir(pathlib.Path("homeassistant/components"))
+    integrations = Integration.load_dir(Path("homeassistant/components"))
     for domain in sorted(integrations):
         integration = integrations[domain]
 
@@ -308,8 +191,6 @@ def gather_requirements_from_modules(errors, reqs):
 def process_requirements(errors, module_requirements, package, reqs):
     """Process all of the requirements."""
     for req in module_requirements:
-        if req in IGNORE_REQ:
-            continue
         if "://" in req:
             errors.append(f"{package}[Only pypi dependencies are allowed: {req}]")
         if req.partition("==")[1] == "" and req not in IGNORE_PIN:
@@ -346,17 +227,21 @@ def requirements_all_output(reqs):
 def requirements_test_output(reqs):
     """Generate output for test_requirements."""
     output = []
-    output.append("# Home Assistant test")
-    output.append("\n")
-    with open("requirements_test.txt") as test_file:
-        output.append(test_file.read())
-    output.append("\n")
+    output.append("# Home Assistant tests, full dependency set\n")
+    output.append(
+        f"# Automatically generated by {Path(__file__).name}, do not edit\n\n"
+    )
+    output.append("-r requirements_test.txt\n")
+
     filtered = {
-        key: value
-        for key, value in reqs.items()
+        requirement: modules
+        for requirement, modules in reqs.items()
         if any(
-            re.search(r"(^|#){}($|[=><])".format(re.escape(ign)), key) is not None
-            for ign in TEST_REQUIREMENTS
+            # Always install requirements that are not part of integrations
+            not mdl.startswith("homeassistant.components.") or
+            # Install tests for integrations that have tests
+            has_tests(mdl)
+            for mdl in modules
         )
     }
     output.append(generate_requirements_list(filtered))
@@ -364,50 +249,48 @@ def requirements_test_output(reqs):
     return "".join(output)
 
 
+def requirements_pre_commit_output():
+    """Generate output for pre-commit dependencies."""
+    source = ".pre-commit-config-all.yaml"
+    pre_commit_conf = load_yaml(source)
+    reqs = []
+    for repo in (x for x in pre_commit_conf["repos"] if x.get("rev")):
+        for hook in repo["hooks"]:
+            reqs.append(f"{hook['id']}=={repo['rev']}")
+            reqs.extend(x for x in hook.get("additional_dependencies", ()))
+    output = [
+        f"# Automatically generated "
+        f"from {source} by {Path(__file__).name}, do not edit",
+        "",
+    ]
+    output.extend(sorted(reqs))
+    return "\n".join(output) + "\n"
+
+
 def gather_constraints():
     """Construct output for constraint file."""
-    return "\n".join(
-        sorted(
-            core_requirements() + list(gather_recursive_requirements("default_config"))
+    return (
+        "\n".join(
+            sorted(
+                core_requirements()
+                + list(gather_recursive_requirements("default_config"))
+            )
+            + [""]
         )
-        + [""]
+        + CONSTRAINT_BASE
     )
 
 
-def write_requirements_file(data):
-    """Write the modules to the requirements_all.txt."""
-    with open("requirements_all.txt", "w+", newline="\n") as req_file:
-        req_file.write(data)
-
-
-def write_test_requirements_file(data):
-    """Write the modules to the requirements_test_all.txt."""
-    with open("requirements_test_all.txt", "w+", newline="\n") as req_file:
-        req_file.write(data)
-
-
-def write_constraints_file(data):
-    """Write constraints to a file."""
-    with open(CONSTRAINT_PATH, "w+", newline="\n") as req_file:
-        req_file.write(data + CONSTRAINT_BASE)
-
-
-def validate_requirements_file(data):
-    """Validate if requirements_all.txt is up to date."""
-    with open("requirements_all.txt", "r") as req_file:
-        return data == req_file.read()
-
-
-def validate_requirements_test_file(data):
-    """Validate if requirements_test_all.txt is up to date."""
-    with open("requirements_test_all.txt", "r") as req_file:
-        return data == req_file.read()
-
-
-def validate_constraints_file(data):
-    """Validate if constraints is up to date."""
-    with open(CONSTRAINT_PATH, "r") as req_file:
-        return data + CONSTRAINT_BASE == req_file.read()
+def diff_file(filename, content):
+    """Diff a file."""
+    return list(
+        difflib.context_diff(
+            [line + "\n" for line in Path(filename).read_text().split("\n")],
+            [line + "\n" for line in content.split("\n")],
+            filename,
+            "generated",
+        )
+    )
 
 
 def main(validate):
@@ -421,33 +304,40 @@ def main(validate):
     if data is None:
         return 1
 
-    constraints = gather_constraints()
-
     reqs_file = requirements_all_output(data)
     reqs_test_file = requirements_test_output(data)
+    reqs_pre_commit_file = requirements_pre_commit_output()
+    constraints = gather_constraints()
+
+    files = (
+        ("requirements_all.txt", reqs_file),
+        ("requirements_test_pre_commit.txt", reqs_pre_commit_file),
+        ("requirements_test_all.txt", reqs_test_file),
+        ("homeassistant/package_constraints.txt", constraints),
+    )
 
     if validate:
         errors = []
-        if not validate_requirements_file(reqs_file):
-            errors.append("requirements_all.txt is not up to date")
 
-        if not validate_requirements_test_file(reqs_test_file):
-            errors.append("requirements_test_all.txt is not up to date")
-
-        if not validate_constraints_file(constraints):
-            errors.append("home-assistant/package_constraints.txt is not up to date")
+        for filename, content in files:
+            diff = diff_file(filename, content)
+            if diff:
+                errors.append("".join(diff))
 
         if errors:
-            print("******* ERROR")
-            print("\n".join(errors))
-            print("Please run script/gen_requirements_all.py")
+            print("ERROR - FOUND THE FOLLOWING DIFFERENCES")
+            print()
+            print()
+            print("\n\n".join(errors))
+            print()
+            print("Please run python3 -m script.gen_requirements_all")
             return 1
 
         return 0
 
-    write_requirements_file(reqs_file)
-    write_test_requirements_file(reqs_test_file)
-    write_constraints_file(constraints)
+    for filename, content in files:
+        Path(filename).write_text(content)
+
     return 0
 
 

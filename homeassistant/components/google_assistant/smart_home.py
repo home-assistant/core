@@ -5,7 +5,7 @@ import logging
 
 from homeassistant.util.decorator import Registry
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, __version__
 
 from .const import (
     ERR_PROTOCOL_ERROR,
@@ -24,9 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_handle_message(hass, config, user_id, message):
     """Handle incoming API messages."""
-    request_id: str = message.get("requestId")
-
-    data = RequestData(config, user_id, request_id)
+    data = RequestData(config, user_id, message["requestId"], message.get("devices"))
 
     response = await _process(hass, data, message)
 
@@ -67,6 +65,7 @@ async def _process(hass, data, message):
 
     if result is None:
         return None
+
     return {"requestId": data.request_id, "payload": result}
 
 
@@ -74,7 +73,7 @@ async def _process(hass, data, message):
 async def async_devices_sync(hass, data, payload):
     """Handle action.devices.SYNC request.
 
-    https://developers.google.com/actions/smarthome/create-app#actiondevicessync
+    https://developers.google.com/assistant/smarthome/develop/process-intents#SYNC
     """
     hass.bus.async_fire(
         EVENT_SYNC_RECEIVED, {"request_id": data.request_id}, context=data.context
@@ -84,7 +83,7 @@ async def async_devices_sync(hass, data, payload):
         *(
             entity.sync_serialize()
             for entity in async_get_entities(hass, data.config)
-            if data.config.should_expose(entity.state)
+            if entity.should_expose()
         )
     )
 
@@ -100,7 +99,7 @@ async def async_devices_sync(hass, data, payload):
 async def async_devices_query(hass, data, payload):
     """Handle action.devices.QUERY request.
 
-    https://developers.google.com/actions/smarthome/create-app#actiondevicesquery
+    https://developers.google.com/assistant/smarthome/develop/process-intents#QUERY
     """
     devices = {}
     for device in payload.get("devices", []):
@@ -128,7 +127,7 @@ async def async_devices_query(hass, data, payload):
 async def handle_devices_execute(hass, data, payload):
     """Handle action.devices.EXECUTE request.
 
-    https://developers.google.com/actions/smarthome/create-app#actiondevicesexecute
+    https://developers.google.com/assistant/smarthome/develop/process-intents#EXECUTE
     """
     entities = {}
     results = {}
@@ -193,12 +192,51 @@ async def handle_devices_execute(hass, data, payload):
 
 
 @HANDLERS.register("action.devices.DISCONNECT")
-async def async_devices_disconnect(hass, data, payload):
+async def async_devices_disconnect(hass, data: RequestData, payload):
     """Handle action.devices.DISCONNECT request.
+
+    https://developers.google.com/assistant/smarthome/develop/process-intents#DISCONNECT
+    """
+    await data.config.async_deactivate_report_state()
+    return None
+
+
+@HANDLERS.register("action.devices.IDENTIFY")
+async def async_devices_identify(hass, data: RequestData, payload):
+    """Handle action.devices.IDENTIFY request.
+
+    https://developers.google.com/assistant/smarthome/develop/local#implement_the_identify_handler
+    """
+    return {
+        "device": {
+            "id": data.config.agent_user_id,
+            "isLocalOnly": True,
+            "isProxy": True,
+            "deviceInfo": {
+                "hwVersion": "UNKNOWN_HW_VERSION",
+                "manufacturer": "Home Assistant",
+                "model": "Home Assistant",
+                "swVersion": __version__,
+            },
+        }
+    }
+
+
+@HANDLERS.register("action.devices.REACHABLE_DEVICES")
+async def async_devices_reachable(hass, data: RequestData, payload):
+    """Handle action.devices.REACHABLE_DEVICES request.
 
     https://developers.google.com/actions/smarthome/create#actiondevicesdisconnect
     """
-    return None
+    google_ids = set(dev["id"] for dev in (data.devices or []))
+
+    return {
+        "devices": [
+            entity.reachable_device_serialize()
+            for entity in async_get_entities(hass, data.config)
+            if entity.entity_id in google_ids and entity.should_expose()
+        ]
+    }
 
 
 def turned_off_response(message):

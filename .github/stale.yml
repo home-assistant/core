@@ -13,6 +13,7 @@ onlyLabels: []
 # Issues or Pull Requests with these labels will never be considered stale. Set to `[]` to disable
 exemptLabels:
   - under investigation
+  - Help wanted
 
 # Set to true to ignore issues in a project (defaults to false)
 exemptProjects: true

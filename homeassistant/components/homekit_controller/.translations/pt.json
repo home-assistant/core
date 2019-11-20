@@ -4,7 +4,8 @@
             "pair": {
                 "data": {
                     "pairing_code": "C\u00f3digo de emparelhamento"
-                }
+                },
+                "title": "Emparelhar com o acess\u00f3rio HomeKit"
             },
             "user": {
                 "data": {

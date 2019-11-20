@@ -12,6 +12,10 @@ DEFAULT_NAME = "Pi-Hole"
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
+SERVICE_DISABLE = "disable"
+SERVICE_ENABLE = "enable"
+SERVICE_DISABLE_ATTR_DURATION = "duration"
+
 ATTR_BLOCKED_DOMAINS = "domains_blocked"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)

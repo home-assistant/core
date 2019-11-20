@@ -1,14 +1,15 @@
 """Support for departure information for public transport in Munich."""
-import logging
-from datetime import timedelta
-
 from copy import deepcopy
+from datetime import timedelta
+import logging
+
+import MVGLive
 import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -150,8 +151,6 @@ class MVGLiveData:
         self, station, destinations, directions, lines, products, timeoffset, number
     ):
         """Initialize the sensor."""
-        import MVGLive
-
         self._station = station
         self._destinations = destinations
         self._directions = directions
@@ -189,17 +188,19 @@ class MVGLiveData:
                 and _departure["destination"] not in self._destinations
             ):
                 continue
-            elif (
+
+            if (
                 "" not in self._directions[:1]
                 and _departure["direction"] not in self._directions
             ):
                 continue
-            elif (
-                "" not in self._lines[:1] and _departure["linename"] not in self._lines
-            ):
+
+            if "" not in self._lines[:1] and _departure["linename"] not in self._lines:
                 continue
-            elif _departure["time"] < self._timeoffset:
+
+            if _departure["time"] < self._timeoffset:
                 continue
+
             # now select the relevant data
             _nextdep = {ATTR_ATTRIBUTION: ATTRIBUTION}
             for k in ["destination", "linename", "time", "direction", "product"]:

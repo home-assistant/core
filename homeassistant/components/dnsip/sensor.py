@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+import aiodns
+from aiodns.error import DNSError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -58,7 +60,6 @@ class WanIpSensor(Entity):
 
     def __init__(self, hass, name, hostname, resolver, ipv6):
         """Initialize the DNS IP sensor."""
-        import aiodns
 
         self.hass = hass
         self._name = name
@@ -80,7 +81,6 @@ class WanIpSensor(Entity):
 
     async def async_update(self):
         """Get the current DNS IP address for hostname."""
-        from aiodns.error import DNSError
 
         try:
             response = await self.resolver.query(self.hostname, self.querytype)

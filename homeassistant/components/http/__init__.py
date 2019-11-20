@@ -17,22 +17,20 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util as hass_util
 from homeassistant.util import ssl as ssl_util
-from homeassistant.util.logging import HideSensitiveDataFilter
 
 from .auth import setup_auth
 from .ban import setup_bans
-from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_HASS_USER, KEY_REAL_IP  # noqa
+from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_HASS_USER, KEY_REAL_IP  # noqa: F401
 from .cors import setup_cors
 from .real_ip import setup_real_ip
 from .static import CACHE_HEADERS, CachingStaticResource
-from .view import HomeAssistantView  # noqa
+from .view import HomeAssistantView  # noqa: F401
 
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 DOMAIN = "http"
 
-CONF_API_PASSWORD = "api_password"
 CONF_SERVER_HOST = "server_host"
 CONF_SERVER_PORT = "server_port"
 CONF_BASE_URL = "base_url"
@@ -42,7 +40,6 @@ CONF_SSL_KEY = "ssl_key"
 CONF_CORS_ORIGINS = "cors_allowed_origins"
 CONF_USE_X_FORWARDED_FOR = "use_x_forwarded_for"
 CONF_TRUSTED_PROXIES = "trusted_proxies"
-CONF_TRUSTED_NETWORKS = "trusted_networks"
 CONF_LOGIN_ATTEMPTS_THRESHOLD = "login_attempts_threshold"
 CONF_IP_BAN_ENABLED = "ip_ban_enabled"
 CONF_SSL_PROFILE = "ssl_profile"
@@ -59,37 +56,8 @@ DEFAULT_CORS = "https://cast.home-assistant.io"
 NO_LOGIN_ATTEMPT_THRESHOLD = -1
 
 
-def trusted_networks_deprecated(value):
-    """Warn user trusted_networks config is deprecated."""
-    if not value:
-        return value
-
-    _LOGGER.warning(
-        "Configuring trusted_networks via the http integration has been"
-        " deprecated. Use the trusted networks auth provider instead."
-        " For instructions, see https://www.home-assistant.io/docs/"
-        "authentication/providers/#trusted-networks"
-    )
-    return value
-
-
-def api_password_deprecated(value):
-    """Warn user api_password config is deprecated."""
-    if not value:
-        return value
-
-    _LOGGER.warning(
-        "Configuring api_password via the http integration has been"
-        " deprecated. Use the legacy api password auth provider instead."
-        " For instructions, see https://www.home-assistant.io/docs/"
-        "authentication/providers/#legacy-api-password"
-    )
-    return value
-
-
 HTTP_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_API_PASSWORD): vol.All(cv.string, api_password_deprecated),
         vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST): cv.string,
         vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
         vol.Optional(CONF_BASE_URL): cv.string,
@@ -102,9 +70,6 @@ HTTP_SCHEMA = vol.Schema(
         vol.Inclusive(CONF_USE_X_FORWARDED_FOR, "proxy"): cv.boolean,
         vol.Inclusive(CONF_TRUSTED_PROXIES, "proxy"): vol.All(
             cv.ensure_list, [ip_network]
-        ),
-        vol.Optional(CONF_TRUSTED_NETWORKS, default=[]): vol.All(
-            cv.ensure_list, [ip_network], trusted_networks_deprecated
         ),
         vol.Optional(
             CONF_LOGIN_ATTEMPTS_THRESHOLD, default=NO_LOGIN_ATTEMPT_THRESHOLD
@@ -128,6 +93,7 @@ class ApiConfig:
         """Initialize a new API config object."""
         self.host = host
         self.port = port
+        self.use_ssl = use_ssl
 
         host = host.rstrip("/")
         if host.startswith(("http://", "https://")):
@@ -148,7 +114,6 @@ async def async_setup(hass, config):
     if conf is None:
         conf = HTTP_SCHEMA({})
 
-    api_password = conf.get(CONF_API_PASSWORD)
     server_host = conf[CONF_SERVER_HOST]
     server_port = conf[CONF_SERVER_PORT]
     ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
@@ -160,11 +125,6 @@ async def async_setup(hass, config):
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
     ssl_profile = conf[CONF_SSL_PROFILE]
-
-    if api_password is not None:
-        logging.getLogger("aiohttp.access").addFilter(
-            HideSensitiveDataFilter(api_password)
-        )
 
     server = HomeAssistantHTTP(
         hass,

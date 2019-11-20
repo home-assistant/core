@@ -60,8 +60,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if instance is None or namespace is None:
             _LOGGER.error("Skipping %s", dev_name)
             continue
-        else:
-            devices.append(EddystoneTemp(name, namespace, instance))
+
+        devices.append(EddystoneTemp(name, namespace, instance))
 
     if devices:
         mon = Monitor(hass, devices, bt_device_id)

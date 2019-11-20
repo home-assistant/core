@@ -1,6 +1,6 @@
 """Classes to help gather user submissions."""
 import logging
-from typing import Dict, Any, Callable, Hashable, List, Optional
+from typing import Dict, Any, Callable, List, Optional
 import uuid
 import voluptuous as vol
 from .core import callback, HomeAssistant
@@ -58,7 +58,7 @@ class FlowManager:
         ]
 
     async def async_init(
-        self, handler: Hashable, *, context: Optional[Dict] = None, data: Any = None
+        self, handler: str, *, context: Optional[Dict] = None, data: Any = None
     ) -> Any:
         """Start a configuration flow."""
         if context is None:
@@ -168,9 +168,9 @@ class FlowHandler:
     """Handle the configuration flow of a component."""
 
     # Set by flow manager
-    flow_id: Optional[str] = None
+    flow_id: str = None  # type: ignore
     hass: Optional[HomeAssistant] = None
-    handler = None
+    handler: Optional[str] = None
     cur_step: Optional[Dict[str, str]] = None
     context: Dict
 
@@ -188,7 +188,7 @@ class FlowHandler:
         data_schema: vol.Schema = None,
         errors: Optional[Dict] = None,
         description_placeholders: Optional[Dict] = None,
-    ) -> Dict:
+    ) -> Dict[str, Any]:
         """Return the definition of a form to gather user input."""
         return {
             "type": RESULT_TYPE_FORM,
@@ -208,7 +208,7 @@ class FlowHandler:
         data: Dict,
         description: Optional[str] = None,
         description_placeholders: Optional[Dict] = None,
-    ) -> Dict:
+    ) -> Dict[str, Any]:
         """Finish config flow and create a config entry."""
         return {
             "version": self.VERSION,
@@ -224,7 +224,7 @@ class FlowHandler:
     @callback
     def async_abort(
         self, *, reason: str, description_placeholders: Optional[Dict] = None
-    ) -> Dict:
+    ) -> Dict[str, Any]:
         """Abort the config flow."""
         return {
             "type": RESULT_TYPE_ABORT,
@@ -237,7 +237,7 @@ class FlowHandler:
     @callback
     def async_external_step(
         self, *, step_id: str, url: str, description_placeholders: Optional[Dict] = None
-    ) -> Dict:
+    ) -> Dict[str, Any]:
         """Return the definition of an external step for the user to take."""
         return {
             "type": RESULT_TYPE_EXTERNAL_STEP,
@@ -249,7 +249,7 @@ class FlowHandler:
         }
 
     @callback
-    def async_external_step_done(self, *, next_step_id: str) -> Dict:
+    def async_external_step_done(self, *, next_step_id: str) -> Dict[str, Any]:
         """Return the definition of an external step for the user to take."""
         return {
             "type": RESULT_TYPE_EXTERNAL_STEP_DONE,

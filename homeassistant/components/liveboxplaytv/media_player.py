@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+from liveboxplaytv import LiveboxPlayTv
+import pyteleloisirs
 import requests
 import voluptuous as vol
 
@@ -85,7 +87,6 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
 
     def __init__(self, host, port, name):
         """Initialize the Livebox Play TV device."""
-        from liveboxplaytv import LiveboxPlayTv
 
         self._client = LiveboxPlayTv(host, port)
         # Assume that the appliance is not muted
@@ -103,7 +104,6 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
 
     async def async_update(self):
         """Retrieve the latest data."""
-        import pyteleloisirs
 
         try:
             self._state = self.refresh_state()

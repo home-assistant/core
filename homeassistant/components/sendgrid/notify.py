@@ -3,6 +3,8 @@ import logging
 
 import voluptuous as vol
 
+from sendgrid import SendGridAPIClient
+
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_RECIPIENT,
@@ -45,8 +47,6 @@ class SendgridNotificationService(BaseNotificationService):
 
     def __init__(self, config):
         """Initialize the service."""
-        from sendgrid import SendGridAPIClient
-
         self.api_key = config[CONF_API_KEY]
         self.sender = config[CONF_SENDER]
         self.sender_name = config[CONF_SENDER_NAME]

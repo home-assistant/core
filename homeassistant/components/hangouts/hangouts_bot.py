@@ -308,9 +308,10 @@ class HangoutsBot:
     async def _async_list_conversations(self):
         import hangups
 
-        self._user_list, self._conversation_list = await hangups.build_user_conversation_list(
-            self._client
-        )
+        (
+            self._user_list,
+            self._conversation_list,
+        ) = await hangups.build_user_conversation_list(self._client)
         conversations = {}
         for i, conv in enumerate(self._conversation_list.get_all()):
             users_in_conversation = []

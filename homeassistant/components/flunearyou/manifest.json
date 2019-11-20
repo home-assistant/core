@@ -1,7 +1,7 @@
 {
   "domain": "flunearyou",
   "name": "Flunearyou",
-  "documentation": "https://www.home-assistant.io/components/flunearyou",
+  "documentation": "https://www.home-assistant.io/integrations/flunearyou",
   "requirements": [
     "pyflunearyou==1.0.3"
   ],

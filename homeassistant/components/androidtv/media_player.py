@@ -1,8 +1,16 @@
 """Support for functionality to interact with Android TV / Fire TV devices."""
 import functools
 import logging
+import os
 import voluptuous as vol
 
+from adb_shell.auth.keygen import keygen
+from adb_shell.exceptions import (
+    InvalidChecksumError,
+    InvalidCommandError,
+    InvalidResponseError,
+    TcpTimeoutException,
+)
 from androidtv import setup, ha_state_detection_rules_validator
 from androidtv.constants import APPS, KEYS
 
@@ -34,6 +42,7 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.storage import STORAGE_DIR
 
 ANDROIDTV_DOMAIN = "androidtv"
 
@@ -123,38 +132,49 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Android TV / Fire TV platform."""
     hass.data.setdefault(ANDROIDTV_DOMAIN, {})
 
-    host = "{0}:{1}".format(config[CONF_HOST], config[CONF_PORT])
+    host = f"{config[CONF_HOST]}:{config[CONF_PORT]}"
 
     if CONF_ADB_SERVER_IP not in config:
-        # Use "python-adb" (Python ADB implementation)
-        adb_log = "using Python ADB implementation "
-        if CONF_ADBKEY in config:
+        # Use "adb_shell" (Python ADB implementation)
+        if CONF_ADBKEY not in config:
+            # Generate ADB key files (if they don't exist)
+            adbkey = hass.config.path(STORAGE_DIR, "androidtv_adbkey")
+            if not os.path.isfile(adbkey):
+                keygen(adbkey)
+
+            adb_log = f"using Python ADB implementation with adbkey='{adbkey}'"
+
+            aftv = setup(
+                host,
+                adbkey,
+                device_class=config[CONF_DEVICE_CLASS],
+                state_detection_rules=config[CONF_STATE_DETECTION_RULES],
+                auth_timeout_s=10.0,
+            )
+
+        else:
+            adb_log = (
+                f"using Python ADB implementation with adbkey='{config[CONF_ADBKEY]}'"
+            )
+
             aftv = setup(
                 host,
                 config[CONF_ADBKEY],
                 device_class=config[CONF_DEVICE_CLASS],
                 state_detection_rules=config[CONF_STATE_DETECTION_RULES],
+                auth_timeout_s=10.0,
             )
-            adb_log += "with adbkey='{0}'".format(config[CONF_ADBKEY])
 
-        else:
-            aftv = setup(
-                host,
-                device_class=config[CONF_DEVICE_CLASS],
-                state_detection_rules=config[CONF_STATE_DETECTION_RULES],
-            )
-            adb_log += "without adbkey authentication"
     else:
         # Use "pure-python-adb" (communicate with ADB server)
+        adb_log = f"using ADB server at {config[CONF_ADB_SERVER_IP]}:{config[CONF_ADB_SERVER_PORT]}"
+
         aftv = setup(
             host,
             adb_server_ip=config[CONF_ADB_SERVER_IP],
             adb_server_port=config[CONF_ADB_SERVER_PORT],
             device_class=config[CONF_DEVICE_CLASS],
             state_detection_rules=config[CONF_STATE_DETECTION_RULES],
-        )
-        adb_log = "using ADB server at {0}:{1}".format(
-            config[CONF_ADB_SERVER_IP], config[CONF_ADB_SERVER_PORT]
         )
 
     if not aftv.available:
@@ -232,14 +252,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 def adb_decorator(override_available=False):
-    """Send an ADB command if the device is available and catch exceptions."""
+    """Wrap ADB methods and catch exceptions.
+
+    Allows for overriding the available status of the ADB connection via the
+    `override_available` parameter.
+    """
 
     def _adb_decorator(func):
-        """Wait if previous ADB commands haven't finished."""
+        """Wrap the provided ADB method and catch exceptions."""
 
         @functools.wraps(func)
         def _adb_exception_catcher(self, *args, **kwargs):
-            # If the device is unavailable, don't do anything
+            """Call an ADB-related method and catch exceptions."""
             if not self.available and not override_available:
                 return None
 
@@ -251,6 +275,7 @@ def adb_decorator(override_available=False):
                     "establishing attempt in the next update. Error: %s",
                     err,
                 )
+                self.aftv.adb_close()
                 self._available = False  # pylint: disable=protected-access
                 return None
 
@@ -266,8 +291,11 @@ class ADBDevice(MediaPlayerDevice):
         """Initialize the Android TV / Fire TV device."""
         self.aftv = aftv
         self._name = name
-        self._apps = APPS.copy()
-        self._apps.update(apps)
+        self._app_id_to_name = APPS.copy()
+        self._app_id_to_name.update(apps)
+        self._app_name_to_id = {
+            value: key for key, value in self._app_id_to_name.items()
+        }
         self._keys = KEYS
 
         self._device_properties = self.aftv.device_properties
@@ -278,14 +306,7 @@ class ADBDevice(MediaPlayerDevice):
 
         # ADB exceptions to catch
         if not self.aftv.adb_server_ip:
-            # Using "python-adb" (Python ADB implementation)
-            from adb.adb_protocol import (
-                InvalidChecksumError,
-                InvalidCommandError,
-                InvalidResponseError,
-            )
-            from adb.usb_exceptions import TcpTimeoutException
-
+            # Using "adb_shell" (Python ADB implementation)
             self.exceptions = (
                 AttributeError,
                 BrokenPipeError,
@@ -302,7 +323,7 @@ class ADBDevice(MediaPlayerDevice):
 
         # Property attributes
         self._adb_response = None
-        self._available = self.aftv.available
+        self._available = True
         self._current_app = None
         self._state = None
 
@@ -314,7 +335,7 @@ class ADBDevice(MediaPlayerDevice):
     @property
     def app_name(self):
         """Return the friendly name of the current app."""
-        return self._apps.get(self._current_app, self._current_app)
+        return self._app_id_to_name.get(self._current_app, self._current_app)
 
     @property
     def available(self):
@@ -429,7 +450,7 @@ class AndroidTVDevice(ADBDevice):
         # Check if device is disconnected.
         if not self._available:
             # Try to connect
-            self._available = self.aftv.connect(always_log_errors=False)
+            self._available = self.aftv.adb_connect(always_log_errors=False)
 
             # To be safe, wait until the next update to run ADB commands if
             # using the Python ADB implementation.
@@ -441,9 +462,13 @@ class AndroidTVDevice(ADBDevice):
             return
 
         # Get the updated state and attributes.
-        state, self._current_app, self._device, self._is_volume_muted, self._volume_level = (
-            self.aftv.update()
-        )
+        (
+            state,
+            self._current_app,
+            self._device,
+            self._is_volume_muted,
+            self._volume_level,
+        ) = self.aftv.update()
 
         self._state = ANDROIDTV_STATES.get(state)
         if self._state is None:
@@ -500,7 +525,7 @@ class FireTVDevice(ADBDevice):
         super().__init__(aftv, name, apps, turn_on_command, turn_off_command)
 
         self._get_sources = get_sources
-        self._running_apps = None
+        self._sources = None
 
     @adb_decorator(override_available=True)
     def update(self):
@@ -508,7 +533,7 @@ class FireTVDevice(ADBDevice):
         # Check if device is disconnected.
         if not self._available:
             # Try to connect
-            self._available = self.aftv.connect(always_log_errors=False)
+            self._available = self.aftv.adb_connect(always_log_errors=False)
 
             # To be safe, wait until the next update to run ADB commands if
             # using the Python ADB implementation.
@@ -520,23 +545,28 @@ class FireTVDevice(ADBDevice):
             return
 
         # Get the `state`, `current_app`, and `running_apps`.
-        state, self._current_app, self._running_apps = self.aftv.update(
-            self._get_sources
-        )
+        state, self._current_app, running_apps = self.aftv.update(self._get_sources)
 
         self._state = ANDROIDTV_STATES.get(state)
         if self._state is None:
             self._available = False
 
+        if running_apps:
+            self._sources = [
+                self._app_id_to_name.get(app_id, app_id) for app_id in running_apps
+            ]
+        else:
+            self._sources = None
+
     @property
     def source(self):
         """Return the current app."""
-        return self._current_app
+        return self._app_id_to_name.get(self._current_app, self._current_app)
 
     @property
     def source_list(self):
         """Return a list of running apps."""
-        return self._running_apps
+        return self._sources
 
     @property
     def supported_features(self):
@@ -557,6 +587,7 @@ class FireTVDevice(ADBDevice):
         """
         if isinstance(source, str):
             if not source.startswith("!"):
-                self.aftv.launch_app(source)
+                self.aftv.launch_app(self._app_name_to_id.get(source, source))
             else:
-                self.aftv.stop_app(source[1:].lstrip())
+                source_ = source[1:].lstrip()
+                self.aftv.stop_app(self._app_name_to_id.get(source_, source_))

@@ -5,6 +5,9 @@ import logging
 import os
 import time
 
+from aiohttp.web import Response
+import pywink
+from pubnubsubhandler import PubNubSubscriptionHandler
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
@@ -279,8 +282,6 @@ def _request_oauth_completion(hass, config):
 
 def setup(hass, config):
     """Set up the Wink component."""
-    import pywink
-    from pubnubsubhandler import PubNubSubscriptionHandler
 
     if hass.data.get(DOMAIN) is None:
         hass.data[DOMAIN] = {
@@ -689,8 +690,6 @@ class WinkAuthCallbackView(HomeAssistantView):
     @callback
     def get(self, request):
         """Finish OAuth callback request."""
-        from aiohttp import web
-
         hass = request.app["hass"]
         data = request.query
 
@@ -715,15 +714,13 @@ class WinkAuthCallbackView(HomeAssistantView):
 
             hass.async_add_job(setup, hass, self.config)
 
-            return web.Response(
+            return Response(
                 text=html_response.format(response_message), content_type="text/html"
             )
 
         error_msg = "No code returned from Wink API"
         _LOGGER.error(error_msg)
-        return web.Response(
-            text=html_response.format(error_msg), content_type="text/html"
-        )
+        return Response(text=html_response.format(error_msg), content_type="text/html")
 
 
 class WinkDevice(Entity):
@@ -863,7 +860,7 @@ class WinkSirenDevice(WinkDevice):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        attributes = super(WinkSirenDevice, self).device_state_attributes
+        attributes = super().device_state_attributes
 
         auto_shutoff = self.wink.auto_shutoff()
         if auto_shutoff is not None:
@@ -921,7 +918,7 @@ class WinkNimbusDialDevice(WinkDevice):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        attributes = super(WinkNimbusDialDevice, self).device_state_attributes
+        attributes = super().device_state_attributes
         dial_attributes = self.dial_attributes()
 
         return {**attributes, **dial_attributes}

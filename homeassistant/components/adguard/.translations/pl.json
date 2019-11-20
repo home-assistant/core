@@ -1,6 +1,8 @@
 {
     "config": {
         "abort": {
+            "adguard_home_addon_outdated": "Ta integracja wymaga AdGuard Home {minimal_version} lub nowszej wersji, masz {current_version}. Zaktualizuj sw\u00f3j dodatek Hass.io AdGuard Home.",
+            "adguard_home_outdated": "Ta integracja wymaga AdGuard Home {minimal_version} lub nowszej wersji, masz {current_version}.",
             "existing_instance_updated": "Zaktualizowano istniej\u0105c\u0105 konfiguracj\u0119.",
             "single_instance_allowed": "Dozwolona jest tylko jedna konfiguracja AdGuard Home."
         },
@@ -22,7 +24,7 @@
                     "verify_ssl": "AdGuard Home u\u017cywa odpowiedniego certyfikatu."
                 },
                 "description": "Skonfiguruj instancj\u0119 AdGuard Home, aby umo\u017cliwi\u0107 monitorowanie i kontrol\u0119.",
-                "title": "Po\u0142\u0105cz sw\u00f3j AdGuard Home"
+                "title": "Po\u0142\u0105cz AdGuard Home"
             }
         },
         "title": "AdGuard Home"

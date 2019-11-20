@@ -2,19 +2,20 @@
 import asyncio
 from datetime import timedelta
 import logging
-from urllib3.exceptions import HTTPError
 
 from amcrest import AmcrestError
+from haffmpeg.camera import CameraMjpeg
+from urllib3.exceptions import HTTPError
 import voluptuous as vol
 
 from homeassistant.components.camera import (
-    Camera,
     CAMERA_SERVICE_SCHEMA,
     SUPPORT_ON_OFF,
     SUPPORT_STREAM,
+    Camera,
 )
 from homeassistant.components.ffmpeg import DATA_FFMPEG
-from homeassistant.const import CONF_NAME, STATE_ON, STATE_OFF
+from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream,
     async_aiohttp_proxy_web,
@@ -159,7 +160,6 @@ class AmcrestCam(Camera):
             return await async_aiohttp_proxy_web(self.hass, request, stream_coro)
 
         # streaming via ffmpeg
-        from haffmpeg.camera import CameraMjpeg
 
         streaming_url = self._rtsp_url
         stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)

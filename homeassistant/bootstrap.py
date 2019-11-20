@@ -33,6 +33,8 @@ STAGE_1_INTEGRATIONS = {
     "recorder",
     # To make sure we forward data to other instances
     "mqtt_eventstream",
+    # To provide account link implementations
+    "cloud",
 }
 
 
@@ -64,13 +66,9 @@ async def async_from_config_dict(
         )
 
     core_config = config.get(core.DOMAIN, {})
-    api_password = config.get("http", {}).get("api_password")
-    trusted_networks = config.get("http", {}).get("trusted_networks")
 
     try:
-        await conf_util.async_process_ha_core_config(
-            hass, core_config, api_password, trusted_networks
-        )
+        await conf_util.async_process_ha_core_config(hass, core_config)
     except vol.Invalid as config_err:
         conf_util.async_log_exception(config_err, "homeassistant", core_config, hass)
         return None
@@ -97,11 +95,11 @@ async def async_from_config_dict(
     stop = time()
     _LOGGER.info("Home Assistant initialized in %.2fs", stop - start)
 
-    if sys.version_info[:3] < (3, 6, 1):
+    if sys.version_info[:3] < (3, 7, 0):
         msg = (
-            "Python 3.6.0 support is deprecated and will "
-            "be removed in the first release after October 2. Please "
-            "upgrade Python to 3.6.1 or higher."
+            "Python 3.6 support is deprecated and will "
+            "be removed in the first release after December 15, 2019. Please "
+            "upgrade Python to 3.7.0 or higher."
         )
         _LOGGER.warning(msg)
         hass.components.persistent_notification.async_create(
@@ -264,7 +262,7 @@ def _get_domains(hass: core.HomeAssistant, config: Dict[str, Any]) -> Set[str]:
     domains = set(key.split(" ")[0] for key in config.keys() if key != core.DOMAIN)
 
     # Add config entry domains
-    domains.update(hass.config_entries.async_domains())  # type: ignore
+    domains.update(hass.config_entries.async_domains())
 
     # Make sure the Hass.io component is loaded
     if "HASSIO" in os.environ:

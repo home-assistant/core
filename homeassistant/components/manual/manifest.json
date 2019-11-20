@@ -1,7 +1,7 @@
 {
   "domain": "manual",
   "name": "Manual",
-  "documentation": "https://www.home-assistant.io/components/manual",
+  "documentation": "https://www.home-assistant.io/integrations/manual",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

@@ -3,34 +3,40 @@ import logging
 from typing import List
 
 from homeassistant.components.water_heater import (
+    SUPPORT_AWAY_MODE,
     SUPPORT_OPERATION_MODE,
     WaterHeaterDevice,
 )
-from homeassistant.const import PRECISION_WHOLE, STATE_OFF, STATE_ON
+from homeassistant.const import PRECISION_TENTHS, PRECISION_WHOLE, STATE_OFF, STATE_ON
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util.dt import parse_datetime
 
-from . import EvoDevice
-from .const import DOMAIN, EVO_STRFTIME, EVO_FOLLOW, EVO_TEMPOVER, EVO_PERMOVER
+from . import EvoChild
+from .const import DOMAIN, EVO_FOLLOW, EVO_PERMOVER
 
 _LOGGER = logging.getLogger(__name__)
 
-HA_STATE_TO_EVO = {STATE_ON: "On", STATE_OFF: "Off"}
-EVO_STATE_TO_HA = {v: k for k, v in HA_STATE_TO_EVO.items()}
+STATE_AUTO = "auto"
 
-HA_OPMODE_TO_DHW = {STATE_ON: EVO_FOLLOW, STATE_OFF: EVO_PERMOVER}
+HA_STATE_TO_EVO = {STATE_AUTO: "", STATE_ON: "On", STATE_OFF: "Off"}
+EVO_STATE_TO_HA = {v: k for k, v in HA_STATE_TO_EVO.items() if k != ""}
+
+STATE_ATTRS_DHW = ["dhwId", "activeFaults", "stateStatus", "temperatureStatus"]
 
 
 async def async_setup_platform(
-    hass, config, async_add_entities, discovery_info=None
+    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ) -> None:
-    """Create the DHW controller."""
+    """Create a DHW controller."""
     if discovery_info is None:
         return
 
     broker = hass.data[DOMAIN]["broker"]
 
     _LOGGER.debug(
-        "Found %s, id: %s", broker.tcs.hotwater.zone_type, broker.tcs.hotwater.zoneId
+        "Found the DHW Controller (%s), id: %s",
+        broker.tcs.hotwater.zone_type,
+        broker.tcs.hotwater.zoneId,
     )
 
     evo_dhw = EvoDHW(broker, broker.tcs.hotwater)
@@ -38,63 +44,71 @@ async def async_setup_platform(
     async_add_entities([evo_dhw], update_before_add=True)
 
 
-class EvoDHW(EvoDevice, WaterHeaterDevice):
+class EvoDHW(EvoChild, WaterHeaterDevice):
     """Base for a Honeywell evohome DHW controller (aka boiler)."""
 
     def __init__(self, evo_broker, evo_device) -> None:
-        """Initialize the evohome DHW controller."""
+        """Initialize a evohome DHW controller."""
         super().__init__(evo_broker, evo_device)
 
+        self._unique_id = evo_device.dhwId
         self._name = "DHW controller"
         self._icon = "mdi:thermometer-lines"
 
-        self._precision = PRECISION_WHOLE
-        self._state_attributes = [
-            "dhwId",
-            "activeFaults",
-            "stateStatus",
-            "temperatureStatus",
-            "setpoints",
-        ]
-
-        self._supported_features = SUPPORT_OPERATION_MODE
-        self._operation_list = list(HA_OPMODE_TO_DHW)
+        self._precision = PRECISION_TENTHS if evo_broker.client_v1 else PRECISION_WHOLE
+        self._supported_features = SUPPORT_AWAY_MODE | SUPPORT_OPERATION_MODE
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._evo_device.temperatureStatus.get("isAvailable", False)
+    def state(self):
+        """Return the current state."""
+        return EVO_STATE_TO_HA[self._evo_device.stateStatus["state"]]
 
     @property
     def current_operation(self) -> str:
-        """Return the current operating mode (On, or Off)."""
+        """Return the current operating mode (Auto, On, or Off)."""
+        if self._evo_device.stateStatus["mode"] == EVO_FOLLOW:
+            return STATE_AUTO
         return EVO_STATE_TO_HA[self._evo_device.stateStatus["state"]]
 
     @property
     def operation_list(self) -> List[str]:
         """Return the list of available operations."""
-        return self._operation_list
+        return list(HA_STATE_TO_EVO)
 
     @property
-    def current_temperature(self) -> float:
-        """Return the current temperature."""
-        return self._evo_device.temperatureStatus["temperature"]
+    def is_away_mode_on(self):
+        """Return True if away mode is on."""
+        is_off = EVO_STATE_TO_HA[self._evo_device.stateStatus["state"]] == STATE_OFF
+        is_permanent = self._evo_device.stateStatus["mode"] == EVO_PERMOVER
+        return is_off and is_permanent
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
-        """Set new operation mode for a DHW controller."""
-        op_mode = HA_OPMODE_TO_DHW[operation_mode]
+        """Set new operation mode for a DHW controller.
 
-        state = "" if op_mode == EVO_FOLLOW else HA_STATE_TO_EVO[STATE_OFF]
-        until = None  # EVO_FOLLOW, EVO_PERMOVER
-
-        if op_mode == EVO_TEMPOVER and self._schedule["DailySchedules"]:
+        Except for Auto, the mode is only until the next SetPoint.
+        """
+        if operation_mode == STATE_AUTO:
+            await self._call_client_api(self._evo_device.set_dhw_auto())
+        else:
             await self._update_schedule()
-            if self._schedule["DailySchedules"]:
-                until = parse_datetime(self.setpoints["next"]["from"])
-                until = until.strftime(EVO_STRFTIME)
+            until = parse_datetime(str(self.setpoints.get("next_sp_from")))
 
-        data = {"Mode": op_mode, "State": state, "UntilTime": until}
+            if operation_mode == STATE_ON:
+                await self._call_client_api(self._evo_device.set_dhw_on(until))
+            else:  # STATE_OFF
+                await self._call_client_api(self._evo_device.set_dhw_off(until))
 
-        await self._call_client_api(
-            self._evo_device._set_dhw(data)  # pylint: disable=protected-access
-        )
+    async def async_turn_away_mode_on(self):
+        """Turn away mode on."""
+        await self._call_client_api(self._evo_device.set_dhw_off())
+
+    async def async_turn_away_mode_off(self):
+        """Turn away mode off."""
+        await self._call_client_api(self._evo_device.set_dhw_auto())
+
+    async def async_update(self) -> None:
+        """Get the latest state data for a DHW controller."""
+        await super().async_update()
+
+        for attr in STATE_ATTRS_DHW:
+            self._device_state_attrs[attr] = getattr(self._evo_device, attr)

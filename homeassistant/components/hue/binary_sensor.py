@@ -1,19 +1,31 @@
 """Hue binary sensor entities."""
+
+from aiohue.sensors import TYPE_ZLL_PRESENCE
+
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice,
     DEVICE_CLASS_MOTION,
+    BinarySensorDevice,
 )
 from homeassistant.components.hue.sensor_base import (
     GenericZLLSensor,
+    SensorManager,
     async_setup_entry as shared_async_setup_entry,
 )
-
 
 PRESENCE_NAME_FORMAT = "{} motion"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer binary sensor setup to the shared sensor module."""
+    SensorManager.sensor_config_map.update(
+        {
+            TYPE_ZLL_PRESENCE: {
+                "binary": True,
+                "name_format": PRESENCE_NAME_FORMAT,
+                "class": HuePresence,
+            }
+        }
+    )
     await shared_async_setup_entry(hass, config_entry, async_add_entities, binary=True)
 
 

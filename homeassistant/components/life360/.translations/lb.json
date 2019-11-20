@@ -10,6 +10,7 @@
         "error": {
             "invalid_credentials": "Ong\u00eblteg Login Informatioune",
             "invalid_username": "Ong\u00ebltege Benotzernumm",
+            "unexpected": "Onerwaarte Feeler bei der Kommunikatioun mam Life360 Server",
             "user_already_configured": "Kont ass scho konfigur\u00e9iert"
         },
         "step": {

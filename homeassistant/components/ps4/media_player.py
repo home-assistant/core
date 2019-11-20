@@ -2,8 +2,8 @@
 import logging
 import asyncio
 
-import pyps4_homeassistant.ps4 as pyps4
-from pyps4_homeassistant.errors import NotReady
+import pyps4_2ndscreen.ps4 as pyps4
+from pyps4_2ndscreen.errors import NotReady
 
 from homeassistant.core import callback
 from homeassistant.components.media_player import ENTITY_IMAGE_URL, MediaPlayerDevice
@@ -26,7 +26,7 @@ from homeassistant.const import (
     CONF_REGION,
     CONF_TOKEN,
     STATE_IDLE,
-    STATE_OFF,
+    STATE_STANDBY,
     STATE_PLAYING,
 )
 from homeassistant.helpers import device_registry, entity_registry
@@ -201,8 +201,8 @@ class PS4Device(MediaPlayerDevice):
                     if self._state != STATE_IDLE:
                         self.idle()
             else:
-                if self._state != STATE_OFF:
-                    self.state_off()
+                if self._state != STATE_STANDBY:
+                    self.state_standby()
 
         elif self._retry > DEFAULT_RETRIES:
             self.state_unknown()
@@ -230,10 +230,10 @@ class PS4Device(MediaPlayerDevice):
         self._state = STATE_IDLE
         self.schedule_update()
 
-    def state_off(self):
-        """Set states for state off."""
+    def state_standby(self):
+        """Set states for state standby."""
         self.reset_title()
-        self._state = STATE_OFF
+        self._state = STATE_STANDBY
         self.schedule_update()
 
     def state_unknown(self):
@@ -254,7 +254,7 @@ class PS4Device(MediaPlayerDevice):
 
     async def async_get_title_data(self, title_id, name):
         """Get PS Store Data."""
-        from pyps4_homeassistant.errors import PSDataIncomplete
+        from pyps4_2ndscreen.errors import PSDataIncomplete
 
         app_name = None
         art = None

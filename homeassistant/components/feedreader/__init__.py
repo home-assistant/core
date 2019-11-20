@@ -6,6 +6,7 @@ from threading import Lock
 import pickle
 
 import voluptuous as vol
+import feedparser
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, CONF_SCAN_INTERVAL
 from homeassistant.helpers.event import track_time_interval
@@ -87,8 +88,6 @@ class FeedManager:
 
     def _update(self):
         """Update the feed and publish new entries to the event bus."""
-        import feedparser
-
         _LOGGER.info("Fetching new data from feed %s", self._url)
         self._feed = feedparser.parse(
             self._url,
@@ -140,9 +139,10 @@ class FeedManager:
 
     def _update_and_fire_entry(self, entry):
         """Update last_entry_timestamp and fire entry."""
-        # We are lucky, `published_parsed` data available, let's make use of
-        # it to publish only new available entries since the last run
-        if "published_parsed" in entry.keys():
+        # Check if the entry has a published date.
+        if "published_parsed" in entry.keys() and entry.published_parsed:
+            # We are lucky, `published_parsed` data available, let's make use of
+            # it to publish only new available entries since the last run
             self._has_published_parsed = True
             self._last_entry_timestamp = max(
                 entry.published_parsed, self._last_entry_timestamp

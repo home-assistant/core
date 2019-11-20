@@ -1,6 +1,7 @@
 """Support for Venstar WiFi Thermostats."""
 import logging
 
+from venstarcolortouch import VenstarColorTouch
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
@@ -11,14 +12,20 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF,
     SUPPORT_FAN_MODE,
+    FAN_ON,
+    FAN_AUTO,
     SUPPORT_TARGET_HUMIDITY,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     PRESET_AWAY,
     PRESET_NONE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
-    HVAC_MODE_OFF,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -65,7 +72,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Venstar thermostat."""
-    import venstarcolortouch
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -78,7 +84,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     else:
         proto = "http"
 
-    client = venstarcolortouch.VenstarColorTouch(
+    client = VenstarColorTouch(
         addr=host, timeout=timeout, user=username, password=password, proto=proto
     )
 
@@ -92,6 +98,11 @@ class VenstarThermostat(ClimateDevice):
         """Initialize the thermostat."""
         self._client = client
         self._humidifier = humidifier
+        self._mode_map = {
+            HVAC_MODE_HEAT: self._client.MODE_HEAT,
+            HVAC_MODE_COOL: self._client.MODE_COOL,
+            HVAC_MODE_AUTO: self._client.MODE_AUTO,
+        }
 
     def update(self):
         """Update the data from the thermostat."""
@@ -156,7 +167,7 @@ class VenstarThermostat(ClimateDevice):
 
     @property
     def hvac_mode(self):
-        """Return current operation ie. heat, cool, idle."""
+        """Return current operation mode ie. heat, cool, auto."""
         if self._client.mode == self._client.MODE_HEAT:
             return HVAC_MODE_HEAT
         if self._client.mode == self._client.MODE_COOL:
@@ -166,11 +177,22 @@ class VenstarThermostat(ClimateDevice):
         return HVAC_MODE_OFF
 
     @property
+    def hvac_action(self):
+        """Return current operation mode ie. heat, cool, auto."""
+        if self._client.state == self._client.STATE_IDLE:
+            return CURRENT_HVAC_IDLE
+        if self._client.state == self._client.STATE_HEATING:
+            return CURRENT_HVAC_HEAT
+        if self._client.state == self._client.STATE_COOLING:
+            return CURRENT_HVAC_COOL
+        return CURRENT_HVAC_OFF
+
+    @property
     def fan_mode(self):
-        """Return the fan setting."""
-        if self._client.fan == self._client.FAN_AUTO:
-            return HVAC_MODE_AUTO
-        return STATE_ON
+        """Return the current fan mode."""
+        if self._client.fan == self._client.FAN_ON:
+            return FAN_ON
+        return FAN_AUTO
 
     @property
     def device_state_attributes(self):
@@ -225,6 +247,7 @@ class VenstarThermostat(ClimateDevice):
             return PRESET_AWAY
         if self._client.schedule == 0:
             return HOLD_MODE_TEMPERATURE
+        return PRESET_NONE
 
     @property
     def preset_modes(self):
@@ -249,20 +272,29 @@ class VenstarThermostat(ClimateDevice):
     def set_temperature(self, **kwargs):
         """Set a new target temperature."""
         set_temp = True
-        operation_mode = kwargs.get(ATTR_HVAC_MODE, self._client.mode)
+        operation_mode = kwargs.get(ATTR_HVAC_MODE)
         temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         temperature = kwargs.get(ATTR_TEMPERATURE)
 
-        if operation_mode != self._client.mode:
+        if operation_mode and self._mode_map.get(operation_mode) != self._client.mode:
             set_temp = self._set_operation_mode(operation_mode)
 
         if set_temp:
-            if operation_mode == self._client.MODE_HEAT:
+            if (
+                self._mode_map.get(operation_mode, self._client.mode)
+                == self._client.MODE_HEAT
+            ):
                 success = self._client.set_setpoints(temperature, self._client.cooltemp)
-            elif operation_mode == self._client.MODE_COOL:
+            elif (
+                self._mode_map.get(operation_mode, self._client.mode)
+                == self._client.MODE_COOL
+            ):
                 success = self._client.set_setpoints(self._client.heattemp, temperature)
-            elif operation_mode == self._client.MODE_AUTO:
+            elif (
+                self._mode_map.get(operation_mode, self._client.mode)
+                == self._client.MODE_AUTO
+            ):
                 success = self._client.set_setpoints(temp_low, temp_high)
             else:
                 success = False
@@ -301,13 +333,11 @@ class VenstarThermostat(ClimateDevice):
         if preset_mode == PRESET_AWAY:
             success = self._client.set_away(self._client.AWAY_AWAY)
         elif preset_mode == HOLD_MODE_TEMPERATURE:
-            success = self._client.set_schedule(0)
+            success = self._client.set_away(self._client.AWAY_HOME)
+            success = success and self._client.set_schedule(0)
         elif preset_mode == PRESET_NONE:
-            success = False
-            if self._client.away:
-                success = self._client.set_away(self._client.AWAY_HOME)
-            if self._client.schedule == 0:
-                success = success and self._client.set_schedule(1)
+            success = self._client.set_away(self._client.AWAY_HOME)
+            success = success and self._client.set_schedule(1)
         else:
             _LOGGER.error("Unknown hold mode: %s", preset_mode)
             success = False

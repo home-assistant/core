@@ -1,6 +1,8 @@
 """Support for the Asterisk Voicemail interface."""
 import logging
 
+from asterisk_mbox import ServerError
+
 from homeassistant.components.mailbox import CONTENT_TYPE_MPEG, Mailbox, StreamError
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -50,7 +52,6 @@ class AsteriskMailbox(Mailbox):
 
     async def async_get_media(self, msgid):
         """Return the media blob for the msgid."""
-        from asterisk_mbox import ServerError
 
         client = self.hass.data[ASTERISK_DOMAIN].client
         try:

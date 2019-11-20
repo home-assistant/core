@@ -1,9 +1,9 @@
 {
   "domain": "eight_sleep",
   "name": "Eight sleep",
-  "documentation": "https://www.home-assistant.io/components/eight_sleep",
+  "documentation": "https://www.home-assistant.io/integrations/eight_sleep",
   "requirements": [
-    "pyeight==0.1.1"
+    "pyeight==0.1.2"
   ],
   "dependencies": [],
   "codeowners": [

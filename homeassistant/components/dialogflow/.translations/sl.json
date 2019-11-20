@@ -5,7 +5,7 @@
             "one_instance_allowed": "Potrebna je samo ena instanca."
         },
         "create_entry": {
-            "default": "Za po\u0161iljanje dogodkov Home Assistant-u, boste morali nastaviti [webhook z dialogflow]({twilio_url}).\n\nIzpolnite naslednje informacije:\n\n- URL: `{webhook_url}`\n- Metoda: POST\n- Vrsta vsebine: application/x-www-form-urlencoded\n\nGlej [dokumentacijo]({docs_url}) za nadaljna navodila."
+            "default": "Za po\u0161iljanje dogodkov Home Assistant-u, boste morali nastaviti [webhook z Dialogflow]({twilio_url}).\n\nIzpolnite naslednje informacije:\n\n- URL: `{webhook_url}`\n- Metoda: POST\n- Vrsta vsebine: application/x-www-form-urlencoded\n\nGlej [dokumentacijo]({docs_url}) za nadaljna navodila."
         },
         "step": {
             "user": {

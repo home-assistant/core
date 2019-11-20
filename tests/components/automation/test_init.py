@@ -842,6 +842,25 @@ async def test_automation_with_error_in_script(hass, caplog):
     assert "Service not found" in caplog.text
 
 
+async def test_automation_with_error_in_script_2(hass, caplog):
+    """Test automation with an error in script."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "action": {"service": None, "entity_id": "hello.world"},
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert "string value is None" in caplog.text
+
+
 async def test_automation_restore_last_triggered_with_initial_state(hass):
     """Ensure last_triggered is restored, even when initial state is set."""
     time = dt_util.utcnow()

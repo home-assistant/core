@@ -19,7 +19,7 @@ matrix:
     - python: "3.6.1"
       env: TOXENV=lint
     - python: "3.6.1"
-      env: TOXENV=pylint
+      env: TOXENV=pylint PYLINT_ARGS=--jobs=0 TRAVIS_WAIT=30
     - python: "3.6.1"
       env: TOXENV=typing
     - python: "3.6.1"
@@ -27,7 +27,10 @@ matrix:
     - python: "3.7"
       env: TOXENV=py37
 
-cache: pip
+cache:
+  pip: true
+  directories:
+    - $HOME/.cache/pre-commit
 install: pip install -U tox
 language: python
-script: travis_wait 40 tox --develop
+script: ${TRAVIS_WAIT:+travis_wait $TRAVIS_WAIT} tox --develop

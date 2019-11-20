@@ -4,7 +4,9 @@ from copy import deepcopy
 from unittest.mock import Mock, MagicMock, patch, PropertyMock
 
 import pytest
-from pytradfri.device import Device, LightControl, Light
+from pytradfri.device import Device
+from pytradfri.device.light import Light
+from pytradfri.device.light_control import LightControl
 
 from homeassistant.components import tradfri
 

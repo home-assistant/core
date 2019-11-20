@@ -1,7 +1,7 @@
 {
   "domain": "harmony",
   "name": "Harmony",
-  "documentation": "https://www.home-assistant.io/components/harmony",
+  "documentation": "https://www.home-assistant.io/integrations/harmony",
   "requirements": [
     "aioharmony==0.1.13"
   ],

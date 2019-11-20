@@ -1,41 +1,45 @@
 """Support for Abode Security System sensors."""
 import logging
 
+import abodepy.helpers.constants as CONST
+
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
 )
 
-from . import DOMAIN as ABODE_DOMAIN, AbodeDevice
+from . import AbodeDevice
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 # Sensor types: Name, icon
 SENSOR_TYPES = {
-    "temp": ["Temperature", DEVICE_CLASS_TEMPERATURE],
-    "humidity": ["Humidity", DEVICE_CLASS_HUMIDITY],
-    "lux": ["Lux", DEVICE_CLASS_ILLUMINANCE],
+    CONST.TEMP_STATUS_KEY: ["Temperature", DEVICE_CLASS_TEMPERATURE],
+    CONST.HUMI_STATUS_KEY: ["Humidity", DEVICE_CLASS_HUMIDITY],
+    CONST.LUX_STATUS_KEY: ["Lux", DEVICE_CLASS_ILLUMINANCE],
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up a sensor for an Abode device."""
-    import abodepy.helpers.constants as CONST
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Platform uses config entry setup."""
+    pass
 
-    data = hass.data[ABODE_DOMAIN]
 
-    devices = []
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Abode sensor devices."""
+    data = hass.data[DOMAIN]
+
+    entities = []
+
     for device in data.abode.get_devices(generic_type=CONST.TYPE_SENSOR):
-        if data.is_excluded(device):
-            continue
-
         for sensor_type in SENSOR_TYPES:
-            devices.append(AbodeSensor(data, device, sensor_type))
+            if sensor_type not in device.get_value(CONST.STATUSES_KEY):
+                continue
+            entities.append(AbodeSensor(data, device, sensor_type))
 
-    data.devices.extend(devices)
-
-    add_entities(devices)
+    async_add_entities(entities)
 
 
 class AbodeSensor(AbodeDevice):
@@ -59,6 +63,11 @@ class AbodeSensor(AbodeDevice):
     def device_class(self):
         """Return the device class."""
         return self._device_class
+
+    @property
+    def unique_id(self):
+        """Return a unique ID to use for this device."""
+        return f"{self._device.device_uuid}-{self._sensor_type}"
 
     @property
     def state(self):

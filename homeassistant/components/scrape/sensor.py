@@ -1,6 +1,7 @@
 """Support for getting data from websites with scraping."""
 import logging
 
+from bs4 import BeautifulSoup
 import voluptuous as vol
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
@@ -123,8 +124,6 @@ class ScrapeSensor(Entity):
         if self.rest.data is None:
             _LOGGER.error("Unable to retrieve data")
             return
-
-        from bs4 import BeautifulSoup
 
         raw_data = BeautifulSoup(self.rest.data, "html.parser")
         _LOGGER.debug(raw_data)

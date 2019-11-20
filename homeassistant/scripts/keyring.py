@@ -8,7 +8,7 @@ from homeassistant.util.yaml import _SECRET_NAMESPACE
 
 # mypy: allow-untyped-defs
 
-REQUIREMENTS = ["keyring==17.1.1", "keyrings.alt==3.1.1"]
+REQUIREMENTS = ["keyring==19.2.0", "keyrings.alt==3.1.1"]
 
 
 def run(args):

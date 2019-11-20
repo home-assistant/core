@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_setup": "TelldusLive ya est\u00e1 configurado",
+            "authorize_url_fail": "Error desconocido al generar una URL de autorizaci\u00f3n.",
             "unknown": "Se produjo un error desconocido"
         },
         "error": {
@@ -17,6 +18,7 @@
                     "host": "Host"
                 }
             }
-        }
+        },
+        "title": "Telldus Live"
     }
 }

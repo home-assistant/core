@@ -16,7 +16,7 @@ from . import (
     SetupFlow,
 )
 
-REQUIREMENTS = ["pyotp==2.2.7", "PyQRCode==1.2.1"]
+REQUIREMENTS = ["pyotp==2.3.0", "PyQRCode==1.2.1"]
 
 CONFIG_SCHEMA = MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend({}, extra=vol.PREVENT_EXTRA)
 
@@ -215,8 +215,13 @@ class TotpSetupFlow(SetupFlow):
 
         else:
             hass = self._auth_module.hass
-            self._ota_secret, self._url, self._image = await hass.async_add_executor_job(  # type: ignore
-                _generate_secret_and_qr_code, str(self._user.name)
+            (
+                self._ota_secret,
+                self._url,
+                self._image,
+            ) = await hass.async_add_executor_job(
+                _generate_secret_and_qr_code,  # type: ignore
+                str(self._user.name),
             )
 
         return self.async_show_form(

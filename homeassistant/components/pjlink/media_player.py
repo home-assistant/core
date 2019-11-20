@@ -105,10 +105,12 @@ class PjLinkDevice(MediaPlayerDevice):
                 pwstate = projector.get_power()
                 if pwstate in ("on", "warm-up"):
                     self._pwstate = STATE_ON
+                    self._muted = projector.get_mute()[1]
+                    self._current_source = format_input_source(*projector.get_input())
                 else:
                     self._pwstate = STATE_OFF
-                self._muted = projector.get_mute()[1]
-                self._current_source = format_input_source(*projector.get_input())
+                    self._muted = False
+                    self._current_source = None
             except KeyError as err:
                 if str(err) == "'OK'":
                     self._pwstate = STATE_OFF
@@ -156,13 +158,15 @@ class PjLinkDevice(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn projector off."""
-        with self.projector() as projector:
-            projector.set_power("off")
+        if self._pwstate == STATE_ON:
+            with self.projector() as projector:
+                projector.set_power("off")
 
     def turn_on(self):
         """Turn projector on."""
-        with self.projector() as projector:
-            projector.set_power("on")
+        if self._pwstate == STATE_OFF:
+            with self.projector() as projector:
+                projector.set_power("on")
 
     def mute_volume(self, mute):
         """Mute (true) of unmute (false) media player."""

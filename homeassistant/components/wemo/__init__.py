@@ -1,6 +1,7 @@
 """Support for WeMo device discovery."""
 import logging
 
+import pywemo
 import requests
 import voluptuous as vol
 
@@ -87,7 +88,6 @@ def setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up a wemo config entry."""
-    import pywemo
 
     config = hass.data[DOMAIN]
 

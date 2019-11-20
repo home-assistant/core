@@ -164,23 +164,20 @@ class RestoreStateData:
     @callback
     def async_setup_dump(self, *args: Any) -> None:
         """Set up the restore state listeners."""
+
+        def _async_dump_states(*_: Any) -> None:
+            self.hass.async_create_task(self.async_dump_states())
+
         # Dump the initial states now. This helps minimize the risk of having
         # old states loaded by overwritting the last states once home assistant
         # has started and the old states have been read.
-        self.hass.async_create_task(self.async_dump_states())
+        _async_dump_states()
 
         # Dump states periodically
-        async_track_time_interval(
-            self.hass,
-            lambda *_: self.hass.async_create_task(self.async_dump_states()),
-            STATE_DUMP_INTERVAL,
-        )
+        async_track_time_interval(self.hass, _async_dump_states, STATE_DUMP_INTERVAL)
 
         # Dump states when stopping hass
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP,
-            lambda *_: self.hass.async_create_task(self.async_dump_states()),
-        )
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_dump_states)
 
     @callback
     def async_restore_entity_added(self, entity_id: str) -> None:

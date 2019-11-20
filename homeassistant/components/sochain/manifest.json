@@ -1,7 +1,7 @@
 {
   "domain": "sochain",
   "name": "Sochain",
-  "documentation": "https://www.home-assistant.io/components/sochain",
+  "documentation": "https://www.home-assistant.io/integrations/sochain",
   "requirements": [
     "python-sochain-api==0.0.2"
   ],

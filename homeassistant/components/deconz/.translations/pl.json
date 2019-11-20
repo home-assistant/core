@@ -11,6 +11,7 @@
         "error": {
             "no_key": "Nie mo\u017cna uzyska\u0107 klucza API"
         },
+        "flow_title": "Bramka deCONZ Zigbee ({host})",
         "step": {
             "hassio_confirm": {
                 "data": {
@@ -43,31 +44,48 @@
     },
     "device_automation": {
         "trigger_subtype": {
-            "both_buttons": "Oba przyciski",
-            "button_1": "Pierwszy przycisk",
-            "button_2": "Drugi przycisk",
-            "button_3": "Trzeci przycisk",
-            "button_4": "Czwarty przycisk",
-            "close": "Zamknij",
-            "dim_down": "Przyciemnienie",
-            "dim_up": "Przyciemnienie",
-            "left": "Lewo",
-            "open": "Otw\u00f3rz",
-            "right": "Prawo",
-            "turn_off": "Wy\u0142\u0105cz",
-            "turn_on": "W\u0142\u0105cz"
+            "both_buttons": "oba przyciski",
+            "button_1": "pierwszy przycisk",
+            "button_2": "drugi przycisk",
+            "button_3": "trzeci przycisk",
+            "button_4": "czwarty przycisk",
+            "close": "nast\u0105pi zamkni\u0119cie",
+            "dim_down": "nast\u0105pi zmniejszenie jasno\u015bci",
+            "dim_up": "nast\u0105pi zwi\u0119kszenie jasno\u015bci",
+            "left": "w lewo",
+            "open": "otwarcie",
+            "right": "w prawo",
+            "side_1": "strona 1",
+            "side_2": "strona 2",
+            "side_3": "strona 3",
+            "side_4": "strona 4",
+            "side_5": "strona 5",
+            "side_6": "strona 6",
+            "turn_off": "nast\u0105pi wy\u0142\u0105czenie",
+            "turn_on": "nast\u0105pi w\u0142\u0105czenie"
         },
         "trigger_type": {
-            "remote_button_double_press": "Przycisk \"{subtype}\" podw\u00f3jnie naci\u015bni\u0119ty",
-            "remote_button_long_press": "Przycisk \"{subtype}\" naci\u015bni\u0119ty w spos\u00f3b ci\u0105g\u0142y",
-            "remote_button_long_release": "Przycisk \"{subtype}\" zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
-            "remote_button_quadruple_press": "Przycisk \"{subtype}\" czterokrotnie naci\u015bni\u0119ty",
-            "remote_button_quintuple_press": "Przycisk \"{subtype}\" pi\u0119ciokrotnie naci\u015bni\u0119ty",
-            "remote_button_rotated": "Przycisk obr\u00f3cony \"{subtype}\"",
-            "remote_button_short_press": "Przycisk \"{subtype}\" naci\u015bni\u0119ty",
-            "remote_button_short_release": "Przycisk \"{subtype}\" zwolniony",
-            "remote_button_triple_press": "Przycisk \"{subtype}\" trzykrotnie naci\u015bni\u0119ty",
-            "remote_gyro_activated": "Urz\u0105dzenie potrz\u0105\u015bni\u0119te"
+            "remote_awakened": "urz\u0105dzenie si\u0119 obudzi",
+            "remote_button_double_press": "przycisk \"{subtype}\" zostanie podw\u00f3jnie naci\u015bni\u0119ty",
+            "remote_button_long_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty w spos\u00f3b ci\u0105g\u0142y",
+            "remote_button_long_release": "przycisk \"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
+            "remote_button_quadruple_press": "przycisk \"{subtype}\" zostanie czterokrotnie naci\u015bni\u0119ty",
+            "remote_button_quintuple_press": "przycisk \"{subtype}\" zostanie pi\u0119ciokrotnie naci\u015bni\u0119ty",
+            "remote_button_rotated": "przycisk zostanie obr\u00f3cony \"{subtype}\"",
+            "remote_button_rotation_stopped": "nast\u0105pi zatrzymanie obrotu przycisku \"{subtype}\"",
+            "remote_button_short_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty",
+            "remote_button_short_release": "przycisk \"{subtype}\" zostanie zwolniony",
+            "remote_button_triple_press": "przycisk \"{subtype}\" zostanie trzykrotnie naci\u015bni\u0119ty",
+            "remote_double_tap": "urz\u0105dzenie \"{subtype}\" zostanie dwukrotnie pukni\u0119te",
+            "remote_falling": "urz\u0105dzenie zarejestruje swobodny spadek",
+            "remote_gyro_activated": "nast\u0105pi potrz\u0105\u015bni\u0119cie urz\u0105dzeniem",
+            "remote_moved": "urz\u0105dzenie poruszone z \"{subtype}\" w g\u00f3r\u0119",
+            "remote_rotate_from_side_1": "urz\u0105dzenie obr\u00f3cone ze \"strona 1\" na \"{subtype}\"",
+            "remote_rotate_from_side_2": "urz\u0105dzenie obr\u00f3cone ze \"strona 2\" na \"{subtype}\"",
+            "remote_rotate_from_side_3": "urz\u0105dzenie obr\u00f3cone ze \"strona 3\" na \"{subtype}\"",
+            "remote_rotate_from_side_4": "urz\u0105dzenie obr\u00f3cone ze \"strona 4\" na \"{subtype}\"",
+            "remote_rotate_from_side_5": "urz\u0105dzenie obr\u00f3cone ze \"strona 5\" na \"{subtype}\"",
+            "remote_rotate_from_side_6": "urz\u0105dzenie obr\u00f3cone ze \"strona 6\" na \"{subtype}\""
         }
     },
     "options": {

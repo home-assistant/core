@@ -2,6 +2,7 @@
 import logging
 from collections import defaultdict
 
+import pyvera as veraApi
 import voluptuous as vol
 from requests.exceptions import RequestException
 
@@ -65,7 +66,6 @@ VERA_COMPONENTS = [
 
 def setup(hass, base_config):
     """Set up for Vera devices."""
-    import pyvera as veraApi
 
     def stop_subscription(event):
         """Shutdown Vera subscriptions and subscription thread on exit."""
@@ -118,7 +118,6 @@ def setup(hass, base_config):
 
 def map_vera_device(vera_device, remap):
     """Map vera classes to Home Assistant types."""
-    import pyvera as veraApi
 
     if isinstance(vera_device, veraApi.VeraDimmer):
         return "light"

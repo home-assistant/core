@@ -1,7 +1,7 @@
 {
   "domain": "qbittorrent",
   "name": "Qbittorrent",
-  "documentation": "https://www.home-assistant.io/components/qbittorrent",
+  "documentation": "https://www.home-assistant.io/integrations/qbittorrent",
   "requirements": [
     "python-qbittorrent==0.3.1"
   ],

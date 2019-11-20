@@ -3,11 +3,19 @@
 import asyncio
 import json
 
-from aiohttp.hdrs import CONTENT_TYPE, AUTHORIZATION
+from aiohttp.hdrs import AUTHORIZATION
 import pytest
 
 from homeassistant import core, const, setup
-from homeassistant.components import fan, cover, light, switch, lock, media_player
+from homeassistant.components import (
+    fan,
+    cover,
+    light,
+    switch,
+    lock,
+    media_player,
+    alarm_control_panel,
+)
 from homeassistant.components.climate import const as climate
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.components import google_assistant as ga
@@ -15,11 +23,6 @@ from homeassistant.components import google_assistant as ga
 from . import DEMO_DEVICES
 
 API_PASSWORD = "test1234"
-
-HA_HEADERS = {
-    const.HTTP_HEADER_HA_AUTH: API_PASSWORD,
-    CONTENT_TYPE: const.CONTENT_TYPE_JSON,
-}
 
 PROJECT_ID = "hasstest-1234"
 CLIENT_ID = "helloworld"
@@ -96,6 +99,14 @@ def hass_fixture(loop, hass):
 
     loop.run_until_complete(
         setup.async_setup_component(hass, lock.DOMAIN, {"lock": [{"platform": "demo"}]})
+    )
+
+    loop.run_until_complete(
+        setup.async_setup_component(
+            hass,
+            alarm_control_panel.DOMAIN,
+            {"alarm_control_panel": [{"platform": "demo"}]},
+        )
     )
 
     return hass

@@ -1,5 +1,7 @@
 """Viessmann ViCare climate device."""
 import logging
+import requests
+import simplejson
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -10,17 +12,22 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     HVAC_MODE_HEAT,
     HVAC_MODE_AUTO,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
 )
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE, PRECISION_WHOLE
 
 from . import DOMAIN as VICARE_DOMAIN
 from . import VICARE_API
 from . import VICARE_NAME
+from . import VICARE_HEATING_TYPE
+from . import HeatingType
 
 _LOGGER = logging.getLogger(__name__)
 
 VICARE_MODE_DHW = "dhw"
 VICARE_MODE_DHWANDHEATING = "dhwAndHeating"
+VICARE_MODE_DHWANDHEATINGCOOLING = "dhwAndHeatingCooling"
 VICARE_MODE_FORCEDREDUCED = "forcedReduced"
 VICARE_MODE_FORCEDNORMAL = "forcedNormal"
 VICARE_MODE_OFF = "standby"
@@ -46,6 +53,7 @@ SUPPORT_FLAGS_HEATING = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 VICARE_TO_HA_HVAC_HEATING = {
     VICARE_MODE_DHW: HVAC_MODE_OFF,
     VICARE_MODE_DHWANDHEATING: HVAC_MODE_AUTO,
+    VICARE_MODE_DHWANDHEATINGCOOLING: HVAC_MODE_AUTO,
     VICARE_MODE_FORCEDREDUCED: HVAC_MODE_OFF,
     VICARE_MODE_FORCEDNORMAL: HVAC_MODE_HEAT,
     VICARE_MODE_OFF: HVAC_MODE_OFF,
@@ -75,15 +83,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if discovery_info is None:
         return
     vicare_api = hass.data[VICARE_DOMAIN][VICARE_API]
+    heating_type = hass.data[VICARE_DOMAIN][VICARE_HEATING_TYPE]
     add_entities(
-        [ViCareClimate(f"{hass.data[VICARE_DOMAIN][VICARE_NAME]}  Heating", vicare_api)]
+        [
+            ViCareClimate(
+                f"{hass.data[VICARE_DOMAIN][VICARE_NAME]}  Heating",
+                vicare_api,
+                heating_type,
+            )
+        ]
     )
 
 
 class ViCareClimate(ClimateDevice):
     """Representation of the ViCare heating climate device."""
 
-    def __init__(self, name, api):
+    def __init__(self, name, api, heating_type):
         """Initialize the climate device."""
         self._name = name
         self._state = None
@@ -93,46 +108,69 @@ class ViCareClimate(ClimateDevice):
         self._current_mode = None
         self._current_temperature = None
         self._current_program = None
+        self._heating_type = heating_type
+        self._current_action = None
 
     def update(self):
         """Let HA know there has been an update from the ViCare API."""
-        _room_temperature = self._api.getRoomTemperature()
-        _supply_temperature = self._api.getSupplyTemperature()
-        if _room_temperature is not None and _room_temperature != PYVICARE_ERROR:
-            self._current_temperature = _room_temperature
-        elif _supply_temperature != PYVICARE_ERROR:
-            self._current_temperature = _supply_temperature
-        else:
-            self._current_temperature = None
-        self._current_program = self._api.getActiveProgram()
+        try:
+            _room_temperature = self._api.getRoomTemperature()
+            _supply_temperature = self._api.getSupplyTemperature()
+            if _room_temperature is not None and _room_temperature != PYVICARE_ERROR:
+                self._current_temperature = _room_temperature
+            elif _supply_temperature != PYVICARE_ERROR:
+                self._current_temperature = _supply_temperature
+            else:
+                self._current_temperature = None
+            self._current_program = self._api.getActiveProgram()
 
-        # The getCurrentDesiredTemperature call can yield 'error' (str) when the system is in standby
-        desired_temperature = self._api.getCurrentDesiredTemperature()
-        if desired_temperature == PYVICARE_ERROR:
-            desired_temperature = None
+            # The getCurrentDesiredTemperature call can yield 'error' (str) when the system is in standby
+            desired_temperature = self._api.getCurrentDesiredTemperature()
+            if desired_temperature == PYVICARE_ERROR:
+                desired_temperature = None
 
-        self._target_temperature = desired_temperature
+            self._target_temperature = desired_temperature
 
-        self._current_mode = self._api.getActiveMode()
+            self._current_mode = self._api.getActiveMode()
 
-        # Update the device attributes
-        self._attributes = {}
-        self._attributes["room_temperature"] = _room_temperature
-        self._attributes["supply_temperature"] = _supply_temperature
-        self._attributes["outside_temperature"] = self._api.getOutsideTemperature()
-        self._attributes["active_vicare_program"] = self._current_program
-        self._attributes["active_vicare_mode"] = self._current_mode
-        self._attributes["heating_curve_slope"] = self._api.getHeatingCurveSlope()
-        self._attributes["heating_curve_shift"] = self._api.getHeatingCurveShift()
-        self._attributes[
-            "month_since_last_service"
-        ] = self._api.getMonthSinceLastService()
-        self._attributes["date_last_service"] = self._api.getLastServiceDate()
-        self._attributes["error_history"] = self._api.getErrorHistory()
-        self._attributes["active_error"] = self._api.getActiveError()
-        self._attributes[
-            "circulationpump_active"
-        ] = self._api.getCirculationPumpActive()
+            # Update the generic device attributes
+            self._attributes = {}
+            self._attributes["room_temperature"] = _room_temperature
+            self._attributes["supply_temperature"] = _supply_temperature
+            self._attributes["outside_temperature"] = self._api.getOutsideTemperature()
+            self._attributes["active_vicare_program"] = self._current_program
+            self._attributes["active_vicare_mode"] = self._current_mode
+            self._attributes["heating_curve_slope"] = self._api.getHeatingCurveSlope()
+            self._attributes["heating_curve_shift"] = self._api.getHeatingCurveShift()
+            self._attributes[
+                "month_since_last_service"
+            ] = self._api.getMonthSinceLastService()
+            self._attributes["date_last_service"] = self._api.getLastServiceDate()
+            self._attributes["error_history"] = self._api.getErrorHistory()
+            self._attributes["active_error"] = self._api.getActiveError()
+            self._attributes[
+                "circulationpump_active"
+            ] = self._api.getCirculationPumpActive()
+
+            # Update the specific device attributes
+            if self._heating_type == HeatingType.gas:
+                self._current_action = self._api.getBurnerActive()
+
+                self._attributes["burner_modulation"] = self._api.getBurnerModulation()
+                self._attributes[
+                    "boiler_temperature"
+                ] = self._api.getBoilerTemperature()
+
+            elif self._heating_type == HeatingType.heatpump:
+                self._current_action = self._api.getCompressorActive()
+
+                self._attributes[
+                    "return_temperature"
+                ] = self._api.getReturnTemperature()
+        except requests.exceptions.ConnectionError:
+            _LOGGER.error("Unable to retrieve data from ViCare server")
+        except simplejson.errors.JSONDecodeError:
+            _LOGGER.error("Unable to decode data from ViCare server")
 
     @property
     def supported_features(self):
@@ -182,6 +220,13 @@ class ViCareClimate(ClimateDevice):
         return list(HA_TO_VICARE_HVAC_HEATING)
 
     @property
+    def hvac_action(self):
+        """Return the current hvac action."""
+        if self._current_action:
+            return CURRENT_HVAC_HEAT
+        return CURRENT_HVAC_IDLE
+
+    @property
     def min_temp(self):
         """Return the minimum temperature."""
         return VICARE_TEMP_HEATING_MIN
@@ -200,9 +245,8 @@ class ViCareClimate(ClimateDevice):
         """Set new target temperatures."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None:
-            self._api.setProgramTemperature(
-                self._current_program, self._target_temperature
-            )
+            self._api.setProgramTemperature(self._current_program, temp)
+            self._target_temperature = temp
 
     @property
     def preset_mode(self):

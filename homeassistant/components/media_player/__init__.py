@@ -7,6 +7,7 @@ import functools as ft
 import hashlib
 import logging
 from random import SystemRandom
+from typing import Optional
 from urllib.parse import urlparse
 
 from aiohttp import web
@@ -38,7 +39,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa
+from homeassistant.helpers.config_validation import (  # noqa: F401
     ENTITY_SERVICE_SCHEMA,
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -347,7 +348,7 @@ async def async_unload_entry(hass, entry):
 class MediaPlayerDevice(Entity):
     """ABC for media player devices."""
 
-    _access_token = None
+    _access_token: Optional[str] = None
 
     # Implement these for your media player
     @property
@@ -356,7 +357,7 @@ class MediaPlayerDevice(Entity):
         return None
 
     @property
-    def access_token(self):
+    def access_token(self) -> str:
         """Access token for this media player."""
         if self._access_token is None:
             self._access_token = hashlib.sha256(

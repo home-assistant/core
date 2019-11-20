@@ -42,8 +42,10 @@ class CachingStaticResource(StaticResource):
         if filepath.is_dir():
             return await super()._handle(request)
         if filepath.is_file():
-            # type ignore: https://github.com/aio-libs/aiohttp/pull/3976
-            return FileResponse(  # type: ignore
-                filepath, chunk_size=self._chunk_size, headers=CACHE_HEADERS
+            return FileResponse(
+                filepath,
+                chunk_size=self._chunk_size,
+                # type ignore: https://github.com/aio-libs/aiohttp/pull/3976
+                headers=CACHE_HEADERS,  # type: ignore
             )
         raise HTTPNotFound

@@ -48,7 +48,7 @@ class SafeLineLoader(yaml.SafeLoader):
     def compose_node(self, parent: yaml.nodes.Node, index: int) -> yaml.nodes.Node:
         """Annotate a node with the first line it was seen."""
         last_line: int = self.line
-        node: yaml.nodes.Node = super(SafeLineLoader, self).compose_node(parent, index)
+        node: yaml.nodes.Node = super().compose_node(parent, index)
         node.__line__ = last_line + 1  # type: ignore
         return node
 
@@ -76,14 +76,14 @@ def _add_reference(
     ...
 
 
-@overload  # noqa: F811
+@overload
 def _add_reference(
     obj: Union[str, NodeStrClass], loader: yaml.SafeLoader, node: yaml.nodes.Node
 ) -> NodeStrClass:
     ...
 
 
-@overload  # noqa: F811
+@overload
 def _add_reference(
     obj: DICT_T, loader: yaml.SafeLoader, node: yaml.nodes.Node
 ) -> DICT_T:
@@ -93,7 +93,7 @@ def _add_reference(
 # pylint: enable=pointless-statement
 
 
-def _add_reference(  # type: ignore # noqa: F811
+def _add_reference(  # type: ignore
     obj, loader: SafeLineLoader, node: yaml.nodes.Node
 ):
     """Add file reference information to an object."""
@@ -211,7 +211,7 @@ def _ordered_dict(loader: SafeLineLoader, node: yaml.nodes.MappingNode) -> Order
 
         if key in seen:
             fname = getattr(loader.stream, "name", "")
-            _LOGGER.error(
+            _LOGGER.warning(
                 'YAML file %s contains duplicate key "%s". ' "Check lines %d and %d.",
                 fname,
                 key,
@@ -225,7 +225,7 @@ def _ordered_dict(loader: SafeLineLoader, node: yaml.nodes.MappingNode) -> Order
 
 def _construct_seq(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
     """Add line number and file name to Load YAML sequence."""
-    obj, = loader.construct_yaml_seq(node)
+    (obj,) = loader.construct_yaml_seq(node)
     return _add_reference(obj, loader, node)
 
 

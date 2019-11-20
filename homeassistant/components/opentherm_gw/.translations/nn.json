@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "init": {
+                "data": {
+                    "id": "ID",
+                    "name": "Namn"
+                }
+            }
+        }
+    }
+}

@@ -1,7 +1,7 @@
 {
   "domain": "threshold",
   "name": "Threshold",
-  "documentation": "https://www.home-assistant.io/components/threshold",
+  "documentation": "https://www.home-assistant.io/integrations/threshold",
   "requirements": [],
   "dependencies": [],
   "codeowners": [

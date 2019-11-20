@@ -1,6 +1,6 @@
 """Support for Ebusd sensors."""
-import logging
 import datetime
+import logging
 
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util

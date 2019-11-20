@@ -32,6 +32,11 @@
                     "track_devices": "Spor netv\u00e6rksenheder (Ubiquiti-enheder)",
                     "track_wired_clients": "Inkluder kablede netv\u00e6rksklienter"
                 }
+            },
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "Opret b\u00e5ndbredde sensorer for netv\u00e6rksklienter"
+                }
             }
         }
     }

@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 import math
 
+from python_awair import AwairClient
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -105,7 +106,6 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
 # used at this time is the `uuid` value.
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Connect to the Awair API and find devices."""
-    from python_awair import AwairClient
 
     token = config[CONF_ACCESS_TOKEN]
     client = AwairClient(token, session=async_get_clientsession(hass))

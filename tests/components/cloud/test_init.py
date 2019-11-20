@@ -28,6 +28,13 @@ async def test_constructor_loads_info_from_config(hass):
                     "user_pool_id": "test-user_pool_id",
                     "region": "test-region",
                     "relayer": "test-relayer",
+                    "google_actions_sync_url": "http://test-google_actions_sync_url",
+                    "subscription_info_url": "http://test-subscription-info-url",
+                    "cloudhook_create_url": "http://test-cloudhook_create_url",
+                    "remote_api_url": "http://test-remote_api_url",
+                    "alexa_access_token_url": "http://test-alexa-token-url",
+                    "acme_directory_server": "http://test-acme-directory-server",
+                    "google_actions_report_state_url": "http://test-google-actions-report-state-url",
                 },
             },
         )
@@ -39,6 +46,16 @@ async def test_constructor_loads_info_from_config(hass):
     assert cl.user_pool_id == "test-user_pool_id"
     assert cl.region == "test-region"
     assert cl.relayer == "test-relayer"
+    assert cl.google_actions_sync_url == "http://test-google_actions_sync_url"
+    assert cl.subscription_info_url == "http://test-subscription-info-url"
+    assert cl.cloudhook_create_url == "http://test-cloudhook_create_url"
+    assert cl.remote_api_url == "http://test-remote_api_url"
+    assert cl.alexa_access_token_url == "http://test-alexa-token-url"
+    assert cl.acme_directory_server == "http://test-acme-directory-server"
+    assert (
+        cl.google_actions_report_state_url
+        == "http://test-google-actions-report-state-url"
+    )
 
 
 async def test_remote_services(hass, mock_cloud_fixture, hass_read_only_user):

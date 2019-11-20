@@ -1,6 +1,7 @@
 """Support for Zengge lights."""
 import logging
 
+from zengge import zengge
 import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICES, CONF_NAME
@@ -47,12 +48,11 @@ class ZenggeLight(Light):
 
     def __init__(self, device):
         """Initialize the light."""
-        import zengge
 
         self._name = device["name"]
         self._address = device["address"]
         self.is_valid = True
-        self._bulb = zengge.zengge(self._address)
+        self._bulb = zengge(self._address)
         self._white = 0
         self._brightness = 0
         self._hs_color = (0, 0)

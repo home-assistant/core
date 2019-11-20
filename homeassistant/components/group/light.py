@@ -3,7 +3,7 @@ import asyncio
 from collections import Counter
 import itertools
 import logging
-from typing import Any, Callable, Iterator, List, Optional, Tuple
+from typing import Any, Callable, Iterator, List, Optional, Tuple, cast
 
 import voluptuous as vol
 
@@ -16,7 +16,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import State, callback
+from homeassistant.core import CALLBACK_TYPE, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -42,6 +42,10 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
 )
+
+
+# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +73,9 @@ async def async_setup_platform(
     hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ) -> None:
     """Initialize light.group platform."""
-    async_add_entities([LightGroup(config.get(CONF_NAME), config[CONF_ENTITIES])])
+    async_add_entities(
+        [LightGroup(cast(str, config.get(CONF_NAME)), config[CONF_ENTITIES])]
+    )
 
 
 class LightGroup(light.Light):
@@ -90,7 +96,7 @@ class LightGroup(light.Light):
         self._effect_list: Optional[List[str]] = None
         self._effect: Optional[str] = None
         self._supported_features: int = 0
-        self._async_unsub_state_changed = None
+        self._async_unsub_state_changed: Optional[CALLBACK_TYPE] = None
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -102,6 +108,7 @@ class LightGroup(light.Light):
             """Handle child updates."""
             self.async_schedule_update_ha_state(True)
 
+        assert self.hass is not None
         self._async_unsub_state_changed = async_track_state_change(
             self.hass, self._entity_ids, async_state_changed_listener
         )
@@ -263,7 +270,7 @@ class LightGroup(light.Light):
     async def async_update(self):
         """Query all members and determine the light group state."""
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
-        states = list(filter(None, all_states))
+        states: List[State] = list(filter(None, all_states))
         on_states = [state for state in states if state.state == STATE_ON]
 
         self._is_on = len(on_states) > 0

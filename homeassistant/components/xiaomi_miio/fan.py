@@ -5,14 +5,40 @@ from functools import partial
 import logging
 
 import voluptuous as vol
+from miio import (  # pylint: disable=import-error
+    AirFresh,
+    AirHumidifier,
+    AirPurifier,
+    Device,
+    DeviceException,
+)
+
+from miio.airfresh import (  # pylint: disable=import-error; pylint: disable=import-error
+    LedBrightness as AirfreshLedBrightness,
+    OperationMode as AirfreshOperationMode,
+)
+from miio.airhumidifier import (  # pylint: disable=import-error; pylint: disable=import-error
+    LedBrightness as AirhumidifierLedBrightness,
+    OperationMode as AirhumidifierOperationMode,
+)
+from miio.airpurifier import (  # pylint: disable=import-error; pylint: disable=import-error
+    LedBrightness as AirpurifierLedBrightness,
+    OperationMode as AirpurifierOperationMode,
+)
 
 from homeassistant.components.fan import (
-    FanEntity,
+    DOMAIN,
     PLATFORM_SCHEMA,
     SUPPORT_SET_SPEED,
-    DOMAIN,
+    FanEntity,
 )
-from homeassistant.const import CONF_NAME, CONF_HOST, CONF_TOKEN, ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_MODE,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_TOKEN,
+)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
@@ -37,7 +63,8 @@ MODEL_AIRPURIFIER_SA2 = "zhimi.airpurifier.sa2"
 MODEL_AIRPURIFIER_2S = "zhimi.airpurifier.mc1"
 
 MODEL_AIRHUMIDIFIER_V1 = "zhimi.humidifier.v1"
-MODEL_AIRHUMIDIFIER_CA = "zhimi.humidifier.ca1"
+MODEL_AIRHUMIDIFIER_CA1 = "zhimi.humidifier.ca1"
+MODEL_AIRHUMIDIFIER_CB1 = "zhimi.humidifier.cb1"
 
 MODEL_AIRFRESH_VA2 = "zhimi.airfresh.va2"
 
@@ -62,7 +89,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 MODEL_AIRPURIFIER_SA2,
                 MODEL_AIRPURIFIER_2S,
                 MODEL_AIRHUMIDIFIER_V1,
-                MODEL_AIRHUMIDIFIER_CA,
+                MODEL_AIRHUMIDIFIER_CA1,
+                MODEL_AIRHUMIDIFIER_CB1,
                 MODEL_AIRFRESH_VA2,
             ]
         ),
@@ -75,7 +103,6 @@ ATTR_MODEL = "model"
 ATTR_TEMPERATURE = "temperature"
 ATTR_HUMIDITY = "humidity"
 ATTR_AIR_QUALITY_INDEX = "aqi"
-ATTR_MODE = "mode"
 ATTR_FILTER_HOURS_USED = "filter_hours_used"
 ATTR_FILTER_LIFE = "filter_life_remaining"
 ATTR_FAVORITE_LEVEL = "favorite_level"
@@ -230,7 +257,7 @@ AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER = {
     ATTR_BUTTON_PRESSED: "button_pressed",
 }
 
-AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA = {
+AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA_AND_CB = {
     **AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_COMMON,
     ATTR_MOTOR_SPEED: "motor_speed",
     ATTR_DEPTH: "depth",
@@ -330,7 +357,7 @@ FEATURE_FLAGS_AIRHUMIDIFIER = (
     | FEATURE_SET_TARGET_HUMIDITY
 )
 
-FEATURE_FLAGS_AIRHUMIDIFIER_CA = FEATURE_FLAGS_AIRHUMIDIFIER | FEATURE_SET_DRY
+FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB = FEATURE_FLAGS_AIRHUMIDIFIER | FEATURE_SET_DRY
 
 FEATURE_FLAGS_AIRFRESH = (
     FEATURE_SET_BUZZER
@@ -422,14 +449,12 @@ SERVICE_TO_METHOD = {
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the miio fan device from config."""
-    from miio import Device, DeviceException
-
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
 
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
-    token = config.get(CONF_TOKEN)
+    host = config[CONF_HOST]
+    token = config[CONF_TOKEN]
+    name = config[CONF_NAME]
     model = config.get(CONF_MODEL)
 
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
@@ -438,7 +463,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if model is None:
         try:
             miio_device = Device(host, token)
-            device_info = miio_device.info()
+            device_info = await hass.async_add_executor_job(miio_device.info)
             model = device_info.model
             unique_id = f"{model}-{device_info.mac_address}"
             _LOGGER.info(
@@ -451,18 +476,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             raise PlatformNotReady
 
     if model.startswith("zhimi.airpurifier."):
-        from miio import AirPurifier
-
         air_purifier = AirPurifier(host, token)
         device = XiaomiAirPurifier(name, air_purifier, model, unique_id)
     elif model.startswith("zhimi.humidifier."):
-        from miio import AirHumidifier
-
         air_humidifier = AirHumidifier(host, token, model=model)
         device = XiaomiAirHumidifier(name, air_humidifier, model, unique_id)
     elif model.startswith("zhimi.airfresh."):
-        from miio import AirFresh
-
         air_fresh = AirFresh(host, token)
         device = XiaomiAirFresh(name, air_fresh, model, unique_id)
     else:
@@ -573,8 +592,6 @@ class XiaomiGenericDevice(FanEntity):
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a miio device command handling error messages."""
-        from miio import DeviceException
-
         try:
             result = await self.hass.async_add_executor_job(
                 partial(func, *args, **kwargs)
@@ -691,8 +708,6 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
 
     async def async_update(self):
         """Fetch state from the device."""
-        from miio import DeviceException
-
         # On state change the device doesn't provide the new state immediately.
         if self._skip_update:
             self._skip_update = False
@@ -724,9 +739,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
     def speed(self):
         """Return the current speed."""
         if self._state:
-            from miio.airpurifier import OperationMode
-
-            return OperationMode(self._state_attrs[ATTR_MODE]).name
+            return AirpurifierOperationMode(self._state_attrs[ATTR_MODE]).name
 
         return None
 
@@ -735,14 +748,12 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
         if self.supported_features & SUPPORT_SET_SPEED == 0:
             return
 
-        from miio.airpurifier import OperationMode
-
         _LOGGER.debug("Setting the operation mode to: %s", speed)
 
         await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
-            OperationMode[speed.title()],
+            AirpurifierOperationMode[speed.title()],
         )
 
     async def async_set_led_on(self):
@@ -770,12 +781,10 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
         if self._device_features & FEATURE_SET_LED_BRIGHTNESS == 0:
             return
 
-        from miio.airpurifier import LedBrightness
-
         await self._try_command(
             "Setting the led brightness of the miio device failed.",
             self._device.set_led_brightness,
-            LedBrightness(brightness),
+            AirpurifierLedBrightness(brightness),
         )
 
     async def async_set_favorite_level(self, level: int = 1):
@@ -871,21 +880,23 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
 
     def __init__(self, name, device, model, unique_id):
         """Initialize the plug switch."""
-        from miio.airhumidifier import OperationMode
-
         super().__init__(name, device, model, unique_id)
 
-        if self._model == MODEL_AIRHUMIDIFIER_CA:
-            self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA
-            self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA
+        if self._model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
+            self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB
+            self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA_AND_CB
             self._speed_list = [
-                mode.name for mode in OperationMode if mode is not OperationMode.Strong
+                mode.name
+                for mode in AirhumidifierOperationMode
+                if mode is not AirhumidifierOperationMode.Strong
             ]
         else:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER
             self._speed_list = [
-                mode.name for mode in OperationMode if mode is not OperationMode.Auto
+                mode.name
+                for mode in AirhumidifierOperationMode
+                if mode is not AirhumidifierOperationMode.Auto
             ]
 
         self._state_attrs.update(
@@ -894,8 +905,6 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
 
     async def async_update(self):
         """Fetch state from the device."""
-        from miio import DeviceException
-
         # On state change the device doesn't provide the new state immediately.
         if self._skip_update:
             self._skip_update = False
@@ -927,9 +936,7 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
     def speed(self):
         """Return the current speed."""
         if self._state:
-            from miio.airhumidifier import OperationMode
-
-            return OperationMode(self._state_attrs[ATTR_MODE]).name
+            return AirhumidifierOperationMode(self._state_attrs[ATTR_MODE]).name
 
         return None
 
@@ -938,14 +945,12 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
         if self.supported_features & SUPPORT_SET_SPEED == 0:
             return
 
-        from miio.airhumidifier import OperationMode
-
         _LOGGER.debug("Setting the operation mode to: %s", speed)
 
         await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
-            OperationMode[speed.title()],
+            AirhumidifierOperationMode[speed.title()],
         )
 
     async def async_set_led_brightness(self, brightness: int = 2):
@@ -953,12 +958,10 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
         if self._device_features & FEATURE_SET_LED_BRIGHTNESS == 0:
             return
 
-        from miio.airhumidifier import LedBrightness
-
         await self._try_command(
             "Setting the led brightness of the miio device failed.",
             self._device.set_led_brightness,
-            LedBrightness(brightness),
+            AirhumidifierLedBrightness(brightness),
         )
 
     async def async_set_target_humidity(self, humidity: int = 40):
@@ -1011,8 +1014,6 @@ class XiaomiAirFresh(XiaomiGenericDevice):
 
     async def async_update(self):
         """Fetch state from the device."""
-        from miio import DeviceException
-
         # On state change the device doesn't provide the new state immediately.
         if self._skip_update:
             self._skip_update = False
@@ -1044,9 +1045,7 @@ class XiaomiAirFresh(XiaomiGenericDevice):
     def speed(self):
         """Return the current speed."""
         if self._state:
-            from miio.airfresh import OperationMode
-
-            return OperationMode(self._state_attrs[ATTR_MODE]).name
+            return AirfreshOperationMode(self._state_attrs[ATTR_MODE]).name
 
         return None
 
@@ -1055,14 +1054,12 @@ class XiaomiAirFresh(XiaomiGenericDevice):
         if self.supported_features & SUPPORT_SET_SPEED == 0:
             return
 
-        from miio.airfresh import OperationMode
-
         _LOGGER.debug("Setting the operation mode to: %s", speed)
 
         await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
-            OperationMode[speed.title()],
+            AirfreshOperationMode[speed.title()],
         )
 
     async def async_set_led_on(self):
@@ -1090,12 +1087,10 @@ class XiaomiAirFresh(XiaomiGenericDevice):
         if self._device_features & FEATURE_SET_LED_BRIGHTNESS == 0:
             return
 
-        from miio.airfresh import LedBrightness
-
         await self._try_command(
             "Setting the led brightness of the miio device failed.",
             self._device.set_led_brightness,
-            LedBrightness(brightness),
+            AirfreshLedBrightness(brightness),
         )
 
     async def async_set_extra_features(self, features: int = 1):

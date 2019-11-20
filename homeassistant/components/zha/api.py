@@ -4,6 +4,8 @@ import asyncio
 import logging
 
 import voluptuous as vol
+from zigpy.types.named import EUI64
+import zigpy.zdo.types as zdo_types
 
 from homeassistant.components import websocket_api
 from homeassistant.core import callback
@@ -19,9 +21,16 @@ from .core.const import (
     ATTR_COMMAND,
     ATTR_COMMAND_TYPE,
     ATTR_ENDPOINT_ID,
+    ATTR_LEVEL,
     ATTR_MANUFACTURER,
     ATTR_NAME,
     ATTR_VALUE,
+    ATTR_WARNING_DEVICE_DURATION,
+    ATTR_WARNING_DEVICE_MODE,
+    ATTR_WARNING_DEVICE_STROBE,
+    ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE,
+    ATTR_WARNING_DEVICE_STROBE_INTENSITY,
+    CHANNEL_IAS_WD,
     CLUSTER_COMMAND_SERVER,
     CLUSTER_COMMANDS_CLIENT,
     CLUSTER_COMMANDS_SERVER,
@@ -31,8 +40,13 @@ from .core.const import (
     DATA_ZHA_GATEWAY,
     DOMAIN,
     MFG_CLUSTER_ID_START,
+    WARNING_DEVICE_MODE_EMERGENCY,
+    WARNING_DEVICE_SOUND_HIGH,
+    WARNING_DEVICE_SQUAWK_MODE_ARMED,
+    WARNING_DEVICE_STROBE_HIGH,
+    WARNING_DEVICE_STROBE_YES,
 )
-from .core.helpers import async_is_bindable_target, convert_ieee, get_matched_clusters
+from .core.helpers import async_is_bindable_target, get_matched_clusters
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +57,7 @@ RESPONSE = "response"
 DEVICE_INFO = "device_info"
 
 ATTR_DURATION = "duration"
+ATTR_GROUP = "group"
 ATTR_IEEE_ADDRESS = "ieee_address"
 ATTR_IEEE = "ieee"
 ATTR_SOURCE_IEEE = "source_ieee"
@@ -54,24 +69,27 @@ SERVICE_PERMIT = "permit"
 SERVICE_REMOVE = "remove"
 SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE = "set_zigbee_cluster_attribute"
 SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND = "issue_zigbee_cluster_command"
+SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND = "issue_zigbee_group_command"
 SERVICE_DIRECT_ZIGBEE_BIND = "issue_direct_zigbee_bind"
 SERVICE_DIRECT_ZIGBEE_UNBIND = "issue_direct_zigbee_unbind"
+SERVICE_WARNING_DEVICE_SQUAWK = "warning_device_squawk"
+SERVICE_WARNING_DEVICE_WARN = "warning_device_warn"
 SERVICE_ZIGBEE_BIND = "service_zigbee_bind"
 IEEE_SERVICE = "ieee_based_service"
 
 SERVICE_SCHEMAS = {
     SERVICE_PERMIT: vol.Schema(
         {
-            vol.Optional(ATTR_IEEE_ADDRESS, default=None): convert_ieee,
+            vol.Optional(ATTR_IEEE_ADDRESS, default=None): EUI64.convert,
             vol.Optional(ATTR_DURATION, default=60): vol.All(
                 vol.Coerce(int), vol.Range(0, 254)
             ),
         }
     ),
-    IEEE_SERVICE: vol.Schema({vol.Required(ATTR_IEEE_ADDRESS): convert_ieee}),
+    IEEE_SERVICE: vol.Schema({vol.Required(ATTR_IEEE_ADDRESS): EUI64.convert}),
     SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE: vol.Schema(
         {
-            vol.Required(ATTR_IEEE): convert_ieee,
+            vol.Required(ATTR_IEEE): EUI64.convert,
             vol.Required(ATTR_ENDPOINT_ID): cv.positive_int,
             vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
             vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
@@ -80,15 +98,60 @@ SERVICE_SCHEMAS = {
             vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
         }
     ),
+    SERVICE_WARNING_DEVICE_SQUAWK: vol.Schema(
+        {
+            vol.Required(ATTR_IEEE): EUI64.convert,
+            vol.Optional(
+                ATTR_WARNING_DEVICE_MODE, default=WARNING_DEVICE_SQUAWK_MODE_ARMED
+            ): cv.positive_int,
+            vol.Optional(
+                ATTR_WARNING_DEVICE_STROBE, default=WARNING_DEVICE_STROBE_YES
+            ): cv.positive_int,
+            vol.Optional(
+                ATTR_LEVEL, default=WARNING_DEVICE_SOUND_HIGH
+            ): cv.positive_int,
+        }
+    ),
+    SERVICE_WARNING_DEVICE_WARN: vol.Schema(
+        {
+            vol.Required(ATTR_IEEE): EUI64.convert,
+            vol.Optional(
+                ATTR_WARNING_DEVICE_MODE, default=WARNING_DEVICE_MODE_EMERGENCY
+            ): cv.positive_int,
+            vol.Optional(
+                ATTR_WARNING_DEVICE_STROBE, default=WARNING_DEVICE_STROBE_YES
+            ): cv.positive_int,
+            vol.Optional(
+                ATTR_LEVEL, default=WARNING_DEVICE_SOUND_HIGH
+            ): cv.positive_int,
+            vol.Optional(ATTR_WARNING_DEVICE_DURATION, default=5): cv.positive_int,
+            vol.Optional(
+                ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE, default=0x00
+            ): cv.positive_int,
+            vol.Optional(
+                ATTR_WARNING_DEVICE_STROBE_INTENSITY, default=WARNING_DEVICE_STROBE_HIGH
+            ): cv.positive_int,
+        }
+    ),
     SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND: vol.Schema(
         {
-            vol.Required(ATTR_IEEE): convert_ieee,
+            vol.Required(ATTR_IEEE): EUI64.convert,
             vol.Required(ATTR_ENDPOINT_ID): cv.positive_int,
             vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
             vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
             vol.Required(ATTR_COMMAND): cv.positive_int,
             vol.Required(ATTR_COMMAND_TYPE): cv.string,
             vol.Optional(ATTR_ARGS, default=""): cv.string,
+            vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
+        }
+    ),
+    SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND: vol.Schema(
+        {
+            vol.Required(ATTR_GROUP): cv.positive_int,
+            vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
+            vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
+            vol.Required(ATTR_COMMAND): cv.positive_int,
+            vol.Optional(ATTR_ARGS, default=[]): cv.ensure_list,
             vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
         }
     ),
@@ -100,7 +163,7 @@ SERVICE_SCHEMAS = {
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "zha/devices/permit",
-        vol.Optional(ATTR_IEEE, default=None): convert_ieee,
+        vol.Optional(ATTR_IEEE, default=None): EUI64.convert,
         vol.Optional(ATTR_DURATION, default=60): vol.All(
             vol.Coerce(int), vol.Range(0, 254)
         ),
@@ -151,7 +214,7 @@ async def websocket_get_devices(hass, connection, msg):
 @websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command(
-    {vol.Required(TYPE): "zha/device", vol.Required(ATTR_IEEE): convert_ieee}
+    {vol.Required(TYPE): "zha/device", vol.Required(ATTR_IEEE): EUI64.convert}
 )
 async def websocket_get_device(hass, connection, msg):
     """Get ZHA devices."""
@@ -203,7 +266,7 @@ def async_get_device_info(hass, device, ha_device_registry=None):
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/devices/reconfigure",
-        vol.Required(ATTR_IEEE): convert_ieee,
+        vol.Required(ATTR_IEEE): EUI64.convert,
     }
 )
 async def websocket_reconfigure_node(hass, connection, msg):
@@ -218,7 +281,7 @@ async def websocket_reconfigure_node(hass, connection, msg):
 @websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command(
-    {vol.Required(TYPE): "zha/devices/clusters", vol.Required(ATTR_IEEE): convert_ieee}
+    {vol.Required(TYPE): "zha/devices/clusters", vol.Required(ATTR_IEEE): EUI64.convert}
 )
 async def websocket_device_clusters(hass, connection, msg):
     """Return a list of device clusters."""
@@ -256,7 +319,7 @@ async def websocket_device_clusters(hass, connection, msg):
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/devices/clusters/attributes",
-        vol.Required(ATTR_IEEE): convert_ieee,
+        vol.Required(ATTR_IEEE): EUI64.convert,
         vol.Required(ATTR_ENDPOINT_ID): int,
         vol.Required(ATTR_CLUSTER_ID): int,
         vol.Required(ATTR_CLUSTER_TYPE): str,
@@ -297,7 +360,7 @@ async def websocket_device_cluster_attributes(hass, connection, msg):
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/devices/clusters/commands",
-        vol.Required(ATTR_IEEE): convert_ieee,
+        vol.Required(ATTR_IEEE): EUI64.convert,
         vol.Required(ATTR_ENDPOINT_ID): int,
         vol.Required(ATTR_CLUSTER_ID): int,
         vol.Required(ATTR_CLUSTER_TYPE): str,
@@ -351,7 +414,7 @@ async def websocket_device_cluster_commands(hass, connection, msg):
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/devices/clusters/attributes/value",
-        vol.Required(ATTR_IEEE): convert_ieee,
+        vol.Required(ATTR_IEEE): EUI64.convert,
         vol.Required(ATTR_ENDPOINT_ID): int,
         vol.Required(ATTR_CLUSTER_ID): int,
         vol.Required(ATTR_CLUSTER_TYPE): str,
@@ -395,7 +458,7 @@ async def websocket_read_zigbee_cluster_attributes(hass, connection, msg):
 @websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command(
-    {vol.Required(TYPE): "zha/devices/bindable", vol.Required(ATTR_IEEE): convert_ieee}
+    {vol.Required(TYPE): "zha/devices/bindable", vol.Required(ATTR_IEEE): EUI64.convert}
 )
 async def websocket_get_bindable_devices(hass, connection, msg):
     """Directly bind devices."""
@@ -423,8 +486,8 @@ async def websocket_get_bindable_devices(hass, connection, msg):
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/devices/bind",
-        vol.Required(ATTR_SOURCE_IEEE): convert_ieee,
-        vol.Required(ATTR_TARGET_IEEE): convert_ieee,
+        vol.Required(ATTR_SOURCE_IEEE): EUI64.convert,
+        vol.Required(ATTR_TARGET_IEEE): EUI64.convert,
     }
 )
 async def websocket_bind_devices(hass, connection, msg):
@@ -445,8 +508,8 @@ async def websocket_bind_devices(hass, connection, msg):
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zha/devices/unbind",
-        vol.Required(ATTR_SOURCE_IEEE): convert_ieee,
-        vol.Required(ATTR_TARGET_IEEE): convert_ieee,
+        vol.Required(ATTR_SOURCE_IEEE): EUI64.convert,
+        vol.Required(ATTR_TARGET_IEEE): EUI64.convert,
     }
 )
 async def websocket_unbind_devices(hass, connection, msg):
@@ -464,7 +527,6 @@ async def websocket_unbind_devices(hass, connection, msg):
 
 async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operation):
     """Create or remove a direct zigbee binding between 2 devices."""
-    from zigpy.zdo import types as zdo_types
 
     source_device = zha_gateway.get_device(source_ieee)
     target_device = zha_gateway.get_device(target_ieee)
@@ -610,6 +672,117 @@ def async_load_api(hass):
         schema=SERVICE_SCHEMAS[SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND],
     )
 
+    async def issue_zigbee_group_command(service):
+        """Issue command on zigbee cluster on a zigbee group."""
+        group_id = service.data.get(ATTR_GROUP)
+        cluster_id = service.data.get(ATTR_CLUSTER_ID)
+        command = service.data.get(ATTR_COMMAND)
+        args = service.data.get(ATTR_ARGS)
+        manufacturer = service.data.get(ATTR_MANUFACTURER) or None
+        group = zha_gateway.get_group(group_id)
+        if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
+            _LOGGER.error("Missing manufacturer attribute for cluster: %d", cluster_id)
+        response = None
+        if group is not None:
+            cluster = group.endpoint[cluster_id]
+            response = await cluster.command(
+                command, *args, manufacturer=manufacturer, expect_reply=True
+            )
+        _LOGGER.debug(
+            "Issue group command for: %s %s %s %s %s",
+            f"{ATTR_CLUSTER_ID}: [{cluster_id}]",
+            f"{ATTR_COMMAND}: [{command}]",
+            f"{ATTR_ARGS}: [{args}]",
+            f"{ATTR_MANUFACTURER}: [{manufacturer}]",
+            f"{RESPONSE}: [{response}]",
+        )
+
+    hass.helpers.service.async_register_admin_service(
+        DOMAIN,
+        SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND,
+        issue_zigbee_group_command,
+        schema=SERVICE_SCHEMAS[SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND],
+    )
+
+    async def warning_device_squawk(service):
+        """Issue the squawk command for an IAS warning device."""
+        ieee = service.data[ATTR_IEEE]
+        mode = service.data.get(ATTR_WARNING_DEVICE_MODE)
+        strobe = service.data.get(ATTR_WARNING_DEVICE_STROBE)
+        level = service.data.get(ATTR_LEVEL)
+
+        zha_device = zha_gateway.get_device(ieee)
+        if zha_device is not None:
+            channel = zha_device.cluster_channels.get(CHANNEL_IAS_WD)
+            if channel:
+                await channel.squawk(mode, strobe, level)
+            else:
+                _LOGGER.error(
+                    "Squawking IASWD: %s is missing the required IASWD channel!",
+                    "{}: [{}]".format(ATTR_IEEE, str(ieee)),
+                )
+        else:
+            _LOGGER.error(
+                "Squawking IASWD: %s could not be found!",
+                "{}: [{}]".format(ATTR_IEEE, str(ieee)),
+            )
+        _LOGGER.debug(
+            "Squawking IASWD: %s %s %s %s",
+            "{}: [{}]".format(ATTR_IEEE, str(ieee)),
+            "{}: [{}]".format(ATTR_WARNING_DEVICE_MODE, mode),
+            "{}: [{}]".format(ATTR_WARNING_DEVICE_STROBE, strobe),
+            "{}: [{}]".format(ATTR_LEVEL, level),
+        )
+
+    hass.helpers.service.async_register_admin_service(
+        DOMAIN,
+        SERVICE_WARNING_DEVICE_SQUAWK,
+        warning_device_squawk,
+        schema=SERVICE_SCHEMAS[SERVICE_WARNING_DEVICE_SQUAWK],
+    )
+
+    async def warning_device_warn(service):
+        """Issue the warning command for an IAS warning device."""
+        ieee = service.data[ATTR_IEEE]
+        mode = service.data.get(ATTR_WARNING_DEVICE_MODE)
+        strobe = service.data.get(ATTR_WARNING_DEVICE_STROBE)
+        level = service.data.get(ATTR_LEVEL)
+        duration = service.data.get(ATTR_WARNING_DEVICE_DURATION)
+        duty_mode = service.data.get(ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE)
+        intensity = service.data.get(ATTR_WARNING_DEVICE_STROBE_INTENSITY)
+
+        zha_device = zha_gateway.get_device(ieee)
+        if zha_device is not None:
+            channel = zha_device.cluster_channels.get(CHANNEL_IAS_WD)
+            if channel:
+                await channel.start_warning(
+                    mode, strobe, level, duration, duty_mode, intensity
+                )
+            else:
+                _LOGGER.error(
+                    "Warning IASWD: %s is missing the required IASWD channel!",
+                    "{}: [{}]".format(ATTR_IEEE, str(ieee)),
+                )
+        else:
+            _LOGGER.error(
+                "Warning IASWD: %s could not be found!",
+                "{}: [{}]".format(ATTR_IEEE, str(ieee)),
+            )
+        _LOGGER.debug(
+            "Warning IASWD: %s %s %s %s",
+            "{}: [{}]".format(ATTR_IEEE, str(ieee)),
+            "{}: [{}]".format(ATTR_WARNING_DEVICE_MODE, mode),
+            "{}: [{}]".format(ATTR_WARNING_DEVICE_STROBE, strobe),
+            "{}: [{}]".format(ATTR_LEVEL, level),
+        )
+
+    hass.helpers.service.async_register_admin_service(
+        DOMAIN,
+        SERVICE_WARNING_DEVICE_WARN,
+        warning_device_warn,
+        schema=SERVICE_SCHEMAS[SERVICE_WARNING_DEVICE_WARN],
+    )
+
     websocket_api.async_register_command(hass, websocket_permit_devices)
     websocket_api.async_register_command(hass, websocket_get_devices)
     websocket_api.async_register_command(hass, websocket_get_device)
@@ -629,3 +802,6 @@ def async_unload_api(hass):
     hass.services.async_remove(DOMAIN, SERVICE_REMOVE)
     hass.services.async_remove(DOMAIN, SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE)
     hass.services.async_remove(DOMAIN, SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND)
+    hass.services.async_remove(DOMAIN, SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND)
+    hass.services.async_remove(DOMAIN, SERVICE_WARNING_DEVICE_SQUAWK)
+    hass.services.async_remove(DOMAIN, SERVICE_WARNING_DEVICE_WARN)

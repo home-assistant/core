@@ -1,6 +1,7 @@
 """Support for the Netatmo binary sensors."""
 import logging
 
+from pyatmo import NoDevice
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
@@ -58,15 +59,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     module_name = None
 
-    import pyatmo
-
     auth = hass.data[DATA_NETATMO_AUTH]
 
     try:
         data = CameraData(hass, auth, home)
         if not data.get_camera_names():
             return None
-    except pyatmo.NoDevice:
+    except NoDevice:
         return None
 
     welcome_sensors = config.get(CONF_WELCOME_SENSORS, WELCOME_SENSOR_TYPES)

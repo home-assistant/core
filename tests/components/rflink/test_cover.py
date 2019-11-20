@@ -9,13 +9,13 @@ import logging
 
 from homeassistant.components.rflink import EVENT_BUTTON_PRESSED
 from homeassistant.const import (
-    SERVICE_OPEN_COVER,
-    SERVICE_CLOSE_COVER,
-    STATE_OPEN,
-    STATE_CLOSED,
     ATTR_ENTITY_ID,
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
+    STATE_CLOSED,
+    STATE_OPEN,
 )
-from homeassistant.core import callback, State, CoreState
+from homeassistant.core import CoreState, State, callback
 
 from tests.common import mock_restore_cache
 from tests.components.rflink.test_init import mock_rflink

@@ -19,10 +19,14 @@ from homeassistant.helpers import config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 CONF_FRAMERATE = "framerate"
+CONF_SECURITY_LEVEL = "security_level"
+CONF_STREAM_PATH = "stream_path"
 
 DEFAULT_CAMERA_BRAND = "Vivotek"
 DEFAULT_NAME = "Vivotek Camera"
 DEFAULT_EVENT_0_KEY = "event_i0_enable"
+DEFAULT_SECURITY_LEVEL = "admin"
+DEFAULT_STREAM_SOURCE = "live.sdp"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -33,12 +37,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_SSL, default=False): cv.boolean,
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
         vol.Optional(CONF_FRAMERATE, default=2): cv.positive_int,
+        vol.Optional(CONF_SECURITY_LEVEL, default=DEFAULT_SECURITY_LEVEL): cv.string,
+        vol.Optional(CONF_STREAM_PATH, default=DEFAULT_STREAM_SOURCE): cv.string,
     }
 )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Vivotek IP Camera."""
+    creds = f"{config[CONF_USERNAME]}:{config[CONF_PASSWORD]}"
     args = dict(
         config=config,
         cam=VivotekCamera(
@@ -47,15 +54,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             verify_ssl=config[CONF_VERIFY_SSL],
             usr=config[CONF_USERNAME],
             pwd=config[CONF_PASSWORD],
+            sec_lvl=config[CONF_SECURITY_LEVEL],
         ),
-        stream_source=(
-            "rtsp://%s:%s@%s:554/live.sdp",
-            config[CONF_USERNAME],
-            config[CONF_PASSWORD],
-            config[CONF_IP_ADDRESS],
-        ),
+        stream_source=f"rtsp://{creds}@{config[CONF_IP_ADDRESS]}:554/{config[CONF_STREAM_PATH]}",
     )
-    add_entities([VivotekCam(**args)])
+    add_entities([VivotekCam(**args)], True)
 
 
 class VivotekCam(Camera):
@@ -68,6 +71,7 @@ class VivotekCam(Camera):
         self._cam = cam
         self._frame_interval = 1 / config[CONF_FRAMERATE]
         self._motion_detection_enabled = False
+        self._model_name = None
         self._name = config[CONF_NAME]
         self._stream_source = stream_source
 
@@ -117,4 +121,8 @@ class VivotekCam(Camera):
     @property
     def model(self):
         """Return the camera model."""
-        return self._cam.model_name
+        return self._model_name
+
+    def update(self):
+        """Update entity status."""
+        self._model_name = self._cam.model_name

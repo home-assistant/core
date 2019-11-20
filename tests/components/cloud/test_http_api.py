@@ -7,16 +7,11 @@ import pytest
 from jose import jwt
 from hass_nabucasa.auth import Unauthenticated, UnknownError
 from hass_nabucasa.const import STATE_CONNECTED
+from hass_nabucasa import thingtalk
 
 from homeassistant.core import State
 from homeassistant.auth.providers import trusted_networks as tn_auth
-from homeassistant.components.cloud.const import (
-    PREF_ENABLE_GOOGLE,
-    PREF_ENABLE_ALEXA,
-    PREF_GOOGLE_SECURE_DEVICES_PIN,
-    DOMAIN,
-    RequireRelink,
-)
+from homeassistant.components.cloud.const import DOMAIN, RequireRelink
 from homeassistant.components.google_assistant.helpers import GoogleEntity
 from homeassistant.components.alexa.entities import LightCapabilities
 from homeassistant.components.alexa import errors as alexa_errors
@@ -33,7 +28,9 @@ SUBSCRIPTION_INFO_URL = "https://api-test.hass.io/subscription_info"
 @pytest.fixture()
 def mock_auth():
     """Mock check token."""
-    with patch("hass_nabucasa.auth.CognitoAuth.check_token"):
+    with patch(
+        "hass_nabucasa.auth.CognitoAuth.async_check_token", side_effect=mock_coro
+    ):
         yield
 
 
@@ -357,6 +354,7 @@ async def test_websocket_status(
             "google_secure_devices_pin": None,
             "alexa_entity_configs": {},
             "alexa_report_state": False,
+            "google_report_state": False,
             "remote_enabled": False,
         },
         "alexa_entities": {
@@ -471,9 +469,9 @@ async def test_websocket_update_preferences(
     hass, hass_ws_client, aioclient_mock, setup_api, mock_cloud_login
 ):
     """Test updating preference."""
-    assert setup_api[PREF_ENABLE_GOOGLE]
-    assert setup_api[PREF_ENABLE_ALEXA]
-    assert setup_api[PREF_GOOGLE_SECURE_DEVICES_PIN] is None
+    assert setup_api.google_enabled
+    assert setup_api.alexa_enabled
+    assert setup_api.google_secure_devices_pin is None
     client = await hass_ws_client(hass)
     await client.send_json(
         {
@@ -487,9 +485,9 @@ async def test_websocket_update_preferences(
     response = await client.receive_json()
 
     assert response["success"]
-    assert not setup_api[PREF_ENABLE_GOOGLE]
-    assert not setup_api[PREF_ENABLE_ALEXA]
-    assert setup_api[PREF_GOOGLE_SECURE_DEVICES_PIN] == "1234"
+    assert not setup_api.google_enabled
+    assert not setup_api.alexa_enabled
+    assert setup_api.google_secure_devices_pin == "1234"
 
 
 async def test_websocket_update_preferences_require_relink(
@@ -874,3 +872,55 @@ async def test_enable_alexa_state_report_fail(
 
     assert not response["success"]
     assert response["error"]["code"] == "alexa_relink"
+
+
+async def test_thingtalk_convert(hass, hass_ws_client, setup_api):
+    """Test that we can convert a query."""
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.cloud.http_api.thingtalk.async_convert",
+        return_value=mock_coro({"hello": "world"}),
+    ):
+        await client.send_json(
+            {"id": 5, "type": "cloud/thingtalk/convert", "query": "some-data"}
+        )
+        response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"hello": "world"}
+
+
+async def test_thingtalk_convert_timeout(hass, hass_ws_client, setup_api):
+    """Test that we can convert a query."""
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.cloud.http_api.thingtalk.async_convert",
+        side_effect=asyncio.TimeoutError,
+    ):
+        await client.send_json(
+            {"id": 5, "type": "cloud/thingtalk/convert", "query": "some-data"}
+        )
+        response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "timeout"
+
+
+async def test_thingtalk_convert_internal(hass, hass_ws_client, setup_api):
+    """Test that we can convert a query."""
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.cloud.http_api.thingtalk.async_convert",
+        side_effect=thingtalk.ThingTalkConversionError("Did not understand"),
+    ):
+        await client.send_json(
+            {"id": 5, "type": "cloud/thingtalk/convert", "query": "some-data"}
+        )
+        response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "unknown_error"
+    assert response["error"]["message"] == "Did not understand"

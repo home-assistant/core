@@ -2,6 +2,7 @@
 import logging
 
 import voluptuous as vol
+import vlc
 
 from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
@@ -16,6 +17,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,8 +53,6 @@ class VlcDevice(MediaPlayerDevice):
 
     def __init__(self, name, arguments):
         """Initialize the vlc device."""
-        import vlc
-
         self._instance = vlc.Instance(arguments)
         self._vlc = self._instance.media_player_new()
         self._name = name
@@ -65,8 +65,6 @@ class VlcDevice(MediaPlayerDevice):
 
     def update(self):
         """Get the latest details from the device."""
-        import vlc
-
         status = self._vlc.get_state()
         if status == vlc.State.Playing:
             self._state = STATE_PLAYING

@@ -7,7 +7,7 @@ import random
 import re
 from datetime import datetime
 from functools import wraps
-from typing import Iterable
+from typing import Any, Dict, Iterable, List, Optional, Union
 
 import jinja2
 from jinja2 import contextfilter, contextfunction
@@ -25,13 +25,13 @@ from homeassistant.const import (
 from homeassistant.core import State, callback, split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
-from homeassistant.helpers.typing import TemplateVarsType
+from homeassistant.helpers.typing import HomeAssistantType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
 from homeassistant.util.async_ import run_callback_threadsafe
 
 
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,7 +72,9 @@ def render_complex(value, variables=None):
     return value.async_render(variables)
 
 
-def extract_entities(template, variables=None):
+def extract_entities(
+    template: Optional[str], variables: Optional[Dict[str, Any]] = None
+) -> Union[str, List[str]]:
     """Extract all entities for state_changed listener from template string."""
     if template is None or _RE_JINJA_DELIMITERS.search(template) is None:
         return []
@@ -86,6 +88,7 @@ def extract_entities(template, variables=None):
     for result in extraction:
         if (
             result[0] == "trigger.entity_id"
+            and variables
             and "trigger" in variables
             and "entity_id" in variables["trigger"]
         ):
@@ -106,7 +109,7 @@ def extract_entities(template, variables=None):
     return MATCH_ALL
 
 
-def _true(arg) -> bool:
+def _true(arg: Any) -> bool:
     return True
 
 
@@ -163,7 +166,7 @@ class Template:
         if not isinstance(template, str):
             raise TypeError("Expected template to be a string")
 
-        self.template = template
+        self.template: str = template
         self._compiled_code = None
         self._compiled = None
         self.hass = hass
@@ -187,11 +190,13 @@ class Template:
         except jinja2.exceptions.TemplateSyntaxError as err:
             raise TemplateError(err)
 
-    def extract_entities(self, variables=None):
+    def extract_entities(
+        self, variables: Dict[str, Any] = None
+    ) -> Union[str, List[str]]:
         """Extract all entities for state_changed listener."""
         return extract_entities(self.template, variables)
 
-    def render(self, variables: TemplateVarsType = None, **kwargs):
+    def render(self, variables: TemplateVarsType = None, **kwargs: Any) -> str:
         """Render given template."""
         if variables is not None:
             kwargs.update(variables)
@@ -201,7 +206,7 @@ class Template:
         ).result()
 
     @callback
-    def async_render(self, variables: TemplateVarsType = None, **kwargs) -> str:
+    def async_render(self, variables: TemplateVarsType = None, **kwargs: Any) -> str:
         """Render given template.
 
         This method must be run in the event loop.
@@ -218,7 +223,7 @@ class Template:
 
     @callback
     def async_render_to_info(
-        self, variables: TemplateVarsType = None, **kwargs
+        self, variables: TemplateVarsType = None, **kwargs: Any
     ) -> RenderInfo:
         """Render the template and collect an entity filter."""
         assert self.hass and _RENDER_INFO not in self.hass.data
@@ -479,7 +484,7 @@ def _resolve_state(hass, entity_id_or_state):
     return None
 
 
-def expand(hass, *args) -> Iterable[State]:
+def expand(hass: HomeAssistantType, *args: Any) -> Iterable[State]:
     """Expand out any groups into entity states."""
     search = list(args)
     found = {}
@@ -635,7 +640,7 @@ def distance(hass, *args):
     )
 
 
-def is_state(hass, entity_id: str, state: State) -> bool:
+def is_state(hass: HomeAssistantType, entity_id: str, state: State) -> bool:
     """Test if a state is a specific value."""
     state_obj = _get_state(hass, entity_id)
     return state_obj is not None and state_obj.state == state
@@ -884,6 +889,16 @@ def ordinal(value):
     )
 
 
+def from_json(value):
+    """Convert a JSON string to an object."""
+    return json.loads(value)
+
+
+def to_json(value):
+    """Convert an object to a JSON string."""
+    return json.dumps(value)
+
+
 @contextfilter
 def random_every_time(context, values):
     """Choose a random value.
@@ -916,6 +931,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["timestamp_custom"] = timestamp_custom
         self.filters["timestamp_local"] = timestamp_local
         self.filters["timestamp_utc"] = timestamp_utc
+        self.filters["to_json"] = to_json
+        self.filters["from_json"] = from_json
         self.filters["is_defined"] = fail_when_undefined
         self.filters["max"] = max
         self.filters["min"] = min

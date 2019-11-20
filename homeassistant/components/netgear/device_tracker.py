@@ -1,6 +1,7 @@
 """Support for Netgear routers."""
 import logging
 
+from pynetgear import Netgear
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -71,14 +72,13 @@ class NetgearDeviceScanner(DeviceScanner):
         accesspoints,
     ):
         """Initialize the scanner."""
-        import pynetgear
 
         self.tracked_devices = devices
         self.excluded_devices = excluded_devices
         self.tracked_accesspoints = accesspoints
 
         self.last_results = []
-        self._api = pynetgear.Netgear(password, host, username, port, ssl)
+        self._api = Netgear(password, host, username, port, ssl)
 
         _LOGGER.info("Logging in")
 

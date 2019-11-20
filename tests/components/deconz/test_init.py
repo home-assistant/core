@@ -1,33 +1,34 @@
 """Test deCONZ component setup process."""
-from unittest.mock import Mock, patch
-
 import asyncio
+
+from asynctest import Mock, patch
+
 import pytest
 
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.components import deconz
 
-from tests.common import mock_coro, MockConfigEntry
+from tests.common import MockConfigEntry
 
 ENTRY1_HOST = "1.2.3.4"
 ENTRY1_PORT = 80
 ENTRY1_API_KEY = "1234567890ABCDEF"
 ENTRY1_BRIDGEID = "12345ABC"
+ENTRY1_UUID = "456DEF"
 
 ENTRY2_HOST = "2.3.4.5"
 ENTRY2_PORT = 80
 ENTRY2_API_KEY = "1234567890ABCDEF"
 ENTRY2_BRIDGEID = "23456DEF"
+ENTRY2_UUID = "789ACE"
 
 
 async def setup_entry(hass, entry):
     """Test that setup entry works."""
     with patch.object(
-        deconz.DeconzGateway, "async_setup", return_value=mock_coro(True)
+        deconz.DeconzGateway, "async_setup", return_value=True
     ), patch.object(
-        deconz.DeconzGateway,
-        "async_update_device_registry",
-        return_value=mock_coro(True),
+        deconz.DeconzGateway, "async_update_device_registry", return_value=True
     ):
         assert await deconz.async_setup_entry(hass, entry) is True
 
@@ -67,6 +68,7 @@ async def test_setup_entry_successful(hass):
             deconz.config_flow.CONF_PORT: ENTRY1_PORT,
             deconz.config_flow.CONF_API_KEY: ENTRY1_API_KEY,
             deconz.CONF_BRIDGEID: ENTRY1_BRIDGEID,
+            deconz.CONF_UUID: ENTRY1_UUID,
         },
     )
     entry.add_to_hass(hass)
@@ -86,6 +88,7 @@ async def test_setup_entry_multiple_gateways(hass):
             deconz.config_flow.CONF_PORT: ENTRY1_PORT,
             deconz.config_flow.CONF_API_KEY: ENTRY1_API_KEY,
             deconz.CONF_BRIDGEID: ENTRY1_BRIDGEID,
+            deconz.CONF_UUID: ENTRY1_UUID,
         },
     )
     entry.add_to_hass(hass)
@@ -97,6 +100,7 @@ async def test_setup_entry_multiple_gateways(hass):
             deconz.config_flow.CONF_PORT: ENTRY2_PORT,
             deconz.config_flow.CONF_API_KEY: ENTRY2_API_KEY,
             deconz.CONF_BRIDGEID: ENTRY2_BRIDGEID,
+            deconz.CONF_UUID: ENTRY2_UUID,
         },
     )
     entry2.add_to_hass(hass)
@@ -119,15 +123,14 @@ async def test_unload_entry(hass):
             deconz.config_flow.CONF_PORT: ENTRY1_PORT,
             deconz.config_flow.CONF_API_KEY: ENTRY1_API_KEY,
             deconz.CONF_BRIDGEID: ENTRY1_BRIDGEID,
+            deconz.CONF_UUID: ENTRY1_UUID,
         },
     )
     entry.add_to_hass(hass)
 
     await setup_entry(hass, entry)
 
-    with patch.object(
-        deconz.DeconzGateway, "async_reset", return_value=mock_coro(True)
-    ):
+    with patch.object(deconz.DeconzGateway, "async_reset", return_value=True):
         assert await deconz.async_unload_entry(hass, entry)
 
     assert not hass.data[deconz.DOMAIN]
@@ -142,6 +145,7 @@ async def test_unload_entry_multiple_gateways(hass):
             deconz.config_flow.CONF_PORT: ENTRY1_PORT,
             deconz.config_flow.CONF_API_KEY: ENTRY1_API_KEY,
             deconz.CONF_BRIDGEID: ENTRY1_BRIDGEID,
+            deconz.CONF_UUID: ENTRY1_UUID,
         },
     )
     entry.add_to_hass(hass)
@@ -153,6 +157,7 @@ async def test_unload_entry_multiple_gateways(hass):
             deconz.config_flow.CONF_PORT: ENTRY2_PORT,
             deconz.config_flow.CONF_API_KEY: ENTRY2_API_KEY,
             deconz.CONF_BRIDGEID: ENTRY2_BRIDGEID,
+            deconz.CONF_UUID: ENTRY2_UUID,
         },
     )
     entry2.add_to_hass(hass)
@@ -160,9 +165,7 @@ async def test_unload_entry_multiple_gateways(hass):
     await setup_entry(hass, entry)
     await setup_entry(hass, entry2)
 
-    with patch.object(
-        deconz.DeconzGateway, "async_reset", return_value=mock_coro(True)
-    ):
+    with patch.object(deconz.DeconzGateway, "async_reset", return_value=True):
         assert await deconz.async_unload_entry(hass, entry)
 
     assert ENTRY2_BRIDGEID in hass.data[deconz.DOMAIN]

@@ -1,14 +1,11 @@
 """Authentication for HTTP component."""
-import base64
 import logging
 
 from aiohttp import hdrs
 from aiohttp.web import middleware
 import jwt
 
-from homeassistant.auth.providers import legacy_api_password
 from homeassistant.auth.util import generate_secret
-from homeassistant.const import HTTP_HEADER_HA_AUTH
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
@@ -52,16 +49,6 @@ def async_sign_path(hass, refresh_token_id, path, expiration):
 @callback
 def setup_auth(hass, app):
     """Create auth middleware for the app."""
-    old_auth_warning = set()
-
-    support_legacy = hass.auth.support_legacy
-    if support_legacy:
-        _LOGGER.warning("legacy_api_password support has been enabled.")
-
-    trusted_networks = []
-    for prv in hass.auth.auth_providers:
-        if prv.type == "trusted_networks":
-            trusted_networks += prv.trusted_networks
 
     async def async_validate_auth_header(request):
         """
@@ -75,40 +62,16 @@ def setup_auth(hass, app):
             # If no space in authorization header
             return False
 
-        if auth_type == "Bearer":
-            refresh_token = await hass.auth.async_validate_access_token(auth_val)
-            if refresh_token is None:
-                return False
+        if auth_type != "Bearer":
+            return False
 
-            request[KEY_HASS_USER] = refresh_token.user
-            return True
+        refresh_token = await hass.auth.async_validate_access_token(auth_val)
 
-        if auth_type == "Basic" and support_legacy:
-            decoded = base64.b64decode(auth_val).decode("utf-8")
-            try:
-                username, password = decoded.split(":", 1)
-            except ValueError:
-                # If no ':' in decoded
-                return False
+        if refresh_token is None:
+            return False
 
-            if username != "homeassistant":
-                return False
-
-            user = await legacy_api_password.async_validate_password(hass, password)
-            if user is None:
-                return False
-
-            request[KEY_HASS_USER] = user
-            _LOGGER.info(
-                "Basic auth with api_password is going to deprecate,"
-                " please use a bearer token to access %s from %s",
-                request.path,
-                request[KEY_REAL_IP],
-            )
-            old_auth_warning.add(request.path)
-            return True
-
-        return False
+        request[KEY_HASS_USER] = refresh_token.user
+        return True
 
     async def async_validate_signed_request(request):
         """Validate a signed request."""
@@ -140,50 +103,16 @@ def setup_auth(hass, app):
         request[KEY_HASS_USER] = refresh_token.user
         return True
 
-    async def async_validate_trusted_networks(request):
-        """Test if request is from a trusted ip."""
-        ip_addr = request[KEY_REAL_IP]
-
-        if not any(ip_addr in trusted_network for trusted_network in trusted_networks):
-            return False
-
-        user = await hass.auth.async_get_owner()
-        if user is None:
-            return False
-
-        request[KEY_HASS_USER] = user
-        return True
-
-    async def async_validate_legacy_api_password(request, password):
-        """Validate api_password."""
-        user = await legacy_api_password.async_validate_password(hass, password)
-        if user is None:
-            return False
-
-        request[KEY_HASS_USER] = user
-        return True
-
     @middleware
     async def auth_middleware(request, handler):
         """Authenticate as middleware."""
         authenticated = False
 
-        if HTTP_HEADER_HA_AUTH in request.headers or DATA_API_PASSWORD in request.query:
-            if request.path not in old_auth_warning:
-                _LOGGER.log(
-                    logging.INFO if support_legacy else logging.WARNING,
-                    "api_password is going to deprecate. You need to use a"
-                    " bearer token to access %s from %s",
-                    request.path,
-                    request[KEY_REAL_IP],
-                )
-                old_auth_warning.add(request.path)
-
         if hdrs.AUTHORIZATION in request.headers and await async_validate_auth_header(
             request
         ):
-            # it included both use_auth and api_password Basic auth
             authenticated = True
+            auth_type = "bearer token"
 
         # We first start with a string check to avoid parsing query params
         # for every request.
@@ -193,39 +122,15 @@ def setup_auth(hass, app):
             and await async_validate_signed_request(request)
         ):
             authenticated = True
+            auth_type = "signed request"
 
-        elif trusted_networks and await async_validate_trusted_networks(request):
-            if request.path not in old_auth_warning:
-                # When removing this, don't forget to remove the print logic
-                # in http/view.py
-                request["deprecate_warning_message"] = (
-                    "Access from trusted networks without auth token is "
-                    "going to be removed in Home Assistant 0.96. Configure "
-                    "the trusted networks auth provider or use long-lived "
-                    "access tokens to access {} from {}".format(
-                        request.path, request[KEY_REAL_IP]
-                    )
-                )
-                old_auth_warning.add(request.path)
-            authenticated = True
-
-        elif (
-            support_legacy
-            and HTTP_HEADER_HA_AUTH in request.headers
-            and await async_validate_legacy_api_password(
-                request, request.headers[HTTP_HEADER_HA_AUTH]
+        if authenticated:
+            _LOGGER.debug(
+                "Authenticated %s for %s using %s",
+                request[KEY_REAL_IP],
+                request.path,
+                auth_type,
             )
-        ):
-            authenticated = True
-
-        elif (
-            support_legacy
-            and DATA_API_PASSWORD in request.query
-            and await async_validate_legacy_api_password(
-                request, request.query[DATA_API_PASSWORD]
-            )
-        ):
-            authenticated = True
 
         request[KEY_AUTHENTICATED] = authenticated
         return await handler(request)

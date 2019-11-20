@@ -1,9 +1,11 @@
 """An abstract class for entities."""
-from datetime import timedelta
+from abc import ABC
+import asyncio
+from datetime import datetime, timedelta
 import logging
 import functools as ft
 from timeit import default_timer as timer
-from typing import Any, Optional, List, Iterable
+from typing import Any, Dict, Iterable, List, Optional, Union
 
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -22,11 +24,12 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_DEVICE_CLASS,
 )
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.entity_registry import (
     EVENT_ENTITY_REGISTRY_UPDATED,
     RegistryEntry,
 )
-from homeassistant.core import HomeAssistant, callback, CALLBACK_TYPE
+from homeassistant.core import HomeAssistant, callback, CALLBACK_TYPE, Context
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
@@ -82,7 +85,7 @@ def async_generate_entity_id(
     return ensure_unique_string(entity_id_format.format(slugify(name)), current_ids)
 
 
-class Entity:
+class Entity(ABC):
     """An abstract class for Home Assistant entities."""
 
     # SAFE TO OVERWRITE
@@ -94,7 +97,7 @@ class Entity:
     hass: Optional[HomeAssistant] = None
 
     # Owning platform instance. Will be set by EntityPlatform
-    platform = None
+    platform: Optional[EntityPlatform] = None
 
     # If we reported if this entity was slow
     _slow_reported = False
@@ -106,7 +109,7 @@ class Entity:
     _update_staged = False
 
     # Process updates in parallel
-    parallel_updates = None
+    parallel_updates: Optional[asyncio.Semaphore] = None
 
     # Entry in the entity registry
     registry_entry: Optional[RegistryEntry] = None
@@ -115,8 +118,8 @@ class Entity:
     _on_remove: Optional[List[CALLBACK_TYPE]] = None
 
     # Context
-    _context = None
-    _context_set = None
+    _context: Optional[Context] = None
+    _context_set: Optional[datetime] = None
 
     @property
     def should_poll(self) -> bool:
@@ -137,28 +140,30 @@ class Entity:
         return None
 
     @property
-    def state(self) -> str:
+    def state(self) -> Union[None, str, int, float]:
         """Return the state of the entity."""
         return STATE_UNKNOWN
 
     @property
-    def state_attributes(self):
+    def state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes.
 
-        Implemented by component base class.
+        Implemented by component base class. Convention for attribute names
+        is lowercase snake_case.
         """
         return None
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return device specific state attributes.
 
-        Implemented by platform classes.
+        Implemented by platform classes. Convention for attribute names
+        is lowercase snake_case.
         """
         return None
 
     @property
-    def device_info(self):
+    def device_info(self) -> Optional[Dict[str, Any]]:
         """Return device specific attributes.
 
         Implemented by platform classes.
@@ -171,17 +176,17 @@ class Entity:
         return None
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> Optional[str]:
         """Return the unit of measurement of this entity, if any."""
         return None
 
     @property
-    def icon(self):
+    def icon(self) -> Optional[str]:
         """Return the icon to use in the frontend, if any."""
         return None
 
     @property
-    def entity_picture(self):
+    def entity_picture(self) -> Optional[str]:
         """Return the entity picture to use in the frontend, if any."""
         return None
 
@@ -215,12 +220,12 @@ class Entity:
         return None
 
     @property
-    def context_recent_time(self):
+    def context_recent_time(self) -> timedelta:
         """Time that a context is considered recent."""
         return timedelta(seconds=5)
 
     @property
-    def entity_registry_enabled_default(self):
+    def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return True
 
@@ -230,12 +235,16 @@ class Entity:
     # produce undesirable effects in the entity's operation.
 
     @property
-    def enabled(self):
-        """Return if the entity is enabled in the entity registry."""
+    def enabled(self) -> bool:
+        """Return if the entity is enabled in the entity registry.
+
+        If an entity is not part of the registry, it cannot be disabled
+        and will therefore always be enabled.
+        """
         return self.registry_entry is None or not self.registry_entry.disabled
 
     @callback
-    def async_set_context(self, context):
+    def async_set_context(self, context: Context) -> None:
         """Set the context the entity currently operates under."""
         self._context = context
         self._context_set = dt_util.utcnow()
@@ -540,9 +549,22 @@ class Entity:
 
         return self.unique_id == other.unique_id
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return the representation."""
         return "<Entity {}: {}>".format(self.name, self.state)
+
+    # call an requests
+    async def async_request_call(self, coro):
+        """Process request batched."""
+
+        if self.parallel_updates:
+            await self.parallel_updates.acquire()
+
+        try:
+            await coro
+        finally:
+            if self.parallel_updates:
+                self.parallel_updates.release()
 
 
 class ToggleEntity(Entity):

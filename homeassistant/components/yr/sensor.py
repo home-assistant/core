@@ -7,6 +7,7 @@ from xml.parsers.expat import ExpatError
 
 import aiohttp
 import async_timeout
+import xmltodict
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -18,6 +19,11 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     ATTR_ATTRIBUTION,
     CONF_NAME,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
+    PRESSURE_HPA,
+    TEMP_CELSIUS,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
@@ -33,20 +39,24 @@ ATTRIBUTION = (
 # https://api.met.no/license_data.html
 
 SENSOR_TYPES = {
-    "symbol": ["Symbol", None],
-    "precipitation": ["Precipitation", "mm"],
-    "temperature": ["Temperature", "°C"],
-    "windSpeed": ["Wind speed", "m/s"],
-    "windGust": ["Wind gust", "m/s"],
-    "pressure": ["Pressure", "hPa"],
-    "windDirection": ["Wind direction", "°"],
-    "humidity": ["Humidity", "%"],
-    "fog": ["Fog", "%"],
-    "cloudiness": ["Cloudiness", "%"],
-    "lowClouds": ["Low clouds", "%"],
-    "mediumClouds": ["Medium clouds", "%"],
-    "highClouds": ["High clouds", "%"],
-    "dewpointTemperature": ["Dewpoint temperature", "°C"],
+    "symbol": ["Symbol", None, None],
+    "precipitation": ["Precipitation", "mm", None],
+    "temperature": ["Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
+    "windSpeed": ["Wind speed", "m/s", None],
+    "windGust": ["Wind gust", "m/s", None],
+    "pressure": ["Pressure", PRESSURE_HPA, DEVICE_CLASS_PRESSURE],
+    "windDirection": ["Wind direction", "°", None],
+    "humidity": ["Humidity", "%", DEVICE_CLASS_HUMIDITY],
+    "fog": ["Fog", "%", None],
+    "cloudiness": ["Cloudiness", "%", None],
+    "lowClouds": ["Low clouds", "%", None],
+    "mediumClouds": ["Medium clouds", "%", None],
+    "highClouds": ["High clouds", "%", None],
+    "dewpointTemperature": [
+        "Dewpoint temperature",
+        TEMP_CELSIUS,
+        DEVICE_CLASS_TEMPERATURE,
+    ],
 }
 
 CONF_FORECAST = "forecast"
@@ -102,6 +112,7 @@ class YrSensor(Entity):
         self.type = sensor_type
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
+        self._device_class = SENSOR_TYPES[self.type][2]
 
     @property
     def name(self):
@@ -138,6 +149,11 @@ class YrSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
+    @property
+    def device_class(self):
+        """Return the device class of this entity, if any."""
+        return self._device_class
+
 
 class YrData:
     """Get the latest data and updates the states."""
@@ -155,7 +171,6 @@ class YrData:
 
     async def fetching_data(self, *_):
         """Get the latest data from yr.no."""
-        import xmltodict
 
         def try_again(err: str):
             """Retry in 15 to 20 minutes."""

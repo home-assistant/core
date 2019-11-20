@@ -1,6 +1,12 @@
 """Support for Asterisk Voicemail interface."""
 import logging
 
+from asterisk_mbox import Client as asteriskClient
+from asterisk_mbox.commands import (
+    CMD_MESSAGE_CDR,
+    CMD_MESSAGE_CDR_AVAILABLE,
+    CMD_MESSAGE_LIST,
+)
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
@@ -51,7 +57,6 @@ class AsteriskData:
 
     def __init__(self, hass, host, port, password, config):
         """Init the Asterisk data object."""
-        from asterisk_mbox import Client as asteriskClient
 
         self.hass = hass
         self.config = config
@@ -76,11 +81,6 @@ class AsteriskData:
     @callback
     def handle_data(self, command, msg):
         """Handle changes to the mailbox."""
-        from asterisk_mbox.commands import (
-            CMD_MESSAGE_LIST,
-            CMD_MESSAGE_CDR_AVAILABLE,
-            CMD_MESSAGE_CDR,
-        )
 
         if command == CMD_MESSAGE_LIST:
             _LOGGER.debug("AsteriskVM sent updated message list: Len %d", len(msg))

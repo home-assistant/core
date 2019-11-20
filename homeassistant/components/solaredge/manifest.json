@@ -1,7 +1,7 @@
 {
   "domain": "solaredge",
   "name": "Solaredge",
-  "documentation": "https://www.home-assistant.io/components/solaredge",
+  "documentation": "https://www.home-assistant.io/integrations/solaredge",
   "requirements": [
     "solaredge==0.0.2",
     "stringcase==1.2.0"

@@ -2,14 +2,14 @@
   "domain": "zha",
   "name": "Zigbee Home Automation",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/zha",
+  "documentation": "https://www.home-assistant.io/integrations/zha",
   "requirements": [
-    "bellows-homeassistant==0.9.1",
-    "zha-quirks==0.0.23",
-    "zigpy-deconz==0.3.0",
-    "zigpy-homeassistant==0.8.0",
-    "zigpy-xbee-homeassistant==0.4.0",
-    "zigpy-zigate==0.3.1"
+    "bellows-homeassistant==0.11.0",
+    "zha-quirks==0.0.28",
+    "zigpy-deconz==0.7.0",
+    "zigpy-homeassistant==0.11.0",
+    "zigpy-xbee-homeassistant==0.7.0",
+    "zigpy-zigate==0.5.0"
   ],
   "dependencies": [],
   "codeowners": ["@dmulcahey", "@adminiuga"]

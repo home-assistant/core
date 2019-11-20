@@ -28,9 +28,9 @@ from typing import (
 # Typing imports that create a circular dependency
 # pylint: disable=using-constant-test,unused-import
 if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant  # noqa
+    from homeassistant.core import HomeAssistant
 
-CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # noqa pylint: disable=invalid-name
+CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
 
 DEPENDENCY_BLACKLIST = {"config"}
 
@@ -64,7 +64,7 @@ def manifest_from_legacy_module(domain: str, module: ModuleType) -> Dict:
 
 
 async def _async_get_custom_components(
-    hass: "HomeAssistant"
+    hass: "HomeAssistant",
 ) -> Dict[str, "Integration"]:
     """Return list of custom integrations."""
     try:
@@ -102,7 +102,7 @@ async def _async_get_custom_components(
 
 
 async def async_get_custom_components(
-    hass: "HomeAssistant"
+    hass: "HomeAssistant",
 ) -> Dict[str, "Integration"]:
     """Return cached list of custom integrations."""
     reg_or_evt = hass.data.get(DATA_CUSTOM_COMPONENTS)
@@ -307,7 +307,7 @@ class IntegrationNotFound(LoaderError):
 
     def __init__(self, domain: str) -> None:
         """Initialize a component not found error."""
-        super().__init__(f"Integration {domain} not found.")
+        super().__init__(f"Integration '{domain}' not found.")
         self.domain = domain
 
 

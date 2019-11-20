@@ -146,7 +146,7 @@ class DnsmasqUbusDeviceScanner(UbusDeviceScanner):
 
     def __init__(self, config):
         """Initialize the scanner."""
-        super(DnsmasqUbusDeviceScanner, self).__init__(config)
+        super().__init__(config)
         self.leasefile = None
 
     def _generate_mac2name(self):

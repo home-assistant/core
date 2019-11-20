@@ -6,7 +6,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import group
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
     ATTR_BATTERY_LEVEL,
     ATTR_COMMAND,
     SERVICE_TOGGLE,
@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa
+from homeassistant.helpers.config_validation import (  # noqa: F401
     ENTITY_SERVICE_SCHEMA,
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -68,10 +68,10 @@ VACUUM_SEND_COMMAND_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
 
 STATE_CLEANING = "cleaning"
 STATE_DOCKED = "docked"
-STATE_IDLE = STATE_IDLE
-STATE_PAUSED = STATE_PAUSED
 STATE_RETURNING = "returning"
 STATE_ERROR = "error"
+
+STATES = [STATE_CLEANING, STATE_DOCKED, STATE_RETURNING, STATE_ERROR]
 
 DEFAULT_NAME = "Vacuum cleaner robot"
 

@@ -71,7 +71,7 @@ class ZWaveTriggerSensor(ZWaveBinarySensor):
 
     def __init__(self, values, device_class):
         """Initialize the sensor."""
-        super(ZWaveTriggerSensor, self).__init__(values, device_class)
+        super().__init__(values, device_class)
         # Set default off delay to 60 sec
         self.re_arm_sec = 60
         self.invalidate_after = None

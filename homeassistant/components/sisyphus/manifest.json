@@ -1,7 +1,7 @@
 {
   "domain": "sisyphus",
   "name": "Sisyphus",
-  "documentation": "https://www.home-assistant.io/components/sisyphus",
+  "documentation": "https://www.home-assistant.io/integrations/sisyphus",
   "requirements": [
     "sisyphus-control==2.2.1"
   ],

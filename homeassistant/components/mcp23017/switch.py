@@ -2,6 +2,10 @@
 import logging
 
 import voluptuous as vol
+import board  # pylint: disable=import-error
+import busio  # pylint: disable=import-error
+import adafruit_mcp230xx  # pylint: disable=import-error
+import digitalio  # pylint: disable=import-error
 
 from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import DEVICE_DEFAULT_NAME
@@ -31,10 +35,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the MCP23017 devices."""
-    import board
-    import busio
-    import adafruit_mcp230xx
-
     invert_logic = config.get(CONF_INVERT_LOGIC)
     i2c_address = config.get(CONF_I2C_ADDRESS)
 
@@ -54,8 +54,6 @@ class MCP23017Switch(ToggleEntity):
 
     def __init__(self, name, pin, invert_logic):
         """Initialize the pin."""
-        import digitalio
-
         self._name = name or DEVICE_DEFAULT_NAME
         self._pin = pin
         self._invert_logic = invert_logic

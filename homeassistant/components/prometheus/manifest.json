@@ -1,7 +1,7 @@
 {
   "domain": "prometheus",
   "name": "Prometheus",
-  "documentation": "https://www.home-assistant.io/components/prometheus",
+  "documentation": "https://www.home-assistant.io/integrations/prometheus",
   "requirements": [
     "prometheus_client==0.7.1"
   ],

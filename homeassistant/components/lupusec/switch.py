@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+import lupupy.constants as CONST
+
 from homeassistant.components.switch import SwitchDevice
 
 from . import DOMAIN as LUPUSEC_DOMAIN, LupusecDevice
@@ -15,8 +17,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Lupusec switch devices."""
     if discovery_info is None:
         return
-
-    import lupupy.constants as CONST
 
     data = hass.data[LUPUSEC_DOMAIN]
 

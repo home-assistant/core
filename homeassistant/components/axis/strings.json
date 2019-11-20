@@ -1,6 +1,7 @@
 {
     "config": {
         "title": "Axis device",
+        "flow_title": "Axis device: {name} ({host})",
         "step": {
             "user": {
                 "title": "Set up Axis device",

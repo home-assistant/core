@@ -1,44 +1,37 @@
 """Support for Rain Bird Irrigation system LNK WiFi Module."""
 import logging
 
-import voluptuous as vol
+from pyrainbird import RainbirdController
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_MONITORED_CONDITIONS
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-from . import DATA_RAINBIRD
+from . import (
+    DATA_RAINBIRD,
+    RAINBIRD_CONTROLLER,
+    SENSOR_TYPE_RAINDELAY,
+    SENSOR_TYPE_RAINSENSOR,
+    SENSOR_TYPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-# sensor_type [ description, unit, icon ]
-SENSOR_TYPES = {"rainsensor": ["Rainsensor", None, "mdi:water"]}
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        )
-    }
-)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Rain Bird sensor."""
-    controller = hass.data[DATA_RAINBIRD]
 
-    sensors = []
-    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-        sensors.append(RainBirdSensor(controller, sensor_type))
+    if discovery_info is None:
+        return
 
-    add_entities(sensors, True)
+    controller = hass.data[DATA_RAINBIRD][discovery_info[RAINBIRD_CONTROLLER]]
+    add_entities(
+        [RainBirdSensor(controller, sensor_type) for sensor_type in SENSOR_TYPES], True
+    )
 
 
 class RainBirdSensor(Entity):
     """A sensor implementation for Rain Bird device."""
 
-    def __init__(self, controller, sensor_type):
+    def __init__(self, controller: RainbirdController, sensor_type):
         """Initialize the Rain Bird sensor."""
         self._sensor_type = sensor_type
         self._controller = controller
@@ -55,12 +48,10 @@ class RainBirdSensor(Entity):
     def update(self):
         """Get the latest data and updates the states."""
         _LOGGER.debug("Updating sensor: %s", self._name)
-        if self._sensor_type == "rainsensor":
-            result = self._controller.currentRainSensorState()
-            if result and result["type"] == "CurrentRainSensorStateResponse":
-                self._state = result["sensorState"]
-            else:
-                self._state = None
+        if self._sensor_type == SENSOR_TYPE_RAINSENSOR:
+            self._state = self._controller.get_rain_sensor_state()
+        elif self._sensor_type == SENSOR_TYPE_RAINDELAY:
+            self._state = self._controller.get_rain_delay()
 
     @property
     def name(self):

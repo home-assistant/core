@@ -11,6 +11,7 @@
         "error": {
             "no_key": "Impossibile ottenere una API key"
         },
+        "flow_title": "Gateway Zigbee deCONZ ({host})",
         "step": {
             "hassio_confirm": {
                 "data": {
@@ -54,20 +55,37 @@
             "left": "Sinistra",
             "open": "Aperto",
             "right": "Destra",
+            "side_1": "Lato 1",
+            "side_2": "Lato 2",
+            "side_3": "Lato 3",
+            "side_4": "Lato 4",
+            "side_5": "Lato 5",
+            "side_6": "Lato 6",
             "turn_off": "Spegnere",
             "turn_on": "Accendere"
         },
         "trigger_type": {
+            "remote_awakened": "Dispositivo risvegliato",
             "remote_button_double_press": "Pulsante \"{subtype}\" cliccato due volte",
             "remote_button_long_press": "Pulsante \"{subtype}\" premuto continuamente",
             "remote_button_long_release": "Pulsante \"{subtype}\" rilasciato dopo una lunga pressione",
             "remote_button_quadruple_press": "Pulsante \"{subtype}\" cliccato quattro volte",
             "remote_button_quintuple_press": "Pulsante \"{subtype}\" cliccato cinque volte",
             "remote_button_rotated": "Pulsante ruotato \"{subtype}\"",
+            "remote_button_rotation_stopped": "La rotazione dei pulsanti \"{subtype}\" si \u00e8 arrestata",
             "remote_button_short_press": "Pulsante \"{subtype}\" premuto",
             "remote_button_short_release": "Pulsante \"{subtype}\" rilasciato",
             "remote_button_triple_press": "Pulsante \"{subtype}\" cliccato tre volte",
-            "remote_gyro_activated": "Dispositivo in vibrazione"
+            "remote_double_tap": "Dispositivo \"{subtype}\" toccato due volte",
+            "remote_falling": "Dispositivo in caduta libera",
+            "remote_gyro_activated": "Dispositivo in vibrazione",
+            "remote_moved": "Dispositivo spostato con \"{subtype}\" verso l'alto",
+            "remote_rotate_from_side_1": "Dispositivo ruotato da \"lato 1\" a \"{subtype}\"",
+            "remote_rotate_from_side_2": "Dispositivo ruotato da \"lato 2\" a \"{subtype}\"",
+            "remote_rotate_from_side_3": "Dispositivo ruotato da \"lato 3\" a \"{subtype}\"",
+            "remote_rotate_from_side_4": "Dispositivo ruotato da \"lato 4\" a \"{subtype}\"",
+            "remote_rotate_from_side_5": "Dispositivo ruotato da \"lato 5\" a \"{subtype}\"",
+            "remote_rotate_from_side_6": "Dispositivo ruotato da \"lato 6\" a \"{subtype}\""
         }
     },
     "options": {

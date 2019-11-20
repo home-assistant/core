@@ -1,9 +1,9 @@
 {
   "domain": "sql",
   "name": "Sql",
-  "documentation": "https://www.home-assistant.io/components/sql",
+  "documentation": "https://www.home-assistant.io/integrations/sql",
   "requirements": [
-    "sqlalchemy==1.3.8"
+    "sqlalchemy==1.3.11"
   ],
   "dependencies": [],
   "codeowners": [

@@ -1,7 +1,7 @@
 {
   "domain": "miflora",
   "name": "Miflora",
-  "documentation": "https://www.home-assistant.io/components/miflora",
+  "documentation": "https://www.home-assistant.io/integrations/miflora",
   "requirements": [
     "bluepy==1.1.4",
     "miflora==0.4.0"
