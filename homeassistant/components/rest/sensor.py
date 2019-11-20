@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
     CONF_DEVICE_CLASS,
+    CONF_FILE_PATH,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
@@ -37,6 +38,7 @@ DEFAULT_NAME = "REST Sensor"
 DEFAULT_VERIFY_SSL = True
 DEFAULT_FORCE_UPDATE = False
 DEFAULT_TIMEOUT = 10
+DEFAULT_FILE_PATH = None
 
 CONF_JSON_ATTRS = "json_attributes"
 METHODS = ["POST", "GET"]
@@ -61,6 +63,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
         vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        vol.Optional(CONF_FILE_PATH): cv.isfile,
     }
 )
 
@@ -86,6 +89,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     json_attrs = config.get(CONF_JSON_ATTRS)
     force_update = config.get(CONF_FORCE_UPDATE)
     timeout = config.get(CONF_TIMEOUT)
+    client_certificate_path = config.get(CONF_FILE_PATH)
 
     if value_template is not None:
         value_template.hass = hass
@@ -101,7 +105,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             auth = HTTPBasicAuth(username, password)
     else:
         auth = None
-    rest = RestData(method, resource, auth, headers, payload, verify_ssl, timeout)
+    rest = RestData(
+        method,
+        resource,
+        auth,
+        headers,
+        payload,
+        verify_ssl,
+        timeout,
+        client_certificate_path,
+    )
     rest.update()
     if rest.data is None:
         raise PlatformNotReady
@@ -224,7 +237,15 @@ class RestData:
     """Class for handling the data retrieval."""
 
     def __init__(
-        self, method, resource, auth, headers, data, verify_ssl, timeout=DEFAULT_TIMEOUT
+        self,
+        method,
+        resource,
+        auth,
+        headers,
+        data,
+        verify_ssl,
+        timeout=DEFAULT_TIMEOUT,
+        client_certificate_path=DEFAULT_FILE_PATH,
     ):
         """Initialize the data object."""
         self._request = requests.Request(
@@ -233,6 +254,7 @@ class RestData:
         self._verify_ssl = verify_ssl
         self._timeout = timeout
         self.data = None
+        self.client_certificate_path = client_certificate_path
 
     def set_url(self, url):
         """Set url."""
@@ -243,6 +265,7 @@ class RestData:
         _LOGGER.debug("Updating from %s", self._request.url)
         try:
             with requests.Session() as sess:
+                sess.cert = self.client_certificate_path
                 response = sess.send(
                     self._request, timeout=self._timeout, verify=self._verify_ssl
                 )
