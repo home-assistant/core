@@ -33,7 +33,6 @@ def validate_recognition_model(config):
     if config[CONF_RECOGNITION_MODEL] not in SUPPORTED_RECOGNITION_MODELS:
         config[CONF_RECOGNITION_MODEL] = "recognition_02"
 
-    _LOGGER.warning("recognition model %s", config[CONF_RECOGNITION_MODEL])
     return config
 
 
