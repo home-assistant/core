@@ -6,12 +6,11 @@
         "step": {
             "user": {
                 "data": {
-                    "mmi": "MMI",
                     "radius": "\u0420\u0430\u0434\u0438\u0443\u0441"
                 },
-                "title": "GeoNet NZ Quakes"
+                "title": "GeoNet NZ Volcano"
             }
         },
-        "title": "GeoNet NZ Quakes"
+        "title": "GeoNet NZ Volcano"
     }
 }
