@@ -263,8 +263,6 @@ class AlmondAgent(conversation.AbstractConversationAgent):
         host = self.entry.data["host"]
         if self.entry.data.get("is_hassio"):
             host = "/core_almond"
-        elif self.entry.data["type"] != TYPE_LOCAL:
-            host = f"{host}/me"
         return {
             "text": "Would you like to opt-in to share your anonymized commands with Stanford to improve Almond's responses?",
             "url": f"{host}/conversation",
