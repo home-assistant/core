@@ -18,8 +18,8 @@ DOMAIN = "timer"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 DEFAULT_DURATION = 0
-DEFAULT_RESTORE = False
-DEFAULT_RESTORE_GRACE_PERIOD = timedelta(minutes=15)
+DEFAULT_RESTORE = True
+DEFAULT_RESTORE_GRACE_PERIOD = timedelta()
 ATTR_DURATION = "duration"
 ATTR_REMAINING = "remaining"
 ATTR_RESTORE = "restore"
@@ -54,11 +54,13 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_NAME): cv.string,
                     vol.Optional(CONF_ICON): cv.icon,
                     vol.Optional(
-                        CONF_DURATION, timedelta(DEFAULT_DURATION)
+                        CONF_DURATION, default=timedelta(DEFAULT_DURATION)
                     ): cv.time_period,
-                    vol.Optional(CONF_RESTORE, DEFAULT_RESTORE): cv.boolean,
                     vol.Optional(
-                        CONF_RESTORE_GRACE_PERIOD, DEFAULT_RESTORE_GRACE_PERIOD
+                        CONF_RESTORE, default=DEFAULT_RESTORE
+                    ): cv.boolean,
+                    vol.Optional(
+                        CONF_RESTORE_GRACE_PERIOD, default=DEFAULT_RESTORE_GRACE_PERIOD
                     ): cv.time_period,
                 },
                 None,
@@ -144,16 +146,11 @@ class Timer(RestoreEntity):
         self._state = STATUS_IDLE
         self._duration = duration
         self._remaining = self._duration
-        self._restore = restore if restore is not None else DEFAULT_RESTORE
+        self._restore = restore 
         if self._restore:
-            self._restore_grace_period = (
-                restore_grace_period
-                if restore_grace_period is not None
-                else DEFAULT_RESTORE_GRACE_PERIOD
-            )
+            self._restore_grace_period = restore_grace_period
         else:
             self._restore_grace_period = None
-
         self._icon = icon
         self._hass = hass
         self._end = None
@@ -188,17 +185,16 @@ class Timer(RestoreEntity):
             ATTR_RESTORE: str(self._restore),
             ATTR_RESTORE_GRACE_PERIOD: str(self._restore_grace_period),
             ATTR_END: str(self._end.replace(tzinfo=timezone.utc).astimezone(tz=None))
-            if self._end is not None
-            else None,
+                      if self._end is not None
+                      else None,
         }
 
     async def async_added_to_hass(self):
         """Call when entity is about to be added to Home Assistant."""
-
         if not self._restore:
             self._state = STATUS_IDLE
             return
-
+        
         # Check for previous recorded state
         state = await self.async_get_last_state()
         if state is not None:
@@ -218,7 +214,7 @@ class Timer(RestoreEntity):
                         self._duration = timedelta(
                             hours=duration_data[0],
                             minutes=duration_data[1],
-                            seconds=duration_data[2],
+                            seconds=duration_data[2]
                         )
                     # restore remaining (needed for paused state)
                     if (
@@ -232,7 +228,7 @@ class Timer(RestoreEntity):
                         self._remaining = timedelta(
                             hours=remaining_dt.hour,
                             minutes=remaining_dt.minute,
-                            seconds=remaining_dt.second,
+                            seconds=remaining_dt.second
                         )
                     else:
                         self._remaining = timedelta()
