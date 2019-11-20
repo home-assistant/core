@@ -84,21 +84,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, do_import)
 
 
-# def setup_platform(hass, config, add_entities, discovery_info=None):
-#     """Set up the Efesto device."""
-#     url = config.get(CONF_URL)
-#     username = config.get(CONF_USERNAME)
-#     password = config.get(CONF_PASSWORD)
-#     device = config.get(CONF_DEVICE)
-#     name = config.get(CONF_NAME)
-
-#     try:
-#         client = efestoclient.EfestoClient(url, username, password, device, False)
-#         add_entities([EfestoHeatingDevice(client, name, device)], True)
-#     except efestoclient.Error as err:
-#         _LOGGER.error("Error while connecting to the Efesto web service: %s", err)
-
-
 async def async_setup_entry(hass, entry, async_add_entities):
     """Add Efesto device entry."""
     url = entry.data[CONF_URL]
