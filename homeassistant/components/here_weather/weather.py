@@ -1,11 +1,10 @@
 """Support for the HERE Destination Weather API."""
 from datetime import timedelta
 import logging
-from typing import Callable, Dict, Optional, Union
-
-import voluptuous as vol
+from typing import Callable, Dict, Union
 
 import herepy
+import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -19,48 +18,46 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.const import (
-    CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MODE,
     CONF_NAME,
-    PRESSURE_HPA,
-    PRESSURE_INHG,
-    STATE_UNKNOWN,
+    CONF_UNIT_SYSTEM,
+    CONF_UNIT_SYSTEM_IMPERIAL,
+    CONF_UNIT_SYSTEM_METRIC,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.pressure import convert as convert_pressure
+
+from . import (
+    HEREWeatherData,
+    convert_unit_of_measurement_if_needed,
+    get_attribute_from_here_data,
+)
+from .const import (
+    CONDITION_CLASSES,
+    CONF_APP_CODE,
+    CONF_APP_ID,
+    CONF_LOCATION_NAME,
+    CONF_ZIP_CODE,
+    DEFAULT_MODE,
+    MODE_DAILY,
+    MODE_DAILY_SIMPLE,
+    MODE_HOURLY,
+    MODE_OBSERVATION,
+)
+
+CONF_MODES = [MODE_HOURLY, MODE_DAILY, MODE_DAILY_SIMPLE, MODE_OBSERVATION]
+
+UNITS = [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_APP_ID = "app_id"
-CONF_APP_CODE = "app_code"
-CONF_LOCATION_NAME = "location_name"
-
-FORECAST_MODE = ["hourly", "daily"]
-
-DEFAULT_NAME = "HERE Destination Weather"
+DEFAULT_NAME = "HERE"
 
 MIN_TIME_BETWEEN_FORECAST_UPDATES = timedelta(minutes=30)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
-
-CONDITION_CLASSES = {
-    "cloudy": [803, 804],
-    "fog": [701, 741],
-    "hail": [906],
-    "lightning": [210, 211, 212, 221],
-    "lightning-rainy": [200, 201, 202, 230, 231, 232],
-    "partlycloudy": [801, 802],
-    "pouring": [504, 314, 502, 503, 522],
-    "rainy": [300, 301, 302, 310, 311, 312, 313, 500, 501, 520, 521],
-    "snowy": [600, 601, 602, 611, 612, 620, 621, 622],
-    "snowy-rainy": [511, 615, 616],
-    "sunny": [800],
-    "windy": [905, 951, 952, 953, 954, 955, 956, 957],
-    "windy-variant": [958, 959, 960, 961],
-    "exceptional": [711, 721, 731, 751, 761, 762, 771, 900, 901, 962, 903, 904],
-}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -68,12 +65,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_APP_CODE): cv.string,
         vol.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
         vol.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
-        vol.Exclusive(CONF_LATITUDE, "coords_or_name"): cv.latitude,
-        vol.Exclusive(CONF_LOCATION_NAME, "coords_or_name"): cv.entity_id,
+        vol.Exclusive(CONF_LATITUDE, "coords_or_name_or_zip_code"): cv.latitude,
+        vol.Exclusive(CONF_LOCATION_NAME, "coords_or_name_or_zip_code"): cv.string,
+        vol.Exclusive(CONF_ZIP_CODE, "coords_or_name_or_zip_code"): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_MODE, default=DEFAULT_MODE): vol.In(CONF_MODES),
         vol.Optional(CONF_LATITUDE): cv.latitude,
         vol.Optional(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_MODE, default="hourly"): vol.In(FORECAST_MODE),
+        vol.Optional(CONF_LOCATION_NAME): cv.string,
+        vol.Optional(CONF_ZIP_CODE): cv.string,
+        vol.Optional(CONF_UNIT_SYSTEM): vol.In(UNITS),
     }
 )
 
@@ -85,37 +86,53 @@ async def async_setup_platform(
     discovery_info: None = None,
 ) -> None:
     """Set up the HERE Destination weather platform."""
+    app_id = config[CONF_APP_ID]
+    app_code = config[CONF_APP_CODE]
 
-    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    latitude = config.get(CONF_LATITUDE)
-    name = config[CONF_NAME]
+    here_client = herepy.DestinationWeatherApi(app_id, app_code)
+
+    if not await hass.async_add_executor_job(
+        _are_valid_client_credentials, here_client
+    ):
+        _LOGGER.error(
+            "Invalid credentials. This error is returned if the specified token was invalid or no contract could be found for this token."
+        )
+        return
+
+    name = config.get(CONF_NAME)
     mode = config[CONF_MODE]
+    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
+    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
+    location_name = config.get(CONF_LOCATION_NAME)
+    zip_code = config.get(CONF_ZIP_CODE)
+    units = config.get(CONF_UNIT_SYSTEM, hass.config.units.name)
 
-    try:
-        owm = pyowm.OWM(config.get(CONF_API_KEY))
-    except pyowm.exceptions.api_call_error.APICallError:
-        _LOGGER.error("Error while connecting to OpenWeatherMap")
-        return False
-
-    data = WeatherData(owm, latitude, longitude, mode)
-
-    add_entities(
-        [OpenWeatherMapWeather(name, data, hass.config.units.temperature_unit, mode)],
-        True,
+    here_data = HEREWeatherData(
+        here_client, mode, units, latitude, longitude, location_name, zip_code
     )
 
+    async_add_entities([HEREDestinationWeather(name, here_data, mode)], True)
 
-class OpenWeatherMapWeather(WeatherEntity):
-    """Implementation of an OpenWeatherMap sensor."""
 
-    def __init__(self, name, owm, temperature_unit, mode):
+def _are_valid_client_credentials(here_client: herepy.DestinationWeatherApi) -> bool:
+    """Check if the provided credentials are correct using defaults."""
+    try:
+        product = herepy.WeatherProductType.forecast_astronomy
+        known_good_zip_code = "10025"
+        here_client.weather_for_zip_code(known_good_zip_code, product)
+    except herepy.UnauthorizedError:
+        return False
+    return True
+
+
+class HEREDestinationWeather(WeatherEntity):
+    """Implementation of an HERE Destination Weather WeatherEntity."""
+
+    def __init__(self, name, here_data, mode):
         """Initialize the sensor."""
         self._name = name
-        self._owm = owm
-        self._temperature_unit = temperature_unit
+        self._here_data = here_data
         self._mode = mode
-        self.data = None
-        self.forecast_data = None
 
     @property
     def name(self):
@@ -125,174 +142,130 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-        try:
-            return [
-                k
-                for k, v in CONDITION_CLASSES.items()
-                if self.data.get_weather_code() in v
-            ][0]
-        except IndexError:
-            return STATE_UNKNOWN
+        return get_condition_from_here_data(self._here_data.data)
 
     @property
-    def temperature(self):
+    def temperature(self) -> float:
         """Return the temperature."""
-        return self.data.get_temperature("celsius").get("temp")
+        return get_temperature_from_here_data(self._here_data.data)
 
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return TEMP_CELSIUS
+        try:
+            return convert_unit_of_measurement_if_needed(
+                self._here_data.units, TEMP_CELSIUS
+            )
+        except KeyError:
+            return None
 
     @property
     def pressure(self):
         """Return the pressure."""
-        pressure = self.data.get_pressure().get("press")
-        if self.hass.config.units.name == "imperial":
-            return round(convert_pressure(pressure, PRESSURE_HPA, PRESSURE_INHG), 2)
-        return pressure
+        return None
 
     @property
     def humidity(self):
         """Return the humidity."""
-        return self.data.get_humidity()
+        get_attribute_from_here_data(self._here_data.data, "humidity")
 
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        if self.hass.config.units.name == "imperial":
-            return round(self.data.get_wind().get("speed") * 2.24, 2)
-
-        return round(self.data.get_wind().get("speed") * 3.6, 2)
+        get_attribute_from_here_data(self._here_data.data, "windSpeed")
 
     @property
     def wind_bearing(self):
         """Return the wind bearing."""
-        return self.data.get_wind().get("deg")
+        get_attribute_from_here_data(self._here_data.data, "windDirection")
 
     @property
     def attribution(self):
         """Return the attribution."""
-        return ATTRIBUTION
+        return None
 
     @property
     def forecast(self):
         """Return the forecast array."""
+        if self._here_data.data is None:
+            return None
         data = []
-
-        def calc_precipitation(rain, snow):
-            """Calculate the precipitation."""
-            rain_value = 0 if rain is None else rain
-            snow_value = 0 if snow is None else snow
-            if round(rain_value + snow_value, 1) == 0:
-                return None
-            return round(rain_value + snow_value, 1)
-
-        if self._mode == "freedaily":
-            weather = self.forecast_data.get_weathers()[::8]
-        else:
-            weather = self.forecast_data.get_weathers()
-
-        for entry in weather:
-            if self._mode == "daily":
-                data.append(
-                    {
-                        ATTR_FORECAST_TIME: entry.get_reference_time("unix") * 1000,
-                        ATTR_FORECAST_TEMP: entry.get_temperature("celsius").get("day"),
-                        ATTR_FORECAST_TEMP_LOW: entry.get_temperature("celsius").get(
-                            "night"
-                        ),
-                        ATTR_FORECAST_PRECIPITATION: calc_precipitation(
-                            entry.get_rain().get("all"), entry.get_snow().get("all")
-                        ),
-                        ATTR_FORECAST_WIND_SPEED: entry.get_wind().get("speed"),
-                        ATTR_FORECAST_WIND_BEARING: entry.get_wind().get("deg"),
-                        ATTR_FORECAST_CONDITION: [
-                            k
-                            for k, v in CONDITION_CLASSES.items()
-                            if entry.get_weather_code() in v
-                        ][0],
-                    }
-                )
-            else:
-                data.append(
-                    {
-                        ATTR_FORECAST_TIME: entry.get_reference_time("unix") * 1000,
-                        ATTR_FORECAST_TEMP: entry.get_temperature("celsius").get(
-                            "temp"
-                        ),
-                        ATTR_FORECAST_PRECIPITATION: (
-                            round(entry.get_rain().get("3h"), 1)
-                            if entry.get_rain().get("3h") is not None
-                            and (round(entry.get_rain().get("3h"), 1) > 0)
-                            else None
-                        ),
-                        ATTR_FORECAST_CONDITION: [
-                            k
-                            for k, v in CONDITION_CLASSES.items()
-                            if entry.get_weather_code() in v
-                        ][0],
-                    }
-                )
+        for offset in range(len(self._here_data.data)):
+            data.append(
+                {
+                    ATTR_FORECAST_TIME: get_attribute_from_here_data(
+                        self._here_data.data, "utcTime", offset
+                    ),
+                    ATTR_FORECAST_TEMP: get_high_or_default_temperature_from_here_data(
+                        self._here_data.data, offset
+                    ),
+                    ATTR_FORECAST_TEMP_LOW: get_low_or_default_temperature_from_here_data(
+                        self._here_data.data, offset
+                    ),
+                    ATTR_FORECAST_PRECIPITATION: calc_precipitation(
+                        self._here_data.data, offset
+                    ),
+                    ATTR_FORECAST_WIND_SPEED: get_attribute_from_here_data(
+                        self._here_data.data, "windSpeed", offset
+                    ),
+                    ATTR_FORECAST_WIND_BEARING: get_attribute_from_here_data(
+                        self._here_data.data, "windDirection", offset
+                    ),
+                    ATTR_FORECAST_CONDITION: get_condition_from_here_data(
+                        self._here_data.data, offset
+                    ),
+                }
+            )
         return data
 
-    def update(self):
-        """Get the latest data from OWM and updates the states."""
-        from pyowm.exceptions.api_call_error import APICallError
-
-        try:
-            self._owm.update()
-            self._owm.update_forecast()
-        except APICallError:
-            _LOGGER.error("Exception when calling OWM web API to update data")
-            return
-
-        self.data = self._owm.data
-        self.forecast_data = self._owm.forecast_data
+    async def async_update(self) -> None:
+        """Get the latest data from HERE."""
+        await self.hass.async_add_executor_job(self._here_data.update)
 
 
-class WeatherData:
-    """Get the latest data from OpenWeatherMap."""
+def get_condition_from_here_data(here_data: list, offset: int = 0) -> str:
+    """Return the condition from here_data."""
+    try:
+        return [
+            k
+            for k, v in CONDITION_CLASSES.items()
+            if get_attribute_from_here_data(here_data, "iconName", offset) in v
+        ][0]
+    except IndexError:
+        return None
 
-    def __init__(self, owm, latitude, longitude, mode):
-        """Initialize the data object."""
-        self._mode = mode
-        self.owm = owm
-        self.latitude = latitude
-        self.longitude = longitude
-        self.data = None
-        self.forecast_data = None
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Get the latest data from OpenWeatherMap."""
-        obs = self.owm.weather_at_coords(self.latitude, self.longitude)
-        if obs is None:
-            _LOGGER.warning("Failed to fetch data from OWM")
-            return
+def get_high_or_default_temperature_from_here_data(
+    here_data: list, offset: int = 0
+) -> str:
+    """Return the temperature from here_data."""
+    temperature = get_attribute_from_here_data(here_data, "highTemperature", offset)
+    if temperature is not None:
+        return float(temperature)
 
-        self.data = obs.get_weather()
+    return get_temperature_from_here_data(here_data, offset)
 
-    @Throttle(MIN_TIME_BETWEEN_FORECAST_UPDATES)
-    def update_forecast(self):
-        """Get the latest forecast from OpenWeatherMap."""
-        from pyowm.exceptions.api_call_error import APICallError
 
-        try:
-            if self._mode == "daily":
-                fcd = self.owm.daily_forecast_at_coords(
-                    self.latitude, self.longitude, 15
-                )
-            else:
-                fcd = self.owm.three_hours_forecast_at_coords(
-                    self.latitude, self.longitude
-                )
-        except APICallError:
-            _LOGGER.error("Exception when calling OWM web API " "to update forecast")
-            return
+def get_low_or_default_temperature_from_here_data(
+    here_data: list, offset: int = 0
+) -> str:
+    """Return the temperature from here_data."""
+    temperature = get_attribute_from_here_data(here_data, "lowTemperature", offset)
+    if temperature is not None:
+        return float(temperature)
+    return get_temperature_from_here_data(here_data, offset)
 
-        if fcd is None:
-            _LOGGER.warning("Failed to fetch forecast data from OWM")
-            return
 
-        self.forecast_data = fcd.get_forecast()
+def get_temperature_from_here_data(here_data: list, offset: int = 0) -> str:
+    """Return the temperature from here_data."""
+    temperature = get_attribute_from_here_data(here_data, "temperature", offset)
+    if temperature is not None:
+        return float(temperature)
+
+
+def calc_precipitation(here_data: list, offset: int = 0) -> float:
+    """Calculate Precipitation."""
+    rain_fall = get_attribute_from_here_data(here_data, "rainFall", offset)
+    snow_fall = get_attribute_from_here_data(here_data, "snowFall", offset)
+    if rain_fall is not None and snow_fall is not None:
+        return float(rain_fall) + float(snow_fall)

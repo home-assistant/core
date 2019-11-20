@@ -1,0 +1,118 @@
+{
+    "astronomy": {
+        "astronomy": [
+            {
+                "sunrise": "6:55AM",
+                "sunset": "6:33PM",
+                "moonrise": "1:27PM",
+                "moonset": "10:58PM",
+                "moonPhase": 0.328,
+                "moonPhaseDesc": "Waxing crescent",
+                "iconName": "cw_waxing_crescent",
+                "city": "Edgewater",
+                "latitude": 40.82,
+                "longitude": -73.97,
+                "utcTime": "2019-10-04T00:00:00.000-04:00"
+            },
+            {
+                "sunrise": "6:56AM",
+                "sunset": "6:31PM",
+                "moonrise": "2:21PM",
+                "moonset": "11:50PM",
+                "moonPhase": 0.429,
+                "moonPhaseDesc": "First Quarter",
+                "iconName": "cw_first_qtr",
+                "city": "Edgewater",
+                "latitude": 40.82,
+                "longitude": -73.97,
+                "utcTime": "2019-10-05T00:00:00.000-04:00"
+            },
+            {
+                "sunrise": "6:57AM",
+                "sunset": "6:30PM",
+                "moonrise": "3:10PM",
+                "moonset": "*",
+                "moonPhase": 0.530,
+                "moonPhaseDesc": "First Quarter",
+                "iconName": "cw_first_qtr",
+                "city": "Edgewater",
+                "latitude": 40.82,
+                "longitude": -73.97,
+                "utcTime": "2019-10-06T00:00:00.000-04:00"
+            },
+            {
+                "sunrise": "6:58AM",
+                "sunset": "6:28PM",
+                "moonrise": "3:51PM",
+                "moonset": "12:45AM",
+                "moonPhase": 0.627,
+                "moonPhaseDesc": "Waxing gibbous",
+                "iconName": "cw_waxing_gibbous",
+                "city": "Edgewater",
+                "latitude": 40.82,
+                "longitude": -73.97,
+                "utcTime": "2019-10-07T00:00:00.000-04:00"
+            },
+            {
+                "sunrise": "6:59AM",
+                "sunset": "6:26PM",
+                "moonrise": "4:26PM",
+                "moonset": "1:43AM",
+                "moonPhase": 0.717,
+                "moonPhaseDesc": "Waxing gibbous",
+                "iconName": "cw_waxing_gibbous",
+                "city": "Edgewater",
+                "latitude": 40.82,
+                "longitude": -73.97,
+                "utcTime": "2019-10-08T00:00:00.000-04:00"
+            },
+            {
+                "sunrise": "7:00AM",
+                "sunset": "6:25PM",
+                "moonrise": "4:57PM",
+                "moonset": "2:41AM",
+                "moonPhase": 0.798,
+                "moonPhaseDesc": "Waxing gibbous",
+                "iconName": "cw_waxing_gibbous",
+                "city": "Edgewater",
+                "latitude": 40.82,
+                "longitude": -73.97,
+                "utcTime": "2019-10-09T00:00:00.000-04:00"
+            },
+            {
+                "sunrise": "7:01AM",
+                "sunset": "6:23PM",
+                "moonrise": "5:25PM",
+                "moonset": "3:40AM",
+                "moonPhase": 0.868,
+                "moonPhaseDesc": "Waxing gibbous",
+                "iconName": "cw_waxing_gibbous",
+                "city": "Edgewater",
+                "latitude": 40.82,
+                "longitude": -73.97,
+                "utcTime": "2019-10-10T00:00:00.000-04:00"
+            },
+            {
+                "sunrise": "7:02AM",
+                "sunset": "6:22PM",
+                "moonrise": "5:51PM",
+                "moonset": "4:38AM",
+                "moonPhase": 0.924,
+                "moonPhaseDesc": "Waxing gibbous",
+                "iconName": "cw_waxing_gibbous",
+                "city": "Edgewater",
+                "latitude": 40.82,
+                "longitude": -73.97,
+                "utcTime": "2019-10-11T00:00:00.000-04:00"
+            }
+        ],
+        "country": "United States",
+        "state": "New York",
+        "city": "New York",
+        "latitude": 40.79962,
+        "longitude": -73.970314,
+        "timezone": -5
+    },
+    "feedCreation": "2019-10-04T14:22:46.164Z",
+    "metric": true
+}

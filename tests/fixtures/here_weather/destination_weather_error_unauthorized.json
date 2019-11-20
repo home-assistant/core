@@ -1,0 +1,6 @@
+{
+    "Type": "Unauthorized",
+    "Message": [
+      "This is not a valid app_id and app_code pair. Please verify that the values are not swapped between the app_id and app_code and the values provisioned by HERE (either by your customer representative or via http://developer.here.com/myapps) were copied correctly into the request."
+    ]
+  }
