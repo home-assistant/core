@@ -8,13 +8,14 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_STATE,
     CONF_ENTITIES,
+    CONF_ID,
     CONF_NAME,
     CONF_PLATFORM,
     STATE_OFF,
     STATE_ON,
     SERVICE_RELOAD,
 )
-from homeassistant.core import State, DOMAIN
+from homeassistant.core import State, DOMAIN as HA_DOMAIN
 from homeassistant import config as conf_util
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_integration
@@ -23,7 +24,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     entity_platform,
 )
-from homeassistant.helpers.state import HASS_DOMAIN, async_reproduce_state
+from homeassistant.helpers.state import async_reproduce_state
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, STATES, Scene
 
 
@@ -54,11 +55,13 @@ def _convert_states(states):
     return result
 
 
+CONF_SCENE_ID = "scene_id"
+
 STATES_SCHEMA = vol.All(dict, _convert_states)
 
 PLATFORM_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PLATFORM): HASS_DOMAIN,
+        vol.Required(CONF_PLATFORM): HA_DOMAIN,
         vol.Required(STATES): vol.All(
             cv.ensure_list,
             [
@@ -72,7 +75,12 @@ PLATFORM_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+CREATE_SCENE_SCHEMA = vol.Schema(
+    {vol.Required(CONF_SCENE_ID): cv.slug, vol.Required(CONF_ENTITIES): STATES_SCHEMA}
+)
+
 SERVICE_APPLY = "apply"
+SERVICE_CREATE = "create"
 SCENECONFIG = namedtuple("SceneConfig", [CONF_NAME, STATES])
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,7 +115,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
         # Extract only the config for the Home Assistant platform, ignore the rest.
         for p_type, p_config in config_per_platform(conf, SCENE_DOMAIN):
-            if p_type != DOMAIN:
+            if p_type != HA_DOMAIN:
                 continue
 
             _process_scenes_config(hass, async_add_entities, p_config)
@@ -129,6 +137,22 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         vol.Schema({vol.Required(CONF_ENTITIES): STATES_SCHEMA}),
     )
 
+    async def create_service(call):
+        """Create a scene."""
+        scene_config = SCENECONFIG(call.data[CONF_SCENE_ID], call.data[CONF_ENTITIES])
+        entity_id = f"{SCENE_DOMAIN}.{scene_config.name}"
+        old = platform.entities.get(entity_id)
+        if old is not None:
+            if not old.from_service:
+                _LOGGER.warning("The scene %s already exists", entity_id)
+                return
+            await platform.async_remove_entity(entity_id)
+        async_add_entities([HomeAssistantScene(hass, scene_config, from_service=True)])
+
+    hass.services.async_register(
+        SCENE_DOMAIN, SERVICE_CREATE, create_service, CREATE_SCENE_SCHEMA
+    )
+
 
 def _process_scenes_config(hass, async_add_entities, config):
     """Process multiple scenes and add them."""
@@ -139,7 +163,11 @@ def _process_scenes_config(hass, async_add_entities, config):
         return
 
     async_add_entities(
-        HomeAssistantScene(hass, SCENECONFIG(scene[CONF_NAME], scene[CONF_ENTITIES]))
+        HomeAssistantScene(
+            hass,
+            SCENECONFIG(scene[CONF_NAME], scene[CONF_ENTITIES]),
+            scene.get(CONF_ID),
+        )
         for scene in scene_config
     )
 
@@ -147,10 +175,12 @@ def _process_scenes_config(hass, async_add_entities, config):
 class HomeAssistantScene(Scene):
     """A scene is a group of entities and the states we want them to be."""
 
-    def __init__(self, hass, scene_config):
+    def __init__(self, hass, scene_config, scene_id=None, from_service=False):
         """Initialize the scene."""
+        self._id = scene_id
         self.hass = hass
         self.scene_config = scene_config
+        self.from_service = from_service
 
     @property
     def name(self):
@@ -160,7 +190,10 @@ class HomeAssistantScene(Scene):
     @property
     def device_state_attributes(self):
         """Return the scene state attributes."""
-        return {ATTR_ENTITY_ID: list(self.scene_config.states)}
+        attributes = {ATTR_ENTITY_ID: list(self.scene_config.states)}
+        if self._id is not None:
+            attributes[CONF_ID] = self._id
+        return attributes
 
     async def async_activate(self):
         """Activate scene. Try to get entities into requested state."""

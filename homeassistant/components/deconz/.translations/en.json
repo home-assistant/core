@@ -55,10 +55,17 @@
             "left": "Left",
             "open": "Open",
             "right": "Right",
+            "side_1": "Side 1",
+            "side_2": "Side 2",
+            "side_3": "Side 3",
+            "side_4": "Side 4",
+            "side_5": "Side 5",
+            "side_6": "Side 6",
             "turn_off": "Turn off",
             "turn_on": "Turn on"
         },
         "trigger_type": {
+            "remote_awakened": "Device awakened",
             "remote_button_double_press": "\"{subtype}\" button double clicked",
             "remote_button_long_press": "\"{subtype}\" button continuously pressed",
             "remote_button_long_release": "\"{subtype}\" button released after long press",
@@ -69,7 +76,16 @@
             "remote_button_short_press": "\"{subtype}\" button pressed",
             "remote_button_short_release": "\"{subtype}\" button released",
             "remote_button_triple_press": "\"{subtype}\" button triple clicked",
-            "remote_gyro_activated": "Device shaken"
+            "remote_double_tap": "Device \"{subtype}\" double tapped",
+            "remote_falling": "Device in free fall",
+            "remote_gyro_activated": "Device shaken",
+            "remote_moved": "Device moved with \"{subtype}\" up",
+            "remote_rotate_from_side_1": "Device rotated from \"side 1\" to \"{subtype}\"",
+            "remote_rotate_from_side_2": "Device rotated from \"side 2\" to \"{subtype}\"",
+            "remote_rotate_from_side_3": "Device rotated from \"side 3\" to \"{subtype}\"",
+            "remote_rotate_from_side_4": "Device rotated from \"side 4\" to \"{subtype}\"",
+            "remote_rotate_from_side_5": "Device rotated from \"side 5\" to \"{subtype}\"",
+            "remote_rotate_from_side_6": "Device rotated from \"side 6\" to \"{subtype}\""
         }
     },
     "options": {

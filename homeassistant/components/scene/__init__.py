@@ -8,7 +8,6 @@ from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.const import CONF_PLATFORM, SERVICE_TURN_ON
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.state import HASS_DOMAIN
 
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -21,7 +20,7 @@ STATES = "states"
 def _hass_domain_validator(config):
     """Validate platform in config for homeassistant domain."""
     if CONF_PLATFORM not in config:
-        config = {CONF_PLATFORM: HASS_DOMAIN, STATES: config}
+        config = {CONF_PLATFORM: HA_DOMAIN, STATES: config}
 
     return config
 

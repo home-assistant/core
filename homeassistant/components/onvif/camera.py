@@ -192,8 +192,27 @@ class ONVIFHassCamera(Camera):
         try:
             system_date = dt_util.utcnow()
             device_time = await devicemgmt.GetSystemDateAndTime()
-            if device_time:
+            if not device_time:
+                _LOGGER.debug(
+                    """Couldn't get camera '%s' date/time.
+                    GetSystemDateAndTime() return null/empty""",
+                    self._name,
+                )
+                return
+
+            if device_time.UTCDateTime:
+                tzone = dt_util.UTC
                 cdate = device_time.UTCDateTime
+            else:
+                tzone = (
+                    dt_util.get_time_zone(device_time.TimeZone)
+                    or dt_util.DEFAULT_TIME_ZONE
+                )
+                cdate = device_time.LocalDateTime
+
+            if cdate is None:
+                _LOGGER.warning("Could not retrieve date/time on this camera")
+            else:
                 cam_date = dt.datetime(
                     cdate.Date.Year,
                     cdate.Date.Month,
@@ -202,10 +221,16 @@ class ONVIFHassCamera(Camera):
                     cdate.Time.Minute,
                     cdate.Time.Second,
                     0,
-                    dt_util.UTC,
+                    tzone,
                 )
 
+                cam_date_utc = cam_date.astimezone(dt_util.UTC)
+
+                _LOGGER.debug("TimeZone for date/time: %s", tzone)
+
                 _LOGGER.debug("Camera date/time: %s", cam_date)
+
+                _LOGGER.debug("Camera date/time in UTC: %s", cam_date_utc)
 
                 _LOGGER.debug("System date/time: %s", system_date)
 
@@ -214,10 +239,10 @@ class ONVIFHassCamera(Camera):
 
                 if dt_diff_seconds > 5:
                     _LOGGER.warning(
-                        "The date/time on the camera is '%s', "
+                        "The date/time on the camera (UTC) is '%s', "
                         "which is different from the system '%s', "
                         "this could lead to authentication issues",
-                        cam_date,
+                        cam_date_utc,
                         system_date,
                     )
         except ServerDisconnectedError as err:

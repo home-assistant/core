@@ -169,6 +169,8 @@ class PioneerDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
+        if self._pwstate == "PWR2":
+            return STATE_OFF
         if self._pwstate == "PWR1":
             return STATE_OFF
         if self._pwstate == "PWR0":

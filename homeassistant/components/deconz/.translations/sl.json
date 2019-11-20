@@ -55,10 +55,17 @@
             "left": "Levo",
             "open": "Odprto",
             "right": "Desno",
+            "side_1": "Stran 1",
+            "side_2": "Stran 2",
+            "side_3": "Stran 3",
+            "side_4": "Stran 4",
+            "side_5": "Stran 5",
+            "side_6": "Stran 6",
             "turn_off": "Ugasni",
             "turn_on": "Pri\u017egi"
         },
         "trigger_type": {
+            "remote_awakened": "Naprava se je prebudila",
             "remote_button_double_press": "Dvakrat kliknete gumb \"{subtype}\"",
             "remote_button_long_press": "\"{subtype}\" gumb neprekinjeno pritisnjen",
             "remote_button_long_release": "\"{subtype}\" gumb spro\u0161\u010den po dolgem pritisku",
@@ -69,7 +76,16 @@
             "remote_button_short_press": "Pritisnjen \"{subtype}\" gumb",
             "remote_button_short_release": "Gumb \"{subtype}\" spro\u0161\u010den",
             "remote_button_triple_press": "Gumb \"{subtype}\" trikrat kliknjen",
-            "remote_gyro_activated": "Naprava se je pretresla"
+            "remote_double_tap": "Naprava \"{subtype}\" dvakrat dotaknjena",
+            "remote_falling": "Naprava v prostem padu",
+            "remote_gyro_activated": "Naprava se je pretresla",
+            "remote_moved": "Naprava je premaknjena s \"{subtype}\" navzgor",
+            "remote_rotate_from_side_1": "Naprava je zasukana iz \"strani 1\" v \"{subtype}\"",
+            "remote_rotate_from_side_2": "Naprava je zasukana iz \"strani 2\" v \"{subtype}\"",
+            "remote_rotate_from_side_3": "Naprava je zasukana iz \"strani 3\" v \"{subtype}\"",
+            "remote_rotate_from_side_4": "Naprava je zasukana iz \"strani 4\" v \"{subtype}\"",
+            "remote_rotate_from_side_5": "Naprava je zasukana iz \"strani 5\" v \"{subtype}\"",
+            "remote_rotate_from_side_6": "Naprava je zasukana iz \"strani 6\" v \"{subtype}\""
         }
     },
     "options": {

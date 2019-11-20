@@ -173,7 +173,7 @@ class NextBusDepartureSensor(Entity):
         """Update sensor with new departures times."""
         # Note: using Multi because there is a bug with the single stop impl
         results = self._client.get_predictions_for_multi_stops(
-            [{"stop_tag": int(self.stop), "route_tag": self.route}], self.agency
+            [{"stop_tag": self.stop, "route_tag": self.route}], self.agency
         )
 
         self._log_debug("Predictions results: %s", results)
