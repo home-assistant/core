@@ -3,11 +3,7 @@
   "name": "Somfy Open API",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/somfy",
-  "dependencies": [],
-  "codeowners": [
-    "@tetienne"
-  ],
-  "requirements": [
-    "pymfy==0.5.2"
-  ]
+  "dependencies": ["http"],
+  "codeowners": ["@tetienne"],
+  "requirements": ["pymfy==0.6.0"]
 }

@@ -28,7 +28,7 @@ DEFAULT_TIMEOUT = 10
 DEFAULT_METHOD = "get"
 DEFAULT_VERIFY_SSL = True
 
-SUPPORT_REST_METHODS = ["get", "post", "put", "delete"]
+SUPPORT_REST_METHODS = ["get", "patch", "post", "put", "delete"]
 
 CONF_CONTENT_TYPE = "content_type"
 

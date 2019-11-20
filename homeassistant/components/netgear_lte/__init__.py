@@ -5,6 +5,7 @@ import logging
 
 import aiohttp
 import attr
+import eternalegypt
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -139,7 +140,6 @@ class ModemData:
 
     async def async_update(self):
         """Call the API to update the data."""
-        import eternalegypt
 
         try:
             self.data = await self.modem.information()
@@ -264,7 +264,6 @@ async def async_setup(hass, config):
 
 async def _setup_lte(hass, lte_config):
     """Set up a Netgear LTE modem."""
-    import eternalegypt
 
     host = lte_config[CONF_HOST]
     password = lte_config[CONF_PASSWORD]
@@ -322,7 +321,6 @@ async def _login(hass, modem_data, password):
 
 async def _retry_login(hass, modem_data, password):
     """Sleep and retry setup."""
-    import eternalegypt
 
     _LOGGER.warning("Could not connect to %s. Will keep trying", modem_data.host)
 

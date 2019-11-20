@@ -18,7 +18,7 @@ from homeassistant.helpers.sun import (
 from homeassistant.util import dt as dt_util
 
 
-# mypy: allow-untyped-calls, allow-untyped-defs
+# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 

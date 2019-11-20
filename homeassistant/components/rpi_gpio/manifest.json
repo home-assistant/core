@@ -3,7 +3,7 @@
   "name": "Rpi gpio",
   "documentation": "https://www.home-assistant.io/integrations/rpi_gpio",
   "requirements": [
-    "RPi.GPIO==0.6.5"
+    "RPi.GPIO==0.7.0"
   ],
   "dependencies": [],
   "codeowners": []

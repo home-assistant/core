@@ -105,10 +105,12 @@ class PjLinkDevice(MediaPlayerDevice):
                 pwstate = projector.get_power()
                 if pwstate in ("on", "warm-up"):
                     self._pwstate = STATE_ON
+                    self._muted = projector.get_mute()[1]
+                    self._current_source = format_input_source(*projector.get_input())
                 else:
                     self._pwstate = STATE_OFF
-                self._muted = projector.get_mute()[1]
-                self._current_source = format_input_source(*projector.get_input())
+                    self._muted = False
+                    self._current_source = None
             except KeyError as err:
                 if str(err) == "'OK'":
                     self._pwstate = STATE_OFF

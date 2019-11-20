@@ -1,7 +1,10 @@
 """Support for Arduino boards running with the Firmata firmware."""
 import logging
 
+import serial
 import voluptuous as vol
+
+from PyMata.pymata import PyMata
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.const import CONF_PORT
@@ -20,7 +23,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the Arduino component."""
-    import serial
 
     port = config[DOMAIN][CONF_PORT]
 
@@ -59,7 +61,6 @@ class ArduinoBoard:
 
     def __init__(self, port):
         """Initialize the board."""
-        from PyMata.pymata import PyMata
 
         self._port = port
         self._board = PyMata(self._port, verbose=False)

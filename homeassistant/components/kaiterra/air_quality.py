@@ -1,16 +1,14 @@
 """Support for Kaiterra Air Quality Sensors."""
 from homeassistant.components.air_quality import AirQualityEntity
-
+from homeassistant.const import CONF_DEVICE_ID, CONF_NAME
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from homeassistant.const import CONF_DEVICE_ID, CONF_NAME
-
 from .const import (
-    DOMAIN,
-    ATTR_VOC,
     ATTR_AQI_LEVEL,
     ATTR_AQI_POLLUTANT,
+    ATTR_VOC,
     DISPATCHER_KAITERRA,
+    DOMAIN,
 )
 
 

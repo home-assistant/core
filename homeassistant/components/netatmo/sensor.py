@@ -4,6 +4,7 @@ import threading
 from datetime import timedelta
 from time import time
 
+import pyatmo
 import requests
 import voluptuous as vol
 
@@ -79,6 +80,7 @@ SENSOR_TYPES = {
     "gustangle": ["Gust Angle", "", "mdi:compass", None],
     "gustangle_value": ["Gust Angle Value", "º", "mdi:compass", None],
     "guststrength": ["Gust Strength", "km/h", "mdi:weather-windy", None],
+    "reachable": ["Reachability", "", "mdi:signal", None],
     "rf_status": ["Radio", "", "mdi:signal", None],
     "rf_status_lvl": ["Radio_lvl", "", "mdi:signal", None],
     "wifi_status": ["Wifi", "", "mdi:wifi", None],
@@ -173,8 +175,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 )
             if _dev:
                 add_entities(_dev, True)
-
-        import pyatmo
 
         for data_class in [pyatmo.WeatherStationData, pyatmo.HomeCoachData]:
             try:
@@ -376,6 +376,8 @@ class NetatmoSensor(Entity):
                     self._state = "N (%d\xb0)" % data["GustAngle"]
             elif self.type == "guststrength":
                 self._state = data["GustStrength"]
+            elif self.type == "reachable":
+                self._state = data["reachable"]
             elif self.type == "rf_status_lvl":
                 self._state = data["rf_status"]
             elif self.type == "rf_status":
@@ -512,8 +514,6 @@ class NetatmoPublicData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Request an update from the Netatmo API."""
-        import pyatmo
-
         data = pyatmo.PublicData(
             self.auth,
             LAT_NE=self.lat_ne,
@@ -559,12 +559,10 @@ class NetatmoData:
         if time() < self._next_update or not self._update_in_progress.acquire(False):
             return
         try:
-            from pyatmo import NoDevice
-
             try:
                 self.station_data = self.data_class(self.auth)
                 _LOGGER.debug("%s detected!", str(self.data_class.__name__))
-            except NoDevice:
+            except pyatmo.NoDevice:
                 _LOGGER.warning(
                     "No Weather or HomeCoach devices found for %s", str(self.station)
                 )

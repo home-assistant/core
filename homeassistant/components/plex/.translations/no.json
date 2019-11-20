@@ -24,7 +24,7 @@
                     "token": "Token (hvis n\u00f8dvendig)",
                     "verify_ssl": "Verifisere SSL-sertifikat"
                 },
-                "title": "Plex server"
+                "title": "Plex-server"
             },
             "select_server": {
                 "data": {
@@ -35,7 +35,7 @@
             },
             "start_website_auth": {
                 "description": "Fortsett \u00e5 autorisere p\u00e5 plex.tv.",
-                "title": "Koble til Plex server"
+                "title": "Koble til Plex-server"
             },
             "user": {
                 "data": {

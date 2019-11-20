@@ -1,6 +1,8 @@
 """Support for reading vehicle status from BMW connected drive portal."""
 import logging
 
+from bimmer_connected.state import ChargingState
+
 from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_KILOMETERS,
@@ -97,7 +99,6 @@ class BMWConnectedDriveSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        from bimmer_connected.state import ChargingState
 
         vehicle_state = self._vehicle.state
         charging_state = vehicle_state.charging_status in [ChargingState.CHARGING]

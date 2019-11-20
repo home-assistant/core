@@ -10,7 +10,7 @@ from .const import (
 )
 
 
-# mypy: allow-untyped-calls, allow-untyped-defs
+# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

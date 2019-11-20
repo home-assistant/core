@@ -7,7 +7,7 @@ from homeassistant.components.water_heater import (
     SUPPORT_OPERATION_MODE,
     WaterHeaterDevice,
 )
-from homeassistant.const import PRECISION_WHOLE, STATE_OFF, STATE_ON
+from homeassistant.const import PRECISION_TENTHS, PRECISION_WHOLE, STATE_OFF, STATE_ON
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util.dt import parse_datetime
 
@@ -55,7 +55,7 @@ class EvoDHW(EvoChild, WaterHeaterDevice):
         self._name = "DHW controller"
         self._icon = "mdi:thermometer-lines"
 
-        self._precision = PRECISION_WHOLE
+        self._precision = PRECISION_TENTHS if evo_broker.client_v1 else PRECISION_WHOLE
         self._supported_features = SUPPORT_AWAY_MODE | SUPPORT_OPERATION_MODE
 
     @property

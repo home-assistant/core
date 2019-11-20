@@ -38,6 +38,7 @@ that can occur in the state will cause the right service to be called.
             f"""
 Device trigger base has been added to the {info.domain} integration:
  - {info.integration_dir / "device_trigger.py"}
+ - {info.integration_dir / "strings.json"} (translations)
  - {info.tests_dir / "test_device_trigger.py"}
 
 You will now need to update the code to make sure that relevant triggers
@@ -50,6 +51,7 @@ are exposed.
             f"""
 Device condition base has been added to the {info.domain} integration:
  - {info.integration_dir / "device_condition.py"}
+ - {info.integration_dir / "strings.json"} (translations)
  - {info.tests_dir / "test_device_condition.py"}
 
 You will now need to update the code to make sure that relevant condtions
@@ -62,6 +64,7 @@ are exposed.
             f"""
 Device action base has been added to the {info.domain} integration:
  - {info.integration_dir / "device_action.py"}
+ - {info.integration_dir / "strings.json"} (translations)
  - {info.tests_dir / "test_device_action.py"}
 
 You will now need to update the code to make sure that relevant services

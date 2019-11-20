@@ -27,6 +27,7 @@ from homeassistant.auth import (
 )
 from homeassistant.auth.permissions import system_policies
 from homeassistant.components import mqtt, recorder
+from homeassistant.components.mqtt.models import Message
 from homeassistant.config import async_process_component_config
 from homeassistant.const import (
     ATTR_DISCOVERED,
@@ -230,7 +231,6 @@ def get_test_instance_port():
     return _TEST_INSTANCE_PORT
 
 
-@ha.callback
 def async_mock_service(hass, domain, service, schema=None):
     """Set up a fake service & return a calls log list to this service."""
     calls = []
@@ -272,7 +272,7 @@ def async_fire_mqtt_message(hass, topic, payload, qos=0, retain=False):
     """Fire the MQTT message."""
     if isinstance(payload, str):
         payload = payload.encode("utf-8")
-    msg = mqtt.Message(topic, payload, qos, retain)
+    msg = Message(topic, payload, qos, retain)
     hass.data["mqtt"]._mqtt_handle_message(msg)
 
 
@@ -1015,14 +1015,23 @@ def mock_entity_platform(hass, platform_path, module):
     hue.light.
     """
     domain, platform_name = platform_path.split(".")
-    integration_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
+    mock_platform(hass, f"{platform_name}.{domain}", module)
+
+
+def mock_platform(hass, platform_path, module=None):
+    """Mock a platform.
+
+    platform_path is in form hue.config_flow.
+    """
+    domain, platform_name = platform_path.split(".")
+    integration_cache = hass.data.setdefault(loader.DATA_INTEGRATIONS, {})
     module_cache = hass.data.setdefault(loader.DATA_COMPONENTS, {})
 
-    if platform_name not in integration_cache:
-        mock_integration(hass, MockModule(platform_name))
+    if domain not in integration_cache:
+        mock_integration(hass, MockModule(domain))
 
     _LOGGER.info("Adding mock integration platform: %s", platform_path)
-    module_cache["{}.{}".format(platform_name, domain)] = module
+    module_cache[platform_path] = module or Mock()
 
 
 def async_capture_events(hass, event_name):

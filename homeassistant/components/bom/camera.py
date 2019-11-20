@@ -1,4 +1,5 @@
 """Provide animated GIF loops of BOM radar imagery."""
+from bomradarloop import BOMRadarLoop
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
@@ -119,7 +120,6 @@ class BOMRadarCam(Camera):
 
     def __init__(self, name, location, radar_id, delta, frames, outfile):
         """Initialize the component."""
-        from bomradarloop import BOMRadarLoop
 
         super().__init__()
         self._name = name

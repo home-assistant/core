@@ -4,6 +4,7 @@ import platform
 import subprocess as sp
 
 import voluptuous as vol
+import wakeonlan
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -48,8 +49,6 @@ class WOLSwitch(SwitchDevice):
 
     def __init__(self, hass, name, host, mac_address, off_action, broadcast_address):
         """Initialize the WOL switch."""
-        import wakeonlan
-
         self._hass = hass
         self._name = name
         self._host = host
@@ -57,7 +56,6 @@ class WOLSwitch(SwitchDevice):
         self._broadcast_address = broadcast_address
         self._off_script = Script(hass, off_action) if off_action else None
         self._state = False
-        self._wol = wakeonlan
 
     @property
     def is_on(self):
@@ -72,11 +70,11 @@ class WOLSwitch(SwitchDevice):
     def turn_on(self, **kwargs):
         """Turn the device on."""
         if self._broadcast_address:
-            self._wol.send_magic_packet(
+            wakeonlan.send_magic_packet(
                 self._mac_address, ip_address=self._broadcast_address
             )
         else:
-            self._wol.send_magic_packet(self._mac_address)
+            wakeonlan.send_magic_packet(self._mac_address)
 
     def turn_off(self, **kwargs):
         """Turn the device off if an off action is present."""

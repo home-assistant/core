@@ -10,13 +10,7 @@ from hass_nabucasa.const import STATE_CONNECTED
 
 from homeassistant.core import State
 from homeassistant.auth.providers import trusted_networks as tn_auth
-from homeassistant.components.cloud.const import (
-    PREF_ENABLE_GOOGLE,
-    PREF_ENABLE_ALEXA,
-    PREF_GOOGLE_SECURE_DEVICES_PIN,
-    DOMAIN,
-    RequireRelink,
-)
+from homeassistant.components.cloud.const import DOMAIN, RequireRelink
 from homeassistant.components.google_assistant.helpers import GoogleEntity
 from homeassistant.components.alexa.entities import LightCapabilities
 from homeassistant.components.alexa import errors as alexa_errors
@@ -474,9 +468,9 @@ async def test_websocket_update_preferences(
     hass, hass_ws_client, aioclient_mock, setup_api, mock_cloud_login
 ):
     """Test updating preference."""
-    assert setup_api[PREF_ENABLE_GOOGLE]
-    assert setup_api[PREF_ENABLE_ALEXA]
-    assert setup_api[PREF_GOOGLE_SECURE_DEVICES_PIN] is None
+    assert setup_api.google_enabled
+    assert setup_api.alexa_enabled
+    assert setup_api.google_secure_devices_pin is None
     client = await hass_ws_client(hass)
     await client.send_json(
         {
@@ -490,9 +484,9 @@ async def test_websocket_update_preferences(
     response = await client.receive_json()
 
     assert response["success"]
-    assert not setup_api[PREF_ENABLE_GOOGLE]
-    assert not setup_api[PREF_ENABLE_ALEXA]
-    assert setup_api[PREF_GOOGLE_SECURE_DEVICES_PIN] == "1234"
+    assert not setup_api.google_enabled
+    assert not setup_api.alexa_enabled
+    assert setup_api.google_secure_devices_pin == "1234"
 
 
 async def test_websocket_update_preferences_require_relink(

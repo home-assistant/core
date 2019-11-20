@@ -2,6 +2,7 @@
 import logging
 from datetime import datetime
 
+import ephem
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -67,7 +68,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 def get_season(date, hemisphere, season_tracking_type):
     """Calculate the current season."""
-    import ephem
 
     if hemisphere == "equator":
         return None

@@ -255,7 +255,7 @@ async def async_setup(hass, config):
                     "domain": "ais_yt_service",
                     "name": "AIS YouTube",
                     "config_flow": False,
-                    "documentation": "https://ai-speaker.com",
+                    "documentation": "https://www.ai-speaker.com",
                     "requirements": [package],
                     "dependencies": [],
                     "codeowners": [],
@@ -888,7 +888,7 @@ def do_install_upgrade(hass, call):
         # set update status
         _set_update_status(hass, UPDATE_STATUS_RESTART)
         # restart ais-dom
-        hass.services.call("homeassistant", "restart")
+        hass.services.call("homeassistant", "stop", {"ais_command": "restart"})
     elif reinstall_linux_apt:
         # check the version again
         hass.services.call(

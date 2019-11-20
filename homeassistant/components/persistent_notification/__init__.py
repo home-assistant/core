@@ -52,11 +52,6 @@ STATE = "notifying"
 STATUS_UNREAD = "unread"
 STATUS_READ = "read"
 
-WS_TYPE_GET_NOTIFICATIONS = "persistent_notification/get"
-SCHEMA_WS_GET = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_GET_NOTIFICATIONS}
-)
-
 
 @bind_hass
 def create(hass, message, title=None, notification_id=None):
@@ -198,14 +193,13 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         DOMAIN, SERVICE_MARK_READ, mark_read_service, SCHEMA_SERVICE_MARK_READ
     )
 
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_GET_NOTIFICATIONS, websocket_get_notifications, SCHEMA_WS_GET
-    )
+    hass.components.websocket_api.async_register_command(websocket_get_notifications)
 
     return True
 
 
 @callback
+@websocket_api.websocket_command({vol.Required("type"): "persistent_notification/get"})
 def websocket_get_notifications(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,

@@ -148,11 +148,11 @@ class LogiCam(Camera):
 
     async def async_turn_off(self):
         """Disable streaming mode for this camera."""
-        await self._camera.set_streaming_mode(False)
+        await self._camera.set_config("streaming", False)
 
     async def async_turn_on(self):
         """Enable streaming mode for this camera."""
-        await self._camera.set_streaming_mode(True)
+        await self._camera.set_config("streaming", True)
 
     @property
     def should_poll(self):

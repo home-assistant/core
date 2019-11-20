@@ -4,7 +4,8 @@ from typing import Set
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
+from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     _LOGGER,
@@ -18,7 +19,7 @@ from .hap import HomematicipAuth
 
 
 @callback
-def configured_haps(hass: HomeAssistant) -> Set[str]:
+def configured_haps(hass: HomeAssistantType) -> Set[str]:
     """Return a set of the configured access points."""
     return set(
         entry.data[HMIPC_HAPID]

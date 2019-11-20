@@ -7,6 +7,14 @@ import random
 import string
 
 import requests
+import slixmpp
+from slixmpp.exceptions import IqError, IqTimeout, XMPPError
+from slixmpp.xmlstream.xmlstream import NotConnectedError
+from slixmpp.plugins.xep_0363.http_upload import (
+    FileTooBig,
+    FileUploadError,
+    UploadServiceNotFound,
+)
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -118,14 +126,6 @@ async def async_send_message(
     data=None,
 ):
     """Send a message over XMPP."""
-    import slixmpp
-    from slixmpp.exceptions import IqError, IqTimeout, XMPPError
-    from slixmpp.xmlstream.xmlstream import NotConnectedError
-    from slixmpp.plugins.xep_0363.http_upload import (
-        FileTooBig,
-        FileUploadError,
-        UploadServiceNotFound,
-    )
 
     class SendNotificationBot(slixmpp.ClientXMPP):
         """Service for sending Jabber (XMPP) messages."""

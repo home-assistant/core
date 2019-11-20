@@ -44,6 +44,7 @@ from homeassistant.components.cover import (
 
 
 # mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,7 +75,7 @@ class CoverGroup(CoverDevice):
         """Initialize a CoverGroup entity."""
         self._name = name
         self._is_closed = False
-        self._cover_position = 100
+        self._cover_position: Optional[int] = 100
         self._tilt_position = None
         self._supported_features = 0
         self._assumed_state = True
@@ -178,7 +179,7 @@ class CoverGroup(CoverDevice):
         return self._is_closed
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> Optional[int]:
         """Return current position for all covers."""
         return self._cover_position
 

@@ -5,7 +5,8 @@
   "documentation": "https://www.home-assistant.io/integrations/plex",
   "requirements": [
     "plexapi==3.0.6",
-    "plexauth==0.0.4"
+    "plexauth==0.0.5",
+    "plexwebsocket==0.0.3"
   ],
   "dependencies": [
     "http"

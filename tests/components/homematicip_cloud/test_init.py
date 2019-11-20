@@ -2,10 +2,10 @@
 
 from unittest.mock import patch
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import homematicip_cloud as hmipc
+from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro, MockConfigEntry
+from tests.common import MockConfigEntry, mock_coro
 
 
 async def test_config_with_accesspoint_passed_to_config_entry(hass):
@@ -53,7 +53,7 @@ async def test_config_already_registered_not_passed_to_config_entry(hass):
         )
 
     # No flow started
-    assert len(mock_config_entries.flow.mock_calls) == 0
+    assert not mock_config_entries.flow.mock_calls
 
 
 async def test_setup_entry_successful(hass):

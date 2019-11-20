@@ -30,7 +30,7 @@ def async_setup(hass, config=None):
            https://github.com/sviete
 
          - Strona projektu:
-           https://ai-speaker.com
+           https://www.ai-speaker.com
 
 
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -46,7 +46,7 @@ Oto kilka informacji, od których możesz zacząć:
 
  - [Dokumentacja](https://sviete.github.io/AIS-docs)
  - [Źródła systemu](https://github.com/sviete)
- - [Strona projektu](https://ai-speaker.com)
+ - [Strona projektu](https://www.ai-speaker.com)
 
 """,
         "Cześć, witamy w systemie Asystent domowy!",

@@ -12,6 +12,7 @@
             "device_unavailable": "\u8a2d\u5099\u7121\u6cd5\u4f7f\u7528",
             "faulty_credentials": "\u4f7f\u7528\u8005\u6191\u8b49\u7121\u6548"
         },
+        "flow_title": "Axis \u8a2d\u5099\uff1a{name} ({host})",
         "step": {
             "user": {
                 "data": {

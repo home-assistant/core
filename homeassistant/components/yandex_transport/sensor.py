@@ -79,18 +79,21 @@ class DiscoverMoscowYandexTransport(Entity):
         transport_list = stop_metadata["Transport"]
         for transport in transport_list:
             route = transport["name"]
-            if self._routes and route not in self._routes:
-                # skip unnecessary route info
-                continue
-            if "Events" in transport["BriefSchedule"]:
-                for event in transport["BriefSchedule"]["Events"]:
-                    if "Estimated" in event:
-                        posix_time_next = int(event["Estimated"]["value"])
-                        if closer_time is None or closer_time > posix_time_next:
-                            closer_time = posix_time_next
-                        if route not in attrs:
-                            attrs[route] = []
-                        attrs[route].append(event["Estimated"]["text"])
+            for thread in transport["threads"]:
+                if self._routes and route not in self._routes:
+                    # skip unnecessary route info
+                    continue
+                if "Events" not in thread["BriefSchedule"]:
+                    continue
+                for event in thread["BriefSchedule"]["Events"]:
+                    if "Estimated" not in event:
+                        continue
+                    posix_time_next = int(event["Estimated"]["value"])
+                    if closer_time is None or closer_time > posix_time_next:
+                        closer_time = posix_time_next
+                    if route not in attrs:
+                        attrs[route] = []
+                    attrs[route].append(event["Estimated"]["text"])
         attrs[STOP_NAME] = stop_name
         attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
         if closer_time is None:

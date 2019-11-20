@@ -12,7 +12,6 @@ from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
 )
-
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.util.dt as dt_util
 

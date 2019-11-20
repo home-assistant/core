@@ -83,3 +83,31 @@ class AlexaBridgeUnreachableError(AlexaError):
 
     namespace = "Alexa"
     error_type = "BRIDGE_UNREACHABLE"
+
+
+class AlexaSecurityPanelUnauthorizedError(AlexaError):
+    """Class to represent SecurityPanelController Unauthorized errors."""
+
+    namespace = "Alexa.SecurityPanelController"
+    error_type = "UNAUTHORIZED"
+
+
+class AlexaSecurityPanelAuthorizationRequired(AlexaError):
+    """Class to represent SecurityPanelController AuthorizationRequired errors."""
+
+    namespace = "Alexa.SecurityPanelController"
+    error_type = "AUTHORIZATION_REQUIRED"
+
+
+class AlexaAlreadyInOperationError(AlexaError):
+    """Class to represent AlreadyInOperation errors."""
+
+    namespace = "Alexa"
+    error_type = "ALREADY_IN_OPERATION"
+
+
+class AlexaInvalidDirectiveError(AlexaError):
+    """Class to represent InvalidDirective errors."""
+
+    namespace = "Alexa"
+    error_type = "INVALID_DIRECTIVE"

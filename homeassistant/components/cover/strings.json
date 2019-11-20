@@ -1,0 +1,10 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_open": "{entity_name} is open",
+            "is_closed": "{entity_name} is closed",
+            "is_opening": "{entity_name} is opening",
+            "is_closing": "{entity_name} is closing"
+        }
+    }
+}

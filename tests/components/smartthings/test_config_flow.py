@@ -205,6 +205,8 @@ async def test_cloudhook_app_created_then_show_wait_form(
     hass, app, app_oauth_client, smartthings_mock
 ):
     """Test SmartApp is created with a cloudhoko and shows wait form."""
+    hass.config.components.add("cloud")
+
     # Unload the endpoint so we can reload it under the cloud.
     await smartapp.unload_smartapp_endpoint(hass)
 

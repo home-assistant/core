@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+from pyowm import OWM
+from pyowm.exceptions.api_call_error import APICallError
 import voluptuous as vol
 
 from homeassistant.components.weather import (
@@ -71,7 +73,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the OpenWeatherMap weather platform."""
-    import pyowm
 
     longitude = config.get(CONF_LONGITUDE, round(hass.config.longitude, 5))
     latitude = config.get(CONF_LATITUDE, round(hass.config.latitude, 5))
@@ -80,8 +81,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # aid-dom
     if config.get(CONF_API_KEY) != "use_ais_dom_api_key":
         try:
-            owm = pyowm.OWM(config.get(CONF_API_KEY))
-        except pyowm.exceptions.api_call_error.APICallError:
+            owm = OWM(config.get(CONF_API_KEY))
+        except APICallError:
             _LOGGER.error("Error while connecting to OpenWeatherMap")
             return False
     else:
@@ -228,8 +229,6 @@ class OpenWeatherMapWeather(WeatherEntity):
 
     def update(self):
         """Get the latest data from OWM and updates the states."""
-        from pyowm.exceptions.api_call_error import APICallError
-
         try:
             self._owm.update()
             self._owm.update_forecast()
@@ -257,8 +256,10 @@ class WeatherData:
         # aid-dom part
         if not self.owm:
             import pyowm
+
             try:
                 from homeassistant.components import ais_cloud
+
                 aiscloud = ais_cloud.AisCloudWS()
                 ws_resp = aiscloud.key("openweathermap_weather")
                 json_ws_resp = ws_resp.json()
@@ -267,7 +268,10 @@ class WeatherData:
                 except pyowm.exceptions.api_call_error.APICallError:
                     _LOGGER.error("Error while connecting to OpenWeatherMap")
             except Exception as error:
-                _LOGGER.error("Unable to get the API Key to OpenWeatherMap from AIS dom. %s", error)
+                _LOGGER.error(
+                    "Unable to get the API Key to OpenWeatherMap from AIS dom. %s",
+                    error,
+                )
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -284,8 +288,6 @@ class WeatherData:
     def update_forecast(self):
         self.ais_dom_api()
         """Get the latest forecast from OpenWeatherMap."""
-        from pyowm.exceptions.api_call_error import APICallError
-
         try:
             if self._mode == "daily":
                 fcd = self.owm.daily_forecast_at_coords(

@@ -1,0 +1,13 @@
+{
+    "device_automation": {
+        "action_type": {
+            "lock": "Bloqueja {entity_name}",
+            "open": "Obre {entity_name}",
+            "unlock": "Desbloqueja {entity_name}"
+        },
+        "condition_type": {
+            "is_locked": "{entity_name} est\u00e0 bloquejat/ada",
+            "is_unlocked": "{entity_name} est\u00e0 desbloquejat/ada"
+        }
+    }
+}

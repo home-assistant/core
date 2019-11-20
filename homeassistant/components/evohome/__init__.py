@@ -8,11 +8,11 @@ import re
 from typing import Any, Dict, Optional, Tuple
 
 import aiohttp.client_exceptions
-import voluptuous as vol
+import evohomeasync
 import evohomeasync2
+import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
@@ -28,14 +28,17 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, EVO_FOLLOW, STORAGE_VERSION, STORAGE_KEY, GWS, TCS
+from .const import DOMAIN, EVO_FOLLOW, GWS, STORAGE_KEY, STORAGE_VERSION, TCS
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ACCESS_TOKEN_EXPIRES = "access_token_expires"
-CONF_REFRESH_TOKEN = "refresh_token"
+ACCESS_TOKEN = "access_token"
+ACCESS_TOKEN_EXPIRES = "access_token_expires"
+REFRESH_TOKEN = "refresh_token"
+USER_DATA = "user_data"
 
 CONF_LOCATION_IDX = "location_idx"
+
 SCAN_INTERVAL_DEFAULT = timedelta(seconds=300)
 SCAN_INTERVAL_MINIMUM = timedelta(seconds=60)
 
@@ -96,14 +99,15 @@ def convert_dict(dictionary: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _handle_exception(err) -> bool:
+    """Return False if the exception can't be ignored."""
     try:
         raise err
 
     except evohomeasync2.AuthenticationError:
         _LOGGER.error(
-            "Failed to (re)authenticate with the vendor's server. "
+            "Failed to authenticate with the vendor's server. "
             "Check your network and the vendor's service status page. "
-            "Check that your username and password are correct. "
+            "Also check that your username and password are correct. "
             "Message is: %s",
             err,
         )
@@ -135,14 +139,77 @@ def _handle_exception(err) -> bool:
             )
             return False
 
-        raise  # we don't expect/handle any other ClientResponseError
+        raise  # we don't expect/handle any other Exceptions
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Create a (EMEA/EU-based) Honeywell evohome system."""
-    broker = EvoBroker(hass, config[DOMAIN])
-    if not await broker.init_client():
+
+    async def load_auth_tokens(store) -> Tuple[Dict, Optional[Dict]]:
+        app_storage = await store.async_load()
+        tokens = dict(app_storage if app_storage else {})
+
+        if tokens.pop(CONF_USERNAME, None) != config[DOMAIN][CONF_USERNAME]:
+            # any tokens wont be valid, and store might be be corrupt
+            await store.async_save({})
+            return ({}, None)
+
+        # evohomeasync2 requires naive/local datetimes as strings
+        if tokens.get(ACCESS_TOKEN_EXPIRES) is not None:
+            tokens[ACCESS_TOKEN_EXPIRES] = _dt_to_local_naive(
+                dt_util.parse_datetime(tokens[ACCESS_TOKEN_EXPIRES])
+            )
+
+        user_data = tokens.pop(USER_DATA, None)
+        return (tokens, user_data)
+
+    store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+    tokens, user_data = await load_auth_tokens(store)
+
+    client_v2 = evohomeasync2.EvohomeClient(
+        config[DOMAIN][CONF_USERNAME],
+        config[DOMAIN][CONF_PASSWORD],
+        **tokens,
+        session=async_get_clientsession(hass),
+    )
+
+    try:
+        await client_v2.login()
+    except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
+        _handle_exception(err)
         return False
+    finally:
+        config[DOMAIN][CONF_PASSWORD] = "REDACTED"
+
+    loc_idx = config[DOMAIN][CONF_LOCATION_IDX]
+    try:
+        loc_config = client_v2.installation_info[loc_idx][GWS][0][TCS][0]
+    except IndexError:
+        _LOGGER.error(
+            "Config error: '%s' = %s, but the valid range is 0-%s. "
+            "Unable to continue. Fix any configuration errors and restart HA.",
+            CONF_LOCATION_IDX,
+            loc_idx,
+            len(client_v2.installation_info) - 1,
+        )
+        return False
+
+    _LOGGER.debug("Config = %s", loc_config)
+
+    client_v1 = evohomeasync.EvohomeClient(
+        client_v2.username,
+        client_v2.password,
+        user_data=user_data,
+        session=async_get_clientsession(hass),
+    )
+
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN]["broker"] = broker = EvoBroker(
+        hass, client_v2, client_v1, store, config[DOMAIN]
+    )
+
+    await broker.save_auth_tokens()
+    await broker.update()  # get initial state
 
     hass.async_create_task(async_load_platform(hass, "climate", DOMAIN, {}, config))
     if broker.tcs.hotwater:
@@ -160,116 +227,100 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 class EvoBroker:
     """Container for evohome client and data."""
 
-    def __init__(self, hass, params) -> None:
+    def __init__(self, hass, client, client_v1, store, params) -> None:
         """Initialize the evohome client and its data structure."""
         self.hass = hass
+        self.client = client
+        self.client_v1 = client_v1
+        self._store = store
         self.params = params
-        self.config = {}
 
-        self.client = self.tcs = None
-        self._app_storage = {}
-
-        hass.data[DOMAIN] = {}
-        hass.data[DOMAIN]["broker"] = self
-
-    async def init_client(self) -> bool:
-        """Initialse the evohome data broker.
-
-        Return True if this is successful, otherwise return False.
-        """
-        refresh_token, access_token, access_token_expires = (
-            await self._load_auth_tokens()
-        )
-
-        # evohomeasync2 uses naive/local datetimes
-        if access_token_expires is not None:
-            access_token_expires = _dt_to_local_naive(access_token_expires)
-
-        client = self.client = evohomeasync2.EvohomeClient(
-            self.params[CONF_USERNAME],
-            self.params[CONF_PASSWORD],
-            refresh_token=refresh_token,
-            access_token=access_token,
-            access_token_expires=access_token_expires,
-            session=async_get_clientsession(self.hass),
-        )
-
-        try:
-            await client.login()
-        except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
-            if not _handle_exception(err):
-                return False
-
-        finally:
-            self.params[CONF_PASSWORD] = "REDACTED"
-
-        self.hass.add_job(self._save_auth_tokens())
-
-        loc_idx = self.params[CONF_LOCATION_IDX]
-        try:
-            self.config = client.installation_info[loc_idx][GWS][0][TCS][0]
-
-        except IndexError:
-            _LOGGER.error(
-                "Config error: '%s' = %s, but its valid range is 0-%s. "
-                "Unable to continue. "
-                "Fix any configuration errors and restart HA.",
-                CONF_LOCATION_IDX,
-                loc_idx,
-                len(client.installation_info) - 1,
-            )
-            return False
-
+        loc_idx = params[CONF_LOCATION_IDX]
+        self.config = client.installation_info[loc_idx][GWS][0][TCS][0]
         self.tcs = (
             client.locations[loc_idx]  # pylint: disable=protected-access
             ._gateways[0]
             ._control_systems[0]
         )
+        self.temps = None
 
-        _LOGGER.debug("Config = %s", self.config)
-        if _LOGGER.isEnabledFor(logging.DEBUG):  # don't do an I/O unless required
-            await self.update()  # includes: _LOGGER.debug("Status = %s"...
-
-        return True
-
-    async def _load_auth_tokens(
-        self
-    ) -> Tuple[Optional[str], Optional[str], Optional[datetime]]:
-        store = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
-        app_storage = self._app_storage = await store.async_load()
-
-        if app_storage is None:
-            app_storage = self._app_storage = {}
-
-        if app_storage.get(CONF_USERNAME) == self.params[CONF_USERNAME]:
-            refresh_token = app_storage.get(CONF_REFRESH_TOKEN)
-            access_token = app_storage.get(CONF_ACCESS_TOKEN)
-            at_expires_str = app_storage.get(CONF_ACCESS_TOKEN_EXPIRES)
-            if at_expires_str:
-                at_expires_dt = dt_util.parse_datetime(at_expires_str)
-            else:
-                at_expires_dt = None
-
-            return (refresh_token, access_token, at_expires_dt)
-
-        return (None, None, None)  # account switched: so tokens wont be valid
-
-    async def _save_auth_tokens(self, *args) -> None:
+    async def save_auth_tokens(self) -> None:
+        """Save access tokens and session IDs to the store for later use."""
         # evohomeasync2 uses naive/local datetimes
         access_token_expires = _local_dt_to_aware(self.client.access_token_expires)
 
-        self._app_storage[CONF_USERNAME] = self.params[CONF_USERNAME]
-        self._app_storage[CONF_REFRESH_TOKEN] = self.client.refresh_token
-        self._app_storage[CONF_ACCESS_TOKEN] = self.client.access_token
-        self._app_storage[CONF_ACCESS_TOKEN_EXPIRES] = access_token_expires.isoformat()
+        app_storage = {CONF_USERNAME: self.client.username}
+        app_storage[REFRESH_TOKEN] = self.client.refresh_token
+        app_storage[ACCESS_TOKEN] = self.client.access_token
+        app_storage[ACCESS_TOKEN_EXPIRES] = access_token_expires.isoformat()
 
-        store = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
-        await store.async_save(self._app_storage)
+        if self.client_v1 and self.client_v1.user_data:
+            app_storage[USER_DATA] = {
+                "userInfo": {"userID": self.client_v1.user_data["userInfo"]["userID"]},
+                "sessionId": self.client_v1.user_data["sessionId"],
+            }
+        else:
+            app_storage[USER_DATA] = None
 
-        self.hass.helpers.event.async_track_point_in_utc_time(
-            self._save_auth_tokens,
-            access_token_expires + self.params[CONF_SCAN_INTERVAL],
-        )
+        await self._store.async_save(app_storage)
+
+    async def _update_v1(self, *args, **kwargs) -> None:
+        """Get the latest high-precision temperatures of the default Location."""
+
+        def get_session_id(client_v1) -> Optional[str]:
+            user_data = client_v1.user_data if client_v1 else None
+            return user_data.get("sessionId") if user_data else None
+
+        session_id = get_session_id(self.client_v1)
+
+        try:
+            temps = list(await self.client_v1.temperatures(force_refresh=True))
+
+        except aiohttp.ClientError as err:
+            _LOGGER.warning(
+                "Unable to obtain the latest high-precision temperatures. "
+                "Check your network and the vendor's service status page. "
+                "Proceeding with low-precision temperatures. "
+                "Message is: %s",
+                err,
+            )
+            self.temps = None  # these are now stale, will fall back to v2 temps
+
+        else:
+            if (
+                str(self.client_v1.location_id)
+                != self.client.locations[self.params[CONF_LOCATION_IDX]].locationId
+            ):
+                _LOGGER.warning(
+                    "The v2 API's configured location doesn't match "
+                    "the v1 API's default location (there is more than one location), "
+                    "so the high-precision feature will be disabled"
+                )
+                self.client_v1 = self.temps = None
+            else:
+                self.temps = {str(i["id"]): i["temp"] for i in temps}
+
+        _LOGGER.debug("Temperatures = %s", self.temps)
+
+        if session_id != get_session_id(self.client_v1):
+            await self.save_auth_tokens()
+
+    async def _update_v2(self, *args, **kwargs) -> None:
+        """Get the latest modes, temperatures, setpoints of a Location."""
+        access_token = self.client.access_token
+
+        loc_idx = self.params[CONF_LOCATION_IDX]
+        try:
+            status = await self.client.locations[loc_idx].status()
+        except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
+            _handle_exception(err)
+        else:
+            self.hass.helpers.dispatcher.async_dispatcher_send(DOMAIN)
+
+            _LOGGER.debug("Status = %s", status[GWS][0][TCS][0])
+
+        if access_token != self.client.access_token:
+            await self.save_auth_tokens()
 
     async def update(self, *args, **kwargs) -> None:
         """Get the latest state data of an entire evohome Location.
@@ -278,17 +329,13 @@ class EvoBroker:
         operating mode of the Controller and the current temp of its children (e.g.
         Zones, DHW controller).
         """
-        loc_idx = self.params[CONF_LOCATION_IDX]
+        await self._update_v2()
 
-        try:
-            status = await self.client.locations[loc_idx].status()
-        except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
-            _handle_exception(err)
-        else:
-            # inform the evohome devices that state data has been updated
-            self.hass.helpers.dispatcher.async_dispatcher_send(DOMAIN)
+        if self.client_v1:
+            await self._update_v1()
 
-            _LOGGER.debug("Status = %s", status[GWS][0][TCS][0])
+        # inform the evohome devices that state data has been updated
+        self.hass.helpers.dispatcher.async_dispatcher_send(DOMAIN)
 
 
 class EvoDevice(Entity):
@@ -305,10 +352,8 @@ class EvoDevice(Entity):
         self._evo_tcs = evo_broker.tcs
 
         self._unique_id = self._name = self._icon = self._precision = None
-
-        self._device_state_attrs = {}
-        self._state_attributes = []
         self._supported_features = None
+        self._device_state_attrs = {}
 
     @callback
     def _refresh(self) -> None:
@@ -394,9 +439,13 @@ class EvoChild(EvoDevice):
     @property
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature of a Zone."""
-        if self._evo_device.temperatureStatus["isAvailable"]:
-            return self._evo_device.temperatureStatus["temperature"]
-        return None
+        if not self._evo_device.temperatureStatus["isAvailable"]:
+            return None
+
+        if self._evo_broker.temps:
+            return self._evo_broker.temps[self._evo_device.zoneId]
+
+        return self._evo_device.temperatureStatus["temperature"]
 
     @property
     def setpoints(self) -> Dict[str, Any]:
@@ -411,36 +460,43 @@ class EvoChild(EvoDevice):
         day_of_week = int(day_time.strftime("%w"))  # 0 is Sunday
         time_of_day = day_time.strftime("%H:%M:%S")
 
-        # Iterate today's switchpoints until past the current time of day...
-        day = self._schedule["DailySchedules"][day_of_week]
-        sp_idx = -1  # last switchpoint of the day before
-        for i, tmp in enumerate(day["Switchpoints"]):
-            if time_of_day > tmp["TimeOfDay"]:
-                sp_idx = i  # current setpoint
-            else:
-                break
+        try:
+            # Iterate today's switchpoints until past the current time of day...
+            day = self._schedule["DailySchedules"][day_of_week]
+            sp_idx = -1  # last switchpoint of the day before
+            for i, tmp in enumerate(day["Switchpoints"]):
+                if time_of_day > tmp["TimeOfDay"]:
+                    sp_idx = i  # current setpoint
+                else:
+                    break
 
-        # Did the current SP start yesterday? Does the next start SP tomorrow?
-        this_sp_day = -1 if sp_idx == -1 else 0
-        next_sp_day = 1 if sp_idx + 1 == len(day["Switchpoints"]) else 0
+            # Did the current SP start yesterday? Does the next start SP tomorrow?
+            this_sp_day = -1 if sp_idx == -1 else 0
+            next_sp_day = 1 if sp_idx + 1 == len(day["Switchpoints"]) else 0
 
-        for key, offset, idx in [
-            ("this", this_sp_day, sp_idx),
-            ("next", next_sp_day, (sp_idx + 1) * (1 - next_sp_day)),
-        ]:
-            sp_date = (day_time + timedelta(days=offset)).strftime("%Y-%m-%d")
-            day = self._schedule["DailySchedules"][(day_of_week + offset) % 7]
-            switchpoint = day["Switchpoints"][idx]
+            for key, offset, idx in [
+                ("this", this_sp_day, sp_idx),
+                ("next", next_sp_day, (sp_idx + 1) * (1 - next_sp_day)),
+            ]:
+                sp_date = (day_time + timedelta(days=offset)).strftime("%Y-%m-%d")
+                day = self._schedule["DailySchedules"][(day_of_week + offset) % 7]
+                switchpoint = day["Switchpoints"][idx]
 
-            dt_local_aware = _local_dt_to_aware(
-                dt_util.parse_datetime(f"{sp_date}T{switchpoint['TimeOfDay']}")
+                dt_local_aware = _local_dt_to_aware(
+                    dt_util.parse_datetime(f"{sp_date}T{switchpoint['TimeOfDay']}")
+                )
+
+                self._setpoints[f"{key}_sp_from"] = dt_local_aware.isoformat()
+                try:
+                    self._setpoints[f"{key}_sp_temp"] = switchpoint["heatSetpoint"]
+                except KeyError:
+                    self._setpoints[f"{key}_sp_state"] = switchpoint["DhwState"]
+
+        except IndexError:
+            self._setpoints = {}
+            _LOGGER.warning(
+                "Failed to get setpoints - please report as an issue", exc_info=True
             )
-
-            self._setpoints[f"{key}_sp_from"] = dt_local_aware.isoformat()
-            try:
-                self._setpoints[f"{key}_sp_temp"] = switchpoint["heatSetpoint"]
-            except KeyError:
-                self._setpoints[f"{key}_sp_state"] = switchpoint["DhwState"]
 
         return self._setpoints
 
@@ -453,6 +509,8 @@ class EvoChild(EvoDevice):
         self._schedule = await self._call_client_api(
             self._evo_device.schedule(), refresh=False
         )
+
+        _LOGGER.debug("Schedule['%s'] = %s", self.name, self._schedule)
 
     async def async_update(self) -> None:
         """Get the latest state data."""

@@ -77,11 +77,12 @@ async def async_setup_entry(hass, config_entry):
         hass.data[DOMAIN] = {}
 
     controller = UniFiController(hass, config_entry)
-    controller_id = get_controller_id_from_config_entry(config_entry)
-    hass.data[DOMAIN][controller_id] = controller
 
     if not await controller.async_setup():
         return False
+
+    controller_id = get_controller_id_from_config_entry(config_entry)
+    hass.data[DOMAIN][controller_id] = controller
 
     if controller.mac is None:
         return True

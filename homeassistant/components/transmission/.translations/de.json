@@ -21,16 +21,19 @@
                     "password": "Passwort",
                     "port": "Port",
                     "username": "Benutzername"
-                }
+                },
+                "title": "Transmission-Client einrichten"
             }
-        }
+        },
+        "title": "Transmission"
     },
     "options": {
         "step": {
             "init": {
                 "data": {
                     "scan_interval": "Aktualisierungsfrequenz"
-                }
+                },
+                "description": "Konfigurieren von Optionen f\u00fcr Transmission"
             }
         }
     }

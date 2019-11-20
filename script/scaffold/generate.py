@@ -68,6 +68,39 @@ def _custom_tasks(template, info) -> None:
 
         info.update_manifest(**changes)
 
+    if template == "device_trigger":
+        info.update_strings(
+            device_automation={
+                **info.strings().get("device_automation", {}),
+                "trigger_type": {
+                    "turned_on": "{entity_name} turned on",
+                    "turned_off": "{entity_name} turned off",
+                },
+            }
+        )
+
+    if template == "device_condition":
+        info.update_strings(
+            device_automation={
+                **info.strings().get("device_automation", {}),
+                "condtion_type": {
+                    "is_on": "{entity_name} is on",
+                    "is_off": "{entity_name} is off",
+                },
+            }
+        )
+
+    if template == "device_action":
+        info.update_strings(
+            device_automation={
+                **info.strings().get("device_automation", {}),
+                "action_type": {
+                    "turn_on": "Turn on {entity_name}",
+                    "turn_off": "Turn off {entity_name}",
+                },
+            }
+        )
+
     if template == "config_flow":
         info.update_manifest(config_flow=True)
         info.update_strings(

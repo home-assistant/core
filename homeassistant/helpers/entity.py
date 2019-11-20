@@ -148,7 +148,8 @@ class Entity:
     def state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes.
 
-        Implemented by component base class.
+        Implemented by component base class. Convention for attribute names
+        is lowercase snake_case.
         """
         return None
 
@@ -156,7 +157,8 @@ class Entity:
     def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return device specific state attributes.
 
-        Implemented by platform classes.
+        Implemented by platform classes. Convention for attribute names
+        is lowercase snake_case.
         """
         return None
 
@@ -550,6 +552,19 @@ class Entity:
     def __repr__(self) -> str:
         """Return the representation."""
         return "<Entity {}: {}>".format(self.name, self.state)
+
+    # call an requests
+    async def async_request_call(self, coro):
+        """Process request batched."""
+
+        if self.parallel_updates:
+            await self.parallel_updates.acquire()
+
+        try:
+            await coro
+        finally:
+            if self.parallel_updates:
+                self.parallel_updates.release()
 
 
 class ToggleEntity(Entity):

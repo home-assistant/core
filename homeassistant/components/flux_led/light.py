@@ -3,6 +3,7 @@ import logging
 import socket
 import random
 
+from flux_led import BulbScanner, WifiLedBulb
 import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PROTOCOL, ATTR_MODE
@@ -135,8 +136,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Flux lights."""
-    import flux_led
-
     lights = []
     light_ips = []
 
@@ -156,7 +155,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     # Find the bulbs on the LAN
-    scanner = flux_led.BulbScanner()
+    scanner = BulbScanner()
     scanner.scan(timeout=10)
     for device in scanner.getBulbInfo():
         ipaddr = device["ipaddr"]
@@ -187,9 +186,8 @@ class FluxLight(Light):
 
     def _connect(self):
         """Connect to Flux light."""
-        import flux_led
 
-        self._bulb = flux_led.WifiLedBulb(self._ipaddr, timeout=5)
+        self._bulb = WifiLedBulb(self._ipaddr, timeout=5)
         if self._protocol:
             self._bulb.setProtocol(self._protocol)
 

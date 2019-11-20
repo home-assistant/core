@@ -3,6 +3,7 @@ import logging
 
 import voluptuous as vol
 from api.soma_api import SomaApi
+from requests import RequestException
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
@@ -75,6 +76,12 @@ class SomaEntity(Entity):
         self.device = device
         self.api = api
         self.current_position = 50
+        self.is_available = True
+
+    @property
+    def available(self):
+        """Return true if the last API commands returned successfully."""
+        return self.is_available
 
     @property
     def unique_id(self):
@@ -100,12 +107,19 @@ class SomaEntity(Entity):
 
     async def async_update(self):
         """Update the device with the latest data."""
-        response = await self.hass.async_add_executor_job(
-            self.api.get_shade_state, self.device["mac"]
-        )
+        try:
+            response = await self.hass.async_add_executor_job(
+                self.api.get_shade_state, self.device["mac"]
+            )
+        except RequestException:
+            _LOGGER.error("Connection to SOMA Connect failed")
+            self.is_available = False
+            return
         if response["result"] != "success":
             _LOGGER.error(
                 "Unable to reach device %s (%s)", self.device["name"], response["msg"]
             )
+            self.is_available = False
             return
         self.current_position = 100 - response["position"]
+        self.is_available = True

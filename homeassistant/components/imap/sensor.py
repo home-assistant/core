@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+from aioimaplib import IMAP4_SSL, AioImapException
 import async_timeout
 import voluptuous as vol
 
@@ -107,24 +108,20 @@ class ImapSensor(Entity):
 
     async def connection(self):
         """Return a connection to the server, establishing it if necessary."""
-        import aioimaplib
-
         if self._connection is None:
             try:
-                self._connection = aioimaplib.IMAP4_SSL(self._server, self._port)
+                self._connection = IMAP4_SSL(self._server, self._port)
                 await self._connection.wait_hello_from_server()
                 await self._connection.login(self._user, self._password)
                 await self._connection.select(self._folder)
                 self._does_push = self._connection.has_capability("IDLE")
-            except (aioimaplib.AioImapException, asyncio.TimeoutError):
+            except (AioImapException, asyncio.TimeoutError):
                 self._connection = None
 
         return self._connection
 
     async def idle_loop(self):
         """Wait for data pushed from server."""
-        import aioimaplib
-
         while True:
             try:
                 if await self.connection():
@@ -138,17 +135,15 @@ class ImapSensor(Entity):
                         await idle
                 else:
                     await self.async_update_ha_state()
-            except (aioimaplib.AioImapException, asyncio.TimeoutError):
+            except (AioImapException, asyncio.TimeoutError):
                 self.disconnected()
 
     async def async_update(self):
         """Periodic polling of state."""
-        import aioimaplib
-
         try:
             if await self.connection():
                 await self.refresh_email_count()
-        except (aioimaplib.AioImapException, asyncio.TimeoutError):
+        except (AioImapException, asyncio.TimeoutError):
             self.disconnected()
 
     async def refresh_email_count(self):

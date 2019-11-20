@@ -110,14 +110,17 @@ class CloudClient(Interface):
         if not self.cloud.is_logged_in:
             return
 
-        if self.alexa_config.should_report_state:
+        if self.alexa_config.enabled and self.alexa_config.should_report_state:
             try:
                 await self.alexa_config.async_enable_proactive_mode()
             except alexa_errors.NoTokenAvailable:
                 pass
 
-        if self.google_config.should_report_state:
-            self.google_config.async_enable_report_state()
+        if self.google_config.enabled:
+            self.google_config.async_enable_local_sdk()
+
+            if self.google_config.should_report_state:
+                self.google_config.async_enable_report_state()
 
     async def cleanups(self) -> None:
         """Cleanup some stuff after logout."""

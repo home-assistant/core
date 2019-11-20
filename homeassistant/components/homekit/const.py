@@ -10,6 +10,7 @@ ATTR_DISPLAY_NAME = "display_name"
 ATTR_VALUE = "value"
 
 # #### Config ####
+CONF_ADVERTISE_IP = "advertise_ip"
 CONF_AUTO_START = "auto_start"
 CONF_ENTITY_CONFIG = "entity_config"
 CONF_FEATURE = "feature"

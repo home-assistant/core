@@ -23,9 +23,9 @@ def create_engine_test(*args, **kwargs):
 
 async def test_schema_update_calls(hass):
     """Test that schema migrations occur in correct order."""
-    with patch("sqlalchemy.create_engine", new=create_engine_test), patch(
-        "homeassistant.components.recorder.migration._apply_update"
-    ) as update:
+    with patch(
+        "homeassistant.components.recorder.create_engine", new=create_engine_test
+    ), patch("homeassistant.components.recorder.migration._apply_update") as update:
         await async_setup_component(
             hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
         )

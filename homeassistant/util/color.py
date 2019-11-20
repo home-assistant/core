@@ -167,8 +167,8 @@ COLORS = {
 class XYPoint:
     """Represents a CIE 1931 XY coordinate pair."""
 
-    x = attr.ib(type=float)
-    y = attr.ib(type=float)
+    x = attr.ib(type=float)  # pylint: disable=invalid-name
+    y = attr.ib(type=float)  # pylint: disable=invalid-name
 
 
 @attr.s()

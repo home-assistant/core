@@ -1,8 +1,11 @@
 """Support for performing TensorFlow classification on images."""
+import io
 import logging
 import os
 import sys
 
+from PIL import Image, ImageDraw
+import numpy as np
 import voluptuous as vol
 
 from homeassistant.components.image_processing import (
@@ -88,6 +91,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         # Verify that the TensorFlow Object Detection API is pre-installed
         # pylint: disable=unused-import,unused-variable
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+        # These imports shouldn't be moved to the top, because they depend on code from the model_dir.
+        # (The model_dir is created during the manual setup process. See integration docs.)
         import tensorflow as tf  # noqa
         from object_detection.utils import label_map_util  # noqa
     except ImportError:
@@ -236,9 +241,6 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         }
 
     def _save_image(self, image, matches, paths):
-        from PIL import Image, ImageDraw
-        import io
-
         img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
         img_width, img_height = img.size
         draw = ImageDraw.Draw(img)
@@ -280,7 +282,6 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
 
     def process_image(self, image):
         """Process the image."""
-        import numpy as np
 
         try:
             import cv2  # pylint: disable=import-error
@@ -289,9 +290,6 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
             inp = img[:, :, [2, 1, 0]]  # BGR->RGB
             inp_expanded = inp.reshape(1, inp.shape[0], inp.shape[1], 3)
         except ImportError:
-            from PIL import Image
-            import io
-
             img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
             img.thumbnail((460, 460), Image.ANTIALIAS)
             img_width, img_height = img.size

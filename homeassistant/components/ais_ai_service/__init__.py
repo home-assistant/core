@@ -12,6 +12,8 @@ import datetime
 import requests
 from homeassistant import core
 from homeassistant.loader import bind_hass
+
+# from homeassistant.helpers import template
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -59,7 +61,6 @@ aisCloudWS = ais_cloud.AisCloudWS()
 
 ATTR_TEXT = "text"
 DOMAIN = "ais_ai_service"
-G_HTTP_REST_SERVICE_BASE_URL = "http://{}:8122"
 
 REGEX_TURN_COMMAND = re.compile(r"turn (?P<name>(?: |\w)+) (?P<command>\w+)")
 
@@ -2126,9 +2127,20 @@ async def async_setup(hass, config):
 
     def say_it(service):
         """Info to the user."""
-        text = service.data[ATTR_TEXT]
+        text = ""
+        if ATTR_TEXT in service.data:
+            text = service.data[ATTR_TEXT]
+        # TODO else:
+        #     # check message template
+        #     if "template_text" in service.data:
+        #         tpl = template.Template(service.data["template_text"], hass)
+        #         message = tpl.async_render()
+        #     else:
+        #         return
         if "img" in service.data:
             img = service.data["img"]
+            if len(img) < 3:
+                img = None
         else:
             img = None
         _say_it(hass, text, img)
@@ -2694,7 +2706,7 @@ async def async_setup(hass, config):
 
 def _publish_command_to_frame(hass, key, val, ip):
     # sent the command to the android frame via http
-    url = G_HTTP_REST_SERVICE_BASE_URL.format(ip)
+    url = ais_global.G_HTTP_REST_SERVICE_BASE_URL.format(ip)
 
     if key == "WifiConnectToSid":
         ssid = val.split(";")[0]
@@ -3193,7 +3205,8 @@ def _post_message(message, hass):
     )
     try:
         requests.post(
-            G_HTTP_REST_SERVICE_BASE_URL.format("127.0.0.1") + "/text_to_speech",
+            ais_global.G_HTTP_REST_SERVICE_BASE_URL.format("127.0.0.1")
+            + "/text_to_speech",
             json=j_data,
             timeout=1,
         )

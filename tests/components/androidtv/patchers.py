@@ -1,7 +1,7 @@
 """Define patches used for androidtv tests."""
 
 from socket import error as socket_error
-from unittest.mock import patch
+from unittest.mock import mock_open, patch
 
 
 class AdbDeviceFake:
@@ -128,3 +128,15 @@ def patch_shell(response=None, error=False):
 
 
 PATCH_ADB_DEVICE = patch("androidtv.adb_manager.AdbDevice", AdbDeviceFake)
+PATCH_ANDROIDTV_OPEN = patch("androidtv.adb_manager.open", mock_open())
+PATCH_KEYGEN = patch("homeassistant.components.androidtv.media_player.keygen")
+PATCH_SIGNER = patch("androidtv.adb_manager.PythonRSASigner")
+
+
+def isfile(filepath):
+    """Mock `os.path.isfile`."""
+    return filepath.endswith("adbkey")
+
+
+PATCH_ISFILE = patch("os.path.isfile", isfile)
+PATCH_ACCESS = patch("os.access", return_value=True)

@@ -1,6 +1,8 @@
 """Support for Luftdaten stations."""
 import logging
 
+from luftdaten import Luftdaten
+from luftdaten.exceptions import LuftdatenError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -114,8 +116,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up Luftdaten as config entry."""
-    from luftdaten import Luftdaten
-    from luftdaten.exceptions import LuftdatenError
 
     if not isinstance(config_entry.data[CONF_SENSOR_ID], int):
         _async_fixup_sensor_id(hass, config_entry, config_entry.data[CONF_SENSOR_ID])
@@ -172,12 +172,9 @@ async def async_unload_entry(hass, config_entry):
     )
     remove_listener()
 
-    for component in ("sensor",):
-        await hass.config_entries.async_forward_entry_unload(config_entry, component)
-
     hass.data[DOMAIN][DATA_LUFTDATEN_CLIENT].pop(config_entry.entry_id)
 
-    return True
+    return await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
 
 
 class LuftDatenData:
@@ -191,8 +188,6 @@ class LuftDatenData:
 
     async def async_update(self):
         """Update sensor/binary sensor data."""
-        from luftdaten.exceptions import LuftdatenError
-
         try:
             await self.client.get_data()
 

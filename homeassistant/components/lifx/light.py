@@ -6,6 +6,8 @@ import logging
 import math
 import sys
 
+import aiolifx as aiolifx_module
+import aiolifx_effects as aiolifx_effects_module
 import voluptuous as vol
 
 from homeassistant import util
@@ -151,15 +153,11 @@ LIFX_EFFECT_STOP_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_id
 
 def aiolifx():
     """Return the aiolifx module."""
-    import aiolifx as aiolifx_module
-
     return aiolifx_module
 
 
 def aiolifx_effects():
     """Return the aiolifx_effects module."""
-    import aiolifx_effects as aiolifx_effects_module
-
     return aiolifx_effects_module
 
 

@@ -33,6 +33,12 @@
                     "track_wired_clients": "Inclure les clients du r\u00e9seau filaire"
                 }
             },
+            "init": {
+                "data": {
+                    "one": "Vide",
+                    "other": "Vide"
+                }
+            },
             "statistics_sensors": {
                 "data": {
                     "allow_bandwidth_sensors": "Cr\u00e9er des capteurs d'utilisation de la bande passante pour les clients r\u00e9seau"

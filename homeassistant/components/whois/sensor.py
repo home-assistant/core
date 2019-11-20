@@ -119,7 +119,10 @@ class WhoisSensor(Entity):
             attrs = {}
 
             expiration_date = response["expiration_date"]
-            attrs[ATTR_EXPIRES] = expiration_date.isoformat()
+            if isinstance(expiration_date, list):
+                attrs[ATTR_EXPIRES] = expiration_date[0].isoformat()
+            else:
+                attrs[ATTR_EXPIRES] = expiration_date.isoformat()
 
             if "nameservers" in response:
                 attrs[ATTR_NAME_SERVERS] = " ".join(response["nameservers"])

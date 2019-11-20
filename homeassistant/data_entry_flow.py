@@ -168,7 +168,7 @@ class FlowHandler:
     """Handle the configuration flow of a component."""
 
     # Set by flow manager
-    flow_id: Optional[str] = None
+    flow_id: str = None  # type: ignore
     hass: Optional[HomeAssistant] = None
     handler: Optional[Hashable] = None
     cur_step: Optional[Dict[str, str]] = None

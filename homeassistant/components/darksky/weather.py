@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+import forecastio
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 import voluptuous as vol
 
@@ -101,6 +102,11 @@ class DarkSkyWeather(WeatherEntity):
         self._ds_currently = None
         self._ds_hourly = None
         self._ds_daily = None
+
+    @property
+    def available(self):
+        """Return if weather data is available from Dark Sky."""
+        return self._ds_data is not None
 
     @property
     def attribution(self):
@@ -215,7 +221,8 @@ class DarkSkyWeather(WeatherEntity):
         self._dark_sky.update()
 
         self._ds_data = self._dark_sky.data
-        self._ds_currently = self._dark_sky.currently.d
+        currently = self._dark_sky.currently
+        self._ds_currently = currently.d if currently else {}
         self._ds_hourly = self._dark_sky.hourly
         self._ds_daily = self._dark_sky.daily
 
@@ -238,8 +245,6 @@ class DarkSkyData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Dark Sky."""
-        import forecastio
-
         try:
             self.data = forecastio.load_forecast(
                 self._api_key, self.latitude, self.longitude, units=self.requested_units

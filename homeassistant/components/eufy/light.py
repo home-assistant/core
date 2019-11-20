@@ -1,5 +1,6 @@
 """Support for Eufy lights."""
 import logging
+import lakeside
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -36,7 +37,6 @@ class EufyLight(Light):
 
     def __init__(self, device):
         """Initialize the light."""
-        import lakeside
 
         self._temp = None
         self._brightness = None

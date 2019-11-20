@@ -1,19 +1,21 @@
 """Optical character recognition processing of seven segments displays."""
-import logging
 import io
+import logging
 import os
+import subprocess
 
+from PIL import Image
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.core import split_entity_id
 from homeassistant.components.image_processing import (
-    PLATFORM_SCHEMA,
-    ImageProcessingEntity,
-    CONF_SOURCE,
     CONF_ENTITY_ID,
     CONF_NAME,
+    CONF_SOURCE,
+    PLATFORM_SCHEMA,
+    ImageProcessingEntity,
 )
+from homeassistant.core import split_entity_id
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,9 +122,6 @@ class ImageProcessingSsocr(ImageProcessingEntity):
 
     def process_image(self, image):
         """Process the image."""
-        from PIL import Image
-        import subprocess
-
         stream = io.BytesIO(image)
         img = Image.open(stream)
         img.save(self.filepath, "png")

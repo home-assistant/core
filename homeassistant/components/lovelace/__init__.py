@@ -124,19 +124,19 @@ class LovelaceStorage:
             config["views"] = []
 
         for aisview in ais_dom_config["views"]:
-            _LOGGER.info("---------------------------------")
-            _LOGGER.info("Processing " + aisview["path"])
+            _LOGGER.debug("---------------------------------")
+            _LOGGER.debug("Processing " + aisview["path"])
             view_found = False
             for idx, view in enumerate(config["views"]):
                 if aisview["path"] == view["path"]:
-                    _LOGGER.info(aisview["path"] + " -> COPY")
+                    _LOGGER.debug(aisview["path"] + " -> COPY")
                     config["views"][idx] = aisview
                     view_found = True
                     break
             if not view_found:
-                _LOGGER.info(aisview["path"] + " -> ADD")
+                _LOGGER.debug(aisview["path"] + " -> ADD")
                 config["views"].append(aisview)
-            _LOGGER.info("---------------------------------")
+            _LOGGER.debug("---------------------------------")
         return config
 
     async def async_save(self, config):

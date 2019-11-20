@@ -12,6 +12,7 @@
             "device_unavailable": "L'appareil n'est pas disponible",
             "faulty_credentials": "Mauvaises informations d'identification de l'utilisateur"
         },
+        "flow_title": "Appareil Axis: {name} ( {host} )",
         "step": {
             "user": {
                 "data": {

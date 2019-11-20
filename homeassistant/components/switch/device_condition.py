@@ -1,5 +1,5 @@
 """Provides device conditions for switches."""
-from typing import List
+from typing import Dict, List
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
@@ -21,9 +21,16 @@ def async_condition_from_config(
     """Evaluate state based on configuration."""
     if config_validation:
         config = CONDITION_SCHEMA(config)
-    return toggle_entity.async_condition_from_config(config, config_validation)
+    return toggle_entity.async_condition_from_config(config)
 
 
-async def async_get_conditions(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_conditions(
+    hass: HomeAssistant, device_id: str
+) -> List[Dict[str, str]]:
     """List device conditions."""
     return await toggle_entity.async_get_conditions(hass, device_id, DOMAIN)
+
+
+async def async_get_condition_capabilities(hass: HomeAssistant, config: dict) -> dict:
+    """List condition capabilities."""
+    return await toggle_entity.async_get_condition_capabilities(hass, config)

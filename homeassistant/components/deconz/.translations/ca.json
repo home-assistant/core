@@ -11,6 +11,7 @@
         "error": {
             "no_key": "No s'ha pogut obtenir una clau API"
         },
+        "flow_title": "Passarel\u00b7la d'enlla\u00e7 deCONZ Zigbee ({host})",
         "step": {
             "hassio_confirm": {
                 "data": {

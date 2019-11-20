@@ -1,5 +1,5 @@
 """Tests for the Sonos Media Player platform."""
-from homeassistant.components.sonos import media_player, DOMAIN
+from homeassistant.components.sonos import DOMAIN, media_player
 from homeassistant.setup import async_setup_component
 
 

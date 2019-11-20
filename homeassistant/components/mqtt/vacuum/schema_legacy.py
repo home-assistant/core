@@ -33,7 +33,7 @@ from homeassistant.components.mqtt import (
     subscription,
 )
 
-from . import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
+from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -43,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Validate the configuration and return a Tile scanner."""
-    from pytile import Client
+    from pytile import async_login
 
     websession = aiohttp_client.async_get_clientsession(hass)
 
@@ -52,14 +52,16 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     )
     config_data = await hass.async_add_job(load_json, config_file)
     if config_data:
-        client = Client(
+        client = await async_login(
             config[CONF_USERNAME],
             config[CONF_PASSWORD],
             websession,
             client_uuid=config_data["client_uuid"],
         )
     else:
-        client = Client(config[CONF_USERNAME], config[CONF_PASSWORD], websession)
+        client = await async_login(
+            config[CONF_USERNAME], config[CONF_PASSWORD], websession
+        )
 
         config_data = {"client_uuid": client.client_uuid}
         await hass.async_add_job(save_json, config_file, config_data)

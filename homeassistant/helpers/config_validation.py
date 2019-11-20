@@ -386,6 +386,7 @@ def remove_falsy(value: List[T]) -> List[T]:
 def service(value):
     """Validate service."""
     # Services use same format as entities so we can use same helper.
+    value = string(value).lower()
     if valid_entity_id(value):
         return value
     raise vol.Invalid("Service {} does not match format <domain>.<name>".format(value))
@@ -600,7 +601,8 @@ def deprecated(
     if module is not None:
         module_name = module.__name__
     else:
-        # Unclear when it is None, but it happens, so let's guard.
+        # If Python is unable to access the sources files, the call stack frame
+        # will be missing information, so let's guard.
         # https://github.com/home-assistant/home-assistant/issues/24982
         module_name = __name__
 
@@ -884,6 +886,8 @@ DEVICE_ACTION_BASE_SCHEMA = vol.Schema(
 
 DEVICE_ACTION_SCHEMA = DEVICE_ACTION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
+_SCRIPT_SCENE_SCHEMA = vol.Schema({vol.Required("scene"): entity_domain("scene")})
+
 SCRIPT_SCHEMA = vol.All(
     ensure_list,
     [
@@ -894,6 +898,7 @@ SCRIPT_SCHEMA = vol.All(
             EVENT_SCHEMA,
             CONDITION_SCHEMA,
             DEVICE_ACTION_SCHEMA,
+            _SCRIPT_SCENE_SCHEMA,
         )
     ],
 )

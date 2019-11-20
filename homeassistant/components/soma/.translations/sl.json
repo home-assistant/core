@@ -8,6 +8,16 @@
         "create_entry": {
             "default": "Uspe\u0161no overjen s Soma."
         },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Gostitelj",
+                    "port": "Vrata"
+                },
+                "description": "Prosimo, vnesite nastavitve povezave za va\u0161 SOMA Connect.",
+                "title": "SOMA Connect"
+            }
+        },
         "title": "Soma"
     }
 }

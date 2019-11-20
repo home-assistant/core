@@ -21,4 +21,3 @@ ATTR_TORRENT = "torrent"
 SERVICE_ADD_TORRENT = "add_torrent"
 
 DATA_UPDATED = "transmission_data_updated"
-DATA_TRANSMISSION = "data_transmission"

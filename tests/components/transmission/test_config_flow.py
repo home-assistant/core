@@ -1,4 +1,4 @@
-"""Tests for Met.no config flow."""
+"""Tests for Transmission config flow."""
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -30,6 +30,14 @@ USERNAME = "username"
 PASSWORD = "password"
 PORT = 9091
 SCAN_INTERVAL = 10
+
+MOCK_ENTRY = {
+    CONF_NAME: NAME,
+    CONF_HOST: HOST,
+    CONF_USERNAME: USERNAME,
+    CONF_PASSWORD: PASSWORD,
+    CONF_PORT: PORT,
+}
 
 
 @pytest.fixture(name="api")
@@ -90,18 +98,10 @@ async def test_flow_works(hass, api):
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == PORT
-    assert result["data"]["options"][CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
+    # assert result["data"]["options"][CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
 
     # test with all provided
-    result = await flow.async_step_user(
-        {
-            CONF_NAME: NAME,
-            CONF_HOST: HOST,
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-            CONF_PORT: PORT,
-        }
-    )
+    result = await flow.async_step_user(MOCK_ENTRY)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == NAME
@@ -110,7 +110,7 @@ async def test_flow_works(hass, api):
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
     assert result["data"][CONF_PORT] == PORT
-    assert result["data"]["options"][CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
+    # assert result["data"]["options"][CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
 
 
 async def test_options(hass):
@@ -118,14 +118,7 @@ async def test_options(hass):
     entry = MockConfigEntry(
         domain=DOMAIN,
         title=CONF_NAME,
-        data={
-            "name": DEFAULT_NAME,
-            "host": HOST,
-            "username": USERNAME,
-            "password": PASSWORD,
-            "port": DEFAULT_PORT,
-            "options": {CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
-        },
+        data=MOCK_ENTRY,
         options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
     )
     flow = init_config_flow(hass)
@@ -157,7 +150,7 @@ async def test_import(hass, api):
     assert result["data"][CONF_NAME] == DEFAULT_NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == DEFAULT_PORT
-    assert result["data"]["options"][CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
+    assert result["data"][CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
 
     # import with all
     result = await flow.async_step_import(
@@ -177,18 +170,40 @@ async def test_import(hass, api):
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
     assert result["data"][CONF_PORT] == PORT
-    assert result["data"]["options"][CONF_SCAN_INTERVAL] == SCAN_INTERVAL
+    assert result["data"][CONF_SCAN_INTERVAL] == SCAN_INTERVAL
 
 
-async def test_integration_already_exists(hass, api):
-    """Test we only allow a single config flow."""
-    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+async def test_host_already_configured(hass, api):
+    """Test host is already configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_ENTRY,
+        options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
     )
+    entry.add_to_hass(hass)
+    flow = init_config_flow(hass)
+    result = await flow.async_step_user(MOCK_ENTRY)
+
     assert result["type"] == "abort"
-    assert result["reason"] == "one_instance_allowed"
+    assert result["reason"] == "already_configured"
+
+
+async def test_name_already_configured(hass, api):
+    """Test name is already configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_ENTRY,
+        options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
+    )
+    entry.add_to_hass(hass)
+
+    mock_entry = MOCK_ENTRY.copy()
+    mock_entry[CONF_HOST] = "0.0.0.0"
+    flow = init_config_flow(hass)
+    result = await flow.async_step_user(mock_entry)
+
+    assert result["type"] == "form"
+    assert result["errors"] == {CONF_NAME: "name_exists"}
 
 
 async def test_error_on_wrong_credentials(hass, auth_error):

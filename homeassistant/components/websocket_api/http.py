@@ -2,6 +2,7 @@
 import asyncio
 from contextlib import suppress
 import logging
+from typing import Optional
 
 from aiohttp import web, WSMsgType
 import async_timeout
@@ -25,7 +26,7 @@ from .error import Disconnect
 from .messages import error_message
 
 
-# mypy: allow-untyped-calls, allow-untyped-defs
+# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
 
 class WebsocketAPIView(HomeAssistantView):
@@ -47,7 +48,7 @@ class WebSocketHandler:
         """Initialize an active connection."""
         self.hass = hass
         self.request = request
-        self.wsock = None
+        self.wsock: Optional[web.WebSocketResponse] = None
         self._to_write: asyncio.Queue = asyncio.Queue(maxsize=MAX_PENDING_MSG)
         self._handle_task = None
         self._writer_task = None
@@ -115,7 +116,7 @@ class WebSocketHandler:
         # Py3.7+
         if hasattr(asyncio, "current_task"):
             # pylint: disable=no-member
-            self._handle_task = asyncio.current_task()  # type: ignore
+            self._handle_task = asyncio.current_task()
         else:
             self._handle_task = asyncio.Task.current_task()
 

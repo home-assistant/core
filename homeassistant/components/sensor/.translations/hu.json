@@ -1,0 +1,26 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_battery_level": "{entity_name} akku szint",
+            "is_humidity": "{entity_name} p\u00e1ratartalom",
+            "is_illuminance": "{entity_name} megvil\u00e1g\u00edt\u00e1s",
+            "is_power": "{entity_name} teljes\u00edtm\u00e9ny",
+            "is_pressure": "{entity_name} nyom\u00e1s",
+            "is_signal_strength": "{entity_name} jeler\u0151ss\u00e9g",
+            "is_temperature": "{entity_name} h\u0151m\u00e9rs\u00e9klet",
+            "is_timestamp": "{entity_name} id\u0151b\u00e9lyeg",
+            "is_value": "{entity_name} \u00e9rt\u00e9k"
+        },
+        "trigger_type": {
+            "battery_level": "{entity_name} akku szint",
+            "humidity": "{entity_name} p\u00e1ratartalom",
+            "illuminance": "{entity_name} megvil\u00e1g\u00edt\u00e1s",
+            "power": "{entity_name} teljes\u00edtm\u00e9ny",
+            "pressure": "{entity_name} nyom\u00e1s",
+            "signal_strength": "{entity_name} jeler\u0151ss\u00e9g",
+            "temperature": "{entity_name} h\u0151m\u00e9rs\u00e9klet",
+            "timestamp": "{entity_name} id\u0151b\u00e9lyeg",
+            "value": "{entity_name} \u00e9rt\u00e9k"
+        }
+    }
+}

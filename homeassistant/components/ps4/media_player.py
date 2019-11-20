@@ -2,8 +2,8 @@
 import logging
 import asyncio
 
-import pyps4_homeassistant.ps4 as pyps4
-from pyps4_homeassistant.errors import NotReady
+import pyps4_2ndscreen.ps4 as pyps4
+from pyps4_2ndscreen.errors import NotReady
 
 from homeassistant.core import callback
 from homeassistant.components.media_player import ENTITY_IMAGE_URL, MediaPlayerDevice
@@ -254,7 +254,7 @@ class PS4Device(MediaPlayerDevice):
 
     async def async_get_title_data(self, title_id, name):
         """Get PS Store Data."""
-        from pyps4_homeassistant.errors import PSDataIncomplete
+        from pyps4_2ndscreen.errors import PSDataIncomplete
 
         app_name = None
         art = None

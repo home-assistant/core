@@ -3,8 +3,9 @@ import asyncio
 import logging
 from datetime import timedelta
 
-import requests
 import async_timeout
+from pywemo import discovery
+import requests
 
 from homeassistant import util
 from homeassistant.components.light import (
@@ -35,7 +36,6 @@ SUPPORT_WEMO = (
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up discovered WeMo switches."""
-    from pywemo import discovery
 
     if discovery_info is not None:
         location = discovery_info["ssdp_description"]

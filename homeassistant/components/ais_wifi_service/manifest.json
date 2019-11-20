@@ -2,7 +2,7 @@
   "domain": "ais_wifi_service",
   "name": "AIS Konfiguracja połączenia WiFi",
   "config_flow": true,
-  "documentation": "https://ai-speaker.com",
+  "documentation": "https://www.ai-speaker.com",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

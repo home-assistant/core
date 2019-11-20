@@ -1,34 +1,32 @@
 """Support for Kaiterra devices."""
 import voluptuous as vol
 
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers import config_validation as cv
-
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_DEVICES,
     CONF_DEVICE_ID,
+    CONF_DEVICES,
+    CONF_NAME,
     CONF_SCAN_INTERVAL,
     CONF_TYPE,
-    CONF_NAME,
 )
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.event import async_track_time_interval
 
+from .api_data import KaiterraApiData
 from .const import (
     AVAILABLE_AQI_STANDARDS,
-    AVAILABLE_UNITS,
     AVAILABLE_DEVICE_TYPES,
+    AVAILABLE_UNITS,
     CONF_AQI_STANDARD,
     CONF_PREFERRED_UNITS,
-    DOMAIN,
     DEFAULT_AQI_STANDARD,
     DEFAULT_PREFERRED_UNIT,
     DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
     KAITERRA_COMPONENTS,
 )
-
-from .api_data import KaiterraApiData
 
 KAITERRA_DEVICE_SCHEMA = vol.Schema(
     {

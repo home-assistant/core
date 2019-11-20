@@ -1,6 +1,12 @@
 """Support to control a Zehnder ComfoAir Q350/450/600 ventilation unit."""
 import logging
 
+from pycomfoconnect import (
+    SENSOR_TEMPERATURE_EXTRACT,
+    SENSOR_TEMPERATURE_OUTDOOR,
+    Bridge,
+    ComfoConnect,
+)
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -56,7 +62,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the ComfoConnect bridge."""
-    from pycomfoconnect import Bridge
 
     conf = config[DOMAIN]
     host = conf.get(CONF_HOST)
@@ -97,7 +102,6 @@ class ComfoConnectBridge:
 
     def __init__(self, hass, bridge, name, token, friendly_name, pin):
         """Initialize the ComfoConnect bridge."""
-        from pycomfoconnect import ComfoConnect
 
         self.data = {}
         self.name = name
@@ -124,11 +128,6 @@ class ComfoConnectBridge:
     def sensor_callback(self, var, value):
         """Call function for sensor updates."""
         _LOGGER.debug("Got value from bridge: %d = %d", var, value)
-
-        from pycomfoconnect import (
-            SENSOR_TEMPERATURE_EXTRACT,
-            SENSOR_TEMPERATURE_OUTDOOR,
-        )
 
         if var in [SENSOR_TEMPERATURE_EXTRACT, SENSOR_TEMPERATURE_OUTDOOR]:
             self.data[var] = value / 10

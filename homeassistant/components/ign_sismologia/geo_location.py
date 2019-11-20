@@ -19,8 +19,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ["georss_ign_sismologia_client==0.2"]
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_EXTERNAL_ID = "external_id"

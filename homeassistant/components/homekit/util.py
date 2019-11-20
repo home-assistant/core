@@ -235,7 +235,7 @@ def convert_to_float(state):
 
 def temperature_to_homekit(temperature, unit):
     """Convert temperature to Celsius for HomeKit."""
-    return round(temp_util.convert(temperature, unit, TEMP_CELSIUS) * 2) / 2
+    return round(temp_util.convert(temperature, unit, TEMP_CELSIUS), 1)
 
 
 def temperature_to_states(temperature, unit):

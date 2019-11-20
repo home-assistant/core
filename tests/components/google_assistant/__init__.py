@@ -12,12 +12,23 @@ class MockConfig(helpers.AbstractConfig):
         should_expose=None,
         entity_config=None,
         hass=None,
+        local_sdk_webhook_id=None,
+        local_sdk_user_id=None,
+        enabled=True,
     ):
         """Initialize config."""
         super().__init__(hass)
         self._should_expose = should_expose
         self._secure_devices_pin = secure_devices_pin
         self._entity_config = entity_config or {}
+        self._local_sdk_webhook_id = local_sdk_webhook_id
+        self._local_sdk_user_id = local_sdk_user_id
+        self._enabled = enabled
+
+    @property
+    def enabled(self):
+        """Return if Google is enabled."""
+        return self._enabled
 
     @property
     def secure_devices_pin(self):
@@ -28,6 +39,16 @@ class MockConfig(helpers.AbstractConfig):
     def entity_config(self):
         """Return secure devices pin."""
         return self._entity_config
+
+    @property
+    def local_sdk_webhook_id(self):
+        """Return local SDK webhook id."""
+        return self._local_sdk_webhook_id
+
+    @property
+    def local_sdk_user_id(self):
+        """Return local SDK webhook id."""
+        return self._local_sdk_user_id
 
     def should_expose(self, state):
         """Expose it all."""

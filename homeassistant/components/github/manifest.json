@@ -3,7 +3,7 @@
   "name": "Github",
   "documentation": "https://www.home-assistant.io/integrations/github",
   "requirements": [
-    "PyGithub==1.43.5"
+    "PyGithub==1.43.8"
   ],
   "dependencies": [],
   "codeowners": []

@@ -3,12 +3,14 @@ import logging
 from typing import Optional
 
 from homematicip.aio.device import AsyncDevice
-from homematicip.aio.home import AsyncHome
+from homematicip.aio.group import AsyncGroup
 
-from homeassistant.components import homematicip_cloud
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import Entity
+
+from .const import DOMAIN as HMIPC_DOMAIN
+from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,22 +37,25 @@ DEVICE_ATTRIBUTE_ICONS = {
 
 DEVICE_ATTRIBUTES = {
     "modelType": ATTR_MODEL_TYPE,
-    "id": ATTR_ID,
     "sabotage": ATTR_SABOTAGE,
     "rssiDeviceValue": ATTR_RSSI_DEVICE,
     "rssiPeerValue": ATTR_RSSI_PEER,
     "deviceOverheated": ATTR_DEVICE_OVERHEATED,
     "deviceOverloaded": ATTR_DEVICE_OVERLOADED,
     "deviceUndervoltage": ATTR_DEVICE_UNTERVOLTAGE,
+    "id": ATTR_ID,
 }
+
+GROUP_ATTRIBUTES = {"modelType": ATTR_MODEL_TYPE}
 
 
 class HomematicipGenericDevice(Entity):
     """Representation of an HomematicIP generic device."""
 
-    def __init__(self, home: AsyncHome, device, post: Optional[str] = None) -> None:
+    def __init__(self, hap: HomematicipHAP, device, post: Optional[str] = None) -> None:
         """Initialize the generic device."""
-        self._home = home
+        self._hap = hap
+        self._home = hap.home
         self._device = device
         self.post = post
         # Marker showing that the HmIP device hase been removed.
@@ -65,18 +70,19 @@ class HomematicipGenericDevice(Entity):
             return {
                 "identifiers": {
                     # Serial numbers of Homematic IP device
-                    (homematicip_cloud.DOMAIN, self._device.id)
+                    (HMIPC_DOMAIN, self._device.id)
                 },
                 "name": self._device.label,
                 "manufacturer": self._device.oem,
                 "model": self._device.modelType,
                 "sw_version": self._device.firmwareVersion,
-                "via_device": (homematicip_cloud.DOMAIN, self._device.homeId),
+                "via_device": (HMIPC_DOMAIN, self._device.homeId),
             }
         return None
 
     async def async_added_to_hass(self):
         """Register callbacks."""
+        self._hap.hmip_device_by_entity_id[self.entity_id] = self._device
         self._device.on_update(self._async_device_changed)
         self._device.on_remove(self._async_device_removed)
 
@@ -100,6 +106,7 @@ class HomematicipGenericDevice(Entity):
         # Only go further if the device/entity should be removed from registries
         # due to a removal of the HmIP device.
         if self.hmip_device_removed:
+            del self._hap.hmip_device_by_entity_id[self.entity_id]
             await self.async_remove_from_registries()
 
     async def async_remove_from_registries(self) -> None:
@@ -173,6 +180,7 @@ class HomematicipGenericDevice(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the generic device."""
         state_attr = {}
+
         if isinstance(self._device, AsyncDevice):
             for attr, attr_key in DEVICE_ATTRIBUTES.items():
                 attr_value = getattr(self._device, attr, None)
@@ -180,5 +188,13 @@ class HomematicipGenericDevice(Entity):
                     state_attr[attr_key] = attr_value
 
             state_attr[ATTR_IS_GROUP] = False
+
+        if isinstance(self._device, AsyncGroup):
+            for attr, attr_key in GROUP_ATTRIBUTES.items():
+                attr_value = getattr(self._device, attr, None)
+                if attr_value:
+                    state_attr[attr_key] = attr_value
+
+            state_attr[ATTR_IS_GROUP] = True
 
         return state_attr

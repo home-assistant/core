@@ -1,0 +1,42 @@
+# Describes the format for available AIS device services
+
+start_rf_sniffing:
+  description: Przełączenie bramki RF w tryb nasłuchiwania kodów
+
+stop_rf_sniffing:
+  description: Przełączenie bramki RF w tryb wysyłania kodów
+
+send_rf_code:
+  description: Wysłanie kodu RF
+  fields:
+    code:
+      description: Kod B0 do wysłania
+      example: 'AAB00512DE05C802D5017223A0012332232323323232322332323232322323323223233223322323323232323223323232232323233455'
+    topic:
+      description: Temat MQTT na jakim nasłuchuje bramka
+      example: 'sonoffRFBridge'
+
+add_ais_dom_entity:
+  description: Dodanie nowej encji AIS dom (np. przełączika RF)
+  fields:
+    name:
+      description: Nazwa dla urządzenia
+    code:
+      description: Kod RF który ma wysyłać urządzenie
+      example: 'AAB00512DE05C802D5017223A0012332232323323232322332323232322323323223233223322323323232323223323232232323233455'
+    deviceId:
+      description: Identyfikator urządzenia do którego przypisać encję (np. identyfikator bramki RF)
+      example: 'AA33CC55'
+    topic:
+      description: Temat MQTT na jakim nasłuchuje bramka
+      example: 'sonoffRFBridge'
+    type:
+      description: Typ encji switch lub sensor
+      example: 'switch'
+
+remove_ais_dom_entity:
+  description: Usunięcie encji AIS dom z urządzenia (np. przełącznika z bramki RF)
+  fields:
+    entity_id:
+      description: Identyfikator encji
+      example: switch.brama_wiazdowa

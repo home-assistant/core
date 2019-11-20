@@ -2,7 +2,7 @@
 Exposes Amplifier Srvice on AIS dom device
 
 For more details about this platform, please refer to the documentation at
-https://ai-speaker.com
+https://www.ai-speaker.com
 """
 import asyncio
 import os

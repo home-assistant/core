@@ -3,6 +3,8 @@ from collections import defaultdict
 import logging
 
 import voluptuous as vol
+from teslajsonpy import Controller as teslaAPI, TeslaException
+
 
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -52,8 +54,6 @@ TESLA_COMPONENTS = [
 
 def setup(hass, base_config):
     """Set up of Tesla component."""
-    from teslajsonpy import Controller as teslaAPI, TeslaException
-
     config = base_config.get(DOMAIN)
 
     email = config.get(CONF_USERNAME)

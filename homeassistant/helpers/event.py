@@ -1,13 +1,13 @@
 """Helpers for listening to events."""
 from datetime import datetime, timedelta
 import functools as ft
-from typing import Callable
+from typing import Any, Callable, Iterable, Optional, Union
 
 import attr
 
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.sun import get_astral_event_next
-from homeassistant.core import HomeAssistant, callback, CALLBACK_TYPE
+from homeassistant.core import HomeAssistant, callback, CALLBACK_TYPE, Event
 from homeassistant.const import (
     ATTR_NOW,
     EVENT_STATE_CHANGED,
@@ -240,7 +240,9 @@ track_point_in_utc_time = threaded_listener_factory(async_track_point_in_utc_tim
 
 @callback
 @bind_hass
-def async_call_later(hass, delay, action):
+def async_call_later(
+    hass: HomeAssistant, delay: float, action: Callable[..., None]
+) -> CALLBACK_TYPE:
     """Add a listener that is called in <delay>."""
     return async_track_point_in_utc_time(
         hass, action, dt_util.utcnow() + timedelta(seconds=delay)
@@ -252,7 +254,9 @@ call_later = threaded_listener_factory(async_call_later)
 
 @callback
 @bind_hass
-def async_track_time_interval(hass, action, interval):
+def async_track_time_interval(
+    hass: HomeAssistant, action: Callable[..., None], interval: timedelta
+) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively at every timedelta interval."""
     remove = None
 
@@ -284,14 +288,14 @@ class SunListener:
     """Helper class to help listen to sun events."""
 
     hass = attr.ib(type=HomeAssistant)
-    action = attr.ib(type=Callable)
-    event = attr.ib(type=str)
-    offset = attr.ib(type=timedelta)
-    _unsub_sun: CALLBACK_TYPE = attr.ib(default=None)
-    _unsub_config: CALLBACK_TYPE = attr.ib(default=None)
+    action: Callable[..., None] = attr.ib()
+    event: str = attr.ib()
+    offset: Optional[timedelta] = attr.ib()
+    _unsub_sun: Optional[CALLBACK_TYPE] = attr.ib(default=None)
+    _unsub_config: Optional[CALLBACK_TYPE] = attr.ib(default=None)
 
     @callback
-    def async_attach(self):
+    def async_attach(self) -> None:
         """Attach a sun listener."""
         assert self._unsub_config is None
 
@@ -302,7 +306,7 @@ class SunListener:
         self._listen_next_sun_event()
 
     @callback
-    def async_detach(self):
+    def async_detach(self) -> None:
         """Detach the sun listener."""
         assert self._unsub_sun is not None
         assert self._unsub_config is not None
@@ -313,7 +317,7 @@ class SunListener:
         self._unsub_config = None
 
     @callback
-    def _listen_next_sun_event(self):
+    def _listen_next_sun_event(self) -> None:
         """Set up the sun event listener."""
         assert self._unsub_sun is None
 
@@ -324,14 +328,14 @@ class SunListener:
         )
 
     @callback
-    def _handle_sun_event(self, _now):
+    def _handle_sun_event(self, _now: Any) -> None:
         """Handle solar event."""
         self._unsub_sun = None
         self._listen_next_sun_event()
         self.hass.async_run_job(self.action)
 
     @callback
-    def _handle_config_event(self, _event):
+    def _handle_config_event(self, _event: Any) -> None:
         """Handle core config update."""
         assert self._unsub_sun is not None
         self._unsub_sun()
@@ -341,7 +345,9 @@ class SunListener:
 
 @callback
 @bind_hass
-def async_track_sunrise(hass, action, offset=None):
+def async_track_sunrise(
+    hass: HomeAssistant, action: Callable[..., None], offset: Optional[timedelta] = None
+) -> CALLBACK_TYPE:
     """Add a listener that will fire a specified offset from sunrise daily."""
     listener = SunListener(hass, action, SUN_EVENT_SUNRISE, offset)
     listener.async_attach()
@@ -353,7 +359,9 @@ track_sunrise = threaded_listener_factory(async_track_sunrise)
 
 @callback
 @bind_hass
-def async_track_sunset(hass, action, offset=None):
+def async_track_sunset(
+    hass: HomeAssistant, action: Callable[..., None], offset: Optional[timedelta] = None
+) -> CALLBACK_TYPE:
     """Add a listener that will fire a specified offset from sunset daily."""
     listener = SunListener(hass, action, SUN_EVENT_SUNSET, offset)
     listener.async_attach()
@@ -366,8 +374,13 @@ track_sunset = threaded_listener_factory(async_track_sunset)
 @callback
 @bind_hass
 def async_track_utc_time_change(
-    hass, action, hour=None, minute=None, second=None, local=False
-):
+    hass: HomeAssistant,
+    action: Callable[..., None],
+    hour: Optional[Any] = None,
+    minute: Optional[Any] = None,
+    second: Optional[Any] = None,
+    local: bool = False,
+) -> CALLBACK_TYPE:
     """Add a listener that will fire if time matches a pattern."""
     # We do not have to wrap the function with time pattern matching logic
     # if no pattern given
@@ -386,7 +399,7 @@ def async_track_utc_time_change(
 
     next_time = None
 
-    def calculate_next(now):
+    def calculate_next(now: datetime) -> None:
         """Calculate and set the next time the trigger should fire."""
         nonlocal next_time
 
@@ -397,10 +410,10 @@ def async_track_utc_time_change(
 
     # Make sure rolling back the clock doesn't prevent the timer from
     # triggering.
-    last_now = None
+    last_now: Optional[datetime] = None
 
     @callback
-    def pattern_time_change_listener(event):
+    def pattern_time_change_listener(event: Event) -> None:
         """Listen for matching time_changed events."""
         nonlocal next_time, last_now
 
@@ -427,7 +440,13 @@ track_utc_time_change = threaded_listener_factory(async_track_utc_time_change)
 
 @callback
 @bind_hass
-def async_track_time_change(hass, action, hour=None, minute=None, second=None):
+def async_track_time_change(
+    hass: HomeAssistant,
+    action: Callable[..., None],
+    hour: Optional[Any] = None,
+    minute: Optional[Any] = None,
+    second: Optional[Any] = None,
+) -> CALLBACK_TYPE:
     """Add a listener that will fire if UTC time matches a pattern."""
     return async_track_utc_time_change(hass, action, hour, minute, second, local=True)
 
@@ -435,7 +454,9 @@ def async_track_time_change(hass, action, hour=None, minute=None, second=None):
 track_time_change = threaded_listener_factory(async_track_time_change)
 
 
-def _process_state_match(parameter):
+def _process_state_match(
+    parameter: Union[None, str, Iterable[str]]
+) -> Callable[[str], bool]:
     """Convert parameter to function that matches input against parameter."""
     if parameter is None or parameter == MATCH_ALL:
         return lambda _: True
@@ -443,5 +464,5 @@ def _process_state_match(parameter):
     if isinstance(parameter, str) or not hasattr(parameter, "__iter__"):
         return lambda state: state == parameter
 
-    parameter = tuple(parameter)
-    return lambda state: state in parameter
+    parameter_tuple = tuple(parameter)
+    return lambda state: state in parameter_tuple

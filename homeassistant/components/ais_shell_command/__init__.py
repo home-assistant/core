@@ -69,10 +69,6 @@ def async_setup(hass, config):
         yield from _flush_logs(hass, service)
 
     @asyncio.coroutine
-    def change_remote_access(service):
-        yield from _change_remote_access(hass, service)
-
-    @asyncio.coroutine
     def ssh_remote_access(service):
         yield from _ssh_remote_access(hass, service)
 
@@ -95,6 +91,9 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def disable_irda_remote(service):
         yield from _disable_irda_remote(hass, service)
+
+    def change_remote_access(service):
+        _change_remote_access(hass, service)
 
     # register services
     hass.services.async_register(DOMAIN, "change_host_name", change_host_name)
@@ -141,7 +140,6 @@ def _change_host_name(hass, call):
     process.wait()
 
 
-@asyncio.coroutine
 def _change_remote_access(hass, call):
     import os
 
@@ -154,16 +152,19 @@ def _change_remote_access(hass, call):
         text = "Zatrzymuje " + text
 
     if ais_global.G_AIS_START_IS_DONE:
-        yield from hass.services.async_call("ais_ai_service", "say_it", {"text": text})
+        hass.services.call("ais_ai_service", "say_it", {"text": text})
 
     if access == "on":
+        os.system("pm2 stop tunnel")
         os.system("pm2 delete tunnel")
-        os.system(
-            "pm2 start lt --name tunnel --restart-delay=30000 -- -h http://paczka.pro -p 8180 -s "
-            + gate_id
+        cmd = (
+            "pm2 start lt --name tunnel --output NULL --error NULL --restart-delay=30000 -- "
+            "-h http://paczka.pro -p 8180 -s {}".format(gate_id)
         )
+        os.system(cmd)
         os.system("pm2 save")
     else:
+        os.system("pm2 stop tunnel")
         os.system("pm2 delete tunnel")
         os.system("pm2 save")
 
@@ -619,12 +620,15 @@ def _flush_logs(hass, call):
 
     # pm2
     os.system("pm2 flush")
+    os.system("rm /data/data/pl.sviete.dom/files/home/.pm2/logs/*.log")
+
     # pip cache
     os.system("rm -rf /data/data/pl.sviete.dom/files/home/.cache/pip")
-    # recorder.purge
-    yield from hass.services.async_call(
-        "recorder", "purge", {"keep_days": 3, "repack": True}
-    )
+    # recorder.purge if recorder exists
+    if hass.services.has_service("recorder", "purge"):
+        yield from hass.services.async_call(
+            "recorder", "purge", {"keep_days": 3, "repack": True}
+        )
 
 
 @asyncio.coroutine

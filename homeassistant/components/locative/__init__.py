@@ -127,8 +127,7 @@ async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
     hass.data[DOMAIN]["unsub_device_tracker"].pop(entry.entry_id)()
-    await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
-    return True
+    return await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
 
 
 # pylint: disable=invalid-name

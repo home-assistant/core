@@ -1,8 +1,10 @@
 """Support for functionality to interact with Android TV / Fire TV devices."""
 import functools
 import logging
+import os
 import voluptuous as vol
 
+from adb_shell.auth.keygen import keygen
 from adb_shell.exceptions import (
     InvalidChecksumError,
     InvalidCommandError,
@@ -40,6 +42,7 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.storage import STORAGE_DIR
 
 ANDROIDTV_DOMAIN = "androidtv"
 
@@ -133,27 +136,39 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if CONF_ADB_SERVER_IP not in config:
         # Use "adb_shell" (Python ADB implementation)
-        adb_log = "using Python ADB implementation " + (
-            f"with adbkey='{config[CONF_ADBKEY]}'"
-            if CONF_ADBKEY in config
-            else "without adbkey authentication"
-        )
-        if CONF_ADBKEY in config:
+        if CONF_ADBKEY not in config:
+            # Generate ADB key files (if they don't exist)
+            adbkey = hass.config.path(STORAGE_DIR, "androidtv_adbkey")
+            if not os.path.isfile(adbkey):
+                keygen(adbkey)
+
+            adb_log = f"using Python ADB implementation with adbkey='{adbkey}'"
+
+            aftv = setup(
+                host,
+                adbkey,
+                device_class=config[CONF_DEVICE_CLASS],
+                state_detection_rules=config[CONF_STATE_DETECTION_RULES],
+                auth_timeout_s=10.0,
+            )
+
+        else:
+            adb_log = (
+                f"using Python ADB implementation with adbkey='{config[CONF_ADBKEY]}'"
+            )
+
             aftv = setup(
                 host,
                 config[CONF_ADBKEY],
                 device_class=config[CONF_DEVICE_CLASS],
                 state_detection_rules=config[CONF_STATE_DETECTION_RULES],
+                auth_timeout_s=10.0,
             )
 
-        else:
-            aftv = setup(
-                host,
-                device_class=config[CONF_DEVICE_CLASS],
-                state_detection_rules=config[CONF_STATE_DETECTION_RULES],
-            )
     else:
         # Use "pure-python-adb" (communicate with ADB server)
+        adb_log = f"using ADB server at {config[CONF_ADB_SERVER_IP]}:{config[CONF_ADB_SERVER_PORT]}"
+
         aftv = setup(
             host,
             adb_server_ip=config[CONF_ADB_SERVER_IP],
@@ -161,7 +176,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             device_class=config[CONF_DEVICE_CLASS],
             state_detection_rules=config[CONF_STATE_DETECTION_RULES],
         )
-        adb_log = f"using ADB server at {config[CONF_ADB_SERVER_IP]}:{config[CONF_ADB_SERVER_PORT]}"
 
     if not aftv.available:
         # Determine the name that will be used for the device in the log
@@ -257,7 +271,7 @@ def adb_decorator(override_available=False):
                     "establishing attempt in the next update. Error: %s",
                     err,
                 )
-                self.aftv.adb.close()
+                self.aftv.adb_close()
                 self._available = False  # pylint: disable=protected-access
                 return None
 
@@ -429,7 +443,7 @@ class AndroidTVDevice(ADBDevice):
         # Check if device is disconnected.
         if not self._available:
             # Try to connect
-            self._available = self.aftv.connect(always_log_errors=False)
+            self._available = self.aftv.adb_connect(always_log_errors=False)
 
             # To be safe, wait until the next update to run ADB commands if
             # using the Python ADB implementation.
@@ -508,7 +522,7 @@ class FireTVDevice(ADBDevice):
         # Check if device is disconnected.
         if not self._available:
             # Try to connect
-            self._available = self.aftv.connect(always_log_errors=False)
+            self._available = self.aftv.adb_connect(always_log_errors=False)
 
             # To be safe, wait until the next update to run ADB commands if
             # using the Python ADB implementation.

@@ -105,6 +105,7 @@ class SynologyCamera(Camera):
         """Return true if the device is recording."""
         return self._camera.is_recording
 
+    @property
     def should_poll(self):
         """Update the recording state periodically."""
         return True

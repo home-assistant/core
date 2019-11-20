@@ -58,6 +58,7 @@
    - delay: '2'
    - service: ais_cloud.get_rss_news_category
    - service: ais_yt_service.search
+   - service: ais_audiobooks_service.get_authors
    - delay: '1'
    - service: ais_ai_service.prepare_remote_menu
    - service: ais_shell_command.change_remote_access
@@ -251,7 +252,6 @@
   action:
     - service: ais_shell_command.flush_logs
 
-
 - id: '20181205122942123'
   alias: 'AIS Execute process command web hook'
   initial_state: True
@@ -337,3 +337,31 @@
     entity_id: input_boolean.ais_audio_mono
   action:
     - service: ais_amplifier_service.change_audio_to_mono
+
+- id: '201911121415123'
+  alias: 'AIS set WiFi config for devices'
+  initial_state: True
+  hide_entity: True
+  trigger:
+    platform: time
+    at: '18:35:00'
+  action:
+    - service: mqtt.publish
+      data:
+        payload: 4
+        topic: dom/cmnd/WifiConfig
+
+- id: '201911151800123'
+  alias: 'AIS IFTTT info'
+  initial_state: True
+  hide_entity: True
+  trigger:
+    platform: event
+    event_type: ifttt_webhook_received
+    event_data:
+      action: say_it
+  action:
+    - data_template:
+        text: '{{ trigger.event.data.text }}'
+        img: '{{ trigger.event.data.img }}'
+      service: "ais_ai_service.say_it"

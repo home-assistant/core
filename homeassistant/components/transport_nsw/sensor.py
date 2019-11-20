@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 
 import voluptuous as vol
+from TransportNSW import TransportNSW
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -120,8 +121,6 @@ class PublicTransportData:
 
     def __init__(self, stop_id, route, destination, api_key):
         """Initialize the data object."""
-        import TransportNSW
-
         self._stop_id = stop_id
         self._route = route
         self._destination = destination
@@ -134,7 +133,7 @@ class PublicTransportData:
             ATTR_DESTINATION: "n/a",
             ATTR_MODE: None,
         }
-        self.tnsw = TransportNSW.TransportNSW()
+        self.tnsw = TransportNSW()
 
     def update(self):
         """Get the next leave time."""

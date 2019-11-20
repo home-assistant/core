@@ -4,6 +4,9 @@ import importlib
 
 import voluptuous as vol
 
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.config import async_log_exception, config_without_domain
 from homeassistant.exceptions import HomeAssistantError
@@ -52,7 +55,12 @@ async def _try_async_validate_config_item(hass, config, full_config=None):
     """Validate config item."""
     try:
         config = await async_validate_config_item(hass, config, full_config)
-    except (vol.Invalid, HomeAssistantError, IntegrationNotFound) as ex:
+    except (
+        vol.Invalid,
+        HomeAssistantError,
+        IntegrationNotFound,
+        InvalidDeviceAutomationConfig,
+    ) as ex:
         async_log_exception(ex, DOMAIN, full_config or config, hass)
         return None
 

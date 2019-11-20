@@ -3,14 +3,15 @@ import logging
 import random
 import socket
 
+from lightify import Lightify
 import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
+    ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    ATTR_EFFECT,
     EFFECT_RANDOM,
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
@@ -20,7 +21,6 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     Light,
 )
-
 from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
@@ -71,11 +71,9 @@ DEFAULT_KELVIN = 2700
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Osram Lightify lights."""
-    import lightify
-
     host = config[CONF_HOST]
     try:
-        bridge = lightify.Lightify(host, log_level=logging.NOTSET)
+        bridge = Lightify(host, log_level=logging.NOTSET)
     except socket.error as err:
         msg = "Error connecting to bridge: {} due to: {}".format(host, str(err))
         _LOGGER.exception(msg)

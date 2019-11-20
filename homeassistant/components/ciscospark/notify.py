@@ -1,16 +1,16 @@
 """Cisco Spark platform for notify component."""
 import logging
 
+from ciscosparkapi import CiscoSparkAPI, SparkApiError
 import voluptuous as vol
-
-from homeassistant.const import CONF_TOKEN
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import (
     ATTR_TITLE,
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONF_TOKEN
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +33,6 @@ class CiscoSparkNotificationService(BaseNotificationService):
 
     def __init__(self, token, default_room):
         """Initialize the service."""
-        from ciscosparkapi import CiscoSparkAPI
 
         self._default_room = default_room
         self._token = token
@@ -41,7 +40,6 @@ class CiscoSparkNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        from ciscosparkapi import SparkApiError
 
         try:
             title = ""

@@ -3,11 +3,14 @@ from datetime import timedelta
 import logging
 import random
 
+import spotipy
+import spotipy.oauth2
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_CONTENT_ID,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
     SUPPORT_NEXT_TRACK,
@@ -18,7 +21,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_SHUFFLE_SET,
     SUPPORT_VOLUME_SET,
-    ATTR_MEDIA_CONTENT_ID,
 )
 from homeassistant.const import CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import callback
@@ -97,7 +99,6 @@ def request_configuration(hass, config, add_entities, oauth):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Spotify platform."""
-    import spotipy.oauth2
 
     callback_url = f"{hass.config.api.base_url}{AUTH_CALLBACK_PATH}"
     cache = config.get(CONF_CACHE_PATH, hass.config.path(DEFAULT_CACHE_PATH))
@@ -181,7 +182,6 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
 
     def refresh_spotify_instance(self):
         """Fetch a new spotify instance."""
-        import spotipy
 
         token_refreshed = False
         need_token = self._token_info is None or self._oauth.is_token_expired(

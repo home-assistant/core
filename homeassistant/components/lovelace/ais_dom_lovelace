@@ -51,26 +51,6 @@
                                 ]
                             },
                             "type": "ais-monster"
-                        },
-                        {
-                            "card": {
-                                "show_header_toggle": false,
-                                "title": "Automatyzacje",
-                                "type": "entities"
-                            },
-                            "filter": {
-                                "exclude": [
-                                    {
-                                        "entity_id": "automation.ais_*"
-                                    }
-                                ],
-                                "include": [
-                                    {
-                                        "domain": "automation"
-                                    }
-                                ]
-                            },
-                            "type": "ais-monster"
                         }
                     ],
                     "icon": "mdi:home-outline",
@@ -767,10 +747,35 @@
                     "title": "Audio"
                 },
                 {
-                    "badges": [],
+                "badges": [
+                    "sensor.time",
+                    "sensor.daytodisplay",
+                    "binary_sensor.dzien_pracujacy",
+                    "sun.sun"
+                ],
                     "cards": [
                         {
                             "cards": [
+                            {
+                                "card": {
+                                    "show_header_toggle": false,
+                                    "title": "Automatyzacje",
+                                    "type": "entities"
+                                },
+                                "filter": {
+                                    "exclude": [
+                                        {
+                                            "entity_id": "automation.ais_*"
+                                        }
+                                    ],
+                                    "include": [
+                                        {
+                                            "domain": "automation"
+                                        }
+                                    ]
+                                },
+                                "type": "ais-monster"
+                            },
                                 {
                                     "entities": [],
                                     "show_header_toggle": false,
@@ -794,7 +799,6 @@
                                     "type": "entities"
                                 }
                             ],
-                            "title": "Urz\u0105dzenia w Twojej sieci",
                             "type": "vertical-stack"
                         },
                         {
@@ -829,6 +833,36 @@
                                     {
                                         "attributes": {
                                             "device_class": "humidity"
+                                        },
+                                        "domain": "sensor"
+                                    },
+                                    {
+                                        "attributes": {
+                                            "device_class": "timestamp"
+                                        },
+                                        "domain": "sensor"
+                                    },
+                                    {
+                                        "attributes": {
+                                            "device_class": "battery"
+                                        },
+                                        "domain": "sensor"
+                                    },
+                                    {
+                                        "attributes": {
+                                            "device_class": "illuminance"
+                                        },
+                                        "domain": "sensor"
+                                    },
+                                    {
+                                        "attributes": {
+                                            "device_class": "power"
+                                        },
+                                        "domain": "sensor"
+                                    },
+                                    {
+                                        "attributes": {
+                                            "device_class": "pressure"
                                         },
                                         "domain": "sensor"
                                     },
@@ -885,7 +919,6 @@
                                 }
                             ],
                             "show_header_toggle": false,
-                            "title": "Dodawanie nowych urz\u0105dze\u0144",
                             "type": "vertical-stack"
                         },
                         {

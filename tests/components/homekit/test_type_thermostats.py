@@ -96,10 +96,10 @@ async def test_thermostat(hass, hk_driver, cls, events):
         },
     )
     await hass.async_block_till_done()
-    assert acc.char_target_temp.value == 22.0
+    assert acc.char_target_temp.value == 22.2
     assert acc.char_current_heat_cool.value == 1
     assert acc.char_target_heat_cool.value == 1
-    assert acc.char_current_temp.value == 18.0
+    assert acc.char_current_temp.value == 17.8
     assert acc.char_display_units.value == 0
 
     hass.states.async_set(
@@ -432,7 +432,7 @@ async def test_thermostat_fahrenheit(hass, hk_driver, cls, events):
     )
     await hass.async_block_till_done()
     assert acc.get_temperature_range() == (7.0, 35.0)
-    assert acc.char_heating_thresh_temp.value == 20.0
+    assert acc.char_heating_thresh_temp.value == 20.1
     assert acc.char_cooling_thresh_temp.value == 24.0
     assert acc.char_current_temp.value == 23.0
     assert acc.char_target_temp.value == 22.0

@@ -37,6 +37,10 @@ async def async_setup_entry(
     )
 
 
+# https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
+# pylint: disable=invalid-overridden-method
+
+
 class EsphomeSensor(EsphomeEntity):
     """A sensor implementation for esphome."""
 
@@ -52,6 +56,11 @@ class EsphomeSensor(EsphomeEntity):
     def icon(self) -> str:
         """Return the icon."""
         return self._static_info.icon
+
+    @property
+    def force_update(self) -> bool:
+        """Return if this sensor should force a state update."""
+        return self._static_info.force_update
 
     @esphome_state_property
     def state(self) -> Optional[str]:

@@ -2,7 +2,10 @@
 import logging
 import re
 
+import elkm1_lib as elkm1
+from elkm1_lib.const import Max
 import voluptuous as vol
+
 from homeassistant.const import (
     CONF_EXCLUDE,
     CONF_HOST,
@@ -12,8 +15,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback  # noqa
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import discovery
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType  # noqa
 
@@ -125,9 +127,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up the Elk M1 platform."""
-    from elkm1_lib.const import Max
-    import elkm1_lib as elkm1
-
     devices = {}
     elk_datas = {}
 

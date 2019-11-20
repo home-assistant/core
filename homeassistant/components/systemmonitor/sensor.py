@@ -3,6 +3,7 @@ import logging
 import os
 import socket
 
+import psutil
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -134,8 +135,6 @@ class SystemMonitorSensor(Entity):
 
     def update(self):
         """Get the latest system information."""
-        import psutil
-
         if self.type == "disk_use_percent":
             self._state = psutil.disk_usage(self.argument).percent
         elif self.type == "disk_use":
@@ -219,8 +218,8 @@ class SystemMonitorSensor(Entity):
                 dt_util.utc_from_timestamp(psutil.boot_time())
             ).isoformat()
         elif self.type == "load_1m":
-            self._state = os.getloadavg()[0]
+            self._state = round(os.getloadavg()[0], 2)
         elif self.type == "load_5m":
-            self._state = os.getloadavg()[1]
+            self._state = round(os.getloadavg()[1], 2)
         elif self.type == "load_15m":
-            self._state = os.getloadavg()[2]
+            self._state = round(os.getloadavg()[2], 2)

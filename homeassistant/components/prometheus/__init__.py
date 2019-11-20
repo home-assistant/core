@@ -3,24 +3,25 @@ import logging
 import string
 
 from aiohttp import web
+import prometheus_client
 import voluptuous as vol
 
 from homeassistant import core as hacore
 from homeassistant.components.climate.const import ATTR_CURRENT_TEMPERATURE
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
-    ATTR_DEVICE_CLASS,
     CONTENT_TYPE_TEXT_PLAIN,
     EVENT_STATE_CHANGED,
-    TEMP_FAHRENHEIT,
     TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
 )
 from homeassistant.helpers import entityfilter, state as state_helper
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.temperature import fahrenheit_to_celsius
 from homeassistant.helpers.entity_values import EntityValues
+from homeassistant.util.temperature import fahrenheit_to_celsius
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,8 +65,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Activate Prometheus component."""
-    import prometheus_client
-
     hass.http.register_view(PrometheusView(prometheus_client))
 
     conf = config[DOMAIN]
@@ -99,7 +98,7 @@ class PrometheusMetrics:
 
     def __init__(
         self,
-        prometheus_client,
+        prometheus_cli,
         entity_filter,
         namespace,
         climate_units,
@@ -108,7 +107,7 @@ class PrometheusMetrics:
         default_metric,
     ):
         """Initialize Prometheus Metrics."""
-        self.prometheus_client = prometheus_client
+        self.prometheus_cli = prometheus_cli
         self._component_config = component_config
         self._override_metric = override_metric
         self._default_metric = default_metric
@@ -147,9 +146,7 @@ class PrometheusMetrics:
             getattr(self, handler)(state)
 
         metric = self._metric(
-            "state_change",
-            self.prometheus_client.Counter,
-            "The number of state changes",
+            "state_change", self.prometheus_cli.Counter, "The number of state changes"
         )
         metric.labels(**self._labels(state)).inc()
 
@@ -199,7 +196,7 @@ class PrometheusMetrics:
         if "battery_level" in state.attributes:
             metric = self._metric(
                 "battery_level_percent",
-                self.prometheus_client.Gauge,
+                self.prometheus_cli.Gauge,
                 "Battery level as a percentage of its capacity",
             )
             try:
@@ -211,7 +208,7 @@ class PrometheusMetrics:
     def _handle_binary_sensor(self, state):
         metric = self._metric(
             "binary_sensor_state",
-            self.prometheus_client.Gauge,
+            self.prometheus_cli.Gauge,
             "State of the binary sensor (0/1)",
         )
         value = self.state_as_number(state)
@@ -220,7 +217,7 @@ class PrometheusMetrics:
     def _handle_input_boolean(self, state):
         metric = self._metric(
             "input_boolean_state",
-            self.prometheus_client.Gauge,
+            self.prometheus_cli.Gauge,
             "State of the input boolean (0/1)",
         )
         value = self.state_as_number(state)
@@ -229,7 +226,7 @@ class PrometheusMetrics:
     def _handle_device_tracker(self, state):
         metric = self._metric(
             "device_tracker_state",
-            self.prometheus_client.Gauge,
+            self.prometheus_cli.Gauge,
             "State of the device tracker (0/1)",
         )
         value = self.state_as_number(state)
@@ -237,14 +234,14 @@ class PrometheusMetrics:
 
     def _handle_person(self, state):
         metric = self._metric(
-            "person_state", self.prometheus_client.Gauge, "State of the person (0/1)"
+            "person_state", self.prometheus_cli.Gauge, "State of the person (0/1)"
         )
         value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
     def _handle_light(self, state):
         metric = self._metric(
-            "light_state", self.prometheus_client.Gauge, "Load level of a light (0..1)"
+            "light_state", self.prometheus_cli.Gauge, "Load level of a light (0..1)"
         )
 
         try:
@@ -259,7 +256,7 @@ class PrometheusMetrics:
 
     def _handle_lock(self, state):
         metric = self._metric(
-            "lock_state", self.prometheus_client.Gauge, "State of the lock (0/1)"
+            "lock_state", self.prometheus_cli.Gauge, "State of the lock (0/1)"
         )
         value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
@@ -271,7 +268,7 @@ class PrometheusMetrics:
                 temp = fahrenheit_to_celsius(temp)
             metric = self._metric(
                 "temperature_c",
-                self.prometheus_client.Gauge,
+                self.prometheus_cli.Gauge,
                 "Temperature in degrees Celsius",
             )
             metric.labels(**self._labels(state)).set(temp)
@@ -282,15 +279,13 @@ class PrometheusMetrics:
                 current_temp = fahrenheit_to_celsius(current_temp)
             metric = self._metric(
                 "current_temperature_c",
-                self.prometheus_client.Gauge,
+                self.prometheus_cli.Gauge,
                 "Current Temperature in degrees Celsius",
             )
             metric.labels(**self._labels(state)).set(current_temp)
 
         metric = self._metric(
-            "climate_state",
-            self.prometheus_client.Gauge,
-            "State of the thermostat (0/1)",
+            "climate_state", self.prometheus_cli.Gauge, "State of the thermostat (0/1)"
         )
         try:
             value = self.state_as_number(state)
@@ -308,7 +303,7 @@ class PrometheusMetrics:
 
         if metric is not None:
             _metric = self._metric(
-                metric, self.prometheus_client.Gauge, f"Sensor data measured in {unit}"
+                metric, self.prometheus_cli.Gauge, f"Sensor data measured in {unit}"
             )
 
             try:
@@ -368,7 +363,7 @@ class PrometheusMetrics:
 
     def _handle_switch(self, state):
         metric = self._metric(
-            "switch_state", self.prometheus_client.Gauge, "State of the switch (0/1)"
+            "switch_state", self.prometheus_cli.Gauge, "State of the switch (0/1)"
         )
 
         try:
@@ -383,7 +378,7 @@ class PrometheusMetrics:
     def _handle_automation(self, state):
         metric = self._metric(
             "automation_triggered_count",
-            self.prometheus_client.Counter,
+            self.prometheus_cli.Counter,
             "Count of times an automation has been triggered",
         )
 
@@ -396,15 +391,15 @@ class PrometheusView(HomeAssistantView):
     url = API_ENDPOINT
     name = "api:prometheus"
 
-    def __init__(self, prometheus_client):
+    def __init__(self, prometheus_cli):
         """Initialize Prometheus view."""
-        self.prometheus_client = prometheus_client
+        self.prometheus_cli = prometheus_cli
 
     async def get(self, request):
         """Handle request for Prometheus metrics."""
         _LOGGER.debug("Received Prometheus metrics request")
 
         return web.Response(
-            body=self.prometheus_client.generate_latest(),
+            body=self.prometheus_cli.generate_latest(),
             content_type=CONTENT_TYPE_TEXT_PLAIN,
         )

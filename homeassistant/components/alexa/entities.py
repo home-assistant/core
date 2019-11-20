@@ -14,6 +14,7 @@ from homeassistant.const import (
 from homeassistant.util.decorator import Registry
 from homeassistant.components.climate import const as climate
 from homeassistant.components import (
+    alarm_control_panel,
     alert,
     automation,
     binary_sensor,
@@ -33,21 +34,28 @@ from homeassistant.components import (
 from .const import CONF_DESCRIPTION, CONF_DISPLAY_CATEGORIES
 from .capabilities import (
     AlexaBrightnessController,
+    AlexaChannelController,
     AlexaColorController,
     AlexaColorTemperatureController,
     AlexaContactSensor,
+    AlexaDoorbellEventSource,
     AlexaEndpointHealth,
     AlexaInputController,
     AlexaLockController,
+    AlexaModeController,
     AlexaMotionSensor,
     AlexaPercentageController,
     AlexaPlaybackController,
     AlexaPowerController,
+    AlexaPowerLevelController,
+    AlexaRangeController,
     AlexaSceneController,
+    AlexaSecurityPanelController,
     AlexaSpeaker,
     AlexaStepSpeaker,
     AlexaTemperatureSensor,
     AlexaThermostatController,
+    AlexaToggleController,
 )
 
 ENTITY_ADAPTERS = Registry()
@@ -77,7 +85,7 @@ class DisplayCategory:
     DOOR = "DOOR"
 
     # Indicates a doorbell.
-    DOOR_BELL = "DOORBELL"
+    DOORBELL = "DOORBELL"
 
     # Indicates a fan.
     FAN = "FAN"
@@ -344,6 +352,20 @@ class FanCapabilities(AlexaEntity):
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & fan.SUPPORT_SET_SPEED:
             yield AlexaPercentageController(self.entity)
+            yield AlexaPowerLevelController(self.entity)
+            yield AlexaRangeController(
+                self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_SPEED}"
+            )
+
+        if supported & fan.SUPPORT_OSCILLATE:
+            yield AlexaToggleController(
+                self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}"
+            )
+        if supported & fan.SUPPORT_DIRECTION:
+            yield AlexaModeController(
+                self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}"
+            )
+
         yield AlexaEndpointHealth(self.hass, self.entity)
 
 
@@ -399,6 +421,9 @@ class MediaPlayerCapabilities(AlexaEntity):
 
         if supported & media_player.SUPPORT_SELECT_SOURCE:
             yield AlexaInputController(self.entity)
+
+        if supported & media_player.const.SUPPORT_PLAY_MEDIA:
+            yield AlexaChannelController(self.entity)
 
 
 @ENTITY_ADAPTERS.register(scene.DOMAIN)
@@ -476,6 +501,11 @@ class BinarySensorCapabilities(AlexaEntity):
         elif sensor_type is self.TYPE_MOTION:
             yield AlexaMotionSensor(self.hass, self.entity)
 
+        entity_conf = self.config.entity_config.get(self.entity.entity_id, {})
+        if CONF_DISPLAY_CATEGORIES in entity_conf:
+            if entity_conf[CONF_DISPLAY_CATEGORIES] == DisplayCategory.DOORBELL:
+                yield AlexaDoorbellEventSource(self.entity)
+
         yield AlexaEndpointHealth(self.hass, self.entity)
 
     def get_type(self):
@@ -485,3 +515,18 @@ class BinarySensorCapabilities(AlexaEntity):
             return self.TYPE_CONTACT
         if attrs.get(ATTR_DEVICE_CLASS) == "motion":
             return self.TYPE_MOTION
+
+
+@ENTITY_ADAPTERS.register(alarm_control_panel.DOMAIN)
+class AlarmControlPanelCapabilities(AlexaEntity):
+    """Class to represent Alarm capabilities."""
+
+    def default_display_categories(self):
+        """Return the display categories for this entity."""
+        return [DisplayCategory.SECURITY_PANEL]
+
+    def interfaces(self):
+        """Yield the supported interfaces."""
+        if not self.entity.attributes.get("code_arm_required"):
+            yield AlexaSecurityPanelController(self.hass, self.entity)
+            yield AlexaEndpointHealth(self.hass, self.entity)

@@ -4,13 +4,13 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES as BINARY_SENSOR_CLASSES,
 )
-from homeassistant.components.sensor import DEVICE_CLASSES as SENSOR_CLASSES
 from homeassistant.components.device_tracker import (
     ATTR_BATTERY,
     ATTR_GPS,
     ATTR_GPS_ACCURACY,
     ATTR_LOCATION_NAME,
 )
+from homeassistant.components.sensor import DEVICE_CLASSES as SENSOR_CLASSES
 from homeassistant.const import ATTR_DOMAIN, ATTR_SERVICE, ATTR_SERVICE_DATA
 from homeassistant.helpers import config_validation as cv
 

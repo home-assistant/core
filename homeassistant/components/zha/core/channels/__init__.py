@@ -11,6 +11,8 @@ from functools import wraps
 import logging
 from random import uniform
 
+import zigpy.exceptions
+
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -48,8 +50,6 @@ def decorate_command(channel, command):
 
     @wraps(command)
     async def wrapper(*args, **kwds):
-        from zigpy.exceptions import DeliveryError
-
         try:
             result = await command(*args, **kwds)
             channel.debug(
@@ -61,7 +61,7 @@ def decorate_command(channel, command):
             )
             return result
 
-        except (DeliveryError, Timeout) as ex:
+        except (zigpy.exceptions.DeliveryError, Timeout) as ex:
             channel.debug("command failed: %s exception: %s", command.__name__, str(ex))
             return ex
 
@@ -143,12 +143,10 @@ class ZigbeeChannel(LogMixin):
         This also swallows DeliveryError exceptions that are thrown when
         devices are unreachable.
         """
-        from zigpy.exceptions import DeliveryError
-
         try:
             res = await self.cluster.bind()
             self.debug("bound '%s' cluster: %s", self.cluster.ep_attribute, res[0])
-        except (DeliveryError, Timeout) as ex:
+        except (zigpy.exceptions.DeliveryError, Timeout) as ex:
             self.debug(
                 "Failed to bind '%s' cluster: %s", self.cluster.ep_attribute, str(ex)
             )
@@ -167,8 +165,6 @@ class ZigbeeChannel(LogMixin):
         This also swallows DeliveryError exceptions that are thrown when
         devices are unreachable.
         """
-        from zigpy.exceptions import DeliveryError
-
         attr_name = self.cluster.attributes.get(attr, [attr])[0]
 
         kwargs = {}
@@ -189,7 +185,7 @@ class ZigbeeChannel(LogMixin):
                 reportable_change,
                 res,
             )
-        except (DeliveryError, Timeout) as ex:
+        except (zigpy.exceptions.DeliveryError, Timeout) as ex:
             self.debug(
                 "failed to set reporting for '%s' attr on '%s' cluster: %s",
                 attr_name,

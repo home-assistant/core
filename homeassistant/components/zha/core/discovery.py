@@ -7,6 +7,9 @@ https://home-assistant.io/integrations/zha/
 
 import logging
 
+import zigpy.profiles
+from zigpy.zcl.clusters.general import OnOff, PowerConfiguration
+
 from homeassistant import const as ha_const
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.sensor import DOMAIN as SENSOR
@@ -52,8 +55,6 @@ def async_process_endpoint(
     is_new_join,
 ):
     """Process an endpoint on a zigpy device."""
-    import zigpy.profiles
-
     if endpoint_id == 0:  # ZDO
         _async_create_cluster_channel(
             endpoint, zha_device, is_new_join, channel_class=ZDOChannel
@@ -179,8 +180,6 @@ def _async_handle_single_cluster_matches(
     hass, endpoint, zha_device, profile_clusters, device_key, is_new_join
 ):
     """Dispatch single cluster matches to HA components."""
-    from zigpy.zcl.clusters.general import OnOff, PowerConfiguration
-
     cluster_matches = []
     cluster_match_results = []
     matched_power_configuration = False

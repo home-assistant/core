@@ -1,11 +1,12 @@
 """Legacy device tracker classes."""
 import asyncio
 from datetime import timedelta
+import hashlib
 from typing import Any, List, Sequence
 
 import voluptuous as vol
 
-from homeassistant.core import callback
+from homeassistant import util
 from homeassistant.components import zone
 from homeassistant.components.group import (
     ATTR_ADD_ENTITIES,
@@ -16,16 +17,7 @@ from homeassistant.components.group import (
     SERVICE_SET,
 )
 from homeassistant.components.zone import async_active_zone
-from homeassistant.config import load_yaml_config_file, async_log_exception
-from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_registry import async_get_registry
-from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import GPSType, HomeAssistantType
-from homeassistant import util
-import homeassistant.util.dt as dt_util
-from homeassistant.util.yaml import dump
-
+from homeassistant.config import async_log_exception, load_yaml_config_file
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_GPS_ACCURACY,
@@ -37,9 +29,17 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_NAME,
     DEVICE_DEFAULT_NAME,
-    STATE_NOT_HOME,
     STATE_HOME,
+    STATE_NOT_HOME,
 )
+from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import GPSType, HomeAssistantType
+import homeassistant.util.dt as dt_util
+from homeassistant.util.yaml import dump
 
 from .const import (
     ATTR_BATTERY,
@@ -635,7 +635,6 @@ def get_gravatar_for_email(email: str):
 
     Async friendly.
     """
-    import hashlib
 
     url = "https://www.gravatar.com/avatar/{}.jpg?s=80&d=wavatar"
     return url.format(hashlib.md5(email.encode("utf-8").lower()).hexdigest())

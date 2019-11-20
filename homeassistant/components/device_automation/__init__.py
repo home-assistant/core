@@ -60,6 +60,12 @@ async def async_setup(hass, config):
         websocket_device_automation_list_triggers
     )
     hass.components.websocket_api.async_register_command(
+        websocket_device_automation_get_action_capabilities
+    )
+    hass.components.websocket_api.async_register_command(
+        websocket_device_automation_get_condition_capabilities
+    )
+    hass.components.websocket_api.async_register_command(
         websocket_device_automation_get_trigger_capabilities
     )
     return True
@@ -150,7 +156,11 @@ async def _async_get_device_automation_capabilities(hass, automation_type, autom
         # The device automation has no capabilities
         return {}
 
-    capabilities = await getattr(platform, function_name)(hass, automation)
+    try:
+        capabilities = await getattr(platform, function_name)(hass, automation)
+    except InvalidDeviceAutomationConfig:
+        return {}
+
     capabilities = capabilities.copy()
 
     extra_fields = capabilities.get("extra_fields")
@@ -204,6 +214,38 @@ async def websocket_device_automation_list_triggers(hass, connection, msg):
     device_id = msg["device_id"]
     triggers = await _async_get_device_automations(hass, "trigger", device_id)
     connection.send_result(msg["id"], triggers)
+
+
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "device_automation/action/capabilities",
+        vol.Required("action"): dict,
+    }
+)
+async def websocket_device_automation_get_action_capabilities(hass, connection, msg):
+    """Handle request for device action capabilities."""
+    action = msg["action"]
+    capabilities = await _async_get_device_automation_capabilities(
+        hass, "action", action
+    )
+    connection.send_result(msg["id"], capabilities)
+
+
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "device_automation/condition/capabilities",
+        vol.Required("condition"): dict,
+    }
+)
+async def websocket_device_automation_get_condition_capabilities(hass, connection, msg):
+    """Handle request for device condition capabilities."""
+    condition = msg["condition"]
+    capabilities = await _async_get_device_automation_capabilities(
+        hass, "condition", condition
+    )
+    connection.send_result(msg["id"], capabilities)
 
 
 @websocket_api.async_response

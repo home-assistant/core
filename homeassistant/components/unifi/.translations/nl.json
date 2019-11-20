@@ -38,6 +38,11 @@
                     "one": "Leeg",
                     "other": "Leeg"
                 }
+            },
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "Maak bandbreedtegebruiksensoren voor netwerkclients"
+                }
             }
         }
     }

@@ -1,10 +1,12 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Host is already configured.",
             "one_instance_allowed": "Only a single instance is necessary."
         },
         "error": {
             "cannot_connect": "Unable to Connect to host",
+            "name_exists": "Name already exists",
             "wrong_credentials": "Wrong username or password"
         },
         "step": {
@@ -33,7 +35,8 @@
                 "data": {
                     "scan_interval": "Update frequency"
                 },
-                "description": "Configure options for Transmission"
+                "description": "Configure options for Transmission",
+                "title": "Configure options for Transmission"
             }
         }
     }

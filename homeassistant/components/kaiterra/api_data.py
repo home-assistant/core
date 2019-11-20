@@ -1,21 +1,17 @@
 """Data for all Kaiterra devices."""
+import asyncio
 from logging import getLogger
 
-import asyncio
-
-import async_timeout
-
 from aiohttp.client_exceptions import ClientResponseError
+import async_timeout
+from kaiterra_async_client import AQIStandard, KaiterraAPIClient, Units
 
-from kaiterra_async_client import KaiterraAPIClient, AQIStandard, Units
-
+from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID, CONF_DEVICES, CONF_TYPE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from homeassistant.const import CONF_API_KEY, CONF_DEVICES, CONF_DEVICE_ID, CONF_TYPE
-
 from .const import (
-    AQI_SCALE,
     AQI_LEVEL,
+    AQI_SCALE,
     CONF_AQI_STANDARD,
     CONF_PREFERRED_UNITS,
     DISPATCHER_KAITERRA,
@@ -60,9 +56,10 @@ class KaiterraApiData:
             with async_timeout.timeout(10):
                 data = await self._api.get_latest_sensor_readings(self._devices)
         except (ClientResponseError, asyncio.TimeoutError):
-            _LOGGER.debug("Couldn't fetch data")
+            _LOGGER.debug("Couldn't fetch data from Kaiterra API")
             self.data = {}
             async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)
+            return
 
         _LOGGER.debug("New data retrieved: %s", data)
 
@@ -102,8 +99,7 @@ class KaiterraApiData:
                 device["aqi_pollutant"] = {"value": main_pollutant}
 
                 self.data[self._devices_ids[i]] = device
-
-                async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)
         except IndexError as err:
             _LOGGER.error("Parsing error %s", err)
-            async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)
+
+        async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)

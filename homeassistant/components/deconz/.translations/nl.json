@@ -11,6 +11,7 @@
         "error": {
             "no_key": "Kon geen API-sleutel ophalen"
         },
+        "flow_title": "deCONZ Zigbee gateway ( {host} )",
         "step": {
             "hassio_confirm": {
                 "data": {
@@ -64,6 +65,7 @@
             "remote_button_quadruple_press": "\" {subtype} \" knop viervoudig aangeklikt",
             "remote_button_quintuple_press": "\" {subtype} \" knop vijf keer aangeklikt",
             "remote_button_rotated": "Knop gedraaid \" {subtype} \"",
+            "remote_button_rotation_stopped": "Knoprotatie \" {subtype} \" gestopt",
             "remote_button_short_press": "\" {subtype} \" knop ingedrukt",
             "remote_button_short_release": "\"{subtype}\" knop losgelaten",
             "remote_button_triple_press": "\" {subtype} \" knop driemaal geklikt",

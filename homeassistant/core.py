@@ -77,7 +77,8 @@ from homeassistant.util.unit_system import (  # NOQA
 # Typing imports that create a circular dependency
 # pylint: disable=using-constant-test
 if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntries  # noqa
+    from homeassistant.config_entries import ConfigEntries
+    from homeassistant.components.http import HomeAssistantHTTP
 
 # pylint: disable=invalid-name
 T = TypeVar("T")
@@ -162,6 +163,9 @@ class CoreState(enum.Enum):
 class HomeAssistant:
     """Root object of the Home Assistant home automation."""
 
+    http: "HomeAssistantHTTP" = None  # type: ignore
+    config_entries: "ConfigEntries" = None  # type: ignore
+
     def __init__(self, loop: Optional[asyncio.events.AbstractEventLoop] = None) -> None:
         """Initialize new Home Assistant object."""
         self.loop: asyncio.events.AbstractEventLoop = (loop or asyncio.get_event_loop())
@@ -186,7 +190,6 @@ class HomeAssistant:
         self.data: dict = {}
         self.state = CoreState.not_running
         self.exit_code = 0
-        self.config_entries: Optional[ConfigEntries] = None
         # If not None, use to signal end-of-loop
         self._stopped: Optional[asyncio.Event] = None
 
@@ -417,6 +420,21 @@ class HomeAssistant:
                 # This may not work
                 _LOGGER.warning("async_stop called before startup is complete")
 
+        # # ais dom
+        if ais_command is not None:
+            if ais_command == "restart":
+                import subprocess
+
+                subprocess.Popen(
+                    "sleep 7 && su -c reboot", shell=True, stdout=None, stderr=None
+                )
+            if ais_command == "stop":
+                import subprocess
+
+                subprocess.Popen(
+                    "sleep 7 &&  su -c reboot -p'", shell=True, stdout=None, stderr=None
+                )
+
         # stage 1
         self.state = CoreState.stopping
         self.async_track_tasks()
@@ -433,18 +451,6 @@ class HomeAssistant:
             self._stopped.set()
         else:
             self.loop.stop()
-        # ais dom
-        if ais_command is not None:
-            if ais_command == "restart":
-                import subprocess
-
-                subprocess.Popen("su -c reboot", shell=True, stdout=None, stderr=None)
-            if ais_command == "stop":
-                import subprocess
-
-                subprocess.Popen(
-                    "su -c 'reboot -p'", shell=True, stdout=None, stderr=None
-                )
 
 
 @attr.s(slots=True, frozen=True)

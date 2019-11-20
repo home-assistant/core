@@ -1,33 +1,39 @@
 """Test ZHA API."""
 import pytest
+import zigpy.zcl.clusters.general as general
+
 from homeassistant.components.switch import DOMAIN
-from homeassistant.components.zha.api import async_load_api, TYPE, ID
+from homeassistant.components.websocket_api import const
+from homeassistant.components.zha.api import ID, TYPE, async_load_api
 from homeassistant.components.zha.core.const import (
     ATTR_CLUSTER_ID,
     ATTR_CLUSTER_TYPE,
-    CLUSTER_TYPE_IN,
+    ATTR_ENDPOINT_ID,
     ATTR_IEEE,
+    ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_NAME,
     ATTR_QUIRK_APPLIED,
-    ATTR_MANUFACTURER,
-    ATTR_ENDPOINT_ID,
+    CLUSTER_TYPE_IN,
 )
-from homeassistant.components.websocket_api import const
+
 from .common import async_init_zigpy_device
 
 
 @pytest.fixture
 async def zha_client(hass, config_entry, zha_gateway, hass_ws_client):
     """Test zha switch platform."""
-    from zigpy.zcl.clusters.general import OnOff, Basic
 
     # load the ZHA API
     async_load_api(hass)
 
     # create zigpy device
     await async_init_zigpy_device(
-        hass, [OnOff.cluster_id, Basic.cluster_id], [], None, zha_gateway
+        hass,
+        [general.OnOff.cluster_id, general.Basic.cluster_id],
+        [],
+        None,
+        zha_gateway,
     )
 
     # load up switch domain

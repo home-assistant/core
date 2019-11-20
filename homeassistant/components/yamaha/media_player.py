@@ -2,6 +2,7 @@
 import logging
 
 import requests
+import rxv
 import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
@@ -82,7 +83,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yamaha platform."""
-    import rxv
 
     # Keep track of configured receivers so that we don't end up
     # discovering a receiver dynamically that we have static config
@@ -336,8 +336,6 @@ class YamahaDevice(MediaPlayerDevice):
         self._call_playback_function(self.receiver.next, "next track")
 
     def _call_playback_function(self, function, function_text):
-        import rxv
-
         try:
             function()
         except rxv.exceptions.ResponseException:

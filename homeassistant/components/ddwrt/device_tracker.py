@@ -165,4 +165,4 @@ class DdWrtDeviceScanner(DeviceScanner):
 
 def _parse_ddwrt_response(data_str):
     """Parse the DD-WRT data format."""
-    return {key: val for key, val in _DDWRT_DATA_REGEX.findall(data_str)}
+    return dict(_DDWRT_DATA_REGEX.findall(data_str))

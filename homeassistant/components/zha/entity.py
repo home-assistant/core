@@ -40,7 +40,7 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
         self._unique_id = unique_id
         if not skip_entity_id:
             ieee = zha_device.ieee
-            ieeetail = "".join(["%02x" % (o,) for o in ieee[-4:]])
+            ieeetail = "".join([f"{o:02x}" for o in ieee[:4]])
             self.entity_id = "{}.{}_{}_{}_{}{}".format(
                 self._domain,
                 slugify(zha_device.manufacturer),

@@ -51,6 +51,7 @@ class TestRestCommandComponent:
         self.config = {
             rc.DOMAIN: {
                 "get_test": {"url": self.url, "method": "get"},
+                "patch_test": {"url": self.url, "method": "patch"},
                 "post_test": {"url": self.url, "method": "post"},
                 "put_test": {"url": self.url, "method": "put"},
                 "delete_test": {"url": self.url, "method": "delete"},
@@ -65,7 +66,7 @@ class TestRestCommandComponent:
 
     def test_setup_tests(self):
         """Set up test config and test it."""
-        with assert_setup_component(4):
+        with assert_setup_component(5):
             setup_component(self.hass, rc.DOMAIN, self.config)
 
         assert self.hass.services.has_service(rc.DOMAIN, "get_test")
@@ -75,7 +76,7 @@ class TestRestCommandComponent:
 
     def test_rest_command_timeout(self, aioclient_mock):
         """Call a rest command with timeout."""
-        with assert_setup_component(4):
+        with assert_setup_component(5):
             setup_component(self.hass, rc.DOMAIN, self.config)
 
         aioclient_mock.get(self.url, exc=asyncio.TimeoutError())
@@ -87,7 +88,7 @@ class TestRestCommandComponent:
 
     def test_rest_command_aiohttp_error(self, aioclient_mock):
         """Call a rest command with aiohttp exception."""
-        with assert_setup_component(4):
+        with assert_setup_component(5):
             setup_component(self.hass, rc.DOMAIN, self.config)
 
         aioclient_mock.get(self.url, exc=aiohttp.ClientError())
@@ -99,7 +100,7 @@ class TestRestCommandComponent:
 
     def test_rest_command_http_error(self, aioclient_mock):
         """Call a rest command with status code 400."""
-        with assert_setup_component(4):
+        with assert_setup_component(5):
             setup_component(self.hass, rc.DOMAIN, self.config)
 
         aioclient_mock.get(self.url, status=400)
@@ -114,7 +115,7 @@ class TestRestCommandComponent:
         data = {"username": "test", "password": "123456"}
         self.config[rc.DOMAIN]["get_test"].update(data)
 
-        with assert_setup_component(4):
+        with assert_setup_component(5):
             setup_component(self.hass, rc.DOMAIN, self.config)
 
         aioclient_mock.get(self.url, content=b"success")
@@ -129,7 +130,7 @@ class TestRestCommandComponent:
         data = {"payload": "test"}
         self.config[rc.DOMAIN]["post_test"].update(data)
 
-        with assert_setup_component(4):
+        with assert_setup_component(5):
             setup_component(self.hass, rc.DOMAIN, self.config)
 
         aioclient_mock.post(self.url, content=b"success")
@@ -142,7 +143,7 @@ class TestRestCommandComponent:
 
     def test_rest_command_get(self, aioclient_mock):
         """Call a rest command with get."""
-        with assert_setup_component(4):
+        with assert_setup_component(5):
             setup_component(self.hass, rc.DOMAIN, self.config)
 
         aioclient_mock.get(self.url, content=b"success")
@@ -154,7 +155,7 @@ class TestRestCommandComponent:
 
     def test_rest_command_delete(self, aioclient_mock):
         """Call a rest command with delete."""
-        with assert_setup_component(4):
+        with assert_setup_component(5):
             setup_component(self.hass, rc.DOMAIN, self.config)
 
         aioclient_mock.delete(self.url, content=b"success")
@@ -164,12 +165,28 @@ class TestRestCommandComponent:
 
         assert len(aioclient_mock.mock_calls) == 1
 
+    def test_rest_command_patch(self, aioclient_mock):
+        """Call a rest command with patch."""
+        data = {"payload": "data"}
+        self.config[rc.DOMAIN]["patch_test"].update(data)
+
+        with assert_setup_component(5):
+            setup_component(self.hass, rc.DOMAIN, self.config)
+
+        aioclient_mock.patch(self.url, content=b"success")
+
+        self.hass.services.call(rc.DOMAIN, "patch_test", {})
+        self.hass.block_till_done()
+
+        assert len(aioclient_mock.mock_calls) == 1
+        assert aioclient_mock.mock_calls[0][2] == b"data"
+
     def test_rest_command_post(self, aioclient_mock):
         """Call a rest command with post."""
         data = {"payload": "data"}
         self.config[rc.DOMAIN]["post_test"].update(data)
 
-        with assert_setup_component(4):
+        with assert_setup_component(5):
             setup_component(self.hass, rc.DOMAIN, self.config)
 
         aioclient_mock.post(self.url, content=b"success")
@@ -185,7 +202,7 @@ class TestRestCommandComponent:
         data = {"payload": "data"}
         self.config[rc.DOMAIN]["put_test"].update(data)
 
-        with assert_setup_component(4):
+        with assert_setup_component(5):
             setup_component(self.hass, rc.DOMAIN, self.config)
 
         aioclient_mock.put(self.url, content=b"success")

@@ -12,6 +12,7 @@
             "device_unavailable": "Naprava ni na voljo",
             "faulty_credentials": "Napa\u010dni uporabni\u0161ki podatki"
         },
+        "flow_title": "OS naprava: {Name} ({Host})",
         "step": {
             "user": {
                 "data": {

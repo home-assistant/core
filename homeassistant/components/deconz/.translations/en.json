@@ -11,6 +11,7 @@
         "error": {
             "no_key": "Couldn't get an API key"
         },
+        "flow_title": "deCONZ Zigbee gateway ({host})",
         "step": {
             "hassio_confirm": {
                 "data": {

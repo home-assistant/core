@@ -33,6 +33,11 @@ sensor:
          entity_id: sensor.date
          friendly_name: 'Numer tygodnia w roku'
          value_template: "{{ now().isocalendar()[1] }}"
+binary_sensor:
+  - platform: workday
+    name: "Dzień pracujący"
+    country: PL
+
 group:
   day_info:
     control: hidden
@@ -42,3 +47,4 @@ group:
       - sensor.nextsunset
       - sensor.dayofyear
       - sensor.weekofyear
+      - binary_sensor.dzien_pracujacy

@@ -1,6 +1,7 @@
 """Support for RFXtrx switches."""
 import logging
 
+import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
 from homeassistant.components import rfxtrx
@@ -38,8 +39,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up the RFXtrx platform."""
-    import RFXtrx as rfxtrxmod
-
     # Add switch from config file
     switches = rfxtrx.get_devices_from_config(config, RfxtrxSwitch)
     add_entities_callback(switches)

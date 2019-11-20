@@ -501,6 +501,30 @@ def test_timestamp_local(hass):
         )
 
 
+def test_to_json(hass):
+    """Test the object to JSON string filter."""
+
+    # Note that we're not testing the actual json.loads and json.dumps methods,
+    # only the filters, so we don't need to be exhaustive with our sample JSON.
+    expected_result = '{"Foo": "Bar"}'
+    actual_result = template.Template(
+        "{{ {'Foo': 'Bar'} | to_json }}", hass
+    ).async_render()
+    assert actual_result == expected_result
+
+
+def test_from_json(hass):
+    """Test the JSON string to object filter."""
+
+    # Note that we're not testing the actual json.loads and json.dumps methods,
+    # only the filters, so we don't need to be exhaustive with our sample JSON.
+    expected_result = "Bar"
+    actual_result = template.Template(
+        '{{ (\'{"Foo": "Bar"}\' | from_json).Foo }}', hass
+    ).async_render()
+    assert actual_result == expected_result
+
+
 def test_min(hass):
     """Test the min filter."""
     assert template.Template("{{ [1, 2, 3] | min }}", hass).async_render() == "1"

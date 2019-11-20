@@ -1,6 +1,8 @@
 """Support Wink alarm control panels."""
 import logging
 
+import pywink
+
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
@@ -17,7 +19,6 @@ STATE_ALARM_PRIVACY = "Private"
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink platform."""
-    import pywink
 
     for camera in pywink.get_cameras():
         # get_cameras returns multiple device types.
