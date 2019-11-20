@@ -27,6 +27,7 @@ class FbxTempSensor(Entity):
         """Initialize the sensor."""
         self._fbx = fbx
         self._datas = None
+        self._name = "generic"
         self._state = None
         self._sensor_id = sensor_id
         self._unit_of_measurement = "°C"
