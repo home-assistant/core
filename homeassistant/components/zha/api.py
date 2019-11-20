@@ -141,7 +141,7 @@ SERVICE_SCHEMAS = {
             vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
             vol.Required(ATTR_COMMAND): cv.positive_int,
             vol.Required(ATTR_COMMAND_TYPE): cv.string,
-            vol.Optional(ATTR_ARGS, default=""): cv.string,
+            vol.Optional(ATTR_ARGS, default=[]): cv.ensure_list,
             vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
         }
     ),
@@ -649,7 +649,7 @@ def async_load_api(hass):
                 cluster_id,
                 command,
                 command_type,
-                args,
+                *args,
                 cluster_type=cluster_type,
                 manufacturer=manufacturer,
             )
