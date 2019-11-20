@@ -1,0 +1,13 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "Kan geen verbinding maken met CoolMasterNet-instantie. Controleer uw host"
+        },
+        "step": {
+            "user": {
+                "title": "Stel uw CoolMasterNet-verbindingsgegevens in."
+            }
+        },
+        "title": "CoolMasterNet"
+    }
+}

@@ -102,7 +102,6 @@ class ComfoConnectBridge:
 
     def __init__(self, hass, bridge, name, token, friendly_name, pin):
         """Initialize the ComfoConnect bridge."""
-
         self.data = {}
         self.name = name
         self.hass = hass
@@ -136,7 +135,3 @@ class ComfoConnectBridge:
 
         # Notify listeners that we have received an update
         dispatcher_send(self.hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, var)
-
-    def subscribe_sensor(self, sensor_id):
-        """Subscribe for the specified sensor."""
-        self.comfoconnect.register_sensor(sensor_id)

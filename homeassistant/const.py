@@ -1,7 +1,7 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 101
-PATCH_VERSION = "3"
+MINOR_VERSION = 102
+PATCH_VERSION = "0"
 __short_version__ = "{}.{}".format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = "{}.{}".format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 6, 1)
@@ -40,6 +40,8 @@ CONF_BELOW = "below"
 CONF_BINARY_SENSORS = "binary_sensors"
 CONF_BLACKLIST = "blacklist"
 CONF_BRIGHTNESS = "brightness"
+CONF_CLIENT_ID = "client_id"
+CONF_CLIENT_SECRET = "client_secret"
 CONF_CODE = "code"
 CONF_COLOR_TEMP = "color_temp"
 CONF_COMMAND = "command"

@@ -82,6 +82,7 @@ HM_DEVICE_TYPES = {
         "IPKeySwitchPowermeter",
         "IPGarage",
         "IPKeySwitch",
+        "IPKeySwitchLevel",
         "IPMultiIO",
     ],
     DISCOVER_LIGHTS: [
@@ -90,6 +91,7 @@ HM_DEVICE_TYPES = {
         "IPKeyDimmer",
         "IPDimmer",
         "ColorEffectLight",
+        "IPKeySwitchLevel",
     ],
     DISCOVER_SENSORS: [
         "SwitchPowermeter",
@@ -671,6 +673,11 @@ def _get_devices(hass, discovery_type, keys, interface):
                 and class_name not in HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS.get(param, [])
             ):
                 continue
+            if discovery_type == DISCOVER_SWITCHES and class_name == "IPKeySwitchLevel":
+                channels.remove(8)
+                channels.remove(12)
+            if discovery_type == DISCOVER_LIGHTS and class_name == "IPKeySwitchLevel":
+                channels.remove(4)
 
             # Add devices
             _LOGGER.debug(
