@@ -177,6 +177,7 @@ class Doods(ImageProcessingEntity):
                     _LOGGER.warning("Detector does not support label %s", label)
                     continue
                 self._label_areas[label] = [0, 0, 1, 1]
+                self._label_covers[label] = True
                 if label not in dconfig or dconfig[label] > confidence:
                     dconfig[label] = confidence
 

@@ -267,7 +267,10 @@ class Thermostat(ClimateDevice):
         self._last_active_hvac_mode = HVAC_MODE_AUTO
 
         self._operation_list = []
-        if self.thermostat["settings"]["heatStages"]:
+        if (
+            self.thermostat["settings"]["heatStages"]
+            or self.thermostat["settings"]["hasHeatPump"]
+        ):
             self._operation_list.append(HVAC_MODE_HEAT)
         if self.thermostat["settings"]["coolStages"]:
             self._operation_list.append(HVAC_MODE_COOL)

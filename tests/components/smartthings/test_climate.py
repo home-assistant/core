@@ -13,7 +13,7 @@ from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
-    ATTR_HVAC_ACTIONS,
+    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_TARGET_TEMP_HIGH,
@@ -214,7 +214,7 @@ async def test_legacy_thermostat_entity_state(hass, legacy_thermostat):
         | SUPPORT_TARGET_TEMPERATURE_RANGE
         | SUPPORT_TARGET_TEMPERATURE
     )
-    assert state.attributes[ATTR_HVAC_ACTIONS] == CURRENT_HVAC_IDLE
+    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
     assert sorted(state.attributes[ATTR_HVAC_MODES]) == [
         HVAC_MODE_AUTO,
         HVAC_MODE_COOL,
@@ -238,7 +238,7 @@ async def test_basic_thermostat_entity_state(hass, basic_thermostat):
         state.attributes[ATTR_SUPPORTED_FEATURES]
         == SUPPORT_TARGET_TEMPERATURE_RANGE | SUPPORT_TARGET_TEMPERATURE
     )
-    assert ATTR_HVAC_ACTIONS not in state.attributes
+    assert ATTR_HVAC_ACTION not in state.attributes
     assert sorted(state.attributes[ATTR_HVAC_MODES]) == [
         HVAC_MODE_COOL,
         HVAC_MODE_HEAT,
@@ -259,7 +259,7 @@ async def test_thermostat_entity_state(hass, thermostat):
         | SUPPORT_TARGET_TEMPERATURE_RANGE
         | SUPPORT_TARGET_TEMPERATURE
     )
-    assert state.attributes[ATTR_HVAC_ACTIONS] == CURRENT_HVAC_IDLE
+    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
     assert sorted(state.attributes[ATTR_HVAC_MODES]) == [
         HVAC_MODE_AUTO,
         HVAC_MODE_COOL,

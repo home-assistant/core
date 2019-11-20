@@ -9,7 +9,7 @@
         },
         "step": {
             "user": {
-                "description": "Czy chcesz skonfigurowa\u0107 IFTTT?",
+                "description": "Na pewno chcesz skonfigurowa\u0107 IFTTT?",
                 "title": "Konfiguracja apletu Webhook IFTTT"
             }
         },

@@ -13,6 +13,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
 from .const import (
+    _LOGGER,
     CONF_ALLOW_CLIP_SENSOR,
     CONF_ALLOW_DECONZ_GROUPS,
     CONF_BRIDGEID,
@@ -175,6 +176,8 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_deconz_bridge")
 
         uuid = discovery_info[ATTR_UUID].replace("uuid:", "")
+
+        _LOGGER.debug("deCONZ gateway discovered (%s)", uuid)
 
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if uuid == entry.data.get(CONF_UUID):

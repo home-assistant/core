@@ -29,7 +29,7 @@ from homeassistant.const import (
     CONF_REGION,
     CONF_TOKEN,
     STATE_IDLE,
-    STATE_OFF,
+    STATE_STANDBY,
     STATE_PLAYING,
     STATE_UNKNOWN,
 )
@@ -46,7 +46,7 @@ MOCK_HOST_NAME = "Fake PS4"
 MOCK_HOST_ID = "A0000A0AA000"
 MOCK_HOST_VERSION = "09879011"
 MOCK_HOST_TYPE = "PS4"
-MOCK_STATUS_STANDBY = "Server Standby"
+MOCK_STATUS_REST = "Server Standby"
 MOCK_STATUS_ON = "Ok"
 MOCK_STANDBY_CODE = 620
 MOCK_ON_CODE = 200
@@ -100,13 +100,13 @@ MOCK_STATUS_IDLE = {
     "system-version": MOCK_HOST_VERSION,
 }
 
-MOCK_STATUS_OFF = {
+MOCK_STATUS_STANDBY = {
     "host-type": MOCK_HOST_TYPE,
     "host-ip": MOCK_HOST,
     "host-request-port": MOCK_TCP_PORT,
     "host-id": MOCK_HOST_ID,
     "host-name": MOCK_HOST_NAME,
-    "status": MOCK_STATUS_STANDBY,
+    "status": MOCK_STATUS_REST,
     "status_code": MOCK_STANDBY_CODE,
     "device-discovery-protocol-version": MOCK_DDP_VERSION,
     "system-version": MOCK_HOST_VERSION,
@@ -183,14 +183,14 @@ async def test_media_player_is_setup_correctly_with_entry(hass):
     assert mock_state == STATE_UNKNOWN
 
 
-async def test_state_off_is_set(hass):
-    """Test that state is set to off."""
+async def test_state_standby_is_set(hass):
+    """Test that state is set to standby."""
     mock_entity_id = await setup_mock_component(hass)
 
     with patch(MOCK_SAVE, side_effect=MagicMock()):
-        await mock_ddp_response(hass, MOCK_STATUS_OFF)
+        await mock_ddp_response(hass, MOCK_STATUS_STANDBY)
 
-    assert hass.states.get(mock_entity_id).state == STATE_OFF
+    assert hass.states.get(mock_entity_id).state == STATE_STANDBY
 
 
 async def test_state_playing_is_set(hass):
@@ -290,13 +290,13 @@ async def test_media_attributes_are_loaded(hass):
 async def test_device_info_is_set_from_status_correctly(hass):
     """Test that device info is set correctly from status update."""
     mock_d_registry = mock_device_registry(hass)
-    with patch("pyps4_2ndscreen.ps4.get_status", return_value=MOCK_STATUS_OFF):
+    with patch("pyps4_2ndscreen.ps4.get_status", return_value=MOCK_STATUS_STANDBY):
         mock_entity_id = await setup_mock_component(hass)
 
     await hass.async_block_till_done()
 
     # Reformat mock status-sw_version for assertion.
-    mock_version = MOCK_STATUS_OFF["system-version"]
+    mock_version = MOCK_STATUS_STANDBY["system-version"]
     mock_version = mock_version[1:4]
     mock_version = "{}.{}".format(mock_version[0], mock_version[1:])
 
@@ -306,7 +306,7 @@ async def test_device_info_is_set_from_status_correctly(hass):
     mock_entry = mock_d_registry.async_get_device(
         identifiers={(DOMAIN, MOCK_HOST_ID)}, connections={()}
     )
-    assert mock_state == STATE_OFF
+    assert mock_state == STATE_STANDBY
 
     assert len(mock_d_entries) == 1
     assert mock_entry.name == MOCK_HOST_NAME

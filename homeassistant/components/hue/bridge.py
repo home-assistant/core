@@ -5,12 +5,12 @@ import aiohue
 import async_timeout
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import DOMAIN, LOGGER
 from .errors import AuthenticationRequired, CannotConnect
+from .helpers import create_config_flow
 
 SERVICE_HUE_SCENE = "hue_activate_scene"
 ATTR_GROUP_NAME = "group_name"
@@ -30,6 +30,7 @@ class HueBridge:
         self.allow_unreachable = allow_unreachable
         self.allow_groups = allow_groups
         self.available = True
+        self.authorized = False
         self.api = None
 
     @property
@@ -49,13 +50,7 @@ class HueBridge:
             # We are going to fail the config entry setup and initiate a new
             # linking procedure. When linking succeeds, it will remove the
             # old config entry.
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": config_entries.SOURCE_IMPORT},
-                    data={"host": host},
-                )
-            )
+            create_config_flow(hass, host)
             return False
 
         except CannotConnect:
@@ -82,6 +77,7 @@ class HueBridge:
             DOMAIN, SERVICE_HUE_SCENE, self.hue_activate_scene, schema=SCENE_SCHEMA
         )
 
+        self.authorized = True
         return True
 
     async def async_reset(self):
@@ -154,6 +150,17 @@ class HueBridge:
             return
 
         await group.set_action(scene=scene.id)
+
+    async def handle_unauthorized_error(self):
+        """Create a new config flow when the authorization is no longer valid."""
+        if not self.authorized:
+            # we already created a new config flow, no need to do it again
+            return
+        LOGGER.error(
+            "Unable to authorize to bridge %s, setup the linking again.", self.host
+        )
+        self.authorized = False
+        create_config_flow(self.hass, self.host)
 
 
 async def get_bridge(hass, host, username=None):

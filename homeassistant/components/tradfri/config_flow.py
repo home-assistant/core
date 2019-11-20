@@ -64,13 +64,17 @@ class FlowHandler(config_entries.ConfigFlow):
                     errors[KEY_SECURITY_CODE] = err.code
                 else:
                     errors["base"] = err.code
+        else:
+            user_input = {}
 
         fields = OrderedDict()
 
         if self._host is None:
-            fields[vol.Required(CONF_HOST)] = str
+            fields[vol.Required(CONF_HOST, default=user_input.get(CONF_HOST))] = str
 
-        fields[vol.Required(KEY_SECURITY_CODE)] = str
+        fields[
+            vol.Required(KEY_SECURITY_CODE, default=user_input.get(KEY_SECURITY_CODE))
+        ] = str
 
         return self.async_show_form(
             step_id="auth", data_schema=vol.Schema(fields), errors=errors
