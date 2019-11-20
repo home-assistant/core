@@ -56,7 +56,7 @@ from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.util.async_ import run_callback_threadsafe
-from homeassistant.components.device_automation import (  # noqa
+from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automations as async_get_device_automations,
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
@@ -1084,7 +1084,7 @@ class hashdict(dict):
 
     """
 
-    def __key(self):  # noqa: D105 no docstring
+    def __key(self):
         return tuple(sorted(self.items()))
 
     def __repr__(self):  # noqa: D105 no docstring

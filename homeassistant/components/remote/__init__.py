@@ -16,7 +16,7 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
 )
 from homeassistant.components import group
-from homeassistant.helpers.config_validation import (  # noqa
+from homeassistant.helpers.config_validation import (  # noqa: F401
     ENTITY_SERVICE_SCHEMA,
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,

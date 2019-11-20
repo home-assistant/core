@@ -126,6 +126,9 @@ afsapi==0.0.4
 # homeassistant.components.geonetnz_quakes
 aio_geojson_geonetnz_quakes==0.11
 
+# homeassistant.components.geonetnz_volcano
+aio_geojson_geonetnz_volcano==0.5
+
 # homeassistant.components.ambient_station
 aioambient==0.3.2
 
@@ -142,7 +145,7 @@ aiobotocore==0.10.4
 aiodns==2.0.0
 
 # homeassistant.components.esphome
-aioesphomeapi==2.5.0
+aioesphomeapi==2.6.0
 
 # homeassistant.components.freebox
 aiofreepybox==0.0.8
@@ -200,7 +203,7 @@ aladdin_connect==0.3
 alarmdecoder==1.13.2
 
 # homeassistant.components.alpha_vantage
-alpha_vantage==2.1.1
+alpha_vantage==2.1.2
 
 # homeassistant.components.ambiclimate
 ambiclimate==0.2.1
@@ -209,7 +212,7 @@ ambiclimate==0.2.1
 amcrest==1.5.3
 
 # homeassistant.components.androidtv
-androidtv==0.0.32
+androidtv==0.0.34
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -402,6 +405,7 @@ datapoint==0.4.3
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
 # homeassistant.components.ohmconnect
+# homeassistant.components.ssdp
 defusedxml==0.6.0
 
 # homeassistant.components.deluge
@@ -655,7 +659,7 @@ hole==0.5.0
 holidays==0.9.11
 
 # homeassistant.components.frontend
-home-assistant-frontend==20191114.0
+home-assistant-frontend==20191119.2
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.4
@@ -751,7 +755,7 @@ libpurecool==0.5.0
 libpyfoscam==1.0
 
 # homeassistant.components.vivotek
-libpyvivotek==0.2.2
+libpyvivotek==0.3.1
 
 # homeassistant.components.mikrotik
 librouteros==2.3.0
@@ -999,7 +1003,7 @@ pmsensor==0.4
 pocketcasts==0.1
 
 # homeassistant.components.postnl
-postnl_api==1.0.2
+postnl_api==1.2.2
 
 # homeassistant.components.reddit
 praw==6.4.0
@@ -1027,6 +1031,9 @@ ptvsd==4.2.8
 
 # homeassistant.components.wink
 pubnubsub-handler==1.0.8
+
+# homeassistant.components.androidtv
+pure-python-adb==0.2.2.dev0
 
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
@@ -1066,7 +1073,7 @@ pyHS100==0.3.5
 pyMetno==0.4.6
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.23
+pyRFXtrx==0.24
 
 # homeassistant.components.switchmate
 # pySwitchmate==0.4.6
@@ -1088,6 +1095,9 @@ py_nextbusnext==0.1.4
 
 # homeassistant.components.ads
 pyads==3.0.7
+
+# homeassistant.components.hisense_aehw4a1
+pyaehw4a1==0.3.1
 
 # homeassistant.components.aftership
 pyaftership==0.1.2
@@ -1244,7 +1254,7 @@ pyhaversion==3.1.0
 pyheos==0.6.0
 
 # homeassistant.components.hikvision
-pyhik==0.2.4
+pyhik==0.2.5
 
 # homeassistant.components.hive
 pyhiveapi==0.2.19.3
@@ -1376,7 +1386,7 @@ pynzbgetapi==0.2.0
 pyobihai==1.2.0
 
 # homeassistant.components.ombi
-pyombi==0.1.5
+pyombi==0.1.10
 
 # homeassistant.components.openuv
 pyopenuv==1.0.9
@@ -1414,7 +1424,7 @@ pypjlink2==1.2.0
 pypoint==1.1.2
 
 # homeassistant.components.ps4
-pyps4-2ndscreen==1.0.1
+pyps4-2ndscreen==1.0.3
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.93
@@ -1645,6 +1655,9 @@ pyuptimerobot==0.0.5
 # homeassistant.components.vera
 pyvera==0.3.6
 
+# homeassistant.components.versasense
+pyversasense==0.0.6
+
 # homeassistant.components.vesync
 pyvesync==1.1.0
 
@@ -1721,7 +1734,7 @@ rocketchat-API==0.6.1
 roku==3.1
 
 # homeassistant.components.roomba
-roombapy==1.3.1
+roombapy==1.4.1
 
 # homeassistant.components.rova
 rova==0.1.0
@@ -1763,7 +1776,7 @@ sense_energy==0.7.0
 sharp_aquos_rc==0.3.2
 
 # homeassistant.components.shodan
-shodan==1.19.0
+shodan==1.19.1
 
 # homeassistant.components.simplepush
 simplepush==1.1.4
@@ -1838,7 +1851,7 @@ spotipy-homeassistant==2.4.4.dev1
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.3.10
+sqlalchemy==1.3.11
 
 # homeassistant.components.starlingbank
 starlingbank==3.1
