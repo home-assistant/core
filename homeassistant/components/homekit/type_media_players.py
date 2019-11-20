@@ -34,6 +34,7 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
     STATE_UNKNOWN,
+    STATE_STANDBY,
 )
 
 from . import TYPES
@@ -190,7 +191,12 @@ class MediaPlayer(HomeAccessory):
         current_state = new_state.state
 
         if self.chars[FEATURE_ON_OFF]:
-            hk_state = current_state not in (STATE_OFF, STATE_UNKNOWN, "None")
+            hk_state = current_state not in (
+                STATE_OFF,
+                STATE_STANDBY,
+                STATE_UNKNOWN,
+                "None",
+            )
             if not self._flag[FEATURE_ON_OFF]:
                 _LOGGER.debug(
                     '%s: Set current state for "on_off" to %s', self.entity_id, hk_state
@@ -390,7 +396,7 @@ class TelevisionMediaPlayer(HomeAccessory):
         current_state = new_state.state
 
         # Power state television
-        hk_state = current_state not in (STATE_OFF, STATE_UNKNOWN)
+        hk_state = current_state not in (STATE_OFF, STATE_STANDBY, STATE_UNKNOWN)
         if not self._flag[CHAR_ACTIVE]:
             _LOGGER.debug(
                 "%s: Set current active state to %s", self.entity_id, hk_state

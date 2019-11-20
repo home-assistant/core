@@ -16,6 +16,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
+    STATE_STANDBY,
 )
 from homeassistant.core import Context, State
 from homeassistant.helpers.typing import HomeAssistantType
@@ -58,6 +59,8 @@ async def _async_reproduce_states(
     if state.state == STATE_ON:
         await call_service(SERVICE_TURN_ON, [])
     elif state.state == STATE_OFF:
+        await call_service(SERVICE_TURN_OFF, [])
+    elif state.state == STATE_STANDBY:
         await call_service(SERVICE_TURN_OFF, [])
     elif state.state == STATE_PLAYING:
         await call_service(SERVICE_MEDIA_PLAY, [])

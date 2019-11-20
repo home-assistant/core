@@ -5,7 +5,13 @@ import logging
 from pyps4_2ndscreen.errors import NotReady, PSDataIncomplete
 import pyps4_2ndscreen.ps4 as pyps4
 
-from homeassistant.components.media_player import ENTITY_IMAGE_URL, MediaPlayerDevice
+from homeassistant.components.media_player import (
+    ENTITY_IMAGE_URL,
+    STATE_IDLE,
+    STATE_PLAYING,
+    STATE_STANDBY,
+    MediaPlayerDevice,
+)
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_TITLE,
@@ -24,9 +30,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REGION,
     CONF_TOKEN,
-    STATE_IDLE,
-    STATE_PLAYING,
-    STATE_STANDBY,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry, entity_registry
@@ -252,7 +255,7 @@ class PS4Device(MediaPlayerDevice):
         self._media_type = None
         self._source = None
 
-    async def async_get_title_data(self, title_id, name):
+    async def async_get_title_data(self, title_id: str, name: str):
         """Get PS Store Data."""
 
         app_name = None
@@ -455,6 +458,15 @@ class PS4Device(MediaPlayerDevice):
     def source_list(self):
         """List of available input sources."""
         return self._source_list
+
+    def async_toggle(self):
+        """Toggle the power on the media player.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        if self.state == STATE_STANDBY:
+            return self.async_turn_on()
+        return self.async_turn_off()
 
     async def async_turn_off(self):
         """Turn off media player."""

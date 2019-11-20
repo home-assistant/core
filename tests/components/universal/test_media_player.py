@@ -10,7 +10,13 @@ import homeassistant.components.input_select as input_select
 import homeassistant.components.media_player as media_player
 import homeassistant.components.switch as switch
 import homeassistant.components.universal.media_player as universal
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_PAUSED,
+    STATE_PLAYING,
+    STATE_STANDBY,
+)
 
 from tests.common import get_test_home_assistant, mock_service
 
@@ -386,6 +392,12 @@ class TestMediaPlayer(unittest.TestCase):
         assert self.mock_mp_1.entity_id == ump._child_state.entity_id
 
         self.mock_mp_1._state = STATE_OFF
+        self.mock_mp_1.schedule_update_ha_state()
+        self.hass.block_till_done()
+        asyncio.run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
+        assert self.mock_mp_2.entity_id == ump._child_state.entity_id
+
+        self.mock_mp_1._state = STATE_STANDBY
         self.mock_mp_1.schedule_update_ha_state()
         self.hass.block_till_done()
         asyncio.run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()

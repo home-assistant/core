@@ -9,6 +9,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
+    STATE_STANDBY,
 )
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
@@ -83,6 +84,13 @@ async def test_get_conditions(hass, device_reg, entity_reg):
             "condition": "device",
             "domain": DOMAIN,
             "type": "is_playing",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "type": "is_standby",
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },
@@ -190,6 +198,24 @@ async def test_if_state(hass, calls):
                         },
                     },
                 },
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event6"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": "",
+                            "entity_id": "media_player.entity",
+                            "type": "is_standby",
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "is_standby - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                        },
+                    },
+                },
             ]
         },
     )
@@ -198,6 +224,7 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event3")
     hass.bus.async_fire("test_event4")
     hass.bus.async_fire("test_event5")
+    hass.bus.async_fire("test_event6")
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == "is_on - event - test_event1"
@@ -208,6 +235,7 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event3")
     hass.bus.async_fire("test_event4")
     hass.bus.async_fire("test_event5")
+    hass.bus.async_fire("test_event6")
     await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[1].data["some"] == "is_off - event - test_event2"
@@ -218,6 +246,7 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event3")
     hass.bus.async_fire("test_event4")
     hass.bus.async_fire("test_event5")
+    hass.bus.async_fire("test_event6")
     await hass.async_block_till_done()
     assert len(calls) == 3
     assert calls[2].data["some"] == "is_idle - event - test_event3"
@@ -228,6 +257,7 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event3")
     hass.bus.async_fire("test_event4")
     hass.bus.async_fire("test_event5")
+    hass.bus.async_fire("test_event6")
     await hass.async_block_till_done()
     assert len(calls) == 4
     assert calls[3].data["some"] == "is_paused - event - test_event4"
@@ -238,6 +268,18 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event3")
     hass.bus.async_fire("test_event4")
     hass.bus.async_fire("test_event5")
+    hass.bus.async_fire("test_event6")
     await hass.async_block_till_done()
     assert len(calls) == 5
     assert calls[4].data["some"] == "is_playing - event - test_event5"
+
+    hass.states.async_set("media_player.entity", STATE_STANDBY)
+    hass.bus.async_fire("test_event1")
+    hass.bus.async_fire("test_event2")
+    hass.bus.async_fire("test_event3")
+    hass.bus.async_fire("test_event4")
+    hass.bus.async_fire("test_event5")
+    hass.bus.async_fire("test_event6")
+    await hass.async_block_till_done()
+    assert len(calls) == 6
+    assert calls[5].data["some"] == "is_standby - event - test_event6"

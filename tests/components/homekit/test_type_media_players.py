@@ -29,6 +29,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
+    STATE_STANDBY,
 )
 
 from tests.common import async_mock_service
@@ -69,6 +70,10 @@ async def test_media_player_set_state(hass, hk_driver, events):
     assert acc.chars[FEATURE_TOGGLE_MUTE].value is True
 
     hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    assert acc.chars[FEATURE_ON_OFF].value is False
+
+    hass.states.async_set(entity_id, STATE_STANDBY)
     await hass.async_block_till_done()
     assert acc.chars[FEATURE_ON_OFF].value is False
 
@@ -186,6 +191,10 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
     assert acc.char_mute.value is True
 
     hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    assert acc.char_active.value == 0
+
+    hass.states.async_set(entity_id, STATE_STANDBY)
     await hass.async_block_till_done()
     assert acc.char_active.value == 0
 

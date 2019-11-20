@@ -365,6 +365,74 @@ async def test_device_info_assummed_works(hass):
     assert not mock_d_entries
 
 
+async def test_toggle(hass):
+    """Test that toggle service calls correct service."""
+    mock_entity_id = await setup_mock_component(hass)
+    mock_fetch = "{}{}".format(
+        "homeassistant.components.ps4.media_player.",
+        "pyps4.Ps4Async.async_get_ps_store_data",
+    )
+    mock_turn_on = "{}{}".format(
+        "homeassistant.components.ps4.media_player.PS4Device.", "async_turn_on"
+    )
+    mock_turn_off = "{}{}".format(
+        "homeassistant.components.ps4.media_player.PS4Device.", "async_turn_off"
+    )
+
+    # If State is STATE_STANDBY assert service turn_on is called.
+    with patch(MOCK_SAVE, side_effect=MagicMock()):
+        await mock_ddp_response(hass, MOCK_STATUS_STANDBY)
+
+    assert hass.states.get(mock_entity_id).state == STATE_STANDBY
+
+    with patch(mock_turn_on, side_effect=mock_coro(None)) as mock_turn_on_call, patch(
+        mock_turn_off, side_effect=mock_coro(None)
+    ) as mock_turn_off_call, patch(MOCK_SAVE, side_effect=MagicMock()):
+        await hass.services.async_call(
+            "media_player", "toggle", {ATTR_ENTITY_ID: mock_entity_id}
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_turn_on_call.mock_calls) == 1
+    assert len(mock_turn_off_call.mock_calls) == 0
+
+    # If State is STATE_IDLE assert service turn_off is called.
+    with patch(MOCK_SAVE, side_effect=MagicMock()):
+        await mock_ddp_response(hass, MOCK_STATUS_IDLE)
+
+    assert hass.states.get(mock_entity_id).state == STATE_IDLE
+
+    with patch(mock_turn_on, side_effect=mock_coro(None)) as mock_turn_on_call, patch(
+        mock_turn_off, side_effect=mock_coro(None)
+    ) as mock_turn_off_call, patch(MOCK_SAVE, side_effect=MagicMock()):
+        await hass.services.async_call(
+            "media_player", "toggle", {ATTR_ENTITY_ID: mock_entity_id}
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_turn_on_call.mock_calls) == 0
+    assert len(mock_turn_off_call.mock_calls) == 1
+
+    # If State is STATE_PLAYING assert service turn_off is called.
+    with patch(mock_fetch, return_value=mock_coro(None)), patch(
+        MOCK_SAVE, side_effect=MagicMock()
+    ):
+        await mock_ddp_response(hass, MOCK_STATUS_PLAYING)
+
+    assert hass.states.get(mock_entity_id).state == STATE_PLAYING
+
+    with patch(mock_turn_on, side_effect=mock_coro(None)) as mock_turn_on_call, patch(
+        mock_turn_off, side_effect=mock_coro(None)
+    ) as mock_turn_off_call, patch(MOCK_SAVE, side_effect=MagicMock()):
+        await hass.services.async_call(
+            "media_player", "toggle", {ATTR_ENTITY_ID: mock_entity_id}
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_turn_on_call.mock_calls) == 0
+    assert len(mock_turn_off_call.mock_calls) == 1
+
+
 async def test_turn_on(hass):
     """Test that turn on service calls function."""
     mock_entity_id = await setup_mock_component(hass)

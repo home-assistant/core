@@ -66,6 +66,7 @@ from homeassistant.const import (
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
+    STATE_STANDBY,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import callback
@@ -83,7 +84,7 @@ CONF_COMMANDS = "commands"
 CONF_SERVICE = "service"
 CONF_SERVICE_DATA = "service_data"
 
-OFF_STATES = [STATE_IDLE, STATE_OFF, STATE_UNAVAILABLE]
+OFF_STATES = [STATE_IDLE, STATE_OFF, STATE_STANDBY, STATE_UNAVAILABLE]
 
 ATTRS_SCHEMA = cv.schema_with_slug_keys(cv.string)
 CMD_SCHEMA = cv.schema_with_slug_keys(cv.SERVICE_SCHEMA)

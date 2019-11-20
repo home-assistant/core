@@ -15,6 +15,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
+    STATE_STANDBY,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import condition, config_validation as cv, entity_registry
@@ -23,7 +24,14 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DOMAIN
 
-CONDITION_TYPES = {"is_on", "is_off", "is_idle", "is_paused", "is_playing"}
+CONDITION_TYPES = {
+    "is_on",
+    "is_off",
+    "is_idle",
+    "is_paused",
+    "is_playing",
+    "is_standby",
+}
 
 CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
@@ -91,6 +99,15 @@ async def async_get_conditions(
                 CONF_TYPE: "is_playing",
             }
         )
+        conditions.append(
+            {
+                CONF_CONDITION: "device",
+                CONF_DEVICE_ID: device_id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_ENTITY_ID: entry.entity_id,
+                CONF_TYPE: "is_standby",
+            }
+        )
 
     return conditions
 
@@ -109,6 +126,8 @@ def async_condition_from_config(
         state = STATE_PAUSED
     elif config[CONF_TYPE] == "is_on":
         state = STATE_ON
+    elif config[CONF_TYPE] == "is_standby":
+        state = STATE_STANDBY
     else:
         state = STATE_OFF
 

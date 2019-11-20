@@ -36,6 +36,7 @@ from homeassistant.const import (
     STATE_IDLE,
     STATE_OFF,
     STATE_PLAYING,
+    STATE_STANDBY,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -165,7 +166,9 @@ def is_on(hass, entity_id=None):
     """
     entity_ids = [entity_id] if entity_id else hass.states.entity_ids(DOMAIN)
     return any(
-        not hass.states.is_state(entity_id, STATE_OFF) for entity_id in entity_ids
+        not hass.states.is_state(entity_id, STATE_OFF)
+        and not hass.states.is_state(entity_id, STATE_STANDBY)
+        for entity_id in entity_ids
     )
 
 

@@ -31,6 +31,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
+    STATE_STANDBY,
 )
 from homeassistant.core import Context, State
 
@@ -45,6 +46,7 @@ ENTITY_2 = "media_player.test2"
     [
         (SERVICE_TURN_ON, STATE_ON),
         (SERVICE_TURN_OFF, STATE_OFF),
+        (SERVICE_TURN_OFF, STATE_STANDBY),
         (SERVICE_MEDIA_PLAY, STATE_PLAYING),
         (SERVICE_MEDIA_STOP, STATE_IDLE),
         (SERVICE_MEDIA_PAUSE, STATE_PAUSED),
