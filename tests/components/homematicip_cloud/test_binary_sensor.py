@@ -8,8 +8,19 @@ from homeassistant.components.homematicip_cloud.binary_sensor import (
     ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION,
     ATTR_ACCELERATION_SENSOR_SENSITIVITY,
     ATTR_ACCELERATION_SENSOR_TRIGGER_ANGLE,
-    ATTR_LOW_BATTERY,
+    ATTR_MOISTURE_DETECTED,
     ATTR_MOTION_DETECTED,
+    ATTR_POWER_MAINS_FAILURE,
+    ATTR_PRESENCE_DETECTED,
+    ATTR_WATER_LEVEL_DETECTED,
+    ATTR_WINDOW_STATE,
+)
+from homeassistant.components.homematicip_cloud.device import (
+    ATTR_EVENT_DELAY,
+    ATTR_GROUP_MEMBER_UNREACHABLE,
+    ATTR_LOW_BATTERY,
+    ATTR_RSSI_DEVICE,
+    ATTR_SABOTAGE,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
@@ -105,6 +116,13 @@ async def test_hmip_shutter_contact(hass, default_mock_hap):
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_OFF
 
+    # test common attributes
+    assert ha_state.attributes[ATTR_RSSI_DEVICE] == -54
+    assert not ha_state.attributes.get(ATTR_SABOTAGE)
+    await async_manipulate_test_data(hass, hmip_device, "sabotage", True)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.attributes[ATTR_SABOTAGE]
+
 
 async def test_hmip_motion_detector(hass, default_mock_hap):
     """Test HomematicipMotionDetector."""
@@ -136,6 +154,11 @@ async def test_hmip_presence_detector(hass, default_mock_hap):
     await async_manipulate_test_data(hass, hmip_device, "presenceDetected", True)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
+
+    assert not ha_state.attributes.get(ATTR_EVENT_DELAY)
+    await async_manipulate_test_data(hass, hmip_device, "eventDelay", True)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.attributes[ATTR_EVENT_DELAY]
 
 
 async def test_hmip_smoke_detector(hass, default_mock_hap):
@@ -267,10 +290,25 @@ async def test_hmip_security_zone_sensor_group(hass, default_mock_hap):
     )
 
     assert ha_state.state == STATE_OFF
+    assert not ha_state.attributes.get(ATTR_MOTION_DETECTED)
+    assert not ha_state.attributes.get(ATTR_PRESENCE_DETECTED)
+    assert not ha_state.attributes.get(ATTR_GROUP_MEMBER_UNREACHABLE)
+    assert not ha_state.attributes.get(ATTR_SABOTAGE)
+    assert not ha_state.attributes.get(ATTR_WINDOW_STATE)
+
     await async_manipulate_test_data(hass, hmip_device, "motionDetected", True)
+    await async_manipulate_test_data(hass, hmip_device, "presenceDetected", True)
+    await async_manipulate_test_data(hass, hmip_device, "unreach", True)
+    await async_manipulate_test_data(hass, hmip_device, "sabotage", True)
+    await async_manipulate_test_data(hass, hmip_device, "windowState", WindowState.OPEN)
     ha_state = hass.states.get(entity_id)
+
     assert ha_state.state == STATE_ON
-    assert ha_state.attributes[ATTR_MOTION_DETECTED] is True
+    assert ha_state.attributes[ATTR_MOTION_DETECTED]
+    assert ha_state.attributes[ATTR_PRESENCE_DETECTED]
+    assert ha_state.attributes[ATTR_GROUP_MEMBER_UNREACHABLE]
+    assert ha_state.attributes[ATTR_SABOTAGE]
+    assert ha_state.attributes[ATTR_WINDOW_STATE] == WindowState.OPEN
 
 
 async def test_hmip_security_sensor_group(hass, default_mock_hap):
@@ -283,14 +321,6 @@ async def test_hmip_security_sensor_group(hass, default_mock_hap):
         hass, default_mock_hap, entity_id, entity_name, device_model
     )
 
-    assert ha_state.state == STATE_OFF
-    assert not ha_state.attributes.get("low_bat")
-    await async_manipulate_test_data(hass, hmip_device, "lowBat", True)
-    ha_state = hass.states.get(entity_id)
-    assert ha_state.state == STATE_ON
-    assert ha_state.attributes[ATTR_LOW_BATTERY] is True
-
-    await async_manipulate_test_data(hass, hmip_device, "lowBat", False)
     await async_manipulate_test_data(
         hass,
         hmip_device,
@@ -299,7 +329,45 @@ async def test_hmip_security_sensor_group(hass, default_mock_hap):
     )
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
+
     assert (
         ha_state.attributes["smoke_detector_alarm"]
         == SmokeDetectorAlarmType.PRIMARY_ALARM
     )
+    await async_manipulate_test_data(
+        hass, hmip_device, "smokeDetectorAlarmType", SmokeDetectorAlarmType.IDLE_OFF
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_OFF
+
+    assert not ha_state.attributes.get(ATTR_LOW_BATTERY)
+    assert not ha_state.attributes.get(ATTR_MOTION_DETECTED)
+    assert not ha_state.attributes.get(ATTR_PRESENCE_DETECTED)
+    assert not ha_state.attributes.get(ATTR_POWER_MAINS_FAILURE)
+    assert not ha_state.attributes.get(ATTR_MOISTURE_DETECTED)
+    assert not ha_state.attributes.get(ATTR_WATER_LEVEL_DETECTED)
+    assert not ha_state.attributes.get(ATTR_GROUP_MEMBER_UNREACHABLE)
+    assert not ha_state.attributes.get(ATTR_SABOTAGE)
+    assert not ha_state.attributes.get(ATTR_WINDOW_STATE)
+
+    await async_manipulate_test_data(hass, hmip_device, "lowBat", True)
+    await async_manipulate_test_data(hass, hmip_device, "motionDetected", True)
+    await async_manipulate_test_data(hass, hmip_device, "presenceDetected", True)
+    await async_manipulate_test_data(hass, hmip_device, "powerMainsFailure", True)
+    await async_manipulate_test_data(hass, hmip_device, "moistureDetected", True)
+    await async_manipulate_test_data(hass, hmip_device, "waterlevelDetected", True)
+    await async_manipulate_test_data(hass, hmip_device, "unreach", True)
+    await async_manipulate_test_data(hass, hmip_device, "sabotage", True)
+    await async_manipulate_test_data(hass, hmip_device, "windowState", WindowState.OPEN)
+    ha_state = hass.states.get(entity_id)
+
+    assert ha_state.state == STATE_ON
+    assert ha_state.attributes[ATTR_LOW_BATTERY]
+    assert ha_state.attributes[ATTR_MOTION_DETECTED]
+    assert ha_state.attributes[ATTR_PRESENCE_DETECTED]
+    assert ha_state.attributes[ATTR_POWER_MAINS_FAILURE]
+    assert ha_state.attributes[ATTR_MOISTURE_DETECTED]
+    assert ha_state.attributes[ATTR_WATER_LEVEL_DETECTED]
+    assert ha_state.attributes[ATTR_GROUP_MEMBER_UNREACHABLE]
+    assert ha_state.attributes[ATTR_SABOTAGE]
+    assert ha_state.attributes[ATTR_WINDOW_STATE] == WindowState.OPEN

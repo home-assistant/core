@@ -8,7 +8,7 @@ This module exists of the following parts:
 import asyncio
 from abc import ABCMeta, ABC, abstractmethod
 import logging
-from typing import Optional, Any, Dict, cast
+from typing import Optional, Any, Dict, cast, Awaitable, Callable
 import time
 
 import async_timeout
@@ -28,6 +28,7 @@ from .aiohttp_client import async_get_clientsession
 DATA_JWT_SECRET = "oauth2_jwt_secret"
 DATA_VIEW_REGISTERED = "oauth2_view_reg"
 DATA_IMPLEMENTATIONS = "oauth2_impl"
+DATA_PROVIDERS = "oauth2_providers"
 AUTH_CALLBACK_PATH = "/auth/external/callback"
 
 
@@ -291,10 +292,22 @@ async def async_get_implementations(
     hass: HomeAssistant, domain: str
 ) -> Dict[str, AbstractOAuth2Implementation]:
     """Return OAuth2 implementations for specified domain."""
-    return cast(
+    registered = cast(
         Dict[str, AbstractOAuth2Implementation],
         hass.data.setdefault(DATA_IMPLEMENTATIONS, {}).get(domain, {}),
     )
+
+    if DATA_PROVIDERS not in hass.data:
+        return registered
+
+    registered = dict(registered)
+
+    for provider_domain, get_impl in hass.data[DATA_PROVIDERS].items():
+        implementation = await get_impl(hass, domain)
+        if implementation is not None:
+            registered[provider_domain] = implementation
+
+    return registered
 
 
 async def async_get_config_entry_implementation(
@@ -308,6 +321,23 @@ async def async_get_config_entry_implementation(
         raise ValueError("Implementation not available")
 
     return implementation
+
+
+@callback
+def async_add_implementation_provider(
+    hass: HomeAssistant,
+    provider_domain: str,
+    async_provide_implementation: Callable[
+        [HomeAssistant, str], Awaitable[Optional[AbstractOAuth2Implementation]]
+    ],
+) -> None:
+    """Add an implementation provider.
+
+    If no implementation found, return None.
+    """
+    hass.data.setdefault(DATA_PROVIDERS, {})[
+        provider_domain
+    ] = async_provide_implementation
 
 
 class OAuth2AuthorizeCallbackView(HomeAssistantView):
@@ -355,16 +385,24 @@ class OAuth2Session:
         self.config_entry = config_entry
         self.implementation = implementation
 
+    @property
+    def token(self) -> dict:
+        """Return the token."""
+        return cast(dict, self.config_entry.data["token"])
+
+    @property
+    def valid_token(self) -> bool:
+        """Return if token is still valid."""
+        return cast(float, self.token["expires_at"]) > time.time()
+
     async def async_ensure_token_valid(self) -> None:
         """Ensure that the current token is valid."""
-        token = self.config_entry.data["token"]
-
-        if token["expires_at"] > time.time():
+        if self.valid_token:
             return
 
-        new_token = await self.implementation.async_refresh_token(token)
+        new_token = await self.implementation.async_refresh_token(self.token)
 
-        self.hass.config_entries.async_update_entry(  # type: ignore
+        self.hass.config_entries.async_update_entry(
             self.config_entry, data={**self.config_entry.data, "token": new_token}
         )
 

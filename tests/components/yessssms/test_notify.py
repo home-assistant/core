@@ -2,6 +2,7 @@
 import unittest
 from unittest.mock import patch
 
+import logging
 import pytest
 import requests_mock
 
@@ -101,6 +102,7 @@ async def test_false_login_data_error(hass, caplog, valid_settings, invalid_logi
 
 async def test_init_success(hass, caplog, valid_settings, valid_login_data):
     """Test for successful init of yessssms."""
+    caplog.set_level(logging.DEBUG)
     await valid_settings
     assert hass.services.has_service("notify", "sms")
     messages = []
@@ -119,6 +121,7 @@ async def test_init_success(hass, caplog, valid_settings, valid_login_data):
 
 async def test_connection_error_on_init(hass, caplog, valid_settings, connection_error):
     """Test for connection error on init."""
+    caplog.set_level(logging.DEBUG)
     await valid_settings
     assert hass.services.has_service("notify", "sms")
     for record in caplog.records:

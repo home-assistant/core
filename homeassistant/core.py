@@ -1298,7 +1298,7 @@ class Config:
         self.skip_pip: bool = False
 
         # List of loaded components
-        self.components: set = set()
+        self.components: Set[str] = set()
 
         # API (HTTP) server configuration, see components.http.ApiConfig
         self.api: Optional[Any] = None

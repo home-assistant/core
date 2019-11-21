@@ -42,7 +42,7 @@
                     "manual_setup": "Installation manuelle",
                     "token": "Jeton plex"
                 },
-                "description": "Entrez un jeton Plex pour la configuration automatique.",
+                "description": "Continuez pour autoriser plex.tv ou configurez manuellement un serveur.",
                 "title": "Connecter un serveur Plex"
             }
         },

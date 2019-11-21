@@ -310,7 +310,7 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
             await async_set_lights_xy(
                 self.hass, self._lights, x_val, y_val, brightness, self._transition
             )
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Lights updated to x:%s y:%s brightness:%s, %s%% "
                 "of %s cycle complete at %s",
                 x_val,
@@ -322,7 +322,7 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
             )
         elif self._mode == MODE_RGB:
             await async_set_lights_rgb(self.hass, self._lights, rgb, self._transition)
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Lights updated to rgb:%s, %s%% " "of %s cycle complete at %s",
                 rgb,
                 round(percentage_complete * 100),
@@ -335,7 +335,7 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
             await async_set_lights_temp(
                 self.hass, self._lights, mired, brightness, self._transition
             )
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Lights updated to mired:%s brightness:%s, %s%% "
                 "of %s cycle complete at %s",
                 mired,
