@@ -99,8 +99,15 @@ async def get_intent(hass: core.HomeAssistant, text: str, conversation_id: str):
         intent_result.async_set_speech(str(err))
 
     if intent_result is None:
-        intent_result = intent.IntentResponse()
-        intent_result.async_set_speech("Sorry, I didn't understand that")
+        # ais-dom ask
+        from homeassistant.components import ais_ai_service as ais_ai
+
+        intent_result = await ais_ai._process(hass, text)
+        if intent_result is None:
+            intent_result = intent.IntentResponse()
+            intent_result.async_set_speech(
+                "Przepraszam, jeszcze tego nie potrafię zrozumieć."
+            )
 
     return intent_result
 
