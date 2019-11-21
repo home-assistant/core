@@ -1,0 +1,13 @@
+{
+  "device_automation": {
+    "condtion_type": {
+      "is_off": "{entity_name} is off",
+      "is_eco": "{entity_name} is in eco mode",
+      "is_electric": "{entity_name} is in electric mode",
+      "is_performance": "{entity_name} is in performance mode",
+      "is_high_demand": "{entity_name} is in high demand mode",
+      "is_heat_pump": "{entity_name} is in heat pump mode",
+      "is_gas": "{entity_name} is in gas only mode"
+    }
+  }
+}
