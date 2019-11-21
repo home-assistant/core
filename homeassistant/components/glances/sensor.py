@@ -28,8 +28,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if sensor_details[0] == "fs":
                 # fs will provide a list of disks attached
                 for disk in client.api.data[sensor_details[0]]:
-                    _LOGGER.debug("%s - %s", disk["mnt_point"], disk["size"])
-
                     dev.append(
                         GlancesSensor(
                             client,
