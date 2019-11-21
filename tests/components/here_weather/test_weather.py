@@ -52,13 +52,13 @@ def requests_mock_invalid_credentials(requests_mock):
 @pytest.fixture
 def requests_mock_location_name(requests_mock_credentials_check):
     """Add the url used in a request with location_name to requests mock."""
-    product = herepy.WeatherProductType.forecast_astronomy
+    product = herepy.WeatherProductType.forecast_7days
     response_url = build_location_name_mock_url(
         APP_ID, APP_CODE, LOCATION_NAME, product
     )
     requests_mock_credentials_check.get(
         response_url,
-        text=load_fixture("here_weather/destination_weather_forecasts_astronomy.json"),
+        text=load_fixture("here_weather/destination_weather_forecasts.json"),
     )
     return requests_mock_credentials_check
 
@@ -66,13 +66,13 @@ def requests_mock_location_name(requests_mock_credentials_check):
 @pytest.fixture
 def requests_mock_coordinates(requests_mock_credentials_check):
     """Add the url used in a request with coordinates to requests mock."""
-    product = herepy.WeatherProductType.forecast_astronomy
+    product = herepy.WeatherProductType.forecast_7days
     response_url = build_coordinates_mock_url(
         APP_ID, APP_CODE, LATITUDE, LONGITUDE, product
     )
     requests_mock_credentials_check.get(
         response_url,
-        text=load_fixture("here_weather/destination_weather_forecasts_astronomy.json"),
+        text=load_fixture("here_weather/destination_weather_forecasts.json"),
     )
     return requests_mock_credentials_check
 
