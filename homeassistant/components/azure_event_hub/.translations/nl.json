@@ -1,0 +1,25 @@
+{
+    "config": {
+        "title": "Azure Event Hub New",
+        "step": {
+            "user": {
+                "title": "Azure Event Hub",
+                "description": "Vul de informatie over uw Azure Event Hub hier in.",
+                "data": {
+                    "event_hub_namespace": "Event Hub Namespace",
+                    "event_hub_instance_name": "Event Hub Instance",
+                    "event_hub_sas_policy": "Event Hub SAS Policy",
+                    "event_hub_sas_key": "Event Hub SAS Key"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Failed to connect, please try again",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "abort": {
+            "already_configured": "Device is already configured"
+        }
+    }
+}
