@@ -243,7 +243,7 @@ class RestData:
         headers,
         data,
         verify_ssl,
-        client_certificate_path,
+        client_certificate_path=None,
         timeout=DEFAULT_TIMEOUT,
     ):
         """Initialize the data object."""
