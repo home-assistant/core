@@ -202,7 +202,7 @@ def websocket_handle_delete(hass, connection, msg):
     except KeyError:
         connection.send_message(
             websocket_api.error_message(
-                msg[CONF_ID], "item_not_found", "Item not found"
+                msg[CONF_ID], "schedule_not_found", "Schedule not found"
             )
         )
 
@@ -229,5 +229,7 @@ def websocket_handle_update(hass, connection, msg):
         connection.send_message(websocket_api.result_message(msg_id, item))
     except KeyError:
         connection.send_message(
-            websocket_api.error_message(msg_id, "item_not_found", "Item not found")
+            websocket_api.error_message(
+                msg_id, "schedule_not_found", "Schedule not found"
+            )
         )
