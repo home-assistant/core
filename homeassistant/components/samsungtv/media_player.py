@@ -6,7 +6,7 @@ import socket
 from samsungctl import exceptions as samsung_exceptions, Remote as SamsungRemote
 import voluptuous as vol
 import wakeonlan
-from websocket._exceptions import WebSocketException
+from websocket import WebSocketException
 
 from homeassistant.components.media_player import (
     MediaPlayerDevice,
