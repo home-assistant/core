@@ -38,7 +38,6 @@ DEFAULT_NAME = "REST Sensor"
 DEFAULT_VERIFY_SSL = True
 DEFAULT_FORCE_UPDATE = False
 DEFAULT_TIMEOUT = 10
-DEFAULT_FILE_PATH = None
 
 CONF_JSON_ATTRS = "json_attributes"
 METHODS = ["POST", "GET"]
@@ -112,8 +111,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         headers,
         payload,
         verify_ssl,
-        timeout,
         client_certificate_path,
+        timeout,
     )
     rest.update()
     if rest.data is None:
@@ -244,8 +243,8 @@ class RestData:
         headers,
         data,
         verify_ssl,
+        client_certificate_path,
         timeout=DEFAULT_TIMEOUT,
-        client_certificate_path=DEFAULT_FILE_PATH,
     ):
         """Initialize the data object."""
         self._request = requests.Request(
