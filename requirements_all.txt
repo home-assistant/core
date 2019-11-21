@@ -719,7 +719,7 @@ iperf3==0.1.11
 ipify==1.0.0
 
 # homeassistant.components.verisure
-jsonpath==0.75
+jsonpath==0.82
 
 # homeassistant.components.kodi
 jsonrpc-async==0.6
@@ -1977,7 +1977,7 @@ volkszaehler==0.1.2
 volvooncall==0.8.7
 
 # homeassistant.components.verisure
-vsure==1.5.2
+vsure==1.5.4
 
 # homeassistant.components.vasttrafik
 vtjp==0.1.14
