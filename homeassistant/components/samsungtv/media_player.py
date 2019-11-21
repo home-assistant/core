@@ -210,8 +210,13 @@ class SamsungTVDevice(MediaPlayerDevice):
                 try:
                     self.get_remote().control(key)
                     break
-                except (samsung_exceptions.ConnectionClosed, BrokenPipeError):
+                except (
+                    samsung_exceptions.ConnectionClosed,
+                    BrokenPipeError,
+                    WebSocketException,
+                ):
                     # BrokenPipe can occur when the commands is sent to fast
+                    # WebSocketException can occur when timed out
                     self._remote = None
             self._state = STATE_ON
         except AttributeError:
@@ -223,7 +228,8 @@ class SamsungTVDevice(MediaPlayerDevice):
             self._remote = None
             LOGGER.debug("Failed sending command %s", key, exc_info=True)
             return
-        except (OSError, WebSocketException):
+        except OSError:
+            # Different reasons, e.g. hostname not resolveable
             self._state = STATE_OFF
             self._remote = None
         if self._power_off_in_progress():
