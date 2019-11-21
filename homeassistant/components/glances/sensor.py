@@ -28,11 +28,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if sensor_details[0] == "fs":
                 # fs will provide a list of disks attached
                 for disk in client.api.data[sensor_details[0]]:
+                    _LOGGER.debug("%s - %s", disk["mnt_point"], disk["size"])
+
                     dev.append(
                         GlancesSensor(
                             client,
                             name,
-                            disk["device_name"],
+                            disk["mnt_point"],
                             SENSOR_TYPES[sensor_type][1],
                             sensor_type,
                             SENSOR_TYPES[sensor_type],
@@ -145,7 +147,7 @@ class GlancesSensor(Entity):
         if value is not None:
             if self.sensor_details[0] == "fs":
                 for var in value["fs"]:
-                    if var["device_name"] != self._sensor_name_prefix:
+                    if var["mnt_point"] == self._sensor_name_prefix:
                         disk = var
                         break
                 if self.type == "disk_use_percent":
