@@ -68,6 +68,7 @@ CURRENT_HVAC_MAP_EFESTO_HEAT = {
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up Efesto climate, nothing to do."""
+    return True
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -81,9 +82,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
     try:
         client = efestoclient.EfestoClient(url, username, password, device)
         client.get_status()
-        async_add_entities(
-            [EfestoHeatingDevice(client, name, device)], True,
-        )
     except efestoclient.UnauthorizedError:
         _LOGGER.error("Wrong credentials for device %s", device)
         return False
@@ -96,6 +94,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
     except efestoclient.Error as err:
         _LOGGER.error("Unknown Efesto error: %s", err)
         return False
+
+    async_add_entities(
+        [EfestoHeatingDevice(client, name, device)], True,
+    )
+
     return True
 
 
@@ -125,13 +128,12 @@ class EfestoHeatingDevice(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
-        data = {
+        return {
             ATTR_DEVICE_STATUS: self._device_status,
             ATTR_HUMAN_DEVICE_STATUS: self._human_device_status,
             ATTR_SMOKE_TEMP: self._smoke_temperature,
             ATTR_REAL_POWER: self._real_power,
         }
-        return data
 
     @property
     def unique_id(self):
@@ -264,24 +266,6 @@ class EfestoHeatingDevice(ClimateDevice):
         """Get the latest data."""
         try:
             device = self.client.get_status()
-
-            self._device_status = device.device_status
-            self._current_temperature = device.air_temperature
-            self._target_temperature = device.last_set_air_temperature
-            self._human_device_status = device.device_status_human
-            self._smoke_temperature = device.smoke_temperature
-            self._real_power = device.real_power
-            self._current_power = device.last_set_power
-
-            if self._device_status == 0:
-                self._on = False
-            else:
-                self._on = True
-                if device.idle_info:
-                    self._idle_info = device.idle_info
-                    self._human_device_status = device.idle_info
-                    if self._idle_info == "TURNING OFF":
-                        self._on = False
         except efestoclient.UnauthorizedError:
             _LOGGER.error("Wrong credentials for device %s", device)
             return False
@@ -291,4 +275,23 @@ class EfestoHeatingDevice(ClimateDevice):
         except efestoclient.Error as err:
             _LOGGER.error("Error: %s", err)
             return False
+
+        self._device_status = device.device_status
+        self._current_temperature = device.air_temperature
+        self._target_temperature = device.last_set_air_temperature
+        self._human_device_status = device.device_status_human
+        self._smoke_temperature = device.smoke_temperature
+        self._real_power = device.real_power
+        self._current_power = device.last_set_power
+
+        if self._device_status == 0:
+            self._on = False
+        else:
+            self._on = True
+            if device.idle_info:
+                self._idle_info = device.idle_info
+                self._human_device_status = device.idle_info
+                if self._idle_info == "TURNING OFF":
+                    self._on = False
+
         return True

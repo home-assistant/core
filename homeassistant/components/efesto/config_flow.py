@@ -55,15 +55,6 @@ class EfestoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 client = efestoclient.EfestoClient(url, username, password, device_id)
                 client.get_status()
-                return self.async_create_entry(
-                    title=name,
-                    data={
-                        CONF_URL: url,
-                        CONF_USERNAME: username,
-                        CONF_PASSWORD: password,
-                        CONF_DEVICE: device_id,
-                    },
-                )
             except efestoclient.UnauthorizedError:
                 errors["base"] = "unauthorized"
             except efestoclient.ConnectionError:
@@ -72,6 +63,16 @@ class EfestoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_url"
             except efestoclient.Error:
                 errors["base"] = "unknown_error"
+
+            return self.async_create_entry(
+                title=name,
+                data={
+                    CONF_URL: url,
+                    CONF_USERNAME: username,
+                    CONF_PASSWORD: password,
+                    CONF_DEVICE: device_id,
+                },
+            )
         else:
             user_input = {}
 
