@@ -17,6 +17,11 @@ from homeassistant.const import (
 from homeassistant.components.climate import const as climate
 from homeassistant.components.alexa import smart_home
 from homeassistant.components.alexa.errors import UnsupportedProperty
+from homeassistant.components.media_player.const import (
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_STOP,
+)
 from tests.common import async_mock_service
 
 from . import (
@@ -472,11 +477,7 @@ async def test_report_climate_state(hass):
             {"value": 34.0, "scale": "CELSIUS"},
         )
 
-    for off_modes in (
-        climate.HVAC_MODE_OFF,
-        climate.HVAC_MODE_FAN_ONLY,
-        climate.HVAC_MODE_DRY,
-    ):
+    for off_modes in (climate.HVAC_MODE_OFF, climate.HVAC_MODE_FAN_ONLY):
         hass.states.async_set(
             "climate.downstairs",
             off_modes,
@@ -494,6 +495,23 @@ async def test_report_climate_state(hass):
             "temperature",
             {"value": 34.0, "scale": "CELSIUS"},
         )
+
+    # assert dry is reported as CUSTOM
+    hass.states.async_set(
+        "climate.downstairs",
+        "dry",
+        {
+            "friendly_name": "Climate Downstairs",
+            "supported_features": 91,
+            climate.ATTR_CURRENT_TEMPERATURE: 34,
+            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+        },
+    )
+    properties = await reported_properties(hass, "climate.downstairs")
+    properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "CUSTOM")
+    properties.assert_equal(
+        "Alexa.TemperatureSensor", "temperature", {"value": 34.0, "scale": "CELSIUS"}
+    )
 
     hass.states.async_set(
         "climate.heat",
@@ -629,3 +647,22 @@ async def test_report_alarm_control_panel_state(hass):
 
     properties = await reported_properties(hass, "alarm_control_panel.disarmed")
     properties.assert_equal("Alexa.SecurityPanelController", "armState", "DISARMED")
+
+
+async def test_report_playback_state(hass):
+    """Test PlaybackStateReporter implements playbackState property."""
+    hass.states.async_set(
+        "media_player.test",
+        "off",
+        {
+            "friendly_name": "Test media player",
+            "supported_features": SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP,
+            "volume_level": 0.75,
+        },
+    )
+
+    properties = await reported_properties(hass, "media_player.test")
+
+    properties.assert_equal(
+        "Alexa.PlaybackStateReporter", "playbackState", {"state": "STOPPED"}
+    )

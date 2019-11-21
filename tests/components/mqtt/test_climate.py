@@ -568,6 +568,39 @@ async def test_custom_availability_payload(hass, mqtt_mock):
     assert state.state == STATE_UNAVAILABLE
 
 
+async def test_set_target_temperature_low_high_with_templates(hass, mqtt_mock, caplog):
+    """Test setting of temperature high/low templates."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["climate"]["temperature_low_state_topic"] = "temperature-state"
+    config["climate"]["temperature_high_state_topic"] = "temperature-state"
+    config["climate"]["temperature_low_state_template"] = "{{ value_json.temp_low }}"
+    config["climate"]["temperature_high_state_template"] = "{{ value_json.temp_high }}"
+
+    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+
+    state = hass.states.get(ENTITY_CLIMATE)
+
+    # Temperature - with valid value
+    assert state.attributes.get("target_temp_low") is None
+    assert state.attributes.get("target_temp_high") is None
+
+    async_fire_mqtt_message(
+        hass, "temperature-state", '{"temp_low": "1031", "temp_high": "1032"}'
+    )
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("target_temp_low") == 1031
+    assert state.attributes.get("target_temp_high") == 1032
+
+    # Temperature - with invalid value
+    async_fire_mqtt_message(hass, "temperature-state", '"-INVALID-"')
+    state = hass.states.get(ENTITY_CLIMATE)
+    # make sure, the invalid value gets logged...
+    assert "Could not parse temperature from" in caplog.text
+    # ... but the actual value stays unchanged.
+    assert state.attributes.get("target_temp_low") == 1031
+    assert state.attributes.get("target_temp_high") == 1032
+
+
 async def test_set_with_templates(hass, mqtt_mock, caplog):
     """Test setting of new fan mode in pessimistic mode."""
     config = copy.deepcopy(DEFAULT_CONFIG)

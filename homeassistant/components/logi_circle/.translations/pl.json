@@ -11,7 +11,7 @@
         },
         "error": {
             "auth_error": "Autoryzacja API nie powiod\u0142a si\u0119.",
-            "auth_timeout": "Up\u0142yn\u0105\u0142 limit czasu \u017c\u0105dania tokena dost\u0119pu.",
+            "auth_timeout": "Przekroczono limit czasu \u017c\u0105dania tokena dost\u0119pu.",
             "follow_link": "Post\u0119puj zgodnie z linkiem i uwierzytelnij si\u0119 przed naci\u015bni\u0119ciem przycisku Prze\u015blij."
         },
         "step": {

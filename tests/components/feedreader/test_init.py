@@ -163,6 +163,12 @@ class TestFeedreaderComponent(unittest.TestCase):
         manager, events = self.setup_manager(feed_data)
         assert len(events) == 3
 
+    def test_feed_with_unrecognized_publication_date(self):
+        """Test simple feed with entry with unrecognized publication date."""
+        feed_data = load_fixture("feedreader4.xml")
+        manager, events = self.setup_manager(feed_data)
+        assert len(events) == 1
+
     def test_feed_invalid_data(self):
         """Test feed with invalid data."""
         feed_data = "INVALID DATA"

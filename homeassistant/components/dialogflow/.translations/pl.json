@@ -9,7 +9,7 @@
         },
         "step": {
             "user": {
-                "description": "\n\n![AIS logo](/static/icons/dialogflow.png)\n\nCzy chcesz skonfigurowa\u0107 Dialogflow?",
+                "description": "Na pewno chcesz skonfigurowa\u0107 Dialogflow?",
                 "title": "Konfiguracja Dialogflow Webhook"
             }
         },
