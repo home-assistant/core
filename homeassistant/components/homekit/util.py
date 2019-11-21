@@ -4,8 +4,6 @@ from collections import OrderedDict, namedtuple
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.temperature as temp_util
 from homeassistant.components import fan, media_player, sensor
 from homeassistant.const import (
     ATTR_CODE,
@@ -15,6 +13,8 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import split_entity_id
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util.temperature as temp_util
 from .const import (
     CONF_FEATURE,
     CONF_FEATURE_LIST,
