@@ -1,6 +1,6 @@
 """Collection of useful functions for the HomeKit component."""
-import logging
 from collections import OrderedDict, namedtuple
+import logging
 
 import voluptuous as vol
 
@@ -15,6 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.temperature as temp_util
+
 from .const import (
     CONF_FEATURE,
     CONF_FEATURE_LIST,
