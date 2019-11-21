@@ -56,6 +56,7 @@ def _convert_states(states):
 
 
 CONF_SCENE_ID = "scene_id"
+CONF_SNAPSHOT = "snapshot"
 
 STATES_SCHEMA = vol.All(dict, _convert_states)
 
@@ -76,7 +77,11 @@ PLATFORM_SCHEMA = vol.Schema(
 )
 
 CREATE_SCENE_SCHEMA = vol.Schema(
-    {vol.Required(CONF_SCENE_ID): cv.slug, vol.Required(CONF_ENTITIES): STATES_SCHEMA}
+    {
+        vol.Required(CONF_SCENE_ID): cv.slug,
+        vol.Optional(CONF_ENTITIES, default={}): STATES_SCHEMA,
+        vol.Optional(CONF_SNAPSHOT, default=[]): cv.entity_ids,
+    }
 )
 
 SERVICE_APPLY = "apply"
@@ -139,7 +144,24 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async def create_service(call):
         """Create a scene."""
-        scene_config = SCENECONFIG(call.data[CONF_SCENE_ID], call.data[CONF_ENTITIES])
+        snapshot = call.data[CONF_SNAPSHOT]
+        entities = call.data[CONF_ENTITIES]
+
+        for entity_id in snapshot:
+            state = hass.states.get(entity_id)
+            if state is None:
+                _LOGGER.warning(
+                    "Entity %s does not exist and therefore cannot be snapshotted",
+                    entity_id,
+                )
+                continue
+            entities[entity_id] = State(entity_id, state.state, state.attributes)
+
+        if not entities:
+            _LOGGER.warning("Empty scenes are not allowed")
+            return
+
+        scene_config = SCENECONFIG(call.data[CONF_SCENE_ID], entities)
         entity_id = f"{SCENE_DOMAIN}.{scene_config.name}"
         old = platform.entities.get(entity_id)
         if old is not None:
