@@ -259,4 +259,4 @@ class CameraData:
     @Throttle(MIN_TIME_BETWEEN_EVENT_UPDATES)
     def update_event(self):
         """Call the Netatmo API to update the events."""
-        self.camera_data.updateEvent(home=self.home, cameratype=self.camera_type)
+        self.camera_data.updateEvent(home=self.home, devicetype=self.camera_type)
