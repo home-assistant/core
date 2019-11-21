@@ -1,0 +1,9 @@
+{
+  "domain": "scheduler",
+  "name": "Scheduler",
+  "documentation": "https://www.home-assistant.io/integrations/scheduler",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}
+
