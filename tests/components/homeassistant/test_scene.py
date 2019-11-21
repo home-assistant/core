@@ -64,6 +64,13 @@ async def test_create_service(hass, caplog):
     assert hass.states.get("scene.hallo_2") is not None
 
     assert await hass.services.async_call(
+        "scene", "create", {"scene_id": "hallo"}, blocking=True
+    )
+    await hass.async_block_till_done()
+    assert "Empty scenes are not allowed" in caplog.text
+    assert hass.states.get("scene.hallo") is None
+
+    assert await hass.services.async_call(
         "scene",
         "create",
         {
@@ -117,3 +124,50 @@ async def test_create_service(hass, caplog):
     assert scene.name == "hallo_2"
     assert scene.state == "scening"
     assert scene.attributes.get("entity_id") == ["light.kitchen"]
+
+
+async def test_snapshot_service(hass, caplog):
+    """Test the snapshot option."""
+    assert await async_setup_component(hass, "scene", {"scene": {}})
+    hass.states.async_set("light.my_light", "on", {"hs_color": (345, 75)})
+    assert hass.states.get("scene.hallo") is None
+
+    assert await hass.services.async_call(
+        "scene",
+        "create",
+        {"scene_id": "hallo", "snapshot": ["light.my_light"]},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    scene = hass.states.get("scene.hallo")
+    assert scene is not None
+    assert scene.attributes.get("entity_id") == ["light.my_light"]
+
+    assert await hass.services.async_call(
+        "scene",
+        "create",
+        {"scene_id": "hallo_2", "snapshot": ["light.not_existent"]},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("scene.hallo_2") is None
+    assert (
+        "Entity light.not_existent does not exist and therefore cannot be snapshotted"
+        in caplog.text
+    )
+
+    assert await hass.services.async_call(
+        "scene",
+        "create",
+        {
+            "scene_id": "hallo_3",
+            "entities": {"light.bed_light": {"state": "on", "brightness": 50}},
+            "snapshot": ["light.my_light"],
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    scene = hass.states.get("scene.hallo_3")
+    assert scene is not None
+    assert "light.my_light" in scene.attributes.get("entity_id")
+    assert "light.bed_light" in scene.attributes.get("entity_id")
