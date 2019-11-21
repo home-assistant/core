@@ -1,5 +1,4 @@
 """Test HomeKit util module."""
-
 import pytest
 import voluptuous as vol
 
@@ -17,8 +16,8 @@ from homeassistant.components.homekit.const import (
     TYPE_SPRINKLER,
     TYPE_SWITCH,
     TYPE_VALVE,
-    CONF_KEY_ACTIONS,
-    MEDIA_PLAYER_KEY_ARROW_LEFT,
+    CONF_EVENTS,
+    FEATURE_ARROW_LEFT,
 )
 from homeassistant.components.homekit.util import (
     HomeKitSpeedMapping,
@@ -52,7 +51,7 @@ from homeassistant.core import State
 from tests.common import async_mock_service
 
 
-def test_validate_entity_config(MEDIA_PLAYER_KEY_LEFT=None):
+def test_validate_entity_config():
     """Test validate entities."""
     configs = [
         None,
@@ -119,7 +118,7 @@ def test_validate_entity_config(MEDIA_PLAYER_KEY_LEFT=None):
     assert vec({"media_player.demo": {}}) == {
         "media_player.demo": {
             CONF_FEATURE_LIST: {},
-            CONF_KEY_ACTIONS: {},
+            CONF_EVENTS: {},
             CONF_LOW_BATTERY_THRESHOLD: 20,
         }
     }
@@ -128,17 +127,15 @@ def test_validate_entity_config(MEDIA_PLAYER_KEY_LEFT=None):
             {CONF_FEATURE: FEATURE_ON_OFF},
             {CONF_FEATURE: FEATURE_PLAY_PAUSE},
         ],
-        CONF_KEY_ACTIONS: {
-            MEDIA_PLAYER_KEY_ARROW_LEFT: {ATTR_SERVICE: "domain.service", ATTR_DATA: {}}
+        CONF_EVENTS: {
+            FEATURE_ARROW_LEFT: {ATTR_SERVICE: "domain.service", ATTR_DATA: {}}
         },
     }
     assert vec({"media_player.demo": config}) == {
         "media_player.demo": {
             CONF_FEATURE_LIST: {FEATURE_ON_OFF: {}, FEATURE_PLAY_PAUSE: {}},
-            CONF_KEY_ACTIONS: {
-                MEDIA_PLAYER_KEY_ARROW_LEFT: [
-                    {ATTR_SERVICE: "domain.service", ATTR_DATA: {}}
-                ]
+            CONF_EVENTS: {
+                FEATURE_ARROW_LEFT: [{ATTR_SERVICE: "domain.service", ATTR_DATA: {}}]
             },
             CONF_LOW_BATTERY_THRESHOLD: 20,
         }

@@ -55,23 +55,23 @@ from .const import (
     CHAR_VOLUME_CONTROL_TYPE,
     CHAR_VOLUME_SELECTOR,
     CONF_FEATURE_LIST,
-    CONF_KEY_ACTIONS,
+    CONF_EVENTS,
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
-    MEDIA_PLAYER_KEY_ARROW_DOWN,
-    MEDIA_PLAYER_KEY_ARROW_LEFT,
-    MEDIA_PLAYER_KEY_ARROW_RIGHT,
-    MEDIA_PLAYER_KEY_ARROW_UP,
-    MEDIA_PLAYER_KEY_BACK,
-    MEDIA_PLAYER_KEY_EXIT,
-    MEDIA_PLAYER_KEY_FAST_FORWARD,
-    MEDIA_PLAYER_KEY_INFORMATION,
-    MEDIA_PLAYER_KEY_NEXT_TRACK,
-    MEDIA_PLAYER_KEY_PREVIOUS_TRACK,
-    MEDIA_PLAYER_KEY_REWIND,
-    MEDIA_PLAYER_KEY_SELECT,
+    FEATURE_ARROW_DOWN,
+    FEATURE_ARROW_LEFT,
+    FEATURE_ARROW_RIGHT,
+    FEATURE_ARROW_UP,
+    FEATURE_BACK,
+    FEATURE_EXIT,
+    FEATURE_FAST_FORWARD,
+    FEATURE_INFORMATION,
+    FEATURE_NEXT_TRACK,
+    FEATURE_PREVIOUS_TRACK,
+    FEATURE_REWIND,
+    FEATURE_SELECT,
     SERV_INPUT_SOURCE,
     SERV_SWITCH,
     SERV_TELEVISION,
@@ -81,35 +81,19 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 MEDIA_PLAYER_KEYS = {
-    # 0: "Rewind",
-    # 1: "FastForward",
-    # 2: "NextTrack",
-    # 3: "PreviousTrack",
-    # 4: "ArrowUp",
-    # 5: "ArrowDown",
-    # 6: "ArrowLeft",
-    # 7: "ArrowRight",
-    # 8: "Select",
-    # 9: "Back",
-    # 10: "Exit",
-    11: SERVICE_MEDIA_PLAY_PAUSE,
-    # 15: "Information",
-}
-
-MEDIA_PLAYER_KEY_NAMES = {
-    0: MEDIA_PLAYER_KEY_REWIND,
-    1: MEDIA_PLAYER_KEY_FAST_FORWARD,
-    2: MEDIA_PLAYER_KEY_NEXT_TRACK,
-    3: MEDIA_PLAYER_KEY_PREVIOUS_TRACK,
-    4: MEDIA_PLAYER_KEY_ARROW_UP,
-    5: MEDIA_PLAYER_KEY_ARROW_DOWN,
-    6: MEDIA_PLAYER_KEY_ARROW_LEFT,
-    7: MEDIA_PLAYER_KEY_ARROW_RIGHT,
-    8: MEDIA_PLAYER_KEY_SELECT,
-    9: MEDIA_PLAYER_KEY_BACK,
-    10: MEDIA_PLAYER_KEY_EXIT,
+    0: FEATURE_REWIND,
+    1: FEATURE_FAST_FORWARD,
+    2: FEATURE_NEXT_TRACK,
+    3: FEATURE_PREVIOUS_TRACK,
+    4: FEATURE_ARROW_UP,
+    5: FEATURE_ARROW_DOWN,
+    6: FEATURE_ARROW_LEFT,
+    7: FEATURE_ARROW_RIGHT,
+    8: FEATURE_SELECT,
+    9: FEATURE_BACK,
+    10: FEATURE_EXIT,
     11: FEATURE_PLAY_PAUSE,
-    15: MEDIA_PLAYER_KEY_INFORMATION,
+    15: FEATURE_INFORMATION,
 }
 
 
@@ -279,9 +263,9 @@ class TelevisionMediaPlayer(HomeAccessory):
 
         self.sources = []
 
-        self._key_scripts = {}
-        for key_name, action in self.config.get(CONF_KEY_ACTIONS, {}).items():
-            self._key_scripts[key_name] = Script(self.hass, action)
+        self._event_scripts = {}
+        for event_name, action in self.config.get(CONF_EVENTS, {}).items():
+            self._event_scripts[event_name] = Script(self.hass, action)
 
         # Add additional characteristics if volume or input selection supported
         self.chars_tv = []
@@ -289,8 +273,10 @@ class TelevisionMediaPlayer(HomeAccessory):
         features = self.hass.states.get(self.entity_id).attributes.get(
             ATTR_SUPPORTED_FEATURES, 0
         )
+        self.support_play_pause = features & (SUPPORT_PLAY | SUPPORT_PAUSE)
 
-        if features & (SUPPORT_PLAY | SUPPORT_PAUSE) or self._key_scripts:
+        if self.support_play_pause or self._event_scripts:
+            self.support_play_pause = True
             self.chars_tv.append(CHAR_REMOTE_KEY)
         if features & SUPPORT_VOLUME_MUTE or features & SUPPORT_VOLUME_STEP:
             self.chars_speaker.extend(
@@ -405,10 +391,10 @@ class TelevisionMediaPlayer(HomeAccessory):
     def set_remote_key(self, value):
         """Send remote key value if call came from HomeKit."""
         _LOGGER.debug("%s: Set remote key to %s", self.entity_id, value)
-        service = MEDIA_PLAYER_KEYS.get(value)
-        if service:
+        key_name = MEDIA_PLAYER_KEYS.get(value)
+        if key_name:
             # Handle Play Pause
-            if service == SERVICE_MEDIA_PLAY_PAUSE:
+            if key_name == FEATURE_PLAY_PAUSE and self.support_play_pause:
                 state = self.hass.states.get(self.entity_id).state
                 if state in (STATE_PLAYING, STATE_PAUSED):
                     service = (
@@ -416,12 +402,13 @@ class TelevisionMediaPlayer(HomeAccessory):
                         if state == STATE_PAUSED
                         else SERVICE_MEDIA_PAUSE
                     )
-            params = {ATTR_ENTITY_ID: self.entity_id}
-            self.call_service(DOMAIN, service, params)
+                else:
+                    service = SERVICE_MEDIA_PLAY_PAUSE
+                params = {ATTR_ENTITY_ID: self.entity_id}
+                self.call_service(DOMAIN, service, params)
 
-        key_name = MEDIA_PLAYER_KEY_NAMES.get(value)
-        if key_name:
-            script = self._key_scripts.get(key_name)
+            # Handle registered event scripts
+            script = self._event_scripts.get(key_name)
             if script:
                 _LOGGER.debug("Running script for key: %s", key_name)
                 script.run()

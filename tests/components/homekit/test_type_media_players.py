@@ -7,6 +7,8 @@ from homeassistant.components.homekit.const import (
     FEATURE_PLAY_PAUSE,
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
+    CONF_EVENTS,
+    FEATURE_ARROW_RIGHT,
 )
 from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.components.homekit.type_media_players import (
@@ -176,8 +178,8 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
         entity_id,
         2,
         {
-            "key_actions": {
-                "arrow_right": [
+            CONF_EVENTS: {
+                FEATURE_ARROW_RIGHT: [
                     {"service": "fake.service", "data": {"key": "KEY_RIGHT"}}
                 ]
             }

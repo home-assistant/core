@@ -16,7 +16,7 @@ CONF_ENTITY_CONFIG = "entity_config"
 CONF_FEATURE = "feature"
 CONF_FEATURE_LIST = "feature_list"
 CONF_FILTER = "filter"
-CONF_KEY_ACTIONS = "key_actions"
+CONF_EVENTS = "events"
 CONF_LINKED_BATTERY_SENSOR = "linked_battery_sensor"
 CONF_LOW_BATTERY_THRESHOLD = "low_battery_threshold"
 CONF_SAFE_MODE = "safe_mode"
@@ -28,9 +28,21 @@ DEFAULT_PORT = 51827
 DEFAULT_SAFE_MODE = False
 
 # #### Features ####
+FEATURE_ARROW_DOWN = "arrow_down"
+FEATURE_ARROW_LEFT = "arrow_left"
+FEATURE_ARROW_RIGHT = "arrow_right"
+FEATURE_ARROW_UP = "arrow_up"
+FEATURE_BACK = "back"
+FEATURE_EXIT = "exit"
+FEATURE_FAST_FORWARD = "fast_forward"
+FEATURE_INFORMATION = "information"
+FEATURE_NEXT_TRACK = "next_track"
 FEATURE_ON_OFF = "on_off"
 FEATURE_PLAY_PAUSE = "play_pause"
 FEATURE_PLAY_STOP = "play_stop"
+FEATURE_PREVIOUS_TRACK = "previous_track"
+FEATURE_REWIND = "rewind"
+FEATURE_SELECT = "select"
 FEATURE_TOGGLE_MUTE = "toggle_mute"
 
 # #### HomeKit Component Event ####
@@ -176,18 +188,3 @@ THRESHOLD_CO2 = 1000
 # #### Default values ####
 DEFAULT_MIN_TEMP_WATER_HEATER = 40  # °C
 DEFAULT_MAX_TEMP_WATER_HEATER = 60  # °C
-
-# #### TV Media Player key names ####
-MEDIA_PLAYER_KEY_ARROW_DOWN = "arrow_down"
-MEDIA_PLAYER_KEY_ARROW_LEFT = "arrow_left"
-MEDIA_PLAYER_KEY_ARROW_RIGHT = "arrow_right"
-MEDIA_PLAYER_KEY_ARROW_UP = "arrow_up"
-MEDIA_PLAYER_KEY_BACK = "back"
-MEDIA_PLAYER_KEY_EXIT = "exit"
-MEDIA_PLAYER_KEY_FAST_FORWARD = "fast_forward"
-MEDIA_PLAYER_KEY_INFORMATION = "information"
-MEDIA_PLAYER_KEY_NEXT_TRACK = "next_track"
-MEDIA_PLAYER_KEY_PLAY_PAUSE = "play_pause"
-MEDIA_PLAYER_KEY_PREVIOUS_TRACK = "previous_track"
-MEDIA_PLAYER_KEY_REWIND = "rewind"
-MEDIA_PLAYER_KEY_SELECT = "select"
