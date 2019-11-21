@@ -7,7 +7,7 @@ from efestoclient import (  # pylint: disable=redefined-builtin
     UnauthorizedError,
 )
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.efesto.const import DOMAIN
 from homeassistant.const import (
     CONF_URL,
@@ -22,7 +22,6 @@ from tests.common import mock_coro
 
 async def test_full_form_flow(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

@@ -64,15 +64,16 @@ class EfestoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except efestoclient.Error:
                 errors["base"] = "unknown_error"
 
-            return self.async_create_entry(
-                title=name,
-                data={
-                    CONF_URL: url,
-                    CONF_USERNAME: username,
-                    CONF_PASSWORD: password,
-                    CONF_DEVICE: device_id,
-                },
-            )
+            if "base" not in errors:
+                return self.async_create_entry(
+                    title=name,
+                    data={
+                        CONF_URL: url,
+                        CONF_USERNAME: username,
+                        CONF_PASSWORD: password,
+                        CONF_DEVICE: device_id,
+                    },
+                )
         else:
             user_input = {}
 
