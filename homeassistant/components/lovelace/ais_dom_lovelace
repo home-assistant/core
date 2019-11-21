@@ -1092,21 +1092,6 @@
                                 }
                             ],
                             "type": "vertical-stack"
-                        },
-                        {
-                            "card": {
-                                "show_header_toggle": false,
-                                "title": "Kamery",
-                                "type": "entities"
-                            },
-                            "filter": {
-                                "include": [
-                                    {
-                                        "domain": "camera"
-                                    }
-                                ]
-                            },
-                            "type": "ais-monster"
                         }
                     ],
                     "icon": "mdi:google-circles-extended",
