@@ -582,7 +582,14 @@ def entity_to_json(config, entity, state):
         "uniqueid": entity.entity_id,
         "swversion": "123",
     }
-    if (entity_features & SUPPORT_BRIGHTNESS) or entity.domain != light.DOMAIN:
+    if (entity_features & SUPPORT_BRIGHTNESS) or entity.domain in (
+        # Types of entities for which we can interpret the brightness value
+        script.DOMAIN,
+        climate.DOMAIN,
+        fan.DOMAIN,
+        media_player.DOMAIN,
+        cover.DOMAIN,
+    ):
         data["state"].update(
             {
                 HUE_API_STATE_BRI: state[STATE_BRIGHTNESS],

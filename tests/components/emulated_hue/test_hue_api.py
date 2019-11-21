@@ -18,6 +18,7 @@ from homeassistant.components import (
     media_player,
     cover,
     climate,
+    switch,
 )
 from homeassistant.components.emulated_hue import Config
 from homeassistant.components.emulated_hue.hue_api import (
@@ -120,6 +121,12 @@ def hass_hue(loop, hass):
         )
     )
 
+    loop.run_until_complete(
+        setup.async_setup_component(
+            hass, switch.DOMAIN, {"switch": [{"platform": "demo"}]}
+        )
+    )
+
     # Kitchen light is explicitly excluded from being exposed
     kitchen_light_entity = hass.states.get("light.kitchen_lights")
     attrs = dict(kitchen_light_entity.attributes)
@@ -161,6 +168,12 @@ def hass_hue(loop, hass):
 
     # Expose HeatPump
     hp_entity = hass.states.get("climate.heatpump")
+    attrs = dict(hp_entity.attributes)
+    attrs[emulated_hue.ATTR_EMULATED_HUE_HIDDEN] = False
+    hass.states.async_set(hp_entity.entity_id, hp_entity.state, attributes=attrs)
+
+    # Expose Switch
+    hp_entity = hass.states.get("switch.decorative_lights")
     attrs = dict(hp_entity.attributes)
     attrs[emulated_hue.ATTR_EMULATED_HUE_HIDDEN] = False
     hass.states.async_set(hp_entity.entity_id, hp_entity.state, attributes=attrs)
@@ -209,6 +222,7 @@ def test_discover_lights(hue_client):
     assert "light.bed_light" not in devices
     assert "script.set_kitchen_light" in devices
     assert "light.kitchen_lights" not in devices
+    assert "switch.decorative_lights" in devices
     assert "media_player.living_room" in devices
     assert "media_player.bedroom" in devices
     assert "media_player.walkman" in devices
@@ -222,14 +236,17 @@ def test_discover_lights(hue_client):
 
 
 @asyncio.coroutine
-def test_light_without_brightness_supported(hass_hue, hue_client):
+@pytest.mark.parametrize(
+    "entity_id", ("light.no_brightness", "switch.decorative_lights")
+)
+def test_entity_without_brightness_supported(hass_hue, hue_client, entity_id):
     """Test that light without brightness is supported."""
-    light_without_brightness_json = yield from perform_get_light_state(
-        hue_client, "light.no_brightness", 200
+    entity_without_brightness_json = yield from perform_get_light_state(
+        hue_client, entity_id, 200
     )
 
-    assert light_without_brightness_json["state"][HUE_API_STATE_ON] is True
-    assert light_without_brightness_json["type"] == "On/off light"
+    assert entity_without_brightness_json["state"][HUE_API_STATE_ON] is True
+    assert entity_without_brightness_json["type"] == "On/off light"
 
 
 @asyncio.coroutine
