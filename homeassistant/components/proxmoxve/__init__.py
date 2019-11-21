@@ -1,14 +1,12 @@
 """Support for Proxmox VE."""
+from enum import Enum
 import logging
 import time
-from enum import Enum
 
 from proxmoxer import ProxmoxAPI
 from proxmoxer.backends.https import AuthenticationError
-
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -16,6 +14,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,6 +74,7 @@ def setup(hass, config):
     """Set up the component."""
 
     # Create API Clients for later use
+    hass.data[PROXMOX_CLIENTS] = {}
     for entry in config[DOMAIN]:
         host = entry[CONF_HOST]
         port = entry[CONF_PORT]
@@ -83,28 +83,32 @@ def setup(hass, config):
         password = entry[CONF_PASSWORD]
         verify_ssl = entry[CONF_VERIFY_SSL]
 
-        # Construct an API client with the given data for the given host
-        proxmox_client = None
-
         try:
+            # Construct an API client with the given data for the given host
             proxmox_client = ProxmoxClient(
                 host, port, user, realm, password, verify_ssl
             )
             proxmox_client.build_client()
         except AuthenticationError:
-            _LOGGER.warning("Invalid credentials")
-            return False
+            _LOGGER.warning(
+                "Invalid credentials for proxmox instance %s:%d", host, port
+            )
+            continue
+        except Exception as exception:
+            _LOGGER.warning(
+                "Failed to connect to proxmox instance %s:%d (%s)",
+                host,
+                port,
+                type(exception).__name__,
+            )
+            continue
 
-        if proxmox_client is None:
-            _LOGGER.warning("Failed to connect to proxmox")
-            return False
+        hass.data[PROXMOX_CLIENTS][f"{host}:{port}"] = proxmox_client
 
-        hass.data[PROXMOX_CLIENTS] = {}
-        hass.data[PROXMOX_CLIENTS][f"{host}:{str(port)}"] = proxmox_client
-
-    hass.helpers.discovery.load_platform(
-        "binary_sensor", DOMAIN, {"entries": config[DOMAIN]}, config
-    )
+    if len(hass.data[PROXMOX_CLIENTS]) > 0:
+        hass.helpers.discovery.load_platform(
+            "binary_sensor", DOMAIN, {"entries": config[DOMAIN]}, config
+        )
 
     return True
 

@@ -2,9 +2,9 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.const import CONF_HOST, CONF_PORT, ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_HOST, CONF_PORT
 
-from . import ProxmoxItemType, PROXMOX_CLIENTS, CONF_NODES, CONF_VMS, CONF_CONTAINERS
+from . import CONF_CONTAINERS, CONF_NODES, CONF_VMS, PROXMOX_CLIENTS, ProxmoxItemType
 
 ATTRIBUTION = "Data provided by Proxmox VE"
 _LOGGER = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             for virtual_machine in node[CONF_VMS]:
                 sensors.append(
                     ProxmoxBinarySensor(
-                        hass.data[PROXMOX_CLIENTS][f"{entry[CONF_HOST]}:{str(port)}"],
+                        hass.data[PROXMOX_CLIENTS][f"{entry[CONF_HOST]}:{port}"],
                         node["node"],
                         ProxmoxItemType.qemu,
                         virtual_machine,
@@ -32,7 +32,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             for container in node[CONF_CONTAINERS]:
                 sensors.append(
                     ProxmoxBinarySensor(
-                        hass.data[PROXMOX_CLIENTS][f"{entry[CONF_HOST]}:{str(port)}"],
+                        hass.data[PROXMOX_CLIENTS][f"{entry[CONF_HOST]}:{port}"],
                         node["node"],
                         ProxmoxItemType.lxc,
                         container,
@@ -99,13 +99,13 @@ class ProxmoxBinarySensor(BinarySensorDevice):
             (item for item in items if item["vmid"] == str(self._item_id)), None
         )
 
+        if item is None:
+            _LOGGER.warning("Couldn't find VM/Container with the ID %s", self._item_id)
+
         if self._vmname is None:
             self._vmname = item["name"]
 
         if self._name is None:
             self._name = f"{self._item_node} {self._vmname} running"
-
-        if item is None:
-            _LOGGER.warning("Couldn't find VM/Container with the ID %s", self._item_id)
 
         return item
