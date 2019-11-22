@@ -128,3 +128,8 @@ class DefaultAgent(AbstractConversationAgent):
                     {key: {"value": value} for key, value in match.groupdict().items()},
                     text,
                 )
+
+        # Ask AIS dom Agent
+        return await self.hass.services.async_call(
+            "ais_ai_service", "process", {"text": text}
+        )

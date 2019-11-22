@@ -245,6 +245,7 @@ class IntentResponse:
     ) -> None:
         """Set speech response."""
         self.speech[speech_type] = {"speech": speech, "extra_data": extra_data}
+        # Speak via ais dom TODO
 
     @callback
     def async_set_card(

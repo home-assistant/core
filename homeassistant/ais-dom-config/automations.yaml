@@ -111,7 +111,7 @@
     condition: template
     value_template: "{{ states.input_text.ais_knowledge_query.state != '' }}"
   action:
-    - service: ais_ai_service.process
+    - service: conversation.process
       data_template:
         text: "{{ states('input_text.ais_knowledge_query') }}"
 

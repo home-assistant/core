@@ -2864,7 +2864,11 @@ def _process_command_from_frame(hass, service):
 
         service.data = ast.literal_eval(service.data["web_hook_json"])
     if service.data["topic"] == "ais/speech_command":
-        hass.async_run_job(_process(hass, service.data["payload"]))
+        hass.async_run_job(
+            hass.services.async_call(
+                "conversation", "process", {"text": service.data["payload"]}
+            )
+        )
         return
     elif service.data["topic"] == "ais/key_command":
         _process_code(hass, json.loads(service.data["payload"]))

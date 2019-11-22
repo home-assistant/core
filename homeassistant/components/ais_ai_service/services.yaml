@@ -15,7 +15,7 @@ process:
   fields:
     text:
       description: Tekst pynia/komendy.
-      example: 'Włącz radio RMF.'
+      example: 'Włącz radio RMF'
 
 process_code:
   description: Przetwarzanie kodu z pilota.
