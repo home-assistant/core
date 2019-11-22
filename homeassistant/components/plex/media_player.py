@@ -29,10 +29,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.util import dt as dt_util
 
@@ -41,9 +38,7 @@ from .const import (
     DISPATCHERS,
     DOMAIN as PLEX_DOMAIN,
     NAME_FORMAT,
-    PLATFORMS_COMPLETED,
     PLEX_NEW_MP_SIGNAL,
-    PLEX_PLATFORM_SETUP_COMPLETE_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     SERVERS,
 )
@@ -73,9 +68,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         hass, PLEX_NEW_MP_SIGNAL.format(server_id), async_new_media_players
     )
     hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
-    hass.data[PLEX_DOMAIN][PLATFORMS_COMPLETED][server_id].add(MP_DOMAIN)
     _LOGGER.debug("New entity listener created")
-    async_dispatcher_send(hass, PLEX_PLATFORM_SETUP_COMPLETE_SIGNAL.format(server_id))
 
 
 @callback

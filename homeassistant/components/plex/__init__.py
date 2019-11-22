@@ -1,5 +1,6 @@
 """Support to embed Plex."""
 import asyncio
+import functools
 import logging
 
 import plexapi.exceptions
@@ -39,7 +40,6 @@ from .const import (
     PLATFORMS_COMPLETED,
     PLEX_MEDIA_PLAYER_OPTIONS,
     PLEX_SERVER_CONFIG,
-    PLEX_PLATFORM_SETUP_COMPLETE_SIGNAL,
     PLEX_UPDATE_PLATFORMS_SIGNAL,
     SERVERS,
     WEBSOCKETS,
@@ -167,16 +167,10 @@ async def async_setup_entry(hass, entry):
     )
     hass.data[PLEX_DOMAIN][WEBSOCKETS][server_id] = websocket
 
-    async def async_start_websocket_session():
+    def start_websocket_session(platform, _):
+        hass.data[PLEX_DOMAIN][PLATFORMS_COMPLETED][server_id].add(platform)
         if hass.data[PLEX_DOMAIN][PLATFORMS_COMPLETED][server_id] == PLATFORMS:
             hass.loop.create_task(websocket.listen())
-
-    unsub = async_dispatcher_connect(
-        hass,
-        PLEX_PLATFORM_SETUP_COMPLETE_SIGNAL.format(server_id),
-        async_start_websocket_session,
-    )
-    hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
     def close_websocket_session(_):
         websocket.close()
@@ -187,9 +181,10 @@ async def async_setup_entry(hass, entry):
     hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
     for platform in PLATFORMS:
-        hass.async_create_task(
+        task = hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
+        task.add_done_callback(functools.partial(start_websocket_session, platform))
 
     return True
 

@@ -1,12 +1,8 @@
 """Support for Plex media server monitoring."""
 import logging
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import (
@@ -14,8 +10,6 @@ from .const import (
     DISPATCHERS,
     DOMAIN as PLEX_DOMAIN,
     NAME_FORMAT,
-    PLATFORMS_COMPLETED,
-    PLEX_PLATFORM_SETUP_COMPLETE_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
     SERVERS,
 )
@@ -37,8 +31,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     plexserver = hass.data[PLEX_DOMAIN][SERVERS][server_id]
     sensor = PlexSensor(plexserver)
     async_add_entities([sensor])
-    hass.data[PLEX_DOMAIN][PLATFORMS_COMPLETED][server_id].add(SENSOR_DOMAIN)
-    async_dispatcher_send(hass, PLEX_PLATFORM_SETUP_COMPLETE_SIGNAL.format(server_id))
 
 
 class PlexSensor(Entity):
