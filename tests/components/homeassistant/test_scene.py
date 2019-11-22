@@ -152,7 +152,7 @@ async def test_snapshot_service(hass, caplog):
     await hass.async_block_till_done()
     assert hass.states.get("scene.hallo_2") is None
     assert (
-        "Entity light.not_existent does not exist and therefore cannot be snapshooted"
+        "Entity light.not_existent does not exist and therefore cannot be snapshot"
         in caplog.text
     )
 

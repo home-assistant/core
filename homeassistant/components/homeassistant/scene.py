@@ -151,7 +151,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             state = hass.states.get(entity_id)
             if state is None:
                 _LOGGER.warning(
-                    "Entity %s does not exist and therefore cannot be snapshooted",
+                    "Entity %s does not exist and therefore cannot be snapshot",
                     entity_id,
                 )
                 continue
