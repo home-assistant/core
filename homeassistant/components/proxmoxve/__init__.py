@@ -94,23 +94,16 @@ def setup(hass, config):
                 "Invalid credentials for proxmox instance %s:%d", host, port
             )
             continue
-        except Exception as exception:
-            _LOGGER.warning(
-                "Failed to connect to proxmox instance %s:%d (%s)",
-                host,
-                port,
-                type(exception).__name__,
-            )
-            continue
 
         hass.data[PROXMOX_CLIENTS][f"{host}:{port}"] = proxmox_client
 
-    if len(hass.data[PROXMOX_CLIENTS]) > 0:
+    if hass.data[PROXMOX_CLIENTS]:
         hass.helpers.discovery.load_platform(
             "binary_sensor", DOMAIN, {"entries": config[DOMAIN]}, config
         )
+        return True
 
-    return True
+    return False
 
 
 class ProxmoxItemType(Enum):
