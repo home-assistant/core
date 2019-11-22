@@ -669,6 +669,8 @@ def forgiving_round(value, precision=0, method="common"):
             value = math.ceil(float(value) * multiplier) / multiplier
         elif method == "floor":
             value = math.floor(float(value) * multiplier) / multiplier
+        elif method == "half":
+            value = round(float(value) * 2) / 2
         else:
             # if method is common or something else, use common rounding
             value = round(float(value), precision)
