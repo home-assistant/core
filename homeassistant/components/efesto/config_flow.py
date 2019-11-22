@@ -24,7 +24,6 @@ def device_entries(hass):
     )
 
 
-@config_entries.HANDLERS.register(DOMAIN)
 class EfestoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Efesto Config Flow handler."""
 
