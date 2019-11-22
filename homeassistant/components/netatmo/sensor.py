@@ -6,7 +6,6 @@ from time import time
 
 import pyatmo
 import requests
-import urllib3
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -177,7 +176,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         for data_class in [pyatmo.WeatherStationData, pyatmo.HomeCoachData]:
             try:
-                data = NetatmoData(auth, data_class, config.get(CONF_STATION))
+                station = config.get(CONF_STATION)
+                dc_data = data_class(auth)
+                _LOGGER.debug("%s detected!", NETATMO_DEVICE_TYPES[data_class.__name__])
+                if station:
+                    station_data = dc_data.stationByName(station)
+                    if station_data:
+                        station_id = station_data.get("_id")
+                    else:
+                        _LOGGER.debug(
+                            'No %s station "%s" found',
+                            NETATMO_DEVICE_TYPES[data_class.__name__],
+                            station,
+                        )
+                else:
+                    station_id = None
+                data = NetatmoData(dc_data, station_id)
             except pyatmo.NoDevice:
                 _LOGGER.info(
                     "No %s devices found", NETATMO_DEVICE_TYPES[data_class.__name__]
@@ -541,18 +555,11 @@ class NetatmoPublicData:
 class NetatmoData:
     """Get the latest data from Netatmo."""
 
-    def __init__(self, auth, data_class, station):
+    def __init__(self, station_data, station_id):
         """Initialize the data object."""
-        self.auth = auth
-        self.data_class = data_class
         self.data = {}
-        self.station_data = self.data_class(self.auth)
-        self.station = station
-        self.station_id = None
-        if station:
-            station_data = self.station_data.stationByName(self.station)
-            if station_data:
-                self.station_id = station_data.get("_id")
+        self.station_data = station_data
+        self.station_id = station_id
         self._next_update = time()
         self._update_in_progress = threading.Lock()
 
@@ -572,18 +579,6 @@ class NetatmoData:
         if time() < self._next_update or not self._update_in_progress.acquire(False):
             return
         try:
-            try:
-                self.station_data = self.data_class(self.auth)
-                _LOGGER.debug("%s detected!", str(self.data_class.__name__))
-            except pyatmo.NoDevice:
-                _LOGGER.warning(
-                    "No Weather or HomeCoach devices found for %s", str(self.station)
-                )
-                return
-            except (requests.exceptions.Timeout, urllib3.exceptions.ReadTimeoutError):
-                _LOGGER.warning("Timed out when connecting to Netatmo server.")
-                return
-
             data = self.station_data.lastData(
                 station=self.station_id, exclude=3600, byId=True
             )
@@ -599,7 +594,7 @@ class NetatmoData:
                         newinterval = self.data[module]["When"]
                         break
             except TypeError:
-                _LOGGER.debug("No %s modules found", self.data_class.__name__)
+                _LOGGER.debug("No %s modules found", self.station_data.__name__)
 
             if newinterval:
                 # Try and estimate when fresh data will be available
