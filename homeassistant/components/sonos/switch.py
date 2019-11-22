@@ -61,8 +61,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         _LOGGER.debug("Adding new alarm")
                         alarm_list.append(one_alarm)
                         hass.add_job(
-                            async_add_entities,
-                            [SonosAlarmSwitch(soco, one_alarm._alarm_id)],
+                            async_add_entities, [SonosAlarmSwitch(soco, one_alarm)],
                         )
             except SoCoException as ex:
                 _LOGGER.debug("SoCoException, ex=%s", ex)
@@ -99,11 +98,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SonosAlarmSwitch(SwitchDevice):
     """Switch class for Sonos alarms."""
 
-    def __init__(self, soco, id):
+    def __init__(self, soco, alarm):
         """Init Sonos alarms switch."""
         self._icon = "mdi:alarm"
         self._soco = soco
-        self._id = id
+        self._id = alarm._alarm_id
         self._is_available = True
         speaker_info = self._soco.get_speaker_info(True)
         self._unique_id = "{}-{}".format(soco.uid, self._id)
@@ -113,7 +112,7 @@ class SonosAlarmSwitch(SwitchDevice):
         self.alarm = None
         for one_alarm in alarms.get_alarms(self._soco):
             # pylint: disable=protected-access
-            if one_alarm._alarm_id == id:
+            if one_alarm._alarm_id == self._id:
                 self.alarm = one_alarm
 
         self._is_on = self.alarm.enabled
@@ -145,7 +144,8 @@ class SonosAlarmSwitch(SwitchDevice):
             _LOGGER.debug("successfully updated alarms")
         except SoCoException as exc:
             _LOGGER.error(
-                "Home Assistant couldnt update the state of the alarm {}".format(exc),
+                "Home Assistant couldnt update the state of the alarm %s",
+                exc,
                 exc_info=True,
             )
             self._is_available = False
@@ -210,7 +210,7 @@ class SonosAlarmSwitch(SwitchDevice):
             return True
         except SoCoException as exc:
             _LOGGER.error(
-                "Home Assistant couldnt switch the alarm {}".format(exc), exc_info=True
+                "Home Assistant couldnt switch the alarm %s", exc, exc_info=True
             )
             self._is_available = False
             return False
