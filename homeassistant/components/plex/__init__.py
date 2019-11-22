@@ -16,7 +16,6 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_URL,
     CONF_VERIFY_SSL,
-    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.helpers import config_validation as cv
@@ -37,8 +36,10 @@ from .const import (
     DISPATCHERS,
     DOMAIN as PLEX_DOMAIN,
     PLATFORMS,
+    PLATFORMS_COMPLETED,
     PLEX_MEDIA_PLAYER_OPTIONS,
     PLEX_SERVER_CONFIG,
+    PLEX_PLATFORM_SETUP_COMPLETE_SIGNAL,
     PLEX_UPDATE_PLATFORMS_SIGNAL,
     SERVERS,
     WEBSOCKETS,
@@ -74,7 +75,10 @@ _LOGGER = logging.getLogger(__package__)
 
 def setup(hass, config):
     """Set up the Plex component."""
-    hass.data.setdefault(PLEX_DOMAIN, {SERVERS: {}, DISPATCHERS: {}, WEBSOCKETS: {}})
+    hass.data.setdefault(
+        PLEX_DOMAIN,
+        {SERVERS: {}, DISPATCHERS: {}, WEBSOCKETS: {}, PLATFORMS_COMPLETED: {}},
+    )
 
     plex_config = config.get(PLEX_DOMAIN, {})
     if plex_config:
@@ -141,11 +145,7 @@ async def async_setup_entry(hass, entry):
     )
     server_id = plex_server.machine_identifier
     hass.data[PLEX_DOMAIN][SERVERS][server_id] = plex_server
-
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.data[PLEX_DOMAIN][PLATFORMS_COMPLETED][server_id] = set()
 
     entry.add_update_listener(async_options_updated)
 
@@ -167,18 +167,29 @@ async def async_setup_entry(hass, entry):
     )
     hass.data[PLEX_DOMAIN][WEBSOCKETS][server_id] = websocket
 
-    async def async_start_websocket_session(_):
-        await websocket.listen()
+    async def async_start_websocket_session():
+        if hass.data[PLEX_DOMAIN][PLATFORMS_COMPLETED][server_id] == PLATFORMS:
+            hass.loop.create_task(websocket.listen())
+
+    unsub = async_dispatcher_connect(
+        hass,
+        PLEX_PLATFORM_SETUP_COMPLETE_SIGNAL.format(server_id),
+        async_start_websocket_session,
+    )
+    hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
     def close_websocket_session(_):
         websocket.close()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, async_start_websocket_session)
 
     unsub = hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP, close_websocket_session
     )
     hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
+
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, platform)
+        )
 
     return True
 
