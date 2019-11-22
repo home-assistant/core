@@ -152,7 +152,7 @@ class DeconzLight(DeconzDevice, Light):
 
         if ATTR_TRANSITION in kwargs:
             data["transitiontime"] = int(kwargs[ATTR_TRANSITION] * 10)
-        elif self._device.manufacturer.startswith("IKEA"):
+        elif self._device.manufacturer and self._device.manufacturer.startswith("IKEA"):
             data["transitiontime"] = 0
 
         if ATTR_FLASH in kwargs:
