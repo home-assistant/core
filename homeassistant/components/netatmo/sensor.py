@@ -43,7 +43,7 @@ DEFAULT_NAME_PUBLIC = "Netatmo Public Data"
 NETATMO_UPDATE_INTERVAL = 600
 
 # NetAtmo Public Data is uploaded to server every 10 minutes
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=600)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=NETATMO_UPDATE_INTERVAL)
 
 SUPPORTED_PUBLIC_SENSOR_TYPES = [
     "temperature",
