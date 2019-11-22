@@ -4,6 +4,7 @@ from unittest.mock import patch
 import voluptuous as vol
 
 from homeassistant.setup import async_setup_component
+from tests.common import async_mock_service
 
 
 async def test_reload_config_service(hass):
@@ -147,6 +148,16 @@ async def test_snapshot_service(hass, caplog):
     scene = hass.states.get("scene.hallo")
     assert scene is not None
     assert scene.attributes.get("entity_id") == ["light.my_light"]
+
+    hass.states.async_set("light.my_light", "off", {"hs_color": (123, 45)})
+    turn_on_calls = async_mock_service(hass, "light", "turn_on")
+    assert await hass.services.async_call(
+        "scene", "turn_on", {"entity_id": "scene.hallo"}, blocking=True
+    )
+    await hass.async_block_till_done()
+    assert len(turn_on_calls) == 1
+    assert turn_on_calls[0].data.get("entity_id") == "light.my_light"
+    assert turn_on_calls[0].data.get("hs_color") == (345, 75)
 
     assert await hass.services.async_call(
         "scene",
