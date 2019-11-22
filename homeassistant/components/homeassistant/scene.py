@@ -55,6 +55,16 @@ def _convert_states(states):
     return result
 
 
+def _ensure_no_intersection(value):
+    """Validate that entities and snapshot_entities do not overlap."""
+    if any(
+        entity_id in value[CONF_SNAPSHOT] for entity_id in value[CONF_ENTITIES].keys()
+    ):
+        raise vol.Invalid("entities and snapshot_entities must not overlap")
+
+    return value
+
+
 CONF_SCENE_ID = "scene_id"
 CONF_SNAPSHOT = "snapshot_entities"
 
@@ -76,12 +86,16 @@ PLATFORM_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-CREATE_SCENE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_SCENE_ID): cv.slug,
-        vol.Optional(CONF_ENTITIES, default={}): STATES_SCHEMA,
-        vol.Optional(CONF_SNAPSHOT, default=[]): cv.entity_ids,
-    }
+CREATE_SCENE_SCHEMA = vol.All(
+    cv.has_at_least_one_key(CONF_ENTITIES, CONF_SNAPSHOT),
+    _ensure_no_intersection,
+    vol.Schema(
+        {
+            vol.Required(CONF_SCENE_ID): cv.slug,
+            vol.Optional(CONF_ENTITIES, default={}): STATES_SCHEMA,
+            vol.Optional(CONF_SNAPSHOT, default=[]): cv.entity_ids,
+        }
+    ),
 )
 
 SERVICE_APPLY = "apply"
