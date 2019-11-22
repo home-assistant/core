@@ -135,7 +135,7 @@ async def test_snapshot_service(hass, caplog):
     assert await hass.services.async_call(
         "scene",
         "create",
-        {"scene_id": "hallo", "snapshot": ["light.my_light"]},
+        {"scene_id": "hallo", "snapshot_entities": ["light.my_light"]},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -146,7 +146,7 @@ async def test_snapshot_service(hass, caplog):
     assert await hass.services.async_call(
         "scene",
         "create",
-        {"scene_id": "hallo_2", "snapshot": ["light.not_existent"]},
+        {"scene_id": "hallo_2", "snapshot_entities": ["light.not_existent"]},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -162,7 +162,7 @@ async def test_snapshot_service(hass, caplog):
         {
             "scene_id": "hallo_3",
             "entities": {"light.bed_light": {"state": "on", "brightness": 50}},
-            "snapshot": ["light.my_light"],
+            "snapshot_entities": ["light.my_light"],
         },
         blocking=True,
     )

@@ -56,7 +56,7 @@ def _convert_states(states):
 
 
 CONF_SCENE_ID = "scene_id"
-CONF_SNAPSHOT = "snapshot"
+CONF_SNAPSHOT = "snapshot_entities"
 
 STATES_SCHEMA = vol.All(dict, _convert_states)
 
