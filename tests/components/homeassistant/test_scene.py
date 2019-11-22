@@ -64,7 +64,10 @@ async def test_create_service(hass, caplog):
     assert hass.states.get("scene.hallo_2") is not None
 
     assert await hass.services.async_call(
-        "scene", "create", {"scene_id": "hallo"}, blocking=True
+        "scene",
+        "create",
+        {"scene_id": "hallo", "entities": {}, "snapshot_entities": []},
+        blocking=True,
     )
     await hass.async_block_till_done()
     assert "Empty scenes are not allowed" in caplog.text

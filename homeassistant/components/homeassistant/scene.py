@@ -57,12 +57,17 @@ def _convert_states(states):
 
 def _ensure_no_intersection(value):
     """Validate that entities and snapshot_entities do not overlap."""
-    if any(
-        entity_id in value[CONF_SNAPSHOT] for entity_id in value[CONF_ENTITIES].keys()
+    if (
+        CONF_SNAPSHOT not in value
+        or CONF_ENTITIES not in value
+        or not any(
+            entity_id in value[CONF_SNAPSHOT]
+            for entity_id in value[CONF_ENTITIES].keys()
+        )
     ):
-        raise vol.Invalid("entities and snapshot_entities must not overlap")
+        return value
 
-    return value
+    raise vol.Invalid("entities and snapshot_entities must not overlap")
 
 
 CONF_SCENE_ID = "scene_id"
