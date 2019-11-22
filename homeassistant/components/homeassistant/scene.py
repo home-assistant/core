@@ -61,8 +61,7 @@ def _ensure_no_intersection(value):
         CONF_SNAPSHOT not in value
         or CONF_ENTITIES not in value
         or not any(
-            entity_id in value[CONF_SNAPSHOT]
-            for entity_id in value[CONF_ENTITIES].keys()
+            entity_id in value[CONF_SNAPSHOT] for entity_id in value[CONF_ENTITIES]
         )
     ):
         return value
