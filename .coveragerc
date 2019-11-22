@@ -526,6 +526,7 @@ omit =
     homeassistant/components/proliphix/climate.py
     homeassistant/components/prometheus/*
     homeassistant/components/prowl/notify.py
+    homeassistant/components/proxmoxve/*
     homeassistant/components/proxy/camera.py
     homeassistant/components/ptvsd/*
     homeassistant/components/pulseaudio_loopback/switch.py
