@@ -107,7 +107,7 @@ COLORS = {
     "mediumslateblue": (123, 104, 238),
     "mediumspringgreen": (0, 250, 154),
     "mediumturquoise": (72, 209, 204),
-    "mediumvioletredred": (199, 21, 133),
+    "mediumvioletred": (199, 21, 133),
     "midnightblue": (25, 25, 112),
     "mintcream": (245, 255, 250),
     "mistyrose": (255, 228, 225),
