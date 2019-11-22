@@ -1,9 +1,11 @@
 """Test Home Assistant scenes."""
 from unittest.mock import patch
 
+import pytest
 import voluptuous as vol
 
 from homeassistant.setup import async_setup_component
+
 from tests.common import async_mock_service
 
 
@@ -193,7 +195,7 @@ async def test_ensure_no_intersection(hass):
     """Test that entities and snapshot_entities do not overlap."""
     assert await async_setup_component(hass, "scene", {"scene": {}})
 
-    try:
+    with pytest.raises(vol.MultipleInvalid) as ex:
         assert await hass.services.async_call(
             "scene",
             "create",
@@ -205,7 +207,5 @@ async def test_ensure_no_intersection(hass):
             blocking=True,
         )
         await hass.async_block_till_done()
-        assert False
-    except vol.MultipleInvalid as ex:
-        assert ex.msg == "entities and snapshot_entities must not overlap"
+    assert "entities and snapshot_entities must not overlap" in str(ex.value)
     assert hass.states.get("scene.hallo") is None
