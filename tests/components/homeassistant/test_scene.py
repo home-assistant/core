@@ -1,6 +1,8 @@
 """Test Home Assistant scenes."""
 from unittest.mock import patch
 
+import voluptuous as vol
+
 from homeassistant.setup import async_setup_component
 
 
@@ -174,3 +176,25 @@ async def test_snapshot_service(hass, caplog):
     assert scene is not None
     assert "light.my_light" in scene.attributes.get("entity_id")
     assert "light.bed_light" in scene.attributes.get("entity_id")
+
+
+async def test_ensure_no_intersection(hass):
+    """Test that entities and snapshot_entities do not overlap."""
+    assert await async_setup_component(hass, "scene", {"scene": {}})
+
+    try:
+        assert await hass.services.async_call(
+            "scene",
+            "create",
+            {
+                "scene_id": "hallo",
+                "entities": {"light.my_light": {"state": "on", "brightness": 50}},
+                "snapshot_entities": ["light.my_light"],
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        assert False
+    except vol.MultipleInvalid as ex:
+        assert ex.msg == "entities and snapshot_entities must not overlap"
+    assert hass.states.get("scene.hallo") is None
