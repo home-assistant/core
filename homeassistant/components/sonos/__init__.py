@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TIME, CONF_HOSTS
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -173,7 +174,8 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up Sonos from a config entry."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, MP_DOMAIN)
-    )
+    for domain in [MP_DOMAIN, SWITCH_DOMAIN]:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, domain)
+        )
     return True
