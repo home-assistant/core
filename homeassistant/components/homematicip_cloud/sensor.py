@@ -68,11 +68,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomematicIP Cloud sensors from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
-    devices = [HomematicipAccesspointStatus(hap)]
+    entities = [HomematicipAccesspointStatus(hap)]
     for device in hap.home.devices:
         if isinstance(device, (AsyncHeatingThermostat, AsyncHeatingThermostatCompact)):
-            devices.append(HomematicipHeatingThermostat(hap, device))
-            devices.append(HomematicipTemperatureSensor(hap, device))
+            entities.append(HomematicipHeatingThermostat(hap, device))
+            entities.append(HomematicipTemperatureSensor(hap, device))
         if isinstance(
             device,
             (
@@ -84,8 +84,8 @@ async def async_setup_entry(
                 AsyncWeatherSensorPro,
             ),
         ):
-            devices.append(HomematicipTemperatureSensor(hap, device))
-            devices.append(HomematicipHumiditySensor(hap, device))
+            entities.append(HomematicipTemperatureSensor(hap, device))
+            entities.append(HomematicipHumiditySensor(hap, device))
         if isinstance(
             device,
             (
@@ -99,7 +99,7 @@ async def async_setup_entry(
                 AsyncWeatherSensorPro,
             ),
         ):
-            devices.append(HomematicipIlluminanceSensor(hap, device))
+            entities.append(HomematicipIlluminanceSensor(hap, device))
         if isinstance(
             device,
             (
@@ -108,18 +108,18 @@ async def async_setup_entry(
                 AsyncFullFlushSwitchMeasuring,
             ),
         ):
-            devices.append(HomematicipPowerSensor(hap, device))
+            entities.append(HomematicipPowerSensor(hap, device))
         if isinstance(
             device, (AsyncWeatherSensor, AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
         ):
-            devices.append(HomematicipWindspeedSensor(hap, device))
+            entities.append(HomematicipWindspeedSensor(hap, device))
         if isinstance(device, (AsyncWeatherSensorPlus, AsyncWeatherSensorPro)):
-            devices.append(HomematicipTodayRainSensor(hap, device))
+            entities.append(HomematicipTodayRainSensor(hap, device))
         if isinstance(device, AsyncPassageDetector):
-            devices.append(HomematicipPassageDetectorDeltaCounter(hap, device))
+            entities.append(HomematicipPassageDetectorDeltaCounter(hap, device))
 
-    if devices:
-        async_add_entities(devices)
+    if entities:
+        async_add_entities(entities)
 
 
 class HomematicipAccesspointStatus(HomematicipGenericDevice):

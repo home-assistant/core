@@ -53,13 +53,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomematicIP climate from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
-    devices = []
+    entities = []
     for device in hap.home.groups:
         if isinstance(device, AsyncHeatingGroup):
-            devices.append(HomematicipHeatingGroup(hap, device))
+            entities.append(HomematicipHeatingGroup(hap, device))
 
-    if devices:
-        async_add_entities(devices)
+    if entities:
+        async_add_entities(entities)
 
 
 class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):

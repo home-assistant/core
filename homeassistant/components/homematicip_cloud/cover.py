@@ -34,15 +34,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomematicIP cover from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
-    devices = []
+    entities = []
     for device in hap.home.devices:
         if isinstance(device, AsyncFullFlushBlind):
-            devices.append(HomematicipCoverSlats(hap, device))
+            entities.append(HomematicipCoverSlats(hap, device))
         elif isinstance(device, AsyncFullFlushShutter):
-            devices.append(HomematicipCoverShutter(hap, device))
+            entities.append(HomematicipCoverShutter(hap, device))
 
-    if devices:
-        async_add_entities(devices)
+    if entities:
+        async_add_entities(entities)
 
 
 class HomematicipCoverShutter(HomematicipGenericDevice, CoverDevice):

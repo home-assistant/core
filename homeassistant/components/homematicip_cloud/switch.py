@@ -37,7 +37,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomematicIP switch from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
-    devices = []
+    entities = []
     for device in hap.home.devices:
         if isinstance(device, AsyncBrandSwitchMeasuring):
             # BrandSwitchMeasuring inherits PlugableSwitchMeasuring
@@ -47,27 +47,27 @@ async def async_setup_entry(
         elif isinstance(
             device, (AsyncPlugableSwitchMeasuring, AsyncFullFlushSwitchMeasuring)
         ):
-            devices.append(HomematicipSwitchMeasuring(hap, device))
+            entities.append(HomematicipSwitchMeasuring(hap, device))
         elif isinstance(
             device, (AsyncPlugableSwitch, AsyncPrintedCircuitBoardSwitchBattery)
         ):
-            devices.append(HomematicipSwitch(hap, device))
+            entities.append(HomematicipSwitch(hap, device))
         elif isinstance(device, AsyncOpenCollector8Module):
             for channel in range(1, 9):
-                devices.append(HomematicipMultiSwitch(hap, device, channel))
+                entities.append(HomematicipMultiSwitch(hap, device, channel))
         elif isinstance(device, AsyncMultiIOBox):
             for channel in range(1, 3):
-                devices.append(HomematicipMultiSwitch(hap, device, channel))
+                entities.append(HomematicipMultiSwitch(hap, device, channel))
         elif isinstance(device, AsyncPrintedCircuitBoardSwitch2):
             for channel in range(1, 3):
-                devices.append(HomematicipMultiSwitch(hap, device, channel))
+                entities.append(HomematicipMultiSwitch(hap, device, channel))
 
     for group in hap.home.groups:
         if isinstance(group, AsyncSwitchingGroup):
-            devices.append(HomematicipGroupSwitch(hap, group))
+            entities.append(HomematicipGroupSwitch(hap, group))
 
-    if devices:
-        async_add_entities(devices)
+    if entities:
+        async_add_entities(entities)
 
 
 class HomematicipSwitch(HomematicipGenericDevice, SwitchDevice):

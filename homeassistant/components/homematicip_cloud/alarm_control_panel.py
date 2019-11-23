@@ -43,6 +43,7 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the alarm control panel."""
         self._home = hap.home
+        _LOGGER.info("Setting up %s", self.name)
 
     @property
     def device_info(self) -> Dict[str, Any]:

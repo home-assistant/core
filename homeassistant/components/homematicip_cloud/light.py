@@ -46,16 +46,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomematicIP Cloud lights from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
-    devices = []
+    entities = []
     for device in hap.home.devices:
         if isinstance(device, AsyncBrandSwitchMeasuring):
-            devices.append(HomematicipLightMeasuring(hap, device))
+            entities.append(HomematicipLightMeasuring(hap, device))
         elif isinstance(device, AsyncBrandSwitchNotificationLight):
-            devices.append(HomematicipLight(hap, device))
-            devices.append(
+            entities.append(HomematicipLight(hap, device))
+            entities.append(
                 HomematicipNotificationLight(hap, device, device.topLightChannelIndex)
             )
-            devices.append(
+            entities.append(
                 HomematicipNotificationLight(
                     hap, device, device.bottomLightChannelIndex
                 )
@@ -64,10 +64,10 @@ async def async_setup_entry(
             device,
             (AsyncDimmer, AsyncPluggableDimmer, AsyncBrandDimmer, AsyncFullFlushDimmer),
         ):
-            devices.append(HomematicipDimmer(hap, device))
+            entities.append(HomematicipDimmer(hap, device))
 
-    if devices:
-        async_add_entities(devices)
+    if entities:
+        async_add_entities(entities)
 
 
 class HomematicipLight(HomematicipGenericDevice, Light):
