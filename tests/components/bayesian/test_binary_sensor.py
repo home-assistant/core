@@ -54,8 +54,8 @@ class TestBayesianBinarySensor(unittest.TestCase):
 
         state = self.hass.states.get("binary_sensor.test_binary")
 
-        assert [] == state.attributes.get("observations")
-        assert 0.2 == state.attributes.get("probability")
+        assert len(state.attributes.get("observations")) == 0
+        assert state.attributes.get("probability") == 0.2
 
         assert state.state == "off"
 
@@ -83,7 +83,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get("binary_sensor.test_binary")
-        assert 0.2 == state.attributes.get("probability")
+        assert state.attributes.get("probability") == 0.2
 
         assert state.state == "off"
 
@@ -120,8 +120,8 @@ class TestBayesianBinarySensor(unittest.TestCase):
 
         state = self.hass.states.get("binary_sensor.test_binary")
 
-        assert [] == state.attributes.get("observations")
-        assert 0.2 == state.attributes.get("probability")
+        assert len(state.attributes.get("observations")) == 0
+        assert state.attributes.get("probability") == 0.2
 
         assert state.state == "off"
 
@@ -148,6 +148,70 @@ class TestBayesianBinarySensor(unittest.TestCase):
         state = self.hass.states.get("binary_sensor.test_binary")
         assert round(abs(0.2 - state.attributes.get("probability")), 7) == 0
 
+        assert state.state == "off"
+
+    def test_sensor_template(self):
+        """Test sensor on template platform observations."""
+        config = {
+            "binary_sensor": {
+                "name": "Test_Binary",
+                "platform": "bayesian",
+                "observations": [
+                    {
+                        "platform": "template",
+                        "value_template": "{{ is_state('sensor.test_monitored1', 'on') "
+                        "and is_state('sensor.test_monitored2', 'on') }}",
+                        "prob_given_true": 0.8,
+                        "prob_given_false": 0.2,
+                    },
+                    {
+                        "platform": "template",
+                        "value_template": "{{ is_state('sensor.test_monitored1', 'off') "
+                        "and is_state('sensor.test_monitored2', 'on') }}",
+                        "prob_given_true": 0.4,
+                        "prob_given_false": 0.9,
+                    },
+                ],
+                "prior": 0.2,
+                "probability_threshold": 0.3,
+            }
+        }
+
+        assert setup_component(self.hass, "binary_sensor", config)
+
+        self.hass.states.set("sensor.test_monitored1", "on")
+        self.hass.states.set("sensor.test_monitored2", "off")
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("binary_sensor.test_binary")
+
+        assert len(state.attributes.get("observations")) == 0
+        assert state.attributes.get("probability") == 0.2
+
+        assert state.state == "off"
+
+        self.hass.states.set("sensor.test_monitored2", "on")
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("binary_sensor.test_binary")
+        assert len(state.attributes.get("observations")) == 1
+        assert abs(0.5 - state.attributes.get("probability")) < 1e-7
+        assert state.state == "on"
+
+        self.hass.states.set("sensor.test_monitored1", "off")
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("binary_sensor.test_binary")
+        assert len(state.attributes.get("observations")) == 1
+        assert abs(0.1 - state.attributes.get("probability")) < 1e-7
+        assert state.state == "off"
+
+        self.hass.states.set("sensor.test_monitored2", "off")
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("binary_sensor.test_binary")
+        assert len(state.attributes.get("observations")) == 0
+        assert abs(0.2 - state.attributes.get("probability")) < 1e-7
         assert state.state == "off"
 
     def test_threshold(self):
@@ -212,8 +276,8 @@ class TestBayesianBinarySensor(unittest.TestCase):
 
         state = self.hass.states.get("binary_sensor.test_binary")
 
-        assert [] == state.attributes.get("observations")
-        assert 0.2 == state.attributes.get("probability")
+        assert len(state.attributes.get("observations")) == 0
+        assert state.attributes.get("probability") == 0.2
 
         assert state.state == "off"
 
@@ -264,7 +328,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
 
 
 async def test_state_delay_on(hass):
-    """Test binary sensor template delay on."""
+    """Test binary sensor state delay on."""
     config = {
         "binary_sensor": {
             "name": "test",
@@ -285,6 +349,12 @@ async def test_state_delay_on(hass):
     }
     await async_setup_component(hass, "binary_sensor", config)
     await hass.async_start()
+
+    hass.states.async_set("sensor.test_state", "off")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
 
     hass.states.async_set("sensor.test_state", "on")
     await hass.async_block_till_done()
@@ -313,6 +383,75 @@ async def test_state_delay_on(hass):
     assert state.state == "off"
 
     hass.states.async_set("sensor.test_state", "off")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+    future = dt_util.utcnow() + timedelta(seconds=5)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+
+async def test_numeric_delay_on(hass):
+    """Test binary sensor numeric delay on."""
+    config = {
+        "binary_sensor": {
+            "name": "test",
+            "platform": "bayesian",
+            "observations": [
+                {
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.test_state",
+                    "above": 10,
+                    "prob_given_true": 0.8,
+                    "prob_given_false": 0.2,
+                    "delay_on": 5,
+                }
+            ],
+            "prior": 0.2,
+            "probability_threshold": 0.3,
+        }
+    }
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_start()
+
+    hass.states.async_set("sensor.test_state", 5)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+    hass.states.async_set("sensor.test_state", 15)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+    future = dt_util.utcnow() + timedelta(seconds=5)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "on"
+
+    # check with time changes
+    hass.states.async_set("sensor.test_state", 5)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+    hass.states.async_set("sensor.test_state", 15)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+    hass.states.async_set("sensor.test_state", 5)
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
