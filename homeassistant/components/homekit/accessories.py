@@ -96,8 +96,7 @@ class HomeAccessory(Accessory):
         self.debounce = {}
         self._support_battery_level = False
         self._support_battery_charging = True
-        self.linked_battery_sensor = self.config.get(
-            CONF_LINKED_BATTERY_SENSOR)
+        self.linked_battery_sensor = self.config.get(CONF_LINKED_BATTERY_SENSOR)
         self.low_battery_threshold = self.config.get(
             CONF_LOW_BATTERY_THRESHOLD, DEFAULT_LOW_BATTERY_THRESHOLD
         )
@@ -109,8 +108,7 @@ class HomeAccessory(Accessory):
 
         if self.linked_battery_sensor:
             if self.hass.states.get(self.linked_battery_sensor):
-                battery_found = self.hass.states.get(
-                    self.linked_battery_sensor).state
+                battery_found = self.hass.states.get(self.linked_battery_sensor).state
             else:
                 self.linked_battery_sensor = None
                 _LOGGER.warning(
