@@ -640,6 +640,9 @@ hdate==0.9.3
 # homeassistant.components.heatmiser
 heatmiserV3==0.9.1
 
+# homeassistant.components.heatmiserv3
+heatmiserV3==1.1.9
+
 # homeassistant.components.here_travel_time
 herepy==0.6.3.3
 
