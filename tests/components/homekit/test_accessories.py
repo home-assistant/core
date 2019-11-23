@@ -195,7 +195,7 @@ async def test_linked_battery_sensor(hass, hk_driver, caplog):
         {CONF_LINKED_BATTERY_SENSOR: linked_battery},
     )
     acc.update_state = lambda x: None
-    assert acc.linked_battery_sensor == linked_battery
+    assert acc.linked_battery_sensor_id == linked_battery
 
     await hass.async_add_job(acc.run)
     await hass.async_block_till_done()
@@ -243,6 +243,34 @@ async def test_linked_battery_sensor(hass, hk_driver, caplog):
     assert acc._char_battery.value == 100
     assert acc._char_low_battery.value == 0
     assert acc._char_charging.value == 0
+
+
+async def test_missing_linked_battery_sensor(hass, hk_driver, caplog):
+    """Test battery service with mising linked_battery_sensor."""
+    entity_id = "homekit.accessory"
+    linked_battery = "sensor.battery"
+    hass.states.async_set(entity_id, "open")
+    await hass.async_block_till_done()
+
+    acc = HomeAccessory(
+        hass,
+        hk_driver,
+        "Battery Service",
+        entity_id,
+        2,
+        {CONF_LINKED_BATTERY_SENSOR: linked_battery},
+    )
+    acc.update_state = lambda x: None
+    assert not acc.linked_battery_sensor
+    assert acc.linked_battery_sensor_id
+
+    await hass.async_add_job(acc.run)
+    await hass.async_block_till_done()
+
+    assert not acc.linked_battery_sensor
+    assert not hasattr(acc, "_char_battery")
+    assert not hasattr(acc, "_char_low_battery")
+    assert not hasattr(acc, "_char_charging")
 
 
 async def test_call_service(hass, hk_driver, events):
