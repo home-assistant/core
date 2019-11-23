@@ -82,12 +82,12 @@ async def async_setup(hass, config):
 
     plex_config = config.get(PLEX_DOMAIN, {})
     if plex_config:
-        await _async_setup_plex(hass, plex_config)
+        _async_setup_plex(hass, plex_config)
 
     return True
 
 
-async def _async_setup_plex(hass, config):
+def _async_setup_plex(hass, config):
     """Pass configuration to a config flow."""
     server_config = dict(config)
     if MP_DOMAIN in server_config:
