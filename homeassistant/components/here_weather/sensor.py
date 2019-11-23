@@ -1,5 +1,4 @@
 """Support for the HERE Destination Weather service."""
-from datetime import timedelta
 import logging
 from typing import Callable, Dict, Optional, Union
 
@@ -40,8 +39,6 @@ from .const import (
 UNITS = [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]
 
 _LOGGER = logging.getLogger(__name__)
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

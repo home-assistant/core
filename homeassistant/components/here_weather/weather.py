@@ -1,5 +1,4 @@
 """Support for the HERE Destination Weather API."""
-from datetime import timedelta
 import logging
 from typing import Callable, Dict, Union
 
@@ -55,9 +54,6 @@ UNITS = [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "HERE"
-
-MIN_TIME_BETWEEN_FORECAST_UPDATES = timedelta(minutes=30)
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
