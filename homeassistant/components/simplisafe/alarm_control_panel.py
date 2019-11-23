@@ -4,6 +4,7 @@ import re
 
 from simplipy.entity import EntityTypes
 from simplipy.system import SystemStates
+from simplipy.system.v3 import LevelMap as V3Volume
 
 from homeassistant.components.alarm_control_panel import (
     FORMAT_NUMBER,
@@ -24,14 +25,23 @@ from .const import DATA_CLIENT, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ALARM_ACTIVE = "alarm_active"
+ATTR_ALARM_DURATION = "alarm_duration"
+ATTR_ALARM_VOLUME = "alarm_volume"
 ATTR_BATTERY_BACKUP_POWER_LEVEL = "battery_backup_power_level"
+ATTR_CHIME_VOLUME = "chime_volume"
+ATTR_ENTRY_DELAY_AWAY = "entry_delay_away"
+ATTR_ENTRY_DELAY_HOME = "entry_delay_home"
+ATTR_EXIT_DELAY_AWAY = "exit_delay_away"
+ATTR_EXIT_DELAY_HOME = "exit_delay_home"
 ATTR_GSM_STRENGTH = "gsm_strength"
 ATTR_LAST_EVENT_INFO = "last_event_info"
 ATTR_LAST_EVENT_SENSOR_NAME = "last_event_sensor_name"
 ATTR_LAST_EVENT_SENSOR_TYPE = "last_event_sensor_type"
 ATTR_LAST_EVENT_TIMESTAMP = "last_event_timestamp"
 ATTR_LAST_EVENT_TYPE = "last_event_type"
+ATTR_LIGHT = "light"
 ATTR_RF_JAMMING = "rf_jamming"
+ATTR_VOICE_PROMPT_VOLUME = "voice_prompt_volume"
 ATTR_WALL_POWER_LEVEL = "wall_power_level"
 ATTR_WIFI_STRENGTH = "wifi_strength"
 
@@ -66,14 +76,27 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
 
         # Some properties only exist for V2 or V3 systems:
         for prop in (
+            ATTR_ALARM_DURATION,
+            ATTR_ALARM_VOLUME,
             ATTR_BATTERY_BACKUP_POWER_LEVEL,
+            ATTR_CHIME_VOLUME,
+            ATTR_ENTRY_DELAY_AWAY,
+            ATTR_ENTRY_DELAY_HOME,
+            ATTR_EXIT_DELAY_AWAY,
+            ATTR_EXIT_DELAY_HOME,
             ATTR_GSM_STRENGTH,
+            ATTR_LIGHT,
             ATTR_RF_JAMMING,
+            ATTR_VOICE_PROMPT_VOLUME,
             ATTR_WALL_POWER_LEVEL,
             ATTR_WIFI_STRENGTH,
         ):
             if hasattr(system, prop):
-                self._attrs[prop] = getattr(system, prop)
+                value = getattr(system, prop)
+                if isinstance(value, V3Volume):
+                    self._attrs[prop] = value.name
+                else:
+                    self._attrs[prop] = value
 
     @property
     def changed_by(self):

@@ -10,11 +10,83 @@ remove_pin:
     label_or_pin:
       description: The label/value to remove.
       example: Test PIN
+set_alarm_duration:
+  description: "Set the duration (in seconds) of an active alarm"
+  fields:
+    system_id:
+      description: The SimpliSafe system ID to affect
+      example: 123987
+    seconds:
+      description: The number of seconds to sound the alarm
+      example: 120
+set_alarm_volume:
+  description: "Set the volume of an active alarm"
+  fields:
+    system_id:
+      description: The SimpliSafe system ID to affect
+      example: 123987
+    volume:
+      description: "A volume (off, low, medium, high)"
+      example: low
+set_chime_volume:
+  description: "Set the volume of the door chime"
+  fields:
+    system_id:
+      description: The SimpliSafe system ID to affect
+      example: 123987
+    volume:
+      description: "A volume (off, low, medium, high)"
+      example: low
+set_entry_delay_away:
+  description: 'Set the entry delay duration ("away" mode).'
+  fields:
+    system_id:
+      description: The SimpliSafe system ID to affect
+      example: 123987
+    seconds:
+      description: "The number of seconds to delay"
+      example: 120
+set_entry_delay_home:
+  description: 'Set the entry delay duration ("home" mode).'
+  fields:
+    system_id:
+      description: The SimpliSafe system ID to affect
+      example: 123987
+    seconds:
+      description: "The number of seconds to delay"
+      example: 120
+set_exit_delay_away:
+  description: 'Set the exit delay duration ("away" mode).'
+  fields:
+    system_id:
+      description: The SimpliSafe system ID to affect
+      example: 123987
+    seconds:
+      description: "The number of seconds to delay"
+      example: 120
+set_exit_delay_home:
+  description: 'Set the exit delay duration ("home" mode).'
+  fields:
+    system_id:
+      description: The SimpliSafe system ID to affect
+      example: 123987
+    seconds:
+      description: "The number of seconds to delay"
+      example: 120
+set_light:
+  description: "Turn the base station light on/off"
+  fields:
+    system_id:
+      description: The SimpliSafe system ID to affect
+      example: 123987
+    light_state:
+      description: "True for on, False for off"
+      example: "True"
 set_pin:
   description: Set/update a PIN
   fields:
     system_id:
-      description: The SimpliSafe system ID to affect.
+      description: The SimpliSafe system ID to affect
       example: 123987
     label:
       description: The label of the PIN
@@ -22,3 +94,12 @@ set_pin:
     pin:
       description: The value of the PIN
       example: 1256
+set_voice_prompt_volume:
+  description: "Set the volume of the voice prompt"
+  fields:
+    system_id:
+      description: The SimpliSafe system ID to affect
+      example: 123987
+    volume:
+      description: "A volume (off, low, medium, high)"
+      example: low
