@@ -13,6 +13,7 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 # List of all countries currently supported by holidays
+# Source: https://github.com/dr-prodigy/python-holidays#available-countries
 # There seems to be no way to get the list out at runtime
 ALL_COUNTRIES = [
     "Argentina",
@@ -42,6 +43,8 @@ ALL_COUNTRIES = [
     "Denmark",
     "DK",
     "England",
+    "Estonia",
+    "EE",
     "EuropeanCentralBank",
     "ECB",
     "TAR",
@@ -53,8 +56,8 @@ ALL_COUNTRIES = [
     "DE",
     "Hungary",
     "HU",
-    "Honduras",
-    "HUD",
+    "Iceland",
+    "IS",
     "India",
     "IND",
     "Ireland",
@@ -64,6 +67,8 @@ ALL_COUNTRIES = [
     "IT",
     "Japan",
     "JP",
+    "Kenya",
+    "KE",
     "Lithuania",
     "LT",
     "Luxembourg",
@@ -77,7 +82,9 @@ ALL_COUNTRIES = [
     "Northern Ireland",
     "Norway",
     "NO",
-    "Polish",
+    "Peru",
+    "PE",
+    "Poland",
     "PL",
     "Portugal",
     "PT",
