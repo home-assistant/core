@@ -187,7 +187,7 @@ async def async_setup_entry(hass, config_entry):
         )
 
     @callback
-    def verify_system_exists(func):
+    def verify_system_exists(coro):
         """Log an error if a service call uses an invalid system ID."""
 
         async def decorator(call):
@@ -196,13 +196,13 @@ async def async_setup_entry(hass, config_entry):
             if system_id not in systems:
                 _LOGGER.error("Unknown system ID in service call: %s", system_id)
                 return
-            await func(call)
+            await coro(call)
 
         return decorator
 
     @callback
-    def v3_only(func):
-        """Log an error if the decorated function is performed on a v2 system."""
+    def v3_only(coro):
+        """Log an error if the decorated coroutine is called with a v2 system."""
 
         async def decorator(call):
             """Decorate."""
@@ -210,7 +210,7 @@ async def async_setup_entry(hass, config_entry):
             if system.version != 3:
                 _LOGGER.error("Service only available on V3 systems")
                 return
-            await func(call)
+            await coro(call)
 
         return decorator
 
