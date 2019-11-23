@@ -191,11 +191,7 @@ async def async_setup_entry(hass, config_entry):
         """Log an error if a service call uses an invalid system ID."""
 
         async def decorator(call):
-            """Decorate.
-
-            Note that since verify_domain_control is used and it only decorates
-            coroutines, this, too, is a coroutine.
-            """
+            """Decorate."""
             system_id = int(call.data[ATTR_SYSTEM_ID])
             if system_id not in systems:
                 _LOGGER.error("Unknown system ID in service call: %s", system_id)
@@ -209,11 +205,7 @@ async def async_setup_entry(hass, config_entry):
         """Log an error if the decorated function is performed on a v2 system."""
 
         async def decorator(call):
-            """Decorate.
-
-            Note that since verify_domain_control is used and it only decorates
-            coroutines, this, too, is a coroutine.
-            """
+            """Decorate."""
             system = systems[int(call.data[ATTR_SYSTEM_ID])]
             if system.version != 3:
                 _LOGGER.error("Service only available on V3 systems")
