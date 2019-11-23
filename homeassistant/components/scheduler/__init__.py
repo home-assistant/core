@@ -238,6 +238,7 @@ class Scheduler:
             save_json(self._hass.config.path(PERSISTENCE), self.items)
 
         self._hass.async_add_job(save)
+        self._hass.bus.async_fire(EVENT)
 
     @callback
     def async_update(self, schedule_id, data):
@@ -270,7 +271,6 @@ def websocket_handle_create(hass, connection, msg):
             )
         )
     else:
-        hass.bus.async_fire(EVENT)
         connection.send_message(websocket_api.result_message(msg[CONF_ID], item))
 
 
@@ -278,7 +278,6 @@ def websocket_handle_create(hass, connection, msg):
 def websocket_handle_clear(hass, connection, msg):
     """Handle clearing disabled schedules from the scheduler."""
     hass.data[DOMAIN].async_clear_inactive()
-    hass.bus.async_fire(EVENT)
     connection.send_message(websocket_api.result_message(msg[CONF_ID]))
 
 
@@ -294,7 +293,6 @@ def websocket_handle_delete(hass, connection, msg):
             )
         )
     else:
-        hass.bus.async_fire(EVENT)
         connection.send_message(websocket_api.result_message(msg[CONF_ID], item))
 
 
@@ -310,7 +308,6 @@ def websocket_handle_disable(hass, connection, msg):
             )
         )
     else:
-        hass.bus.async_fire(EVENT)
         connection.send_message(websocket_api.result_message(msg[CONF_ID], item))
 
 
@@ -326,7 +323,6 @@ def websocket_handle_enable(hass, connection, msg):
             )
         )
     else:
-        hass.bus.async_fire(EVENT)
         connection.send_message(websocket_api.result_message(msg[CONF_ID], item))
 
 
@@ -361,5 +357,4 @@ def websocket_handle_update(hass, connection, msg):
             )
         )
     else:
-        hass.bus.async_fire(EVENT)
         connection.send_message(websocket_api.result_message(msg_id, item))
