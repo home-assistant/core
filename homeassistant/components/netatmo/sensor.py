@@ -547,13 +547,18 @@ class NetatmoData:
         self.data = {}
         self.station_data = self.data_class(self.auth)
         self.station = station
+        self.station_id = None
+        if station:
+            station_data = self.station_data.stationByName(self.station)
+            if station_data:
+                self.station_id = station_data.get("_id")
         self._next_update = time()
         self._update_in_progress = threading.Lock()
 
     def get_module_infos(self):
         """Return all modules available on the API as a dict."""
-        if self.station is not None:
-            return self.station_data.getModules(station=self.station)
+        if self.station_id is not None:
+            return self.station_data.getModules(station_id=self.station_id)
         return self.station_data.getModules()
 
     def update(self):
@@ -579,7 +584,7 @@ class NetatmoData:
                 return
 
             data = self.station_data.lastData(
-                station=self.station, exclude=3600, byId=True
+                station=self.station_id, exclude=3600, byId=True
             )
             if not data:
                 self._next_update = time() + NETATMO_UPDATE_INTERVAL
