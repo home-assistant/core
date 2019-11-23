@@ -644,7 +644,7 @@ ya_ma==0.3.8
 yahooweather==0.10
 
 # homeassistant.components.zeroconf
-zeroconf==0.23.0
+zeroconf==0.24.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.28
