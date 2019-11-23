@@ -215,7 +215,7 @@ async def async_setup_entry(hass, config_entry):
             coroutines, this, too, is a coroutine.
             """
             system = systems[int(call.data[ATTR_SYSTEM_ID])]
-            if system.version == 2:
+            if system.version != 3:
                 _LOGGER.error("Service only available on V3 systems")
                 return
             await func(call)
