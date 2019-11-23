@@ -177,17 +177,19 @@ class BayesianBinarySensor(BinarySensorDevice):
                 should_trigger = self.watchers[platform](entity_obs)
                 self._update_current_obs(entity_obs, should_trigger)
 
-            prior = self.prior
-            for obs in self.current_obs.values():
-                prior = update_probability(prior, obs["prob_true"], obs["prob_false"])
-            self.probability = prior
-
-            self.hass.async_add_job(self.async_update_ha_state, True)
-
         async_track_state_change(
             self.hass, self.entity_obs, async_threshold_sensor_state_listener
         )
 
+    def _update_state(self):
+        prior = self.prior
+        for obs in self.current_obs.values():
+            prior = update_probability(prior, obs["prob_true"], obs["prob_false"])
+        self.probability = prior
+
+        self.hass.async_add_job(self.async_update_ha_state, True)
+
+    @callback
     def _update_current_obs(self, entity_observation, should_trigger):
         """Update current observation."""
         obs_id = entity_observation["id"]
@@ -208,10 +210,12 @@ class BayesianBinarySensor(BinarySensorDevice):
                 "prob_true": prob_true,
                 "prob_false": prob_false,
             }
+            self._update_state()
 
         @callback
         def pop_from_current_obs():
             self.current_obs.pop(obs_id, None)
+            self._update_state()
 
         if should_trigger:
             if delay_on:
@@ -220,7 +224,7 @@ class BayesianBinarySensor(BinarySensorDevice):
                     self.hass,
                     period,
                     add_to_current_obs,
-                    entity_ids=entity_observation["entity_id"],
+                    entity_ids=entity_id,
                     async_check_same_func=lambda *args: self.watchers[
                         entity_observation["platform"]
                     ](entity_observation)
@@ -241,9 +245,11 @@ class BayesianBinarySensor(BinarySensorDevice):
                     ](entity_observation)
                     == should_trigger,
                 )
+
             else:
                 pop_from_current_obs()
 
+    @callback
     def _process_numeric_state(self, entity_observation):
         """Add entity to current_obs if numeric state conditions are met."""
         entity = entity_observation["entity_id"]
@@ -258,6 +264,7 @@ class BayesianBinarySensor(BinarySensorDevice):
         )
         return should_trigger
 
+    @callback
     def _process_state(self, entity_observation):
         """Add entity to current observations if state conditions are met."""
         entity = entity_observation["entity_id"]
@@ -268,6 +275,7 @@ class BayesianBinarySensor(BinarySensorDevice):
 
         return should_trigger
 
+    @callback
     def _process_template(self, entity_observation):
         """Add entity to current_obs if template is true."""
         template = entity_observation.get(CONF_VALUE_TEMPLATE)
