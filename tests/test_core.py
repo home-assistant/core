@@ -14,7 +14,7 @@ import pytz
 import pytest
 
 import homeassistant.core as ha
-from homeassistant.exceptions import InvalidEntityFormatError, InvalidStateError
+from homeassistant.exceptions import InvalidEntityFormatError
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.const import (
@@ -474,9 +474,6 @@ def test_state_init():
     """Test state.init."""
     with pytest.raises(InvalidEntityFormatError):
         ha.State("invalid_entity_format", "test_state")
-
-    with pytest.raises(InvalidStateError):
-        ha.State("domain.long_state", "t" * 256)
 
 
 def test_state_domain():
