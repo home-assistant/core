@@ -415,6 +415,7 @@ class YeelightGenericLight(Light):
         self._brightness = None
         self._color_temp = None
         self._hs = None
+        self._effect = None
 
         model_specs = self._bulb.get_model_specs()
         self._min_mireds = kelvin_to_mired(model_specs["color_temp"]["max"])
@@ -515,6 +516,11 @@ class YeelightGenericLight(Light):
         """Return the color property."""
         return self._hs
 
+    @property
+    def effect(self):
+        """Return the current effect."""
+        return self._effect
+
     # F821: https://github.com/PyCQA/pyflakes/issues/373
     @property
     def _bulb(self) -> "Bulb":  # noqa: F821
@@ -546,6 +552,17 @@ class YeelightGenericLight(Light):
         return YEELIGHT_MONO_EFFECT_LIST
 
     @property
+    def state_attributes(self):
+        """Return optional state attributes."""
+
+        attributes = super().state_attributes
+        attributes["flowing"] = self.device.is_color_flow_enabled
+        if self.device.is_nightlight_supported:
+            attributes["night_light"] = self.device.is_nightlight_enabled
+
+        return attributes
+
+    @property
     def device(self):
         """Return yeelight device."""
         return self._device
@@ -553,6 +570,8 @@ class YeelightGenericLight(Light):
     def update(self):
         """Update light properties."""
         self._hs = self._get_hs_from_properties()
+        if not self.device.is_color_flow_enabled:
+            self._effect = None
 
     def _get_hs_from_properties(self):
         rgb = self._get_property("rgb")
@@ -694,6 +713,7 @@ class YeelightGenericLight(Light):
 
             try:
                 self._bulb.start_flow(flow, light_type=self.light_type)
+                self._effect = effect
             except BulbException as ex:
                 _LOGGER.error("Unable to set effect: %s", ex)
 
