@@ -118,8 +118,8 @@ def valid_entity_id(entity_id: str) -> bool:
     return "." in entity_id and slugify(entity_id) == entity_id.replace(".", "_", 1)
 
 
-def valid_state(state: str) -> bool:
-    """Test if a state is valid."""
+def valid_state_length(state: str) -> bool:
+    """Test if a state is less than 256 characters."""
     return len(state) < 256
 
 
@@ -725,13 +725,13 @@ class State:
                 ).format(entity_id)
             )
 
-        if not valid_state(state):
-            raise InvalidStateError(
-                (
-                    "Invalid state encountered for entity id: {}. "
-                    "State max length is 255 characters."
-                ).format(entity_id)
+        if not valid_state_length(state):
+            _LOGGER.warning(
+                "Invalid state encountered for entity id: %s. "
+                "State truncated to max length of 255 characters.",
+                entity_id
             )
+            state = state[:255]
 
         self.entity_id = entity_id.lower()
         self.state = state
