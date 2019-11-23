@@ -195,7 +195,7 @@ async def test_linked_battery_sensor(hass, hk_driver, caplog):
         {CONF_LINKED_BATTERY_SENSOR: linked_battery},
     )
     acc.update_state = lambda x: None
-    assert acc.linked_battery_sensor_id == linked_battery
+    assert acc.linked_battery_sensor == linked_battery
 
     await hass.async_add_job(acc.run)
     await hass.async_block_till_done()
@@ -262,7 +262,6 @@ async def test_missing_linked_battery_sensor(hass, hk_driver, caplog):
     )
     acc.update_state = lambda x: None
     assert not acc.linked_battery_sensor
-    assert acc.linked_battery_sensor_id
 
     await hass.async_add_job(acc.run)
     await hass.async_block_till_done()

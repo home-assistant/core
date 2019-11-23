@@ -96,8 +96,8 @@ class HomeAccessory(Accessory):
         self.debounce = {}
         self._support_battery_level = False
         self._support_battery_charging = True
-        self.linked_battery_sensor = None
-        self.linked_battery_sensor_id = self.config.get(CONF_LINKED_BATTERY_SENSOR)
+        self.linked_battery_sensor = self.config.get(
+            CONF_LINKED_BATTERY_SENSOR)
         self.low_battery_threshold = self.config.get(
             CONF_LOW_BATTERY_THRESHOLD, DEFAULT_LOW_BATTERY_THRESHOLD
         )
@@ -106,19 +106,18 @@ class HomeAccessory(Accessory):
         battery_found = self.hass.states.get(self.entity_id).attributes.get(
             ATTR_BATTERY_LEVEL
         )
-        if self.linked_battery_sensor_id:
-            self.linked_battery_sensor = self.hass.states.get(
-                self.linked_battery_sensor_id
-            )
 
-            if self.linked_battery_sensor is None:
+        if self.linked_battery_sensor:
+            if self.hass.states.get(self.linked_battery_sensor):
+                battery_found = self.hass.states.get(
+                    self.linked_battery_sensor).state
+            else:
+                self.linked_battery_sensor = None
                 _LOGGER.warning(
                     "%s: Battery sensor state missing: %s",
                     self.entity_id,
                     self.linked_battery_sensor,
                 )
-            else:
-                battery_found = self.linked_battery_sensor.state
 
         if battery_found is None:
             return
@@ -148,12 +147,12 @@ class HomeAccessory(Accessory):
         async_track_state_change(self.hass, self.entity_id, self.update_state_callback)
 
         if self.linked_battery_sensor:
-            battery_state = self.hass.states.get(self.linked_battery_sensor_id)
+            battery_state = self.hass.states.get(self.linked_battery_sensor)
             self.hass.async_add_job(
                 self.update_linked_battery, None, None, battery_state
             )
             async_track_state_change(
-                self.hass, self.linked_battery_sensor_id, self.update_linked_battery
+                self.hass, self.linked_battery_sensor, self.update_linked_battery
             )
 
     @ha_callback
