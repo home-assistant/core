@@ -73,7 +73,7 @@ CONFIG_SCHEMA = vol.Schema({PLEX_DOMAIN: SERVER_CONFIG_SCHEMA}, extra=vol.ALLOW_
 _LOGGER = logging.getLogger(__package__)
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Plex component."""
     hass.data.setdefault(
         PLEX_DOMAIN,
@@ -82,12 +82,12 @@ def setup(hass, config):
 
     plex_config = config.get(PLEX_DOMAIN, {})
     if plex_config:
-        _setup_plex(hass, plex_config)
+        await _async_setup_plex(hass, plex_config)
 
     return True
 
 
-def _setup_plex(hass, config):
+async def _async_setup_plex(hass, config):
     """Pass configuration to a config flow."""
     server_config = dict(config)
     if MP_DOMAIN in server_config:
