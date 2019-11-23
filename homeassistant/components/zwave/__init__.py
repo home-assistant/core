@@ -5,6 +5,11 @@ from importlib import import_module
 import logging
 from pprint import pprint
 
+# pylint: disable=import-error
+from openzwave.group import ZWaveGroup
+from openzwave.network import ZWaveNetwork
+from openzwave.option import ZWaveOption
+from pydispatch import dispatcher
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -334,13 +339,6 @@ async def async_setup_entry(hass, config_entry):
 
     Will automatically load components to support devices found on the network.
     """
-    from pydispatch import dispatcher
-
-    # pylint: disable=import-error
-    from openzwave.option import ZWaveOption
-    from openzwave.network import ZWaveNetwork
-    from openzwave.group import ZWaveGroup
-
     # Merge config entry and yaml config
     config = config_entry.data
     if DATA_ZWAVE_CONFIG in hass.data:
@@ -1185,10 +1183,7 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
 
     def __init__(self, values, domain):
         """Initialize the z-Wave device."""
-        # pylint: disable=import-error
         super().__init__()
-        from openzwave.network import ZWaveNetwork
-        from pydispatch import dispatcher
 
         self.values = values
         self.node = values.primary.node

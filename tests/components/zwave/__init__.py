@@ -1,1 +1,1 @@
-"""Tests for the  Z-Wave component."""
+"""Tests for the Z-Wave component."""

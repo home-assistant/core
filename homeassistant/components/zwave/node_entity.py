@@ -2,6 +2,10 @@
 from itertools import count
 import logging
 
+# pylint: disable=import-error
+from openzwave.network import ZWaveNetwork
+from pydispatch import dispatcher
+
 from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, ATTR_WAKEUP
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
@@ -120,10 +124,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
 
     def __init__(self, node, network):
         """Initialize node."""
-        # pylint: disable=import-error
         super().__init__()
-        from openzwave.network import ZWaveNetwork
-        from pydispatch import dispatcher
 
         self._network = network
         self.node = node

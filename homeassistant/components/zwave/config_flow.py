@@ -1,7 +1,12 @@
 """Config flow to configure Z-Wave."""
 from collections import OrderedDict
+from functools import partial
 import logging
+from random import choice
 
+# pylint: disable=import-error
+from openzwave.object import ZWaveException
+from openzwave.option import ZWaveOption
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -42,12 +47,7 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
 
         if user_input is not None:
             # Check if USB path is valid
-            from openzwave.option import ZWaveOption
-            from openzwave.object import ZWaveException
-
             try:
-                from functools import partial
-
                 option = await self.hass.async_add_executor_job(  # noqa: F841 pylint: disable=unused-variable
                     partial(
                         ZWaveOption,
@@ -63,8 +63,6 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
 
             if user_input.get(CONF_NETWORK_KEY) is None:
                 # Generate a random key
-                from random import choice
-
                 key = str()
                 for i in range(16):
                     key += "0x"

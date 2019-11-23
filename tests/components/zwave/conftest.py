@@ -19,9 +19,9 @@ def mock_openzwave():
         "sys.modules",
         {
             "libopenzwave": libopenzwave,
-            "openzwave.option": base_mock.option,
-            "openzwave.network": base_mock.network,
             "openzwave.group": base_mock.group,
+            "openzwave.network": base_mock.network,
+            "openzwave.option": base_mock.option,
         },
     ):
         yield base_mock
