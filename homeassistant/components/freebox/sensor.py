@@ -1,6 +1,7 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 import logging
 
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
 from . import DATA_FREEBOX
@@ -30,7 +31,7 @@ class FbxTempSensor(Entity):
         self._name = "generic"
         self._state = None
         self._sensor_id = sensor_id
-        self._unit_of_measurement = "°C"
+        self._unit_of_measurement = TEMP_CELSIUS
 
     @property
     def name(self):
