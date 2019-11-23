@@ -126,7 +126,7 @@ class SonosAlarmSwitch(SwitchDevice):
         }
         super().__init__()
 
-    async def async_update(self, now=None):
+    def update(self, now=None):
         """Retrieve latest state."""
         _LOGGER.debug("updating alarms")
         try:
