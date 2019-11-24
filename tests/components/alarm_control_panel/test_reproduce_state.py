@@ -58,7 +58,9 @@ async def test_reproducing_states(hass, caplog):
         hass, "alarm_control_panel", SERVICE_ALARM_TRIGGER
     )
 
-    # These calls should do nothing as entities already in desired state
+    # Even if the target state is the same as the current we still needs
+    # to do the calls, as the current state is just a cache of the real one
+    # and could be out of sync.
     await hass.helpers.state.async_reproduce_state(
         [
             State("alarm_control_panel.entity_armed_away", STATE_ALARM_ARMED_AWAY),
@@ -74,12 +76,12 @@ async def test_reproducing_states(hass, caplog):
         blocking=True,
     )
 
-    assert len(arm_away_calls) == 0
-    assert len(arm_custom_bypass_calls) == 0
-    assert len(arm_home_calls) == 0
-    assert len(arm_night_calls) == 0
-    assert len(disarm_calls) == 0
-    assert len(trigger_calls) == 0
+    assert len(arm_away_calls) == 1
+    assert len(arm_custom_bypass_calls) == 1
+    assert len(arm_home_calls) == 1
+    assert len(arm_night_calls) == 1
+    assert len(disarm_calls) == 1
+    assert len(trigger_calls) == 1
 
     # Test invalid state is handled
     await hass.helpers.state.async_reproduce_state(
@@ -87,12 +89,12 @@ async def test_reproducing_states(hass, caplog):
     )
 
     assert "not_supported" in caplog.text
-    assert len(arm_away_calls) == 0
-    assert len(arm_custom_bypass_calls) == 0
-    assert len(arm_home_calls) == 0
-    assert len(arm_night_calls) == 0
-    assert len(disarm_calls) == 0
-    assert len(trigger_calls) == 0
+    assert len(arm_away_calls) == 1
+    assert len(arm_custom_bypass_calls) == 1
+    assert len(arm_home_calls) == 1
+    assert len(arm_night_calls) == 1
+    assert len(disarm_calls) == 1
+    assert len(trigger_calls) == 1
 
     # Make sure correct services are called
     await hass.helpers.state.async_reproduce_state(
@@ -113,36 +115,36 @@ async def test_reproducing_states(hass, caplog):
         blocking=True,
     )
 
-    assert len(arm_away_calls) == 1
-    assert arm_away_calls[0].domain == "alarm_control_panel"
-    assert arm_away_calls[0].data == {
+    assert len(arm_away_calls) == 2
+    assert arm_away_calls[1].domain == "alarm_control_panel"
+    assert arm_away_calls[1].data == {
         "entity_id": "alarm_control_panel.entity_armed_custom_bypass"
     }
 
-    assert len(arm_custom_bypass_calls) == 1
-    assert arm_custom_bypass_calls[0].domain == "alarm_control_panel"
-    assert arm_custom_bypass_calls[0].data == {
+    assert len(arm_custom_bypass_calls) == 2
+    assert arm_custom_bypass_calls[1].domain == "alarm_control_panel"
+    assert arm_custom_bypass_calls[1].data == {
         "entity_id": "alarm_control_panel.entity_armed_home"
     }
 
-    assert len(arm_home_calls) == 1
-    assert arm_home_calls[0].domain == "alarm_control_panel"
-    assert arm_home_calls[0].data == {
+    assert len(arm_home_calls) == 2
+    assert arm_home_calls[1].domain == "alarm_control_panel"
+    assert arm_home_calls[1].data == {
         "entity_id": "alarm_control_panel.entity_armed_night"
     }
 
-    assert len(arm_night_calls) == 1
-    assert arm_night_calls[0].domain == "alarm_control_panel"
-    assert arm_night_calls[0].data == {
+    assert len(arm_night_calls) == 2
+    assert arm_night_calls[1].domain == "alarm_control_panel"
+    assert arm_night_calls[1].data == {
         "entity_id": "alarm_control_panel.entity_disarmed"
     }
 
-    assert len(disarm_calls) == 1
-    assert disarm_calls[0].domain == "alarm_control_panel"
-    assert disarm_calls[0].data == {"entity_id": "alarm_control_panel.entity_triggered"}
+    assert len(disarm_calls) == 2
+    assert disarm_calls[1].domain == "alarm_control_panel"
+    assert disarm_calls[1].data == {"entity_id": "alarm_control_panel.entity_triggered"}
 
-    assert len(trigger_calls) == 1
-    assert trigger_calls[0].domain == "alarm_control_panel"
-    assert trigger_calls[0].data == {
+    assert len(trigger_calls) == 2
+    assert trigger_calls[1].domain == "alarm_control_panel"
+    assert trigger_calls[1].data == {
         "entity_id": "alarm_control_panel.entity_armed_away"
     }
