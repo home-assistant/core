@@ -4,7 +4,6 @@ import re
 
 from simplipy.entity import EntityTypes
 from simplipy.system import SystemStates
-from simplipy.system.v3 import LevelMap as V3Volume
 
 from homeassistant.components.alarm_control_panel import (
     FORMAT_NUMBER,
@@ -74,29 +73,25 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
         self._simplisafe = simplisafe
         self._state = None
 
-        # Some properties only exist for V2 or V3 systems:
-        for prop in (
-            ATTR_ALARM_DURATION,
-            ATTR_ALARM_VOLUME,
-            ATTR_BATTERY_BACKUP_POWER_LEVEL,
-            ATTR_CHIME_VOLUME,
-            ATTR_ENTRY_DELAY_AWAY,
-            ATTR_ENTRY_DELAY_HOME,
-            ATTR_EXIT_DELAY_AWAY,
-            ATTR_EXIT_DELAY_HOME,
-            ATTR_GSM_STRENGTH,
-            ATTR_LIGHT,
-            ATTR_RF_JAMMING,
-            ATTR_VOICE_PROMPT_VOLUME,
-            ATTR_WALL_POWER_LEVEL,
-            ATTR_WIFI_STRENGTH,
-        ):
-            if hasattr(system, prop):
-                value = getattr(system, prop)
-                if isinstance(value, V3Volume):
-                    self._attrs[prop] = value.name
-                else:
-                    self._attrs[prop] = value
+        if self._system.version == 3:
+            self._attrs.update(
+                {
+                    ATTR_ALARM_DURATION: self._system.alarm_duration,
+                    ATTR_ALARM_VOLUME: self._system.alarm_volume.name,
+                    ATTR_BATTERY_BACKUP_POWER_LEVEL: self._system.battery_backup_power_level,
+                    ATTR_CHIME_VOLUME: self._system.chime_volume.name,
+                    ATTR_ENTRY_DELAY_AWAY: self._system.entry_delay_away,
+                    ATTR_ENTRY_DELAY_HOME: self._system.entry_delay_home,
+                    ATTR_EXIT_DELAY_AWAY: self._system.exit_delay_away,
+                    ATTR_EXIT_DELAY_HOME: self._system.exit_delay_home,
+                    ATTR_GSM_STRENGTH: self._system.gsm_strength,
+                    ATTR_LIGHT: self._system.light,
+                    ATTR_RF_JAMMING: self._system.rf_jamming,
+                    ATTR_VOICE_PROMPT_VOLUME: self._system.voice_prompt_volume.name,
+                    ATTR_WALL_POWER_LEVEL: self._system.wall_power_level,
+                    ATTR_WIFI_STRENGTH: self._system.wifi_strength,
+                }
+            )
 
     @property
     def changed_by(self):
@@ -174,7 +169,6 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
         last_event = self._simplisafe.last_event_data[self._system.system_id]
         self._attrs.update(
             {
-                ATTR_ALARM_ACTIVE: self._system.alarm_going_off,
                 ATTR_LAST_EVENT_INFO: last_event["info"],
                 ATTR_LAST_EVENT_SENSOR_NAME: last_event["sensorName"],
                 ATTR_LAST_EVENT_SENSOR_TYPE: EntityTypes(last_event["sensorType"]).name,
