@@ -2,7 +2,7 @@
   "domain": "heatmiser",
   "name": "Heatmiser",
   "documentation": "https://www.home-assistant.io/integrations/heatmiser",
-  "requirements": ["heatmiserV3==1.1.9", "pyserial-asyncio"],
+  "requirements": ["heatmiserV3==1.1.10", "pyserial-asyncio"],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@andylockran"]
 }
