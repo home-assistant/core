@@ -12,7 +12,9 @@ async def test_reproducing_states(hass, caplog):
     lock_calls = async_mock_service(hass, "lock", "lock")
     unlock_calls = async_mock_service(hass, "lock", "unlock")
 
-    # These calls should do nothing as entities already in desired state
+    # Even if the target state is the same as the current we still needs
+    # to do the calls, as the current state is just a cache of the real one
+    # and could be out of sync.
     await hass.helpers.state.async_reproduce_state(
         [
             State("lock.entity_locked", "locked"),
@@ -21,8 +23,8 @@ async def test_reproducing_states(hass, caplog):
         blocking=True,
     )
 
-    assert len(lock_calls) == 0
-    assert len(unlock_calls) == 0
+    assert len(lock_calls) == 1
+    assert len(unlock_calls) == 1
 
     # Test invalid state is handled
     await hass.helpers.state.async_reproduce_state(
@@ -30,8 +32,8 @@ async def test_reproducing_states(hass, caplog):
     )
 
     assert "not_supported" in caplog.text
-    assert len(lock_calls) == 0
-    assert len(unlock_calls) == 0
+    assert len(lock_calls) == 1
+    assert len(unlock_calls) == 1
 
     # Make sure correct services are called
     await hass.helpers.state.async_reproduce_state(
@@ -44,10 +46,10 @@ async def test_reproducing_states(hass, caplog):
         blocking=True,
     )
 
-    assert len(lock_calls) == 1
-    assert lock_calls[0].domain == "lock"
-    assert lock_calls[0].data == {"entity_id": "lock.entity_unlocked"}
+    assert len(lock_calls) == 2
+    assert lock_calls[-1].domain == "lock"
+    assert lock_calls[-1].data == {"entity_id": "lock.entity_unlocked"}
 
-    assert len(unlock_calls) == 1
-    assert unlock_calls[0].domain == "lock"
-    assert unlock_calls[0].data == {"entity_id": "lock.entity_locked"}
+    assert len(unlock_calls) == 2
+    assert unlock_calls[-1].domain == "lock"
+    assert unlock_calls[-1].data == {"entity_id": "lock.entity_locked"}

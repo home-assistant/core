@@ -36,10 +36,6 @@ async def _async_reproduce_state(
         )
         return
 
-    # Return if we are already at the right state.
-    if cur_state.state == state.state:
-        return
-
     service_data = {ATTR_ENTITY_ID: state.entity_id}
 
     if state.state == STATE_LOCKED:
