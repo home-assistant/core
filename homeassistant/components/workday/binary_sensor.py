@@ -57,6 +57,7 @@ ALL_COUNTRIES = [
     "Hungary",
     "HU",
     "Honduras",
+    "HND",
     "Iceland",
     "IS",
     "India",
