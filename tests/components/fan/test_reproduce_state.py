@@ -18,7 +18,9 @@ async def test_reproducing_states(hass, caplog):
     oscillate_calls = async_mock_service(hass, "fan", "oscillate")
     set_speed_calls = async_mock_service(hass, "fan", "set_speed")
 
-    # These calls should do nothing as entities already in desired state
+    # Even if the target state is the same as the current we still needs
+    # to do the calls, as the current state is just a cache of the real one
+    # and could be out of sync.
     await hass.helpers.state.async_reproduce_state(
         [
             State("fan.entity_off", "off"),
@@ -30,11 +32,11 @@ async def test_reproducing_states(hass, caplog):
         blocking=True,
     )
 
-    assert len(turn_on_calls) == 0
-    assert len(turn_off_calls) == 0
-    assert len(set_direction_calls) == 0
-    assert len(oscillate_calls) == 0
-    assert len(set_speed_calls) == 0
+    assert len(turn_on_calls) == 4
+    assert len(turn_off_calls) == 1
+    assert len(set_direction_calls) == 1
+    assert len(oscillate_calls) == 1
+    assert len(set_speed_calls) == 1
 
     # Test invalid state is handled
     await hass.helpers.state.async_reproduce_state(
@@ -42,11 +44,11 @@ async def test_reproducing_states(hass, caplog):
     )
 
     assert "not_supported" in caplog.text
-    assert len(turn_on_calls) == 0
-    assert len(turn_off_calls) == 0
-    assert len(set_direction_calls) == 0
-    assert len(oscillate_calls) == 0
-    assert len(set_speed_calls) == 0
+    assert len(turn_on_calls) == 4
+    assert len(turn_off_calls) == 1
+    assert len(set_direction_calls) == 1
+    assert len(oscillate_calls) == 1
+    assert len(set_speed_calls) == 1
 
     # Make sure correct services are called
     await hass.helpers.state.async_reproduce_state(
@@ -62,28 +64,28 @@ async def test_reproducing_states(hass, caplog):
         blocking=True,
     )
 
-    assert len(turn_on_calls) == 1
-    assert turn_on_calls[0].domain == "fan"
-    assert turn_on_calls[0].data == {"entity_id": "fan.entity_off"}
+    assert len(turn_on_calls) == 8
+    assert turn_on_calls[-1].domain == "fan"
+    assert turn_on_calls[-1].data == {"entity_id": "fan.entity_direction"}
 
-    assert len(set_direction_calls) == 1
-    assert set_direction_calls[0].domain == "fan"
-    assert set_direction_calls[0].data == {
+    assert len(set_direction_calls) == 2
+    assert set_direction_calls[1].domain == "fan"
+    assert set_direction_calls[1].data == {
         "entity_id": "fan.entity_direction",
         "direction": "reverse",
     }
 
-    assert len(oscillate_calls) == 1
-    assert oscillate_calls[0].domain == "fan"
-    assert oscillate_calls[0].data == {
+    assert len(oscillate_calls) == 2
+    assert oscillate_calls[1].domain == "fan"
+    assert oscillate_calls[1].data == {
         "entity_id": "fan.entity_oscillating",
         "oscillating": False,
     }
 
-    assert len(set_speed_calls) == 1
-    assert set_speed_calls[0].domain == "fan"
-    assert set_speed_calls[0].data == {"entity_id": "fan.entity_speed", "speed": "low"}
+    assert len(set_speed_calls) == 2
+    assert set_speed_calls[1].domain == "fan"
+    assert set_speed_calls[1].data == {"entity_id": "fan.entity_speed", "speed": "low"}
 
-    assert len(turn_off_calls) == 1
-    assert turn_off_calls[0].domain == "fan"
-    assert turn_off_calls[0].data == {"entity_id": "fan.entity_on"}
+    assert len(turn_off_calls) == 2
+    assert turn_off_calls[1].domain == "fan"
+    assert turn_off_calls[1].data == {"entity_id": "fan.entity_on"}

@@ -50,27 +50,16 @@ async def _async_reproduce_state(
         )
         return
 
-    # Return if we are already at the right state.
-    if cur_state.state == state.state and all(
-        check_attr_equal(cur_state.attributes, state.attributes, attr)
-        for attr in ATTRIBUTES
-    ):
-        return
-
     service_data = {ATTR_ENTITY_ID: state.entity_id}
     service_calls = {}  # service: service_data
 
     if state.state == STATE_ON:
         # The fan should be on
-        if cur_state.state != STATE_ON:
-            # Turn on the fan at first
-            service_calls[SERVICE_TURN_ON] = service_data
+        service_calls[SERVICE_TURN_ON] = service_data
 
         for attr, service in ATTRIBUTES.items():
             # Call services to adjust the attributes
-            if attr in state.attributes and not check_attr_equal(
-                state.attributes, cur_state.attributes, attr
-            ):
+            if attr in state.attributes:
                 data = service_data.copy()
                 data[attr] = state.attributes[attr]
                 service_calls[service] = data
