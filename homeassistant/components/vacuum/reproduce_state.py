@@ -56,34 +56,26 @@ async def _async_reproduce_state(
         )
         return
 
-    # Return if we are already at the right state.
-    if cur_state.state == state.state and cur_state.attributes.get(
-        ATTR_FAN_SPEED
-    ) == state.attributes.get(ATTR_FAN_SPEED):
-        return
-
     service_data = {ATTR_ENTITY_ID: state.entity_id}
 
-    if cur_state.state != state.state:
-        # Wrong state
-        if state.state == STATE_ON:
-            service = SERVICE_TURN_ON
-        elif state.state == STATE_OFF:
-            service = SERVICE_TURN_OFF
-        elif state.state == STATE_CLEANING:
-            service = SERVICE_START
-        elif state.state == STATE_DOCKED or state.state == STATE_RETURNING:
-            service = SERVICE_RETURN_TO_BASE
-        elif state.state == STATE_IDLE:
-            service = SERVICE_STOP
-        elif state.state == STATE_PAUSED:
-            service = SERVICE_PAUSE
+    if state.state == STATE_ON:
+        service = SERVICE_TURN_ON
+    elif state.state == STATE_OFF:
+        service = SERVICE_TURN_OFF
+    elif state.state == STATE_CLEANING:
+        service = SERVICE_START
+    elif state.state == STATE_DOCKED or state.state == STATE_RETURNING:
+        service = SERVICE_RETURN_TO_BASE
+    elif state.state == STATE_IDLE:
+        service = SERVICE_STOP
+    elif state.state == STATE_PAUSED:
+        service = SERVICE_PAUSE
 
-        await hass.services.async_call(
-            DOMAIN, service, service_data, context=context, blocking=True
-        )
+    await hass.services.async_call(
+        DOMAIN, service, service_data, context=context, blocking=True
+    )
 
-    if cur_state.attributes.get(ATTR_FAN_SPEED) != state.attributes.get(ATTR_FAN_SPEED):
+    if state.attributes.get(ATTR_FAN_SPEED):
         # Wrong fan speed
         service_data["fan_speed"] = state.attributes[ATTR_FAN_SPEED]
         await hass.services.async_call(

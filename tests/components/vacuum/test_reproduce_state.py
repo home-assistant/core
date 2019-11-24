@@ -47,7 +47,9 @@ async def test_reproducing_states(hass, caplog):
     return_calls = async_mock_service(hass, "vacuum", SERVICE_RETURN_TO_BASE)
     fan_speed_calls = async_mock_service(hass, "vacuum", SERVICE_SET_FAN_SPEED)
 
-    # These calls should do nothing as entities already in desired state
+    # Even if the target state is the same as the current we still needs
+    # to do the calls, as the current state is just a cache of the real one
+    # and could be out of sync.
     await hass.helpers.state.async_reproduce_state(
         [
             State("vacuum.entity_off", STATE_OFF),
@@ -62,13 +64,13 @@ async def test_reproducing_states(hass, caplog):
         blocking=True,
     )
 
-    assert len(turn_on_calls) == 0
-    assert len(turn_off_calls) == 0
-    assert len(start_calls) == 0
-    assert len(pause_calls) == 0
-    assert len(stop_calls) == 0
-    assert len(return_calls) == 0
-    assert len(fan_speed_calls) == 0
+    assert len(turn_on_calls) == 2
+    assert len(turn_off_calls) == 1
+    assert len(start_calls) == 1
+    assert len(pause_calls) == 1
+    assert len(stop_calls) == 1
+    assert len(return_calls) == 2
+    assert len(fan_speed_calls) == 1
 
     # Test invalid state is handled
     await hass.helpers.state.async_reproduce_state(
@@ -76,13 +78,13 @@ async def test_reproducing_states(hass, caplog):
     )
 
     assert "not_supported" in caplog.text
-    assert len(turn_on_calls) == 0
-    assert len(turn_off_calls) == 0
-    assert len(start_calls) == 0
-    assert len(pause_calls) == 0
-    assert len(stop_calls) == 0
-    assert len(return_calls) == 0
-    assert len(fan_speed_calls) == 0
+    assert len(turn_on_calls) == 2
+    assert len(turn_off_calls) == 1
+    assert len(start_calls) == 1
+    assert len(pause_calls) == 1
+    assert len(stop_calls) == 1
+    assert len(return_calls) == 2
+    assert len(fan_speed_calls) == 1
 
     # Make sure correct services are called
     await hass.helpers.state.async_reproduce_state(
@@ -101,39 +103,43 @@ async def test_reproducing_states(hass, caplog):
         blocking=True,
     )
 
-    assert len(turn_on_calls) == 1
-    assert turn_on_calls[0].domain == "vacuum"
-    assert turn_on_calls[0].data == {"entity_id": "vacuum.entity_off"}
+    assert len(turn_on_calls) == 4
+    assert turn_on_calls[-1].domain == "vacuum"
+    assert turn_on_calls[-1].data == {
+        "entity_id": "vacuum.entity_on_fan",
+        ATTR_FAN_SPEED: FAN_SPEED_HIGH,
+    }
 
-    assert len(turn_off_calls) == 1
-    assert turn_off_calls[0].domain == "vacuum"
-    assert turn_off_calls[0].data == {"entity_id": "vacuum.entity_on"}
+    assert len(turn_off_calls) == 2
+    assert turn_off_calls[-1].domain == "vacuum"
+    assert turn_off_calls[-1].data == {"entity_id": "vacuum.entity_on"}
 
-    assert len(start_calls) == 2
+    assert len(start_calls) == 3
     entities = [
         {"entity_id": "vacuum.entity_docked"},
         {"entity_id": "vacuum.entity_returning"},
+        {"entity_id": "vacuum.entity_cleaning"},
     ]
     for call in start_calls:
         assert call.domain == "vacuum"
         assert call.data in entities
         entities.remove(call.data)
 
-    assert len(pause_calls) == 1
-    assert pause_calls[0].domain == "vacuum"
-    assert pause_calls[0].data == {"entity_id": "vacuum.entity_cleaning"}
+    assert len(pause_calls) == 2
+    assert pause_calls[-1].domain == "vacuum"
+    assert pause_calls[-1].data == {"entity_id": "vacuum.entity_cleaning"}
 
-    assert len(stop_calls) == 1
-    assert stop_calls[0].domain == "vacuum"
-    assert stop_calls[0].data == {"entity_id": "vacuum.entity_paused"}
+    assert len(stop_calls) == 2
+    assert stop_calls[-1].domain == "vacuum"
+    assert stop_calls[-1].data == {"entity_id": "vacuum.entity_paused"}
 
-    assert len(return_calls) == 1
-    assert return_calls[0].domain == "vacuum"
-    assert return_calls[0].data == {"entity_id": "vacuum.entity_idle"}
+    assert len(return_calls) == 3
+    assert return_calls[-1].domain == "vacuum"
+    assert return_calls[-1].data == {"entity_id": "vacuum.entity_idle"}
 
-    assert len(fan_speed_calls) == 1
-    assert fan_speed_calls[0].domain == "vacuum"
-    assert fan_speed_calls[0].data == {
+    assert len(fan_speed_calls) == 2
+    assert fan_speed_calls[-1].domain == "vacuum"
+    assert fan_speed_calls[-1].data == {
         "entity_id": "vacuum.entity_on_fan",
         ATTR_FAN_SPEED: FAN_SPEED_HIGH,
     }
