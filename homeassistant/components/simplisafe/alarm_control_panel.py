@@ -73,6 +73,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
         self._simplisafe = simplisafe
         self._state = None
 
+        self._attrs.update({ATTR_ALARM_ACTIVE: self._system.alarm_going_off})
         if self._system.version == 3:
             self._attrs.update(
                 {
