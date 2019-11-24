@@ -223,7 +223,9 @@ async def websocket_get_groups(hass, connection, msg):
 
     groups = []
     for group in zha_gateway.application_controller.groups.values():
-        groups.append(async_get_group_info(hass, group, ha_device_registry))
+        groups.append(
+            async_get_group_info(hass, zha_gateway, group, ha_device_registry)
+        )
     connection.send_result(msg[ID], groups)
 
 
@@ -267,6 +269,7 @@ async def websocket_get_group(hass, connection, msg):
     if group_id in zha_gateway.application_controller.groups:
         group = async_get_group_info(
             hass,
+            zha_gateway,
             zha_gateway.application_controller.groups[group_id],
             ha_device_registry,
         )
@@ -299,7 +302,7 @@ async def websocket_add_group(hass, connection, msg):
         zigpy_group = zha_gateway.application_controller.groups.add_group(
             group_id, group_name
         )
-    ret_group = async_get_group_info(hass, zigpy_group, ha_device_registry)
+    ret_group = async_get_group_info(hass, zha_gateway, zigpy_group, ha_device_registry)
     connection.send_result(msg[ID], ret_group)
 
 
@@ -329,14 +332,19 @@ def async_get_device_info(hass, device, ha_device_registry=None):
 
 
 @callback
-def async_get_group_info(hass, group, ha_device_registry):
+def async_get_group_info(hass, zha_gateway, group, ha_device_registry):
     """Get ZHA group."""
     ret_group = {}
-    ret_group["id"] = group.group_id
+    ret_group["group_id"] = group.group_id
     ret_group["name"] = group.name
     ret_group["members"] = [
-        async_get_device_info(hass, member, ha_device_registry=ha_device_registry)
-        for member in group.members.values()
+        async_get_device_info(
+            hass,
+            zha_gateway.get_device(member_ieee),
+            ha_device_registry=ha_device_registry,
+        )
+        for member_ieee in group.members.keys()
+        if member_ieee in zha_gateway.devices
     ]
     return ret_group
 
