@@ -2,12 +2,18 @@
 import logging
 
 from homeassistant.components.fan import (
-    SUPPORT_SET_SPEED, FanEntity, DOMAIN,
-    SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF)
+    SUPPORT_SET_SPEED,
+    FanEntity,
+    DOMAIN,
+    SPEED_HIGH,
+    SPEED_LOW,
+    SPEED_MEDIUM,
+    SPEED_OFF,
+)
 
 from . import LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice
 
-from pylutron_caseta import (FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_HIGH)
+from pylutron_caseta import FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_HIGH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,21 +22,20 @@ VALUE_TO_SPEED = {
     FAN_OFF: SPEED_OFF,
     FAN_LOW: SPEED_LOW,
     FAN_MEDIUM: SPEED_MEDIUM,
-    FAN_HIGH: SPEED_HIGH
+    FAN_HIGH: SPEED_HIGH,
 }
 
 SPEED_TO_VALUE = {
     SPEED_OFF: FAN_OFF,
     SPEED_LOW: FAN_LOW,
     SPEED_MEDIUM: FAN_MEDIUM,
-    SPEED_HIGH: FAN_HIGH
+    SPEED_HIGH: FAN_HIGH,
 }
 
 FAN_SPEEDS = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up Lutron fan."""
     devs = []
     bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
@@ -78,11 +83,14 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
     @property
     def is_on(self):
         """Return true if device is on."""
-        return VALUE_TO_SPEED[self._state["fan_speed"]] in [SPEED_LOW,
-                                                            SPEED_MEDIUM,
-                                                            SPEED_HIGH]
+        return VALUE_TO_SPEED[self._state["fan_speed"]] in [
+            SPEED_LOW,
+            SPEED_MEDIUM,
+            SPEED_HIGH,
+        ]
 
     async def async_update(self):
         """Update when forcing a refresh of the device."""
         self._state = self._smartbridge.get_device_by_id(self._device_id)
         _LOGGER.debug("State of this lutron fan device is %s", self._state)
+
