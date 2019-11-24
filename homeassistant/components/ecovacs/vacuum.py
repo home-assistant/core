@@ -1,16 +1,7 @@
 """Support for Ecovacs Ecovacs Vaccums."""
 import logging
 
-from sucks import (
-    Charge,
-    Clean,
-    FAN_SPEED_NORMAL,
-    FAN_SPEED_HIGH,
-    PlaySound,
-    Spot,
-    Stop,
-    VacBotCommand,
-)
+import sucks
 
 from homeassistant.components.vacuum import (
     SUPPORT_BATTERY,
@@ -135,7 +126,7 @@ class EcovacsVacuum(VacuumDevice):
     def return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
 
-        self.device.run(Charge())
+        self.device.run(sucks.Charge())
 
     @property
     def battery_icon(self):
@@ -161,12 +152,12 @@ class EcovacsVacuum(VacuumDevice):
     def fan_speed_list(self):
         """Get the list of available fan speed steps of the vacuum cleaner."""
 
-        return [FAN_SPEED_NORMAL, FAN_SPEED_HIGH]
+        return [sucks.FAN_SPEED_NORMAL, sucks.FAN_SPEED_HIGH]
 
     def turn_on(self, **kwargs):
         """Turn the vacuum on and start cleaning."""
 
-        self.device.run(Clean())
+        self.device.run(sucks.Clean())
 
     def turn_off(self, **kwargs):
         """Turn the vacuum off stopping the cleaning and returning home."""
@@ -175,27 +166,27 @@ class EcovacsVacuum(VacuumDevice):
     def stop(self, **kwargs):
         """Stop the vacuum cleaner."""
 
-        self.device.run(Stop())
+        self.device.run(sucks.Stop())
 
     def clean_spot(self, **kwargs):
         """Perform a spot clean-up."""
 
-        self.device.run(Spot())
+        self.device.run(sucks.Spot())
 
     def locate(self, **kwargs):
         """Locate the vacuum cleaner."""
 
-        self.device.run(PlaySound())
+        self.device.run(sucks.PlaySound())
 
     def set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed."""
         if self.is_on:
 
-            self.device.run(Clean(mode=self.device.clean_status, speed=fan_speed))
+            self.device.run(sucks.Clean(mode=self.device.clean_status, speed=fan_speed))
 
     def send_command(self, command, params=None, **kwargs):
         """Send a command to a vacuum cleaner."""
-        self.device.run(VacBotCommand(command, params))
+        self.device.run(sucks.VacBotCommand(command, params))
 
     @property
     def device_state_attributes(self):
