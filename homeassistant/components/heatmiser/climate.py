@@ -108,13 +108,11 @@ class HeatmiserV3Thermostat(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        _LOGGER.info(self._current_temperature)
         return self._current_temperature
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        _LOGGER.info(self._target_temperature)
         return self._target_temperature
 
     def set_temperature(self, **kwargs):
