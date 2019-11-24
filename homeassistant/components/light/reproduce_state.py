@@ -87,13 +87,6 @@ async def _async_reproduce_state(
     if any(attr in DEPRECATED_GROUP for attr in state.attributes):
         _LOGGER.warning(DEPRECATION_WARNING)
 
-    # Return if we are already at the right state.
-    if cur_state.state == state.state and all(
-        check_attr_equal(cur_state.attributes, state.attributes, attr)
-        for attr in ATTR_GROUP + COLOR_GROUP
-    ):
-        return
-
     service_data = {ATTR_ENTITY_ID: state.entity_id}
 
     if state.state == STATE_ON:

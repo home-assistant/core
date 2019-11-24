@@ -37,7 +37,9 @@ async def test_reproducing_states(hass, caplog):
     turn_on_calls = async_mock_service(hass, "light", "turn_on")
     turn_off_calls = async_mock_service(hass, "light", "turn_off")
 
-    # These calls should do nothing as entities already in desired state
+    # Even if the target state is the same as the current we still needs
+    # to do the calls, as the current state is just a cache of the real one
+    # and could be out of sync.
     await hass.helpers.state.async_reproduce_state(
         [
             State("light.entity_off", "off"),
@@ -57,8 +59,8 @@ async def test_reproducing_states(hass, caplog):
         blocking=True,
     )
 
-    assert len(turn_on_calls) == 0
-    assert len(turn_off_calls) == 0
+    assert len(turn_on_calls) == 12
+    assert len(turn_off_calls) == 1
 
     # Test invalid state is handled
     await hass.helpers.state.async_reproduce_state(
@@ -66,8 +68,8 @@ async def test_reproducing_states(hass, caplog):
     )
 
     assert "not_supported" in caplog.text
-    assert len(turn_on_calls) == 0
-    assert len(turn_off_calls) == 0
+    assert len(turn_on_calls) == 12
+    assert len(turn_off_calls) == 1
 
     # Make sure correct services are called
     await hass.helpers.state.async_reproduce_state(
@@ -89,7 +91,7 @@ async def test_reproducing_states(hass, caplog):
         blocking=True,
     )
 
-    assert len(turn_on_calls) == 12
+    assert len(turn_on_calls) == 24
 
     expected_calls = []
 
@@ -141,7 +143,7 @@ async def test_reproducing_states(hass, caplog):
     expected_rgb["entity_id"] = "light.entity_rgb"
     expected_calls.append(expected_rgb)
 
-    for call in turn_on_calls:
+    for call in turn_on_calls[12:]:
         assert call.domain == "light"
         found = False
         for expected in expected_calls:
@@ -153,9 +155,9 @@ async def test_reproducing_states(hass, caplog):
         # No entry found
         assert found
 
-    assert len(turn_off_calls) == 1
-    assert turn_off_calls[0].domain == "light"
-    assert turn_off_calls[0].data == {"entity_id": "light.entity_xy"}
+    assert len(turn_off_calls) == 2
+    assert turn_off_calls[1].domain == "light"
+    assert turn_off_calls[1].data == {"entity_id": "light.entity_xy"}
 
 
 async def test_deprecation_warning(hass, caplog):
