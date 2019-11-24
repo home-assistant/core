@@ -106,7 +106,6 @@ def add_station(station, api_key, fuel_types, entities, master):
     _LOGGER.debug(
         "Add_station called for station: %s and fuel types: %s", station, fuel_types
     )
-    station_id = station["id"]
     for fuel in fuel_types:
         sensor = None
         if master is None:
@@ -118,7 +117,7 @@ def add_station(station, api_key, fuel_types, entities, master):
             sensor = FuelPriceSensorSlave(
                 fuel, station, f"{NAME}_{station['name']}_{fuel}"
             )
-            master.add_slave(station_id, sensor)
+            master.add_slave(station["id"], sensor)
         entities.append(sensor)
     return master
 

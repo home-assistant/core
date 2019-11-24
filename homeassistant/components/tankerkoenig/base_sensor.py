@@ -35,10 +35,7 @@ class FuelPriceSensorBase(Entity):
         self._name = name
         self._latitude = station["lat"]
         self._longitude = station["lng"]
-        if station["isOpen"]:
-            self._is_open = STATE_OPEN
-        else:
-            self._is_open = STATE_CLOSED
+        self._is_open = STATE_OPEN if station["isOpen"] else STATE_CLOSED
         self._address = f"{station['street']} {station['houseNumber']}, {station['postCode']} {station['place']}"
         _LOGGER.debug("Setup standalone sensor %s", name)
 
@@ -82,7 +79,4 @@ class FuelPriceSensorBase(Entity):
     def new_data(self, data):
         """Update the internal sensor data."""
         self._data = data
-        if self._data["status"] == "open":
-            self._is_open = STATE_OPEN
-        else:
-            self._is_open = STATE_CLOSED
+        self._is_open = STATE_OPEN if data["status"] == "open" else STATE_CLOSED
