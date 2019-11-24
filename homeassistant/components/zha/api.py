@@ -219,10 +219,11 @@ async def websocket_get_devices(hass, connection, msg):
 async def websocket_get_groups(hass, connection, msg):
     """Get ZHA groups."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    ha_device_registry = await async_get_registry(hass)
 
     groups = []
     for group in zha_gateway.application_controller.groups.values():
-        groups.append(async_get_group_info(hass, group))
+        groups.append(async_get_group_info(hass, group, ha_device_registry))
     connection.send_result(msg[ID], groups)
 
 
@@ -259,12 +260,15 @@ async def websocket_get_device(hass, connection, msg):
 async def websocket_get_group(hass, connection, msg):
     """Get ZHA group."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    ha_device_registry = await async_get_registry(hass)
     group_id = msg[GROUP_ID]
     group = None
 
     if group_id in zha_gateway.application_controller.groups:
         group = async_get_group_info(
-            hass, zha_gateway.application_controller.groups[group_id]
+            hass,
+            zha_gateway.application_controller.groups[group_id],
+            ha_device_registry,
         )
     if not group:
         connection.send_message(
@@ -284,6 +288,7 @@ async def websocket_get_group(hass, connection, msg):
 async def websocket_add_group(hass, connection, msg):
     """Add a new ZHA group."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    ha_device_registry = await async_get_registry(hass)
     group_id = len(zha_gateway.application_controller.groups) + 1
     group_name = msg[GROUP_NAME]
     zigpy_group = async_get_group_by_name(zha_gateway, group_name)
@@ -293,7 +298,7 @@ async def websocket_add_group(hass, connection, msg):
         zigpy_group = zha_gateway.application_controller.groups.add_group(
             group_id, group_name
         )
-    ret_group = async_get_group_info(hass, zigpy_group)
+    ret_group = async_get_group_info(hass, zigpy_group, ha_device_registry)
     connection.send_result(msg[ID], ret_group)
 
 
@@ -323,13 +328,15 @@ def async_get_device_info(hass, device, ha_device_registry=None):
 
 
 @callback
-def async_get_group_info(hass, group):
+def async_get_group_info(hass, group, ha_device_registry):
     """Get ZHA group."""
     ret_group = {}
     ret_group["id"] = group.group_id
     ret_group["name"] = group.name
-    ret_group["members"] = [{} for member in group.members]
-
+    ret_group["members"] = [
+        async_get_device_info(hass, member, ha_device_registry=ha_device_registry)
+        for member in group.members.values()
+    ]
     return ret_group
 
 
