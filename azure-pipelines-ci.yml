@@ -162,7 +162,7 @@ stages:
           python -m venv venv
 
           . venv/bin/activate
-          pip install -U pip setuptools
+          pip install -U pip setuptools wheel
           pip install -r requirements_all.txt -c homeassistant/package_constraints.txt
           pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
     - script: |
