@@ -213,6 +213,19 @@ async def websocket_get_devices(hass, connection, msg):
 
 @websocket_api.require_admin
 @websocket_api.async_response
+@websocket_api.websocket_command({vol.Required(TYPE): "zha/groups"})
+async def websocket_get_groups(hass, connection, msg):
+    """Get ZHA groups."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+
+    groups = []
+    for group in zha_gateway.application_controller.groups.values():
+        groups.append(async_get_group_info(hass, group))
+    connection.send_result(msg[ID], groups)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
 @websocket_api.websocket_command(
     {vol.Required(TYPE): "zha/device", vol.Required(ATTR_IEEE): EUI64.convert}
 )
@@ -259,6 +272,17 @@ def async_get_device_info(hass, device, ha_device_registry=None):
             ret_device["device_reg_id"] = reg_device.id
             ret_device["area_id"] = reg_device.area_id
     return ret_device
+
+
+@callback
+def async_get_group_info(hass, group):
+    """Get ZHA group."""
+    ret_group = {}
+    ret_group["id"] = group.group_id
+    ret_group["name"] = group.name
+    ret_group["members"] = [{} for member in group.members]
+
+    return ret_group
 
 
 @websocket_api.require_admin
@@ -785,6 +809,7 @@ def async_load_api(hass):
 
     websocket_api.async_register_command(hass, websocket_permit_devices)
     websocket_api.async_register_command(hass, websocket_get_devices)
+    websocket_api.async_register_command(hass, websocket_get_groups)
     websocket_api.async_register_command(hass, websocket_get_device)
     websocket_api.async_register_command(hass, websocket_reconfigure_node)
     websocket_api.async_register_command(hass, websocket_device_clusters)
