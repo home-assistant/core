@@ -1,20 +1,20 @@
 """Support for Tado to create a climate device for each zone."""
 import logging
-from typing import Optional, List
+from typing import List, Optional
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_OFF,
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF,
     FAN_HIGH,
     FAN_LOW,
     FAN_MIDDLE,
     FAN_OFF,
     HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
     HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     PRESET_AWAY,
