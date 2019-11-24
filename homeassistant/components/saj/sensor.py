@@ -24,6 +24,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
@@ -88,13 +89,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
         return
 
-    if done:
-        for sensor in sensor_def:
-            hass_sensors.append(
-                SAJsensor(saj.serialnumber, sensor, inverter_name=config.get(CONF_NAME))
-            )
+    if not done:
+        raise PlatformNotReady
 
-        async_add_entities(hass_sensors)
+    for sensor in sensor_def:
+        hass_sensors.append(
+            SAJsensor(saj.serialnumber, sensor, inverter_name=config.get(CONF_NAME))
+        )
+
+    async_add_entities(hass_sensors)
 
     async def async_saj():
         """Update all the SAJ sensors."""
