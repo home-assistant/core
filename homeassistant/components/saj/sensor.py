@@ -39,12 +39,12 @@ UNIT_OF_MEASUREMENT_HOURS = "h"
 INVERTER_TYPES = ["ethernet", "wifi"]
 
 SAJ_UNIT_MAPPINGS = {
-    "W": POWER_WATT,
-    "kWh": ENERGY_KILO_WATT_HOUR,
+    "": None,
     "h": UNIT_OF_MEASUREMENT_HOURS,
     "kg": MASS_KILOGRAMS,
+    "kWh": ENERGY_KILO_WATT_HOUR,
+    "W": POWER_WATT,
     "°C": TEMP_CELSIUS,
-    "": None,
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -59,7 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up SAJ sensors."""
+    """Set up the SAJ sensors."""
 
     remove_interval_update = None
     wifi = config[CONF_TYPE] == INVERTER_TYPES[1]
@@ -81,7 +81,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         saj = pysaj.SAJ(config[CONF_HOST], **kwargs)
         done = await saj.read(sensor_def)
     except pysaj.UnauthorizedException:
-        _LOGGER.error("Username and/or password is wrong.")
+        _LOGGER.error("Username and/or password is wrong")
         return
     except pysaj.UnexpectedResponseException as err:
         _LOGGER.error(
@@ -170,7 +170,7 @@ class SAJsensor(Entity):
     """Representation of a SAJ sensor."""
 
     def __init__(self, serialnumber, pysaj_sensor, inverter_name=None):
-        """Initialize the sensor."""
+        """Initialize the SAJ sensor."""
         self._sensor = pysaj_sensor
         self._inverter_name = inverter_name
         self._serialnumber = serialnumber
