@@ -7,8 +7,7 @@ from homeassistant.components.fan import (
 
 from . import LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice
 
-from pylutron_caseta import (FAN_OFF, FAN_LOW,
-    FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH)
+from pylutron_caseta import (FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_HIGH)
 
 _LOGGER = logging.getLogger(__name__)
 
