@@ -40,6 +40,7 @@ from .core.const import (
     DATA_ZHA_GATEWAY,
     DOMAIN,
     GROUP_ID,
+    GROUP_NAME,
     MFG_CLUSTER_ID_START,
     WARNING_DEVICE_MODE_EMERGENCY,
     WARNING_DEVICE_SOUND_HIGH,
@@ -252,7 +253,9 @@ async def websocket_get_device(hass, connection, msg):
 
 @websocket_api.require_admin
 @websocket_api.async_response
-@websocket_api.websocket_command({vol.Required(TYPE): "zha/group"})
+@websocket_api.websocket_command(
+    {vol.Required(TYPE): "zha/group", vol.Required(GROUP_ID): cv.positive_int}
+)
 async def websocket_get_group(hass, connection, msg):
     """Get ZHA group."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
@@ -271,6 +274,27 @@ async def websocket_get_group(hass, connection, msg):
         )
         return
     connection.send_result(msg[ID], group)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {vol.Required(TYPE): "zha/group/add", vol.Required(GROUP_NAME): cv.string}
+)
+async def websocket_add_group(hass, connection, msg):
+    """Add a new ZHA group."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    group_id = len(zha_gateway.application_controller.groups) + 1
+    group_name = msg[GROUP_NAME]
+    zigpy_group = async_get_group_by_name(zha_gateway, group_name)
+    ret_group = None
+
+    if zigpy_group is None:
+        zigpy_group = zha_gateway.application_controller.groups.add_group(
+            group_id, group_name
+        )
+    ret_group = async_get_group_info(hass, zigpy_group)
+    connection.send_result(msg[ID], ret_group)
 
 
 @callback
@@ -307,6 +331,15 @@ def async_get_group_info(hass, group):
     ret_group["members"] = [{} for member in group.members]
 
     return ret_group
+
+
+@callback
+def async_get_group_by_name(zha_gateway, group_name):
+    """Get ZHA group by name."""
+    for group in zha_gateway.application_controller.groups.items():
+        if group.name == group_name:
+            return group
+    return None
 
 
 @websocket_api.require_admin
@@ -836,6 +869,7 @@ def async_load_api(hass):
     websocket_api.async_register_command(hass, websocket_get_groups)
     websocket_api.async_register_command(hass, websocket_get_device)
     websocket_api.async_register_command(hass, websocket_get_group)
+    websocket_api.async_register_command(hass, websocket_add_group)
     websocket_api.async_register_command(hass, websocket_reconfigure_node)
     websocket_api.async_register_command(hass, websocket_device_clusters)
     websocket_api.async_register_command(hass, websocket_device_cluster_attributes)
