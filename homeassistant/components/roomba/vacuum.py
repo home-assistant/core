@@ -336,7 +336,7 @@ class RoombaVacuum(VacuumDevice):
             self._state_attrs[ATTR_POSITION] = position
 
         # Not all Roombas have a bin full sensor
-        if self._capabilities[CAP_BIN_FULL]:
+        if self._capabilities[CAP_BIN_FULL] or bin_state.get("full") is not None:
             self._state_attrs[ATTR_BIN_FULL] = bin_state.get("full")
 
         # Fan speed mode (Performance, Automatic or Eco)
