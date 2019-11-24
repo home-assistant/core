@@ -20,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_THERMOSTATS = "thermostats"
+CONF_THERMOSTATS = "tstats"
 TSTATS_SCHEMA = vol.Schema(
     [{vol.Required("id"): cv.string, vol.Required("name"): cv.string}]
 )

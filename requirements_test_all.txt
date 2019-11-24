@@ -216,9 +216,6 @@ hbmqtt==0.9.5
 # homeassistant.components.jewish_calendar
 hdate==0.9.3
 
-# homeassistant.components.heatmiserv3
-heatmiserV3==1.1.9
-
 # homeassistant.components.here_travel_time
 herepy==0.6.3.3
 
