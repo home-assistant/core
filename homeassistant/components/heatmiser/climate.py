@@ -8,6 +8,7 @@ from homeassistant.components.climate import (
     ClimateDevice,
     PLATFORM_SCHEMA,
     HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
 )
 from homeassistant.components.climate.const import SUPPORT_TARGET_TEMPERATURE
 from homeassistant.const import (
@@ -65,6 +66,7 @@ class HeatmiserV3Thermostat(ClimateDevice):
         self._target_temperature = None
         self._id = device
         self.dcb = None
+        self._hvac_mode = HVAC_MODE_HEAT
 
     @property
     def supported_features(self):
@@ -87,7 +89,13 @@ class HeatmiserV3Thermostat(ClimateDevice):
 
         Need to be one of HVAC_MODE_*.
         """
-        return HVAC_MODE_HEAT
+        self.uh1._open()
+        self._hvac_mode = (
+            HVAC_MODE_OFF
+            if (int(self.therm.get_current_state()) == 0)
+            else HVAC_MODE_HEAT
+        )
+        return self._hvac_mode
 
     @property
     def hvac_modes(self) -> List[str]:
@@ -95,7 +103,7 @@ class HeatmiserV3Thermostat(ClimateDevice):
 
         Need to be a subset of HVAC_MODES.
         """
-        return [HVAC_MODE_HEAT]
+        return [HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
     @property
     def current_temperature(self):
@@ -121,3 +129,8 @@ class HeatmiserV3Thermostat(ClimateDevice):
         self.dcb = self.therm.read_dcb()
         self._current_temperature = int(self.therm.get_floor_temp())
         self._target_temperature = int(self.therm.get_target_temp())
+        self._hvac_mode = (
+            HVAC_MODE_OFF
+            if (int(self.therm.get_current_state()) == 0)
+            else HVAC_MODE_HEAT
+        )
