@@ -294,6 +294,7 @@ async def websocket_add_group(hass, connection, msg):
     zigpy_group = async_get_group_by_name(zha_gateway, group_name)
     ret_group = None
 
+    """guard against group already existing"""
     if zigpy_group is None:
         zigpy_group = zha_gateway.application_controller.groups.add_group(
             group_id, group_name
