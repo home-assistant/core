@@ -638,7 +638,7 @@ hbmqtt==0.9.5
 hdate==0.9.3
 
 # homeassistant.components.heatmiser
-heatmiserV3==1.1.10
+heatmiserV3==1.1.11
 
 # homeassistant.components.here_travel_time
 herepy==0.6.3.3
@@ -1459,7 +1459,6 @@ pysdcp==1
 # homeassistant.components.sensibo
 pysensibo==1.0.3
 
-# homeassistant.components.heatmiser
 # homeassistant.components.serial
 pyserial-asyncio==0.4
 

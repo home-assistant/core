@@ -13,17 +13,24 @@ from homeassistant.components.climate import (
 from homeassistant.components.climate.const import SUPPORT_TARGET_TEMPERATURE
 from homeassistant.const import (
     TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
     ATTR_TEMPERATURE,
     CONF_HOST,
     CONF_PORT,
+    CONF_ID,
+    CONF_NAME,
 )
 import homeassistant.helpers.config_validation as cv
+
+from heatmiserV3 import heatmiser, connection
+
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_THERMOSTATS = "tstats"
+
 TSTATS_SCHEMA = vol.Schema(
-    [{vol.Required("id"): cv.string, vol.Required("name"): cv.string}]
+    [{vol.Required(CONF_ID): cv.string, vol.Required(CONF_NAME): cv.string}]
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -37,19 +44,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the heatmiser thermostat."""
-    from heatmiserV3 import heatmiser, connection
 
-    HT = heatmiser.HeatmiserThermostat
+    heatmiser_v3_thermostat = heatmiser.HeatmiserThermostat
 
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
 
     thermostats = config.get(CONF_THERMOSTATS)
 
-    UH1 = connection.HeatmiserUH1(host, port)
+    uh1_hub = connection.HeatmiserUH1(host, port)
 
     add_entities(
-        [HeatmiserV3Thermostat(HT, thermostat, UH1) for thermostat in thermostats],
+        [
+            HeatmiserV3Thermostat(heatmiser_v3_thermostat, thermostat, uh1_hub)
+            for thermostat in thermostats
+        ],
         True,
     )
 
@@ -59,14 +68,15 @@ class HeatmiserV3Thermostat(ClimateDevice):
 
     def __init__(self, therm, device, uh1):
         """Initialize the thermostat."""
-        self.therm = therm(int(device["id"]), "prt", uh1)
+        self.therm = therm(int(device[CONF_ID]), "prt", uh1)
         self.uh1 = uh1
-        self._name = device["name"]
+        self._name = device[CONF_NAME]
         self._current_temperature = None
         self._target_temperature = None
         self._id = device
         self.dcb = None
         self._hvac_mode = HVAC_MODE_HEAT
+        self._temperature_unit = None
 
     @property
     def supported_features(self):
@@ -81,7 +91,7 @@ class HeatmiserV3Thermostat(ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit of measurement which this thermostat uses."""
-        return TEMP_CELSIUS
+        return self._temperature_unit
 
     @property
     def hvac_mode(self) -> str:
@@ -89,12 +99,6 @@ class HeatmiserV3Thermostat(ClimateDevice):
 
         Need to be one of HVAC_MODE_*.
         """
-        self.uh1._open()
-        self._hvac_mode = (
-            HVAC_MODE_OFF
-            if (int(self.therm.get_current_state()) == 0)
-            else HVAC_MODE_HEAT
-        )
         return self._hvac_mode
 
     @property
@@ -123,12 +127,20 @@ class HeatmiserV3Thermostat(ClimateDevice):
 
     def update(self):
         """Get the latest data."""
-        self.uh1._open()
-        self.dcb = self.therm.read_dcb()
-        self._current_temperature = int(self.therm.get_floor_temp())
-        self._target_temperature = int(self.therm.get_target_temp())
-        self._hvac_mode = (
-            HVAC_MODE_OFF
-            if (int(self.therm.get_current_state()) == 0)
-            else HVAC_MODE_HEAT
-        )
+        try:
+            self.uh1._open()
+            self.dcb = self.therm.read_dcb()
+            self._temperature_unit = (
+                TEMP_CELSIUS
+                if (self.therm.get_temperature_format() == "C")
+                else TEMP_FAHRENHEIT
+            )
+            self._current_temperature = int(self.therm.get_floor_temp())
+            self._target_temperature = int(self.therm.get_target_temp())
+            self._hvac_mode = (
+                HVAC_MODE_OFF
+                if (int(self.therm.get_current_state()) == 0)
+                else HVAC_MODE_HEAT
+            )
+        except Exception:
+            _LOGGER.error("Failed to update device %s", self._name)
