@@ -39,6 +39,7 @@ from .core.const import (
     DATA_ZHA,
     DATA_ZHA_GATEWAY,
     DOMAIN,
+    GROUP_ID,
     MFG_CLUSTER_ID_START,
     WARNING_DEVICE_MODE_EMERGENCY,
     WARNING_DEVICE_SOUND_HIGH,
@@ -247,6 +248,29 @@ async def websocket_get_device(hass, connection, msg):
         )
         return
     connection.send_result(msg[ID], device)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command({vol.Required(TYPE): "zha/group"})
+async def websocket_get_group(hass, connection, msg):
+    """Get ZHA group."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    group_id = msg[GROUP_ID]
+    group = None
+
+    if group_id in zha_gateway.application_controller.groups:
+        group = async_get_group_info(
+            hass, zha_gateway.application_controller.groups[group_id]
+        )
+    if not group:
+        connection.send_message(
+            websocket_api.error_message(
+                msg[ID], websocket_api.const.ERR_NOT_FOUND, "ZHA Group not found"
+            )
+        )
+        return
+    connection.send_result(msg[ID], group)
 
 
 @callback
@@ -811,6 +835,7 @@ def async_load_api(hass):
     websocket_api.async_register_command(hass, websocket_get_devices)
     websocket_api.async_register_command(hass, websocket_get_groups)
     websocket_api.async_register_command(hass, websocket_get_device)
+    websocket_api.async_register_command(hass, websocket_get_group)
     websocket_api.async_register_command(hass, websocket_reconfigure_node)
     websocket_api.async_register_command(hass, websocket_device_clusters)
     websocket_api.async_register_command(hass, websocket_device_cluster_attributes)
