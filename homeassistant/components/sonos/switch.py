@@ -7,7 +7,8 @@ import pysonos
 from pysonos import alarms
 from pysonos.exceptions import SoCoException
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
+from homeassistant.util import slugify
 
 from . import (
     ATTR_INCLUDE_LINKED_ZONES,
@@ -106,7 +107,11 @@ class SonosAlarmSwitch(SwitchDevice):
         self._is_available = True
         speaker_info = self._soco.get_speaker_info(True)
         self._unique_id = "{}-{}".format(soco.uid, self._id)
-        self._name = "{} Alarm {}".format(speaker_info["zone_name"], self._id)
+        self._name = "Sonos {} Alarm (id: {})".format(
+            speaker_info["zone_name"], self._id
+        )
+        _entity_id = slugify("sonos_alarm_{}".format(self._id))
+        self.entity_id = ENTITY_ID_FORMAT.format(_entity_id)
         self._model = speaker_info["model_name"]
 
         self.alarm = None
@@ -118,9 +123,9 @@ class SonosAlarmSwitch(SwitchDevice):
         self._is_on = self.alarm.enabled
         self._attributes = {
             ATTR_TIME: str(self.alarm.start_time),
-            ATTR_VOLUME: str(self.alarm.volume),
+            ATTR_VOLUME: self.alarm.volume / 100,
             ATTR_DURATION: str(self.alarm.duration),
-            ATTR_INCLUDE_LINKED_ZONES: str(self.alarm.include_linked_zones),
+            ATTR_INCLUDE_LINKED_ZONES: self.alarm.include_linked_zones,
             ATTR_RECURRENCE: str(self.alarm.recurrence),
             ATTR_PLAY_MODE: str(self.alarm.play_mode),
         }
@@ -135,11 +140,11 @@ class SonosAlarmSwitch(SwitchDevice):
             self._attributes[ATTR_TIME] = str(self.alarm.start_time)
             self._attributes[ATTR_DURATION] = str(self.alarm.duration)
             self._attributes[ATTR_RECURRENCE] = str(self.alarm.recurrence)
-            self._attributes[ATTR_VOLUME] = str(self.alarm.volume)
+            self._attributes[ATTR_VOLUME] = self.alarm.volume / 100
             self._attributes[ATTR_PLAY_MODE] = str(self.alarm.play_mode)
-            self._attributes[ATTR_INCLUDE_LINKED_ZONES] = str(
-                self.alarm.include_linked_zones
-            )
+            self._attributes[
+                ATTR_INCLUDE_LINKED_ZONES
+            ] = self.alarm.include_linked_zones
             self._is_available = True
             _LOGGER.debug("successfully updated alarms")
         except SoCoException as exc:
