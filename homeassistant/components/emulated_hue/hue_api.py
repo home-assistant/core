@@ -572,32 +572,29 @@ def get_entity_state(config, entity):
 def entity_to_json(config, entity, state):
     """Convert an entity to its Hue bridge JSON representation."""
     entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-    if (entity_features & SUPPORT_BRIGHTNESS) or entity.domain != light.DOMAIN:
-        return {
-            "state": {
-                HUE_API_STATE_ON: state[STATE_ON],
-                HUE_API_STATE_BRI: state[STATE_BRIGHTNESS],
-                HUE_API_STATE_HUE: state[STATE_HUE],
-                HUE_API_STATE_SAT: state[STATE_SATURATION],
-                "reachable": entity.state != STATE_UNAVAILABLE,
-            },
-            "type": "Dimmable light",
-            "name": config.get_entity_name(entity),
-            "modelid": "HASS123",
-            "uniqueid": entity.entity_id,
-            "swversion": "123",
-        }
-    return {
+
+    data = {
         "state": {
             HUE_API_STATE_ON: state[STATE_ON],
             "reachable": entity.state != STATE_UNAVAILABLE,
         },
-        "type": "On/off light",
         "name": config.get_entity_name(entity),
-        "modelid": "HASS321",
         "uniqueid": entity.entity_id,
         "swversion": "123",
     }
+    if (entity_features & SUPPORT_BRIGHTNESS) or entity.domain != light.DOMAIN:
+        data["state"].update(
+            {
+                HUE_API_STATE_BRI: state[STATE_BRIGHTNESS],
+                HUE_API_STATE_HUE: state[STATE_HUE],
+                HUE_API_STATE_SAT: state[STATE_SATURATION],
+            }
+        )
+        data.update({"modelid": "HASS123", "type": "Dimmable light"})
+    else:
+        data.update({"modelid": "HASS321", "type": "On/off light"})
+
+    return data
 
 
 def create_hue_success_response(entity_id, attr, value):
