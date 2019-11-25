@@ -6,7 +6,13 @@ import voluptuous as vol
 import hdate
 
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import (
+    CONF_ELEVATION,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    CONF_TIME_ZONE,
+)
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -62,8 +68,14 @@ JEWISH_CALENDAR_SCHEMA = {
     vol.Optional(
         CONF_HAVDALAH_OFFSET_MINUTES, default=DEFAULT_HAVDALAH_OFFSET_MINUTES
     ): int,
-    vol.Optional(CONF_LATITUDE): cv.latitude,
-    vol.Optional(CONF_LONGITUDE): cv.longitude,
+    vol.Inclusive(
+        CONF_LATITUDE, "coordinates", "Latitude and longitude must exist together"
+    ): cv.latitude,
+    vol.Inclusive(
+        CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
+    ): cv.longitude,
+    vol.Optional(CONF_ELEVATION): float,
+    vol.Optional(CONF_TIME_ZONE): cv.time_zone,
 }
 
 CONFIG_SCHEMA = vol.Schema(
@@ -87,44 +99,46 @@ async def async_setup(hass, config):
 
 
 async def async_setup_entry(hass, config_entry):
-    """Set up a config entry for Jewish calendar."""
+    """Set up a configuration entry for Jewish calendar."""
     name = config_entry.data[CONF_NAME]
-    language = config_entry.data[CONF_LANGUAGE]
-    diaspora = config_entry.data[CONF_DIASPORA]
-
-    latitude = config_entry.data.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config_entry.data.get(CONF_LONGITUDE, hass.config.longitude)
-    candle_lighting_offset = config_entry.data.get(
-        CONF_CANDLE_LIGHT_MINUTES, DEFAULT_CANDLE_LIGHT
-    )
-    havdalah_offset = config_entry.data.get(
-        CONF_HAVDALAH_OFFSET_MINUTES, DEFAULT_HAVDALAH_OFFSET_MINUTES
-    )
+    language = config_entry.data.get(CONF_LANGUAGE, DEFAULT_LANGUAGE)
+    diaspora = config_entry.data.get(CONF_DIASPORA, DEFAULT_DIASPORA)
 
     if not config_entry.options:
+        # If options are not defined, update entry with optional values from the
+        # original configuration.
         options = {
-            CONF_LATITUDE: latitude,
-            CONF_LONGITUDE: longitude,
-            CONF_CANDLE_LIGHT_MINUTES: candle_lighting_offset,
-            CONF_HAVDALAH_OFFSET_MINUTES: havdalah_offset,
+            CONF_CANDLE_LIGHT_MINUTES: config_entry.data.get(
+                CONF_CANDLE_LIGHT_MINUTES, DEFAULT_CANDLE_LIGHT
+            ),
+            CONF_HAVDALAH_OFFSET_MINUTES: config_entry.data.get(
+                CONF_HAVDALAH_OFFSET_MINUTES, DEFAULT_HAVDALAH_OFFSET_MINUTES
+            ),
         }
 
         hass.config_entries.async_update_entry(config_entry, options=options)
 
     location = hdate.Location(
-        latitude=latitude,
-        longitude=longitude,
-        timezone=hass.config.time_zone,
+        name=hass.config.location_name,
         diaspora=diaspora,
+        # If details of the location are not specified, use Hass's defaults.
+        latitude=config_entry.data.get(CONF_LATITUDE, hass.config.latitude),
+        longitude=config_entry.data.get(CONF_LONGITUDE, hass.config.longitude),
+        altitude=config_entry.data.get(CONF_ELEVATION, hass.config.elevation),
+        timezone=config_entry.data.get(CONF_TIME_ZONE, hass.config.time_zone),
     )
 
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
-        "location": location,
         "name": name,
         "language": language,
-        "candle_lighting_offset": candle_lighting_offset,
-        "havdalah_offset": havdalah_offset,
         "diaspora": diaspora,
+        "location": location,
+        "candle_lighting_offset": config_entry.options.get(
+            CONF_CANDLE_LIGHT_MINUTES, DEFAULT_CANDLE_LIGHT
+        ),
+        "havdalah_offset": config_entry.options.get(
+            CONF_HAVDALAH_OFFSET_MINUTES, DEFAULT_HAVDALAH_OFFSET_MINUTES
+        ),
     }
 
     hass.async_create_task(

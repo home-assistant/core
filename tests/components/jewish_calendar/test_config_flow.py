@@ -2,12 +2,15 @@
 import pytest
 from unittest.mock import patch
 
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.jewish_calendar.const import (
     CONF_DIASPORA,
     CONF_LANGUAGE,
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_HAVDALAH_OFFSET_MINUTES,
+    DEFAULT_DIASPORA,
+    DEFAULT_LANGUAGE,
     DOMAIN,
 )
 from homeassistant.components.jewish_calendar import config_flow
@@ -18,6 +21,7 @@ from tests.common import mock_coro
 
 async def test_step_user(hass):
     """Test user config."""
+    """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -26,6 +30,9 @@ async def test_step_user(hass):
     assert result["errors"] == {}
 
     with patch(
+        "homeassistant.components.jewish_calendar.config_flow.validate_input",
+        return_value=mock_coro({"title": "Test Title"}),
+    ), patch(
         "homeassistant.components.jewish_calendar.async_setup",
         return_value=mock_coro(True),
     ) as mock_setup, patch(
@@ -38,12 +45,13 @@ async def test_step_user(hass):
         )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "JCalendar"
+    assert result2["title"] == "Test Title"
     assert result2["data"] == {
         "name": "JCalendar",
         "diaspora": True,
         "language": "hebrew",
     }
+
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -75,6 +83,8 @@ async def test_step_import_with_options(hass):
     conf = {
         DOMAIN: {
             CONF_NAME: "test",
+            CONF_DIASPORA: DEFAULT_DIASPORA,
+            CONF_LANGUAGE: DEFAULT_LANGUAGE,
             CONF_CANDLE_LIGHT_MINUTES: 20,
             CONF_HAVDALAH_OFFSET_MINUTES: 50,
             CONF_LATITUDE: 31.76,
@@ -90,6 +100,8 @@ async def test_step_import_with_options(hass):
     assert result["title"] == "test"
     assert result["data"] == {
         CONF_NAME: "test",
+        CONF_DIASPORA: DEFAULT_DIASPORA,
+        CONF_LANGUAGE: DEFAULT_LANGUAGE,
         CONF_CANDLE_LIGHT_MINUTES: 20,
         CONF_HAVDALAH_OFFSET_MINUTES: 50,
         CONF_LATITUDE: 31.76,
