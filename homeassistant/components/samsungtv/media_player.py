@@ -6,6 +6,7 @@ import socket
 from samsungctl import exceptions as samsung_exceptions, Remote as SamsungRemote
 import voluptuous as vol
 import wakeonlan
+from websocket import WebSocketException
 
 from homeassistant.components.media_player import (
     MediaPlayerDevice,
@@ -209,23 +210,26 @@ class SamsungTVDevice(MediaPlayerDevice):
                 try:
                     self.get_remote().control(key)
                     break
-                except (samsung_exceptions.ConnectionClosed, BrokenPipeError):
+                except (
+                    samsung_exceptions.ConnectionClosed,
+                    BrokenPipeError,
+                    WebSocketException,
+                ):
                     # BrokenPipe can occur when the commands is sent to fast
+                    # WebSocketException can occur when timed out
                     self._remote = None
             self._state = STATE_ON
         except AttributeError:
             # Auto-detect could not find working config yet
             pass
-        except (
-            samsung_exceptions.UnhandledResponse,
-            samsung_exceptions.AccessDenied,
-        ):
+        except (samsung_exceptions.UnhandledResponse, samsung_exceptions.AccessDenied):
             # We got a response so it's on.
             self._state = STATE_ON
             self._remote = None
             LOGGER.debug("Failed sending command %s", key, exc_info=True)
             return
         except OSError:
+            # Different reasons, e.g. hostname not resolveable
             self._state = STATE_OFF
             self._remote = None
         if self._power_off_in_progress():
