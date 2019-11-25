@@ -242,7 +242,7 @@ def websocket_handle_create(hass, connection, msg):
         )
     except ValueError as err:
         connection.send_message(
-            websocket_api.error_message(msg[CONF_ID], "invalid_parameter", err)
+            websocket_api.error_message(msg[CONF_ID], "invalid_parameter", str(err))
         )
     else:
         connection.send_message(websocket_api.result_message(msg[CONF_ID], item))
@@ -289,7 +289,7 @@ def websocket_handle_update(hass, connection, msg):
         )
     except ValueError as err:
         connection.send_message(
-            websocket_api.error_message(msg_id, "invalid_parameter", err)
+            websocket_api.error_message(msg_id, "invalid_parameter", str(err))
         )
     else:
         connection.send_message(websocket_api.result_message(msg_id, item))
