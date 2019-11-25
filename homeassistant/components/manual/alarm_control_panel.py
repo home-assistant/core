@@ -9,6 +9,7 @@ import voluptuous as vol
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
     SUPPORT_ALARM_TRIGGER,
@@ -248,6 +249,7 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
             | SUPPORT_ALARM_ARM_AWAY
             | SUPPORT_ALARM_ARM_NIGHT
             | SUPPORT_ALARM_TRIGGER
+            | SUPPORT_ALARM_ARM_CUSTOM_BYPASS
         )
 
     @property

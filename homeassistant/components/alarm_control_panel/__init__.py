@@ -29,6 +29,7 @@ from .const import (
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
     SUPPORT_ALARM_TRIGGER,
+    SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
 )
 
 DOMAIN = "alarm_control_panel"
@@ -78,6 +79,7 @@ async def async_setup(hass, config):
         SERVICE_ALARM_ARM_CUSTOM_BYPASS,
         ALARM_SERVICE_SCHEMA,
         "async_alarm_arm_custom_bypass",
+        SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
     )
     component.async_register_entity_service(
         SERVICE_ALARM_TRIGGER,
