@@ -255,7 +255,8 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of entity specified in attributes or active child."""
-        return float(self._override_or_child_attr(ATTR_MEDIA_VOLUME_LEVEL))
+        level = self._override_or_child_attr(ATTR_MEDIA_VOLUME_LEVEL)
+        return float(level) if level is not None else None
 
     @property
     def is_volume_muted(self):
