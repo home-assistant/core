@@ -59,8 +59,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
                 CONF_TYPE: "set_hvac_mode",
             }
         )
-
-        if state and const.ATTR_PRESET_MODES in state.attributes:
+        if state.attributes["supported_features"] & const.SUPPORT_PRESET_MODE:
             actions.append(
                 {
                     CONF_DEVICE_ID: device_id,
