@@ -103,11 +103,6 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
         """Return the list of supported features."""
         return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
-    @property
-    def unique_id(self):
-        """Return the unique ID of the entity."""
-        return self._system.system_id
-
     def _validate_code(self, code, state):
         """Validate given code."""
         check = self._code is None or code == self._code
