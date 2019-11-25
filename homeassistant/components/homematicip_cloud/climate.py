@@ -149,7 +149,11 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
 
         This is only relevant for radiator thermostats.
         """
-        if self._device.floorHeatingMode == "RADIATOR":
+        if (
+            self._device.floorHeatingMode == "RADIATOR"
+            and self._has_radiator_thermostat
+            and self._heat_mode_enabled
+        ):
             return (
                 CURRENT_HVAC_HEAT if self._device.valvePosition else CURRENT_HVAC_IDLE
             )
@@ -327,7 +331,7 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
 
     @property
     def _first_radiator_thermostat(
-        self
+        self,
     ) -> Optional[Union[AsyncHeatingThermostat, AsyncHeatingThermostatCompact]]:
         """Return the first radiator thermostat from the hmip heating group."""
         for device in self._device.devices:
