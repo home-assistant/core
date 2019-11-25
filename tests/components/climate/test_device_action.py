@@ -39,7 +39,7 @@ async def test_get_actions(hass, device_reg, entity_reg):
     )
     entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
     hass.states.async_set("climate.test_5678", const.HVAC_MODE_COOL, {})
-    hass.states.async_set("climate.test_5678", "attributes", {"preset_modes": []})
+    hass.states.async_set("climate.test_5678", "attributes", {"supported_features": 17})
     expected_actions = [
         {
             "domain": DOMAIN,
@@ -68,6 +68,7 @@ async def test_get_action_hvac_only(hass, device_reg, entity_reg):
     )
     entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
     hass.states.async_set("climate.test_5678", const.HVAC_MODE_COOL, {})
+    hass.states.async_set("climate.test_5678", "attributes", {"supported_features": 1})
     expected_actions = [
         {
             "domain": DOMAIN,
