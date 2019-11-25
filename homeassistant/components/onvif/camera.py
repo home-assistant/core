@@ -334,7 +334,6 @@ class ONVIFHassCamera(Camera):
             self._ptz_service = self._camera.create_ptz_service()
             _LOGGER.debug("Completed set up of the ONVIF camera component")
 
-
     async def async_perform_ptz(self, pan, tilt, zoom):
         """Perform a PTZ action on the camera."""
         if self._ptz_service is None:
@@ -372,11 +371,10 @@ class ONVIFHassCamera(Camera):
         try:
             _LOGGER.debug("Calling SystemReboot")
             ret = await self._camera.devicemgmt.SystemReboot()
-            _LOGGER.debug("Camera '%s' Reboot command returned '%s'",self._name,ret)
+            _LOGGER.debug("Camera '%s' Reboot command returned '%s'", self._name, ret)
         except exceptions.ONVIFError as err:
             if "Bad Request" in err.reason:
                 _LOGGER.debug("Camera '%s' doesn't support SystemReboot.", self._name)
-
 
     async def async_added_to_hass(self):
         """Handle entity addition to hass."""
