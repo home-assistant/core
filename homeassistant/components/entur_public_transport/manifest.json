@@ -6,5 +6,7 @@
     "enturclient==0.2.0"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@hfurubotten"
+  ]
 }
