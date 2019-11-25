@@ -129,6 +129,10 @@ def async_setup(hass, config):
         _LOGGER.info("change_audio_service")
         data.change_audio_service(call)
 
+    def send_audio_to_speaker(call):
+        _LOGGER.info("send_audio_to_speaker")
+        data.send_audio_to_speaker(call)
+
     # register services
     hass.services.async_register(DOMAIN, "get_radio_types", get_radio_types)
     hass.services.async_register(DOMAIN, "get_radio_names", get_radio_names)
@@ -147,6 +151,7 @@ def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "play_prev", play_prev)
     hass.services.async_register(DOMAIN, "play_next", play_next)
     hass.services.async_register(DOMAIN, "change_audio_service", change_audio_service)
+    hass.services.async_register(DOMAIN, "send_audio_to_speaker", send_audio_to_speaker)
 
     def device_discovered(service):
         """ Called when a device has been discovered. """
@@ -1131,6 +1136,7 @@ class AisColudData:
             "ais_cloud", "play_audio", {"media_source": media_source, "id": next_id}
         )
 
+    # youtube or spotify
     def change_audio_service(self, call):
         # we have only 2 now we can toggle
         self.hass.services.call(
@@ -1138,6 +1144,26 @@ class AisColudData:
             "select_next",
             {"entity_id": "input_select.ais_music_service"},
         )
+
+    # send audio from AIS to play on selected speaker
+    def send_audio_to_speaker(self, call):
+        if "media_player" not in call.data:
+            _LOGGER.error("No media_player")
+            return
+        media_player = call.data["media_player"]
+        state = self.hass.states.get(ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID)
+        attr = state.attributes
+        media_content_id = attr.get("media_content_id")
+        if media_content_id is not None:
+            self.hass.services.call(
+                "media_player",
+                "play_media",
+                {
+                    "entity_id": media_player,
+                    "media_content_type": "music",
+                    "media_content_id": media_content_id,
+                },
+            )
 
     def select_media_player(self, call):
         if "media_player_type" not in call.data:

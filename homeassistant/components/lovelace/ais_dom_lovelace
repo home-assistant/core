@@ -27,7 +27,9 @@
                                     "icon": "mdi:speaker",
                                     "more_info": false,
                                     "name": " ",
+                                    "tts": {"platform": "ais"},
                                     "shortcuts": {
+                                        "list": [],
                                         "buttons": [
                                             {
                                                 "icon": "mdi:bookmark-music",
