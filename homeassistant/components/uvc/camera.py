@@ -4,6 +4,7 @@ import socket
 
 import requests
 import voluptuous as vol
+from uvcclient import nvr, camera as uvc_camera
 
 from homeassistant.const import CONF_PORT, CONF_SSL
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
@@ -38,8 +39,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     password = config[CONF_PASSWORD]
     port = config[CONF_PORT]
     ssl = config[CONF_SSL]
-
-    from uvcclient import nvr
 
     try:
         # Exceptions may be raised in all method calls to the nvr library.
@@ -118,7 +117,6 @@ class UnifiVideoCamera(Camera):
 
     def _login(self):
         """Login to the camera."""
-        from uvcclient import camera as uvc_camera
 
         caminfo = self._nvr.get_camera(self._uuid)
         if self._connect_addr:
@@ -160,7 +158,6 @@ class UnifiVideoCamera(Camera):
 
     def camera_image(self):
         """Return the image of this camera."""
-        from uvcclient import camera as uvc_camera
 
         if not self._camera:
             if not self._login():
@@ -182,7 +179,6 @@ class UnifiVideoCamera(Camera):
 
     def set_motion_detection(self, mode):
         """Set motion detection on or off."""
-        from uvcclient.nvr import NvrError
 
         if mode is True:
             set_mode = "motion"
@@ -192,7 +188,7 @@ class UnifiVideoCamera(Camera):
         try:
             self._nvr.set_recordmode(self._uuid, set_mode)
             self._motion_status = mode
-        except NvrError as err:
+        except nvr.NvrError as err:
             _LOGGER.error("Unable to set recordmode to %s", set_mode)
             _LOGGER.debug(err)
 
