@@ -1,4 +1,5 @@
 """Component to interface with an alarm control panel."""
+from abc import abstractmethod
 from datetime import timedelta
 import logging
 
@@ -7,19 +8,19 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_CODE_FORMAT,
-    SERVICE_ALARM_TRIGGER,
-    SERVICE_ALARM_DISARM,
-    SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_NIGHT,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+    SERVICE_ALARM_ARM_HOME,
+    SERVICE_ALARM_ARM_NIGHT,
+    SERVICE_ALARM_DISARM,
+    SERVICE_ALARM_TRIGGER,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     ENTITY_SERVICE_SCHEMA,
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
@@ -165,9 +166,9 @@ class AlarmControlPanel(Entity):
         return self.hass.async_add_executor_job(self.alarm_arm_custom_bypass, code)
 
     @property
+    @abstractmethod
     def supported_features(self) -> int:
         """Return the list of supported features."""
-        raise NotImplementedError()
 
     @property
     def state_attributes(self):
