@@ -6,6 +6,14 @@
       "arm_night": "Arm {entity_name} night",
       "disarm": "Disarm {entity_name}",
       "trigger": "Trigger {entity_name}"
+    },
+    "condition_type": {
+      "is_pending": "{entity_name} is pending",
+      "is_triggered": "{entity_name} is triggered",
+      "is_disarmed": "{entity_name} is disarmed",
+      "is_armed_home": "{entity_name} is armed home",
+      "is_armed_away": "{entity_name} is armed away",
+      "is_armed_night": "{entity_name} is armed night"
     }
   }
 }
