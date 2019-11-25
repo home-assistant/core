@@ -102,9 +102,6 @@ class LiveboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     "password": self.password,
                 },
             )
-        else:
-            errors["base"] = "register_failed"
-
         return self.async_show_form(step_id="register", errors=errors)
 
     @staticmethod
