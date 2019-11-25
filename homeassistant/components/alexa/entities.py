@@ -270,6 +270,10 @@ class SwitchCapabilities(AlexaEntity):
 
     def default_display_categories(self):
         """Return the display categories for this entity."""
+        device_class = self.entity.attributes.get(ATTR_DEVICE_CLASS)
+        if device_class == switch.DEVICE_CLASS_OUTLET:
+            return [DisplayCategory.SMARTPLUG]
+
         return [DisplayCategory.SWITCH]
 
     def interfaces(self):

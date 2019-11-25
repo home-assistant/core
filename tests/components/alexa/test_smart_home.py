@@ -168,6 +168,23 @@ async def test_switch(hass, events):
     properties.assert_equal("Alexa.PowerController", "powerState", "ON")
 
 
+async def test_outlet(hass, events):
+    """Test switch with device class outlet discovery."""
+    device = (
+        "switch.test",
+        "on",
+        {"friendly_name": "Test switch", "device_class": "outlet"},
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "switch#test"
+    assert appliance["displayCategories"][0] == "SMARTPLUG"
+    assert appliance["friendlyName"] == "Test switch"
+    assert_endpoint_capabilities(
+        appliance, "Alexa.PowerController", "Alexa.EndpointHealth"
+    )
+
+
 async def test_light(hass):
     """Test light discovery."""
     device = ("light.test_1", "on", {"friendly_name": "Test light 1"})
