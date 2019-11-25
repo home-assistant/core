@@ -86,11 +86,7 @@ SERVICE_PTZ_SCHEMA = vol.Schema(
     }
 )
 
-SERVICE_REBOOT_SCHEMA = vol.Schema(
-    {
-        ATTR_ENTITY_ID: cv.entity_ids,
-    }
-)
+SERVICE_REBOOT_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids,})
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
