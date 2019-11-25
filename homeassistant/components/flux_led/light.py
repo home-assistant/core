@@ -141,6 +141,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+def flux_led_wait():
+    """Wait device after change state to improve stability."""
+    time.sleep(1)
+
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Flux lights."""
     lights = []
@@ -280,7 +285,7 @@ class FluxLight(Light):
         """Turn the specified or all lights on."""
         if not self.is_on:
             self._bulb.turnOn()
-            self.wait()
+            flux_led_wait()
 
         hs_color = kwargs.get(ATTR_HS_COLOR)
 
@@ -300,10 +305,10 @@ class FluxLight(Light):
                 brightness = self.brightness
             if color_temp > COLOR_TEMP_WARM_VS_COLD_WHITE_CUT_OFF:
                 self._bulb.setRgbw(w=brightness)
-                self.wait()
+                flux_led_wait()
             else:
                 self._bulb.setRgbw(w2=brightness)
-                self.wait()
+                flux_led_wait()
             return
 
         # Show warning if effect set with rgb, brightness, or white level
@@ -318,7 +323,7 @@ class FluxLight(Light):
             self._bulb.setRgb(
                 random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
             )
-            self.wait()
+            flux_led_wait()
             return
 
         if effect == EFFECT_CUSTOM:
@@ -328,13 +333,13 @@ class FluxLight(Light):
                     self._custom_effect[CONF_SPEED_PCT],
                     self._custom_effect[CONF_TRANSITION],
                 )
-                self.wait()
+                flux_led_wait()
             return
 
         # Effect selection
         if effect in EFFECT_MAP:
             self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
-            self.wait()
+            flux_led_wait()
             return
 
         # Preserve current brightness on color/white level change
@@ -351,22 +356,22 @@ class FluxLight(Light):
         # handle W only mode (use brightness instead of white value)
         if self._mode == MODE_WHITE:
             self._bulb.setRgbw(0, 0, 0, w=brightness)
-            self.wait()
+            flux_led_wait()
 
         # handle RGBW mode
         elif self._mode == MODE_RGBW:
             self._bulb.setRgbw(*tuple(rgb), w=white, brightness=brightness)
-            self.wait()
+            flux_led_wait()
 
         # handle RGB mode
         else:
             self._bulb.setRgb(*tuple(rgb), brightness=brightness)
-            self.wait()
+            flux_led_wait()
 
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
         self._bulb.turnOff()
-        self.wait()
+        flux_led_wait()
 
     def update(self):
         """Synchronize state with bulb."""
@@ -385,6 +390,3 @@ class FluxLight(Light):
 
         self._bulb.update_state(retry=2)
 
-    def wait(self):
-        """Wait device after change state to improve stability."""
-        time.sleep(1)
