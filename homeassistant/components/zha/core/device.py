@@ -506,6 +506,10 @@ class ZHADevice(LogMixin):
         )
         return response
 
+    async def async_add_to_group(self, group_id):
+        """Add this device to the provided zigbee group."""
+        await self._zigpy_device.add_to_group(group_id)
+
     def log(self, level, msg, *args):
         """Log a message."""
         msg = "[%s](%s): " + msg
