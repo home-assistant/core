@@ -53,7 +53,7 @@ aioautomatic==0.6.5
 aiobotocore==0.10.4
 
 # homeassistant.components.esphome
-aioesphomeapi==2.6.0
+aioesphomeapi==2.6.1
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
