@@ -3,13 +3,14 @@ import asyncio
 from ipaddress import IPv4Address
 
 import aiohttp
+from async_upnp_client import UpnpError, UpnpFactory
+from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.profiles.igd import IgdDevice
 
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import LOGGER as _LOGGER
-from .const import DOMAIN, CONF_LOCAL_IP
+from .const import CONF_LOCAL_IP, DOMAIN, LOGGER as _LOGGER
 
 
 class Device:
@@ -48,14 +49,10 @@ class Device:
     async def async_create_device(cls, hass: HomeAssistantType, ssdp_description: str):
         """Create UPnP/IGD device."""
         # build async_upnp_client requester
-        from async_upnp_client.aiohttp import AiohttpSessionRequester
-
         session = async_get_clientsession(hass)
         requester = AiohttpSessionRequester(session, True)
 
         # create async_upnp_client device
-        from async_upnp_client import UpnpFactory
-
         factory = UpnpFactory(requester, disable_state_variable_validation=True)
         upnp_device = await factory.async_create_device(ssdp_description)
 
@@ -99,8 +96,6 @@ class Device:
     async def _async_add_port_mapping(self, external_port, local_ip, internal_port):
         """Add a port mapping."""
         # create port mapping
-        from async_upnp_client import UpnpError
-
         _LOGGER.info(
             "Creating port mapping %s:%s:%s (TCP)",
             external_port,
@@ -135,8 +130,6 @@ class Device:
 
     async def _async_delete_port_mapping(self, external_port):
         """Remove a port mapping."""
-        from async_upnp_client import UpnpError
-
         _LOGGER.info("Deleting port mapping %s (TCP)", external_port)
         try:
             await self._igd_device.async_delete_port_mapping(
