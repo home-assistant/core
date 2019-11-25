@@ -9,7 +9,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
-    STATE_ALARM_DISARMED,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_NIGHT,
@@ -28,6 +27,9 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
+    STATE_ALARM_DISARMED,
+    STATE_CLOSED,
+    STATE_OPEN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -956,23 +958,42 @@ async def async_api_set_mode(hass, config, directive, context):
     domain = entity.domain
     service = None
     data = {ATTR_ENTITY_ID: entity.entity_id}
-    mode = directive.payload["mode"]
+    capability_mode = directive.payload["mode"]
 
-    if domain != fan.DOMAIN:
+    if domain not in (fan.DOMAIN, cover.DOMAIN):
         msg = "Entity does not support directive"
         raise AlexaInvalidDirectiveError(msg)
 
     if instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
-        mode, direction = mode.split(".")
-        if direction in [fan.DIRECTION_REVERSE, fan.DIRECTION_FORWARD]:
+        _, direction = capability_mode.split(".")
+        if direction in (fan.DIRECTION_REVERSE, fan.DIRECTION_FORWARD):
             service = fan.SERVICE_SET_DIRECTION
             data[fan.ATTR_DIRECTION] = direction
+
+    if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+        _, position = capability_mode.split(".")
+
+        if position == STATE_CLOSED:
+            service = cover.SERVICE_CLOSE_COVER
+
+        if position == STATE_OPEN:
+            service = cover.SERVICE_OPEN_COVER
 
     await hass.services.async_call(
         domain, service, data, blocking=False, context=context
     )
 
-    return directive.response()
+    response = directive.response()
+    response.add_context_property(
+        {
+            "namespace": "Alexa.ModeController",
+            "instance": instance,
+            "name": "mode",
+            "value": capability_mode,
+        }
+    )
+
+    return response
 
 
 @HANDLERS.register(("Alexa.ModeController", "AdjustMode"))

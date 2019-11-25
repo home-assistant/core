@@ -311,7 +311,10 @@ class CoverCapabilities(AlexaEntity):
 
     def default_display_categories(self):
         """Return the display categories for this entity."""
-        return [DisplayCategory.DOOR]
+        device_class = self.entity.attributes.get(ATTR_DEVICE_CLASS)
+        if device_class in (cover.DEVICE_CLASS_GARAGE, cover.DEVICE_CLASS_DOOR):
+            return [DisplayCategory.DOOR]
+        return [DisplayCategory.OTHER]
 
     def interfaces(self):
         """Yield the supported interfaces."""
@@ -319,6 +322,10 @@ class CoverCapabilities(AlexaEntity):
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & cover.SUPPORT_SET_POSITION:
             yield AlexaPercentageController(self.entity)
+        if supported & (cover.SUPPORT_CLOSE | cover.SUPPORT_OPEN):
+            yield AlexaModeController(
+                self.entity, instance=f"{cover.DOMAIN}.{cover.ATTR_POSITION}"
+            )
         yield AlexaEndpointHealth(self.hass, self.entity)
 
 
