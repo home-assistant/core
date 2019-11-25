@@ -210,6 +210,7 @@ homeassistant/components/ness_alarm/* @nickw444
 homeassistant/components/nest/* @awarecan
 homeassistant/components/netdata/* @fabaff
 homeassistant/components/nextbus/* @vividboarder
+homeassistant/components/nilu/* @hfurubotten
 homeassistant/components/nissan_leaf/* @filcole
 homeassistant/components/nmbs/* @thibmaek
 homeassistant/components/no_ip/* @fabaff
