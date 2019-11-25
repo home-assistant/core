@@ -46,6 +46,9 @@ async def test_get_actions(hass, device_reg, entity_reg):
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    hass.states.async_set(
+        "alarm_control_panel.test_5678", "attributes", {"supported_features": 15}
+    )
     expected_actions = [
         {
             "domain": DOMAIN,
@@ -74,6 +77,36 @@ async def test_get_actions(hass, device_reg, entity_reg):
         {
             "domain": DOMAIN,
             "type": "trigger",
+            "device_id": device_entry.id,
+            "entity_id": "alarm_control_panel.test_5678",
+        },
+    ]
+    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    assert_lists_same(actions, expected_actions)
+
+
+async def test_get_actions_arm_night_only(hass, device_reg, entity_reg):
+    """Test we get the expected actions from a alarm_control_panel."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    hass.states.async_set(
+        "alarm_control_panel.test_5678", "attributes", {"supported_features": 4}
+    )
+    expected_actions = [
+        {
+            "domain": DOMAIN,
+            "type": "arm_night",
+            "device_id": device_entry.id,
+            "entity_id": "alarm_control_panel.test_5678",
+        },
+        {
+            "domain": DOMAIN,
+            "type": "disarm",
             "device_id": device_entry.id,
             "entity_id": "alarm_control_panel.test_5678",
         },
