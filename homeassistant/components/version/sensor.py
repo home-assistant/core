@@ -2,6 +2,13 @@
 import logging
 from datetime import timedelta
 
+from pyhaversion import (
+    LocalVersion,
+    DockerVersion,
+    HassioVersion,
+    PyPiVersion,
+    HaIoVersion,
+)
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -56,13 +63,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Version sensor platform."""
-    from pyhaversion import (
-        LocalVersion,
-        DockerVersion,
-        HassioVersion,
-        PyPiVersion,
-        HaIoVersion,
-    )
 
     beta = config.get(CONF_BETA)
     image = config.get(CONF_IMAGE)
