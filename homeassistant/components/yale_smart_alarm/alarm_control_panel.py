@@ -2,6 +2,13 @@
 import logging
 
 import voluptuous as vol
+from yalesmartalarmclient.client import (
+    YaleSmartAlarmClient,
+    AuthenticationError,
+    YALE_STATE_DISARM,
+    YALE_STATE_ARM_PARTIAL,
+    YALE_STATE_ARM_FULL,
+)
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanel,
@@ -42,8 +49,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     password = config[CONF_PASSWORD]
     area_id = config[CONF_AREA_ID]
 
-    from yalesmartalarmclient.client import YaleSmartAlarmClient, AuthenticationError
-
     try:
         client = YaleSmartAlarmClient(username, password, area_id)
     except AuthenticationError:
@@ -61,12 +66,6 @@ class YaleAlarmDevice(AlarmControlPanel):
         self._name = name
         self._client = client
         self._state = None
-
-        from yalesmartalarmclient.client import (
-            YALE_STATE_DISARM,
-            YALE_STATE_ARM_PARTIAL,
-            YALE_STATE_ARM_FULL,
-        )
 
         self._state_map = {
             YALE_STATE_DISARM: STATE_ALARM_DISARMED,
