@@ -386,5 +386,5 @@ class FluxLight(Light):
         self._bulb.update_state(retry=2)
 
     def wait(self):
-        """Wait device after change state to improve stability"""
+        """Wait device after change state to improve stability."""
         time.sleep(1)
