@@ -116,7 +116,7 @@ class TadoDataStore:
         return self.tado.getCapabilities(tado_id)
 
     def get_me(self):
-        """Wrap for getMet()."""
+        """Wrap for getMe()."""
         return self.tado.getMe()
 
     def reset_zone_overlay(self, zone_id):
