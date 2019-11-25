@@ -2,7 +2,7 @@
 import asyncio
 import logging
 
-from aioftp import Client, StatusCodeError  # pylint: disable=import-error
+from aioftp import Client, StatusCodeError
 from haffmpeg.camera import CameraMjpeg  # pylint: disable=import-error
 from haffmpeg.tools import IMAGE_JPEG, ImageFrame  # pylint: disable=import-error
 import voluptuous as vol
