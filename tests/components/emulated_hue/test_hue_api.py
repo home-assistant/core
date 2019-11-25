@@ -233,6 +233,26 @@ def test_light_without_brightness_supported(hass_hue, hue_client):
 
 
 @asyncio.coroutine
+@pytest.mark.parametrize(
+    "state,is_reachable",
+    [
+        (const.STATE_UNAVAILABLE, False),
+        (const.STATE_OK, True),
+        (const.STATE_UNKNOWN, True),
+    ],
+)
+def test_reachable_for_state(hass_hue, hue_client, state, is_reachable):
+    """Test that an entity is reported as unreachable if in unavailable state."""
+    entity_id = "light.ceiling_lights"
+
+    hass_hue.states.async_set(entity_id, state)
+
+    state_json = yield from perform_get_light_state(hue_client, entity_id, 200)
+
+    assert state_json["state"]["reachable"] == is_reachable, state_json
+
+
+@asyncio.coroutine
 def test_get_light_state(hass_hue, hue_client):
     """Test the getting of light state."""
     # Turn office light on and set to 127 brightness, and set light color
