@@ -93,4 +93,3 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
         """Update when forcing a refresh of the device."""
         self._state = self._smartbridge.get_device_by_id(self._device_id)
         _LOGGER.debug("State of this lutron fan device is %s", self._state)
-        
