@@ -300,7 +300,7 @@ nuheat==0.3.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.17.3
+numpy==1.17.4
 
 # homeassistant.components.google
 oauth2client==4.0.0
