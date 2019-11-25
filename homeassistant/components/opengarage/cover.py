@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_COVERS,
     CONF_HOST,
     CONF_PORT,
-    CONF_PROTOCOL,
+    CONF_SSL,
     STATE_CLOSING,
     STATE_OPENING,
 )
@@ -34,7 +34,6 @@ CONF_DEVICE_KEY = "device_key"
 
 DEFAULT_NAME = "OpenGarage"
 DEFAULT_PORT = 80
-DEFAULT_PROTOCOL = "http"
 
 STATES_MAP = {0: STATE_CLOSED, 1: STATE_OPEN}
 
@@ -44,9 +43,7 @@ COVER_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.In(
-            ["http", "https"]
-        ),
+        vol.Optional(CONF_SSL, default=False): cv.boolean,
     }
 )
 
@@ -65,7 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             CONF_NAME: device_config.get(CONF_NAME),
             CONF_HOST: device_config.get(CONF_HOST),
             CONF_PORT: device_config.get(CONF_PORT),
-            CONF_PROTOCOL: device_config.get(CONF_PROTOCOL),
+            CONF_SSL: device_config.get(CONF_SSL),
             CONF_DEVICE_KEY: device_config.get(CONF_DEVICE_KEY),
         }
 
@@ -80,7 +77,7 @@ class OpenGarageCover(CoverDevice):
     def __init__(self, args):
         """Initialize the cover."""
         self.opengarage_url = "{}://{}:{}".format(
-            args[CONF_PROTOCOL], args[CONF_HOST], args[CONF_PORT]
+            "https" if args[CONF_SSL] else "http", args[CONF_HOST], args[CONF_PORT]
         )
         self._name = args[CONF_NAME]
         self._device_key = args[CONF_DEVICE_KEY]
