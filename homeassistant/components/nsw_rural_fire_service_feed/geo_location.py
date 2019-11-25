@@ -7,11 +7,6 @@ from aio_geojson_nsw_rfs_incidents import NswRuralFireServiceIncidentsFeedManage
 import voluptuous as vol
 
 from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
-from homeassistant.components.nsw_rural_fire_service_feed.const import (
-    SIGNAL_DELETE_ENTITY,
-    SIGNAL_NEW_GEOLOCATION,
-    SIGNAL_UPDATE_ENTITY,
-)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LOCATION,
@@ -48,6 +43,10 @@ DEFAULT_RADIUS_IN_KM = 20.0
 DEFAULT_UNIT_OF_MEASUREMENT = "km"
 
 SCAN_INTERVAL = timedelta(minutes=5)
+
+SIGNAL_DELETE_ENTITY = "nsw_rural_fire_service_feed_delete_{}"
+SIGNAL_UPDATE_ENTITY = "nsw_rural_fire_service_feed_update_{}"
+SIGNAL_NEW_GEOLOCATION = "nsw_rural_fire_service_feed_new_geolocation_{}"
 
 SOURCE = "nsw_rural_fire_service_feed"
 
