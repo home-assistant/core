@@ -10,6 +10,10 @@ from homeassistant.components.alarm_control_panel import (
     FORMAT_TEXT,
     AlarmControlPanel,
 )
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+)
 from homeassistant.const import (
     CONF_CODE,
     STATE_ALARM_ARMED_AWAY,
@@ -93,6 +97,16 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
     def state(self):
         """Return the state of the entity."""
         return self._state
+
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of the entity."""
+        return self._system.system_id
 
     def _validate_code(self, code, state):
         """Validate given code."""

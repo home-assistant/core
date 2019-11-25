@@ -165,6 +165,11 @@ class AlarmControlPanel(Entity):
         return self.hass.async_add_executor_job(self.alarm_arm_custom_bypass, code)
 
     @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        raise NotImplementedError()
+
+    @property
     def state_attributes(self):
         """Return the state attributes."""
         state_attr = {
