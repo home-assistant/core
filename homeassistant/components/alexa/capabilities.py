@@ -752,10 +752,11 @@ class AlexaThermostatController(AlexaCapability):
                 supported_modes.append(thermostat_mode)
 
         preset_modes = self.entity.attributes.get(climate.ATTR_PRESET_MODES)
-        for mode in preset_modes:
-            thermostat_mode = API_THERMOSTAT_PRESETS.get(mode)
-            if thermostat_mode:
-                supported_modes.append(thermostat_mode)
+        if preset_modes:
+            for mode in preset_modes:
+                thermostat_mode = API_THERMOSTAT_PRESETS.get(mode)
+                if thermostat_mode:
+                    supported_modes.append(thermostat_mode)
 
         # Return False for supportsScheduling until supported with event listener in handler.
         configuration = {"supportsScheduling": False}
