@@ -58,6 +58,7 @@ ZOOM_IN = "ZOOM_IN"
 PTZ_NONE = "NONE"
 
 SERVICE_PTZ = "onvif_ptz"
+SERVICE_REBOOT = "onvif_reboot"
 
 ONVIF_DATA = "onvif"
 ENTITIES = "entities"
@@ -85,6 +86,12 @@ SERVICE_PTZ_SCHEMA = vol.Schema(
     }
 )
 
+SERVICE_REBOOT_SCHEMA = vol.Schema(
+    {
+        ATTR_ENTITY_ID: cv.entity_ids,
+    }
+)
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up a ONVIF camera."""
@@ -109,6 +116,24 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     hass.services.async_register(
         DOMAIN, SERVICE_PTZ, async_handle_ptz, schema=SERVICE_PTZ_SCHEMA
+    )
+
+    async def async_handle_reboot(service):
+        """Handle PTZ service call."""
+        all_cameras = hass.data[ONVIF_DATA][ENTITIES]
+        entity_ids = await async_extract_entity_ids(hass, service)
+        target_cameras = []
+        if not entity_ids:
+            target_cameras = all_cameras
+        else:
+            target_cameras = [
+                camera for camera in all_cameras if camera.entity_id in entity_ids
+            ]
+        for camera in target_cameras:
+            await camera.async_perform_reboot()
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_REBOOT, async_handle_reboot, schema=SERVICE_REBOOT_SCHEMA
     )
 
     _LOGGER.debug("Constructing the ONVIFHassCamera")
@@ -309,6 +334,7 @@ class ONVIFHassCamera(Camera):
             self._ptz_service = self._camera.create_ptz_service()
             _LOGGER.debug("Completed set up of the ONVIF camera component")
 
+
     async def async_perform_ptz(self, pan, tilt, zoom):
         """Perform a PTZ action on the camera."""
         if self._ptz_service is None:
@@ -340,6 +366,17 @@ class ONVIFHassCamera(Camera):
                     _LOGGER.debug("Camera '%s' doesn't support PTZ.", self._name)
         else:
             _LOGGER.debug("Camera '%s' doesn't support PTZ.", self._name)
+
+    async def async_perform_reboot(self):
+        """Perform a SystemReboot action on the camera."""
+        try:
+            _LOGGER.debug("Calling SystemReboot")
+            ret = await self._camera.devicemgmt.SystemReboot()
+            _LOGGER.debug("Camera '%s' Reboot command returned '%s'",self._name,ret)
+        except exceptions.ONVIFError as err:
+            if "Bad Request" in err.reason:
+                _LOGGER.debug("Camera '%s' doesn't support SystemReboot.", self._name)
+
 
     async def async_added_to_hass(self):
         """Handle entity addition to hass."""

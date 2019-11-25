@@ -13,4 +13,9 @@ onvif_ptz:
     zoom:
       description: 'Zoom. Allowed values: ZOOM_IN, ZOOM_OUT, NONE'
       example: 'NONE'
-
+onvif_reboot:
+  description: If your ONVIF camera supports SystemReboot, you will be able to reboot it.
+  fields:
+    entity_id:
+      description: 'String or list of strings that point at entity_ids of cameras. Else targets all.'
+      example: 'camera.backyard'
