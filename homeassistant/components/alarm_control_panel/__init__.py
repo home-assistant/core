@@ -61,31 +61,31 @@ async def async_setup(hass, config):
         SERVICE_ALARM_ARM_HOME,
         ALARM_SERVICE_SCHEMA,
         "async_alarm_arm_home",
-        SUPPORT_ALARM_ARM_HOME,
+        [SUPPORT_ALARM_ARM_HOME],
     )
     component.async_register_entity_service(
         SERVICE_ALARM_ARM_AWAY,
         ALARM_SERVICE_SCHEMA,
         "async_alarm_arm_away",
-        SUPPORT_ALARM_ARM_AWAY,
+        [SUPPORT_ALARM_ARM_AWAY],
     )
     component.async_register_entity_service(
         SERVICE_ALARM_ARM_NIGHT,
         ALARM_SERVICE_SCHEMA,
         "async_alarm_arm_night",
-        SUPPORT_ALARM_ARM_NIGHT,
+        [SUPPORT_ALARM_ARM_NIGHT],
     )
     component.async_register_entity_service(
         SERVICE_ALARM_ARM_CUSTOM_BYPASS,
         ALARM_SERVICE_SCHEMA,
         "async_alarm_arm_custom_bypass",
-        SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
+        [SUPPORT_ALARM_ARM_CUSTOM_BYPASS],
     )
     component.async_register_entity_service(
         SERVICE_ALARM_TRIGGER,
         ALARM_SERVICE_SCHEMA,
         "async_alarm_trigger",
-        SUPPORT_ALARM_TRIGGER,
+        [SUPPORT_ALARM_TRIGGER],
     )
 
     return True
