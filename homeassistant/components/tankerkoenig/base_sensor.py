@@ -1,7 +1,6 @@
 """Base classe for tankerkoenig sensor integration."""
 import logging
 
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
@@ -9,13 +8,15 @@ from homeassistant.const import (
     STATE_CLOSED,
     STATE_OPEN,
 )
+from homeassistant.helpers.entity import Entity
+
 from .const import NAME
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ADDRESS = "address"
 ATTR_BRAND = "brand"
-ATTR_FUEL = "fuel_type"
+ATTR_FUEL_TYPE = "fuel_type"
 ATTR_IS_OPEN = "state"
 ATTR_STATION_NAME = "station_name"
 ATTRIBUTION = "Data provided by https://creativecommons.tankerkoenig.de"
@@ -67,7 +68,7 @@ class FuelPriceSensorBase(Entity):
         attrs = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_BRAND: self._station["brand"],
-            ATTR_FUEL: self._fuel_type,
+            ATTR_FUEL_TYPE: self._fuel_type,
             ATTR_STATION_NAME: self._station["name"],
             ATTR_ADDRESS: self._address,
             ATTR_LATITUDE: self._latitude,

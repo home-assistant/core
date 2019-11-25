@@ -1,34 +1,33 @@
 """Platform for tankerkoenig sensor integration."""
+from datetime import timedelta
 import logging
 
-from datetime import timedelta
 import pytankerkoenig
-
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
-    CONF_SCAN_INTERVAL,
     STATE_CLOSED,
     STATE_OPEN,
 )
-from .const import NAME, CONF_STATIONS, CONF_TYPES, FUEL_TYPES
+import homeassistant.helpers.config_validation as cv
+
 from .base_sensor import FuelPriceSensorBase
+from .const import CONF_FUEL_TYPES, CONF_STATIONS, FUEL_TYPES, NAME
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_RADIUS = 5
+DEFAULT_RADIUS = 2
 SCAN_INTERVAL = timedelta(minutes=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_TYPES, ["e5", "e10", "diesel"]): vol.All(
+        vol.Optional(CONF_FUEL_TYPES, default=FUEL_TYPES): vol.All(
             cv.ensure_list, [vol.In(FUEL_TYPES)]
         ),
         vol.Inclusive(
@@ -37,10 +36,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Inclusive(
             CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
         ): cv.longitude,
-        vol.Optional(CONF_RADIUS, DEFAULT_RADIUS): vol.All(
+        vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): vol.All(
             cv.positive_int, vol.Range(min=1)
         ),
-        vol.Optional(CONF_SCAN_INTERVAL, SCAN_INTERVAL): cv.time_period,
         vol.Optional(CONF_STATIONS, default=[]): vol.All(cv.ensure_list, [cv.string]),
     }
 )
@@ -48,12 +46,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set the Tankerkoenig sensor platform up."""
-    fuel_types = config.get(CONF_TYPES, FUEL_TYPES)
+    fuel_types = config.get(CONF_FUEL_TYPES)
     api_key = config.get(CONF_API_KEY)
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    radius = config.get(CONF_RADIUS, DEFAULT_RADIUS)
-    additional_stations = config.get(CONF_STATIONS, [])
+    radius = config.get(CONF_RADIUS)
+    additional_stations = config.get(CONF_STATIONS)
 
     master = None
     entities = []
@@ -132,11 +130,6 @@ class FuelPriceSensorMaster(FuelPriceSensorBase):
         self._slaves = {}
         self._monitored_stations = [self._station_id]
 
-    @property
-    def should_poll(self):
-        """Poll regularly for the standalone sensor."""
-        return True
-
     def add_slave(self, station_id, slave):
         """Add an additional slave sensor, that needs to be updated together with this one."""
         if station_id not in self._slaves:
@@ -145,7 +138,7 @@ class FuelPriceSensorMaster(FuelPriceSensorBase):
             self._slaves[station_id].append(slave)
         self._monitored_stations = list(set(self._monitored_stations) | {station_id})
 
-    async def async_update(self):
+    def update(self):
         """Fetch new prices."""
         _LOGGER.debug("Fetching new prices for standalone sensor")
         data = pytankerkoenig.getPriceList(self._api_key, self._monitored_stations)
