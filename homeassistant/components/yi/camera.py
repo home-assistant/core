@@ -3,8 +3,8 @@ import asyncio
 import logging
 
 from aioftp import Client, StatusCodeError
-from haffmpeg.camera import CameraMjpeg  # pylint: disable=import-error
-from haffmpeg.tools import IMAGE_JPEG, ImageFrame  # pylint: disable=import-error
+from haffmpeg.camera import CameraMjpeg
+from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
