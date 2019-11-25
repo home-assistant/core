@@ -1,10 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Denne enheten er allerede konfigurert"
+            "already_configured": "Denne enheten er allerede konfigurert",
+            "already_in_progress": "Denne enheten blir allerede konfigurert",
+            "not_huawei_lte": "Ikke en Huawei LTE-enhet"
         },
         "error": {
             "connection_failed": "Tilkoblingen mislyktes",
+            "connection_timeout": "Tilkoblingsavbrudd",
             "incorrect_password": "feil passord",
             "incorrect_username": "Feil brukernavn",
             "incorrect_username_or_password": "Feil brukernavn eller passord",

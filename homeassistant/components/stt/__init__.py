@@ -7,24 +7,25 @@ from typing import Dict, List, Optional
 from aiohttp import StreamReader, web
 from aiohttp.hdrs import istr
 from aiohttp.web_exceptions import (
+    HTTPBadRequest,
     HTTPNotFound,
     HTTPUnsupportedMediaType,
-    HTTPBadRequest,
 )
 import attr
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import callback
-from homeassistant.helpers import config_per_platform
+from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_prepare_setup_platform
 
 from .const import (
     DOMAIN,
-    AudioBitrates,
+    AudioBitRates,
+    AudioChannels,
     AudioCodecs,
     AudioFormats,
-    AudioSamplerates,
+    AudioSampleRates,
     SpeechResultState,
 )
 
@@ -37,14 +38,17 @@ async def async_setup(hass: HomeAssistantType, config):
     """Set up STT."""
     providers = {}
 
-    async def async_setup_platform(p_type, p_config, disc_info=None):
+    async def async_setup_platform(p_type, p_config=None, discovery_info=None):
         """Set up a TTS platform."""
+        if p_config is None:
+            p_config = {}
+
         platform = await async_prepare_setup_platform(hass, config, DOMAIN, p_type)
         if platform is None:
             return
 
         try:
-            provider = await platform.async_get_engine(hass, p_config)
+            provider = await platform.async_get_engine(hass, p_config, discovery_info)
             if provider is None:
                 _LOGGER.error("Error setting up platform %s", p_type)
                 return
@@ -65,6 +69,13 @@ async def async_setup(hass: HomeAssistantType, config):
     if setup_tasks:
         await asyncio.wait(setup_tasks)
 
+    # Add discovery support
+    async def async_platform_discovered(platform, info):
+        """Handle for discovered platform."""
+        await async_setup_platform(platform, discovery_info=info)
+
+    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
+
     hass.http.register_view(SpeechToTextView(providers))
     return True
 
@@ -76,15 +87,16 @@ class SpeechMetadata:
     language: str = attr.ib()
     format: AudioFormats = attr.ib()
     codec: AudioCodecs = attr.ib()
-    bitrate: AudioBitrates = attr.ib(converter=int)
-    samplerate: AudioSamplerates = attr.ib(converter=int)
+    bit_rate: AudioBitRates = attr.ib(converter=int)
+    sample_rate: AudioSampleRates = attr.ib(converter=int)
+    channel: AudioChannels = attr.ib(converter=int)
 
 
 @attr.s
 class SpeechResult:
     """Result of audio Speech."""
 
-    text: str = attr.ib()
+    text: Optional[str] = attr.ib()
     result: SpeechResultState = attr.ib()
 
 
@@ -111,13 +123,18 @@ class Provider(ABC):
 
     @property
     @abstractmethod
-    def supported_bitrates(self) -> List[AudioBitrates]:
-        """Return a list of supported bitrates."""
+    def supported_bit_rates(self) -> List[AudioBitRates]:
+        """Return a list of supported bit rates."""
 
     @property
     @abstractmethod
-    def supported_samplerates(self) -> List[AudioSamplerates]:
-        """Return a list of supported samplerates."""
+    def supported_sample_rates(self) -> List[AudioSampleRates]:
+        """Return a list of supported sample rates."""
+
+    @property
+    @abstractmethod
+    def supported_channels(self) -> List[AudioChannels]:
+        """Return a list of supported channels."""
 
     @abstractmethod
     async def async_process_audio_stream(
@@ -135,8 +152,9 @@ class Provider(ABC):
             metadata.language not in self.supported_languages
             or metadata.format not in self.supported_formats
             or metadata.codec not in self.supported_codecs
-            or metadata.bitrate not in self.supported_bitrates
-            or metadata.samplerate not in self.supported_samplerates
+            or metadata.bit_rate not in self.supported_bit_rates
+            or metadata.sample_rate not in self.supported_sample_rates
+            or metadata.channel not in self.supported_channels
         ):
             return False
         return True
@@ -157,7 +175,7 @@ class SpeechToTextView(HomeAssistantView):
     def _metadata_from_header(request: web.Request) -> Optional[SpeechMetadata]:
         """Extract metadata from header.
 
-        X-Speech-Content: format=wav; codec=pcm; samplerate=16000; bitrate=16; language=de_de
+        X-Speech-Content: format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=1; language=de_de
         """
         try:
             data = request.headers[istr("X-Speech-Content")].split(";")
@@ -211,7 +229,8 @@ class SpeechToTextView(HomeAssistantView):
                 "languages": stt_provider.supported_languages,
                 "formats": stt_provider.supported_formats,
                 "codecs": stt_provider.supported_codecs,
-                "samplerates": stt_provider.supported_samplerates,
-                "bitrates": stt_provider.supported_bitrates,
+                "sample_rates": stt_provider.supported_sample_rates,
+                "bit_rates": stt_provider.supported_bit_rates,
+                "channels": stt_provider.supported_channels,
             }
         )

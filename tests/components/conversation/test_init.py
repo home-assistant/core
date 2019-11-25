@@ -124,6 +124,51 @@ async def test_http_processing_intent(hass, hass_client):
     }
 
 
+async def test_http_handle_intent(hass, hass_client):
+    """Test handle intent via HTTP API."""
+
+    class TestIntentHandler(intent.IntentHandler):
+        """Test Intent Handler."""
+
+        intent_type = "OrderBeer"
+
+        async def async_handle(self, intent):
+            """Handle the intent."""
+            response = intent.create_response()
+            response.async_set_speech(
+                "I've ordered a {}!".format(intent.slots["type"]["value"])
+            )
+            response.async_set_card(
+                "Beer ordered", "You chose a {}.".format(intent.slots["type"]["value"])
+            )
+            return response
+
+    intent.async_register(hass, TestIntentHandler())
+
+    result = await async_setup_component(
+        hass,
+        "conversation",
+        {"conversation": {"intents": {"OrderBeer": ["I would like the {type} beer"]}}},
+    )
+    assert result
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/conversation/handle",
+        json={"name": "OrderBeer", "data": {"type": "Belgian"}},
+    )
+
+    assert resp.status == 200
+    data = await resp.json()
+
+    assert data == {
+        "card": {
+            "simple": {"content": "You chose a Belgian.", "title": "Beer ordered"}
+        },
+        "speech": {"plain": {"extra_data": None, "speech": "I've ordered a Belgian!"}},
+    }
+
+
 @pytest.mark.parametrize("sentence", ("turn on kitchen", "turn kitchen on"))
 async def test_turn_on_intent(hass, sentence):
     """Test calling the turn on intent."""
@@ -266,11 +311,14 @@ async def test_http_api_wrong_data(hass, hass_client):
 async def test_custom_agent(hass, hass_client):
     """Test a custom conversation agent."""
 
+    calls = []
+
     class MyAgent(conversation.AbstractConversationAgent):
         """Test Agent."""
 
-        async def async_process(self, text):
+        async def async_process(self, text, conversation_id):
             """Process some text."""
+            calls.append((text, conversation_id))
             response = intent.IntentResponse()
             response.async_set_speech("Test response")
             return response
@@ -281,9 +329,16 @@ async def test_custom_agent(hass, hass_client):
 
     client = await hass_client()
 
-    resp = await client.post("/api/conversation/process", json={"text": "Test Text"})
+    resp = await client.post(
+        "/api/conversation/process",
+        json={"text": "Test Text", "conversation_id": "test-conv-id"},
+    )
     assert resp.status == 200
     assert await resp.json() == {
         "card": {},
         "speech": {"plain": {"extra_data": None, "speech": "Test response"}},
     }
+
+    assert len(calls) == 1
+    assert calls[0][0] == "Test Text"
+    assert calls[0][1] == "test-conv-id"

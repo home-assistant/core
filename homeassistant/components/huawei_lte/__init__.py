@@ -6,7 +6,7 @@ from functools import partial
 from urllib.parse import urlparse
 import ipaddress
 import logging
-from typing import Any, Callable, Dict, List, Set
+from typing import Any, Callable, Dict, List, Set, Tuple
 
 import voluptuous as vol
 import attr
@@ -36,6 +36,7 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -134,6 +135,11 @@ class Router:
             except (KeyError, TypeError):
                 pass
         return DEFAULT_DEVICE_NAME
+
+    @property
+    def device_connections(self) -> Set[Tuple[str, str]]:
+        """Get router connections for device registry."""
+        return {(dr.CONNECTION_NETWORK_MAC, self.mac)}
 
     def update(self) -> None:
         """Update router data."""
@@ -283,6 +289,30 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     # Clear all subscriptions, enabled entities will push back theirs
     router.subscriptions.clear()
 
+    # Set up device registry
+    device_data = {}
+    sw_version = None
+    if router.data.get(KEY_DEVICE_INFORMATION):
+        device_info = router.data[KEY_DEVICE_INFORMATION]
+        serial_number = device_info.get("SerialNumber")
+        if serial_number:
+            device_data["identifiers"] = {(DOMAIN, serial_number)}
+        sw_version = device_info.get("SoftwareVersion")
+        if device_info.get("DeviceName"):
+            device_data["model"] = device_info["DeviceName"]
+    if not sw_version and router.data.get(KEY_DEVICE_BASIC_INFORMATION):
+        sw_version = router.data[KEY_DEVICE_BASIC_INFORMATION].get("SoftwareVersion")
+    if sw_version:
+        device_data["sw_version"] = sw_version
+    device_registry = await dr.async_get_registry(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections=router.device_connections,
+        name=router.device_name,
+        manufacturer="Huawei",
+        **device_data,
+    )
+
     # Forward config entry setup to platforms
     for domain in (DEVICE_TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN):
         hass.async_create_task(
@@ -407,6 +437,11 @@ class HuaweiLteBaseEntity(Entity):
     def should_poll(self) -> bool:
         """Huawei LTE entities report their state without polling."""
         return False
+
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        """Get info for matching with parent router."""
+        return {"connections": self.router.device_connections}
 
     async def async_update(self) -> None:
         """Update state."""

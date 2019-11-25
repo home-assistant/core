@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 import logging
 
+from todoist.api import TodoistAPI
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
@@ -142,8 +143,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # Look up IDs based on (lowercase) names.
     project_id_lookup = {}
     label_id_lookup = {}
-
-    from todoist.api import TodoistAPI
 
     api = TodoistAPI(token)
     api.sync()

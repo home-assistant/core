@@ -113,7 +113,7 @@ async def test_verify_valid_state(
     """Verify all attributes are set from a valid response."""
     await assert_setup_sensor(hass, CONFIG_BASIC)
     mock_nextbus_predictions.assert_called_once_with(
-        [{"stop_tag": int(VALID_STOP), "route_tag": VALID_ROUTE}], VALID_AGENCY
+        [{"stop_tag": VALID_STOP, "route_tag": VALID_ROUTE}], VALID_AGENCY
     )
 
     state = hass.states.get(SENSOR_ID_SHORT)
