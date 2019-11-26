@@ -846,3 +846,63 @@ async def test_state_delay_on_off(hass):
 
     state = hass.states.get("binary_sensor.test")
     assert state.state == "on"
+
+
+async def test_state_max_duration(hass):
+    """Test binary sensor state using max duration."""
+    config = {
+        "binary_sensor": {
+            "name": "test",
+            "platform": "bayesian",
+            "observations": [
+                {
+                    "platform": "state",
+                    "entity_id": "sensor.test_state",
+                    "prob_given_true": 0.8,
+                    "prob_given_false": 0.2,
+                    "to_state": "on",
+                    "max_duration": 5,
+                },
+                {
+                    "platform": "state",
+                    "entity_id": "sensor.test_state",
+                    "to_state": "on",
+                    "prob_given_true": 0.52,
+                    "prob_given_false": 0.39,
+                    "delay_on": 5,
+                    "max_duration": 5,
+                },
+            ],
+            "prior": 0.2,
+            "probability_threshold": 0.3,
+        }
+    }
+
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_start()
+
+    hass.states.async_set("sensor.test_state", "on")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "on"
+
+    future = dt_util.utcnow() + timedelta(seconds=5)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+    assert [{"prob_false": 0.39, "prob_true": 0.52}] == state.attributes.get(
+        "observations"
+    )
+    assert abs(0.25 - state.attributes.get("probability")) < 1e-7
+
+    future = dt_util.utcnow() + timedelta(seconds=5)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+    assert len(state.attributes.get("observations")) == 0
+    assert abs(0.2 - state.attributes.get("probability")) < 1e-7
