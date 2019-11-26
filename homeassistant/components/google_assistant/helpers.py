@@ -41,7 +41,7 @@ class AbstractConfig:
     def __init__(self, hass):
         """Initialize abstract config."""
         self.hass = hass
-        self._google_sync_unsub = None
+        self._google_sync_unsub = {}
         self._local_sdk_active = False
 
     @property
@@ -119,31 +119,29 @@ class AbstractConfig:
             self._unsub_report_state()
             self._unsub_report_state = None
 
-    async def async_sync_entities(self):
+    async def async_sync_entities(self, agent_user_id: str):
         """Sync all entities to Google."""
         # Remove any pending sync
-        if self._google_sync_unsub:
-            self._google_sync_unsub()
-            self._google_sync_unsub = None
+        self._google_sync_unsub.pop(agent_user_id, lambda: None)()
 
-        return await self._async_request_sync_devices()
-
-    async def _schedule_callback(self, _now):
-        """Handle a scheduled sync callback."""
-        self._google_sync_unsub = None
-        await self.async_sync_entities()
+        return await self._async_request_sync_devices(agent_user_id)
 
     @callback
-    def async_schedule_google_sync(self):
+    def async_schedule_google_sync(self, agent_user_id: str):
         """Schedule a sync."""
-        if self._google_sync_unsub:
-            self._google_sync_unsub()
 
-        self._google_sync_unsub = async_call_later(
-            self.hass, SYNC_DELAY, self._schedule_callback
+        async def _schedule_callback(_now):
+            """Handle a scheduled sync callback."""
+            self._google_sync_unsub.pop(agent_user_id, None)
+            await self.async_sync_entities(agent_user_id)
+
+        self._google_sync_unsub.pop(agent_user_id, lambda: None)()
+
+        self._google_sync_unsub[agent_user_id] = async_call_later(
+            self.hass, SYNC_DELAY, _schedule_callback
         )
 
-    async def _async_request_sync_devices(self) -> int:
+    async def _async_request_sync_devices(self, agent_user_id: str) -> int:
         """Trigger a sync with Google.
 
         Return value is the HTTP status code of the sync request.
@@ -165,7 +163,7 @@ class AbstractConfig:
             return
 
         webhook.async_register(
-            self.hass, DOMAIN, "Local Support", webhook_id, self._handle_local_webhook
+            self.hass, DOMAIN, "Local Support", webhook_id, self._handle_local_webhook,
         )
 
         self._local_sdk_active = True
