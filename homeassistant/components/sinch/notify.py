@@ -61,10 +61,12 @@ class SinchNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
         targets = kwargs.get(ATTR_TARGET, self.default_recipients)
-        data = kwargs.get(ATTR_DATA)
-        sender = data.get(ATTR_SENDER) if data else self.sender
+        data = kwargs.get(ATTR_DATA) or {}
 
-        clx_args = {ATTR_MESSAGE: message, ATTR_SENDER: sender}
+        clx_args = {ATTR_MESSAGE: message, ATTR_SENDER: self.sender}
+
+        if ATTR_SENDER in data:
+            clx_args[ATTR_SENDER] = data[ATTR_SENDER]
 
         if not targets:
             _LOGGER.error("At least 1 target is required")
