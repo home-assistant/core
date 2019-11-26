@@ -1,4 +1,4 @@
-"""Constants for the Onvif Camera component."""
+"""Constants for the ONVIF Camera component."""
 DOMAIN = "onvif"
 
 DEFAULT_NAME = "ONVIF Camera"
