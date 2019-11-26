@@ -257,13 +257,3 @@ songpal_set_sound_setting:
     value:
       description: Value to set.
       example: 'on'
-
-epson_select_cmode:
-  description: Select Color mode of Epson projector
-  fields:
-    entity_id:
-      description: Name of projector
-      example: 'media_player.epson_projector'
-    cmode:
-      description: Name of Cmode
-      example: 'cinema'
