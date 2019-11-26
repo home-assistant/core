@@ -75,10 +75,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class UnifiVideoCamera(Camera):
     """A Ubiquiti Unifi Video Camera."""
 
-    def __init__(self, nvr, uuid, name, password):
+    def __init__(self, camera, uuid, name, password):
         """Initialize an Unifi camera."""
         super().__init__()
-        self._nvr = nvr
+        self._nvr = camera
         self._uuid = uuid
         self._name = name
         self._password = password
