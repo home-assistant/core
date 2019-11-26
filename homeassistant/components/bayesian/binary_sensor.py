@@ -133,7 +133,7 @@ class BayesianBinarySensor(BinarySensorDevice):
                 to_observe.update(set([obs.get("entity_id")]))
             if "value_template" in obs:
                 to_observe.update(set(obs.get(CONF_VALUE_TEMPLATE).extract_entities()))
-        self.entity_obs = dict.fromkeys(to_observe, [])
+        self.entity_obs = {key: [] for key in to_observe}
 
         for ind, obs in enumerate(self._observations):
             obs["id"] = ind

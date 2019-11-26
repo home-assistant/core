@@ -539,10 +539,10 @@ class TestMediaPlayer(unittest.TestCase):
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
 
-        assert "0" == ump.volume_level
+        assert 0 == ump.volume_level
 
         self.hass.states.set(self.mock_volume_id, 100)
-        assert "100" == ump.volume_level
+        assert 100 == ump.volume_level
 
     def test_is_volume_muted_children_and_attr(self):
         """Test is volume muted property w/ children and attrs."""

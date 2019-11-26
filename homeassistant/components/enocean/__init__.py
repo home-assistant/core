@@ -84,7 +84,6 @@ class EnOceanDevice(Entity):
     def value_changed(self, packet):
         """Update the internal state of the device when a packet arrives."""
 
-    # pylint: disable=no-self-use
     def send_command(self, data, optional, packet_type):
         """Send a command via the EnOcean dongle."""
         from enocean.protocol.packet import Packet

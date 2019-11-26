@@ -102,7 +102,6 @@ class GoogleConfig(AbstractConfig):
     @property
     def should_report_state(self):
         """Return if states should be proactively reported."""
-        # pylint: disable=no-self-use
         return self._config.get(CONF_REPORT_STATE)
 
     def should_expose(self, state) -> bool:

@@ -1,9 +1,13 @@
 """Support for Satel Integra alarm, using ETHM module."""
 import asyncio
-import logging
 from collections import OrderedDict
+import logging
 
 import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -17,8 +21,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import (
     CONF_ARM_HOME_MODE,
     CONF_DEVICE_PARTITIONS,
-    DATA_SATEL,
     CONF_ZONE_NAME,
+    DATA_SATEL,
     SIGNAL_PANEL_MESSAGE,
 )
 
@@ -130,6 +134,11 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""

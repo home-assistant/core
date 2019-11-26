@@ -56,6 +56,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_SET,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.util.network import is_local
 
@@ -578,7 +579,7 @@ def entity_to_json(config, entity, state):
                 HUE_API_STATE_BRI: state[STATE_BRIGHTNESS],
                 HUE_API_STATE_HUE: state[STATE_HUE],
                 HUE_API_STATE_SAT: state[STATE_SATURATION],
-                "reachable": True,
+                "reachable": entity.state != STATE_UNAVAILABLE,
             },
             "type": "Dimmable light",
             "name": config.get_entity_name(entity),
@@ -587,7 +588,10 @@ def entity_to_json(config, entity, state):
             "swversion": "123",
         }
     return {
-        "state": {HUE_API_STATE_ON: state[STATE_ON], "reachable": True},
+        "state": {
+            HUE_API_STATE_ON: state[STATE_ON],
+            "reachable": entity.state != STATE_UNAVAILABLE,
+        },
         "type": "On/off light",
         "name": config.get_entity_name(entity),
         "modelid": "HASS321",
