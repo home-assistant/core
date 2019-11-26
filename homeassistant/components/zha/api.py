@@ -325,9 +325,13 @@ async def websocket_remove_groups(hass, connection, msg):
     groups = zha_gateway.application_controller.groups
     group_ids = msg[GROUP_IDS]
 
-    for group_id in group_ids:
-        groups.pop(group_id)
-
+    if len(group_ids) > 1:
+        tasks = []
+        for group_id in group_ids:
+            tasks = remove_group(groups[group_id], zha_gateway)
+        await asyncio.gather(*tasks)
+    else:
+        await remove_group(groups[group_ids[0]], zha_gateway)
     ret_groups = await get_groups(hass)
     connection.send_result(msg[ID], ret_groups)
 
@@ -436,6 +440,19 @@ async def get_groups(hass,):
             async_get_group_info(hass, zha_gateway, group, ha_device_registry)
         )
     return groups
+
+
+async def remove_group(group, zha_gateway):
+    """Remove ZHA Group."""
+    tasks = []
+    for member_ieee in group.members.keys():
+        if member_ieee[0] in zha_gateway.devices:
+            tasks.append(
+                zha_gateway.devices[member_ieee[0]].async_remove_from_group(
+                    group.group_id
+                )
+            )
+    await asyncio.gather(*tasks)
 
 
 @callback
