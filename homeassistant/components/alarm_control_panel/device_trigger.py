@@ -11,6 +11,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
@@ -18,6 +19,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, CALLBACK_TYPE
 from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_NIGHT,
+    SUPPORT_ALARM_TRIGGER,
+    SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
+)
 from homeassistant.components.automation import state, AutomationActionType
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from . import DOMAIN
@@ -29,6 +37,7 @@ TRIGGER_TYPES = {
     "armed_home",
     "armed_away",
     "armed_night",
+    "armed_custom_bypass",
 }
 
 TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
@@ -49,15 +58,81 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
         if entry.domain != DOMAIN:
             continue
 
+        state = hass.states.get(entry.entity_id)
+
+        # We need a state or else we can't populate the HVAC and preset modes.
+        if state is None:
+            continue
+
+        supported_features = state.attributes["supported_features"]
+
         # Add triggers for each entity that belongs to this integration
-        for trigger_type in TRIGGER_TYPES:
+        triggers.append(
+            {
+                CONF_PLATFORM: "device",
+                CONF_DEVICE_ID: device_id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_ENTITY_ID: entry.entity_id,
+                CONF_TYPE: "pending",
+            }
+        )
+        triggers.append(
+            {
+                CONF_PLATFORM: "device",
+                CONF_DEVICE_ID: device_id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_ENTITY_ID: entry.entity_id,
+                CONF_TYPE: "disarmed",
+            }
+        )
+        if supported_features & SUPPORT_ALARM_TRIGGER:
             triggers.append(
                 {
                     CONF_PLATFORM: "device",
                     CONF_DEVICE_ID: device_id,
                     CONF_DOMAIN: DOMAIN,
                     CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: trigger_type,
+                    CONF_TYPE: "triggered",
+                }
+            )
+        if supported_features & SUPPORT_ALARM_ARM_HOME:
+            triggers.append(
+                {
+                    CONF_PLATFORM: "device",
+                    CONF_DEVICE_ID: device_id,
+                    CONF_DOMAIN: DOMAIN,
+                    CONF_ENTITY_ID: entry.entity_id,
+                    CONF_TYPE: "armed_home",
+                }
+            )
+        if supported_features & SUPPORT_ALARM_ARM_AWAY:
+            triggers.append(
+                {
+                    CONF_PLATFORM: "device",
+                    CONF_DEVICE_ID: device_id,
+                    CONF_DOMAIN: DOMAIN,
+                    CONF_ENTITY_ID: entry.entity_id,
+                    CONF_TYPE: "armed_away",
+                }
+            )
+        if supported_features & SUPPORT_ALARM_ARM_NIGHT:
+            triggers.append(
+                {
+                    CONF_PLATFORM: "device",
+                    CONF_DEVICE_ID: device_id,
+                    CONF_DOMAIN: DOMAIN,
+                    CONF_ENTITY_ID: entry.entity_id,
+                    CONF_TYPE: "armed_night",
+                }
+            )
+        if supported_features & SUPPORT_ALARM_ARM_CUSTOM_BYPASS:
+            triggers.append(
+                {
+                    CONF_PLATFORM: "device",
+                    CONF_DEVICE_ID: device_id,
+                    CONF_DOMAIN: DOMAIN,
+                    CONF_ENTITY_ID: entry.entity_id,
+                    CONF_TYPE: "armed_custom_bypass",
                 }
             )
 
@@ -91,6 +166,9 @@ async def async_attach_trigger(
     elif config[CONF_TYPE] == "armed_night":
         from_state = STATE_ALARM_PENDING
         to_state = STATE_ALARM_ARMED_NIGHT
+    elif config[CONF_TYPE] == "armed_custom_bypass":
+        from_state = STATE_ALARM_PENDING
+        to_state = STATE_ALARM_ARMED_CUSTOM_BYPASS
 
     state_config = {
         state.CONF_PLATFORM: "state",

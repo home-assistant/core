@@ -6,6 +6,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
@@ -91,6 +92,13 @@ async def test_get_triggers(hass, device_reg, entity_reg):
             "platform": "device",
             "domain": DOMAIN,
             "type": "armed_night",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": "armed_custom_bypass",
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },
@@ -222,6 +230,25 @@ async def test_if_fires_on_state_change(hass, calls):
                         },
                     },
                 },
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": "",
+                        "entity_id": "alarm_control_panel.entity",
+                        "type": "armed_custom_bypass",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "armed_custom_bypass - {{ trigger.platform}} - "
+                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
+                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                            )
+                        },
+                    },
+                },
             ]
         },
     )
@@ -286,5 +313,16 @@ async def test_if_fires_on_state_change(hass, calls):
     assert calls[6].data[
         "some"
     ] == "armed_night - device - {} - pending - armed_night - None".format(
+        "alarm_control_panel.entity"
+    )
+
+    # Fake that the entity is armed with custom bypass.
+    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_PENDING)
+    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_ARMED_CUSTOM_BYPASS)
+    await hass.async_block_till_done()
+    assert len(calls) == 8
+    assert calls[7].data[
+        "some"
+    ] == "armed_custom_bypass - device - {} - pending - armed_custom_bypass - None".format(
         "alarm_control_panel.entity"
     )
