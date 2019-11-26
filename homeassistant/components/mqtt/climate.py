@@ -756,12 +756,14 @@ class MqttClimate(
         if self._away:
             optimistic_update = optimistic_update or self._set_away_mode(False)
         elif preset_mode == PRESET_AWAY:
+            if self._hold:
+                self._set_hold_mode(None)
             optimistic_update = optimistic_update or self._set_away_mode(True)
-
-        if self._hold:
-            optimistic_update = optimistic_update or self._set_hold_mode(None)
-        elif preset_mode not in (None, PRESET_AWAY):
-            optimistic_update = optimistic_update or self._set_hold_mode(preset_mode)
+        else:
+            hold_mode = preset_mode
+            if preset_mode == PRESET_NONE:
+                hold_mode = None
+            optimistic_update = optimistic_update or self._set_hold_mode(hold_mode)
 
         if optimistic_update:
             self.async_write_ha_state()
