@@ -10,6 +10,8 @@ from homematicip.functionalHomes import IndoorClimateHome
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
@@ -139,6 +141,24 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
             if self._heat_mode_enabled
             else [HVAC_MODE_AUTO, HVAC_MODE_COOL]
         )
+
+    @property
+    def hvac_action(self) -> Optional[str]:
+        """
+        Return the current hvac_action.
+
+        This is only relevant for radiator thermostats.
+        """
+        if (
+            self._device.floorHeatingMode == "RADIATOR"
+            and self._has_radiator_thermostat
+            and self._heat_mode_enabled
+        ):
+            return (
+                CURRENT_HVAC_HEAT if self._device.valvePosition else CURRENT_HVAC_IDLE
+            )
+
+        return None
 
     @property
     def preset_mode(self) -> Optional[str]:
