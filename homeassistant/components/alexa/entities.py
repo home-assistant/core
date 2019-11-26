@@ -543,6 +543,10 @@ class BinarySensorCapabilities(AlexaEntity):
         if CONF_DISPLAY_CATEGORIES in entity_conf:
             if entity_conf[CONF_DISPLAY_CATEGORIES] == DisplayCategory.DOORBELL:
                 yield AlexaDoorbellEventSource(self.entity)
+            elif entity_conf[CONF_DISPLAY_CATEGORIES] == DisplayCategory.CONTACT_SENSOR:
+                yield AlexaContactSensor(self.hass, self.entity)
+            elif entity_conf[CONF_DISPLAY_CATEGORIES] == DisplayCategory.MOTION_SENSOR:
+                yield AlexaMotionSensor(self.hass, self.entity)
 
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.hass)
