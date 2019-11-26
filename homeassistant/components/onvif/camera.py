@@ -18,7 +18,6 @@ import voluptuous as vol
 from zeep.exceptions import Fault
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
-from homeassistant.components.camera.const import DOMAIN
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS, DATA_FFMPEG
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -33,34 +32,31 @@ from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_entity_ids
 import homeassistant.util.dt as dt_util
+from .const import (
+    ATTR_PAN,
+    ATTR_TILT,
+    ATTR_ZOOM,
+    CONF_PROFILE,
+    DEFAULT_ARGUMENTS,
+    DEFAULT_NAME,
+    DEFAULT_PASSWORD,
+    DEFAULT_PORT,
+    DEFAULT_PROFILE,
+    DEFAULT_USERNAME,
+    DIR_DOWN,
+    DIR_LEFT,
+    DIR_RIGHT,
+    DIR_UP,
+    DOMAIN,
+    ENTITIES,
+    ONVIF_DATA,
+    PTZ_NONE,
+    SERVICE_PTZ,
+    ZOOM_IN,
+    ZOOM_OUT,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_NAME = "ONVIF Camera"
-DEFAULT_PORT = 5000
-DEFAULT_USERNAME = "admin"
-DEFAULT_PASSWORD = "888888"
-DEFAULT_ARGUMENTS = "-pred 1"
-DEFAULT_PROFILE = 0
-
-CONF_PROFILE = "profile"
-
-ATTR_PAN = "pan"
-ATTR_TILT = "tilt"
-ATTR_ZOOM = "zoom"
-
-DIR_UP = "UP"
-DIR_DOWN = "DOWN"
-DIR_LEFT = "LEFT"
-DIR_RIGHT = "RIGHT"
-ZOOM_OUT = "ZOOM_OUT"
-ZOOM_IN = "ZOOM_IN"
-PTZ_NONE = "NONE"
-
-SERVICE_PTZ = "onvif_ptz"
-
-ONVIF_DATA = "onvif"
-ENTITIES = "entities"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
