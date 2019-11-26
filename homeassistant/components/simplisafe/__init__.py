@@ -278,7 +278,7 @@ async def async_setup_entry(hass, config_entry):
     @verify_system_exists
     @v3_only
     @_verify_domain_control
-    async def set_light(call):
+    async def set_armed_light(call):
         """Turn the base station light on/off."""
         system = systems[call.data[ATTR_SYSTEM_ID]]
         try:
@@ -320,7 +320,7 @@ async def async_setup_entry(hass, config_entry):
         ("remove_pin", remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
         ("set_alarm_duration", set_alarm_duration, SERVICE_SET_DELAY_SCHEMA),
         ("set_delay", set_delay, SERVICE_SET_DELAY_SCHEMA),
-        ("set_light", set_light, SERVICE_SET_LIGHT_SCHEMA),
+        ("set_armed_light", set_armed_light, SERVICE_SET_LIGHT_SCHEMA),
         ("set_pin", set_pin, SERVICE_SET_PIN_SCHEMA),
         ("set_volume_property", set_volume_property, SERVICE_SET_VOLUME_SCHEMA),
     ]:
