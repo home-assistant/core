@@ -41,6 +41,7 @@ from .core.const import (
     DATA_ZHA_GATEWAY,
     DOMAIN,
     GROUP_ID,
+    GROUP_IDS,
     GROUP_NAME,
     MFG_CLUSTER_ID_START,
     WARNING_DEVICE_MODE_EMERGENCY,
@@ -305,6 +306,26 @@ async def websocket_add_group(hass, connection, msg):
         )
     ret_group = async_get_group_info(hass, zha_gateway, zigpy_group, ha_device_registry)
     connection.send_result(msg[ID], ret_group)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zha/group/remove",
+        vol.Required(GROUP_IDS): vol.All(cv.ensure_list, [cv.positive_int]),
+    }
+)
+async def websocket_remove_groups(hass, connection, msg):
+    """Remove the specified ZHA groups."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    groups = zha_gateway.application_controller.groups
+    group_ids = msg[GROUP_IDS]
+
+    for group_id in group_ids:
+        groups.pop(group_id)
+
+    await websocket_get_groups(hass, connection, msg)
 
 
 @websocket_api.require_admin
@@ -955,6 +976,7 @@ def async_load_api(hass):
     websocket_api.async_register_command(hass, websocket_get_device)
     websocket_api.async_register_command(hass, websocket_get_group)
     websocket_api.async_register_command(hass, websocket_add_group)
+    websocket_api.async_register_command(hass, websocket_remove_groups)
     websocket_api.async_register_command(hass, websocket_add_group_members)
     websocket_api.async_register_command(hass, websocket_remove_group_members)
     websocket_api.async_register_command(hass, websocket_reconfigure_node)

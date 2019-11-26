@@ -107,6 +107,7 @@ DISCOVERY_KEY = "zha_discovery_info"
 DOMAIN = "zha"
 
 GROUP_ID = "group_id"
+GROUP_IDS = "group_ids"
 GROUP_NAME = "group_name"
 
 MFG_CLUSTER_ID_START = 0xFC00
