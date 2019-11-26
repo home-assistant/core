@@ -1,10 +1,16 @@
 """The tests for the humidifier component."""
 from unittest.mock import MagicMock
+from typing import List
 
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.humidifier import SET_HUMIDITY_SCHEMA, HumidifierDevice
+from homeassistant.components.humidifier import (
+    SET_HUMIDITY_SCHEMA,
+    HumidifierDevice,
+    OPERATION_MODE_HUMIDIFY,
+    OPERATION_MODE_OFF,
+)
 from tests.common import async_mock_service
 
 
@@ -38,9 +44,23 @@ async def test_set_hum_schema(hass, caplog):
     assert calls[-1].data == data
 
 
+class MockHumidifierDevice(HumidifierDevice):
+    """Mock Humidifier device to use in tests."""
+
+    @property
+    def operation_mode(self) -> str:
+        """Return humidifier operation ie. humidify, dry mode."""
+        return OPERATION_MODE_HUMIDIFY
+
+    @property
+    def operation_modes(self) -> List[str]:
+        """Return the list of available humidifier operation modes."""
+        return [OPERATION_MODE_OFF, OPERATION_MODE_HUMIDIFY]
+
+
 async def test_sync_turn_on(hass):
-    """Test if adding turn_on work."""
-    humidifier = HumidifierDevice()
+    """Test if async turn_on calls sync turn_on."""
+    humidifier = MockHumidifierDevice()
     humidifier.hass = hass
 
     humidifier.turn_on = MagicMock()
@@ -50,8 +70,8 @@ async def test_sync_turn_on(hass):
 
 
 async def test_sync_turn_off(hass):
-    """Test if adding turn_off work."""
-    humidifier = HumidifierDevice()
+    """Test if async turn_off calls sync turn_off."""
+    humidifier = MockHumidifierDevice()
     humidifier.hass = hass
 
     humidifier.turn_off = MagicMock()

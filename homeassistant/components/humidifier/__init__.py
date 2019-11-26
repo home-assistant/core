@@ -1,4 +1,5 @@
 """Provides functionality to interact with humidifier devices."""
+from abc import abstractmethod
 from datetime import timedelta
 import logging
 from typing import Any, Dict, List, Optional
@@ -191,20 +192,20 @@ class HumidifierDevice(Entity):
         raise NotImplementedError
 
     @property
+    @abstractmethod
     def operation_mode(self) -> str:
         """Return humidifier operation ie. humidify, dry mode.
 
         Need to be one of OPERATION_MODE_*.
         """
-        raise NotImplementedError()
 
     @property
+    @abstractmethod
     def operation_modes(self) -> List[str]:
         """Return the list of available humidifier operation modes.
 
         Need to be a subset of OPERATION_MODES.
         """
-        raise NotImplementedError()
 
     @property
     def humidifier_action(self) -> Optional[str]:
