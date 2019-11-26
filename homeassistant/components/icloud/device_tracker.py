@@ -1,25 +1,31 @@
 """Platform that supports scanning iCloud."""
 import logging
-import random
 import os
+import random
 
+from pyicloud import PyiCloudService
+from pyicloud.exceptions import (
+    PyiCloudException,
+    PyiCloudFailedLoginException,
+    PyiCloudNoDevicesException,
+)
 import voluptuous as vol
 
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.components.device_tracker.const import (
-    DOMAIN,
     ATTR_ATTRIBUTES,
+    DOMAIN,
     ENTITY_ID_FORMAT,
 )
 from homeassistant.components.device_tracker.legacy import DeviceScanner
 from homeassistant.components.zone import async_active_zone
-from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util import slugify
+from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.location import distance
-from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -214,12 +220,6 @@ class Icloud(DeviceScanner):
 
     def reset_account_icloud(self):
         """Reset an iCloud account."""
-        from pyicloud import PyiCloudService
-        from pyicloud.exceptions import (
-            PyiCloudFailedLoginException,
-            PyiCloudNoDevicesException,
-        )
-
         icloud_dir = self.hass.config.path("icloud")
         if not os.path.exists(icloud_dir):
             os.makedirs(icloud_dir)
@@ -297,8 +297,6 @@ class Icloud(DeviceScanner):
 
     def icloud_verification_callback(self, callback_data):
         """Handle the chosen trusted device."""
-        from pyicloud.exceptions import PyiCloudException
-
         self._verification_code = callback_data.get("code")
 
         try:
@@ -344,8 +342,6 @@ class Icloud(DeviceScanner):
             return
 
         if self.api.requires_2fa:
-            from pyicloud.exceptions import PyiCloudException
-
             try:
                 if self._trusted_device is None:
                     self.icloud_need_trusted_device()
@@ -436,8 +432,6 @@ class Icloud(DeviceScanner):
 
     def update_device(self, devicename):
         """Update the device_tracker entity."""
-        from pyicloud.exceptions import PyiCloudNoDevicesException
-
         # An entity will not be created by see() when track=false in
         # 'known_devices.yaml', but we need to see() it at least once
         entity = self.hass.states.get(ENTITY_ID_FORMAT.format(devicename))
@@ -503,8 +497,6 @@ class Icloud(DeviceScanner):
 
     def update_icloud(self, devicename=None):
         """Request device information from iCloud and update device_tracker."""
-        from pyicloud.exceptions import PyiCloudNoDevicesException
-
         if self.api is None:
             return
 
