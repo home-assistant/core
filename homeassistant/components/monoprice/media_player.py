@@ -5,7 +5,6 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
-    DOMAIN,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
@@ -21,6 +20,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.helpers.config_validation as cv
+from .const import DOMAIN, SERVICE_RESTORE, SERVICE_SNAPSHOT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,9 +41,6 @@ CONF_ZONES = "zones"
 CONF_SOURCES = "sources"
 
 DATA_MONOPRICE = "monoprice"
-
-SERVICE_SNAPSHOT = "snapshot"
-SERVICE_RESTORE = "restore"
 
 # Valid zone ids: 11-16 or 21-26 or 31-36
 ZONE_IDS = vol.All(
