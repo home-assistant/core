@@ -1495,8 +1495,7 @@ async def test_encrypted_payload_no_topic_key(hass, setup_comp):
 async def test_encrypted_payload_libsodium(hass, setup_comp):
     """Test sending encrypted message payload."""
     try:
-        # pylint: disable=unused-import
-        import nacl  # noqa: F401
+        import nacl  # noqa: F401 pylint: disable=unused-import
     except (ImportError, OSError):
         pytest.skip("PyNaCl/libsodium is not installed")
         return

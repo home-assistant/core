@@ -8,6 +8,7 @@ from asynctest import mock
 import pytest
 from samsungctl import exceptions
 from tests.common import async_fire_time_changed
+from websocket import WebSocketException
 
 from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.components.media_player.const import (
@@ -380,6 +381,17 @@ async def test_send_key_unhandled_response(hass, remote):
     """Testing unhandled response exception."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     remote.control = mock.Mock(side_effect=exceptions.UnhandledResponse("Boom"))
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
+
+
+async def test_send_key_websocketexception(hass, remote):
+    """Testing unhandled response exception."""
+    await setup_samsungtv(hass, MOCK_CONFIG)
+    remote.control = mock.Mock(side_effect=WebSocketException("Boom"))
     assert await hass.services.async_call(
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )

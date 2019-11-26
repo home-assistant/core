@@ -83,7 +83,7 @@ omit =
     homeassistant/components/blinkt/light.py
     homeassistant/components/blockchain/sensor.py
     homeassistant/components/bloomsky/*
-    homeassistant/components/bluesound/media_player.py
+    homeassistant/components/bluesound/*
     homeassistant/components/bluetooth_le_tracker/device_tracker.py
     homeassistant/components/bluetooth_tracker/device_tracker.py
     homeassistant/components/bme280/sensor.py
@@ -199,6 +199,7 @@ omit =
     homeassistant/components/envirophat/sensor.py
     homeassistant/components/envisalink/*
     homeassistant/components/ephember/climate.py
+    homeassistant/components/epson/const.py
     homeassistant/components/epson/media_player.py
     homeassistant/components/epsonworkforce/sensor.py
     homeassistant/components/eq3btsmart/climate.py
@@ -645,6 +646,7 @@ omit =
     homeassistant/components/spotcrime/sensor.py
     homeassistant/components/spotify/media_player.py
     homeassistant/components/squeezebox/media_player.py
+    homeassistant/components/starline/*
     homeassistant/components/starlingbank/sensor.py
     homeassistant/components/steam_online/sensor.py
     homeassistant/components/stiebel_eltron/*

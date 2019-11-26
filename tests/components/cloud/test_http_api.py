@@ -85,14 +85,18 @@ def mock_cognito():
         yield mock_cog()
 
 
-async def test_google_actions_sync(mock_cognito, cloud_client, aioclient_mock):
+async def test_google_actions_sync(
+    mock_cognito, mock_cloud_login, cloud_client, aioclient_mock
+):
     """Test syncing Google Actions."""
     aioclient_mock.post(GOOGLE_ACTIONS_SYNC_URL)
     req = await cloud_client.post("/api/cloud/google_actions/sync")
     assert req.status == 200
 
 
-async def test_google_actions_sync_fails(mock_cognito, cloud_client, aioclient_mock):
+async def test_google_actions_sync_fails(
+    mock_cognito, mock_cloud_login, cloud_client, aioclient_mock
+):
     """Test syncing Google Actions gone bad."""
     aioclient_mock.post(GOOGLE_ACTIONS_SYNC_URL, status=403)
     req = await cloud_client.post("/api/cloud/google_actions/sync")
@@ -801,7 +805,7 @@ async def test_list_alexa_entities(hass, hass_ws_client, setup_api, mock_cloud_l
     assert response["result"][0] == {
         "entity_id": "light.kitchen",
         "display_categories": ["LIGHT"],
-        "interfaces": ["Alexa.PowerController", "Alexa.EndpointHealth"],
+        "interfaces": ["Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"],
     }
 
 

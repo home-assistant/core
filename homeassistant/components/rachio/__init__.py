@@ -284,7 +284,6 @@ class RachioWebhookView(HomeAssistantView):
     url = WEBHOOK_PATH
     name = url[1:].replace("/", ":")
 
-    # pylint: disable=no-self-use
     @asyncio.coroutine
     async def post(self, request) -> web.Response:
         """Handle webhook calls from the server."""

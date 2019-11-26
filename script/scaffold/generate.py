@@ -154,7 +154,7 @@ def _custom_tasks(template, info) -> None:
                     "pick_implementation": {"title": "Pick Authentication Method"}
                 },
                 "abort": {
-                    "missing_configuration": "The Somfy component is not configured. Please follow the documentation."
+                    "missing_configuration": "The {info.name} component is not configured. Please follow the documentation."
                 },
                 "create_entry": {
                     "default": f"Successfully authenticated with {info.name}."

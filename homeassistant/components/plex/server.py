@@ -192,7 +192,7 @@ class PlexServer:
     @property
     def url_in_use(self):
         """Return URL used for connected Plex server."""
-        return self._plex_server._baseurl  # pylint: disable=W0212
+        return self._plex_server._baseurl  # pylint: disable=protected-access
 
     @property
     def use_episode_art(self):

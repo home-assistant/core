@@ -1,20 +1,20 @@
 """Support for Tado to create a climate device for each zone."""
 import logging
-from typing import Optional, List
+from typing import List, Optional
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_OFF,
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF,
     FAN_HIGH,
     FAN_LOW,
     FAN_MIDDLE,
     FAN_OFF,
     HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
     HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     PRESET_AWAY,
@@ -48,22 +48,22 @@ FAN_MAP_TADO = {"HIGH": FAN_HIGH, "MIDDLE": FAN_MIDDLE, "LOW": FAN_LOW}
 
 HVAC_MAP_TADO_HEAT = {
     "MANUAL": HVAC_MODE_HEAT,
-    "TIMER": HVAC_MODE_AUTO,
-    "TADO_MODE": HVAC_MODE_AUTO,
+    "TIMER": HVAC_MODE_HEAT,
+    "TADO_MODE": HVAC_MODE_HEAT,
     "SMART_SCHEDULE": HVAC_MODE_AUTO,
     "OFF": HVAC_MODE_OFF,
 }
 HVAC_MAP_TADO_COOL = {
     "MANUAL": HVAC_MODE_COOL,
-    "TIMER": HVAC_MODE_AUTO,
-    "TADO_MODE": HVAC_MODE_AUTO,
+    "TIMER": HVAC_MODE_COOL,
+    "TADO_MODE": HVAC_MODE_COOL,
     "SMART_SCHEDULE": HVAC_MODE_AUTO,
     "OFF": HVAC_MODE_OFF,
 }
 HVAC_MAP_TADO_HEAT_COOL = {
     "MANUAL": HVAC_MODE_HEAT_COOL,
-    "TIMER": HVAC_MODE_AUTO,
-    "TADO_MODE": HVAC_MODE_AUTO,
+    "TIMER": HVAC_MODE_HEAT_COOL,
+    "TADO_MODE": HVAC_MODE_HEAT_COOL,
     "SMART_SCHEDULE": HVAC_MODE_AUTO,
     "OFF": HVAC_MODE_OFF,
 }
@@ -325,7 +325,7 @@ class TadoClimate(ClimateDevice):
         if temperature is None:
             return
 
-        self._current_operation = CONST_OVERLAY_MANUAL
+        self._current_operation = CONST_OVERLAY_TADO_MODE
         self._overlay_mode = None
         self._target_temp = temperature
         self._control_heating()
@@ -339,11 +339,11 @@ class TadoClimate(ClimateDevice):
         elif hvac_mode == HVAC_MODE_AUTO:
             mode = CONST_MODE_SMART_SCHEDULE
         elif hvac_mode == HVAC_MODE_HEAT:
-            mode = CONST_OVERLAY_MANUAL
+            mode = CONST_OVERLAY_TADO_MODE
         elif hvac_mode == HVAC_MODE_COOL:
-            mode = CONST_OVERLAY_MANUAL
+            mode = CONST_OVERLAY_TADO_MODE
         elif hvac_mode == HVAC_MODE_HEAT_COOL:
-            mode = CONST_OVERLAY_MANUAL
+            mode = CONST_OVERLAY_TADO_MODE
 
         self._current_operation = mode
         self._overlay_mode = None

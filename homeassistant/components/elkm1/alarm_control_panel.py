@@ -3,6 +3,11 @@ from elkm1_lib.const import AlarmState, ArmedStatus, ArmLevel, ArmUpState
 import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_NIGHT,
+)
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
@@ -142,6 +147,11 @@ class ElkArea(ElkEntity, alarm.AlarmControlPanel):
     def state(self):
         """Return the state of the element."""
         return self._state
+
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
 
     @property
     def device_state_attributes(self):

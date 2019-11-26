@@ -2,7 +2,7 @@
 import asyncio
 from datetime import timedelta
 
-# pylint: disable=import-error,no-name-in-module
+# pylint: disable=import-error
 from distutils.version import StrictVersion
 import json
 import logging
