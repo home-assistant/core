@@ -67,7 +67,7 @@ async def test_new_version_shows_entity_startup(
         async_fire_time_changed(hass, later)
         await hass.async_block_till_done()
 
-    await from hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert hass.states.is_state("binary_sensor.updater", "unavailable")
     assert "newest_version" not in hass.states.get("binary_sensor.updater").attributes
     assert "release_notes" not in hass.states.get("binary_sensor.updater").attributes
