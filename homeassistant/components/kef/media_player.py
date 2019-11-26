@@ -34,7 +34,7 @@ DEFAULT_NAME = "KEF"
 DEFAULT_PORT = 50001
 DEFAULT_MAX_VOLUME = 0.5
 DEFAULT_VOLUME_STEP = 0.05
-DATA_KEF = "kef"
+DOMAIN = "kef"
 
 SCAN_INTERVAL = datetime.timedelta(seconds=30)
 PARALLEL_UPDATES = 0
@@ -65,8 +65,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the KEF platform."""
-    if DATA_KEF not in hass.data:
-        hass.data[DATA_KEF] = {}
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
 
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -76,7 +76,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     _LOGGER.debug(
         "Setting up %s with host: %s, port: %s, name: %s, sources: %s",
-        DATA_KEF,
+        DOMAIN,
         host,
         port,
         name,
@@ -93,10 +93,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         ioloop=hass.loop,
     )
     unique_id = media_player.unique_id
-    if unique_id in hass.data[DATA_KEF]:
+    if unique_id in hass.data[DOMAIN]:
         _LOGGER.debug("%s is already configured.", unique_id)
     else:
-        hass.data[DATA_KEF][unique_id] = media_player
+        hass.data[DOMAIN][unique_id] = media_player
         async_add_entities([media_player], update_before_add=True)
 
 
