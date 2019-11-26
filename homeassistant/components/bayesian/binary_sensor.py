@@ -179,7 +179,10 @@ class BayesianBinarySensor(BinarySensorDevice):
                 platform = entity_obs["platform"]
 
                 should_trigger = self.watchers[platform](entity_obs)
-                self._update_current_obs(entity_obs, should_trigger)
+                if (should_trigger and entity_obs["id"] not in self.current_obs) or (
+                    not should_trigger and entity_obs["id"] in self.current_obs
+                ):
+                    self._update_current_obs(entity_obs, should_trigger)
 
         async_track_state_change(
             self.hass, self.entity_obs, async_threshold_sensor_state_listener
@@ -237,6 +240,7 @@ class BayesianBinarySensor(BinarySensorDevice):
                 )
             else:
                 add_to_current_obs()
+
             if max_duration:
                 if delay_on:
                     max_duration = max_duration + delay_on
