@@ -157,7 +157,7 @@ async def test_switch(hass, events):
     assert appliance["displayCategories"][0] == "SWITCH"
     assert appliance["friendlyName"] == "Test switch"
     assert_endpoint_capabilities(
-        appliance, "Alexa.PowerController", "Alexa.EndpointHealth"
+        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"
     )
 
     await assert_power_controller_works(
@@ -194,7 +194,7 @@ async def test_light(hass):
     assert appliance["displayCategories"][0] == "LIGHT"
     assert appliance["friendlyName"] == "Test light 1"
     assert_endpoint_capabilities(
-        appliance, "Alexa.PowerController", "Alexa.EndpointHealth"
+        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"
     )
 
     await assert_power_controller_works(
@@ -220,6 +220,7 @@ async def test_dimmable_light(hass):
         "Alexa.BrightnessController",
         "Alexa.PowerController",
         "Alexa.EndpointHealth",
+        "Alexa",
     )
 
     properties = await reported_properties(hass, "light#test_2")
@@ -262,6 +263,7 @@ async def test_color_light(hass):
         "Alexa.ColorController",
         "Alexa.ColorTemperatureController",
         "Alexa.EndpointHealth",
+        "Alexa",
     )
 
     # IncreaseColorTemperature and DecreaseColorTemperature have their own
@@ -277,8 +279,11 @@ async def test_script(hass):
     assert appliance["displayCategories"][0] == "ACTIVITY_TRIGGER"
     assert appliance["friendlyName"] == "Test script"
 
-    (capability,) = assert_endpoint_capabilities(appliance, "Alexa.SceneController")
-    assert not capability["supportsDeactivation"]
+    capabilities = assert_endpoint_capabilities(
+        appliance, "Alexa.SceneController", "Alexa"
+    )
+    scene_capability = get_capability(capabilities, "Alexa.SceneController")
+    assert not scene_capability["supportsDeactivation"]
 
     await assert_scene_controller_works("script#test", "script.turn_on", None, hass)
 
@@ -293,8 +298,11 @@ async def test_cancelable_script(hass):
     appliance = await discovery_test(device, hass)
 
     assert appliance["endpointId"] == "script#test_2"
-    (capability,) = assert_endpoint_capabilities(appliance, "Alexa.SceneController")
-    assert capability["supportsDeactivation"]
+    capabilities = assert_endpoint_capabilities(
+        appliance, "Alexa.SceneController", "Alexa"
+    )
+    scene_capability = get_capability(capabilities, "Alexa.SceneController")
+    assert scene_capability["supportsDeactivation"]
 
     await assert_scene_controller_works(
         "script#test_2", "script.turn_on", "script.turn_off", hass
@@ -310,7 +318,7 @@ async def test_input_boolean(hass):
     assert appliance["displayCategories"][0] == "OTHER"
     assert appliance["friendlyName"] == "Test input boolean"
     assert_endpoint_capabilities(
-        appliance, "Alexa.PowerController", "Alexa.EndpointHealth"
+        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"
     )
 
     await assert_power_controller_works(
@@ -327,8 +335,11 @@ async def test_scene(hass):
     assert appliance["displayCategories"][0] == "SCENE_TRIGGER"
     assert appliance["friendlyName"] == "Test scene"
 
-    (capability,) = assert_endpoint_capabilities(appliance, "Alexa.SceneController")
-    assert not capability["supportsDeactivation"]
+    capabilities = assert_endpoint_capabilities(
+        appliance, "Alexa.SceneController", "Alexa"
+    )
+    scene_capability = get_capability(capabilities, "Alexa.SceneController")
+    assert not scene_capability["supportsDeactivation"]
 
     await assert_scene_controller_works("scene#test", "scene.turn_on", None, hass)
 
@@ -342,7 +353,7 @@ async def test_fan(hass):
     assert appliance["displayCategories"][0] == "FAN"
     assert appliance["friendlyName"] == "Test fan 1"
     capabilities = assert_endpoint_capabilities(
-        appliance, "Alexa.PowerController", "Alexa.EndpointHealth"
+        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"
     )
 
     power_capability = get_capability(capabilities, "Alexa.PowerController")
@@ -378,6 +389,7 @@ async def test_variable_fan(hass):
         "Alexa.PowerLevelController",
         "Alexa.RangeController",
         "Alexa.EndpointHealth",
+        "Alexa",
     )
 
     range_capability = get_capability(capabilities, "Alexa.RangeController")
@@ -461,6 +473,7 @@ async def test_oscillating_fan(hass):
         "Alexa.RangeController",
         "Alexa.ToggleController",
         "Alexa.EndpointHealth",
+        "Alexa",
     )
 
     toggle_capability = get_capability(capabilities, "Alexa.ToggleController")
@@ -525,6 +538,7 @@ async def test_direction_fan(hass):
         "Alexa.RangeController",
         "Alexa.ModeController",
         "Alexa.EndpointHealth",
+        "Alexa",
     )
 
     mode_capability = get_capability(capabilities, "Alexa.ModeController")
@@ -637,6 +651,7 @@ async def test_fan_range(hass):
         "Alexa.PowerLevelController",
         "Alexa.RangeController",
         "Alexa.EndpointHealth",
+        "Alexa",
     )
 
     range_capability = get_capability(capabilities, "Alexa.RangeController")
@@ -714,7 +729,7 @@ async def test_lock(hass):
     assert appliance["displayCategories"][0] == "SMARTLOCK"
     assert appliance["friendlyName"] == "Test lock"
     assert_endpoint_capabilities(
-        appliance, "Alexa.LockController", "Alexa.EndpointHealth"
+        appliance, "Alexa.LockController", "Alexa.EndpointHealth", "Alexa"
     )
 
     _, msg = await assert_request_calls_service(
@@ -765,6 +780,7 @@ async def test_media_player(hass):
 
     capabilities = assert_endpoint_capabilities(
         appliance,
+        "Alexa",
         "Alexa.ChannelController",
         "Alexa.EndpointHealth",
         "Alexa.InputController",
@@ -987,6 +1003,7 @@ async def test_media_player_power(hass):
 
     assert_endpoint_capabilities(
         appliance,
+        "Alexa",
         "Alexa.ChannelController",
         "Alexa.EndpointHealth",
         "Alexa.InputController",
@@ -1157,6 +1174,7 @@ async def test_media_player_seek(hass):
 
     assert_endpoint_capabilities(
         appliance,
+        "Alexa",
         "Alexa.EndpointHealth",
         "Alexa.PowerController",
         "Alexa.SeekController",
@@ -1260,7 +1278,7 @@ async def test_alert(hass):
     assert appliance["displayCategories"][0] == "OTHER"
     assert appliance["friendlyName"] == "Test alert"
     assert_endpoint_capabilities(
-        appliance, "Alexa.PowerController", "Alexa.EndpointHealth"
+        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"
     )
 
     await assert_power_controller_works(
@@ -1277,7 +1295,7 @@ async def test_automation(hass):
     assert appliance["displayCategories"][0] == "OTHER"
     assert appliance["friendlyName"] == "Test automation"
     assert_endpoint_capabilities(
-        appliance, "Alexa.PowerController", "Alexa.EndpointHealth"
+        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"
     )
 
     await assert_power_controller_works(
@@ -1294,7 +1312,7 @@ async def test_group(hass):
     assert appliance["displayCategories"][0] == "OTHER"
     assert appliance["friendlyName"] == "Test group"
     assert_endpoint_capabilities(
-        appliance, "Alexa.PowerController", "Alexa.EndpointHealth"
+        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"
     )
 
     await assert_power_controller_works(
@@ -1321,6 +1339,7 @@ async def test_cover(hass):
         "Alexa.PercentageController",
         "Alexa.PowerController",
         "Alexa.EndpointHealth",
+        "Alexa",
     )
 
     await assert_power_controller_works(
@@ -1409,7 +1428,7 @@ async def test_temp_sensor(hass):
     assert appliance["friendlyName"] == "Test Temp Sensor"
 
     capabilities = assert_endpoint_capabilities(
-        appliance, "Alexa.TemperatureSensor", "Alexa.EndpointHealth"
+        appliance, "Alexa.TemperatureSensor", "Alexa.EndpointHealth", "Alexa"
     )
 
     temp_sensor_capability = get_capability(capabilities, "Alexa.TemperatureSensor")
@@ -1438,7 +1457,7 @@ async def test_contact_sensor(hass):
     assert appliance["friendlyName"] == "Test Contact Sensor"
 
     capabilities = assert_endpoint_capabilities(
-        appliance, "Alexa.ContactSensor", "Alexa.EndpointHealth"
+        appliance, "Alexa.ContactSensor", "Alexa.EndpointHealth", "Alexa"
     )
 
     contact_sensor_capability = get_capability(capabilities, "Alexa.ContactSensor")
@@ -1467,7 +1486,7 @@ async def test_motion_sensor(hass):
     assert appliance["friendlyName"] == "Test Motion Sensor"
 
     capabilities = assert_endpoint_capabilities(
-        appliance, "Alexa.MotionSensor", "Alexa.EndpointHealth"
+        appliance, "Alexa.MotionSensor", "Alexa.EndpointHealth", "Alexa"
     )
 
     motion_sensor_capability = get_capability(capabilities, "Alexa.MotionSensor")
@@ -1494,7 +1513,7 @@ async def test_doorbell_sensor(hass):
     assert appliance["friendlyName"] == "Test Doorbell Sensor"
 
     capabilities = assert_endpoint_capabilities(
-        appliance, "Alexa.DoorbellEventSource", "Alexa.EndpointHealth"
+        appliance, "Alexa.DoorbellEventSource", "Alexa.EndpointHealth", "Alexa"
     )
 
     doorbell_capability = get_capability(capabilities, "Alexa.DoorbellEventSource")
@@ -1544,6 +1563,7 @@ async def test_thermostat(hass):
         "Alexa.ThermostatController",
         "Alexa.TemperatureSensor",
         "Alexa.EndpointHealth",
+        "Alexa",
     )
 
     properties = await reported_properties(hass, "climate#test_thermostat")
@@ -1940,7 +1960,7 @@ async def test_entity_config(hass):
     assert appliance["friendlyName"] == "Config name"
     assert appliance["description"] == "Config description via Home Assistant"
     assert_endpoint_capabilities(
-        appliance, "Alexa.PowerController", "Alexa.EndpointHealth"
+        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"
     )
 
     scene = msg["payload"]["endpoints"][1]
@@ -2057,7 +2077,7 @@ async def test_alarm_control_panel_disarmed(hass):
     assert appliance["displayCategories"][0] == "SECURITY_PANEL"
     assert appliance["friendlyName"] == "Test Alarm Control Panel 1"
     capabilities = assert_endpoint_capabilities(
-        appliance, "Alexa.SecurityPanelController", "Alexa.EndpointHealth"
+        appliance, "Alexa.SecurityPanelController", "Alexa.EndpointHealth", "Alexa"
     )
     security_panel_capability = get_capability(
         capabilities, "Alexa.SecurityPanelController"
@@ -2124,7 +2144,7 @@ async def test_alarm_control_panel_armed(hass):
     assert appliance["displayCategories"][0] == "SECURITY_PANEL"
     assert appliance["friendlyName"] == "Test Alarm Control Panel 2"
     assert_endpoint_capabilities(
-        appliance, "Alexa.SecurityPanelController", "Alexa.EndpointHealth"
+        appliance, "Alexa.SecurityPanelController", "Alexa.EndpointHealth", "Alexa"
     )
 
     properties = await reported_properties(hass, "alarm_control_panel#test_2")
