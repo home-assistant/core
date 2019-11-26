@@ -65,7 +65,7 @@ async def test_new_version_shows_entity_startup(
 
     with patch("homeassistant.components.updater.current_version", MOCK_VERSION):
         async_fire_time_changed(hass, later)
-        await from hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     await from hass.async_block_till_done()
     assert hass.states.is_state("binary_sensor.updater", "unavailable")
