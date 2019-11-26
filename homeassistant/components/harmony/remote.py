@@ -316,7 +316,6 @@ class HarmonyRemote(remote.RemoteDevice):
         except aioexc.TimeOut:
             _LOGGER.error("%s: Powering off timed-out", self.name)
 
-    # pylint: disable=arguments-differ
     async def async_send_command(self, command, **kwargs):
         """Send a list of commands to one device."""
         _LOGGER.debug("%s: Send Command", self.name)

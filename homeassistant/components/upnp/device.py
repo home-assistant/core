@@ -150,7 +150,6 @@ class Device:
 
     async def async_get_total_packets_received(self):
         """Get total packets received."""
-        # pylint: disable=invalid-name
         return await self._igd_device.async_get_total_packets_received()
 
     async def async_get_total_packets_sent(self):

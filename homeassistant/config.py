@@ -627,7 +627,6 @@ async def merge_packages_config(
     _log_pkg_error: Callable = _log_pkg_error,
 ) -> Dict:
     """Merge packages into the top-level configuration. Mutate config."""
-    # pylint: disable=too-many-nested-blocks
     PACKAGES_CONFIG_SCHEMA(packages)
     for pack_name, pack_conf in packages.items():
         for comp_name, comp_conf in pack_conf.items():
@@ -766,7 +765,6 @@ async def async_process_component_config(
 
         # Validate platform specific schema
         if hasattr(platform, "PLATFORM_SCHEMA"):
-            # pylint: disable=no-member
             try:
                 p_validated = platform.PLATFORM_SCHEMA(  # type: ignore
                     p_config
