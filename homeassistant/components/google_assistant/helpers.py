@@ -133,7 +133,7 @@ class AbstractConfig:
 
         async def _schedule_callback(_now):
             """Handle a scheduled sync callback."""
-            self._google_sync_unsub.pop(agent_user_id)
+            self._google_sync_unsub.pop(agent_user_id, None)
             await self.async_sync_entities(agent_user_id)
 
         self._google_sync_unsub.pop(agent_user_id, lambda: None)()
