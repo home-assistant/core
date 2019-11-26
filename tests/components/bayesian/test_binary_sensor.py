@@ -908,8 +908,8 @@ async def test_state_max_duration(hass):
     )
     assert abs(0.3 - state.attributes.get("probability")) < 1e-7
 
-    future = dt_util.utcnow() + timedelta(seconds=5)
-    async_fire_time_changed(hass, future)
+    newtime = dt_util.utcnow() + timedelta(seconds=5)
+    async_fire_time_changed(hass, newtime)
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
@@ -919,8 +919,18 @@ async def test_state_max_duration(hass):
     )
     assert abs(0.5 - state.attributes.get("probability")) < 1e-7
 
-    future = dt_util.utcnow() + timedelta(seconds=5)
-    async_fire_time_changed(hass, future)
+    newtime = newtime + timedelta(seconds=5)
+    async_fire_time_changed(hass, newtime)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+    assert [] == state.attributes.get("observations")
+    assert abs(0.2 - state.attributes.get("probability")) < 1e-7
+
+    hass.states.async_set("sensor.test_state", "on")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", "off")
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
@@ -930,8 +940,8 @@ async def test_state_max_duration(hass):
     )
     assert abs(0.25 - state.attributes.get("probability")) < 1e-7
 
-    future = dt_util.utcnow() + timedelta(seconds=5)
-    async_fire_time_changed(hass, future)
+    newtime = newtime + timedelta(seconds=5)
+    async_fire_time_changed(hass, newtime)
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
@@ -941,8 +951,8 @@ async def test_state_max_duration(hass):
     )
     assert abs(0.1 - state.attributes.get("probability")) < 1e-7
 
-    future = dt_util.utcnow() + timedelta(seconds=5)
-    async_fire_time_changed(hass, future)
+    newtime = newtime + timedelta(seconds=5)
+    async_fire_time_changed(hass, newtime)
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
