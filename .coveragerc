@@ -475,6 +475,7 @@ omit =
     homeassistant/components/onewire/sensor.py
     homeassistant/components/onkyo/media_player.py
     homeassistant/components/onvif/camera.py
+    homeassistant/components/onvif/const.py
     homeassistant/components/opencv/*
     homeassistant/components/openevse/sensor.py
     homeassistant/components/openexchangerates/sensor.py
