@@ -181,7 +181,7 @@ async def test_outlet(hass, events):
     assert appliance["displayCategories"][0] == "SMARTPLUG"
     assert appliance["friendlyName"] == "Test switch"
     assert_endpoint_capabilities(
-        appliance, "Alexa.PowerController", "Alexa.EndpointHealth"
+        appliance, "Alexa", "Alexa.PowerController", "Alexa.EndpointHealth"
     )
 
 
@@ -1065,6 +1065,7 @@ async def test_media_player_inputs(hass):
 
     capabilities = assert_endpoint_capabilities(
         appliance,
+        "Alexa",
         "Alexa.InputController",
         "Alexa.PowerController",
         "Alexa.EndpointHealth",
@@ -2236,6 +2237,7 @@ async def test_cover_position(hass):
 
     capabilities = assert_endpoint_capabilities(
         appliance,
+        "Alexa",
         "Alexa.ModeController",
         "Alexa.PercentageController",
         "Alexa.PowerController",
