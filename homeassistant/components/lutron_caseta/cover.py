@@ -38,12 +38,12 @@ class LutronCasetaCover(LutronCasetaDevice, CoverDevice):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        return self._state["current_state"] < 1
+        return self._device["current_state"] < 1
 
     @property
     def current_cover_position(self):
         """Return the current position of cover."""
-        return self._state["current_state"]
+        return self._device["current_state"]
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
@@ -61,5 +61,5 @@ class LutronCasetaCover(LutronCasetaDevice, CoverDevice):
 
     async def async_update(self):
         """Call when forcing a refresh of the device."""
-        self._state = self._smartbridge.get_device_by_id(self.device_id)
-        _LOGGER.debug(self._state)
+        self._device = self._smartbridge.get_device_by_id(self.device_id)
+        _LOGGER.debug(self._device)

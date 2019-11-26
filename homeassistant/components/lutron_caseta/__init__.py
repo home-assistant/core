@@ -77,7 +77,6 @@ class LutronCasetaDevice(Entity):
         [:param]bridge the smartbridge object
         """
         self._device = device
-        self._state = None
         self._smartbridge = bridge
 
     async def async_added_to_hass(self):
