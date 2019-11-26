@@ -57,13 +57,13 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
         if entry.domain != DOMAIN:
             continue
 
-        state = hass.states.get(entry.entity_id)
+        entity_state = hass.states.get(entry.entity_id)
 
         # We need a state or else we can't populate the HVAC and preset modes.
-        if state is None:
+        if entity_state is None:
             continue
 
-        supported_features = state.attributes["supported_features"]
+        supported_features = entity_state.attributes["supported_features"]
 
         # Add triggers for each entity that belongs to this integration
         triggers.append(
