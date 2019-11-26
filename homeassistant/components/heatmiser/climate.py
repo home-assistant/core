@@ -4,6 +4,7 @@ from typing import List
 
 import voluptuous as vol
 
+from heatmiserV3 import heatmiser, connection
 from homeassistant.components.climate import (
     ClimateDevice,
     PLATFORM_SCHEMA,
@@ -21,8 +22,6 @@ from homeassistant.const import (
     CONF_NAME,
 )
 import homeassistant.helpers.config_validation as cv
-
-from heatmiserV3 import heatmiser, connection
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -127,8 +126,10 @@ class HeatmiserV3Thermostat(ClimateDevice):
 
     def update(self):
         """Get the latest data."""
-        try:
-            self.uh1._open()
+        self.uh1.reopen()
+        if self.uh1.status is not True:
+            _LOGGER.error("Failed to update device %s", self._name)
+        else:
             self.dcb = self.therm.read_dcb()
             self._temperature_unit = (
                 TEMP_CELSIUS
@@ -142,5 +143,3 @@ class HeatmiserV3Thermostat(ClimateDevice):
                 if (int(self.therm.get_current_state()) == 0)
                 else HVAC_MODE_HEAT
             )
-        except Exception:
-            _LOGGER.error("Failed to update device %s", self._name)
