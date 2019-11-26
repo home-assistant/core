@@ -199,6 +199,7 @@ class BayesianBinarySensor(BinarySensorDevice):
         obs_id = entity_observation["id"]
         delay_on = entity_observation.get("delay_on")
         delay_off = entity_observation.get("delay_off")
+        max_duration = entity_observation.get("max_duration")
 
         if entity_observation["platform"] == "template":
             entity_id = entity_observation.get(CONF_VALUE_TEMPLATE).extract_entities()
@@ -236,6 +237,19 @@ class BayesianBinarySensor(BinarySensorDevice):
                 )
             else:
                 add_to_current_obs()
+            if max_duration:
+                if delay_on:
+                    max_duration = max_duration + delay_on
+                async_track_same_state(
+                    self.hass,
+                    max_duration,
+                    pop_from_current_obs,
+                    entity_ids=entity_id,
+                    async_check_same_func=lambda *args: self.watchers[
+                        entity_observation["platform"]
+                    ](entity_observation)
+                    == should_trigger,
+                )
         else:
             if delay_off:
                 period = delay_off
