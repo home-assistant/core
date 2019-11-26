@@ -107,8 +107,9 @@ class HomeAccessory(Accessory):
         )
 
         if self.linked_battery_sensor:
-            if self.hass.states.get(self.linked_battery_sensor):
-                battery_found = self.hass.states.get(self.linked_battery_sensor).state
+            state = self.hass.states.get(self.linked_battery_sensor)
+            if state is not None:
+                battery_found = state.state
             else:
                 self.linked_battery_sensor = None
                 _LOGGER.warning(
