@@ -25,6 +25,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
+from . import extract_entities, initialise_templates
+from .const import CONF_AVAILABILITY_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [STATE_ON, STATE_OFF, "true", "false"]
@@ -37,6 +39,7 @@ SWITCH_SCHEMA = vol.Schema(
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_ICON_TEMPLATE): cv.template,
         vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
+        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
         vol.Required(ON_ACTION): cv.SCRIPT_SCHEMA,
         vol.Required(OFF_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
@@ -58,19 +61,21 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         state_template = device_config[CONF_VALUE_TEMPLATE]
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         entity_picture_template = device_config.get(CONF_ENTITY_PICTURE_TEMPLATE)
+        availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
         on_action = device_config[ON_ACTION]
         off_action = device_config[OFF_ACTION]
-        entity_ids = (
-            device_config.get(ATTR_ENTITY_ID) or state_template.extract_entities()
+
+        templates = {
+            CONF_VALUE_TEMPLATE: state_template,
+            CONF_ICON_TEMPLATE: icon_template,
+            CONF_ENTITY_PICTURE_TEMPLATE: entity_picture_template,
+            CONF_AVAILABILITY_TEMPLATE: availability_template,
+        }
+
+        initialise_templates(hass, templates)
+        entity_ids = extract_entities(
+            device, "switch", device_config.get(ATTR_ENTITY_ID), templates
         )
-
-        state_template.hass = hass
-
-        if icon_template is not None:
-            icon_template.hass = hass
-
-        if entity_picture_template is not None:
-            entity_picture_template.hass = hass
 
         switches.append(
             SwitchTemplate(
@@ -80,11 +85,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 state_template,
                 icon_template,
                 entity_picture_template,
+                availability_template,
                 on_action,
                 off_action,
                 entity_ids,
             )
         )
+
     if not switches:
         _LOGGER.error("No switches added")
         return False
@@ -104,6 +111,7 @@ class SwitchTemplate(SwitchDevice):
         state_template,
         icon_template,
         entity_picture_template,
+        availability_template,
         on_action,
         off_action,
         entity_ids,
@@ -120,9 +128,11 @@ class SwitchTemplate(SwitchDevice):
         self._state = False
         self._icon_template = icon_template
         self._entity_picture_template = entity_picture_template
+        self._availability_template = availability_template
         self._icon = None
         self._entity_picture = None
         self._entities = entity_ids
+        self._available = True
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -161,11 +171,6 @@ class SwitchTemplate(SwitchDevice):
         return False
 
     @property
-    def available(self):
-        """If switch is available."""
-        return self._state is not None
-
-    @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return self._icon
@@ -174,6 +179,11 @@ class SwitchTemplate(SwitchDevice):
     def entity_picture(self):
         """Return the entity_picture to use in the frontend, if any."""
         return self._entity_picture
+
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return self._available
 
     async def async_turn_on(self, **kwargs):
         """Fire the on action."""
@@ -205,12 +215,16 @@ class SwitchTemplate(SwitchDevice):
         for property_name, template in (
             ("_icon", self._icon_template),
             ("_entity_picture", self._entity_picture_template),
+            ("_available", self._availability_template),
         ):
             if template is None:
                 continue
 
             try:
-                setattr(self, property_name, template.async_render())
+                value = template.async_render()
+                if property_name == "_available":
+                    value = value.lower() == "true"
+                setattr(self, property_name, value)
             except TemplateError as ex:
                 friendly_property_name = property_name[1:].replace("_", " ")
                 if ex.args and ex.args[0].startswith(

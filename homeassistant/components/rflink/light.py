@@ -300,7 +300,7 @@ class ToggleRflinkLight(SwitchableRflinkDevice, Light):
     @property
     def entity_id(self):
         """Return entity id."""
-        return "light.{}".format(self.name)
+        return f"light.{self.name}"
 
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""

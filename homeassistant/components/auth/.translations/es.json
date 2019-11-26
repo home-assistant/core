@@ -13,7 +13,7 @@
                     "title": "Configure una contrase\u00f1a de un solo uso entregada por el componente de notificaci\u00f3n"
                 },
                 "setup": {
-                    "description": "Se ha enviado una contrase\u00f1a de un solo uso a trav\u00e9s de ** notificar. {notify_service} **. Por favor introd\u00facela a continuaci\u00f3n:",
+                    "description": "Se ha enviado una contrase\u00f1a de un solo uso a trav\u00e9s de ** notify. {notify_service} **. Por favor introd\u00facela a continuaci\u00f3n:",
                     "title": "Verificar la configuraci\u00f3n"
                 }
             },

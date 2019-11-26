@@ -1,9 +1,9 @@
 """Support for AVM Fritz!Box smarthome devices."""
 import logging
 
+from pyfritzhome import Fritzhome, LoginError
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
@@ -12,6 +12,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +53,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the fritzbox component."""
-    from pyfritzhome import Fritzhome, LoginError
 
     fritz_list = []
 

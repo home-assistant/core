@@ -1,15 +1,17 @@
 """Support for DLNA DMR (Device Media Renderer)."""
 import asyncio
-from datetime import datetime
 from datetime import timedelta
 import functools
 import logging
 from typing import Optional
 
 import aiohttp
+from async_upnp_client import UpnpFactory
+from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequester
+from async_upnp_client.profiles.dlna import DeviceState, DmrDevice
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_EPISODE,
@@ -41,9 +43,10 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import get_local_ip
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,8 +124,6 @@ async def async_start_event_handler(
         return hass_data["event_handler"]
 
     # start event handler
-    from async_upnp_client.aiohttp import AiohttpNotifyServer
-
     server = AiohttpNotifyServer(
         requester,
         listen_port=server_port,
@@ -163,8 +164,6 @@ async def async_setup_platform(
         hass.data[DLNA_DMR_DATA]["lock"] = asyncio.Lock()
 
     # build upnp/aiohttp requester
-    from async_upnp_client.aiohttp import AiohttpSessionRequester
-
     session = async_get_clientsession(hass)
     requester = AiohttpSessionRequester(session, True)
 
@@ -180,8 +179,6 @@ async def async_setup_platform(
         )
 
     # create upnp device
-    from async_upnp_client import UpnpFactory
-
     factory = UpnpFactory(requester, disable_state_variable_validation=True)
     try:
         upnp_device = await factory.async_create_device(url)
@@ -189,8 +186,6 @@ async def async_setup_platform(
         raise PlatformNotReady()
 
     # wrap with DmrDevice
-    from async_upnp_client.profiles.dlna import DmrDevice
-
     dlna_device = DmrDevice(upnp_device, event_handler)
 
     # create our own device
@@ -241,14 +236,14 @@ class DlnaDmrDevice(MediaPlayerDevice):
             return
 
         # do we need to (re-)subscribe?
-        now = datetime.now()
+        now = dt_util.utcnow()
         should_renew = (
             self._subscription_renew_time and now >= self._subscription_renew_time
         )
         if should_renew or not was_available and self._available:
             try:
                 timeout = await self._device.async_subscribe_services()
-                self._subscription_renew_time = datetime.now() + timeout / 2
+                self._subscription_renew_time = dt_util.utcnow() + timeout / 2
             except (asyncio.TimeoutError, aiohttp.ClientError):
                 self._available = False
                 _LOGGER.debug("Could not (re)subscribe")
@@ -361,8 +356,6 @@ class DlnaDmrDevice(MediaPlayerDevice):
         await self._device.async_wait_for_can_play()
 
         # If already playing, no need to call Play
-        from async_upnp_client.profiles.dlna import DeviceState
-
         if self._device.state == DeviceState.PLAYING:
             return
 
@@ -402,8 +395,6 @@ class DlnaDmrDevice(MediaPlayerDevice):
         """State of the player."""
         if not self._available:
             return STATE_OFF
-
-        from async_upnp_client.profiles.dlna import DeviceState
 
         if self._device.state is None:
             return STATE_ON

@@ -179,7 +179,7 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
         account_id = (await logi_session.account)["accountId"]
         await logi_session.close()
         return self.async_create_entry(
-            title="Logi Circle ({})".format(account_id),
+            title=f"Logi Circle ({account_id})",
             data={
                 CONF_CLIENT_ID: client_id,
                 CONF_CLIENT_SECRET: client_secret,

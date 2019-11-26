@@ -2,7 +2,7 @@
 General channels module for Zigbee Home Automation.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zha/
+https://home-assistant.io/integrations/zha/
 """
 import logging
 
@@ -198,7 +198,7 @@ class LevelControlChannel(ZigbeeChannel):
     def dispatch_level_change(self, command, level):
         """Dispatch level change."""
         async_dispatcher_send(
-            self._zha_device.hass, "{}_{}".format(self.unique_id, command), level
+            self._zha_device.hass, f"{self.unique_id}_{command}", level
         )
 
     async def async_initialize(self, from_cache):
@@ -284,9 +284,7 @@ class OnOffChannel(ZigbeeChannel):
         """Handle attribute updates on this cluster."""
         if attrid == self.ON_OFF:
             async_dispatcher_send(
-                self._zha_device.hass,
-                "{}_{}".format(self.unique_id, SIGNAL_ATTR_UPDATED),
-                value,
+                self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value
             )
             self._state = bool(value)
 
@@ -355,9 +353,7 @@ class PowerConfigurationChannel(ZigbeeChannel):
             attr_id = attr
         if attrid == attr_id:
             async_dispatcher_send(
-                self._zha_device.hass,
-                "{}_{}".format(self.unique_id, SIGNAL_ATTR_UPDATED),
-                value,
+                self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value
             )
 
     async def async_initialize(self, from_cache):

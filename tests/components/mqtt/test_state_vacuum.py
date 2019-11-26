@@ -5,11 +5,8 @@ import json
 from homeassistant.components import mqtt, vacuum
 from homeassistant.components.mqtt import CONF_COMMAND_TOPIC, CONF_STATE_TOPIC
 from homeassistant.components.mqtt.discovery import async_start
-from homeassistant.components.mqtt.vacuum import (
-    CONF_SCHEMA,
-    schema_state as mqttvacuum,
-    services_to_strings,
-)
+from homeassistant.components.mqtt.vacuum import CONF_SCHEMA, schema_state as mqttvacuum
+from homeassistant.components.mqtt.vacuum.schema import services_to_strings
 from homeassistant.components.mqtt.vacuum.schema_state import SERVICE_TO_STRING
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_ICON,
@@ -259,7 +256,7 @@ async def test_no_fan_vacuum(hass, mqtt_mock):
 async def test_status_invalid_json(hass, mqtt_mock):
     """Test to make sure nothing breaks if the vacuum sends bad JSON."""
     config = deepcopy(DEFAULT_CONFIG)
-    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = mqttvacuum.services_to_strings(
+    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
         mqttvacuum.ALL_SERVICES, SERVICE_TO_STRING
     )
 

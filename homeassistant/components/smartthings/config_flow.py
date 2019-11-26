@@ -176,7 +176,7 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow):
             errors=errors,
             description_placeholders={
                 "token_url": "https://account.smartthings.com/tokens",
-                "component_url": "https://www.home-assistant.io/components/smartthings/",
+                "component_url": "https://www.home-assistant.io/integrations/smartthings/",
             },
         )
 

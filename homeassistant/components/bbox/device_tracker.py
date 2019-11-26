@@ -2,6 +2,9 @@
 from collections import namedtuple
 from datetime import timedelta
 import logging
+from typing import List
+
+import pybbox
 
 import voluptuous as vol
 
@@ -41,12 +44,11 @@ class BboxDeviceScanner(DeviceScanner):
 
     def __init__(self, config):
         """Get host from config."""
-        from typing import List  # noqa: pylint: disable=unused-import
 
         self.host = config[CONF_HOST]
 
         """Initialize the scanner."""
-        self.last_results = []  # type: List[Device]
+        self.last_results: List[Device] = []
 
         self.success_init = self._update_info()
         _LOGGER.info("Scanner initialized")
@@ -74,8 +76,6 @@ class BboxDeviceScanner(DeviceScanner):
         Returns boolean if scanning successful.
         """
         _LOGGER.info("Scanning...")
-
-        import pybbox
 
         box = pybbox.Bbox(ip=self.host)
         result = box.get_all_connected_devices()

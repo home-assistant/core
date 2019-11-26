@@ -128,6 +128,9 @@ def hass_hue(loop, hass):
         kitchen_light_entity.entity_id, kitchen_light_entity.state, attributes=attrs
     )
 
+    # create a lamp without brightness support
+    hass.states.async_set("light.no_brightness", "on", {})
+
     # Ceiling Fan is explicitly excluded from being exposed
     ceiling_fan_entity = hass.states.get("fan.ceiling_fan")
     attrs = dict(ceiling_fan_entity.attributes)
@@ -216,6 +219,37 @@ def test_discover_lights(hue_client):
     assert "climate.hvac" in devices
     assert "climate.heatpump" in devices
     assert "climate.ecobee" not in devices
+
+
+@asyncio.coroutine
+def test_light_without_brightness_supported(hass_hue, hue_client):
+    """Test that light without brightness is supported."""
+    light_without_brightness_json = yield from perform_get_light_state(
+        hue_client, "light.no_brightness", 200
+    )
+
+    assert light_without_brightness_json["state"][HUE_API_STATE_ON] is True
+    assert light_without_brightness_json["type"] == "On/off light"
+
+
+@asyncio.coroutine
+@pytest.mark.parametrize(
+    "state,is_reachable",
+    [
+        (const.STATE_UNAVAILABLE, False),
+        (const.STATE_OK, True),
+        (const.STATE_UNKNOWN, True),
+    ],
+)
+def test_reachable_for_state(hass_hue, hue_client, state, is_reachable):
+    """Test that an entity is reported as unreachable if in unavailable state."""
+    entity_id = "light.ceiling_lights"
+
+    hass_hue.states.async_set(entity_id, state)
+
+    state_json = yield from perform_get_light_state(hue_client, entity_id, 200)
+
+    assert state_json["state"]["reachable"] == is_reachable, state_json
 
 
 @asyncio.coroutine

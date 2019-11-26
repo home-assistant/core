@@ -3,24 +3,38 @@
 To update, run python3 -m script.hassfest
 """
 
+# fmt: off
 
 SSDP = {
-    "device_type": {},
-    "manufacturer": {
-        "Belkin International Inc.": [
-            "wemo"
-        ],
-        "Royal Philips Electronics": [
-            "deconz",
-            "hue"
-        ]
-    },
-    "st": {
-        "urn:schemas-denon-com:device:ACT-Denon:1": [
-            "heos"
-        ],
-        "urn:schemas-upnp-org:device:ZonePlayer:1": [
-            "sonos"
-        ]
-    }
+    "deconz": [
+        {
+            "manufacturer": "Royal Philips Electronics"
+        }
+    ],
+    "heos": [
+        {
+            "st": "urn:schemas-denon-com:device:ACT-Denon:1"
+        }
+    ],
+    "huawei_lte": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            "manufacturer": "Huawei"
+        }
+    ],
+    "hue": [
+        {
+            "manufacturer": "Royal Philips Electronics"
+        }
+    ],
+    "sonos": [
+        {
+            "st": "urn:schemas-upnp-org:device:ZonePlayer:1"
+        }
+    ],
+    "wemo": [
+        {
+            "manufacturer": "Belkin International Inc."
+        }
+    ]
 }

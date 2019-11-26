@@ -6,7 +6,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import group
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
     ATTR_BATTERY_LEVEL,
     ATTR_COMMAND,
     SERVICE_TOGGLE,
@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa
+from homeassistant.helpers.config_validation import (  # noqa: F401
     ENTITY_SERVICE_SCHEMA,
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -26,6 +26,9 @@ from homeassistant.helpers.config_validation import (  # noqa
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity, Entity
 from homeassistant.helpers.icon import icon_for_battery_level
+
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,10 +68,10 @@ VACUUM_SEND_COMMAND_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
 
 STATE_CLEANING = "cleaning"
 STATE_DOCKED = "docked"
-STATE_IDLE = STATE_IDLE
-STATE_PAUSED = STATE_PAUSED
 STATE_RETURNING = "returning"
 STATE_ERROR = "error"
+
+STATES = [STATE_CLEANING, STATE_DOCKED, STATE_RETURNING, STATE_ERROR]
 
 DEFAULT_NAME = "Vacuum cleaner robot"
 
@@ -321,6 +324,14 @@ class VacuumDevice(_BaseVacuum, ToggleEntity):
         """
         await self.hass.async_add_executor_job(partial(self.start_pause, **kwargs))
 
+    async def async_pause(self):
+        """Not supported."""
+        pass
+
+    async def async_start(self):
+        """Not supported."""
+        pass
+
 
 class StateVacuumDevice(_BaseVacuum):
     """Representation of a vacuum cleaner robot that supports states."""
@@ -375,3 +386,15 @@ class StateVacuumDevice(_BaseVacuum):
         This method must be run in the event loop.
         """
         await self.hass.async_add_executor_job(self.pause)
+
+    async def async_turn_on(self, **kwargs):
+        """Not supported."""
+        pass
+
+    async def async_turn_off(self, **kwargs):
+        """Not supported."""
+        pass
+
+    async def async_toggle(self, **kwargs):
+        """Not supported."""
+        pass

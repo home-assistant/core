@@ -2,22 +2,27 @@
 import datetime
 import logging
 
+from concord232 import client as concord232_client
 import requests
 import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+)
 from homeassistant.const import (
+    CONF_CODE,
     CONF_HOST,
+    CONF_MODE,
     CONF_NAME,
     CONF_PORT,
-    CONF_CODE,
-    CONF_MODE,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED,
 )
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +52,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
 
-    url = "http://{}:{}".format(host, port)
+    url = f"http://{host}:{port}"
 
     try:
         add_entities([Concord232Alarm(url, name, code, mode)], True)
@@ -60,7 +65,6 @@ class Concord232Alarm(alarm.AlarmControlPanel):
 
     def __init__(self, url, name, code, mode):
         """Initialize the Concord232 alarm panel."""
-        from concord232 import client as concord232_client
 
         self._state = None
         self._name = name
@@ -69,7 +73,6 @@ class Concord232Alarm(alarm.AlarmControlPanel):
         self._url = url
         self._alarm = concord232_client.Client(self._url)
         self._alarm.partitions = self._alarm.list_partitions()
-        self._alarm.last_partition_update = datetime.datetime.now()
 
     @property
     def name(self):
@@ -85,6 +88,11 @@ class Concord232Alarm(alarm.AlarmControlPanel):
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
     def update(self):
         """Update values from API."""

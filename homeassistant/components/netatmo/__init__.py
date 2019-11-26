@@ -3,6 +3,7 @@ import logging
 from datetime import timedelta
 from urllib.error import HTTPError
 
+import pyatmo
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -89,7 +90,6 @@ SCHEMA_SERVICE_DROPWEBHOOK = vol.Schema({})
 
 def setup(hass, config):
     """Set up the Netatmo devices."""
-    import pyatmo
 
     hass.data[DATA_PERSONS] = {}
     try:
@@ -254,11 +254,9 @@ class CameraData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Call the Netatmo API to update the data."""
-        import pyatmo
-
         self.camera_data = pyatmo.CameraData(self.auth, size=100)
 
     @Throttle(MIN_TIME_BETWEEN_EVENT_UPDATES)
     def update_event(self):
         """Call the Netatmo API to update the events."""
-        self.camera_data.updateEvent(home=self.home, cameratype=self.camera_type)
+        self.camera_data.updateEvent(home=self.home, devicetype=self.camera_type)

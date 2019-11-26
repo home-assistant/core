@@ -46,7 +46,7 @@ LocationInfo = collections.namedtuple(
 
 
 async def async_detect_location_info(
-    session: aiohttp.ClientSession
+    session: aiohttp.ClientSession,
 ) -> Optional[LocationInfo]:
     """Detect location information."""
     data = await _get_ipapi(session)

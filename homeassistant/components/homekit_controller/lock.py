@@ -1,6 +1,8 @@
 """Support for HomeKit Controller locks."""
 import logging
 
+from homekit.model.characteristics import CharacteristicsTypes
+
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_LOCKED, STATE_UNLOCKED
 
@@ -46,9 +48,6 @@ class HomeKitLock(HomeKitEntity, LockDevice):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
-
         return [
             CharacteristicsTypes.LOCK_MECHANISM_CURRENT_STATE,
             CharacteristicsTypes.LOCK_MECHANISM_TARGET_STATE,

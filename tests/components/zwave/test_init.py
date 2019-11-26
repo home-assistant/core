@@ -574,17 +574,32 @@ async def test_value_discovery_existing_entity(hass, mock_openzwave):
     assert len(mock_receivers) == 1
 
     node = MockNode(node_id=11, generic=const.GENERIC_TYPE_THERMOSTAT)
-    setpoint = MockValue(
+    thermostat_mode = MockValue(
+        data="Heat",
+        data_items=["Off", "Heat"],
+        node=node,
+        command_class=const.COMMAND_CLASS_THERMOSTAT_MODE,
+        genre=const.GENRE_USER,
+    )
+    setpoint_heating = MockValue(
         data=22.0,
         node=node,
-        index=12,
-        instance=13,
         command_class=const.COMMAND_CLASS_THERMOSTAT_SETPOINT,
+        index=1,
         genre=const.GENRE_USER,
-        units="C",
     )
-    hass.async_add_job(mock_receivers[0], node, setpoint)
+
+    hass.async_add_job(mock_receivers[0], node, thermostat_mode)
     await hass.async_block_till_done()
+
+    def mock_update(self):
+        self.hass.add_job(self.async_update_ha_state)
+
+    with patch.object(
+        zwave.node_entity.ZWaveBaseEntity, "maybe_schedule_update", new=mock_update
+    ):
+        hass.async_add_job(mock_receivers[0], node, setpoint_heating)
+        await hass.async_block_till_done()
 
     assert (
         hass.states.get("climate.mock_node_mock_value").attributes["temperature"]
@@ -597,9 +612,6 @@ async def test_value_discovery_existing_entity(hass, mock_openzwave):
         is None
     )
 
-    def mock_update(self):
-        self.hass.add_job(self.async_update_ha_state)
-
     with patch.object(
         zwave.node_entity.ZWaveBaseEntity, "maybe_schedule_update", new=mock_update
     ):
@@ -607,7 +619,6 @@ async def test_value_discovery_existing_entity(hass, mock_openzwave):
             data=23.5,
             node=node,
             index=1,
-            instance=13,
             command_class=const.COMMAND_CLASS_SENSOR_MULTILEVEL,
             genre=const.GENRE_USER,
             units="C",
@@ -1610,10 +1621,10 @@ class TestZWaveServices(unittest.TestCase):
         self.hass.block_till_done()
 
         assert self.zwave_network.manager.pressButton.called
-        value_id, = self.zwave_network.manager.pressButton.mock_calls.pop(0)[1]
+        (value_id,) = self.zwave_network.manager.pressButton.mock_calls.pop(0)[1]
         assert value_id == reset_value.value_id
         assert self.zwave_network.manager.releaseButton.called
-        value_id, = self.zwave_network.manager.releaseButton.mock_calls.pop(0)[1]
+        (value_id,) = self.zwave_network.manager.releaseButton.mock_calls.pop(0)[1]
         assert value_id == reset_value.value_id
 
     def test_add_association(self):

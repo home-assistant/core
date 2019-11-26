@@ -49,7 +49,7 @@ class LogiSensor(Entity):
         """Initialize a sensor for Logi Circle camera."""
         self._sensor_type = sensor_type
         self._camera = camera
-        self._id = "{}-{}".format(self._camera.mac_address, self._sensor_type)
+        self._id = f"{self._camera.mac_address}-{self._sensor_type}"
         self._icon = "mdi:{}".format(SENSOR_TYPES.get(self._sensor_type)[2])
         self._name = "{0} {1}".format(
             self._camera.name, SENSOR_TYPES.get(self._sensor_type)[0]

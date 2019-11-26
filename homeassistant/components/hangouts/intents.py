@@ -25,7 +25,7 @@ class HelpIntent(intent.IntentHandler):
         help_text = "I understand the following sentences:"
         for intent_data in intents.values():
             for sentence in intent_data["sentences"]:
-                help_text += "\n'{}'".format(sentence)
+                help_text += f"\n'{sentence}'"
         response.async_set_speech(help_text)
 
         return response

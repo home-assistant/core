@@ -1,44 +1,43 @@
 """Test ZHA Device Tracker."""
 from datetime import timedelta
 import time
+
+import zigpy.zcl.clusters.general as general
+import zigpy.zcl.foundation as zcl_f
+
 from homeassistant.components.device_tracker import DOMAIN, SOURCE_TYPE_ROUTER
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
 from homeassistant.components.zha.core.registries import (
     SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE,
 )
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
 import homeassistant.util.dt as dt_util
+
 from .common import (
-    async_init_zigpy_device,
-    make_attribute,
-    make_entity_id,
-    async_test_device_join,
     async_enable_traffic,
+    async_init_zigpy_device,
+    async_test_device_join,
+    find_entity_id,
+    make_attribute,
+    make_zcl_header,
 )
+
 from tests.common import async_fire_time_changed
 
 
 async def test_device_tracker(hass, config_entry, zha_gateway):
     """Test zha device tracker platform."""
-    from zigpy.zcl.clusters.general import (
-        Basic,
-        PowerConfiguration,
-        BinaryInput,
-        Identify,
-        Ota,
-        PollControl,
-    )
 
     # create zigpy device
     zigpy_device = await async_init_zigpy_device(
         hass,
         [
-            Basic.cluster_id,
-            PowerConfiguration.cluster_id,
-            Identify.cluster_id,
-            PollControl.cluster_id,
-            BinaryInput.cluster_id,
+            general.Basic.cluster_id,
+            general.PowerConfiguration.cluster_id,
+            general.Identify.cluster_id,
+            general.PollControl.cluster_id,
+            general.BinaryInput.cluster_id,
         ],
-        [Identify.cluster_id, Ota.cluster_id],
+        [general.Identify.cluster_id, general.Ota.cluster_id],
         SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE,
         zha_gateway,
     )
@@ -48,8 +47,9 @@ async def test_device_tracker(hass, config_entry, zha_gateway):
     await hass.async_block_till_done()
 
     cluster = zigpy_device.endpoints.get(1).power
-    entity_id = make_entity_id(DOMAIN, zigpy_device, cluster, use_suffix=False)
     zha_device = zha_gateway.get_device(zigpy_device.ieee)
+    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
+    assert entity_id is not None
 
     # test that the device tracker was created and that it is unavailable
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
@@ -67,10 +67,11 @@ async def test_device_tracker(hass, config_entry, zha_gateway):
 
     # turn state flip
     attr = make_attribute(0x0020, 23)
-    cluster.handle_message(False, 1, 0x0A, [[attr]])
+    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
+    cluster.handle_message(hdr, [[attr]])
 
     attr = make_attribute(0x0021, 200)
-    cluster.handle_message(False, 1, 0x0A, [[attr]])
+    cluster.handle_message(hdr, [[attr]])
 
     zigpy_device.last_seen = time.time() + 10
     next_update = dt_util.utcnow() + timedelta(seconds=30)
@@ -89,7 +90,7 @@ async def test_device_tracker(hass, config_entry, zha_gateway):
     await async_test_device_join(
         hass,
         zha_gateway,
-        PowerConfiguration.cluster_id,
-        DOMAIN,
+        general.PowerConfiguration.cluster_id,
+        entity_id,
         SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE,
     )

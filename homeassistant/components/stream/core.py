@@ -2,17 +2,17 @@
 import asyncio
 from collections import deque
 import io
-from typing import List, Any
+from typing import Any, List
 
-import attr
 from aiohttp import web
+import attr
 
-from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.decorator import Registry
 
-from .const import DOMAIN, ATTR_STREAMS
+from .const import ATTR_STREAMS, DOMAIN
 
 PROVIDERS = Registry()
 

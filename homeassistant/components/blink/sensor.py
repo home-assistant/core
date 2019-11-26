@@ -28,7 +28,7 @@ class BlinkSensor(Entity):
     def __init__(self, data, camera, sensor_type):
         """Initialize sensors from Blink camera."""
         name, units, icon = SENSORS[sensor_type]
-        self._name = "{} {} {}".format(BLINK_DATA, camera, name)
+        self._name = f"{BLINK_DATA} {camera} {name}"
         self._camera_name = name
         self._type = sensor_type
         self.data = data
@@ -36,7 +36,7 @@ class BlinkSensor(Entity):
         self._state = None
         self._unit_of_measurement = units
         self._icon = icon
-        self._unique_id = "{}-{}".format(self._camera.serial, self._type)
+        self._unique_id = f"{self._camera.serial}-{self._type}"
         self._sensor_key = self._type
         if self._type == "temperature":
             self._sensor_key = "temperature_calibrated"

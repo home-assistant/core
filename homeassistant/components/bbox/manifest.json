@@ -1,7 +1,7 @@
 {
   "domain": "bbox",
   "name": "Bbox",
-  "documentation": "https://www.home-assistant.io/components/bbox",
+  "documentation": "https://www.home-assistant.io/integrations/bbox",
   "requirements": [
     "pybbox==0.0.5-alpha"
   ],

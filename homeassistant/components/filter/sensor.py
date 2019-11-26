@@ -89,7 +89,7 @@ FILTER_LOWPASS_SCHEMA = FILTER_SCHEMA.extend(
     }
 )
 
-FILTER_RANGE_SCHEMA = vol.Schema(
+FILTER_RANGE_SCHEMA = FILTER_SCHEMA.extend(
     {
         vol.Required(CONF_FILTER_NAME): FILTER_NAME_RANGE,
         vol.Optional(CONF_FILTER_LOWER_BOUND): vol.Coerce(float),
@@ -242,7 +242,8 @@ class SensorFilter(Entity):
                         entity_id=self._entity,
                     )
                 )
-                history_list.extend([state for state in filter_history[self._entity]])
+                if self._entity in filter_history:
+                    history_list.extend(filter_history[self._entity])
             if largest_window_time > timedelta(seconds=0):
                 start = dt_util.utcnow() - largest_window_time
                 filter_history = await self.hass.async_add_job(
@@ -253,13 +254,14 @@ class SensorFilter(Entity):
                         entity_id=self._entity,
                     )
                 )
-                history_list.extend(
-                    [
-                        state
-                        for state in filter_history[self._entity]
-                        if state not in history_list
-                    ]
-                )
+                if self._entity in filter_history:
+                    history_list.extend(
+                        [
+                            state
+                            for state in filter_history[self._entity]
+                            if state not in history_list
+                        ]
+                    )
 
             # Sort the window states
             history_list = sorted(history_list, key=lambda s: s.last_updated)
@@ -330,7 +332,7 @@ class FilterState:
 
     def __repr__(self):
         """Return timestamp and state as the representation of FilterState."""
-        return "{} : {}".format(self.timestamp, self.state)
+        return f"{self.timestamp} : {self.state}"
 
 
 class Filter:
@@ -404,6 +406,7 @@ class RangeFilter(Filter):
     def __init__(
         self,
         entity,
+        precision: Optional[int] = DEFAULT_PRECISION,
         lower_bound: Optional[float] = None,
         upper_bound: Optional[float] = None,
     ):
@@ -412,7 +415,7 @@ class RangeFilter(Filter):
         :param upper_bound: band upper bound
         :param lower_bound: band lower bound
         """
-        super().__init__(FILTER_NAME_RANGE, entity=entity)
+        super().__init__(FILTER_NAME_RANGE, precision=precision, entity=entity)
         self._lower_bound = lower_bound
         self._upper_bound = upper_bound
         self._stats_internal = Counter()

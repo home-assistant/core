@@ -8,10 +8,13 @@ import voluptuous as vol
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import STATE_ON, STATE_OFF
-from homeassistant.helpers.config_validation import (  # noqa
+from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
+
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 DOMAIN = "binary_sensor"
 SCAN_INTERVAL = timedelta(seconds=30)

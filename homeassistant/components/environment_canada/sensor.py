@@ -68,7 +68,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ec_data = ECData(coordinates=(lat, lon), language=config.get(CONF_LANGUAGE))
 
     sensor_list = list(ec_data.conditions.keys()) + list(ec_data.alerts.keys())
-    sensor_list.remove("icon_code")
     add_entities([ECSensor(sensor_type, ec_data) for sensor_type in sensor_list], True)
 
 
@@ -126,17 +125,22 @@ class ECSensor(Entity):
         value = sensor_data.get("value")
 
         if isinstance(value, list):
-            self._state = " | ".join([str(s.get("title")) for s in value])
+            self._state = " | ".join([str(s.get("title")) for s in value])[:255]
             self._attr.update(
                 {
                     ATTR_DETAIL: " | ".join([str(s.get("detail")) for s in value]),
                     ATTR_TIME: " | ".join([str(s.get("date")) for s in value]),
                 }
             )
+        elif self.sensor_type == "tendency":
+            self._state = str(value).capitalize()
         else:
-            self._state = value
+            self._state = value[:255]
 
-        if sensor_data.get("unit") == "C":
+        if sensor_data.get("unit") == "C" or self.sensor_type in [
+            "wind_chill",
+            "humidex",
+        ]:
             self._unit = TEMP_CELSIUS
         else:
             self._unit = sensor_data.get("unit")

@@ -2,6 +2,8 @@
 import logging
 from datetime import timedelta
 
+from pytile import async_login
+from pytile.errors import SessionExpiredError, TileError
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
@@ -43,8 +45,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Validate the configuration and return a Tile scanner."""
-    from pytile import Client
-
     websession = aiohttp_client.async_get_clientsession(hass)
 
     config_file = hass.config.path(
@@ -52,14 +52,16 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     )
     config_data = await hass.async_add_job(load_json, config_file)
     if config_data:
-        client = Client(
+        client = await async_login(
             config[CONF_USERNAME],
             config[CONF_PASSWORD],
             websession,
             client_uuid=config_data["client_uuid"],
         )
     else:
-        client = Client(config[CONF_USERNAME], config[CONF_PASSWORD], websession)
+        client = await async_login(
+            config[CONF_USERNAME], config[CONF_PASSWORD], websession
+        )
 
         config_data = {"client_uuid": client.client_uuid}
         await hass.async_add_job(save_json, config_file, config_data)
@@ -87,8 +89,6 @@ class TileScanner:
 
     async def async_init(self):
         """Further initialize connection to the Tile servers."""
-        from pytile.errors import TileError
-
         try:
             await self._client.async_init()
         except TileError as err:
@@ -103,10 +103,6 @@ class TileScanner:
 
     async def _async_update(self, now=None):
         """Update info from Tile."""
-        from pytile.errors import SessionExpiredError, TileError
-
-        _LOGGER.debug("Updating Tile data")
-
         try:
             await self._client.async_init()
             tiles = await self._client.tiles.all(
@@ -126,14 +122,17 @@ class TileScanner:
         for tile in tiles:
             await self._async_see(
                 dev_id="tile_{0}".format(slugify(tile["tile_uuid"])),
-                gps=(tile["tileState"]["latitude"], tile["tileState"]["longitude"]),
+                gps=(
+                    tile["last_tile_state"]["latitude"],
+                    tile["last_tile_state"]["longitude"],
+                ),
                 attributes={
-                    ATTR_ALTITUDE: tile["tileState"]["altitude"],
-                    ATTR_CONNECTION_STATE: tile["tileState"]["connection_state"],
+                    ATTR_ALTITUDE: tile["last_tile_state"]["altitude"],
+                    ATTR_CONNECTION_STATE: tile["last_tile_state"]["connection_state"],
                     ATTR_IS_DEAD: tile["is_dead"],
-                    ATTR_IS_LOST: tile["tileState"]["is_lost"],
-                    ATTR_RING_STATE: tile["tileState"]["ring_state"],
-                    ATTR_VOIP_STATE: tile["tileState"]["voip_state"],
+                    ATTR_IS_LOST: tile["last_tile_state"]["is_lost"],
+                    ATTR_RING_STATE: tile["last_tile_state"]["ring_state"],
+                    ATTR_VOIP_STATE: tile["last_tile_state"]["voip_state"],
                     ATTR_TILE_ID: tile["tile_uuid"],
                     ATTR_TILE_NAME: tile["name"],
                 },

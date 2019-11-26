@@ -1,15 +1,15 @@
 """Support to embed Sonos."""
 import asyncio
+
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.const import CONF_HOSTS, ATTR_ENTITY_ID, ATTR_TIME
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TIME, CONF_HOSTS
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN
-
 
 CONF_ADVERTISE_ADDR = "advertise_addr"
 CONF_INTERFACE_ADDR = "interface_addr"

@@ -2,6 +2,7 @@
 from datetime import timedelta
 import functools as ft
 import logging
+from typing import Optional
 
 import voluptuous as vol
 
@@ -10,7 +11,7 @@ from homeassistant.const import SERVICE_TURN_ON, SERVICE_TOGGLE, SERVICE_TURN_OF
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.config_validation import (  # noqa
+from homeassistant.helpers.config_validation import (  # noqa: F401
     ENTITY_SERVICE_SCHEMA,
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -53,28 +54,26 @@ PROP_TO_ATTR = {
     "speed": ATTR_SPEED,
     "speed_list": ATTR_SPEED_LIST,
     "oscillating": ATTR_OSCILLATING,
-    "direction": ATTR_DIRECTION,
-}  # type: dict
+    "current_direction": ATTR_DIRECTION,
+}
 
 FAN_SET_SPEED_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
     {vol.Required(ATTR_SPEED): cv.string}
-)  # type: dict
+)
 
-FAN_TURN_ON_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Optional(ATTR_SPEED): cv.string}
-)  # type: dict
+FAN_TURN_ON_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({vol.Optional(ATTR_SPEED): cv.string})
 
 FAN_OSCILLATE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
     {vol.Required(ATTR_OSCILLATING): cv.boolean}
-)  # type: dict
+)
 
 FAN_SET_DIRECTION_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
     {vol.Optional(ATTR_DIRECTION): cv.string}
-)  # type: dict
+)
 
 
 @bind_hass
-def is_on(hass, entity_id: str = None) -> bool:
+def is_on(hass, entity_id: Optional[str] = None) -> bool:
     """Return if the fans are on based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_FANS
     state = hass.states.get(entity_id)
@@ -149,12 +148,12 @@ class FanEntity(ToggleEntity):
         return self.hass.async_add_job(self.set_direction, direction)
 
     # pylint: disable=arguments-differ
-    def turn_on(self, speed: str = None, **kwargs) -> None:
+    def turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
         """Turn on the fan."""
         raise NotImplementedError()
 
     # pylint: disable=arguments-differ
-    def async_turn_on(self, speed: str = None, **kwargs):
+    def async_turn_on(self, speed: Optional[str] = None, **kwargs):
         """Turn on the fan.
 
         This method must be run in the event loop and returns a coroutine.
@@ -180,7 +179,7 @@ class FanEntity(ToggleEntity):
         return self.speed not in [SPEED_OFF, None]
 
     @property
-    def speed(self) -> str:
+    def speed(self) -> Optional[str]:
         """Return the current speed."""
         return None
 
@@ -190,14 +189,14 @@ class FanEntity(ToggleEntity):
         return []
 
     @property
-    def current_direction(self) -> str:
+    def current_direction(self) -> Optional[str]:
         """Return the current direction of the fan."""
         return None
 
     @property
     def state_attributes(self) -> dict:
         """Return optional state attributes."""
-        data = {}  # type: dict
+        data = {}
 
         for prop, attr in PROP_TO_ATTR.items():
             if not hasattr(self, prop):

@@ -142,7 +142,7 @@ async def test_config_flow_entry_migrate(hass):
         "media_player",
         "ps4",
         MOCK_UNIQUE_ID,
-        config_entry_id=MOCK_ENTRY_ID,
+        config_entry=mock_entry,
         device_id=MOCK_DEVICE_ID,
     )
     assert len(mock_e_registry.entities) == 1

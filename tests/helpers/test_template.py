@@ -227,6 +227,13 @@ def test_rounding_value(hass):
         == "12.8"
     )
 
+    assert (
+        template.Template(
+            '{{ states.sensor.temperature.state | round(1, "half") }}', hass
+        ).async_render()
+        == "13.0"
+    )
+
 
 def test_rounding_value_get_original_value_on_error(hass):
     """Test rounding value get original value on error."""
@@ -499,6 +506,30 @@ def test_timestamp_local(hass):
             template.Template("{{ %s | timestamp_local }}" % inp, hass).async_render()
             == out
         )
+
+
+def test_to_json(hass):
+    """Test the object to JSON string filter."""
+
+    # Note that we're not testing the actual json.loads and json.dumps methods,
+    # only the filters, so we don't need to be exhaustive with our sample JSON.
+    expected_result = '{"Foo": "Bar"}'
+    actual_result = template.Template(
+        "{{ {'Foo': 'Bar'} | to_json }}", hass
+    ).async_render()
+    assert actual_result == expected_result
+
+
+def test_from_json(hass):
+    """Test the JSON string to object filter."""
+
+    # Note that we're not testing the actual json.loads and json.dumps methods,
+    # only the filters, so we don't need to be exhaustive with our sample JSON.
+    expected_result = "Bar"
+    actual_result = template.Template(
+        '{{ (\'{"Foo": "Bar"}\' | from_json).Foo }}', hass
+    ).async_render()
+    assert actual_result == expected_result
 
 
 def test_min(hass):

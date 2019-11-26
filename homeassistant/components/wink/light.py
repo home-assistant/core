@@ -1,4 +1,6 @@
 """Support for Wink lights."""
+import pywink
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -18,7 +20,6 @@ from . import DOMAIN, WinkDevice
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink lights."""
-    import pywink
 
     for light in pywink.get_light_bulbs():
         _id = light.object_id() + light.name()

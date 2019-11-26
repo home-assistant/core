@@ -1,7 +1,7 @@
 {
   "domain": "delijn",
   "name": "De Lijn",
-  "documentation": "https://www.home-assistant.io/components/delijn",
+  "documentation": "https://www.home-assistant.io/integrations/delijn",
   "dependencies": [],
   "codeowners": ["@bollewolle"],
   "requirements": ["pydelijn==0.5.1"]

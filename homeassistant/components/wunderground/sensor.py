@@ -968,7 +968,7 @@ async def async_setup_platform(
     )
 
     if pws_id is None:
-        unique_id_base = "@{:06f},{:06f}".format(longitude, latitude)
+        unique_id_base = f"@{longitude:06f},{latitude:06f}"
     else:
         # Manually specified weather station, use that for unique_id
         unique_id_base = pws_id
@@ -999,7 +999,7 @@ class WUndergroundSensor(Entity):
         # This is only the suggested entity id, it might get changed by
         # the entity registry later.
         self.entity_id = sensor.ENTITY_ID_FORMAT.format("pws_" + condition)
-        self._unique_id = "{},{}".format(unique_id_base, condition)
+        self._unique_id = f"{unique_id_base},{condition}"
         self._device_class = self._cfg_expand("device_class")
 
     def _cfg_expand(self, what, default=None):
@@ -1106,7 +1106,7 @@ class WUndergroundData:
         self._hass = hass
         self._api_key = api_key
         self._pws_id = pws_id
-        self._lang = "lang:{}".format(lang)
+        self._lang = f"lang:{lang}"
         self._latitude = latitude
         self._longitude = longitude
         self._features = set()
@@ -1122,9 +1122,9 @@ class WUndergroundData:
             self._api_key, "/".join(sorted(self._features)), self._lang
         )
         if self._pws_id:
-            url = url + "pws:{}".format(self._pws_id)
+            url = url + f"pws:{self._pws_id}"
         else:
-            url = url + "{},{}".format(self._latitude, self._longitude)
+            url = url + f"{self._latitude},{self._longitude}"
 
         return url + ".json"
 

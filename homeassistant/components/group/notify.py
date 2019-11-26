@@ -17,6 +17,9 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 
+
+# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SERVICES = "services"

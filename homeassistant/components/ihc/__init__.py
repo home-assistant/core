@@ -61,7 +61,7 @@ def validate_name(config):
     if CONF_NAME in config:
         return config
     ihcid = config[CONF_ID]
-    name = "ihc_{}".format(ihcid)
+    name = f"ihc_{ihcid}"
     config[CONF_NAME] = name
     return config
 
@@ -312,7 +312,7 @@ def get_discovery_info(component_setup, groups, controller_id):
                     if "setting" in node.attrib and node.attrib["setting"] == "yes":
                         continue
                     ihc_id = int(node.attrib["id"].strip("_"), 0)
-                    name = "{}_{}".format(groupname, ihc_id)
+                    name = f"{groupname}_{ihc_id}"
                     device = {
                         "ihc_id": ihc_id,
                         "ctrl_id": controller_id,

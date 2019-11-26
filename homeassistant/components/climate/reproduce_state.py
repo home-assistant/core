@@ -5,7 +5,6 @@ from typing import Iterable, Optional
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import Context, State
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.loader import bind_hass
 
 from .const import (
     ATTR_AUX_HEAT,
@@ -69,7 +68,6 @@ async def _async_reproduce_states(
         await call_service(SERVICE_SET_HUMIDITY, [ATTR_HUMIDITY])
 
 
-@bind_hass
 async def async_reproduce_states(
     hass: HomeAssistantType, states: Iterable[State], context: Optional[Context] = None
 ) -> None:

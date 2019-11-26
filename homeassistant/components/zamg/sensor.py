@@ -124,7 +124,7 @@ class ZamgSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self.client_name, self.variable)
+        return f"{self.client_name} {self.variable}"
 
     @property
     def state(self):
@@ -212,7 +212,7 @@ class ZamgData:
                 }
                 break
         else:
-            raise ValueError("No weather data for station {}".format(self._station_id))
+            raise ValueError(f"No weather data for station {self._station_id}")
 
     def get_data(self, variable):
         """Get the data."""

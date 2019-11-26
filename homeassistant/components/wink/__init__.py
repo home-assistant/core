@@ -5,6 +5,9 @@ import logging
 import os
 import time
 
+from aiohttp.web import Response
+import pywink
+from pubnubsubhandler import PubNubSubscriptionHandler
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
@@ -52,7 +55,7 @@ ATTR_HUB_NAME = "hub_name"
 WINK_AUTH_CALLBACK_PATH = "/auth/wink/callback"
 WINK_AUTH_START = "/auth/wink"
 WINK_CONFIG_FILE = ".wink.conf"
-USER_AGENT = "Manufacturer/Home-Assistant{} python/3 Wink/3".format(__version__)
+USER_AGENT = f"Manufacturer/Home-Assistant{__version__} python/3 Wink/3"
 
 DEFAULT_CONFIG = {"client_id": "CLIENT_ID_HERE", "client_secret": "CLIENT_SECRET_HERE"}
 
@@ -228,7 +231,7 @@ def _request_app_setup(hass, config):
         _configurator = hass.data[DOMAIN]["configuring"][DOMAIN]
         configurator.notify_errors(_configurator, error_msg)
 
-    start_url = "{}{}".format(hass.config.api.base_url, WINK_AUTH_CALLBACK_PATH)
+    start_url = f"{hass.config.api.base_url}{WINK_AUTH_CALLBACK_PATH}"
 
     description = """Please create a Wink developer app at
                      https://developer.wink.com.
@@ -268,9 +271,9 @@ def _request_oauth_completion(hass, config):
         """Call setup again."""
         setup(hass, config)
 
-    start_url = "{}{}".format(hass.config.api.base_url, WINK_AUTH_START)
+    start_url = f"{hass.config.api.base_url}{WINK_AUTH_START}"
 
-    description = "Please authorize Wink by visiting {}".format(start_url)
+    description = f"Please authorize Wink by visiting {start_url}"
 
     hass.data[DOMAIN]["configuring"][DOMAIN] = configurator.request_config(
         DOMAIN, wink_configuration_callback, description=description
@@ -279,8 +282,6 @@ def _request_oauth_completion(hass, config):
 
 def setup(hass, config):
     """Set up the Wink component."""
-    import pywink
-    from pubnubsubhandler import PubNubSubscriptionHandler
 
     if hass.data.get(DOMAIN) is None:
         hass.data[DOMAIN] = {
@@ -689,8 +690,6 @@ class WinkAuthCallbackView(HomeAssistantView):
     @callback
     def get(self, request):
         """Finish OAuth callback request."""
-        from aiohttp import web
-
         hass = request.app["hass"]
         data = request.query
 
@@ -715,15 +714,13 @@ class WinkAuthCallbackView(HomeAssistantView):
 
             hass.async_add_job(setup, hass, self.config)
 
-            return web.Response(
+            return Response(
                 text=html_response.format(response_message), content_type="text/html"
             )
 
         error_msg = "No code returned from Wink API"
         _LOGGER.error(error_msg)
-        return web.Response(
-            text=html_response.format(error_msg), content_type="text/html"
-        )
+        return Response(text=html_response.format(error_msg), content_type="text/html")
 
 
 class WinkDevice(Entity):
@@ -863,7 +860,7 @@ class WinkSirenDevice(WinkDevice):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        attributes = super(WinkSirenDevice, self).device_state_attributes
+        attributes = super().device_state_attributes
 
         auto_shutoff = self.wink.auto_shutoff()
         if auto_shutoff is not None:
@@ -921,7 +918,7 @@ class WinkNimbusDialDevice(WinkDevice):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        attributes = super(WinkNimbusDialDevice, self).device_state_attributes
+        attributes = super().device_state_attributes
         dial_attributes = self.dial_attributes()
 
         return {**attributes, **dial_attributes}

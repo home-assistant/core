@@ -43,7 +43,9 @@ class MySensorsCover(mysensors.device.MySensorsEntity, CoverDevice):
     async def async_open_cover(self, **kwargs):
         """Move the cover up."""
         set_req = self.gateway.const.SetReq
-        self.gateway.set_child_value(self.node_id, self.child_id, set_req.V_UP, 1)
+        self.gateway.set_child_value(
+            self.node_id, self.child_id, set_req.V_UP, 1, ack=1
+        )
         if self.gateway.optimistic:
             # Optimistically assume that cover has changed state.
             if set_req.V_DIMMER in self._values:
@@ -55,7 +57,9 @@ class MySensorsCover(mysensors.device.MySensorsEntity, CoverDevice):
     async def async_close_cover(self, **kwargs):
         """Move the cover down."""
         set_req = self.gateway.const.SetReq
-        self.gateway.set_child_value(self.node_id, self.child_id, set_req.V_DOWN, 1)
+        self.gateway.set_child_value(
+            self.node_id, self.child_id, set_req.V_DOWN, 1, ack=1
+        )
         if self.gateway.optimistic:
             # Optimistically assume that cover has changed state.
             if set_req.V_DIMMER in self._values:
@@ -69,7 +73,7 @@ class MySensorsCover(mysensors.device.MySensorsEntity, CoverDevice):
         position = kwargs.get(ATTR_POSITION)
         set_req = self.gateway.const.SetReq
         self.gateway.set_child_value(
-            self.node_id, self.child_id, set_req.V_DIMMER, position
+            self.node_id, self.child_id, set_req.V_DIMMER, position, ack=1
         )
         if self.gateway.optimistic:
             # Optimistically assume that cover has changed state.
@@ -79,4 +83,6 @@ class MySensorsCover(mysensors.device.MySensorsEntity, CoverDevice):
     async def async_stop_cover(self, **kwargs):
         """Stop the device."""
         set_req = self.gateway.const.SetReq
-        self.gateway.set_child_value(self.node_id, self.child_id, set_req.V_STOP, 1)
+        self.gateway.set_child_value(
+            self.node_id, self.child_id, set_req.V_STOP, 1, ack=1
+        )

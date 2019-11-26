@@ -4,10 +4,17 @@ import logging
 import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_NIGHT,
+    SUPPORT_ALARM_TRIGGER,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
@@ -126,6 +133,8 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
 
         if self._info["status"]["alarm"]:
             state = STATE_ALARM_TRIGGERED
+        elif self._info["status"]["armed_zero_entry_delay"]:
+            state = STATE_ALARM_ARMED_NIGHT
         elif self._info["status"]["armed_away"]:
             state = STATE_ALARM_ARMED_AWAY
         elif self._info["status"]["armed_stay"]:
@@ -137,6 +146,16 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
         elif self._info["status"]["alpha"]:
             state = STATE_ALARM_DISARMED
         return state
+
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return (
+            SUPPORT_ALARM_ARM_HOME
+            | SUPPORT_ALARM_ARM_AWAY
+            | SUPPORT_ALARM_ARM_NIGHT
+            | SUPPORT_ALARM_TRIGGER
+        )
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
@@ -172,6 +191,12 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
     async def async_alarm_trigger(self, code=None):
         """Alarm trigger command. Will be used to trigger a panic alarm."""
         self.hass.data[DATA_EVL].panic_alarm(self._panic_type)
+
+    async def async_alarm_arm_night(self, code=None):
+        """Send arm night command."""
+        self.hass.data[DATA_EVL].arm_night_partition(
+            str(code) if code else str(self._code), self._partition_number
+        )
 
     @callback
     def async_alarm_keypress(self, keypress=None):

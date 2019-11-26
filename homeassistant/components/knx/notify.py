@@ -1,5 +1,6 @@
 """Support for KNX/IP notification services."""
 import voluptuous as vol
+from xknx.devices import Notification as XknxNotification
 
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
 from homeassistant.const import CONF_ADDRESS, CONF_NAME
@@ -42,9 +43,7 @@ def async_get_service_discovery(hass, discovery_info):
 @callback
 def async_get_service_config(hass, config):
     """Set up notification for KNX platform configured within platform."""
-    import xknx
-
-    notification = xknx.devices.Notification(
+    notification = XknxNotification(
         hass.data[DATA_KNX].xknx,
         name=config[CONF_NAME],
         group_address=config[CONF_ADDRESS],

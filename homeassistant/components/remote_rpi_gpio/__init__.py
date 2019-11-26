@@ -47,7 +47,7 @@ def setup_input(address, port, pull_mode, bouncetime):
             bounce_time=bouncetime,
             pin_factory=PiGPIOFactory(address),
         )
-    except (ValueError, IndexError, KeyError, IOError):
+    except (ValueError, IndexError, KeyError, OSError):
         return None
 
 

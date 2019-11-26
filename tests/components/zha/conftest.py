@@ -1,20 +1,29 @@
 """Test configuration for the ZHA component."""
 from unittest.mock import patch
+
 import pytest
+
 from homeassistant import config_entries
-from homeassistant.components.zha.core.const import DOMAIN, DATA_ZHA, COMPONENTS
-from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
+from homeassistant.components.zha.core.const import COMPONENTS, DATA_ZHA, DOMAIN
 from homeassistant.components.zha.core.gateway import ZHAGateway
 from homeassistant.components.zha.core.registries import establish_device_mappings
-from .common import async_setup_entry
 from homeassistant.components.zha.core.store import async_get_registry
+from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
+
+from .common import async_setup_entry
 
 
 @pytest.fixture(name="config_entry")
 def config_entry_fixture(hass):
     """Fixture representing a config entry."""
     config_entry = config_entries.ConfigEntry(
-        1, DOMAIN, "Mock Title", {}, "test", config_entries.CONN_CLASS_LOCAL_PUSH
+        1,
+        DOMAIN,
+        "Mock Title",
+        {},
+        "test",
+        config_entries.CONN_CLASS_LOCAL_PUSH,
+        system_options={},
     )
     return config_entry
 

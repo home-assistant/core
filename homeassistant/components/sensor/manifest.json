@@ -1,7 +1,7 @@
 {
   "domain": "sensor",
   "name": "Sensor",
-  "documentation": "https://www.home-assistant.io/components/sensor",
+  "documentation": "https://www.home-assistant.io/integrations/sensor",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

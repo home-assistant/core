@@ -1,17 +1,6 @@
 """Permissions for Home Assistant."""
 import logging
-from typing import (  # noqa: F401
-    cast,
-    Any,
-    Callable,
-    Dict,
-    List,
-    Mapping,
-    Set,
-    Tuple,
-    Union,
-    TYPE_CHECKING,
-)
+from typing import Any, Callable, Optional
 
 import voluptuous as vol
 
@@ -19,7 +8,7 @@ from .const import CAT_ENTITIES
 from .models import PermissionLookup
 from .types import PolicyType
 from .entities import ENTITY_POLICY_SCHEMA, compile_entities
-from .merge import merge_policies  # noqa
+from .merge import merge_policies  # noqa: F401
 from .util import test_all
 
 
@@ -31,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 class AbstractPermissions:
     """Default permissions class."""
 
-    _cached_entity_func = None
+    _cached_entity_func: Optional[Callable[[str, str], bool]] = None
 
     def _entity_func(self) -> Callable[[str, str], bool]:
         """Return a function that can test entity access."""

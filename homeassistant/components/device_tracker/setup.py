@@ -147,7 +147,7 @@ def async_setup_scanner_platform(
     scanner.hass = hass
 
     # Initial scan of each mac we also tell about host name for config
-    seen = set()  # type: Any
+    seen: Any = set()
 
     async def async_device_tracker_scan(now: dt_util.dt.datetime):
         """Handle interval matches."""

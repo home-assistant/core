@@ -1,7 +1,7 @@
 {
   "domain": "roku",
   "name": "Roku",
-  "documentation": "https://www.home-assistant.io/components/roku",
+  "documentation": "https://www.home-assistant.io/integrations/roku",
   "requirements": [
     "roku==3.1"
   ],

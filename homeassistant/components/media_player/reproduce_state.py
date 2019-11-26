@@ -19,7 +19,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, State
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.loader import bind_hass
 
 from .const import (
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -37,12 +36,15 @@ from .const import (
 )
 
 
+# mypy: allow-untyped-defs
+
+
 async def _async_reproduce_states(
     hass: HomeAssistantType, state: State, context: Optional[Context] = None
 ) -> None:
     """Reproduce component states."""
 
-    async def call_service(service: str, keys: Iterable):
+    async def call_service(service: str, keys: Iterable) -> None:
         """Call service with set of attributes given."""
         data = {}
         data["entity_id"] = state.entity_id
@@ -89,7 +91,6 @@ async def _async_reproduce_states(
         )
 
 
-@bind_hass
 async def async_reproduce_states(
     hass: HomeAssistantType, states: Iterable[State], context: Optional[Context] = None
 ) -> None:

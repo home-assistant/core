@@ -34,7 +34,7 @@ def printc(the_color, *args):
         print(escape_codes[the_color] + msg + escape_codes["reset"])
     except KeyError:
         print(msg)
-        raise ValueError("Invalid color {}".format(the_color))
+        raise ValueError(f"Invalid color {the_color}")
 
 
 def validate_requirements_ok():
@@ -120,7 +120,7 @@ async def pylint(files):
 
 async def flake8(files):
     """Exec flake8."""
-    _, log = await async_exec("flake8", "--doctests", *files)
+    _, log = await async_exec("pre-commit", "run", "flake8", "--files", *files)
     res = []
     for line in log.splitlines():
         line = line.split(":")
@@ -145,7 +145,7 @@ async def lint(files):
 
     lint_ok = True
     for err in res:
-        err_msg = "{} {}:{} {}".format(err.file, err.line, err.col, err.msg)
+        err_msg = f"{err.file} {err.line}:{err.col} {err.msg}"
 
         # tests/* does not have to pass lint
         if err.skip:

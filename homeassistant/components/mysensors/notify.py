@@ -26,7 +26,7 @@ class MySensorsNotificationDevice(mysensors.device.MySensorsDevice):
 
     def __repr__(self):
         """Return the representation."""
-        return "<MySensorsNotificationDevice {}>".format(self.name)
+        return f"<MySensorsNotificationDevice {self.name}>"
 
 
 class MySensorsNotificationService(BaseNotificationService):

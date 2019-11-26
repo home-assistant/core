@@ -78,7 +78,7 @@ def scan_for_rokus(hass):
             "Name: {0}<br />Host: {1}<br />".format(
                 r_info.userdevicename
                 if r_info.userdevicename
-                else "{} {}".format(r_info.modelname, r_info.serial_num),
+                else f"{r_info.modelname} {r_info.serial_num}",
                 roku.host,
             )
         )

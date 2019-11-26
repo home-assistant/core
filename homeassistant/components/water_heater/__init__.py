@@ -9,7 +9,7 @@ from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.config_validation import (  # noqa
+from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
@@ -26,6 +26,9 @@ from homeassistant.const import (
     PRECISION_TENTHS,
     TEMP_FAHRENHEIT,
 )
+
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 DEFAULT_MIN_TEMP = 110
 DEFAULT_MAX_TEMP = 140

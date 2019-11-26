@@ -1,10 +1,12 @@
 {
   "domain": "juicenet",
   "name": "Juicenet",
-  "documentation": "https://www.home-assistant.io/components/juicenet",
+  "documentation": "https://www.home-assistant.io/integrations/juicenet",
   "requirements": [
-    "python-juicenet==0.0.5"
+    "python-juicenet==0.1.6"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@jesserockz"
+  ]
 }

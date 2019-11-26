@@ -13,7 +13,8 @@ from homeassistant.util import location
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.providers import legacy_api_password, homeassistant
 
-from tests.common import (
+pytest.register_assert_rewrite("tests.common")
+from tests.common import (  # noqa: E402 module level import not at top of file
     async_test_home_assistant,
     INSTANCES,
     mock_coro,
@@ -21,7 +22,9 @@ from tests.common import (
     MockUser,
     CLIENT_ID,
 )
-from tests.test_util.aiohttp import mock_aiohttp_client
+from tests.test_util.aiohttp import (
+    mock_aiohttp_client,
+)  # noqa: E402 module level import not at top of file
 
 if os.environ.get("UVLOOP") == "1":
     import uvloop

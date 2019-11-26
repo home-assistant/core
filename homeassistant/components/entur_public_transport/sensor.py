@@ -121,7 +121,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         try:
             given_name = "{} {}".format(name, data.get_stop_info(place).name)
         except KeyError:
-            given_name = "{} {}".format(name, place)
+            given_name = f"{name} {place}"
 
         entities.append(
             EnturPublicTransportSensor(proxy, given_name, place, show_on_map)

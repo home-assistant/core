@@ -108,9 +108,9 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
         if errors:
             _LOGGER.error(errors)
             hass.components.persistent_notification.async_create(
-                "Config error. See dev-info panel for details.",
+                "Config error. See [the logs](/developer-tools/logs) for details.",
                 "Config validating",
-                "{0}.check_config".format(ha.DOMAIN),
+                f"{ha.DOMAIN}.check_config",
             )
             return
 

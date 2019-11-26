@@ -1,7 +1,7 @@
 {
   "domain": "dunehd",
   "name": "Dunehd",
-  "documentation": "https://www.home-assistant.io/components/dunehd",
+  "documentation": "https://www.home-assistant.io/integrations/dunehd",
   "requirements": [
     "pdunehd==1.3"
   ],

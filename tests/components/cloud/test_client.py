@@ -53,7 +53,7 @@ async def test_handler_alexa(hass):
     assert len(endpoints) == 1
     device = endpoints[0]
 
-    assert device["description"] == "Config description"
+    assert device["description"] == "Config description via Home Assistant"
     assert device["friendlyName"] == "Config name"
     assert device["displayCategories"] == ["LIGHT"]
     assert device["manufacturerName"] == "Home Assistant"
@@ -61,7 +61,7 @@ async def test_handler_alexa(hass):
 
 async def test_handler_alexa_disabled(hass, mock_cloud_fixture):
     """Test handler Alexa when user has disabled it."""
-    mock_cloud_fixture[PREF_ENABLE_ALEXA] = False
+    mock_cloud_fixture._prefs[PREF_ENABLE_ALEXA] = False
     cloud = hass.data["cloud"]
 
     resp = await cloud.client.async_alexa_message(
@@ -125,7 +125,7 @@ async def test_handler_google_actions(hass):
 
 async def test_handler_google_actions_disabled(hass, mock_cloud_fixture):
     """Test handler Google Actions when user has disabled it."""
-    mock_cloud_fixture[PREF_ENABLE_GOOGLE] = False
+    mock_cloud_fixture._prefs[PREF_ENABLE_GOOGLE] = False
 
     with patch("hass_nabucasa.Cloud.start", return_value=mock_coro()):
         assert await async_setup_component(hass, "cloud", {})

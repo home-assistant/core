@@ -4,8 +4,8 @@ import pyotgw.vars as gw_vars
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 
 ATTR_GW_ID = "gateway_id"
-ATTR_MODE = "mode"
 ATTR_LEVEL = "level"
+ATTR_DHW_OVRD = "dhw_override"
 
 CONF_CLIMATE = "climate"
 CONF_FLOOR_TEMP = "floor_temperature"
@@ -18,9 +18,12 @@ DEVICE_CLASS_COLD = "cold"
 DEVICE_CLASS_HEAT = "heat"
 DEVICE_CLASS_PROBLEM = "problem"
 
+DOMAIN = "opentherm_gw"
+
 SERVICE_RESET_GATEWAY = "reset_gateway"
 SERVICE_SET_CLOCK = "set_clock"
 SERVICE_SET_CONTROL_SETPOINT = "set_control_setpoint"
+SERVICE_SET_HOT_WATER_OVRD = "set_hot_water_ovrd"
 SERVICE_SET_GPIO_MODE = "set_gpio_mode"
 SERVICE_SET_LED_MODE = "set_led_mode"
 SERVICE_SET_MAX_MOD = "set_max_modulation"

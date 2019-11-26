@@ -1,7 +1,151 @@
 """The tests for the notify yessssms platform."""
 import unittest
+from unittest.mock import patch
+
+import logging
+import pytest
 import requests_mock
+
+from homeassistant.setup import async_setup_component
 import homeassistant.components.yessssms.notify as yessssms
+from homeassistant.components.yessssms.const import CONF_PROVIDER
+
+from homeassistant.const import CONF_PASSWORD, CONF_RECIPIENT, CONF_USERNAME
+
+
+@pytest.fixture(name="config")
+def config_data():
+    """Set valid config data."""
+    config = {
+        "notify": {
+            "platform": "yessssms",
+            "name": "sms",
+            CONF_USERNAME: "06641234567",
+            CONF_PASSWORD: "secretPassword",
+            CONF_RECIPIENT: "06509876543",
+            CONF_PROVIDER: "educom",
+        }
+    }
+    return config
+
+
+@pytest.fixture(name="valid_settings")
+def init_valid_settings(hass, config):
+    """Initialize component with valid settings."""
+    return async_setup_component(hass, "notify", config)
+
+
+@pytest.fixture(name="invalid_provider_settings")
+def init_invalid_provider_settings(hass, config):
+    """Set invalid provider data and initalize component."""
+    config["notify"][CONF_PROVIDER] = "FantasyMobile"  # invalid provider
+    return async_setup_component(hass, "notify", config)
+
+
+@pytest.fixture(name="invalid_login_data")
+def mock_invalid_login_data():
+    """Mock invalid login data."""
+    path = "homeassistant.components.yessssms.notify.YesssSMS.login_data_valid"
+    with patch(path, return_value=False):
+        yield
+
+
+@pytest.fixture(name="valid_login_data")
+def mock_valid_login_data():
+    """Mock valid login data."""
+    path = "homeassistant.components.yessssms.notify.YesssSMS.login_data_valid"
+    with patch(path, return_value=True):
+        yield
+
+
+@pytest.fixture(name="connection_error")
+def mock_connection_error():
+    """Mock a connection error."""
+    path = "homeassistant.components.yessssms.notify.YesssSMS.login_data_valid"
+    with patch(path, side_effect=yessssms.YesssSMS.ConnectionError()):
+        yield
+
+
+async def test_unsupported_provider_error(hass, caplog, invalid_provider_settings):
+    """Test for error on unsupported provider."""
+    await invalid_provider_settings
+    for record in caplog.records:
+        if (
+            record.levelname == "ERROR"
+            and record.name == "homeassistant.components.yessssms.notify"
+        ):
+            assert (
+                "Unknown provider: provider (fantasymobile) is not known to YesssSMS"
+                in record.message
+            )
+    assert (
+        "Unknown provider: provider (fantasymobile) is not known to YesssSMS"
+        in caplog.text
+    )
+    assert not hass.services.has_service("notify", "sms")
+
+
+async def test_false_login_data_error(hass, caplog, valid_settings, invalid_login_data):
+    """Test login data check error."""
+    await valid_settings
+    assert not hass.services.has_service("notify", "sms")
+    for record in caplog.records:
+        if (
+            record.levelname == "ERROR"
+            and record.name == "homeassistant.components.yessssms.notify"
+        ):
+            assert (
+                "Login data is not valid! Please double check your login data at"
+                in record.message
+            )
+
+
+async def test_init_success(hass, caplog, valid_settings, valid_login_data):
+    """Test for successful init of yessssms."""
+    caplog.set_level(logging.DEBUG)
+    await valid_settings
+    assert hass.services.has_service("notify", "sms")
+    messages = []
+    for record in caplog.records:
+        if (
+            record.levelname == "DEBUG"
+            and record.name == "homeassistant.components.yessssms.notify"
+        ):
+            messages.append(record.message)
+    assert "Login data for 'educom' valid" in messages[0]
+    assert (
+        "initialized; library version: {}".format(yessssms.YesssSMS("", "").version())
+        in messages[1]
+    )
+
+
+async def test_connection_error_on_init(hass, caplog, valid_settings, connection_error):
+    """Test for connection error on init."""
+    caplog.set_level(logging.DEBUG)
+    await valid_settings
+    assert hass.services.has_service("notify", "sms")
+    for record in caplog.records:
+        if (
+            record.levelname == "WARNING"
+            and record.name == "homeassistant.components.yessssms.notify"
+        ):
+            assert (
+                "Connection Error, could not verify login data for '{}'".format(
+                    "educom"
+                )
+                in record.message
+            )
+    for record in caplog.records:
+        if (
+            record.levelname == "DEBUG"
+            and record.name == "homeassistant.components.yessssms.notify"
+        ):
+            assert (
+                "initialized; library version: {}".format(
+                    yessssms.YesssSMS("", "").version()
+                )
+                in record.message
+            )
 
 
 class TestNotifyYesssSMS(unittest.TestCase):
@@ -12,7 +156,8 @@ class TestNotifyYesssSMS(unittest.TestCase):
         login = "06641234567"
         passwd = "testpasswd"
         recipient = "06501234567"
-        self.yessssms = yessssms.YesssSMSNotificationService(login, passwd, recipient)
+        client = yessssms.YesssSMS(login, passwd)
+        self.yessssms = yessssms.YesssSMSNotificationService(client, recipient)
 
     @requests_mock.Mocker()
     def test_login_error(self, mock):
@@ -197,7 +342,7 @@ class TestNotifyYesssSMS(unittest.TestCase):
             "POST",
             # pylint: disable=protected-access
             self.yessssms.yesss._login_url,
-            exc=ConnectionError,
+            exc=yessssms.YesssSMS.ConnectionError,
         )
 
         message = "Testing YesssSMS platform :)"
@@ -209,4 +354,4 @@ class TestNotifyYesssSMS(unittest.TestCase):
 
         self.assertTrue(mock.called)
         self.assertEqual(mock.call_count, 1)
-        self.assertIn("unable to connect", context.output[0])
+        self.assertIn("cannot connect to provider", context.output[0])

@@ -47,7 +47,7 @@ def setup(hass, config):
     def send_data(url, apikey, node, payload):
         """Send payload data to Emoncms."""
         try:
-            fullurl = "{}/input/post.json".format(url)
+            fullurl = f"{url}/input/post.json"
             data = {"apikey": apikey, "data": payload}
             parameters = {"node": node}
             req = requests.post(
@@ -83,7 +83,7 @@ def setup(hass, config):
 
         if payload_dict:
             payload = "{%s}" % ",".join(
-                "{}:{}".format(key, val) for key, val in payload_dict.items()
+                f"{key}:{val}" for key, val in payload_dict.items()
             )
 
             send_data(

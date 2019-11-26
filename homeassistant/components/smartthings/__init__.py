@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .config_flow import SmartThingsFlowHandler  # noqa
+from .config_flow import SmartThingsFlowHandler  # noqa: F401
 from .const import (
     CONF_APP_ID,
     CONF_INSTALLED_APP_ID,
@@ -78,8 +78,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Initialize config entry which represents an installed SmartApp."""
     if not validate_webhook_requirements(hass):
         _LOGGER.warning(
-            "The 'base_url' of the 'http' integration must be "
-            "configured and start with 'https://'"
+            "The 'base_url' of the 'http' integration must be configured and start with 'https://'"
         )
         return False
 
@@ -121,8 +120,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
                 await device.status.refresh()
             except ClientResponseError:
                 _LOGGER.debug(
-                    "Unable to update status for device: %s (%s), "
-                    "the device will be excluded",
+                    "Unable to update status for device: %s (%s), the device will be excluded",
                     device.label,
                     device.device_id,
                     exc_info=True,
@@ -148,8 +146,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     except ClientResponseError as ex:
         if ex.status in (401, 403):
             _LOGGER.exception(
-                "Unable to setup config entry '%s' - please "
-                "reconfigure the integration",
+                "Unable to setup config entry '%s' - please reconfigure the integration",
                 entry.title,
             )
             remove_entry = True
@@ -186,9 +183,7 @@ async def async_get_entry_scenes(entry: ConfigEntry, api):
     except ClientResponseError as ex:
         if ex.status == 403:
             _LOGGER.exception(
-                "Unable to load scenes for config entry '%s' "
-                "because the access token does not have the "
-                "required access",
+                "Unable to load scenes for config entry '%s' because the access token does not have the required access",
                 entry.title,
             )
         else:
@@ -235,7 +230,7 @@ async def async_remove_entry(hass: HomeAssistantType, entry: ConfigEntry) -> Non
     app_count = sum(1 for entry in all_entries if entry.data[CONF_APP_ID] == app_id)
     if app_count > 1:
         _LOGGER.debug(
-            "App %s was not removed because it is in use by other" "config entries",
+            "App %s was not removed because it is in use by other config entries",
             app_id,
         )
         return

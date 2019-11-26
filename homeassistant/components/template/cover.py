@@ -24,7 +24,6 @@ from homeassistant.const import (
     CONF_FRIENDLY_NAME,
     CONF_ENTITY_ID,
     EVENT_HOMEASSISTANT_START,
-    MATCH_ALL,
     CONF_VALUE_TEMPLATE,
     CONF_ICON_TEMPLATE,
     CONF_DEVICE_CLASS,
@@ -38,6 +37,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
+from . import extract_entities, initialise_templates
+from .const import CONF_AVAILABILITY_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [STATE_OPEN, STATE_CLOSED, "true", "false"]
@@ -74,6 +75,7 @@ COVER_SCHEMA = vol.Schema(
         vol.Exclusive(
             CONF_VALUE_TEMPLATE, CONF_VALUE_OR_POSITION_TEMPLATE
         ): cv.template,
+        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
         vol.Optional(CONF_POSITION_TEMPLATE): cv.template,
         vol.Optional(CONF_TILT_TEMPLATE): cv.template,
         vol.Optional(CONF_ICON_TEMPLATE): cv.template,
@@ -98,12 +100,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     covers = []
 
     for device, device_config in config[CONF_COVERS].items():
-        friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
         state_template = device_config.get(CONF_VALUE_TEMPLATE)
         position_template = device_config.get(CONF_POSITION_TEMPLATE)
         tilt_template = device_config.get(CONF_TILT_TEMPLATE)
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
+        availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
         entity_picture_template = device_config.get(CONF_ENTITY_PICTURE_TEMPLATE)
+
+        friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
         device_class = device_config.get(CONF_DEVICE_CLASS)
         open_action = device_config.get(OPEN_ACTION)
         close_action = device_config.get(CLOSE_ACTION)
@@ -118,36 +122,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "Must specify at least one of %s" or "%s", OPEN_ACTION, POSITION_ACTION
             )
             continue
-        template_entity_ids = set()
-        if state_template is not None:
-            temp_ids = state_template.extract_entities()
-            if str(temp_ids) != MATCH_ALL:
-                template_entity_ids |= set(temp_ids)
 
-        if position_template is not None:
-            temp_ids = position_template.extract_entities()
-            if str(temp_ids) != MATCH_ALL:
-                template_entity_ids |= set(temp_ids)
+        templates = {
+            CONF_VALUE_TEMPLATE: state_template,
+            CONF_POSITION_TEMPLATE: position_template,
+            CONF_TILT_TEMPLATE: tilt_template,
+            CONF_ICON_TEMPLATE: icon_template,
+            CONF_AVAILABILITY_TEMPLATE: availability_template,
+            CONF_ENTITY_PICTURE_TEMPLATE: entity_picture_template,
+        }
 
-        if tilt_template is not None:
-            temp_ids = tilt_template.extract_entities()
-            if str(temp_ids) != MATCH_ALL:
-                template_entity_ids |= set(temp_ids)
-
-        if icon_template is not None:
-            temp_ids = icon_template.extract_entities()
-            if str(temp_ids) != MATCH_ALL:
-                template_entity_ids |= set(temp_ids)
-
-        if entity_picture_template is not None:
-            temp_ids = entity_picture_template.extract_entities()
-            if str(temp_ids) != MATCH_ALL:
-                template_entity_ids |= set(temp_ids)
-
-        if not template_entity_ids:
-            template_entity_ids = MATCH_ALL
-
-        entity_ids = device_config.get(CONF_ENTITY_ID, template_entity_ids)
+        initialise_templates(hass, templates)
+        entity_ids = extract_entities(device, "cover", None, templates)
 
         covers.append(
             CoverTemplate(
@@ -160,6 +146,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 tilt_template,
                 icon_template,
                 entity_picture_template,
+                availability_template,
                 open_action,
                 close_action,
                 stop_action,
@@ -192,6 +179,7 @@ class CoverTemplate(CoverDevice):
         tilt_template,
         icon_template,
         entity_picture_template,
+        availability_template,
         open_action,
         close_action,
         stop_action,
@@ -213,6 +201,7 @@ class CoverTemplate(CoverDevice):
         self._icon_template = icon_template
         self._device_class = device_class
         self._entity_picture_template = entity_picture_template
+        self._availability_template = availability_template
         self._open_script = None
         if open_action is not None:
             self._open_script = Script(hass, open_action)
@@ -235,6 +224,7 @@ class CoverTemplate(CoverDevice):
         self._position = None
         self._tilt_value = None
         self._entities = entity_ids
+        self._available = True
 
         if self._template is not None:
             self._template.hass = self.hass
@@ -246,6 +236,8 @@ class CoverTemplate(CoverDevice):
             self._icon_template.hass = self.hass
         if self._entity_picture_template is not None:
             self._entity_picture_template.hass = self.hass
+        if self._availability_template is not None:
+            self._availability_template.hass = self.hass
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -331,6 +323,11 @@ class CoverTemplate(CoverDevice):
     def should_poll(self):
         """Return the polling state."""
         return False
+
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return self._available
 
     async def async_open_cover(self, **kwargs):
         """Move the cover up."""
@@ -430,11 +427,8 @@ class CoverTemplate(CoverDevice):
                     )
                 else:
                     self._position = state
-            except TemplateError as ex:
-                _LOGGER.error(ex)
-                self._position = None
-            except ValueError as ex:
-                _LOGGER.error(ex)
+            except (TemplateError, ValueError) as err:
+                _LOGGER.error(err)
                 self._position = None
         if self._tilt_template is not None:
             try:
@@ -447,22 +441,23 @@ class CoverTemplate(CoverDevice):
                     )
                 else:
                     self._tilt_value = state
-            except TemplateError as ex:
-                _LOGGER.error(ex)
-                self._tilt_value = None
-            except ValueError as ex:
-                _LOGGER.error(ex)
+            except (TemplateError, ValueError) as err:
+                _LOGGER.error(err)
                 self._tilt_value = None
 
         for property_name, template in (
             ("_icon", self._icon_template),
             ("_entity_picture", self._entity_picture_template),
+            ("_available", self._availability_template),
         ):
             if template is None:
                 continue
 
             try:
-                setattr(self, property_name, template.async_render())
+                value = template.async_render()
+                if property_name == "_available":
+                    value = value.lower() == "true"
+                setattr(self, property_name, value)
             except TemplateError as ex:
                 friendly_property_name = property_name[1:].replace("_", " ")
                 if ex.args and ex.args[0].startswith(

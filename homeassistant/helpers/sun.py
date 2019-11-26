@@ -68,14 +68,14 @@ def get_location_astral_event_next(
     mod = -1
     while True:
         try:
-            next_dt = (
+            next_dt: datetime.datetime = (
                 getattr(location, event)(
                     dt_util.as_local(utc_point_in_time).date()
                     + datetime.timedelta(days=mod),
                     local=False,
                 )
                 + offset
-            )  # type: datetime.datetime
+            )
             if next_dt > utc_point_in_time:
                 return next_dt
         except AstralError:

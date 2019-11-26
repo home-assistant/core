@@ -65,7 +65,7 @@ class SwitcherControl(SwitchDevice):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return "{}-{}".format(self._device_data.device_id, self._device_data.mac_addr)
+        return f"{self._device_data.device_id}-{self._device_data.mac_addr}"
 
     @property
     def is_on(self) -> bool:
@@ -143,7 +143,7 @@ class SwitcherControl(SwitchDevice):
             STATE_ON as SWITCHER_STATE_ON,
         )
 
-        response = None  # type: SwitcherV2ControlResponseMSG
+        response: "SwitcherV2ControlResponseMSG" = None
         async with SwitcherV2Api(
             self.hass.loop,
             self._device_data.ip_addr,

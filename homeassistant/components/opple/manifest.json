@@ -1,7 +1,7 @@
 {
   "domain": "opple",
   "name": "Opple",
-  "documentation": "https://www.home-assistant.io/components/opple",
+  "documentation": "https://www.home-assistant.io/integrations/opple",
   "requirements": [
     "pyoppleio==1.0.5"
   ],

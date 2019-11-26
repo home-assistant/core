@@ -247,7 +247,7 @@ def setup(hass, config):
                 try:
                     json["fields"][key] = float(value)
                 except (ValueError, TypeError):
-                    new_key = "{}_str".format(key)
+                    new_key = f"{key}_str"
                     new_value = str(value)
                     json["fields"][new_key] = new_value
 
@@ -353,7 +353,11 @@ class InfluxThread(threading.Thread):
 
                 _LOGGER.debug("Wrote %d events", len(json))
                 break
-            except (exceptions.InfluxDBClientError, IOError) as err:
+            except (
+                exceptions.InfluxDBClientError,
+                exceptions.InfluxDBServerError,
+                IOError,
+            ) as err:
                 if retry < self.max_tries:
                     time.sleep(RETRY_DELAY)
                 else:

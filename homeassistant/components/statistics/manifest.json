@@ -1,7 +1,7 @@
 {
   "domain": "statistics",
   "name": "Statistics",
-  "documentation": "https://www.home-assistant.io/components/statistics",
+  "documentation": "https://www.home-assistant.io/integrations/statistics",
   "requirements": [],
   "dependencies": [],
   "codeowners": [

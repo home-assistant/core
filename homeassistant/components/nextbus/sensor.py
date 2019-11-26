@@ -62,9 +62,7 @@ def validate_value(value_name, value, value_list):
             "Invalid %s tag `%s`. Please use one of the following: %s",
             value_name,
             value,
-            ", ".join(
-                "{}: {}".format(title, tag) for tag, title in valid_values.items()
-            ),
+            ", ".join(f"{title}: {tag}" for tag, title in valid_values.items()),
         )
         return False
 
@@ -126,7 +124,7 @@ class NextBusDepartureSensor(Entity):
         self.stop = stop
         self._custom_name = name
         # Maybe pull a more user friendly name from the API here
-        self._name = "{} {}".format(agency, route)
+        self._name = f"{agency} {route}"
         self._client = client
 
         # set up default state attributes
@@ -175,7 +173,7 @@ class NextBusDepartureSensor(Entity):
         """Update sensor with new departures times."""
         # Note: using Multi because there is a bug with the single stop impl
         results = self._client.get_predictions_for_multi_stops(
-            [{"stop_tag": int(self.stop), "route_tag": self.route}], self.agency
+            [{"stop_tag": self.stop, "route_tag": self.route}], self.agency
         )
 
         self._log_debug("Predictions results: %s", results)

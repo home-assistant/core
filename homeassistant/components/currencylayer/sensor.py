@@ -95,7 +95,7 @@ class CurrencylayerSensor(Entity):
         self.rest.update()
         value = self.rest.data
         if value is not None:
-            self._state = round(value["{}{}".format(self._base, self._quote)], 4)
+            self._state = round(value[f"{self._base}{self._quote}"], 4)
 
 
 class CurrencylayerData:

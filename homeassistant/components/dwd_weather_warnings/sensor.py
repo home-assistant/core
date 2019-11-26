@@ -92,7 +92,7 @@ class DwdWeatherWarningsSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._name, self._var_name)
+        return f"{self._name} {self._var_name}"
 
     @property
     def icon(self):
@@ -140,23 +140,23 @@ class DwdWeatherWarningsSensor(Entity):
         for event in self._api.data[prefix + "_warnings"]:
             i = i + 1
 
-            data["warning_{}_name".format(i)] = event["event"]
-            data["warning_{}_level".format(i)] = event["level"]
-            data["warning_{}_type".format(i)] = event["type"]
+            data[f"warning_{i}_name"] = event["event"]
+            data[f"warning_{i}_level"] = event["level"]
+            data[f"warning_{i}_type"] = event["type"]
             if event["headline"]:
-                data["warning_{}_headline".format(i)] = event["headline"]
+                data[f"warning_{i}_headline"] = event["headline"]
             if event["description"]:
-                data["warning_{}_description".format(i)] = event["description"]
+                data[f"warning_{i}_description"] = event["description"]
             if event["instruction"]:
-                data["warning_{}_instruction".format(i)] = event["instruction"]
+                data[f"warning_{i}_instruction"] = event["instruction"]
 
             if event["start"] is not None:
-                data["warning_{}_start".format(i)] = dt_util.as_local(
+                data[f"warning_{i}_start"] = dt_util.as_local(
                     dt_util.utc_from_timestamp(event["start"] / 1000)
                 )
 
             if event["end"] is not None:
-                data["warning_{}_end".format(i)] = dt_util.as_local(
+                data[f"warning_{i}_end"] = dt_util.as_local(
                     dt_util.utc_from_timestamp(event["end"] / 1000)
                 )
 
@@ -212,7 +212,7 @@ class DwdWeatherWarningsAPI:
                     "Found %d %s global DWD warnings", len(json_obj[myvalue]), mykey
                 )
 
-                data["{}_warning_level".format(mykey)] = 0
+                data[f"{mykey}_warning_level"] = 0
                 my_warnings = []
 
                 if self.region_id is not None:
@@ -234,13 +234,13 @@ class DwdWeatherWarningsAPI:
                         break
 
                 # Get max warning level
-                maxlevel = data["{}_warning_level".format(mykey)]
+                maxlevel = data[f"{mykey}_warning_level"]
                 for event in my_warnings:
                     if event["level"] >= maxlevel:
-                        data["{}_warning_level".format(mykey)] = event["level"]
+                        data[f"{mykey}_warning_level"] = event["level"]
 
-                data["{}_warning_count".format(mykey)] = len(my_warnings)
-                data["{}_warnings".format(mykey)] = my_warnings
+                data[f"{mykey}_warning_count"] = len(my_warnings)
+                data[f"{mykey}_warnings"] = my_warnings
 
                 _LOGGER.debug("Found %d %s local DWD warnings", len(my_warnings), mykey)
 

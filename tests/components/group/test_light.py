@@ -186,6 +186,56 @@ async def test_color_temp(hass):
     assert state.attributes["color_temp"] == 1000
 
 
+async def test_emulated_color_temp_group(hass):
+    """Test emulated color temperature in a group."""
+    await async_setup_component(
+        hass,
+        "light",
+        {
+            "light": [
+                {"platform": "demo"},
+                {
+                    "platform": "group",
+                    "entities": [
+                        "light.bed_light",
+                        "light.ceiling_lights",
+                        "light.kitchen_lights",
+                    ],
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("light.bed_light", "on", {"supported_features": 2})
+    await hass.async_block_till_done()
+    hass.states.async_set("light.ceiling_lights", "on", {"supported_features": 63})
+    await hass.async_block_till_done()
+    hass.states.async_set("light.kitchen_lights", "on", {"supported_features": 61})
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": "light.light_group", "color_temp": 200},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.bed_light")
+    assert state.state == "on"
+    assert state.attributes["color_temp"] == 200
+    assert "hs_color" not in state.attributes.keys()
+
+    state = hass.states.get("light.ceiling_lights")
+    assert state.state == "on"
+    assert state.attributes["color_temp"] == 200
+    assert "hs_color" in state.attributes.keys()
+
+    state = hass.states.get("light.kitchen_lights")
+    assert state.state == "on"
+    assert state.attributes["hs_color"] == (27.001, 19.243)
+
+
 async def test_min_max_mireds(hass):
     """Test min/max mireds reporting."""
     await async_setup_component(

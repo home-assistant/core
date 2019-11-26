@@ -2,7 +2,7 @@
 Virtual gateway for Zigbee Home Automation.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zha/
+https://home-assistant.io/integrations/zha/
 """
 
 import asyncio
@@ -108,9 +108,9 @@ class ZHAGateway:
         baudrate = self._config.get(CONF_BAUDRATE, DEFAULT_BAUDRATE)
         radio_type = self._config_entry.data.get(CONF_RADIO_TYPE)
 
-        radio_details = RADIO_TYPES[radio_type][ZHA_GW_RADIO]()
-        radio = radio_details[ZHA_GW_RADIO]
-        self.radio_description = RADIO_TYPES[radio_type][ZHA_GW_RADIO_DESCRIPTION]
+        radio_details = RADIO_TYPES[radio_type]
+        radio = radio_details[ZHA_GW_RADIO]()
+        self.radio_description = radio_details[ZHA_GW_RADIO_DESCRIPTION]
         await radio.connect(usb_path, baudrate)
 
         if CONF_DATABASE in self._config:
@@ -222,6 +222,10 @@ class ZHAGateway:
         """Return ZHADevice for given ieee."""
         return self._devices.get(ieee)
 
+    def get_group(self, group_id):
+        """Return Group for given group id."""
+        return self.application_controller.groups[group_id]
+
     def get_entity_reference(self, entity_id):
         """Return entity reference for given entity_id if found."""
         for entity_reference in itertools.chain.from_iterable(
@@ -304,11 +308,13 @@ class ZHAGateway:
                 manufacturer=zha_device.manufacturer,
                 model=zha_device.model,
             )
+        entry = self.zha_storage.async_get_or_create(zha_device)
+        zha_device.async_update_last_seen(entry.last_seen)
         return zha_device
 
     @callback
     def async_device_became_available(
-        self, sender, is_reply, profile, cluster, src_ep, dst_ep, tsn, command_id, args
+        self, sender, profile, cluster, src_ep, dst_ep, message
     ):
         """Handle tasks when a device becomes available."""
         self.async_update_device(sender)
@@ -337,7 +343,7 @@ class ZHAGateway:
 
         _LOGGER.debug(
             "device - %s entering async_device_initialized - is_new_join: %s",
-            "0x{:04x}:{}".format(device.nwk, device.ieee),
+            f"0x{device.nwk:04x}:{device.ieee}",
             zha_device.status is not DeviceStatus.INITIALIZED,
         )
 
@@ -346,19 +352,15 @@ class ZHAGateway:
             # new nwk or device was physically reset and added again without being removed
             _LOGGER.debug(
                 "device - %s has been reset and readded or its nwk address changed",
-                "0x{:04x}:{}".format(device.nwk, device.ieee),
+                f"0x{device.nwk:04x}:{device.ieee}",
             )
             await self._async_device_rejoined(zha_device)
         else:
             _LOGGER.debug(
                 "device - %s has joined the ZHA zigbee network",
-                "0x{:04x}:{}".format(device.nwk, device.ieee),
+                f"0x{device.nwk:04x}:{device.ieee}",
             )
             await self._async_device_joined(device, zha_device)
-
-        # This is real traffic from a device so lets update last seen on the entry
-        entry = self.zha_storage.async_get_or_create(zha_device)
-        zha_device.async_update_last_seen(entry.last_seen)
 
         device_info = async_get_device_info(
             self._hass, zha_device, self.ha_device_registry
@@ -415,9 +417,9 @@ class ZHAGateway:
             # to update it now
             _LOGGER.debug(
                 "attempting to request fresh state for device - %s %s %s",
-                "0x{:04x}:{}".format(zha_device.nwk, zha_device.ieee),
+                f"0x{zha_device.nwk:04x}:{zha_device.ieee}",
                 zha_device.name,
-                "with power source: {}".format(zha_device.power_source),
+                f"with power source: {zha_device.power_source}",
             )
             await zha_device.async_initialize(from_cache=False)
         else:
@@ -429,7 +431,7 @@ class ZHAGateway:
     async def _async_device_rejoined(self, zha_device):
         _LOGGER.debug(
             "skipping discovery for previously discovered device - %s",
-            "0x{:04x}:{}".format(zha_device.nwk, zha_device.ieee),
+            f"0x{zha_device.nwk:04x}:{zha_device.ieee}",
         )
         # we don't have to do this on a nwk swap but we don't have a way to tell currently
         await zha_device.async_configure()

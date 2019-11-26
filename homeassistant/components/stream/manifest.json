@@ -1,7 +1,7 @@
 {
   "domain": "stream",
   "name": "Stream",
-  "documentation": "https://www.home-assistant.io/components/stream",
+  "documentation": "https://www.home-assistant.io/integrations/stream",
   "requirements": [
     "av==6.1.2"
   ],

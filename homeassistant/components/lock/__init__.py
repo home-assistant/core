@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.config_validation import (  # noqa
+from homeassistant.helpers.config_validation import (  # noqa: F401
     ENTITY_SERVICE_SCHEMA,
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -24,6 +24,9 @@ from homeassistant.const import (
     SERVICE_OPEN,
 )
 from homeassistant.components import group
+
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 ATTR_CHANGED_BY = "changed_by"
 

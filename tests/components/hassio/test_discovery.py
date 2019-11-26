@@ -3,10 +3,9 @@ from unittest.mock import patch, Mock
 
 from homeassistant.setup import async_setup_component
 from homeassistant.components.hassio.handler import HassioAPIError
-from homeassistant.const import EVENT_HOMEASSISTANT_START, HTTP_HEADER_HA_AUTH
+from homeassistant.const import EVENT_HOMEASSISTANT_START
 
 from tests.common import mock_coro
-from . import API_PASSWORD
 
 
 async def test_hassio_discovery_startup(hass, aioclient_mock, hassio_client):
@@ -101,9 +100,7 @@ async def test_hassio_discovery_startup_done(hass, aioclient_mock, hassio_client
         Mock(return_value=mock_coro({"type": "abort"})),
     ) as mock_mqtt:
         await hass.async_start()
-        await async_setup_component(
-            hass, "hassio", {"http": {"api_password": API_PASSWORD}}
-        )
+        await async_setup_component(hass, "hassio", {})
         await hass.async_block_till_done()
 
         assert aioclient_mock.call_count == 2
@@ -151,7 +148,6 @@ async def test_hassio_discovery_webhook(hass, aioclient_mock, hassio_client):
     ) as mock_mqtt:
         resp = await hassio_client.post(
             "/api/hassio_push/discovery/testuuid",
-            headers={HTTP_HEADER_HA_AUTH: API_PASSWORD},
             json={"addon": "mosquitto", "service": "mqtt", "uuid": "testuuid"},
         )
         await hass.async_block_till_done()

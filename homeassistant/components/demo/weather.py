@@ -1,5 +1,5 @@
 """Demo platform that offers fake meteorological data."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -10,6 +10,7 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+import homeassistant.util.dt as dt_util
 
 CONDITION_CLASSES = {
     "cloudy": [],
@@ -27,6 +28,11 @@ CONDITION_CLASSES = {
     "windy-variant": [],
     "exceptional": [],
 }
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Demo config entry."""
+    setup_platform(hass, {}, async_add_entities)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -147,7 +153,7 @@ class DemoWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast."""
-        reftime = datetime.now().replace(hour=16, minute=00)
+        reftime = dt_util.now().replace(hour=16, minute=00)
 
         forecast_data = []
         for entry in self._forecast:

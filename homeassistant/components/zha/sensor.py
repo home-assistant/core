@@ -136,7 +136,6 @@ UNIT_REGISTRY = {
     SENSOR_TEMPERATURE: TEMP_CELSIUS,
     SENSOR_PRESSURE: "hPa",
     SENSOR_ILLUMINANCE: "lx",
-    SENSOR_METERING: POWER_WATT,
     SENSOR_ELECTRICAL_MEASUREMENT: POWER_WATT,
     SENSOR_GENERIC: None,
     SENSOR_BATTERY: "%",
@@ -219,15 +218,19 @@ class Sensor(ZhaEntity):
         """Init this sensor."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._sensor_type = kwargs.get(SENSOR_TYPE, SENSOR_GENERIC)
-        self._unit = UNIT_REGISTRY.get(self._sensor_type)
-        self._formatter_function = FORMATTER_FUNC_REGISTRY.get(
-            self._sensor_type, pass_through_formatter
-        )
-        self._force_update = FORCE_UPDATE_REGISTRY.get(self._sensor_type, False)
-        self._should_poll = POLLING_REGISTRY.get(self._sensor_type, False)
         self._channel = self.cluster_channels.get(
             CHANNEL_REGISTRY.get(self._sensor_type, CHANNEL_ATTRIBUTE)
         )
+        if self._sensor_type == SENSOR_METERING:
+            self._unit = self._channel.unit_of_measurement
+            self._formatter_function = self._channel.formatter_function
+        else:
+            self._unit = UNIT_REGISTRY.get(self._sensor_type)
+            self._formatter_function = FORMATTER_FUNC_REGISTRY.get(
+                self._sensor_type, pass_through_formatter
+            )
+        self._force_update = FORCE_UPDATE_REGISTRY.get(self._sensor_type, False)
+        self._should_poll = POLLING_REGISTRY.get(self._sensor_type, False)
         self._device_class = DEVICE_CLASS_REGISTRY.get(self._sensor_type, None)
         self.state_attr_provider = DEVICE_STATE_ATTR_PROVIDER_REGISTRY.get(
             self._sensor_type, None
@@ -271,7 +274,10 @@ class Sensor(ZhaEntity):
         # this is necessary because HA saves the unit based on what shows in
         # the UI and not based on what the sensor has configured so we need
         # to flip it back after state restoration
-        self._unit = UNIT_REGISTRY.get(self._sensor_type)
+        if self._sensor_type == SENSOR_METERING:
+            self._unit = self._channel.unit_of_measurement
+        else:
+            self._unit = UNIT_REGISTRY.get(self._sensor_type)
         self._state = self._formatter_function(state)
         self.async_schedule_update_ha_state()
 

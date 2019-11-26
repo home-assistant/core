@@ -1,9 +1,9 @@
 {
   "domain": "tts",
   "name": "Tts",
-  "documentation": "https://www.home-assistant.io/components/tts",
+  "documentation": "https://www.home-assistant.io/integrations/tts",
   "requirements": [
-    "mutagen==1.42.0"
+    "mutagen==1.43.0"
   ],
   "dependencies": [
     "http"

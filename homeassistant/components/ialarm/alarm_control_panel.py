@@ -6,6 +6,10 @@ import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+)
 from homeassistant.const import (
     CONF_CODE,
     CONF_HOST,
@@ -28,7 +32,7 @@ def no_application_protocol(value):
     """Validate that value is without the application protocol."""
     protocol_separator = "://"
     if not value or protocol_separator in value:
-        raise vol.Invalid("Invalid host, {} is not allowed".format(protocol_separator))
+        raise vol.Invalid(f"Invalid host, {protocol_separator} is not allowed")
 
     return value
 
@@ -52,7 +56,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     password = config.get(CONF_PASSWORD)
     host = config.get(CONF_HOST)
 
-    url = "http://{}".format(host)
+    url = f"http://{host}"
     ialarm = IAlarmPanel(name, code, username, password, url)
     add_entities([ialarm], True)
 
@@ -90,6 +94,11 @@ class IAlarmPanel(alarm.AlarmControlPanel):
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
     def update(self):
         """Return the state of the device."""

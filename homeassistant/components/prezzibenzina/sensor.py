@@ -77,7 +77,7 @@ class PrezziBenzinaSensor(Entity):
         self._index = index
         self._data = None
         self._station = station
-        self._name = "{} {} {}".format(name, ft, srv)
+        self._name = f"{name} {ft} {srv}"
 
     @property
     def name(self):

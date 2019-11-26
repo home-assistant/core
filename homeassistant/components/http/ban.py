@@ -3,6 +3,7 @@ from collections import defaultdict
 from datetime import datetime
 from ipaddress import ip_address
 import logging
+from typing import List, Optional
 
 from aiohttp.web import middleware
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
@@ -15,6 +16,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util.yaml import dump
 
 from .const import KEY_REAL_IP
+
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -123,7 +127,7 @@ async def process_wrong_login(request):
         _LOGGER.warning("Banned IP %s for too many login attempts", remote_addr)
 
         hass.components.persistent_notification.async_create(
-            "Too many login attempts from {}".format(remote_addr),
+            f"Too many login attempts from {remote_addr}",
             "Banning IP address",
             NOTIFICATION_ID_BAN,
         )
@@ -155,15 +159,15 @@ async def process_success_login(request):
 class IpBan:
     """Represents banned IP address."""
 
-    def __init__(self, ip_ban: str, banned_at: datetime = None) -> None:
+    def __init__(self, ip_ban: str, banned_at: Optional[datetime] = None) -> None:
         """Initialize IP Ban object."""
         self.ip_address = ip_address(ip_ban)
         self.banned_at = banned_at or datetime.utcnow()
 
 
-async def async_load_ip_bans_config(hass: HomeAssistant, path: str):
+async def async_load_ip_bans_config(hass: HomeAssistant, path: str) -> List[IpBan]:
     """Load list of banned IPs from config file."""
-    ip_list = []
+    ip_list: List[IpBan] = []
 
     try:
         list_ = await hass.async_add_executor_job(load_yaml_config_file, path)
@@ -184,7 +188,7 @@ async def async_load_ip_bans_config(hass: HomeAssistant, path: str):
     return ip_list
 
 
-def update_ip_bans_config(path: str, ip_ban: IpBan):
+def update_ip_bans_config(path: str, ip_ban: IpBan) -> None:
     """Update config file with new banned IP address."""
     with open(path, "a") as out:
         ip_ = {

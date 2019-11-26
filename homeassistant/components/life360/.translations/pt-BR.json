@@ -10,6 +10,7 @@
         "error": {
             "invalid_credentials": "Credenciais inv\u00e1lidas",
             "invalid_username": "Nome de usu\u00e1rio Inv\u00e1lido",
+            "unexpected": "Erro inesperado na comunica\u00e7\u00e3o com o servidor Life360",
             "user_already_configured": "A conta j\u00e1 foi configurada"
         },
         "step": {

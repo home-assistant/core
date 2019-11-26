@@ -1,5 +1,8 @@
 """Tracking for bluetooth low energy devices."""
+import asyncio
 import logging
+
+import pygatt  # pylint: disable=import-error
 
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.components.device_tracker.legacy import (
@@ -14,7 +17,6 @@ from homeassistant.components.device_tracker.const import (
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 import homeassistant.util.dt as dt_util
-from homeassistant.util.async_ import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,8 +28,6 @@ MIN_SEEN_NEW = 5
 
 def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the Bluetooth LE Scanner."""
-    # pylint: disable=import-error
-    import pygatt
 
     new_devices = {}
     hass.data.setdefault(DATA_BLE, {DATA_BLE_ADAPTER: None})
@@ -89,7 +89,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
     # Load all known devices.
     # We just need the devices so set consider_home and home range
     # to 0
-    for device in run_coroutine_threadsafe(
+    for device in asyncio.run_coroutine_threadsafe(
         async_load_config(yaml_path, hass, 0), hass.loop
     ).result():
         # check if device is a valid bluetooth device

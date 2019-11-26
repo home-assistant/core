@@ -1,9 +1,13 @@
 """Vizio SmartCast Device support."""
 from datetime import timedelta
 import logging
+
+from pyvizio import Vizio
+from requests.packages import urllib3
 import voluptuous as vol
+
 from homeassistant import util
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PREVIOUS_TRACK,
@@ -107,8 +111,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     if config[CONF_SUPPRESS_WARNING]:
-        from requests.packages import urllib3
-
         _LOGGER.warning(
             "InsecureRequestWarning is disabled "
             "because of Vizio platform configuration"
@@ -122,7 +124,6 @@ class VizioDevice(MediaPlayerDevice):
 
     def __init__(self, host, token, name, volume_step, device_type):
         """Initialize Vizio device."""
-        import pyvizio
 
         self._name = name
         self._state = None
@@ -132,7 +133,7 @@ class VizioDevice(MediaPlayerDevice):
         self._available_inputs = None
         self._device_type = device_type
         self._supported_commands = SUPPORTED_COMMANDS[device_type]
-        self._device = pyvizio.Vizio(DEVICE_ID, host, DEFAULT_NAME, token, device_type)
+        self._device = Vizio(DEVICE_ID, host, DEFAULT_NAME, token, device_type)
         self._max_volume = float(self._device.get_max_volume())
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)

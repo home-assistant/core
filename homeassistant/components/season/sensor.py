@@ -1,25 +1,31 @@
 """Support for tracking which astronomical or meteorological season it is."""
-import logging
 from datetime import datetime
+import logging
 
+import ephem
 import voluptuous as vol
 
+from homeassistant import util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_TYPE
 from homeassistant.helpers.entity import Entity
-from homeassistant import util
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-NORTHERN = "northern"
-SOUTHERN = "southern"
 EQUATOR = "equator"
+
+NORTHERN = "northern"
+
+SOUTHERN = "southern"
+STATE_AUTUMN = "autumn"
 STATE_SPRING = "spring"
 STATE_SUMMER = "summer"
-STATE_AUTUMN = "autumn"
 STATE_WINTER = "winter"
+
 TYPE_ASTRONOMICAL = "astronomical"
 TYPE_METEOROLOGICAL = "meteorological"
+
 VALID_TYPES = [TYPE_ASTRONOMICAL, TYPE_METEOROLOGICAL]
 
 HEMISPHERE_SEASON_SWAP = {
@@ -66,7 +72,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 def get_season(date, hemisphere, season_tracking_type):
     """Calculate the current season."""
-    import ephem
 
     if hemisphere == "equator":
         return None
@@ -104,7 +109,7 @@ class Season(Entity):
         """Initialize the season."""
         self.hass = hass
         self.hemisphere = hemisphere
-        self.datetime = datetime.now()
+        self.datetime = dt_util.utcnow().replace(tzinfo=None)
         self.type = season_tracking_type
         self.season = get_season(self.datetime, self.hemisphere, self.type)
 
@@ -125,5 +130,5 @@ class Season(Entity):
 
     def update(self):
         """Update season."""
-        self.datetime = datetime.utcnow()
+        self.datetime = dt_util.utcnow().replace(tzinfo=None)
         self.season = get_season(self.datetime, self.hemisphere, self.type)

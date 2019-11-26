@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+import hpilo
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -180,8 +181,6 @@ class HpIloData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from HP iLO."""
-        import hpilo
-
         try:
             self.data = hpilo.Ilo(
                 hostname=self._host,
@@ -194,4 +193,4 @@ class HpIloData:
             hpilo.IloCommunicationError,
             hpilo.IloLoginFailed,
         ) as error:
-            raise ValueError("Unable to init HP ILO, {}".format(error))
+            raise ValueError(f"Unable to init HP ILO, {error}")

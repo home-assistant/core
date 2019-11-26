@@ -2,7 +2,7 @@
 
 import pytest
 
-from homeassistant.components.media_player import async_reproduce_states
+from homeassistant.components.media_player.reproduce_state import async_reproduce_states
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_CONTENT_ID,

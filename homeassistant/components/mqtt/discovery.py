@@ -86,7 +86,7 @@ async def async_start(
         """Process the received message."""
         payload = msg.payload
         topic = msg.topic
-        topic_trimmed = topic.replace("{}/".format(discovery_topic), "", 1)
+        topic_trimmed = topic.replace(f"{discovery_topic}/", "", 1)
         match = TOPIC_MATCHER.match(topic_trimmed)
 
         if not match:
@@ -134,9 +134,7 @@ async def async_start(
 
         if payload:
             # Attach MQTT topic to the payload, used for debug prints
-            setattr(
-                payload, "__configuration_source__", "MQTT (topic: '{}')".format(topic)
-            )
+            setattr(payload, "__configuration_source__", f"MQTT (topic: '{topic}')")
 
             if CONF_PLATFORM in payload and "schema" not in payload:
                 platform = payload[CONF_PLATFORM]

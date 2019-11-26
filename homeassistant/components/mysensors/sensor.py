@@ -14,7 +14,7 @@ SENSORS = {
     "V_DIMMER": ["%", "mdi:percent"],
     "V_PERCENTAGE": ["%", "mdi:percent"],
     "V_PRESSURE": [None, "mdi:gauge"],
-    "V_FORECAST": [None, "mdi:weather-partlycloudy"],
+    "V_FORECAST": [None, "mdi:weather-partly-cloudy"],
     "V_RAIN": [None, "mdi:weather-rainy"],
     "V_RAINRATE": [None, "mdi:weather-rainy"],
     "V_WIND": [None, "mdi:weather-windy"],

@@ -2,7 +2,7 @@
 Channels module for Zigbee Home Automation.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zha/
+https://home-assistant.io/integrations/zha/
 """
 import asyncio
 from concurrent.futures import TimeoutError as Timeout
@@ -10,6 +10,8 @@ from enum import Enum
 from functools import wraps
 import logging
 from random import uniform
+
+import zigpy.exceptions
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -48,8 +50,6 @@ def decorate_command(channel, command):
 
     @wraps(command)
     async def wrapper(*args, **kwds):
-        from zigpy.exceptions import DeliveryError
-
         try:
             result = await command(*args, **kwds)
             channel.debug(
@@ -61,7 +61,7 @@ def decorate_command(channel, command):
             )
             return result
 
-        except (DeliveryError, Timeout) as ex:
+        except (zigpy.exceptions.DeliveryError, Timeout) as ex:
             channel.debug("command failed: %s exception: %s", command.__name__, str(ex))
             return ex
 
@@ -87,7 +87,7 @@ class ZigbeeChannel(LogMixin):
         self._channel_name = cluster.ep_attribute
         if self.CHANNEL_NAME:
             self._channel_name = self.CHANNEL_NAME
-        self._generic_id = "channel_0x{:04x}".format(cluster.cluster_id)
+        self._generic_id = f"channel_0x{cluster.cluster_id:04x}"
         self._cluster = cluster
         self._zha_device = device
         self._unique_id = "{}:{}:0x{:04x}".format(
@@ -143,12 +143,10 @@ class ZigbeeChannel(LogMixin):
         This also swallows DeliveryError exceptions that are thrown when
         devices are unreachable.
         """
-        from zigpy.exceptions import DeliveryError
-
         try:
             res = await self.cluster.bind()
             self.debug("bound '%s' cluster: %s", self.cluster.ep_attribute, res[0])
-        except (DeliveryError, Timeout) as ex:
+        except (zigpy.exceptions.DeliveryError, Timeout) as ex:
             self.debug(
                 "Failed to bind '%s' cluster: %s", self.cluster.ep_attribute, str(ex)
             )
@@ -167,8 +165,6 @@ class ZigbeeChannel(LogMixin):
         This also swallows DeliveryError exceptions that are thrown when
         devices are unreachable.
         """
-        from zigpy.exceptions import DeliveryError
-
         attr_name = self.cluster.attributes.get(attr, [attr])[0]
 
         kwargs = {}
@@ -189,7 +185,7 @@ class ZigbeeChannel(LogMixin):
                 reportable_change,
                 res,
             )
-        except (DeliveryError, Timeout) as ex:
+        except (zigpy.exceptions.DeliveryError, Timeout) as ex:
             self.debug(
                 "failed to set reporting for '%s' attr on '%s' cluster: %s",
                 attr_name,
@@ -202,7 +198,7 @@ class ZigbeeChannel(LogMixin):
         # Xiaomi devices don't need this and it disrupts pairing
         if self._zha_device.manufacturer != "LUMI":
             await self.bind()
-            if self.cluster.cluster_id not in self.cluster.endpoint.out_clusters:
+            if self.cluster.is_server:
                 for report_config in self._report_config:
                     await self.configure_reporting(
                         report_config["attr"], report_config["config"]
@@ -240,6 +236,8 @@ class ZigbeeChannel(LogMixin):
             {
                 "unique_id": self._unique_id,
                 "device_ieee": str(self._zha_device.ieee),
+                "endpoint_id": cluster.endpoint.endpoint_id,
+                "cluster_id": cluster.cluster_id,
                 "command": command,
                 "args": args,
             },
@@ -299,9 +297,7 @@ class AttributeListeningChannel(ZigbeeChannel):
         """Handle attribute updates on this cluster."""
         if attrid == self.value_attribute:
             async_dispatcher_send(
-                self._zha_device.hass,
-                "{}_{}".format(self.unique_id, SIGNAL_ATTR_UPDATED),
-                value,
+                self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value
             )
 
     async def async_initialize(self, from_cache):
@@ -399,14 +395,14 @@ class EventRelayChannel(ZigbeeChannel):
 
 
 # pylint: disable=wrong-import-position
-from . import closures  # noqa
-from . import general  # noqa
-from . import homeautomation  # noqa
-from . import hvac  # noqa
-from . import lighting  # noqa
-from . import lightlink  # noqa
-from . import manufacturerspecific  # noqa
-from . import measurement  # noqa
-from . import protocol  # noqa
-from . import security  # noqa
-from . import smartenergy  # noqa
+from . import closures  # noqa: F401
+from . import general  # noqa: F401
+from . import homeautomation  # noqa: F401
+from . import hvac  # noqa: F401
+from . import lighting  # noqa: F401
+from . import lightlink  # noqa: F401
+from . import manufacturerspecific  # noqa: F401
+from . import measurement  # noqa: F401
+from . import protocol  # noqa: F401
+from . import security  # noqa: F401
+from . import smartenergy  # noqa: F401

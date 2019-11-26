@@ -1,9 +1,9 @@
 {
   "domain": "fritzbox_callmonitor",
   "name": "Fritzbox callmonitor",
-  "documentation": "https://www.home-assistant.io/components/fritzbox_callmonitor",
+  "documentation": "https://www.home-assistant.io/integrations/fritzbox_callmonitor",
   "requirements": [
-    "fritzconnection==0.6.5"
+    "fritzconnection==0.8.4"
   ],
   "dependencies": [],
   "codeowners": []

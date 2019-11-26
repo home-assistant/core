@@ -27,7 +27,7 @@ def install_osx():
     try:
         with open(path, "w", encoding="utf-8") as outp:
             outp.write(plist)
-    except IOError as err:
+    except OSError as err:
         print("Unable to write to " + path, err)
         return
 

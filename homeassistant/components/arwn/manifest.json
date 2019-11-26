@@ -1,7 +1,7 @@
 {
   "domain": "arwn",
   "name": "Arwn",
-  "documentation": "https://www.home-assistant.io/components/arwn",
+  "documentation": "https://www.home-assistant.io/integrations/arwn",
   "requirements": [],
   "dependencies": [
     "mqtt"

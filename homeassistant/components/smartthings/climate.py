@@ -406,7 +406,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
                 modes.add(state)
             else:
                 _LOGGER.debug(
-                    "Device %s (%s) returned an invalid supported " "AC mode: %s",
+                    "Device %s (%s) returned an invalid supported AC mode: %s",
                     self._device.label,
                     self._device.device_id,
                     mode,

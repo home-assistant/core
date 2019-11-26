@@ -1,32 +1,39 @@
 """Test ZHA API."""
 import pytest
+import zigpy.zcl.clusters.general as general
+
 from homeassistant.components.switch import DOMAIN
-from homeassistant.components.zha.api import async_load_api, TYPE, ID
+from homeassistant.components.websocket_api import const
+from homeassistant.components.zha.api import ID, TYPE, async_load_api
 from homeassistant.components.zha.core.const import (
     ATTR_CLUSTER_ID,
     ATTR_CLUSTER_TYPE,
-    CLUSTER_TYPE_IN,
+    ATTR_ENDPOINT_ID,
     ATTR_IEEE,
+    ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_NAME,
     ATTR_QUIRK_APPLIED,
-    ATTR_MANUFACTURER,
-    ATTR_ENDPOINT_ID,
+    CLUSTER_TYPE_IN,
 )
+
 from .common import async_init_zigpy_device
 
 
 @pytest.fixture
 async def zha_client(hass, config_entry, zha_gateway, hass_ws_client):
     """Test zha switch platform."""
-    from zigpy.zcl.clusters.general import OnOff, Basic
 
     # load the ZHA API
     async_load_api(hass)
 
     # create zigpy device
     await async_init_zigpy_device(
-        hass, [OnOff.cluster_id, Basic.cluster_id], [], None, zha_gateway
+        hass,
+        [general.OnOff.cluster_id, general.Basic.cluster_id],
+        [],
+        None,
+        zha_gateway,
     )
 
     # load up switch domain
@@ -126,3 +133,22 @@ async def test_list_devices(hass, config_entry, zha_gateway, zha_client):
         for entity_reference in device["entities"]:
             assert entity_reference[ATTR_NAME] is not None
             assert entity_reference["entity_id"] is not None
+
+        await zha_client.send_json(
+            {ID: 6, TYPE: "zha/device", ATTR_IEEE: device[ATTR_IEEE]}
+        )
+        msg = await zha_client.receive_json()
+        device2 = msg["result"]
+        assert device == device2
+
+
+async def test_device_not_found(hass, config_entry, zha_gateway, zha_client):
+    """Test not found response from get device API."""
+    await zha_client.send_json(
+        {ID: 6, TYPE: "zha/device", ATTR_IEEE: "28:6d:97:00:01:04:11:8c"}
+    )
+    msg = await zha_client.receive_json()
+    assert msg["id"] == 6
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == const.ERR_NOT_FOUND

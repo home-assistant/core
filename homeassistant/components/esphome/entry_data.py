@@ -1,22 +1,22 @@
 """Runtime entry data for ESPHome stored in hass.data."""
 import asyncio
-from typing import Any, Callable, Dict, List, Optional, Tuple, Set
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from aioesphomeapi import (
     COMPONENT_TYPE_TO_INFO,
-    DeviceInfo,
-    EntityInfo,
-    EntityState,
-    UserService,
     BinarySensorInfo,
     CameraInfo,
     ClimateInfo,
     CoverInfo,
+    DeviceInfo,
+    EntityInfo,
+    EntityState,
     FanInfo,
     LightInfo,
     SensorInfo,
     SwitchInfo,
     TextSensorInfo,
+    UserService,
 )
 import attr
 
@@ -56,6 +56,13 @@ class RuntimeEntryData:
     reconnect_task = attr.ib(type=Optional[asyncio.Task], default=None)
     state = attr.ib(type=Dict[str, Dict[str, Any]], factory=dict)
     info = attr.ib(type=Dict[str, Dict[str, Any]], factory=dict)
+
+    # A second list of EntityInfo objects
+    # This is necessary for when an entity is being removed. HA requires
+    # some static info to be accessible during removal (unique_id, maybe others)
+    # If an entity can't find anything in the info array, it will look for info here.
+    old_info = attr.ib(type=Dict[str, Dict[str, Any]], factory=dict)
+
     services = attr.ib(type=Dict[int, "UserService"], factory=dict)
     available = attr.ib(type=bool, default=False)
     device_info = attr.ib(type=DeviceInfo, default=None)

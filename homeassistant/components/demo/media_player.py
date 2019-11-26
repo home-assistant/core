@@ -24,9 +24,9 @@ from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 import homeassistant.util.dt as dt_util
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the media player demo platform."""
-    add_entities(
+    async_add_entities(
         [
             DemoYoutubePlayer(
                 "Living Room",
@@ -41,6 +41,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             DemoTVShowPlayer(),
         ]
     )
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Demo config entry."""
+    await async_setup_platform(hass, {}, async_add_entities)
 
 
 YOUTUBE_COVER_URL_FORMAT = "https://img.youtube.com/vi/{}/hqdefault.jpg"
@@ -417,7 +422,7 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
     @property
     def media_title(self):
         """Return the title of current playing media."""
-        return "Chapter {}".format(self._cur_episode)
+        return f"Chapter {self._cur_episode}"
 
     @property
     def media_series_title(self):

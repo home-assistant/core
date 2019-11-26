@@ -14,6 +14,9 @@ from homeassistant.const import (
 from homeassistant.helpers.event import async_track_sunrise, async_track_sunset
 import homeassistant.helpers.config_validation as cv
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
 TRIGGER_SCHEMA = vol.Schema(
@@ -25,7 +28,7 @@ TRIGGER_SCHEMA = vol.Schema(
 )
 
 
-async def async_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for events based on configuration."""
     event = config.get(CONF_EVENT)
     offset = config.get(CONF_OFFSET)

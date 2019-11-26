@@ -1,6 +1,8 @@
 {
     "config": {
         "abort": {
+            "adguard_home_addon_outdated": "Za to integracijo je potrebna AdGuard Home {minimal_version} ali vi\u0161ja, vi imate {current_version}. Prosimo posodobite va\u0161 hass.io AdGuard Home dodatek.",
+            "adguard_home_outdated": "Za to integracijo je potrebna AdGuard Home {minimal_version} ali vi\u0161ja, vi imate {current_version}.",
             "existing_instance_updated": "Posodobljena obstoje\u010da konfiguracija.",
             "single_instance_allowed": "Dovoljena je samo ena konfiguracija AdGuard Home."
         },
@@ -9,7 +11,7 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "\u017delite konfigurirati Home Assistant-a za povezavo z AdGuard Home, ki ga ponuja hass.io add-on {addon} ?",
+                "description": "\u017delite konfigurirati Home Assistant-a za povezavo z AdGuard Home, ki ga ponuja Hass.io add-on {addon} ?",
                 "title": "AdGuard Home preko dodatka Hass.io"
             },
             "user": {

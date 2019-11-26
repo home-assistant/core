@@ -93,7 +93,7 @@ class MockSwitcherV2Device:
 @fixture(name="mock_bridge")
 def mock_bridge_fixture() -> Generator[None, Any, None]:
     """Fixture for mocking aioswitcher.bridge.SwitcherV2Bridge."""
-    queue = Queue()  # type: Queue
+    queue = Queue()
 
     async def mock_queue():
         """Mock asyncio's Queue."""

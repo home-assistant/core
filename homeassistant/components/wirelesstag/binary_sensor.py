@@ -95,7 +95,7 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorDevice):
         """Initialize a binary sensor for a Wireless Sensor Tags."""
         super().__init__(api, tag)
         self._sensor_type = sensor_type
-        self._name = "{0} {1}".format(self._tag.name, self.event.human_readable_name)
+        self._name = f"{self._tag.name} {self.event.human_readable_name}"
 
     async def async_added_to_hass(self):
         """Register callbacks."""

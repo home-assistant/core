@@ -75,7 +75,7 @@ class UnitSystem:
         pressure: str,
     ) -> None:
         """Initialize the unit system object."""
-        errors = ", ".join(
+        errors: str = ", ".join(
             UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit, unit_type)
             for unit, unit_type in [
                 (temperature, TEMPERATURE),
@@ -85,7 +85,7 @@ class UnitSystem:
                 (pressure, PRESSURE),
             ]
             if not is_valid_unit(unit, unit_type)
-        )  # type: str
+        )
 
         if errors:
             raise ValueError(errors)

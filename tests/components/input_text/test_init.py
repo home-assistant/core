@@ -186,3 +186,12 @@ async def test_input_text_context(hass, hass_admin_user):
     assert state2 is not None
     assert state.state != state2.state
     assert state2.context.user_id == hass_admin_user.id
+
+
+async def test_config_none(hass):
+    """Set up input_text without any config."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {"b1": None}})
+
+    state = hass.states.get("input_text.b1")
+    assert state
+    assert str(state.state) == "unknown"

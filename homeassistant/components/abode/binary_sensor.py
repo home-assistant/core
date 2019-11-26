@@ -1,19 +1,26 @@
 """Support for Abode Security System binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+import abodepy.helpers.constants as CONST
+import abodepy.helpers.timeline as TIMELINE
 
-from . import DOMAIN as ABODE_DOMAIN, AbodeAutomation, AbodeDevice
+from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import AbodeAutomation, AbodeDevice
+from .const import DOMAIN, SIGNAL_TRIGGER_QUICK_ACTION
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up a sensor for an Abode device."""
-    import abodepy.helpers.constants as CONST
-    import abodepy.helpers.timeline as TIMELINE
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Platform uses config entry setup."""
+    pass
 
-    data = hass.data[ABODE_DOMAIN]
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Abode binary sensor devices."""
+    data = hass.data[DOMAIN]
 
     device_types = [
         CONST.TYPE_CONNECTIVITY,
@@ -23,26 +30,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         CONST.TYPE_OPENING,
     ]
 
-    devices = []
-    for device in data.abode.get_devices(generic_type=device_types):
-        if data.is_excluded(device):
-            continue
+    entities = []
 
-        devices.append(AbodeBinarySensor(data, device))
+    for device in data.abode.get_devices(generic_type=device_types):
+        entities.append(AbodeBinarySensor(data, device))
 
     for automation in data.abode.get_automations(generic_type=CONST.TYPE_QUICK_ACTION):
-        if data.is_automation_excluded(automation):
-            continue
-
-        devices.append(
+        entities.append(
             AbodeQuickActionBinarySensor(
                 data, automation, TIMELINE.AUTOMATION_EDIT_GROUP
             )
         )
 
-    data.devices.extend(devices)
-
-    add_entities(devices)
+    async_add_entities(entities)
 
 
 class AbodeBinarySensor(AbodeDevice, BinarySensorDevice):
@@ -61,6 +61,12 @@ class AbodeBinarySensor(AbodeDevice, BinarySensorDevice):
 
 class AbodeQuickActionBinarySensor(AbodeAutomation, BinarySensorDevice):
     """A binary sensor implementation for Abode quick action automations."""
+
+    async def async_added_to_hass(self):
+        """Subscribe Abode events."""
+        await super().async_added_to_hass()
+        signal = SIGNAL_TRIGGER_QUICK_ACTION.format(self.entity_id)
+        async_dispatcher_connect(self.hass, signal, self.trigger)
 
     def trigger(self):
         """Trigger a quick automation."""

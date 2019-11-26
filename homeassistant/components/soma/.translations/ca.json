@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Nom\u00e9s pots configurar un compte de Soma.",
+            "authorize_url_timeout": "S'ha acabat el temps d'espera durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3.",
+            "missing_configuration": "El component Soma no est\u00e0 configurat. Mira'n la documentaci\u00f3."
+        },
+        "create_entry": {
+            "default": "Autenticaci\u00f3 exitosa amb Soma."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "port": "Port"
+                },
+                "description": "Introdueix la informaci\u00f3 de connexi\u00f3 de SOMA Connect.",
+                "title": "SOMA Connect"
+            }
+        },
+        "title": "Soma"
+    }
+}

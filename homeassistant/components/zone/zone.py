@@ -1,5 +1,9 @@
 """Zone entity and functionality."""
+
+from typing import cast
+
 from homeassistant.const import ATTR_HIDDEN, ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.core import State
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.location import distance
 
@@ -8,7 +12,10 @@ from .const import ATTR_PASSIVE, ATTR_RADIUS
 STATE = "zoning"
 
 
-def in_zone(zone, latitude, longitude, radius=0) -> bool:
+# mypy: allow-untyped-defs
+
+
+def in_zone(zone: State, latitude: float, longitude: float, radius: float = 0) -> bool:
     """Test if given latitude, longitude is in given zone.
 
     Async friendly.
@@ -20,7 +27,9 @@ def in_zone(zone, latitude, longitude, radius=0) -> bool:
         zone.attributes[ATTR_LONGITUDE],
     )
 
-    return zone_dist - radius < zone.attributes[ATTR_RADIUS]
+    if zone_dist is None or zone.attributes[ATTR_RADIUS] is None:
+        return False
+    return zone_dist - radius < cast(float, zone.attributes[ATTR_RADIUS])
 
 
 class Zone(Entity):

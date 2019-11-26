@@ -88,7 +88,7 @@ class GoogleWifiSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{}_{}".format(self._name, self._var_name)
+        return f"{self._name}_{self._var_name}"
 
     @property
     def icon(self):
@@ -125,7 +125,7 @@ class GoogleWifiAPI:
     def __init__(self, host, conditions):
         """Initialize the data object."""
         uri = "http://"
-        resource = "{}{}{}".format(uri, host, ENDPOINT)
+        resource = f"{uri}{host}{ENDPOINT}"
         self._request = requests.Request("GET", resource).prepare()
         self.raw_data = None
         self.conditions = conditions

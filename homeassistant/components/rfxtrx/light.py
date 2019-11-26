@@ -1,6 +1,7 @@
 """Support for RFXtrx lights."""
 import logging
 
+import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
 from homeassistant.components import rfxtrx
@@ -45,8 +46,6 @@ SUPPORT_RFXTRX = SUPPORT_BRIGHTNESS
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RFXtrx platform."""
-    import RFXtrx as rfxtrxmod
-
     lights = rfxtrx.get_devices_from_config(config, RfxtrxLight)
     add_entities(lights)
 

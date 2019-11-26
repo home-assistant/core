@@ -117,7 +117,7 @@ class FoobotSensor(Entity):
     @property
     def unique_id(self):
         """Return the unique id of this entity."""
-        return "{}_{}".format(self._uuid, self.type)
+        return f"{self._uuid}_{self.type}"
 
     @property
     def unit_of_measurement(self):

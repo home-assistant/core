@@ -10,7 +10,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
-from . import config_flow  # noqa  pylint_disable=unused-import
+from . import config_flow  # noqa: F401
 from .const import (
     CONF_HOST,
     DOMAIN,
@@ -46,7 +46,7 @@ DATA_CONFIG_ENTRY_LOCK = "tellduslive_config_entry_lock"
 CONFIG_ENTRY_IS_SETUP = "telldus_config_entry_is_setup"
 
 NEW_CLIENT_TASK = "telldus_new_client_task"
-INTERVAL_TRACKER = "{}_INTERVAL".format(DOMAIN)
+INTERVAL_TRACKER = f"{DOMAIN}_INTERVAL"
 
 
 async def async_setup_entry(hass, entry):

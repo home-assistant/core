@@ -1,6 +1,9 @@
 """Support for Homekit device discovery."""
 import logging
 
+import homekit
+from homekit.model.characteristics import CharacteristicsTypes
+
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -10,7 +13,7 @@ from homeassistant.helpers import device_registry as dr
 from .config_flow import HomekitControllerFlowHandler  # noqa: F401
 from .connection import get_accessory_information, HKDevice
 from .const import CONTROLLER, ENTITY_MAP, KNOWN_DEVICES
-from .const import DOMAIN  # noqa: pylint: disable=unused-import
+from .const import DOMAIN
 from .storage import EntityMapStorage
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,9 +66,6 @@ class HomeKitEntity(Entity):
 
     def setup(self):
         """Configure an entity baed on its HomeKit characterstics metadata."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
-
         accessories = self._accessory.accessories
 
         get_uuid = CharacteristicsTypes.get_uuid
@@ -95,9 +95,6 @@ class HomeKitEntity(Entity):
 
     def _setup_characteristic(self, char):
         """Configure an entity based on a HomeKit characteristics metadata."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
-
         # Build up a list of (aid, iid) tuples to poll on update()
         self.pollable_characteristics.append((self._aid, char["iid"]))
 
@@ -109,7 +106,7 @@ class HomeKitEntity(Entity):
         # Callback to allow entity to configure itself based on this
         # characteristics metadata (valid values, value ranges, features, etc)
         setup_fn_name = escape_characteristic_name(short_name)
-        setup_fn = getattr(self, "_setup_{}".format(setup_fn_name), None)
+        setup_fn = getattr(self, f"_setup_{setup_fn_name}", None)
         if not setup_fn:
             return
         # pylint: disable=not-callable
@@ -131,7 +128,7 @@ class HomeKitEntity(Entity):
 
             # Callback to update the entity with this characteristic value
             char_name = escape_characteristic_name(self._char_names[iid])
-            update_fn = getattr(self, "_update_{}".format(char_name), None)
+            update_fn = getattr(self, f"_update_{char_name}", None)
             if not update_fn:
                 continue
 
@@ -144,7 +141,7 @@ class HomeKitEntity(Entity):
     def unique_id(self):
         """Return the ID of this device."""
         serial = self._accessory_info["serial-number"]
-        return "homekit-{}-{}".format(serial, self._iid)
+        return f"homekit-{serial}-{self._iid}"
 
     @property
     def name(self):
@@ -211,9 +208,6 @@ async def async_setup_entry(hass, entry):
 
 async def async_setup(hass, config):
     """Set up for Homekit devices."""
-    # pylint: disable=import-error
-    import homekit
-
     map_storage = hass.data[ENTITY_MAP] = EntityMapStorage(hass)
     await map_storage.async_initialize()
 

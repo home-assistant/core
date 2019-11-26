@@ -2,7 +2,7 @@
 Home automation channels module for Zigbee Home Automation.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zha/
+https://home-assistant.io/integrations/zha/
 """
 import logging
 
@@ -72,9 +72,7 @@ class ElectricalMeasurementChannel(AttributeListeningChannel):
         # This is a polling channel. Don't allow cache.
         result = await self.get_attribute_value("active_power", from_cache=False)
         async_dispatcher_send(
-            self._zha_device.hass,
-            "{}_{}".format(self.unique_id, SIGNAL_ATTR_UPDATED),
-            result,
+            self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", result
         )
 
     async def async_initialize(self, from_cache):

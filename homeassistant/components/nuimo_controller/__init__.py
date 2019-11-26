@@ -76,7 +76,7 @@ class NuimoThread(threading.Thread):
 
     def __init__(self, hass, mac, name):
         """Initialize thread object."""
-        super(NuimoThread, self).__init__()
+        super().__init__()
         self._hass = hass
         self._mac = mac
         self._name = name

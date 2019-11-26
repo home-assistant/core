@@ -1,11 +1,16 @@
 """Connection session."""
 import asyncio
+from typing import Any, Callable, Dict, Hashable
+
 import voluptuous as vol
 
 from homeassistant.core import callback, Context
 from homeassistant.exceptions import Unauthorized
 
 from . import const, messages
+
+
+# mypy: allow-untyped-calls, allow-untyped-defs
 
 
 class ActiveConnection:
@@ -22,7 +27,7 @@ class ActiveConnection:
         else:
             self.refresh_token_id = None
 
-        self.subscriptions = {}
+        self.subscriptions: Dict[Hashable, Callable[[], Any]] = {}
         self.last_id = 0
 
     def context(self, msg):
@@ -103,6 +108,8 @@ class ActiveConnection:
     @callback
     def async_handle_exception(self, msg, err):
         """Handle an exception while processing a handler."""
+        log_handler = self.logger.error
+
         if isinstance(err, Unauthorized):
             code = const.ERR_UNAUTHORIZED
             err_message = "Unauthorized"
@@ -115,6 +122,8 @@ class ActiveConnection:
         else:
             code = const.ERR_UNKNOWN_ERROR
             err_message = "Unknown error"
+            log_handler = self.logger.exception
 
-        self.logger.exception("Error handling message: %s", err_message)
+        log_handler("Error handling message: %s", err_message)
+
         self.send_message(messages.error_message(msg["id"], code, err_message))

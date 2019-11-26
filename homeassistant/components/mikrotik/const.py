@@ -12,6 +12,7 @@ CONF_LOGIN_METHOD = "login_method"
 CONF_ENCODING = "encoding"
 DEFAULT_ENCODING = "utf-8"
 
+NAME = "name"
 INFO = "info"
 IDENTITY = "identity"
 ARP = "arp"

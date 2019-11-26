@@ -74,6 +74,7 @@ class FakePairing:
                         if char.iid != cid:
                             continue
                         char.set_value(new_val)
+        return {}
 
 
 class FakeController:

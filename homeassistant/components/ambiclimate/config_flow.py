@@ -130,7 +130,7 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow):
         return oauth
 
     def _cb_url(self):
-        return "{}{}".format(self.hass.config.api.base_url, AUTH_CALLBACK_PATH)
+        return f"{self.hass.config.api.base_url}{AUTH_CALLBACK_PATH}"
 
     async def _get_authorize_url(self):
         oauth = self._generate_oauth()

@@ -7,6 +7,10 @@ import socket
 import urllib
 
 import aiohttp
+import jsonrpc_base
+import jsonrpc_async
+import jsonrpc_websocket
+
 import voluptuous as vol
 
 from homeassistant.components.kodi import SERVICE_CALL_METHOD
@@ -140,7 +144,7 @@ def _check_deprecated_turn_off(hass, turn_off_action):
         method = DEPRECATED_TURN_OFF_ACTIONS[turn_off_action]
         new_config = OrderedDict(
             [
-                ("service", "{}.{}".format(DOMAIN, SERVICE_CALL_METHOD)),
+                ("service", f"{DOMAIN}.{SERVICE_CALL_METHOD}"),
                 (
                     "data_template",
                     OrderedDict([("entity_id", "{{ entity_id }}"), ("method", method)]),
@@ -231,8 +235,6 @@ def cmd(func):
     @wraps(func)
     async def wrapper(obj, *args, **kwargs):
         """Wrap all command methods."""
-        import jsonrpc_base
-
         try:
             await func(obj, *args, **kwargs)
         except jsonrpc_base.jsonrpc.TransportError as exc:
@@ -268,9 +270,6 @@ class KodiDevice(MediaPlayerDevice):
         unique_id=None,
     ):
         """Initialize the Kodi device."""
-        import jsonrpc_async
-        import jsonrpc_websocket
-
         self.hass = hass
         self._name = name
         self._unique_id = unique_id
@@ -281,18 +280,18 @@ class KodiDevice(MediaPlayerDevice):
 
         if username is not None:
             kwargs["auth"] = aiohttp.BasicAuth(username, password)
-            image_auth_string = "{}:{}@".format(username, password)
+            image_auth_string = f"{username}:{password}@"
         else:
             image_auth_string = ""
 
         http_protocol = "https" if encryption else "http"
         ws_protocol = "wss" if encryption else "ws"
 
-        self._http_url = "{}://{}:{}/jsonrpc".format(http_protocol, host, port)
+        self._http_url = f"{http_protocol}://{host}:{port}/jsonrpc"
         self._image_url = "{}://{}{}:{}/image".format(
             http_protocol, image_auth_string, host, port
         )
-        self._ws_url = "{}://{}:{}/jsonrpc".format(ws_protocol, host, tcp_port)
+        self._ws_url = f"{ws_protocol}://{host}:{tcp_port}/jsonrpc"
 
         self._http_server = jsonrpc_async.Server(self._http_url, **kwargs)
         if websocket:
@@ -326,14 +325,14 @@ class KodiDevice(MediaPlayerDevice):
             turn_on_action = script.Script(
                 self.hass,
                 turn_on_action,
-                "{} turn ON script".format(self.name),
+                f"{self.name} turn ON script",
                 self.async_update_ha_state(True),
             )
         if turn_off_action is not None:
             turn_off_action = script.Script(
                 self.hass,
                 _check_deprecated_turn_off(hass, turn_off_action),
-                "{} turn OFF script".format(self.name),
+                f"{self.name} turn OFF script",
             )
         self._turn_on_action = turn_on_action
         self._turn_off_action = turn_off_action
@@ -389,8 +388,6 @@ class KodiDevice(MediaPlayerDevice):
 
     async def _get_players(self):
         """Return the active player objects or None."""
-        import jsonrpc_base
-
         try:
             return await self.server.Player.GetActivePlayers()
         except jsonrpc_base.jsonrpc.TransportError:
@@ -420,8 +417,6 @@ class KodiDevice(MediaPlayerDevice):
 
     async def async_ws_connect(self):
         """Connect to Kodi via websocket protocol."""
-        import jsonrpc_base
-
         try:
             ws_loop_future = await self._ws_server.ws_connect()
         except jsonrpc_base.jsonrpc.TransportError:
@@ -801,8 +796,6 @@ class KodiDevice(MediaPlayerDevice):
 
     async def async_call_method(self, method, **kwargs):
         """Run Kodi JSONRPC API method with params."""
-        import jsonrpc_base
-
         _LOGGER.debug("Run API method %s, kwargs=%s", method, kwargs)
         result_ok = False
         try:
@@ -850,8 +843,6 @@ class KodiDevice(MediaPlayerDevice):
         All the albums of an artist can be added with
         media_name="ALL"
         """
-        import jsonrpc_base
-
         params = {"playlistid": 0}
         if media_type == "SONG":
             if media_id is None:

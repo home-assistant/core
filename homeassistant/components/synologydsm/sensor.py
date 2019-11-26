@@ -119,24 +119,26 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ]
 
         # Handle all volumes
-        for volume in config.get(CONF_VOLUMES, api.storage.volumes):
-            sensors += [
-                SynoNasStorageSensor(
-                    api, name, variable, _STORAGE_VOL_MON_COND[variable], volume
-                )
-                for variable in monitored_conditions
-                if variable in _STORAGE_VOL_MON_COND
-            ]
+        if api.storage.volumes is not None:
+            for volume in config.get(CONF_VOLUMES, api.storage.volumes):
+                sensors += [
+                    SynoNasStorageSensor(
+                        api, name, variable, _STORAGE_VOL_MON_COND[variable], volume
+                    )
+                    for variable in monitored_conditions
+                    if variable in _STORAGE_VOL_MON_COND
+                ]
 
         # Handle all disks
-        for disk in config.get(CONF_DISKS, api.storage.disks):
-            sensors += [
-                SynoNasStorageSensor(
-                    api, name, variable, _STORAGE_DSK_MON_COND[variable], disk
-                )
-                for variable in monitored_conditions
-                if variable in _STORAGE_DSK_MON_COND
-            ]
+        if api.storage.disks is not None:
+            for disk in config.get(CONF_DISKS, api.storage.disks):
+                sensors += [
+                    SynoNasStorageSensor(
+                        api, name, variable, _STORAGE_DSK_MON_COND[variable], disk
+                    )
+                    for variable in monitored_conditions
+                    if variable in _STORAGE_DSK_MON_COND
+                ]
 
         add_entities(sensors, True)
 
@@ -184,7 +186,7 @@ class SynoNasSensor(Entity):
     def name(self):
         """Return the name of the sensor, if any."""
         if self.monitor_device is not None:
-            return "{} ({})".format(self.var_name, self.monitor_device)
+            return f"{self.var_name} ({self.monitor_device})"
         return self.var_name
 
     @property
