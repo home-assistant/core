@@ -341,6 +341,40 @@ async def websocket_add_group_members(hass, connection, msg):
     connection.send_result(msg[ID], ret_group)
 
 
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zha/group/members/remove",
+        vol.Required(GROUP_ID): cv.positive_int,
+        vol.Required(ATTR_MEMBERS): vol.All(cv.ensure_list, [EUI64.convert]),
+    }
+)
+async def websocket_remove_group_members(hass, connection, msg):
+    """Remove members from a ZHA group."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    ha_device_registry = await async_get_registry(hass)
+    group_id = msg[GROUP_ID]
+    members = msg[ATTR_MEMBERS]
+    zigpy_group = None
+
+    if group_id in zha_gateway.application_controller.groups:
+        zigpy_group = zha_gateway.application_controller.groups[group_id]
+        tasks = []
+        for ieee in members:
+            tasks.append(zha_gateway.devices[ieee].async_remove_from_group(group_id))
+        await asyncio.gather(*tasks)
+    if not zigpy_group:
+        connection.send_message(
+            websocket_api.error_message(
+                msg[ID], websocket_api.const.ERR_NOT_FOUND, "ZHA Group not found"
+            )
+        )
+        return
+    ret_group = async_get_group_info(hass, zha_gateway, zigpy_group, ha_device_registry)
+    connection.send_result(msg[ID], ret_group)
+
+
 @callback
 def async_get_device_info(hass, device, ha_device_registry=None):
     """Get ZHA device."""
@@ -922,6 +956,7 @@ def async_load_api(hass):
     websocket_api.async_register_command(hass, websocket_get_group)
     websocket_api.async_register_command(hass, websocket_add_group)
     websocket_api.async_register_command(hass, websocket_add_group_members)
+    websocket_api.async_register_command(hass, websocket_remove_group_members)
     websocket_api.async_register_command(hass, websocket_reconfigure_node)
     websocket_api.async_register_command(hass, websocket_device_clusters)
     websocket_api.async_register_command(hass, websocket_device_cluster_attributes)
