@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/esphome",
   "requirements": [
-    "aioesphomeapi==2.4.2"
+    "aioesphomeapi==2.6.1"
   ],
   "dependencies": [],
   "zeroconf": ["_esphomelib._tcp.local."],

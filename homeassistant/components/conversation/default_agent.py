@@ -1,6 +1,7 @@
 """Standard conversastion implementation for Home Assistant."""
 import logging
 import re
+from typing import Optional
 
 from homeassistant import core
 from homeassistant.components.cover import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
@@ -107,7 +108,9 @@ class DefaultAgent(AbstractConversationAgent):
         for intent_type, sentences in UTTERANCES[component].items():
             async_register(self.hass, intent_type, sentences)
 
-    async def async_process(self, text) -> intent.IntentResponse:
+    async def async_process(
+        self, text: str, conversation_id: Optional[str] = None
+    ) -> intent.IntentResponse:
         """Process a sentence."""
         intents = self.hass.data[DOMAIN]
 

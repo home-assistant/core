@@ -387,19 +387,22 @@ class OAuth2Session:
 
     @property
     def token(self) -> dict:
-        """Return the current token."""
+        """Return the token."""
         return cast(dict, self.config_entry.data["token"])
+
+    @property
+    def valid_token(self) -> bool:
+        """Return if token is still valid."""
+        return cast(float, self.token["expires_at"]) > time.time()
 
     async def async_ensure_token_valid(self) -> None:
         """Ensure that the current token is valid."""
-        token = self.token
-
-        if token["expires_at"] > time.time():
+        if self.valid_token:
             return
 
-        new_token = await self.implementation.async_refresh_token(token)
+        new_token = await self.implementation.async_refresh_token(self.token)
 
-        self.hass.config_entries.async_update_entry(  # type: ignore
+        self.hass.config_entries.async_update_entry(
             self.config_entry, data={**self.config_entry.data, "token": new_token}
         )
 

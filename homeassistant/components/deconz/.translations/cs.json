@@ -8,6 +8,7 @@
         "error": {
             "no_key": "Nelze z\u00edskat kl\u00ed\u010d API"
         },
+        "flow_title": "Br\u00e1na deCONZ ZigBee ({host})",
         "step": {
             "init": {
                 "data": {

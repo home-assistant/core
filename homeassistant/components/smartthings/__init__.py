@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .config_flow import SmartThingsFlowHandler  # noqa
+from .config_flow import SmartThingsFlowHandler  # noqa: F401
 from .const import (
     CONF_APP_ID,
     CONF_INSTALLED_APP_ID,

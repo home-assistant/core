@@ -23,6 +23,7 @@ from homeassistant.util.aiohttp import MockRequest
 from . import account_link, http_api
 from .client import CloudClient
 from .const import (
+    CONF_ACCOUNT_LINK_URL,
     CONF_ACME_DIRECTORY_SERVER,
     CONF_ALEXA,
     CONF_ALEXA_ACCESS_TOKEN_URL,
@@ -38,7 +39,7 @@ from .const import (
     CONF_REMOTE_API_URL,
     CONF_SUBSCRIPTION_INFO_URL,
     CONF_USER_POOL_ID,
-    CONF_ACCOUNT_LINK_URL,
+    CONF_VOICE_API_URL,
     DOMAIN,
     MODE_DEV,
     MODE_PROD,
@@ -103,6 +104,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_ALEXA_ACCESS_TOKEN_URL): vol.Url(),
                 vol.Optional(CONF_GOOGLE_ACTIONS_REPORT_STATE_URL): vol.Url(),
                 vol.Optional(CONF_ACCOUNT_LINK_URL): vol.Url(),
+                vol.Optional(CONF_VOICE_API_URL): vol.Url(),
             }
         )
     },
@@ -230,20 +232,27 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler
     )
 
-    loaded_binary_sensor = False
+    loaded = False
 
     async def _on_connect():
         """Discover RemoteUI binary sensor."""
-        nonlocal loaded_binary_sensor
+        nonlocal loaded
 
-        if loaded_binary_sensor:
+        # Prevent multiple discovery
+        if loaded:
             return
+        loaded = True
 
-        loaded_binary_sensor = True
         hass.async_create_task(
             hass.helpers.discovery.async_load_platform(
                 "binary_sensor", DOMAIN, {}, config
             )
+        )
+        hass.async_create_task(
+            hass.helpers.discovery.async_load_platform("stt", DOMAIN, {}, config)
+        )
+        hass.async_create_task(
+            hass.helpers.discovery.async_load_platform("tts", DOMAIN, {}, config)
         )
 
     cloud.iot.register_on_connect(_on_connect)

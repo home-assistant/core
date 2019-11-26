@@ -5,7 +5,7 @@ from pyhap.const import CATEGORY_THERMOSTAT
 
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE,
-    ATTR_HVAC_ACTIONS,
+    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
@@ -293,7 +293,7 @@ class Thermostat(HomeAccessory):
         self._flag_heat_cool = False
 
         # Set current operation mode for supported thermostats
-        hvac_action = new_state.attributes.get(ATTR_HVAC_ACTIONS)
+        hvac_action = new_state.attributes.get(ATTR_HVAC_ACTION)
         if hvac_action:
             self.char_current_heat_cool.set_value(
                 HC_HASS_TO_HOMEKIT_ACTION[hvac_action]

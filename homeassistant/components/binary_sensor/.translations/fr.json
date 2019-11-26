@@ -86,7 +86,7 @@
             "smoke": "{entity_name} commenc\u00e9 \u00e0 d\u00e9tecter la fum\u00e9e",
             "sound": "{entity_name} commenc\u00e9 \u00e0 d\u00e9tecter le son",
             "turned_off": "{entity_name} est d\u00e9sactiv\u00e9",
-            "turned_on": "{entity_name} activ\u00e9",
+            "turned_on": "{entity_name} est activ\u00e9",
             "unsafe": "{entity_name} est devenu dangereux",
             "vibration": "{entity_name} a commenc\u00e9 \u00e0 d\u00e9tecter les vibrations"
         }

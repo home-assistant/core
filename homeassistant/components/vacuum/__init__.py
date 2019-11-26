@@ -18,7 +18,7 @@ from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
 )
 from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa
+from homeassistant.helpers.config_validation import (  # noqa: F401
     ENTITY_SERVICE_SCHEMA,
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -70,6 +70,8 @@ STATE_CLEANING = "cleaning"
 STATE_DOCKED = "docked"
 STATE_RETURNING = "returning"
 STATE_ERROR = "error"
+
+STATES = [STATE_CLEANING, STATE_DOCKED, STATE_RETURNING, STATE_ERROR]
 
 DEFAULT_NAME = "Vacuum cleaner robot"
 

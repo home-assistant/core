@@ -10,7 +10,7 @@ from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.util.json import load_json
-from . import config_flow  # noqa  pylint_disable=unused-import
+from . import config_flow  # noqa: F401
 from .const import (
     DOMAIN,
     CONFIG_FILE,

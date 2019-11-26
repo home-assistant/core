@@ -6,7 +6,7 @@ from xml.etree.ElementTree import ParseError
 import plexapi.exceptions
 import requests.exceptions
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
@@ -30,6 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -56,28 +57,44 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Plex media_player from a config entry."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
+    registry = await async_get_registry(hass)
 
     def async_new_media_players(new_entities):
         _async_add_entities(
-            hass, config_entry, async_add_entities, server_id, new_entities
+            hass, registry, config_entry, async_add_entities, server_id, new_entities
         )
 
     unsub = async_dispatcher_connect(
         hass, PLEX_NEW_MP_SIGNAL.format(server_id), async_new_media_players
     )
     hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
+    _LOGGER.debug("New entity listener created")
 
 
 @callback
 def _async_add_entities(
-    hass, config_entry, async_add_entities, server_id, new_entities
+    hass, registry, config_entry, async_add_entities, server_id, new_entities
 ):
     """Set up Plex media_player entities."""
+    _LOGGER.debug("New entities: %s", new_entities)
     entities = []
     plexserver = hass.data[PLEX_DOMAIN][SERVERS][server_id]
     for entity_params in new_entities:
         plex_mp = PlexMediaPlayer(plexserver, **entity_params)
         entities.append(plex_mp)
+
+        # Migration to per-server unique_ids
+        old_entity_id = registry.async_get_entity_id(
+            MP_DOMAIN, PLEX_DOMAIN, plex_mp.machine_identifier
+        )
+        if old_entity_id is not None:
+            new_unique_id = f"{server_id}:{plex_mp.machine_identifier}"
+            _LOGGER.debug(
+                "Migrating unique_id from [%s] to [%s]",
+                plex_mp.machine_identifier,
+                new_unique_id,
+            )
+            registry.async_update_entity(old_entity_id, new_unique_id=new_unique_id)
 
     async_add_entities(entities, True)
 
@@ -126,6 +143,8 @@ class PlexMediaPlayer(MediaPlayerDevice):
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         server_id = self.plex_server.machine_identifier
+
+        _LOGGER.debug("Added %s [%s]", self.entity_id, self.unique_id)
         unsub = async_dispatcher_connect(
             self.hass,
             PLEX_UPDATE_MEDIA_PLAYER_SIGNAL.format(self.unique_id),
@@ -136,6 +155,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
     @callback
     def async_refresh_media_player(self, device, session):
         """Set instance objects and trigger an entity state update."""
+        _LOGGER.debug("Refreshing %s [%s / %s]", self.entity_id, device, session)
         self.device = device
         self.session = session
         self.async_schedule_update_ha_state(True)
@@ -270,12 +290,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
             self._media_content_type = MEDIA_TYPE_TVSHOW
 
             # season number (00)
-            if callable(self.session.season):
-                self._media_season = str((self.session.season()).index).zfill(2)
-            elif self.session.parentIndex is not None:
-                self._media_season = self.session.parentIndex.zfill(2)
-            else:
-                self._media_season = None
+            self._media_season = self.session.seasonNumber
             # show name
             self._media_series_title = self.session.grandparentTitle
             # episode number (00)
@@ -315,6 +330,11 @@ class PlexMediaPlayer(MediaPlayerDevice):
     @property
     def unique_id(self):
         """Return the id of this plex client."""
+        return f"{self.plex_server.machine_identifier}:{self._machine_identifier}"
+
+    @property
+    def machine_identifier(self):
+        """Return the Plex-provided identifier of this plex client."""
         return self._machine_identifier
 
     @property

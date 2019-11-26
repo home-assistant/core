@@ -16,7 +16,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import State, callback
+from homeassistant.core import CALLBACK_TYPE, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -96,7 +96,7 @@ class LightGroup(light.Light):
         self._effect_list: Optional[List[str]] = None
         self._effect: Optional[str] = None
         self._supported_features: int = 0
-        self._async_unsub_state_changed = None
+        self._async_unsub_state_changed: Optional[CALLBACK_TYPE] = None
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -108,6 +108,7 @@ class LightGroup(light.Light):
             """Handle child updates."""
             self.async_schedule_update_ha_state(True)
 
+        assert self.hass is not None
         self._async_unsub_state_changed = async_track_state_change(
             self.hass, self._entity_ids, async_state_changed_listener
         )

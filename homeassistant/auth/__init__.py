@@ -261,7 +261,7 @@ class AuthManager:
         """Enable a multi-factor auth module for user."""
         if user.system_generated:
             raise ValueError(
-                "System generated users cannot enable " "multi-factor auth module."
+                "System generated users cannot enable multi-factor auth module."
             )
 
         module = self.get_auth_mfa_module(mfa_module_id)
@@ -276,7 +276,7 @@ class AuthManager:
         """Disable a multi-factor auth module for user."""
         if user.system_generated:
             raise ValueError(
-                "System generated users cannot disable " "multi-factor auth module."
+                "System generated users cannot disable multi-factor auth module."
             )
 
         module = self.get_auth_mfa_module(mfa_module_id)
@@ -320,7 +320,7 @@ class AuthManager:
 
         if user.system_generated != (token_type == models.TOKEN_TYPE_SYSTEM):
             raise ValueError(
-                "System generated users can only have system type " "refresh tokens"
+                "System generated users can only have system type refresh tokens"
             )
 
         if token_type == models.TOKEN_TYPE_NORMAL and client_id is None:
@@ -330,7 +330,7 @@ class AuthManager:
             token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
             and client_name is None
         ):
-            raise ValueError("Client_name is required for long-lived access " "token")
+            raise ValueError("Client_name is required for long-lived access token")
 
         if token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN:
             for token in user.refresh_tokens.values():
