@@ -198,6 +198,7 @@ homeassistant/components/mill/* @danielhiversen
 homeassistant/components/min_max/* @fabaff
 homeassistant/components/minio/* @tkislan
 homeassistant/components/mobile_app/* @robbiet480
+homeassistant/components/modbus/* @adamchengtkc
 homeassistant/components/monoprice/* @etsinko
 homeassistant/components/moon/* @fabaff
 homeassistant/components/mpd/* @fabaff
