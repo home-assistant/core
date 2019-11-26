@@ -147,7 +147,6 @@ def execute(hass, filename, source, data=None):
 
     def protected_getattr(obj, name, default=None):
         """Restricted method to get attributes."""
-        # pylint: disable=too-many-boolean-expressions
         if name.startswith("async_"):
             raise ScriptError("Not allowed to access async methods")
         if (

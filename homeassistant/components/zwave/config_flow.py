@@ -48,8 +48,7 @@ class ZwaveFlowHandler(config_entries.ConfigFlow):
             try:
                 from functools import partial
 
-                # pylint: disable=unused-variable
-                option = await self.hass.async_add_executor_job(  # noqa: F841
+                option = await self.hass.async_add_executor_job(  # noqa: F841 pylint: disable=unused-variable
                     partial(
                         ZWaveOption,
                         user_input[CONF_USB_STICK_PATH],
