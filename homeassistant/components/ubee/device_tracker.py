@@ -1,6 +1,8 @@
 """Support for Ubee router."""
 
 import logging
+
+from pyubee import Ubee
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -35,8 +37,6 @@ def get_scanner(hass, config):
     username = info[CONF_USERNAME]
     password = info[CONF_PASSWORD]
     model = info[CONF_MODEL]
-
-    from pyubee import Ubee
 
     ubee = Ubee(host, username, password, model)
     if not ubee.login():
