@@ -350,7 +350,8 @@ class RoombaVacuum(VacuumDevice):
 
             self._fan_speed = fan_speed
 
-    def _get_bin_state(self, state):
+    @staticmethod
+    def _get_bin_state(state):
         bin_raw_state = state.get("bin", {})
         bin_state = {}
 
