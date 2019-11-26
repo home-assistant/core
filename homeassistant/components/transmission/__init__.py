@@ -35,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 SERVICE_ADD_TORRENT_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_TORRENT): cv.string, vol.Required(CONF_HOST): cv.string}
+    {vol.Required(ATTR_TORRENT): cv.string, vol.Required(CONF_NAME): cv.string}
 )
 
 TRANS_SCHEMA = vol.All(
@@ -169,11 +169,11 @@ class TransmissionClient:
             """Add new torrent to download."""
             tm_client = None
             for entry in self.hass.config_entries.async_entries(DOMAIN):
-                if entry.data[CONF_HOST] == service.data[CONF_HOST]:
+                if entry.data[CONF_NAME] == service.data[CONF_NAME]:
                     tm_client = self.hass.data[DOMAIN][entry.entry_id]
                     break
             if tm_client is None:
-                _LOGGER.error("Transmission host is not found")
+                _LOGGER.error("Transmission instance is not found")
             else:
                 torrent = service.data[ATTR_TORRENT]
                 if torrent.startswith(

@@ -108,6 +108,7 @@ class TransmissionSwitch(ToggleEntity):
         """Unsubscribe from update dispatcher."""
         if self.unsub_update:
             self.unsub_update()
+            self.unsub_update = None
 
     def update(self):
         """Get the latest data from Transmission and updates the state."""
