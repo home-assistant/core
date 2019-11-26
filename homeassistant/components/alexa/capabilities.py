@@ -227,6 +227,20 @@ class AlexaCapability:
         return friendly_names
 
 
+class Alexa(AlexaCapability):
+    """Implements Alexa Interface.
+
+    Although endpoints implement this interface implicitly,
+    The API suggests you should explicitly include this interface.
+
+    https://developer.amazon.com/docs/device-apis/alexa-interface.html
+    """
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa"
+
+
 class AlexaEndpointHealth(AlexaCapability):
     """Implements Alexa.EndpointHealth.
 
