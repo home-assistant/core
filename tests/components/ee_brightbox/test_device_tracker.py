@@ -73,9 +73,9 @@ async def test_missing_credentials(eebrightbox_mock, hass):
 
 
 @patch("homeassistant.components.ee_brightbox.device_tracker.EEBrightBox")
-async def test_invalid_credentials(config_check_failed, hass):
+async def test_invalid_credentials(eebrightbox_mock, hass):
     """Test invalid credentials."""
-    # _configure_mock_failed_config_check(eebrightbox_mock)
+    _configure_mock_failed_config_check(eebrightbox_mock)
 
     result = await async_setup_component(
         hass,
