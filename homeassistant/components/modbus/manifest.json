@@ -6,5 +6,7 @@
     "pymodbus==1.5.2"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@adamchengtkc"
+  ]
 }
