@@ -43,7 +43,8 @@ class HomeAssistantView:
 
         return Context(user_id=user.id)
 
-    def json(self, result, status_code=200, headers=None):
+    @staticmethod
+    def json(result, status_code=200, headers=None):
         """Return a JSON response."""
         try:
             msg = json.dumps(
