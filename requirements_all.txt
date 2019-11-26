@@ -100,7 +100,7 @@ TwitterAPI==2.5.10
 # VL53L1X2==0.1.5
 
 # homeassistant.components.waze_travel_time
-WazeRouteCalculator==0.10
+WazeRouteCalculator==0.12
 
 # homeassistant.components.yessssms
 YesssSMS==0.4.1
