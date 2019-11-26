@@ -1,14 +1,15 @@
 """Support to control a Zehnder ComfoAir 350 ventilation unit."""
 
 import logging
+
+from comfoair.asyncio import ComfoAir
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-import homeassistant.helpers.config_validation as cv
-from comfoair.asyncio import ComfoAir
 
 DOMAIN = "comfoair"
 SIGNAL_COMFOAIR_UPDATE_RECEIVED = "comfoair_update_received"
@@ -51,17 +52,19 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         coro = discovery.async_load_platform(hass, com, DOMAIN, {}, config)
         hass.async_create_task(coro)
 
-    async def _ca_service_virtualkey(service):
-        ev_mask = service.data.get(ATTR_MASK)
-        ev_type = service.data.get(ATTR_TYPE)
+    async def ca_service_virtualkey(service):
+        ev_mask = service.data[ATTR_MASK]
+        ev_type = service.data[ATTR_TYPE]
         await hass.data[DOMAIN].keypress(ev_mask, ev_type)
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_VIRTUALKEY,
-        _ca_service_virtualkey,
+        ca_service_virtualkey,
         schema=SCHEMA_SERVICE_VIRTUALKEY,
     )
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, hass.data[DOMAIN].stop)
 
     return True
 
@@ -72,10 +75,10 @@ class ComfoAirModule:
     def __init__(self, hass: HomeAssistantType, config: ConfigType):
         """Initialize the ComfoAir component."""
         self._hass = hass
-        self._name = config[DOMAIN].get(CONF_NAME)
+        self._name = config[DOMAIN][CONF_NAME]
         self._cache = {}
 
-        self._ca = ComfoAir(config[DOMAIN].get(CONF_SERIAL_PORT))
+        self._ca = ComfoAir(config[DOMAIN][CONF_SERIAL_PORT])
         self._ca.add_listener(self._event)
 
     async def _event(self, event):
