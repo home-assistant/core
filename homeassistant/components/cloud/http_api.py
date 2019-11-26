@@ -174,7 +174,9 @@ class GoogleActionsSyncView(HomeAssistantView):
         """Trigger a Google Actions sync."""
         hass = request.app["hass"]
         cloud: Cloud = hass.data[DOMAIN]
-        status = await cloud.client.google_config.async_sync_entities()
+        status = await cloud.client.google_config.async_sync_entities(
+            cloud.client.google_config.agent_user_id
+        )
         return self.json({}, status_code=status)
 
 

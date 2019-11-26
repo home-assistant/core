@@ -12,7 +12,12 @@ from tests.common import mock_coro, async_fire_time_changed
 
 async def test_google_update_report_state(hass, cloud_prefs):
     """Test Google config responds to updating preference."""
-    config = CloudGoogleConfig(hass, GACTIONS_SCHEMA({}), cloud_prefs, None)
+    config = CloudGoogleConfig(
+        hass,
+        GACTIONS_SCHEMA({}),
+        cloud_prefs,
+        Mock(claims={"cognito:username": "abcdefghjkl"}),
+    )
 
     with patch.object(
         config, "async_sync_entities", side_effect=mock_coro
@@ -39,12 +44,17 @@ async def test_sync_entities(aioclient_mock, hass, cloud_prefs):
         ),
     )
 
-    assert await config.async_sync_entities() == 404
+    assert await config.async_sync_entities("user") == 404
 
 
 async def test_google_update_expose_trigger_sync(hass, cloud_prefs):
     """Test Google config responds to updating exposed entities."""
-    config = CloudGoogleConfig(hass, GACTIONS_SCHEMA({}), cloud_prefs, None)
+    config = CloudGoogleConfig(
+        hass,
+        GACTIONS_SCHEMA({}),
+        cloud_prefs,
+        Mock(claims={"cognito:username": "abcdefghjkl"}),
+    )
 
     with patch.object(
         config, "async_sync_entities", side_effect=mock_coro

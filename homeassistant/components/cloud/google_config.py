@@ -105,7 +105,7 @@ class CloudGoogleConfig(AbstractConfig):
         except ErrorResponse as err:
             _LOGGER.warning("Error reporting state - %s: %s", err.code, err.message)
 
-    async def _async_request_sync_devices(self):
+    async def _async_request_sync_devices(self, agent_user_id: str):
         """Trigger a sync with Google."""
         if self._sync_entities_lock.locked():
             return 200
@@ -143,7 +143,7 @@ class CloudGoogleConfig(AbstractConfig):
 
             # State reporting is reported as a property on entities.
             # So when we change it, we need to sync all entities.
-            await self.async_sync_entities()
+            await self.async_sync_entities(self.agent_user_id)
 
         # If entity prefs are the same or we have filter in config.yaml,
         # don't sync.
@@ -151,7 +151,7 @@ class CloudGoogleConfig(AbstractConfig):
             self._cur_entity_prefs is not prefs.google_entity_configs
             and self._config["filter"].empty_filter
         ):
-            self.async_schedule_google_sync()
+            self.async_schedule_google_sync(self.agent_user_id)
 
         if self.enabled and not self.is_local_sdk_active:
             self.async_enable_local_sdk()
@@ -167,4 +167,4 @@ class CloudGoogleConfig(AbstractConfig):
 
         # Schedule a sync if a change was made to an entity that Google knows about
         if self._should_expose_entity_id(entity_id):
-            await self.async_sync_entities()
+            await self.async_sync_entities(self.agent_user_id)
