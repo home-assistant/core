@@ -42,11 +42,11 @@ class LutronCasetaLight(LutronCasetaDevice, Light):
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
-        self._smartbridge.set_value(self._device_id, to_lutron_level(brightness))
+        self._smartbridge.set_value(self.device_id, to_lutron_level(brightness))
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        self._smartbridge.set_value(self._device_id, 0)
+        self._smartbridge.set_value(self.device_id, 0)
 
     @property
     def is_on(self):
@@ -55,5 +55,5 @@ class LutronCasetaLight(LutronCasetaDevice, Light):
 
     async def async_update(self):
         """Call when forcing a refresh of the device."""
-        self._state = self._smartbridge.get_device_by_id(self._device_id)
+        self._state = self._smartbridge.get_device_by_id(self.device_id)
         _LOGGER.debug(self._state)
