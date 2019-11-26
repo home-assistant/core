@@ -174,16 +174,16 @@ class TransmissionClient:
                     break
             if tm_client is None:
                 _LOGGER.error("Transmission instance is not found")
+                return
+            torrent = service.data[ATTR_TORRENT]
+            if torrent.startswith(
+                ("http", "ftp:", "magnet:")
+            ) or self.hass.config.is_allowed_path(torrent):
+                tm_client.tm_api.add_torrent(torrent)
             else:
-                torrent = service.data[ATTR_TORRENT]
-                if torrent.startswith(
-                    ("http", "ftp:", "magnet:")
-                ) or self.hass.config.is_allowed_path(torrent):
-                    tm_client.tm_api.add_torrent(torrent)
-                else:
-                    _LOGGER.warning(
-                        "Could not add torrent: unsupported type or no permission"
-                    )
+                _LOGGER.warning(
+                    "Could not add torrent: unsupported type or no permission"
+                )
 
         self.hass.services.async_register(
             DOMAIN, SERVICE_ADD_TORRENT, add_torrent, schema=SERVICE_ADD_TORRENT_SCHEMA
