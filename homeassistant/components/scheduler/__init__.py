@@ -138,7 +138,7 @@ class Scheduler:
             activation_context = Context()
 
         item = {
-            CONF_ID: schedule_id,
+            CONF_SCHEDULE_ID: schedule_id,
             CONF_ENTITY_ID: entity_id,
             CONF_START_DATETIME: start_datetime,
             CONF_END_DATETIME: end_datetime,
@@ -182,8 +182,8 @@ class Scheduler:
             self._async_activation_listeners,
             self._async_deactivation_listeners,
         ):
-            if schedule_id in listener_repo:
-                cancel = listener_repo(schedule_id)
+            if schedule_id in self._async_activation_listeners:
+                cancel = listener_repo.pop(schedule_id)
                 cancel()
 
         item = self.items.pop(schedule_id)
@@ -216,10 +216,6 @@ class Scheduler:
         if schedule_id not in self.items:
             raise KeyError
 
-        raise_on_invalid_dates(
-            data.get(CONF_START_DATETIME), data.get(CONF_END_DATETIME)
-        )
-
         data = ITEM_UPDATE_SCHEMA(data)
         item = self.async_delete(schedule_id)
         item.update(data)
@@ -229,7 +225,7 @@ class Scheduler:
             item[CONF_START_DATETIME],
             end_datetime=item[CONF_END_DATETIME],
             schedule_id=item[CONF_SCHEDULE_ID],
-            activation_context=item[CONF_ACTIVATION_CONTEXT_ID],
+            activation_context=Context(id=item[CONF_ACTIVATION_CONTEXT_ID]),
         )
 
 
@@ -253,11 +249,9 @@ def websocket_handle_delete(hass, connection, msg):
     """Handle deleting a schedule."""
     try:
         item = hass.data[DOMAIN].async_delete(msg[CONF_SCHEDULE_ID])
-    except KeyError:
+    except KeyError as err:
         connection.send_message(
-            websocket_api.error_message(
-                msg[CONF_ID], "schedule_not_found", "Schedule not found"
-            )
+            websocket_api.error_message(msg[CONF_ID], "schedule_not_found", str(err))
         )
     else:
         connection.send_message(websocket_api.result_message(msg[CONF_ID], item))
@@ -281,11 +275,9 @@ def websocket_handle_update(hass, connection, msg):
 
     try:
         item = hass.data[DOMAIN].async_update(schedule_id, data)
-    except KeyError:
+    except KeyError as err:
         connection.send_message(
-            websocket_api.error_message(
-                msg_id, "schedule_not_found", "Schedule not found"
-            )
+            websocket_api.error_message(msg[CONF_ID], "schedule_not_found", str(err))
         )
     except ValueError as err:
         connection.send_message(
