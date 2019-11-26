@@ -43,7 +43,6 @@ SUPPORTED_FEATURES = (
 )
 
 
-# pylint: disable=unused-argument
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a media player entity for a Sisyphus table."""
     host = discovery_info[CONF_HOST]

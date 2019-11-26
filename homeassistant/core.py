@@ -75,7 +75,6 @@ from homeassistant.util.unit_system import (
 )
 
 # Typing imports that create a circular dependency
-# pylint: disable=using-constant-test
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntries
     from homeassistant.components.http import HomeAssistantHTTP

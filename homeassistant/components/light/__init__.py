@@ -232,7 +232,9 @@ class SetIntentHandler(intent.IntentHandler):
             service_data[ATTR_BRIGHTNESS_PCT] = slots["brightness"]["value"]
             speech_parts.append("{}% brightness".format(slots["brightness"]["value"]))
 
-        await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, service_data)
+        await hass.services.async_call(
+            DOMAIN, SERVICE_TURN_ON, service_data, context=intent_obj.context
+        )
 
         response = intent_obj.create_response()
 

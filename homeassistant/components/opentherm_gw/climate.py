@@ -31,6 +31,9 @@ from .const import CONF_FLOOR_TEMP, CONF_PRECISION, DATA_GATEWAYS, DATA_OPENTHER
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_FLOOR_TEMP = False
+DEFAULT_PRECISION = None
+
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 
@@ -54,8 +57,8 @@ class OpenThermClimate(ClimateDevice):
         """Initialize the device."""
         self._gateway = gw_dev
         self.friendly_name = gw_dev.name
-        self.floor_temp = options[CONF_FLOOR_TEMP]
-        self.temp_precision = options.get(CONF_PRECISION)
+        self.floor_temp = options.get(CONF_FLOOR_TEMP, DEFAULT_FLOOR_TEMP)
+        self.temp_precision = options.get(CONF_PRECISION, DEFAULT_PRECISION)
         self._current_operation = None
         self._current_temperature = None
         self._hvac_mode = HVAC_MODE_HEAT
@@ -70,7 +73,7 @@ class OpenThermClimate(ClimateDevice):
     def update_options(self, entry):
         """Update climate entity options."""
         self.floor_temp = entry.options[CONF_FLOOR_TEMP]
-        self.temp_precision = entry.options.get(CONF_PRECISION)
+        self.temp_precision = entry.options[CONF_PRECISION]
         self.async_schedule_update_ha_state()
 
     async def async_added_to_hass(self):
