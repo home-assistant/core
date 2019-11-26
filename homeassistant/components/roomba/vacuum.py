@@ -33,7 +33,6 @@ ATTR_ERROR = "error"
 ATTR_POSITION = "position"
 ATTR_SOFTWARE_VERSION = "software_version"
 
-CAP_BIN_FULL = "bin_full"
 CAP_POSITION = "position"
 CAP_CARPET_BOOST = "carpet_boost"
 
@@ -276,17 +275,13 @@ class RoombaVacuum(VacuumDevice):
 
         # Get the capabilities of our unit
         capabilities = state.get("cap", {})
-        cap_bin_full = capabilities.get("binFullDetect")
         cap_carpet_boost = capabilities.get("carpetBoost")
         cap_pos = capabilities.get("pose")
         # Store capabilities
         self._capabilities = {
-            CAP_BIN_FULL: cap_bin_full == 1,
             CAP_CARPET_BOOST: cap_carpet_boost == 1,
             CAP_POSITION: cap_pos == 1,
         }
-
-        bin_state = state.get("bin", {})
 
         # Roomba software version
         software_version = state.get("softwareVer")
@@ -302,9 +297,12 @@ class RoombaVacuum(VacuumDevice):
 
         # Set properties that are to appear in the GUI
         self._state_attrs = {
-            ATTR_BIN_PRESENT: bin_state.get("present"),
             ATTR_SOFTWARE_VERSION: software_version,
         }
+
+        # Get bin state
+        bin_state = self._get_bin_state(state)
+        self._state_attrs.update(bin_state)
 
         # Only add cleaning time and cleaned area attrs when the vacuum is
         # currently on
@@ -335,10 +333,6 @@ class RoombaVacuum(VacuumDevice):
                 position = f"({pos_x}, {pos_y}, {theta})"
             self._state_attrs[ATTR_POSITION] = position
 
-        # Not all Roombas have a bin full sensor
-        if self._capabilities[CAP_BIN_FULL]:
-            self._state_attrs[ATTR_BIN_FULL] = bin_state.get("full")
-
         # Fan speed mode (Performance, Automatic or Eco)
         # Not all Roombas expose carpet boost
         if self._capabilities[CAP_CARPET_BOOST]:
@@ -355,3 +349,16 @@ class RoombaVacuum(VacuumDevice):
                     fan_speed = FAN_SPEED_ECO
 
             self._fan_speed = fan_speed
+
+    @staticmethod
+    def _get_bin_state(state):
+        bin_raw_state = state.get("bin", {})
+        bin_state = {}
+
+        if bin_raw_state.get("present") is not None:
+            bin_state[ATTR_BIN_PRESENT] = bin_raw_state.get("present")
+
+        if bin_raw_state.get("full") is not None:
+            bin_state[ATTR_BIN_FULL] = bin_raw_state.get("full")
+
+        return bin_state
