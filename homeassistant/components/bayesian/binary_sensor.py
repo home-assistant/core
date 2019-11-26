@@ -19,9 +19,6 @@ from homeassistant.core import callback
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change, async_track_same_state
-import logging
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_OBSERVATIONS = "observations"
 ATTR_PROBABILITY = "probability"
