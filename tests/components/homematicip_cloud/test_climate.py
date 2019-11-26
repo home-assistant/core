@@ -7,8 +7,11 @@ from homematicip.functionalHomes import IndoorClimateHome
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE,
+    ATTR_HVAC_ACTION,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
@@ -214,6 +217,17 @@ async def test_hmip_heating_group_heat(hass, default_mock_hap):
     assert len(hmip_device.mock_calls) == service_call_counter + 24
     # Only fire event from last async_manipulate_test_data available.
     assert hmip_device.mock_calls[-1][0] == "fire_update_event"
+
+    await async_manipulate_test_data(hass, hmip_device, "floorHeatingMode", "RADIATOR")
+    await async_manipulate_test_data(hass, hmip_device, "valvePosition", 0.1)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == HVAC_MODE_AUTO
+    assert ha_state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
+    await async_manipulate_test_data(hass, hmip_device, "floorHeatingMode", "RADIATOR")
+    await async_manipulate_test_data(hass, hmip_device, "valvePosition", 0.0)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == HVAC_MODE_AUTO
+    assert ha_state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
 
 
 async def test_hmip_heating_group_cool(hass, default_mock_hap):
