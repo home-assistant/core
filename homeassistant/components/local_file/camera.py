@@ -13,13 +13,15 @@ from homeassistant.components.camera import (
 )
 from homeassistant.helpers import config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    CONF_FILE_PATH,
+    DATA_LOCAL_FILE,
+    DEFAULT_NAME,
+    DOMAIN,
+    SERVICE_UPDATE_FILE_PATH,
+)
 
-DOMAIN = "local_file"
-CONF_FILE_PATH = "file_path"
-DATA_LOCAL_FILE = "local_file_cameras"
-DEFAULT_NAME = "Local File"
-SERVICE_UPDATE_FILE_PATH = "update_file_path"
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
