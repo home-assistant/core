@@ -552,11 +552,10 @@ class YeelightGenericLight(Light):
         return YEELIGHT_MONO_EFFECT_LIST
 
     @property
-    def state_attributes(self):
-        """Return optional state attributes."""
+    def device_state_attributes(self):
+        """Return the device specific state attributes."""
 
-        attributes = super().state_attributes
-        attributes["flowing"] = self.device.is_color_flow_enabled
+        attributes = {"flowing": self.device.is_color_flow_enabled}
         if self.device.is_nightlight_supported:
             attributes["night_light"] = self.device.is_nightlight_enabled
 
