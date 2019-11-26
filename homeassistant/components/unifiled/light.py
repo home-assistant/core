@@ -15,12 +15,12 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up the Unifi LED platform."""
 
     # Assign configuration variables.
-    _ip = config_entry.data["host"]
-    _port = config_entry.data["port"]
-    _username = config_entry.data["username"]
-    _password = config_entry.data["password"]
+    host = config_entry.data["host"]
+    port = config_entry.data["port"]
+    username = config_entry.data["username"]
+    password = config_entry.data["password"]
 
-    api = unifiled(_ip, _port, username=_username, password=_password)
+    api = unifiled(host, port, username=username, password=password)
 
     # Verify that passed in configuration works
     if not api.getloginstate():
@@ -39,8 +39,7 @@ class UnifiLedLight(Light):
         self._api = api
         self._light = light
         self._name = light["name"]
-        self._unifiledid = light["id"]
-        self._unique_id = "light." + light["id"]
+        self._unique_id = light["id"]
         self._state = light["status"]["output"]
         self._available = light["isOnline"]
         self._brightness = self._api.convertfrom100to255(light["status"]["led"])
@@ -90,19 +89,19 @@ class UnifiLedLight(Light):
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
         self._api.setdevicebrightness(
-            self._unifiledid,
+            self._unique_id,
             str(self._api.convertfrom255to100(kwargs.get(ATTR_BRIGHTNESS, 255))),
         )
-        self._api.setdeviceoutput(self._unifiledid, 1)
+        self._api.setdeviceoutput(self._unique_id, 1)
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        self._api.setdeviceoutput(self._unifiledid, 0)
+        self._api.setdeviceoutput(self._unique_id, 0)
 
     def update(self):
         """Update the light states."""
-        self._state = self._api.getlightstate(self._unifiledid)
+        self._state = self._api.getlightstate(self._unique_id)
         self._brightness = self._api.convertfrom100to255(
-            self._api.getlightbrightness(self._unifiledid)
+            self._api.getlightbrightness(self._unique_id)
         )
-        self._available = self._api.getlightavailable(self._unifiledid)
+        self._available = self._api.getlightavailable(self._unique_id)
