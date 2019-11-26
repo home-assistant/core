@@ -2,9 +2,7 @@
   "domain": "openhome",
   "name": "Openhome",
   "documentation": "https://www.home-assistant.io/integrations/openhome",
-  "requirements": [
-    "openhomedevice==0.4.2"
-  ],
+  "requirements": ["openhomedevice==0.6.3"],
   "dependencies": [],
   "codeowners": []
 }
