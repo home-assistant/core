@@ -11,8 +11,6 @@ from homeassistant.const import (
     CONF_TIME_ZONE,
 )
 from homeassistant.core import callback
-from homeassistant import exceptions
-import homeassistant.helpers.config_validation as cv
 
 
 from .const import (
