@@ -1,33 +1,33 @@
 """Provides device automations for Alarm control panel."""
 from typing import List
+
 import voluptuous as vol
 
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_NIGHT,
+    SUPPORT_ALARM_TRIGGER,
+)
+from homeassistant.components.automation import AutomationActionType, state
+from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.const import (
-    CONF_DOMAIN,
-    CONF_TYPE,
-    CONF_PLATFORM,
     CONF_DEVICE_ID,
+    CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_PLATFORM,
+    CONF_TYPE,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import HomeAssistant, CALLBACK_TYPE
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_NIGHT,
-    SUPPORT_ALARM_TRIGGER,
-    SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
-)
-from homeassistant.components.automation import state, AutomationActionType
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+
 from . import DOMAIN
 
 TRIGGER_TYPES = {
@@ -37,7 +37,6 @@ TRIGGER_TYPES = {
     "armed_home",
     "armed_away",
     "armed_night",
-    "armed_custom_bypass",
 }
 
 TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
@@ -125,16 +124,6 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
                     CONF_TYPE: "armed_night",
                 }
             )
-        if supported_features & SUPPORT_ALARM_ARM_CUSTOM_BYPASS:
-            triggers.append(
-                {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "armed_custom_bypass",
-                }
-            )
 
     return triggers
 
@@ -166,9 +155,6 @@ async def async_attach_trigger(
     elif config[CONF_TYPE] == "armed_night":
         from_state = STATE_ALARM_PENDING
         to_state = STATE_ALARM_ARMED_NIGHT
-    elif config[CONF_TYPE] == "armed_custom_bypass":
-        from_state = STATE_ALARM_PENDING
-        to_state = STATE_ALARM_ARMED_CUSTOM_BYPASS
 
     state_config = {
         state.CONF_PLATFORM: "state",

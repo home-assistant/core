@@ -2,26 +2,25 @@
 import pytest
 
 from homeassistant.components.alarm_control_panel import DOMAIN
+import homeassistant.components.automation as automation
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.setup import async_setup_component
-import homeassistant.components.automation as automation
 from homeassistant.helpers import device_registry
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
     assert_lists_same,
+    async_get_device_automations,
     async_mock_service,
     mock_device_registry,
     mock_registry,
-    async_get_device_automations,
 )
 
 
@@ -52,6 +51,9 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    hass.states.async_set(
+        "alarm_control_panel.test_5678", "attributes", {"supported_features": 15}
+    )
     expected_triggers = [
         {
             "platform": "device",
@@ -63,14 +65,14 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         {
             "platform": "device",
             "domain": DOMAIN,
-            "type": "triggered",
+            "type": "disarmed",
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },
         {
             "platform": "device",
             "domain": DOMAIN,
-            "type": "disarmed",
+            "type": "triggered",
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },
@@ -92,13 +94,6 @@ async def test_get_triggers(hass, device_reg, entity_reg):
             "platform": "device",
             "domain": DOMAIN,
             "type": "armed_night",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
-        },
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "armed_custom_bypass",
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },
@@ -230,25 +225,6 @@ async def test_if_fires_on_state_change(hass, calls):
                         },
                     },
                 },
-                {
-                    "trigger": {
-                        "platform": "device",
-                        "domain": DOMAIN,
-                        "device_id": "",
-                        "entity_id": "alarm_control_panel.entity",
-                        "type": "armed_custom_bypass",
-                    },
-                    "action": {
-                        "service": "test.automation",
-                        "data_template": {
-                            "some": (
-                                "armed_custom_bypass - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
-                            )
-                        },
-                    },
-                },
             ]
         },
     )
@@ -313,16 +289,5 @@ async def test_if_fires_on_state_change(hass, calls):
     assert calls[6].data[
         "some"
     ] == "armed_night - device - {} - pending - armed_night - None".format(
-        "alarm_control_panel.entity"
-    )
-
-    # Fake that the entity is armed with custom bypass.
-    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_PENDING)
-    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_ARMED_CUSTOM_BYPASS)
-    await hass.async_block_till_done()
-    assert len(calls) == 8
-    assert calls[7].data[
-        "some"
-    ] == "armed_custom_bypass - device - {} - pending - armed_custom_bypass - None".format(
         "alarm_control_panel.entity"
     )
