@@ -4,7 +4,7 @@ from pytest import raises
 from unittest.mock import patch, Mock
 
 import requests
-from requests.exceptions import Timeout, MissingSchema
+from requests.exceptions import Timeout
 import requests_mock
 
 from homeassistant.exceptions import PlatformNotReady
@@ -47,7 +47,7 @@ class TestRestBinarySensorSetup(unittest.TestCase):
 
     def test_setup_missing_schema(self):
         """Test setup with resource missing schema."""
-        with pytest.raises(MissingSchema):
+        with pytest.raises(PlatformNotReady):
             rest.setup_platform(
                 self.hass,
                 {"platform": "rest", "resource": "localhost", "method": "GET"},
@@ -60,7 +60,7 @@ class TestRestBinarySensorSetup(unittest.TestCase):
         with raises(PlatformNotReady):
             rest.setup_platform(
                 self.hass,
-                {"platform": "rest", "resource": "http://localhost"},
+                {"platform": "rest", "resource": "http://localhost", "method": "GET"},
                 self.add_devices,
                 None,
             )
@@ -72,7 +72,7 @@ class TestRestBinarySensorSetup(unittest.TestCase):
         with raises(PlatformNotReady):
             rest.setup_platform(
                 self.hass,
-                {"platform": "rest", "resource": "http://localhost"},
+                {"platform": "rest", "resource": "http://localhost", "method": "GET"},
                 self.add_devices,
                 None,
             )
