@@ -36,6 +36,7 @@ CONF_P_GIVEN_T = "prob_given_true"
 CONF_TO_STATE = "to_state"
 CONF_DELAY_ON = "delay_on"
 CONF_DELAY_OFF = "delay_off"
+CONF_MAX_DURATION = "max_duration"
 
 DEFAULT_NAME = "Bayesian Binary Sensor"
 DEFAULT_PROBABILITY_THRESHOLD = 0.5
@@ -50,6 +51,7 @@ NUMERIC_STATE_SCHEMA = vol.Schema(
         vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
         vol.Optional(CONF_DELAY_ON): vol.All(cv.time_period, cv.positive_timedelta),
         vol.Optional(CONF_DELAY_OFF): vol.All(cv.time_period, cv.positive_timedelta),
+        vol.Optional(CONF_MAX_DURATION): vol.All(cv.time_period, cv.positive_timedelta),
     },
     required=True,
 )
@@ -63,6 +65,7 @@ STATE_SCHEMA = vol.Schema(
         vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
         vol.Optional(CONF_DELAY_ON): vol.All(cv.time_period, cv.positive_timedelta),
         vol.Optional(CONF_DELAY_OFF): vol.All(cv.time_period, cv.positive_timedelta),
+        vol.Optional(CONF_MAX_DURATION): vol.All(cv.time_period, cv.positive_timedelta),
     },
     required=True,
 )
@@ -75,6 +78,7 @@ TEMPLATE_SCHEMA = vol.Schema(
         vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
         vol.Optional(CONF_DELAY_ON): vol.All(cv.time_period, cv.positive_timedelta),
         vol.Optional(CONF_DELAY_OFF): vol.All(cv.time_period, cv.positive_timedelta),
+        vol.Optional(CONF_MAX_DURATION): vol.All(cv.time_period, cv.positive_timedelta),
     },
     required=True,
 )
