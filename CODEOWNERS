@@ -292,6 +292,7 @@ homeassistant/components/spaceapi/* @fabaff
 homeassistant/components/speedtestdotnet/* @rohankapoorcom
 homeassistant/components/spider/* @peternijssen
 homeassistant/components/sql/* @dgomes
+homeassistant/components/starline/* @anonym-tsk
 homeassistant/components/statistics/* @fabaff
 homeassistant/components/stiebel_eltron/* @fucm
 homeassistant/components/stream/* @hunterjm
