@@ -50,15 +50,6 @@ def async_set_agent(hass: core.HomeAssistant, agent: AbstractConversationAgent):
     hass.data[DATA_AGENT] = agent
 
 
-async def get_agent(hass: core.HomeAssistant) -> AbstractConversationAgent:
-    """Get agent."""
-    agent = hass.data.get(DATA_AGENT)
-    if agent is None:
-        agent = hass.data[DATA_AGENT] = DefaultAgent(hass)
-        await agent.async_initialize(hass.data.get(DATA_CONFIG))
-    return agent
-
-
 async def async_setup(hass, config):
     """Register the process service."""
     hass.data[DATA_CONFIG] = config
@@ -67,8 +58,9 @@ async def async_setup(hass, config):
         """Parse text into commands."""
         text = service.data[ATTR_TEXT]
         _LOGGER.debug("Processing: <%s>", text)
+        agent = await _get_agent(hass)
         try:
-            await process(hass, text, service.context.id)
+            await agent.async_process(text, service.context)
         except intent.IntentHandleError as err:
             _LOGGER.error("Error processing %s: %s", text, err)
 
@@ -84,27 +76,6 @@ async def async_setup(hass, config):
     return True
 
 
-async def process(hass: core.HomeAssistant, text: str, conversation_id: str):
-    """Process text and get intent."""
-    agent = await get_agent(hass)
-    return await agent.async_process(text, conversation_id)
-
-
-async def get_intent(hass: core.HomeAssistant, text: str, conversation_id: str):
-    """Process text and get intent."""
-    try:
-        intent_result = await process(hass, text, conversation_id)
-    except intent.IntentHandleError as err:
-        intent_result = intent.IntentResponse()
-        intent_result.async_set_speech(str(err))
-
-    if intent_result is None:
-        intent_result = intent.IntentResponse()
-        intent_result.async_set_speech("Sorry, I didn't understand that")
-
-    return intent_result
-
-
 @websocket_api.async_response
 @websocket_api.websocket_command(
     {"type": "conversation/process", "text": str, vol.Optional("conversation_id"): str}
@@ -112,7 +83,10 @@ async def get_intent(hass: core.HomeAssistant, text: str, conversation_id: str):
 async def websocket_process(hass, connection, msg):
     """Process text."""
     connection.send_result(
-        msg["id"], await get_intent(hass, msg["text"], msg.get("conversation_id"))
+        msg["id"],
+        await _async_converse(
+            hass, msg["text"], msg.get("conversation_id"), connection.context(msg)
+        ),
     )
 
 
@@ -120,7 +94,7 @@ async def websocket_process(hass, connection, msg):
 @websocket_api.websocket_command({"type": "conversation/agent/info"})
 async def websocket_get_agent_info(hass, connection, msg):
     """Do we need onboarding."""
-    agent = await get_agent(hass)
+    agent = await _get_agent(hass)
 
     connection.send_result(
         msg["id"],
@@ -135,7 +109,7 @@ async def websocket_get_agent_info(hass, connection, msg):
 @websocket_api.websocket_command({"type": "conversation/onboarding/set", "shown": bool})
 async def websocket_set_onboarding(hass, connection, msg):
     """Set onboarding status."""
-    agent = await get_agent(hass)
+    agent = await _get_agent(hass)
 
     success = await agent.async_set_onboarding(msg["shown"])
 
@@ -157,8 +131,9 @@ class ConversationProcessView(http.HomeAssistantView):
     async def post(self, request, data):
         """Send a request for processing."""
         hass = request.app["hass"]
-        intent_result = await get_intent(
-            hass, data["text"], data.get("conversation_id")
+
+        intent_result = await _async_converse(
+            hass, data["text"], data.get("conversation_id"), self.context(request)
         )
 
         return self.json(intent_result)
@@ -188,7 +163,7 @@ class ConversationHandleView(http.HomeAssistantView):
                 key: {"value": value} for key, value in data.get("data", {}).items()
             }
             intent_result = await intent.async_handle(
-                hass, DOMAIN, intent_name, slots, ""
+                hass, DOMAIN, intent_name, slots, "", self.context(request)
             )
         except intent.IntentHandleError as err:
             intent_result = intent.IntentResponse()
@@ -199,3 +174,30 @@ class ConversationHandleView(http.HomeAssistantView):
             intent_result.async_set_speech("Sorry, I couldn't handle that")
 
         return self.json(intent_result)
+
+
+async def _get_agent(hass: core.HomeAssistant) -> AbstractConversationAgent:
+    """Get the active conversation agent."""
+    agent = hass.data.get(DATA_AGENT)
+    if agent is None:
+        agent = hass.data[DATA_AGENT] = DefaultAgent(hass)
+        await agent.async_initialize(hass.data.get(DATA_CONFIG))
+    return agent
+
+
+async def _async_converse(
+    hass: core.HomeAssistant, text: str, conversation_id: str, context: core.Context
+) -> intent.IntentResponse:
+    """Process text and get intent."""
+    agent = await _get_agent(hass)
+    try:
+        intent_result = await agent.async_process(text, context, conversation_id)
+    except intent.IntentHandleError as err:
+        intent_result = intent.IntentResponse()
+        intent_result.async_set_speech(str(err))
+
+    if intent_result is None:
+        intent_result = intent.IntentResponse()
+        intent_result.async_set_speech("Sorry, I didn't understand that")
+
+    return intent_result

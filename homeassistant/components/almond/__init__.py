@@ -10,7 +10,7 @@ from aiohttp import ClientSession, ClientError
 from pyalmond import AlmondLocalAuth, AbstractAlmondWebAuth, WebAlmondAPI
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, CoreState
+from homeassistant.core import HomeAssistant, CoreState, Context
 from homeassistant.const import CONF_TYPE, CONF_HOST, EVENT_HOMEASSISTANT_START
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.auth.const import GROUP_ID_ADMIN
@@ -277,7 +277,7 @@ class AlmondAgent(conversation.AbstractConversationAgent):
         return True
 
     async def async_process(
-        self, text: str, conversation_id: Optional[str] = None
+        self, text: str, context: Context, conversation_id: Optional[str] = None
     ) -> intent.IntentResponse:
         """Process a sentence."""
         response = await self.api.async_converse_text(text, conversation_id)
