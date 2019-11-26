@@ -50,6 +50,8 @@ disable=
   too-many-boolean-expressions,
   unnecessary-pass,
   unused-argument
+enable=
+  use-symbolic-message-instead
 
 [REPORTS]
 score=no
