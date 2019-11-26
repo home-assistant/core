@@ -335,7 +335,6 @@ MQTT_PUBLISH_SCHEMA = vol.Schema(
 )
 
 
-# pylint: disable=invalid-name
 SubscribePayloadType = Union[str, bytes]  # Only bytes if encoding is None
 
 

@@ -99,7 +99,7 @@ def test_properties_no_data(hass: HomeAssistant) -> None:
     assert weather.temperature_unit == TEMP_CELSIUS
 
 
-# pylint: disable=W0212
+# pylint: disable=protected-access
 def test_properties_unknown_symbol() -> None:
     """Test behaviour when unknown symbol from API."""
     hass = Mock()
@@ -152,7 +152,7 @@ def test_properties_unknown_symbol() -> None:
     assert forecast[ATTR_FORECAST_CONDITION] is None
 
 
-# pylint: disable=W0212
+# pylint: disable=protected-access
 async def test_refresh_weather_forecast_exceeds_retries(hass) -> None:
     """Test the refresh weather forecast function."""
     from smhi.smhi_lib import SmhiForecastException

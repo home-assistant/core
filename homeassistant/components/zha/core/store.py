@@ -1,5 +1,5 @@
 """Data storage helper for ZHA."""
-# pylint: disable=W0611
+# pylint: disable=unused-import
 from collections import OrderedDict
 import logging
 from typing import MutableMapping

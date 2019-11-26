@@ -226,7 +226,7 @@ class WithingsDataManager:
             WithingsDataManager.print_service_available()
             return result
 
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception as ex:
             # Withings api encountered error.
             if isinstance(ex, (UnauthorizedException, AuthFailedException)):
                 raise NotAuthenticatedError(ex)

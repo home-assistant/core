@@ -87,7 +87,6 @@ async def async_setup(hass, config):
         time = call.data.get(ATTR_TIME)
         date = call.data.get(ATTR_DATE)
         dttm = call.data.get(ATTR_DATETIME)
-        # pylint: disable=too-many-boolean-expressions
         if (
             dttm
             and (date or time)

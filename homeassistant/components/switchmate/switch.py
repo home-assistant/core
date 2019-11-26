@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-# pylint: disable=import-error, no-member, no-value-for-parameter
+# pylint: disable=import-error, no-member
 import switchmate
 import voluptuous as vol
 

@@ -13,8 +13,6 @@ CACHE_TIME = 31 * 86400  # = 1 month
 CACHE_HEADERS = {hdrs.CACHE_CONTROL: f"public, max-age={CACHE_TIME}"}
 
 
-# https://github.com/PyCQA/astroid/issues/633
-# pylint: disable=duplicate-bases
 class CachingStaticResource(StaticResource):
     """Static Resource handler that will add cache headers."""
 

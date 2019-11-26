@@ -272,7 +272,6 @@ def cmdline() -> List[str]:
 
 async def setup_and_run_hass(config_dir: str, args: argparse.Namespace) -> int:
     """Set up HASS and run."""
-    # pylint: disable=redefined-outer-name
     from homeassistant import bootstrap, core
 
     hass = core.HomeAssistant()

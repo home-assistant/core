@@ -306,7 +306,6 @@ class MarkerSensor(Entity):
         self._attributes = self.data.attributes
 
 
-# pylint: disable=no-name-in-module
 class CupsData:
     """Get the latest data from CUPS and update the state."""
 

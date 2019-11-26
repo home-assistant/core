@@ -14,7 +14,7 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.helpers import ConfigType
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN  # pylint: disable=W0611
+from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 

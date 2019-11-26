@@ -139,7 +139,7 @@ class ToonData:
         """Update all Toon data and notify entities."""
         # Ignore the TTL meganism from client library
         # It causes a lots of issues, hence we take control over caching
-        self._toon._clear_cache()  # pylint: disable=W0212
+        self._toon._clear_cache()  # pylint: disable=protected-access
 
         # Gather data from client library (single API call)
         self.gas = self._toon.gas

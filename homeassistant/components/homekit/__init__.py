@@ -362,8 +362,7 @@ class HomeKit:
             return
         self.status = STATUS_WAIT
 
-        # pylint: disable=unused-import
-        from . import (  # noqa: F401
+        from . import (  # noqa: F401 pylint: disable=unused-import
             type_covers,
             type_fans,
             type_lights,
