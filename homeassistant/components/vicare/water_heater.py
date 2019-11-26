@@ -1,7 +1,6 @@
 """Viessmann ViCare water_heater device."""
 import logging
 import requests
-import simplejson
 
 from homeassistant.components.water_heater import (
     SUPPORT_TARGET_TEMPERATURE,
@@ -93,7 +92,7 @@ class ViCareWater(WaterHeaterDevice):
             self._current_mode = self._api.getActiveMode()
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
-        except simplejson.errors.JSONDecodeError:
+        except ValueError:
             _LOGGER.error("Unable to decode data from ViCare server")
 
     @property
