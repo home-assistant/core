@@ -61,7 +61,7 @@ async def async_get_conditions(
             }
         )
 
-        if state and const.ATTR_PRESET_MODES in state.attributes:
+        if state and state.attributes["supported_features"] & const.SUPPORT_PRESET_MODE:
             conditions.append(
                 {
                     CONF_CONDITION: "device",

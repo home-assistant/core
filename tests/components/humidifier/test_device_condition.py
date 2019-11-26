@@ -53,6 +53,9 @@ async def test_get_conditions(hass, device_reg, entity_reg):
             const.ATTR_PRESET_MODES: [const.PRESET_HOME, const.PRESET_AWAY],
         },
     )
+    hass.states.async_set(
+        "humidifier.test_5678", "attributes", {"supported_features": 3}
+    )
     expected_conditions = [
         {
             "condition": "device",
@@ -68,6 +71,40 @@ async def test_get_conditions(hass, device_reg, entity_reg):
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },
+    ]
+    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    assert_lists_same(conditions, expected_conditions)
+
+
+async def test_get_conditions_operation_only(hass, device_reg, entity_reg):
+    """Test we get the expected conditions from a humidifier."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    hass.states.async_set(
+        f"{DOMAIN}.test_5678",
+        const.OPERATION_MODE_DRY,
+        {
+            const.ATTR_OPERATION_MODE: const.OPERATION_MODE_DRY,
+            const.ATTR_PRESET_MODE: const.PRESET_AWAY,
+            const.ATTR_PRESET_MODES: [const.PRESET_HOME, const.PRESET_AWAY],
+        },
+    )
+    hass.states.async_set(
+        "humidifier.test_5678", "attributes", {"supported_features": 1}
+    )
+    expected_conditions = [
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "type": "is_operation_mode",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        }
     ]
     conditions = await async_get_device_automations(hass, "condition", device_entry.id)
     assert_lists_same(conditions, expected_conditions)
