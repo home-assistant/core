@@ -858,8 +858,8 @@ async def test_state_max_duration(hass):
                 {
                     "platform": "state",
                     "entity_id": "sensor.test_state",
-                    "prob_given_true": 0.8,
-                    "prob_given_false": 0.2,
+                    "prob_given_true": 0.6,
+                    "prob_given_false": 0.35,
                     "to_state": "on",
                     "max_duration": 5,
                 },
@@ -867,8 +867,25 @@ async def test_state_max_duration(hass):
                     "platform": "state",
                     "entity_id": "sensor.test_state",
                     "to_state": "on",
+                    "prob_given_true": 0.8,
+                    "prob_given_false": 0.2,
+                    "delay_on": 5,
+                    "max_duration": 5,
+                },
+                {
+                    "platform": "state",
+                    "entity_id": "sensor.test_state",
+                    "to_state": "off",
                     "prob_given_true": 0.52,
                     "prob_given_false": 0.39,
+                    "max_duration": 5,
+                },
+                {
+                    "platform": "state",
+                    "entity_id": "sensor.test_state",
+                    "to_state": "off",
+                    "prob_given_true": 0.28,
+                    "prob_given_false": 0.63,
                     "delay_on": 5,
                     "max_duration": 5,
                 },
@@ -886,6 +903,21 @@ async def test_state_max_duration(hass):
 
     state = hass.states.get("binary_sensor.test")
     assert state.state == "on"
+    assert [{"prob_false": 0.35, "prob_true": 0.6}] == state.attributes.get(
+        "observations"
+    )
+    assert abs(0.3 - state.attributes.get("probability")) < 1e-7
+
+    future = dt_util.utcnow() + timedelta(seconds=5)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "on"
+    assert [{"prob_false": 0.2, "prob_true": 0.8}] == state.attributes.get(
+        "observations"
+    )
+    assert abs(0.5 - state.attributes.get("probability")) < 1e-7
 
     future = dt_util.utcnow() + timedelta(seconds=5)
     async_fire_time_changed(hass, future)
@@ -904,5 +936,16 @@ async def test_state_max_duration(hass):
 
     state = hass.states.get("binary_sensor.test")
     assert state.state == "off"
-    assert len(state.attributes.get("observations")) == 0
+    assert [{"prob_false": 0.28, "prob_true": 0.63}] == state.attributes.get(
+        "observations"
+    )
+    assert abs(0.1 - state.attributes.get("probability")) < 1e-7
+
+    future = dt_util.utcnow() + timedelta(seconds=5)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+    assert [] == state.attributes.get("observations")
     assert abs(0.2 - state.attributes.get("probability")) < 1e-7
