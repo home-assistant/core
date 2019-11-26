@@ -510,6 +510,10 @@ class ZHADevice(LogMixin):
         """Add this device to the provided zigbee group."""
         await self._zigpy_device.add_to_group(group_id)
 
+    async def async_remove_from_group(self, group_id):
+        """Remove this device from the provided zigbee group."""
+        await self._zigpy_device.remove_from_group(group_id)
+
     def log(self, level, msg, *args):
         """Log a message."""
         msg = "[%s](%s): " + msg
