@@ -15,7 +15,6 @@ from songpal import (
 
 from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
 from homeassistant.components.media_player.const import (
-    DOMAIN,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
@@ -33,6 +32,8 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
+from .const import DOMAIN, SET_SOUND_SETTING
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ENDPOINT = "endpoint"
@@ -41,8 +42,6 @@ PARAM_NAME = "name"
 PARAM_VALUE = "value"
 
 PLATFORM = "songpal"
-
-SET_SOUND_SETTING = "songpal_set_sound_setting"
 
 SUPPORT_SONGPAL = (
     SUPPORT_VOLUME_SET
