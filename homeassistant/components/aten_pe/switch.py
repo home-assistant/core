@@ -5,12 +5,6 @@ import logging
 from atenpdu import AtenPE
 import voluptuous as vol
 
-from homeassistant.components.snmp.const import (
-    CONF_AUTH_KEY,
-    CONF_COMMUNITY,
-    CONF_PRIV_KEY,
-    DEFAULT_PORT,
-)
 from homeassistant.components.switch import (
     DEVICE_CLASS_OUTLET,
     PLATFORM_SCHEMA,
@@ -21,7 +15,11 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_AUTH_KEY = "auth_key"
+CONF_COMMUNITY = "community"
+CONF_PRIV_KEY = "priv_key"
 DEFAULT_COMMUNITY = "private"
+DEFAULT_PORT = "161"
 DEFAULT_USERNAME = "administrator"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
