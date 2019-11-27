@@ -64,7 +64,6 @@ SERVICE_ICLOUD_PLAY_SOUND = "play_sound"
 SERVICE_ICLOUD_DISPLAY_MESSAGE = "display_message"
 SERVICE_ICLOUD_LOST_DEVICE = "lost_device"
 SERVICE_ICLOUD_UPDATE = "update"
-SERVICE_ICLOUD_RESET = "reset"
 ATTR_ACCOUNT = "account"
 ATTR_LOST_DEVICE_MESSAGE = "message"
 ATTR_LOST_DEVICE_NUMBER = "number"
@@ -145,7 +144,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     account = IcloudAccount(
         hass, username, password, account_name, max_interval, gps_accuracy_threshold
     )
-    await hass.async_add_executor_job(account.reset_account)
+    await hass.async_add_executor_job(account.setup)
     hass.data[DOMAIN][username] = account
 
     for component in ICLOUD_COMPONENTS:
@@ -194,16 +193,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         else:
             _get_account(account).keep_alive()
 
-    def reset_account(service: ServiceDataType) -> None:
-        """Reset an iCloud account."""
-        account = service.data.get(ATTR_ACCOUNT)
-
-        if account is None:
-            for account in hass.data[DOMAIN].values():
-                account.reset_account()
-        else:
-            _get_account(account).reset_account()
-
     def _get_account(account_identifier: str) -> any:
         if account_identifier is None:
             return None
@@ -242,10 +231,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         DOMAIN, SERVICE_ICLOUD_UPDATE, update_account, schema=SERVICE_SCHEMA
     )
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_ICLOUD_RESET, reset_account, schema=SERVICE_SCHEMA
-    )
-
     return True
 
 
@@ -277,8 +262,8 @@ class IcloudAccount:
 
         self.unsub_device_tracker = None
 
-    def reset_account(self):
-        """Reset an iCloud account."""
+    def setup(self):
+        """Set up an iCloud account."""
         icloud_dir = self.hass.config.path("icloud")
 
         try:
@@ -415,7 +400,7 @@ class IcloudAccount:
     def keep_alive(self, now=None) -> None:
         """Keep the API alive."""
         if self.api is None:
-            self.reset_account()
+            self.setup()
 
         if self.api is None:
             return
