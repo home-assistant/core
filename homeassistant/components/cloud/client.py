@@ -8,7 +8,7 @@ import aiohttp
 from hass_nabucasa import Cloud
 from hass_nabucasa.client import CloudClient as Interface
 
-from homeassistant.core import callback
+from homeassistant.core import callback, Context
 from homeassistant.components.google_assistant import smart_home as ga
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -154,8 +154,13 @@ class CloudClient(Interface):
 
     async def async_alexa_message(self, payload: Dict[Any, Any]) -> Dict[Any, Any]:
         """Process cloud alexa message to client."""
+        cloud_user = await self._prefs.get_cloud_user()
         return await alexa_sh.async_handle_message(
-            self._hass, self.alexa_config, payload, enabled=self._prefs.alexa_enabled
+            self._hass,
+            self.alexa_config,
+            payload,
+            context=Context(user_id=cloud_user),
+            enabled=self._prefs.alexa_enabled,
         )
 
     async def async_google_message(self, payload: Dict[Any, Any]) -> Dict[Any, Any]:
