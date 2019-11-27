@@ -29,9 +29,10 @@ async def async_setup_entry(hass, entry):
         _LOGGER.error("Could not connect to unifiled controller")
         raise PlatformNotReady()
 
-    # hass.data[DOMAIN][LEDAPI] = api
     hass.data.setdefault(KEY_API, {})[entry.entry_id] = api
 
-    hass.async_add_job(hass.config_entries.async_forward_entry_setup(entry, "light"))
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(entry, "light")
+    )
 
     return True

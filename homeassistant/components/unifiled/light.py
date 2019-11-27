@@ -11,19 +11,6 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up the Unifi LED platform."""
 
-    # Assign configuration variables.
-    # host = config_entry.data["host"]
-    # port = config_entry.data["port"]
-    # username = config_entry.data["username"]
-    # password = config_entry.data["password"]
-
-    # api = unifiled(host, port, username=username, password=password)
-
-    # Verify that passed in configuration works
-    # if not api.getloginstate():
-    #    _LOGGER.error("Could not connect to unifiled controller")
-    #    raise PlatformNotReady()
-
     api = hass.data[KEY_API][config_entry.entry_id]
 
     async_add_devices(UnifiLedLight(light, api) for light in api.getlights())
