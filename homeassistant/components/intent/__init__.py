@@ -13,11 +13,11 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Intent component."""
-    hass.http.register_view(ConversationHandleView())
+    hass.http.register_view(IntentHandleView())
     return True
 
 
-class ConversationHandleView(http.HomeAssistantView):
+class IntentHandleView(http.HomeAssistantView):
     """View to handle intents from JSON."""
 
     url = "/api/intent/handle"
