@@ -23,12 +23,13 @@ DATA_SCHEMA = vol.Schema(
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
 
-    try:
-        unifiled(data["host"], data["port"], data["username"], data["password"])
-        return {"title": data["host"]}
-    except Exception as ex:  # pylint: disable=broad-except
-        _LOGGER.error(ex)
+    api = unifiled(data["host"], data["port"], data["username"], data["password"])
+
+    if not api.getloginstate():
+        _LOGGER.error("Could not connect to unifiled controller")
         raise CannotConnect()
+
+    return {"title": data["host"]}
 
 
 class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -47,8 +48,6 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=info["title"], data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -60,7 +59,3 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""
