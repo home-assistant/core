@@ -30,7 +30,7 @@ class MockResource:
         self.provides = ["server"]
         self._mock_plex_server = MockPlexServer(index)
 
-    def connect(self):
+    def connect(self, timeout):
         """Mock the resource connect method."""
         return self._mock_plex_server
 
