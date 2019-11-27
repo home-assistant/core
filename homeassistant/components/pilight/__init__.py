@@ -19,6 +19,8 @@ from homeassistant.const import (
     CONF_PROTOCOL,
 )
 
+from pilight import pilight
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SEND_DELAY = "send_delay"
@@ -59,7 +61,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the Pilight component."""
-    from pilight import pilight
 
     host = config[DOMAIN][CONF_HOST]
     port = config[DOMAIN][CONF_PORT]
