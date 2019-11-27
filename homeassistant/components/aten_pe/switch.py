@@ -9,7 +9,6 @@ from homeassistant.components.snmp.const import (
     CONF_AUTH_KEY,
     CONF_COMMUNITY,
     CONF_PRIV_KEY,
-    DEFAULT_HOST,
     DEFAULT_PORT,
 )
 from homeassistant.components.switch import (
@@ -27,7 +26,7 @@ DEFAULT_USERNAME = "administrator"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
         vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
@@ -40,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the ATEN PE switch."""
     dev = AtenPE(
-        node=config.get(CONF_HOST),
+        node=config[CONF_HOST],
         serv=config.get(CONF_PORT),
         community=config.get(CONF_COMMUNITY),
         username=config.get(CONF_USERNAME),
