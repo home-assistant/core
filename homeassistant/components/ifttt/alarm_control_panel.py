@@ -181,7 +181,7 @@ class IFTTTAlarmPanel(AlarmControlPanel):
         """Call the IFTTT trigger service to change the alarm state."""
         data = {ATTR_EVENT: event}
 
-        self.hass.services.call(IFTTT_DOMAIN, SERVICE_TRIGGER, data)
+        self.hass.services.call(DOMAIN, SERVICE_TRIGGER, data)
         _LOGGER.debug("Called IFTTT integration to trigger event %s", event)
         if self._optimistic:
             self._state = state
