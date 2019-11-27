@@ -675,46 +675,48 @@ class YeelightGenericLight(Light):
     @_cmd
     def set_effect(self, effect) -> None:
         """Activate effect."""
-        if effect:
-            if effect == EFFECT_STOP:
-                self._bulb.stop_flow(light_type=self.light_type)
-                return
+        if not effect:
+            return
 
-            effects_map = {
-                EFFECT_DISCO: yee_transitions.disco,
-                EFFECT_TEMP: yee_transitions.temp,
-                EFFECT_STROBE: yee_transitions.strobe,
-                EFFECT_STROBE_COLOR: yee_transitions.strobe_color,
-                EFFECT_ALARM: yee_transitions.alarm,
-                EFFECT_POLICE: yee_transitions.police,
-                EFFECT_POLICE2: yee_transitions.police2,
-                EFFECT_CHRISTMAS: yee_transitions.christmas,
-                EFFECT_RGB: yee_transitions.rgb,
-                EFFECT_RANDOM_LOOP: yee_transitions.randomloop,
-                EFFECT_LSD: yee_transitions.lsd,
-                EFFECT_SLOWDOWN: yee_transitions.slowdown,
-            }
+        if effect == EFFECT_STOP:
+            self._bulb.stop_flow(light_type=self.light_type)
+            return
 
-            if effect in self.custom_effects_names:
-                flow = Flow(**self.custom_effects[effect])
-            elif effect in effects_map:
-                flow = Flow(count=0, transitions=effects_map[effect]())
-            elif effect == EFFECT_FAST_RANDOM_LOOP:
-                flow = Flow(
-                    count=0, transitions=yee_transitions.randomloop(duration=250)
-                )
-            elif effect == EFFECT_WHATSAPP:
-                flow = Flow(count=2, transitions=yee_transitions.pulse(37, 211, 102))
-            elif effect == EFFECT_FACEBOOK:
-                flow = Flow(count=2, transitions=yee_transitions.pulse(59, 89, 152))
-            elif effect == EFFECT_TWITTER:
-                flow = Flow(count=2, transitions=yee_transitions.pulse(0, 172, 237))
+        effects_map = {
+            EFFECT_DISCO: yee_transitions.disco,
+            EFFECT_TEMP: yee_transitions.temp,
+            EFFECT_STROBE: yee_transitions.strobe,
+            EFFECT_STROBE_COLOR: yee_transitions.strobe_color,
+            EFFECT_ALARM: yee_transitions.alarm,
+            EFFECT_POLICE: yee_transitions.police,
+            EFFECT_POLICE2: yee_transitions.police2,
+            EFFECT_CHRISTMAS: yee_transitions.christmas,
+            EFFECT_RGB: yee_transitions.rgb,
+            EFFECT_RANDOM_LOOP: yee_transitions.randomloop,
+            EFFECT_LSD: yee_transitions.lsd,
+            EFFECT_SLOWDOWN: yee_transitions.slowdown,
+        }
 
-            try:
-                self._bulb.start_flow(flow, light_type=self.light_type)
-                self._effect = effect
-            except BulbException as ex:
-                _LOGGER.error("Unable to set effect: %s", ex)
+        if effect in self.custom_effects_names:
+            flow = Flow(**self.custom_effects[effect])
+        elif effect in effects_map:
+            flow = Flow(count=0, transitions=effects_map[effect]())
+        elif effect == EFFECT_FAST_RANDOM_LOOP:
+            flow = Flow(
+                count=0, transitions=yee_transitions.randomloop(duration=250)
+            )
+        elif effect == EFFECT_WHATSAPP:
+            flow = Flow(count=2, transitions=yee_transitions.pulse(37, 211, 102))
+        elif effect == EFFECT_FACEBOOK:
+            flow = Flow(count=2, transitions=yee_transitions.pulse(59, 89, 152))
+        elif effect == EFFECT_TWITTER:
+            flow = Flow(count=2, transitions=yee_transitions.pulse(0, 172, 237))
+
+        try:
+            self._bulb.start_flow(flow, light_type=self.light_type)
+            self._effect = effect
+        except BulbException as ex:
+            _LOGGER.error("Unable to set effect: %s", ex)
 
     def turn_on(self, **kwargs) -> None:
         """Turn the bulb on."""
