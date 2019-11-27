@@ -103,9 +103,7 @@ class TestNuHeat(unittest.TestCase):
         thermostat.schedule_update_ha_state.reset_mock()
 
         # All entities
-        self.hass.services.call(
-            nuheat.DOMAIN, nuheat.SERVICE_RESUME_PROGRAM, {}, True
-        )
+        self.hass.services.call(nuheat.DOMAIN, nuheat.SERVICE_RESUME_PROGRAM, {}, True)
 
         thermostat.resume_program.assert_called_with()
         thermostat.schedule_update_ha_state.assert_called_with(True)
