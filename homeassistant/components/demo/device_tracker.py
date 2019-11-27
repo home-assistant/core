@@ -1,7 +1,7 @@
 """Demo platform for the Device tracker component."""
 import random
 
-DOMAIN = "demo"
+from .const import DOMAIN, SERVICE_DEMO
 
 
 def setup_scanner(hass, config, see, discovery_info=None):
@@ -36,6 +36,6 @@ def setup_scanner(hass, config, see, discovery_info=None):
         battery=53,
     )
 
-    hass.services.register(DOMAIN, "demo", observe)
+    hass.services.register(DOMAIN, SERVICE_DEMO, observe)
 
     return True
