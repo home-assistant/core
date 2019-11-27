@@ -194,19 +194,6 @@ soundtouch_remove_zone_slave:
       description: Name of slaves entities to remove from the existing zone.
       example: 'media_player.soundtouch_bedroom'
 
-squeezebox_call_method:
-  description: 'Call a Squeezebox JSON/RPC API method.'
-  fields:
-    entity_id:
-      description: Name(s) of the Squeexebox entities where to run the API method.
-      example: 'media_player.squeezebox_radio'
-    command:
-      description: Name of the Squeezebox command.
-      example: 'playlist'
-    parameters:
-      description: Optional array of parameters to be appended to the command. See 'Command Line Interface' official help page from Logitech for details.
-      example: '["loadtracks", "track.titlesearch=highway to hell"]'
-
 yamaha_enable_output:
   description: Enable or disable an output port
   fields:
