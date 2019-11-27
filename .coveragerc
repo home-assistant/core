@@ -316,7 +316,7 @@ omit =
     homeassistant/components/iaqualink/light.py
     homeassistant/components/iaqualink/sensor.py
     homeassistant/components/iaqualink/switch.py
-    homeassistant/components/icloud/device_tracker.py
+    homeassistant/components/icloud/*
     homeassistant/components/izone/climate.py
     homeassistant/components/izone/discovery.py
     homeassistant/components/izone/__init__.py
