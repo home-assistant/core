@@ -1959,7 +1959,7 @@ twilio==6.32.0
 unifiled==0.11
 
 # homeassistant.components.upcloud
-upcloud-api==0.4.3
+upcloud-api==0.4.5
 
 # homeassistant.components.huawei_lte
 url-normalize==1.4.1
