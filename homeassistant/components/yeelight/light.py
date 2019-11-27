@@ -696,7 +696,8 @@ class YeelightGenericLight(Light):
         if effect == EFFECT_STOP:
             self._bulb.stop_flow(light_type=self.light_type)
             return
-        elif effect in self.custom_effects_names:
+
+        if effect in self.custom_effects_names:
             flow = Flow(**self.custom_effects[effect])
         elif effect in EFFECTS_MAP:
             flow = Flow(count=0, transitions=EFFECTS_MAP[effect]())
