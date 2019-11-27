@@ -7,6 +7,8 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+from pilight import pilight
+
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 import homeassistant.helpers.config_validation as cv
@@ -18,8 +20,6 @@ from homeassistant.const import (
     CONF_WHITELIST,
     CONF_PROTOCOL,
 )
-
-from pilight import pilight
 
 _LOGGER = logging.getLogger(__name__)
 
