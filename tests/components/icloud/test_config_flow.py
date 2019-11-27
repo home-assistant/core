@@ -2,8 +2,6 @@
 from unittest.mock import patch, MagicMock, PropertyMock
 import pytest
 
-
-from pyicloud.base import PyiCloudService
 from pyicloud.exceptions import PyiCloudFailedLoginException
 
 from homeassistant import data_entry_flow
@@ -57,8 +55,9 @@ def mock_controller_session(not_create_cookie: MagicMock):
 @pytest.fixture(name="service")
 def mock_controller_service(session: MagicMock):
     """Mock a successful service."""
-    with patch.object(
-        PyiCloudService, "requires_2fa", new_callable=PropertyMock
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService.requires_2fa",
+        new_callable=PropertyMock,
     ) as mock:
         mock.return_value = True
         yield mock
@@ -67,8 +66,9 @@ def mock_controller_service(session: MagicMock):
 @pytest.fixture(name="service_with_cookie")
 def mock_controller_service_with_cookie(session: MagicMock):
     """Mock a successful service while already authenticate."""
-    with patch.object(
-        PyiCloudService, "requires_2fa", new_callable=PropertyMock
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService.requires_2fa",
+        new_callable=PropertyMock,
     ) as mock:
         mock.return_value = False
         yield mock
