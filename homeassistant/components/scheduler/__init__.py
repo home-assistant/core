@@ -263,6 +263,9 @@ class Scheduler:
         activation_context=None,
     ):
         """Add a scheduler item."""
+        if start_datetime == end_datetime:
+            end_datetime = None
+
         schedule = Schedule(
             self._hass,
             entity_id,
