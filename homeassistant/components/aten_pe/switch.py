@@ -38,9 +38,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the ATEN PE switch."""
     dev = AtenPE(
         node=config[CONF_HOST],
-        serv=config.get(CONF_PORT),
-        community=config.get(CONF_COMMUNITY),
-        username=config.get(CONF_USERNAME),
+        serv=config[CONF_PORT],
+        community=config[CONF_COMMUNITY],
+        username=config[CONF_USERNAME],
         authkey=config.get(CONF_AUTH_KEY),
         privkey=config.get(CONF_PRIV_KEY),
     )
