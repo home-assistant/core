@@ -7,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     ATTR_STATUS,
-    DOMAIN,
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_ERROR,
@@ -40,6 +39,7 @@ from .const import (
     NEATO_PERSISTENT_MAPS,
     NEATO_ROBOTS,
     SCAN_INTERVAL_MINUTES,
+    SERVICE_NEATO_CUSTOM_CLEANING,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,8 +72,6 @@ ATTR_LAUNCHED_FROM = "launched_from"
 ATTR_NAVIGATION = "navigation"
 ATTR_CATEGORY = "category"
 ATTR_ZONE = "zone"
-
-SERVICE_NEATO_CUSTOM_CLEANING = "neato_custom_cleaning"
 
 SERVICE_NEATO_CUSTOM_CLEANING_SCHEMA = vol.Schema(
     {
@@ -126,7 +124,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         return entities
 
     hass.services.async_register(
-        DOMAIN,
+        NEATO_DOMAIN,
         SERVICE_NEATO_CUSTOM_CLEANING,
         neato_custom_cleaning_service,
         schema=SERVICE_NEATO_CUSTOM_CLEANING_SCHEMA,
