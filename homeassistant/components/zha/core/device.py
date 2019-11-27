@@ -13,6 +13,7 @@ import time
 import zigpy.exceptions
 from zigpy.profiles import zha, zll
 import zigpy.quirks
+from zigpy.zcl.clusters.general import Groups
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
@@ -178,6 +179,17 @@ class ZHADevice(LogMixin):
     def is_end_device(self):
         """Return true if this device is an end device."""
         return self._zigpy_device.node_desc.is_end_device
+
+    @property
+    def is_groupable(self):
+        """Return true if this device has a group cluster."""
+        if not self.available:
+            return False
+        clusters = self.async_get_clusters()
+        for cluster_map in clusters.values():
+            for clusters in cluster_map.values():
+                if Groups.cluster_id in clusters:
+                    return True
 
     @property
     def gateway(self):
