@@ -3,7 +3,10 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanel,
+    FORMAT_NUMBER,
+)
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
@@ -29,6 +32,7 @@ from . import (
     CONF_PANIC,
     CONF_PARTITIONNAME,
     DATA_EVL,
+    DOMAIN,
     PARTITION_SCHEMA,
     SIGNAL_KEYPAD_UPDATE,
     SIGNAL_PARTITION_UPDATE,
@@ -37,7 +41,7 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_ALARM_KEYPRESS = "envisalink_alarm_keypress"
+SERVICE_ALARM_KEYPRESS = "alarm_keypress"
 ATTR_KEYPRESS = "keypress"
 ALARM_KEYPRESS_SCHEMA = vol.Schema(
     {
@@ -83,7 +87,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             device.async_alarm_keypress(keypress)
 
     hass.services.async_register(
-        alarm.DOMAIN,
+        DOMAIN,
         SERVICE_ALARM_KEYPRESS,
         alarm_keypress_handler,
         schema=ALARM_KEYPRESS_SCHEMA,
@@ -92,7 +96,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     return True
 
 
-class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
+class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanel):
     """Representation of an Envisalink-based alarm panel."""
 
     def __init__(
@@ -124,7 +128,7 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
         """Regex for code format or None if no code is required."""
         if self._code:
             return None
-        return alarm.FORMAT_NUMBER
+        return FORMAT_NUMBER
 
     @property
     def state(self):
