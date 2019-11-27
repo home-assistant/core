@@ -14,7 +14,6 @@ import voluptuous as vol
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.components.device_tracker.const import (
     ATTR_ATTRIBUTES,
-    DOMAIN,
     ENTITY_ID_FORMAT,
 )
 from homeassistant.components.device_tracker.legacy import DeviceScanner
@@ -26,6 +25,14 @@ from homeassistant.util import slugify
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.location import distance
+
+from .const import (
+    DOMAIN,
+    SERVICE_LOST_IPHONE,
+    SERVICE_RESET_ACCOUNT,
+    SERVICE_SET_INTERVAL,
+    SERVICE_UPDATE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -144,7 +151,7 @@ def setup_scanner(hass, config: dict, see, discovery_info=None):
                 ICLOUDTRACKERS[account].lost_iphone(devicename)
 
     hass.services.register(
-        DOMAIN, "icloud_lost_iphone", lost_iphone, schema=SERVICE_SCHEMA
+        DOMAIN, SERVICE_LOST_IPHONE, lost_iphone, schema=SERVICE_SCHEMA
     )
 
     def update_icloud(call):
@@ -155,9 +162,7 @@ def setup_scanner(hass, config: dict, see, discovery_info=None):
             if account in ICLOUDTRACKERS:
                 ICLOUDTRACKERS[account].update_icloud(devicename)
 
-    hass.services.register(
-        DOMAIN, "icloud_update", update_icloud, schema=SERVICE_SCHEMA
-    )
+    hass.services.register(DOMAIN, SERVICE_UPDATE, update_icloud, schema=SERVICE_SCHEMA)
 
     def reset_account_icloud(call):
         """Reset an iCloud account."""
@@ -167,7 +172,7 @@ def setup_scanner(hass, config: dict, see, discovery_info=None):
                 ICLOUDTRACKERS[account].reset_account_icloud()
 
     hass.services.register(
-        DOMAIN, "icloud_reset_account", reset_account_icloud, schema=SERVICE_SCHEMA
+        DOMAIN, SERVICE_RESET_ACCOUNT, reset_account_icloud, schema=SERVICE_SCHEMA
     )
 
     def setinterval(call):
@@ -180,7 +185,7 @@ def setup_scanner(hass, config: dict, see, discovery_info=None):
                 ICLOUDTRACKERS[account].setinterval(interval, devicename)
 
     hass.services.register(
-        DOMAIN, "icloud_set_interval", setinterval, schema=SERVICE_SCHEMA
+        DOMAIN, SERVICE_SET_INTERVAL, setinterval, schema=SERVICE_SCHEMA
     )
 
     # Tells the bootstrapper that the component was successfully initialized
