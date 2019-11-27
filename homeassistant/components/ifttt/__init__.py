@@ -23,6 +23,7 @@ ATTR_VALUE3 = "value3"
 
 CONF_KEY = "key"
 
+SERVICE_PUSH_ALARM_STATE = "push_alarm_state"
 SERVICE_TRIGGER = "trigger"
 
 SERVICE_TRIGGER_SCHEMA = vol.Schema(

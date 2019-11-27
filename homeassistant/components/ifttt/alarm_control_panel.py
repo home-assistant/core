@@ -4,8 +4,12 @@ import re
 
 import voluptuous as vol
 
-import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanel,
+    FORMAT_NUMBER,
+    FORMAT_TEXT,
+)
+from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
@@ -24,7 +28,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-from . import ATTR_EVENT, DOMAIN as IFTTT_DOMAIN, SERVICE_TRIGGER
+from . import ATTR_EVENT, DOMAIN, SERVICE_PUSH_ALARM_STATE, SERVICE_TRIGGER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,8 +63,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
     }
 )
-
-SERVICE_PUSH_ALARM_STATE = "ifttt_push_alarm_state"
 
 PUSH_ALARM_STATE_SERVICE_SCHEMA = vol.Schema(
     {vol.Required(ATTR_ENTITY_ID): cv.entity_ids, vol.Required(ATTR_STATE): cv.string}
@@ -106,7 +108,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class IFTTTAlarmPanel(alarm.AlarmControlPanel):
+class IFTTTAlarmPanel(AlarmControlPanel):
     """Representation of an alarm control panel controlled through IFTTT."""
 
     def __init__(
@@ -148,8 +150,8 @@ class IFTTTAlarmPanel(alarm.AlarmControlPanel):
         if self._code is None:
             return None
         if isinstance(self._code, str) and re.search("^\\d+$", self._code):
-            return alarm.FORMAT_NUMBER
-        return alarm.FORMAT_TEXT
+            return FORMAT_NUMBER
+        return FORMAT_TEXT
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
@@ -179,7 +181,7 @@ class IFTTTAlarmPanel(alarm.AlarmControlPanel):
         """Call the IFTTT trigger service to change the alarm state."""
         data = {ATTR_EVENT: event}
 
-        self.hass.services.call(IFTTT_DOMAIN, SERVICE_TRIGGER, data)
+        self.hass.services.call(DOMAIN, SERVICE_TRIGGER, data)
         _LOGGER.debug("Called IFTTT integration to trigger event %s", event)
         if self._optimistic:
             self._state = state
