@@ -692,7 +692,8 @@ class YeelightGenericLight(Light):
         """Activate effect."""
         if not effect:
             return
-        elif effect == EFFECT_STOP:
+
+        if effect == EFFECT_STOP:
             self._bulb.stop_flow(light_type=self.light_type)
             return
         elif effect in self.custom_effects_names:
