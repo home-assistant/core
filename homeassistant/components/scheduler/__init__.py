@@ -1,6 +1,7 @@
 """Support for scheduling scenes."""
 from datetime import datetime
 import logging
+from typing import TYPE_CHECKING, Callable, Dict, Optional
 from uuid import uuid4
 
 import voluptuous as vol
@@ -15,6 +16,9 @@ from homeassistant.helpers.event import (
 )
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import load_json, save_json
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant, ServiceCall, State  # noqa
 
 DOMAIN = "scheduler"
 _LOGGER = logging.getLogger(__name__)
@@ -123,13 +127,13 @@ class Schedule:
 
     def __init__(
         self,
-        hass,
-        entity_id,
-        start_datetime,
-        end_datetime=None,
-        schedule_id=None,
-        activation_context_id=None,
-    ):
+        hass: "HomeAssistant",
+        entity_id: str,
+        start_datetime: datetime,
+        end_datetime: Optional[datetime] = None,
+        schedule_id: Optional[str] = None,
+        activation_context_id: Optional[str] = None,
+    ) -> None:
         """Initialize."""
         now = datetime.now()
         if (start_datetime and start_datetime < now) or (
@@ -137,32 +141,35 @@ class Schedule:
         ):
             raise ValueError("Dates in the past are not allowed")
 
-        self._async_state_listener = None
-        self._entity_states = {}
-        self._hass = hass
-        self.end_datetime = end_datetime
-        self.entity_id = entity_id
-        self.start_datetime = start_datetime
+        self._async_state_listener: Optional[Callable] = None
+        self._entity_states: Dict[str, "State"] = {}
+        self._hass: "HomeAssistant" = hass
+        self.end_datetime: datetime = end_datetime
+        self.entity_id: str = entity_id
+        self.start_datetime: datetime = start_datetime
 
+        self.schedule_id: str
         if schedule_id:
             self.schedule_id = schedule_id
         else:
             self.schedule_id = uuid4().hex
 
+        self.activation_context_id: str
         if activation_context_id:
             self._activation_context = Context(id=activation_context_id)
         else:
             self._activation_context = Context()
 
     @classmethod
-    def from_dict(cls, hass, conf):
+    def from_dict(cls, hass: "HomeAssistant", conf: dict) -> "Schedule":
         """Instantiate a schedule from a dict of parameters."""
         try:
             ITEM_SCHEMA(conf)
         except vol.Invalid as err:
             raise ValueError(f"Cannot create schedule from invalid data: {err}")
 
-        start_datetime = dt_util.parse_datetime(conf[CONF_START_DATETIME])
+        start_datetime: datetime = dt_util.parse_datetime(conf[CONF_START_DATETIME])
+        end_datetime: datetime
         if conf.get(CONF_END_DATETIME):
             end_datetime = dt_util.parse_datetime(conf[CONF_END_DATETIME])
         else:
@@ -176,7 +183,7 @@ class Schedule:
             activation_context_id=conf.get(CONF_ACTIVATION_CONTEXT_ID),
         )
 
-    def as_dict(self):
+    def as_dict(self) -> dict:
         """Output the schedule as a dict."""
         return {
             CONF_SCHEDULE_ID: self.schedule_id,
@@ -189,7 +196,7 @@ class Schedule:
         }
 
     @callback
-    def async_activate(self):
+    def async_activate(self) -> None:
         """Trigger the schedule's scene."""
         self._hass.async_create_task(
             self._hass.services.async_call(
@@ -201,7 +208,7 @@ class Schedule:
         )
 
         @callback
-        def save_state(entity_id, old_state, new_state):
+        def save_state(entity_id: str, old_state: "State", new_state: "State") -> None:
             """Save prior states of an entity if it was triggered by this schedule."""
             if new_state.context != self._activation_context:
                 return
@@ -214,7 +221,7 @@ class Schedule:
         _LOGGER.info("Scheduler activated scene: %s", self.entity_id)
 
     @callback
-    def async_deactivate(self):
+    def async_deactivate(self) -> None:
         """Restore the entities touched by the schedule."""
         if not self._entity_states:
             return
@@ -233,15 +240,15 @@ class Schedule:
 class Scheduler:
     """A class that manages scene schedules."""
 
-    def __init__(self, hass):
+    def __init__(self, hass: "HomeAssistant"):
         """Initialize."""
-        self._async_activation_listeners = {}
-        self._async_deactivation_listeners = {}
-        self._hass = hass
-        self.schedules = {}
+        self._async_activation_listeners: Dict[str, Callable] = {}
+        self._async_deactivation_listeners: Dict[str, str] = {}
+        self._hass: "HomeAssistant" = hass
+        self.schedules: Dict[str, Schedule] = {}
 
     @callback
-    def async_clear_expired(self):
+    def async_clear_expired(self) -> None:
         """Clear schedules that are in the past."""
         now = datetime.now()
 
@@ -256,12 +263,12 @@ class Scheduler:
     @callback
     def async_create(
         self,
-        entity_id,
-        start_datetime,
-        end_datetime=None,
-        schedule_id=None,
-        activation_context=None,
-    ):
+        entity_id: str,
+        start_datetime: datetime,
+        end_datetime: Optional[datetime] = None,
+        schedule_id: Optional[str] = None,
+        activation_context: Optional[str] = None,
+    ) -> dict:
         """Add a scheduler item."""
         if start_datetime == end_datetime:
             end_datetime = None
@@ -276,7 +283,7 @@ class Scheduler:
         )
 
         @callback
-        def schedule_start(call):
+        def schedule_start(call: "ServiceCall") -> None:
             """Trigger when the schedule starts."""
             schedule.async_activate()
             if not schedule.end_datetime:
@@ -285,7 +292,7 @@ class Scheduler:
                 self.async_save()
 
         @callback
-        def schedule_end(call):
+        def schedule_end(call: "ServiceCall") -> None:
             """Trigger when the schedule ends."""
             schedule.async_deactivate()
             self._async_deactivation_listeners.pop(schedule.schedule_id)
@@ -309,7 +316,7 @@ class Scheduler:
         return schedule.as_dict()
 
     @callback
-    def async_delete(self, schedule_id, *, save=True):
+    def async_delete(self, schedule_id: str, *, save: bool = True) -> dict:
         """Delete a schedule."""
         if schedule_id not in self.schedules:
             raise KeyError
@@ -327,10 +334,10 @@ class Scheduler:
             self.async_save()
         return schedule.as_dict()
 
-    async def async_load(self):
+    async def async_load(self) -> None:
         """Load scheduler items."""
 
-        def load():
+        def load() -> dict:
             """Load the items synchronously."""
             return load_json(self._hass.config.path(PERSISTENCE), default={})
 
@@ -345,10 +352,10 @@ class Scheduler:
             )
 
     @callback
-    def async_save(self):
+    def async_save(self) -> None:
         """Save the items."""
 
-        def save():
+        def save() -> None:
             """Save the items synchronously."""
             save_json(
                 self._hass.config.path(PERSISTENCE),
@@ -362,7 +369,7 @@ class Scheduler:
         self._hass.bus.async_fire(EVENT)
 
     @callback
-    def async_update(self, schedule_id, new_data):
+    def async_update(self, schedule_id: str, new_data: dict) -> dict:
         """Update a schedule."""
         if schedule_id not in self.schedules:
             raise KeyError
