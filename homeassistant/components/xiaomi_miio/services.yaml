@@ -206,21 +206,21 @@ set_power_mode:
       description: Power mode, valid values are 'normal' and 'green'.
       example: 'green'
 
-control_start:
+remote_control_start:
   description: Start remote control of the vacuum cleaner. You can then move it with `remote_control_move`, when done call `remote_control_stop`.
   fields:
     entity_id:
       description: Name of the vacuum entity.
       example: 'vacuum.xiaomi_vacuum_cleaner'
 
-control_stop:
+remote_control_stop:
   description: Stop remote control mode of the vacuum cleaner.
   fields:
     entity_id:
       description: Name of the vacuum entity.
       example: 'vacuum.xiaomi_vacuum_cleaner'
 
-control_move:
+remote_control_move:
   description: Remote control the vacuum cleaner, make sure you first set it in remote control mode with `remote_control_start`.
   fields:
     entity_id:
@@ -236,7 +236,7 @@ control_move:
       description: Duration of the movement.
       example: '1500'
 
-control_move_step:
+remote_control_move_step:
   description: Remote control the vacuum cleaner, only makes one move and then stops.
   fields:
     entity_id:
