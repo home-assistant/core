@@ -18,12 +18,12 @@ from . import DOMAIN, WinkDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_SET_VACATION_MODE = "wink_set_lock_vacation_mode"
-SERVICE_SET_ALARM_MODE = "wink_set_lock_alarm_mode"
-SERVICE_SET_ALARM_SENSITIVITY = "wink_set_lock_alarm_sensitivity"
-SERVICE_SET_ALARM_STATE = "wink_set_lock_alarm_state"
-SERVICE_SET_BEEPER_STATE = "wink_set_lock_beeper_state"
-SERVICE_ADD_KEY = "wink_add_new_lock_key_code"
+SERVICE_SET_VACATION_MODE = "set_lock_vacation_mode"
+SERVICE_SET_ALARM_MODE = "set_lock_alarm_mode"
+SERVICE_SET_ALARM_SENSITIVITY = "set_lock_alarm_sensitivity"
+SERVICE_SET_ALARM_STATE = "set_lock_alarm_state"
+SERVICE_SET_BEEPER_STATE = "set_lock_beeper_state"
+SERVICE_ADD_KEY = "add_new_lock_key_code"
 
 ATTR_ENABLED = "enabled"
 ATTR_SENSITIVITY = "sensitivity"
