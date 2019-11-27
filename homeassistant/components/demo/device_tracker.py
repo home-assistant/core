@@ -1,7 +1,7 @@
 """Demo platform for the Device tracker component."""
 import random
 
-from homeassistant.components.device_tracker import DOMAIN
+DOMAIN = "demo"
 
 
 def setup_scanner(hass, config, see, discovery_info=None):
