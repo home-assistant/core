@@ -10,19 +10,21 @@ from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({"host": str, "port": str, "username": str, "password": str})
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required("host"): str,
+        vol.Required("port"): str,
+        vol.Required("username"): str,
+        vol.Required("password"): str,
+    }
+)
 
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
 
     try:
-        unifiled(
-            data["host"],
-            data["port"],
-            username=data["username"],
-            password=data["password"],
-        )
+        unifiled(data["host"], data["port"], data["username"], data["password"])
         return {"title": data["host"]}
     except Exception as ex:  # pylint: disable=broad-except
         _LOGGER.error(ex)
