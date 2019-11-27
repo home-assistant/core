@@ -6,7 +6,6 @@ from pyeconet.api import PyEcoNet
 import voluptuous as vol
 
 from homeassistant.components.water_heater import (
-    DOMAIN,
     PLATFORM_SCHEMA,
     STATE_ECO,
     STATE_ELECTRIC,
@@ -28,6 +27,8 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
+from .const import DOMAIN, SERVICE_ADD_VACATION, SERVICE_DELETE_VACATION
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_VACATION_START = "next_vacation_start_date"
@@ -40,9 +41,6 @@ ATTR_START_DATE = "start_date"
 ATTR_END_DATE = "end_date"
 
 SUPPORT_FLAGS_HEATER = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
-
-SERVICE_ADD_VACATION = "econet_add_vacation"
-SERVICE_DELETE_VACATION = "econet_delete_vacation"
 
 ADD_VACATION_SCHEMA = vol.Schema(
     {

@@ -178,7 +178,7 @@ omit =
     homeassistant/components/ecobee/notify.py
     homeassistant/components/ecobee/sensor.py
     homeassistant/components/ecobee/weather.py
-    homeassistant/components/econet/water_heater.py
+    homeassistant/components/econet/*
     homeassistant/components/ecovacs/*
     homeassistant/components/eddystone_temperature/sensor.py
     homeassistant/components/edimax/switch.py
