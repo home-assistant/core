@@ -46,7 +46,6 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 SIGNAL_DELETE_ENTITY = "nsw_rural_fire_service_feed_delete_{}"
 SIGNAL_UPDATE_ENTITY = "nsw_rural_fire_service_feed_update_{}"
-SIGNAL_NEW_GEOLOCATION = "nsw_rural_fire_service_feed_new_geolocation_{}"
 
 SOURCE = "nsw_rural_fire_service_feed"
 
@@ -77,7 +76,7 @@ async def async_setup_platform(
     categories = config.get(CONF_CATEGORIES)
     # Initialize the entity manager.
     manager = NswRuralFireServiceFeedEntityManager(
-        hass, scan_interval, coordinates, radius_in_km, categories
+        hass, async_add_entities, scan_interval, coordinates, radius_in_km, categories
     )
 
     async def start_feed_manager(event):
@@ -85,29 +84,24 @@ async def async_setup_platform(
         await manager.async_init()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_feed_manager)
-
-    @callback
-    def async_add_geolocation(feed_manager, external_id):
-        """Add gelocation entity from feed."""
-        new_entity = NswRuralFireServiceLocationEvent(feed_manager, external_id)
-        _LOGGER.debug("Adding geolocation %s", new_entity)
-        async_add_entities([new_entity], True)
-
-    manager.listeners.append(
-        async_dispatcher_connect(
-            hass, manager.async_event_new_entity(), async_add_geolocation
-        )
-    )
     hass.async_create_task(manager.async_update())
 
 
 class NswRuralFireServiceFeedEntityManager:
     """Feed Entity Manager for NSW Rural Fire Service GeoJSON feed."""
 
-    def __init__(self, hass, scan_interval, coordinates, radius_in_km, categories):
+    def __init__(
+        self,
+        hass,
+        async_add_entities,
+        scan_interval,
+        coordinates,
+        radius_in_km,
+        categories,
+    ):
         """Initialize the Feed Entity Manager."""
         self._hass = hass
-        self._config_entry_id = "abc"
+        self._async_add_entities = async_add_entities
         websession = aiohttp_client.async_get_clientsession(hass)
         self._feed_manager = NswRuralFireServiceIncidentsFeedManager(
             websession,
@@ -150,20 +144,15 @@ class NswRuralFireServiceFeedEntityManager:
             self._track_time_remove_callback()
         _LOGGER.debug("Feed entity manager stopped")
 
-    @callback
-    def async_event_new_entity(self):
-        """Return manager specific event to signal new entity."""
-        return SIGNAL_NEW_GEOLOCATION.format(self._config_entry_id)
-
     def get_entry(self, external_id):
         """Get feed entry by external id."""
         return self._feed_manager.feed_entries.get(external_id)
 
     async def _generate_entity(self, external_id):
         """Generate new entity."""
-        async_dispatcher_send(
-            self._hass, self.async_event_new_entity(), self, external_id
-        )
+        new_entity = NswRuralFireServiceLocationEvent(self, external_id)
+        _LOGGER.debug("Adding geolocation %s", new_entity)
+        self._async_add_entities([new_entity], True)
 
     async def _update_entity(self, external_id):
         """Update entity."""
