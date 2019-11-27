@@ -22,7 +22,7 @@ from . import DATA_AD, DOMAIN, SIGNAL_PANEL_MESSAGE
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_ALARM_TOGGLE_CHIME = "alarmdecoder_alarm_toggle_chime"
+SERVICE_ALARM_TOGGLE_CHIME = "alarm_toggle_chime"
 ALARM_TOGGLE_CHIME_SCHEMA = vol.Schema({vol.Required(ATTR_CODE): cv.string})
 
 SERVICE_ALARM_KEYPRESS = "alarm_keypress"
