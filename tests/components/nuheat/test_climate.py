@@ -9,10 +9,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 import homeassistant.components.nuheat.climate as nuheat
-from homeassistant.const import (
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 from tests.common import get_test_home_assistant
 
