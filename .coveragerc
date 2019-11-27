@@ -412,6 +412,7 @@ omit =
     homeassistant/components/miflora/sensor.py
     homeassistant/components/mikrotik/*
     homeassistant/components/mill/climate.py
+    homeassistant/components/mill/const.py
     homeassistant/components/minio/*
     homeassistant/components/mitemp_bt/sensor.py
     homeassistant/components/mjpeg/camera.py
