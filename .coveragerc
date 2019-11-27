@@ -85,7 +85,7 @@ omit =
     homeassistant/components/bloomsky/*
     homeassistant/components/bluesound/*
     homeassistant/components/bluetooth_le_tracker/device_tracker.py
-    homeassistant/components/bluetooth_tracker/device_tracker.py
+    homeassistant/components/bluetooth_tracker/*
     homeassistant/components/bme280/sensor.py
     homeassistant/components/bme680/sensor.py
     homeassistant/components/bmw_connected_drive/*
