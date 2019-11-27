@@ -23,7 +23,9 @@ DATA_SCHEMA = vol.Schema(
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
 
-    api = unifiled(data["host"], data["port"], data["username"], data["password"])
+    api = await hass.async_add_executor_job(
+        unifiled, data["host"], data["port"], data["username"], data["password"]
+    )
 
     if not api.getloginstate():
         _LOGGER.error("Could not connect to unifiled controller")
