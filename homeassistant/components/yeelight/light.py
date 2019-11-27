@@ -141,6 +141,21 @@ MODEL_TO_DEVICE_TYPE = {
     "ceiling4": BulbType.WhiteTempMood,
 }
 
+EFFECTS_MAP = {
+    EFFECT_DISCO: yee_transitions.disco,
+    EFFECT_TEMP: yee_transitions.temp,
+    EFFECT_STROBE: yee_transitions.strobe,
+    EFFECT_STROBE_COLOR: yee_transitions.strobe_color,
+    EFFECT_ALARM: yee_transitions.alarm,
+    EFFECT_POLICE: yee_transitions.police,
+    EFFECT_POLICE2: yee_transitions.police2,
+    EFFECT_CHRISTMAS: yee_transitions.christmas,
+    EFFECT_RGB: yee_transitions.rgb,
+    EFFECT_RANDOM_LOOP: yee_transitions.randomloop,
+    EFFECT_LSD: yee_transitions.lsd,
+    EFFECT_SLOWDOWN: yee_transitions.slowdown,
+}
+
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Range(min=1, max=100))
 
 SERVICE_SCHEMA_SET_MODE = YEELIGHT_SERVICE_SCHEMA.extend(
@@ -677,40 +692,23 @@ class YeelightGenericLight(Light):
         """Activate effect."""
         if not effect:
             return
-
-        if effect == EFFECT_STOP:
+        elif effect == EFFECT_STOP:
             self._bulb.stop_flow(light_type=self.light_type)
             return
-
-        effects_map = {
-            EFFECT_DISCO: yee_transitions.disco,
-            EFFECT_TEMP: yee_transitions.temp,
-            EFFECT_STROBE: yee_transitions.strobe,
-            EFFECT_STROBE_COLOR: yee_transitions.strobe_color,
-            EFFECT_ALARM: yee_transitions.alarm,
-            EFFECT_POLICE: yee_transitions.police,
-            EFFECT_POLICE2: yee_transitions.police2,
-            EFFECT_CHRISTMAS: yee_transitions.christmas,
-            EFFECT_RGB: yee_transitions.rgb,
-            EFFECT_RANDOM_LOOP: yee_transitions.randomloop,
-            EFFECT_LSD: yee_transitions.lsd,
-            EFFECT_SLOWDOWN: yee_transitions.slowdown,
-        }
-
-        if effect in self.custom_effects_names:
+        elif effect in self.custom_effects_names:
             flow = Flow(**self.custom_effects[effect])
-        elif effect in effects_map:
-            flow = Flow(count=0, transitions=effects_map[effect]())
+        elif effect in EFFECTS_MAP:
+            flow = Flow(count=0, transitions=EFFECTS_MAP[effect]())
         elif effect == EFFECT_FAST_RANDOM_LOOP:
-            flow = Flow(
-                count=0, transitions=yee_transitions.randomloop(duration=250)
-            )
+            flow = Flow(count=0, transitions=yee_transitions.randomloop(duration=250))
         elif effect == EFFECT_WHATSAPP:
             flow = Flow(count=2, transitions=yee_transitions.pulse(37, 211, 102))
         elif effect == EFFECT_FACEBOOK:
             flow = Flow(count=2, transitions=yee_transitions.pulse(59, 89, 152))
         elif effect == EFFECT_TWITTER:
             flow = Flow(count=2, transitions=yee_transitions.pulse(0, 172, 237))
+        else:
+            return
 
         try:
             self._bulb.start_flow(flow, light_type=self.light_type)
