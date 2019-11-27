@@ -1,0 +1,6 @@
+"""Constants for the iCloud component."""
+DOMAIN = "icloud"
+SERVICE_LOST_IPHONE = "lost_iphone"
+SERVICE_UPDATE = "update"
+SERVICE_RESET_ACCOUNT = "reset_account"
+SERVICE_SET_INTERVAL = "set_interval"
