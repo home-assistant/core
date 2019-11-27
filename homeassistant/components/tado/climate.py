@@ -88,6 +88,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     climate_devices = []
     for zone in zones:
+        if zone["type"] == "HOT_WATER":
+            continue
+
         device = create_climate_device(tado, hass, zone, zone["name"], zone["id"])
         if not device:
             continue

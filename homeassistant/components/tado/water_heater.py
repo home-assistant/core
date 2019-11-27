@@ -8,9 +8,10 @@ import logging
 
 from homeassistant.components.water_heater import (
     SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
     WaterHeaterDevice,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, TEMP_CELSIUS
+from homeassistant.const import STATE_OFF, STATE_ON, TEMP_CELSIUS, ATTR_TEMPERATURE
 from homeassistant.components.tado import DATA_TADO
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +50,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 def create_water_heater_device(tado, hass, zone, name, zone_id):
     """Create a Tado water heater device."""
     data_id = "zone {} {}".format(name, zone_id)
-    device = TadoWaterHeater(tado, name, zone_id, data_id)
+    capabilities = tado.get_capabilities(zone_id)
+    supports_temperature_control = capabilities["canSetTemperature"]
+    min_temp = max_temp = None
+
+    if supports_temperature_control and "temperatures" in capabilities:
+        temperatures = capabilities["temperatures"]
+
+        min_temp = float(temperatures["celsius"]["min"])
+        max_temp = float(temperatures["celsius"]["max"])
+
+    device = TadoWaterHeater(
+        tado, name, zone_id, data_id, supports_temperature_control, min_temp, max_temp
+    )
 
     tado.add_sensor(
         data_id, {"id": zone_id, "zone": zone, "name": name, "climate": device}
@@ -61,7 +74,16 @@ def create_water_heater_device(tado, hass, zone, name, zone_id):
 class TadoWaterHeater(WaterHeaterDevice):
     """Representation of a Tado water heater."""
 
-    def __init__(self, store, zone_name, zone_id, data_id):
+    def __init__(
+        self,
+        store,
+        zone_name,
+        zone_id,
+        data_id,
+        supports_temperature_control,
+        min_temp,
+        max_temp,
+    ):
         """Initialize of Tado water heater device."""
         self._store = store
         self._data_id = data_id
@@ -72,6 +94,17 @@ class TadoWaterHeater(WaterHeaterDevice):
         self._active = False
         self._device_is_active = False
 
+        self._supports_temperature_control = supports_temperature_control
+        self._min_temperature = min_temp
+        self._max_temperature = max_temp
+
+        self._supported_features = SUPPORT_FLAGS_HEATER
+
+        if self._supports_temperature_control:
+            self._supported_features |= SUPPORT_TARGET_TEMPERATURE
+
+        self._target_temperature = None
+
         self._is_away = False
 
         self._current_operation = CONST_MODE_SMART_SCHEDULE
@@ -80,7 +113,7 @@ class TadoWaterHeater(WaterHeaterDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_FLAGS_HEATER
+        return self._supported_features
 
     @property
     def name(self):
@@ -91,6 +124,11 @@ class TadoWaterHeater(WaterHeaterDevice):
     def current_operation(self):
         """Return current readable operation mode."""
         return STATE_ON if self._device_is_active else STATE_OFF
+
+    @property
+    def target_temperature(self):
+        """Return the temperature we try to reach."""
+        return self._target_temperature
 
     @property
     def is_away_mode_on(self):
@@ -111,6 +149,17 @@ class TadoWaterHeater(WaterHeaterDevice):
         """Set new operation mode."""
         self._device_is_active = operation_mode == STATE_ON
         self._overlay_mode = CONST_OVERLAY_TADO_MODE
+        self._control_heater()
+
+    def set_temperature(self, **kwargs):
+        """Set new target temperature."""
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        if not self._supports_temperature_control or temperature is None:
+            return
+
+        self._current_operation = CONST_OVERLAY_TADO_MODE
+        self._overlay_mode = None
+        self._target_temperature = temperature
         self._control_heater()
 
     def update(self):
@@ -138,6 +187,16 @@ class TadoWaterHeater(WaterHeaterDevice):
             else:
                 self._device_is_active = True
 
+        # temperature setting will not exist when device is off
+        if (
+            "temperature" in data["setting"]
+            and data["setting"]["temperature"] is not None
+        ):
+            setting = float(data["setting"]["temperature"]["celsius"])
+            self._target_temperature = self.hass.config.units.temperature(
+                setting, TEMP_CELSIUS
+            )
+
         overlay = False
         overlay_data = None
         termination = CONST_MODE_SMART_SCHEDULE
@@ -164,7 +223,10 @@ class TadoWaterHeater(WaterHeaterDevice):
         )
         if self._device_is_active:
             self._store.set_zone_overlay(
-                self.zone_id, self._overlay_mode, device_type="HOT_WATER"
+                self.zone_id,
+                self._overlay_mode,
+                self._target_temperature,
+                device_type="HOT_WATER",
             )
         else:
             self._store.set_zone_off(
