@@ -137,8 +137,7 @@ class NeatoConnectedVacuum(StateVacuumDevice):
     def __init__(self, neato, robot, mapdata, persistent_maps):
         """Initialize the Neato Connected Vacuum."""
         self.robot = robot
-        self.neato = neato
-        self._available = self.neato.logged_in if self.neato is not None else False
+        self._available = neato.logged_in if neato is not None else False
         self._mapdata = mapdata
         self._name = f"{self.robot.name}"
         self._robot_has_map = self.robot.has_persistent_maps
@@ -163,17 +162,10 @@ class NeatoConnectedVacuum(StateVacuumDevice):
 
     def update(self):
         """Update the states of Neato Vacuums."""
-        if self.neato is None:
-            _LOGGER.error("Error while updating vacuum")
-            self._state = None
-            self._available = False
-            return
-
         _LOGGER.debug("Running Neato Vacuums update")
         try:
             if self._robot_stats is None:
                 self._robot_stats = self.robot.get_robot_info().json()
-            self.neato.update_robots()
             self._state = self.robot.state
         except NeatoRobotException as ex:
             if self._available:  # print only once when available
