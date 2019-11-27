@@ -12,46 +12,52 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_LOCATIONS = 'locations'
+CONF_LOCATIONS = "locations"
 
 SCAN_INTERVAL = timedelta(minutes=30)
 
 AUTHORITIES = [
-    'Barking and Dagenham',
-    'Bexley',
-    'Brent',
-    'Camden',
-    'City of London',
-    'Croydon',
-    'Ealing',
-    'Enfield',
-    'Greenwich',
-    'Hackney',
-    'Haringey',
-    'Harrow',
-    'Havering',
-    'Hillingdon',
-    'Islington',
-    'Kensington and Chelsea',
-    'Kingston',
-    'Lambeth',
-    'Lewisham',
-    'Merton',
-    'Redbridge',
-    'Richmond',
-    'Southwark',
-    'Sutton',
-    'Tower Hamlets',
-    'Wandsworth',
-    'Westminster']
+    "Barking and Dagenham",
+    "Bexley",
+    "Brent",
+    "Camden",
+    "City of London",
+    "Croydon",
+    "Ealing",
+    "Enfield",
+    "Greenwich",
+    "Hackney",
+    "Haringey",
+    "Harrow",
+    "Havering",
+    "Hillingdon",
+    "Islington",
+    "Kensington and Chelsea",
+    "Kingston",
+    "Lambeth",
+    "Lewisham",
+    "Merton",
+    "Redbridge",
+    "Richmond",
+    "Southwark",
+    "Sutton",
+    "Tower Hamlets",
+    "Wandsworth",
+    "Westminster",
+]
 
-URL = ('http://api.erg.kcl.ac.uk/AirQuality/Hourly/'
-       'MonitoringIndex/GroupName=London/Json')
+URL = (
+    "http://api.erg.kcl.ac.uk/AirQuality/Hourly/"
+    "MonitoringIndex/GroupName=London/Json"
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_LOCATIONS, default=AUTHORITIES):
-        vol.All(cv.ensure_list, [vol.In(AUTHORITIES)]),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_LOCATIONS, default=AUTHORITIES): vol.All(
+            cv.ensure_list, [vol.In(AUTHORITIES)]
+        )
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -86,7 +92,7 @@ class APIData:
 class AirSensor(Entity):
     """Single authority air sensor."""
 
-    ICON = 'mdi:cloud-outline'
+    ICON = "mdi:cloud-outline"
 
     def __init__(self, name, APIdata):
         """Initialize the sensor."""
@@ -120,20 +126,20 @@ class AirSensor(Entity):
     def device_state_attributes(self):
         """Return other details about the sensor state."""
         attrs = {}
-        attrs['updated'] = self._updated
-        attrs['sites'] = len(self._site_data)
-        attrs['data'] = self._site_data
+        attrs["updated"] = self._updated
+        attrs["sites"] = len(self._site_data)
+        attrs["data"] = self._site_data
         return attrs
 
     def update(self):
         """Update the sensor."""
         self._api_data.update()
         self._site_data = self._api_data.data[self._name]
-        self._updated = self._site_data[0]['updated']
+        self._updated = self._site_data[0]["updated"]
         sites_status = []
         for site in self._site_data:
-            if site['pollutants_status'] != 'no_species_data':
-                sites_status.append(site['pollutants_status'])
+            if site["pollutants_status"] != "no_species_data":
+                sites_status.append(site["pollutants_status"])
         if sites_status:
             self._state = max(set(sites_status), key=sites_status.count)
         else:
@@ -145,16 +151,17 @@ def parse_species(species_data):
     parsed_species_data = []
     quality_list = []
     for species in species_data:
-        if species['@AirQualityBand'] != 'No data':
+        if species["@AirQualityBand"] != "No data":
             species_dict = {}
-            species_dict['description'] = species['@SpeciesDescription']
-            species_dict['code'] = species['@SpeciesCode']
-            species_dict['quality'] = species['@AirQualityBand']
-            species_dict['index'] = species['@AirQualityIndex']
-            species_dict['summary'] = (species_dict['code'] + ' is '
-                                       + species_dict['quality'])
+            species_dict["description"] = species["@SpeciesDescription"]
+            species_dict["code"] = species["@SpeciesCode"]
+            species_dict["quality"] = species["@AirQualityBand"]
+            species_dict["index"] = species["@AirQualityIndex"]
+            species_dict["summary"] = (
+                species_dict["code"] + " is " + species_dict["quality"]
+            )
             parsed_species_data.append(species_dict)
-            quality_list.append(species_dict['quality'])
+            quality_list.append(species_dict["quality"])
     return parsed_species_data, quality_list
 
 
@@ -165,31 +172,32 @@ def parse_site(entry_sites_data):
         site_data = {}
         species_data = []
 
-        site_data['updated'] = site['@BulletinDate']
-        site_data['latitude'] = site['@Latitude']
-        site_data['longitude'] = site['@Longitude']
-        site_data['site_code'] = site['@SiteCode']
-        site_data['site_name'] = site['@SiteName'].split("-")[-1].lstrip()
-        site_data['site_type'] = site['@SiteType']
+        site_data["updated"] = site["@BulletinDate"]
+        site_data["latitude"] = site["@Latitude"]
+        site_data["longitude"] = site["@Longitude"]
+        site_data["site_code"] = site["@SiteCode"]
+        site_data["site_name"] = site["@SiteName"].split("-")[-1].lstrip()
+        site_data["site_type"] = site["@SiteType"]
 
-        if isinstance(site['Species'], dict):
-            species_data = [site['Species']]
+        if isinstance(site["Species"], dict):
+            species_data = [site["Species"]]
         else:
-            species_data = site['Species']
+            species_data = site["Species"]
 
         parsed_species_data, quality_list = parse_species(species_data)
 
         if not parsed_species_data:
-            parsed_species_data.append('no_species_data')
-        site_data['pollutants'] = parsed_species_data
+            parsed_species_data.append("no_species_data")
+        site_data["pollutants"] = parsed_species_data
 
         if quality_list:
-            site_data['pollutants_status'] = max(set(quality_list),
-                                                 key=quality_list.count)
-            site_data['number_of_pollutants'] = len(quality_list)
+            site_data["pollutants_status"] = max(
+                set(quality_list), key=quality_list.count
+            )
+            site_data["number_of_pollutants"] = len(quality_list)
         else:
-            site_data['pollutants_status'] = 'no_species_data'
-            site_data['number_of_pollutants'] = 0
+            site_data["pollutants_status"] = "no_species_data"
+            site_data["number_of_pollutants"] = 0
 
         authority_data.append(site_data)
     return authority_data
@@ -199,13 +207,13 @@ def parse_api_response(response):
     """Parse return dict or list of data from API."""
     data = dict.fromkeys(AUTHORITIES)
     for authority in AUTHORITIES:
-        for entry in response['HourlyAirQualityIndex']['LocalAuthority']:
-            if entry['@LocalAuthorityName'] == authority:
+        for entry in response["HourlyAirQualityIndex"]["LocalAuthority"]:
+            if entry["@LocalAuthorityName"] == authority:
 
-                if isinstance(entry['Site'], dict):
-                    entry_sites_data = [entry['Site']]
+                if isinstance(entry["Site"], dict):
+                    entry_sites_data = [entry["Site"]]
                 else:
-                    entry_sites_data = entry['Site']
+                    entry_sites_data = entry["Site"]
 
                 data[authority] = parse_site(entry_sites_data)
 

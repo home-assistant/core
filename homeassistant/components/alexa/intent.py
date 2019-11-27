@@ -14,27 +14,24 @@ _LOGGER = logging.getLogger(__name__)
 
 HANDLERS = Registry()
 
-INTENTS_API_ENDPOINT = '/api/alexa'
+INTENTS_API_ENDPOINT = "/api/alexa"
 
 
 class SpeechType(enum.Enum):
     """The Alexa speech types."""
 
-    plaintext = 'PlainText'
-    ssml = 'SSML'
+    plaintext = "PlainText"
+    ssml = "SSML"
 
 
-SPEECH_MAPPINGS = {
-    'plain': SpeechType.plaintext,
-    'ssml': SpeechType.ssml,
-}
+SPEECH_MAPPINGS = {"plain": SpeechType.plaintext, "ssml": SpeechType.ssml}
 
 
 class CardType(enum.Enum):
     """The Alexa card types."""
 
-    simple = 'Simple'
-    link_account = 'LinkAccount'
+    simple = "Simple"
+    link_account = "LinkAccount"
 
 
 @callback
@@ -51,44 +48,50 @@ class AlexaIntentsView(http.HomeAssistantView):
     """Handle Alexa requests."""
 
     url = INTENTS_API_ENDPOINT
-    name = 'api:alexa'
+    name = "api:alexa"
 
     async def post(self, request):
         """Handle Alexa."""
-        hass = request.app['hass']
+        hass = request.app["hass"]
         message = await request.json()
 
         _LOGGER.debug("Received Alexa request: %s", message)
 
         try:
             response = await async_handle_message(hass, message)
-            return b'' if response is None else self.json(response)
+            return b"" if response is None else self.json(response)
         except UnknownRequest as err:
             _LOGGER.warning(str(err))
-            return self.json(intent_error_response(
-                hass, message, str(err)))
+            return self.json(intent_error_response(hass, message, str(err)))
 
         except intent.UnknownIntent as err:
             _LOGGER.warning(str(err))
-            return self.json(intent_error_response(
-                hass, message,
-                "This intent is not yet configured within Home Assistant."))
+            return self.json(
+                intent_error_response(
+                    hass,
+                    message,
+                    "This intent is not yet configured within Home Assistant.",
+                )
+            )
 
         except intent.InvalidSlotInfo as err:
             _LOGGER.error("Received invalid slot data from Alexa: %s", err)
-            return self.json(intent_error_response(
-                hass, message,
-                "Invalid slot information received for this intent."))
+            return self.json(
+                intent_error_response(
+                    hass, message, "Invalid slot information received for this intent."
+                )
+            )
 
         except intent.IntentError as err:
             _LOGGER.exception(str(err))
-            return self.json(intent_error_response(
-                hass, message, "Error handling intent."))
+            return self.json(
+                intent_error_response(hass, message, "Error handling intent.")
+            )
 
 
 def intent_error_response(hass, message, error):
     """Return an Alexa response that will speak the error message."""
-    alexa_intent_info = message.get('request').get('intent')
+    alexa_intent_info = message.get("request").get("intent")
     alexa_response = AlexaResponse(hass, alexa_intent_info)
     alexa_response.add_speech(SpeechType.plaintext, error)
     return alexa_response.as_dict()
@@ -104,25 +107,25 @@ async def async_handle_message(hass, message):
      - intent.IntentError
 
     """
-    req = message.get('request')
-    req_type = req['type']
+    req = message.get("request")
+    req_type = req["type"]
 
     handler = HANDLERS.get(req_type)
 
     if not handler:
-        raise UnknownRequest('Received unknown request {}'.format(req_type))
+        raise UnknownRequest(f"Received unknown request {req_type}")
 
     return await handler(hass, message)
 
 
-@HANDLERS.register('SessionEndedRequest')
+@HANDLERS.register("SessionEndedRequest")
 async def async_handle_session_end(hass, message):
     """Handle a session end request."""
     return None
 
 
-@HANDLERS.register('IntentRequest')
-@HANDLERS.register('LaunchRequest')
+@HANDLERS.register("IntentRequest")
+@HANDLERS.register("LaunchRequest")
 async def async_handle_intent(hass, message):
     """Handle an intent request.
 
@@ -132,33 +135,37 @@ async def async_handle_intent(hass, message):
      - intent.IntentError
 
     """
-    req = message.get('request')
-    alexa_intent_info = req.get('intent')
+    req = message.get("request")
+    alexa_intent_info = req.get("intent")
     alexa_response = AlexaResponse(hass, alexa_intent_info)
 
-    if req['type'] == 'LaunchRequest':
-        intent_name = message.get('session', {})  \
-                             .get('application', {})  \
-                             .get('applicationId')
+    if req["type"] == "LaunchRequest":
+        intent_name = (
+            message.get("session", {}).get("application", {}).get("applicationId")
+        )
     else:
-        intent_name = alexa_intent_info['name']
+        intent_name = alexa_intent_info["name"]
 
     intent_response = await intent.async_handle(
-        hass, DOMAIN, intent_name,
-        {key: {'value': value} for key, value
-         in alexa_response.variables.items()})
+        hass,
+        DOMAIN,
+        intent_name,
+        {key: {"value": value} for key, value in alexa_response.variables.items()},
+    )
 
     for intent_speech, alexa_speech in SPEECH_MAPPINGS.items():
         if intent_speech in intent_response.speech:
             alexa_response.add_speech(
-                alexa_speech,
-                intent_response.speech[intent_speech]['speech'])
+                alexa_speech, intent_response.speech[intent_speech]["speech"]
+            )
             break
 
-    if 'simple' in intent_response.card:
+    if "simple" in intent_response.card:
         alexa_response.add_card(
-            CardType.simple, intent_response.card['simple']['title'],
-            intent_response.card['simple']['content'])
+            CardType.simple,
+            intent_response.card["simple"]["title"],
+            intent_response.card["simple"]["content"],
+        )
 
     return alexa_response.as_dict()
 
@@ -168,23 +175,23 @@ def resolve_slot_synonyms(key, request):
     # Default to the spoken slot value if more than one or none are found. For
     # reference to the request object structure, see the Alexa docs:
     # https://tinyurl.com/ybvm7jhs
-    resolved_value = request['value']
+    resolved_value = request["value"]
 
-    if ('resolutions' in request and
-            'resolutionsPerAuthority' in request['resolutions'] and
-            len(request['resolutions']['resolutionsPerAuthority']) >= 1):
+    if (
+        "resolutions" in request
+        and "resolutionsPerAuthority" in request["resolutions"]
+        and len(request["resolutions"]["resolutionsPerAuthority"]) >= 1
+    ):
 
         # Extract all of the possible values from each authority with a
         # successful match
         possible_values = []
 
-        for entry in request['resolutions']['resolutionsPerAuthority']:
-            if entry['status']['code'] != SYN_RESOLUTION_MATCH:
+        for entry in request["resolutions"]["resolutionsPerAuthority"]:
+            if entry["status"]["code"] != SYN_RESOLUTION_MATCH:
                 continue
 
-            possible_values.extend([item['value']['name']
-                                    for item
-                                    in entry['values']])
+            possible_values.extend([item["value"]["name"] for item in entry["values"]])
 
         # If there is only one match use the resolved value, otherwise the
         # resolution cannot be determined, so use the spoken slot value
@@ -192,9 +199,9 @@ def resolve_slot_synonyms(key, request):
             resolved_value = possible_values[0]
         else:
             _LOGGER.debug(
-                'Found multiple synonym resolutions for slot value: {%s: %s}',
+                "Found multiple synonym resolutions for slot value: {%s: %s}",
                 key,
-                request['value']
+                request["value"],
             )
 
     return resolved_value
@@ -215,12 +222,12 @@ class AlexaResponse:
 
         # Intent is None if request was a LaunchRequest or SessionEndedRequest
         if intent_info is not None:
-            for key, value in intent_info.get('slots', {}).items():
+            for key, value in intent_info.get("slots", {}).items():
                 # Only include slots with values
-                if 'value' not in value:
+                if "value" not in value:
                     continue
 
-                _key = key.replace('.', '_')
+                _key = key.replace(".", "_")
 
                 self.variables[_key] = resolve_slot_synonyms(key, value)
 
@@ -228,9 +235,7 @@ class AlexaResponse:
         """Add a card to the response."""
         assert self.card is None
 
-        card = {
-            "type": card_type.value
-        }
+        card = {"type": card_type.value}
 
         if card_type == CardType.link_account:
             self.card = card
@@ -244,43 +249,36 @@ class AlexaResponse:
         """Add speech to the response."""
         assert self.speech is None
 
-        key = 'ssml' if speech_type == SpeechType.ssml else 'text'
+        key = "ssml" if speech_type == SpeechType.ssml else "text"
 
-        self.speech = {
-            'type': speech_type.value,
-            key: text
-        }
+        self.speech = {"type": speech_type.value, key: text}
 
     def add_reprompt(self, speech_type, text):
         """Add reprompt if user does not answer."""
         assert self.reprompt is None
 
-        key = 'ssml' if speech_type == SpeechType.ssml else 'text'
+        key = "ssml" if speech_type == SpeechType.ssml else "text"
 
         self.reprompt = {
-            'type': speech_type.value,
-            key: text.async_render(self.variables)
+            "type": speech_type.value,
+            key: text.async_render(self.variables),
         }
 
     def as_dict(self):
         """Return response in an Alexa valid dict."""
-        response = {
-            'shouldEndSession': self.should_end_session
-        }
+        response = {"shouldEndSession": self.should_end_session}
 
         if self.card is not None:
-            response['card'] = self.card
+            response["card"] = self.card
 
         if self.speech is not None:
-            response['outputSpeech'] = self.speech
+            response["outputSpeech"] = self.speech
 
         if self.reprompt is not None:
-            response['reprompt'] = {
-                'outputSpeech': self.reprompt
-            }
+            response["reprompt"] = {"outputSpeech": self.reprompt}
 
         return {
-            'version': '1.0',
-            'sessionAttributes': self.session_attributes,
-            'response': response,
+            "version": "1.0",
+            "sessionAttributes": self.session_attributes,
+            "response": response,
         }

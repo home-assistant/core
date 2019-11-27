@@ -4,9 +4,22 @@ import unittest
 from tests.common import get_test_home_assistant
 
 from homeassistant.components.simulated.sensor import (
-    CONF_AMP, CONF_FWHM, CONF_MEAN, CONF_PERIOD, CONF_PHASE, CONF_SEED,
-    CONF_UNIT, CONF_RELATIVE_TO_EPOCH, DEFAULT_AMP, DEFAULT_FWHM, DEFAULT_MEAN,
-    DEFAULT_NAME, DEFAULT_PHASE, DEFAULT_SEED, DEFAULT_RELATIVE_TO_EPOCH)
+    CONF_AMP,
+    CONF_FWHM,
+    CONF_MEAN,
+    CONF_PERIOD,
+    CONF_PHASE,
+    CONF_SEED,
+    CONF_UNIT,
+    CONF_RELATIVE_TO_EPOCH,
+    DEFAULT_AMP,
+    DEFAULT_FWHM,
+    DEFAULT_MEAN,
+    DEFAULT_NAME,
+    DEFAULT_PHASE,
+    DEFAULT_SEED,
+    DEFAULT_RELATIVE_TO_EPOCH,
+)
 from homeassistant.const import CONF_FRIENDLY_NAME
 from homeassistant.setup import setup_component
 
@@ -24,15 +37,12 @@ class TestSimulatedSensor(unittest.TestCase):
 
     def test_default_config(self):
         """Test default config."""
-        config = {
-            'sensor': {
-                'platform': 'simulated'}
-        }
-        assert setup_component(self.hass, 'sensor', config)
+        config = {"sensor": {"platform": "simulated"}}
+        assert setup_component(self.hass, "sensor", config)
         self.hass.block_till_done()
 
         assert len(self.hass.states.entity_ids()) == 1
-        state = self.hass.states.get('sensor.simulated')
+        state = self.hass.states.get("sensor.simulated")
 
         assert state.attributes.get(CONF_FRIENDLY_NAME) == DEFAULT_NAME
         assert state.attributes.get(CONF_AMP) == DEFAULT_AMP
@@ -42,5 +52,4 @@ class TestSimulatedSensor(unittest.TestCase):
         assert state.attributes.get(CONF_PHASE) == DEFAULT_PHASE
         assert state.attributes.get(CONF_FWHM) == DEFAULT_FWHM
         assert state.attributes.get(CONF_SEED) == DEFAULT_SEED
-        assert state.attributes.get(
-            CONF_RELATIVE_TO_EPOCH) == DEFAULT_RELATIVE_TO_EPOCH
+        assert state.attributes.get(CONF_RELATIVE_TO_EPOCH) == DEFAULT_RELATIVE_TO_EPOCH

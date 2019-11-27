@@ -7,43 +7,57 @@ from datetime import datetime, timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT,
-                                 EVENT_HOMEASSISTANT_START)
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_HOST,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_START,
+)
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
+
+from .const import DOMAIN, DEFAULT_NAME, DEFAULT_PORT
+from .helper import get_cert
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'SSL Certificate Expiry'
-DEFAULT_PORT = 443
-
 SCAN_INTERVAL = timedelta(hours=12)
 
-TIMEOUT = 10.0
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-})
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up certificate expiry sensor."""
-    def run_setup(event):
-        """Wait until Home Assistant is fully initialized before creating.
 
-        Delay the setup until Home Assistant is fully initialized.
-        """
-        server_name = config.get(CONF_HOST)
-        server_port = config.get(CONF_PORT)
-        sensor_name = config.get(CONF_NAME)
+    @callback
+    def do_import(_):
+        """Process YAML import after HA is fully started."""
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config)
+            )
+        )
 
-        add_entities([SSLCertificate(sensor_name, server_name, server_port)],
-                     True)
+    # Delay to avoid validation during setup in case we're checking our own cert.
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, do_import)
 
-    # To allow checking of the HA certificate we must first be running.
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Add cert-expiry entry."""
+    async_add_entities(
+        [SSLCertificate(entry.title, entry.data[CONF_HOST], entry.data[CONF_PORT])],
+        False,
+        # Don't update in case we're checking our own cert.
+    )
+    return True
 
 
 class SSLCertificate(Entity):
@@ -56,6 +70,7 @@ class SSLCertificate(Entity):
         self._name = sensor_name
         self._state = None
         self._available = False
+        self._valid = False
 
     @property
     def name(self):
@@ -63,9 +78,14 @@ class SSLCertificate(Entity):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return a unique id for the sensor."""
+        return f"{self.server_name}:{self.server_port}"
+
+    @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return 'days'
+        return "days"
 
     @property
     def state(self):
@@ -75,41 +95,57 @@ class SSLCertificate(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return 'mdi:certificate'
+        return "mdi:certificate"
 
     @property
     def available(self):
-        """Icon to use in the frontend, if any."""
+        """Return the availability of the sensor."""
         return self._available
+
+    async def async_added_to_hass(self):
+        """Once the entity is added we should update to get the initial data loaded."""
+
+        @callback
+        def do_update(_):
+            """Run the update method when the start event was fired."""
+            self.async_schedule_update_ha_state(True)
+
+        if self.hass.is_running:
+            self.async_schedule_update_ha_state(True)
+        else:
+            # Delay until HA is fully started in case we're checking our own cert.
+            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, do_update)
 
     def update(self):
         """Fetch the certificate information."""
-        ctx = ssl.create_default_context()
         try:
-            address = (self.server_name, self.server_port)
-            with socket.create_connection(
-                    address, timeout=TIMEOUT) as sock:
-                with ctx.wrap_socket(
-                        sock, server_hostname=address[0]) as ssock:
-                    cert = ssock.getpeercert()
-
+            cert = get_cert(self.server_name, self.server_port)
         except socket.gaierror:
             _LOGGER.error("Cannot resolve hostname: %s", self.server_name)
             self._available = False
+            self._valid = False
             return
         except socket.timeout:
-            _LOGGER.error(
-                "Connection timeout with server: %s", self.server_name)
+            _LOGGER.error("Connection timeout with server: %s", self.server_name)
             self._available = False
+            self._valid = False
             return
-        except OSError:
-            _LOGGER.error("Cannot fetch certificate from %s",
-                          self.server_name, exc_info=1)
-            self._available = False
+        except (ssl.CertificateError, ssl.SSLError):
+            self._available = True
+            self._state = 0
+            self._valid = False
             return
 
-        ts_seconds = ssl.cert_time_to_seconds(cert['notAfter'])
+        ts_seconds = ssl.cert_time_to_seconds(cert["notAfter"])
         timestamp = datetime.fromtimestamp(ts_seconds)
         expiry = timestamp - datetime.today()
         self._available = True
         self._state = expiry.days
+        self._valid = True
+
+    @property
+    def device_state_attributes(self):
+        """Return additional sensor state attributes."""
+        attr = {"is_valid": self._valid}
+
+        return attr

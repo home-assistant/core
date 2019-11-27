@@ -26,7 +26,7 @@
                     "host": "Host",
                     "port": "Port"
                 },
-                "description": "Wprowad\u017a ustawienia po\u0142\u0105czenia swojego [ESPHome](https://esphomelib.com/) w\u0119z\u0142a.",
+                "description": "Wprowad\u017a ustawienia po\u0142\u0105czenia [ESPHome](https://esphomelib.com/) w\u0119z\u0142a.",
                 "title": "ESPHome"
             }
         },

@@ -1,17 +1,32 @@
 """Hue binary sensor entities."""
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, DEVICE_CLASS_MOTION)
-from homeassistant.components.hue.sensor_base import (
-    GenericZLLSensor, async_setup_entry as shared_async_setup_entry)
 
+from aiohue.sensors import TYPE_ZLL_PRESENCE
+
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOTION,
+    BinarySensorDevice,
+)
+from homeassistant.components.hue.sensor_base import (
+    GenericZLLSensor,
+    SensorManager,
+    async_setup_entry as shared_async_setup_entry,
+)
 
 PRESENCE_NAME_FORMAT = "{} motion"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer binary sensor setup to the shared sensor module."""
-    await shared_async_setup_entry(
-        hass, config_entry, async_add_entities, binary=True)
+    SensorManager.sensor_config_map.update(
+        {
+            TYPE_ZLL_PRESENCE: {
+                "binary": True,
+                "name_format": PRESENCE_NAME_FORMAT,
+                "class": HuePresence,
+            }
+        }
+    )
+    await shared_async_setup_entry(hass, config_entry, async_add_entities, binary=True)
 
 
 class HuePresence(GenericZLLSensor, BinarySensorDevice):
@@ -31,9 +46,8 @@ class HuePresence(GenericZLLSensor, BinarySensorDevice):
     def device_state_attributes(self):
         """Return the device state attributes."""
         attributes = super().device_state_attributes
-        if 'sensitivity' in self.sensor.config:
-            attributes['sensitivity'] = self.sensor.config['sensitivity']
-        if 'sensitivitymax' in self.sensor.config:
-            attributes['sensitivity_max'] = \
-                self.sensor.config['sensitivitymax']
+        if "sensitivity" in self.sensor.config:
+            attributes["sensitivity"] = self.sensor.config["sensitivity"]
+        if "sensitivitymax" in self.sensor.config:
+            attributes["sensitivity_max"] = self.sensor.config["sensitivitymax"]
         return attributes

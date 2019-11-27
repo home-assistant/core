@@ -3,12 +3,13 @@ import datetime
 import logging
 
 from homeassistant.components.switch import SwitchDevice
+import homeassistant.util.dt as dt_util
 
 from . import DOMAIN as DOORBIRD_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-IR_RELAY = '__ir_light__'
+IR_RELAY = "__ir_light__"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -16,7 +17,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     switches = []
 
     for doorstation in hass.data[DOORBIRD_DOMAIN]:
-        relays = doorstation.device.info()['RELAYS']
+        relays = doorstation.device.info()["RELAYS"]
         relays.append(IR_RELAY)
 
         for relay in relays:
@@ -45,9 +46,9 @@ class DoorBirdSwitch(SwitchDevice):
     def name(self):
         """Return the name of the switch."""
         if self._relay == IR_RELAY:
-            return "{} IR".format(self._doorstation.name)
+            return f"{self._doorstation.name} IR"
 
-        return "{} Relay {}".format(self._doorstation.name, self._relay)
+        return f"{self._doorstation.name} Relay {self._relay}"
 
     @property
     def icon(self):
@@ -66,16 +67,15 @@ class DoorBirdSwitch(SwitchDevice):
         else:
             self._state = self._doorstation.device.energize_relay(self._relay)
 
-        now = datetime.datetime.now()
+        now = dt_util.utcnow()
         self._assume_off = now + self._time
 
     def turn_off(self, **kwargs):
         """Turn off the relays is not needed. They are time-based."""
-        raise NotImplementedError(
-            "DoorBird relays cannot be manually turned off.")
+        raise NotImplementedError("DoorBird relays cannot be manually turned off.")
 
     def update(self):
         """Wait for the correct amount of assumed time to pass."""
-        if self._state and self._assume_off <= datetime.datetime.now():
+        if self._state and self._assume_off <= dt_util.utcnow():
             self._state = False
             self._assume_off = datetime.datetime.min

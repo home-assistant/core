@@ -1,5 +1,6 @@
 """The tests for the Alert component."""
 import unittest
+
 # pylint: disable=protected-access
 from copy import deepcopy
 
@@ -7,26 +8,31 @@ import homeassistant.components.alert as alert
 import homeassistant.components.notify as notify
 from homeassistant.components.alert import DOMAIN
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_ENTITY_ID, STATE_IDLE, CONF_NAME, CONF_STATE,
-    SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON, STATE_OFF)
+    ATTR_ENTITY_ID,
+    CONF_ENTITY_ID,
+    STATE_IDLE,
+    CONF_NAME,
+    CONF_STATE,
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_ON,
+    STATE_OFF,
+)
 from homeassistant.core import callback
 from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant
 
 NAME = "alert_test"
 DONE_MESSAGE = "alert_gone"
-NOTIFIER = 'test'
+NOTIFIER = "test"
 TEMPLATE = "{{ states.sensor.test.entity_id }}"
 TEST_ENTITY = "sensor.test"
 TITLE = "{{ states.sensor.test.entity_id }}"
 TEST_TITLE = "sensor.test"
-TEST_DATA = {
-    'data': {
-        'inline_keyboard': ['Close garage:/close_garage']
-    }
-}
-TEST_CONFIG = \
-    {alert.DOMAIN: {
+TEST_DATA = {"data": {"inline_keyboard": ["Close garage:/close_garage"]}}
+TEST_CONFIG = {
+    alert.DOMAIN: {
         NAME: {
             CONF_NAME: NAME,
             alert.CONF_DONE_MESSAGE: DONE_MESSAGE,
@@ -36,11 +42,24 @@ TEST_CONFIG = \
             alert.CONF_SKIP_FIRST: False,
             alert.CONF_NOTIFIERS: [NOTIFIER],
             alert.CONF_TITLE: TITLE,
-            alert.CONF_DATA: {}
+            alert.CONF_DATA: {},
         }
-    }}
-TEST_NOACK = [NAME, NAME, "sensor.test",
-              STATE_ON, [30], False, None, None, NOTIFIER, False, None, None]
+    }
+}
+TEST_NOACK = [
+    NAME,
+    NAME,
+    "sensor.test",
+    STATE_ON,
+    [30],
+    False,
+    None,
+    None,
+    NOTIFIER,
+    False,
+    None,
+    None,
+]
 ENTITY_ID = alert.ENTITY_ID_FORMAT.format(NAME)
 
 
@@ -59,8 +78,7 @@ def async_turn_on(hass, entity_id):
     This is a legacy helper method. Do not use it for new tests.
     """
     data = {ATTR_ENTITY_ID: entity_id}
-    hass.async_create_task(
-        hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data))
+    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data))
 
 
 def turn_off(hass, entity_id):
@@ -78,8 +96,7 @@ def async_turn_off(hass, entity_id):
     This is a legacy helper method. Do not use it for new tests.
     """
     data = {ATTR_ENTITY_ID: entity_id}
-    hass.async_create_task(
-        hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data))
+    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data))
 
 
 def toggle(hass, entity_id):
@@ -97,8 +114,7 @@ def async_toggle(hass, entity_id):
     This is a legacy helper method. Do not use it for new tests.
     """
     data = {ATTR_ENTITY_ID: entity_id}
-    hass.async_create_task(
-        hass.services.async_call(DOMAIN, SERVICE_TOGGLE, data))
+    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_TOGGLE, data))
 
 
 # pylint: disable=invalid-name
@@ -122,8 +138,7 @@ class TestAlert(unittest.TestCase):
             """Add recorded event to set."""
             events.append(event)
 
-        self.hass.services.register(
-            notify.DOMAIN, NOTIFIER, record_event)
+        self.hass.services.register(notify.DOMAIN, NOTIFIER, record_event)
 
         return events
 
@@ -193,31 +208,30 @@ class TestAlert(unittest.TestCase):
     def test_hidden(self):
         """Test entity hiding."""
         assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
-        hidden = self.hass.states.get(ENTITY_ID).attributes.get('hidden')
+        hidden = self.hass.states.get(ENTITY_ID).attributes.get("hidden")
         assert hidden
 
         self.hass.states.set("sensor.test", STATE_ON)
         self.hass.block_till_done()
-        hidden = self.hass.states.get(ENTITY_ID).attributes.get('hidden')
+        hidden = self.hass.states.get(ENTITY_ID).attributes.get("hidden")
         assert not hidden
 
         turn_off(self.hass, ENTITY_ID)
-        hidden = self.hass.states.get(ENTITY_ID).attributes.get('hidden')
+        hidden = self.hass.states.get(ENTITY_ID).attributes.get("hidden")
         assert not hidden
 
     def test_notification_no_done_message(self):
         """Test notifications."""
         events = []
         config = deepcopy(TEST_CONFIG)
-        del (config[alert.DOMAIN][NAME][alert.CONF_DONE_MESSAGE])
+        del config[alert.DOMAIN][NAME][alert.CONF_DONE_MESSAGE]
 
         @callback
         def record_event(event):
             """Add recorded event to set."""
             events.append(event)
 
-        self.hass.services.register(
-            notify.DOMAIN, NOTIFIER, record_event)
+        self.hass.services.register(notify.DOMAIN, NOTIFIER, record_event)
 
         assert setup_component(self.hass, alert.DOMAIN, config)
         assert 0 == len(events)
@@ -239,8 +253,7 @@ class TestAlert(unittest.TestCase):
             """Add recorded event to set."""
             events.append(event)
 
-        self.hass.services.register(
-            notify.DOMAIN, NOTIFIER, record_event)
+        self.hass.services.register(notify.DOMAIN, NOTIFIER, record_event)
 
         assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
         assert 0 == len(events)
@@ -334,8 +347,7 @@ class TestAlert(unittest.TestCase):
             """Add recorded event to set."""
             events.append(event)
 
-        self.hass.services.register(
-            notify.DOMAIN, NOTIFIER, record_event)
+        self.hass.services.register(notify.DOMAIN, NOTIFIER, record_event)
 
         assert setup_component(self.hass, alert.DOMAIN, config)
         assert 0 == len(events)

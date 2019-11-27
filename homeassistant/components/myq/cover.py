@@ -1,55 +1,61 @@
 """Support for MyQ-Enabled Garage Doors."""
 import logging
+
+from pymyq import login
+from pymyq.errors import MyQError
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-    CoverDevice, PLATFORM_SCHEMA, SUPPORT_CLOSE, SUPPORT_OPEN
+    CoverDevice,
+    PLATFORM_SCHEMA,
+    SUPPORT_CLOSE,
+    SUPPORT_OPEN,
 )
 from homeassistant.const import (
-    CONF_PASSWORD, CONF_TYPE, CONF_USERNAME, STATE_CLOSED, STATE_CLOSING,
-    STATE_OPEN, STATE_OPENING
+    CONF_PASSWORD,
+    CONF_TYPE,
+    CONF_USERNAME,
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
 )
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 MYQ_TO_HASS = {
-    'closed': STATE_CLOSED,
-    'closing': STATE_CLOSING,
-    'open': STATE_OPEN,
-    'opening': STATE_OPENING
+    "closed": STATE_CLOSED,
+    "closing": STATE_CLOSING,
+    "open": STATE_OPEN,
+    "opening": STATE_OPENING,
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_TYPE): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        # This parameter is no longer used; keeping it to avoid a breaking change in
+        # a hotfix, but in a future main release, this should be removed:
+        vol.Optional(CONF_TYPE): cv.string,
+    }
+)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the platform."""
-    from pymyq import login
-    from pymyq.errors import MyQError, UnsupportedBrandError
-
     websession = aiohttp_client.async_get_clientsession(hass)
 
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
-    brand = config[CONF_TYPE]
 
     try:
-        myq = await login(username, password, brand, websession)
-    except UnsupportedBrandError:
-        _LOGGER.error('Unsupported brand: %s', brand)
-        return
+        myq = await login(username, password, websession)
     except MyQError as err:
-        _LOGGER.error('There was an error while logging in: %s', err)
+        _LOGGER.error("There was an error while logging in: %s", err)
         return
 
-    devices = await myq.get_devices()
-    async_add_entities([MyQDevice(device) for device in devices], True)
+    async_add_entities([MyQDevice(device) for device in myq.covers.values()], True)
 
 
 class MyQDevice(CoverDevice):
@@ -62,7 +68,7 @@ class MyQDevice(CoverDevice):
     @property
     def device_class(self):
         """Define this cover as a garage door."""
-        return 'garage'
+        return "garage"
 
     @property
     def name(self):

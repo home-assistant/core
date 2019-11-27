@@ -2,12 +2,7 @@
 import logging
 from typing import Optional
 
-from arcam.fmj import (
-    DecodeMode2CH,
-    DecodeModeMCH,
-    IncomingAudioFormat,
-    SourceCodes,
-)
+from arcam.fmj import DecodeMode2CH, DecodeModeMCH, IncomingAudioFormat, SourceCodes
 from arcam.fmj.state import State
 
 from homeassistant import config_entries
@@ -45,9 +40,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-        hass: HomeAssistantType,
-        config_entry: config_entries.ConfigEntry,
-        async_add_entities,
+    hass: HomeAssistantType,
+    config_entry: config_entries.ConfigEntry,
+    async_add_entities,
 ):
     """Set up the configuration entry."""
     data = hass.data[DOMAIN_DATA_ENTRIES][config_entry.entry_id]
@@ -91,20 +86,14 @@ class ArcamFmj(MediaPlayerDevice):
         audio_format, _ = self._state.get_incoming_audio_format()
         return bool(
             audio_format
-            in (
-                IncomingAudioFormat.PCM,
-                IncomingAudioFormat.ANALOGUE_DIRECT,
-                None,
-            )
+            in (IncomingAudioFormat.PCM, IncomingAudioFormat.ANALOGUE_DIRECT, None)
         )
 
     @property
     def device_info(self):
         """Return a device description for device registry."""
         return {
-            "identifiers": {
-                (DOMAIN, self._state.client.host, self._state.client.port)
-            },
+            "identifiers": {(DOMAIN, self._state.client.host, self._state.client.port)},
             "model": "FMJ",
             "manufacturer": "Arcam",
         }
@@ -135,7 +124,7 @@ class ArcamFmj(MediaPlayerDevice):
         return support
 
     async def async_added_to_hass(self):
-        """Once registed add listener for events."""
+        """Once registered, add listener for events."""
         await self._state.start()
 
         @callback
@@ -153,9 +142,7 @@ class ArcamFmj(MediaPlayerDevice):
             if host == self._state.client.host:
                 self.async_schedule_update_ha_state(force_refresh=True)
 
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_CLIENT_DATA, _data
-        )
+        self.hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_CLIENT_DATA, _data)
 
         self.hass.helpers.dispatcher.async_dispatcher_connect(
             SIGNAL_CLIENT_STARTED, _started
@@ -190,13 +177,9 @@ class ArcamFmj(MediaPlayerDevice):
         """Select a specific source."""
         try:
             if self._get_2ch():
-                await self._state.set_decode_mode_2ch(
-                    DecodeMode2CH[sound_mode]
-                )
+                await self._state.set_decode_mode_2ch(DecodeMode2CH[sound_mode])
             else:
-                await self._state.set_decode_mode_mch(
-                    DecodeModeMCH[sound_mode]
-                )
+                await self._state.set_decode_mode_mch(DecodeModeMCH[sound_mode])
         except KeyError:
             _LOGGER.error("Unsupported sound_mode %s", sound_mode)
             return
@@ -336,7 +319,7 @@ class ArcamFmj(MediaPlayerDevice):
         channel = self.media_channel
 
         if channel:
-            value = "{} - {}".format(source.name, channel)
+            value = f"{source.name} - {channel}"
         else:
             value = source.name
         return value

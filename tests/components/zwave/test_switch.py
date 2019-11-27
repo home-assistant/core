@@ -3,8 +3,7 @@ from unittest.mock import patch
 
 from homeassistant.components.zwave import switch
 
-from tests.mock.zwave import (
-    MockNode, MockValue, MockEntityValues, value_changed)
+from tests.mock.zwave import MockNode, MockValue, MockEntityValues, value_changed
 
 
 def test_get_device_detects_switch(mock_openzwave):
@@ -55,12 +54,11 @@ def test_switch_value_changed(mock_openzwave):
     assert device.is_on
 
 
-@patch('time.perf_counter')
+@patch("time.perf_counter")
 def test_switch_refresh_on_update(mock_counter, mock_openzwave):
     """Test value changed for refresh on update Z-Wave switch."""
     mock_counter.return_value = 10
-    node = MockNode(manufacturer_id='013c', product_type='0001',
-                    product_id='0005')
+    node = MockNode(manufacturer_id="013c", product_type="0001", product_id="0005")
     value = MockValue(data=False, node=node, instance=1)
     values = MockEntityValues(primary=value)
     device = switch.get_device(node=node, values=values, node_config={})

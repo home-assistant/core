@@ -8,12 +8,12 @@ from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tesla binary sensor."""
     devices = [
-        TeslaBinarySensor(
-            device, hass.data[TESLA_DOMAIN]['controller'], 'connectivity')
-        for device in hass.data[TESLA_DOMAIN]['devices']['binary_sensor']]
+        TeslaBinarySensor(device, hass.data[TESLA_DOMAIN]["controller"], "connectivity")
+        for device in hass.data[TESLA_DOMAIN]["devices"]["binary_sensor"]
+    ]
     add_entities(devices, True)
 
 
@@ -41,8 +41,8 @@ class TeslaBinarySensor(TeslaDevice, BinarySensorDevice):
         """Return the state of the binary sensor."""
         return self._state
 
-    def update(self):
+    async def async_update(self):
         """Update the state of the device."""
         _LOGGER.debug("Updating sensor: %s", self._name)
-        self.tesla_device.update()
+        await super().async_update()
         self._state = self.tesla_device.get_value()

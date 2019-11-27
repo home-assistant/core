@@ -9,91 +9,68 @@ trigger:
     include:
     - requirements_all.txt
 pr: none
+schedules:
+- cron: '0 */4 * * *'
+  displayName: 'daily builds'
+  branches:
+    include:
+    - dev
+  always: true
 variables:
   - name: versionWheels
-    value: '1.0-3.7-alpine3.10'
-  - group: wheels
-
+    value: '1.4-3.7-alpine3.10'
+resources:
+  repositories:
+    - repository: azure
+      type: github
+      name: 'home-assistant/ci-azure'
+      endpoint: 'home-assistant'
 
 jobs:
+- template: templates/azp-job-wheels.yaml@azure
+  parameters:
+    builderVersion: '$(versionWheels)'
+    builderApk: 'build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev'
+    builderPip: 'Cython;numpy'
+    wheelsRequirement: 'requirements_wheels.txt'
+    wheelsRequirementDiff: 'requirements_diff.txt'
+    preBuild:
+    - script: |
+        cp requirements_all.txt requirements_wheels.txt
+        if [[ "$(Build.Reason)" =~ (Schedule|Manual) ]]; then
+          touch requirements_diff.txt
+        else
+          curl -s -o requirements_diff.txt https://raw.githubusercontent.com/home-assistant/home-assistant/master/requirements_all.txt
+        fi
 
-- job: 'Wheels'
-  timeoutInMinutes: 360
-  pool:
-    vmImage: 'ubuntu-latest'
-  strategy:
-    maxParallel: 5
-    matrix:
-      amd64:
-        buildArch: 'amd64'
-      i386:
-        buildArch: 'i386'
-      armhf:
-        buildArch: 'armhf'
-      armv7:
-        buildArch: 'armv7'
-      aarch64:
-        buildArch: 'aarch64'
-  steps:
-  - script: |
-      sudo apt-get update
-      sudo apt-get install -y --no-install-recommends \
-        qemu-user-static \
-        binfmt-support \
-        curl
+        requirement_files="requirements_wheels.txt requirements_diff.txt"
+        for requirement_file in ${requirement_files}; do
+          sed -i "s|# pybluez|pybluez|g" ${requirement_file}
+          sed -i "s|# bluepy|bluepy|g" ${requirement_file}
+          sed -i "s|# beacontools|beacontools|g" ${requirement_file}
+          sed -i "s|# RPi.GPIO|RPi.GPIO|g" ${requirement_file}
+          sed -i "s|# raspihats|raspihats|g" ${requirement_file}
+          sed -i "s|# rpi-rf|rpi-rf|g" ${requirement_file}
+          sed -i "s|# blinkt|blinkt|g" ${requirement_file}
+          sed -i "s|# fritzconnection|fritzconnection|g" ${requirement_file}
+          sed -i "s|# pyuserinput|pyuserinput|g" ${requirement_file}
+          sed -i "s|# evdev|evdev|g" ${requirement_file}
+          sed -i "s|# smbus-cffi|smbus-cffi|g" ${requirement_file}
+          sed -i "s|# i2csense|i2csense|g" ${requirement_file}
+          sed -i "s|# python-eq3bt|python-eq3bt|g" ${requirement_file}
+          sed -i "s|# pycups|pycups|g" ${requirement_file}
+          sed -i "s|# homekit|homekit|g" ${requirement_file}
+          sed -i "s|# decora_wifi|decora_wifi|g" ${requirement_file}
+          sed -i "s|# decora|decora|g" ${requirement_file}
+          sed -i "s|# avion|avion|g" ${requirement_file}
+          sed -i "s|# PySwitchbot|PySwitchbot|g" ${requirement_file}
+          sed -i "s|# pySwitchmate|pySwitchmate|g" ${requirement_file}
+          sed -i "s|# face_recognition|face_recognition|g" ${requirement_file}
+          sed -i "s|# py_noaa|py_noaa|g" ${requirement_file}
+          sed -i "s|# bme680|bme680|g" ${requirement_file}
 
-      sudo mount binfmt_misc -t binfmt_misc /proc/sys/fs/binfmt_misc
-      sudo update-binfmts --enable qemu-arm
-      sudo update-binfmts --enable qemu-aarch64
-    displayName: 'Initial cross build'
-  - script: |
-      mkdir -p .ssh
-      echo -e "-----BEGIN RSA PRIVATE KEY-----\n$(wheelsSSH)\n-----END RSA PRIVATE KEY-----" >> .ssh/id_rsa
-      ssh-keyscan -H $(wheelsHost) >> .ssh/known_hosts
-      chmod 600 .ssh/*
-    displayName: 'Install ssh key'
-  - script: sudo docker pull homeassistant/$(buildArch)-wheels:$(versionWheels)
-    displayName: 'Install wheels builder'
-  - script: |
-      cp requirements_all.txt requirements_wheels.txt
-      if [[ "$(Build.Reason)" =~ (Schedule|Manual) ]]; then
-        touch requirements_diff.txt
-      else
-        curl -s -o requirements_diff.txt https://raw.githubusercontent.com/home-assistant/home-assistant/master/requirements_all.txt
-      fi
-
-      requirement_files="requirements_wheels.txt requirements_diff.txt"
-      for requirement_file in ${requirement_files}; do
-        sed -i "s|# pytradfri|pytradfri|g" ${requirement_file}
-        sed -i "s|# pybluez|pybluez|g" ${requirement_file}
-        sed -i "s|# bluepy|bluepy|g" ${requirement_file}
-        sed -i "s|# beacontools|beacontools|g" ${requirement_file}
-        sed -i "s|# RPi.GPIO|RPi.GPIO|g" ${requirement_file}
-        sed -i "s|# raspihats|raspihats|g" ${requirement_file}
-        sed -i "s|# rpi-rf|rpi-rf|g" ${requirement_file}
-        sed -i "s|# blinkt|blinkt|g" ${requirement_file}
-        sed -i "s|# fritzconnection|fritzconnection|g" ${requirement_file}
-        sed -i "s|# pyuserinput|pyuserinput|g" ${requirement_file}
-        sed -i "s|# evdev|evdev|g" ${requirement_file}
-        sed -i "s|# smbus-cffi|smbus-cffi|g" ${requirement_file}
-        sed -i "s|# i2csense|i2csense|g" ${requirement_file}
-        sed -i "s|# python-eq3bt|python-eq3bt|g" ${requirement_file}
-        sed -i "s|# pycups|pycups|g" ${requirement_file}
-        sed -i "s|# homekit|homekit|g" ${requirement_file}
-        sed -i "s|# decora_wifi|decora_wifi|g" ${requirement_file}
-        sed -i "s|# decora|decora|g" ${requirement_file}
-        sed -i "s|# PySwitchbot|PySwitchbot|g" ${requirement_file}
-        sed -i "s|# pySwitchmate|pySwitchmate|g" ${requirement_file}
-        sed -i "s|# face_recognition|face_recognition|g" ${requirement_file}
-      done
-    displayName: 'Prepare requirements files for Hass.io'
-  - script: |
-      sudo docker run --rm -v $(pwd):/data:ro -v $(pwd)/.ssh:/root/.ssh:rw \
-        homeassistant/$(buildArch)-wheels:$(versionWheels) \
-        --apk "build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;linux-headers;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev" \
-        --index $(wheelsIndex) \
-        --requirement requirements_wheels.txt \
-        --requirement-diff requirements_diff.txt \
-        --upload rsync \
-        --remote wheels@$(wheelsHost):/opt/wheels
-    displayName: 'Run wheels build'
+          if [[ "$(buildArch)" =~ arm ]]; then
+            sed -i "s|# VL53L1X|VL53L1X|g" ${requirement_file}
+          fi
+        done
+      displayName: 'Prepare requirements files for Hass.io'

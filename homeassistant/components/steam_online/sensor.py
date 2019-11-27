@@ -1,50 +1,50 @@
 """Sensor for Steam account status."""
-import logging
 from datetime import timedelta
+import logging
 
+import steam
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.const import CONF_API_KEY
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ACCOUNTS = 'accounts'
+CONF_ACCOUNTS = "accounts"
 
-ICON = 'mdi:steam'
+ICON = "mdi:steam"
 
-STATE_OFFLINE = 'offline'
-STATE_ONLINE = 'online'
-STATE_BUSY = 'busy'
-STATE_AWAY = 'away'
-STATE_SNOOZE = 'snooze'
-STATE_LOOKING_TO_TRADE = 'looking_to_trade'
-STATE_LOOKING_TO_PLAY = 'looking_to_play'
+STATE_OFFLINE = "offline"
+STATE_ONLINE = "online"
+STATE_BUSY = "busy"
+STATE_AWAY = "away"
+STATE_SNOOZE = "snooze"
+STATE_LOOKING_TO_TRADE = "looking_to_trade"
+STATE_LOOKING_TO_PLAY = "looking_to_play"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_ACCOUNTS, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_ACCOUNTS, default=[]): vol.All(cv.ensure_list, [cv.string]),
+    }
+)
 
-APP_LIST_KEY = 'steam_online.app_list'
+APP_LIST_KEY = "steam_online.app_list"
 BASE_INTERVAL = timedelta(minutes=1)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Steam platform."""
-    import steam as steamod
-    steamod.api.key.set(config.get(CONF_API_KEY))
+
+    steam.api.key.set(config.get(CONF_API_KEY))
     # Initialize steammods app list before creating sensors
     # to benefit from internal caching of the list.
-    hass.data[APP_LIST_KEY] = steamod.apps.app_list()
-    entities = [
-        SteamSensor(account, steamod)
-        for account in config.get(CONF_ACCOUNTS)]
+    hass.data[APP_LIST_KEY] = steam.apps.app_list()
+    entities = [SteamSensor(account, steam) for account in config.get(CONF_ACCOUNTS)]
     if not entities:
         return
     add_entities(entities, True)
@@ -52,6 +52,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # Only one sensor update once every 60 seconds to avoid
     # flooding steam and getting disconnected.
     entity_next = 0
+
     @callback
     def do_update(time):
         nonlocal entity_next
@@ -79,7 +80,7 @@ class SteamSensor(Entity):
     @property
     def entity_id(self):
         """Return the entity ID."""
-        return 'sensor.steam_{}'.format(self._account)
+        return f"sensor.steam_{self._account}"
 
     @property
     def state(self):
@@ -142,7 +143,7 @@ class SteamSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {'game': self._game} if self._game else None
+        return {"game": self._game} if self._game else None
 
     @property
     def entity_picture(self):

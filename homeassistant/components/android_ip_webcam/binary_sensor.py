@@ -4,8 +4,7 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 from . import CONF_HOST, CONF_NAME, DATA_IP_WEBCAM, KEY_MAP, AndroidIPCamEntity
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the IP Webcam binary sensors."""
     if discovery_info is None:
         return
@@ -14,8 +13,7 @@ async def async_setup_platform(
     name = discovery_info[CONF_NAME]
     ipcam = hass.data[DATA_IP_WEBCAM][host]
 
-    async_add_entities(
-        [IPWebcamBinarySensor(name, host, ipcam, 'motion_active')], True)
+    async_add_entities([IPWebcamBinarySensor(name, host, ipcam, "motion_active")], True)
 
 
 class IPWebcamBinarySensor(AndroidIPCamEntity, BinarySensorDevice):
@@ -27,7 +25,7 @@ class IPWebcamBinarySensor(AndroidIPCamEntity, BinarySensorDevice):
 
         self._sensor = sensor
         self._mapped_name = KEY_MAP.get(self._sensor, self._sensor)
-        self._name = '{} {}'.format(name, self._mapped_name)
+        self._name = f"{name} {self._mapped_name}"
         self._state = None
         self._unit = None
 
@@ -49,4 +47,4 @@ class IPWebcamBinarySensor(AndroidIPCamEntity, BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return 'motion'
+        return "motion"

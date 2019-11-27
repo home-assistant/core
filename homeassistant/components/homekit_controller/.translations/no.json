@@ -24,7 +24,7 @@
                 "data": {
                     "pairing_code": "Sammenkoblingskode"
                 },
-                "description": "Skriv inn HomeKit sammenkoblingskoden for \u00e5 bruke dette tilbeh\u00f8ret",
+                "description": "Skriv inn din HomeKit-sammenkoblingskode (i formatet XXX-XX-XXX) for \u00e5 bruke dette tilbeh\u00f8ret",
                 "title": "Koble til HomeKit tilbeh\u00f8r"
             },
             "user": {

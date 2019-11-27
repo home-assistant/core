@@ -2,34 +2,41 @@
 import logging
 
 import voluptuous as vol
+from wunderpy2 import WunderApi
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    CONF_NAME, CONF_ACCESS_TOKEN)
+from homeassistant.const import CONF_NAME, CONF_ACCESS_TOKEN
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'wunderlist'
-CONF_CLIENT_ID = 'client_id'
-CONF_LIST_NAME = 'list_name'
-CONF_STARRED = 'starred'
+DOMAIN = "wunderlist"
+CONF_CLIENT_ID = "client_id"
+CONF_LIST_NAME = "list_name"
+CONF_STARRED = "starred"
 
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_CLIENT_ID): cv.string,
-        vol.Required(CONF_ACCESS_TOKEN): cv.string,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_CLIENT_ID): cv.string,
+                vol.Required(CONF_ACCESS_TOKEN): cv.string,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
-SERVICE_CREATE_TASK = 'create_task'
+SERVICE_CREATE_TASK = "create_task"
 
-SERVICE_SCHEMA_CREATE_TASK = vol.Schema({
-    vol.Required(CONF_LIST_NAME): cv.string,
-    vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_STARRED, default=False): cv.boolean,
-})
+SERVICE_SCHEMA_CREATE_TASK = vol.Schema(
+    {
+        vol.Required(CONF_LIST_NAME): cv.string,
+        vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_STARRED, default=False): cv.boolean,
+    }
+)
 
 
 def setup(hass, config):
@@ -43,8 +50,7 @@ def setup(hass, config):
         return False
 
     hass.services.register(
-        DOMAIN, 'create_task', data.create_task,
-        schema=SERVICE_SCHEMA_CREATE_TASK
+        DOMAIN, "create_task", data.create_task, schema=SERVICE_SCHEMA_CREATE_TASK
     )
     return True
 
@@ -54,9 +60,7 @@ class Wunderlist:
 
     def __init__(self, access_token, client_id):
         """Create new instance of Wunderlist component."""
-        import wunderpy2
-
-        api = wunderpy2.WunderApi()
+        api = WunderApi()
         self._client = api.get_client(access_token, client_id)
 
         _LOGGER.debug("Instance created")

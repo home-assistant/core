@@ -1,27 +1,32 @@
 """MessageBird platform for notify component."""
 import logging
 
+import messagebird
+from messagebird.client import ErrorException
 import voluptuous as vol
 
+from homeassistant.components.notify import (
+    ATTR_TARGET,
+    PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 from homeassistant.const import CONF_API_KEY, CONF_SENDER
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.components.notify import (ATTR_TARGET, PLATFORM_SCHEMA,
-                                             BaseNotificationService)
-
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_SENDER, default='HA'):
-        vol.All(cv.string, vol.Match(r"^(\+?[1-9]\d{1,14}|\w{1,11})$")),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Optional(CONF_SENDER, default="HA"): vol.All(
+            cv.string, vol.Match(r"^(\+?[1-9]\d{1,14}|\w{1,11})$")
+        ),
+    }
+)
 
 
 def get_service(hass, config, discovery_info=None):
     """Get the MessageBird notification service."""
-    import messagebird
-
     client = messagebird.Client(config[CONF_API_KEY])
     try:
         # validates the api key
@@ -43,8 +48,6 @@ class MessageBirdNotificationService(BaseNotificationService):
 
     def send_message(self, message=None, **kwargs):
         """Send a message to a specified target."""
-        from messagebird.client import ErrorException
-
         targets = kwargs.get(ATTR_TARGET)
         if not targets:
             _LOGGER.error("No target specified")
@@ -53,7 +56,8 @@ class MessageBirdNotificationService(BaseNotificationService):
         for target in targets:
             try:
                 self.client.message_create(
-                    self.sender, target, message, {'reference': 'HA'})
+                    self.sender, target, message, {"reference": "HA"}
+                )
             except ErrorException as exception:
                 _LOGGER.error("Failed to notify %s: %s", target, exception)
                 continue

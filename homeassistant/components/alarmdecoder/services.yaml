@@ -1,0 +1,9 @@
+alarm_keypress:
+  description: Send custom keypresses to the alarm.
+  fields:
+    entity_id:
+      description: Name of the alarm control panel to trigger.
+      example: 'alarm_control_panel.downstairs'
+    keypress:
+      description: 'String to send to the alarm panel.'
+      example: '*71'

@@ -7,10 +7,8 @@ from .const import NEW_SCENE
 from .gateway import get_gateway_from_config_entry
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up deCONZ platforms."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -27,8 +25,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         async_add_entities(entities)
 
-    gateway.listeners.append(async_dispatcher_connect(
-        hass, gateway.async_event_new_device(NEW_SCENE), async_add_scene))
+    gateway.listeners.append(
+        async_dispatcher_connect(
+            hass, gateway.async_signal_new_device(NEW_SCENE), async_add_scene
+        )
+    )
 
     async_add_scene(gateway.api.scenes.values())
 
@@ -47,6 +48,7 @@ class DeconzScene(Scene):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect scene object when removed."""
+        del self.gateway.deconz_ids[self.entity_id]
         self._scene = None
 
     async def async_activate(self):

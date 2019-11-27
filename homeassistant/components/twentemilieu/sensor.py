@@ -26,7 +26,7 @@ PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
-        hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up Twente Milieu sensor based on a config entry."""
     twentemilieu = hass.data[DOMAIN][entry.data[CONF_ID]]
@@ -40,28 +40,28 @@ async def async_setup_entry(
         TwenteMilieuSensor(
             twentemilieu,
             unique_id=entry.data[CONF_ID],
-            name="{} Waste Pickup".format(WASTE_TYPE_NON_RECYCLABLE),
+            name=f"{WASTE_TYPE_NON_RECYCLABLE} Waste Pickup",
             waste_type=WASTE_TYPE_NON_RECYCLABLE,
             icon="mdi:delete-empty",
         ),
         TwenteMilieuSensor(
             twentemilieu,
             unique_id=entry.data[CONF_ID],
-            name="{} Waste Pickup".format(WASTE_TYPE_ORGANIC),
+            name=f"{WASTE_TYPE_ORGANIC} Waste Pickup",
             waste_type=WASTE_TYPE_ORGANIC,
             icon="mdi:delete-empty",
         ),
         TwenteMilieuSensor(
             twentemilieu,
             unique_id=entry.data[CONF_ID],
-            name="{} Waste Pickup".format(WASTE_TYPE_PAPER),
+            name=f"{WASTE_TYPE_PAPER} Waste Pickup",
             waste_type=WASTE_TYPE_PAPER,
             icon="mdi:delete-empty",
         ),
         TwenteMilieuSensor(
             twentemilieu,
             unique_id=entry.data[CONF_ID],
-            name="{} Waste Pickup".format(WASTE_TYPE_PLASTIC),
+            name=f"{WASTE_TYPE_PLASTIC} Waste Pickup",
             waste_type=WASTE_TYPE_PLASTIC,
             icon="mdi:delete-empty",
         ),
@@ -74,12 +74,12 @@ class TwenteMilieuSensor(Entity):
     """Defines a Twente Milieu sensor."""
 
     def __init__(
-            self,
-            twentemilieu: TwenteMilieu,
-            unique_id: str,
-            name: str,
-            waste_type: str,
-            icon: str,
+        self,
+        twentemilieu: TwenteMilieu,
+        unique_id: str,
+        name: str,
+        waste_type: str,
+        icon: str,
     ) -> None:
         """Initialize the Twente Milieu entity."""
         self._available = True
@@ -110,7 +110,7 @@ class TwenteMilieuSensor(Entity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this sensor."""
-        return "{}_{}_{}".format(DOMAIN, self._unique_id, self._waste_type)
+        return f"{DOMAIN}_{self._unique_id}_{self._waste_type}"
 
     @property
     def should_poll(self) -> bool:

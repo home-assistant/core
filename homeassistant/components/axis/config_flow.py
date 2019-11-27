@@ -4,8 +4,14 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
-    CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_PORT,
-    CONF_USERNAME)
+    CONF_DEVICE,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.json import load_json
@@ -14,40 +20,43 @@ from .const import CONF_MODEL, DOMAIN
 from .device import get_device
 from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
 
-AXIS_OUI = {'00408C', 'ACCC8E', 'B8A44F'}
+AXIS_OUI = {"00408C", "ACCC8E", "B8A44F"}
 
-CONFIG_FILE = 'axis.conf'
+CONFIG_FILE = "axis.conf"
 
-EVENT_TYPES = ['motion', 'vmd3', 'pir', 'sound',
-               'daynight', 'tampering', 'input']
+EVENT_TYPES = ["motion", "vmd3", "pir", "sound", "daynight", "tampering", "input"]
 
-PLATFORMS = ['camera']
+PLATFORMS = ["camera"]
 
 AXIS_INCLUDE = EVENT_TYPES + PLATFORMS
 
-AXIS_DEFAULT_HOST = '192.168.0.90'
-AXIS_DEFAULT_USERNAME = 'root'
-AXIS_DEFAULT_PASSWORD = 'pass'
+AXIS_DEFAULT_HOST = "192.168.0.90"
+AXIS_DEFAULT_USERNAME = "root"
+AXIS_DEFAULT_PASSWORD = "pass"
 DEFAULT_PORT = 80
 
-DEVICE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_HOST, default=AXIS_DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_USERNAME, default=AXIS_DEFAULT_USERNAME): cv.string,
-    vol.Optional(CONF_PASSWORD, default=AXIS_DEFAULT_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-}, extra=vol.ALLOW_EXTRA)
+DEVICE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_HOST, default=AXIS_DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_USERNAME, default=AXIS_DEFAULT_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD, default=AXIS_DEFAULT_PASSWORD): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 @callback
 def configured_devices(hass):
     """Return a set of the configured devices."""
-    return {entry.data[CONF_MAC]: entry for entry
-            in hass.config_entries.async_entries(DOMAIN)}
+    return {
+        entry.data[CONF_MAC]: entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+    }
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class AxisFlowHandler(config_entries.ConfigFlow):
+class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Axis config flow."""
 
     VERSION = 1
@@ -76,7 +85,7 @@ class AxisFlowHandler(config_entries.ConfigFlow):
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_PORT: user_input[CONF_PORT],
                     CONF_USERNAME: user_input[CONF_USERNAME],
-                    CONF_PASSWORD: user_input[CONF_PASSWORD]
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
                 }
                 device = await get_device(self.hass, self.device_config)
 
@@ -90,26 +99,30 @@ class AxisFlowHandler(config_entries.ConfigFlow):
                 return await self._create_entry()
 
             except AlreadyConfigured:
-                errors['base'] = 'already_configured'
+                errors["base"] = "already_configured"
 
             except AuthenticationRequired:
-                errors['base'] = 'faulty_credentials'
+                errors["base"] = "faulty_credentials"
 
             except CannotConnect:
-                errors['base'] = 'device_unavailable'
+                errors["base"] = "device_unavailable"
 
-        data = self.import_schema or self.discovery_schema or {
-            vol.Required(CONF_HOST): str,
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
-            vol.Required(CONF_PORT, default=DEFAULT_PORT): int
-        }
+        data = (
+            self.import_schema
+            or self.discovery_schema
+            or {
+                vol.Required(CONF_HOST): str,
+                vol.Required(CONF_USERNAME): str,
+                vol.Required(CONF_PASSWORD): str,
+                vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+            }
+        )
 
         return self.async_show_form(
-            step_id='user',
+            step_id="user",
             description_placeholders=self.device_config,
             data_schema=vol.Schema(data),
-            errors=errors
+            errors=errors,
         )
 
     async def _create_entry(self):
@@ -119,14 +132,14 @@ class AxisFlowHandler(config_entries.ConfigFlow):
         """
         if self.name is None:
             same_model = [
-                entry.data[CONF_NAME] for entry
-                in self.hass.config_entries.async_entries(DOMAIN)
+                entry.data[CONF_NAME]
+                for entry in self.hass.config_entries.async_entries(DOMAIN)
                 if entry.data[CONF_MODEL] == self.model
             ]
 
-            self.name = "{}".format(self.model)
+            self.name = f"{self.model}"
             for idx in range(len(same_model) + 1):
-                self.name = "{} {}".format(self.model, idx)
+                self.name = f"{self.model} {idx}"
                 if self.name not in same_model:
                     break
 
@@ -137,11 +150,8 @@ class AxisFlowHandler(config_entries.ConfigFlow):
             CONF_MODEL: self.model,
         }
 
-        title = "{} - {}".format(self.model, self.serial_number)
-        return self.async_create_entry(
-            title=title,
-            data=data
-        )
+        title = f"{self.model} - {self.serial_number}"
+        return self.async_create_entry(title=title, data=data)
 
     async def _update_entry(self, entry, host):
         """Update existing entry if it is the same device."""
@@ -153,39 +163,48 @@ class AxisFlowHandler(config_entries.ConfigFlow):
 
         This flow is triggered by the discovery component.
         """
-        serialnumber = discovery_info['properties']['macaddress']
+        serialnumber = discovery_info["properties"]["macaddress"]
 
         if serialnumber[:6] not in AXIS_OUI:
-            return self.async_abort(reason='not_axis_device')
+            return self.async_abort(reason="not_axis_device")
 
-        if discovery_info[CONF_HOST].startswith('169.254'):
-            return self.async_abort(reason='link_local_address')
+        if discovery_info[CONF_HOST].startswith("169.254"):
+            return self.async_abort(reason="link_local_address")
 
-        # pylint: disable=unsupported-assignment-operation
-        self.context['macaddress'] = serialnumber
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context["macaddress"] = serialnumber
 
-        if any(serialnumber == flow['context']['macaddress']
-               for flow in self._async_in_progress()):
-            return self.async_abort(reason='already_in_progress')
+        if any(
+            serialnumber == flow["context"]["macaddress"]
+            for flow in self._async_in_progress()
+        ):
+            return self.async_abort(reason="already_in_progress")
 
         device_entries = configured_devices(self.hass)
 
         if serialnumber in device_entries:
             entry = device_entries[serialnumber]
             await self._update_entry(entry, discovery_info[CONF_HOST])
-            return self.async_abort(reason='already_configured')
+            return self.async_abort(reason="already_configured")
 
         config_file = await self.hass.async_add_executor_job(
-            load_json, self.hass.config.path(CONFIG_FILE))
+            load_json, self.hass.config.path(CONFIG_FILE)
+        )
+
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context["title_placeholders"] = {
+            "name": discovery_info["hostname"][:-7],
+            "host": discovery_info[CONF_HOST],
+        }
 
         if serialnumber not in config_file:
             self.discovery_schema = {
-                vol.Required(
-                    CONF_HOST, default=discovery_info[CONF_HOST]): str,
+                vol.Required(CONF_HOST, default=discovery_info[CONF_HOST]): str,
                 vol.Required(CONF_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
-                vol.Required(CONF_PORT, default=discovery_info[CONF_PORT]): int
+                vol.Required(CONF_PORT, default=discovery_info[CONF_PORT]): int,
             }
+
             return await self.async_step_user()
 
         try:
@@ -193,10 +212,10 @@ class AxisFlowHandler(config_entries.ConfigFlow):
             device_config[CONF_HOST] = discovery_info[CONF_HOST]
 
             if CONF_NAME not in device_config:
-                device_config[CONF_NAME] = discovery_info['hostname']
+                device_config[CONF_NAME] = discovery_info["hostname"]
 
         except vol.Invalid:
-            return self.async_abort(reason='bad_config_file')
+            return self.async_abort(reason="bad_config_file")
 
         return await self.async_step_import(device_config)
 
@@ -213,10 +232,8 @@ class AxisFlowHandler(config_entries.ConfigFlow):
 
         self.import_schema = {
             vol.Required(CONF_HOST, default=import_config[CONF_HOST]): str,
-            vol.Required(
-                CONF_USERNAME, default=import_config[CONF_USERNAME]): str,
-            vol.Required(
-                CONF_PASSWORD, default=import_config[CONF_PASSWORD]): str,
-            vol.Required(CONF_PORT, default=import_config[CONF_PORT]): int
+            vol.Required(CONF_USERNAME, default=import_config[CONF_USERNAME]): str,
+            vol.Required(CONF_PASSWORD, default=import_config[CONF_PASSWORD]): str,
+            vol.Required(CONF_PORT, default=import_config[CONF_PORT]): int,
         }
         return await self.async_step_user(user_input=import_config)

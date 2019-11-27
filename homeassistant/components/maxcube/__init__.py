@@ -13,33 +13,42 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PORT = 62910
-DOMAIN = 'maxcube'
+DOMAIN = "maxcube"
 
-DATA_KEY = 'maxcube'
+DATA_KEY = "maxcube"
 
-NOTIFICATION_ID = 'maxcube_notification'
-NOTIFICATION_TITLE = 'Max!Cube gateway setup'
+NOTIFICATION_ID = "maxcube_notification"
+NOTIFICATION_TITLE = "Max!Cube gateway setup"
 
-CONF_GATEWAYS = 'gateways'
+CONF_GATEWAYS = "gateways"
 
-CONFIG_GATEWAY = vol.Schema({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_SCAN_INTERVAL, default=300): cv.time_period,
-})
+CONFIG_GATEWAY = vol.Schema(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_SCAN_INTERVAL, default=300): cv.time_period,
+    }
+)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_GATEWAYS, default={}):
-            vol.All(cv.ensure_list, [CONFIG_GATEWAY]),
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_GATEWAYS, default={}): vol.All(
+                    cv.ensure_list, [CONFIG_GATEWAY]
+                )
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
     """Establish connection to MAX! Cube."""
     from maxcube.connection import MaxCubeConnection
     from maxcube.cube import MaxCube
+
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
 
@@ -56,18 +65,19 @@ def setup(hass, config):
         except timeout as ex:
             _LOGGER.error("Unable to connect to Max!Cube gateway: %s", str(ex))
             hass.components.persistent_notification.create(
-                'Error: {}<br />'
-                'You will need to restart Home Assistant after fixing.'
-                ''.format(ex),
+                "Error: {}<br />"
+                "You will need to restart Home Assistant after fixing."
+                "".format(ex),
                 title=NOTIFICATION_TITLE,
-                notification_id=NOTIFICATION_ID)
+                notification_id=NOTIFICATION_ID,
+            )
             connection_failed += 1
 
     if connection_failed >= len(gateways):
         return False
 
-    load_platform(hass, 'climate', DOMAIN, {}, config)
-    load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
+    load_platform(hass, "climate", DOMAIN, {}, config)
+    load_platform(hass, "binary_sensor", DOMAIN, {}, config)
 
     return True
 

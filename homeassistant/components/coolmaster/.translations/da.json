@@ -1,0 +1,15 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "heat_cool": "Underst\u00f8t automatisk varm/k\u00f8l tilstand",
+                    "host": "V\u00e6rt",
+                    "off": "Kan slukkes"
+                },
+                "title": "Ops\u00e6t dine CoolMasterNet-forbindelsesdetaljer."
+            }
+        },
+        "title": "CoolMasterNet"
+    }
+}

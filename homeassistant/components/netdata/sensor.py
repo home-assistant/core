@@ -6,7 +6,12 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST, CONF_ICON, CONF_NAME, CONF_PORT, CONF_RESOURCES)
+    CONF_HOST,
+    CONF_ICON,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_RESOURCES,
+)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -17,33 +22,36 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
-CONF_DATA_GROUP = 'data_group'
-CONF_ELEMENT = 'element'
-CONF_INVERT = 'invert'
+CONF_DATA_GROUP = "data_group"
+CONF_ELEMENT = "element"
+CONF_INVERT = "invert"
 
-DEFAULT_HOST = 'localhost'
-DEFAULT_NAME = 'Netdata'
+DEFAULT_HOST = "localhost"
+DEFAULT_NAME = "Netdata"
 DEFAULT_PORT = 19999
 
-DEFAULT_ICON = 'mdi:desktop-classic'
+DEFAULT_ICON = "mdi:desktop-classic"
 
-RESOURCE_SCHEMA = vol.Any({
-    vol.Required(CONF_DATA_GROUP): cv.string,
-    vol.Required(CONF_ELEMENT): cv.string,
-    vol.Optional(CONF_ICON, default=DEFAULT_ICON): cv.icon,
-    vol.Optional(CONF_INVERT, default=False): cv.boolean,
-})
+RESOURCE_SCHEMA = vol.Any(
+    {
+        vol.Required(CONF_DATA_GROUP): cv.string,
+        vol.Required(CONF_ELEMENT): cv.string,
+        vol.Optional(CONF_ICON, default=DEFAULT_ICON): cv.icon,
+        vol.Optional(CONF_INVERT, default=False): cv.boolean,
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Required(CONF_RESOURCES): vol.Schema({cv.string: RESOURCE_SCHEMA}),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Required(CONF_RESOURCES): vol.Schema({cv.string: RESOURCE_SCHEMA}),
+    }
+)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Netdata sensor."""
     from netdata import Netdata
 
@@ -68,14 +76,20 @@ async def async_setup_platform(
         sensor_name = entry
         try:
             resource_data = netdata.api.metrics[sensor]
-            unit = '%' if resource_data['units'] == 'percentage' else \
-                resource_data['units']
+            unit = (
+                "%"
+                if resource_data["units"] == "percentage"
+                else resource_data["units"]
+            )
         except KeyError:
             _LOGGER.error("Sensor is not available: %s", sensor)
             continue
 
-        dev.append(NetdataSensor(
-            netdata, name, sensor, sensor_name, element, icon, unit, invert))
+        dev.append(
+            NetdataSensor(
+                netdata, name, sensor, sensor_name, element, icon, unit, invert
+            )
+        )
 
     async_add_entities(dev, True)
 
@@ -83,16 +97,13 @@ async def async_setup_platform(
 class NetdataSensor(Entity):
     """Implementation of a Netdata sensor."""
 
-    def __init__(
-            self, netdata, name, sensor, sensor_name, element, icon, unit,
-            invert):
+    def __init__(self, netdata, name, sensor, sensor_name, element, icon, unit, invert):
         """Initialize the Netdata sensor."""
         self.netdata = netdata
         self._state = None
         self._sensor = sensor
         self._element = element
-        self._sensor_name = self._sensor if sensor_name is None else \
-            sensor_name
+        self._sensor_name = self._sensor if sensor_name is None else sensor_name
         self._name = name
         self._icon = icon
         self._unit_of_measurement = unit
@@ -101,7 +112,7 @@ class NetdataSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self._name, self._sensor_name)
+        return f"{self._name} {self._sensor_name}"
 
     @property
     def unit_of_measurement(self):
@@ -127,9 +138,9 @@ class NetdataSensor(Entity):
         """Get the latest data from Netdata REST API."""
         await self.netdata.async_update()
         resource_data = self.netdata.api.metrics.get(self._sensor)
-        self._state = round(
-            resource_data['dimensions'][self._element]['value'], 2) \
-            * (-1 if self._invert else 1)
+        self._state = round(resource_data["dimensions"][self._element]["value"], 2) * (
+            -1 if self._invert else 1
+        )
 
 
 class NetdataData:

@@ -1,7 +1,7 @@
 {
   "domain": "hydrawise",
   "name": "Hydrawise",
-  "documentation": "https://www.home-assistant.io/components/hydrawise",
+  "documentation": "https://www.home-assistant.io/integrations/hydrawise",
   "requirements": [
     "hydrawiser==0.1.1"
   ],

@@ -1,7 +1,7 @@
 {
   "domain": "logbook",
   "name": "Logbook",
-  "documentation": "https://www.home-assistant.io/components/logbook",
+  "documentation": "https://www.home-assistant.io/integrations/logbook",
   "requirements": [],
   "dependencies": [
     "frontend",

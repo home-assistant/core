@@ -6,8 +6,16 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS, STATE_ON, STATE_OFF, CONF_HOST,
-    CONF_SSL, CONF_VERIFY_SSL, CONF_PORT)
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    TEMP_CELSIUS,
+    STATE_ON,
+    STATE_OFF,
+    CONF_HOST,
+    CONF_SSL,
+    CONF_VERIFY_SSL,
+    CONF_PORT,
+)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -16,30 +24,27 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_SSL = True
 DEFAULT_VERIFY_SSL = True
 
-DIGITS = {
-    'volts': 1,
-    'amps': 1,
-    'active_power': 0,
-    'temperature': 1,
-}
+DIGITS = {"volts": 1, "amps": 1, "active_power": 0, "temperature": 1}
 
 SENSOR_MODELS = [
-    'Ubiquiti mFi-THS',
-    'Ubiquiti mFi-CS',
-    'Ubiquiti mFi-DS',
-    'Outlet',
-    'Input Analog',
-    'Input Digital',
+    "Ubiquiti mFi-THS",
+    "Ubiquiti mFi-CS",
+    "Ubiquiti mFi-DS",
+    "Outlet",
+    "Input Analog",
+    "Input Digital",
 ]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT): cv.port,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_PORT): cv.port,
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -55,16 +60,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     from mficlient.client import FailedToLogin, MFiClient
 
     try:
-        client = MFiClient(host, username, password, port=port,
-                           use_tls=use_tls, verify=verify_tls)
+        client = MFiClient(
+            host, username, password, port=port, use_tls=use_tls, verify=verify_tls
+        )
     except (FailedToLogin, requests.exceptions.ConnectionError) as ex:
         _LOGGER.error("Unable to connect to mFi: %s", str(ex))
         return False
 
-    add_entities(MfiSensor(port, hass)
-                 for device in client.get_devices()
-                 for port in device.ports.values()
-                 if port.model in SENSOR_MODELS)
+    add_entities(
+        MfiSensor(port, hass)
+        for device in client.get_devices()
+        for port in device.ports.values()
+        if port.model in SENSOR_MODELS
+    )
 
 
 class MfiSensor(Entity):
@@ -89,7 +97,7 @@ class MfiSensor(Entity):
             tag = None
         if tag is None:
             return STATE_OFF
-        if self._port.model == 'Input Digital':
+        if self._port.model == "Input Digital":
             return STATE_ON if self._port.value > 0 else STATE_OFF
         digits = DIGITS.get(self._port.tag, 0)
         return round(self._port.value, digits)
@@ -100,14 +108,14 @@ class MfiSensor(Entity):
         try:
             tag = self._port.tag
         except ValueError:
-            return 'State'
+            return "State"
 
-        if tag == 'temperature':
+        if tag == "temperature":
             return TEMP_CELSIUS
-        if tag == 'active_pwr':
-            return 'Watts'
-        if self._port.model == 'Input Digital':
-            return 'State'
+        if tag == "active_pwr":
+            return "Watts"
+        if self._port.model == "Input Digital":
+            return "State"
         return tag
 
     def update(self):

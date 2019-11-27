@@ -16,8 +16,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     switch_entities = []
     for actuator in actuators:
-        if (actuator.type() == ActuatorType.SWITCH) or \
-                (actuator.type() == ActuatorType.DIMMER):
+        if (actuator.type() == ActuatorType.SWITCH) or (
+            actuator.type() == ActuatorType.DIMMER
+        ):
             switch_entities.append(XS1SwitchEntity(actuator))
 
     add_entities(switch_entities)

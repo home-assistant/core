@@ -4,52 +4,59 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA, BinarySensorDevice)
+    DEVICE_CLASSES_SCHEMA,
+    PLATFORM_SCHEMA,
+    BinarySensorDevice,
+)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_DEVICE_CLASS, CONF_ENTITY_ID, CONF_NAME,
-    STATE_UNKNOWN)
+    ATTR_ENTITY_ID,
+    CONF_DEVICE_CLASS,
+    CONF_ENTITY_ID,
+    CONF_NAME,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_HYSTERESIS = 'hysteresis'
-ATTR_LOWER = 'lower'
-ATTR_POSITION = 'position'
-ATTR_SENSOR_VALUE = 'sensor_value'
-ATTR_TYPE = 'type'
-ATTR_UPPER = 'upper'
+ATTR_HYSTERESIS = "hysteresis"
+ATTR_LOWER = "lower"
+ATTR_POSITION = "position"
+ATTR_SENSOR_VALUE = "sensor_value"
+ATTR_TYPE = "type"
+ATTR_UPPER = "upper"
 
-CONF_HYSTERESIS = 'hysteresis'
-CONF_LOWER = 'lower'
-CONF_UPPER = 'upper'
+CONF_HYSTERESIS = "hysteresis"
+CONF_LOWER = "lower"
+CONF_UPPER = "upper"
 
-DEFAULT_NAME = 'Threshold'
+DEFAULT_NAME = "Threshold"
 DEFAULT_HYSTERESIS = 0.0
 
-POSITION_ABOVE = 'above'
-POSITION_BELOW = 'below'
-POSITION_IN_RANGE = 'in_range'
-POSITION_UNKNOWN = 'unknown'
+POSITION_ABOVE = "above"
+POSITION_BELOW = "below"
+POSITION_IN_RANGE = "in_range"
+POSITION_UNKNOWN = "unknown"
 
-TYPE_LOWER = 'lower'
-TYPE_RANGE = 'range'
-TYPE_UPPER = 'upper'
+TYPE_LOWER = "lower"
+TYPE_RANGE = "range"
+TYPE_UPPER = "upper"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ENTITY_ID): cv.entity_id,
-    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-    vol.Optional(CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS):
-        vol.Coerce(float),
-    vol.Optional(CONF_LOWER): vol.Coerce(float),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_UPPER): vol.Coerce(float),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS): vol.Coerce(float),
+        vol.Optional(CONF_LOWER): vol.Coerce(float),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_UPPER): vol.Coerce(float),
+    }
+)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Threshold sensor."""
     entity_id = config.get(CONF_ENTITY_ID)
     name = config.get(CONF_NAME)
@@ -58,15 +65,20 @@ async def async_setup_platform(hass, config, async_add_entities,
     hysteresis = config.get(CONF_HYSTERESIS)
     device_class = config.get(CONF_DEVICE_CLASS)
 
-    async_add_entities([ThresholdSensor(
-        hass, entity_id, name, lower, upper, hysteresis, device_class)], True)
+    async_add_entities(
+        [
+            ThresholdSensor(
+                hass, entity_id, name, lower, upper, hysteresis, device_class
+            )
+        ],
+        True,
+    )
 
 
 class ThresholdSensor(BinarySensorDevice):
     """Representation of a Threshold sensor."""
 
-    def __init__(self, hass, entity_id, name, lower, upper, hysteresis,
-                 device_class):
+    def __init__(self, hass, entity_id, name, lower, upper, hysteresis, device_class):
         """Initialize the Threshold sensor."""
         self._hass = hass
         self._entity_id = entity_id
@@ -81,20 +93,19 @@ class ThresholdSensor(BinarySensorDevice):
         self.sensor_value = None
 
         @callback
-        def async_threshold_sensor_state_listener(
-                entity, old_state, new_state):
+        def async_threshold_sensor_state_listener(entity, old_state, new_state):
             """Handle sensor state changes."""
             try:
-                self.sensor_value = None if new_state.state == STATE_UNKNOWN \
-                    else float(new_state.state)
+                self.sensor_value = (
+                    None if new_state.state == STATE_UNKNOWN else float(new_state.state)
+                )
             except (ValueError, TypeError):
                 self.sensor_value = None
                 _LOGGER.warning("State is not numerical")
 
             hass.async_add_job(self.async_update_ha_state, True)
 
-        async_track_state_change(
-            hass, entity_id, async_threshold_sensor_state_listener)
+        async_track_state_change(hass, entity_id, async_threshold_sensor_state_listener)
 
     @property
     def name(self):
@@ -119,8 +130,7 @@ class ThresholdSensor(BinarySensorDevice):
     @property
     def threshold_type(self):
         """Return the type of threshold this sensor represents."""
-        if self._threshold_lower is not None and \
-                self._threshold_upper is not None:
+        if self._threshold_lower is not None and self._threshold_upper is not None:
             return TYPE_RANGE
         if self._threshold_lower is not None:
             return TYPE_LOWER
@@ -142,6 +152,7 @@ class ThresholdSensor(BinarySensorDevice):
 
     async def async_update(self):
         """Get the latest data and updates the states."""
+
         def below(threshold):
             """Determine if the sensor value is below a threshold."""
             return self.sensor_value < (threshold - self._hysteresis)

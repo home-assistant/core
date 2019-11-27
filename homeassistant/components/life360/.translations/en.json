@@ -10,6 +10,7 @@
         "error": {
             "invalid_credentials": "Invalid credentials",
             "invalid_username": "Invalid username",
+            "unexpected": "Unexpected error communicating with Life360 server",
             "user_already_configured": "Account has already been configured"
         },
         "step": {

@@ -1,7 +1,7 @@
 {
   "domain": "matrix",
   "name": "Matrix",
-  "documentation": "https://www.home-assistant.io/components/matrix",
+  "documentation": "https://www.home-assistant.io/integrations/matrix",
   "requirements": [
     "matrix-client==0.2.0"
   ],

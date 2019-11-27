@@ -4,22 +4,33 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
+    ATTR_DATA,
+    PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.template as template_helper
 
 from . import (
-    ATTR_ADDRESS, ATTR_CHANNEL, ATTR_INTERFACE, ATTR_PARAM, ATTR_VALUE, DOMAIN,
-    SERVICE_SET_DEVICE_VALUE)
+    ATTR_ADDRESS,
+    ATTR_CHANNEL,
+    ATTR_INTERFACE,
+    ATTR_PARAM,
+    ATTR_VALUE,
+    DOMAIN,
+    SERVICE_SET_DEVICE_VALUE,
+)
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(ATTR_ADDRESS): vol.All(cv.string, vol.Upper),
-    vol.Required(ATTR_CHANNEL): vol.Coerce(int),
-    vol.Required(ATTR_PARAM): vol.All(cv.string, vol.Upper),
-    vol.Required(ATTR_VALUE): cv.match_all,
-    vol.Optional(ATTR_INTERFACE): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(ATTR_ADDRESS): vol.All(cv.string, vol.Upper),
+        vol.Required(ATTR_CHANNEL): vol.Coerce(int),
+        vol.Required(ATTR_PARAM): vol.All(cv.string, vol.Upper),
+        vol.Required(ATTR_VALUE): cv.match_all,
+        vol.Optional(ATTR_INTERFACE): cv.string,
+    }
+)
 
 
 def get_service(hass, config, discovery_info=None):
@@ -28,7 +39,7 @@ def get_service(hass, config, discovery_info=None):
         ATTR_ADDRESS: config[ATTR_ADDRESS],
         ATTR_CHANNEL: config[ATTR_CHANNEL],
         ATTR_PARAM: config[ATTR_PARAM],
-        ATTR_VALUE: config[ATTR_VALUE]
+        ATTR_VALUE: config[ATTR_VALUE],
     }
     if ATTR_INTERFACE in config:
         data[ATTR_INTERFACE] = config[ATTR_INTERFACE]

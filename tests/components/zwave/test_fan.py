@@ -1,10 +1,14 @@
 """Test Z-Wave fans."""
 from homeassistant.components.zwave import fan
 from homeassistant.components.fan import (
-    SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH, SUPPORT_SET_SPEED)
+    SPEED_OFF,
+    SPEED_LOW,
+    SPEED_MEDIUM,
+    SPEED_HIGH,
+    SUPPORT_SET_SPEED,
+)
 
-from tests.mock.zwave import (
-    MockNode, MockValue, MockEntityValues, value_changed)
+from tests.mock.zwave import MockNode, MockValue, MockEntityValues, value_changed
 
 
 def test_get_device_detects_fan(mock_openzwave):
@@ -16,8 +20,7 @@ def test_get_device_detects_fan(mock_openzwave):
     device = fan.get_device(node=node, values=values, node_config={})
     assert isinstance(device, fan.ZwaveFan)
     assert device.supported_features == SUPPORT_SET_SPEED
-    assert device.speed_list == [
-        SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+    assert device.speed_list == [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
 
 def test_fan_turn_on(mock_openzwave):

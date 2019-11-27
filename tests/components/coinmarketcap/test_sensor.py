@@ -6,14 +6,13 @@ from unittest.mock import patch
 
 import homeassistant.components.sensor as sensor
 from homeassistant.setup import setup_component
-from tests.common import (
-    get_test_home_assistant, load_fixture, assert_setup_component)
+from tests.common import get_test_home_assistant, load_fixture, assert_setup_component
 
 VALID_CONFIG = {
-    'platform': 'coinmarketcap',
-    'currency_id': 1027,
-    'display_currency': 'EUR',
-    'display_currency_decimals': 3
+    "platform": "coinmarketcap",
+    "currency_id": 1027,
+    "display_currency": "EUR",
+    "display_currency_decimals": 3,
 }
 
 
@@ -29,17 +28,18 @@ class TestCoinMarketCapSensor(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @patch('coinmarketcap.Market.ticker',
-           return_value=json.loads(load_fixture('coinmarketcap.json')))
+    @patch(
+        "coinmarketcap.Market.ticker",
+        return_value=json.loads(load_fixture("coinmarketcap.json")),
+    )
     def test_setup(self, mock_request):
         """Test the setup with custom settings."""
         with assert_setup_component(1, sensor.DOMAIN):
-            assert setup_component(self.hass, sensor.DOMAIN, {
-                'sensor': VALID_CONFIG})
+            assert setup_component(self.hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
 
-        state = self.hass.states.get('sensor.ethereum')
+        state = self.hass.states.get("sensor.ethereum")
         assert state is not None
 
-        assert state.state == '493.455'
-        assert state.attributes.get('symbol') == 'ETH'
-        assert state.attributes.get('unit_of_measurement') == 'EUR'
+        assert state.state == "493.455"
+        assert state.attributes.get("symbol") == "ETH"
+        assert state.attributes.get("unit_of_measurement") == "EUR"

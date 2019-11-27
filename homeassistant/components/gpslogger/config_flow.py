@@ -5,8 +5,6 @@ from .const import DOMAIN
 
 config_entry_flow.register_webhook_flow(
     DOMAIN,
-    'GPSLogger Webhook',
-    {
-        'docs_url': 'https://www.home-assistant.io/components/gpslogger/'
-    }
+    "GPSLogger Webhook",
+    {"docs_url": "https://www.home-assistant.io/integrations/gpslogger/"},
 )

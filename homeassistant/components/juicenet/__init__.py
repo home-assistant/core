@@ -1,34 +1,36 @@
 """Support for Juicenet cloud."""
 import logging
 
+import pyjuicenet
 import voluptuous as vol
 
-from homeassistant.helpers import discovery
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'juicenet'
+DOMAIN = "juicenet"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_ACCESS_TOKEN): cv.string,
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.Schema({vol.Required(CONF_ACCESS_TOKEN): cv.string})},
+    extra=vol.ALLOW_EXTRA,
+)
+
+JUICENET_COMPONENTS = ["sensor", "switch"]
 
 
 def setup(hass, config):
     """Set up the Juicenet component."""
-    import pyjuicenet
-
     hass.data[DOMAIN] = {}
 
     access_token = config[DOMAIN].get(CONF_ACCESS_TOKEN)
-    hass.data[DOMAIN]['api'] = pyjuicenet.Api(access_token)
+    hass.data[DOMAIN]["api"] = pyjuicenet.Api(access_token)
 
-    discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
+    for component in JUICENET_COMPONENTS:
+        discovery.load_platform(hass, component, DOMAIN, {}, config)
+
     return True
 
 

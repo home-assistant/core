@@ -4,17 +4,21 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
-    CONF_DEVICE, CONF_MAC, CONF_NAME, CONF_TRIGGER_TIME,
-    EVENT_HOMEASSISTANT_STOP)
+    CONF_DEVICE,
+    CONF_MAC,
+    CONF_NAME,
+    CONF_TRIGGER_TIME,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.helpers import config_validation as cv
 
 from .config_flow import DEVICE_SCHEMA
 from .const import CONF_CAMERA, CONF_EVENTS, DEFAULT_TRIGGER_TIME, DOMAIN
 from .device import AxisNetworkDevice, get_device
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: cv.schema_with_slug_keys(DEVICE_SCHEMA),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: cv.schema_with_slug_keys(DEVICE_SCHEMA)}, extra=vol.ALLOW_EXTRA
+)
 
 
 async def async_setup(hass, config):
@@ -26,10 +30,13 @@ async def async_setup(hass, config):
             if CONF_NAME not in device_config:
                 device_config[CONF_NAME] = device_name
 
-            hass.async_create_task(hass.config_entries.flow.async_init(
-                DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
-                data=device_config
-            ))
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": config_entries.SOURCE_IMPORT},
+                    data=device_config,
+                )
+            )
 
     return True
 
@@ -72,7 +79,7 @@ async def async_populate_options(hass, config_entry):
     options = {
         CONF_CAMERA: camera,
         CONF_EVENTS: True,
-        CONF_TRIGGER_TIME: DEFAULT_TRIGGER_TIME
+        CONF_TRIGGER_TIME: DEFAULT_TRIGGER_TIME,
     }
 
     hass.config_entries.async_update_entry(config_entry, options=options)

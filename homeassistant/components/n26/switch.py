@@ -11,8 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = DEFAULT_SCAN_INTERVAL
 
 
-def setup_platform(
-        hass, config, add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the N26 switch platform."""
     if discovery_info is None:
         return

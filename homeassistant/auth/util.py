@@ -10,4 +10,4 @@ def generate_secret(entropy: int = 32) -> str:
 
     Event loop friendly.
     """
-    return binascii.hexlify(os.urandom(entropy)).decode('ascii')
+    return binascii.hexlify(os.urandom(entropy)).decode("ascii")

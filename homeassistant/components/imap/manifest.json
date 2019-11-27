@@ -1,7 +1,7 @@
 {
   "domain": "imap",
   "name": "Imap",
-  "documentation": "https://www.home-assistant.io/components/imap",
+  "documentation": "https://www.home-assistant.io/integrations/imap",
   "requirements": [
     "aioimaplib==0.7.15"
   ],

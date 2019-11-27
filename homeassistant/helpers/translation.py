@@ -3,13 +3,16 @@ import logging
 from typing import Any, Dict, Iterable, Optional
 
 from homeassistant.loader import (
-    async_get_integration, bind_hass, async_get_config_flows)
+    async_get_integration,
+    bind_hass,
+    async_get_config_flows,
+)
 from homeassistant.util.json import load_json
 from .typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
-TRANSLATION_STRING_CACHE = 'translation_string_cache'
+TRANSLATION_STRING_CACHE = "translation_string_cache"
 
 
 def recursive_flatten(prefix: Any, data: Dict) -> Dict[str, Any]:
@@ -17,20 +20,20 @@ def recursive_flatten(prefix: Any, data: Dict) -> Dict[str, Any]:
     output = {}
     for key, value in data.items():
         if isinstance(value, dict):
-            output.update(
-                recursive_flatten('{}{}.'.format(prefix, key), value))
+            output.update(recursive_flatten(f"{prefix}{key}.", value))
         else:
-            output['{}{}'.format(prefix, key)] = value
+            output[f"{prefix}{key}"] = value
     return output
 
 
 def flatten(data: Dict) -> Dict[str, Any]:
     """Return a flattened representation of dict data."""
-    return recursive_flatten('', data)
+    return recursive_flatten("", data)
 
 
-async def component_translation_file(hass: HomeAssistantType, component: str,
-                                     language: str) -> Optional[str]:
+async def component_translation_file(
+    hass: HomeAssistantType, component: str, language: str
+) -> Optional[str]:
     """Return the translation json file location for a component.
 
     For component:
@@ -41,7 +44,7 @@ async def component_translation_file(hass: HomeAssistantType, component: str,
 
     If component is just a single file, will return None.
     """
-    parts = component.split('.')
+    parts = component.split(".")
     domain = parts[-1]
     is_platform = len(parts) == 2
 
@@ -50,19 +53,20 @@ async def component_translation_file(hass: HomeAssistantType, component: str,
 
     if is_platform:
         filename = "{}.{}.json".format(parts[0], language)
-        return str(integration.file_path / '.translations' / filename)
+        return str(integration.file_path / ".translations" / filename)
 
     # If it's a component that is just one file, we don't support translations
     # Example custom_components/my_component.py
     if integration.file_path.name != domain:
         return None
 
-    filename = '{}.json'.format(language)
-    return str(integration.file_path / '.translations' / filename)
+    filename = f"{language}.json"
+    return str(integration.file_path / ".translations" / filename)
 
 
-def load_translations_files(translation_files: Dict[str, str]) \
-        -> Dict[str, Dict[str, Any]]:
+def load_translations_files(
+    translation_files: Dict[str, str]
+) -> Dict[str, Dict[str, Any]]:
     """Load and parse translation.json files."""
     loaded = {}
     for component, translation_file in translation_files.items():
@@ -73,16 +77,17 @@ def load_translations_files(translation_files: Dict[str, str]) \
     return loaded
 
 
-def build_resources(translation_cache: Dict[str, Dict[str, Any]],
-                    components: Iterable[str]) -> Dict[str, Dict[str, Any]]:
+def build_resources(
+    translation_cache: Dict[str, Dict[str, Any]], components: Iterable[str]
+) -> Dict[str, Dict[str, Any]]:
     """Build the resources response for the given components."""
     # Build response
-    resources = {}  # type: Dict[str, Dict[str, Any]]
+    resources: Dict[str, Dict[str, Any]] = {}
     for component in components:
-        if '.' not in component:
+        if "." not in component:
             domain = component
         else:
-            domain = component.split('.', 1)[0]
+            domain = component.split(".", 1)[0]
 
         if domain not in resources:
             resources[domain] = {}
@@ -96,8 +101,9 @@ def build_resources(translation_cache: Dict[str, Dict[str, Any]],
 
 
 @bind_hass
-async def async_get_component_resources(hass: HomeAssistantType,
-                                        language: str) -> Dict[str, Any]:
+async def async_get_component_resources(
+    hass: HomeAssistantType, language: str
+) -> Dict[str, Any]:
     """Return translation resources for all components."""
     if TRANSLATION_STRING_CACHE not in hass.data:
         hass.data[TRANSLATION_STRING_CACHE] = {}
@@ -106,8 +112,7 @@ async def async_get_component_resources(hass: HomeAssistantType,
     translation_cache = hass.data[TRANSLATION_STRING_CACHE][language]
 
     # Get the set of components
-    components = (hass.config.components |
-                  await async_get_config_flows(hass))
+    components = hass.config.components | await async_get_config_flows(hass)
 
     # Calculate the missing components
     missing_components = components - set(translation_cache)
@@ -123,7 +128,8 @@ async def async_get_component_resources(hass: HomeAssistantType,
     # Load missing files
     if missing_files:
         load_translations_job = hass.async_add_job(
-            load_translations_files, missing_files)
+            load_translations_files, missing_files
+        )
         assert load_translations_job is not None
         loaded_translations = await load_translations_job
 
@@ -134,17 +140,18 @@ async def async_get_component_resources(hass: HomeAssistantType,
 
     # Return the component translations resources under the 'component'
     # translation namespace
-    return flatten({'component': resources})
+    return flatten({"component": resources})
 
 
 @bind_hass
-async def async_get_translations(hass: HomeAssistantType,
-                                 language: str) -> Dict[str, Any]:
+async def async_get_translations(
+    hass: HomeAssistantType, language: str
+) -> Dict[str, Any]:
     """Return all backend translations."""
     resources = await async_get_component_resources(hass, language)
-    if language != 'en':
+    if language != "en":
         # Fetch the English resources, as a fallback for missing keys
-        base_resources = await async_get_component_resources(hass, 'en')
+        base_resources = await async_get_component_resources(hass, "en")
         resources = {**base_resources, **resources}
 
     return resources

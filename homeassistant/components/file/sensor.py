@@ -6,28 +6,28 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_VALUE_TEMPLATE, CONF_NAME, CONF_UNIT_OF_MEASUREMENT)
+from homeassistant.const import CONF_VALUE_TEMPLATE, CONF_NAME, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_FILE_PATH = 'file_path'
+CONF_FILE_PATH = "file_path"
 
-DEFAULT_NAME = 'File'
+DEFAULT_NAME = "File"
 
-ICON = 'mdi:file'
+ICON = "mdi:file"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_FILE_PATH): cv.isfile,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_FILE_PATH): cv.isfile,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    }
+)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the file sensor."""
     file_path = config.get(CONF_FILE_PATH)
     name = config.get(CONF_NAME)
@@ -38,8 +38,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         value_template.hass = hass
 
     if hass.config.is_allowed_path(file_path):
-        async_add_entities(
-            [FileSensor(name, file_path, unit, value_template)], True)
+        async_add_entities([FileSensor(name, file_path, unit, value_template)], True)
     else:
         _LOGGER.error("'%s' is not a whitelisted directory", file_path)
 
@@ -78,18 +77,20 @@ class FileSensor(Entity):
     def update(self):
         """Get the latest entry from a file and updates the state."""
         try:
-            with open(self._file_path, 'r', encoding='utf-8') as file_data:
+            with open(self._file_path, "r", encoding="utf-8") as file_data:
                 for line in file_data:
                     data = line
                 data = data.strip()
-        except (IndexError, FileNotFoundError, IsADirectoryError,
-                UnboundLocalError):
-            _LOGGER.warning("File or data not present at the moment: %s",
-                            os.path.basename(self._file_path))
+        except (IndexError, FileNotFoundError, IsADirectoryError, UnboundLocalError):
+            _LOGGER.warning(
+                "File or data not present at the moment: %s",
+                os.path.basename(self._file_path),
+            )
             return
 
         if self._val_tpl is not None:
             self._state = self._val_tpl.async_render_with_possible_json_value(
-                data, None)
+                data, None
+            )
         else:
             self._state = data

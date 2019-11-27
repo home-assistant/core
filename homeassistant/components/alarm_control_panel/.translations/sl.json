@@ -1,0 +1,11 @@
+{
+    "device_automation": {
+        "action_type": {
+            "arm_away": "Vklju\u010di {entity_name} zdoma",
+            "arm_home": "Vklju\u010di {entity_name} doma",
+            "arm_night": "Vklju\u010di {entity_name} no\u010d",
+            "disarm": "Razoro\u017ei {entity_name}",
+            "trigger": "Spro\u017ei {entity_name}"
+        }
+    }
+}

@@ -4,8 +4,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA, BinarySensorDevice)
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -13,21 +12,23 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Information provided by MeteoAlarm"
 
-CONF_COUNTRY = 'country'
-CONF_LANGUAGE = 'language'
-CONF_PROVINCE = 'province'
+CONF_COUNTRY = "country"
+CONF_LANGUAGE = "language"
+CONF_PROVINCE = "province"
 
-DEFAULT_DEVICE_CLASS = 'safety'
-DEFAULT_NAME = 'meteoalarm'
+DEFAULT_DEVICE_CLASS = "safety"
+DEFAULT_NAME = "meteoalarm"
 
 SCAN_INTERVAL = timedelta(minutes=30)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COUNTRY): cv.string,
-    vol.Required(CONF_PROVINCE): cv.string,
-    vol.Optional(CONF_LANGUAGE, default='en'): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_COUNTRY): cv.string,
+        vol.Required(CONF_PROVINCE): cv.string,
+        vol.Optional(CONF_LANGUAGE, default="en"): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

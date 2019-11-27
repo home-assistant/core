@@ -1,3 +1,3 @@
 """Recorder constants."""
 
-DATA_INSTANCE = 'recorder_instance'
+DATA_INSTANCE = "recorder_instance"

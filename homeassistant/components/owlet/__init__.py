@@ -8,12 +8,15 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
 from .const import (
-    SENSOR_BASE_STATION, SENSOR_HEART_RATE, SENSOR_MOVEMENT,
-    SENSOR_OXYGEN_LEVEL)
+    SENSOR_BASE_STATION,
+    SENSOR_HEART_RATE,
+    SENSOR_MOVEMENT,
+    SENSOR_OXYGEN_LEVEL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'owlet'
+DOMAIN = "owlet"
 
 SENSOR_TYPES = [
     SENSOR_OXYGEN_LEVEL,
@@ -22,13 +25,18 @@ SENSOR_TYPES = [
     SENSOR_MOVEMENT,
 ]
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_NAME): cv.string,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
@@ -42,24 +50,25 @@ def setup(hass, config):
     try:
         device = PyOwlet(username, password)
     except KeyError:
-        _LOGGER.error("Owlet authentication failed. Please verify your "
-                      "credentials are correct")
+        _LOGGER.error(
+            "Owlet authentication failed. Please verify your " "credentials are correct"
+        )
         return False
 
     device.update_properties()
 
     if not name:
-        name = '{}\'s Owlet'.format(device.baby_name)
+        name = f"{device.baby_name}'s Owlet"
 
     hass.data[DOMAIN] = OwletDevice(device, name, SENSOR_TYPES)
 
-    load_platform(hass, 'sensor', DOMAIN, {}, config)
-    load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
+    load_platform(hass, "sensor", DOMAIN, {}, config)
+    load_platform(hass, "binary_sensor", DOMAIN, {}, config)
 
     return True
 
 
-class OwletDevice():
+class OwletDevice:
     """Represents a configured Owlet device."""
 
     def __init__(self, device, name, monitor):

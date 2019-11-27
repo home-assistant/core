@@ -2,14 +2,18 @@
 import logging
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
+from homeassistant.components.alarm_control_panel.const import SUPPORT_ALARM_ARM_AWAY
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, STATE_ALARM_ARMED_AWAY, STATE_ALARM_DISARMED)
+    ATTR_ATTRIBUTION,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_DISARMED,
+)
 
 from . import BLINK_DATA, DEFAULT_ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
 
-ICON = 'mdi:security'
+ICON = "mdi:security"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -50,16 +54,21 @@ class BlinkSyncModule(AlarmControlPanel):
         return self._state
 
     @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_AWAY
+
+    @property
     def name(self):
         """Return the name of the panel."""
-        return "{} {}".format(BLINK_DATA, self._name)
+        return f"{BLINK_DATA} {self._name}"
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         attr = self.sync.attributes
-        attr['network_info'] = self.data.networks
-        attr['associated_cameras'] = list(self.sync.cameras.keys())
+        attr["network_info"] = self.data.networks
+        attr["associated_cameras"] = list(self.sync.cameras.keys())
         attr[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
         return attr
 

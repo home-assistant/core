@@ -5,12 +5,27 @@ from homeassistant.core import callback
 from homeassistant.util.logging import async_create_catching_coro
 
 from .const import (
-    DOMAIN, PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE, PREF_ENABLE_REMOTE,
-    PREF_GOOGLE_SECURE_DEVICES_PIN, PREF_CLOUDHOOKS, PREF_CLOUD_USER,
-    PREF_GOOGLE_ENTITY_CONFIGS, PREF_OVERRIDE_NAME, PREF_DISABLE_2FA,
-    PREF_ALIASES, PREF_SHOULD_EXPOSE, PREF_ALEXA_ENTITY_CONFIGS,
-    PREF_ALEXA_REPORT_STATE, DEFAULT_ALEXA_REPORT_STATE,
-    InvalidTrustedNetworks, InvalidTrustedProxies)
+    DOMAIN,
+    PREF_ENABLE_ALEXA,
+    PREF_ENABLE_GOOGLE,
+    PREF_ENABLE_REMOTE,
+    PREF_GOOGLE_SECURE_DEVICES_PIN,
+    PREF_CLOUDHOOKS,
+    PREF_CLOUD_USER,
+    PREF_GOOGLE_ENTITY_CONFIGS,
+    PREF_OVERRIDE_NAME,
+    PREF_DISABLE_2FA,
+    PREF_ALIASES,
+    PREF_SHOULD_EXPOSE,
+    PREF_ALEXA_ENTITY_CONFIGS,
+    PREF_ALEXA_REPORT_STATE,
+    DEFAULT_ALEXA_REPORT_STATE,
+    PREF_GOOGLE_REPORT_STATE,
+    PREF_GOOGLE_LOCAL_WEBHOOK_ID,
+    DEFAULT_GOOGLE_REPORT_STATE,
+    InvalidTrustedNetworks,
+    InvalidTrustedProxies,
+)
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
@@ -45,60 +60,80 @@ class CloudPreferences:
 
         self._prefs = prefs
 
+        if PREF_GOOGLE_LOCAL_WEBHOOK_ID not in self._prefs:
+            await self._save_prefs(
+                {
+                    **self._prefs,
+                    PREF_GOOGLE_LOCAL_WEBHOOK_ID: self._hass.components.webhook.async_generate_id(),
+                }
+            )
+
     @callback
     def async_listen_updates(self, listener):
         """Listen for updates to the preferences."""
         self._listeners.append(listener)
 
-    async def async_update(self, *, google_enabled=_UNDEF,
-                           alexa_enabled=_UNDEF, remote_enabled=_UNDEF,
-                           google_secure_devices_pin=_UNDEF, cloudhooks=_UNDEF,
-                           cloud_user=_UNDEF, google_entity_configs=_UNDEF,
-                           alexa_entity_configs=_UNDEF,
-                           alexa_report_state=_UNDEF):
+    async def async_update(
+        self,
+        *,
+        google_enabled=_UNDEF,
+        alexa_enabled=_UNDEF,
+        remote_enabled=_UNDEF,
+        google_secure_devices_pin=_UNDEF,
+        cloudhooks=_UNDEF,
+        cloud_user=_UNDEF,
+        google_entity_configs=_UNDEF,
+        alexa_entity_configs=_UNDEF,
+        alexa_report_state=_UNDEF,
+        google_report_state=_UNDEF,
+    ):
         """Update user preferences."""
+        prefs = {**self._prefs}
+
         for key, value in (
-                (PREF_ENABLE_GOOGLE, google_enabled),
-                (PREF_ENABLE_ALEXA, alexa_enabled),
-                (PREF_ENABLE_REMOTE, remote_enabled),
-                (PREF_GOOGLE_SECURE_DEVICES_PIN, google_secure_devices_pin),
-                (PREF_CLOUDHOOKS, cloudhooks),
-                (PREF_CLOUD_USER, cloud_user),
-                (PREF_GOOGLE_ENTITY_CONFIGS, google_entity_configs),
-                (PREF_ALEXA_ENTITY_CONFIGS, alexa_entity_configs),
-                (PREF_ALEXA_REPORT_STATE, alexa_report_state),
+            (PREF_ENABLE_GOOGLE, google_enabled),
+            (PREF_ENABLE_ALEXA, alexa_enabled),
+            (PREF_ENABLE_REMOTE, remote_enabled),
+            (PREF_GOOGLE_SECURE_DEVICES_PIN, google_secure_devices_pin),
+            (PREF_CLOUDHOOKS, cloudhooks),
+            (PREF_CLOUD_USER, cloud_user),
+            (PREF_GOOGLE_ENTITY_CONFIGS, google_entity_configs),
+            (PREF_ALEXA_ENTITY_CONFIGS, alexa_entity_configs),
+            (PREF_ALEXA_REPORT_STATE, alexa_report_state),
+            (PREF_GOOGLE_REPORT_STATE, google_report_state),
         ):
             if value is not _UNDEF:
-                self._prefs[key] = value
+                prefs[key] = value
 
         if remote_enabled is True and self._has_local_trusted_network:
-            self._prefs[PREF_ENABLE_REMOTE] = False
+            prefs[PREF_ENABLE_REMOTE] = False
             raise InvalidTrustedNetworks
 
         if remote_enabled is True and self._has_local_trusted_proxies:
-            self._prefs[PREF_ENABLE_REMOTE] = False
+            prefs[PREF_ENABLE_REMOTE] = False
             raise InvalidTrustedProxies
 
-        await self._store.async_save(self._prefs)
-
-        for listener in self._listeners:
-            self._hass.async_create_task(
-                async_create_catching_coro(listener(self))
-            )
+        await self._save_prefs(prefs)
 
     async def async_update_google_entity_config(
-            self, *, entity_id, override_name=_UNDEF, disable_2fa=_UNDEF,
-            aliases=_UNDEF, should_expose=_UNDEF):
+        self,
+        *,
+        entity_id,
+        override_name=_UNDEF,
+        disable_2fa=_UNDEF,
+        aliases=_UNDEF,
+        should_expose=_UNDEF,
+    ):
         """Update config for a Google entity."""
         entities = self.google_entity_configs
         entity = entities.get(entity_id, {})
 
         changes = {}
         for key, value in (
-                (PREF_OVERRIDE_NAME, override_name),
-                (PREF_DISABLE_2FA, disable_2fa),
-                (PREF_ALIASES, aliases),
-                (PREF_SHOULD_EXPOSE, should_expose),
+            (PREF_OVERRIDE_NAME, override_name),
+            (PREF_DISABLE_2FA, disable_2fa),
+            (PREF_ALIASES, aliases),
+            (PREF_SHOULD_EXPOSE, should_expose),
         ):
             if value is not _UNDEF:
                 changes[key] = value
@@ -106,42 +141,29 @@ class CloudPreferences:
         if not changes:
             return
 
-        updated_entity = {
-            **entity,
-            **changes,
-        }
+        updated_entity = {**entity, **changes}
 
-        updated_entities = {
-            **entities,
-            entity_id: updated_entity,
-        }
+        updated_entities = {**entities, entity_id: updated_entity}
         await self.async_update(google_entity_configs=updated_entities)
 
     async def async_update_alexa_entity_config(
-            self, *, entity_id, should_expose=_UNDEF):
+        self, *, entity_id, should_expose=_UNDEF
+    ):
         """Update config for an Alexa entity."""
         entities = self.alexa_entity_configs
         entity = entities.get(entity_id, {})
 
         changes = {}
-        for key, value in (
-                (PREF_SHOULD_EXPOSE, should_expose),
-        ):
+        for key, value in ((PREF_SHOULD_EXPOSE, should_expose),):
             if value is not _UNDEF:
                 changes[key] = value
 
         if not changes:
             return
 
-        updated_entity = {
-            **entity,
-            **changes,
-        }
+        updated_entity = {**entity, **changes}
 
-        updated_entities = {
-            **entities,
-            entity_id: updated_entity,
-        }
+        updated_entities = {**entities, entity_id: updated_entity}
         await self.async_update(alexa_entity_configs=updated_entities)
 
     def as_dict(self):
@@ -154,6 +176,7 @@ class CloudPreferences:
             PREF_GOOGLE_ENTITY_CONFIGS: self.google_entity_configs,
             PREF_ALEXA_ENTITY_CONFIGS: self.alexa_entity_configs,
             PREF_ALEXA_REPORT_STATE: self.alexa_report_state,
+            PREF_GOOGLE_REPORT_STATE: self.google_report_state,
             PREF_CLOUDHOOKS: self.cloudhooks,
             PREF_CLOUD_USER: self.cloud_user,
         }
@@ -179,13 +202,17 @@ class CloudPreferences:
     @property
     def alexa_report_state(self):
         """Return if Alexa report state is enabled."""
-        return self._prefs.get(PREF_ALEXA_REPORT_STATE,
-                               DEFAULT_ALEXA_REPORT_STATE)
+        return self._prefs.get(PREF_ALEXA_REPORT_STATE, DEFAULT_ALEXA_REPORT_STATE)
 
     @property
     def google_enabled(self):
         """Return if Google is enabled."""
         return self._prefs[PREF_ENABLE_GOOGLE]
+
+    @property
+    def google_report_state(self):
+        """Return if Google report state is enabled."""
+        return self._prefs.get(PREF_GOOGLE_REPORT_STATE, DEFAULT_GOOGLE_REPORT_STATE)
 
     @property
     def google_secure_devices_pin(self):
@@ -196,6 +223,11 @@ class CloudPreferences:
     def google_entity_configs(self):
         """Return Google Entity configurations."""
         return self._prefs.get(PREF_GOOGLE_ENTITY_CONFIGS, {})
+
+    @property
+    def google_local_webhook_id(self):
+        """Return Google webhook ID to receive local messages."""
+        return self._prefs[PREF_GOOGLE_LOCAL_WEBHOOK_ID]
 
     @property
     def alexa_entity_configs(self):
@@ -215,11 +247,11 @@ class CloudPreferences:
     @property
     def _has_local_trusted_network(self) -> bool:
         """Return if we allow localhost to bypass auth."""
-        local4 = ip_address('127.0.0.1')
-        local6 = ip_address('::1')
+        local4 = ip_address("127.0.0.1")
+        local6 = ip_address("::1")
 
         for prv in self._hass.auth.auth_providers:
-            if prv.type != 'trusted_networks':
+            if prv.type != "trusted_networks":
                 continue
 
             for network in prv.trusted_networks:
@@ -231,14 +263,23 @@ class CloudPreferences:
     @property
     def _has_local_trusted_proxies(self) -> bool:
         """Return if we allow localhost to be a proxy and use its data."""
-        if not hasattr(self._hass, 'http'):
+        if not hasattr(self._hass, "http"):
             return False
 
-        local4 = ip_address('127.0.0.1')
-        local6 = ip_address('::1')
+        local4 = ip_address("127.0.0.1")
+        local6 = ip_address("::1")
 
-        if any(local4 in nwk or local6 in nwk
-               for nwk in self._hass.http.trusted_proxies):
+        if any(
+            local4 in nwk or local6 in nwk for nwk in self._hass.http.trusted_proxies
+        ):
             return True
 
         return False
+
+    async def _save_prefs(self, prefs):
+        """Save preferences to disk."""
+        self._prefs = prefs
+        await self._store.async_save(self._prefs)
+
+        for listener in self._listeners:
+            self._hass.async_create_task(async_create_catching_coro(listener(self)))

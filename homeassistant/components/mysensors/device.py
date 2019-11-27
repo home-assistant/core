@@ -2,8 +2,7 @@
 import logging
 from functools import partial
 
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON)
+from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -12,12 +11,12 @@ from .const import CHILD_CALLBACK, NODE_CALLBACK, UPDATE_DELAY
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CHILD_ID = 'child_id'
-ATTR_DESCRIPTION = 'description'
-ATTR_DEVICE = 'device'
-ATTR_NODE_ID = 'node_id'
-ATTR_HEARTBEAT = 'heartbeat'
-MYSENSORS_PLATFORM_DEVICES = 'mysensors_devices_{}'
+ATTR_CHILD_ID = "child_id"
+ATTR_DESCRIPTION = "description"
+ATTR_DEVICE = "device"
+ATTR_NODE_ID = "node_id"
+ATTR_HEARTBEAT = "heartbeat"
+MYSENSORS_PLATFORM_DEVICES = "mysensors_devices_{}"
 
 
 def get_mysensors_devices(hass, domain):
@@ -77,11 +76,17 @@ class MySensorsDevice:
         for value_type, value in child.values.items():
             _LOGGER.debug(
                 "Entity update: %s: value_type %s, value = %s",
-                self._name, value_type, value)
-            if value_type in (set_req.V_ARMED, set_req.V_LIGHT,
-                              set_req.V_LOCK_STATUS, set_req.V_TRIPPED):
-                self._values[value_type] = (
-                    STATE_ON if int(value) == 1 else STATE_OFF)
+                self._name,
+                value_type,
+                value,
+            )
+            if value_type in (
+                set_req.V_ARMED,
+                set_req.V_LIGHT,
+                set_req.V_LOCK_STATUS,
+                set_req.V_TRIPPED,
+            ):
+                self._values[value_type] = STATE_ON if int(value) == 1 else STATE_OFF
             elif value_type == set_req.V_DIMMER:
                 self._values[value_type] = int(value)
             else:
@@ -133,8 +138,10 @@ class MySensorsEntity(MySensorsDevice, Entity):
         gateway_id = id(self.gateway)
         dev_id = gateway_id, self.node_id, self.child_id, self.value_type
         async_dispatcher_connect(
-            self.hass, CHILD_CALLBACK.format(*dev_id),
-            self.async_update_callback)
+            self.hass, CHILD_CALLBACK.format(*dev_id), self.async_update_callback
+        )
         async_dispatcher_connect(
-            self.hass, NODE_CALLBACK.format(gateway_id, self.node_id),
-            self.async_update_callback)
+            self.hass,
+            NODE_CALLBACK.format(gateway_id, self.node_id),
+            self.async_update_callback,
+        )

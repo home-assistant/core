@@ -1,10 +1,10 @@
 """Define constants for the SimpliSafe component."""
 from datetime import timedelta
 
-DOMAIN = 'simplisafe'
+DOMAIN = "simplisafe"
 
-DATA_CLIENT = 'client'
+DATA_CLIENT = "client"
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
-TOPIC_UPDATE = 'update_{0}'
+TOPIC_UPDATE = "update"

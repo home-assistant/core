@@ -32,4 +32,4 @@ of a component, check the `Home Assistant help section <https://home-assistant.i
 .. |screenshot-states| image:: https://raw.github.com/home-assistant/home-assistant/master/docs/screenshots.png
    :target: https://home-assistant.io/demo/
 .. |screenshot-components| image:: https://raw.github.com/home-assistant/home-assistant/dev/docs/screenshot-components.png
-   :target: https://home-assistant.io/components/
+   :target: https://home-assistant.io/integrations/

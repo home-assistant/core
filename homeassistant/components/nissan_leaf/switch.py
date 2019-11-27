@@ -33,7 +33,8 @@ class LeafClimateSwitch(LeafEntity, ToggleEntity):
         """Log registration."""
         _LOGGER.debug(
             "Registered LeafClimateSwitch integration with HASS for VIN %s",
-            self.car.leaf.vin)
+            self.car.leaf.vin,
+        )
 
     @property
     def device_state_attributes(self):

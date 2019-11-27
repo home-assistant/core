@@ -2,10 +2,21 @@
 import logging
 
 import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_NIGHT,
+)
 from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_DISARMED, STATE_ALARM_ARMING, STATE_ALARM_DISARMING,
-    STATE_ALARM_TRIGGERED, STATE_ALARM_ARMED_CUSTOM_BYPASS)
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMING,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_DISARMING,
+    STATE_ALARM_TRIGGERED,
+)
 
 from . import DOMAIN as TOTALCONNECT_DOMAIN
 
@@ -22,8 +33,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     client = hass.data[TOTALCONNECT_DOMAIN].client
 
     for location in client.locations:
-        location_id = location.get('LocationID')
-        name = location.get('LocationName')
+        location_id = location.get("LocationID")
+        name = location.get("LocationName")
         alarms.append(TotalConnectAlarm(name, location_id, client))
     add_entities(alarms)
 
@@ -50,6 +61,11 @@ class TotalConnectAlarm(alarm.AlarmControlPanel):
         return self._state
 
     @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         return self._device_state_attributes
@@ -58,12 +74,12 @@ class TotalConnectAlarm(alarm.AlarmControlPanel):
         """Return the state of the device."""
         status = self._client.get_armed_status(self._name)
         attr = {
-            'location_name': self._name,
-            'location_id': self._location_id,
-            'ac_loss': self._client.ac_loss,
-            'low_battery': self._client.low_battery,
-            'triggered_source': None,
-            'triggered_zone': None
+            "location_name": self._name,
+            "location_id": self._location_id,
+            "ac_loss": self._client.ac_loss,
+            "low_battery": self._client.low_battery,
+            "triggered_source": None,
+            "triggered_zone": None,
         }
 
         if status == self._client.DISARMED:
@@ -94,16 +110,17 @@ class TotalConnectAlarm(alarm.AlarmControlPanel):
             state = STATE_ALARM_DISARMING
         elif status == self._client.ALARMING:
             state = STATE_ALARM_TRIGGERED
-            attr['triggered_source'] = 'Police/Medical'
+            attr["triggered_source"] = "Police/Medical"
         elif status == self._client.ALARMING_FIRE_SMOKE:
             state = STATE_ALARM_TRIGGERED
-            attr['triggered_source'] = 'Fire/Smoke'
+            attr["triggered_source"] = "Fire/Smoke"
         elif status == self._client.ALARMING_CARBON_MONOXIDE:
             state = STATE_ALARM_TRIGGERED
-            attr['triggered_source'] = 'Carbon Monoxide'
+            attr["triggered_source"] = "Carbon Monoxide"
         else:
-            logging.info("Total Connect Client returned unknown "
-                         "status code: %s", status)
+            logging.info(
+                "Total Connect Client returned unknown " "status code: %s", status
+            )
             state = None
 
         self._state = state

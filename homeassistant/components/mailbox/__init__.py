@@ -16,13 +16,16 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_prepare_setup_platform
 
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'mailbox'
+DOMAIN = "mailbox"
 
-EVENT = 'mailbox_updated'
-CONTENT_TYPE_MPEG = 'audio/mpeg'
-CONTENT_TYPE_NONE = 'none'
+EVENT = "mailbox_updated"
+CONTENT_TYPE_MPEG = "audio/mpeg"
+CONTENT_TYPE_NONE = "none"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -31,7 +34,8 @@ async def async_setup(hass, config):
     """Track states and offer events for mailboxes."""
     mailboxes = []
     hass.components.frontend.async_register_built_in_panel(
-        'mailbox', 'mailbox', 'mdi:mailbox')
+        "mailbox", "mailbox", "mdi:mailbox"
+    )
     hass.http.register_view(MailboxPlatformsView(mailboxes))
     hass.http.register_view(MailboxMessageView(mailboxes))
     hass.http.register_view(MailboxMediaView(mailboxes))
@@ -44,8 +48,7 @@ async def async_setup(hass, config):
         if discovery_info is None:
             discovery_info = {}
 
-        platform = await async_prepare_setup_platform(
-            hass, config, DOMAIN, p_type)
+        platform = await async_prepare_setup_platform(hass, config, DOMAIN, p_type)
 
         if platform is None:
             _LOGGER.error("Unknown mailbox platform specified")
@@ -54,32 +57,36 @@ async def async_setup(hass, config):
         _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
         mailbox = None
         try:
-            if hasattr(platform, 'async_get_handler'):
-                mailbox = await \
-                    platform.async_get_handler(hass, p_config, discovery_info)
-            elif hasattr(platform, 'get_handler'):
+            if hasattr(platform, "async_get_handler"):
+                mailbox = await platform.async_get_handler(
+                    hass, p_config, discovery_info
+                )
+            elif hasattr(platform, "get_handler"):
                 mailbox = await hass.async_add_executor_job(
-                    platform.get_handler, hass, p_config, discovery_info)
+                    platform.get_handler, hass, p_config, discovery_info
+                )
             else:
                 raise HomeAssistantError("Invalid mailbox platform.")
 
             if mailbox is None:
-                _LOGGER.error(
-                    "Failed to initialize mailbox platform %s", p_type)
+                _LOGGER.error("Failed to initialize mailbox platform %s", p_type)
                 return
 
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception('Error setting up platform %s', p_type)
+            _LOGGER.exception("Error setting up platform %s", p_type)
             return
 
         mailboxes.append(mailbox)
         mailbox_entity = MailboxEntity(mailbox)
         component = EntityComponent(
-            logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
+            logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
+        )
         await component.async_add_entities([mailbox_entity])
 
-    setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
-                   in config_per_platform(config, DOMAIN)]
+    setup_tasks = [
+        async_setup_platform(p_type, p_config)
+        for p_type, p_config in config_per_platform(config, DOMAIN)
+    ]
 
     if setup_tasks:
         await asyncio.wait(setup_tasks)
@@ -103,6 +110,7 @@ class MailboxEntity(Entity):
 
     async def async_added_to_hass(self):
         """Complete entity initialization."""
+
         @callback
         def _mailbox_updated(event):
             self.async_schedule_update_ha_state(True)
@@ -199,10 +207,11 @@ class MailboxPlatformsView(MailboxView):
         for mailbox in self.mailboxes:
             platforms.append(
                 {
-                    'name': mailbox.name,
-                    'has_media': mailbox.has_media,
-                    'can_delete': mailbox.can_delete
-                })
+                    "name": mailbox.name,
+                    "has_media": mailbox.has_media,
+                    "can_delete": mailbox.can_delete,
+                }
+            )
         return self.json(platforms)
 
 
@@ -250,7 +259,6 @@ class MailboxMediaView(MailboxView):
                     _LOGGER.error(error_msg)
                     return web.Response(status=500)
             if stream:
-                return web.Response(body=stream,
-                                    content_type=mailbox.media_type)
+                return web.Response(body=stream, content_type=mailbox.media_type)
 
         return web.Response(status=500)

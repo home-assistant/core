@@ -14,8 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORTED_FEATURES = SUPPORT_BRIGHTNESS
 
 
-async def async_setup_platform(hass, config, add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a single Sisyphus table."""
     host = discovery_info[CONF_HOST]
     try:
@@ -24,9 +23,7 @@ async def async_setup_platform(hass, config, add_entities,
     except aiohttp.ClientError:
         raise PlatformNotReady()
 
-    add_entities(
-        [SisyphusLight(table_holder.name, table)],
-        update_before_add=True)
+    add_entities([SisyphusLight(table_holder.name, table)], update_before_add=True)
 
 
 class SisyphusLight(Light):
@@ -39,8 +36,7 @@ class SisyphusLight(Light):
 
     async def async_added_to_hass(self):
         """Add listeners after this object has been initialized."""
-        self._table.add_listener(
-            lambda: self.async_schedule_update_ha_state(False))
+        self._table.add_listener(lambda: self.async_schedule_update_ha_state(False))
 
     @property
     def available(self):

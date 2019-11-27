@@ -1,7 +1,7 @@
 {
   "domain": "sun",
   "name": "Sun",
-  "documentation": "https://www.home-assistant.io/components/sun",
+  "documentation": "https://www.home-assistant.io/integrations/sun",
   "requirements": [],
   "dependencies": [],
   "codeowners": [

@@ -7,6 +7,16 @@ reload_core_config:
 restart:
   description: Restart the Home Assistant service.
 
+set_location:
+  description: Update the Home Assistant location.
+  fields:
+    latitude:
+      description: Latitude of your location
+      example: 32.87336
+    longitude:
+      description: Longitude of your location
+      example: 117.22743
+
 stop:
   description: Stop the Home Assistant service.
 

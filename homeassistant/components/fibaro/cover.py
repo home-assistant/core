@@ -2,7 +2,11 @@
 import logging
 
 from homeassistant.components.cover import (
-    ATTR_POSITION, ATTR_TILT_POSITION, ENTITY_ID_FORMAT, CoverDevice)
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
+    ENTITY_ID_FORMAT,
+    CoverDevice,
+)
 
 from . import FIBARO_DEVICES, FibaroDevice
 
@@ -15,8 +19,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     add_entities(
-        [FibaroCover(device) for
-         device in hass.data[FIBARO_DEVICES]['cover']], True)
+        [FibaroCover(device) for device in hass.data[FIBARO_DEVICES]["cover"]], True
+    )
 
 
 class FibaroCover(FibaroDevice, CoverDevice):

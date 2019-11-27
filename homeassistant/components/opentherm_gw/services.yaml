@@ -35,6 +35,23 @@ set_control_setpoint:
         A value of 0 disables the central heating setpoint override.
       example: '37.5'
 
+set_hot_water_ovrd:
+  description: >
+    Set the domestic hot water enable option on the gateway.
+  fields:
+    gateway_id:
+      description: The gateway_id of the OpenTherm Gateway.
+      example: 'opentherm_gateway'
+    dhw_override:
+      description: >
+        Control the domestic hot water enable option. If the boiler has
+        been configured to let the room unit control when to keep a
+        small amount of water preheated, this command can influence
+        that.
+        Value should be 0 or 1 to enable the override in off or on
+        state, or "A" to disable the override.
+      example: '1'
+
 set_gpio_mode:
   description: Change the function of the GPIO pins of the gateway.
   fields:
@@ -47,7 +64,7 @@ set_gpio_mode:
     mode:
       description: >
         Mode to set on the GPIO pin. Values 0 through 6 are accepted for both GPIOs, 7 is only accepted for GPIO "B".
-        See https://www.home-assistant.io/components/opentherm_gw/#gpio-modes for an explanation of the values.
+        See https://www.home-assistant.io/integrations/opentherm_gw/#gpio-modes for an explanation of the values.
       example: '5'
 
 set_led_mode:
@@ -62,7 +79,7 @@ set_led_mode:
     mode:
       description: >
         The function to assign to the LED. One of "R", "X", "T", "B", "O", "F", "H", "W", "C", "E", "M" or "P".
-        See https://www.home-assistant.io/components/opentherm_gw/#led-modes for an explanation of the values.
+        See https://www.home-assistant.io/integrations/opentherm_gw/#led-modes for an explanation of the values.
       example: 'F'
 
 set_max_modulation:

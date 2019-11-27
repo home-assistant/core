@@ -14,61 +14,63 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD,
-    CONF_NAME, CONF_MONITORED_VARIABLES)
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    CONF_NAME,
+    CONF_MONITORED_VARIABLES,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-KILOBITS = 'Kb'  # type: str
-PRICE = 'CAD'  # type: str
-MESSAGES = 'messages'  # type: str
-MINUTES = 'minutes'  # type: str
+KILOBITS = "Kb"
+PRICE = "CAD"
+MESSAGES = "messages"
+MINUTES = "minutes"
 
-DEFAULT_NAME = 'Fido'
+DEFAULT_NAME = "Fido"
 
 REQUESTS_TIMEOUT = 15
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 SENSOR_TYPES = {
-    'fido_dollar': ['Fido dollar', PRICE, 'mdi:square-inc-cash'],
-    'balance': ['Balance', PRICE, 'mdi:square-inc-cash'],
-    'data_used': ['Data used', KILOBITS, 'mdi:download'],
-    'data_limit': ['Data limit', KILOBITS, 'mdi:download'],
-    'data_remaining': ['Data remaining', KILOBITS, 'mdi:download'],
-    'text_used': ['Text used', MESSAGES, 'mdi:message-text'],
-    'text_limit': ['Text limit', MESSAGES, 'mdi:message-text'],
-    'text_remaining': ['Text remaining', MESSAGES, 'mdi:message-text'],
-    'mms_used': ['MMS used', MESSAGES, 'mdi:message-image'],
-    'mms_limit': ['MMS limit', MESSAGES, 'mdi:message-image'],
-    'mms_remaining': ['MMS remaining', MESSAGES, 'mdi:message-image'],
-    'text_int_used': ['International text used',
-                      MESSAGES, 'mdi:message-alert'],
-    'text_int_limit': ['International text limit',
-                       MESSAGES, 'mdi:message-alert'],
-    'text_int_remaining': ['International remaining',
-                           MESSAGES, 'mdi:message-alert'],
-    'talk_used': ['Talk used', MINUTES, 'mdi:cellphone'],
-    'talk_limit': ['Talk limit', MINUTES, 'mdi:cellphone'],
-    'talk_remaining': ['Talk remaining', MINUTES, 'mdi:cellphone'],
-    'other_talk_used': ['Other Talk used', MINUTES, 'mdi:cellphone'],
-    'other_talk_limit': ['Other Talk limit', MINUTES, 'mdi:cellphone'],
-    'other_talk_remaining': ['Other Talk remaining', MINUTES, 'mdi:cellphone'],
+    "fido_dollar": ["Fido dollar", PRICE, "mdi:square-inc-cash"],
+    "balance": ["Balance", PRICE, "mdi:square-inc-cash"],
+    "data_used": ["Data used", KILOBITS, "mdi:download"],
+    "data_limit": ["Data limit", KILOBITS, "mdi:download"],
+    "data_remaining": ["Data remaining", KILOBITS, "mdi:download"],
+    "text_used": ["Text used", MESSAGES, "mdi:message-text"],
+    "text_limit": ["Text limit", MESSAGES, "mdi:message-text"],
+    "text_remaining": ["Text remaining", MESSAGES, "mdi:message-text"],
+    "mms_used": ["MMS used", MESSAGES, "mdi:message-image"],
+    "mms_limit": ["MMS limit", MESSAGES, "mdi:message-image"],
+    "mms_remaining": ["MMS remaining", MESSAGES, "mdi:message-image"],
+    "text_int_used": ["International text used", MESSAGES, "mdi:message-alert"],
+    "text_int_limit": ["International text limit", MESSAGES, "mdi:message-alert"],
+    "text_int_remaining": ["International remaining", MESSAGES, "mdi:message-alert"],
+    "talk_used": ["Talk used", MINUTES, "mdi:cellphone"],
+    "talk_limit": ["Talk limit", MINUTES, "mdi:cellphone"],
+    "talk_remaining": ["Talk remaining", MINUTES, "mdi:cellphone"],
+    "other_talk_used": ["Other Talk used", MINUTES, "mdi:cellphone"],
+    "other_talk_limit": ["Other Talk limit", MINUTES, "mdi:cellphone"],
+    "other_talk_remaining": ["Other Talk remaining", MINUTES, "mdi:cellphone"],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MONITORED_VARIABLES):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_MONITORED_VARIABLES): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+        ),
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Fido sensor."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -106,7 +108,7 @@ class FidoSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {} {}'.format(self.client_name, self._number, self._name)
+        return f"{self.client_name} {self._number} {self._name}"
 
     @property
     def state(self):
@@ -126,19 +128,16 @@ class FidoSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        return {
-            'number': self._number,
-        }
+        return {"number": self._number}
 
     async def async_update(self):
         """Get the latest data from Fido and update the state."""
         await self.fido_data.async_update()
-        if self.type == 'balance':
+        if self.type == "balance":
             if self.fido_data.data.get(self.type) is not None:
                 self._state = round(self.fido_data.data[self.type], 2)
         else:
-            if self.fido_data.data.get(self._number, {}).get(self.type) \
-                  is not None:
+            if self.fido_data.data.get(self._number, {}).get(self.type) is not None:
                 self._state = self.fido_data.data[self._number][self.type]
                 self._state = round(self._state, 2)
 
@@ -149,14 +148,15 @@ class FidoData:
     def __init__(self, username, password, httpsession):
         """Initialize the data object."""
         from pyfido import FidoClient
-        self.client = FidoClient(username, password,
-                                 REQUESTS_TIMEOUT, httpsession)
+
+        self.client = FidoClient(username, password, REQUESTS_TIMEOUT, httpsession)
         self.data = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest data from Fido."""
         from pyfido.client import PyFidoError
+
         try:
             await self.client.fetch_data()
         except PyFidoError as exp:

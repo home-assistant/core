@@ -14,13 +14,15 @@ from tests.common import MockConfigEntry
 @pytest.fixture(name="config_entry")
 def config_entry_fixture():
     """Create a mock HEOS config entry."""
-    return MockConfigEntry(domain=DOMAIN, data={CONF_HOST: '127.0.0.1'},
-                           title='Controller (127.0.0.1)')
+    return MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, title="Controller (127.0.0.1)"
+    )
 
 
 @pytest.fixture(name="controller")
 def controller_fixture(
-        players, favorites, input_sources, playlists, change_data, dispatcher):
+    players, favorites, input_sources, playlists, change_data, dispatcher
+):
     """Create a mock Heos controller fixture."""
     mock_heos = Mock(Heos)
     for player in players.values():
@@ -37,17 +39,16 @@ def controller_fixture(
     mock_heos.connection_state = const.STATE_CONNECTED
     mock = Mock(return_value=mock_heos)
 
-    with patch("homeassistant.components.heos.Heos", new=mock), \
-            patch("homeassistant.components.heos.config_flow.Heos", new=mock):
+    with patch("homeassistant.components.heos.Heos", new=mock), patch(
+        "homeassistant.components.heos.config_flow.Heos", new=mock
+    ):
         yield mock_heos
 
 
 @pytest.fixture(name="config")
 def config_fixture():
     """Create hass config fixture."""
-    return {
-        DOMAIN: {CONF_HOST: '127.0.0.1'}
-    }
+    return {DOMAIN: {CONF_HOST: "127.0.0.1"}}
 
 
 @pytest.fixture(name="players")
@@ -89,15 +90,12 @@ def favorites_fixture() -> Dict[int, HeosSource]:
     station = Mock(HeosSource)
     station.type = const.TYPE_STATION
     station.name = "Today's Hits Radio"
-    station.media_id = '123456789'
+    station.media_id = "123456789"
     radio = Mock(HeosSource)
     radio.type = const.TYPE_STATION
     radio.name = "Classical MPR (Classical Music)"
-    radio.media_id = 's1234'
-    return {
-        1: station,
-        2: radio
-    }
+    radio.media_id = "s1234"
+    return {1: station, 2: radio}
 
 
 @pytest.fixture(name="input_sources")
@@ -120,17 +118,16 @@ def dispatcher_fixture() -> Dispatcher:
 def discovery_data_fixture() -> dict:
     """Return mock discovery data for testing."""
     return {
-        'host': '127.0.0.1',
-        'manufacturer': 'Denon',
-        'model_name': 'HEOS Drive',
-        'model_number': 'DWSA-10 4.0',
-        'name': 'Office',
-        'port': 60006,
-        'serial': None,
-        'ssdp_description':
-            'http://127.0.0.1:60006/upnp/desc/aios_device/aios_device.xml',
-        'udn': 'uuid:e61de70c-2250-1c22-0080-0005cdf512be',
-        'upnp_device_type': 'urn:schemas-denon-com:device:AiosDevice:1'
+        "host": "127.0.0.1",
+        "manufacturer": "Denon",
+        "model_name": "HEOS Drive",
+        "model_number": "DWSA-10 4.0",
+        "name": "Office",
+        "port": 60006,
+        "serial": None,
+        "ssdp_description": "http://127.0.0.1:60006/upnp/desc/aios_device/aios_device.xml",
+        "udn": "uuid:e61de70c-2250-1c22-0080-0005cdf512be",
+        "upnp_device_type": "urn:schemas-denon-com:device:AiosDevice:1",
     }
 
 
@@ -143,7 +140,7 @@ def quick_selects_fixture() -> Dict[int, str]:
         3: "Quick Select 3",
         4: "Quick Select 4",
         5: "Quick Select 5",
-        6: "Quick Select 6"
+        6: "Quick Select 6",
     }
 
 
@@ -159,18 +156,10 @@ def playlists_fixture() -> Sequence[HeosSource]:
 @pytest.fixture(name="change_data")
 def change_data_fixture() -> Dict:
     """Create player change data for testing."""
-    return {
-        const.DATA_MAPPED_IDS: {},
-        const.DATA_NEW: []
-    }
+    return {const.DATA_MAPPED_IDS: {}, const.DATA_NEW: []}
 
 
 @pytest.fixture(name="change_data_mapped_ids")
 def change_data_mapped_ids_fixture() -> Dict:
     """Create player change data for testing."""
-    return {
-        const.DATA_MAPPED_IDS: {
-            101: 1
-        },
-        const.DATA_NEW: []
-    }
+    return {const.DATA_MAPPED_IDS: {101: 1}, const.DATA_NEW: []}

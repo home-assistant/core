@@ -2,15 +2,14 @@
 
 from datetime import timedelta
 
-from homeassistant.components.streamlabswater import (
-    DOMAIN as STREAMLABSWATER_DOMAIN)
+from homeassistant.components.streamlabswater import DOMAIN as STREAMLABSWATER_DOMAIN
 from homeassistant.const import VOLUME_GALLONS
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-DEPENDENCIES = ['streamlabswater']
+DEPENDENCIES = ["streamlabswater"]
 
-WATER_ICON = 'mdi:water'
+WATER_ICON = "mdi:water"
 MIN_TIME_BETWEEN_USAGE_UPDATES = timedelta(seconds=60)
 
 NAME_DAILY_USAGE = "Daily Water"
@@ -20,18 +19,20 @@ NAME_YEARLY_USAGE = "Yearly Water"
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up water usage sensors."""
-    client = hass.data[STREAMLABSWATER_DOMAIN]['client']
-    location_id = hass.data[STREAMLABSWATER_DOMAIN]['location_id']
-    location_name = hass.data[STREAMLABSWATER_DOMAIN]['location_name']
+    client = hass.data[STREAMLABSWATER_DOMAIN]["client"]
+    location_id = hass.data[STREAMLABSWATER_DOMAIN]["location_id"]
+    location_name = hass.data[STREAMLABSWATER_DOMAIN]["location_name"]
 
     streamlabs_usage_data = StreamlabsUsageData(location_id, client)
     streamlabs_usage_data.update()
 
-    add_devices([
-        StreamLabsDailyUsage(location_name, streamlabs_usage_data),
-        StreamLabsMonthlyUsage(location_name, streamlabs_usage_data),
-        StreamLabsYearlyUsage(location_name, streamlabs_usage_data)
-    ])
+    add_devices(
+        [
+            StreamLabsDailyUsage(location_name, streamlabs_usage_data),
+            StreamLabsMonthlyUsage(location_name, streamlabs_usage_data),
+            StreamLabsYearlyUsage(location_name, streamlabs_usage_data),
+        ]
+    )
 
 
 class StreamlabsUsageData:
@@ -49,9 +50,9 @@ class StreamlabsUsageData:
     def update(self):
         """Query and store usage data."""
         water_usage = self._client.get_water_usage_summary(self._location_id)
-        self._today = round(water_usage['today'], 1)
-        self._this_month = round(water_usage['thisMonth'], 1)
-        self._this_year = round(water_usage['thisYear'], 1)
+        self._today = round(water_usage["today"], 1)
+        self._this_month = round(water_usage["thisMonth"], 1)
+        self._this_year = round(water_usage["thisYear"], 1)
 
     def get_daily_usage(self):
         """Return the day's usage."""
@@ -78,7 +79,7 @@ class StreamLabsDailyUsage(Entity):
     @property
     def name(self):
         """Return the name for daily usage."""
-        return "{} {}".format(self._location_name, NAME_DAILY_USAGE)
+        return f"{self._location_name} {NAME_DAILY_USAGE}"
 
     @property
     def icon(self):
@@ -106,7 +107,7 @@ class StreamLabsMonthlyUsage(StreamLabsDailyUsage):
     @property
     def name(self):
         """Return the name for monthly usage."""
-        return "{} {}".format(self._location_name, NAME_MONTHLY_USAGE)
+        return f"{self._location_name} {NAME_MONTHLY_USAGE}"
 
     @property
     def state(self):
@@ -120,7 +121,7 @@ class StreamLabsYearlyUsage(StreamLabsDailyUsage):
     @property
     def name(self):
         """Return the name for yearly usage."""
-        return "{} {}".format(self._location_name, NAME_YEARLY_USAGE)
+        return f"{self._location_name} {NAME_YEARLY_USAGE}"
 
     @property
     def state(self):

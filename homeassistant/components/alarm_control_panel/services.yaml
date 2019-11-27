@@ -10,6 +10,16 @@ alarm_disarm:
       description: An optional code to disarm the alarm control panel with.
       example: 1234
 
+alarm_arm_custom_bypass:
+  description: Send arm custom bypass command.
+  fields:
+    entity_id:
+      description: Name of alarm control panel to arm custom bypass.
+      example: 'alarm_control_panel.downstairs'
+    code:
+      description: An optional code to arm custom bypass the alarm control panel with.
+      example: 1234
+
 alarm_arm_home:
   description: Send the alarm the command for arm home.
   fields:

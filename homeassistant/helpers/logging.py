@@ -3,6 +3,9 @@ import inspect
 import logging
 
 
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
+
 class KeywordMessage:
     """
     Represents a logging message with keyword arguments.
@@ -26,7 +29,7 @@ class KeywordStyleAdapter(logging.LoggerAdapter):
 
     def __init__(self, logger, extra=None):
         """Initialize a new StyleAdapter for the provided logger."""
-        super(KeywordStyleAdapter, self).__init__(logger, extra or {})
+        super().__init__(logger, extra or {})
 
     def log(self, level, msg, *args, **kwargs):
         """Log the message provided at the appropriate level."""
@@ -44,6 +47,7 @@ class KeywordStyleAdapter(logging.LoggerAdapter):
                 k: kwargs[k]
                 for k in inspect.getfullargspec(
                     self.logger._log  # pylint: disable=protected-access
-                ).args[1:] if k in kwargs
-            }
+                ).args[1:]
+                if k in kwargs
+            },
         )

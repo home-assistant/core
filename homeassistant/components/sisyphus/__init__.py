@@ -4,32 +4,27 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    EVENT_HOMEASSISTANT_STOP
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SISYPHUS = 'sisyphus'
-DOMAIN = 'sisyphus'
+DATA_SISYPHUS = "sisyphus"
+DOMAIN = "sisyphus"
 
 AUTODETECT_SCHEMA = vol.Schema({})
 
-TABLE_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_HOST): cv.string,
-})
+TABLE_SCHEMA = vol.Schema(
+    {vol.Required(CONF_NAME): cv.string, vol.Required(CONF_HOST): cv.string}
+)
 
 TABLES_SCHEMA = vol.Schema([TABLE_SCHEMA])
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Any(AUTODETECT_SCHEMA, TABLES_SCHEMA),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.Any(AUTODETECT_SCHEMA, TABLES_SCHEMA)}, extra=vol.ALLOW_EXTRA
+)
 
 
 async def async_setup(hass, config):
@@ -40,11 +35,11 @@ async def async_setup(hass, config):
         """Filters out excessively verbose logs from SocketIO."""
 
         def filter(self, record):
-            if record.msg.contains('waiting for connection'):
+            if "waiting for connection" in record.msg:
                 return False
             return True
 
-    logging.getLogger('socketIO-client').addFilter(SocketIONoiseFilter())
+    logging.getLogger("socketIO-client").addFilter(SocketIONoiseFilter())
     tables = hass.data.setdefault(DATA_SISYPHUS, {})
     table_configs = config.get(DOMAIN)
     session = async_get_clientsession(hass)
@@ -53,16 +48,12 @@ async def async_setup(hass, config):
         """Add platforms for a single table with the given hostname."""
         tables[host] = TableHolder(hass, session, host, name)
 
-        hass.async_create_task(async_load_platform(
-            hass, 'light', DOMAIN, {
-                CONF_HOST: host,
-            }, config
-        ))
-        hass.async_create_task(async_load_platform(
-            hass, 'media_player', DOMAIN, {
-                CONF_HOST: host,
-            }, config
-        ))
+        hass.async_create_task(
+            async_load_platform(hass, "light", DOMAIN, {CONF_HOST: host}, config)
+        )
+        hass.async_create_task(
+            async_load_platform(hass, "media_player", DOMAIN, {CONF_HOST: host}, config)
+        )
 
     if isinstance(table_configs, dict):  # AUTODETECT_SCHEMA
         for ip_address in await Table.find_table_ips(session):
@@ -109,13 +100,13 @@ class TableHolder:
     async def get_table(self):
         """Return the Table held by this holder, connecting to it if needed."""
         if not self._table_task:
-            self._table_task = self._hass.async_create_task(
-                self._connect_table())
+            self._table_task = self._hass.async_create_task(self._connect_table())
 
         return await self._table_task
 
     async def _connect_table(self):
         from sisyphus_control import Table
+
         self._table = await Table.connect(self._host, self._session)
         if self._name is None:
             self._name = self._table.name

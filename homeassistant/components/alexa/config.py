@@ -1,4 +1,6 @@
 """Config helpers for Alexa."""
+from homeassistant.core import callback
+
 from .state_report import async_enable_proactive_mode
 
 
@@ -55,10 +57,16 @@ class AbstractConfig:
             unsub_func()
         self._unsub_proactive_report = None
 
+    @callback
     def should_expose(self, entity_id):
         """If an entity should be exposed."""
         # pylint: disable=no-self-use
         return False
+
+    @callback
+    def async_invalidate_access_token(self):
+        """Invalidate access token."""
+        raise NotImplementedError
 
     async def async_get_access_token(self):
         """Get an access token."""

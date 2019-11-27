@@ -5,9 +5,9 @@ from .const import DOMAIN
 
 config_entry_flow.register_webhook_flow(
     DOMAIN,
-    'IFTTT Webhook',
+    "IFTTT Webhook",
     {
-        'applet_url': 'https://ifttt.com/maker_webhooks',
-        'docs_url': 'https://www.home-assistant.io/components/ifttt/'
-    }
+        "applet_url": "https://ifttt.com/maker_webhooks",
+        "docs_url": "https://www.home-assistant.io/integrations/ifttt/",
+    },
 )

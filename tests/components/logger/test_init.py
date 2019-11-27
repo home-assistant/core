@@ -8,16 +8,11 @@ from homeassistant.components import logger
 
 from tests.common import get_test_home_assistant
 
-RECORD = namedtuple('record', ('name', 'levelno'))
+RECORD = namedtuple("record", ("name", "levelno"))
 
-NO_DEFAULT_CONFIG = {'logger': {}}
-NO_LOGS_CONFIG = {'logger': {'default': 'info'}}
-TEST_CONFIG = {
-    'logger': {
-        'default': 'warning',
-        'logs': {'test': 'info'}
-    }
-}
+NO_DEFAULT_CONFIG = {"logger": {}}
+NO_LOGS_CONFIG = {"logger": {"default": "info"}}
+TEST_CONFIG = {"logger": {"default": "warning", "logs": {"test": "info"}}}
 
 
 class TestUpdater(unittest.TestCase):
@@ -56,73 +51,73 @@ class TestUpdater(unittest.TestCase):
         assert len(handler.filters) == 1
         log_filter = handler.filters[0].logfilter
 
-        assert log_filter['default'] == logging.WARNING
-        assert log_filter['logs']['test'] == logging.INFO
+        assert log_filter["default"] == logging.WARNING
+        assert log_filter["logs"]["test"] == logging.INFO
 
     def test_logger_test_filters(self):
         """Test resulting filter operation."""
         self.setup_logger(TEST_CONFIG)
 
         # Blocked default record
-        self.assert_not_logged('asdf', logging.DEBUG)
+        self.assert_not_logged("asdf", logging.DEBUG)
 
         # Allowed default record
-        self.assert_logged('asdf', logging.WARNING)
+        self.assert_logged("asdf", logging.WARNING)
 
         # Blocked named record
-        self.assert_not_logged('test', logging.DEBUG)
+        self.assert_not_logged("test", logging.DEBUG)
 
         # Allowed named record
-        self.assert_logged('test', logging.INFO)
+        self.assert_logged("test", logging.INFO)
 
     def test_set_filter_empty_config(self):
         """Test change log level from empty configuration."""
         self.setup_logger(NO_LOGS_CONFIG)
 
-        self.assert_not_logged('test', logging.DEBUG)
+        self.assert_not_logged("test", logging.DEBUG)
 
-        self.hass.services.call(
-            logger.DOMAIN, 'set_level', {'test': 'debug'})
+        self.hass.services.call(logger.DOMAIN, "set_level", {"test": "debug"})
         self.hass.block_till_done()
 
-        self.assert_logged('test', logging.DEBUG)
+        self.assert_logged("test", logging.DEBUG)
 
     def test_set_filter(self):
         """Test change log level of existing filter."""
         self.setup_logger(TEST_CONFIG)
 
-        self.assert_not_logged('asdf', logging.DEBUG)
-        self.assert_logged('dummy', logging.WARNING)
+        self.assert_not_logged("asdf", logging.DEBUG)
+        self.assert_logged("dummy", logging.WARNING)
 
-        self.hass.services.call(logger.DOMAIN, 'set_level',
-                                {'asdf': 'debug', 'dummy': 'info'})
+        self.hass.services.call(
+            logger.DOMAIN, "set_level", {"asdf": "debug", "dummy": "info"}
+        )
         self.hass.block_till_done()
 
-        self.assert_logged('asdf', logging.DEBUG)
-        self.assert_logged('dummy', logging.WARNING)
+        self.assert_logged("asdf", logging.DEBUG)
+        self.assert_logged("dummy", logging.WARNING)
 
     def test_set_default_filter_empty_config(self):
         """Test change default log level from empty configuration."""
         self.setup_logger(NO_DEFAULT_CONFIG)
 
-        self.assert_logged('test', logging.DEBUG)
+        self.assert_logged("test", logging.DEBUG)
 
         self.hass.services.call(
-            logger.DOMAIN, 'set_default_level', {'level': 'warning'})
+            logger.DOMAIN, "set_default_level", {"level": "warning"}
+        )
         self.hass.block_till_done()
 
-        self.assert_not_logged('test', logging.DEBUG)
+        self.assert_not_logged("test", logging.DEBUG)
 
     def test_set_default_filter(self):
         """Test change default log level with existing default."""
         self.setup_logger(TEST_CONFIG)
 
-        self.assert_not_logged('asdf', logging.DEBUG)
-        self.assert_logged('dummy', logging.WARNING)
+        self.assert_not_logged("asdf", logging.DEBUG)
+        self.assert_logged("dummy", logging.WARNING)
 
-        self.hass.services.call(
-            logger.DOMAIN, 'set_default_level', {'level': 'debug'})
+        self.hass.services.call(logger.DOMAIN, "set_default_level", {"level": "debug"})
         self.hass.block_till_done()
 
-        self.assert_logged('asdf', logging.DEBUG)
-        self.assert_logged('dummy', logging.WARNING)
+        self.assert_logged("asdf", logging.DEBUG)
+        self.assert_logged("dummy", logging.WARNING)

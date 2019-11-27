@@ -1,7 +1,7 @@
 {
   "domain": "horizon",
   "name": "Horizon",
-  "documentation": "https://www.home-assistant.io/components/horizon",
+  "documentation": "https://www.home-assistant.io/integrations/horizon",
   "requirements": [
     "horimote==0.4.1"
   ],

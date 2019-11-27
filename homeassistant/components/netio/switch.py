@@ -9,36 +9,43 @@ from homeassistant.core import callback
 from homeassistant import util
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD,
-    EVENT_HOMEASSISTANT_STOP, STATE_ON)
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+    CONF_HOST,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_ON,
+)
+from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_START_DATE = 'start_date'
-ATTR_TOTAL_CONSUMPTION_KWH = 'total_energy_kwh'
+ATTR_START_DATE = "start_date"
+ATTR_TOTAL_CONSUMPTION_KWH = "total_energy_kwh"
 
-CONF_OUTLETS = 'outlets'
+CONF_OUTLETS = "outlets"
 
 DEFAULT_PORT = 1234
-DEFAULT_USERNAME = 'admin'
-Device = namedtuple('device', ['netio', 'entities'])
+DEFAULT_USERNAME = "admin"
+Device = namedtuple("device", ["netio", "entities"])
 DEVICES = {}
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 REQ_CONF = [CONF_HOST, CONF_OUTLETS]
 
-URL_API_NETIO_EP = '/api/netio/{host}'
+URL_API_NETIO_EP = "/api/netio/{host}"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_OUTLETS): {cv.string: cv.string},
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_OUTLETS): {cv.string: cv.string},
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -61,8 +68,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     dev.update = util.Throttle(MIN_TIME_BETWEEN_SCANS)(dev.update)
 
     for key in config[CONF_OUTLETS]:
-        switch = NetioSwitch(
-            DEVICES[host].netio, key, config[CONF_OUTLETS][key])
+        switch = NetioSwitch(DEVICES[host].netio, key, config[CONF_OUTLETS][key])
         DEVICES[host].entities.append(switch)
 
     add_entities(DEVICES[host].entities)
@@ -81,26 +87,32 @@ class NetioApiView(HomeAssistantView):
     """WSGI handler class."""
 
     url = URL_API_NETIO_EP
-    name = 'api:netio'
+    name = "api:netio"
 
     @callback
     def get(self, request, host):
         """Request handler."""
-        hass = request.app['hass']
+        hass = request.app["hass"]
         data = request.query
-        states, consumptions, cumulated_consumptions, start_dates = \
-            [], [], [], []
+        states, consumptions, cumulated_consumptions, start_dates = [], [], [], []
 
         for i in range(1, 5):
-            out = 'output%d' % i
-            states.append(data.get('%s_state' % out) == STATE_ON)
-            consumptions.append(float(data.get('%s_consumption' % out, 0)))
+            out = "output%d" % i
+            states.append(data.get("%s_state" % out) == STATE_ON)
+            consumptions.append(float(data.get("%s_consumption" % out, 0)))
             cumulated_consumptions.append(
-                float(data.get('%s_cumulatedConsumption' % out, 0)) / 1000)
-            start_dates.append(data.get('%s_consumptionStart' % out, ""))
+                float(data.get("%s_cumulatedConsumption" % out, 0)) / 1000
+            )
+            start_dates.append(data.get("%s_consumptionStart" % out, ""))
 
-        _LOGGER.debug('%s: %s, %s, %s since %s', host, states,
-                      consumptions, cumulated_consumptions, start_dates)
+        _LOGGER.debug(
+            "%s: %s, %s, %s since %s",
+            host,
+            states,
+            consumptions,
+            cumulated_consumptions,
+            start_dates,
+        )
 
         ndev = DEVICES[host].netio
         ndev.consumptions = consumptions
@@ -131,7 +143,7 @@ class NetioSwitch(SwitchDevice):
     @property
     def available(self):
         """Return true if entity is available."""
-        return not hasattr(self, 'telnet')
+        return not hasattr(self, "telnet")
 
     def turn_on(self, **kwargs):
         """Turn switch on."""
@@ -142,9 +154,9 @@ class NetioSwitch(SwitchDevice):
         self._set(False)
 
     def _set(self, value):
-        val = list('uuuu')
-        val[int(self.outlet) - 1] = '1' if value else '0'
-        self.netio.get('port list %s' % ''.join(val))
+        val = list("uuuu")
+        val[int(self.outlet) - 1] = "1" if value else "0"
+        self.netio.get("port list %s" % "".join(val))
         self.netio.states[int(self.outlet) - 1] = value
         self.schedule_update_ha_state()
 
@@ -162,7 +174,7 @@ class NetioSwitch(SwitchDevice):
         """Return optional state attributes."""
         return {
             ATTR_TOTAL_CONSUMPTION_KWH: self.cumulated_consumption_kwh,
-            ATTR_START_DATE: self.start_date.split('|')[0]
+            ATTR_START_DATE: self.start_date.split("|")[0],
         }
 
     @property

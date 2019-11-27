@@ -1,6 +1,8 @@
 {
     "config": {
         "abort": {
+            "already_setup": "Solo puede configurar una cuenta Point.",
+            "authorize_url_fail": "Error desconocido al generar una URL de autorizaci\u00f3n.",
             "external_setup": "Punto configurado con \u00e9xito desde otro flujo."
         },
         "error": {

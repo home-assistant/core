@@ -1,8 +1,7 @@
 """Support for Lutron lights."""
 import logging
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
+from homeassistant.components.light import ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light
 
 from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
 
@@ -12,7 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Lutron lights."""
     devs = []
-    for (area_name, device) in hass.data[LUTRON_DEVICES]['light']:
+    for (area_name, device) in hass.data[LUTRON_DEVICES]["light"]:
         dev = LutronLight(area_name, device, hass.data[LUTRON_CONTROLLER])
         devs.append(dev)
 
@@ -68,7 +67,7 @@ class LutronLight(LutronDevice, Light):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attr = {'lutron_integration_id': self._lutron_device.id}
+        attr = {"lutron_integration_id": self._lutron_device.id}
         return attr
 
     @property

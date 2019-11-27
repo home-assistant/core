@@ -1,0 +1,12 @@
+{
+    "domain": "here_travel_time",
+    "name": "HERE travel time",
+    "documentation": "https://www.home-assistant.io/integrations/here_travel_time",
+    "requirements": [
+      "herepy==0.6.3.3"
+    ],
+    "dependencies": [],
+    "codeowners": [
+      "@eifinger"
+    ]
+  }

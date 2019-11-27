@@ -1,6 +1,6 @@
 """JSON utility functions."""
 import logging
-from typing import Union, List, Dict, Optional
+from typing import Union, List, Dict, Optional, Type
 
 import json
 import os
@@ -19,30 +19,35 @@ class WriteError(HomeAssistantError):
     """Error writing the data."""
 
 
-def load_json(filename: str, default: Union[List, Dict, None] = None) \
-        -> Union[List, Dict]:
+def load_json(
+    filename: str, default: Union[List, Dict, None] = None
+) -> Union[List, Dict]:
     """Load JSON data from a file and return as dict or list.
 
     Defaults to returning empty dict if file is not found.
     """
     try:
-        with open(filename, encoding='utf-8') as fdesc:
+        with open(filename, encoding="utf-8") as fdesc:
             return json.loads(fdesc.read())  # type: ignore
     except FileNotFoundError:
         # This is not a fatal error
-        _LOGGER.debug('JSON file not found: %s', filename)
+        _LOGGER.debug("JSON file not found: %s", filename)
     except ValueError as error:
-        _LOGGER.exception('Could not parse JSON content: %s', filename)
+        _LOGGER.exception("Could not parse JSON content: %s", filename)
         raise HomeAssistantError(error)
     except OSError as error:
-        _LOGGER.exception('JSON file reading failed: %s', filename)
+        _LOGGER.exception("JSON file reading failed: %s", filename)
         raise HomeAssistantError(error)
     return {} if default is None else default
 
 
-def save_json(filename: str, data: Union[List, Dict],
-              private: bool = False, *,
-              encoder: Optional[json.JSONEncoder] = None) -> None:
+def save_json(
+    filename: str,
+    data: Union[List, Dict],
+    private: bool = False,
+    *,
+    encoder: Optional[Type[json.JSONEncoder]] = None,
+) -> None:
     """Save JSON data to a file.
 
     Returns True on success.
@@ -52,20 +57,19 @@ def save_json(filename: str, data: Union[List, Dict],
     try:
         json_data = json.dumps(data, sort_keys=True, indent=4, cls=encoder)
         # Modern versions of Python tempfile create this file with mode 0o600
-        with tempfile.NamedTemporaryFile(mode="w", encoding='utf-8',
-                                         dir=tmp_path, delete=False) as fdesc:
+        with tempfile.NamedTemporaryFile(
+            mode="w", encoding="utf-8", dir=tmp_path, delete=False
+        ) as fdesc:
             fdesc.write(json_data)
             tmp_filename = fdesc.name
         if not private:
             os.chmod(tmp_filename, 0o644)
         os.replace(tmp_filename, filename)
     except TypeError as error:
-        _LOGGER.exception('Failed to serialize to JSON: %s',
-                          filename)
+        _LOGGER.exception("Failed to serialize to JSON: %s", filename)
         raise SerializationError(error)
     except OSError as error:
-        _LOGGER.exception('Saving JSON file failed: %s',
-                          filename)
+        _LOGGER.exception("Saving JSON file failed: %s", filename)
         raise WriteError(error)
     finally:
         if os.path.exists(tmp_filename):

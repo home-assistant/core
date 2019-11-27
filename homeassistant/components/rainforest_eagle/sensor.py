@@ -3,45 +3,50 @@ from datetime import timedelta
 import logging
 
 from eagle200_reader import EagleReader
-from requests.exceptions import (
-    ConnectionError as ConnectError, HTTPError, Timeout)
+from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_IP_ADDRESS, DEVICE_CLASS_POWER,
-    ENERGY_KILO_WATT_HOUR)
+    CONF_IP_ADDRESS,
+    DEVICE_CLASS_POWER,
+    ENERGY_KILO_WATT_HOUR,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-CONF_CLOUD_ID = 'cloud_id'
-CONF_INSTALL_CODE = 'install_code'
-POWER_KILO_WATT = 'kW'
+CONF_CLOUD_ID = "cloud_id"
+CONF_INSTALL_CODE = "install_code"
+POWER_KILO_WATT = "kW"
 
 _LOGGER = logging.getLogger(__name__)
 
 MIN_SCAN_INTERVAL = timedelta(seconds=30)
 
 SENSORS = {
-    "instantanous_demand": (
-        "Eagle-200 Meter Power Demand", POWER_KILO_WATT),
+    "instantanous_demand": ("Eagle-200 Meter Power Demand", POWER_KILO_WATT),
     "summation_delivered": (
         "Eagle-200 Total Meter Energy Delivered",
-        ENERGY_KILO_WATT_HOUR),
+        ENERGY_KILO_WATT_HOUR,
+    ),
     "summation_received": (
         "Eagle-200 Total Meter Energy Received",
-        ENERGY_KILO_WATT_HOUR),
+        ENERGY_KILO_WATT_HOUR,
+    ),
     "summation_total": (
         "Eagle-200 Net Meter Energy (Delivered minus Received)",
-        ENERGY_KILO_WATT_HOUR)
-        }
+        ENERGY_KILO_WATT_HOUR,
+    ),
+}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_IP_ADDRESS): cv.string,
-    vol.Required(CONF_CLOUD_ID): cv.string,
-    vol.Required(CONF_INSTALL_CODE): cv.string
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_IP_ADDRESS): cv.string,
+        vol.Required(CONF_CLOUD_ID): cv.string,
+        vol.Required(CONF_INSTALL_CODE): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -61,9 +66,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     monitored_conditions = list(SENSORS)
     sensors = []
     for condition in monitored_conditions:
-        sensors.append(EagleSensor(
-            eagle_data, condition, SENSORS[condition][0],
-            SENSORS[condition][1]))
+        sensors.append(
+            EagleSensor(
+                eagle_data, condition, SENSORS[condition][0], SENSORS[condition][1]
+            )
+        )
 
     add_entities(sensors)
 
@@ -71,8 +78,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class EagleSensor(Entity):
     """Implementation of the Rainforest Eagle-200 sensor."""
 
-    def __init__(
-            self, eagle_data, sensor_type, name, unit):
+    def __init__(self, eagle_data, sensor_type, name, unit):
         """Initialize the sensor."""
         self.eagle_data = eagle_data
         self._type = sensor_type
@@ -83,7 +89,7 @@ class EagleSensor(Entity):
     @property
     def device_class(self):
         """Return the power device class for the instantanous_demand sensor."""
-        if self._type == 'instantanous_demand':
+        if self._type == "instantanous_demand":
             return DEVICE_CLASS_POWER
 
         return None

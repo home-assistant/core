@@ -1,7 +1,7 @@
 {
   "domain": "file",
   "name": "File",
-  "documentation": "https://www.home-assistant.io/components/file",
+  "documentation": "https://www.home-assistant.io/integrations/file",
   "requirements": [],
   "dependencies": [],
   "codeowners": [

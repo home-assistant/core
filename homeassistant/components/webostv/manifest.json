@@ -1,7 +1,7 @@
 {
   "domain": "webostv",
   "name": "Webostv",
-  "documentation": "https://www.home-assistant.io/components/webostv",
+  "documentation": "https://www.home-assistant.io/integrations/webostv",
   "requirements": [
     "pylgtv==0.1.9",
     "websockets==6.0"
