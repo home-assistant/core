@@ -1,5 +1,5 @@
 """Support for UpCloud."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
 import upcloud_api
@@ -18,6 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
+from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +83,7 @@ def setup(hass, config):
         dispatcher_send(hass, SIGNAL_UPDATE_UPCLOUD)
 
     # Call the UpCloud API to refresh data
-    upcloud_update(datetime.now())
+    upcloud_update(dt.utcnow())
     track_time_interval(hass, upcloud_update, scan_interval)
 
     return True
