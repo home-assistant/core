@@ -227,7 +227,7 @@ apcaccess==0.0.13
 apns2==0.3.0
 
 # homeassistant.components.apprise
-apprise==0.8.1
+apprise==0.8.2
 
 # homeassistant.components.aprs
 aprslib==0.6.46
@@ -678,7 +678,7 @@ horimote==0.4.1
 httplib2==0.10.3
 
 # homeassistant.components.huawei_lte
-huawei-lte-api==1.4.3
+huawei-lte-api==1.4.4
 
 # homeassistant.components.hydrawise
 hydrawiser==0.1.1
@@ -1959,7 +1959,7 @@ twilio==6.32.0
 unifiled==0.11
 
 # homeassistant.components.upcloud
-upcloud-api==0.4.3
+upcloud-api==0.4.5
 
 # homeassistant.components.huawei_lte
 url-normalize==1.4.1
