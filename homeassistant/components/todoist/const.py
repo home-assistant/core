@@ -44,8 +44,6 @@ DUE_DATE_VALID_LANGS = [
 # Attribute: When is this task due?
 # Service Call: When is this task due?
 DUE_DATE = "due_date"
-# Todoist API: Look up a task's due date
-DUE_DATE_UTC = "due_date_utc"
 # Attribute: Is this task due today?
 DUE_TODAY = "due_today"
 # Calendar Platform: When a calendar event ends
