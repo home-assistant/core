@@ -56,7 +56,7 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.unifiled.config_flow.validate_input",
+        "homeassistant.components.unifiled.config_flow.unifiled",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -80,7 +80,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.unifiled.config_flow.validate_input",
+        "homeassistant.components.unifiled.config_flow.unifiled",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
