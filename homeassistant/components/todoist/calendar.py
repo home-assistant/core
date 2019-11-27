@@ -28,7 +28,6 @@ from .const import (
     DUE_DATE,
     DUE_DATE_LANG,
     DUE_DATE_STRING,
-    DUE_DATE_UTC,
     DUE_DATE_VALID_LANGS,
     DUE_TODAY,
     END,
