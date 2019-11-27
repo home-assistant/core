@@ -88,13 +88,6 @@ mill_set_room_temperature:
       description: Sleep temp.
       example: 17
 
-nuheat_resume_program:
-  description: Resume the programmed schedule.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.kitchen'
-
 turn_on:
   description: Turn climate device on.
   fields:
