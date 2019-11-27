@@ -1,0 +1,24 @@
+{
+    "config": {
+        "step": {
+            "auth_captcha": {
+                "description": "{captcha_img}",
+                "title": "Captcha"
+            },
+            "auth_mfa": {
+                "data": {
+                    "mfa_code": "Codi SMS"
+                },
+                "title": "Verificaci\u00f3 en dos passos"
+            },
+            "auth_user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "title": "Credencials d\u2019usuari"
+            }
+        },
+        "title": "StarLine"
+    }
+}
