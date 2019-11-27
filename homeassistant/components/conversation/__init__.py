@@ -68,7 +68,6 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_PROCESS, handle_service, schema=SERVICE_PROCESS_SCHEMA
     )
     hass.http.register_view(ConversationProcessView())
-    hass.http.register_view(ConversationHandleView())
     hass.components.websocket_api.async_register_command(websocket_process)
     hass.components.websocket_api.async_register_command(websocket_get_agent_info)
     hass.components.websocket_api.async_register_command(websocket_set_onboarding)
@@ -135,43 +134,6 @@ class ConversationProcessView(http.HomeAssistantView):
         intent_result = await _async_converse(
             hass, data["text"], data.get("conversation_id"), self.context(request)
         )
-
-        return self.json(intent_result)
-
-
-class ConversationHandleView(http.HomeAssistantView):
-    """View to handle intents from JSON."""
-
-    url = "/api/conversation/handle"
-    name = "api:conversation:handle"
-
-    @RequestDataValidator(
-        vol.Schema(
-            {
-                vol.Required("name"): cv.string,
-                vol.Optional("data"): vol.Schema({cv.string: object}),
-            }
-        )
-    )
-    async def post(self, request, data):
-        """Handle intent with name/data."""
-        hass = request.app["hass"]
-
-        try:
-            intent_name = data["name"]
-            slots = {
-                key: {"value": value} for key, value in data.get("data", {}).items()
-            }
-            intent_result = await intent.async_handle(
-                hass, DOMAIN, intent_name, slots, "", self.context(request)
-            )
-        except intent.IntentHandleError as err:
-            intent_result = intent.IntentResponse()
-            intent_result.async_set_speech(str(err))
-
-        if intent_result is None:
-            intent_result = intent.IntentResponse()
-            intent_result.async_set_speech("Sorry, I couldn't handle that")
 
         return self.json(intent_result)
 
