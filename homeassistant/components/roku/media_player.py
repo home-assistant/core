@@ -174,7 +174,7 @@ class RokuDevice(MediaPlayerDevice):
 
     def turn_on(self):
         """Turn on the Roku."""
-        self.roku.power()
+        self.roku.poweron()
 
     def turn_off(self):
         """Turn off the Roku."""
