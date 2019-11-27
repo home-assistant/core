@@ -121,7 +121,7 @@ class TestApns(unittest.TestCase):
             self._setup_notify()
 
         assert self.hass.services.call(
-            notify.DOMAIN,
+            apns.DOMAIN,
             "apns_test_app",
             {"push_id": "1234", "name": "test device"},
             blocking=True,
@@ -153,7 +153,7 @@ class TestApns(unittest.TestCase):
             self._setup_notify()
 
         assert self.hass.services.call(
-            notify.DOMAIN, "apns_test_app", {"push_id": "1234"}, blocking=True
+            apns.DOMAIN, "apns_test_app", {"push_id": "1234"}, blocking=True
         )
 
         devices = {dev.push_id: dev for dev in written_devices}
@@ -183,7 +183,7 @@ class TestApns(unittest.TestCase):
             self._setup_notify()
 
         assert self.hass.services.call(
-            notify.DOMAIN,
+            apns.DOMAIN,
             "apns_test_app",
             {"push_id": "1234", "name": "updated device 1"},
             blocking=True,
@@ -222,7 +222,7 @@ class TestApns(unittest.TestCase):
             self._setup_notify()
 
         assert self.hass.services.call(
-            notify.DOMAIN,
+            apns.DOMAIN,
             "apns_test_app",
             {"push_id": "1234", "name": "updated device 1"},
             blocking=True,
