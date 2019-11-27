@@ -47,8 +47,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     switches = []
     for outlet in dev.outlets:
-        if outlet.name:
-            switches.append(AtenSwitch(dev, outlet.id, outlet.name))
+        switches.append(AtenSwitch(dev, outlet.id, outlet.name))
 
     async_add_entities(switches)
     return True
@@ -61,7 +60,7 @@ class AtenSwitch(SwitchDevice):
         """Initialize an ATEN PE switch."""
         self._device = device
         self._outlet = outlet
-        self._name = name
+        self._name = name or f"Outlet {outlet}"
         self._enabled = False
         self._outlet_power = 0.0
 
