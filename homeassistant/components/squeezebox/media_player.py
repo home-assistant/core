@@ -12,7 +12,6 @@ import voluptuous as vol
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
-    DOMAIN,
     MEDIA_TYPE_MUSIC,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
@@ -44,6 +43,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util.dt import utcnow
 
+from .const import DOMAIN, SERVICE_CALL_METHOD
+
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PORT = 9000
@@ -74,8 +75,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_USERNAME): cv.string,
     }
 )
-
-SERVICE_CALL_METHOD = "squeezebox_call_method"
 
 DATA_SQUEEZEBOX = "squeezebox"
 
