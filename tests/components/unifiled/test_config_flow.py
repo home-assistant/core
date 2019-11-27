@@ -18,7 +18,7 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.unifiled.config_flow.validate_input",
+        "homeassistant.components.unifiled.config_flow.unifiled",
         return_value=mock_coro({"title": "Test Title"}),
     ), patch(
         "homeassistant.components.unifiled.async_setup", return_value=mock_coro(True)
@@ -37,7 +37,7 @@ async def test_form(hass):
         )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Test Title"
+    assert result2["title"] == "1.1.1.1"
     assert result2["data"] == {
         "host": "1.1.1.1",
         "port": "20443",
