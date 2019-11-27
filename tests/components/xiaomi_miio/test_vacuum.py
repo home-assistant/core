@@ -365,7 +365,10 @@ def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
 
     # Xiaomi vacuum specific services:
     yield from hass.services.async_call(
-        XIAOMI_DOMAIN, SERVICE_START_REMOTE_CONTROL, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        XIAOMI_DOMAIN,
+        SERVICE_START_REMOTE_CONTROL,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
     )
 
     mock_mirobo_is_on.assert_has_calls([mock.call.manual_start()], any_order=True)
