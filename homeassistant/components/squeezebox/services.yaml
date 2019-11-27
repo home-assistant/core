@@ -1,4 +1,4 @@
-squeezebox_call_method:
+call_method:
   description: Call a custom Squeezebox JSONRPC API.
   fields:
     entity_id:
@@ -10,4 +10,3 @@ squeezebox_call_method:
     parameters:
       description: Array of additional parameters to pass to Logitech Media Server (p1, ..., pN in the CLI documentation).
       example: ["loadtracks", "album.titlesearch="]
- 
