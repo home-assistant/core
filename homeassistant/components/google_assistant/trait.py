@@ -80,6 +80,7 @@ TRAIT_MODES = PREFIX_TRAITS + "Modes"
 TRAIT_OPENCLOSE = PREFIX_TRAITS + "OpenClose"
 TRAIT_VOLUME = PREFIX_TRAITS + "Volume"
 TRAIT_ARMDISARM = PREFIX_TRAITS + "ArmDisarm"
+TRAIT_HUMIDITY_SETTING = PREFIX_TRAITS + "HumiditySetting"
 
 PREFIX_COMMANDS = "action.devices.commands."
 COMMAND_ONOFF = PREFIX_COMMANDS + "OnOff"
@@ -846,6 +847,56 @@ class TemperatureSettingTrait(_Trait):
                 },
                 blocking=True,
                 context=data.context,
+            )
+
+
+@register_trait
+class HumiditySettingTrait(_Trait):
+    """Trait to offer humidity setting functionality.
+
+    https://developers.google.com/actions/smarthome/traits/humiditysetting
+    """
+
+    name = TRAIT_HUMIDITY_SETTING
+    commands = []
+
+    @staticmethod
+    def supported(domain, features, device_class):
+        """Test if state is supported."""
+        return domain == sensor.DOMAIN and device_class == sensor.DEVICE_CLASS_HUMIDITY
+
+    def sync_attributes(self):
+        """Return humidity attributes for a sync request."""
+        response = {}
+        attrs = self.state.attributes
+        domain = self.state.domain
+        if domain == sensor.DOMAIN:
+            device_class = attrs.get(ATTR_DEVICE_CLASS)
+            if device_class == sensor.DEVICE_CLASS_HUMIDITY:
+                response["queryOnlyHumiditySetting"] = True
+
+        return response
+
+    def query_attributes(self):
+        """Return humidity query attributes."""
+        response = {}
+        attrs = self.state.attributes
+        domain = self.state.domain
+        if domain == sensor.DOMAIN:
+            device_class = attrs.get(ATTR_DEVICE_CLASS)
+            if device_class == sensor.DEVICE_CLASS_HUMIDITY:
+                current_humidity = self.state.state
+                if current_humidity is not None:
+                    response["humidityAmbientPercent"] = round(float(current_humidity))
+
+        return response
+
+    async def execute(self, command, data, params, challenge):
+        """Execute a humidity command."""
+        domain = self.state.domain
+        if domain == sensor.DOMAIN:
+            raise SmartHomeError(
+                ERR_NOT_SUPPORTED, "Execute is not supported by sensor"
             )
 
 

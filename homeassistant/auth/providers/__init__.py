@@ -48,7 +48,7 @@ class AuthProvider:
         self.config = config
 
     @property
-    def id(self) -> Optional[str]:  # pylint: disable=invalid-name
+    def id(self) -> Optional[str]:
         """Return id of the auth provider.
 
         Optional, can be None.

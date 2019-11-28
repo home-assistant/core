@@ -212,6 +212,7 @@ def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
         "Balanced",
         "Turbo",
         "Max",
+        "Gentle",
     ]
     assert state.attributes.get(ATTR_MAIN_BRUSH_LEFT) == 12
     assert state.attributes.get(ATTR_SIDE_BRUSH_LEFT) == 12
@@ -354,6 +355,7 @@ def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
         "Balanced",
         "Turbo",
         "Max",
+        "Gentle",
     ]
     assert state.attributes.get(ATTR_MAIN_BRUSH_LEFT) == 11
     assert state.attributes.get(ATTR_SIDE_BRUSH_LEFT) == 11

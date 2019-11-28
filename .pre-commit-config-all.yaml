@@ -18,7 +18,7 @@ repos:
           - --safe
           - --quiet
         files: ^((homeassistant|script|tests)/.+)?[^/]+\.py$
--   repo: https://gitlab.com/pycqa/flake8
+-   repo: https://github.com/PyCQA/flake8
     rev: 3.7.9
     hooks:
     -   id: flake8

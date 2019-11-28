@@ -1,4 +1,4 @@
-# pylint: disable=W0621
+# pylint: disable=redefined-outer-name
 """Tests for the Daikin config flow."""
 import asyncio
 

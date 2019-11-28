@@ -3,6 +3,7 @@ import logging
 
 from requests.exceptions import RequestException
 import voluptuous as vol
+from xfinity_gateway import XfinityGateway
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
@@ -23,7 +24,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_scanner(hass, config):
     """Validate the configuration and return an Xfinity Gateway scanner."""
-    from xfinity_gateway import XfinityGateway
 
     gateway = XfinityGateway(config[DOMAIN][CONF_HOST])
     scanner = None
