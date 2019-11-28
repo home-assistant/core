@@ -1,11 +1,10 @@
 """Interface implementation for cloud client."""
 import asyncio
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 import logging
 
 import aiohttp
-from hass_nabucasa import Cloud
 from hass_nabucasa.client import CloudClient as Interface
 
 from homeassistant.core import callback, Context
@@ -45,7 +44,6 @@ class CloudClient(Interface):
         self.alexa_user_config = alexa_user_config
         self._alexa_config = None
         self._google_config = None
-        self.cloud: Optional[Cloud] = None
 
     @property
     def base_path(self) -> Path:
@@ -105,15 +103,6 @@ class CloudClient(Interface):
             )
 
         return self._google_config
-
-    async def async_initialize(self, cloud: Cloud) -> None:
-        """Initialize the client."""
-        self.cloud = cloud
-
-        if not self.cloud.is_logged_in:
-            return
-
-        await self.logged_in()
 
     async def logged_in(self) -> None:
         """When user logs in."""
