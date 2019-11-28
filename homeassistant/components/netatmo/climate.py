@@ -6,9 +6,6 @@ from typing import List, Optional
 import pyatmo
 import requests
 
-# import voluptuous as vol
-
-# import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
@@ -25,7 +22,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_TEMPERATURE,
-    # CONF_NAME,
     PRECISION_HALVES,
     STATE_OFF,
     TEMP_CELSIUS,
@@ -86,17 +82,6 @@ CONF_HOMES = "homes"
 CONF_ROOMS = "rooms"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
-
-# HOME_CONFIG_SCHEMA = vol.Schema(
-#     {
-#         vol.Required(CONF_NAME): cv.string,
-#         vol.Optional(CONF_ROOMS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-#     }
-# )
-
-# PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-#     {vol.Optional(CONF_HOMES): vol.All(cv.ensure_list, [HOME_CONFIG_SCHEMA])}
-# )
 
 DEFAULT_MAX_TEMP = 30
 
