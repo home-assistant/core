@@ -15,6 +15,7 @@ async def test_google_update_report_state(hass, cloud_prefs):
     config = CloudGoogleConfig(
         hass,
         GACTIONS_SCHEMA({}),
+        "mock-user-id",
         cloud_prefs,
         Mock(claims={"cognito:username": "abcdefghjkl"}),
     )
@@ -37,6 +38,7 @@ async def test_sync_entities(aioclient_mock, hass, cloud_prefs):
     config = CloudGoogleConfig(
         hass,
         GACTIONS_SCHEMA({}),
+        "mock-user-id",
         cloud_prefs,
         Mock(
             google_actions_sync_url="http://example.com",
@@ -52,6 +54,7 @@ async def test_google_update_expose_trigger_sync(hass, cloud_prefs):
     config = CloudGoogleConfig(
         hass,
         GACTIONS_SCHEMA({}),
+        "mock-user-id",
         cloud_prefs,
         Mock(claims={"cognito:username": "abcdefghjkl"}),
     )
@@ -90,7 +93,7 @@ async def test_google_update_expose_trigger_sync(hass, cloud_prefs):
 async def test_google_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
     """Test Google config responds to entity registry."""
     config = CloudGoogleConfig(
-        hass, GACTIONS_SCHEMA({}), cloud_prefs, hass.data["cloud"]
+        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data["cloud"]
     )
 
     with patch.object(

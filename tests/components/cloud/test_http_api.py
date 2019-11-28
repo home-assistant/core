@@ -103,31 +103,17 @@ async def test_google_actions_sync_fails(
     assert req.status == 403
 
 
-async def test_login_view(hass, cloud_client, mock_cognito):
+async def test_login_view(hass, cloud_client):
     """Test logging in."""
-    mock_cognito.id_token = jwt.encode(
-        {"email": "hello@home-assistant.io", "custom:sub-exp": "2018-01-03"}, "test"
-    )
-    mock_cognito.access_token = "access_token"
-    mock_cognito.refresh_token = "refresh_token"
+    hass.data["cloud"] = MagicMock(login=MagicMock(return_value=mock_coro()))
 
-    with patch("hass_nabucasa.iot.CloudIoT.connect") as mock_connect, patch(
-        "hass_nabucasa.auth.CognitoAuth._authenticate", return_value=mock_cognito
-    ) as mock_auth:
-        req = await cloud_client.post(
-            "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
-        )
+    req = await cloud_client.post(
+        "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
+    )
 
     assert req.status == 200
     result = await req.json()
     assert result == {"success": True}
-
-    assert len(mock_connect.mock_calls) == 1
-
-    assert len(mock_auth.mock_calls) == 1
-    result_user, result_pass = mock_auth.mock_calls[0][1]
-    assert result_user == "my_username"
-    assert result_pass == "my_password"
 
 
 async def test_login_view_random_exception(cloud_client):
@@ -351,7 +337,6 @@ async def test_websocket_status(
         "cloud": "connected",
         "prefs": {
             "alexa_enabled": True,
-            "cloud_user": None,
             "cloudhooks": {},
             "google_enabled": True,
             "google_entity_configs": {},

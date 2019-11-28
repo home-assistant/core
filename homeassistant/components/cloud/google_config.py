@@ -23,10 +23,11 @@ _LOGGER = logging.getLogger(__name__)
 class CloudGoogleConfig(AbstractConfig):
     """HA Cloud Configuration for Google Assistant."""
 
-    def __init__(self, hass, config, prefs, cloud):
+    def __init__(self, hass, config, cloud_user, prefs, cloud):
         """Initialize the Google config."""
         super().__init__(hass)
         self._config = config
+        self._user = cloud_user
         self._prefs = prefs
         self._cloud = cloud
         self._cur_entity_prefs = self._prefs.google_entity_configs
@@ -46,7 +47,7 @@ class CloudGoogleConfig(AbstractConfig):
     @property
     def agent_user_id(self):
         """Return Agent User Id to use for query responses."""
-        return self._cloud.claims["cognito:username"]
+        return self._cloud.username
 
     @property
     def entity_config(self):
@@ -74,7 +75,12 @@ class CloudGoogleConfig(AbstractConfig):
     @property
     def local_sdk_user_id(self):
         """Return the user ID to be used for actions received via the local SDK."""
-        return self._prefs.cloud_user
+        return self._user
+
+    @property
+    def cloud_user(self):
+        """Return Cloud User account."""
+        return self._user
 
     def should_expose(self, state):
         """If a state object should be exposed."""
