@@ -7,7 +7,6 @@ import attr
 from huawei_lte_api.enums.cradle import ConnectionStatusEnum
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDevice,
 )
@@ -79,11 +78,6 @@ class HuaweiLteMobileConnectionBinarySensor(HuaweiLteBaseBinarySensor):
         """Initialize identifiers."""
         self.key = KEY_MONITORING_STATUS
         self.item = "ConnectionStatus"
-
-    @property
-    def device_class(self):
-        """Return device class."""
-        return DEVICE_CLASS_CONNECTIVITY
 
     @property
     def _entity_name(self) -> str:
