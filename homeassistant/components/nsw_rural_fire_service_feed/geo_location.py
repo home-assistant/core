@@ -101,7 +101,6 @@ class NswRuralFireServiceFeedEntityManager:
     ):
         """Initialize the Feed Entity Manager."""
         self._hass = hass
-        self._async_add_entities = async_add_entities
         websession = aiohttp_client.async_get_clientsession(hass)
         self._feed_manager = NswRuralFireServiceIncidentsFeedManager(
             websession,
@@ -112,6 +111,7 @@ class NswRuralFireServiceFeedEntityManager:
             filter_radius=radius_in_km,
             filter_categories=categories,
         )
+        self._async_add_entities = async_add_entities
         self._scan_interval = scan_interval
         self._track_time_remove_callback = None
         self.listeners = []
@@ -151,7 +151,7 @@ class NswRuralFireServiceFeedEntityManager:
     async def _generate_entity(self, external_id):
         """Generate new entity."""
         new_entity = NswRuralFireServiceLocationEvent(self, external_id)
-        _LOGGER.debug("Adding geolocation %s", new_entity)
+        # Add new entities to HA.
         self._async_add_entities([new_entity], True)
 
     async def _update_entity(self, external_id):
