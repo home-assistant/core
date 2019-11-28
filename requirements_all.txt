@@ -1335,7 +1335,7 @@ pymailgunner==1.4
 pymediaroom==0.6.4
 
 # homeassistant.components.somfy
-pymfy==0.6.1
+pymfy==0.7.1
 
 # homeassistant.components.xiaomi_tv
 pymitv==1.4.3
