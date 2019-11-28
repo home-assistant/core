@@ -1,0 +1,32 @@
+{
+    "config": {
+        "step": {
+            "auth_app": {
+                "title": "Poverilnice programa"
+            },
+            "auth_captcha": {
+                "data": {
+                    "captcha_code": "\u0160ifra iz slike"
+                },
+                "description": "{captcha_img}",
+                "title": "Captcha"
+            },
+            "auth_mfa": {
+                "data": {
+                    "mfa_code": "SMS koda"
+                },
+                "description": "Vnesite kodo, poslano na telefon {phone_number}",
+                "title": "2-faktorska avtorizacija"
+            },
+            "auth_user": {
+                "data": {
+                    "password": "Geslo",
+                    "username": "Uporabni\u0161ko ime"
+                },
+                "description": "StarLine e-po\u0161tni ra\u010dun in geslo",
+                "title": "Uporabni\u0161ke poverilnice"
+            }
+        },
+        "title": "StarLine"
+    }
+}
