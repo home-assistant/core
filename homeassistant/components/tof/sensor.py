@@ -5,6 +5,7 @@ import logging
 from functools import partial
 
 import voluptuous as vol
+from VL53L1X2 import VL53L1X  # pylint: disable=import-error
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
@@ -51,7 +52,6 @@ def init_tof_1(xshut):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Reset and initialize the VL53L1X ToF Sensor from STMicroelectronics."""
-    from VL53L1X2 import VL53L1X  # pylint: disable=import-error
 
     name = config.get(CONF_NAME)
     bus_number = config.get(CONF_I2C_BUS)
