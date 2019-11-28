@@ -20,19 +20,15 @@ class ConfigEntryNetatmoAuth(pyatmo.auth.NetatmOAuth2):
         implementation: config_entry_oauth2_flow.AbstractOAuth2Implementation,
     ):
         """Initialize Netatmo Auth."""
-        _LOGGER.debug("Netatmo ConfigEntryNetatmoAuth")
         self.hass = hass
         self.config_entry = config_entry
-        _LOGGER.debug("Netatmo ConfigEntryAuth 2")
         self.session = config_entry_oauth2_flow.OAuth2Session(
             hass, config_entry, implementation
         )
-        _LOGGER.debug("Netatmo ConfigEntryAuth 3")
         super().__init__(token=self.session.token)
 
     def refresh_tokens(self) -> dict:
         """Refresh and return new Netatmo tokens using Home Assistant OAuth2 session."""
-        _LOGGER.debug("Netatmo ConfigEntryAuth.refresh_tokens")
         run_coroutine_threadsafe(
             self.session.async_ensure_token_valid(), self.hass.loop
         ).result()
