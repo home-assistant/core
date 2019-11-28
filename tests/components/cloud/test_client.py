@@ -215,15 +215,15 @@ async def test_google_config_should_2fa(hass, mock_cloud_setup, mock_cloud_login
 
 
 async def test_set_username(hass):
-    """Test we set username during initialization."""
+    """Test we set username during loggin."""
     prefs = MagicMock(
         alexa_enabled=False,
         google_enabled=False,
         async_set_username=MagicMock(return_value=mock_coro()),
     )
     client = CloudClient(hass, prefs, None, {}, {})
-    await client.async_initialize(
-        MagicMock(is_logged_in=True, username="mock-username")
-    )
+    client.cloud = MagicMock(is_logged_in=True, username="mock-username")
+    await client.logged_in()
+
     assert len(prefs.async_set_username.mock_calls) == 1
     assert prefs.async_set_username.mock_calls[0][1][0] == "mock-username"
