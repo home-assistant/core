@@ -142,7 +142,7 @@ class CloudGoogleConfig(AbstractConfig):
 
             # State reporting is reported as a property on entities.
             # So when we change it, we need to sync all entities.
-            await self.async_sync_entities(self.agent_user_id)
+            await self.async_sync_entities_all()
 
         # If entity prefs are the same or we have filter in config.yaml,
         # don't sync.
@@ -150,7 +150,7 @@ class CloudGoogleConfig(AbstractConfig):
             self._cur_entity_prefs is not prefs.google_entity_configs
             and self._config["filter"].empty_filter
         ):
-            self.async_schedule_google_sync(self.agent_user_id)
+            self.async_schedule_google_sync_all()
 
         if self.enabled and not self.is_local_sdk_active:
             self.async_enable_local_sdk()
