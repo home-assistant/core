@@ -54,7 +54,7 @@ from .const import (
     ONVIF_DATA,
     PTZ_NONE,
     SERVICE_PTZ,
-	SERVICE_REBOOT,
+    SERVICE_REBOOT,
     ZOOM_IN,
     ZOOM_OUT,
 )
@@ -271,7 +271,7 @@ class ONVIFHassCamera(Camera):
 
     async def async_obtain_input_uri(self):
         """Set the input uri for the camera."""
-        debug(
+        _LOGGER.debug(
             "Connecting with ONVIF Camera: %s on port %s", self._host, self._port
         )
 
@@ -296,10 +296,6 @@ class ONVIFHassCamera(Camera):
             _LOGGER.debug("Using profile index '%d'", self._profile_index)
 
             _LOGGER.debug("Retrieving stream uri")
-
-            # Fix Onvif setup error on Goke GK7102 based IP camera
-            # where we need to recreate media_service  #26781
-            media_service = self._camera.create_media_service()
 
             req = media_service.create_type("GetStreamUri")
             req.ProfileToken = profiles[self._profile_index].token
