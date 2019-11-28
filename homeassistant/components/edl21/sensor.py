@@ -1,7 +1,6 @@
 """Support for EDL21 Smart Meters."""
 
 import logging
-from re import split
 
 import voluptuous as vol
 
@@ -103,7 +102,6 @@ class EDL21Entity(Entity):
     def __init__(self, obis, telegram):
         """Initialize an EDL21Entity."""
         self._obis = obis
-        self._obis_parts = [int(n) for n in split("[^0-9]", obis)]
         self._telegram = telegram
 
     @property
