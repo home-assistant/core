@@ -59,13 +59,3 @@ alarm_trigger:
     code:
       description: An optional code to trigger the alarm control panel with.
       example: 1234
-
-alarmdecoder_alarm_toggle_chime:
-  description: Send the alarm the toggle chime command.
-  fields:
-    entity_id:
-      description: Name of the alarm control panel to trigger.
-      example: 'alarm_control_panel.downstairs'
-    code:
-      description: A required code to toggle the alarm control panel chime with.
-      example: 1234
