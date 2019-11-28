@@ -8,7 +8,6 @@
       "trigger": "Trigger {entity_name}"
     },
     "trigger_type": {
-      "pending": "{entity_name} pending",
       "triggered": "{entity_name} triggered",
       "disarmed": "{entity_name} disarmed",
       "armed_home": "{entity_name} armed home",

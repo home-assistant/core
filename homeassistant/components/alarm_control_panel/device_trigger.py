@@ -7,7 +7,6 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
-    SUPPORT_ALARM_TRIGGER,
 )
 from homeassistant.components.automation import AutomationActionType, state
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
@@ -31,7 +30,6 @@ from homeassistant.helpers.typing import ConfigType
 from . import DOMAIN
 
 TRIGGER_TYPES = {
-    "pending",
     "triggered",
     "disarmed",
     "armed_home",
@@ -66,34 +64,22 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
         supported_features = entity_state.attributes["supported_features"]
 
         # Add triggers for each entity that belongs to this integration
-        triggers.append(
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "pending",
-            }
-        )
-        triggers.append(
+        triggers += [
             {
                 CONF_PLATFORM: "device",
                 CONF_DEVICE_ID: device_id,
                 CONF_DOMAIN: DOMAIN,
                 CONF_ENTITY_ID: entry.entity_id,
                 CONF_TYPE: "disarmed",
-            }
-        )
-        if supported_features & SUPPORT_ALARM_TRIGGER:
-            triggers.append(
-                {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "triggered",
-                }
-            )
+            },
+            {
+                CONF_PLATFORM: "device",
+                CONF_DEVICE_ID: device_id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_ENTITY_ID: entry.entity_id,
+                CONF_TYPE: "triggered",
+            },
+        ]
         if supported_features & SUPPORT_ALARM_ARM_HOME:
             triggers.append(
                 {
@@ -137,10 +123,7 @@ async def async_attach_trigger(
     """Attach a trigger."""
     config = TRIGGER_SCHEMA(config)
 
-    if config[CONF_TYPE] == "pending":
-        from_state = STATE_ALARM_DISARMED
-        to_state = STATE_ALARM_PENDING
-    elif config[CONF_TYPE] == "triggered":
+    if config[CONF_TYPE] == "triggered":
         from_state = STATE_ALARM_PENDING
         to_state = STATE_ALARM_TRIGGERED
     elif config[CONF_TYPE] == "disarmed":
