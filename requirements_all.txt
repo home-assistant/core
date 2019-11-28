@@ -1027,7 +1027,7 @@ protobuf==3.6.1
 proxmoxer==1.0.3
 
 # homeassistant.components.systemmonitor
-psutil==5.6.5
+psutil==5.6.6
 
 # homeassistant.components.ptvsd
 ptvsd==4.2.8
