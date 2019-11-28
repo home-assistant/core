@@ -27,7 +27,7 @@ class CloudGoogleConfig(AbstractConfig):
         """Initialize the Google config."""
         super().__init__(hass)
         self._config = config
-        self._cloud_user = cloud_user
+        self._user = cloud_user
         self._prefs = prefs
         self._cloud = cloud
         self._cur_entity_prefs = self._prefs.google_entity_configs
@@ -75,12 +75,12 @@ class CloudGoogleConfig(AbstractConfig):
     @property
     def local_sdk_user_id(self):
         """Return the user ID to be used for actions received via the local SDK."""
-        return self._cloud_user
+        return self._user
 
     @property
     def cloud_user(self):
         """Return Cloud User account."""
-        return self._cloud_user
+        return self._user
 
     def should_expose(self, state):
         """If a state object should be exposed."""
