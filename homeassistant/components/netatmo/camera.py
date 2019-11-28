@@ -104,14 +104,14 @@ class NetatmoCamera(Camera):
         self._verify_ssl = verify_ssl
         self._quality = quality
 
-        # URLs.
+        # URLs
         self._vpnurl = None
         self._localurl = None
 
         # Identifier
         self._id = None
 
-        # Monitoring status.
+        # Monitoring status
         self._status = None
 
         # SD Card status
