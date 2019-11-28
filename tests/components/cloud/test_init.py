@@ -145,7 +145,7 @@ async def test_on_connect(hass, mock_cloud_fixture):
     """Test cloud on connect triggers."""
     cl = hass.data["cloud"]
 
-    assert len(cl.iot._on_connect) == 4
+    assert len(cl.iot._on_connect) == 3
 
     assert len(hass.states.async_entity_ids("binary_sensor")) == 0
 
