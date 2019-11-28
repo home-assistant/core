@@ -12,10 +12,15 @@ from homeassistant.components.fan import (
     SERVICE_SET_DIRECTION,
     SERVICE_SET_SPEED,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_ON,
+    SERVICE_TURN_OFF,
+    ENTITY_MATCH_ALL,
+)
 
 
-async def async_turn_on(hass, entity_id: str = None, speed: str = None) -> None:
+async def async_turn_on(hass, entity_id=ENTITY_MATCH_ALL, speed: str = None) -> None:
     """Turn all or specified fan on."""
     data = {
         key: value
@@ -26,7 +31,7 @@ async def async_turn_on(hass, entity_id: str = None, speed: str = None) -> None:
     await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data, blocking=True)
 
 
-async def async_turn_off(hass, entity_id: str = None) -> None:
+async def async_turn_off(hass, entity_id=ENTITY_MATCH_ALL) -> None:
     """Turn all or specified fan off."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
@@ -34,7 +39,7 @@ async def async_turn_off(hass, entity_id: str = None) -> None:
 
 
 async def async_oscillate(
-    hass, entity_id: str = None, should_oscillate: bool = True
+    hass, entity_id=ENTITY_MATCH_ALL, should_oscillate: bool = True
 ) -> None:
     """Set oscillation on all or specified fan."""
     data = {
@@ -49,7 +54,7 @@ async def async_oscillate(
     await hass.services.async_call(DOMAIN, SERVICE_OSCILLATE, data, blocking=True)
 
 
-async def async_set_speed(hass, entity_id: str = None, speed: str = None) -> None:
+async def async_set_speed(hass, entity_id=ENTITY_MATCH_ALL, speed: str = None) -> None:
     """Set speed for all or specified fan."""
     data = {
         key: value
@@ -61,7 +66,7 @@ async def async_set_speed(hass, entity_id: str = None, speed: str = None) -> Non
 
 
 async def async_set_direction(
-    hass, entity_id: str = None, direction: str = None
+    hass, entity_id=ENTITY_MATCH_ALL, direction: str = None
 ) -> None:
     """Set direction for all or specified fan."""
     data = {

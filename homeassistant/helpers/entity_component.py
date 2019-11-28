@@ -173,24 +173,16 @@ class EntityComponent:
     async def async_extract_from_service(self, service, expand_group=True):
         """Extract all known and available entities from a service call.
 
-        Will return all entities if no entities specified in call.
         Will return an empty list if entities specified but unknown.
 
         This method must be run in the event loop.
         """
         data_ent_id = service.data.get(ATTR_ENTITY_ID)
 
-        if data_ent_id in (None, ENTITY_MATCH_ALL):
-            if data_ent_id is None:
-                self.logger.warning(
-                    "Not passing an entity ID to a service to target all "
-                    "entities is deprecated. Update your call to %s.%s to be "
-                    "instead: entity_id: %s",
-                    service.domain,
-                    service.service,
-                    ENTITY_MATCH_ALL,
-                )
+        if data_ent_id is None:
+            return []
 
+        if data_ent_id == ENTITY_MATCH_ALL:
             return [entity for entity in self.entities if entity.available]
 
         entity_ids = await async_extract_entity_ids(self.hass, service, expand_group)
