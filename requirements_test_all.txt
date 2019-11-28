@@ -449,7 +449,7 @@ pylitejet==0.1
 pymailgunner==1.4
 
 # homeassistant.components.somfy
-pymfy==0.6.1
+pymfy==0.7.1
 
 # homeassistant.components.mochad
 pymochad==0.2.0
