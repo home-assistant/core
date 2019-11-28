@@ -37,7 +37,6 @@ DOMAIN = "configurator"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-SERVICE_CONFIGURE = "configure"
 STATE_CONFIGURE = "configure"
 STATE_CONFIGURED = "configured"
 
@@ -145,9 +144,6 @@ class Configurator:
         self.hass = hass
         self._cur_id = 0
         self._requests = {}
-        hass.services.async_register(
-            DOMAIN, SERVICE_CONFIGURE, self.async_handle_service_call
-        )
 
     @async_callback
     def async_request_config(
@@ -219,20 +215,6 @@ class Configurator:
             self.hass.states.async_remove(entity_id)
 
         self.hass.bus.async_listen_once(EVENT_TIME_CHANGED, deferred_remove)
-
-    async def async_handle_service_call(self, call):
-        """Handle a configure service call."""
-        request_id = call.data.get(ATTR_CONFIGURE_ID)
-
-        if not self._validate_request_id(request_id):
-            return
-
-        # pylint: disable=unused-variable
-        entity_id, fields, callback = self._requests[request_id]
-
-        # field validation goes here?
-        if callback:
-            await self.hass.async_add_job(callback, call.data.get(ATTR_FIELDS, {}))
 
     def _generate_unique_id(self):
         """Generate a unique configurator ID."""
