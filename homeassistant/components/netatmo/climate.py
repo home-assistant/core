@@ -5,9 +5,11 @@ from typing import List, Optional
 
 import pyatmo
 import requests
-import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+# import voluptuous as vol
+
+# import homeassistant.helpers.config_validation as cv
+from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -23,7 +25,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_TEMPERATURE,
-    CONF_NAME,
+    # CONF_NAME,
     PRECISION_HALVES,
     STATE_OFF,
     TEMP_CELSIUS,
@@ -31,7 +33,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-from .const import DATA_NETATMO_AUTH
+from .const import AUTH, DOMAIN, MANUFAKTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,16 +87,16 @@ CONF_ROOMS = "rooms"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
-HOME_CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_ROOMS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-    }
-)
+# HOME_CONFIG_SCHEMA = vol.Schema(
+#     {
+#         vol.Required(CONF_NAME): cv.string,
+#         vol.Optional(CONF_ROOMS, default=[]): vol.All(cv.ensure_list, [cv.string]),
+#     }
+# )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_HOMES): vol.All(cv.ensure_list, [HOME_CONFIG_SCHEMA])}
-)
+# PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+#     {vol.Optional(CONF_HOMES): vol.All(cv.ensure_list, [HOME_CONFIG_SCHEMA])}
+# )
 
 DEFAULT_MAX_TEMP = 30
 
@@ -102,46 +104,39 @@ NA_THERM = "NATherm1"
 NA_VALVE = "NRV"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the NetAtmo Thermostat."""
-    homes_conf = config.get(CONF_HOMES)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Netatmo energy platform."""
+    auth = hass.data[DOMAIN][AUTH]
 
-    auth = hass.data[DATA_NETATMO_AUTH]
+    def get_devices():
+        """Retrieve Netatmo devices."""
+        devices = []
 
-    home_data = HomeData(auth)
-    try:
-        home_data.setup()
-    except pyatmo.NoDevice:
-        return
-
-    home_ids = []
-    rooms = {}
-    if homes_conf is not None:
-        for home_conf in homes_conf:
-            home = home_conf[CONF_NAME]
-            home_id = home_data.homedata.gethomeId(home)
-            if home_conf[CONF_ROOMS] != []:
-                rooms[home_id] = home_conf[CONF_ROOMS]
-            home_ids.append(home_id)
-    else:
+        home_data = HomeData(auth)
+        try:
+            home_data.setup()
+        except pyatmo.NoDevice:
+            return
         home_ids = home_data.get_home_ids()
 
-    devices = []
-    for home_id in home_ids:
-        _LOGGER.debug("Setting up %s ...", home_id)
-        try:
-            room_data = ThermostatData(auth, home_id)
-        except pyatmo.NoDevice:
-            continue
-        for room_id in room_data.get_room_ids():
-            room_name = room_data.homedata.rooms[home_id][room_id]["name"]
-            _LOGGER.debug("Setting up %s (%s) ...", room_name, room_id)
-            if home_id in rooms and room_name not in rooms[home_id]:
-                _LOGGER.debug("Excluding %s ...", room_name)
+        for home_id in home_ids:
+            _LOGGER.debug("Setting up home %s ...", home_id)
+            try:
+                room_data = ThermostatData(auth, home_id)
+            except pyatmo.NoDevice:
                 continue
-            _LOGGER.debug("Adding devices for room %s (%s) ...", room_name, room_id)
-            devices.append(NetatmoThermostat(room_data, room_id))
-    add_entities(devices, True)
+            for room_id in room_data.get_room_ids():
+                room_name = room_data.homedata.rooms[home_id][room_id]["name"]
+                _LOGGER.debug("Setting up room %s (%s) ...", room_name, room_id)
+                devices.append(NetatmoThermostat(room_data, room_id))
+        return devices
+
+    async_add_entities(await hass.async_add_executor_job(get_devices), True)
+
+
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the NetAtmo Thermostat."""
+    return
 
 
 class NetatmoThermostat(ClimateDevice):
@@ -153,7 +148,7 @@ class NetatmoThermostat(ClimateDevice):
         self._state = None
         self._room_id = room_id
         self._room_name = self._data.homedata.rooms[self._data.home_id][room_id]["name"]
-        self._name = f"netatmo_{self._room_name}"
+        self._name = f"{MANUFAKTURER} {self._room_name}"
         self._current_temperature = None
         self._target_temperature = None
         self._preset = None
@@ -167,6 +162,23 @@ class NetatmoThermostat(ClimateDevice):
 
         if self._module_type == NA_THERM:
             self._operation_list.append(HVAC_MODE_OFF)
+
+        self._unique_id = f"{self._room_id}-{self._module_type}"
+
+    @property
+    def device_info(self):
+        """Return the device info for the thermostat/valve."""
+        return {
+            "identifiers": {(DOMAIN, self._room_id)},
+            "name": self._room_name,
+            "manufacturer": MANUFAKTURER,
+            "model": self._module_type,
+        }
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._room_id
 
     @property
     def supported_features(self):
@@ -426,8 +438,8 @@ class ThermostatData:
         except requests.exceptions.Timeout:
             _LOGGER.warning("Timed out when connecting to Netatmo server")
             return
-        _LOGGER.debug("Following is the debugging output for homestatus:")
-        _LOGGER.debug(self.homestatus.rawData)
+        # _LOGGER.debug("Following is the debugging output for homestatus:")
+        # _LOGGER.debug(self.homestatus.rawData)
         for room in self.homestatus.rooms:
             try:
                 roomstatus = {}

@@ -8,8 +8,8 @@ from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensor
 from homeassistant.const import CONF_TIMEOUT
 from homeassistant.helpers import config_validation as cv
 
-from . import CameraData
 from .const import DATA_NETATMO_AUTH
+from .camera import CameraData
 
 _LOGGER = logging.getLogger(__name__)
 
