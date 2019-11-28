@@ -91,7 +91,7 @@ async def async_devices_sync(hass, data, payload):
 
     response = {"agentUserId": agent_user_id, "devices": devices}
 
-    await data.config.async_connect_agent_user(response["agentUserId"])
+    await data.config.async_connect_agent_user(agent_user_id)
 
     return response
 
