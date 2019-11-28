@@ -166,4 +166,4 @@ class CloudGoogleConfig(AbstractConfig):
 
         # Schedule a sync if a change was made to an entity that Google knows about
         if self._should_expose_entity_id(entity_id):
-            await self.async_sync_entities(self.agent_user_id)
+            await self.async_sync_entities_all()
