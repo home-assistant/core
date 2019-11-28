@@ -18,7 +18,6 @@ import voluptuous as vol
 from zeep.exceptions import Fault
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
-from homeassistant.components.camera.const import DOMAIN
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS, DATA_FFMPEG
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -28,6 +27,32 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
+
+from .const import (
+    ATTR_PAN,
+    ATTR_TILT,
+    ATTR_ZOOM,
+    CONF_PROFILE,
+    DEFAULT_ARGUMENTS,
+    DEFAULT_NAME,
+    DEFAULT_PASSWORD,
+    DEFAULT_PORT,
+    DEFAULT_PROFILE,
+    DEFAULT_USERNAME,
+    DIR_DOWN,
+    DIR_LEFT,
+    DIR_RIGHT,
+    DIR_UP,
+    DOMAIN,
+    ENTITIES,
+    ONVIF_DATA,
+    PTZ_NONE,
+    SERVICE_PTZ,
+    SERVICE_REBOOT,
+    ZOOM_IN,
+    ZOOM_OUT,
+)
+
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 import homeassistant.helpers.config_validation as cv
@@ -35,33 +60,6 @@ from homeassistant.helpers.service import async_extract_entity_ids
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_NAME = "ONVIF Camera"
-DEFAULT_PORT = 5000
-DEFAULT_USERNAME = "admin"
-DEFAULT_PASSWORD = "888888"
-DEFAULT_ARGUMENTS = "-pred 1"
-DEFAULT_PROFILE = 0
-
-CONF_PROFILE = "profile"
-
-ATTR_PAN = "pan"
-ATTR_TILT = "tilt"
-ATTR_ZOOM = "zoom"
-
-DIR_UP = "UP"
-DIR_DOWN = "DOWN"
-DIR_LEFT = "LEFT"
-DIR_RIGHT = "RIGHT"
-ZOOM_OUT = "ZOOM_OUT"
-ZOOM_IN = "ZOOM_IN"
-PTZ_NONE = "NONE"
-
-SERVICE_PTZ = "onvif_ptz"
-SERVICE_REBOOT = "onvif_reboot"
-
-ONVIF_DATA = "onvif"
-ENTITIES = "entities"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -369,8 +367,12 @@ class ONVIFHassCamera(Camera):
             ret = await self._camera.devicemgmt.SystemReboot()
             _LOGGER.debug("Camera '%s' Reboot command returned '%s'", self._name, ret)
         except exceptions.ONVIFError as err:
-            if "Bad Request" in err.reason:
-                _LOGGER.debug("Camera '%s' doesn't support SystemReboot.", self._name)
+            _LOGGER.error(
+                "Couldn't reboot the camera '%s', please verify "
+                "that the camera supports the command. Error: %s",
+                self._name,
+                err,
+            )
 
     async def async_added_to_hass(self):
         """Handle entity addition to hass."""
