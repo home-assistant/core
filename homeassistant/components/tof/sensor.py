@@ -1,16 +1,16 @@
 """Platform for Time of Flight sensor VL53L1X from STMicroelectronics."""
 
 import asyncio
-import logging
 from functools import partial
+import logging
 
-import voluptuous as vol
 from VL53L1X2 import VL53L1X  # pylint: disable=import-error
+import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components import rpi_gpio
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
