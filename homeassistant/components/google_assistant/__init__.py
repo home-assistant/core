@@ -32,7 +32,7 @@ from .const import (
 )
 from .const import EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED  # noqa: F401
 from .const import EVENT_QUERY_RECEIVED  # noqa: F401
-from .http import async_register_http
+from .http import GoogleAssistantView, GoogleConfig
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,7 +93,12 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: GOOGLE_ASSISTANT_SCHEMA}, extra=vol.ALLOW_EX
 async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     """Activate Google Actions component."""
     config = yaml_config.get(DOMAIN, {})
-    google_config = async_register_http(hass, config)
+    google_config = GoogleConfig(hass, config)
+
+    hass.http.register_view(GoogleAssistantView(google_config))
+
+    if google_config.should_report_state:
+        google_config.async_enable_report_state()
 
     async def request_sync_service_handler(call: ServiceCall):
         """Handle request sync service calls."""
