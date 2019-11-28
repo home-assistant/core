@@ -4,17 +4,13 @@ import logging
 import pyatmo
 import requests
 
-# import voluptuous as vol
-
 from homeassistant.components.camera import (
-    # PLATFORM_SCHEMA,
     Camera,
     SUPPORT_STREAM,
     Camera,
 )
 from homeassistant.const import STATE_ON, STATE_OFF
 
-# from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -40,17 +36,6 @@ CONF_QUALITY = "quality"
 DEFAULT_QUALITY = "high"
 
 VALID_QUALITIES = ["high", "medium", "low", "poor"]
-
-# PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-#     {
-#         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-#         vol.Optional(CONF_HOME): cv.string,
-#         vol.Optional(CONF_CAMERAS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-#         vol.Optional(CONF_QUALITY, default=DEFAULT_QUALITY): vol.All(
-#             cv.string, vol.In(VALID_QUALITIES)
-#         ),
-#     }
-# )
 
 _BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
 
@@ -116,7 +101,6 @@ class NetatmoCamera(Camera):
         )
         self._camera_type = camera_type
         self._unique_id = f"{self._camera_id}-{self._camera_type}"
-        _LOGGER.debug("Setting up camera %s", self._unique_id)
         self._verify_ssl = verify_ssl
         self._quality = quality
 
@@ -202,9 +186,6 @@ class NetatmoCamera(Camera):
     @property
     def device_state_attributes(self):
         """Return the Netatmo-specific camera state attributes."""
-
-        # _LOGGER.debug("Getting new attributes from camera netatmo '%s'", self._name)
-
         attr = {}
         attr["id"] = self._id
         attr["status"] = self._status
@@ -215,8 +196,6 @@ class NetatmoCamera(Camera):
 
         if self.model == "Presence":
             attr["light_mode_status"] = self._light_mode_status
-
-        # _LOGGER.debug("Attributes of '%s' = %s", self._name, attr)
 
         return attr
 
@@ -284,8 +263,6 @@ class NetatmoCamera(Camera):
     def update(self):
         """Update entity status."""
 
-        # _LOGGER.debug("Updating camera '%s'", self._name)
-
         # Refresh camera data
         self._data.update()
 
@@ -298,8 +275,6 @@ class NetatmoCamera(Camera):
 
         # Monitoring status
         self._status = camera["status"]
-
-        # _LOGGER.debug("Status of '%s' = %s", self._name, self._status)
 
         # SD Card status
         self._sd_status = camera["sd_status"]
