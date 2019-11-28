@@ -142,7 +142,7 @@ class RenderInfo:
     def result(self) -> str:
         """Results of the template computation."""
         if self._exception is not None:
-            raise self._exception  # pylint: disable=raising-bad-type
+            raise self._exception
         return self._result
 
     def _freeze(self) -> None:

@@ -6,7 +6,7 @@
   "requirements": [
     "plexapi==3.3.0",
     "plexauth==0.0.5",
-    "plexwebsocket==0.0.5"
+    "plexwebsocket==0.0.6"
   ],
   "dependencies": [
     "http"

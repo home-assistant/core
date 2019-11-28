@@ -4,13 +4,13 @@ import datetime
 import logging
 
 import requests
+import tank_utility
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_DEVICES, CONF_EMAIL, CONF_PASSWORD
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,14 +41,13 @@ SENSOR_ATTRS = [
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tank Utility sensor."""
-    from tank_utility import auth
 
     email = config.get(CONF_EMAIL)
     password = config.get(CONF_PASSWORD)
     devices = config.get(CONF_DEVICES)
 
     try:
-        token = auth.get_token(email, password)
+        token = tank_utility.auth.get_token(email, password)
     except requests.exceptions.HTTPError as http_error:
         if (
             http_error.response.status_code
@@ -109,19 +108,20 @@ class TankUtilitySensor(Entity):
         Flatten dictionary to map device to map of device data.
 
         """
-        from tank_utility import auth, device
 
         data = {}
         try:
-            data = device.get_device_data(self._token, self.device)
+            data = tank_utility.device.get_device_data(self._token, self.device)
         except requests.exceptions.HTTPError as http_error:
             if (
                 http_error.response.status_code
                 == requests.codes.unauthorized  # pylint: disable=no-member
             ):
                 _LOGGER.info("Getting new token")
-                self._token = auth.get_token(self._email, self._password, force=True)
-                data = device.get_device_data(self._token, self.device)
+                self._token = tank_utility.auth.get_token(
+                    self._email, self._password, force=True
+                )
+                data = tank_utility.device.get_device_data(self._token, self.device)
             else:
                 raise http_error
         data.update(data.pop("device", {}))

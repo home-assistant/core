@@ -23,10 +23,11 @@ _LOGGER = logging.getLogger(__name__)
 class CloudGoogleConfig(AbstractConfig):
     """HA Cloud Configuration for Google Assistant."""
 
-    def __init__(self, hass, config, prefs, cloud):
+    def __init__(self, hass, config, cloud_user, prefs, cloud):
         """Initialize the Google config."""
         super().__init__(hass)
         self._config = config
+        self._user = cloud_user
         self._prefs = prefs
         self._cloud = cloud
         self._cur_entity_prefs = self._prefs.google_entity_configs
@@ -46,7 +47,7 @@ class CloudGoogleConfig(AbstractConfig):
     @property
     def agent_user_id(self):
         """Return Agent User Id to use for query responses."""
-        return self._cloud.claims["cognito:username"]
+        return self._cloud.username
 
     @property
     def entity_config(self):
@@ -74,7 +75,12 @@ class CloudGoogleConfig(AbstractConfig):
     @property
     def local_sdk_user_id(self):
         """Return the user ID to be used for actions received via the local SDK."""
-        return self._prefs.cloud_user
+        return self._user
+
+    @property
+    def cloud_user(self):
+        """Return Cloud User account."""
+        return self._user
 
     def should_expose(self, state):
         """If a state object should be exposed."""
@@ -105,7 +111,7 @@ class CloudGoogleConfig(AbstractConfig):
         except ErrorResponse as err:
             _LOGGER.warning("Error reporting state - %s: %s", err.code, err.message)
 
-    async def _async_request_sync_devices(self):
+    async def _async_request_sync_devices(self, agent_user_id: str):
         """Trigger a sync with Google."""
         if self._sync_entities_lock.locked():
             return 200
@@ -143,7 +149,7 @@ class CloudGoogleConfig(AbstractConfig):
 
             # State reporting is reported as a property on entities.
             # So when we change it, we need to sync all entities.
-            await self.async_sync_entities()
+            await self.async_sync_entities(self.agent_user_id)
 
         # If entity prefs are the same or we have filter in config.yaml,
         # don't sync.
@@ -151,7 +157,7 @@ class CloudGoogleConfig(AbstractConfig):
             self._cur_entity_prefs is not prefs.google_entity_configs
             and self._config["filter"].empty_filter
         ):
-            self.async_schedule_google_sync()
+            self.async_schedule_google_sync(self.agent_user_id)
 
         if self.enabled and not self.is_local_sdk_active:
             self.async_enable_local_sdk()
@@ -167,4 +173,4 @@ class CloudGoogleConfig(AbstractConfig):
 
         # Schedule a sync if a change was made to an entity that Google knows about
         if self._should_expose_entity_id(entity_id):
-            await self.async_sync_entities()
+            await self.async_sync_entities(self.agent_user_id)
