@@ -1,4 +1,4 @@
-"""The tests for the geojson platform."""
+"""The tests for the NSW Rural Fire Service Feeds platform."""
 import datetime
 from unittest.mock import ANY
 
@@ -23,6 +23,7 @@ from homeassistant.components.nsw_rural_fire_service_feed.geo_location import (
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -30,7 +31,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_RADIUS,
     EVENT_HOMEASSISTANT_START,
-    ATTR_ICON,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.setup import async_setup_component
 from tests.common import assert_setup_component, async_fire_time_changed
@@ -113,8 +114,8 @@ async def test_setup(hass):
     mock_entry_3 = _generate_mock_feed_entry("3456", "Title 3", 25.5, (-31.2, 150.2))
     mock_entry_4 = _generate_mock_feed_entry("4567", "Title 4", 12.5, (-31.3, 150.3))
 
-    utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
+    utcnow = dt_util.utcnow()
     with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
         "aio_geojson_client.feed.GeoJsonFeed.update", new_callable=CoroutineMock
     ) as mock_feed_update:
@@ -216,6 +217,11 @@ async def test_setup(hass):
 
             all_states = hass.states.async_all()
             assert len(all_states) == 0
+
+            # Artificially trigger update.
+            hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+            # Collect events.
+            await hass.async_block_till_done()
 
 
 async def test_setup_with_custom_location(hass):

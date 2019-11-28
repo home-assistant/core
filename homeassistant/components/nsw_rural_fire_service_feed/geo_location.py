@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import ConfigType, aiohttp_client, config_validation as cv
@@ -83,7 +84,12 @@ async def async_setup_platform(
         """Start feed manager."""
         await manager.async_init()
 
+    async def stop_feed_manager(event):
+        """Stop feed manager."""
+        await manager.async_stop()
+
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_feed_manager)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_feed_manager)
     hass.async_create_task(manager.async_update())
 
 
@@ -114,7 +120,6 @@ class NswRuralFireServiceFeedEntityManager:
         self._async_add_entities = async_add_entities
         self._scan_interval = scan_interval
         self._track_time_remove_callback = None
-        self.listeners = []
 
     async def async_init(self):
         """Schedule initial and regular updates based on configured time interval."""
@@ -137,9 +142,6 @@ class NswRuralFireServiceFeedEntityManager:
 
     async def async_stop(self):
         """Stop this feed entity manager from refreshing."""
-        for unsub_dispatcher in self.listeners:
-            unsub_dispatcher()
-        self.listeners = []
         if self._track_time_remove_callback:
             self._track_time_remove_callback()
         _LOGGER.debug("Feed entity manager stopped")
