@@ -1,4 +1,4 @@
-onvif_ptz:
+ptz:
   description: If your ONVIF camera supports PTZ, you will be able to pan, tilt or zoom your camera.
   fields:
     entity_id:
@@ -13,7 +13,7 @@ onvif_ptz:
     zoom:
       description: 'Zoom. Allowed values: ZOOM_IN, ZOOM_OUT, NONE'
       example: 'NONE'
-onvif_reboot:
+reboot:
   description: If your ONVIF camera supports SystemReboot, you will be able to reboot it.
   fields:
     entity_id:
