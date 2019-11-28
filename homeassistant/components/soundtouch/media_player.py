@@ -6,7 +6,6 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
-    DOMAIN,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -29,12 +28,15 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    DOMAIN,
+    SERVICE_ADD_ZONE_SLAVE,
+    SERVICE_CREATE_ZONE,
+    SERVICE_PLAY_EVERYWHERE,
+    SERVICE_REMOVE_ZONE_SLAVE,
+)
 
-SERVICE_PLAY_EVERYWHERE = "soundtouch_play_everywhere"
-SERVICE_CREATE_ZONE = "soundtouch_create_zone"
-SERVICE_ADD_ZONE_SLAVE = "soundtouch_add_zone_slave"
-SERVICE_REMOVE_ZONE_SLAVE = "soundtouch_remove_zone_slave"
+_LOGGER = logging.getLogger(__name__)
 
 MAP_STATUS = {
     "PLAY_STATE": STATE_PLAYING,
