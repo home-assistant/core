@@ -45,13 +45,14 @@ ATTR_GROUP = [
 ]
 
 COLOR_GROUP = [
-    ATTR_COLOR_NAME,
-    ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    ATTR_KELVIN,
-    ATTR_PROFILE,
+    ATTR_COLOR_TEMP,
     ATTR_RGB_COLOR,
     ATTR_XY_COLOR,
+    # The following color attributes are deprecated
+    ATTR_PROFILE,
+    ATTR_COLOR_NAME,
+    ATTR_KELVIN,
 ]
 
 DEPRECATED_GROUP = [

@@ -227,6 +227,13 @@ def test_rounding_value(hass):
         == "12.8"
     )
 
+    assert (
+        template.Template(
+            '{{ states.sensor.temperature.state | round(1, "half") }}', hass
+        ).async_render()
+        == "13.0"
+    )
+
 
 def test_rounding_value_get_original_value_on_error(hass):
     """Test rounding value get original value on error."""

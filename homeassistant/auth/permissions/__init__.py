@@ -58,14 +58,11 @@ class PolicyPermissions(AbstractPermissions):
 
     def __eq__(self, other: Any) -> bool:
         """Equals check."""
-        # pylint: disable=protected-access
         return isinstance(other, PolicyPermissions) and other._policy == self._policy
 
 
 class _OwnerPermissions(AbstractPermissions):
     """Owner permissions."""
-
-    # pylint: disable=no-self-use
 
     def access_all_entities(self, key: str) -> bool:
         """Check if we have a certain access to all entities."""

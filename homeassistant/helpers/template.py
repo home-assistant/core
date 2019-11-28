@@ -142,7 +142,7 @@ class RenderInfo:
     def result(self) -> str:
         """Results of the template computation."""
         if self._exception is not None:
-            raise self._exception  # pylint: disable=raising-bad-type
+            raise self._exception
         return self._result
 
     def _freeze(self) -> None:
@@ -669,6 +669,8 @@ def forgiving_round(value, precision=0, method="common"):
             value = math.ceil(float(value) * multiplier) / multiplier
         elif method == "floor":
             value = math.floor(float(value) * multiplier) / multiplier
+        elif method == "half":
+            value = round(float(value) * 2) / 2
         else:
             # if method is common or something else, use common rounding
             value = round(float(value), precision)

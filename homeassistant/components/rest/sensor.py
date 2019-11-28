@@ -209,13 +209,18 @@ class RestSensor(Entity):
             if value:
                 try:
                     json_dict = json.loads(value)
+                    if isinstance(json_dict, list):
+                        json_dict = json_dict[0]
                     if isinstance(json_dict, dict):
                         attrs = {
                             k: json_dict[k] for k in self._json_attrs if k in json_dict
                         }
                         self._attributes = attrs
                     else:
-                        _LOGGER.warning("JSON result was not a dictionary")
+                        _LOGGER.warning(
+                            "JSON result was not a dictionary"
+                            " or list with 0th element a dictionary"
+                        )
                 except ValueError:
                     _LOGGER.warning("REST result could not be parsed as JSON")
                     _LOGGER.debug("Erroneous JSON: %s", value)
@@ -247,9 +252,11 @@ class RestData:
         timeout=DEFAULT_TIMEOUT,
     ):
         """Initialize the data object."""
-        self._request = requests.Request(
-            method, resource, headers=headers, auth=auth, data=data
-        ).prepare()
+        self._method = method
+        self._resource = resource
+        self._auth = auth
+        self._headers = headers
+        self._request_data = data
         self._verify_ssl = verify_ssl
         self._timeout = timeout
         self.data = None
@@ -257,24 +264,23 @@ class RestData:
 
     def set_url(self, url):
         """Set url."""
-        self._request.prepare_url(url, None)
+        self._resource = url
 
     def update(self):
         """Get the latest data from REST service with provided method."""
-        _LOGGER.debug("Updating from %s", self._request.url)
+        _LOGGER.debug("Updating from %s", self._resource)
         try:
-            with requests.Session() as sess:
-                sess.cert = self.client_certificate_path
-                response = sess.send(
-                    self._request, timeout=self._timeout, verify=self._verify_ssl
-                )
-
+            response = requests.request(
+                self._method,
+                self._resource,
+                headers=self._headers,
+                auth=self._auth,
+                data=self._request_data,
+                timeout=self._timeout,
+                verify=self._verify_ssl,
+                cert=self.client_certificate_path,
+            )
             self.data = response.text
         except requests.exceptions.RequestException as ex:
-            _LOGGER.error(
-                "Error fetching data: %s from %s failed with %s",
-                self._request,
-                self._request.url,
-                ex,
-            )
+            _LOGGER.error("Error fetching data: %s failed with %s", self._resource, ex)
             self.data = None

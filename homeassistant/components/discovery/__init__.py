@@ -10,6 +10,7 @@ import json
 from datetime import timedelta
 import logging
 
+from netdisco.discovery import NetworkDiscovery
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -129,7 +130,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Start a discovery service."""
-    from netdisco.discovery import NetworkDiscovery
 
     logger = logging.getLogger(__name__)
     netdisco = NetworkDiscovery()

@@ -68,7 +68,6 @@ def load_yaml(fname: str) -> JSON_TYPE:
         raise HomeAssistantError(exc)
 
 
-# pylint: disable=pointless-statement
 @overload
 def _add_reference(
     obj: Union[list, NodeListClass], loader: yaml.SafeLoader, node: yaml.nodes.Node
@@ -211,7 +210,7 @@ def _ordered_dict(loader: SafeLineLoader, node: yaml.nodes.MappingNode) -> Order
 
         if key in seen:
             fname = getattr(loader.stream, "name", "")
-            _LOGGER.error(
+            _LOGGER.warning(
                 'YAML file %s contains duplicate key "%s". ' "Check lines %d and %d.",
                 fname,
                 key,
