@@ -19,6 +19,12 @@ from zeep.exceptions import Fault
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS, DATA_FFMPEG
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.service import async_extract_entity_ids
+import homeassistant.util.dt as dt_util
+
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -48,16 +54,10 @@ from .const import (
     ONVIF_DATA,
     PTZ_NONE,
     SERVICE_PTZ,
-    SERVICE_REBOOT,
+	SERVICE_REBOOT,
     ZOOM_IN,
     ZOOM_OUT,
 )
-
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.service import async_extract_entity_ids
-import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -271,7 +271,7 @@ class ONVIFHassCamera(Camera):
 
     async def async_obtain_input_uri(self):
         """Set the input uri for the camera."""
-        _LOGGER.debug(
+        debug(
             "Connecting with ONVIF Camera: %s on port %s", self._host, self._port
         )
 
