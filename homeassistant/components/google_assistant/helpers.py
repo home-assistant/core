@@ -255,14 +255,14 @@ class GoogleConfigStore:
         """Add an agent user id to store."""
         if agent_user_id not in self._data[STORE_AGENT_USER_IDS]:
             self._data[STORE_AGENT_USER_IDS][agent_user_id] = {}
-            self._store.async_delay_save(lambda: self._data)
+            self._store.async_delay_save(lambda: self._data, 1.0)
 
     @callback
     def pop_agent_user_id(self, agent_user_id):
         """Remove agent user id from store."""
         if agent_user_id in self._data[STORE_AGENT_USER_IDS]:
             self._data[STORE_AGENT_USER_IDS].pop(agent_user_id, None)
-            self._store.async_delay_save(lambda: self._data)
+            self._store.async_delay_save(lambda: self._data, 1.0)
 
     async def async_load(self):
         """Store current configuration to disk."""

@@ -147,20 +147,29 @@ async def test_agent_user_id_storage(hass, hass_storage):
     }
 
     store = helpers.GoogleConfigStore(hass)
-
     await store.async_load()
-    assert store.agent_user_ids == {"agent_1": {}}
-
-    store.add_agent_user_id("agent_2")
-
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
-    await hass.async_block_till_done()
 
     assert hass_storage["google_assistant"] == {
         "version": 1,
         "key": "google_assistant",
-        "data": {"agent_user_ids": {"agent_1": {}, "agent_2": {}}},
+        "data": {"agent_user_ids": {"agent_1": {}}},
     }
+
+    async def _check_after_delay(data):
+        async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=2))
+        await hass.async_block_till_done()
+
+        assert hass_storage["google_assistant"] == {
+            "version": 1,
+            "key": "google_assistant",
+            "data": data,
+        }
+
+    store.add_agent_user_id("agent_2")
+    await _check_after_delay({"agent_user_ids": {"agent_1": {}, "agent_2": {}}})
+
+    store.pop_agent_user_id("agent_1")
+    await _check_after_delay({"agent_user_ids": {"agent_2": {}}})
 
 
 async def test_agent_user_id_connect():
