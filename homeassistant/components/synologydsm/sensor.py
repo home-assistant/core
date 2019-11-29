@@ -1,24 +1,25 @@
 """Support for Synology NAS Sensors."""
-import logging
 from datetime import timedelta
+import logging
 
+from SynologyDSM import SynologyDSM
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME,
+    ATTR_ATTRIBUTION,
+    CONF_DISKS,
     CONF_HOST,
-    CONF_USERNAME,
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
-    ATTR_ATTRIBUTION,
-    TEMP_CELSIUS,
-    CONF_MONITORED_CONDITIONS,
+    CONF_USERNAME,
     EVENT_HOMEASSISTANT_START,
-    CONF_DISKS,
+    TEMP_CELSIUS,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -151,7 +152,6 @@ class SynoApi:
 
     def __init__(self, host, port, username, password, temp_unit, use_ssl):
         """Initialize the API wrapper class."""
-        from SynologyDSM import SynologyDSM
 
         self.temp_unit = temp_unit
 
