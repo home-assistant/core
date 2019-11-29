@@ -3,7 +3,7 @@ import datetime
 from unittest.mock import ANY
 
 from aio_geojson_nsw_rfs_incidents import NswRuralFireServiceIncidentsFeed
-from asynctest.mock import patch, MagicMock, call, CoroutineMock
+from asynctest.mock import patch, MagicMock, call
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
@@ -117,7 +117,7 @@ async def test_setup(hass):
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
     with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "aio_geojson_client.feed.GeoJsonFeed.update", new_callable=CoroutineMock
+        "aio_geojson_client.feed.GeoJsonFeed.update"
     ) as mock_feed_update:
         mock_feed_update.return_value = (
             "OK",
@@ -233,7 +233,7 @@ async def test_setup_with_custom_location(hass):
         "aio_geojson_nsw_rfs_incidents.feed_manager.NswRuralFireServiceIncidentsFeed",
         wraps=NswRuralFireServiceIncidentsFeed,
     ) as mock_feed_manager, patch(
-        "aio_geojson_client.feed.GeoJsonFeed.update", new_callable=CoroutineMock
+        "aio_geojson_client.feed.GeoJsonFeed.update"
     ) as mock_feed_update:
         mock_feed_update.return_value = "OK", [mock_entry_1]
 
