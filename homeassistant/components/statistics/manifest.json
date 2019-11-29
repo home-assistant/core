@@ -3,7 +3,9 @@
   "name": "Statistics",
   "documentation": "https://www.home-assistant.io/integrations/statistics",
   "requirements": [],
-  "dependencies": [],
+  "dependencies": [
+      "recorder"
+  ],
   "codeowners": [
     "@fabaff"
   ]
