@@ -270,10 +270,6 @@ class GoogleConfigStore:
         if data:
             self._data = data
 
-    async def async_save(self):
-        """Save current configuration to disk."""
-        await self._store.async_save(self._data)
-
 
 class RequestData:
     """Hold data associated with a particular request."""
