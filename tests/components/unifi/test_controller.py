@@ -373,7 +373,7 @@ async def test_get_controller_controller_unavailable(hass):
 
 
 async def test_get_controller_unknown_error(hass):
-    """Check that get_controller can handle unkown errors."""
+    """Check that get_controller can handle unknown errors."""
     result = None
     with patch("aiounifi.Controller.login", side_effect=aiounifi.AiounifiException):
         try:

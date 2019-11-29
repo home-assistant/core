@@ -16,7 +16,7 @@ def create_security_system_service():
     targ_state.value = 0
 
     # According to the spec, a battery-level characteristic is normally
-    # part of a seperate service. However as the code was written (which
+    # part of a separate service. However as the code was written (which
     # predates this test) the battery level would have to be part of the lock
     # service as it is here.
     targ_state = service.add_characteristic("battery-level")

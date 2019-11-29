@@ -45,7 +45,7 @@ async def async_setup_entry(
 
 
 class WithingsAttribute:
-    """Base class for modeling withing data."""
+    """Base class for modeling within data."""
 
     def __init__(
         self,

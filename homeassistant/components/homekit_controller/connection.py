@@ -325,7 +325,7 @@ class HKDevice:
             key = (row["aid"], row["iid"])
 
             # If the key was returned by put_characteristics() then the
-            # change didnt work
+            # change didn't work
             if key in results:
                 continue
 

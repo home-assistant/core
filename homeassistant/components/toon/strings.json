@@ -26,7 +26,7 @@
     "abort": {
       "client_id": "The client ID from the configuration is invalid.",
       "client_secret": "The client secret from the configuration is invalid.",
-      "unknown_auth_fail": "Unexpected error occured, while authenticating.",
+      "unknown_auth_fail": "Unexpected error occurred, while authenticating.",
       "no_agreements": "This account has no Toon displays.",
       "no_app": "You need to configure Toon before being able to authenticate with it. [Please read the instructions](https://www.home-assistant.io/components/toon/)."
     }

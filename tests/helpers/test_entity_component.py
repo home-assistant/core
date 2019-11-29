@@ -341,7 +341,7 @@ async def test_setup_entry(hass):
 
 
 async def test_setup_entry_platform_not_exist(hass):
-    """Test setup entry fails if platform doesnt exist."""
+    """Test setup entry fails if platform doesn't exist."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     entry = MockConfigEntry(domain="non_existing")
 
