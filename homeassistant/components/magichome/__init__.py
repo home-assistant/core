@@ -13,7 +13,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 
 
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_COMPANY = "company"
