@@ -134,8 +134,11 @@ class ECSensor(Entity):
             )
         elif self.sensor_type == "tendency":
             self._state = str(value).capitalize()
-        else:
+        elif value is not None and len(value) > 255:
             self._state = value[:255]
+            _LOGGER.info("Value for %s truncated to 255 characters", self._unique_id)
+        else:
+            self._state = value
 
         if sensor_data.get("unit") == "C" or self.sensor_type in [
             "wind_chill",
