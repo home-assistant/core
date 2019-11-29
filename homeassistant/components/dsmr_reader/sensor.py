@@ -1,6 +1,4 @@
 """Support for DSMR Reader through MQTT."""
-import logging
-
 from homeassistant.components import mqtt
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
