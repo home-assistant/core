@@ -79,7 +79,7 @@ class HueBridge:
         )
 
         self.parallel_updates_semaphore = asyncio.Semaphore(
-            3 if self.api.config.modelid == "BSB001" else 10, loop=self.hass.loop
+            3 if self.api.config.modelid == "BSB001" else 10
         )
 
         self.authorized = True
