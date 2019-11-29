@@ -32,10 +32,10 @@ class DSMRSensor(Entity):
         self._entity_id = slugify(topic.replace("/", "_"))
         self._topic = topic
 
-        self._name = self._definition["name"]
-        self._unit_of_measurement = self._definition.get("unit", None)
-        self._icon = self._definition.get("icon", None)
-        self._transform = self._definition.get("transform", None)
+        self._name = self._definition.get("name")
+        self._unit_of_measurement = self._definition.get("unit")
+        self._icon = self._definition.get("icon")
+        self._transform = self._definition.get("transform")
         self._state = None
 
     async def async_added_to_hass(self):
