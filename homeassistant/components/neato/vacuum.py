@@ -313,13 +313,12 @@ class NeatoConnectedVacuum(StateVacuumDevice):
     @property
     def device_info(self):
         """Device info for neato robot."""
-        return {
-            "identifiers": {(NEATO_DOMAIN, self._robot_serial)},
-            "name": self._name,
-            "manufacturer": self._robot_stats["data"]["mfg_name"],
-            "model": self._robot_stats["data"]["modelName"],
-            "sw_version": self._state["meta"]["firmware"],
-        }
+        info = {"identifiers": {(NEATO_DOMAIN, self._robot_serial)}, "name": self._name}
+        if self._robot_stats:
+            info["manufacturer"] = self._robot_stats["data"]["mfg_name"]
+            info["model"] = self._robot_stats["data"]["modelName"]
+        if self._state:
+            info["sw_version"] = self._state["meta"]["firmware"]
 
     def start(self):
         """Start cleaning or resume cleaning."""
