@@ -67,7 +67,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(
     hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ):
-    """Set up the GeoNet NZ Quakes Feed platform."""
+    """Set up the NSW Rural Fire Service Feed platform."""
     scan_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     coordinates = (
         config.get(CONF_LATITUDE, hass.config.latitude),
