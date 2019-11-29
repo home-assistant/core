@@ -3,6 +3,7 @@ import asyncio
 
 import aiohue
 import async_timeout
+import slugify as unicode_slug
 import voluptuous as vol
 
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -173,24 +174,11 @@ async def get_bridge(hass, host, username=None):
         with async_timeout.timeout(10):
             # Create username if we don't have one
             if not username:
-
-                def cyrillic_to_latin(string):
-                    symbols = (
-                        "абвгдеёзийклмнопрстуфхъыьэАБВГДЕЁЗИЙКЛМНОПРСТУФХЪЫЬЭ",
-                        "abvgdeezijklmnoprstufh'y'eABVGDEEZIJKLMNOPRSTUFH'Y'E",
-                    )
-                    trans_table = {ord(a): ord(b) for a, b in zip(*symbols)}
-                    return string.translate(trans_table)
-
-                def remove_non_ascii(string):
-                    return "".join(i for i in string if ord(i) < 128)
-
-                devicetype = remove_non_ascii(
-                    cyrillic_to_latin(f"home-assistant#{hass.config.location_name}")
+                device_name = unicode_slug.slugify(
+                    hass.config.location_name, max_length=19
                 )
-                await bridge.create_user(
-                    devicetype[:40] if len(devicetype) > 40 else devicetype
-                )
+                await bridge.create_user(f"home-assistant#{device_name}")
+
             # Initialize bridge (and validate our username)
             await bridge.initialize()
 
