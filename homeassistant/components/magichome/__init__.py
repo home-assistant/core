@@ -4,12 +4,14 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_PLATFORM
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.dispatcher import dispatcher_send, async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
+
+from magichome import MagicHomeApi
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,8 +51,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up MagicHome Component."""
-    from magichome import MagicHomeApi
-
     magichome = MagicHomeApi()
     username = config[DOMAIN][CONF_USERNAME]
     password = config[DOMAIN][CONF_PASSWORD]
