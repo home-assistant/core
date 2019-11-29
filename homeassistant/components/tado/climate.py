@@ -103,6 +103,7 @@ def create_climate_device(tado, hass, zone, name, zone_id):
 
     unit = TEMP_CELSIUS
     ac_device = capabilities["type"] == "AIR_CONDITIONING"
+    hot_water_device = capabilities["type"] == "HOT_WATER"
     ac_support_heat = False
 
     if ac_device:
@@ -134,6 +135,7 @@ def create_climate_device(tado, hass, zone, name, zone_id):
         hass.config.units.temperature(max_temp, unit),
         step,
         ac_device,
+        hot_water_device,
         ac_support_heat,
     )
 
@@ -157,6 +159,7 @@ class TadoClimate(ClimateDevice):
         max_temp,
         step,
         ac_device,
+        hot_water_device,
         ac_support_heat,
         tolerance=0.3,
     ):
@@ -168,6 +171,7 @@ class TadoClimate(ClimateDevice):
         self.zone_id = zone_id
 
         self._ac_device = ac_device
+        self._hot_water_device = hot_water_device
         self._ac_support_heat = ac_support_heat
         self._cooling = False
 
@@ -518,6 +522,21 @@ class TadoClimate(ClimateDevice):
                 None,
                 "AIR_CONDITIONING",
                 "COOL",
+            )
+        elif self._hot_water_device:
+            _LOGGER.info(
+                "Switching mytado.com to %s mode for zone %s (%d). Temp (%s) - HOT_WATER",
+                self._current_operation,
+                self.zone_name,
+                self.zone_id,
+                self._target_temp,
+            )
+            self._store.set_zone_overlay(
+                self.zone_id,
+                self._current_operation,
+                self._target_temp,
+                None,
+                "HOT_WATER",
             )
         else:
             _LOGGER.info(
