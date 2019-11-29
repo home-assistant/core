@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from opendata_transport import OpendataTransport, exceptions
+from opendata_transport import OpendataTransport
 from opendata_transport.exceptions import OpendataTransportError
 import voluptuous as vol
 
@@ -57,7 +57,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     try:
         await opendata.async_get_data()
-    except exceptions.OpendataTransportError:
+    except OpendataTransportError:
         _LOGGER.error(
             "Check at http://transport.opendata.ch/examples/stationboard.html "
             "if your station names are valid"
