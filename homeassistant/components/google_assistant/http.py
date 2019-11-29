@@ -82,11 +82,6 @@ class GoogleConfig(AbstractConfig):
         return True
 
     @property
-    def agent_user_id(self):
-        """Return Agent User Id to use for query responses."""
-        return None
-
-    @property
     def entity_config(self):
         """Return entity config."""
         return self._config.get(CONF_ENTITY_CONFIG) or {}

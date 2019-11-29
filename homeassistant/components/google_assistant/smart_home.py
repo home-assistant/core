@@ -79,7 +79,7 @@ async def async_devices_sync(hass, data, payload):
         EVENT_SYNC_RECEIVED, {"request_id": data.request_id}, context=data.context
     )
 
-    agent_user_id = data.config.agent_user_id or data.context.user_id
+    agent_user_id = data.context.user_id
 
     devices = await asyncio.gather(
         *(
@@ -198,9 +198,7 @@ async def async_devices_disconnect(hass, data: RequestData, payload):
 
     https://developers.google.com/assistant/smarthome/develop/process-intents#DISCONNECT
     """
-    await data.config.async_disconnect_agent_user(
-        data.config.agent_user_id or data.context.user_id
-    )
+    await data.config.async_disconnect_agent_user(data.context.user_id)
     return None
 
 
@@ -212,7 +210,7 @@ async def async_devices_identify(hass, data: RequestData, payload):
     """
     return {
         "device": {
-            "id": data.config.agent_user_id,
+            "id": data.context.user_id,
             "isLocalOnly": True,
             "isProxy": True,
             "deviceInfo": {

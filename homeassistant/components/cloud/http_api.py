@@ -175,7 +175,7 @@ class GoogleActionsSyncView(HomeAssistantView):
         hass = request.app["hass"]
         cloud: Cloud = hass.data[DOMAIN]
         gconf = await cloud.client.get_google_config()
-        status = await gconf.async_sync_entities(gconf.agent_user_id)
+        status = await gconf.async_sync_entities(gconf.cloud_user)
         return self.json({}, status_code=status)
 
 

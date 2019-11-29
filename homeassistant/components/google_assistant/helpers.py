@@ -58,11 +58,6 @@ class AbstractConfig:
         return False
 
     @property
-    def agent_user_id(self):
-        """Return Agent User Id to use for query responses."""
-        return None
-
-    @property
     def entity_config(self):
         """Return entity config."""
         return {}
