@@ -465,7 +465,6 @@ class HueOneLightChangeView(HomeAssistantView):
         ]
 
         for (key, val) in (
-            # (STATE_ON, HUE_API_STATE_ON),
             (STATE_BRIGHTNESS, HUE_API_STATE_BRI),
             (STATE_HUE, HUE_API_STATE_HUE),
             (STATE_SATURATION, HUE_API_STATE_SAT),
