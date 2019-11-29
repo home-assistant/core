@@ -1,9 +1,8 @@
 """Support for MagicHome Smart devices."""
+from magichome import MagicHomeApi
 from datetime import timedelta
 import logging
 import voluptuous as vol
-
-from magichome import MagicHomeApi
 
 from homeassistant.core import callback
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_PLATFORM
