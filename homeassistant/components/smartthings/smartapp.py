@@ -234,7 +234,7 @@ async def setup_smartapp_endpoint(hass: HomeAssistantType):
         and not hass.config_entries.async_entries(DOMAIN)
     ):
         cloudhook_url = await hass.components.cloud.async_create_cloudhook(
-            hass, config[CONF_WEBHOOK_ID]
+            config[CONF_WEBHOOK_ID]
         )
         config[CONF_CLOUDHOOK_URL] = cloudhook_url
         await store.async_save(config)
@@ -287,7 +287,7 @@ async def unload_smartapp_endpoint(hass: HomeAssistantType):
         and hass.components.cloud.async_is_logged_in()
     ):
         await hass.components.cloud.async_delete_cloudhook(
-            hass, hass.data[DOMAIN][CONF_WEBHOOK_ID]
+            hass.data[DOMAIN][CONF_WEBHOOK_ID]
         )
         # Remove cloudhook from storage
         store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
