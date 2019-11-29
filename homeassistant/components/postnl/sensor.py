@@ -36,7 +36,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the PostNL sensor platform."""
-    from postnl_api import PostNL_API, UnauthorizedException
+    from postnl_api import postnl_api, PostNL_API, UnauthorizedException
+    
+    postnl_api.AUTHENTICATE_URL = "https://jouw.postnl.nl/web/token"
+    postnl_api.DEFAULT_HEADER = {"Api-Version":"4.18", "User-Agent": "PostNL/iOS/4.32.0"}
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
