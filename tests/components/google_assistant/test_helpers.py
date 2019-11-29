@@ -1,12 +1,18 @@
 """Test Google Assistant helpers."""
 from asynctest.mock import Mock, patch, call
+from datetime import timedelta
 import pytest
 from homeassistant.setup import async_setup_component
 from homeassistant.components.google_assistant import helpers
 from homeassistant.components.google_assistant.const import EVENT_COMMAND_RECEIVED
+from homeassistant.util import dt
 from . import MockConfig
 
-from tests.common import async_capture_events, async_mock_service
+from tests.common import (
+    async_capture_events,
+    async_mock_service,
+    async_fire_time_changed,
+)
 
 
 async def test_google_entity_sync_serialize_with_local_sdk(hass):
@@ -131,21 +137,30 @@ async def test_config_local_sdk_if_disabled(hass, hass_client):
     assert await resp.read() == b""
 
 
-async def test_agent_user_id_storage(hass):
+async def test_agent_user_id_storage(hass, hass_storage):
     """Test a disconnect message."""
-    with patch("homeassistant.helpers.storage.Store.async_load") as mock_load, patch(
-        "homeassistant.helpers.storage.Store.async_delay_save"
-    ) as mock_save:
-        store = helpers.GoogleConfigStore(hass)
 
-        mock_load.return_value = {"agent_user_ids": {"agent_1": {}}}
-        await store.async_load()
-        assert store.agent_user_ids == {"agent_1": {}}
+    hass_storage["google_assistant"] = {
+        "version": 1,
+        "key": "google_assistant",
+        "data": {"agent_user_ids": {"agent_1": {}}},
+    }
 
-        store.add_agent_user_id("agent_2")
-        assert mock_save.call_args == call(
-            {"agent_user_ids": {"agent_1": {}, "agent_2": {}}}
-        )
+    store = helpers.GoogleConfigStore(hass)
+
+    await store.async_load()
+    assert store.agent_user_ids == {"agent_1": {}}
+
+    store.add_agent_user_id("agent_2")
+
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    assert hass_storage["google_assistant"] == {
+        "version": 1,
+        "key": "google_assistant",
+        "data": {"agent_user_ids": {"agent_1": {}, "agent_2": {}}},
+    }
 
 
 async def test_agent_user_id_connect():
