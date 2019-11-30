@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
+from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.service import async_extract_entity_ids
 from homeassistant.loader import bind_hass, async_get_integration
 from homeassistant.util import slugify
@@ -196,7 +196,7 @@ class EntityComponent:
     def async_register_entity_service(self, name, schema, func, required_features=None):
         """Register an entity service."""
         if isinstance(schema, dict):
-            schema = ENTITY_SERVICE_SCHEMA.extend(schema)
+            schema = make_entity_service_schema(schema)
 
         async def handle_service(call):
             """Handle the service."""
