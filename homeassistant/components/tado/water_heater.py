@@ -11,12 +11,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
 )
-from homeassistant.components.tado import (
-    DOMAIN,
-    SIGNAL_TADO_UPDATE_RECEIVED,
-    TYPE_HOT_WATER,
-)
-from homeassistant.components.tado.climate import CONST_OVERLAY_MANUAL
 from homeassistant.components.water_heater import (
     SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE,
@@ -25,11 +19,14 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+from . import DOMAIN, SIGNAL_TADO_UPDATE_RECEIVED, TYPE_HOT_WATER
+
 _LOGGER = logging.getLogger(__name__)
 
 CONST_MODE_SMART_SCHEDULE = "SMART_SCHEDULE"
 CONST_MODE_OFF = "OFF"
 CONST_OVERLAY_TADO_MODE = "TADO_MODE"
+CONST_OVERLAY_MANUAL = "MANUAL"
 
 WATER_HEATER_MAP_TADO = {
     "MANUAL": HVAC_MODE_HEAT,

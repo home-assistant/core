@@ -22,14 +22,11 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.components.tado import (
-    DOMAIN,
-    SIGNAL_TADO_UPDATE_RECEIVED,
-    TYPE_AIR_CONDITIONING,
-)
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.temperature import convert as convert_temperature
+
+from . import DOMAIN, SIGNAL_TADO_UPDATE_RECEIVED, TYPE_AIR_CONDITIONING
 
 _LOGGER = logging.getLogger(__name__)
 
