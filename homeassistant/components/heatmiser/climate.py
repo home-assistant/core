@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     heatmiser_v3_thermostat = heatmiser.HeatmiserThermostat
 
-    host = config.get(CONF_HOST)
+    host = config[CONF_HOST]
     port = config.get(CONF_PORT)
 
     thermostats = config[CONF_THERMOSTATS]
