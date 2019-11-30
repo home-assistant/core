@@ -158,9 +158,11 @@ class MiFloraSensor(Entity):
             data = self.poller.parameter_value(self.parameter)
         except OSError as ioerr:
             _LOGGER.info("Polling error %s", ioerr)
+            self._state = None
             return
         except BluetoothBackendException as bterror:
             _LOGGER.info("Polling error %s", bterror)
+            self._state = None
             return
 
         if data is not None:
