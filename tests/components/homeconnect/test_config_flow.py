@@ -52,5 +52,3 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.data["type"] == "oauth2"
