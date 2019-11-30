@@ -50,7 +50,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         switches.append(AtenSwitch(dev, outlet.id, outlet.name))
 
     async_add_entities(switches)
-    return True
 
 
 class AtenSwitch(SwitchDevice):
