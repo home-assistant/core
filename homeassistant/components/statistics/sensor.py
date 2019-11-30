@@ -5,7 +5,6 @@ import statistics
 
 import voluptuous as vol
 
-from homeassistant.components.recorder.models import States
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -276,6 +275,8 @@ class StatisticsSensor(Entity):
         If MaxAge is provided then query will restrict to entries younger then
         current datetime - MaxAge.
         """
+        # pylint: disable=import-outside-toplevel
+        from homeassistant.components.recorder.models import States
 
         _LOGGER.debug("%s: initializing values from the database", self.entity_id)
 
