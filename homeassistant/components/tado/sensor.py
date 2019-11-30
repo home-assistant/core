@@ -1,129 +1,113 @@
 """Support for Tado sensors for each zone."""
 import logging
 
-from homeassistant.const import ATTR_ID, ATTR_NAME, TEMP_CELSIUS
+from homeassistant.components.tado import (
+    DOMAIN,
+    SIGNAL_TADO_UPDATE_RECEIVED,
+    TYPE_AIR_CONDITIONING,
+    TYPE_HEATING,
+    TYPE_HOT_WATER,
+)
+from homeassistant.const import TEMP_CELSIUS
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-
-from . import DATA_TADO
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DATA_ID = "data_id"
-ATTR_DEVICE = "device"
-ATTR_ZONE = "zone"
+ZONE_SENSORS = {
+    TYPE_HEATING: [
+        "temperature",
+        "humidity",
+        "power",
+        "link",
+        "heating",
+        "tado mode",
+        "overlay",
+        "early start",
+    ],
+    TYPE_AIR_CONDITIONING: [
+        "temperature",
+        "humidity",
+        "power",
+        "link",
+        "ac",
+        "tado mode",
+        "overlay",
+    ],
+    TYPE_HOT_WATER: ["power", "link", "tado mode", "overlay"],
+}
 
-CLIMATE_HEAT_SENSOR_TYPES = [
-    "temperature",
-    "humidity",
-    "power",
-    "link",
-    "heating",
-    "tado mode",
-    "overlay",
-    "early start",
-]
-
-CLIMATE_COOL_SENSOR_TYPES = [
-    "temperature",
-    "humidity",
-    "power",
-    "link",
-    "ac",
-    "tado mode",
-    "overlay",
-]
-
-HOT_WATER_SENSOR_TYPES = ["power", "link", "tado mode", "overlay"]
+DEVICE_SENSORS = ["tado bridge status"]
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
-    tado = hass.data[DATA_TADO]
+    tado = hass.data[DOMAIN]
 
     try:
         zones = tado.get_zones()
     except RuntimeError:
-        _LOGGER.error("Unable to get zone info from mytado")
+        _LOGGER.error("Unable to get zone info")
         return
 
+    # Create zone sensors
     sensor_items = []
     for zone in zones:
-        if zone["type"] == "HEATING":
-            for variable in CLIMATE_HEAT_SENSOR_TYPES:
-                sensor_items.append(
-                    create_zone_sensor(tado, zone, zone["name"], zone["id"], variable)
-                )
-        elif zone["type"] == "HOT_WATER":
-            for variable in HOT_WATER_SENSOR_TYPES:
-                sensor_items.append(
-                    create_zone_sensor(tado, zone, zone["name"], zone["id"], variable)
-                )
-        elif zone["type"] == "AIR_CONDITIONING":
-            for variable in CLIMATE_COOL_SENSOR_TYPES:
-                sensor_items.append(
-                    create_zone_sensor(tado, zone, zone["name"], zone["id"], variable)
-                )
-
-    me_data = tado.get_me()
-    sensor_items.append(
-        create_device_sensor(
-            tado,
-            me_data,
-            me_data["homes"][0]["name"],
-            me_data["homes"][0]["id"],
-            "tado bridge status",
+        sensor_items.extend(
+            [
+                create_zone_sensor(tado, zone["name"], zone["id"], variable)
+                for variable in ZONE_SENSORS.get(zone["type"])
+            ]
         )
+
+    # Create device sensors
+    home = tado.get_me()["homes"][0]
+    sensor_items.extend(
+        [
+            create_device_sensor(tado, home["name"], home["id"], variable,)
+            for variable in DEVICE_SENSORS
+        ]
     )
 
-    if sensor_items:
-        add_entities(sensor_items, True)
+    add_entities(sensor_items, True)
 
 
-def create_zone_sensor(tado, zone, name, zone_id, variable):
+def create_zone_sensor(tado, name, zone_id, variable):
     """Create a zone sensor."""
-    data_id = f"zone {name} {zone_id}"
-
-    tado.add_sensor(
-        data_id,
-        {ATTR_ZONE: zone, ATTR_NAME: name, ATTR_ID: zone_id, ATTR_DATA_ID: data_id},
-    )
-
-    return TadoSensor(tado, name, zone_id, variable, data_id)
+    return TadoSensor(tado, name, "zone", zone_id, variable)
 
 
-def create_device_sensor(tado, device, name, device_id, variable):
+def create_device_sensor(tado, name, device_id, variable):
     """Create a device sensor."""
-    data_id = f"device {name} {device_id}"
-
-    tado.add_sensor(
-        data_id,
-        {
-            ATTR_DEVICE: device,
-            ATTR_NAME: name,
-            ATTR_ID: device_id,
-            ATTR_DATA_ID: data_id,
-        },
-    )
-
-    return TadoSensor(tado, name, device_id, variable, data_id)
+    return TadoSensor(tado, name, "device", device_id, variable)
 
 
 class TadoSensor(Entity):
     """Representation of a tado Sensor."""
 
-    def __init__(self, store, zone_name, zone_id, zone_variable, data_id):
+    def __init__(self, tado, zone_name, zone_type, zone_id, zone_variable):
         """Initialize of the Tado Sensor."""
-        self._store = store
+        self._tado = tado
 
         self.zone_name = zone_name
         self.zone_id = zone_id
         self.zone_variable = zone_variable
+        self.zone_type = zone_type
 
         self._unique_id = f"{zone_variable} {zone_id}"
-        self._data_id = data_id
 
         self._state = None
         self._state_attributes = None
+
+    async def async_added_to_hass(self):
+        """Register for sensor updates."""
+        async_dispatcher_connect(
+            self.hass,
+            SIGNAL_TADO_UPDATE_RECEIVED.format(self.zone_id),
+            self._handle_update,
+        )
+        self._tado.add_sensor(self.zone_id, self.zone_type)
+        await self.hass.async_add_executor_job(self._tado.update)
 
     @property
     def unique_id(self):
@@ -165,16 +149,13 @@ class TadoSensor(Entity):
         if self.zone_variable == "humidity":
             return "mdi:water-percent"
 
-    def update(self):
-        """Update method called when should_poll is true."""
-        self._store.update()
+    @property
+    def should_poll(self) -> bool:
+        """Do not poll."""
+        return False
 
-        data = self._store.get_data(self._data_id)
-
-        if data is None:
-            _LOGGER.debug("Received no data for zone %s", self.zone_name)
-            return
-
+    def _handle_update(self, data):
+        """Handle update callbacks."""
         unit = TEMP_CELSIUS
 
         if self.zone_variable == "temperature":
@@ -259,3 +240,5 @@ class TadoSensor(Entity):
                 self._state = True
             else:
                 self._state = False
+
+        self.schedule_update_ha_state()
