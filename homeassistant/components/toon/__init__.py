@@ -6,7 +6,7 @@ from functools import partial
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_TOKEN, CONF_SCAN_INTERVAL
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -15,8 +15,6 @@ from homeassistant.helpers.dispatcher import dispatcher_send, async_dispatcher_c
 
 from . import config_flow  # noqa: F401
 from .const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
     CONF_DISPLAY,
     CONF_TENANT,
     DATA_TOON_CLIENT,
@@ -34,8 +32,6 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Required(CONF_CLIENT_ID): cv.string,
-                vol.Required(CONF_CLIENT_SECRET): cv.string,
                 vol.Required(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): vol.All(cv.time_period, cv.positive_timedelta),
@@ -70,10 +66,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigType) -> bool:
     toon = await hass.async_add_executor_job(
         partial(
             Toon,
-            entry.data[CONF_USERNAME],
-            entry.data[CONF_PASSWORD],
-            conf[CONF_CLIENT_ID],
-            conf[CONF_CLIENT_SECRET],
+            entry.data[CONF_TOKEN],
             tenant_id=entry.data[CONF_TENANT],
             display_common_name=entry.data[CONF_DISPLAY],
         )

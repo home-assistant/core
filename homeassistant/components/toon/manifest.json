@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/toon",
   "requirements": [
-    "toonapilib==3.2.4"
+    "toonapilib==4.1.0"
   ],
   "dependencies": [],
   "codeowners": [

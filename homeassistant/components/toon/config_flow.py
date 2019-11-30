@@ -6,12 +6,10 @@ from functools import partial
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import callback
 
 from .const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
     CONF_DISPLAY,
     CONF_TENANT,
     DATA_TOON_CONFIG,
@@ -39,8 +37,7 @@ class ToonFlowHandler(config_entries.ConfigFlow):
     def __init__(self):
         """Initialize the Toon flow."""
         self.displays = None
-        self.username = None
-        self.password = None
+        self.token = None
         self.tenant = None
 
     async def async_step_user(self, user_input=None):
@@ -55,8 +52,7 @@ class ToonFlowHandler(config_entries.ConfigFlow):
     async def _show_authenticaticate_form(self, errors=None):
         """Show the authentication form to the user."""
         fields = OrderedDict()
-        fields[vol.Required(CONF_USERNAME)] = str
-        fields[vol.Required(CONF_PASSWORD)] = str
+        fields[vol.Required(CONF_TOKEN)] = str
         fields[vol.Optional(CONF_TENANT)] = vol.In(["eneco", "electrabel", "viesgo"])
 
         return self.async_show_form(
@@ -69,9 +65,8 @@ class ToonFlowHandler(config_entries.ConfigFlow):
         """Attempt to authenticate with the Toon account."""
         from toonapilib import Toon
         from toonapilib.toonapilibexceptions import (
-            InvalidConsumerSecret,
-            InvalidConsumerKey,
-            InvalidCredentials,
+            InvalidAuthenticationToken,
+            InvalidDisplayName,
             AgreementsRetrievalError,
         )
 
@@ -83,24 +78,18 @@ class ToonFlowHandler(config_entries.ConfigFlow):
             toon = await self.hass.async_add_executor_job(
                 partial(
                     Toon,
-                    user_input[CONF_USERNAME],
-                    user_input[CONF_PASSWORD],
-                    app[CONF_CLIENT_ID],
-                    app[CONF_CLIENT_SECRET],
+                    user_input[CONF_TOKEN],
                     tenant_id=user_input[CONF_TENANT],
                 )
             )
 
             displays = toon.display_names
 
-        except InvalidConsumerKey:
-            return self.async_abort(reason="client_id")
+        except InvalidAuthenticationToken:
+            return await self._show_authenticaticate_form({"base": "token"})
 
-        except InvalidConsumerSecret:
-            return self.async_abort(reason="client_secret")
-
-        except InvalidCredentials:
-            return await self._show_authenticaticate_form({"base": "credentials"})
+        except InvalidDisplayName:
+            return await self._show_display_form()
 
         except AgreementsRetrievalError:
             return self.async_abort(reason="no_agreements")
@@ -110,8 +99,7 @@ class ToonFlowHandler(config_entries.ConfigFlow):
             return self.async_abort(reason="unknown_auth_fail")
 
         self.displays = displays
-        self.username = user_input[CONF_USERNAME]
-        self.password = user_input[CONF_PASSWORD]
+        self.token = user_input[CONF_TOKEN]
         self.tenant = user_input[CONF_TENANT]
 
         return await self.async_step_display()
@@ -145,10 +133,7 @@ class ToonFlowHandler(config_entries.ConfigFlow):
             await self.hass.async_add_executor_job(
                 partial(
                     Toon,
-                    self.username,
-                    self.password,
-                    app[CONF_CLIENT_ID],
-                    app[CONF_CLIENT_SECRET],
+                    self.token,
                     tenant_id=self.tenant,
                     display_common_name=user_input[CONF_DISPLAY],
                 )
@@ -161,8 +146,7 @@ class ToonFlowHandler(config_entries.ConfigFlow):
         return self.async_create_entry(
             title=user_input[CONF_DISPLAY],
             data={
-                CONF_USERNAME: self.username,
-                CONF_PASSWORD: self.password,
+                CONF_TOKEN: self.token,
                 CONF_TENANT: self.tenant,
                 CONF_DISPLAY: user_input[CONF_DISPLAY],
             },
