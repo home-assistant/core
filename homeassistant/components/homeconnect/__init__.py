@@ -73,9 +73,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass, entry
     )
 
-    hc = api.ConfigEntryAuth(hass, entry, implementation)
+    hc_api = api.ConfigEntryAuth(hass, entry, implementation)
 
-    hass.data[DOMAIN][entry.entry_id] = hc
+    hass.data[DOMAIN][entry.entry_id] = hc_api
 
     await update_all_devices(hass, entry)
 
@@ -108,7 +108,7 @@ async def update_all_devices(hass, entry):
     """Update all the devices."""
     try:
         data = hass.data[DOMAIN]
-        hc = data[entry.entry_id]
-        data[DEVICES] = await hass.async_add_executor_job(hc.get_devices)
+        hc_api = data[entry.entry_id]
+        data[DEVICES] = await hass.async_add_executor_job(hc_api.get_devices)
     except HTTPError as err:
         _LOGGER.warning("Cannot update devices: %s", err.response.status_code)
