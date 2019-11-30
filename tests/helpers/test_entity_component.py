@@ -251,7 +251,7 @@ async def test_platform_not_ready(hass):
         assert "test_domain.mod1" in hass.config.components
 
 
-async def test_extract_from_service_returns_all_if_no_entity_id(hass):
+async def test_extract_from_service_fails_if_no_entity_id(hass):
     """Test the extraction of everything from service."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     await component.async_add_entities(

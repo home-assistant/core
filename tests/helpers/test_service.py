@@ -465,7 +465,7 @@ async def test_call_with_match_all(
 async def test_call_with_omit_entity_id(
     hass, mock_service_platform_call, mock_entities
 ):
-    """Check we only target allowed entities if targetting all."""
+    """Check service call if we do not pass an entity ID."""
     await service.entity_service_call(
         hass,
         [Mock(entities=mock_entities)],
