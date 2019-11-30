@@ -30,7 +30,7 @@ class DSMRSensor(Entity):
         self._entity_id = slugify(topic.replace("/", "_"))
         self._topic = topic
 
-        self._name = self._definition.get("name")
+        self._name = self._definition.get("name", topic.split("/")[-1])
         self._unit_of_measurement = self._definition.get("unit")
         self._icon = self._definition.get("icon")
         self._transform = self._definition.get("transform")
