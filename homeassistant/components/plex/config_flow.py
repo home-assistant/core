@@ -80,7 +80,10 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Validate a provided configuration."""
         errors = {}
         self.current_login = server_config
-        is_importing = self.context["source"] == config_entries.SOURCE_IMPORT
+        is_importing = (
+            self.context["source"]  # pylint: disable=no-member
+            == config_entries.SOURCE_IMPORT
+        )
 
         plex_server = PlexServer(self.hass, server_config)
         try:
