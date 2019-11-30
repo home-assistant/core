@@ -166,6 +166,10 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         try:
             if self._robot_stats is None:
                 self._robot_stats = self.robot.get_robot_info().json()
+        except NeatoRobotException:
+            _LOGGER.warning("Couldn't fetch robot information of %s", self._name)
+
+        try:
             self._state = self.robot.state
         except NeatoRobotException as ex:
             if self._available:  # print only once when available
