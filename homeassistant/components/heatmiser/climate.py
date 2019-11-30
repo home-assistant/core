@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
 
-    thermostats = config.get(CONF_THERMOSTATS)
+    thermostats = config[CONF_THERMOSTATS]
 
     uh1_hub = connection.HeatmiserUH1(host, port)
 
