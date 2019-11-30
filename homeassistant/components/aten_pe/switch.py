@@ -11,6 +11,7 @@ from homeassistant.components.switch import (
     SwitchDevice,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,13 +46,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         privkey=config.get(CONF_PRIV_KEY),
     )
 
-    await hass.async_add_executor_job(dev.loadMibs)
+    try:
+        await hass.async_add_executor_job(dev.loadMibs)
 
-    mac = await dev.deviceMAC()
+        mac = await dev.deviceMAC()
 
-    switches = []
-    async for outlet in dev.outlets():
-        switches.append(AtenSwitch(dev, mac, outlet.id, outlet.name))
+        switches = []
+        async for outlet in dev.outlets():
+            switches.append(AtenSwitch(dev, mac, outlet.id, outlet.name))
+    except Exception:  # pylint: disable=broad-except
+        raise PlatformNotReady
 
     async_add_entities(switches)
 
