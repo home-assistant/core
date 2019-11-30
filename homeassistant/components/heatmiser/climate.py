@@ -70,7 +70,7 @@ class HeatmiserV3Thermostat(ClimateDevice):
 
     def __init__(self, therm, device, uh1):
         """Initialize the thermostat."""
-        self.therm = therm(int(device[CONF_ID]), "prt", uh1)
+        self.therm = therm(device[CONF_ID], "prt", uh1)
         self.uh1 = uh1
         self._name = device[CONF_NAME]
         self._current_temperature = None
