@@ -30,6 +30,7 @@ CONF_WEBHOOKS = "webhooks"
 
 SERVICE_ADDWEBHOOK = "addwebhook"
 SERVICE_DROPWEBHOOK = "dropwebhook"
+SERVICE_SETSCHEDULE = "set_schedule"
 
 NETATMO_AUTH = None
 NETATMO_WEBHOOK_URL = None
@@ -86,6 +87,8 @@ CONFIG_SCHEMA = vol.Schema(
 SCHEMA_SERVICE_ADDWEBHOOK = vol.Schema({vol.Optional(CONF_URL): cv.string})
 
 SCHEMA_SERVICE_DROPWEBHOOK = vol.Schema({})
+
+SCHEMA_SERVICE_SETSCHEDULE = vol.Schema({vol.Required("schedule"): cv.string})
 
 
 def setup(hass, config):
@@ -149,6 +152,21 @@ def setup(hass, config):
         SERVICE_DROPWEBHOOK,
         _service_dropwebhook,
         schema=SCHEMA_SERVICE_DROPWEBHOOK,
+    )
+
+    home_data = pyatmo.HomeData(auth)
+
+    def _service_setschedule(service):
+        """Service to change current home schedule."""
+        schedule_name = service.data.get("schedule")
+        home_data.switchHomeSchedule(schedule=schedule_name)
+        _LOGGER.info("Set home schedule to %s", schedule_name)
+
+    hass.services.register(
+        DOMAIN,
+        SERVICE_SETSCHEDULE,
+        _service_setschedule,
+        schema=SCHEMA_SERVICE_SETSCHEDULE,
     )
 
     return True
