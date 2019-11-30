@@ -29,14 +29,17 @@ _LOGGER = logging.getLogger(__name__)
 CONF_THERMOSTATS = "tstats"
 
 TSTATS_SCHEMA = vol.Schema(
-    [{vol.Required(CONF_ID): cv.string, vol.Required(CONF_NAME): cv.string}]
+    vol.All(
+        cv.ensure_list,
+        [{vol.Required(CONF_ID): cv.positive_int, vol.Required(CONF_NAME): cv.string}],
+    )
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT): cv.string,
-        vol.Optional(CONF_THERMOSTATS, default={}): TSTATS_SCHEMA,
+        vol.Optional(CONF_THERMOSTATS, default=[]): TSTATS_SCHEMA,
     }
 )
 
@@ -46,10 +49,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     heatmiser_v3_thermostat = heatmiser.HeatmiserThermostat
 
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
 
-    thermostats = config.get(CONF_THERMOSTATS)
+    thermostats = config[CONF_THERMOSTATS]
 
     uh1_hub = connection.HeatmiserUH1(host, port)
 
@@ -127,19 +130,19 @@ class HeatmiserV3Thermostat(ClimateDevice):
     def update(self):
         """Get the latest data."""
         self.uh1.reopen()
-        if self.uh1.status is not True:
+        if not self.uh1.status:
             _LOGGER.error("Failed to update device %s", self._name)
-        else:
-            self.dcb = self.therm.read_dcb()
-            self._temperature_unit = (
-                TEMP_CELSIUS
-                if (self.therm.get_temperature_format() == "C")
-                else TEMP_FAHRENHEIT
-            )
-            self._current_temperature = int(self.therm.get_floor_temp())
-            self._target_temperature = int(self.therm.get_target_temp())
-            self._hvac_mode = (
-                HVAC_MODE_OFF
-                if (int(self.therm.get_current_state()) == 0)
-                else HVAC_MODE_HEAT
-            )
+            return
+        self.dcb = self.therm.read_dcb()
+        self._temperature_unit = (
+            TEMP_CELSIUS
+            if (self.therm.get_temperature_format() == "C")
+            else TEMP_FAHRENHEIT
+        )
+        self._current_temperature = int(self.therm.get_floor_temp())
+        self._target_temperature = int(self.therm.get_target_temp())
+        self._hvac_mode = (
+            HVAC_MODE_OFF
+            if (int(self.therm.get_current_state()) == 0)
+            else HVAC_MODE_HEAT
+        )
