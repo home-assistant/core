@@ -5,7 +5,6 @@ import statistics
 
 import voluptuous as vol
 
-from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -277,6 +276,7 @@ class StatisticsSensor(Entity):
         """
         # pylint: disable=import-outside-toplevel
         from homeassistant.components.recorder.models import States
+        from homeassistant.components.recorder.util import execute, session_scope
 
         _LOGGER.debug("%s: initializing values from the database", self.entity_id)
 
