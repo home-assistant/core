@@ -4,6 +4,7 @@ from asyncio import run_coroutine_threadsafe
 import logging
 
 import homeconnect
+from homeconnect.api import HomeConnectError
 
 from homeassistant import config_entries, core
 from homeassistant.core import callback
@@ -77,8 +78,6 @@ class HomeConnectDevice:
 
     def __init__(self, appliance):
         """Initialize the device."""
-        from homeconnect.api import HomeConnectError
-
         self.appliance = appliance
         try:
             self.appliance.get_status()
