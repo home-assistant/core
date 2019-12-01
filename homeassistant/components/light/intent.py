@@ -1,7 +1,7 @@
 """Intents for the light integration."""
-from homeassistant.core import HomeAssistant
 import voluptuous as vol
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 import homeassistant.util.color as color_util
 import homeassistant.helpers.config_validation as cv
