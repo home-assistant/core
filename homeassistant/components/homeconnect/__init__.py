@@ -106,9 +106,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 @Throttle(SCAN_INTERVAL)
 async def update_all_devices(hass, entry):
     """Update all the devices."""
+    data = hass.data[DOMAIN]
+    hc_api = data[entry.entry_id]
     try:
-        data = hass.data[DOMAIN]
-        hc_api = data[entry.entry_id]
         data[DEVICES] = await hass.async_add_executor_job(hc_api.get_devices)
     except HTTPError as err:
         _LOGGER.warning("Cannot update devices: %s", err.response.status_code)
