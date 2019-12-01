@@ -2,7 +2,7 @@
 Support for BSH Home Connect appliances.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/homeconnect/
+https://home-assistant.io/integrations/homeconnect/
 """
 import asyncio
 from datetime import timedelta

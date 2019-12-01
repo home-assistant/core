@@ -1,7 +1,7 @@
 """Provides a sensor for Home Connect.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.homeconnect/
+https://home-assistant.io/integrations/sensor.homeconnect/
 """
 import logging
 

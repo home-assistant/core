@@ -1,7 +1,7 @@
 """Provides a switch for Home Connect.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.homeconnect/
+https://home-assistant.io/integrations/switch.homeconnect/
 """
 import logging
 import re
