@@ -1162,7 +1162,7 @@ async def async_api_changechannel(hass, config, directive, context):
         payload_name = "uri"
     elif "name" in metadata_payload:
         channel = metadata_payload["name"]
-        payload_name = "name"
+        payload_name = "callSign"
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
