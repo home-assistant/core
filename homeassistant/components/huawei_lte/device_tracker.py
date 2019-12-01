@@ -145,11 +145,10 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
         host = next((x for x in hosts if x.get("MacAddress") == self.mac), None)
         self._is_connected = host is not None
         if self._is_connected:
-            self._name = host.get("HostName", self.mac)
+            # HostName may be present with explicit None value
+            self._name = host.get("HostName") or self.mac
             self._device_state_attributes = {
-                _better_snakecase(k): v
-                for k, v in host.items()
-                if k not in ("MacAddress", "HostName")
+                _better_snakecase(k): v for k, v in host.items() if k != "HostName"
             }
 
 
