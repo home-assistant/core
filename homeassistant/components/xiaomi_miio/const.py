@@ -42,7 +42,7 @@ SERVICE_SET_POWER_PRICE = "switch_set_power_price"
 
 # Vacuum Services
 SERVICE_MOVE_REMOTE_CONTROL = "vacuum_remote_control_move"
-SERVICE_MOVE_REMOTE_CONTROL_STEP = "vacuum_emote_control_move_step"
+SERVICE_MOVE_REMOTE_CONTROL_STEP = "vacuum_remote_control_move_step"
 SERVICE_START_REMOTE_CONTROL = "vacuum_remote_control_start"
 SERVICE_STOP_REMOTE_CONTROL = "vacuum_remote_control_stop"
 SERVICE_CLEAN_ZONE = "vacuum_clean_zone"
