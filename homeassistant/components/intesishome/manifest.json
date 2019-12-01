@@ -4,5 +4,5 @@
   "documentation": "https://www.home-assistant.io/components/intesishome",
   "dependencies": [],
   "codeowners": ["@jnimmo"],
-  "requirements": ["pyintesishome==0.8"]
+  "requirements": ["pyintesishome==1.1"]
 }
