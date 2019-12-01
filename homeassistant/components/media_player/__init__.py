@@ -123,6 +123,12 @@ DEVICE_CLASSES = [DEVICE_CLASS_TV, DEVICE_CLASS_SPEAKER]
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 
+MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = {
+    vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
+    vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
+    vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
+}
+
 ATTR_TO_PROPERTY = [
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
@@ -275,11 +281,7 @@ async def async_setup(hass, config):
     )
     component.async_register_entity_service(
         SERVICE_PLAY_MEDIA,
-        {
-            vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
-            vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
-            vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
-        },
+        MEDIA_PLAYER_PLAY_MEDIA_SCHEMA,
         lambda entity, call: entity.async_play_media(
             media_type=call.data[ATTR_MEDIA_CONTENT_TYPE],
             media_id=call.data[ATTR_MEDIA_CONTENT_ID],

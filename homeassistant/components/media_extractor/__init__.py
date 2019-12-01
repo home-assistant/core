@@ -2,6 +2,8 @@
 import logging
 
 import voluptuous as vol
+from youtube_dl import YoutubeDL
+from youtube_dl.utils import DownloadError, ExtractorError
 
 from homeassistant.components.media_player import MEDIA_PLAYER_PLAY_MEDIA_SCHEMA
 from homeassistant.components.media_player.const import (
@@ -44,7 +46,10 @@ def setup(hass, config):
         MediaExtractor(hass, config[DOMAIN], call.data).extract_and_send()
 
     hass.services.register(
-        DOMAIN, SERVICE_PLAY_MEDIA, play_media, schema=MEDIA_PLAYER_PLAY_MEDIA_SCHEMA
+        DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        play_media,
+        schema=cv.make_entity_service_schema(MEDIA_PLAYER_PLAY_MEDIA_SCHEMA),
     )
 
     return True
@@ -98,9 +103,6 @@ class MediaExtractor:
 
     def get_stream_selector(self):
         """Return format selector for the media URL."""
-        from youtube_dl import YoutubeDL
-        from youtube_dl.utils import DownloadError, ExtractorError
-
         ydl = YoutubeDL({"quiet": True, "logger": _LOGGER})
 
         try:
