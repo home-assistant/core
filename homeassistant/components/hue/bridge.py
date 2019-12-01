@@ -3,6 +3,7 @@ import asyncio
 
 import aiohue
 import async_timeout
+import slugify as unicode_slug
 import voluptuous as vol
 
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -173,7 +174,11 @@ async def get_bridge(hass, host, username=None):
         with async_timeout.timeout(10):
             # Create username if we don't have one
             if not username:
-                await bridge.create_user(f"home-assistant#{hass.config.location_name}")
+                device_name = unicode_slug.slugify(
+                    hass.config.location_name, max_length=19
+                )
+                await bridge.create_user(f"home-assistant#{device_name}")
+
             # Initialize bridge (and validate our username)
             await bridge.initialize()
 
