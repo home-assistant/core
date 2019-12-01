@@ -1,162 +1,100 @@
-"""Platform for tankerkoenig sensor integration."""
-from datetime import timedelta
+"""Tankerkoenig sensor integration."""
+
 import logging
 
-import pytankerkoenig
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_RADIUS,
+    ATTR_ATTRIBUTION,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
     STATE_CLOSED,
     STATE_OPEN,
+    STATE_UNKNOWN,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
-from .base_sensor import FuelPriceSensorBase
-from .const import CONF_FUEL_TYPES, CONF_STATIONS, FUEL_TYPES, NAME
+from .const import DOMAIN, NAME
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_RADIUS = 2
-SCAN_INTERVAL = timedelta(minutes=30)
+ATTR_ADDRESS = "address"
+ATTR_BRAND = "brand"
+ATTR_FUEL_TYPE = "fuel_type"
+ATTR_STATE = "state"
+ATTR_STATION_NAME = "station_name"
+ATTRIBUTION = "Data provided by https://creativecommons.tankerkoenig.de"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_FUEL_TYPES, default=FUEL_TYPES): vol.All(
-            cv.ensure_list, [vol.In(FUEL_TYPES)]
-        ),
-        vol.Inclusive(
-            CONF_LATITUDE, "coordinates", "Latitude and longitude must exist together"
-        ): cv.latitude,
-        vol.Inclusive(
-            CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
-        ): cv.longitude,
-        vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): vol.All(
-            cv.positive_int, vol.Range(min=1)
-        ),
-        vol.Optional(CONF_STATIONS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-    }
-)
+ICON = "mdi:fuel"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set the Tankerkoenig sensor platform up."""
-    fuel_types = config.get(CONF_FUEL_TYPES)
-    api_key = config.get(CONF_API_KEY)
-    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    radius = config.get(CONF_RADIUS)
-    additional_stations = config.get(CONF_STATIONS)
+    """Set up the tankerkoenig sensors."""
+    tankerkoenig = hass.data[DOMAIN]
+    _LOGGER.debug("Setup platform. Stations: %s ", tankerkoenig.entities)
+    async_add_entities(tankerkoenig.entity_list)
 
-    master = None
-    entities = []
-    _LOGGER.debug("Fetching data for (%s,%s) rad: %s", latitude, longitude, radius)
-    try:
-        data = pytankerkoenig.getNearbyStations(
-            api_key, latitude, longitude, radius, "all", "dist"
-        )
-    except pytankerkoenig.customException as err:
-        data = {"ok": False, "message": err, "exception": True}
-    _LOGGER.debug("Received data: %s", data)
-    if not data["ok"]:
-        _LOGGER.error("Error fetching data from tankerkoenig.de:\n%s", data["message"])
-        _LOGGER.error("Could not setup sensors")
-        return
 
-    if len(data["stations"]) <= 0:
-        _LOGGER.warning("Could not find any station in range")
-    else:
-        for station in data["stations"]:
-            master = add_station(station, api_key, fuel_types, entities, master)
+class FuelPriceSensor(Entity):
+    """Contains prices for fuel in a given station."""
 
-    for additional_station_id in additional_stations:
-        try:
-            additional_station_data = pytankerkoenig.getStationData(
-                api_key, additional_station_id
-            )
-        except pytankerkoenig.customException as err:
-            additional_station_data = {"ok": False, "message": err, "exception": True}
-        if not additional_station_data["ok"]:
-            _LOGGER.warning(
-                "Error when adding station %s: %s",
-                additional_station_id,
-                additional_station_data["message"],
-            )
+    def __init__(self, fuel_type, station, name=NAME):
+        """Initialize the sensor."""
+        self._station = station
+        self._station_id = station["id"]
+        self._fuel_type = fuel_type
+        self._name = name
+        self._latitude = station["lat"]
+        self._longitude = station["lng"]
+        self._open_state = STATE_OPEN if station["isOpen"] else STATE_CLOSED
+        self._address = f"{station['street']} {station['houseNumber']}, {station['postCode']} {station['place']}"
+        _LOGGER.debug("Setup sensor %s", name)
+        self._price = station[fuel_type]
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend."""
+        return ICON
+
+    @property
+    def unit_of_measurement(self):
+        """Return unit of measurement."""
+        return "€"
+
+    @property
+    def state(self):
+        """Return the state of the device."""
+        return self._price
+
+    @property
+    def device_state_attributes(self):
+        """Return the attributes of the device."""
+        attrs = {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_BRAND: self._station["brand"],
+            ATTR_FUEL_TYPE: self._fuel_type,
+            ATTR_STATION_NAME: self._station["name"],
+            ATTR_ADDRESS: self._address,
+            ATTR_LATITUDE: self._latitude,
+            ATTR_LONGITUDE: self._longitude,
+            ATTR_STATE: self._open_state,
+        }
+        return attrs
+
+    def new_data(self, data):
+        """Update the internal sensor data."""
+        if data is None or "status" not in data.keys():
+            _LOGGER.warning("Received no data for station %s", self._station_id)
+            self._open_state = STATE_UNKNOWN
+            self._price = None
         else:
-            master = add_station(
-                additional_station_data["station"],
-                api_key,
-                fuel_types,
-                entities,
-                master,
-            )
-
-    async_add_entities(entities, True)
-
-
-def add_station(station, api_key, fuel_types, entities, master):
-    """Add fuel station to the entity list."""
-    _LOGGER.debug(
-        "Add_station called for station: %s and fuel types: %s", station, fuel_types
-    )
-    for fuel in fuel_types:
-        sensor = None
-        if master is None:
-            master = FuelPriceSensorMaster(
-                api_key, fuel, station, f"{NAME}_{station['name']}_{fuel}"
-            )
-            sensor = master
-        else:
-            sensor = FuelPriceSensorSlave(
-                fuel, station, f"{NAME}_{station['name']}_{fuel}"
-            )
-            master.add_slave(station["id"], sensor)
-        entities.append(sensor)
-    return master
-
-
-class FuelPriceSensorMaster(FuelPriceSensorBase):
-    """Master sensor for tankerkoenig prices. This sensor gets the updated prices and forwards them to any slaves."""
-
-    def __init__(self, api_key, fuel_type, station, name=NAME):
-        """Initialize the class."""
-        super().__init__(fuel_type, station, name)
-        self._api_key = api_key
-        self._slaves = {}
-        self._monitored_stations = [self._station_id]
-
-    def add_slave(self, station_id, slave):
-        """Add an additional slave sensor, that needs to be updated together with this one."""
-        if station_id not in self._slaves:
-            self._slaves[station_id] = [slave]
-        else:
-            self._slaves[station_id].append(slave)
-        self._monitored_stations = list(set(self._monitored_stations) | {station_id})
+            self._open_state = STATE_OPEN if data["status"] == "open" else STATE_CLOSED
+            self._price = data.get(self._fuel_type)
+        self.update()
 
     def update(self):
-        """Fetch new prices."""
-        _LOGGER.debug("Fetching new prices for standalone sensor")
-        data = pytankerkoenig.getPriceList(self._api_key, self._monitored_stations)
-        if data["ok"]:
-            _LOGGER.debug("Received data: %s", data)
-            self._data = data["prices"][self._station_id]
-            if self._data["status"] == "open":
-                self._is_open = STATE_OPEN
-            else:
-                self._is_open = STATE_CLOSED
-            for station_id, slave_list in self._slaves.items():
-                for slave in slave_list:
-                    slave.new_data(data["prices"][station_id])
-        else:
-            _LOGGER.error(
-                "Error fetching data from tankerkoenig.de: %s", data["message"]
-            )
-
-
-class FuelPriceSensorSlave(FuelPriceSensorBase):
-    """Contains prices for fuels in the given station."""
+        """Update the data in the HASS backend."""
+        pass
