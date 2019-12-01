@@ -1,7 +1,7 @@
 {
   "domain": "signal_messenger",
   "name": "signal_messenger",
-  "documentation": "https://www.home-assistant.io/integrations/signalmessenger",
+  "documentation": "https://www.home-assistant.io/integrations/signal_messenger",
   "dependencies": [],
   "codeowners": ["@bbernhard"],
   "requirements": [
