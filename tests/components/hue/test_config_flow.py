@@ -230,6 +230,26 @@ async def test_bridge_ssdp_emulated_hue(hass):
     )
 
     assert result["type"] == "abort"
+    assert result["reason"] == "not_hue_bridge"
+
+
+async def test_bridge_ssdp_espalexa(hass):
+    """Test if discovery info is from an Espalexa based device."""
+    flow = config_flow.HueFlowHandler()
+    flow.hass = hass
+    flow.context = {}
+
+    result = await flow.async_step_ssdp(
+        {
+            "name": "Espalexa (0.0.0.0)",
+            "host": "0.0.0.0",
+            "serial": "1234",
+            "manufacturerURL": config_flow.HUE_MANUFACTURERURL,
+        }
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_hue_bridge"
 
 
 async def test_bridge_ssdp_already_configured(hass):
