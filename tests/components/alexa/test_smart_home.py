@@ -935,7 +935,7 @@ async def test_media_player(hass):
         "media_player#test",
         "media_player.play_media",
         hass,
-        payload={"channel": {"number": 24}},
+        payload={"channel": {"number": "24"}, "channelMetadata": {"name": ""}},
     )
 
     call, _ = await assert_request_calls_service(
@@ -944,7 +944,7 @@ async def test_media_player(hass):
         "media_player#test",
         "media_player.play_media",
         hass,
-        payload={"channel": {"callSign": "ABC"}},
+        payload={"channel": {"callSign": "ABC"}, "channelMetadata": {"name": ""}},
     )
 
     call, _ = await assert_request_calls_service(
@@ -953,7 +953,7 @@ async def test_media_player(hass):
         "media_player#test",
         "media_player.play_media",
         hass,
-        payload={"channel": {"affiliateCallSign": "ABC"}},
+        payload={"channel": {"number": ""}, "channelMetadata": {"name": "ABC"}},
     )
 
     call, _ = await assert_request_calls_service(
@@ -962,7 +962,19 @@ async def test_media_player(hass):
         "media_player#test",
         "media_player.play_media",
         hass,
-        payload={"channel": {"uri": "ABC"}},
+        payload={
+            "channel": {"affiliateCallSign": "ABC"},
+            "channelMetadata": {"name": ""},
+        },
+    )
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.ChannelController",
+        "ChangeChannel",
+        "media_player#test",
+        "media_player.play_media",
+        hass,
+        payload={"channel": {"uri": "ABC"}, "channelMetadata": {"name": ""}},
     )
 
     call, _ = await assert_request_calls_service(
