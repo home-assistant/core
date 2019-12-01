@@ -1,6 +1,11 @@
 """Tests for Intent component."""
+import pytest
+
 from homeassistant.setup import async_setup_component
 from homeassistant.helpers import intent
+from homeassistant.components.cover import SERVICE_OPEN_COVER
+
+from tests.common import async_mock_service
 
 
 async def test_http_handle_intent(hass, hass_client, hass_admin_user):
@@ -42,3 +47,30 @@ async def test_http_handle_intent(hass, hass_client, hass_admin_user):
         },
         "speech": {"plain": {"extra_data": None, "speech": "I've ordered a Belgian!"}},
     }
+
+
+async def test_cover_intents_loading(hass):
+    """Test Cover Intents Loading."""
+    assert await async_setup_component(hass, "intent", {})
+
+    with pytest.raises(intent.UnknownIntent):
+        await intent.async_handle(
+            hass, "test", "HassOpenCover", {"name": {"value": "garage door"}}
+        )
+
+    assert await async_setup_component(hass, "cover", {})
+
+    hass.states.async_set("cover.garage_door", "closed")
+    calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
+
+    response = await intent.async_handle(
+        hass, "test", "HassOpenCover", {"name": {"value": "garage door"}}
+    )
+    await hass.async_block_till_done()
+
+    assert response.speech["plain"]["speech"] == "Opened garage door"
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == "cover"
+    assert call.service == "open_cover"
+    assert call.data == {"entity_id": "cover.garage_door"}

@@ -1,20 +1,53 @@
 """The Intent integration."""
+import asyncio
+import logging
+
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_COMPONENT_LOADED
+from homeassistant.setup import ATTR_COMPONENT
 from homeassistant.components import http
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.helpers import config_validation as cv, intent
+from homeassistant.loader import async_get_integration, IntegrationNotFound
 
 from .const import DOMAIN
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Intent component."""
     hass.http.register_view(IntentHandleView())
+
+    tasks = [_async_process_intent(hass, comp) for comp in hass.config.components]
+
+    async def async_component_loaded(event):
+        """Handle a new component loaded."""
+        await _async_process_intent(hass, event.data[ATTR_COMPONENT])
+
+    hass.bus.async_listen(EVENT_COMPONENT_LOADED, async_component_loaded)
+
+    if tasks:
+        await asyncio.gather(*tasks)
+
     return True
+
+
+async def _async_process_intent(hass: HomeAssistant, component_name: str):
+    """Process the intents of a component."""
+    try:
+        integration = await async_get_integration(hass, component_name)
+        platform = integration.get_platform(DOMAIN)
+    except (IntegrationNotFound, ImportError):
+        return
+
+    try:
+        await platform.async_setup_intents(hass)
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Error setting up intents for %s", component_name)
 
 
 class IntentHandleView(http.HomeAssistantView):
