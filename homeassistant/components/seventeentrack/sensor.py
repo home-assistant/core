@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from py17track import Client
+from py17track import Client as SeventeenTrackClient
 from py17track.errors import SeventeenTrackError
 import voluptuous as vol
 
@@ -66,7 +66,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     websession = aiohttp_client.async_get_clientsession(hass)
 
-    client = Client(websession)
+    client = SeventeenTrackClient(websession)
 
     try:
         login_result = await client.profile.login(
