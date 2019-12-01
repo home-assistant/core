@@ -14,7 +14,7 @@ import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "season"
+DEFAULT_NAME = "Season"
 
 EQUATOR = "equator"
 
