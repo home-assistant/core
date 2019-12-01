@@ -2,7 +2,7 @@
 
 import logging
 
-from atenpdu import AtenPE
+from atenpdu import AtenPE, AtenPEError
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -37,9 +37,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the ATEN PE switch."""
+    node = config[CONF_HOST]
+    serv = config[CONF_PORT]
+
     dev = AtenPE(
-        node=config[CONF_HOST],
-        serv=config[CONF_PORT],
+        node=node,
+        serv=serv,
         community=config[CONF_COMMUNITY],
         username=config[CONF_USERNAME],
         authkey=config.get(CONF_AUTH_KEY),
@@ -47,15 +50,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
     try:
-        await hass.async_add_executor_job(dev.loadMibs)
-
+        await hass.async_add_executor_job(dev.initialize)
         mac = await dev.deviceMAC()
-
-        switches = []
-        async for outlet in dev.outlets():
-            switches.append(AtenSwitch(dev, mac, outlet.id, outlet.name))
-    except Exception:  # pylint: disable=broad-except
+        outlets = dev.outlets()
+    except AtenPEError as exc:
+        _LOGGER.error("Failed to initialize %s:%s: %s", node, serv, str(exc))
         raise PlatformNotReady
+
+    switches = []
+    async for outlet in outlets:
+        switches.append(AtenSwitch(dev, mac, outlet.id, outlet.name))
 
     async_add_entities(switches)
 
