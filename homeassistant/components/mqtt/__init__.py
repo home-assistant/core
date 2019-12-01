@@ -725,6 +725,7 @@ class MQTT:
         """Initialize Home Assistant MQTT client."""
         # We don't import them on the top because some integrations
         # should be able to optionally rely on MQTT.
+        # pylint: disable=import-outside-toplevel
         import paho.mqtt.client as mqtt
 
         self.hass = hass
@@ -788,6 +789,7 @@ class MQTT:
 
         This method is a coroutine.
         """
+        # pylint: disable=import-outside-toplevel
         import paho.mqtt.client as mqtt
 
         result: int = None
@@ -881,6 +883,7 @@ class MQTT:
         Resubscribe to all topics we were subscribed to and publish birth
         message.
         """
+        # pylint: disable=import-outside-toplevel
         import paho.mqtt.client as mqtt
 
         if result_code != mqtt.CONNACK_ACCEPTED:
@@ -974,6 +977,7 @@ class MQTT:
 
 def _raise_on_error(result_code: int) -> None:
     """Raise error if error result."""
+    # pylint: disable=import-outside-toplevel
     import paho.mqtt.client as mqtt
 
     if result_code != 0:
@@ -984,6 +988,7 @@ def _raise_on_error(result_code: int) -> None:
 
 def _match_topic(subscription: str, topic: str) -> bool:
     """Test if topic matches subscription."""
+    # pylint: disable=import-outside-toplevel
     from paho.mqtt.matcher import MQTTMatcher
 
     matcher = MQTTMatcher()
