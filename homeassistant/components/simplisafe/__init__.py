@@ -1,7 +1,7 @@
 """Support for SimpliSafe alarm systems."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
 from simplipy import API
 from simplipy.errors import InvalidCredentialsError, SimplipyError
