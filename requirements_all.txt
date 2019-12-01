@@ -251,6 +251,9 @@ asterisk_mbox==0.5.0
 # homeassistant.components.upnp
 async-upnp-client==0.14.12
 
+# homeassistant.components.aten_pe
+atenpdu==0.3.0
+
 # homeassistant.components.aurora_abb_powerone
 aurorapy==0.2.6
 

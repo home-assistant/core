@@ -32,6 +32,7 @@ homeassistant/components/arcam_fmj/* @elupus
 homeassistant/components/arduino/* @fabaff
 homeassistant/components/arest/* @fabaff
 homeassistant/components/asuswrt/* @kennedyshead
+homeassistant/components/aten_pe/* @mtdcr
 homeassistant/components/atome/* @baqs
 homeassistant/components/aurora_abb_powerone/* @davet2001
 homeassistant/components/auth/* @home-assistant/core
