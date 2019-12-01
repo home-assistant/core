@@ -12,7 +12,7 @@ from homeassistant.const import (
     STATE_HOME,
     STATE_NOT_HOME,
 )
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import Context, HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 
@@ -39,22 +39,13 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
         if entry.domain != DOMAIN:
             continue
 
-        actions.append(
-            {
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "set_home",
-            }
-        )
-        actions.append(
-            {
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "set_not_home",
-            }
-        )
+        action_kwargs = {
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_ENTITY_ID: entry.entity_id,
+        }
+        actions.append({CONF_TYPE: "set_home", **action_kwargs})
+        actions.append({CONF_TYPE: "set_not_home", **action_kwargs})
 
     return actions
 
@@ -65,15 +56,14 @@ async def async_call_action_from_config(
     """Execute a device action."""
     config = ACTION_SCHEMA(config)
 
-    entity_id = config[CONF_ENTITY_ID]
-    service_data = {ATTR_ENTITY_ID: entity_id}
+    service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
 
     if config[CONF_TYPE] == "set_home":
         service_data[ATTR_LOCATION_NAME] = STATE_HOME
-        service_data[ATTR_DEV_ID] = entity_id[entity_id.find(".") + 1 :]
+        service_data[ATTR_DEV_ID] = split_entity_id(config[CONF_ENTITY_ID])[1]
     elif config[CONF_TYPE] == "set_not_home":
         service_data[ATTR_LOCATION_NAME] = STATE_NOT_HOME
-        service_data[ATTR_DEV_ID] = entity_id[entity_id.find(".") + 1 :]
+        service_data[ATTR_DEV_ID] = split_entity_id(config[CONF_ENTITY_ID])[1]
 
     await hass.services.async_call(
         DOMAIN, SERVICE_SEE, service_data, blocking=True, context=context
