@@ -85,6 +85,21 @@ CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE, ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEM
 _LOGGER = logging.getLogger(__name__)
 
 
+SET_TEMPERATURE_SCHEMA = vol.All(
+    cv.has_at_least_one_key(
+        ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW
+    ),
+    make_entity_service_schema(
+        {
+            vol.Exclusive(ATTR_TEMPERATURE, "temperature"): vol.Coerce(float),
+            vol.Inclusive(ATTR_TARGET_TEMP_HIGH, "temperature"): vol.Coerce(float),
+            vol.Inclusive(ATTR_TARGET_TEMP_LOW, "temperature"): vol.Coerce(float),
+            vol.Optional(ATTR_HVAC_MODE): vol.In(HVAC_MODES),
+        }
+    ),
+)
+
+
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up climate devices."""
     component = hass.data[DOMAIN] = EntityComponent(
@@ -110,25 +125,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         async_service_aux_heat,
     )
     component.async_register_entity_service(
-        SERVICE_SET_TEMPERATURE,
-        vol.All(
-            cv.has_at_least_one_key(
-                ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW
-            ),
-            make_entity_service_schema(
-                {
-                    vol.Exclusive(ATTR_TEMPERATURE, "temperature"): vol.Coerce(float),
-                    vol.Inclusive(ATTR_TARGET_TEMP_HIGH, "temperature"): vol.Coerce(
-                        float
-                    ),
-                    vol.Inclusive(ATTR_TARGET_TEMP_LOW, "temperature"): vol.Coerce(
-                        float
-                    ),
-                    vol.Optional(ATTR_HVAC_MODE): vol.In(HVAC_MODES),
-                }
-            ),
-        ),
-        async_service_temperature_set,
+        SERVICE_SET_TEMPERATURE, SET_TEMPERATURE_SCHEMA, async_service_temperature_set,
     )
     component.async_register_entity_service(
         SERVICE_SET_HUMIDITY,
