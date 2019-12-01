@@ -89,7 +89,7 @@ class HueBridge:
         """Process request batched."""
 
         async with self.parallel_updates_semaphore:
-            await coro
+            return await coro
 
     async def async_reset(self):
         """Reset this bridge to default state.
