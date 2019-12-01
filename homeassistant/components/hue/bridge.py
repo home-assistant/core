@@ -33,6 +33,7 @@ class HueBridge:
         self.available = True
         self.authorized = False
         self.api = None
+        self.parallel_updates_semaphore = None
 
     @property
     def host(self):
@@ -78,8 +79,18 @@ class HueBridge:
             DOMAIN, SERVICE_HUE_SCENE, self.hue_activate_scene, schema=SCENE_SCHEMA
         )
 
+        self.parallel_updates_semaphore = asyncio.Semaphore(
+            3 if self.api.config.modelid == "BSB001" else 10
+        )
+
         self.authorized = True
         return True
+
+    async def async_request_call(self, coro):
+        """Process request batched."""
+
+        async with self.parallel_updates_semaphore:
+            return await coro
 
     async def async_reset(self):
         """Reset this bridge to default state.
