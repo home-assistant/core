@@ -129,6 +129,9 @@ aio_geojson_geonetnz_quakes==0.11
 # homeassistant.components.geonetnz_volcano
 aio_geojson_geonetnz_volcano==0.5
 
+# homeassistant.components.nsw_rural_fire_service_feed
+aio_geojson_nsw_rfs_incidents==0.1
+
 # homeassistant.components.ambient_station
 aioambient==0.3.2
 
@@ -227,7 +230,7 @@ apcaccess==0.0.13
 apns2==0.3.0
 
 # homeassistant.components.apprise
-apprise==0.8.1
+apprise==0.8.2
 
 # homeassistant.components.aprs
 aprslib==0.6.46
@@ -247,6 +250,9 @@ asterisk_mbox==0.5.0
 # homeassistant.components.dlna_dmr
 # homeassistant.components.upnp
 async-upnp-client==0.14.12
+
+# homeassistant.components.aten_pe
+atenpdu==0.3.0
 
 # homeassistant.components.aurora_abb_powerone
 aurorapy==0.2.6
@@ -550,7 +556,6 @@ geizhals==0.0.9
 geniushub-client==0.6.30
 
 # homeassistant.components.geo_json_events
-# homeassistant.components.nsw_rural_fire_service_feed
 # homeassistant.components.usgs_earthquakes_feed
 geojson_client==0.4
 
@@ -629,7 +634,7 @@ habitipy==0.2.0
 hangups==0.4.9
 
 # homeassistant.components.cloud
-hass-nabucasa==0.29
+hass-nabucasa==0.30
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.5
@@ -678,7 +683,7 @@ horimote==0.4.1
 httplib2==0.10.3
 
 # homeassistant.components.huawei_lte
-huawei-lte-api==1.4.3
+huawei-lte-api==1.4.4
 
 # homeassistant.components.hydrawise
 hydrawiser==0.1.1
@@ -990,7 +995,7 @@ plexapi==3.3.0
 plexauth==0.0.5
 
 # homeassistant.components.plex
-plexwebsocket==0.0.5
+plexwebsocket==0.0.6
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1027,7 +1032,7 @@ protobuf==3.6.1
 proxmoxer==1.0.3
 
 # homeassistant.components.systemmonitor
-psutil==5.6.5
+psutil==5.6.6
 
 # homeassistant.components.ptvsd
 ptvsd==4.2.8
@@ -1082,7 +1087,7 @@ pyRFXtrx==0.24
 # pySwitchmate==0.4.6
 
 # homeassistant.components.tibber
-pyTibber==0.11.7
+pyTibber==0.12.0
 
 # homeassistant.components.dlink
 pyW215==0.6.0
@@ -1335,7 +1340,7 @@ pymailgunner==1.4
 pymediaroom==0.6.4
 
 # homeassistant.components.somfy
-pymfy==0.6.1
+pymfy==0.7.1
 
 # homeassistant.components.xiaomi_tv
 pymitv==1.4.3
@@ -1959,7 +1964,7 @@ twilio==6.32.0
 unifiled==0.11
 
 # homeassistant.components.upcloud
-upcloud-api==0.4.3
+upcloud-api==0.4.5
 
 # homeassistant.components.huawei_lte
 url-normalize==1.4.1
@@ -2067,7 +2072,7 @@ yeelight==0.5.0
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2019.11.22
+youtube_dl==2019.11.28
 
 # homeassistant.components.zengge
 zengge==0.2

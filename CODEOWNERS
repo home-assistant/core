@@ -32,6 +32,7 @@ homeassistant/components/arcam_fmj/* @elupus
 homeassistant/components/arduino/* @fabaff
 homeassistant/components/arest/* @fabaff
 homeassistant/components/asuswrt/* @kennedyshead
+homeassistant/components/aten_pe/* @mtdcr
 homeassistant/components/atome/* @baqs
 homeassistant/components/aurora_abb_powerone/* @davet2001
 homeassistant/components/auth/* @home-assistant/core
@@ -78,6 +79,7 @@ homeassistant/components/device_automation/* @home-assistant/core
 homeassistant/components/digital_ocean/* @fabaff
 homeassistant/components/discogs/* @thibmaek
 homeassistant/components/doorbird/* @oblogic7
+homeassistant/components/dsmr_reader/* @depl0y
 homeassistant/components/dweet/* @fabaff
 homeassistant/components/ecobee/* @marthoc
 homeassistant/components/ecovacs/* @OverloadUT
@@ -156,6 +158,7 @@ homeassistant/components/input_number/* @home-assistant/core
 homeassistant/components/input_select/* @home-assistant/core
 homeassistant/components/input_text/* @home-assistant/core
 homeassistant/components/integration/* @dgomes
+homeassistant/components/intent/* @home-assistant/core
 homeassistant/components/ios/* @robbiet480
 homeassistant/components/ipma/* @dgomes
 homeassistant/components/iqvia/* @bachya

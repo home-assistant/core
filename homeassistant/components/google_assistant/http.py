@@ -10,7 +10,6 @@ from aiohttp.web import Request, Response
 
 # Typing imports
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import callback
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
@@ -223,16 +222,6 @@ class GoogleConfig(AbstractConfig):
             "payload": message,
         }
         await self.async_call_homegraph_api(REPORT_STATE_BASE_URL, data)
-
-
-@callback
-def async_register_http(hass, cfg):
-    """Register HTTP views for Google Assistant."""
-    config = GoogleConfig(hass, cfg)
-    hass.http.register_view(GoogleAssistantView(config))
-    if config.should_report_state:
-        config.async_enable_report_state()
-    return config
 
 
 class GoogleAssistantView(HomeAssistantView):

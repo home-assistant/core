@@ -3,12 +3,14 @@ import asyncio
 import logging
 
 import async_timeout
+from roomba import Roomba
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     PLATFORM_SCHEMA,
     SUPPORT_BATTERY,
     SUPPORT_FAN_SPEED,
+    SUPPORT_LOCATE,
     SUPPORT_PAUSE,
     SUPPORT_RETURN_HOME,
     SUPPORT_SEND_COMMAND,
@@ -16,7 +18,6 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
-    SUPPORT_LOCATE,
     VacuumDevice,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
@@ -84,7 +85,6 @@ SUPPORT_ROOMBA_CARPET_BOOST = SUPPORT_ROOMBA | SUPPORT_FAN_SPEED
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the iRobot Roomba vacuum cleaner platform."""
-    from roomba import Roomba
 
     if PLATFORM not in hass.data:
         hass.data[PLATFORM] = {}
@@ -296,9 +296,7 @@ class RoombaVacuum(VacuumDevice):
         self._is_on = self._status in ["Running"]
 
         # Set properties that are to appear in the GUI
-        self._state_attrs = {
-            ATTR_SOFTWARE_VERSION: software_version,
-        }
+        self._state_attrs = {ATTR_SOFTWARE_VERSION: software_version}
 
         # Get bin state
         bin_state = self._get_bin_state(state)

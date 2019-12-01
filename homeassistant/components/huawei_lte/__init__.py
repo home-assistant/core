@@ -21,6 +21,7 @@ from huawei_lte_api.exceptions import (
 from requests.exceptions import Timeout
 from url_normalize import url_normalize
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -54,6 +55,7 @@ from .const import (
     KEY_DEVICE_INFORMATION,
     KEY_DEVICE_SIGNAL,
     KEY_DIALUP_MOBILE_DATASWITCH,
+    KEY_MONITORING_STATUS,
     KEY_MONITORING_TRAFFIC_STATISTICS,
     KEY_WLAN_HOST_LIST,
     UPDATE_OPTIONS_SIGNAL,
@@ -99,6 +101,13 @@ CONFIG_SCHEMA = vol.Schema(
         )
     },
     extra=vol.ALLOW_EXTRA,
+)
+
+CONFIG_ENTRY_PLATFORMS = (
+    BINARY_SENSOR_DOMAIN,
+    DEVICE_TRACKER_DOMAIN,
+    SENSOR_DOMAIN,
+    SWITCH_DOMAIN,
 )
 
 
@@ -170,6 +179,7 @@ class Router:
         get_data(KEY_DEVICE_BASIC_INFORMATION, self.client.device.basic_information)
         get_data(KEY_DEVICE_SIGNAL, self.client.device.signal)
         get_data(KEY_DIALUP_MOBILE_DATASWITCH, self.client.dial_up.mobile_dataswitch)
+        get_data(KEY_MONITORING_STATUS, self.client.monitoring.status)
         get_data(
             KEY_MONITORING_TRAFFIC_STATISTICS, self.client.monitoring.traffic_statistics
         )
@@ -314,7 +324,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     )
 
     # Forward config entry setup to platforms
-    for domain in (DEVICE_TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN):
+    for domain in CONFIG_ENTRY_PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, domain)
         )
@@ -357,7 +367,7 @@ async def async_unload_entry(
     """Unload config entry."""
 
     # Forward config entry unload to platforms
-    for domain in (DEVICE_TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN):
+    for domain in CONFIG_ENTRY_PLATFORMS:
         await hass.config_entries.async_forward_entry_unload(config_entry, domain)
 
     # Forget about the router and invoke its cleanup
