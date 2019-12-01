@@ -2,7 +2,6 @@
 
 import logging
 
-from homeassistant.core import callback
 from homeassistant.components.fan import (
     SPEED_HIGH,
     SPEED_LOW,
@@ -11,6 +10,7 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DOMAIN, SIGNAL_UPDATE_SMARTY
