@@ -174,7 +174,7 @@ class BroadlinkRemote(RemoteDevice):
     def flags(self):
         """Return dictionary of toggle flags.
 
-        A toggle flag indicates whether `self._async_send()`
+        A toggle flag indicates whether `self._async_send_code()`
         should send an alternative code for a key device.
         """
         return self._flags
