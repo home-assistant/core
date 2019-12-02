@@ -18,10 +18,12 @@
         "title": "Filter for Event Hub",
         "description": "Please enter the filters for which comma-seperated domains and entities to send to Event Hub.",
         "data": {
-          "include_domains": "Include domains",
-          "include_entities": "Include entities",
-          "exclude_domains": "Exclude domains",
-          "exclude_entities": "Exclude entities"
+          "filter": {
+            "include_domains": "Include domains",
+            "include_entities": "Include entities",
+            "exclude_domains": "Exclude domains",
+            "exclude_entities": "Exclude entities"
+          }
         }
       }
     },

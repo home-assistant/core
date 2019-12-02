@@ -13,6 +13,7 @@ FLOWS = [
     "ambiclimate",
     "ambient_station",
     "axis",
+    "azure_event_hub",
     "cast",
     "cert_expiry",
     "coolmaster",

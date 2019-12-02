@@ -1,10 +1,13 @@
 {
   "domain": "azure_event_hub",
   "name": "Azure Event Hub",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/azure_event_hub",
   "requirements": [
     "azure-eventhub==5.0.0b5"
   ],
+  "ssdp": [],
+  "homekit": {},
   "dependencies": [],
   "codeowners": [
     "@eavanvalkenburg"
