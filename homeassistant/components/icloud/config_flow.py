@@ -137,19 +137,21 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if errors is None:
             errors = {}
 
-        trusted_devices = {}
-        devices = self.api.trusted_devices
-        for i, device in enumerate(devices):
-            trusted_devices[i] = device.get(
+        trusted_devices = await self.hass.async_add_executor_job(
+            getattr, self.api, "trusted_devices"
+        )
+        trusted_devices_for_form = {}
+        for i, device in enumerate(trusted_devices):
+            trusted_devices_for_form[i] = device.get(
                 "deviceName", f"SMS to {device.get('phoneNumber')}"
             )
 
         if user_input is None:
             return await self._show_trusted_device_form(
-                trusted_devices, user_input, errors
+                trusted_devices_for_form, user_input, errors
             )
 
-        self._trusted_device = devices[int(user_input[CONF_TRUSTED_DEVICE])]
+        self._trusted_device = trusted_devices[int(user_input[CONF_TRUSTED_DEVICE])]
 
         if not await self.hass.async_add_executor_job(
             self.api.send_verification_code, self._trusted_device
@@ -159,7 +161,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors[CONF_TRUSTED_DEVICE] = "send_verification_code"
 
             return await self._show_trusted_device_form(
-                trusted_devices, user_input, errors
+                trusted_devices_for_form, user_input, errors
             )
 
         return await self.async_step_verification_code()
