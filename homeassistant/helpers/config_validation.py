@@ -583,6 +583,20 @@ def uuid4_hex(value: Any) -> str:
     return result.hex
 
 
+def uuid4_string(value):
+    """Validate a v4 UUID in string format."""
+    try:
+        result = UUID(value, version=4)
+    except (ValueError, AttributeError, TypeError) as error:
+        raise vol.Invalid("Invalid Version4 UUID", error_message=str(error))
+
+    if str(result) != value.lower():
+        # UUID() will create a uuid4 if input is invalid
+        raise vol.Invalid("Invalid Version4 UUID")
+
+    return str(result)
+
+
 def ensure_list_csv(value: Any) -> List:
     """Ensure that input is a list or make one from comma-separated string."""
     if isinstance(value, str):

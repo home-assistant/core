@@ -969,7 +969,7 @@ def test_comp_entity_ids():
 
 
 def test_uuid4_hex(caplog):
-    """Test uuid validation."""
+    """Test hex uuid validation."""
     schema = vol.Schema(cv.uuid4_hex)
 
     for value in ["Not a hex string", "0", 0]:
@@ -987,6 +987,27 @@ def test_uuid4_hex(caplog):
     _hex = uuid.uuid4().hex
     assert schema(_hex) == _hex
     assert schema(_hex.upper()) == _hex
+
+
+def test_uuid4_string(caplog):
+    """Test string uuid validation."""
+    schema = vol.Schema(cv.uuid4_string)
+
+    for value in ["Not a hex string", "0", 0]:
+        with pytest.raises(vol.Invalid):
+            schema(value)
+
+    with pytest.raises(vol.Invalid):
+        # the third block should start with 4
+        schema("a03d31b2-2eee-2acc-bb90-eec40be6ed23")
+
+    with pytest.raises(vol.Invalid):
+        # the fourth block should start with 8-a
+        schema("a03d31b2-2eee-4acc-1b90-eec40be6ed23")
+
+    _str = str(uuid.uuid4())
+    assert schema(_str) == _str
+    assert schema(_str.upper()) == _str
 
 
 def test_key_value_schemas():
