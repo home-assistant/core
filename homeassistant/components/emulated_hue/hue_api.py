@@ -574,7 +574,7 @@ def entity_to_json(config, entity):
     """Convert an entity to its Hue bridge JSON representation."""
     entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
     unique_id = hashlib.md5(entity.entity_id.encode()).hexdigest()
-    unique_id = "00:%s:%s:%s:%s:%s:%s:%s-%s" % (
+    unique_id = "00:{}:{}:{}:{}:{}:{}:{}-{}".format(
         unique_id[0:2],
         unique_id[2:4],
         unique_id[4:6],
