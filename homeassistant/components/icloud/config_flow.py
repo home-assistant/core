@@ -149,11 +149,11 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 trusted_devices, user_input, errors
             )
 
-        self._trusted_device = self.api.trusted_devices[
-            int(user_input[CONF_TRUSTED_DEVICE])
-        ]
+        self._trusted_device = devices[int(user_input[CONF_TRUSTED_DEVICE])]
 
-        if not self.api.send_verification_code(self._trusted_device):
+        if not await self.hass.async_add_executor_job(
+            self.api.send_verification_code, self._trusted_device
+        ):
             _LOGGER.error("Failed to send verification code")
             self._trusted_device = None
             errors[CONF_TRUSTED_DEVICE] = "send_verification_code"
@@ -191,8 +191,10 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._verification_code = user_input[CONF_VERIFICATION_CODE]
 
         try:
-            if not self.api.validate_verification_code(
-                self._trusted_device, self._verification_code
+            if not await self.hass.async_add_executor_job(
+                self.api.validate_verification_code,
+                self._trusted_device,
+                self._verification_code,
             ):
                 raise PyiCloudException("The code you entered is not valid.")
         except PyiCloudException as error:
