@@ -50,23 +50,9 @@ from .const import (
     DEFAULT_MAX_HUMIDITY,
 )
 
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = timedelta(seconds=60)
 
 _LOGGER = logging.getLogger(__name__)
-
-SET_FAN_MODE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_FAN_MODE): cv.string}
-)
-SET_PRESET_MODE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_PRESET_MODE): cv.string}
-)
-SET_OPERATION_MODE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_OPERATION_MODE): vol.In(OPERATION_MODES)}
-)
-SET_HUMIDITY_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_HUMIDITY): vol.Coerce(float)}
-)
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
@@ -83,18 +69,26 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         SERVICE_TURN_OFF, ENTITY_SERVICE_SCHEMA, "async_turn_off"
     )
     component.async_register_entity_service(
-        SERVICE_SET_FAN_MODE, SET_FAN_MODE_SCHEMA, "async_set_fan_mode"
+        SERVICE_SET_FAN_MODE,
+        ENTITY_SERVICE_SCHEMA.extend({vol.Required(ATTR_FAN_MODE): cv.string}),
+        "async_set_fan_mode",
     )
     component.async_register_entity_service(
         SERVICE_SET_OPERATION_MODE,
-        SET_OPERATION_MODE_SCHEMA,
+        ENTITY_SERVICE_SCHEMA.extend(
+            {vol.Required(ATTR_OPERATION_MODE): vol.In(OPERATION_MODES)}
+        ),
         "async_set_operation_mode",
     )
     component.async_register_entity_service(
-        SERVICE_SET_PRESET_MODE, SET_PRESET_MODE_SCHEMA, "async_set_preset_mode"
+        SERVICE_SET_PRESET_MODE,
+        ENTITY_SERVICE_SCHEMA.extend({vol.Required(ATTR_PRESET_MODE): cv.string}),
+        "async_set_preset_mode",
     )
     component.async_register_entity_service(
-        SERVICE_SET_HUMIDITY, SET_HUMIDITY_SCHEMA, "async_set_humidity"
+        SERVICE_SET_HUMIDITY,
+        ENTITY_SERVICE_SCHEMA.extend({vol.Required(ATTR_HUMIDITY): vol.Coerce(float)}),
+        "async_set_humidity",
     )
 
     return True

@@ -5,13 +5,19 @@ from typing import List
 import pytest
 import voluptuous as vol
 
+from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
+
 from homeassistant.components.humidifier import (
-    SET_HUMIDITY_SCHEMA,
     HumidifierDevice,
     OPERATION_MODE_HUMIDIFY,
     OPERATION_MODE_OFF,
+    ATTR_HUMIDITY,
 )
 from tests.common import async_mock_service
+
+SET_HUMIDITY_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+    {vol.Required(ATTR_HUMIDITY): vol.Coerce(float)}
+)
 
 
 async def test_set_hum_schema_no_req(hass, caplog):
