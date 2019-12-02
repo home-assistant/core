@@ -72,6 +72,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         SERVICE_SET_FAN_MODE,
         ENTITY_SERVICE_SCHEMA.extend({vol.Required(ATTR_FAN_MODE): cv.string}),
         "async_set_fan_mode",
+        [SUPPORT_FAN_MODE],
     )
     component.async_register_entity_service(
         SERVICE_SET_OPERATION_MODE,
@@ -84,11 +85,13 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         SERVICE_SET_PRESET_MODE,
         ENTITY_SERVICE_SCHEMA.extend({vol.Required(ATTR_PRESET_MODE): cv.string}),
         "async_set_preset_mode",
+        [SUPPORT_PRESET_MODE],
     )
     component.async_register_entity_service(
         SERVICE_SET_HUMIDITY,
         ENTITY_SERVICE_SCHEMA.extend({vol.Required(ATTR_HUMIDITY): vol.Coerce(float)}),
         "async_set_humidity",
+        [SUPPORT_TARGET_HUMIDITY],
     )
 
     return True
