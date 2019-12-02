@@ -4,7 +4,6 @@ from typing import List, Optional
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
@@ -56,14 +55,12 @@ async def async_call_action_from_config(
     """Execute a device action."""
     config = ACTION_SCHEMA(config)
 
-    service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
+    service_data = {ATTR_DEV_ID: split_entity_id(config[CONF_ENTITY_ID])[1]}
 
     if config[CONF_TYPE] == "set_home":
         service_data[ATTR_LOCATION_NAME] = STATE_HOME
-        service_data[ATTR_DEV_ID] = split_entity_id(config[CONF_ENTITY_ID])[1]
     elif config[CONF_TYPE] == "set_not_home":
         service_data[ATTR_LOCATION_NAME] = STATE_NOT_HOME
-        service_data[ATTR_DEV_ID] = split_entity_id(config[CONF_ENTITY_ID])[1]
 
     await hass.services.async_call(
         DOMAIN, SERVICE_SEE, service_data, blocking=True, context=context
