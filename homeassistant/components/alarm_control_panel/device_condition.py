@@ -2,6 +2,11 @@
 from typing import Dict, List
 import voluptuous as vol
 
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_NIGHT,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_CONDITION,
@@ -13,7 +18,6 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant
@@ -23,7 +27,6 @@ from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from . import DOMAIN
 
 CONDITION_TYPES = {
-    "is_pending",
     "is_triggered",
     "is_disarmed",
     "is_armed_home",
@@ -51,15 +54,59 @@ async def async_get_conditions(
         if entry.domain != DOMAIN:
             continue
 
+        state = hass.states.get(entry.entity_id)
+
+        # We need a state or else we can't populate the HVAC and preset modes.
+        if state is None:
+            continue
+
+        supported_features = state.attributes["supported_features"]
+
         # Add conditions for each entity that belongs to this integration
-        for condition_type in CONDITION_TYPES:
+        conditions += [
+            {
+                CONF_CONDITION: "device",
+                CONF_DEVICE_ID: device_id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_ENTITY_ID: entry.entity_id,
+                CONF_TYPE: "is_disarmed",
+            },
+            {
+                CONF_CONDITION: "device",
+                CONF_DEVICE_ID: device_id,
+                CONF_DOMAIN: DOMAIN,
+                CONF_ENTITY_ID: entry.entity_id,
+                CONF_TYPE: "is_triggered",
+            },
+        ]
+        if supported_features & SUPPORT_ALARM_ARM_HOME:
             conditions.append(
                 {
                     CONF_CONDITION: "device",
                     CONF_DEVICE_ID: device_id,
                     CONF_DOMAIN: DOMAIN,
                     CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: condition_type,
+                    CONF_TYPE: "is_armed_home",
+                }
+            )
+        if supported_features & SUPPORT_ALARM_ARM_AWAY:
+            conditions.append(
+                {
+                    CONF_CONDITION: "device",
+                    CONF_DEVICE_ID: device_id,
+                    CONF_DOMAIN: DOMAIN,
+                    CONF_ENTITY_ID: entry.entity_id,
+                    CONF_TYPE: "is_armed_away",
+                }
+            )
+        if supported_features & SUPPORT_ALARM_ARM_NIGHT:
+            conditions.append(
+                {
+                    CONF_CONDITION: "device",
+                    CONF_DEVICE_ID: device_id,
+                    CONF_DOMAIN: DOMAIN,
+                    CONF_ENTITY_ID: entry.entity_id,
+                    CONF_TYPE: "is_armed_night",
                 }
             )
 
@@ -72,8 +119,6 @@ def async_condition_from_config(
     """Create a function to test a device condition."""
     if config_validation:
         config = CONDITION_SCHEMA(config)
-    if config[CONF_TYPE] == "is_pending":
-        state = STATE_ALARM_PENDING
     elif config[CONF_TYPE] == "is_triggered":
         state = STATE_ALARM_TRIGGERED
     elif config[CONF_TYPE] == "is_disarmed":
