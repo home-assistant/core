@@ -1,13 +1,19 @@
 """Helpers that help with state related things."""
 import asyncio
+from collections import defaultdict
 import datetime as dt
 import logging
-from collections import defaultdict
 from types import ModuleType, TracebackType
 from typing import Dict, Iterable, List, Optional, Type, Union
 
-from homeassistant.loader import bind_hass, async_get_integration, IntegrationNotFound
-import homeassistant.util.dt as dt_util
+from homeassistant.components.climate.const import (
+    HVAC_MODE_AUTO,
+    HVAC_MODE_COOL,
+    HVAC_MODE_DRY,
+    HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
+)
 from homeassistant.components.sun import STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON
 from homeassistant.const import (
     STATE_CLOSED,
@@ -21,6 +27,9 @@ from homeassistant.const import (
     STATE_UNLOCKED,
 )
 from homeassistant.core import Context, State
+from homeassistant.loader import IntegrationNotFound, async_get_integration, bind_hass
+import homeassistant.util.dt as dt_util
+
 from .typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
@@ -118,6 +127,12 @@ def state_as_number(state: State) -> float:
         STATE_ABOVE_HORIZON,
         STATE_OPEN,
         STATE_HOME,
+        HVAC_MODE_HEAT,
+        HVAC_MODE_COOL,
+        HVAC_MODE_HEAT_COOL,
+        HVAC_MODE_AUTO,
+        HVAC_MODE_DRY,
+        HVAC_MODE_FAN_ONLY,
     ):
         return 1
     if state.state in (
