@@ -298,9 +298,9 @@ class HumidifierDevice(Entity):
             await self.async_set_operation_mode(OPERATION_MODE_OFF)
 
     @property
+    @abstractmethod
     def supported_features(self) -> int:
         """Return the list of supported features."""
-        return SUPPORT_TARGET_HUMIDITY
 
     @property
     def min_humidity(self) -> int:
