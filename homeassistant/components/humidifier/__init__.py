@@ -113,21 +113,15 @@ class HumidifierDevice(Entity):
         return self.operation_mode
 
     @property
-    def state_attributes(self) -> Dict[str, Any]:
-        """Return the optional state attributes."""
+    def capability_attributes(self):
+        """Return capability attributes."""
+        data = {}
         supported_features = self.supported_features
-        data = {
-            ATTR_OPERATION_MODES: self.operation_modes,
-            ATTR_CURRENT_HUMIDITY: self.current_humidity,
-        }
 
         if supported_features & SUPPORT_TARGET_HUMIDITY:
             data[ATTR_HUMIDITY] = self.target_humidity
             data[ATTR_MIN_HUMIDITY] = self.min_humidity
             data[ATTR_MAX_HUMIDITY] = self.max_humidity
-
-        if self.humidifier_action:
-            data[ATTR_HUMIDIFIER_ACTION] = self.humidifier_action
 
         if supported_features & SUPPORT_FAN_MODE:
             data[ATTR_FAN_MODE] = self.fan_mode
@@ -142,6 +136,20 @@ class HumidifierDevice(Entity):
 
         if supported_features & SUPPORT_WATER_LEVEL:
             data[ATTR_WATER_LEVEL] = self.water_level
+
+        return data
+
+    @property
+    def state_attributes(self) -> Dict[str, Any]:
+        """Return the optional state attributes."""
+        data = {
+            ATTR_OPERATION_MODES: self.operation_modes,
+            ATTR_CURRENT_HUMIDITY: self.current_humidity,
+        }
+
+        if self.humidifier_action:
+            data[ATTR_HUMIDIFIER_ACTION] = self.humidifier_action
+
         return data
 
     @property
