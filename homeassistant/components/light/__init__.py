@@ -398,8 +398,8 @@ class Light(ToggleEntity):
         return None
 
     @property
-    def state_attributes(self):
-        """Return optional state attributes."""
+    def capability_attributes(self):
+        """Return capability attributes."""
         data = {}
         supported_features = self.supported_features
 
@@ -410,25 +410,35 @@ class Light(ToggleEntity):
         if supported_features & SUPPORT_EFFECT:
             data[ATTR_EFFECT_LIST] = self.effect_list
 
-        if self.is_on:
-            if supported_features & SUPPORT_BRIGHTNESS:
-                data[ATTR_BRIGHTNESS] = self.brightness
+        return data
 
-            if supported_features & SUPPORT_COLOR_TEMP:
-                data[ATTR_COLOR_TEMP] = self.color_temp
+    @property
+    def state_attributes(self):
+        """Return state attributes."""
+        if not self.is_on:
+            return None
 
-            if supported_features & SUPPORT_COLOR and self.hs_color:
-                # pylint: disable=unsubscriptable-object,not-an-iterable
-                hs_color = self.hs_color
-                data[ATTR_HS_COLOR] = (round(hs_color[0], 3), round(hs_color[1], 3))
-                data[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
-                data[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
+        data = {}
+        supported_features = self.supported_features
 
-            if supported_features & SUPPORT_WHITE_VALUE:
-                data[ATTR_WHITE_VALUE] = self.white_value
+        if supported_features & SUPPORT_BRIGHTNESS:
+            data[ATTR_BRIGHTNESS] = self.brightness
 
-            if supported_features & SUPPORT_EFFECT:
-                data[ATTR_EFFECT] = self.effect
+        if supported_features & SUPPORT_COLOR_TEMP:
+            data[ATTR_COLOR_TEMP] = self.color_temp
+
+        if supported_features & SUPPORT_COLOR and self.hs_color:
+            # pylint: disable=unsubscriptable-object,not-an-iterable
+            hs_color = self.hs_color
+            data[ATTR_HS_COLOR] = (round(hs_color[0], 3), round(hs_color[1], 3))
+            data[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
+            data[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
+
+        if supported_features & SUPPORT_WHITE_VALUE:
+            data[ATTR_WHITE_VALUE] = self.white_value
+
+        if supported_features & SUPPORT_EFFECT:
+            data[ATTR_EFFECT] = self.effect
 
         return {key: val for key, val in data.items() if val is not None}
 
