@@ -81,7 +81,7 @@ class MoonSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return MOON_ICONS.get(self.state, "mdi:brightness-3")
+        return MOON_ICONS.get(self.state)
 
     async def async_update(self):
         """Get the time and updates the states."""
