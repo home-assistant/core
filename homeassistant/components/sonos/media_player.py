@@ -1056,7 +1056,6 @@ class SonosEntity(MediaPlayerDevice):
     def restore(self):
         """Restore a snapshotted state to a player."""
         try:
-            # pylint: disable=protected-access
             self._soco_snapshot.restore()
         except (TypeError, AttributeError, SoCoException) as ex:
             # Can happen if restoring a coordinator onto a current slave

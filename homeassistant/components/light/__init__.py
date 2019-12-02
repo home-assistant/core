@@ -19,14 +19,13 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import UnknownUser, Unauthorized
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa
+from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
     ENTITY_SERVICE_SCHEMA,
 )
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers import intent
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
 
@@ -141,8 +140,6 @@ PROFILE_SCHEMA = vol.Schema(
     vol.ExactSequence((str, cv.small_float, cv.small_float, cv.byte))
 )
 
-INTENT_SET = "HassLightSet"
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -194,63 +191,6 @@ def preprocess_turn_off(params):
         return (True, params)  # Light should be turned off
 
     return (False, None)  # Light should be turned on
-
-
-class SetIntentHandler(intent.IntentHandler):
-    """Handle set color intents."""
-
-    intent_type = INTENT_SET
-    slot_schema = {
-        vol.Required("name"): cv.string,
-        vol.Optional("color"): color_util.color_name_to_rgb,
-        vol.Optional("brightness"): vol.All(vol.Coerce(int), vol.Range(0, 100)),
-    }
-
-    async def async_handle(self, intent_obj):
-        """Handle the hass intent."""
-        hass = intent_obj.hass
-        slots = self.async_validate_slots(intent_obj.slots)
-        state = hass.helpers.intent.async_match_state(
-            slots["name"]["value"],
-            [state for state in hass.states.async_all() if state.domain == DOMAIN],
-        )
-
-        service_data = {ATTR_ENTITY_ID: state.entity_id}
-        speech_parts = []
-
-        if "color" in slots:
-            intent.async_test_feature(state, SUPPORT_COLOR, "changing colors")
-            service_data[ATTR_RGB_COLOR] = slots["color"]["value"]
-            # Use original passed in value of the color because we don't have
-            # human readable names for that internally.
-            speech_parts.append(
-                "the color {}".format(intent_obj.slots["color"]["value"])
-            )
-
-        if "brightness" in slots:
-            intent.async_test_feature(state, SUPPORT_BRIGHTNESS, "changing brightness")
-            service_data[ATTR_BRIGHTNESS_PCT] = slots["brightness"]["value"]
-            speech_parts.append("{}% brightness".format(slots["brightness"]["value"]))
-
-        await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, service_data)
-
-        response = intent_obj.create_response()
-
-        if not speech_parts:  # No attributes changed
-            speech = f"Turned on {state.name}"
-        else:
-            parts = [f"Changed {state.name} to"]
-            for index, part in enumerate(speech_parts):
-                if index == 0:
-                    parts.append(f" {part}")
-                elif index != len(speech_parts) - 1:
-                    parts.append(f", {part}")
-                else:
-                    parts.append(f" and {part}")
-            speech = "".join(parts)
-
-        response.async_set_speech(speech)
-        return response
 
 
 async def async_setup(hass, config):
@@ -338,8 +278,6 @@ async def async_setup(hass, config):
     component.async_register_entity_service(
         SERVICE_TOGGLE, LIGHT_TOGGLE_SCHEMA, "async_toggle"
     )
-
-    hass.helpers.intent.async_register(SetIntentHandler())
 
     return True
 
@@ -460,8 +398,8 @@ class Light(ToggleEntity):
         return None
 
     @property
-    def state_attributes(self):
-        """Return optional state attributes."""
+    def capability_attributes(self):
+        """Return capability attributes."""
         data = {}
         supported_features = self.supported_features
 
@@ -472,25 +410,35 @@ class Light(ToggleEntity):
         if supported_features & SUPPORT_EFFECT:
             data[ATTR_EFFECT_LIST] = self.effect_list
 
-        if self.is_on:
-            if supported_features & SUPPORT_BRIGHTNESS:
-                data[ATTR_BRIGHTNESS] = self.brightness
+        return data
 
-            if supported_features & SUPPORT_COLOR_TEMP:
-                data[ATTR_COLOR_TEMP] = self.color_temp
+    @property
+    def state_attributes(self):
+        """Return state attributes."""
+        if not self.is_on:
+            return None
 
-            if supported_features & SUPPORT_COLOR and self.hs_color:
-                # pylint: disable=unsubscriptable-object,not-an-iterable
-                hs_color = self.hs_color
-                data[ATTR_HS_COLOR] = (round(hs_color[0], 3), round(hs_color[1], 3))
-                data[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
-                data[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
+        data = {}
+        supported_features = self.supported_features
 
-            if supported_features & SUPPORT_WHITE_VALUE:
-                data[ATTR_WHITE_VALUE] = self.white_value
+        if supported_features & SUPPORT_BRIGHTNESS:
+            data[ATTR_BRIGHTNESS] = self.brightness
 
-            if supported_features & SUPPORT_EFFECT:
-                data[ATTR_EFFECT] = self.effect
+        if supported_features & SUPPORT_COLOR_TEMP:
+            data[ATTR_COLOR_TEMP] = self.color_temp
+
+        if supported_features & SUPPORT_COLOR and self.hs_color:
+            # pylint: disable=unsubscriptable-object,not-an-iterable
+            hs_color = self.hs_color
+            data[ATTR_HS_COLOR] = (round(hs_color[0], 3), round(hs_color[1], 3))
+            data[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
+            data[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
+
+        if supported_features & SUPPORT_WHITE_VALUE:
+            data[ATTR_WHITE_VALUE] = self.white_value
+
+        if supported_features & SUPPORT_EFFECT:
+            data[ATTR_EFFECT] = self.effect
 
         return {key: val for key, val in data.items() if val is not None}
 

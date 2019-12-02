@@ -16,6 +16,7 @@ from .const import DOMAIN, LOGGER
 from .errors import AuthenticationRequired, CannotConnect
 
 HUE_MANUFACTURERURL = "http://www.philips.com"
+HUE_IGNORED_BRIDGE_NAMES = ["HASS Bridge", "Espalexa"]
 
 
 @callback
@@ -133,14 +134,16 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         This flow is triggered by the SSDP component. It will check if the
         host is already configured and delegate to the import step if not.
         """
-        from homeassistant.components.ssdp import ATTR_MANUFACTURERURL
+        from homeassistant.components.ssdp import ATTR_MANUFACTURERURL, ATTR_NAME
 
         if discovery_info[ATTR_MANUFACTURERURL] != HUE_MANUFACTURERURL:
             return self.async_abort(reason="not_hue_bridge")
 
-        # Filter out emulated Hue
-        if "HASS Bridge" in discovery_info.get("name", ""):
-            return self.async_abort(reason="already_configured")
+        if any(
+            name in discovery_info.get(ATTR_NAME, "")
+            for name in HUE_IGNORED_BRIDGE_NAMES
+        ):
+            return self.async_abort(reason="not_hue_bridge")
 
         host = self.context["host"] = discovery_info.get("host")
 

@@ -1,4 +1,5 @@
 """Component to interface with an alarm control panel."""
+from abc import abstractmethod
 from datetime import timedelta
 import logging
 
@@ -7,21 +8,29 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_CODE_FORMAT,
-    SERVICE_ALARM_TRIGGER,
-    SERVICE_ALARM_DISARM,
-    SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_NIGHT,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+    SERVICE_ALARM_ARM_HOME,
+    SERVICE_ALARM_ARM_NIGHT,
+    SERVICE_ALARM_DISARM,
+    SERVICE_ALARM_TRIGGER,
 )
-from homeassistant.helpers.config_validation import (  # noqa
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import (  # noqa: F401
     ENTITY_SERVICE_SCHEMA,
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+
+from .const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_NIGHT,
+    SUPPORT_ALARM_TRIGGER,
+)
 
 DOMAIN = "alarm_control_panel"
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -49,21 +58,34 @@ async def async_setup(hass, config):
         SERVICE_ALARM_DISARM, ALARM_SERVICE_SCHEMA, "async_alarm_disarm"
     )
     component.async_register_entity_service(
-        SERVICE_ALARM_ARM_HOME, ALARM_SERVICE_SCHEMA, "async_alarm_arm_home"
+        SERVICE_ALARM_ARM_HOME,
+        ALARM_SERVICE_SCHEMA,
+        "async_alarm_arm_home",
+        [SUPPORT_ALARM_ARM_HOME],
     )
     component.async_register_entity_service(
-        SERVICE_ALARM_ARM_AWAY, ALARM_SERVICE_SCHEMA, "async_alarm_arm_away"
+        SERVICE_ALARM_ARM_AWAY,
+        ALARM_SERVICE_SCHEMA,
+        "async_alarm_arm_away",
+        [SUPPORT_ALARM_ARM_AWAY],
     )
     component.async_register_entity_service(
-        SERVICE_ALARM_ARM_NIGHT, ALARM_SERVICE_SCHEMA, "async_alarm_arm_night"
+        SERVICE_ALARM_ARM_NIGHT,
+        ALARM_SERVICE_SCHEMA,
+        "async_alarm_arm_night",
+        [SUPPORT_ALARM_ARM_NIGHT],
     )
     component.async_register_entity_service(
         SERVICE_ALARM_ARM_CUSTOM_BYPASS,
         ALARM_SERVICE_SCHEMA,
         "async_alarm_arm_custom_bypass",
+        [SUPPORT_ALARM_ARM_CUSTOM_BYPASS],
     )
     component.async_register_entity_service(
-        SERVICE_ALARM_TRIGGER, ALARM_SERVICE_SCHEMA, "async_alarm_trigger"
+        SERVICE_ALARM_TRIGGER,
+        ALARM_SERVICE_SCHEMA,
+        "async_alarm_trigger",
+        [SUPPORT_ALARM_TRIGGER],
     )
 
     return True
@@ -79,7 +101,6 @@ async def async_unload_entry(hass, entry):
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
-# pylint: disable=no-self-use
 class AlarmControlPanel(Entity):
     """An abstract class for alarm control devices."""
 
@@ -163,6 +184,11 @@ class AlarmControlPanel(Entity):
         This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.async_add_executor_job(self.alarm_arm_custom_bypass, code)
+
+    @property
+    @abstractmethod
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
 
     @property
     def state_attributes(self):

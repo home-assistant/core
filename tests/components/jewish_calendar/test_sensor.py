@@ -180,8 +180,9 @@ async def test_jewish_calendar_sensor(
     assert sensor_object.state == str(result)
 
     if sensor == "holiday":
-        assert sensor_object.attributes.get("type") == "YOM_TOV"
         assert sensor_object.attributes.get("id") == "rosh_hashana_i"
+        assert sensor_object.attributes.get("type") == "YOM_TOV"
+        assert sensor_object.attributes.get("type_id") == 1
 
 
 SHABBAT_PARAMS = [

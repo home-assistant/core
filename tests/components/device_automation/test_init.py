@@ -184,6 +184,9 @@ async def test_websocket_get_action_capabilities(
     entity_reg.async_get_or_create(
         "alarm_control_panel", "test", "5678", device_id=device_entry.id
     )
+    hass.states.async_set(
+        "alarm_control_panel.test_5678", "attributes", {"supported_features": 15}
+    )
     expected_capabilities = {
         "arm_away": {"extra_fields": []},
         "arm_home": {"extra_fields": []},

@@ -207,7 +207,7 @@ class ScriptEntity(ToggleEntity):
         )
         try:
             await self.script.async_run(kwargs.get(ATTR_VARIABLES), context)
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:
             self.script.async_log_exception(
                 _LOGGER, f"Error executing script {self.entity_id}", err
             )

@@ -17,7 +17,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import as_local, parse_datetime, utc_from_timestamp
 
-from . import config_flow  # noqa  pylint_disable=unused-import
+from . import config_flow
 from .const import (
     CONF_WEBHOOK_URL,
     DOMAIN,

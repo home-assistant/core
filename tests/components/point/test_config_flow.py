@@ -14,7 +14,7 @@ def init_config_flow(hass, side_effect=None):
     """Init a configuration flow."""
     config_flow.register_flow_implementation(hass, DOMAIN, "id", "secret")
     flow = config_flow.PointFlowHandler()
-    flow._get_authorization_url = Mock(  # pylint: disable=W0212
+    flow._get_authorization_url = Mock(  # pylint: disable=protected-access
         return_value=mock_coro("https://example.com"), side_effect=side_effect
     )
     flow.hass = hass
@@ -28,7 +28,7 @@ def is_authorized():
 
 
 @pytest.fixture
-def mock_pypoint(is_authorized):  # pylint: disable=W0621
+def mock_pypoint(is_authorized):  # pylint: disable=redefined-outer-name
     """Mock pypoint."""
     with MockDependency("pypoint") as mock_pypoint_:
         mock_pypoint_.PointSession().get_access_token.return_value = {
@@ -67,8 +67,8 @@ async def test_abort_if_already_setup(hass):
 
 
 async def test_full_flow_implementation(
-    hass, mock_pypoint
-):  # noqa pylint: disable=W0621
+    hass, mock_pypoint  # pylint: disable=redefined-outer-name
+):
     """Test registering an implementation and finishing flow works."""
     config_flow.register_flow_implementation(hass, "test-other", None, None)
     flow = init_config_flow(hass)
@@ -94,7 +94,7 @@ async def test_full_flow_implementation(
     assert result["data"]["token"] == {"access_token": "boo"}
 
 
-async def test_step_import(hass, mock_pypoint):  # pylint: disable=W0621
+async def test_step_import(hass, mock_pypoint):  # pylint: disable=redefined-outer-name
     """Test that we trigger import when configuring with client."""
     flow = init_config_flow(hass)
 
@@ -106,7 +106,7 @@ async def test_step_import(hass, mock_pypoint):  # pylint: disable=W0621
 @pytest.mark.parametrize("is_authorized", [False])
 async def test_wrong_code_flow_implementation(
     hass, mock_pypoint
-):  # noqa pylint: disable=W0621
+):  # pylint: disable=redefined-outer-name
     """Test wrong code."""
     flow = init_config_flow(hass)
 

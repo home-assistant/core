@@ -162,7 +162,6 @@ class Timer(RestoreEntity):
             event = EVENT_TIMER_RESTARTED
 
         self._state = STATUS_ACTIVE
-        # pylint: disable=redefined-outer-name
         start = dt_util.utcnow()
         if self._remaining and newduration is None:
             self._end = start + self._remaining
