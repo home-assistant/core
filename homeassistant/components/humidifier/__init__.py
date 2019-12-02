@@ -43,7 +43,6 @@ from .const import (
     SERVICE_SET_PRESET_MODE,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TEMPERATURE,
     SUPPORT_WATER_LEVEL,
     DEFAULT_MIN_HUMIDITY,
@@ -91,7 +90,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         SERVICE_SET_HUMIDITY,
         ENTITY_SERVICE_SCHEMA.extend({vol.Required(ATTR_HUMIDITY): vol.Coerce(float)}),
         "async_set_humidity",
-        [SUPPORT_TARGET_HUMIDITY],
     )
 
     return True
@@ -121,10 +119,9 @@ class HumidifierDevice(Entity):
         data = {}
         supported_features = self.supported_features
 
-        if supported_features & SUPPORT_TARGET_HUMIDITY:
-            data[ATTR_HUMIDITY] = self.target_humidity
-            data[ATTR_MIN_HUMIDITY] = self.min_humidity
-            data[ATTR_MAX_HUMIDITY] = self.max_humidity
+        data[ATTR_HUMIDITY] = self.target_humidity
+        data[ATTR_MIN_HUMIDITY] = self.min_humidity
+        data[ATTR_MAX_HUMIDITY] = self.max_humidity
 
         if supported_features & SUPPORT_FAN_MODE:
             data[ATTR_FAN_MODE] = self.fan_mode

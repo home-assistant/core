@@ -12,7 +12,6 @@ from homeassistant.components.humidifier import (
     OPERATION_MODE_HUMIDIFY,
     OPERATION_MODE_OFF,
     ATTR_HUMIDITY,
-    SUPPORT_TARGET_HUMIDITY,
 )
 from tests.common import async_mock_service
 
@@ -67,7 +66,7 @@ class MockHumidifierDevice(HumidifierDevice):
     @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
-        return SUPPORT_TARGET_HUMIDITY
+        return 0
 
 
 async def test_sync_turn_on(hass):
