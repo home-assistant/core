@@ -200,13 +200,13 @@ getmac==0.8.1
 # homeassistant.components.glances
 glances_api==0.2.0
 
-# homeassistant.components.Google
+# homeassistant.components.google
 google-api-python-client==1.6.4
 
 # homeassistant.components.google_pubsub
 google-cloud-pubsub==0.39.1
 
-# homeassistant.components.FFmpeg
+# homeassistant.components.ffmpeg
 ha-ffmpeg==2.0
 
 # homeassistant.components.hangouts
@@ -242,7 +242,7 @@ homekit[IP]==0.15.0
 # homeassistant.components.homematicip_cloud
 homematicip==0.10.13
 
-# homeassistant.components.Google
+# homeassistant.components.google
 # homeassistant.components.remember_the_milk
 httplib2==0.10.3
 
@@ -307,14 +307,14 @@ nuheat==0.3.0
 # homeassistant.components.trend
 numpy==1.17.4
 
-# homeassistant.components.Google
+# homeassistant.components.google
 oauth2client==4.0.0
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
 paho-mqtt==1.5.0
 
-# homeassistant.components.Aruba
+# homeassistant.components.aruba
 # homeassistant.components.cisco_ios
 # homeassistant.components.pandora
 # homeassistant.components.unifi_direct
@@ -323,8 +323,8 @@ pexpect==4.6.0
 # homeassistant.components.pilight
 pilight==0.1.1
 
-# homeassistant.components.Proxy
 # homeassistant.components.image_processing
+# homeassistant.components.proxy
 # homeassistant.components.qrcode
 pillow==6.2.1
 
@@ -359,7 +359,7 @@ pure-python-adb==0.2.2.dev0
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
 
-# homeassistant.components.Canary
+# homeassistant.components.canary
 py-canary==0.5.0
 
 # homeassistant.components.melissa
@@ -371,7 +371,7 @@ py17track==2.2.2
 # homeassistant.components.tplink
 pyHS100==0.3.5
 
-# homeassistant.components.MET
+# homeassistant.components.met
 # homeassistant.components.norway_air
 pyMetno==0.4.6
 
@@ -423,7 +423,7 @@ pyfritzhome==0.4.0
 # homeassistant.components.ifttt
 pyfttt==0.3
 
-# homeassistant.components.VERSION
+# homeassistant.components.version
 pyhaversion==3.1.0
 
 # homeassistant.components.heos
