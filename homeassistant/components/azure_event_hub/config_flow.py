@@ -180,9 +180,9 @@ async def test_connection(config: Dict):
     except (ConnectError, AuthenticationError) as exp:
         _LOGGER.debug("Error:, %s", exp)
         msg = str(exp)
-        if (
+        if (  # pylint: disable=no-else-raise
             "Please confirm target hostname exists" in msg
-        ):  # pylint: disable=no-else-raise
+        ):
             raise InvalidNamespace
         elif "Failed to open mgmt link" in msg:
             raise InvalidInstance
@@ -244,9 +244,9 @@ class AzureEventHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 _LOGGER.info("Info gathered: %s", user_input)
                 config, name = await validate_input(user_input, self.hass)
-                if self._from_yaml or not user_input.get(
-                    CONF_FILTER
-                ):  # pylint: disable=no-else-return
+                if (  # pylint: disable=no-else-return
+                    self._from_yaml or not user_input.get(CONF_FILTER)
+                ):
                     return self.async_create_entry(title=name, data=config)
                 else:
                     self._init_in_progress = user_input
