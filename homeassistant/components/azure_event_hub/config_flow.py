@@ -78,7 +78,7 @@ def valid_domain(hass: HomeAssistant, value: str):
     """Validate a domain in the filter, existing in current HA."""
     domains = hass.data.get("integrations", {}).keys()
     if domains:
-        if value in domains:
+        if value in domains:  # pylint: disable=no-else-return
             return value
         else:
             raise InvalidDomain
@@ -96,7 +96,7 @@ def valid_entity(hass: HomeAssistant, value: str):
         raise InvalidEntity
     if domains:
         # only checks if the domain exists, entity names might not be ready yet.
-        if cv.split_entity_id(value)[0] in domains:
+        if cv.split_entity_id(value)[0] in domains:  # pylint: disable=no-else-return
             return value
         else:
             raise InvalidEntity
@@ -117,20 +117,20 @@ def reformat_config(data: Dict, hass: HomeAssistant):
             config[CONF_FILTER] = {}
         else:
             validated_filter = {}
-            for k, filter in config[CONF_FILTER].items():
-                if isinstance(filter, list):
-                    validated_filter[k] = filter
+            for k, filt in config[CONF_FILTER].items():
+                if isinstance(filt, list):
+                    validated_filter[k] = filt
                 else:
                     if k in [CONF_EXCLUDE_DOMAINS, CONF_INCLUDE_DOMAINS]:
                         validated_filter[k] = (
-                            [valid_domain(hass, f.strip()) for f in filter.split(",")]
-                            if filter
+                            [valid_domain(hass, f.strip()) for f in filt.split(",")]
+                            if filt
                             else []
                         )
                     else:
                         validated_filter[k] = (
-                            [valid_entity(hass, f.strip()) for f in filter.split(",")]
-                            if filter
+                            [valid_entity(hass, f.strip()) for f in filt.split(",")]
+                            if filt
                             else []
                         )
             try:
@@ -153,8 +153,8 @@ async def test_connection(config: Dict):
             client = EventHubProducerClient.from_connection_string(
                 **client_args, **additional_args
             )
-        except ValueError as e:  # occurs when the format of a connection string is wrong
-            _LOGGER.debug("ValueError: %s", e)
+        except ValueError as exp:  # occurs when the format of a connection string is wrong
+            _LOGGER.debug("ValueError: %s", exp)
             raise InvalidConnectionString
     elif (
         config.get(CONF_EVENT_HUB_NAMESPACE, None)
@@ -177,10 +177,12 @@ async def test_connection(config: Dict):
         raise InvalidConfig
     try:
         await client.get_partition_ids()
-    except (ConnectError, AuthenticationError) as e:
-        _LOGGER.debug("Error:, %s", e)
-        msg = str(e)
-        if "Please confirm target hostname exists" in msg:
+    except (ConnectError, AuthenticationError) as exp:
+        _LOGGER.debug("Error:, %s", exp)
+        msg = str(exp)
+        if (
+            "Please confirm target hostname exists" in msg
+        ):  # pylint: disable=no-else-raise
             raise InvalidNamespace
         elif "Failed to open mgmt link" in msg:
             raise InvalidInstance
@@ -201,9 +203,9 @@ async def validate_input(data: Dict, hass: HomeAssistant):
     config = reformat_config(data, hass)
     try:
         CONFIG_VALIDATION_SCHEMA(config)
-    except Exception as e:  # pylint: disable=broad-except
-        _LOGGER.debug("Config validation failed: %s", e)
-        raise e
+    except Exception as exp:  # pylint: disable=broad-except
+        _LOGGER.debug("Config validation failed: %s", exp)
+        raise exp
     return config, await test_connection(config)
 
 
@@ -242,7 +244,9 @@ class AzureEventHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 _LOGGER.info("Info gathered: %s", user_input)
                 config, name = await validate_input(user_input, self.hass)
-                if self._from_yaml or not user_input.get(CONF_FILTER):
+                if self._from_yaml or not user_input.get(
+                    CONF_FILTER
+                ):  # pylint: disable=no-else-return
                     return self.async_create_entry(title=name, data=config)
                 else:
                     self._init_in_progress = user_input
@@ -258,10 +262,10 @@ class AzureEventHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 InvalidDomain,
                 InvalidEntity,
                 CannotConnect,
-            ) as e:
-                self._errors["base"] = e.msg
-            except Exception as e:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception: %s", e)
+            ) as exp:
+                self._errors["base"] = exp.msg
+            except Exception as exp:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception: %s", exp)
                 self._errors["base"] = "unknown"
 
         return self.async_show_form(
@@ -287,10 +291,10 @@ class AzureEventHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 InvalidDomain,
                 InvalidEntity,
                 CannotConnect,
-            ) as e:
-                self._errors["base"] = e.msg
-            except Exception as e:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception: %s", e)
+            ) as exp:
+                self._errors["base"] = exp.msg
+            except Exception as exp:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception: %s", exp)
                 self._errors["base"] = "unknown"
         return self.async_show_form(
             step_id="filter", data_schema=FILTER_ENTRY_SCHEMA, errors=self._errors

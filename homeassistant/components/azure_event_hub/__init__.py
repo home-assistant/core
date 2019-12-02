@@ -181,7 +181,7 @@ class AEHThread(threading.Thread):
         dequeue_count = 0
         dropped = 0
         can_add = True
-        try:
+        try:  # pylint: disable=too-many-nested-blocks
             while can_add and not self.shutdown:
                 timeout = None if dequeue_count == 0 else self.batch_timeout()
                 item = self.queue.get(timeout=timeout)
@@ -230,8 +230,8 @@ class AEHThread(threading.Thread):
             if len(data_batch) > 0:
                 with client:
                     client.send(data_batch)
-        except EventHubError as e:
-            _LOGGER.error("Error in sending events to Event Hub: %s", e)
+        except EventHubError as exc:
+            _LOGGER.error("Error in sending events to Event Hub: %s", exc)
         finally:
             client.close()
             for _ in range(dequeue_count):
