@@ -300,7 +300,7 @@ class HumidifierDevice(Entity):
     @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
-        raise NotImplementedError()
+        return SUPPORT_TARGET_HUMIDITY
 
     @property
     def min_humidity(self) -> int:
