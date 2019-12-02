@@ -2,13 +2,14 @@
 import asyncio
 from base64 import b64encode
 from binascii import hexlify
+from collections import defaultdict
 from datetime import timedelta
 from ipaddress import ip_address
-from itertools import product, takewhile, zip_longest
-import json
+from itertools import product
 import logging
 import socket
 
+import broadlink
 import voluptuous as vol
 
 from homeassistant.components.remote import (
@@ -19,22 +20,21 @@ from homeassistant.components.remote import (
     ATTR_NUM_REPEATS,
     ATTR_TIMEOUT,
     DEFAULT_DELAY_SECS,
-    DEFAULT_NUM_REPEATS,
     DOMAIN as COMPONENT,
     PLATFORM_SCHEMA,
     SUPPORT_LEARN_COMMAND,
     RemoteDevice,
 )
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.storage import Store
 from homeassistant.util.dt import utcnow
 
 from . import DOMAIN, data_packet, hostname, mac_address
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_METADATA = ".metadata"
 
 DEFAULT_LEARNING_TIMEOUT = 20
 DEFAULT_NAME = "Broadlink"
@@ -44,30 +44,44 @@ DEFAULT_TIMEOUT = 5
 
 SCAN_INTERVAL = timedelta(minutes=2)
 
-COMMAND_SCHEMA = vol.Schema(
+CODE_STORAGE_KEY = "{}_codes"
+CODE_STORAGE_VERSION = 1
+FLAG_STORAGE_KEY = "{}_flags"
+FLAG_STORAGE_VERSION = 1
+FLAG_SAVE_DELAY = 15
+
+CODE_STORAGE_SCHEMA = vol.Schema(
     {
         vol.All(str, vol.Length(min=1)): {  # Device
-            CONF_METADATA: dict,
             vol.All(str, vol.Length(min=1)): vol.Any(  # Command
-                vol.All(str, vol.Length(min=1)),
+                vol.All(str, vol.Length(min=1)),  # Code
                 vol.All([vol.All(str, vol.Length(min=1))], vol.Length(min=2, max=2)),
-            ),
+            )
         }
     }
 )
 
-TOGGLE_SCHEMA = vol.Schema({cv.string: vol.In([0, 1])})
+FLAG_STORAGE_SCHEMA = vol.Schema({cv.string: vol.In([0, 1])})
 
 MINIMUM_SERVICE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_COMMAND): vol.All(
-            cv.ensure_list,
-            [vol.All(cv.string, vol.Length(min=1), vol.NotIn([CONF_METADATA]))],
-            vol.Length(min=1),
+            cv.ensure_list, [vol.All(cv.string, vol.Length(min=1))], vol.Length(min=1)
         ),
         vol.Required(ATTR_DEVICE): vol.All(cv.string, vol.Length(min=1)),
     },
     extra=vol.ALLOW_EXTRA,
+)
+
+SERVICE_SEND_SCHEMA = MINIMUM_SERVICE_SCHEMA.extend(
+    {vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS): vol.Coerce(float)}
+)
+
+SERVICE_LEARN_SCHEMA = MINIMUM_SERVICE_SCHEMA.extend(
+    {
+        vol.Optional(ATTR_ALTERNATIVE, default=False): cv.boolean,
+        vol.Optional(ATTR_TIMEOUT, default=DEFAULT_LEARNING_TIMEOUT): cv.positive_int,
+    }
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -82,12 +96,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Broadlink remote."""
-    import broadlink
-
-    host = config.get(CONF_HOST)
-    mac_addr = config.get(CONF_MAC)
-    timeout = config.get(CONF_TIMEOUT)
-    name = config.get(CONF_NAME)
+    host = config[CONF_HOST]
+    mac_addr = config[CONF_MAC]
+    timeout = config[CONF_TIMEOUT]
+    name = config[CONF_NAME]
     unique_id = f"remote_{hexlify(mac_addr).decode('utf-8')}"
 
     if unique_id in hass.data.setdefault(DOMAIN, {}).setdefault(COMPONENT, []):
@@ -97,13 +109,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     api = broadlink.rm((host, DEFAULT_PORT), mac_addr, None)
     api.timeout = timeout
-    remote = BroadlinkRemote(name, unique_id, api, hass.config.path)
+    code_storage = Store(hass, CODE_STORAGE_VERSION, CODE_STORAGE_KEY.format(unique_id))
+    flag_storage = Store(hass, FLAG_STORAGE_VERSION, FLAG_STORAGE_KEY.format(unique_id))
+    remote = BroadlinkRemote(name, unique_id, api, code_storage, flag_storage)
 
-    connected = False
-    loaded = False
+    connected, loaded = (False, False)
     try:
         connected, loaded = await asyncio.gather(
-            hass.async_add_executor_job(api.auth), remote.async_retrieve_data()
+            hass.async_add_executor_job(api.auth), remote.async_load_storage_files()
         )
     except socket.error:
         pass
@@ -120,15 +133,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class BroadlinkRemote(RemoteDevice):
     """Representation of a Broadlink remote."""
 
-    def __init__(self, name, unique_id, api, config_path):
+    def __init__(self, name, unique_id, api, code_storage, flag_storage):
         """Initialize the remote."""
         self._name = name
         self._unique_id = unique_id
         self._api = api
-        self._command_file = config_path(f"{unique_id}.json")
-        self._toggle_file = config_path(f"{unique_id}.dat")
-        self._commands = {}
-        self._toggle = {}
+        self._code_storage = code_storage
+        self._flag_storage = flag_storage
+        self._codes = {}
+        self._flags = defaultdict(int)
         self._state = True
         self._available = True
 
@@ -153,14 +166,18 @@ class BroadlinkRemote(RemoteDevice):
         return self._available
 
     @property
-    def should_poll(self):
-        """Return True if the remote has to be polled for state."""
-        return True
-
-    @property
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_LEARN_COMMAND
+
+    @callback
+    def flags(self):
+        """Return dictionary of toggle flags.
+
+        A toggle flag indicates whether `self._async_send()`
+        should send an alternative code for a key device.
+        """
+        return self._flags
 
     async def async_turn_on(self, **kwargs):
         """Turn the remote on."""
@@ -175,47 +192,69 @@ class BroadlinkRemote(RemoteDevice):
         if not self.available:
             await self._async_connect()
 
+    async def async_load_storage_files(self):
+        """Load codes and toggle flags from storage files."""
+        try:
+            self._codes.update(
+                await self._async_get_data(self._code_storage, CODE_STORAGE_SCHEMA)
+            )
+            self._flags.update(
+                await self._async_get_data(self._flag_storage, FLAG_STORAGE_SCHEMA)
+            )
+        except (HomeAssistantError, vol.MultipleInvalid):
+            return False
+        return True
+
+    async def _async_get_data(self, storage, schema):
+        """Return data from storage file."""
+        try:
+            data = schema(await storage.async_load() or {})
+        except (HomeAssistantError, vol.MultipleInvalid) as err:
+            _LOGGER.error("Failed to load '%s': %s", storage.path, err)
+            raise
+        return data
+
     async def async_send_command(self, command, **kwargs):
         """Send a list of commands to a device."""
         kwargs[ATTR_COMMAND] = command
-        kwargs = MINIMUM_SERVICE_SCHEMA(kwargs)
-        commands = kwargs.get(ATTR_COMMAND)
-        device = kwargs.get(ATTR_DEVICE)
-        repeat = kwargs.get(ATTR_NUM_REPEATS, DEFAULT_NUM_REPEATS)
-        delay = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
+        kwargs = SERVICE_SEND_SCHEMA(kwargs)
+        commands = kwargs[ATTR_COMMAND]
+        device = kwargs[ATTR_DEVICE]
+        repeat = kwargs[ATTR_NUM_REPEATS]
+        delay = kwargs[ATTR_DELAY_SECS]
 
         if not self._state:
             return
 
-        initial_toggle_value = self._toggle.get(device)
-
         should_delay = False
         for _, cmd in product(range(repeat), commands):
             try:
-                should_delay = await self._async_send_single_command(
-                    cmd, device, delay=delay if should_delay else 0
+                should_delay = await self._async_send_code(
+                    cmd, device, delay if should_delay else 0
                 )
             except ConnectionError:
                 break
 
-        if self._toggle.get(device) != initial_toggle_value:
-            await self._async_store_toggle_data(self._toggle_file)
+        self._flag_storage.async_delay_save(self.flags, FLAG_SAVE_DELAY)
 
-    async def _async_send_single_command(self, command, device, delay=0):
-        """Send a single command to a device.
+    async def _async_send_code(self, command, device, delay):
+        """Send a code to a device.
 
         For toggle commands, alternate between codes in a list,
         ensuring that the same code is never sent twice in a row.
         """
         try:
-            code, is_toggle = (
-                await asyncio.gather(
-                    self._async_get_code(command, device), asyncio.sleep(delay)
-                )
-            )[0]
+            code = self._codes[device][command]
         except KeyError:
             _LOGGER.error("Failed to send '%s/%s': command not found", command, device)
             return False
+
+        if isinstance(code, list):
+            code = code[self._flags[device]]
+            should_alternate = True
+        else:
+            should_alternate = False
+        await asyncio.sleep(delay)
 
         try:
             await self._async_attempt(self._api.send_data, data_packet(code))
@@ -226,24 +265,18 @@ class BroadlinkRemote(RemoteDevice):
             _LOGGER.error("Failed to send '%s/%s': remote is offline", command, device)
             raise
 
-        if is_toggle:
-            self._toggle[device] ^= 1
-        return True
+        if should_alternate:
+            self._flags[device] ^= 1
 
-    async def _async_get_code(self, command, device):
-        """Return the code and a toggle flag for a given command."""
-        code = self._commands[device][command]
-        if isinstance(code, list):
-            return (code[self._toggle[device]], True)
-        return (code, False)
+        return True
 
     async def async_learn_command(self, **kwargs):
         """Learn a list of commands from a remote."""
-        kwargs = MINIMUM_SERVICE_SCHEMA(kwargs)
-        commands = kwargs.get(ATTR_COMMAND)
-        device = kwargs.get(ATTR_DEVICE)
-        toggle = kwargs.get(ATTR_ALTERNATIVE)
-        timeout = kwargs.get(ATTR_TIMEOUT, DEFAULT_LEARNING_TIMEOUT)
+        kwargs = SERVICE_LEARN_SCHEMA(kwargs)
+        commands = kwargs[ATTR_COMMAND]
+        device = kwargs[ATTR_DEVICE]
+        toggle = kwargs[ATTR_ALTERNATIVE]
+        timeout = kwargs[ATTR_TIMEOUT]
 
         if not self._state:
             return
@@ -251,22 +284,28 @@ class BroadlinkRemote(RemoteDevice):
         should_store = False
         for command in commands:
             try:
-                should_store |= await self._async_learn_single_command(
-                    command, device, toggle=toggle, timeout=timeout
+                should_store |= await self._async_learn_code(
+                    command, device, toggle, timeout
                 )
             except ConnectionError:
                 break
 
         if should_store:
-            await self._async_store_commands(self._command_file)
+            await self._code_storage.async_save(self._codes)
 
-    async def _async_learn_single_command(
-        self, command, device, toggle=False, timeout=DEFAULT_LEARNING_TIMEOUT
-    ):
-        """Learn a single command from a remote."""
+    async def _async_learn_code(self, command, device, toggle, timeout):
+        """Learn a code from a remote.
+
+        Capture an aditional code for toggle commands.
+        """
         try:
-            code = await self._async_capture_code(
-                command, toggle=toggle, timeout=timeout
+            code = (
+                await self._async_capture_code(command, timeout)
+                if not toggle
+                else [
+                    await self._async_capture_code(command, timeout),
+                    await self._async_capture_code(command, timeout),
+                ]
             )
         except (ValueError, TimeoutError):
             _LOGGER.error(
@@ -277,20 +316,12 @@ class BroadlinkRemote(RemoteDevice):
             _LOGGER.error("Failed to learn '%s/%s': remote is offline", command, device)
             raise
 
-        try:
-            self._commands[device][command] = code
-        except KeyError:  # New device
-            self._commands[device] = {command: code}
-            self._toggle[device] = 0
+        self._codes.setdefault(device, {}).update({command: code})
+
         return True
 
-    async def _async_capture_code(
-        self, command, toggle=False, timeout=DEFAULT_LEARNING_TIMEOUT
-    ):
-        """Enter learning mode and capture a code from a remote.
-
-        Capture an aditional code for toggle commands.
-        """
+    async def _async_capture_code(self, command, timeout):
+        """Enter learning mode and capture a code from a remote."""
         await self._async_attempt(self._api.enter_learning)
 
         self.hass.components.persistent_notification.async_create(
@@ -316,12 +347,7 @@ class BroadlinkRemote(RemoteDevice):
         if all(not value for value in code):
             raise ValueError
 
-        code = b64encode(code).decode("utf8")
-        return (
-            code
-            if not toggle
-            else [code, await self._async_capture_code(command, timeout=timeout)]
-        )
+        return b64encode(code).decode("utf8")
 
     async def _async_attempt(self, function, *args):
         """Retry a socket-related function until it succeeds."""
@@ -348,71 +374,3 @@ class BroadlinkRemote(RemoteDevice):
             _LOGGER.warning("Disconnected from the remote")
             self._available = False
         return auth
-
-    async def async_retrieve_data(self):
-        """Load dictionary of commands and toggle data from files."""
-        try:
-            await self._async_load_commands(self._command_file)
-            await self._async_load_toggle_data(self._toggle_file)
-        except FileNotFoundError:
-            pass  # No problem. The file will be created soon.
-        except (IOError, json.JSONDecodeError, vol.MultipleInvalid):
-            return False
-        return True
-
-    async def _async_load_commands(self, file_path):
-        """Load dictionary of commands from a JSON file."""
-        try:
-            with open(file_path, "r") as json_file:
-                self._commands = COMMAND_SCHEMA(json.load(json_file))
-        except FileNotFoundError:
-            raise
-        except IOError as err:
-            _LOGGER.error("Failed to load '%s': %s", file_path, err.strerror)
-            raise
-        except json.JSONDecodeError as err:
-            _LOGGER.error("Failed to load '%s': %s", file_path, err)
-            raise
-        except vol.MultipleInvalid as err:
-            _LOGGER.error("Failed to load '%s': %s", file_path, err)
-            raise
-
-    async def _async_store_commands(self, file_path):
-        """Dump dictionary of commands into a JSON file."""
-        try:
-            with open(file_path, "w") as json_file:
-                json.dump(self._commands, json_file, indent=4)
-        except IOError as err:
-            _LOGGER.error("Failed to write '%s': %s", file_path, err.strerror)
-
-    async def _async_load_toggle_data(self, file_path):
-        """Load dictionary of toggle values from a binary file.
-
-        You should call ``self._async_load_commands()`` first.
-        """
-        try:
-            with open(file_path, "rb") as bin_file:
-                self._toggle = TOGGLE_SCHEMA(
-                    dict(
-                        takewhile(
-                            lambda d: d[0],
-                            zip_longest(self._commands, bin_file.read(), fillvalue=0),
-                        )
-                    )
-                )
-        except FileNotFoundError:
-            raise
-        except IOError as err:
-            _LOGGER.error("Failed to load '%s': %s", file_path, err.strerror)
-            raise
-        except vol.MultipleInvalid as err:
-            _LOGGER.error("Failed to load '%s': %s", file_path, err)
-            raise
-
-    async def _async_store_toggle_data(self, file_path):
-        """Store dictionary of toggle values into a binary file."""
-        try:
-            with open(file_path, "wb") as bin_file:
-                bin_file.write(bytes(self._toggle.values()))
-        except IOError as err:
-            _LOGGER.error("Failed to write '%s': %s", file_path, err.strerror)
