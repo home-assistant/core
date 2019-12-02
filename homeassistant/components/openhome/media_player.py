@@ -17,14 +17,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 
-SUPPORT_OPENHOME = (
-    SUPPORT_SELECT_SOURCE
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_TURN_OFF
-    | SUPPORT_TURN_ON
-)
+SUPPORT_OPENHOME = SUPPORT_SELECT_SOURCE | SUPPORT_TURN_OFF | SUPPORT_TURN_ON
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,13 +72,18 @@ class OpenhomeDevice(MediaPlayerDevice):
         self._in_standby = self._device.IsInStandby()
         self._transport_state = self._device.TransportState()
         self._track_information = self._device.TrackInfo()
-        self._volume_level = self._device.VolumeLevel()
-        self._volume_muted = self._device.IsMuted()
         self._source = self._device.Source()
         self._name = self._device.Room().decode("utf-8")
         self._supported_features = SUPPORT_OPENHOME
         source_index = {}
         source_names = list()
+
+        if self._device.VolumeEnabled():
+            self._supported_features |= (
+                SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET
+            )
+            self._volume_level = self._device.VolumeLevel()
+            self._volume_muted = self._device.IsMuted()
 
         for source in self._device.Sources():
             source_names.append(source["name"])

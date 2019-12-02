@@ -77,7 +77,7 @@ class PlexServer:
             self.server_choice = (
                 self._server_name if self._server_name else available_servers[0][0]
             )
-            self._plex_server = account.resource(self.server_choice).connect()
+            self._plex_server = account.resource(self.server_choice).connect(timeout=10)
 
         def _connect_with_url():
             session = None
@@ -192,7 +192,7 @@ class PlexServer:
     @property
     def url_in_use(self):
         """Return URL used for connected Plex server."""
-        return self._plex_server._baseurl  # pylint: disable=W0212
+        return self._plex_server._baseurl  # pylint: disable=protected-access
 
     @property
     def use_episode_art(self):

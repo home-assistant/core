@@ -150,7 +150,6 @@ class CastStatusListener:
         chromecast.register_status_listener(self)
         chromecast.socket_client.media_controller.register_status_listener(self)
         chromecast.register_connection_listener(self)
-        # pylint: disable=protected-access
         if cast_device._cast_info.is_audio_group:
             self._mz_mgr.add_multizone(chromecast)
         else:

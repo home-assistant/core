@@ -1,12 +1,12 @@
-"""Support for thr Free Mobile SMS platform."""
+"""Support for Free Mobile SMS platform."""
 import logging
 
+from freesms import FreeClient
 import voluptuous as vol
 
+from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
-
-from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,8 +25,6 @@ class FreeSMSNotificationService(BaseNotificationService):
 
     def __init__(self, username, access_token):
         """Initialize the service."""
-        from freesms import FreeClient
-
         self.free_client = FreeClient(username, access_token)
 
     def send_message(self, message="", **kwargs):

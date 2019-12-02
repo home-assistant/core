@@ -1,11 +1,9 @@
 """The tests for the Conversation component."""
-# pylint: disable=protected-access
 import pytest
 
-from homeassistant.core import DOMAIN as HASS_DOMAIN
+from homeassistant.core import DOMAIN as HASS_DOMAIN, Context
 from homeassistant.setup import async_setup_component
 from homeassistant.components import conversation
-from homeassistant.components.cover import SERVICE_OPEN_COVER
 from homeassistant.helpers import intent
 
 from tests.common import async_mock_intent, async_mock_service
@@ -25,10 +23,13 @@ async def test_calling_intent(hass):
     )
     assert result
 
+    context = Context()
+
     await hass.services.async_call(
         "conversation",
         "process",
         {conversation.ATTR_TEXT: "I would like the Grolsch beer"},
+        context=context,
     )
     await hass.async_block_till_done()
 
@@ -38,6 +39,7 @@ async def test_calling_intent(hass):
     assert intent.intent_type == "OrderBeer"
     assert intent.slots == {"type": {"value": "Grolsch"}}
     assert intent.text_input == "I would like the Grolsch beer"
+    assert intent.context is context
 
 
 async def test_register_before_setup(hass):
@@ -80,7 +82,7 @@ async def test_register_before_setup(hass):
     assert intent.text_input == "I would like the Grolsch beer"
 
 
-async def test_http_processing_intent(hass, hass_client):
+async def test_http_processing_intent(hass, hass_client, hass_admin_user):
     """Test processing intent via HTTP API."""
 
     class TestIntentHandler(intent.IntentHandler):
@@ -90,6 +92,7 @@ async def test_http_processing_intent(hass, hass_client):
 
         async def async_handle(self, intent):
             """Handle the intent."""
+            assert intent.context.user_id == hass_admin_user.id
             response = intent.create_response()
             response.async_set_speech(
                 "I've ordered a {}!".format(intent.slots["type"]["value"])
@@ -124,51 +127,6 @@ async def test_http_processing_intent(hass, hass_client):
     }
 
 
-async def test_http_handle_intent(hass, hass_client):
-    """Test handle intent via HTTP API."""
-
-    class TestIntentHandler(intent.IntentHandler):
-        """Test Intent Handler."""
-
-        intent_type = "OrderBeer"
-
-        async def async_handle(self, intent):
-            """Handle the intent."""
-            response = intent.create_response()
-            response.async_set_speech(
-                "I've ordered a {}!".format(intent.slots["type"]["value"])
-            )
-            response.async_set_card(
-                "Beer ordered", "You chose a {}.".format(intent.slots["type"]["value"])
-            )
-            return response
-
-    intent.async_register(hass, TestIntentHandler())
-
-    result = await async_setup_component(
-        hass,
-        "conversation",
-        {"conversation": {"intents": {"OrderBeer": ["I would like the {type} beer"]}}},
-    )
-    assert result
-
-    client = await hass_client()
-    resp = await client.post(
-        "/api/conversation/handle",
-        json={"name": "OrderBeer", "data": {"type": "Belgian"}},
-    )
-
-    assert resp.status == 200
-    data = await resp.json()
-
-    assert data == {
-        "card": {
-            "simple": {"content": "You chose a Belgian.", "title": "Beer ordered"}
-        },
-        "speech": {"plain": {"extra_data": None, "speech": "I've ordered a Belgian!"}},
-    }
-
-
 @pytest.mark.parametrize("sentence", ("turn on kitchen", "turn kitchen on"))
 async def test_turn_on_intent(hass, sentence):
     """Test calling the turn on intent."""
@@ -191,32 +149,6 @@ async def test_turn_on_intent(hass, sentence):
     assert call.domain == HASS_DOMAIN
     assert call.service == "turn_on"
     assert call.data == {"entity_id": "light.kitchen"}
-
-
-async def test_cover_intents_loading(hass):
-    """Test Cover Intents Loading."""
-    with pytest.raises(intent.UnknownIntent):
-        await intent.async_handle(
-            hass, "test", "HassOpenCover", {"name": {"value": "garage door"}}
-        )
-
-    result = await async_setup_component(hass, "cover", {})
-    assert result
-
-    hass.states.async_set("cover.garage_door", "closed")
-    calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
-
-    response = await intent.async_handle(
-        hass, "test", "HassOpenCover", {"name": {"value": "garage door"}}
-    )
-    await hass.async_block_till_done()
-
-    assert response.speech["plain"]["speech"] == "Opened garage door"
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == "cover"
-    assert call.service == "open_cover"
-    assert call.data == {"entity_id": "cover.garage_door"}
 
 
 @pytest.mark.parametrize("sentence", ("turn off kitchen", "turn kitchen off"))
@@ -308,7 +240,7 @@ async def test_http_api_wrong_data(hass, hass_client):
     assert resp.status == 400
 
 
-async def test_custom_agent(hass, hass_client):
+async def test_custom_agent(hass, hass_client, hass_admin_user):
     """Test a custom conversation agent."""
 
     calls = []
@@ -316,9 +248,9 @@ async def test_custom_agent(hass, hass_client):
     class MyAgent(conversation.AbstractConversationAgent):
         """Test Agent."""
 
-        async def async_process(self, text, conversation_id):
+        async def async_process(self, text, context, conversation_id):
             """Process some text."""
-            calls.append((text, conversation_id))
+            calls.append((text, context, conversation_id))
             response = intent.IntentResponse()
             response.async_set_speech("Test response")
             return response
@@ -341,4 +273,5 @@ async def test_custom_agent(hass, hass_client):
 
     assert len(calls) == 1
     assert calls[0][0] == "Test Text"
-    assert calls[0][1] == "test-conv-id"
+    assert calls[0][1].user_id == hass_admin_user.id
+    assert calls[0][2] == "test-conv-id"
