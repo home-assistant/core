@@ -44,24 +44,11 @@ DEFAULT_TIMEOUT = 5
 
 SCAN_INTERVAL = timedelta(minutes=2)
 
-CODE_STORAGE_KEY = "{}_codes"
+CODE_STORAGE_KEY = "broadlink_{}_codes"
 CODE_STORAGE_VERSION = 1
-FLAG_STORAGE_KEY = "{}_flags"
+FLAG_STORAGE_KEY = "broadlink_{}_flags"
 FLAG_STORAGE_VERSION = 1
 FLAG_SAVE_DELAY = 15
-
-CODE_STORAGE_SCHEMA = vol.Schema(
-    {
-        vol.All(str, vol.Length(min=1)): {  # Device
-            vol.All(str, vol.Length(min=1)): vol.Any(  # Command
-                vol.All(str, vol.Length(min=1)),  # Code
-                vol.All([vol.All(str, vol.Length(min=1))], vol.Length(min=2, max=2)),
-            )
-        }
-    }
-)
-
-FLAG_STORAGE_SCHEMA = vol.Schema({cv.string: vol.In([0, 1])})
 
 MINIMUM_SERVICE_SCHEMA = vol.Schema(
     {
@@ -171,7 +158,7 @@ class BroadlinkRemote(RemoteDevice):
         return SUPPORT_LEARN_COMMAND
 
     @callback
-    def flags(self):
+    def get_flags(self):
         """Return dictionary of toggle flags.
 
         A toggle flag indicates whether `self._async_send_code()`
@@ -195,24 +182,11 @@ class BroadlinkRemote(RemoteDevice):
     async def async_load_storage_files(self):
         """Load codes and toggle flags from storage files."""
         try:
-            self._codes.update(
-                await self._async_get_data(self._code_storage, CODE_STORAGE_SCHEMA)
-            )
-            self._flags.update(
-                await self._async_get_data(self._flag_storage, FLAG_STORAGE_SCHEMA)
-            )
-        except (HomeAssistantError, vol.MultipleInvalid):
+            self._codes.update(await self._code_storage.async_load() or {})
+            self._flags.update(await self._flag_storage.async_load() or {})
+        except HomeAssistantError:
             return False
         return True
-
-    async def _async_get_data(self, storage, schema):
-        """Return data from storage file."""
-        try:
-            data = schema(await storage.async_load() or {})
-        except (HomeAssistantError, vol.MultipleInvalid) as err:
-            _LOGGER.error("Failed to load '%s': %s", storage.path, err)
-            raise
-        return data
 
     async def async_send_command(self, command, **kwargs):
         """Send a list of commands to a device."""
@@ -235,7 +209,7 @@ class BroadlinkRemote(RemoteDevice):
             except ConnectionError:
                 break
 
-        self._flag_storage.async_delay_save(self.flags, FLAG_SAVE_DELAY)
+        self._flag_storage.async_delay_save(self.get_flags, FLAG_SAVE_DELAY)
 
     async def _async_send_code(self, command, device, delay):
         """Send a code to a device.
@@ -299,14 +273,13 @@ class BroadlinkRemote(RemoteDevice):
         Capture an aditional code for toggle commands.
         """
         try:
-            code = (
-                await self._async_capture_code(command, timeout)
-                if not toggle
-                else [
+            if not toggle:
+                code = await self._async_capture_code(command, timeout)
+            else:
+                code = [
                     await self._async_capture_code(command, timeout),
                     await self._async_capture_code(command, timeout),
                 ]
-            )
         except (ValueError, TimeoutError):
             _LOGGER.error(
                 "Failed to learn '%s/%s': no signal received", command, device
