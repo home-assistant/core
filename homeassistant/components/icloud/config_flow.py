@@ -18,6 +18,8 @@ from .const import (
     DEFAULT_MAX_INTERVAL,
     DEFAULT_GPS_ACCURACY_THRESHOLD,
     DOMAIN,  # noqa
+    STORAGE_KEY,
+    STORAGE_VERSION,
 )
 
 CONF_TRUSTED_DEVICE = "trusted_device"
@@ -80,9 +82,10 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors = {}
 
-        icloud_dir = self.hass.config.path("icloud")
-        if not os.path.exists(icloud_dir):
-            await self.hass.async_add_executor_job(os.makedirs, icloud_dir)
+        icloud_dir = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+
+        if not os.path.exists(icloud_dir.path):
+            await self.hass.async_add_executor_job(os.makedirs, icloud_dir.path)
 
         if user_input is None:
             return await self._show_setup_form(user_input, errors)
@@ -101,7 +104,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             self.api = await self.hass.async_add_executor_job(
-                PyiCloudService, self._username, self._password, icloud_dir
+                PyiCloudService, self._username, self._password, icloud_dir.path
             )
         except PyiCloudFailedLoginException as error:
             _LOGGER.error("Error logging into iCloud service: %s", error)

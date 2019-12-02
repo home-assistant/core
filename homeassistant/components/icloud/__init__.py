@@ -15,6 +15,7 @@ from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_point_in_utc_time
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceDataType
 from homeassistant.util import slugify
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -46,6 +47,8 @@ from .const import (
     DEVICE_STATUS,
     DEVICE_STATUS_SET,
     DEVICE_STATUS_CODES,
+    STORAGE_KEY,
+    STORAGE_VERSION,
 )
 
 ATTRIBUTION = "Data provided by Apple iCloud"
@@ -141,8 +144,16 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     max_interval = entry.data[CONF_MAX_INTERVAL]
     gps_accuracy_threshold = entry.data[CONF_GPS_ACCURACY_THRESHOLD]
 
+    icloud_dir = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+
     account = IcloudAccount(
-        hass, username, password, account_name, max_interval, gps_accuracy_threshold
+        hass,
+        username,
+        password,
+        icloud_dir,
+        account_name,
+        max_interval,
+        gps_accuracy_threshold,
     )
     await hass.async_add_executor_job(account.setup)
     hass.data[DOMAIN][username] = account
@@ -242,6 +253,7 @@ class IcloudAccount:
         hass: HomeAssistantType,
         username: str,
         password: str,
+        icloud_dir: Store,
         account_name: str,
         max_interval: int,
         gps_accuracy_threshold: int,
@@ -255,6 +267,8 @@ class IcloudAccount:
         self._max_interval = max_interval
         self._gps_accuracy_threshold = gps_accuracy_threshold
 
+        self._icloud_dir = icloud_dir
+
         self.api = None
         self._owner_fullname = None
         self._family_members_fullname = {}
@@ -264,10 +278,10 @@ class IcloudAccount:
 
     def setup(self):
         """Set up an iCloud account."""
-        icloud_dir = self.hass.config.path("icloud")
-
         try:
-            self.api = PyiCloudService(self._username, self._password, icloud_dir)
+            self.api = PyiCloudService(
+                self._username, self._password, self._icloud_dir.path
+            )
         except PyiCloudFailedLoginException as error:
             self.api = None
             _LOGGER.error("Error logging into iCloud Service: %s", error)

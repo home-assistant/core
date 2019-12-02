@@ -10,6 +10,10 @@ CONF_GPS_ACCURACY_THRESHOLD = "gps_accuracy_threshold"
 DEFAULT_MAX_INTERVAL = 30  # min
 DEFAULT_GPS_ACCURACY_THRESHOLD = 500  # meters
 
+# to store the cookie
+STORAGE_KEY = DOMAIN
+STORAGE_VERSION = 1
+
 # Next PR will add sensor
 ICLOUD_COMPONENTS = ["device_tracker"]
 
