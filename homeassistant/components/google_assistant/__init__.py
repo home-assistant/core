@@ -93,7 +93,9 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: GOOGLE_ASSISTANT_SCHEMA}, extra=vol.ALLOW_EX
 async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     """Activate Google Actions component."""
     config = yaml_config.get(DOMAIN, {})
+
     google_config = GoogleConfig(hass, config)
+    await google_config.async_initialize()
 
     hass.http.register_view(GoogleAssistantView(google_config))
 

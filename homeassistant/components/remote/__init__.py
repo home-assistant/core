@@ -17,7 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.components import group
 from homeassistant.helpers.config_validation import (  # noqa: F401
-    ENTITY_SERVICE_SCHEMA,
+    make_entity_service_schema,
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
@@ -56,27 +56,8 @@ DEFAULT_HOLD_SECS = 0
 
 SUPPORT_LEARN_COMMAND = 1
 
-REMOTE_SERVICE_ACTIVITY_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+REMOTE_SERVICE_ACTIVITY_SCHEMA = make_entity_service_schema(
     {vol.Optional(ATTR_ACTIVITY): cv.string}
-)
-
-REMOTE_SERVICE_SEND_COMMAND_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {
-        vol.Required(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_DEVICE): cv.string,
-        vol.Optional(ATTR_NUM_REPEATS, default=DEFAULT_NUM_REPEATS): cv.positive_int,
-        vol.Optional(ATTR_DELAY_SECS): vol.Coerce(float),
-        vol.Optional(ATTR_HOLD_SECS, default=DEFAULT_HOLD_SECS): vol.Coerce(float),
-    }
-)
-
-REMOTE_SERVICE_LEARN_COMMAND_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {
-        vol.Optional(ATTR_DEVICE): cv.string,
-        vol.Optional(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_ALTERNATIVE): cv.boolean,
-        vol.Optional(ATTR_TIMEOUT): cv.positive_int,
-    }
 )
 
 
@@ -107,12 +88,27 @@ async def async_setup(hass, config):
     )
 
     component.async_register_entity_service(
-        SERVICE_SEND_COMMAND, REMOTE_SERVICE_SEND_COMMAND_SCHEMA, "async_send_command"
+        SERVICE_SEND_COMMAND,
+        {
+            vol.Required(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(ATTR_DEVICE): cv.string,
+            vol.Optional(
+                ATTR_NUM_REPEATS, default=DEFAULT_NUM_REPEATS
+            ): cv.positive_int,
+            vol.Optional(ATTR_DELAY_SECS): vol.Coerce(float),
+            vol.Optional(ATTR_HOLD_SECS, default=DEFAULT_HOLD_SECS): vol.Coerce(float),
+        },
+        "async_send_command",
     )
 
     component.async_register_entity_service(
         SERVICE_LEARN_COMMAND,
-        REMOTE_SERVICE_LEARN_COMMAND_SCHEMA,
+        {
+            vol.Optional(ATTR_DEVICE): cv.string,
+            vol.Optional(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(ATTR_ALTERNATIVE): cv.boolean,
+            vol.Optional(ATTR_TIMEOUT): cv.positive_int,
+        },
         "async_learn_command",
     )
 
