@@ -227,9 +227,7 @@ class HueFullStateView(HomeAssistantView):
                 "mac": "00:00:00:00:00:00",
                 "swversion": "01003542",
                 "whitelist": {HUE_API_USERNAME: {"name": "HASS BRIDGE"}},
-                "ipaddress": str(self.config.advertise_ip)
-                + ":"
-                + str(self.config.advertise_port),
+                "ipaddress": f"{self.config.advertise_ip}:{self.config.advertise_port}",
             },
         }
 
