@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.unifiled.const import DOMAIN
-from homeassistant.components.unifiled.config_flow import CannotConnect, InvalidAuth
+from homeassistant.components.unifiled.config_flow import CannotConnect
 
 from tests.common import mock_coro
 
@@ -19,7 +19,10 @@ async def test_form(hass):
 
     with patch(
         "homeassistant.components.unifiled.config_flow.unifiled",
-        return_value=mock_coro({"title": "Test Title"}),
+        return_value=mock_coro(True),
+    ), patch(
+        "homeassistant.components.unifiled.config_flow.unifiled.getloginstate",
+        return_value=mock_coro(True),
     ), patch(
         "homeassistant.components.unifiled.async_setup", return_value=mock_coro(True)
     ) as mock_setup, patch(
@@ -47,30 +50,6 @@ async def test_form(hass):
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_invalid_auth(hass):
-    """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.unifiled.config_flow.unifiled",
-        side_effect=InvalidAuth,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "port": "20443",
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_auth"}
 
 
 async def test_form_cannot_connect(hass):
