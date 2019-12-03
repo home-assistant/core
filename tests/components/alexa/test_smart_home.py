@@ -1473,6 +1473,35 @@ async def test_contact_sensor(hass):
     properties.assert_equal("Alexa.EndpointHealth", "connectivity", {"value": "OK"})
 
 
+async def test_forced_contact_sensor(hass):
+    """Test contact sensor discovery with specified display_category."""
+    device = (
+        "binary_sensor.test_contact_forced",
+        "on",
+        {"friendly_name": "Test Contact Sensor With DisplayCategory"},
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "binary_sensor#test_contact_forced"
+    assert appliance["displayCategories"][0] == "CONTACT_SENSOR"
+    assert appliance["friendlyName"] == "Test Contact Sensor With DisplayCategory"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance, "Alexa.ContactSensor", "Alexa.EndpointHealth", "Alexa"
+    )
+
+    contact_sensor_capability = get_capability(capabilities, "Alexa.ContactSensor")
+    assert contact_sensor_capability is not None
+    properties = contact_sensor_capability["properties"]
+    assert properties["retrievable"] is True
+    assert {"name": "detectionState"} in properties["supported"]
+
+    properties = await reported_properties(hass, "binary_sensor#test_contact_forced")
+    properties.assert_equal("Alexa.ContactSensor", "detectionState", "DETECTED")
+
+    properties.assert_equal("Alexa.EndpointHealth", "connectivity", {"value": "OK"})
+
+
 async def test_motion_sensor(hass):
     """Test motion sensor discovery."""
     device = (
@@ -1498,6 +1527,35 @@ async def test_motion_sensor(hass):
 
     properties = await reported_properties(hass, "binary_sensor#test_motion")
     properties.assert_equal("Alexa.MotionSensor", "detectionState", "DETECTED")
+
+
+async def test_forced_motion_sensor(hass):
+    """Test motion sensor discovery with specified display_category."""
+    device = (
+        "binary_sensor.test_motion_forced",
+        "on",
+        {"friendly_name": "Test Motion Sensor With DisplayCategory"},
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "binary_sensor#test_motion_forced"
+    assert appliance["displayCategories"][0] == "MOTION_SENSOR"
+    assert appliance["friendlyName"] == "Test Motion Sensor With DisplayCategory"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance, "Alexa.MotionSensor", "Alexa.EndpointHealth", "Alexa"
+    )
+
+    motion_sensor_capability = get_capability(capabilities, "Alexa.MotionSensor")
+    assert motion_sensor_capability is not None
+    properties = motion_sensor_capability["properties"]
+    assert properties["retrievable"] is True
+    assert {"name": "detectionState"} in properties["supported"]
+
+    properties = await reported_properties(hass, "binary_sensor#test_motion_forced")
+    properties.assert_equal("Alexa.MotionSensor", "detectionState", "DETECTED")
+
+    properties.assert_equal("Alexa.EndpointHealth", "connectivity", {"value": "OK"})
 
 
 async def test_doorbell_sensor(hass):
