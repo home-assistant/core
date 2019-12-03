@@ -13,7 +13,11 @@ TEST_TOKEN_URL = "https://api.amazon.com/auth/o2/token"
 class MockConfig(config.AbstractConfig):
     """Mock Alexa config."""
 
-    entity_config = {"binary_sensor.test_doorbell": {"display_categories": "DOORBELL"}}
+    entity_config = {
+        "binary_sensor.test_doorbell": {"display_categories": "DOORBELL"},
+        "binary_sensor.test_contact_forced": {"display_categories": "CONTACT_SENSOR"},
+        "binary_sensor.test_motion_forced": {"display_categories": "MOTION_SENSOR"},
+    }
 
     @property
     def supports_auth(self):
