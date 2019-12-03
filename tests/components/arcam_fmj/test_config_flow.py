@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry
 
 @pytest.fixture(name="config_entry")
 def config_entry_fixture():
-    """Create a mock HEOS config entry."""
+    """Create a mock Arcam config entry."""
     return MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, title=MOCK_NAME)
 
 
