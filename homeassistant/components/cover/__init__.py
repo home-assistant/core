@@ -82,7 +82,6 @@ ATTR_POSITION = "position"
 ATTR_TILT_POSITION = "tilt_position"
 
 
-
 @bind_hass
 def is_closed(hass, entity_id=None):
     """Return if the cover is closed based on the statemachine."""
