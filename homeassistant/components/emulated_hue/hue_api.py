@@ -129,7 +129,6 @@ class HueUsernameView(HomeAssistantView):
         if "devicetype" not in data:
             return self.json_message("devicetype not specified", HTTP_BAD_REQUEST)
 
-
         return self.json([{"success": {"username": HUE_API_USERNAME}}])
 
 
@@ -199,7 +198,6 @@ class HueAllLightsStateView(HomeAssistantView):
         """Process a request to get the list of available lights."""
         if not is_local(request[KEY_REAL_IP]):
             return self.json_message("Only local IPs allowed", HTTP_UNAUTHORIZED)
-
 
         return self.json(create_list_of_entities(self.config, request))
 

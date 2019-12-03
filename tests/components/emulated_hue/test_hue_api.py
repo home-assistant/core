@@ -844,7 +844,6 @@ async def test_external_ip_blocked(hue_client):
             result = await hue_client.get(getUrl)
             assert result.status == 400
 
-
         for postUrl in postUrls:
             result = await hue_client.post(postUrl)
             assert result.status == 400
