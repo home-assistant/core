@@ -4,7 +4,6 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     ATTR_MODE,
@@ -33,10 +32,6 @@ ATTR_MAX = "max"
 ATTR_PATTERN = "pattern"
 
 SERVICE_SET_VALUE = "set_value"
-
-SERVICE_SET_VALUE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_VALUE): cv.string}
-)
 
 
 def _cv_input_text(cfg):
@@ -111,7 +106,7 @@ async def async_setup(hass, config):
         return False
 
     component.async_register_entity_service(
-        SERVICE_SET_VALUE, SERVICE_SET_VALUE_SCHEMA, "async_set_value"
+        SERVICE_SET_VALUE, {vol.Required(ATTR_VALUE): cv.string}, "async_set_value"
     )
 
     await component.async_add_entities(entities)
