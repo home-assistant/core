@@ -6,7 +6,6 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_DATE, ATTR_TIME, CONF_ICON, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
@@ -26,14 +25,6 @@ DEFAULT_VALUE = "1970-01-01 00:00:00"
 ATTR_DATETIME = "datetime"
 
 SERVICE_SET_DATETIME = "set_datetime"
-
-SERVICE_SET_DATETIME_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {
-        vol.Optional(ATTR_DATE): cv.date,
-        vol.Optional(ATTR_TIME): cv.time,
-        vol.Optional(ATTR_DATETIME): cv.datetime,
-    }
-)
 
 
 def has_date_or_time(conf):
@@ -108,7 +99,13 @@ async def async_setup(hass, config):
         entity.async_set_datetime(date, time)
 
     component.async_register_entity_service(
-        SERVICE_SET_DATETIME, SERVICE_SET_DATETIME_SCHEMA, async_set_datetime_service
+        SERVICE_SET_DATETIME,
+        {
+            vol.Optional(ATTR_DATE): cv.date,
+            vol.Optional(ATTR_TIME): cv.time,
+            vol.Optional(ATTR_DATETIME): cv.datetime,
+        },
+        async_set_datetime_service,
     )
 
     await component.async_add_entities(entities)
