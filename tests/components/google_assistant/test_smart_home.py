@@ -466,13 +466,16 @@ async def test_serialize_input_boolean(hass):
     }
 
 
-async def test_unavailable_state_doesnt_sync(hass):
-    """Test that an unavailable entity does not sync over."""
-    light = DemoLight(None, "Demo Light", state=False)
+async def test_unavailable_state_does_sync(hass):
+    """Test that an unavailable entity does sync over."""
+    light = DemoLight(None, "Demo Light", state=False, hs_color=(180, 75))
     light.hass = hass
     light.entity_id = "light.demo_light"
     light._available = False  # pylint: disable=protected-access
     await light.async_update_ha_state()
+
+    events = []
+    hass.bus.async_listen(EVENT_SYNC_RECEIVED, events.append)
 
     result = await sh.async_handle_message(
         hass,
@@ -483,8 +486,35 @@ async def test_unavailable_state_doesnt_sync(hass):
 
     assert result == {
         "requestId": REQ_ID,
-        "payload": {"agentUserId": "test-agent", "devices": []},
+        "payload": {
+            "agentUserId": "test-agent",
+            "devices": [
+                {
+                    "id": "light.demo_light",
+                    "name": {"name": "Demo Light"},
+                    "traits": [
+                        trait.TRAIT_BRIGHTNESS,
+                        trait.TRAIT_ONOFF,
+                        trait.TRAIT_COLOR_SETTING,
+                    ],
+                    "type": const.TYPE_LIGHT,
+                    "willReportState": False,
+                    "attributes": {
+                        "colorModel": "hsv",
+                        "colorTemperatureRange": {
+                            "temperatureMinK": 2000,
+                            "temperatureMaxK": 6535,
+                        },
+                    },
+                }
+            ],
+        },
     }
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].event_type == EVENT_SYNC_RECEIVED
+    assert events[0].data == {"request_id": REQ_ID}
 
 
 @pytest.mark.parametrize(
