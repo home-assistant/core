@@ -1,7 +1,7 @@
 """Pushetta platform for notify component."""
 import logging
 
-from pushetta import Pushetta, exceptions as PushettaExceptions
+from pushetta import Pushetta, exceptions as pushetta_exceptions
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -60,9 +60,9 @@ class PushettaNotificationService(BaseNotificationService):
 
         try:
             self.pushetta.pushMessage(self._channel_name, f"{title} {message}")
-        except PushettaExceptions.TokenValidationError:
+        except pushetta_exceptions.TokenValidationError:
             _LOGGER.error("Please check your access token")
             self.is_valid = False
-        except PushettaExceptions.ChannelNotFoundError:
+        except pushetta_exceptions.ChannelNotFoundError:
             _LOGGER.error("Channel '%s' not found", self._channel_name)
             self.is_valid = False
