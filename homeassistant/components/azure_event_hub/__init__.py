@@ -160,7 +160,6 @@ class AEHThread(threading.Thread):
         event_data = EventData(json.dumps(obj=state, cls=JSONEncoder).encode("utf-8"))
         return event_data
 
-    @callback
     def _event_listener(self, event: Event):
         """Listen for new messages on the bus and queue them for AEH."""
         item = (time.monotonic(), event)
