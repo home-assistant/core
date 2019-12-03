@@ -45,7 +45,7 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
             if entity_data == old_entity.query_serialize():
                 return
 
-        await google_config.async_report_state(
+        await google_config.async_report_state_all(
             {"devices": {"states": {changed_entity: entity_data}}}
         )
 
@@ -62,7 +62,7 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
             except SmartHomeError:
                 continue
 
-        await google_config.async_report_state({"devices": {"states": entities}})
+        await google_config.async_report_state_all({"devices": {"states": entities}})
 
     async_call_later(hass, INITIAL_REPORT_DELAY, inital_report)
 

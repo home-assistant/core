@@ -455,7 +455,7 @@ async def test_serialize_input_boolean(hass):
     state = State("input_boolean.bla", "on")
     # pylint: disable=protected-access
     entity = sh.GoogleEntity(hass, BASIC_CONFIG, state)
-    result = await entity.sync_serialize()
+    result = await entity.sync_serialize(None)
     assert result == {
         "id": "input_boolean.bla",
         "attributes": {},
@@ -664,8 +664,8 @@ async def test_query_disconnect(hass):
     config.async_enable_report_state()
     assert config._unsub_report_state is not None
     with patch.object(
-        config, "async_deactivate_report_state", side_effect=mock_coro
-    ) as mock_deactivate:
+        config, "async_disconnect_agent_user", side_effect=mock_coro
+    ) as mock_disconnect:
         result = await sh.async_handle_message(
             hass,
             config,
@@ -673,7 +673,7 @@ async def test_query_disconnect(hass):
             {"inputs": [{"intent": "action.devices.DISCONNECT"}], "requestId": REQ_ID},
         )
     assert result is None
-    assert len(mock_deactivate.mock_calls) == 1
+    assert len(mock_disconnect.mock_calls) == 1
 
 
 async def test_trait_execute_adding_query_data(hass):
@@ -741,10 +741,12 @@ async def test_trait_execute_adding_query_data(hass):
 
 async def test_identify(hass):
     """Test identify message."""
+    user_agent_id = "mock-user-id"
+    proxy_device_id = user_agent_id
     result = await sh.async_handle_message(
         hass,
         BASIC_CONFIG,
-        None,
+        user_agent_id,
         {
             "requestId": REQ_ID,
             "inputs": [
@@ -778,7 +780,7 @@ async def test_identify(hass):
                     "customData": {
                         "httpPort": 8123,
                         "httpSSL": False,
-                        "proxyDeviceId": BASIC_CONFIG.agent_user_id,
+                        "proxyDeviceId": proxy_device_id,
                         "webhookId": "dde3b9800a905e886cc4d38e226a6e7e3f2a6993d2b9b9f63d13e42ee7de3219",
                     },
                 }
@@ -790,7 +792,7 @@ async def test_identify(hass):
         "requestId": REQ_ID,
         "payload": {
             "device": {
-                "id": BASIC_CONFIG.agent_user_id,
+                "id": proxy_device_id,
                 "isLocalOnly": True,
                 "isProxy": True,
                 "deviceInfo": {
@@ -822,10 +824,13 @@ async def test_reachable_devices(hass):
         should_expose=lambda state: state.entity_id != "light.not_expose"
     )
 
+    user_agent_id = "mock-user-id"
+    proxy_device_id = user_agent_id
+
     result = await sh.async_handle_message(
         hass,
         config,
-        None,
+        user_agent_id,
         {
             "requestId": REQ_ID,
             "inputs": [
@@ -834,7 +839,7 @@ async def test_reachable_devices(hass):
                     "payload": {
                         "device": {
                             "proxyDevice": {
-                                "id": "6a04f0f7-6125-4356-a846-861df7e01497",
+                                "id": proxy_device_id,
                                 "customData": "{}",
                                 "proxyData": "{}",
                             }
@@ -849,7 +854,7 @@ async def test_reachable_devices(hass):
                     "customData": {
                         "httpPort": 8123,
                         "httpSSL": False,
-                        "proxyDeviceId": BASIC_CONFIG.agent_user_id,
+                        "proxyDeviceId": proxy_device_id,
                         "webhookId": "dde3b9800a905e886cc4d38e226a6e7e3f2a6993d2b9b9f63d13e42ee7de3219",
                     },
                 },
@@ -858,11 +863,11 @@ async def test_reachable_devices(hass):
                     "customData": {
                         "httpPort": 8123,
                         "httpSSL": False,
-                        "proxyDeviceId": BASIC_CONFIG.agent_user_id,
+                        "proxyDeviceId": proxy_device_id,
                         "webhookId": "dde3b9800a905e886cc4d38e226a6e7e3f2a6993d2b9b9f63d13e42ee7de3219",
                     },
                 },
-                {"id": BASIC_CONFIG.agent_user_id, "customData": {}},
+                {"id": proxy_device_id, "customData": {}},
             ],
         },
     )
