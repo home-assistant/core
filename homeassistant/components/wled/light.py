@@ -10,11 +10,13 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
+    ATTR_WHITE_VALUE,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
     SUPPORT_TRANSITION,
+    SUPPORT_WHITE_VALUE,
     Light,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -79,6 +81,7 @@ class WLEDLight(Light, WLEDDeviceEntity):
         self._color: Optional[Tuple[float, float]] = None
         self._effect: Optional[str] = None
         self._state: Optional[bool] = None
+        self._white_value: Optional[int] = None
 
         # Only apply the segment ID if it is not the first segment
         name = wled.device.info.name
@@ -108,15 +111,25 @@ class WLEDLight(Light, WLEDDeviceEntity):
         return self._brightness
 
     @property
+    def white_value(self) -> Optional[int]:
+        """Return the white value of this light between 0..255."""
+        return self._white_value
+
+    @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        return (
+        flags = (
             SUPPORT_BRIGHTNESS
             | SUPPORT_COLOR
             | SUPPORT_COLOR_TEMP
             | SUPPORT_EFFECT
             | SUPPORT_TRANSITION
         )
+
+        if self._rgbw:
+            flags |= SUPPORT_WHITE_VALUE
+
+        return flags
 
     @property
     def effect_list(self) -> List[str]:
@@ -163,11 +176,21 @@ class WLEDLight(Light, WLEDDeviceEntity):
         if ATTR_EFFECT in kwargs:
             data[ATTR_EFFECT] = kwargs[ATTR_EFFECT]
 
-        # Support for RGBW strips
-        if self._rgbw and any(x in (ATTR_COLOR_TEMP, ATTR_HS_COLOR) for x in kwargs):
-            data[ATTR_COLOR_PRIMARY] = color_util.color_rgb_to_rgbw(
-                *data[ATTR_COLOR_PRIMARY]
-            )
+        # Support for RGBW strips, adds white value
+        if self._rgbw and any(
+            x in (ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_WHITE_VALUE) for x in kwargs
+        ):
+            # WLED cannot just accept a white value, it needs the color.
+            # We use the last know color in case just the white value changes.
+            if not any(x in (ATTR_COLOR_TEMP, ATTR_HS_COLOR) for x in kwargs):
+                hue, sat = self._color
+                data[ATTR_COLOR_PRIMARY] = color_util.color_hsv_to_RGB(hue, sat, 100)
+
+            # Add requested or last known white value
+            if ATTR_WHITE_VALUE in kwargs:
+                data[ATTR_COLOR_PRIMARY] += (kwargs[ATTR_WHITE_VALUE],)
+            else:
+                data[ATTR_COLOR_PRIMARY] += (self._white_value,)
 
         try:
             await self.wled.light(**data)
@@ -186,6 +209,9 @@ class WLEDLight(Light, WLEDDeviceEntity):
             if ATTR_COLOR_TEMP in kwargs:
                 self._color = color_util.color_temperature_to_hs(mireds)
 
+            if ATTR_WHITE_VALUE in kwargs:
+                self._white_value = kwargs[ATTR_WHITE_VALUE]
+
         except WLEDError:
             _LOGGER.error("An error occurred while turning on WLED light.")
             self._available = False
@@ -198,9 +224,9 @@ class WLEDLight(Light, WLEDDeviceEntity):
         self._state = self.wled.device.state.on
 
         color = self.wled.device.state.segments[self._segment].color_primary
+        self._color = color_util.color_RGB_to_hs(*color[:3])
         if self._rgbw:
-            color = color_util.color_rgbw_to_rgb(*color)
-        self._color = color_util.color_RGB_to_hs(*color)
+            self._white_value = color[-1]
 
         playlist = self.wled.device.state.playlist
         if playlist == -1:
