@@ -1,9 +1,10 @@
 """Support for scheduling scenes."""
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Callable, Dict, Optional
 from uuid import uuid4
 
+from dateutil.rrule import rrulestr
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -20,48 +21,36 @@ from homeassistant.util.json import load_json, save_json
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant, ServiceCall, State  # noqa
 
-DOMAIN = "scheduler"
 _LOGGER = logging.getLogger(__name__)
+DOMAIN = "scheduler"
 
 PERSISTENCE = ".scheduler.json"
-
 EVENT = "scheduler_updated"
 
+CONF_ACTIVATION_CONTEXT = "activation_context"
 CONF_ACTIVATION_CONTEXT_ID = "activation_context_id"
+CONF_DURATION = "duration"
 CONF_END_DATETIME = "end_datetime"
+CONF_RRULE = "rrule"
 CONF_SCHEDULE_ID = "schedule_id"
 CONF_START_DATETIME = "start_datetime"
 
-ITEM_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_SCHEDULE_ID): str,
-        vol.Optional(CONF_ACTIVATION_CONTEXT_ID): str,
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Required(CONF_START_DATETIME): str,
-        vol.Optional(CONF_END_DATETIME): vol.Any(str, None),
-    }
+SCHEDULE_UPDATE_SCHEMA = vol.Schema(
+    {CONF_ENTITY_ID: cv.entity_id, CONF_RRULE: str, CONF_DURATION: int}
 )
 
-ITEM_UPDATE_SCHEMA = vol.Schema(
-    {CONF_ENTITY_ID: cv.entity_id, CONF_START_DATETIME: str, CONF_END_DATETIME: str}
-)
-
-WS_TYPE_SCHEDULER_CLEAR_EXPIRED = "scheduler/items/clear_expired"
-WS_TYPE_SCHEDULER_CREATE_SCHEDULE = "scheduler/items/create"
-WS_TYPE_SCHEDULER_DELETE_SCHEDULE = "scheduler/items/delete"
-WS_TYPE_SCHEDULER_ITEMS = "scheduler/items"
-WS_TYPE_SCHEDULER_UPDATE_SCHEDULE = "scheduler/items/update"
-
-SCHEMA_WEBSOCKET_CLEAR_EXPIRED = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_SCHEDULER_CLEAR_EXPIRED}
-)
+WS_TYPE_SCHEDULER_CREATE_SCHEDULE = "scheduler/schedules/create"
+WS_TYPE_SCHEDULER_DELETE_SCHEDULE = "scheduler/schedules/delete"
+WS_TYPE_SCHEDULER_SCHEDULES = "scheduler/schedules"
+WS_TYPE_SCHEDULER_UPDATE_SCHEDULE = "scheduler/schedules/update"
 
 SCHEMA_WEBSOCKET_CREATE_SCHEDULE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
     {
         vol.Required("type"): WS_TYPE_SCHEDULER_CREATE_SCHEDULE,
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Required(CONF_START_DATETIME): str,
-        vol.Optional(CONF_END_DATETIME): str,
+        vol.Required(CONF_START_DATETIME): cv.datetime,
+        vol.Optional(CONF_RRULE): str,
+        vol.Optional(CONF_DURATION): int,
     }
 )
 
@@ -73,7 +62,7 @@ SCHEMA_WEBSOCKET_DELETE_SCHEDULE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.ext
 )
 
 SCHEMA_WEBSOCKET_SCHEDULES = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_SCHEDULER_ITEMS}
+    {vol.Required("type"): WS_TYPE_SCHEDULER_SCHEDULES}
 )
 
 SCHEMA_WEBSOCKET_UPDATE_SCHEDULE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
@@ -81,8 +70,9 @@ SCHEMA_WEBSOCKET_UPDATE_SCHEDULE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.ext
         vol.Required("type"): WS_TYPE_SCHEDULER_UPDATE_SCHEDULE,
         vol.Required(CONF_SCHEDULE_ID): str,
         vol.Optional(CONF_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_START_DATETIME): str,
-        vol.Optional(CONF_END_DATETIME): str,
+        vol.Optional(CONF_START_DATETIME): cv.datetime,
+        vol.Optional(CONF_DURATION): int,
+        vol.Optional(CONF_RRULE): str,
     }
 )
 
@@ -96,11 +86,6 @@ async def async_setup(hass, config):
     await scheduler.async_load()
 
     hass.components.websocket_api.async_register_command(
-        WS_TYPE_SCHEDULER_CLEAR_EXPIRED,
-        websocket_handle_clear_expired,
-        SCHEMA_WEBSOCKET_CLEAR_EXPIRED,
-    )
-    hass.components.websocket_api.async_register_command(
         WS_TYPE_SCHEDULER_CREATE_SCHEDULE,
         websocket_handle_create,
         SCHEMA_WEBSOCKET_CREATE_SCHEDULE,
@@ -111,7 +96,9 @@ async def async_setup(hass, config):
         SCHEMA_WEBSOCKET_DELETE_SCHEDULE,
     )
     hass.components.websocket_api.async_register_command(
-        WS_TYPE_SCHEDULER_ITEMS, websocket_handle_items, SCHEMA_WEBSOCKET_SCHEDULES
+        WS_TYPE_SCHEDULER_SCHEDULES,
+        websocket_handle_schedules,
+        SCHEMA_WEBSOCKET_SCHEDULES,
     )
     hass.components.websocket_api.async_register_command(
         WS_TYPE_SCHEDULER_UPDATE_SCHEDULE,
@@ -122,78 +109,19 @@ async def async_setup(hass, config):
     return True
 
 
-class Schedule:
+class ScheduleInstance:
     """A class that defines a scene schedule."""
 
     def __init__(
-        self,
-        hass: "HomeAssistant",
-        entity_id: str,
-        start_datetime: datetime,
-        end_datetime: Optional[datetime] = None,
-        schedule_id: Optional[str] = None,
-        activation_context_id: Optional[str] = None,
+        self, hass: "HomeAssistant", entity_id: str, activation_context: Context,
     ) -> None:
         """Initialize."""
-        now = datetime.now()
-        if (start_datetime and start_datetime < now) or (
-            end_datetime and end_datetime < now
-        ):
-            raise ValueError("Dates in the past are not allowed")
-
+        self._activation_context = activation_context
         self._async_state_listener: Optional[Callable] = None
         self._entity_states: Dict[str, "State"] = {}
         self._hass: "HomeAssistant" = hass
-        self.end_datetime: datetime = end_datetime
         self.entity_id: str = entity_id
-        self.start_datetime: datetime = start_datetime
-
-        self.schedule_id: str
-        if schedule_id:
-            self.schedule_id = schedule_id
-        else:
-            self.schedule_id = uuid4().hex
-
-        self.activation_context_id: str
-        if activation_context_id:
-            self._activation_context = Context(id=activation_context_id)
-        else:
-            self._activation_context = Context()
-
-    @classmethod
-    def from_dict(cls, hass: "HomeAssistant", conf: dict) -> "Schedule":
-        """Instantiate a schedule from a dict of parameters."""
-        try:
-            ITEM_SCHEMA(conf)
-        except vol.Invalid as err:
-            raise ValueError(f"Cannot create schedule from invalid data: {err}")
-
-        start_datetime: datetime = dt_util.parse_datetime(conf[CONF_START_DATETIME])
-        end_datetime: datetime
-        if conf.get(CONF_END_DATETIME):
-            end_datetime = dt_util.parse_datetime(conf[CONF_END_DATETIME])
-        else:
-            end_datetime = None
-        return cls(
-            hass,
-            conf[CONF_ENTITY_ID],
-            start_datetime,
-            end_datetime=end_datetime,
-            schedule_id=conf.get(CONF_SCHEDULE_ID),
-            activation_context_id=conf.get(CONF_ACTIVATION_CONTEXT_ID),
-        )
-
-    def as_dict(self) -> dict:
-        """Output the schedule as a dict."""
-        return {
-            CONF_SCHEDULE_ID: self.schedule_id,
-            CONF_ACTIVATION_CONTEXT_ID: self._activation_context.id,
-            CONF_ENTITY_ID: self.entity_id,
-            CONF_START_DATETIME: self.start_datetime.isoformat(),
-            CONF_END_DATETIME: self.end_datetime.isoformat()
-            if self.end_datetime
-            else None,
-        }
+        self.instance_id = uuid4().hex
 
     @callback
     def async_activate(self) -> None:
@@ -210,9 +138,8 @@ class Schedule:
         @callback
         def save_state(entity_id: str, old_state: "State", new_state: "State") -> None:
             """Save prior states of an entity if it was triggered by this schedule."""
-            if new_state.context != self._activation_context:
-                return
-            self._entity_states[entity_id] = old_state
+            if new_state.context == self._activation_context:
+                self._entity_states[entity_id] = old_state
 
         self._async_state_listener = async_track_state_change(
             self._hass, MATCH_ALL, save_state
@@ -238,101 +165,93 @@ class Schedule:
 
 
 class Scheduler:
-    """A class that manages scene schedules."""
+    """A class to manage scene schedules."""
 
-    def __init__(self, hass: "HomeAssistant"):
+    def __init__(self, hass: "HomeAssistant") -> None:
         """Initialize."""
         self._async_activation_listeners: Dict[str, Callable] = {}
         self._async_deactivation_listeners: Dict[str, str] = {}
         self._hass: "HomeAssistant" = hass
-        self.schedules: Dict[str, Schedule] = {}
+        self.schedules: Dict[str, dict] = {}
 
     @callback
-    def async_clear_expired(self) -> None:
-        """Clear schedules that are in the past."""
-        now = datetime.now()
-
-        for schedule_id, schedule in self.schedules.items():
-            if schedule[CONF_START_DATETIME] < now and (
-                schedule.get(CONF_END_DATETIME) and schedule[CONF_END_DATETIME] < now
-            ):
-                self.async_delete(schedule_id)
-
-        self.async_save()
+    def as_dict(self, schedule_id: str) -> dict:
+        """Return a schedule in dict form."""
+        schedule = self.schedules[schedule_id]
+        return {
+            CONF_SCHEDULE_ID: schedule_id,
+            CONF_ENTITY_ID: schedule[CONF_ENTITY_ID],
+            CONF_START_DATETIME: schedule[CONF_START_DATETIME].isoformat(),
+            CONF_DURATION: schedule[CONF_DURATION],
+            CONF_RRULE: str(schedule[CONF_RRULE]),
+            CONF_ACTIVATION_CONTEXT_ID: schedule[CONF_ACTIVATION_CONTEXT].id,
+        }
 
     @callback
     def async_create(
         self,
         entity_id: str,
         start_datetime: datetime,
-        end_datetime: Optional[datetime] = None,
-        schedule_id: Optional[str] = None,
-        activation_context: Optional[str] = None,
+        *,
+        duration: Optional[int] = None,
+        rrule_str: Optional[str] = None,
+        activation_context_id: Optional[str] = None,
     ) -> dict:
-        """Add a scheduler item."""
-        if start_datetime == end_datetime:
-            end_datetime = None
+        """Create a schedule.
 
-        schedule = Schedule(
-            self._hass,
-            entity_id,
-            dt_util.parse_datetime(start_datetime),
-            dt_util.parse_datetime(end_datetime) if end_datetime else None,
-            schedule_id,
-            activation_context,
-        )
+        The rrule_str parameter must be an RFC5545-compliant string.
+        The duration parameter is a number of seconds a schedule instance should last.
+        """
+        if start_datetime < datetime.now():
+            raise ValueError("Dates in the past are not allowed")
 
-        @callback
-        def schedule_start(call: "ServiceCall") -> None:
-            """Trigger when the schedule starts."""
-            schedule.async_activate()
-            if not schedule.end_datetime:
-                self._async_activation_listeners.pop(schedule.schedule_id)
-                self.schedules.pop(schedule.schedule_id)
-                self.async_save()
+        schedule_id = uuid4().hex
+        schedule = {
+            CONF_ENTITY_ID: entity_id,
+            CONF_START_DATETIME: start_datetime,
+            CONF_DURATION: duration,
+            CONF_RRULE: rrulestr(rrule_str) if rrule_str else None,
+            CONF_ACTIVATION_CONTEXT: Context(id=activation_context_id)
+            if activation_context_id
+            else Context(),
+        }
+        self.schedules[schedule_id] = schedule
 
-        @callback
-        def schedule_end(call: "ServiceCall") -> None:
-            """Trigger when the schedule ends."""
-            schedule.async_deactivate()
-            self._async_deactivation_listeners.pop(schedule.schedule_id)
-            self.schedules.pop(schedule.schedule_id)
-            self.async_save()
-
-        self._async_activation_listeners[
-            schedule.schedule_id
-        ] = async_track_point_in_time(
-            self._hass, schedule_start, schedule.start_datetime
-        )
-        if schedule.end_datetime:
-            self._async_deactivation_listeners[
-                schedule.schedule_id
-            ] = async_track_point_in_time(
-                self._hass, schedule_end, schedule.end_datetime
-            )
-
-        self.schedules[schedule.schedule_id] = schedule
         self.async_save()
-        return schedule.as_dict()
+        _LOGGER.info('Created schedule "%s": %s', schedule_id, schedule)
+
+        self.async_schedule_next_instance(schedule_id, initial=True)
+
+        return self.as_dict(schedule_id)
 
     @callback
-    def async_delete(self, schedule_id: str, *, save: bool = True) -> dict:
+    def async_delete(
+        self, schedule_id: str, *, remove_listeners: bool = True, save: bool = True
+    ) -> dict:
         """Delete a schedule."""
         if schedule_id not in self.schedules:
             raise KeyError
 
-        schedule = self.schedules.pop(schedule_id)
+        # This parameter is in place to handle two use cases:
+        # 1. If the delete API is called, by default, we should assume there are
+        #    listeners to cancel.
+        # 2. If a completed schedule is deleted, the listeners won't exist.
+        if remove_listeners:
+            if schedule_id in self._async_activation_listeners:
+                cancel = self._async_activation_listeners.pop(schedule_id)
+                cancel()
+            if schedule_id in self._async_deactivation_listeners:
+                cancel = self._async_deactivation_listeners.pop(schedule_id)
+                cancel()
 
-        if schedule_id in self._async_activation_listeners:
-            cancel = self._async_activation_listeners.pop(schedule_id)
-            cancel()
-        if schedule_id in self._async_deactivation_listeners:
-            cancel = self._async_deactivation_listeners.pop(schedule_id)
-            cancel()
+        return_payload = self.as_dict(schedule_id)
+        self.schedules.pop(schedule_id)
 
         if save:
             self.async_save()
-        return schedule.as_dict()
+        _LOGGER.info('Deleted schedule "%s"', schedule_id)
+
+        return return_payload
 
     async def async_load(self) -> None:
         """Load scheduler items."""
@@ -345,22 +264,22 @@ class Scheduler:
         for schedule in raw_schedules.values():
             self.async_create(
                 schedule[CONF_ENTITY_ID],
-                schedule[CONF_START_DATETIME],
-                schedule[CONF_END_DATETIME],
-                schedule[CONF_SCHEDULE_ID],
-                schedule[CONF_ACTIVATION_CONTEXT_ID],
+                dt_util.parse_datetime(schedule[CONF_START_DATETIME]),
+                duration=schedule[CONF_DURATION],
+                rrule_str=schedule[CONF_RRULE],
+                activation_context_id=schedule[CONF_ACTIVATION_CONTEXT_ID],
             )
 
     @callback
     def async_save(self) -> None:
-        """Save the items."""
+        """Save the schedules to local storage."""
 
         def save() -> None:
-            """Save the items synchronously."""
+            """Save."""
             save_json(
                 self._hass.config.path(PERSISTENCE),
                 {
-                    schedule_id: schedule.as_dict()
+                    schedule_id: self.as_dict(schedule_id)
                     for schedule_id, schedule in self.schedules.items()
                 },
             )
@@ -369,34 +288,72 @@ class Scheduler:
         self._hass.bus.async_fire(EVENT)
 
     @callback
+    def async_schedule_next_instance(
+        self, schedule_id: str, *, initial: bool = False
+    ) -> bool:
+        """Schedule the next instance of a schedule."""
+        schedule = self.schedules[schedule_id]
+
+        if initial:
+            start_dt = schedule[CONF_START_DATETIME]
+        else:
+            start_dt = schedule[CONF_RRULE].after(datetime.now(), inc=True)
+
+        if (not initial and not schedule.get(CONF_RRULE)) or not start_dt:
+            self.async_delete(schedule_id, remove_listeners=False)
+            return
+
+        if schedule.get(CONF_DURATION):
+            end_dt = start_dt + timedelta(seconds=schedule[CONF_DURATION])
+        else:
+            end_dt = None
+
+        instance = ScheduleInstance(
+            self._hass, schedule[CONF_ENTITY_ID], schedule[CONF_ACTIVATION_CONTEXT]
+        )
+
+        @callback
+        def schedule_start(call: datetime) -> None:
+            """Trigger when the schedule starts."""
+            instance.async_activate()
+            if not end_dt:
+                self.async_schedule_next_instance(schedule_id)
+
+        @callback
+        def schedule_end(call: datetime) -> None:
+            """Trigger when the schedule ends."""
+            instance.async_deactivate()
+            self.async_schedule_next_instance(schedule_id)
+
+        self._async_activation_listeners[schedule_id] = async_track_point_in_time(
+            self._hass, schedule_start, start_dt
+        )
+        if end_dt:
+            self._async_deactivation_listeners[schedule_id] = async_track_point_in_time(
+                self._hass, schedule_end, end_dt
+            )
+
+        _LOGGER.info(
+            'Scheduled instance of schedule "%s" (start: %s / end: %s)',
+            schedule_id,
+            start_dt,
+            end_dt,
+        )
+
     def async_update(self, schedule_id: str, new_data: dict) -> dict:
         """Update a schedule."""
         if schedule_id not in self.schedules:
             raise KeyError
 
-        try:
-            data = ITEM_UPDATE_SCHEMA(new_data)
-        except vol.Invalid as err:
-            raise ValueError(f"Cannot update schedule with invalid data: {err}")
-
+        new_data = SCHEDULE_UPDATE_SCHEMA(new_data)
         data = self.async_delete(schedule_id, save=False)
         data.update(new_data)
         return self.async_create(
             data[CONF_ENTITY_ID],
-            data[CONF_START_DATETIME],
-            data[CONF_END_DATETIME],
-            data[CONF_SCHEDULE_ID],
-            data[CONF_ACTIVATION_CONTEXT_ID],
+            data[CONF_RRULE],
+            duration=data[CONF_DURATION],
+            activation_context_id=data[CONF_ACTIVATION_CONTEXT].id,
         )
-
-
-@callback
-def websocket_handle_clear_expired(hass, connection, msg):
-    """Handle creating a schedule."""
-    hass.data[DOMAIN].async_clear_expired()
-    connection.send_message(
-        websocket_api.result_message(msg[CONF_ID], hass.data[DOMAIN].schedules)
-    )
 
 
 @callback
@@ -404,7 +361,10 @@ def websocket_handle_create(hass, connection, msg):
     """Handle creating a schedule."""
     try:
         schedule = hass.data[DOMAIN].async_create(
-            msg[CONF_ENTITY_ID], msg[CONF_START_DATETIME], msg.get(CONF_END_DATETIME)
+            msg[CONF_ENTITY_ID],
+            msg[CONF_START_DATETIME],
+            duration=msg.get(CONF_DURATION),
+            rrule_str=msg.get(CONF_RRULE),
         )
     except ValueError as err:
         connection.send_message(
@@ -419,16 +379,20 @@ def websocket_handle_delete(hass, connection, msg):
     """Handle deleting a schedule."""
     try:
         schedule = hass.data[DOMAIN].async_delete(msg[CONF_SCHEDULE_ID])
-    except KeyError as err:
+    except KeyError:
         connection.send_message(
-            websocket_api.error_message(msg[CONF_ID], "schedule_not_found", str(err))
+            websocket_api.error_message(
+                msg[CONF_ID],
+                "schedule_not_found",
+                f"Cannot delete unknown schedule ID: {msg[CONF_SCHEDULE_ID]}",
+            )
         )
     else:
         connection.send_message(websocket_api.result_message(msg[CONF_ID], schedule))
 
 
 @callback
-def websocket_handle_items(hass, connection, msg):
+def websocket_handle_schedules(hass, connection, msg):
     """Handle getting all schedule."""
     connection.send_message(
         websocket_api.result_message(msg[CONF_ID], hass.data[DOMAIN].schedules)
@@ -439,15 +403,18 @@ def websocket_handle_items(hass, connection, msg):
 def websocket_handle_update(hass, connection, msg):
     """Handle updating a schedule."""
     msg_id = msg.pop("id")
-    schedule_id = msg.pop("schedule_id")
     msg.pop("type")
+    schedule_id = msg.pop("schedule_id")
     data = msg
 
     try:
         schedule = hass.data[DOMAIN].async_update(schedule_id, data)
-    except KeyError as err:
         connection.send_message(
-            websocket_api.error_message(msg[CONF_ID], "schedule_not_found", str(err))
+            websocket_api.error_message(
+                msg[CONF_ID],
+                "schedule_not_found",
+                f"Cannot delete unknown schedule ID: {msg[CONF_SCHEDULE_ID]}",
+            )
         )
     except ValueError as err:
         connection.send_message(
