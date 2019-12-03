@@ -1,12 +1,12 @@
 {
-  "device_automation": {
-    "condtion_type": {
-      "is_home": "{entity_name} is home",
-      "is_not_home": "{entity_name} is not home"
-    },
-    "action_type": {
-      "set_home": "Set {entity_name} to home",
-      "set_not_home": "Set {entity_name} to not home"
+    "device_automation": {
+        "condtion_type": {
+            "is_home": "{entity_name} is home",
+            "is_not_home": "{entity_name} is not home"
+        },
+        "action_type": {
+            "comes_home": "{entity_name} comes home",
+            "leaves_home": "{entity_name} leaves home"
+        }
     }
-  }
 }

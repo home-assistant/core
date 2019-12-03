@@ -40,13 +40,13 @@ async def test_get_actions(hass, device_reg, entity_reg):
     expected_actions = [
         {
             "domain": DOMAIN,
-            "type": "set_home",
+            "type": "comes_home",
             "device_id": device_entry.id,
             "entity_id": "device_tracker.test_5678",
         },
         {
             "domain": DOMAIN,
-            "type": "set_not_home",
+            "type": "leaves_home",
             "device_id": device_entry.id,
             "entity_id": "device_tracker.test_5678",
         },
@@ -56,7 +56,7 @@ async def test_get_actions(hass, device_reg, entity_reg):
 
 
 async def test_action(hass):
-    """Test for set_home and set_not_home actions."""
+    """Test for comes_home and leaves_home actions."""
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -65,40 +65,40 @@ async def test_action(hass):
                 {
                     "trigger": {
                         "platform": "event",
-                        "event_type": "test_event_set_home",
+                        "event_type": "test_event_comes_home",
                     },
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "abcdefgh",
                         "entity_id": "device_tracker.entity",
-                        "type": "set_home",
+                        "type": "comes_home",
                     },
                 },
                 {
                     "trigger": {
                         "platform": "event",
-                        "event_type": "test_event_set_not_home",
+                        "event_type": "test_event_leaves_home",
                     },
                     "action": {
                         "domain": DOMAIN,
                         "device_id": "abcdefgh",
                         "entity_id": "device_tracker.entity",
-                        "type": "set_not_home",
+                        "type": "leaves_home",
                     },
                 },
             ]
         },
     )
 
-    set_home_calls = async_mock_service(hass, "device_tracker", "set_home")
-    set_not_home_calls = async_mock_service(hass, "device_tracker", "set_not_home")
+    comes_home_calls = async_mock_service(hass, "device_tracker", "comes_home")
+    leaves_home_calls = async_mock_service(hass, "device_tracker", "leaves_home")
 
-    hass.bus.async_fire("test_event_set_home")
+    hass.bus.async_fire("test_event_comes_home")
     await hass.async_block_till_done()
-    assert len(set_home_calls) == 1
-    assert len(set_not_home_calls) == 0
+    assert len(comes_home_calls) == 1
+    assert len(leaves_home_calls) == 0
 
-    hass.bus.async_fire("test_event_set_not_home")
+    hass.bus.async_fire("test_event_leaves_home")
     await hass.async_block_till_done()
-    assert len(set_home_calls) == 1
-    assert len(set_not_home_calls) == 1
+    assert len(comes_home_calls) == 1
+    assert len(leaves_home_calls) == 1

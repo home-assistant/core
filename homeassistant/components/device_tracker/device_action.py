@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from . import DOMAIN, SERVICE_SEE
 from .const import ATTR_LOCATION_NAME, ATTR_DEV_ID
 
-ACTION_TYPES = {"set_home", "set_not_home"}
+ACTION_TYPES = {"comes_home", "leaves_home"}
 
 ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
@@ -43,8 +43,8 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
             CONF_DOMAIN: DOMAIN,
             CONF_ENTITY_ID: entry.entity_id,
         }
-        actions.append({CONF_TYPE: "set_home", **action_kwargs})
-        actions.append({CONF_TYPE: "set_not_home", **action_kwargs})
+        actions.append({CONF_TYPE: "comes_home", **action_kwargs})
+        actions.append({CONF_TYPE: "leaves_home", **action_kwargs})
 
     return actions
 
@@ -57,9 +57,9 @@ async def async_call_action_from_config(
 
     service_data = {ATTR_DEV_ID: split_entity_id(config[CONF_ENTITY_ID])[1]}
 
-    if config[CONF_TYPE] == "set_home":
+    if config[CONF_TYPE] == "comes_home":
         service_data[ATTR_LOCATION_NAME] = STATE_HOME
-    elif config[CONF_TYPE] == "set_not_home":
+    elif config[CONF_TYPE] == "leaves_home":
         service_data[ATTR_LOCATION_NAME] = STATE_NOT_HOME
 
     await hass.services.async_call(
