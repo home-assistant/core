@@ -59,55 +59,60 @@ def setup(hass, config):
     doorstations = []
 
     for index, doorstation_config in enumerate(config[DOMAIN][CONF_DEVICES]):
-        device_ip = doorstation_config.get(CONF_HOST)
-        username = doorstation_config.get(CONF_USERNAME)
-        password = doorstation_config.get(CONF_PASSWORD)
-        custom_url = doorstation_config.get(CONF_CUSTOM_URL)
-        events = doorstation_config.get(CONF_EVENTS)
-        token = doorstation_config.get(CONF_TOKEN)
-        name = doorstation_config.get(CONF_NAME) or "DoorBird {}".format(index + 1)
+        try:
+            device_ip = doorstation_config.get(CONF_HOST)
+            username = doorstation_config.get(CONF_USERNAME)
+            password = doorstation_config.get(CONF_PASSWORD)
+            custom_url = doorstation_config.get(CONF_CUSTOM_URL)
+            events = doorstation_config.get(CONF_EVENTS)
+            token = doorstation_config.get(CONF_TOKEN)
+            name = doorstation_config.get(CONF_NAME) or "DoorBird {}".format(index + 1)
 
-        device = DoorBird(device_ip, username, password)
-        status = device.ready()
+            device = DoorBird(device_ip, username, password)
+            status = device.ready()
 
-        if status[0]:
-            doorstation = ConfiguredDoorBird(device, name, events, custom_url, token)
-            doorstations.append(doorstation)
-            _LOGGER.info(
-                'Connected to DoorBird "%s" as %s@%s',
-                doorstation.name,
-                username,
-                device_ip,
-            )
-        elif status[1] == 401:
-            _LOGGER.error(
-                "Authorization rejected by DoorBird for %s@%s", username, device_ip
-            )
-            return False
-        else:
-            _LOGGER.error(
-                "Could not connect to DoorBird as %s@%s: Error %s",
-                username,
-                device_ip,
-                str(status[1]),
-            )
-            return False
-
-        # Subscribe to doorbell or motion events
-        if events:
-            try:
-                doorstation.register_events(hass)
-            except HTTPError:
-                hass.components.persistent_notification.create(
-                    "Doorbird configuration failed.  Please verify that API "
-                    "Operator permission is enabled for the Doorbird user. "
-                    "A restart will be required once permissions have been "
-                    "verified.",
-                    title="Doorbird Configuration Failure",
-                    notification_id="doorbird_schedule_error",
+            if status[0]:
+                doorstation = ConfiguredDoorBird(
+                    device, name, events, custom_url, token
                 )
-
+                doorstations.append(doorstation)
+                _LOGGER.info(
+                    'Connected to DoorBird "%s" as %s@%s',
+                    doorstation.name,
+                    username,
+                    device_ip,
+                )
+            elif status[1] == 401:
+                _LOGGER.error(
+                    "Authorization rejected by DoorBird for %s@%s", username, device_ip
+                )
                 return False
+            else:
+                _LOGGER.error(
+                    "Could not connect to DoorBird as %s@%s: Error %s",
+                    username,
+                    device_ip,
+                    str(status[1]),
+                )
+                return False
+
+            # Subscribe to doorbell or motion events
+            if events:
+                try:
+                    doorstation.register_events(hass)
+                except HTTPError:
+                    hass.components.persistent_notification.create(
+                        "Doorbird configuration failed.  Please verify that API "
+                        "Operator permission is enabled for the Doorbird user. "
+                        "A restart will be required once permissions have been "
+                        "verified.",
+                        title="Doorbird Configuration Failure",
+                        notification_id="doorbird_schedule_error",
+                    )
+
+                    return False
+        except Exception as e:
+            _LOGGER.error("Failed to setup doorbird at %s: %s", device_ip, e)
 
     hass.data[DOMAIN] = doorstations
 
