@@ -1144,21 +1144,25 @@ async def async_api_changechannel(hass, config, directive, context):
     """Process a change channel request."""
     channel = "0"
     entity = directive.entity
-    payload = directive.payload["channel"]
+    channel_payload = directive.payload["channel"]
+    metadata_payload = directive.payload["channelMetadata"]
     payload_name = "number"
 
-    if "number" in payload:
-        channel = payload["number"]
+    if "number" in channel_payload:
+        channel = channel_payload["number"]
         payload_name = "number"
-    elif "callSign" in payload:
-        channel = payload["callSign"]
+    elif "callSign" in channel_payload:
+        channel = channel_payload["callSign"]
         payload_name = "callSign"
-    elif "affiliateCallSign" in payload:
-        channel = payload["affiliateCallSign"]
+    elif "affiliateCallSign" in channel_payload:
+        channel = channel_payload["affiliateCallSign"]
         payload_name = "affiliateCallSign"
-    elif "uri" in payload:
-        channel = payload["uri"]
+    elif "uri" in channel_payload:
+        channel = channel_payload["uri"]
         payload_name = "uri"
+    elif "name" in metadata_payload:
+        channel = metadata_payload["name"]
+        payload_name = "callSign"
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
