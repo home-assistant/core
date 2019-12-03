@@ -69,7 +69,9 @@ def render_complex(value, variables=None):
         return [render_complex(item, variables) for item in value]
     if isinstance(value, dict):
         return {key: render_complex(item, variables) for key, item in value.items()}
-    return value.async_render(variables)
+    if isinstance(value, Template):
+        return value.async_render(variables)
+    return value
 
 
 def extract_entities(

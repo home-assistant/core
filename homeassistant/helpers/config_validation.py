@@ -489,8 +489,9 @@ def template_complex(value):
         for key, element in return_value.items():
             return_value[key] = template_complex(element)
         return return_value
-
-    return template(value)
+    if isinstance(value, str):
+        return template(value)
+    return value
 
 
 def datetime(value):

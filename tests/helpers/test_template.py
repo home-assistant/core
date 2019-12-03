@@ -1796,3 +1796,10 @@ def test_length_of_states(hass):
 
     tpl = template.Template("{{ states.sensor | length }}", hass)
     assert tpl.async_render() == "2"
+
+
+def test_render_complex_handling_non_template_values(hass):
+    """Test that we can render non-template fields."""
+    assert template.render_complex(
+        {True: 1, False: template.Template("{{ hello }}", hass)}, {"hello": 2}
+    ) == {True: 1, False: "2"}
