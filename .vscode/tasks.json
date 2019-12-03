@@ -12,7 +12,7 @@
       "presentation": {
         "reveal": "always",
         "panel": "new"
-      },
+      } ,
       "problemMatcher": []
     },
     {
@@ -23,7 +23,7 @@
       "group": {
         "kind": "test",
         "isDefault": true
-      },
+      } ,
       "presentation": {
         "reveal": "always",
         "panel": "new"
