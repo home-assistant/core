@@ -643,7 +643,7 @@ hbmqtt==0.9.5
 hdate==0.9.3
 
 # homeassistant.components.heatmiser
-heatmiserV3==0.9.1
+heatmiserV3==1.1.18
 
 # homeassistant.components.here_travel_time
 herepy==0.6.3.3
