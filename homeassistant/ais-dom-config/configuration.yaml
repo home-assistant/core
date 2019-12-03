@@ -90,4 +90,5 @@ ais_virtual_devices:
 
 conversation:
 scene:
-mobile_app:
+# TODO
+# mobile_app:
