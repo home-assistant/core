@@ -336,7 +336,7 @@ class GoogleEntity:
     @callback
     def is_supported(self) -> bool:
         """Return if the entity is supported by Google."""
-        return self.state.state != STATE_UNAVAILABLE and bool(self.traits())
+        return bool(self.traits())
 
     @callback
     def might_2fa(self) -> bool:
