@@ -41,7 +41,53 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_conditions(hass, device_reg, entity_reg):
+async def test_get_no_conditions(hass, device_reg, entity_reg):
+    """Test we get the expected conditions from a alarm_control_panel."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    assert_lists_same(conditions, [])
+
+
+async def test_get_minimum_conditions(hass, device_reg, entity_reg):
+    """Test we get the expected conditions from a alarm_control_panel."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    hass.states.async_set(
+        "alarm_control_panel.test_5678", "attributes", {"supported_features": 0}
+    )
+    expected_conditions = [
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "type": "is_disarmed",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "type": "is_triggered",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
+    ]
+
+    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    assert_lists_same(conditions, expected_conditions)
+
+
+async def test_get_maximum_conditions(hass, device_reg, entity_reg):
     """Test we get the expected conditions from a alarm_control_panel."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)

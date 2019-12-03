@@ -56,7 +56,7 @@ async def async_get_conditions(
 
         state = hass.states.get(entry.entity_id)
 
-        # We need a state or else we can't populate the HVAC and preset modes.
+        # We need a state or else we can't populate the different armed conditions
         if state is None:
             continue
 
