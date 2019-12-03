@@ -30,11 +30,12 @@ CORE_INTEGRATIONS = ("homeassistant", "persistent_notification")
 LOGGING_INTEGRATIONS = {"logger", "system_log"}
 STAGE_1_INTEGRATIONS = {
     # To record data
-    "recorder",
+    # "recorder",
     # To make sure we forward data to other instances
     "mqtt_eventstream",
+    # AIS comment
     # To provide account link implementations
-    "cloud",
+    # "cloud",
 }
 
 
