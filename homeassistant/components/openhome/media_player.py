@@ -1,6 +1,8 @@
 """Support for Openhome Devices."""
 import logging
 
+from openhomedevice.Device import Device
+
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
@@ -26,7 +28,6 @@ DEVICES = []
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Openhome platform."""
-    from openhomedevice.Device import Device
 
     if not discovery_info:
         return True
