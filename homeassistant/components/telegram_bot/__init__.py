@@ -753,7 +753,7 @@ class BaseTelegramBotEntity:
             message_ok, event_data = self._get_message_data(data)
             if event_data is None:
                 return message_ok
-            
+
             if ATTR_MSGID in data:
                 event_data[ATTR_MSGID] = data[ATTR_MSGID]
 
