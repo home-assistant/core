@@ -145,6 +145,17 @@ class Entity(ABC):
         return STATE_UNKNOWN
 
     @property
+    def capability_attributes(self) -> Optional[Dict[str, Any]]:
+        """Return the capability attributes.
+
+        Attributes that explain the capabilities of an entity.
+
+        Implemented by component base class. Convention for attribute names
+        is lowercase snake_case.
+        """
+        return None
+
+    @property
     def state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes.
 
@@ -302,7 +313,7 @@ class Entity(ABC):
 
         start = timer()
 
-        attr = {}
+        attr = self.capability_attributes or {}
         if not self.available:
             state = STATE_UNAVAILABLE
         else:
