@@ -370,7 +370,6 @@
                                         "cards": [
                                             {
                                                 "entity": "input_select.rss_news_category",
-                                                "title": "Kategoria wiadomo\u015bci",
                                                 "type": "ais-easy-picker"
                                             }
                                         ],
@@ -389,7 +388,6 @@
                                         "cards": [
                                             {
                                                 "entity": "input_select.book_autor",
-                                                "title": "Autor",
                                                 "type": "ais-easy-picker"
                                             }
                                         ],
@@ -428,7 +426,6 @@
                                         "cards": [
                                             {
                                                 "entity": "input_select.rss_news_channel",
-                                                "title": "Kana\u0142 wiadomo\u015bci",
                                                 "type": "ais-easy-picker"
                                             },
                                             {
@@ -437,7 +434,6 @@
                                                         "sensor.rssnewslist"
                                                     ],
                                                     "media_source": "News",
-                                                    "title": "Artyku\u0142y",
                                                     "type": "ais-list"
                                                 },
                                                 "conditions": [
@@ -466,7 +462,6 @@
                                         ],
                                         "media_source": "Bookmark",
                                         "show_delete_icon": true,
-                                        "title": "Lista zak\u0142adek",
                                         "type": "ais-list"
                                     },
                                     "conditions": [
@@ -484,7 +479,6 @@
                                         ],
                                         "media_source": "Favorite",
                                         "show_delete_icon": true,
-                                        "title": "Lista ulubionych audio",
                                         "type": "ais-list"
                                     },
                                     "conditions": [
@@ -502,7 +496,6 @@
                                         ],
                                         "media_source": "Music",
                                         "show_delete_icon": true,
-                                        "title": "Lista utwor\u00f3w z YouTube",
                                         "type": "ais-list"
                                     },
                                     "conditions": [
@@ -524,7 +517,6 @@
                                         ],
                                         "media_source": "SpotifySearch",
                                         "show_delete_icon": true,
-                                        "title": "Wynik wyszukania na Spotify",
                                         "type": "ais-list"
                                     },
                                     "conditions": [
@@ -542,7 +534,6 @@
                                 {
                                     "card": {
                                         "entity": "input_select.radio_type",
-                                        "title": "Typ radia",
                                         "type": "ais-easy-picker"
                                     },
                                     "conditions": [
@@ -556,7 +547,6 @@
                                 {
                                     "card": {
                                         "entity": "input_select.podcast_type",
-                                        "title": "Typ podcasta",
                                         "type": "ais-easy-picker"
                                     },
                                     "conditions": [
@@ -573,7 +563,6 @@
                                             "sensor.podcastnamelist"
                                         ],
                                         "media_source": "PodcastName",
-                                        "title": "Audycje",
                                         "type": "ais-list"
                                     },
                                     "conditions": [
@@ -590,7 +579,6 @@
                                             "sensor.audiobookslist"
                                         ],
                                         "media_source": "AudioBook",
-                                        "title": "Ksi\u0105\u017cki",
                                         "type": "ais-list"
                                     },
                                     "conditions": [
@@ -613,7 +601,6 @@
                                         ],
                                         "media_source": "Spotify",
                                         "show_delete_icon": true,
-                                        "title": "Lista utwor\u00f3w na Spotify",
                                         "type": "ais-list"
                                     },
                                     "conditions": [
@@ -634,7 +621,6 @@
                                             "sensor.radiolist"
                                         ],
                                         "media_source": "Radio",
-                                        "title": "Stacje radiowe",
                                         "type": "ais-list"
                                     },
                                     "conditions": [
@@ -651,7 +637,6 @@
                                             "sensor.podcastlist"
                                         ],
                                         "media_source": "Podcast",
-                                        "title": "Odcinki audycji",
                                         "type": "ais-list"
                                     },
                                     "conditions": [
@@ -668,7 +653,6 @@
                                             "sensor.audiobookschapterslist"
                                         ],
                                         "media_source": "AudioBookChapter",
-                                        "title": "Rozdzia\u0142y",
                                         "type": "ais-list"
                                     },
                                     "conditions": [
