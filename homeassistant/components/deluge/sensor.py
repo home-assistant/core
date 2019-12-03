@@ -51,7 +51,7 @@ class DelugeSensor(Entity):
     @property
     def unique_id(self):
         """Return the unique id of the entity."""
-        return f"{self.client.api.host}-{self.name}"
+        return f"{self.client.api.host}-{self.type}"
 
     @property
     def state(self):
@@ -83,7 +83,7 @@ class DelugeSensor(Entity):
     def _schedule_immediate_update(self):
         self.async_schedule_update_ha_state(True)
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data from Deluge and updates the state."""
         self.data = self.client.api.data
 
@@ -129,3 +129,4 @@ class DelugeSensor(Entity):
         """Unsub from update dispatcher."""
         if self.unsub_dispatcher:
             self.unsub_dispatcher()
+            self.unsub_dispatcher = None

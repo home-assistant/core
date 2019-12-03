@@ -1,7 +1,7 @@
 """Support for starting/stoping the Deluge client torrents."""
 import logging
 
-from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import ToggleEntity
@@ -32,7 +32,6 @@ class DelugeSwitch(ToggleEntity):
         """Initialize the Deluge switch."""
         self._name = name
         self.client = client
-        self._state = STATE_OFF
         self._available = False
         self.unsub_dispatcher = None
 
@@ -44,12 +43,7 @@ class DelugeSwitch(ToggleEntity):
     @property
     def unique_id(self):
         """Return the unique id of the entity."""
-        return f"{self.client.api.host}-{self.name}"
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
+        return f"{self.client.api.host}-{DELUGE_SWITCH}"
 
     @property
     def should_poll(self):
@@ -59,7 +53,7 @@ class DelugeSwitch(ToggleEntity):
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._state == STATE_ON
+        return self.client.api.get_active_torrents_count() > 0
 
     @property
     def available(self):
@@ -86,16 +80,10 @@ class DelugeSwitch(ToggleEntity):
 
     @callback
     def _schedule_immediate_update(self):
-        self.async_schedule_update_ha_state(True)
-
-    def update(self):
-        """Get the latest data from deluge and updates the state."""
-        if self.client.api.get_active_torrents_count() > 0:
-            self._state = STATE_ON
-        else:
-            self._state = STATE_OFF
+        self.async_schedule_update_ha_state()
 
     async def will_remove_from_hass(self):
         """Unsub from update dispatcher."""
         if self.unsub_dispatcher:
             self.unsub_dispatcher()
+            self.unsub_dispatcher = None

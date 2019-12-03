@@ -75,11 +75,11 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Deluge from a config entry."""
     client = DelugeClient(hass, entry)
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = client
 
     if not await client.async_setup():
         return False
 
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = client
     return True
 
 
@@ -95,17 +95,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def get_api(hass, entry):
-    """Get Transmission client."""
-    host = entry[CONF_HOST]
-    port = entry[CONF_PORT]
-    username = entry.get(CONF_USERNAME)
-    password = entry.get(CONF_PASSWORD)
+def get_api(hass, data):
+    """Get Deluge client."""
+    host = data[CONF_HOST]
+    port = data[CONF_PORT]
+    username = data[CONF_USERNAME]
+    password = data[CONF_PASSWORD]
 
     try:
-        api = await hass.async_add_executor_job(
-            DelugeRPCClient, host, port, username, password, True
-        )
+        api = DelugeRPCClient(host, port, username, password, True)
         api.connect()
         _LOGGER.debug("Successfully connected to %s", host)
         return api
@@ -141,7 +139,9 @@ class DelugeClient:
         """Set up the Deluge client."""
 
         try:
-            deluge_api = await get_api(self.hass, self.config_entry.data)
+            deluge_api = await self.hass.async_add_executor_job(
+                get_api, self.hass, self.config_entry.data
+            )
         except CannotConnect:
             raise ConfigEntryNotReady
         except (UserNameError, PasswordError, UnknownError):
@@ -151,8 +151,8 @@ class DelugeClient:
 
         await self.hass.async_add_executor_job(self._deluge_data.init_torrent_list)
         await self.hass.async_add_executor_job(self._deluge_data.update)
-        self.add_options()
-        self.set_scan_interval(self.config_entry.options[CONF_SCAN_INTERVAL])
+        self.async_add_options()
+        self.async_set_scan_interval(self.config_entry.options[CONF_SCAN_INTERVAL])
 
         for component in PLATFORMS:
             self.hass.async_create_task(
@@ -187,7 +187,7 @@ class DelugeClient:
 
         return True
 
-    def add_options(self):
+    def async_add_options(self):
         """Add options for entry."""
         if not self.config_entry.options:
             scan_interval = self.config_entry.data.pop(
@@ -199,7 +199,7 @@ class DelugeClient:
                 self.config_entry, options=options
             )
 
-    def set_scan_interval(self, scan_interval):
+    def async_set_scan_interval(self, scan_interval):
         """Update scan interval."""
 
         def refresh(event_time):
@@ -215,7 +215,7 @@ class DelugeClient:
     @staticmethod
     async def async_options_updated(hass, entry):
         """Triggered by config entry options updates."""
-        hass.data[DOMAIN][entry.entry_id].set_scan_interval(
+        hass.data[DOMAIN][entry.entry_id].async_set_scan_interval(
             entry.options[CONF_SCAN_INTERVAL]
         )
 
@@ -243,7 +243,7 @@ class DelugeData:
     @property
     def signal_update(self):
         """Update signal per deluge entry."""
-        return f"{DATA_UPDATED}-{self.host}"
+        return f"{DATA_UPDATED}-{self.config.entry_id}"
 
     def update(self):
         """Get the latest data from deluge instance."""
@@ -264,7 +264,7 @@ class DelugeData:
             self.available = True
         except FailedToReconnectException:
             self.available = False
-            _LOGGER.error("Unable to connect to Deeluge client %s", self.host)
+            _LOGGER.error("Unable to connect to Deluge client %s", self.host)
 
         dispatcher_send(self.hass, self.signal_update)
 

@@ -53,7 +53,7 @@ class DelugeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     break
 
             try:
-                await get_api(self.hass, user_input)
+                await self.hass.async_add_executor_job(get_api, self.hass, user_input)
 
             except UserNameError:
                 errors[CONF_USERNAME] = "user_error"
