@@ -844,9 +844,7 @@ async def test_external_ip_blocked(hue_client):
             result = await hue_client.get(getUrl)
             assert result.status == 400
 
-<<<<<<< HEAD
-    assert result.status == 401
-=======
+
         for postUrl in postUrls:
             result = await hue_client.post(postUrl)
             assert result.status == 400
@@ -854,4 +852,3 @@ async def test_external_ip_blocked(hue_client):
         for putUrl in putUrls:
             result = await hue_client.put(putUrl)
             assert result.status == 400
->>>>>>> Add full state view for emulated_hue

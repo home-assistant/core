@@ -200,15 +200,8 @@ class HueAllLightsStateView(HomeAssistantView):
         if not is_local(request[KEY_REAL_IP]):
             return self.json_message("Only local IPs allowed", HTTP_UNAUTHORIZED)
 
-        hass = request.app["hass"]
-        json_response = {}
 
-        for entity in hass.states.async_all():
-            if self.config.is_entity_exposed(entity):
-                number = self.config.entity_id_to_number(entity.entity_id)
-                json_response[number] = entity_to_json(self.config, entity)
-
-        return self.json(json_response)
+        return self.json(create_list_of_entities(self.config, request))
 
 
 class HueFullStateView(HomeAssistantView):
@@ -230,17 +223,8 @@ class HueFullStateView(HomeAssistantView):
         if username != HUE_API_USERNAME:
             return self.json(UNAUTHORIZED_USER)
 
-        hass = request.app["hass"]
-        json_response = {}
-
-        for entity in hass.states.async_all():
-            if self.config.is_entity_exposed(entity):
-                state = get_entity_state(self.config, entity)
-                number = self.config.entity_id_to_number(entity.entity_id)
-                json_response[number] = entity_to_json(self.config, entity, state)
-
         json_response = {
-            "lights": json_response,
+            "lights": create_list_of_entities(self.config, request),
             "config": {
                 "mac": "00:00:00:00:00:00",
                 "swversion": "01003542",
@@ -735,3 +719,16 @@ def create_hue_success_response(entity_id, attr, value):
     """Create a success response for an attribute set on a light."""
     success_key = f"/lights/{entity_id}/state/{attr}"
     return {"success": {success_key: value}}
+
+
+def create_list_of_entities(config, request):
+    """Create a list of all entites."""
+    hass = request.app["hass"]
+    json_response = {}
+
+    for entity in hass.states.async_all():
+        if config.is_entity_exposed(entity):
+            number = config.entity_id_to_number(entity.entity_id)
+            json_response[number] = entity_to_json(config, entity)
+
+    return json_response
