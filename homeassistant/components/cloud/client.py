@@ -101,6 +101,7 @@ class CloudClient(Interface):
             self._google_config = google_config.CloudGoogleConfig(
                 self._hass, self.google_user_config, cloud_user, self._prefs, self.cloud
             )
+            await self._google_config.async_initialize()
 
         return self._google_config
 

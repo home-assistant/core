@@ -19,6 +19,8 @@ async def test_google_update_report_state(hass, cloud_prefs):
         cloud_prefs,
         Mock(claims={"cognito:username": "abcdefghjkl"}),
     )
+    await config.async_initialize()
+    await config.async_connect_agent_user("mock-user-id")
 
     with patch.object(
         config, "async_sync_entities", side_effect=mock_coro
@@ -58,6 +60,8 @@ async def test_google_update_expose_trigger_sync(hass, cloud_prefs):
         cloud_prefs,
         Mock(claims={"cognito:username": "abcdefghjkl"}),
     )
+    await config.async_initialize()
+    await config.async_connect_agent_user("mock-user-id")
 
     with patch.object(
         config, "async_sync_entities", side_effect=mock_coro
@@ -95,6 +99,8 @@ async def test_google_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
     config = CloudGoogleConfig(
         hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data["cloud"]
     )
+    await config.async_initialize()
+    await config.async_connect_agent_user("mock-user-id")
 
     with patch.object(
         config, "async_sync_entities", side_effect=mock_coro

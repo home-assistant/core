@@ -82,11 +82,6 @@ class GoogleConfig(AbstractConfig):
         return True
 
     @property
-    def agent_user_id(self):
-        """Return Agent User Id to use for query responses."""
-        return None
-
-    @property
     def entity_config(self):
         """Return entity config."""
         return self._config.get(CONF_ENTITY_CONFIG) or {}
@@ -214,11 +209,11 @@ class GoogleConfig(AbstractConfig):
             _LOGGER.error("Could not contact %s", url)
             return 500
 
-    async def async_report_state(self, message):
+    async def async_report_state(self, message, agent_user_id: str):
         """Send a state report to Google."""
         data = {
             "requestId": uuid4().hex,
-            "agentUserId": (await self.hass.auth.async_get_owner()).id,
+            "agentUserId": agent_user_id,
             "payload": message,
         }
         await self.async_call_homegraph_api(REPORT_STATE_BASE_URL, data)
