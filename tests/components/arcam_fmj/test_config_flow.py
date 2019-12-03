@@ -33,5 +33,5 @@ async def test_import(hass):
     flow.hass = hass
     result = await flow.async_step_import(MOCK_CONFIG)
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == MOCK_NAME
+    assert result["title"] == "Arcam FMJ"
     assert result["data"] == MOCK_CONFIG
