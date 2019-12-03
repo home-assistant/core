@@ -42,7 +42,6 @@ def mock_controller_service():
     with patch(
         "homeassistant.components.icloud.config_flow.PyiCloudService"
     ) as service_mock:
-        service_mock.authenticate.return_value = Mock()
         service_mock.return_value.requires_2fa = True
         yield service_mock
 
@@ -53,7 +52,6 @@ def mock_controller_service_with_cookie():
     with patch(
         "homeassistant.components.icloud.config_flow.PyiCloudService"
     ) as service_mock:
-        service_mock.authenticate.return_value = Mock()
         service_mock.return_value.requires_2fa = False
         yield service_mock
 
@@ -64,7 +62,6 @@ def mock_controller_service_send_verification_code_failed():
     with patch(
         "homeassistant.components.icloud.config_flow.PyiCloudService"
     ) as service_mock:
-        service_mock.authenticate.return_value = Mock()
         service_mock.return_value.requires_2fa = False
         service_mock.return_value.trusted_devices = TRUSTED_DEVICES
         service_mock.send_verification_code = Mock(return_value=False)
@@ -77,7 +74,6 @@ def mock_controller_service_validate_verification_code_failed():
     with patch(
         "homeassistant.components.icloud.config_flow.PyiCloudService"
     ) as service_mock:
-        service_mock.authenticate.return_value = Mock()
         service_mock.return_value.requires_2fa = False
         service_mock.return_value.trusted_devices = TRUSTED_DEVICES
         service_mock.send_verification_code = Mock(return_value=True)
