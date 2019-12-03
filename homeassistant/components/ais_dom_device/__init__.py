@@ -58,6 +58,12 @@ async def async_setup(hass, config):
         await _async_remove_ais_dom_entity(hass, call.data["entity_id"])
 
     @asyncio.coroutine
+    async def async_remove_ais_dom_device(call):
+        if "device_id" not in call.data:
+            return
+        await _async_remove_ais_dom_device(hass, call.data["device_id"])
+
+    @asyncio.coroutine
     async def async_start_rf_sniffing(call):
         await _async_start_rf_sniffing(hass)
 
@@ -79,6 +85,9 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "add_ais_dom_entity", add_ais_dom_entity)
     hass.services.async_register(
         DOMAIN, "remove_ais_dom_entity", async_remove_ais_dom_entity
+    )
+    hass.services.async_register(
+        DOMAIN, "remove_ais_dom_device", async_remove_ais_dom_device
     )
     hass.services.async_register(DOMAIN, "start_rf_sniffing", async_start_rf_sniffing)
     hass.services.async_register(DOMAIN, "stop_rf_sniffing", async_stop_rf_sniffing)
@@ -188,6 +197,45 @@ async def _async_remove_ais_dom_entity(hass, entity_id):
 
     # remove this code and his name from json
     G_RF_CODES_DATA.async_remove_code(unique_id)
+
+
+async def _async_remove_ais_dom_device(hass, device_id):
+    dev_registry = await dr.async_get_registry(hass)
+    device = dev_registry.async_get(device_id)
+
+    # prepare list of entities to remove
+    etr = []
+    ent_registry = await entity_registry.async_get_registry(hass)
+    for e in ent_registry.entities:
+        entity_entry = ent_registry.async_get(e)
+        if entity_entry.device_id == device_id:
+            unique_id = entity_entry.unique_id
+            domain = entity_entry.domain
+            platform = entity_entry.platform
+            etr.append(
+                {
+                    "domain": domain,
+                    "unique_id": unique_id,
+                    "platform": platform,
+                    "entity_id": entity_entry.entity_id,
+                }
+            )
+
+    for r in etr:
+        _LOGGER.info(etr)
+        _LOGGER.info(r)
+        ent_registry.async_remove(r.entity_id)
+        # remove from already discovered
+        if r.platform == "mqtt":
+            discovery_hash = (r.domain, r.unique_id)
+            if discovery_hash in hass.data[mqtt_disco.ALREADY_DISCOVERED]:
+                mqtt_disco.clear_discovery_hash(hass, discovery_hash)
+        hass.states.async_remove(r.entity_id)
+        # remove this code and his name from json
+        G_RF_CODES_DATA.async_remove_code(r.unique_id)
+
+    if device is not None:
+        dev_registry.async_remove_device(device.id)
 
 
 async def _async_add_ais_dom_entity(hass, device_id, name, b0_code, topic, entity_type):
