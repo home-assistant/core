@@ -17,7 +17,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
-    ENTITY_SERVICE_SCHEMA,
+    make_entity_service_schema,
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
@@ -41,9 +41,7 @@ ATTR_CODE_ARM_REQUIRED = "code_arm_required"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-ALARM_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Optional(ATTR_CODE): cv.string}
-)
+ALARM_SERVICE_SCHEMA = make_entity_service_schema({vol.Optional(ATTR_CODE): cv.string})
 
 
 async def async_setup(hass, config):

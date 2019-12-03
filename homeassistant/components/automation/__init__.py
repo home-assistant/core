@@ -24,7 +24,7 @@ from homeassistant.core import Context, CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, extract_domain_configs, script
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
+from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -106,7 +106,7 @@ PLATFORM_SCHEMA = vol.Schema(
     }
 )
 
-TRIGGER_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+TRIGGER_SERVICE_SCHEMA = make_entity_service_schema(
     {vol.Optional(ATTR_VARIABLES, default={}): dict}
 )
 
@@ -184,12 +184,18 @@ async def async_setup(hass, config):
     )
 
     hass.services.async_register(
-        DOMAIN, SERVICE_TOGGLE, toggle_service_handler, schema=ENTITY_SERVICE_SCHEMA
+        DOMAIN,
+        SERVICE_TOGGLE,
+        toggle_service_handler,
+        schema=make_entity_service_schema({}),
     )
 
     for service in (SERVICE_TURN_ON, SERVICE_TURN_OFF):
         hass.services.async_register(
-            DOMAIN, service, turn_onoff_service_handler, schema=ENTITY_SERVICE_SCHEMA
+            DOMAIN,
+            service,
+            turn_onoff_service_handler,
+            schema=make_entity_service_schema({}),
         )
 
     return True

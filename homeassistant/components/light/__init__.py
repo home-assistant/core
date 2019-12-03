@@ -22,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
-    ENTITY_SERVICE_SCHEMA,
+    make_entity_service_schema,
 )
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -93,48 +93,36 @@ VALID_TRANSITION = vol.All(vol.Coerce(float), vol.Clamp(min=0, max=6553))
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 
-LIGHT_TURN_ON_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {
-        vol.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
-        ATTR_TRANSITION: VALID_TRANSITION,
-        ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
-        ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
-        vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
-        vol.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): vol.All(
-            vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple)
-        ),
-        vol.Exclusive(ATTR_XY_COLOR, COLOR_GROUP): vol.All(
-            vol.ExactSequence((cv.small_float, cv.small_float)), vol.Coerce(tuple)
-        ),
-        vol.Exclusive(ATTR_HS_COLOR, COLOR_GROUP): vol.All(
-            vol.ExactSequence(
-                (
-                    vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
-                    vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
-                )
-            ),
-            vol.Coerce(tuple),
-        ),
-        vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP): vol.All(
-            vol.Coerce(int), vol.Range(min=1)
-        ),
-        vol.Exclusive(ATTR_KELVIN, COLOR_GROUP): vol.All(
-            vol.Coerce(int), vol.Range(min=0)
-        ),
-        ATTR_WHITE_VALUE: vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
-        ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
-        ATTR_EFFECT: cv.string,
-    }
-)
-
-
-LIGHT_TURN_OFF_SCHEMA = {
+LIGHT_TURN_ON_SCHEMA = {
+    vol.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
     ATTR_TRANSITION: VALID_TRANSITION,
+    ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
+    ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
+    vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
+    vol.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): vol.All(
+        vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple)
+    ),
+    vol.Exclusive(ATTR_XY_COLOR, COLOR_GROUP): vol.All(
+        vol.ExactSequence((cv.small_float, cv.small_float)), vol.Coerce(tuple)
+    ),
+    vol.Exclusive(ATTR_HS_COLOR, COLOR_GROUP): vol.All(
+        vol.ExactSequence(
+            (
+                vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
+                vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
+            )
+        ),
+        vol.Coerce(tuple),
+    ),
+    vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP): vol.All(
+        vol.Coerce(int), vol.Range(min=1)
+    ),
+    vol.Exclusive(ATTR_KELVIN, COLOR_GROUP): vol.All(vol.Coerce(int), vol.Range(min=0)),
+    ATTR_WHITE_VALUE: vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
     ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
+    ATTR_EFFECT: cv.string,
 }
 
-
-LIGHT_TOGGLE_SCHEMA = LIGHT_TURN_ON_SCHEMA
 
 PROFILE_SCHEMA = vol.Schema(
     vol.ExactSequence((str, cv.small_float, cv.small_float, cv.byte))
@@ -268,15 +256,20 @@ async def async_setup(hass, config):
         DOMAIN,
         SERVICE_TURN_ON,
         async_handle_light_on_service,
-        schema=LIGHT_TURN_ON_SCHEMA,
+        schema=cv.make_entity_service_schema(LIGHT_TURN_ON_SCHEMA),
     )
 
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, LIGHT_TURN_OFF_SCHEMA, "async_turn_off"
+        SERVICE_TURN_OFF,
+        {
+            ATTR_TRANSITION: VALID_TRANSITION,
+            ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
+        },
+        "async_turn_off",
     )
 
     component.async_register_entity_service(
-        SERVICE_TOGGLE, LIGHT_TOGGLE_SCHEMA, "async_toggle"
+        SERVICE_TOGGLE, LIGHT_TURN_ON_SCHEMA, "async_toggle"
     )
 
     return True
