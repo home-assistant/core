@@ -5,6 +5,7 @@ import os
 import sys
 
 from PIL import Image, ImageDraw
+import cv2  # pylint: disable=import-error
 import numpy as np
 import voluptuous as vol
 
@@ -92,6 +93,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
         # These imports shouldn't be moved to the top, because they depend on code from the model_dir.
         # (The model_dir is created during the manual setup process. See integration docs.)
+        # pylint: disable=import-outside-toplevel
         import tensorflow as tf
         from object_detection.utils import label_map_util
     except ImportError:
@@ -104,7 +106,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         # Display warning that PIL will be used if no OpenCV is found.
-        import cv2  # noqa: F401 pylint: disable=unused-import
+        import cv2  # noqa: F401 pylint: disable=unused-import, import-outside-toplevel
     except ImportError:
         _LOGGER.warning(
             "No OpenCV library found. TensorFlow will process image with "
@@ -281,8 +283,6 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         """Process the image."""
 
         try:
-            import cv2  # pylint: disable=import-error
-
             img = cv2.imdecode(np.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
             inp = img[:, :, [2, 1, 0]]  # BGR->RGB
             inp_expanded = inp.reshape(1, inp.shape[0], inp.shape[1], 3)
