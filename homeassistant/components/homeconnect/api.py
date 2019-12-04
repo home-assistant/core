@@ -158,12 +158,19 @@ class DeviceWithPrograms(HomeConnectDevice):
         return self._programs
 
     def get_program_switches(self):
-        """Get a dictionary with info about program switches."""
+        """Get a dictionary with info about program switches.
+
+        There will be one switch for each program.
+        """
         programs = self.get_programs_available()
         return [{"device": self, "program_name": p["name"]} for p in programs]
 
     def get_program_sensors(self):
-        """Get a dictionary with info about program sensors."""
+        """Get a dictionary with info about program sensors.
+
+        There will be one of the four types of sensors or each
+        device.
+        """
         sensors = {
             "Remaining Program Time": "s",
             "Elapsed Program Time": "s",
