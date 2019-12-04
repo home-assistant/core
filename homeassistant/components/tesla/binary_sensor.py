@@ -15,7 +15,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Tesla binary_sensors by config_entry."""
-    async_add_devices(
+    async_add_entities(
         [
             TeslaBinarySensor(
                 device,

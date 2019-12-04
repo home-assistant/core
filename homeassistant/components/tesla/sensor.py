@@ -29,7 +29,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             devices.append(TeslaSensor(device, controller, "outside", config_entry))
         elif device.bin_type in [0xA, 0xB, 0x5]:
             devices.append(TeslaSensor(device, controller))
-    async_add_devices(devices, True)
+    async_add_entities(devices, True)
 
 
 class TeslaSensor(TeslaDevice, Entity):

@@ -42,10 +42,14 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 @callback
-def _async_save_refresh_token(hass, config_entry, access_token, token):
+def _async_save_tokens(hass, config_entry, access_token, refresh_token):
     hass.config_entries.async_update_entry(
         config_entry,
-        data={**config_entry.data, CONF_ACCESS_TOKEN: access_token, CONF_TOKEN: token},
+        data={
+            **config_entry.data,
+            CONF_ACCESS_TOKEN: access_token,
+            CONF_TOKEN: refresh_token,
+        },
     )
 
 
@@ -100,7 +104,7 @@ async def async_setup(hass, base_config):
                 data={CONF_USERNAME: email, CONF_PASSWORD: password},
             )
         )
-        async_call_later(hass, 15, lambda _: _update_entry(email, scan_interval))
+        async_call_later(hass, 15, _update_entry(email, scan_interval))
     return True
 
 
@@ -119,7 +123,7 @@ async def async_setup_entry(hass, config_entry):
                 update_interval=config_entry.options.get(CONF_SCAN_INTERVAL, 300),
             )
             (refresh_token, access_token) = await controller.connect()
-            _async_save_refresh_token(hass, config_entry, access_token, refresh_token)
+            _async_save_tokens(hass, config_entry, access_token, refresh_token)
             hass.data[DOMAIN][config_entry.entry_id] = {
                 "controller": controller,
                 "devices": defaultdict(list),
@@ -234,7 +238,7 @@ class TeslaDevice(Entity):
         """Update the state of the device."""
         if self.config_entry and self.controller.is_token_refreshed():
             (refresh_token, access_token) = self.controller.get_tokens()
-            _async_save_refresh_token(
+            _async_save_tokens(
                 self.hass, self.config_entry, access_token, refresh_token
             )
             _LOGGER.debug("Saving new tokens in config_entry")

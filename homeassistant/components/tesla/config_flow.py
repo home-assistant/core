@@ -53,7 +53,12 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the start of the config flow."""
 
         if not user_input:
-            return await self._show_form(data_schema=self.data_schema)
+            return self.async_show_form(
+                step_id="user",
+                data_schema=self.data_schema,
+                errors={},
+                description_placeholders={},
+            )
 
         if user_input[CONF_USERNAME] in configured_instances(self.hass):
             return await self._show_form(errors={CONF_USERNAME: "identifier_exists"})
@@ -64,21 +69,18 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
             return self.async_create_entry(title=user_input[CONF_USERNAME], data=info)
         except CannotConnect:
-            return await self._show_form(errors={"base": "connection_error"})
-        except InvalidAuth:
-            return await self._show_form(errors={"base": "invalid_credentials"})
-
-    async def _show_form(
-        self, step="user", placeholders=None, errors=None, data_schema=None
-    ) -> None:
-        """Show the form to the user."""
-        data_schema = data_schema or self.data_schema
-        if step == "user":
             return self.async_show_form(
-                step_id=step,
-                data_schema=data_schema,
-                errors=errors if errors else {},
-                description_placeholders=placeholders if placeholders else {},
+                step_id="user",
+                data_schema=self.data_schema,
+                errors={"base": "connection_error"},
+                description_placeholders={},
+            )
+        except InvalidAuth:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=self.data_schema,
+                errors={"base": "invalid_credentials"},
+                description_placeholders={},
             )
 
     @staticmethod
