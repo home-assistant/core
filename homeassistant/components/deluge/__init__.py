@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 
 from deluge_client import DelugeRPCClient, FailedToReconnectException
+
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -55,7 +56,7 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = ["sensor", "switch"]
 
 SERVICE_ADD_TORRENT_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_TORRENT): cv.string, vol.Required(CONF_HOST): cv.string}
+    {vol.Required(ATTR_TORRENT): cv.string, vol.Required(CONF_NAME): cv.string}
 )
 
 
@@ -166,18 +167,21 @@ class DelugeClient:
             torrent = service.data[ATTR_TORRENT]
             deluge_client = None
             for entry in self.hass.config_entries.async_entries(DOMAIN):
-                if entry.data[CONF_HOST] == service.data[CONF_HOST]:
-                    deluge_client = self.hass.data[DOMAIN][entry.entry_id]
+                if entry.data[CONF_NAME] == service.data[CONF_NAME]:
+                    deluge_client = entry
                     break
             if deluge_client is None:
                 _LOGGER.error("Deluge host is not found")
                 return
-            if torrent.startswith(("http", "ftp:")):
-                deluge_api.core.add_torrent_url(torrent, {})
-            elif torrent.startswith(("magnet:")):
-                deluge_api.core.add_torrent_magnet(torrent, {})
-            else:
-                _LOGGER.warning("Could not add torrent: unsupported type")
+            try:
+                if torrent.startswith(("http", "ftp:")):
+                    deluge_api.core.add_torrent_url(torrent, {})
+                elif torrent.startswith(("magnet:")):
+                    deluge_api.core.add_torrent_magnet(torrent, {})
+                else:
+                    _LOGGER.warning("Could not add torrent: unsupported type")
+            except Exception as error:  # pylint: disable=broad-except
+                _LOGGER.warning(error)
 
         self.hass.services.async_register(
             DOMAIN, SERVICE_ADD_TORRENT, add_torrent, schema=SERVICE_ADD_TORRENT_SCHEMA
