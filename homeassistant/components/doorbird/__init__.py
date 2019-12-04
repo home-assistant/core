@@ -111,7 +111,7 @@ def setup(hass, config):
                     )
 
                     return False
-        # pylint: disable=too-broad-exception
+        # pylint: disable=broad-except
         except Exception as error:
             _LOGGER.error("Failed to setup doorbird at %s: %s", device_ip, error)
 
