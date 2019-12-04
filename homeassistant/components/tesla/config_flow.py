@@ -61,7 +61,12 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         if user_input[CONF_USERNAME] in configured_instances(self.hass):
-            return await self._show_form(errors={CONF_USERNAME: "identifier_exists"})
+            return self.async_show_form(
+                step_id="user",
+                data_schema=self.data_schema,
+                errors={CONF_USERNAME: "identifier_exists"},
+                description_placeholders={},
+            )
 
         self.config[CONF_USERNAME] = user_input[CONF_USERNAME]
 
