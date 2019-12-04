@@ -301,20 +301,20 @@ def test_discover_full_state(hue_client):
     devices = set(val["uniqueid"] for val in result_json["lights"].values())
 
     # Make sure the lights we added to the config are there
-    assert "light.ceiling_lights" in devices
-    assert "light.bed_light" not in devices
-    assert "script.set_kitchen_light" in devices
-    assert "light.kitchen_lights" not in devices
-    assert "media_player.living_room" in devices
-    assert "media_player.bedroom" in devices
-    assert "media_player.walkman" in devices
-    assert "media_player.lounge_room" in devices
-    assert "fan.living_room_fan" in devices
-    assert "fan.ceiling_fan" not in devices
-    assert "cover.living_room_window" in devices
-    assert "climate.hvac" in devices
-    assert "climate.heatpump" in devices
-    assert "climate.ecobee" not in devices
+    assert "00:2f:d2:31:ce:c5:55:cc-ee" in devices  # light.ceiling_lights
+    assert "00:b6:14:77:34:b7:bb:06-e8" not in devices  # light.bed_light
+    assert "00:95:b7:51:16:58:6c:c0-c5" in devices  # script.set_kitchen_light
+    assert "00:64:7b:e4:96:c3:fe:90-c3" not in devices  # light.kitchen_lights
+    assert "00:7e:8a:42:35:66:db:86-c5" in devices  # media_player.living_room
+    assert "00:05:44:c2:d6:0a:e5:17-b7" in devices  # media_player.bedroom
+    assert "00:f3:5f:fa:31:f3:32:21-a8" in devices  # media_player.walkman
+    assert "00:b4:06:2e:91:95:23:97-fb" in devices  # media_player.lounge_room
+    assert "00:b2:bd:f9:2c:ad:22:ae-58" in devices  # fan.living_room_fan
+    assert "00:77:4c:8a:23:7d:27:4b-7f" not in devices  # fan.ceiling_fan
+    assert "00:02:53:b9:d5:1a:b3:67-b2" in devices  # cover.living_room_window
+    assert "00:42:03:fe:97:58:2d:b1-50" in devices  # climate.hvac
+    assert "00:7b:2a:c7:08:d6:66:bf-80" in devices  # climate.heatpump
+    assert "00:57:77:a1:6a:8e:ef:b3-6c" not in devices  # climate.ecobee
 
 
 @asyncio.coroutine
@@ -842,12 +842,12 @@ async def test_external_ip_blocked(hue_client):
     ):
         for getUrl in getUrls:
             result = await hue_client.get(getUrl)
-            assert result.status == 400
+            assert result.status == 401
 
         for postUrl in postUrls:
             result = await hue_client.post(postUrl)
-            assert result.status == 400
+            assert result.status == 401
 
         for putUrl in putUrls:
             result = await hue_client.put(putUrl)
-            assert result.status == 400
+            assert result.status == 401
