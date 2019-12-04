@@ -2,25 +2,24 @@
 import logging
 import os
 
-import voluptuous as vol
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import PyiCloudException, PyiCloudFailedLoginException
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import slugify
 
-# pylint: disable=unused-import
 from .const import (
     CONF_ACCOUNT_NAME,
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
-    DEFAULT_MAX_INTERVAL,
     DEFAULT_GPS_ACCURACY_THRESHOLD,
-    DOMAIN,  # noqa
+    DEFAULT_MAX_INTERVAL,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
+from .const import DOMAIN  # pylint: disable=unused-import
 
 CONF_TRUSTED_DEVICE = "trusted_device"
 CONF_VERIFICATION_CODE = "verification_code"
