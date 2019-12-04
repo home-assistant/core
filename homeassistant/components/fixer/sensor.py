@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+from fixerio import Fixerio, exceptions
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -35,7 +36,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Fixer.io sensor."""
-    from fixerio import Fixerio, exceptions
 
     api_key = config.get(CONF_API_KEY)
     name = config.get(CONF_NAME)
@@ -102,7 +102,6 @@ class ExchangeData:
 
     def __init__(self, target_currency, api_key):
         """Initialize the data object."""
-        from fixerio import Fixerio
 
         self.api_key = api_key
         self.rate = None
