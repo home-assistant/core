@@ -81,12 +81,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class HorizonDevice(MediaPlayerDevice):
     """Representation of a Horizon HD Recorder."""
 
-    def __init__(self, client, name, keys):
+    def __init__(self, client, name, remote_keys):
         """Initialize the remote."""
         self._client = client
         self._name = name
         self._state = None
-        self._keys = keys
+        self._keys = remote_keys
 
     @property
     def name(self):
