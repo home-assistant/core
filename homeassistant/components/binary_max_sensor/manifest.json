@@ -1,0 +1,8 @@
+{
+    "domain": "binary_max_sensor",
+    "name": "Binary Max Sensor",
+    "documentation": "https://www.home-assistant.io/integrations/binary_max_sensor",
+    "requirements": [],
+    "dependencies": [],
+    "codeowners": ["@gjbadros"],
+}
