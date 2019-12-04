@@ -53,6 +53,7 @@ CONF_STOP_CT = "stop_colortemp"
 CONF_BRIGHTNESS = "brightness"
 CONF_DISABLE_BRIGHTNESS_ADJUST = "disable_brightness_adjust"
 CONF_INTERVAL = "interval"
+CONF_SET_STATE_SERVICE = "set_state_service"
 
 MODE_XY = "xy"
 MODE_MIRED = "mired"
@@ -64,6 +65,7 @@ PLATFORM_SCHEMA = vol.Schema(
         vol.Required(CONF_PLATFORM): "flux",
         vol.Required(CONF_LIGHTS): cv.entity_ids,
         vol.Optional(CONF_NAME, default="Flux"): cv.string,
+        vol.Optional(CONF_SET_STATE_SERVICE): cv.string,
         vol.Optional(CONF_START_TIME): cv.time,
         vol.Optional(CONF_STOP_TIME): cv.time,
         vol.Optional(CONF_START_CT, default=4000): vol.All(
@@ -88,50 +90,70 @@ PLATFORM_SCHEMA = vol.Schema(
 )
 
 
-async def async_set_lights_xy(hass, lights, x_val, y_val, brightness, transition):
+async def async_set_lights_xy(
+    hass, set_state_service, lights, x_val, y_val, brightness, transition
+):
     """Set color of array of lights."""
+    service = set_state_service or SERVICE_TURN_ON
     for light in lights:
+        if not is_on(hass, light) and set_state_service is None:
+            continue
+        service_data = {ATTR_ENTITY_ID: light}
         if is_on(hass, light):
-            service_data = {ATTR_ENTITY_ID: light}
-            if x_val is not None and y_val is not None:
-                service_data[ATTR_XY_COLOR] = [x_val, y_val]
             if brightness is not None:
                 service_data[ATTR_BRIGHTNESS] = brightness
                 service_data[ATTR_WHITE_VALUE] = brightness
-            if transition is not None:
-                service_data[ATTR_TRANSITION] = transition
-            await hass.services.async_call(LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
+        if x_val is not None and y_val is not None:
+            service_data[ATTR_XY_COLOR] = [x_val, y_val]
+        if transition is not None:
+            service_data[ATTR_TRANSITION] = transition
+        try:
+            await hass.services.async_call(LIGHT_DOMAIN, service, service_data)
+        except Exception as e:
+            _LOGGER.warning("flux failed to set new xy state: %s", e)
 
 
-async def async_set_lights_temp(hass, lights, mired, brightness, transition):
+async def async_set_lights_temp(
+    hass, set_state_service, lights, mired, brightness, transition
+):
     """Set color of array of lights."""
+    service = set_state_service or SERVICE_TURN_ON
     for light in lights:
+        if not is_on(hass, light) and set_state_service is None:
+            continue
+        service_data = {ATTR_ENTITY_ID: light}
         if is_on(hass, light):
-            service_data = {ATTR_ENTITY_ID: light}
-            if mired is not None:
-                service_data[ATTR_COLOR_TEMP] = int(mired)
             if brightness is not None:
                 service_data[ATTR_BRIGHTNESS] = brightness
-            if transition is not None:
-                service_data[ATTR_TRANSITION] = transition
-            await hass.services.async_call(LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
+        if mired is not None:
+            service_data[ATTR_COLOR_TEMP] = int(mired)
+        if transition is not None:
+            service_data[ATTR_TRANSITION] = transition
+        try:
+            await hass.services.async_call(LIGHT_DOMAIN, service, service_data)
+        except Exception as e:
+            _LOGGER.warning("flux failed to set new temp state: %s", e)
 
 
-async def async_set_lights_rgb(hass, lights, rgb, transition):
+async def async_set_lights_rgb(hass, set_state_service, lights, rgb, transition):
     """Set color of array of lights."""
+    service = set_state_service or SERVICE_TURN_ON
     for light in lights:
-        if is_on(hass, light):
-            service_data = {ATTR_ENTITY_ID: light}
-            if rgb is not None:
-                service_data[ATTR_RGB_COLOR] = rgb
-            if transition is not None:
-                service_data[ATTR_TRANSITION] = transition
-            await hass.services.async_call(LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
+        service_data = {ATTR_ENTITY_ID: light}
+        if rgb is not None:
+            service_data[ATTR_RGB_COLOR] = rgb
+        if transition is not None:
+            service_data[ATTR_TRANSITION] = transition
+        try:
+            await hass.services.async_call(LIGHT_DOMAIN, service, service_data)
+        except Exception as e:
+            _LOGGER.warning("flux failed to set new rgb state: %s", e)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Flux switches."""
     name = config.get(CONF_NAME)
+    set_state_service = config.get(CONF_SET_STATE_SERVICE)
     lights = config.get(CONF_LIGHTS)
     start_time = config.get(CONF_START_TIME)
     stop_time = config.get(CONF_STOP_TIME)
@@ -145,6 +167,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     transition = config.get(ATTR_TRANSITION)
     flux = FluxSwitch(
         name,
+        set_state_service,
         hass,
         lights,
         start_time,
@@ -174,6 +197,7 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
     def __init__(
         self,
         name,
+        set_state_service,
         hass,
         lights,
         start_time,
@@ -189,6 +213,7 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
     ):
         """Initialize the Flux switch."""
         self._name = name
+        self._set_state_service = set_state_service
         self.hass = hass
         self._lights = lights
         self._start_time = start_time
@@ -305,11 +330,18 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
             brightness = None
         if self._mode == MODE_XY:
             await async_set_lights_xy(
-                self.hass, self._lights, x_val, y_val, brightness, self._transition
+                self.hass,
+                self._set_state_service,
+                self._lights,
+                x_val,
+                y_val,
+                brightness,
+                self._transition,
             )
             _LOGGER.debug(
-                "Lights updated to x:%s y:%s brightness:%s, %s%% "
+                "Lights %s updated to x:%s y:%s brightness:%s, %s%% "
                 "of %s cycle complete at %s",
+                self.name,
                 x_val,
                 y_val,
                 brightness,
@@ -318,9 +350,12 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
                 now,
             )
         elif self._mode == MODE_RGB:
-            await async_set_lights_rgb(self.hass, self._lights, rgb, self._transition)
+            await async_set_lights_rgb(
+                self.hass, self._set_state_service, self._lights, rgb, self._transition
+            )
             _LOGGER.debug(
-                "Lights updated to rgb:%s, %s%% of %s cycle complete at %s",
+                "Lights %s updated to rgb:%s, %s%% " "of %s cycle complete at %s",
+                self.name,
                 rgb,
                 round(percentage_complete * 100),
                 time_state,
@@ -330,11 +365,17 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
             # Convert to mired and clamp to allowed values
             mired = color_temperature_kelvin_to_mired(temp)
             await async_set_lights_temp(
-                self.hass, self._lights, mired, brightness, self._transition
+                self.hass,
+                self._set_state_service,
+                self._lights,
+                mired,
+                brightness,
+                self._transition,
             )
             _LOGGER.debug(
-                "Lights updated to mired:%s brightness:%s, %s%% "
+                "Lights %s updated to mired:%s brightness:%s, %s%% "
                 "of %s cycle complete at %s",
+                self.name,
                 mired,
                 brightness,
                 round(percentage_complete * 100),
