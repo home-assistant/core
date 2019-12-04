@@ -1,6 +1,8 @@
 """Support for Lutron Homeworks lights."""
 import logging
 
+from pyhomeworks.pyhomeworks import HW_LIGHT_CHANGED
+
 from homeassistant.components.light import ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
@@ -93,7 +95,6 @@ class HomeworksLight(HomeworksDevice, Light):
     @callback
     def _update_callback(self, msg_type, values):
         """Process device specific messages."""
-        from pyhomeworks.pyhomeworks import HW_LIGHT_CHANGED
 
         if msg_type == HW_LIGHT_CHANGED:
             self._level = int((values[1] * 255.0) / 100.0)
