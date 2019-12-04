@@ -109,8 +109,8 @@ async def async_set_lights_xy(
             service_data[ATTR_TRANSITION] = transition
         try:
             await hass.services.async_call(LIGHT_DOMAIN, service, service_data)
-        except Exception as e:
-            _LOGGER.warning("flux failed to set new xy state: %s", e)
+        except Exception as err:  # pylint:disable=broad-except
+            _LOGGER.warning("flux failed to set new xy state: %s", err)
 
 
 async def async_set_lights_temp(
@@ -131,8 +131,8 @@ async def async_set_lights_temp(
             service_data[ATTR_TRANSITION] = transition
         try:
             await hass.services.async_call(LIGHT_DOMAIN, service, service_data)
-        except Exception as e:
-            _LOGGER.warning("flux failed to set new temp state: %s", e)
+        except Exception as err:  # pylint:disable=broad-except
+            _LOGGER.warning("flux failed to set new temp state: %s", err)
 
 
 async def async_set_lights_rgb(hass, set_state_service, lights, rgb, transition):
@@ -146,8 +146,8 @@ async def async_set_lights_rgb(hass, set_state_service, lights, rgb, transition)
             service_data[ATTR_TRANSITION] = transition
         try:
             await hass.services.async_call(LIGHT_DOMAIN, service, service_data)
-        except Exception as e:
-            _LOGGER.warning("flux failed to set new rgb state: %s", e)
+        except Exception as err:  # pylint:disable=broad-except
+            _LOGGER.warning("flux failed to set new rgb state: %s", err)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
