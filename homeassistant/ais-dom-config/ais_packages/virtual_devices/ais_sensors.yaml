@@ -1,3 +1,10 @@
 group:
   all_ais_sensors:
     name: Wszystkie czujniki
+
+
+sensor:
+  - platform: ais_files
+    folder: "/sdcard/dom/Zdjęcia"
+    name: gallery_images
+    sort: date
