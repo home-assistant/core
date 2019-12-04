@@ -3,13 +3,13 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
+    ATTR_MESSAGE,
     ATTR_TARGET,
     PLATFORM_SCHEMA,
     BaseNotificationService,
-    ATTR_MESSAGE,
 )
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
