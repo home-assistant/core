@@ -8,7 +8,7 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from .api import HomeConnectEntity
-from .const import DEVICES, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,8 +18,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     def get_entities():
         entities = []
-        data = hass.data[DOMAIN]
-        for device_dict in data.get(DEVICES, []):
+        hc_api = hass.data[DOMAIN][config_entry.entry_id]
+        for device_dict in hc_api.devices:
             entity_dicts = device_dict.get("entities", {}).get("binary_sensor", [])
             entity_list = [HomeConnectBinarySensor(**d) for d in entity_dicts]
             device = device_dict["device"]

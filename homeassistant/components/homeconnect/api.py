@@ -32,6 +32,7 @@ class ConfigEntryAuth(homeconnect.HomeConnectAPI):
             hass, config_entry, implementation
         )
         super().__init__(self.session.token)
+        self.devices = []
 
     def refresh_tokens(self) -> dict:
         """Refresh and return new Home Connect tokens using Home Assistant OAuth2 session."""
@@ -66,6 +67,7 @@ class ConfigEntryAuth(homeconnect.HomeConnectAPI):
                 _LOGGER.warning("Appliance type %s not implemented.", app.type)
                 continue
             devices.append({"device": device, "entities": device.get_entities()})
+        self.devices = devices
         return devices
 
 

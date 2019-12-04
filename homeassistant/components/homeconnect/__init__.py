@@ -22,7 +22,7 @@ from homeassistant.helpers import (
 from homeassistant.util import Throttle
 
 from . import api, config_flow
-from .const import DEVICES, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
@@ -109,6 +109,6 @@ async def update_all_devices(hass, entry):
     data = hass.data[DOMAIN]
     hc_api = data[entry.entry_id]
     try:
-        data[DEVICES] = await hass.async_add_executor_job(hc_api.get_devices)
+        await hass.async_add_executor_job(hc_api.get_devices)
     except HTTPError as err:
         _LOGGER.warning("Cannot update devices: %s", err.response.status_code)
