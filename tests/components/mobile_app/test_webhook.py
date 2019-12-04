@@ -216,3 +216,23 @@ async def test_webhook_requires_encryption(webhook_client, create_registrations)
     assert "error" in webhook_json
     assert webhook_json["success"] is False
     assert webhook_json["error"]["code"] == "encryption_required"
+
+
+async def test_webhook_update_location(hass, webhook_client, create_registrations):
+    """Test that encrypted registrations only accept encrypted data."""
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+        json={
+            "type": "update_location",
+            "data": {"gps": [1, 2], "gps_accuracy": 10, "altitude": -10},
+        },
+    )
+
+    assert resp.status == 200
+
+    state = hass.states.get("device_tracker.test_1_2")
+    assert state is not None
+    assert state.attributes["latitude"] == 1.0
+    assert state.attributes["longitude"] == 2.0
+    assert state.attributes["gps_accuracy"] == 10
+    assert state.attributes["altitude"] == -10

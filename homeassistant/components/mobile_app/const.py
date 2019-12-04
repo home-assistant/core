@@ -160,7 +160,7 @@ UPDATE_LOCATION_SCHEMA = vol.Schema(
         vol.Required(ATTR_GPS_ACCURACY): cv.positive_int,
         vol.Optional(ATTR_BATTERY): cv.positive_int,
         vol.Optional(ATTR_SPEED): cv.positive_int,
-        vol.Optional(ATTR_ALTITUDE): cv.positive_int,
+        vol.Optional(ATTR_ALTITUDE): vol.Coerce(float),
         vol.Optional(ATTR_COURSE): cv.positive_int,
         vol.Optional(ATTR_VERTICAL_ACCURACY): cv.positive_int,
     }
