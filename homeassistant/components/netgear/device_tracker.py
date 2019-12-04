@@ -110,6 +110,7 @@ class NetgearDeviceScanner(DeviceScanner):
                     or dev.name in self.excluded_devices
                 )
             )
+            tracked = tracked and dev.link_rate is not None
             if tracked:
                 devices.append(dev.mac)
                 if (
