@@ -2,7 +2,8 @@
 from datetime import timedelta
 import logging
 
-from fixerio import Fixerio, exceptions
+from fixerio import Fixerio
+from fixerio.exceptions import FixerioException
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -43,7 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         Fixerio(symbols=[target], access_key=api_key).latest()
-    except exceptions.FixerioException:
+    except FixerioException:
         _LOGGER.error("One of the given currencies is not supported")
         return
 
