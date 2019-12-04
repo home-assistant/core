@@ -107,7 +107,7 @@ class TadoSensor(Entity):
             SIGNAL_TADO_UPDATE_RECEIVED.format(self.zone_id),
             self._handle_update,
         )
-        self._tado.add_sensor(self.zone_id, self.zone_type)
+        self._tado.add_sensor(self.zone_type, self.zone_id)
         await self.hass.async_add_executor_job(self._tado.update)
 
     @property

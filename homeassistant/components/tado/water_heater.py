@@ -46,15 +46,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         zones = tado.get_zones()
     except RuntimeError:
-        _LOGGER.error("Unable to get zone info from mytado")
+        _LOGGER.error("Unable to get zone info")
         return
 
     water_heater_devices = []
     for zone in zones:
         if zone["type"] == TYPE_HOT_WATER:
-            device = create_water_heater_device(
-                tado, hass, zone, zone["name"], zone["id"]
-            )
+            device = create_water_heater_device(tado, zone["name"], zone["id"])
             if device:
                 water_heater_devices.append(device)
 
@@ -62,17 +60,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities(water_heater_devices, True)
 
 
-def create_water_heater_device(tado, hass, zone, name, zone_id):
+def create_water_heater_device(tado, name, zone_id):
     """Create a Tado water heater device."""
     capabilities = tado.get_capabilities(zone_id)
     supports_temperature_control = capabilities["canSetTemperature"]
-    min_temp = max_temp = None
 
     if supports_temperature_control and "temperatures" in capabilities:
         temperatures = capabilities["temperatures"]
-
         min_temp = float(temperatures["celsius"]["min"])
         max_temp = float(temperatures["celsius"]["max"])
+    else:
+        min_temp = None
+        max_temp = None
 
     device = TadoWaterHeater(
         tado, name, zone_id, supports_temperature_control, min_temp, max_temp
@@ -122,7 +121,7 @@ class TadoWaterHeater(WaterHeaterDevice):
             SIGNAL_TADO_UPDATE_RECEIVED.format(self.zone_id),
             self._handle_update,
         )
-        self._tado.add_sensor(self.zone_id, "zone")
+        self._tado.add_sensor("zone", self.zone_id)
         await self.hass.async_add_executor_job(self._tado.update)
 
     @property
@@ -183,6 +182,12 @@ class TadoWaterHeater(WaterHeaterDevice):
 
         self._current_operation = mode
         self._overlay_mode = None
+
+        # Set a target temperature if we don't have any
+        if mode == CONST_OVERLAY_TADO_MODE and self._target_temp is None:
+            self._target_temp = self.min_temp
+            self.schedule_update_ha_state()
+
         self._control_heater()
 
     def set_temperature(self, **kwargs):
@@ -219,8 +224,7 @@ class TadoWaterHeater(WaterHeaterDevice):
             and data["setting"]["temperature"] is not None
         ):
             setting = float(data["setting"]["temperature"]["celsius"])
-            unit = TEMP_CELSIUS
-            self._target_temp = self.hass.config.units.temperature(setting, unit)
+            self._target_temp = setting
 
         overlay = False
         overlay_data = None
@@ -242,7 +246,7 @@ class TadoWaterHeater(WaterHeaterDevice):
         self.schedule_update_ha_state()
 
     def _control_heater(self):
-        """Send new target temperature to mytado."""
+        """Send new target temperature."""
         if self._current_operation == CONST_MODE_SMART_SCHEDULE:
             _LOGGER.info(
                 "Switching to SMART_SCHEDULE for zone %s (%d)",

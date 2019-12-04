@@ -76,28 +76,28 @@ class TadoConnector:
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Update the internal data from Tado."""
+        """Update the registered zones."""
         for sensor, sensor_type in self.sensors:
-            _LOGGER.debug("Updating %s %s", sensor_type, sensor)
-            try:
-                if sensor_type == "zone":
-                    data = self.tado.getState(sensor)
-                elif sensor_type == "device":
-                    data = self.tado.getDevices()[0]
-                else:
-                    continue
+            self.update_sensor(sensor_type, sensor)
 
-                dispatcher_send(
-                    self.hass, SIGNAL_TADO_UPDATE_RECEIVED.format(sensor), data
-                )
-            except RuntimeError:
-                _LOGGER.error(
-                    "Unable to connect to Tado while updating %s %s",
-                    sensor_type,
-                    sensor,
-                )
+    def update_sensor(self, sensor_type, sensor):
+        """Update the internal data from Tado."""
+        _LOGGER.debug("Updating %s %s", sensor_type, sensor)
+        try:
+            if sensor_type == "zone":
+                data = self.tado.getState(sensor)
+            elif sensor_type == "device":
+                data = self.tado.getDevices()[0]
+            else:
+                return
 
-    def add_sensor(self, sensor, sensor_type):
+            dispatcher_send(self.hass, SIGNAL_TADO_UPDATE_RECEIVED.format(sensor), data)
+        except RuntimeError:
+            _LOGGER.error(
+                "Unable to connect to Tado while updating %s %s", sensor_type, sensor,
+            )
+
+    def add_sensor(self, sensor_type, sensor):
         """Add a sensor to update."""
         if (sensor, sensor_type) not in self.sensors:
             _LOGGER.debug("Registering sensor %s %s", sensor_type, sensor)
@@ -118,7 +118,7 @@ class TadoConnector:
     def reset_zone_overlay(self, zone_id):
         """Reset the zone back to the default operation."""
         self.tado.resetZoneOverlay(zone_id)
-        self.update(no_throttle=True)  # pylint: disable=unexpected-keyword-arg
+        self.update_sensor("zone", zone_id)
 
     def set_zone_overlay(
         self,
@@ -133,9 +133,9 @@ class TadoConnector:
         self.tado.setZoneOverlay(
             zone_id, overlay_mode, temperature, duration, device_type, "ON", mode
         )
-        self.update(no_throttle=True)  # pylint: disable=unexpected-keyword-arg
+        self.update_sensor("zone", zone_id)
 
     def set_zone_off(self, zone_id, overlay_mode, device_type="HEATING"):
         """Set a zone to off."""
         self.tado.setZoneOverlay(zone_id, overlay_mode, None, None, device_type, "OFF")
-        self.update(no_throttle=True)  # pylint: disable=unexpected-keyword-arg
+        self.update_sensor("zone", zone_id)
