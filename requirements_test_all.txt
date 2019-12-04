@@ -472,11 +472,11 @@ pynx584==0.4
 # homeassistant.components.openuv
 pyopenuv==1.0.9
 
-# homeassistant.components.opentherm_gw
-pyotgw==0.5b1
-
 # homeassistant.components.opnsense
 pyopnsense==0.2.0
+
+# homeassistant.components.opentherm_gw
+pyotgw==0.5b1
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
