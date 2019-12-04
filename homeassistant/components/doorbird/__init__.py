@@ -111,8 +111,8 @@ def setup(hass, config):
                     )
 
                     return False
-        except Exception as e:
-            _LOGGER.error("Failed to setup doorbird at %s: %s", device_ip, e)
+        except Exception as error:
+            _LOGGER.error("Failed to setup doorbird at %s: %s", device_ip, error)
 
     hass.data[DOMAIN] = doorstations
 
