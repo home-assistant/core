@@ -5,6 +5,10 @@ group:
 
 sensor:
   - platform: ais_files
-    folder: "/sdcard/dom/Zdjęcia"
-    name: gallery_images
+    folder: "/data/data/pl.sviete.dom/files/home/AIS/www/img/"
+    name: ais_gallery_img
+    sort: date
+  - platform: ais_files
+    folder: "/data/data/pl.sviete.dom/files/home/AIS/www/video/"
+    name: ais_gallery_video
     sort: date

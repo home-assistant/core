@@ -20,7 +20,7 @@ SCAN_INTERVAL = timedelta(minutes=1)
 
 def get_files_list(folder_path, filter_term, sort):
     """Return the list of files, applying filter."""
-    query = folder_path
+    query = folder_path + filter_term
     """files_list = glob.glob(query)"""
     if sort == "name":
         files_list = sorted(glob.glob(query))
@@ -45,9 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if not hass.config.is_allowed_path(path):
         _LOGGER.error("folder %s is not valid or allowed", path)
     else:
-        folder = FilesSensor(
-            path, name, config.get(DEFAULT_FILTER), config.get(CONF_SORT)
-        )
+        folder = FilesSensor(path, name, DEFAULT_FILTER, config.get(CONF_SORT))
         add_entities([folder], True)
 
 

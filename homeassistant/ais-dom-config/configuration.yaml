@@ -12,7 +12,6 @@ homeassistant:
   whitelist_external_dirs:
   - /data/data/pl.sviete.dom/files/home/AIS/
   - /data/data/pl.sviete.dom/files/home/AIS/www/
-  - /sdcard/dom/Zdjęcia
 
 #
 system_health:

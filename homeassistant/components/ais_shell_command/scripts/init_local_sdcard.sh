@@ -24,8 +24,11 @@ fi
 if [ ! -e "/sdcard/dom/Hasła" ] ; then
     mkdir -p /sdcard/dom/Hasła
 fi
-if [ ! -e "/sdcard/dom/Zdjęcia" ] ; then
-    mkdir -p /sdcard/dom/Zdjęcia
+if [ ! -e "/data/data/pl.sviete.dom/files/home/AIS/www/img" ] ; then
+    mkdir -p /data/data/pl.sviete.dom/files/home/AIS/www/video
+fi
+if [ ! -e "/data/data/pl.sviete.dom/files/home/AIS/www/img" ] ; then
+    mkdir -p /data/data/pl.sviete.dom/files/home/AIS/www/video
 fi
 
 
