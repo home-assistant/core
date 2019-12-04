@@ -220,8 +220,7 @@ class TadoClimate(ClimateDevice):
         if self._ac_device:
             if self._ac_support_heat:
                 return SUPPORT_HVAC_HEAT_COOL
-            else:
-                return SUPPORT_HVAC_COOL
+            return SUPPORT_HVAC_COOL
         return SUPPORT_HVAC_HEAT
 
     @property
@@ -236,8 +235,7 @@ class TadoClimate(ClimateDevice):
             if self._active:
                 if self._ac_support_heat and not self._cooling:
                     return CURRENT_HVAC_HEAT
-                else:
-                    return CURRENT_HVAC_COOL
+                return CURRENT_HVAC_COOL
             return CURRENT_HVAC_IDLE
         if self._active:
             return CURRENT_HVAC_HEAT
