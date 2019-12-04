@@ -113,7 +113,7 @@ def setup(hass, config):
                     return False
         # pylint: disable=broad-except
         except Exception as error:
-            _LOGGER.error("Failed to setup doorbird at %s: %s", device_ip, error)
+            _LOGGER.exception("Failed to setup doorbird at %s: %s", device_ip, error)
 
     hass.data[DOMAIN] = doorstations
 
