@@ -1,6 +1,7 @@
 """Support for Gogogate2 garage Doors."""
 import logging
 
+from pygogogate2 import Gogogate2API as pygogogate2
 import voluptuous as vol
 
 from homeassistant.components.cover import CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE
@@ -32,7 +33,6 @@ COVER_SCHEMA = vol.Schema(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Gogogate2 component."""
-    from pygogogate2 import Gogogate2API as pygogogate2
 
     ip_address = config.get(CONF_IP_ADDRESS)
     name = config.get(CONF_NAME)
