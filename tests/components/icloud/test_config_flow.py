@@ -64,7 +64,7 @@ def mock_controller_service_send_verification_code_failed():
     ) as service_mock:
         service_mock.return_value.requires_2fa = False
         service_mock.return_value.trusted_devices = TRUSTED_DEVICES
-        service_mock.send_verification_code = Mock(return_value=False)
+        service_mock.return_value.send_verification_code = Mock(return_value=False)
         yield service_mock
 
 
@@ -76,8 +76,8 @@ def mock_controller_service_validate_verification_code_failed():
     ) as service_mock:
         service_mock.return_value.requires_2fa = False
         service_mock.return_value.trusted_devices = TRUSTED_DEVICES
-        service_mock.send_verification_code = Mock(return_value=True)
-        service_mock.validate_verification_code = Mock(return_value=False)
+        service_mock.return_value.send_verification_code = Mock(return_value=True)
+        service_mock.return_value.validate_verification_code = Mock(return_value=False)
         yield service_mock
 
 
@@ -236,7 +236,7 @@ async def test_abort_on_login_failed(hass: HomeAssistantType):
 async def test_trusted_device(hass: HomeAssistantType, service: MagicMock):
     """Test trusted_device step."""
     flow = init_config_flow(hass)
-    flow.api = service
+    await flow.async_step_user({CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD})
 
     result = await flow.async_step_trusted_device()
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -246,7 +246,7 @@ async def test_trusted_device(hass: HomeAssistantType, service: MagicMock):
 async def test_trusted_device_success(hass: HomeAssistantType, service: MagicMock):
     """Test trusted_device step success."""
     flow = init_config_flow(hass)
-    flow.api = service
+    await flow.async_step_user({CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD})
 
     result = await flow.async_step_trusted_device({CONF_TRUSTED_DEVICE: 0})
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -258,7 +258,7 @@ async def test_abort_on_send_verification_code_failed(
 ):
     """Test when we have errors during send_verification_code."""
     flow = init_config_flow(hass)
-    flow.api = service_send_verification_code_failed
+    await flow.async_step_user({CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD})
 
     result = await flow.async_step_trusted_device({CONF_TRUSTED_DEVICE: 0})
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -280,7 +280,7 @@ async def test_abort_on_validate_verification_code_failed(
 ):
     """Test when we have errors during validate_verification_code."""
     flow = init_config_flow(hass)
-    flow.api = service_validate_verification_code_failed
+    await flow.async_step_user({CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD})
 
     result = await flow.async_step_verification_code({CONF_VERIFICATION_CODE: 0})
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
