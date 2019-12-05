@@ -1,4 +1,5 @@
 """The tests for the ASUSWRT device tracker platform."""
+from unittest.mock import patch
 from homeassistant.setup import async_setup_component
 
 from homeassistant.components.asuswrt import (
@@ -10,7 +11,7 @@ from homeassistant.components.asuswrt import (
 )
 from homeassistant.const import CONF_PLATFORM, CONF_PASSWORD, CONF_USERNAME, CONF_HOST
 
-from tests.common import MockDependency, mock_coro_func
+from tests.common import mock_coro_func
 
 FAKEFILE = None
 
@@ -28,9 +29,9 @@ VALID_CONFIG_ROUTER_SSH = {
 
 async def test_password_or_pub_key_required(hass):
     """Test creating an AsusWRT scanner without a pass or pubkey."""
-    with MockDependency("aioasuswrt.asuswrt") as mocked_asus:
-        mocked_asus.AsusWrt().connection.async_connect = mock_coro_func()
-        mocked_asus.AsusWrt().is_connected = False
+    with patch("homeassistant.components.asuswrt.AsusWrt") as AsusWrt:
+        AsusWrt().connection.async_connect = mock_coro_func()
+        AsusWrt().is_connected = False
         result = await async_setup_component(
             hass, DOMAIN, {DOMAIN: {CONF_HOST: "fake_host", CONF_USERNAME: "fake_user"}}
         )
@@ -39,9 +40,9 @@ async def test_password_or_pub_key_required(hass):
 
 async def test_get_scanner_with_password_no_pubkey(hass):
     """Test creating an AsusWRT scanner with a password and no pubkey."""
-    with MockDependency("aioasuswrt.asuswrt") as mocked_asus:
-        mocked_asus.AsusWrt().connection.async_connect = mock_coro_func()
-        mocked_asus.AsusWrt().connection.async_get_connected_devices = mock_coro_func(
+    with patch("homeassistant.components.asuswrt.AsusWrt") as AsusWrt:
+        AsusWrt().connection.async_connect = mock_coro_func()
+        AsusWrt().connection.async_get_connected_devices = mock_coro_func(
             return_value={}
         )
         result = await async_setup_component(
