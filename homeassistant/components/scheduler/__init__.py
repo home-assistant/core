@@ -1,6 +1,6 @@
 """Support for scheduling scenes."""
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from typing import Awaitable, Callable, Dict, List, Optional
 from uuid import uuid4
@@ -77,7 +77,7 @@ class ActiveScheduleInstance:
         self._affected_states: List[State] = []
         self._async_state_listener: Optional[Callable[..., Awaitable]] = None
         self._async_trigger_listener: Optional[Callable[..., Awaitable]] = None
-        self._async_undo_listener: Optional[Callable[..., Awaitable]] = None
+        self._async_revert_listener: Optional[Callable[..., Awaitable]] = None
         self._async_schedule_next_instance: Callable[
             ..., Awaitable
         ] = async_schedule_next_instance
@@ -89,35 +89,56 @@ class ActiveScheduleInstance:
         self.start_datetime = start_datetime
 
         self._async_trigger_listener = async_track_point_in_time(
-            self._hass, self._on_instance_start, start_datetime
+            self._hass, self._async_on_instance_start, start_datetime
         )
         if end_datetime:
-            self._async_undo_listener = async_track_point_in_time(
-                self._hass, self._on_instance_end, end_datetime
+            self._async_revert_listener = async_track_point_in_time(
+                self._hass, self._async_on_instance_end, end_datetime
             )
 
-    async def _on_instance_start(self, executed_at: datetime) -> None:
+    async def _async_on_instance_end(self, executed_at: datetime) -> None:
+        """Trigger when the schedule ends."""
+        await self.async_revert()
+        await self._async_schedule_next_instance()
+
+    async def _async_on_instance_start(self, executed_at: datetime) -> None:
         """Trigger when the schedule starts."""
         await self.async_trigger()
         if not self.end_datetime:
             await self._async_schedule_next_instance()
 
-    async def _on_instance_end(self, executed_at: datetime) -> None:
-        """Trigger when the schedule ends."""
-        await self.async_revert()
-        await self._async_schedule_next_instance()
-
-    async def async_cancel(self, *, undo_scene: bool = True) -> None:
+    async def async_cancel(self, *, revert_scene: bool = True) -> None:
         """Cancel this instance."""
         if self._async_trigger_listener:
             self._async_trigger_listener()
             self._async_trigger_listener = None
-        if self._async_undo_listener:
-            self._async_undo_listener()
-            self._async_undo_listener = None
+        if self._async_revert_listener:
+            self._async_revert_listener()
+            self._async_revert_listener = None
 
-        if undo_scene:
+        if revert_scene:
             await self.async_revert()
+
+    async def async_revert(self) -> None:
+        """Restore the entities touched by the schedule."""
+        if not self._affected_states:
+            return
+
+        entities = {}
+        for state in self._affected_states:
+            data = {**state.attributes}
+            data["state"] = state.state
+            entities[state.entity_id] = data
+
+        await self._hass.services.async_call(
+            "scene",
+            "apply",
+            service_data={"entities": entities},
+            blocking=True,
+            context=self._context,
+        )
+
+        _LOGGER.info("Scheduler reverted scene: %s", self.entity_id)
 
     async def async_trigger(self) -> None:
         """Trigger the schedule's scene."""
@@ -142,28 +163,7 @@ class ActiveScheduleInstance:
             context=self._context,
         )
 
-        _LOGGER.info("Scheduler activated scene: %s", self.entity_id)
-
-    async def async_revert(self) -> None:
-        """Restore the entities touched by the schedule."""
-        if not self._affected_states:
-            return
-
-        entities = {}
-        for state in self._affected_states:
-            data = {**state.attributes}
-            data["state"] = state.state
-            entities[state.entity_id] = data
-
-        await self._hass.services.async_call(
-            "scene",
-            "apply",
-            service_data={"entities": entities},
-            blocking=True,
-            context=self._context,
-        )
-
-        _LOGGER.info("Scheduler deactivated scene: %s", self.entity_id)
+        _LOGGER.info("Scheduler triggered scene: %s", self.entity_id)
 
 
 @bind_hass
@@ -197,12 +197,37 @@ class Schedule:
         else:
             self.rrule = None
 
+        self._duration: Optional[timedelta]
+        if end_datetime:
+            self._duration = end_datetime - start_datetime
+        else:
+            self._duration = None
+
     def __str__(self) -> str:
         """Define the string representation of this schedule."""
         return (
             f'<Schedule start="{self.start_datetime}" '
             f'end="{self.end_datetime}" rrule="{self.rrule}">'
         )
+
+    @property
+    def active(self) -> bool:
+        """Return whether the schedule is currently active."""
+        # Schedules with no end datetimes are one-shots and are not "active":
+        if not self.end_datetime:
+            return False
+
+        now = datetime.now()
+
+        # If we're between the start and the end time, we're active:
+        if self.start_datetime <= now <= self.end_datetime:
+            return True
+
+        # If we have a recurrence, look at the instance prior to right now and determine
+        # if we're still in it:
+        last_recurrence_start_datetime = self.rrule.before(now, inc=True)
+        last_recurrence_end_datetime = last_recurrence_start_datetime + self._duration
+        return last_recurrence_start_datetime <= now <= last_recurrence_end_datetime
 
     def as_dict(self) -> dict:
         """Return the schedule as a dict."""
@@ -235,9 +260,7 @@ class Schedule:
         elif self.rrule:
             start_datetime = self.rrule.after(now, inc=True)
             if self.end_datetime:
-                end_datetime = start_datetime + (
-                    self.end_datetime - self.start_datetime
-                )
+                end_datetime = start_datetime + self._duration
             else:
                 end_datetime = None
 
