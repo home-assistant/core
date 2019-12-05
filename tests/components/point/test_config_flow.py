@@ -7,7 +7,7 @@ import pytest
 from homeassistant import data_entry_flow
 from homeassistant.components.point import DOMAIN, config_flow
 
-from tests.common import MockDependency, mock_coro
+from tests.common import mock_coro
 
 
 def init_config_flow(hass, side_effect=None):
@@ -30,15 +30,15 @@ def is_authorized():
 @pytest.fixture
 def mock_pypoint(is_authorized):  # pylint: disable=redefined-outer-name
     """Mock pypoint."""
-    with MockDependency("pypoint") as mock_pypoint_:
-        mock_pypoint_.PointSession().get_access_token.return_value = {
+    with patch(
+        "homeassistant.components.point.config_flow.PointSession"
+    ) as PointSession:
+        PointSession.return_value.get_access_token.return_value = {
             "access_token": "boo"
         }
-        mock_pypoint_.PointSession().is_authorized = is_authorized
-        mock_pypoint_.PointSession().user.return_value = {
-            "email": "john.doe@example.com"
-        }
-        yield mock_pypoint_
+        PointSession.return_value.is_authorized = is_authorized
+        PointSession.return_value.user.return_value = {"email": "john.doe@example.com"}
+        yield PointSession
 
 
 async def test_abort_if_no_implementation_registered(hass):

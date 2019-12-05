@@ -432,6 +432,8 @@ class TestLight(unittest.TestCase):
 
 async def test_light_context(hass, hass_admin_user):
     """Test that light context works."""
+    platform = getattr(hass.components, "test.light")
+    platform.init()
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
 
     state = hass.states.get("light.ceiling")
@@ -453,6 +455,8 @@ async def test_light_context(hass, hass_admin_user):
 
 async def test_light_turn_on_auth(hass, hass_admin_user):
     """Test that light context works."""
+    platform = getattr(hass.components, "test.light")
+    platform.init()
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
 
     state = hass.states.get("light.ceiling")
