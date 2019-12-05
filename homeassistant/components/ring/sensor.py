@@ -9,11 +9,11 @@ from homeassistant.const import (
     CONF_ENTITY_NAMESPACE,
     CONF_MONITORED_CONDITIONS,
 )
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.core import callback
 
 from . import (
     ATTRIBUTION,

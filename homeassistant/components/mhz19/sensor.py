@@ -1,20 +1,21 @@
 """Support for CO2 sensor connected to a serial port."""
-import logging
 from datetime import timedelta
+import logging
 
+from pmsensor import co2sensor
 import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    CONF_NAME,
     CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.util.temperature import celsius_to_fahrenheit
+from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+from homeassistant.util.temperature import celsius_to_fahrenheit
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +42,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available CO2 sensors."""
-    from pmsensor import co2sensor
 
     try:
         co2sensor.read_mh_z19(config.get(CONF_SERIAL_DEVICE))
@@ -116,9 +116,9 @@ class MHZ19Sensor(Entity):
 class MHZClient:
     """Get the latest data from the MH-Z sensor."""
 
-    def __init__(self, co2sensor, serial):
+    def __init__(self, co2sens, serial):
         """Initialize the sensor."""
-        self.co2sensor = co2sensor
+        self.co2sensor = co2sens
         self._serial = serial
         self.data = dict()
 
