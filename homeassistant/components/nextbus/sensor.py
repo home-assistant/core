@@ -1,13 +1,13 @@
 """NextBus sensor."""
-import logging
 from itertools import chain
+import logging
 
+from py_nextbus import NextBusClient
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP
+from homeassistant.const import CONF_NAME, DEVICE_CLASS_TIMESTAMP
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.dt import utc_from_timestamp
 
@@ -93,8 +93,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     route = config[CONF_ROUTE]
     stop = config[CONF_STOP]
     name = config.get(CONF_NAME)
-
-    from py_nextbus import NextBusClient
 
     client = NextBusClient(output_format="json")
 

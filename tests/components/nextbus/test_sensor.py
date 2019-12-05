@@ -2,11 +2,12 @@
 from copy import deepcopy
 
 import pytest
+from unittest.mock import patch
 
 import homeassistant.components.sensor as sensor
 import homeassistant.components.nextbus.sensor as nextbus
 
-from tests.common import assert_setup_component, async_setup_component, MockDependency
+from tests.common import assert_setup_component, async_setup_component
 
 
 VALID_AGENCY = "sf-muni"
@@ -54,14 +55,16 @@ async def assert_setup_sensor(hass, config, count=1):
 @pytest.fixture
 def mock_nextbus():
     """Create a mock py_nextbus module."""
-    with MockDependency("py_nextbus") as py_nextbus:
-        yield py_nextbus
+    with patch(
+        "homeassistant.components.nextbus.sensor.NextBusClient"
+    ) as NextBusClient:
+        yield NextBusClient
 
 
 @pytest.fixture
 def mock_nextbus_predictions(mock_nextbus):
     """Create a mock of NextBusClient predictions."""
-    instance = mock_nextbus.NextBusClient.return_value
+    instance = mock_nextbus.return_value
     instance.get_predictions_for_multi_stops.return_value = BASIC_RESULTS
 
     yield instance.get_predictions_for_multi_stops
@@ -70,7 +73,7 @@ def mock_nextbus_predictions(mock_nextbus):
 @pytest.fixture
 def mock_nextbus_lists(mock_nextbus):
     """Mock all list functions in nextbus to test validate logic."""
-    instance = mock_nextbus.NextBusClient.return_value
+    instance = mock_nextbus.return_value
     instance.get_agency_list.return_value = {
         "agency": [{"tag": "sf-muni", "title": "San Francisco Muni"}]
     }
@@ -94,17 +97,18 @@ async def test_invalid_config(hass, mock_nextbus, mock_nextbus_lists):
 
 async def test_validate_tags(hass, mock_nextbus, mock_nextbus_lists):
     """Test that additional validation against the API is successful."""
-    client = mock_nextbus.NextBusClient()
     # with self.subTest('Valid everything'):
-    assert nextbus.validate_tags(client, VALID_AGENCY, VALID_ROUTE, VALID_STOP)
+    assert nextbus.validate_tags(mock_nextbus(), VALID_AGENCY, VALID_ROUTE, VALID_STOP)
     # with self.subTest('Invalid agency'):
-    assert not nextbus.validate_tags(client, "not-valid", VALID_ROUTE, VALID_STOP)
+    assert not nextbus.validate_tags(
+        mock_nextbus(), "not-valid", VALID_ROUTE, VALID_STOP
+    )
 
     # with self.subTest('Invalid route'):
-    assert not nextbus.validate_tags(client, VALID_AGENCY, "0", VALID_STOP)
+    assert not nextbus.validate_tags(mock_nextbus(), VALID_AGENCY, "0", VALID_STOP)
 
     # with self.subTest('Invalid stop'):
-    assert not nextbus.validate_tags(client, VALID_AGENCY, VALID_ROUTE, 0)
+    assert not nextbus.validate_tags(mock_nextbus(), VALID_AGENCY, VALID_ROUTE, 0)
 
 
 async def test_verify_valid_state(
