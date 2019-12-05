@@ -18,7 +18,7 @@ DOMAIN = "tado"
 
 SIGNAL_TADO_UPDATE_RECEIVED = "tado_update_received_{}"
 
-TADO_COMPONENTS = ["sensor", "climate", "water_heater"]
+TADO_COMPONENTS = ["sensor", "climate"]
 
 TYPE_AIR_CONDITIONING = "AIR_CONDITIONING"
 TYPE_HEATING = "HEATING"
