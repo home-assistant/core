@@ -3,6 +3,7 @@
 import logging
 import asyncio
 
+from .discovery import async_start_discovery_service, async_stop_discovery_service
 from async_timeout import timeout
 
 from homeassistant import config_entries
@@ -16,7 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def _async_has_devices(hass):
-    from .discovery import async_start_discovery_service, async_stop_discovery_service
 
     controller_ready = asyncio.Event()
     async_dispatcher_connect(
