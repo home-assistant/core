@@ -202,7 +202,7 @@ async def async_update_items(
     try:
         start = monotonic()
         with async_timeout.timeout(4):
-            await api.update()
+            await bridge.async_request_call(api.update())
     except aiohue.Unauthorized:
         await bridge.handle_unauthorized_error()
         return
@@ -434,9 +434,9 @@ class HueLight(Light):
                 command["effect"] = "none"
 
         if self.is_group:
-            await self.light.set_action(**command)
+            await self.bridge.async_request_call(self.light.set_action(**command))
         else:
-            await self.light.set_state(**command)
+            await self.bridge.async_request_call(self.light.set_state(**command))
 
     async def async_turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
@@ -457,9 +457,9 @@ class HueLight(Light):
             command["alert"] = "none"
 
         if self.is_group:
-            await self.light.set_action(**command)
+            await self.bridge.async_request_call(self.light.set_action(**command))
         else:
-            await self.light.set_state(**command)
+            await self.bridge.async_request_call(self.light.set_state(**command))
 
     async def async_update(self):
         """Synchronize state with bridge."""

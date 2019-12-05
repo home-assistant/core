@@ -2,6 +2,7 @@
 import logging
 import re
 
+from pyialarm import IAlarm
 import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
@@ -66,7 +67,6 @@ class IAlarmPanel(alarm.AlarmControlPanel):
 
     def __init__(self, name, code, username, password, url):
         """Initialize the iAlarm status."""
-        from pyialarm import IAlarm
 
         self._name = name
         self._code = str(code) if code else None

@@ -2,10 +2,11 @@
 
 from collections import OrderedDict
 
+from regenmaschine import login
+from regenmaschine.errors import RainMachineError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import callback
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
@@ -13,6 +14,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SSL,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
 from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN
@@ -55,8 +57,6 @@ class RainMachineFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
-        from regenmaschine import login
-        from regenmaschine.errors import RainMachineError
 
         if not user_input:
             return await self._show_form()

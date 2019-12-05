@@ -497,6 +497,15 @@ class TadoClimate(ClimateDevice):
                 self._store.set_zone_off(
                     self.zone_id, CONST_OVERLAY_MANUAL, "AIR_CONDITIONING"
                 )
+            elif self._hot_water_device:
+                _LOGGER.info(
+                    "Switching mytado.com to OFF for zone %s (%d) - HOT_WATER",
+                    self.zone_name,
+                    self.zone_id,
+                )
+                self._store.set_zone_off(
+                    self.zone_id, CONST_OVERLAY_MANUAL, "HOT_WATER"
+                )
             else:
                 _LOGGER.info(
                     "Switching mytado.com to OFF for zone %s (%d) - HEATING",

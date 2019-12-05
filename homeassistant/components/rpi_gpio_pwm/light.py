@@ -1,22 +1,28 @@
 """Support for LED lights that can be controlled using PWM."""
 import logging
 
+from pwmled import Color
+from pwmled.driver.gpio import GpioDriver
+from pwmled.driver.pca9685 import Pca9685Driver
+from pwmled.led import SimpleLed
+from pwmled.led.rgb import RgbLed
+from pwmled.led.rgbw import RgbwLed
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, CONF_TYPE, STATE_ON, CONF_ADDRESS
 from homeassistant.components.light import (
-    Light,
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
+    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_TRANSITION,
-    PLATFORM_SCHEMA,
+    Light,
 )
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TYPE, STATE_ON
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.color as color_util
 from homeassistant.helpers.restore_state import RestoreEntity
+import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,11 +67,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the PWM LED lights."""
-    from pwmled.led import SimpleLed
-    from pwmled.led.rgb import RgbLed
-    from pwmled.led.rgbw import RgbwLed
-    from pwmled.driver.gpio import GpioDriver
-    from pwmled.driver.pca9685 import Pca9685Driver
 
     leds = []
     for led_conf in config[CONF_LEDS]:
@@ -240,7 +241,6 @@ def _from_hass_brightness(brightness):
 
 def _from_hass_color(color):
     """Convert Home Assistant RGB list to Color tuple."""
-    from pwmled import Color
 
     rgb = color_util.color_hs_to_RGB(*color)
     return Color(*tuple(rgb))

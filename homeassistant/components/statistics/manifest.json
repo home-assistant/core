@@ -4,10 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/statistics",
   "requirements": [],
   "dependencies": [],
-  "after_dependencies": [
-      "recorder"
-  ],
-  "codeowners": [
-    "@fabaff"
-  ]
+  "after_dependencies": ["recorder"],
+  "codeowners": ["@fabaff"]
 }
