@@ -134,6 +134,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         This flow is triggered by the SSDP component. It will check if the
         host is already configured and delegate to the import step if not.
         """
+        # pylint: disable=import-outside-toplevel
         from homeassistant.components.ssdp import ATTR_MANUFACTURERURL, ATTR_NAME
 
         if discovery_info[ATTR_MANUFACTURERURL] != HUE_MANUFACTURERURL:
