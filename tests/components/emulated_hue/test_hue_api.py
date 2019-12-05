@@ -25,11 +25,13 @@ from homeassistant.components.emulated_hue.hue_api import (
     HUE_API_STATE_BRI,
     HUE_API_STATE_HUE,
     HUE_API_STATE_SAT,
+    HUE_API_USERNAME,
     HueUsernameView,
     HueOneLightStateView,
     HueAllLightsStateView,
     HueOneLightChangeView,
     HueAllGroupsStateView,
+    HueFullStateView,
 )
 from homeassistant.const import STATE_ON, STATE_OFF
 
@@ -188,6 +190,7 @@ def hue_client(loop, hass_hue, aiohttp_client):
     HueOneLightStateView(config).register(web_app, web_app.router)
     HueOneLightChangeView(config).register(web_app, web_app.router)
     HueAllGroupsStateView(config).register(web_app, web_app.router)
+    HueFullStateView(config).register(web_app, web_app.router)
 
     return loop.run_until_complete(aiohttp_client(web_app))
 
@@ -250,6 +253,49 @@ def test_reachable_for_state(hass_hue, hue_client, state, is_reachable):
     state_json = yield from perform_get_light_state(hue_client, entity_id, 200)
 
     assert state_json["state"]["reachable"] == is_reachable, state_json
+
+
+@asyncio.coroutine
+def test_discover_full_state(hue_client):
+    """Test the discovery of full state."""
+    result = yield from hue_client.get("/api/" + HUE_API_USERNAME)
+
+    assert result.status == 200
+    assert "application/json" in result.headers["content-type"]
+
+    result_json = yield from result.json()
+
+    # Make sure array has correct content
+    assert "lights" in result_json
+    assert "lights" not in result_json["config"]
+    assert "config" in result_json
+    assert "config" not in result_json["lights"]
+
+    lights_json = result_json["lights"]
+    config_json = result_json["config"]
+
+    # Make sure array is correct size
+    assert len(result_json) == 2
+    assert len(config_json) == 4
+    assert len(lights_json) >= 1
+
+    # Make sure the config wrapper added to the config is there
+    assert "mac" in config_json
+    assert "00:00:00:00:00:00" in config_json["mac"]
+
+    # Make sure the correct version in config
+    assert "swversion" in config_json
+    assert "01003542" in config_json["swversion"]
+
+    # Make sure the correct username in config
+    assert "whitelist" in config_json
+    assert HUE_API_USERNAME in config_json["whitelist"]
+    assert "name" in config_json["whitelist"][HUE_API_USERNAME]
+    assert "HASS BRIDGE" in config_json["whitelist"][HUE_API_USERNAME]["name"]
+
+    # Make sure the correct ip in config
+    assert "ipaddress" in config_json
+    assert "127.0.0.1:8300" in config_json["ipaddress"]
 
 
 @asyncio.coroutine
@@ -763,10 +809,26 @@ def perform_put_light_state(
 
 async def test_external_ip_blocked(hue_client):
     """Test external IP blocked."""
+    getUrls = [
+        "/api/username/groups",
+        "/api/username",
+        "/api/username/lights",
+        "/api/username/lights/light.ceiling_lights",
+    ]
+    postUrls = ["/api"]
+    putUrls = ["/api/username/lights/light.ceiling_lights/state"]
     with patch(
         "homeassistant.components.http.real_ip.ip_address",
         return_value=ip_address("45.45.45.45"),
     ):
-        result = await hue_client.get("/api/username/lights")
+        for getUrl in getUrls:
+            result = await hue_client.get(getUrl)
+            assert result.status == 401
 
-    assert result.status == 401
+        for postUrl in postUrls:
+            result = await hue_client.post(postUrl)
+            assert result.status == 401
+
+        for putUrl in putUrls:
+            result = await hue_client.put(putUrl)
+            assert result.status == 401
