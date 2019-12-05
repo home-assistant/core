@@ -2,6 +2,8 @@
 import logging
 import threading
 
+from pymodbus.client.sync import ModbusTcpClient as ModbusClient
+from pymodbus.transaction import ModbusRtuFramer
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -91,8 +93,6 @@ def setup_client(client_config):
     client_type = client_config[CONF_TYPE]
 
     if client_type == "serial":
-        from pymodbus.client.sync import ModbusSerialClient as ModbusClient
-
         return ModbusClient(
             method=client_config[CONF_METHOD],
             port=client_config[CONF_PORT],
@@ -103,9 +103,6 @@ def setup_client(client_config):
             timeout=client_config[CONF_TIMEOUT],
         )
     if client_type == "rtuovertcp":
-        from pymodbus.client.sync import ModbusTcpClient as ModbusClient
-        from pymodbus.transaction import ModbusRtuFramer
-
         return ModbusClient(
             host=client_config[CONF_HOST],
             port=client_config[CONF_PORT],
@@ -113,16 +110,12 @@ def setup_client(client_config):
             timeout=client_config[CONF_TIMEOUT],
         )
     if client_type == "tcp":
-        from pymodbus.client.sync import ModbusTcpClient as ModbusClient
-
         return ModbusClient(
             host=client_config[CONF_HOST],
             port=client_config[CONF_PORT],
             timeout=client_config[CONF_TIMEOUT],
         )
     if client_type == "udp":
-        from pymodbus.client.sync import ModbusUdpClient as ModbusClient
-
         return ModbusClient(
             host=client_config[CONF_HOST],
             port=client_config[CONF_PORT],
