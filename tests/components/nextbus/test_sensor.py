@@ -55,7 +55,9 @@ async def assert_setup_sensor(hass, config, count=1):
 @pytest.fixture
 def mock_nextbus():
     """Create a mock py_nextbus module."""
-    with patch("homeassistant.components.nextbus.NextBusClient") as NextBusClient:
+    with patch(
+        "homeassistant.components.nextbus.sensor.NextBusClient"
+    ) as NextBusClient:
         yield NextBusClient
 
 
@@ -96,15 +98,17 @@ async def test_invalid_config(hass, mock_nextbus, mock_nextbus_lists):
 async def test_validate_tags(hass, mock_nextbus, mock_nextbus_lists):
     """Test that additional validation against the API is successful."""
     # with self.subTest('Valid everything'):
-    assert nextbus.validate_tags(mock_nextbus, VALID_AGENCY, VALID_ROUTE, VALID_STOP)
+    assert nextbus.validate_tags(mock_nextbus(), VALID_AGENCY, VALID_ROUTE, VALID_STOP)
     # with self.subTest('Invalid agency'):
-    assert not nextbus.validate_tags(mock_nextbus, "not-valid", VALID_ROUTE, VALID_STOP)
+    assert not nextbus.validate_tags(
+        mock_nextbus(), "not-valid", VALID_ROUTE, VALID_STOP
+    )
 
     # with self.subTest('Invalid route'):
-    assert not nextbus.validate_tags(mock_nextbus, VALID_AGENCY, "0", VALID_STOP)
+    assert not nextbus.validate_tags(mock_nextbus(), VALID_AGENCY, "0", VALID_STOP)
 
     # with self.subTest('Invalid stop'):
-    assert not nextbus.validate_tags(mock_nextbus, VALID_AGENCY, VALID_ROUTE, 0)
+    assert not nextbus.validate_tags(mock_nextbus(), VALID_AGENCY, VALID_ROUTE, 0)
 
 
 async def test_verify_valid_state(
