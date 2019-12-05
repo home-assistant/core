@@ -116,9 +116,9 @@ class MHZ19Sensor(Entity):
 class MHZClient:
     """Get the latest data from the MH-Z sensor."""
 
-    def __init__(self, co2sensor, serial):
+    def __init__(self, co2sens, serial):
         """Initialize the sensor."""
-        self.co2sensor = co2sensor
+        self.co2sensor = co2sens
         self._serial = serial
         self.data = dict()
 
