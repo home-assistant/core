@@ -34,7 +34,7 @@ async def test_islamic_prayer_times_min_config(hass):
     min_config_sensors = ["fajr", "dhuhr", "asr", "maghrib", "isha"]
 
     with patch(
-        "homeassistant.components.islamic_prayer_times.PrayerTimesCalculator"
+        "homeassistant.components.islamic_prayer_times.sensor.PrayerTimesCalculator"
     ) as PrayerTimesCalculator:
         PrayerTimesCalculator.return_value.fetch_prayer_times.return_value = (
             PRAYER_TIMES
@@ -65,7 +65,7 @@ async def test_islamic_prayer_times_multiple_sensors(hass):
     ]
 
     with patch(
-        "homeassistant.components.islamic_prayer_times.PrayerTimesCalculator"
+        "homeassistant.components.islamic_prayer_times.sensor.PrayerTimesCalculator"
     ) as PrayerTimesCalculator:
         PrayerTimesCalculator.return_value.fetch_prayer_times.return_value = (
             PRAYER_TIMES
@@ -91,7 +91,7 @@ async def test_islamic_prayer_times_with_calculation_method(hass):
     sensors = ["fajr", "maghrib"]
 
     with patch(
-        "homeassistant.components.islamic_prayer_times.PrayerTimesCalculator"
+        "homeassistant.components.islamic_prayer_times.sensor.PrayerTimesCalculator"
     ) as PrayerTimesCalculator:
         PrayerTimesCalculator.return_value.fetch_prayer_times.return_value = (
             PRAYER_TIMES
@@ -119,7 +119,7 @@ async def test_islamic_prayer_times_with_calculation_method(hass):
 async def test_islamic_prayer_times_data_get_prayer_times(hass):
     """Test Islamic prayer times data fetcher."""
     with patch(
-        "homeassistant.components.islamic_prayer_times.PrayerTimesCalculator"
+        "homeassistant.components.islamic_prayer_times.sensor.PrayerTimesCalculator"
     ) as PrayerTimesCalculator:
         PrayerTimesCalculator.return_value.fetch_prayer_times.return_value = (
             PRAYER_TIMES
@@ -146,7 +146,7 @@ async def test_islamic_prayer_times_sensor_update(hass):
     }
 
     with patch(
-        "homeassistant.components.islamic_prayer_times.PrayerTimesCalculator"
+        "homeassistant.components.islamic_prayer_times.sensor.PrayerTimesCalculator"
     ) as PrayerTimesCalculator:
         PrayerTimesCalculator.return_value.fetch_prayer_times.side_effect = [
             PRAYER_TIMES,
