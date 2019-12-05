@@ -120,7 +120,7 @@ class Iperf3Data:
         self.data = {ATTR_DOWNLOAD: None, ATTR_UPLOAD: None, ATTR_VERSION: None}
 
     def create_client(self):
-        """Creates a new iperf3 client to use for measurement."""
+        """Create a new iperf3 client to use for measurement."""
         client = iperf3.Client()
         client.duration = self._host[CONF_DURATION]
         client.server_hostname = self._host[CONF_HOST]
