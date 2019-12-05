@@ -1,15 +1,18 @@
 """Support for Meteo-France raining forecast sensor."""
 import logging
 
-from vigilancemeteo import DepartmentWeatherAlert
+from meteofrance.client import meteofranceClient
+from vigilancemeteo import DepartmentWeatherAlert, VigilanceMeteoFranceProxy
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     ATTRIBUTION,
     CONF_CITY,
-    DATA_METEO_FRANCE,
+    DOMAIN,
     SENSOR_TYPE_CLASS,
     SENSOR_TYPE_ICON,
     SENSOR_TYPE_NAME,
@@ -23,19 +26,23 @@ STATE_ATTR_FORECAST = "1h rain forecast"
 STATE_ATTR_BULLETIN_TIME = "Bulletin date"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Meteo-France sensor."""
-    if discovery_info is None:
-        return
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Old way of setting up the Meteo-France platform."""
+    pass
 
-    city = discovery_info[CONF_CITY]
-    monitored_conditions = discovery_info[CONF_MONITORED_CONDITIONS]
-    client = hass.data[DATA_METEO_FRANCE][city]
-    weather_alert_client = hass.data[DATA_METEO_FRANCE]["weather_alert_client"]
+
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
+    """Set up the Meteo-France sensor platform."""
+    city = entry.data[CONF_CITY]
+    monitored_conditions = entry.data[CONF_MONITORED_CONDITIONS]
+    client = hass.data[DOMAIN][city]
+    weather_alert_client = hass.data[DOMAIN]["weather_alert_client"]
 
     alert_watcher = None
     if "weather_alert" in monitored_conditions:
-        datas = hass.data[DATA_METEO_FRANCE][city].get_data()
+        datas = hass.data[DOMAIN][city].get_data()
         # Check if a department code is available for this city.
         if "dept" in datas:
             try:
@@ -65,7 +72,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             # Exit and don't create the sensor if no department code available.
             return
 
-    add_entities(
+    async_add_entities(
         [
             MeteoFranceSensor(variable, client, alert_watcher)
             for variable in monitored_conditions
@@ -77,7 +84,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class MeteoFranceSensor(Entity):
     """Representation of a Meteo-France sensor."""
 
-    def __init__(self, condition, client, alert_watcher):
+    def __init__(
+        self,
+        condition,
+        client: meteofranceClient,
+        alert_watcher: VigilanceMeteoFranceProxy,
+    ):
         """Initialize the Meteo-France sensor."""
         self._condition = condition
         self._client = client
@@ -89,6 +101,11 @@ class MeteoFranceSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return f"{self._data['name']} {SENSOR_TYPES[self._condition][SENSOR_TYPE_NAME]}"
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return self.name
 
     @property
     def state(self):

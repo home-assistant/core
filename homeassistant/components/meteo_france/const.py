@@ -3,7 +3,6 @@
 from homeassistant.const import TEMP_CELSIUS
 
 DOMAIN = "meteo_france"
-DATA_METEO_FRANCE = "data_meteo_france"
 ATTRIBUTION = "Data provided by Météo-France"
 
 CONF_CITY = "city"
