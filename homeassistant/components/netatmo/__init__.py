@@ -64,6 +64,7 @@ ATTR_IS_KNOWN = "is_known"
 ATTR_FACE_URL = "face_url"
 ATTR_SNAPSHOT_URL = "snapshot_url"
 ATTR_VIGNETTE_URL = "vignette_url"
+ATTR_SCHEDULE = "schedule"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 MIN_TIME_BETWEEN_EVENT_UPDATES = timedelta(seconds=5)
@@ -88,7 +89,7 @@ SCHEMA_SERVICE_ADDWEBHOOK = vol.Schema({vol.Optional(CONF_URL): cv.string})
 
 SCHEMA_SERVICE_DROPWEBHOOK = vol.Schema({})
 
-SCHEMA_SERVICE_SETSCHEDULE = vol.Schema({vol.Required("schedule"): cv.string})
+SCHEMA_SERVICE_SETSCHEDULE = vol.Schema({vol.Required(ATTR_SCHEDULE): cv.string})
 
 
 def setup(hass, config):
@@ -108,6 +109,12 @@ def setup(hass, config):
     except HTTPError:
         _LOGGER.error("Unable to connect to Netatmo API")
         return False
+
+    try:
+        home_data = pyatmo.HomeData(auth)
+    except pyatmo.NoDevice:
+        home_data = None
+        _LOGGER.debug("No climate device. Disable %s service", SERVICE_SETSCHEDULE)
 
     # Store config to be used during entry setup
     hass.data[DATA_NETATMO_AUTH] = auth
@@ -154,20 +161,19 @@ def setup(hass, config):
         schema=SCHEMA_SERVICE_DROPWEBHOOK,
     )
 
-    home_data = pyatmo.HomeData(auth)
-
     def _service_setschedule(service):
         """Service to change current home schedule."""
-        schedule_name = service.data.get("schedule")
+        schedule_name = service.data.get(ATTR_SCHEDULE)
         home_data.switchHomeSchedule(schedule=schedule_name)
         _LOGGER.info("Set home schedule to %s", schedule_name)
 
-    hass.services.register(
-        DOMAIN,
-        SERVICE_SETSCHEDULE,
-        _service_setschedule,
-        schema=SCHEMA_SERVICE_SETSCHEDULE,
-    )
+    if home_data is not None:
+        hass.services.register(
+            DOMAIN,
+            SERVICE_SETSCHEDULE,
+            _service_setschedule,
+            schema=SCHEMA_SERVICE_SETSCHEDULE,
+        )
 
     return True
 
