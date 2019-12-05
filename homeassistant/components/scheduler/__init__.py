@@ -209,6 +209,7 @@ class Schedule:
             end_dt = start_dt + self._duration
 
         if not start_dt:
+            _LOGGER.debug("No more instances of schedule: %s", self)
             return
 
         instance: ActiveScheduleInstance = ActiveScheduleInstance(
@@ -309,8 +310,8 @@ class Scheduler:
 
         if save:
             await self.async_save()
-
         _LOGGER.info('Deleted schedule "%s"', schedule)
+
         return schedule.as_dict()
 
     async def async_load(self) -> None:
@@ -356,6 +357,7 @@ class Scheduler:
         new_data = SCHEDULE_UPDATE_SCHEMA(new_data)
         data = await self.async_delete(schedule_id, save=False)
         data.update(new_data)
+
         return self.async_create(
             data[CONF_ENTITY_ID],
             data[CONF_START_DATETIME],
