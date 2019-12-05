@@ -1,19 +1,19 @@
 """Support for Enphase Envoy solar energy monitor."""
 import logging
 
+from envoy_reader.envoy_reader import EnvoyReader
 import voluptuous as vol
 
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
-    POWER_WATT,
     ENERGY_WATT_HOUR,
+    POWER_WATT,
 )
-
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +52,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Enphase Envoy sensor."""
-    from envoy_reader.envoy_reader import EnvoyReader
 
     ip_address = config[CONF_IP_ADDRESS]
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
@@ -118,7 +117,6 @@ class Envoy(Entity):
 
     async def async_update(self):
         """Get the energy production data from the Enphase Envoy."""
-        from envoy_reader.envoy_reader import EnvoyReader
 
         if self._type != "inverters":
             _state = await getattr(EnvoyReader(self._ip_address), self._type)()
