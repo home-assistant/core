@@ -1,7 +1,7 @@
 """Support for scheduling scenes."""
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, Callable, Dict, Optional
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional
 from uuid import uuid4
 
 from dateutil.rrule import rrulestr
@@ -173,6 +173,7 @@ class Scheduler:
         self._async_activation_listeners: Dict[str, Callable] = {}
         self._async_deactivation_listeners: Dict[str, str] = {}
         self._hass: "HomeAssistant" = hass
+        self._latest_instances: List[ScheduleInstance] = []
         self.schedules: Dict[str, dict] = {}
 
     @callback
@@ -238,12 +239,7 @@ class Scheduler:
         #    listeners to cancel.
         # 2. If a completed schedule is deleted, the listeners won't exist.
         if remove_listeners:
-            if schedule_id in self._async_activation_listeners:
-                cancel = self._async_activation_listeners.pop(schedule_id)
-                cancel()
-            if schedule_id in self._async_deactivation_listeners:
-                cancel = self._async_deactivation_listeners.pop(schedule_id)
-                cancel()
+            self.async_delete_latest_instance(schedule_id)
 
         return_payload = self.as_dict(schedule_id)
         self.schedules.pop(schedule_id)
@@ -253,6 +249,15 @@ class Scheduler:
         _LOGGER.info('Deleted schedule "%s"', schedule_id)
 
         return return_payload
+
+    async def async_delete_latest_instance(self, schedule_id: str) -> None:
+        """Delete the latest (active) instance of a schedule."""
+        if schedule_id in self._async_activation_listeners:
+            cancel = self._async_activation_listeners.pop(schedule_id)
+            cancel()
+        if schedule_id in self._async_deactivation_listeners:
+            cancel = self._async_deactivation_listeners.pop(schedule_id)
+            cancel()
 
     async def async_load(self) -> None:
         """Load scheduler items."""
