@@ -5,7 +5,6 @@ import os
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.http import HomeAssistantView
 from aiohttp.web import Request, Response
-from typing import Dict
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,25 +119,30 @@ class FileUpladView(HomeAssistantView):
     url = "/api/ais_file/upload"
     name = "api:ais_file:uplad"
 
-    async def post(self, request: Request, data: Dict) -> Response:
+    async def post(self, request: Request) -> Response:
         """Handle the POST request for upload file."""
-        _LOGGER.info("we have POST")
+        data = await request.post()
+        file = data["file"]
+        file_name = file.filename
+        file_data = file.file.read()
+        with open(
+            "/data/data/pl.sviete.dom/files/home/AIS/www/img/" + file_name, "wb"
+        ) as f:
+            f.write(file_data)
+            f.close()
+
         hass = request.app["hass"]
-
-        # await hass.async_create_task(
-        #     hass.config_entries.flow.async_init(DOMAIN, context=ctx, data=data)
-        # )
-        #
-        # return self.json(
-        #     {
-        #         CONF_CLOUDHOOK_URL: data.get(CONF_CLOUDHOOK_URL),
-        #         CONF_REMOTE_UI_URL: remote_ui_url,
-        #         CONF_SECRET: data.get(CONF_SECRET),
-        #         CONF_WEBHOOK_ID: data[CONF_WEBHOOK_ID],
-        #     },
-        #     status_code=HTTP_CREATED,
-        # )
-
-    async def get(self, request: Request, data: Dict) -> Response:
-        _LOGGER.info("we have GET")
-        return "OK"
+        hass.async_add_job(
+            hass.services.async_call(
+                "homeassistant",
+                "update_entity",
+                {"entity_id": "sensor.ais_gallery_img"},
+            )
+        )
+        hass.async_add_job(
+            hass.services.async_call(
+                "homeassistant",
+                "update_entity",
+                {"entity_id": "sensor.ais_gallery_video"},
+            )
+        )
