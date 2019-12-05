@@ -6,7 +6,7 @@ from typing import Optional
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.light import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
