@@ -326,6 +326,7 @@ class Scheduler:
         """
         if not schedule_id:
             schedule_id = uuid4().hex
+
         schedule = Schedule(
             self._hass,
             schedule_id,
@@ -334,11 +335,10 @@ class Scheduler:
             end_datetime=end_datetime,
             rrule_str=rrule_str,
         )
-
         self.schedules[schedule_id] = schedule
+
         await self.async_save()
         _LOGGER.info("Created schedule: %s", schedule)
-
         await schedule.async_schedule_next_instance()
 
         return schedule.as_dict()
