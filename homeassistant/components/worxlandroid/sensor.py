@@ -10,7 +10,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_TIMEOUT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 

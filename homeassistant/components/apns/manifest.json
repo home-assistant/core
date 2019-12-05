@@ -2,9 +2,8 @@
   "domain": "apns",
   "name": "Apns",
   "documentation": "https://www.home-assistant.io/integrations/apns",
-  "requirements": [
-    "apns2==0.3.0"
-  ],
+  "requirements": ["apns2==0.3.0"],
   "dependencies": [],
+  "after_dependencies": ["device_tracker"],
   "codeowners": []
 }
