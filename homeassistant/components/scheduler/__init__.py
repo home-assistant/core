@@ -222,7 +222,7 @@ class Scheduler:
         self.async_save()
         _LOGGER.info('Created schedule "%s": %s', schedule_id, schedule)
 
-        self.async_schedule_next_instance(schedule_id, initial=True)
+        self.async_schedule_next_instance(schedule_id)
 
         return self.as_dict(schedule_id)
 
@@ -295,19 +295,18 @@ class Scheduler:
 
     @callback
     def async_schedule_next_instance(
-        self, schedule_id: str, *, initial: bool = False
+        self, schedule_id: str, *, starting_from: datetime = None
     ) -> bool:
         """Schedule the next instance of a schedule."""
         schedule = self.schedules[schedule_id]
 
-        if initial:
-            start_dt = schedule[CONF_START_DATETIME]
-        else:
-            start_dt = schedule[CONF_RRULE].after(datetime.now(), inc=True)
-
-        if (not initial and not schedule.get(CONF_RRULE)) or not start_dt:
+        if not schedule.get(CONF_RRULE):
             self.async_delete(schedule_id, remove_listeners=False)
             return
+
+        if not starting_from:
+            starting_from = datetime.now()
+        start_dt = schedule[CONF_RRULE].after(starting_from, inc=True)
 
         if schedule.get(CONF_DURATION):
             end_dt = start_dt + timedelta(seconds=schedule[CONF_DURATION])
