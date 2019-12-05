@@ -17,6 +17,7 @@ from homeassistant.helpers.event import (
     async_track_state_change,
 )
 from homeassistant.helpers.storage import Store
+from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,6 +61,7 @@ async def async_setup(hass, config):
     return True
 
 
+@bind_hass
 class ActiveScheduleInstance:
     """A class that defines a scene schedule."""
 
@@ -119,6 +121,7 @@ class ActiveScheduleInstance:
         _LOGGER.info("Scheduler deactivated scene: %s", self.entity_id)
 
 
+@bind_hass
 class Schedule:
     """A class to define an individual schedule."""
 
@@ -241,6 +244,7 @@ class Schedule:
         )
 
 
+@bind_hass
 class Scheduler:
     """A class to manage scene schedules."""
 
