@@ -1,5 +1,4 @@
 """Tests for light platform."""
-from typing import Any, Dict, Optional
 from unittest.mock import patch
 
 from pyHS100 import SmartBulb
@@ -58,64 +57,62 @@ async def test_light(hass: HomeAssistant) -> None:
         "saturation": 210,
     }
 
-    emeter = {
-        "voltage_mv": 12,
-        "power_mw": 13,
-        "current_ma": 14,
-        "energy_wh": 15,
-        "total_wh": 16,
-        "voltage": 17,
-        "power": 18,
-        "current": 19,
-        "total": 20,
-        "energy": 21,
-    }
+    def set_light_state(state):
+        nonlocal light_state
+        light_state.update(state)
 
-    def query_helper(target: str, cmd: str, arg: Optional[Dict] = None) -> Any:
-        nonlocal sys_info, light_state, emeter
-        print("query_helper", target, cmd)
-
-        if target == "system" and cmd == "get_sysinfo":
-            return sys_info
-
-        if (
-            target == "smartlife.iot.smartbulb.lightingservice"
-            and cmd == "get_light_state"
-        ):
-            return light_state
-
-        if (
-            target == "smartlife.iot.smartbulb.lightingservice"
-            and cmd == "transition_light_state"
-        ):
-            light_state["dft_on_state"] = {
-                **light_state["dft_on_state"],
-                **arg,
-            }
-            light_state = {**light_state, **arg}
-            return {}
-
-        if target == "smartlife.iot.common.emeter" and cmd == "get_realtime":
-            return emeter
-
-        if target == "smartlife.iot.common.emeter" and cmd == "get_daystat":
-            return {
-                "day_list": [{**emeter, **{"day": "2"}}],
-            }
-
-        if target == "smartlife.iot.common.emeter" and cmd == "get_monthstat":
-            return {
-                "month_list": [{**emeter, **{"month": "3"}}],
-            }
-
-        return {}
-
-    query_helper_patch = patch(
-        "homeassistant.components.tplink.common.SmartDevice._query_helper",
-        side_effect=query_helper,
+    set_light_state_patch = patch(
+        "homeassistant.components.tplink.common.SmartBulb.set_light_state",
+        side_effect=set_light_state,
+    )
+    get_light_state_patch = patch(
+        "homeassistant.components.tplink.common.SmartBulb.get_light_state",
+        return_value=light_state,
+    )
+    current_consumption_patch = patch(
+        "homeassistant.components.tplink.common.SmartDevice.current_consumption",
+        return_value=3.23,
+    )
+    get_sysinfo_patch = patch(
+        "homeassistant.components.tplink.common.SmartDevice.get_sysinfo",
+        return_value=sys_info,
+    )
+    get_emeter_daily_patch = patch(
+        "homeassistant.components.tplink.common.SmartDevice.get_emeter_daily",
+        return_value={
+            1: 1.01,
+            2: 1.02,
+            3: 1.03,
+            4: 1.04,
+            5: 1.05,
+            6: 1.06,
+            7: 1.07,
+            8: 1.08,
+            9: 1.09,
+            10: 1.10,
+            11: 1.11,
+            12: 1.12,
+        },
+    )
+    get_emeter_monthly_patch = patch(
+        "homeassistant.components.tplink.common.SmartDevice.get_emeter_monthly",
+        return_value={
+            1: 2.01,
+            2: 2.02,
+            3: 2.03,
+            4: 2.04,
+            5: 2.05,
+            6: 2.06,
+            7: 2.07,
+            8: 2.08,
+            9: 2.09,
+            10: 2.10,
+            11: 2.11,
+            12: 2.12,
+        },
     )
 
-    with query_helper_patch:
+    with set_light_state_patch, get_light_state_patch, current_consumption_patch, get_sysinfo_patch, get_emeter_daily_patch, get_emeter_monthly_patch:
         await async_setup_component(
             hass,
             tplink.DOMAIN,
@@ -123,7 +120,6 @@ async def test_light(hass: HomeAssistant) -> None:
                 tplink.DOMAIN: {
                     CONF_DISCOVERY: False,
                     CONF_LIGHT: [{CONF_HOST: "123.123.123.123"}],
-                    # CONF_SWITCH: [{CONF_HOST: "321.321.321.321"}],
                 }
             },
         )
@@ -138,7 +134,6 @@ async def test_light(hass: HomeAssistant) -> None:
 
         assert hass.states.get("light.light1").state == "off"
         assert light_state["on_off"] == 0
-        assert light_state["dft_on_state"]["on_off"] == 0
 
         await hass.async_block_till_done()
 
@@ -161,11 +156,6 @@ async def test_light(hass: HomeAssistant) -> None:
         assert state.attributes["hs_color"] == (110, 210)
         assert state.attributes["color_temp"] == 312
         assert light_state["on_off"] == 1
-        assert light_state["dft_on_state"]["on_off"] == 1
-        assert light_state["color_temp"] == 3205
-        assert light_state["dft_on_state"]["color_temp"] == 3205
-        assert light_state["brightness"] == 19
-        assert light_state["dft_on_state"]["brightness"] == 19
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
