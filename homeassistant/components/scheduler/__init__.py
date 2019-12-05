@@ -252,12 +252,13 @@ class Scheduler:
         self.schedules: Dict[str, Schedule] = {}
 
     async def async_clear_expired_schedules(self) -> None:
-        """Delete expired schedules and return the remaining schedules."""
+        """Delete expired schedules."""
+        now = datetime.now()
         self.schedules = {
             schedule_id: schedule
             for schedule_id, schedule in self.schedules.items()
-            if (not schedule.end_datetime and schedule.start_datetime < datetime.now())
-            or (schedule.end_datetime and schedule.end_datetime < datetime.now())
+            if (not schedule.end_datetime and schedule.start_datetime < now)
+            or (schedule.end_datetime and schedule.end_datetime < now)
         }
 
         await self.async_save()
@@ -274,7 +275,6 @@ class Scheduler:
         """Create a schedule.
 
         The rrule_str parameter must be an RFC5545-compliant string.
-        The duration parameter is a number of seconds a schedule instance should last.
         """
         if not schedule_id:
             schedule_id = uuid4().hex
