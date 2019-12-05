@@ -2,7 +2,7 @@
 import logging
 import threading
 
-from pymodbus.client.sync import ModbusTcpClient as ModbusClient
+from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
 from pymodbus.transaction import ModbusRtuFramer
 import voluptuous as vol
 
@@ -93,7 +93,7 @@ def setup_client(client_config):
     client_type = client_config[CONF_TYPE]
 
     if client_type == "serial":
-        return ModbusClient(
+        return ModbusSerialClient(
             method=client_config[CONF_METHOD],
             port=client_config[CONF_PORT],
             baudrate=client_config[CONF_BAUDRATE],
@@ -103,20 +103,20 @@ def setup_client(client_config):
             timeout=client_config[CONF_TIMEOUT],
         )
     if client_type == "rtuovertcp":
-        return ModbusClient(
+        return ModbusTcpClient(
             host=client_config[CONF_HOST],
             port=client_config[CONF_PORT],
             framer=ModbusRtuFramer,
             timeout=client_config[CONF_TIMEOUT],
         )
     if client_type == "tcp":
-        return ModbusClient(
+        return ModbusTcpClient(
             host=client_config[CONF_HOST],
             port=client_config[CONF_PORT],
             timeout=client_config[CONF_TIMEOUT],
         )
     if client_type == "udp":
-        return ModbusClient(
+        return ModbusUdpClient(
             host=client_config[CONF_HOST],
             port=client_config[CONF_PORT],
             timeout=client_config[CONF_TIMEOUT],
