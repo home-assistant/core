@@ -8,8 +8,8 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
-    ATTR_NAME,
     ATTR_LOCATION,
+    ATTR_NAME,
     CONF_API_KEY,
     EVENT_HOMEASSISTANT_STOP,
 )
