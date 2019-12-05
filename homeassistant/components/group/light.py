@@ -8,20 +8,6 @@ from typing import Any, Callable, Iterator, List, Optional, Tuple, cast
 import voluptuous as vol
 
 from homeassistant.components import light
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
-    CONF_ENTITIES,
-    CONF_NAME,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
-from homeassistant.core import CALLBACK_TYPE, State, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from homeassistant.util import color as color_util
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -42,7 +28,19 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
 )
-
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    CONF_ENTITIES,
+    CONF_NAME,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
+from homeassistant.core import CALLBACK_TYPE, State, callback
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.util import color as color_util
 
 # mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs
