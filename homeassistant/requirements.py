@@ -3,7 +3,7 @@ import asyncio
 from pathlib import Path
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.package as pkg_util
@@ -28,16 +28,19 @@ class RequirementsNotFound(HomeAssistantError):
 
 
 async def async_get_integration_with_requirements(
-    hass: HomeAssistant, domain: str
+    hass: HomeAssistant, domain: str, done: Set[str] = None
 ) -> Integration:
     """Get an integration with installed requirements.
 
     This can raise IntegrationNotFound if manifest or integration
     is invalid, RequirementNotFound if there was some type of
     failure to install requirements.
-
-    Does not handle circular dependencies.
     """
+    if done is None:
+        done = {domain}
+    else:
+        done.add(domain)
+
     integration = await async_get_integration(hass, domain)
 
     if hass.config.skip_pip:
@@ -48,11 +51,18 @@ async def async_get_integration_with_requirements(
             hass, integration.domain, integration.requirements
         )
 
-    deps = integration.dependencies + (integration.after_dependencies or [])
+    deps_to_check = [
+        dep
+        for dep in integration.dependencies + (integration.after_dependencies or [])
+        if dep not in done
+    ]
 
-    if deps:
+    if deps_to_check:
         await asyncio.gather(
-            *[async_get_integration_with_requirements(hass, dep) for dep in deps]
+            *[
+                async_get_integration_with_requirements(hass, dep, done)
+                for dep in deps_to_check
+            ]
         )
 
     return integration
