@@ -48,7 +48,7 @@ async def async_get_conditions(
 ) -> List[Dict[str, str]]:
     """List device conditions for Water heater devices."""
     registry = await entity_registry.async_get_registry(hass)
-    conditions = []
+    conditions: List[dict] = []
 
     # Get all the integrations entities for this device
     for entry in entity_registry.async_entries_for_device(registry, device_id):
