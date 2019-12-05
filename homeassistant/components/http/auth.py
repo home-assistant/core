@@ -11,7 +11,6 @@ from homeassistant.util import dt as dt_util
 
 from .const import KEY_AUTHENTICATED, KEY_HASS_USER, KEY_REAL_IP
 
-
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
