@@ -36,7 +36,7 @@ CONF_SCHEDULE_ID = "schedule_id"
 CONF_START_DATETIME = "start_datetime"
 
 SCHEDULE_UPDATE_SCHEMA = vol.Schema(
-    {CONF_ENTITY_ID: cv.entity_id, CONF_RRULE: str, CONF_DURATION: int}
+    {CONF_ENTITY_ID: cv.entity_id, CONF_DURATION: int, CONF_RRULE: str}
 )
 
 WS_TYPE_SCHEDULER_CREATE_SCHEDULE = "scheduler/schedules/create"
