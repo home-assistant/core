@@ -11,7 +11,7 @@ from homeassistant.helpers.dispatcher import (
 from .const import ATTR_DARK, ATTR_ON, NEW_SENSOR
 from .deconz_device import DeconzDevice
 from .deconz_event import DeconzEvent
-from .gateway import get_gateway_from_config_entry, DeconzEntityHandler
+from .gateway import DeconzEntityHandler, get_gateway_from_config_entry
 
 ATTR_CURRENT = "current"
 ATTR_POWER = "power"

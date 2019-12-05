@@ -2,7 +2,6 @@
 import voluptuous as vol
 
 import homeassistant.components.automation.event as event
-
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,

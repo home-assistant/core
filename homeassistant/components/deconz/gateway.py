@@ -1,12 +1,12 @@
 """Representation of a deCONZ gateway."""
 import asyncio
-import async_timeout
 
+import async_timeout
 from pydeconz import DeconzSession, errors
 
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import (
@@ -14,8 +14,8 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_registry import (
-    async_get_registry,
     DISABLED_CONFIG_ENTRY,
+    async_get_registry,
 )
 
 from .const import (
@@ -30,7 +30,6 @@ from .const import (
     NEW_DEVICE,
     SUPPORTED_PLATFORMS,
 )
-
 from .errors import AuthenticationRequired, CannotConnect
 
 
