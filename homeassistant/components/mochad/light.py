@@ -1,16 +1,17 @@
 """Support for X10 dimmer over Mochad."""
 import logging
 
+from pymochad import device
 import voluptuous as vol
 
+from homeassistant.components import mochad
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     Light,
-    PLATFORM_SCHEMA,
 )
-from homeassistant.components import mochad
-from homeassistant.const import CONF_NAME, CONF_PLATFORM, CONF_DEVICES, CONF_ADDRESS
+from homeassistant.const import CONF_ADDRESS, CONF_DEVICES, CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,7 +47,6 @@ class MochadLight(Light):
 
     def __init__(self, hass, ctrl, dev):
         """Initialize a Mochad Light Device."""
-        from pymochad import device
 
         self._controller = ctrl
         self._address = dev[CONF_ADDRESS]
