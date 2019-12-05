@@ -1,79 +1,42 @@
 """Support for scheduling scenes."""
+import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, Callable, Dict, List, Optional
+from typing import Dict, List, Optional
 from uuid import uuid4
 
-from dateutil.rrule import rrulestr
+from dateutil.rrule import rrule, rrulestr
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.const import CONF_ENTITY_ID, CONF_ID, MATCH_ALL
-from homeassistant.core import Context, callback
+from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change,
 )
+from homeassistant.helpers.storage import Store
 import homeassistant.util.dt as dt_util
-from homeassistant.util.json import load_json, save_json
-
-if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant, ServiceCall, State  # noqa
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "scheduler"
 
-PERSISTENCE = ".scheduler.json"
-EVENT = "scheduler_updated"
+STORAGE_VERSION = 1
 
 CONF_ACTIVATION_CONTEXT = "activation_context"
 CONF_ACTIVATION_CONTEXT_ID = "activation_context_id"
-CONF_DURATION = "duration"
 CONF_END_DATETIME = "end_datetime"
 CONF_RRULE = "rrule"
 CONF_SCHEDULE_ID = "schedule_id"
 CONF_START_DATETIME = "start_datetime"
 
-SCHEDULE_UPDATE_SCHEMA = vol.All(
-    vol.Schema({CONF_ENTITY_ID: cv.entity_id, CONF_DURATION: int, CONF_RRULE: str}),
-    cv.has_at_least_one_key(CONF_ENTITY_ID, CONF_DURATION, CONF_RRULE),
-)
-
-WS_TYPE_SCHEDULER_CREATE_SCHEDULE = "scheduler/schedules/create"
-WS_TYPE_SCHEDULER_DELETE_SCHEDULE = "scheduler/schedules/delete"
-WS_TYPE_SCHEDULER_SCHEDULES = "scheduler/schedules"
-WS_TYPE_SCHEDULER_UPDATE_SCHEDULE = "scheduler/schedules/update"
-
-SCHEMA_WEBSOCKET_CREATE_SCHEDULE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+SCHEDULE_UPDATE_SCHEMA = vol.Schema(
     {
-        vol.Required("type"): WS_TYPE_SCHEDULER_CREATE_SCHEDULE,
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Required(CONF_START_DATETIME): cv.datetime,
-        vol.Optional(CONF_RRULE): str,
-        vol.Optional(CONF_DURATION): int,
-    }
-)
-
-SCHEMA_WEBSOCKET_DELETE_SCHEDULE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_SCHEDULER_DELETE_SCHEDULE,
-        vol.Required(CONF_SCHEDULE_ID): str,
-    }
-)
-
-SCHEMA_WEBSOCKET_SCHEDULES = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_SCHEDULER_SCHEDULES}
-)
-
-SCHEMA_WEBSOCKET_UPDATE_SCHEDULE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_SCHEDULER_UPDATE_SCHEDULE,
-        vol.Required(CONF_SCHEDULE_ID): str,
-        vol.Optional(CONF_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_START_DATETIME): cv.datetime,
-        vol.Optional(CONF_DURATION): int,
-        vol.Optional(CONF_RRULE): str,
+        CONF_ENTITY_ID: cv.entity_id,
+        CONF_START_DATETIME: cv.datetime,
+        CONF_END_DATETIME: cv.datetime,
+        CONF_RRULE: str,
     }
 )
 
@@ -87,306 +50,361 @@ async def async_setup(hass, config):
     await scheduler.async_load()
 
     hass.components.websocket_api.async_register_command(
-        WS_TYPE_SCHEDULER_CREATE_SCHEDULE,
-        websocket_handle_create,
-        SCHEMA_WEBSOCKET_CREATE_SCHEDULE,
+        async_websocket_handle_clear_expired
     )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_SCHEDULER_DELETE_SCHEDULE,
-        websocket_handle_delete,
-        SCHEMA_WEBSOCKET_DELETE_SCHEDULE,
-    )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_SCHEDULER_SCHEDULES,
-        websocket_handle_schedules,
-        SCHEMA_WEBSOCKET_SCHEDULES,
-    )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_SCHEDULER_UPDATE_SCHEDULE,
-        websocket_handle_update,
-        SCHEMA_WEBSOCKET_UPDATE_SCHEDULE,
-    )
+    hass.components.websocket_api.async_register_command(async_websocket_handle_create)
+    hass.components.websocket_api.async_register_command(async_websocket_handle_delete)
+    hass.components.websocket_api.async_register_command(async_websocket_handle_list)
+    hass.components.websocket_api.async_register_command(async_websocket_handle_update)
 
     return True
 
 
-class ScheduleInstance:
+class ActiveScheduleInstance:
     """A class that defines a scene schedule."""
 
-    def __init__(
-        self, hass: "HomeAssistant", entity_id: str, activation_context: Context,
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, entity_id: str) -> None:
         """Initialize."""
-        self._activation_context = activation_context
-        self._async_state_listener: Optional[Callable] = None
-        self._entity_states: Dict[str, "State"] = {}
-        self._hass: "HomeAssistant" = hass
+        self._async_state_listener: Optional[CALLBACK_TYPE] = None
+        self._context: Context = Context()
+        self._affected_states: List[State] = []
+        self._hass: HomeAssistant = hass
         self.entity_id: str = entity_id
         self.instance_id = uuid4().hex
 
-    @callback
-    def async_trigger_scene(self) -> None:
+    async def async_trigger_scene(self) -> None:
         """Trigger the schedule's scene."""
-        self._hass.async_create_task(
-            self._hass.services.async_call(
-                "scene",
-                "turn_on",
-                service_data={"entity_id": self.entity_id},
-                context=self._activation_context,
-            )
-        )
 
         @callback
         def store_entity_if_in_context(
-            entity_id: str, old_state: "State", new_state: "State"
+            entity_id: str, old_state: State, new_state: State
         ) -> None:
             """Save prior states of an entity if it was triggered by this schedule."""
-            if new_state.context == self._activation_context:
-                self._entity_states[entity_id] = old_state
+            if new_state.context == self._context:
+                self._affected_states.append(old_state)
 
         self._async_state_listener = async_track_state_change(
             self._hass, MATCH_ALL, store_entity_if_in_context
         )
 
+        await self._hass.services.async_call(
+            "scene",
+            "turn_on",
+            service_data={"entity_id": self.entity_id},
+            blocking=True,
+            context=self._context,
+        )
+
         _LOGGER.info("Scheduler activated scene: %s", self.entity_id)
 
-    @callback
-    def async_undo_scene(self) -> None:
+    async def async_undo_scene(self) -> None:
         """Restore the entities touched by the schedule."""
-        if not self._entity_states:
+        if not self._affected_states:
             return
 
-        for entity_id, state in self._entity_states.items():
-            self._hass.states.async_set(
-                entity_id,
-                state.state,
-                attributes=state.attributes,
-                context=self._activation_context,
-            )
+        entities = {}
+        for state in self._affected_states:
+            data = {**state.attributes}
+            data["state"] = state.state
+            entities[state.entity_id] = data
+
+        await self._hass.services.async_call(
+            "scene",
+            "apply",
+            service_data={"entities": entities},
+            blocking=True,
+            context=self._context,
+        )
 
         _LOGGER.info("Scheduler deactivated scene: %s", self.entity_id)
+
+
+class Schedule:
+    """A class to define an individual schedule."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        schedule_id: str,
+        entity_id: str,
+        start_datetime: datetime,
+        *,
+        end_datetime: Optional[datetime] = None,
+        rrule_str: Optional[str] = None,
+    ) -> None:
+        """Initialize."""
+        self._async_activation_listener: Optional[CALLBACK_TYPE] = None
+        self._async_deactivation_listener: Optional[CALLBACK_TYPE] = None
+        self._current_instance: Optional[ActiveScheduleInstance] = None
+        self._hass: HomeAssistant = hass
+        self._initial_run_complete: bool = False
+        self.entity_id = entity_id
+        self.schedule_id: str = schedule_id
+
+        self.start_datetime: datetime = start_datetime
+        self.end_datetime: Optional[datetime] = end_datetime
+
+        self._duration: Optional[timedelta]
+        if self.end_datetime:
+            self._duration = self.end_datetime - self.start_datetime
+        else:
+            self._duration = None
+
+        self.rrule: Optional[rrule]
+        if rrule_str:
+            self.rrule = rrulestr(rrule_str)
+        else:
+            self.rrule = None
+
+    def __str__(self) -> str:
+        """Define the string representation of this schedule."""
+        return (
+            f'<Schedule start="{self.start_datetime}" '
+            f'end="{self.end_datetime}" rrule="{self.rrule}">'
+        )
+
+    def as_dict(self) -> dict:
+        """Return the schedule as a dict."""
+        the_dict = {
+            CONF_ENTITY_ID: self.entity_id,
+            CONF_START_DATETIME: self.start_datetime.isoformat(),
+        }
+
+        if self.end_datetime:
+            the_dict[CONF_END_DATETIME] = self.end_datetime.isoformat()
+        else:
+            the_dict[CONF_END_DATETIME] = None
+
+        if self.rrule:
+            the_dict[CONF_RRULE] = str(self.rrule)
+        else:
+            the_dict[CONF_RRULE] = None
+
+        return the_dict
+
+    async def async_cancel_current_instance(self) -> None:
+        """Delete the latest (active) instance of a schedule."""
+        await self._current_instance.async_undo_scene()
+        self._current_instance = None
+
+        if self._async_activation_listener:
+            self._async_activation_listener()
+            self._async_activation_listener = None
+        if self._async_deactivation_listener:
+            self._async_deactivation_listener()
+            self._async_deactivation_listener = None
+
+    async def async_schedule_next_instance(self) -> None:
+        """Schedule the next instance of a schedule."""
+        start_dt: Optional[datetime] = None
+        if not self._initial_run_complete:
+            self._initial_run_complete = True
+            start_dt = self.start_datetime
+            end_dt = self.end_datetime
+        elif self.rrule:
+            start_dt = self.rrule.after(datetime.now(), inc=True)
+            end_dt = start_dt + self._duration
+
+        if not start_dt:
+            return
+
+        instance: ActiveScheduleInstance = ActiveScheduleInstance(
+            self._hass, self.entity_id
+        )
+
+        async def schedule_start(executed_at: datetime) -> None:
+            """Trigger when the schedule starts."""
+            await instance.async_trigger_scene()
+            if not end_dt:
+                await self.async_schedule_next_instance()
+
+        async def schedule_end(executed_at: datetime) -> None:
+            """Trigger when the schedule ends."""
+            await instance.async_undo_scene()
+            await self.async_schedule_next_instance()
+
+        self._async_activation_listener = async_track_point_in_time(
+            self._hass, schedule_start, start_dt
+        )
+        if end_dt:
+            self._async_deactivation_listener = async_track_point_in_time(
+                self._hass, schedule_end, end_dt
+            )
+
+        self._current_instance = instance
+
+        _LOGGER.info(
+            "Scheduled instance of schedule %s (start: %s / end: %s)",
+            self,
+            start_dt,
+            end_dt,
+        )
 
 
 class Scheduler:
     """A class to manage scene schedules."""
 
-    def __init__(self, hass: "HomeAssistant") -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize."""
-        self._async_activation_listeners: Dict[str, Callable] = {}
-        self._async_deactivation_listeners: Dict[str, str] = {}
-        self._hass: "HomeAssistant" = hass
-        self._latest_instances: List[ScheduleInstance] = []
-        self.schedules: Dict[str, dict] = {}
+        self._hass: HomeAssistant = hass
+        self._latest_instances: List[ActiveScheduleInstance] = []
+        self._store = Store(hass, STORAGE_VERSION, DOMAIN)
+        self.schedules: Dict[str, Schedule] = {}
 
-    @callback
-    def as_dict(self, schedule_id: str) -> dict:
-        """Return a schedule in dict form."""
-        schedule = self.schedules[schedule_id]
-        return {
-            CONF_SCHEDULE_ID: schedule_id,
-            CONF_ENTITY_ID: schedule[CONF_ENTITY_ID],
-            CONF_START_DATETIME: schedule[CONF_START_DATETIME].isoformat(),
-            CONF_DURATION: schedule[CONF_DURATION],
-            CONF_RRULE: str(schedule[CONF_RRULE]),
-            CONF_ACTIVATION_CONTEXT_ID: schedule[CONF_ACTIVATION_CONTEXT].id,
+    async def async_clear_expired_schedules(self) -> None:
+        """Delete expired schedules and return the remaining schedules."""
+        self.schedules = {
+            schedule_id: schedule
+            for schedule_id, schedule in self.schedules.items()
+            if (not schedule.end_datetime and schedule.start_datetime < datetime.now())
+            or (schedule.end_datetime and schedule.end_datetime < datetime.now())
         }
 
-    @callback
-    def async_create(
+        await self.async_save()
+
+    async def async_create(
         self,
         entity_id: str,
         start_datetime: datetime,
         *,
-        duration: Optional[int] = None,
+        end_datetime: Optional[datetime] = None,
         rrule_str: Optional[str] = None,
-        activation_context_id: Optional[str] = None,
+        schedule_id: Optional[str] = None,
     ) -> dict:
         """Create a schedule.
 
         The rrule_str parameter must be an RFC5545-compliant string.
         The duration parameter is a number of seconds a schedule instance should last.
         """
-        if start_datetime < datetime.now():
-            raise ValueError("Dates in the past are not allowed")
+        if not schedule_id:
+            schedule_id = uuid4().hex
+        schedule = Schedule(
+            self._hass,
+            schedule_id,
+            entity_id,
+            start_datetime,
+            end_datetime=end_datetime,
+            rrule_str=rrule_str,
+        )
 
-        schedule_id = uuid4().hex
-        schedule = {
-            CONF_ENTITY_ID: entity_id,
-            CONF_START_DATETIME: start_datetime,
-            CONF_DURATION: duration,
-            CONF_RRULE: rrulestr(rrule_str) if rrule_str else None,
-            CONF_ACTIVATION_CONTEXT: Context(id=activation_context_id)
-            if activation_context_id
-            else Context(),
-        }
         self.schedules[schedule_id] = schedule
+        await self.async_save()
+        _LOGGER.info("Created schedule: %s", schedule)
 
-        self.async_save()
-        _LOGGER.info('Created schedule "%s": %s', schedule_id, schedule)
+        await schedule.async_schedule_next_instance()
 
-        self.async_schedule_next_instance(schedule_id)
+        return schedule.as_dict()
 
-        return self.as_dict(schedule_id)
-
-    @callback
-    def async_delete(
-        self, schedule_id: str, *, remove_listeners: bool = True, save: bool = True
-    ) -> dict:
+    async def async_delete(self, schedule_id: str, *, save: bool = True) -> dict:
         """Delete a schedule."""
         if schedule_id not in self.schedules:
             raise KeyError
 
-        # Since there are cases where listeners might not exist (like deleting a
-        # schedule after it completes), we give the caller the ability to delete the
-        # schedule without attempting to cancel nonexistent listeners:
-        if remove_listeners:
-            self.async_delete_latest_instance(schedule_id)
-
-        return_payload = self.as_dict(schedule_id)
-        self.schedules.pop(schedule_id)
+        schedule = self.schedules.pop(schedule_id)
+        await schedule.async_cancel_current_instance()
 
         if save:
-            self.async_save()
-        _LOGGER.info('Deleted schedule "%s"', schedule_id)
+            await self.async_save()
 
-        return return_payload
-
-    async def async_delete_latest_instance(self, schedule_id: str) -> None:
-        """Delete the latest (active) instance of a schedule."""
-        if schedule_id in self._async_activation_listeners:
-            cancel = self._async_activation_listeners.pop(schedule_id)
-            cancel()
-        if schedule_id in self._async_deactivation_listeners:
-            cancel = self._async_deactivation_listeners.pop(schedule_id)
-            cancel()
+        _LOGGER.info('Deleted schedule "%s"', schedule)
+        return schedule.as_dict()
 
     async def async_load(self) -> None:
         """Load scheduler items."""
 
-        def load() -> dict:
-            """Load the items synchronously."""
-            return load_json(self._hass.config.path(PERSISTENCE), default={})
+        raw_schedules = await self._store.async_load()
 
-        raw_schedules = await self._hass.async_add_job(load)
-        for schedule in raw_schedules.values():
-            self.async_create(
-                schedule[CONF_ENTITY_ID],
-                dt_util.parse_datetime(schedule[CONF_START_DATETIME]),
-                duration=schedule[CONF_DURATION],
-                rrule_str=schedule[CONF_RRULE],
-                activation_context_id=schedule[CONF_ACTIVATION_CONTEXT_ID],
-            )
-
-    @callback
-    def async_save(self) -> None:
-        """Save the schedules to local storage."""
-
-        def save() -> None:
-            """Save."""
-            save_json(
-                self._hass.config.path(PERSISTENCE),
-                {
-                    schedule_id: self.as_dict(schedule_id)
-                    for schedule_id, schedule in self.schedules.items()
-                },
-            )
-
-        self._hass.async_add_job(save)
-        self._hass.bus.async_fire(EVENT)
-
-    @callback
-    def async_schedule_next_instance(
-        self, schedule_id: str, *, starting_from: datetime = None
-    ) -> bool:
-        """Schedule the next instance of a schedule."""
-        schedule = self.schedules[schedule_id]
-
-        if not starting_from:
-            starting_from = datetime.now()
-        start_dt = schedule[CONF_RRULE].after(starting_from, inc=True)
-
-        # If no recurrence rule exists or we've run out of recurrences, delete the
-        # schedule and return:
-        if not start_dt or not schedule.get(CONF_RRULE):
-            self.async_delete(schedule_id, remove_listeners=False)
+        if not raw_schedules:
             return
 
-        if schedule.get(CONF_DURATION):
-            end_dt = start_dt + timedelta(seconds=schedule[CONF_DURATION])
-        else:
-            end_dt = None
-
-        instance = ScheduleInstance(
-            self._hass, schedule[CONF_ENTITY_ID], schedule[CONF_ACTIVATION_CONTEXT]
-        )
-
-        @callback
-        def schedule_start(call: datetime) -> None:
-            """Trigger when the schedule starts."""
-            instance.async_trigger_scene()
-            if not end_dt:
-                self.async_schedule_next_instance(schedule_id)
-
-        @callback
-        def schedule_end(call: datetime) -> None:
-            """Trigger when the schedule ends."""
-            instance.async_undo_scene()
-            self.async_schedule_next_instance(schedule_id)
-
-        self._async_activation_listeners[schedule_id] = async_track_point_in_time(
-            self._hass, schedule_start, start_dt
-        )
-        if end_dt:
-            self._async_deactivation_listeners[schedule_id] = async_track_point_in_time(
-                self._hass, schedule_end, end_dt
+        tasks = []
+        for schedule_id, schedule in raw_schedules.items():
+            if schedule.get(CONF_END_DATETIME):
+                end_dt = dt_util.parse_datetime(schedule[CONF_END_DATETIME])
+            else:
+                end_dt = None
+            tasks.append(
+                self.async_create(
+                    schedule[CONF_ENTITY_ID],
+                    dt_util.parse_datetime(schedule[CONF_START_DATETIME]),
+                    end_datetime=end_dt,
+                    rrule_str=schedule.get(CONF_RRULE),
+                    schedule_id=schedule_id,
+                )
             )
 
-        _LOGGER.info(
-            'Scheduled instance of schedule "%s" (start: %s / end: %s)',
-            schedule_id,
-            start_dt,
-            end_dt,
+        await asyncio.gather(*tasks)
+
+    async def async_save(self) -> None:
+        """Save all schedules to storage."""
+        await self._store.async_save(
+            {
+                schedule_id: schedule.as_dict()
+                for schedule_id, schedule in self.schedules.items()
+            }
         )
 
-    def async_update(self, schedule_id: str, new_data: dict) -> dict:
+    async def async_update(self, schedule_id: str, new_data: dict) -> dict:
         """Update a schedule."""
         if schedule_id not in self.schedules:
             raise KeyError
 
         new_data = SCHEDULE_UPDATE_SCHEMA(new_data)
-        data = self.async_delete(schedule_id, save=False)
+        data = await self.async_delete(schedule_id, save=False)
         data.update(new_data)
         return self.async_create(
             data[CONF_ENTITY_ID],
-            data[CONF_RRULE],
-            duration=data[CONF_DURATION],
-            activation_context_id=data[CONF_ACTIVATION_CONTEXT].id,
+            data[CONF_START_DATETIME],
+            end_datetime=data[CONF_END_DATETIME],
+            rrule_str=data[CONF_RRULE],
+            schedule_id=schedule_id,
         )
 
 
-@callback
-def websocket_handle_create(hass, connection, msg):
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {vol.Required("type"): "scheduler/schedules/clear_expired"}
+)
+async def async_websocket_handle_clear_expired(hass, connection, msg):
     """Handle creating a schedule."""
-    try:
-        schedule = hass.data[DOMAIN].async_create(
-            msg[CONF_ENTITY_ID],
-            msg[CONF_START_DATETIME],
-            duration=msg.get(CONF_DURATION),
-            rrule_str=msg.get(CONF_RRULE),
-        )
-    except ValueError as err:
-        connection.send_message(
-            websocket_api.error_message(msg[CONF_ID], "invalid_data", str(err))
-        )
-    else:
-        connection.send_message(websocket_api.result_message(msg[CONF_ID], schedule))
+    await hass.data[DOMAIN].async_clear_expired_schedules()
+    connection.send_message(
+        websocket_api.result_message(msg[CONF_ID], hass.data[DOMAIN].schedules)
+    )
 
 
-@callback
-def websocket_handle_delete(hass, connection, msg):
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "scheduler/schedules/create",
+        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_START_DATETIME): cv.datetime,
+        vol.Optional(CONF_END_DATETIME): cv.datetime,
+        vol.Optional(CONF_RRULE): str,
+    }
+)
+async def async_websocket_handle_create(hass, connection, msg):
+    """Handle creating a schedule."""
+    schedule = await hass.data[DOMAIN].async_create(
+        msg[CONF_ENTITY_ID],
+        msg[CONF_START_DATETIME],
+        end_datetime=msg.get(CONF_END_DATETIME),
+        rrule_str=msg.get(CONF_RRULE),
+    )
+    connection.send_message(websocket_api.result_message(msg[CONF_ID], schedule))
+
+
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "scheduler/schedules/delete",
+        vol.Required(CONF_SCHEDULE_ID): str,
+    }
+)
+async def async_websocket_handle_delete(hass, connection, msg):
     """Handle deleting a schedule."""
     try:
-        schedule = hass.data[DOMAIN].async_delete(msg[CONF_SCHEDULE_ID])
+        schedule = await hass.data[DOMAIN].async_delete(msg[CONF_SCHEDULE_ID])
     except KeyError:
         connection.send_message(
             websocket_api.error_message(
@@ -400,15 +418,26 @@ def websocket_handle_delete(hass, connection, msg):
 
 
 @callback
-def websocket_handle_schedules(hass, connection, msg):
+@websocket_api.websocket_command({vol.Required("type"): "scheduler/schedules/list"})
+def async_websocket_handle_list(hass, connection, msg):
     """Handle getting all schedule."""
     connection.send_message(
         websocket_api.result_message(msg[CONF_ID], hass.data[DOMAIN].schedules)
     )
 
 
-@callback
-def websocket_handle_update(hass, connection, msg):
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "scheduler/schedules/update",
+        vol.Required(CONF_SCHEDULE_ID): str,
+        vol.Optional(CONF_ENTITY_ID): cv.entity_id,
+        vol.Optional(CONF_START_DATETIME): cv.datetime,
+        vol.Optional(CONF_END_DATETIME): cv.datetime,
+        vol.Optional(CONF_RRULE): str,
+    }
+)
+async def async_websocket_handle_update(hass, connection, msg):
     """Handle updating a schedule."""
     msg_id = msg.pop("id")
     msg.pop("type")
@@ -416,17 +445,14 @@ def websocket_handle_update(hass, connection, msg):
     data = msg
 
     try:
-        schedule = hass.data[DOMAIN].async_update(schedule_id, data)
+        schedule = await hass.data[DOMAIN].async_update(schedule_id, data)
+    except KeyError:
         connection.send_message(
             websocket_api.error_message(
                 msg[CONF_ID],
                 "schedule_not_found",
-                f"Cannot delete unknown schedule ID: {msg[CONF_SCHEDULE_ID]}",
+                f"Cannot update unknown schedule ID: {msg[CONF_SCHEDULE_ID]}",
             )
-        )
-    except ValueError as err:
-        connection.send_message(
-            websocket_api.error_message(msg_id, "invalid_data", str(err))
         )
     else:
         connection.send_message(websocket_api.result_message(msg_id, schedule))
