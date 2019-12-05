@@ -310,7 +310,7 @@ class Scheduler:
         return schedule.as_dict()
 
     async def async_load(self) -> None:
-        """Load scheduler items."""
+        """Load all schedules from storage."""
 
         raw_schedules = await self._store.async_load()
 
@@ -366,7 +366,7 @@ class Scheduler:
     {vol.Required("type"): "scheduler/schedules/clear_expired"}
 )
 async def async_websocket_handle_clear_expired(hass, connection, msg):
-    """Handle creating a schedule."""
+    """Handle clearing expired schedules."""
     await hass.data[DOMAIN].async_clear_expired_schedules()
     connection.send_message(
         websocket_api.result_message(msg[CONF_ID], hass.data[DOMAIN].schedules)
@@ -420,7 +420,7 @@ async def async_websocket_handle_delete(hass, connection, msg):
 @callback
 @websocket_api.websocket_command({vol.Required("type"): "scheduler/schedules/list"})
 def async_websocket_handle_list(hass, connection, msg):
-    """Handle getting all schedule."""
+    """Handle getting all schedules."""
     connection.send_message(
         websocket_api.result_message(msg[CONF_ID], hass.data[DOMAIN].schedules)
     )
