@@ -1,8 +1,8 @@
 """Support for scheduling scenes."""
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
-from typing import Dict, List, Optional
+from typing import Awaitable, Callable, Dict, List, Optional
 from uuid import uuid4
 
 from dateutil.rrule import rrule, rrulestr
@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.const import CONF_ENTITY_ID, CONF_ID, MATCH_ALL
-from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, State, callback
+from homeassistant.core import Context, HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import (
     async_track_point_in_time,
@@ -65,14 +65,59 @@ async def async_setup(hass, config):
 class ActiveScheduleInstance:
     """A class that defines a scene schedule."""
 
-    def __init__(self, hass: HomeAssistant, entity_id: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        async_schedule_next_instance: Callable[..., Awaitable],
+        entity_id: str,
+        start_datetime: datetime,
+        end_datetime: Optional[datetime] = None,
+    ) -> None:
         """Initialize."""
-        self._async_state_listener: Optional[CALLBACK_TYPE] = None
-        self._context: Context = Context()
         self._affected_states: List[State] = []
+        self._async_state_listener: Optional[Callable[..., Awaitable]] = None
+        self._async_trigger_listener: Optional[Callable[..., Awaitable]] = None
+        self._async_undo_listener: Optional[Callable[..., Awaitable]] = None
+        self._async_schedule_next_instance: Callable[
+            ..., Awaitable
+        ] = async_schedule_next_instance
+        self._context: Context = Context()
         self._hass: HomeAssistant = hass
+        self.end_datetime = end_datetime
         self.entity_id: str = entity_id
         self.instance_id = uuid4().hex
+        self.start_datetime = start_datetime
+
+        self._async_trigger_listener = async_track_point_in_time(
+            self._hass, self._on_instance_start, start_datetime
+        )
+        if end_datetime:
+            self._async_undo_listener = async_track_point_in_time(
+                self._hass, self._on_instance_end, end_datetime
+            )
+
+    async def _on_instance_start(self, executed_at: datetime) -> None:
+        """Trigger when the schedule starts."""
+        await self.async_trigger_scene()
+        if not self.end_datetime:
+            await self._async_schedule_next_instance()
+
+    async def _on_instance_end(self, executed_at: datetime) -> None:
+        """Trigger when the schedule ends."""
+        await self.async_undo_scene()
+        await self._async_schedule_next_instance()
+
+    async def cancel(self, *, undo_scene: bool = True) -> None:
+        """Cancel this instance."""
+        if self._async_trigger_listener:
+            self._async_trigger_listener()
+            self._async_trigger_listener = None
+        if self._async_undo_listener:
+            self._async_undo_listener()
+            self._async_undo_listener = None
+
+        if undo_scene:
+            await self.async_undo_scene()
 
     async def async_trigger_scene(self) -> None:
         """Trigger the schedule's scene."""
@@ -136,26 +181,19 @@ class Schedule:
         rrule_str: Optional[str] = None,
     ) -> None:
         """Initialize."""
-        self._async_activation_listener: Optional[CALLBACK_TYPE] = None
-        self._async_deactivation_listener: Optional[CALLBACK_TYPE] = None
-        self._current_instance: Optional[ActiveScheduleInstance] = None
         self._hass: HomeAssistant = hass
         self._initial_run_complete: bool = False
+        self.active_instance: Optional[ActiveScheduleInstance] = None
         self.entity_id = entity_id
         self.schedule_id: str = schedule_id
 
         self.start_datetime: datetime = start_datetime
         self.end_datetime: Optional[datetime] = end_datetime
 
-        self._duration: Optional[timedelta]
-        if self.end_datetime:
-            self._duration = self.end_datetime - self.start_datetime
-        else:
-            self._duration = None
-
         self.rrule: Optional[rrule]
         if rrule_str:
-            self.rrule = rrulestr(rrule_str)
+            _rrule = rrulestr(rrule_str)
+            self.rrule = _rrule.replace(self.start_datetime)
         else:
             self.rrule = None
 
@@ -185,63 +223,41 @@ class Schedule:
 
         return the_dict
 
-    async def async_cancel_current_instance(self) -> None:
-        """Delete the latest (active) instance of a schedule."""
-        await self._current_instance.async_undo_scene()
-        self._current_instance = None
-
-        if self._async_activation_listener:
-            self._async_activation_listener()
-            self._async_activation_listener = None
-        if self._async_deactivation_listener:
-            self._async_deactivation_listener()
-            self._async_deactivation_listener = None
-
     async def async_schedule_next_instance(self) -> None:
         """Schedule the next instance of a schedule."""
-        start_dt: Optional[datetime] = None
+        now = datetime.now()
+
+        # Calculate the start and end datetimes for the next instance:
         if not self._initial_run_complete:
             self._initial_run_complete = True
-            start_dt = self.start_datetime
-            end_dt = self.end_datetime
+            start_datetime = self.start_datetime
+            end_datetime = self.end_datetime
         elif self.rrule:
-            start_dt = self.rrule.after(datetime.now(), inc=True)
-            end_dt = start_dt + self._duration
+            start_datetime = self.rrule.after(now, inc=True)
+            if self.end_datetime:
+                end_datetime = start_datetime + (
+                    self.end_datetime - self.start_datetime
+                )
+            else:
+                end_datetime = None
 
-        if not start_dt:
+        if not start_datetime:
             _LOGGER.debug("No more instances of schedule: %s", self)
             return
 
-        instance: ActiveScheduleInstance = ActiveScheduleInstance(
-            self._hass, self.entity_id
+        self.active_instance: ActiveScheduleInstance = ActiveScheduleInstance(
+            self._hass,
+            self.async_schedule_next_instance,
+            self.entity_id,
+            start_datetime,
+            end_datetime=end_datetime,
         )
-
-        async def schedule_start(executed_at: datetime) -> None:
-            """Trigger when the schedule starts."""
-            await instance.async_trigger_scene()
-            if not end_dt:
-                await self.async_schedule_next_instance()
-
-        async def schedule_end(executed_at: datetime) -> None:
-            """Trigger when the schedule ends."""
-            await instance.async_undo_scene()
-            await self.async_schedule_next_instance()
-
-        self._async_activation_listener = async_track_point_in_time(
-            self._hass, schedule_start, start_dt
-        )
-        if end_dt:
-            self._async_deactivation_listener = async_track_point_in_time(
-                self._hass, schedule_end, end_dt
-            )
-
-        self._current_instance = instance
 
         _LOGGER.info(
             "Scheduled instance of schedule %s (start: %s / end: %s)",
             self,
-            start_dt,
-            end_dt,
+            start_datetime,
+            end_datetime,
         )
 
 
@@ -306,7 +322,7 @@ class Scheduler:
             raise KeyError
 
         schedule = self.schedules.pop(schedule_id)
-        await schedule.async_cancel_current_instance()
+        await schedule.active_instance.cancel()
 
         if save:
             await self.async_save()
