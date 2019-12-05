@@ -33,7 +33,7 @@ def get_switch_name(number):
 @pytest.fixture
 def mock_lj(hass):
     """Initialize components."""
-    with mock.patch("pylitejet.LiteJet") as mock_pylitejet:
+    with mock.patch("homeassistant.components.litejet.LiteJet") as mock_pylitejet:
         mock_lj = mock_pylitejet.return_value
 
         mock_lj.switch_pressed_callbacks = {}
