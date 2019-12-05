@@ -174,7 +174,10 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
         self.hass = tests.common.get_test_home_assistant()
         self.hass.start()
         # Note, source dictionary is unsorted!
-        with mock.patch("pymonoprice.get_monoprice", new=lambda *a: self.monoprice):
+        with mock.patch(
+            "homeassistant.components.monoprice.media_player.get_monoprice",
+            new=lambda *a: self.monoprice,
+        ):
             setup_platform(
                 self.hass,
                 {
