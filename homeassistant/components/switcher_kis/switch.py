@@ -25,6 +25,7 @@ from . import (
     SIGNAL_SWITCHER_DEVICE_UPDATE,
 )
 
+# pylint: disable=ungrouped-imports
 if TYPE_CHECKING:
     from aioswitcher.devices import SwitcherV2Device
     from aioswitcher.api.messages import SwitcherV2ControlResponseMSG
