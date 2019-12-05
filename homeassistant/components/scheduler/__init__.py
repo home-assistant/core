@@ -88,14 +88,6 @@ class ActiveScheduleInstance:
         self.instance_id = uuid4().hex
         self.start_datetime = start_datetime
 
-        self._async_trigger_listener = async_track_point_in_time(
-            self._hass, self._async_on_instance_start, start_datetime
-        )
-        if end_datetime:
-            self._async_revert_listener = async_track_point_in_time(
-                self._hass, self._async_on_instance_end, end_datetime
-            )
-
     async def _async_on_instance_end(self, executed_at: datetime) -> None:
         """Trigger when the schedule ends."""
         await self.async_revert()
@@ -118,6 +110,17 @@ class ActiveScheduleInstance:
 
         if revert_scene:
             await self.async_revert()
+
+    @callback
+    def async_init(self) -> None:
+        """Perform some post-instantiation initialization."""
+        self._async_trigger_listener = async_track_point_in_time(
+            self._hass, self._async_on_instance_start, self.start_datetime
+        )
+        if self.end_datetime:
+            self._async_revert_listener = async_track_point_in_time(
+                self._hass, self._async_on_instance_end, self.end_datetime
+            )
 
     async def async_revert(self) -> None:
         """Restore the entities touched by the schedule."""
@@ -275,6 +278,7 @@ class Schedule:
             start_datetime,
             end_datetime=end_datetime,
         )
+        self.active_instance.async_init()
 
         _LOGGER.info(
             "Scheduled instance of schedule %s (start: %s / end: %s)",
