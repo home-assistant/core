@@ -66,10 +66,7 @@ class OwnTracksFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _get_webhook_id(self):
         """Generate webhook ID."""
         webhook_id = self.hass.components.webhook.async_generate_id()
-        if (
-            "cloud" in self.hass.config.components
-            and self.hass.components.cloud.async_active_subscription()
-        ):
+        if self.hass.components.cloud.async_active_subscription():
             webhook_url = await self.hass.components.cloud.async_create_cloudhook(
                 webhook_id
             )

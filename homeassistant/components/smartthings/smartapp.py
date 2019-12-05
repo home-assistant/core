@@ -88,10 +88,7 @@ async def validate_installed_app(api, installed_app_id: str):
 
 def validate_webhook_requirements(hass: HomeAssistantType) -> bool:
     """Ensure HASS is setup properly to receive webhooks."""
-    if (
-        "cloud" in hass.config.components
-        and hass.components.cloud.async_active_subscription()
-    ):
+    if hass.components.cloud.async_active_subscription():
         return True
     if hass.data[DOMAIN][CONF_CLOUDHOOK_URL] is not None:
         return True
@@ -105,11 +102,7 @@ def get_webhook_url(hass: HomeAssistantType) -> str:
     Return the cloudhook if available, otherwise local webhook.
     """
     cloudhook_url = hass.data[DOMAIN][CONF_CLOUDHOOK_URL]
-    if (
-        "cloud" in hass.config.components
-        and hass.components.cloud.async_active_subscription()
-        and cloudhook_url is not None
-    ):
+    if hass.components.cloud.async_active_subscription() and cloudhook_url is not None:
         return cloudhook_url
     return webhook.async_generate_url(hass, hass.data[DOMAIN][CONF_WEBHOOK_ID])
 
@@ -229,7 +222,6 @@ async def setup_smartapp_endpoint(hass: HomeAssistantType):
     cloudhook_url = config.get(CONF_CLOUDHOOK_URL)
     if (
         cloudhook_url is None
-        and "cloud" in hass.config.components
         and hass.components.cloud.async_active_subscription()
         and not hass.config_entries.async_entries(DOMAIN)
     ):
@@ -281,11 +273,7 @@ async def unload_smartapp_endpoint(hass: HomeAssistantType):
         return
     # Remove the cloudhook if it was created
     cloudhook_url = hass.data[DOMAIN][CONF_CLOUDHOOK_URL]
-    if (
-        cloudhook_url
-        and "cloud" in hass.config.components
-        and hass.components.cloud.async_is_logged_in()
-    ):
+    if cloudhook_url and hass.components.cloud.async_is_logged_in():
         await hass.components.cloud.async_delete_cloudhook(
             hass.data[DOMAIN][CONF_WEBHOOK_ID]
         )

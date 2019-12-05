@@ -37,9 +37,7 @@ class RegistrationsView(HomeAssistantView):
 
         webhook_id = generate_secret()
 
-        cloud_loaded = "cloud" in hass.config.components
-
-        if cloud_loaded and hass.components.cloud.async_active_subscription():
+        if hass.components.cloud.async_active_subscription():
             data[
                 CONF_CLOUDHOOK_URL
             ] = await hass.components.cloud.async_create_cloudhook(webhook_id)
@@ -59,11 +57,10 @@ class RegistrationsView(HomeAssistantView):
         )
 
         remote_ui_url = None
-        if cloud_loaded:
-            try:
-                remote_ui_url = hass.components.cloud.async_remote_ui_url()
-            except hass.components.cloud.CloudNotAvailable:
-                pass
+        try:
+            remote_ui_url = hass.components.cloud.async_remote_ui_url()
+        except hass.components.cloud.CloudNotAvailable:
+            pass
 
         return self.json(
             {

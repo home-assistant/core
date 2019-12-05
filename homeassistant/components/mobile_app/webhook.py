@@ -309,10 +309,9 @@ async def handle_webhook(
         if CONF_CLOUDHOOK_URL in registration:
             resp[CONF_CLOUDHOOK_URL] = registration[CONF_CLOUDHOOK_URL]
 
-        if "cloud" in hass.config.components:
-            try:
-                resp[CONF_REMOTE_UI_URL] = hass.components.cloud.async_remote_ui_url()
-            except hass.components.cloud.CloudNotAvailable:
-                pass
+        try:
+            resp[CONF_REMOTE_UI_URL] = hass.components.cloud.async_remote_ui_url()
+        except hass.components.cloud.CloudNotAvailable:
+            pass
 
         return webhook_response(resp, registration=registration, headers=headers)
