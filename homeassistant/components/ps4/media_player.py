@@ -1,19 +1,18 @@
 """Support for PlayStation 4 consoles."""
-import logging
 import asyncio
+import logging
 
+from pyps4_2ndscreen.errors import NotReady, PSDataIncomplete
 import pyps4_2ndscreen.ps4 as pyps4
-from pyps4_2ndscreen.errors import NotReady
 
-from homeassistant.core import callback
 from homeassistant.components.media_player import ENTITY_IMAGE_URL, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_TITLE,
-    MEDIA_TYPE_GAME,
     MEDIA_TYPE_APP,
-    SUPPORT_SELECT_SOURCE,
+    MEDIA_TYPE_GAME,
     SUPPORT_PAUSE,
+    SUPPORT_SELECT_SOURCE,
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
@@ -26,9 +25,10 @@ from homeassistant.const import (
     CONF_REGION,
     CONF_TOKEN,
     STATE_IDLE,
-    STATE_STANDBY,
     STATE_PLAYING,
+    STATE_STANDBY,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import device_registry, entity_registry
 
 from .const import (
@@ -254,7 +254,6 @@ class PS4Device(MediaPlayerDevice):
 
     async def async_get_title_data(self, title_id, name):
         """Get PS Store Data."""
-        from pyps4_2ndscreen.errors import PSDataIncomplete
 
         app_name = None
         art = None
