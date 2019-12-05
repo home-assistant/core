@@ -300,13 +300,15 @@ class Scheduler:
         """Schedule the next instance of a schedule."""
         schedule = self.schedules[schedule_id]
 
-        if not schedule.get(CONF_RRULE):
-            self.async_delete(schedule_id, remove_listeners=False)
-            return
-
         if not starting_from:
             starting_from = datetime.now()
         start_dt = schedule[CONF_RRULE].after(starting_from, inc=True)
+
+        # If no recurrence rule exists or we've run out of recurrences, delete the
+        # schedule and return:
+        if not start_dt or not schedule.get(CONF_RRULE):
+            self.async_delete(schedule_id, remove_listeners=False)
+            return
 
         if schedule.get(CONF_DURATION):
             end_dt = start_dt + timedelta(seconds=schedule[CONF_DURATION])
