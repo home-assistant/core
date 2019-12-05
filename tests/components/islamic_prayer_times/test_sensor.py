@@ -33,7 +33,9 @@ async def test_islamic_prayer_times_min_config(hass):
     """Test minimum Islamic prayer times configuration."""
     min_config_sensors = ["fajr", "dhuhr", "asr", "maghrib", "isha"]
 
-    with patch("homeassistant.components.islamic_prayer_times.PrayerTimesCalculator") as PrayerTimesCalculator:
+    with patch(
+        "homeassistant.components.islamic_prayer_times.PrayerTimesCalculator"
+    ) as PrayerTimesCalculator:
         PrayerTimesCalculator.return_value.fetch_prayer_times.return_value = (
             PRAYER_TIMES
         )
@@ -62,7 +64,9 @@ async def test_islamic_prayer_times_multiple_sensors(hass):
         "midnight",
     ]
 
-    with patch("homeassistant.components.islamic_prayer_times.PrayerTimesCalculator") as PrayerTimesCalculator:
+    with patch(
+        "homeassistant.components.islamic_prayer_times.PrayerTimesCalculator"
+    ) as PrayerTimesCalculator:
         PrayerTimesCalculator.return_value.fetch_prayer_times.return_value = (
             PRAYER_TIMES
         )
@@ -86,7 +90,9 @@ async def test_islamic_prayer_times_with_calculation_method(hass):
     """Test Islamic prayer times configuration with calculation method."""
     sensors = ["fajr", "maghrib"]
 
-    with patch("homeassistant.components.islamic_prayer_times.PrayerTimesCalculator") as PrayerTimesCalculator:
+    with patch(
+        "homeassistant.components.islamic_prayer_times.PrayerTimesCalculator"
+    ) as PrayerTimesCalculator:
         PrayerTimesCalculator.return_value.fetch_prayer_times.return_value = (
             PRAYER_TIMES
         )
@@ -112,7 +118,9 @@ async def test_islamic_prayer_times_with_calculation_method(hass):
 
 async def test_islamic_prayer_times_data_get_prayer_times(hass):
     """Test Islamic prayer times data fetcher."""
-    with patch("homeassistant.components.islamic_prayer_times.PrayerTimesCalculator") as PrayerTimesCalculator:
+    with patch(
+        "homeassistant.components.islamic_prayer_times.PrayerTimesCalculator"
+    ) as PrayerTimesCalculator:
         PrayerTimesCalculator.return_value.fetch_prayer_times.return_value = (
             PRAYER_TIMES
         )
@@ -137,7 +145,9 @@ async def test_islamic_prayer_times_sensor_update(hass):
         "Midnight": "00:45",
     }
 
-    with patch("homeassistant.components.islamic_prayer_times.PrayerTimesCalculator") as PrayerTimesCalculator:
+    with patch(
+        "homeassistant.components.islamic_prayer_times.PrayerTimesCalculator"
+    ) as PrayerTimesCalculator:
         PrayerTimesCalculator.return_value.fetch_prayer_times.side_effect = [
             PRAYER_TIMES,
             new_prayer_times,
