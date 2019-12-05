@@ -236,10 +236,9 @@ class Scheduler:
         if schedule_id not in self.schedules:
             raise KeyError
 
-        # This parameter is in place to handle two use cases:
-        # 1. If the delete API is called, by default, we should assume there are
-        #    listeners to cancel.
-        # 2. If a completed schedule is deleted, the listeners won't exist.
+        # Since there are cases where listeners might not exist (like deleting a
+        # schedule after it completes), we give the caller the ability to delete the
+        # schedule without attempting to cancel nonexistent listeners:
         if remove_listeners:
             self.async_delete_latest_instance(schedule_id)
 
