@@ -3,7 +3,9 @@ import glob
 import logging
 import os
 from homeassistant.helpers.entity import Entity
-
+from homeassistant.components.http import HomeAssistantView
+from aiohttp.web import Request, Response
+from typing import Dict
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +49,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     else:
         folder = FilesSensor(path, name, DEFAULT_FILTER, config.get(CONF_SORT))
         add_entities([folder], True)
+
+    # aa
+    hass.http.register_view(FileUpladView)
 
 
 class FilesSensor(Entity):
@@ -107,3 +112,33 @@ class FilesSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
+
+
+class FileUpladView(HomeAssistantView):
+    """A view that accepts file upload requests."""
+
+    url = "/api/ais_file/upload"
+    name = "api:ais_file:uplad"
+
+    async def post(self, request: Request, data: Dict) -> Response:
+        """Handle the POST request for upload file."""
+        _LOGGER.info("we have POST")
+        hass = request.app["hass"]
+
+        # await hass.async_create_task(
+        #     hass.config_entries.flow.async_init(DOMAIN, context=ctx, data=data)
+        # )
+        #
+        # return self.json(
+        #     {
+        #         CONF_CLOUDHOOK_URL: data.get(CONF_CLOUDHOOK_URL),
+        #         CONF_REMOTE_UI_URL: remote_ui_url,
+        #         CONF_SECRET: data.get(CONF_SECRET),
+        #         CONF_WEBHOOK_ID: data[CONF_WEBHOOK_ID],
+        #     },
+        #     status_code=HTTP_CREATED,
+        # )
+
+    async def get(self, request: Request, data: Dict) -> Response:
+        _LOGGER.info("we have GET")
+        return "OK"
