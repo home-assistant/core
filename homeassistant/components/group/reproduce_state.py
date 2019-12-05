@@ -2,15 +2,16 @@
 from typing import Iterable, Optional
 
 from homeassistant.core import Context, State
+from homeassistant.helpers.state import async_reproduce_state
 from homeassistant.helpers.typing import HomeAssistantType
+
+from . import get_entity_ids
 
 
 async def async_reproduce_states(
     hass: HomeAssistantType, states: Iterable[State], context: Optional[Context] = None
 ) -> None:
     """Reproduce component states."""
-    from . import get_entity_ids
-    from homeassistant.helpers.state import async_reproduce_state
 
     states_copy = []
     for state in states:
