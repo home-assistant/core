@@ -125,7 +125,7 @@ class ScheduleInstance:
         self.instance_id = uuid4().hex
 
     @callback
-    def async_activate(self) -> None:
+    def async_trigger_scene(self) -> None:
         """Trigger the schedule's scene."""
         self._hass.async_create_task(
             self._hass.services.async_call(
@@ -149,7 +149,7 @@ class ScheduleInstance:
         _LOGGER.info("Scheduler activated scene: %s", self.entity_id)
 
     @callback
-    def async_deactivate(self) -> None:
+    def async_undo_scene(self) -> None:
         """Restore the entities touched by the schedule."""
         if not self._entity_states:
             return
@@ -320,14 +320,14 @@ class Scheduler:
         @callback
         def schedule_start(call: datetime) -> None:
             """Trigger when the schedule starts."""
-            instance.async_activate()
+            instance.async_trigger_scene()
             if not end_dt:
                 self.async_schedule_next_instance(schedule_id)
 
         @callback
         def schedule_end(call: datetime) -> None:
             """Trigger when the schedule ends."""
-            instance.async_deactivate()
+            instance.async_undo_scene()
             self.async_schedule_next_instance(schedule_id)
 
         self._async_activation_listeners[schedule_id] = async_track_point_in_time(
