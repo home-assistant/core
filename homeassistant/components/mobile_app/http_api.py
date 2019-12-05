@@ -6,7 +6,6 @@ from aiohttp.web import Request, Response
 from nacl.secret import SecretBox
 
 from homeassistant.auth.util import generate_secret
-
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import CONF_WEBHOOK_ID, HTTP_CREATED
