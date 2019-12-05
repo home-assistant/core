@@ -16,7 +16,19 @@ def grep_dir(path: pathlib.Path, glob_pattern: str, search_pattern: str) -> Set[
             continue
 
         for match in pattern.finditer(fil.read_text()):
-            found.add(match.groups()[0])
+            integration = match.groups()[1]
+
+            if (
+                # If it's importing something from itself
+                integration == path.name
+                # Platform file
+                or (path / f"{integration}.py").exists()
+                # Dir for platform
+                or (path / integration).exists()
+            ):
+                continue
+
+            found.add(match.groups()[1])
 
     return found
 
@@ -30,19 +42,65 @@ ALLOWED_USED_COMPONENTS = {
     "hassio",
     "system_health",
     "websocket_api",
+    "automation",
+    "device_automation",
+    "zone",
+    "homeassistant",
+    "system_log",
+    "person",
+    # Discovery
+    "ssdp",
+    "discovery",
+    # Other
+    "mjpeg",  # base class, has no reqs or component to load.
 }
+
+IGNORE_VIOLATIONS = [
+    # Has same requirement, gets defaults.
+    ("sql", "recorder"),
+    # Sharing a base class
+    ("openalpr_cloud", "openalpr_local"),
+    ("lutron_caseta", "lutron"),
+    ("ffmpeg_noise", "ffmpeg_motion"),
+    # Demo
+    ("demo", "manual"),
+    ("demo", "openalpr_local"),
+    # This should become a helper method that integrations can submit data to
+    ("websocket_api", "lovelace"),
+    # Expose HA to external systems
+    "homekit",
+    "alexa",
+    "google_assistant",
+    "emulated_hue",
+    "prometheus",
+    "conversation",
+    "logbook",
+    # These should be extracted to external package
+    "pvoutput",
+    "dwd_weather_warnings",
+    # Should be rewritten to use own data fetcher
+    "scrape",
+]
 
 
 def validate_dependencies(integration: Integration):
     """Validate all dependencies."""
     # Find usage of hass.components
-    referenced = grep_dir(integration.path, "**/*.py", r"hass\.components\.(\w+)")
+    referenced = grep_dir(
+        integration.path, "**/*.py", r"(hass|homeassistant)\.components\.(\w+)"
+    )
     referenced -= ALLOWED_USED_COMPONENTS
     referenced -= set(integration.manifest["dependencies"])
     referenced -= set(integration.manifest.get("after_dependencies", []))
 
     if referenced:
         for domain in sorted(referenced):
+            if (
+                integration.domain in IGNORE_VIOLATIONS
+                or (integration.domain, domain) in IGNORE_VIOLATIONS
+            ):
+                continue
+
             integration.add_error(
                 "dependencies",
                 "Using component {} but it's not in 'dependencies' or 'after_dependencies'".format(

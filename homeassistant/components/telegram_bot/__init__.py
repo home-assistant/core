@@ -19,7 +19,6 @@ from telegram.parsemode import ParseMode
 from telegram.utils.request import Request
 import voluptuous as vol
 
-from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.const import (
     ATTR_COMMAND,
     ATTR_LATITUDE,
@@ -34,6 +33,10 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import TemplateError
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_DATA = "data"
+ATTR_MESSAGE = "message"
+ATTR_TITLE = "title"
 
 ATTR_ARGS = "args"
 ATTR_AUTHENTICATION = "authentication"
