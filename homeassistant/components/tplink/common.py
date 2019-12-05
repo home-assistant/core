@@ -21,6 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_CONFIG = "config"
 CONF_DIMMER = "dimmer"
 CONF_DISCOVERY = "discovery"
+CONF_TARGET = "target"
 CONF_LIGHT = "light"
 CONF_STRIP = "strip"
 CONF_SWITCH = "switch"
@@ -55,22 +56,22 @@ class SmartDevices:
         return False
 
 
-async def async_get_discoverable_devices(hass):
+async def async_get_discoverable_devices(hass, config_data):
     """Return if there are devices that can be discovered."""
 
     def discover():
-        devs = Discover.discover()
+        devs = Discover.discover(target=config_data[CONF_TARGET])
         return devs
 
     return await hass.async_add_executor_job(discover)
 
 
 async def async_discover_devices(
-    hass: HomeAssistantType, existing_devices: SmartDevices
+    hass: HomeAssistantType, existing_devices: SmartDevices, config_data
 ) -> SmartDevices:
     """Get devices through discovery."""
     _LOGGER.debug("Discovering devices")
-    devices = await async_get_discoverable_devices(hass)
+    devices = await async_get_discoverable_devices(hass, config_data)
     _LOGGER.info("Discovered %s TP-Link smart home device(s)", len(devices))
 
     lights = []

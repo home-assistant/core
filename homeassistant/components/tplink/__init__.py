@@ -12,6 +12,7 @@ from .common import (
     ATTR_CONFIG,
     CONF_DIMMER,
     CONF_DISCOVERY,
+    CONF_TARGET,
     CONF_LIGHT,
     CONF_SWITCH,
     CONF_STRIP,
@@ -44,6 +45,7 @@ CONFIG_SCHEMA = vol.Schema(
                     cv.ensure_list, [TPLINK_HOST_SCHEMA]
                 ),
                 vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
+                vol.Optional(CONF_TARGET, default='255.255.255.255'): cv.string,
             }
         )
     },
@@ -86,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigType):
 
     # Add discovered devices
     if config_data is None or config_data[CONF_DISCOVERY]:
-        discovered_devices = await async_discover_devices(hass, static_devices)
+        discovered_devices = await async_discover_devices(hass, static_devices, config_data)
 
         lights.extend(discovered_devices.lights)
         switches.extend(discovered_devices.switches)
