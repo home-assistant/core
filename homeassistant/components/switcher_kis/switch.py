@@ -1,7 +1,16 @@
 """Home Assistant Switcher Component Switch platform."""
 
 from logging import getLogger
-from typing import Callable, Dict, TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, Dict
+
+from aioswitcher.api import SwitcherV2Api
+from aioswitcher.consts import (
+    COMMAND_OFF,
+    COMMAND_ON,
+    STATE_OFF as SWITCHER_STATE_OFF,
+    STATE_ON as SWITCHER_STATE_ON,
+    WAITING_TEXT,
+)
 
 from homeassistant.components.switch import ATTR_CURRENT_POWER_W, SwitchDevice
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -70,7 +79,6 @@ class SwitcherControl(SwitchDevice):
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        from aioswitcher.consts import STATE_ON as SWITCHER_STATE_ON
 
         return self._state == SWITCHER_STATE_ON
 
@@ -82,7 +90,6 @@ class SwitcherControl(SwitchDevice):
     @property
     def device_state_attributes(self) -> Dict:
         """Return the optional state attributes."""
-        from aioswitcher.consts import WAITING_TEXT
 
         attribs = {}
 
@@ -96,10 +103,6 @@ class SwitcherControl(SwitchDevice):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        from aioswitcher.consts import (
-            STATE_OFF as SWITCHER_STATE_OFF,
-            STATE_ON as SWITCHER_STATE_ON,
-        )
 
         return self._state in [SWITCHER_STATE_ON, SWITCHER_STATE_OFF]
 
@@ -135,13 +138,6 @@ class SwitcherControl(SwitchDevice):
 
     async def _control_device(self, send_on: bool) -> None:
         """Turn the entity on or off."""
-        from aioswitcher.api import SwitcherV2Api
-        from aioswitcher.consts import (
-            COMMAND_OFF,
-            COMMAND_ON,
-            STATE_OFF as SWITCHER_STATE_OFF,
-            STATE_ON as SWITCHER_STATE_ON,
-        )
 
         response: "SwitcherV2ControlResponseMSG" = None
         async with SwitcherV2Api(
