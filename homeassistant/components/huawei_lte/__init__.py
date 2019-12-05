@@ -148,7 +148,7 @@ class Router:
     @property
     def device_connections(self) -> Set[Tuple[str, str]]:
         """Get router connections for device registry."""
-        return {(dr.CONNECTION_NETWORK_MAC, self.mac)}
+        return {(dr.CONNECTION_NETWORK_MAC, self.mac)} if self.mac else set()
 
     def update(self) -> None:
         """Update router data."""
