@@ -98,16 +98,16 @@ class ActiveScheduleInstance:
 
     async def _on_instance_start(self, executed_at: datetime) -> None:
         """Trigger when the schedule starts."""
-        await self.async_trigger_scene()
+        await self.async_trigger()
         if not self.end_datetime:
             await self._async_schedule_next_instance()
 
     async def _on_instance_end(self, executed_at: datetime) -> None:
         """Trigger when the schedule ends."""
-        await self.async_undo_scene()
+        await self.async_revert()
         await self._async_schedule_next_instance()
 
-    async def cancel(self, *, undo_scene: bool = True) -> None:
+    async def async_cancel(self, *, undo_scene: bool = True) -> None:
         """Cancel this instance."""
         if self._async_trigger_listener:
             self._async_trigger_listener()
@@ -117,9 +117,9 @@ class ActiveScheduleInstance:
             self._async_undo_listener = None
 
         if undo_scene:
-            await self.async_undo_scene()
+            await self.async_revert()
 
-    async def async_trigger_scene(self) -> None:
+    async def async_trigger(self) -> None:
         """Trigger the schedule's scene."""
 
         @callback
@@ -144,7 +144,7 @@ class ActiveScheduleInstance:
 
         _LOGGER.info("Scheduler activated scene: %s", self.entity_id)
 
-    async def async_undo_scene(self) -> None:
+    async def async_revert(self) -> None:
         """Restore the entities touched by the schedule."""
         if not self._affected_states:
             return
@@ -322,7 +322,7 @@ class Scheduler:
             raise KeyError
 
         schedule = self.schedules.pop(schedule_id)
-        await schedule.active_instance.cancel()
+        await schedule.active_instance.async_cancel()
 
         if save:
             await self.async_save()
@@ -332,7 +332,6 @@ class Scheduler:
 
     async def async_load(self) -> None:
         """Load all schedules from storage."""
-
         raw_schedules = await self._store.async_load()
 
         if not raw_schedules:
