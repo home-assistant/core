@@ -137,13 +137,15 @@ class ScheduleInstance:
         )
 
         @callback
-        def save_state(entity_id: str, old_state: "State", new_state: "State") -> None:
+        def store_entity_if_in_context(
+            entity_id: str, old_state: "State", new_state: "State"
+        ) -> None:
             """Save prior states of an entity if it was triggered by this schedule."""
             if new_state.context == self._activation_context:
                 self._entity_states[entity_id] = old_state
 
         self._async_state_listener = async_track_state_change(
-            self._hass, MATCH_ALL, save_state
+            self._hass, MATCH_ALL, store_entity_if_in_context
         )
 
         _LOGGER.info("Scheduler activated scene: %s", self.entity_id)
