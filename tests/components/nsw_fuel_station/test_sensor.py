@@ -84,7 +84,7 @@ class TestNSWFuelStation(unittest.TestCase):
         self.hass.stop()
 
     @patch(
-        "homeassistant.components.nsw_fuel_station.FuelCheckClient",
+        "homeassistant.components.nsw_fuel_station.sensor.FuelCheckClient",
         new=FuelCheckClientMock,
     )
     def test_setup(self, mock_nsw_fuel):
@@ -99,7 +99,7 @@ class TestNSWFuelStation(unittest.TestCase):
             assert state is not None
 
     @patch(
-        "homeassistant.components.nsw_fuel_station.FuelCheckClient",
+        "homeassistant.components.nsw_fuel_station.sensor.FuelCheckClient",
         new=FuelCheckClientMock,
     )
     def test_sensor_values(self, mock_nsw_fuel):
