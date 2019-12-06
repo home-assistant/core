@@ -45,14 +45,14 @@ MAP_CONDITION = {
     "rain": "rainy",
     "snow": "snowy",
     "sleet": "snowy-rainy",
-    "windy": "windy",
+    "wind": "windy",
     "fog": "fog",
     "cloudy": "cloudy",
     "partly-cloudy-day": "partly-cloudy",
     "partly-cloudy-night": "partly-cloudy",
     "hail": "hail",
     "thunderstorm": "lightning",
-    "tornado": "tornado",
+    "tornado": "exceptional",
 }
 
 CONF_UNITS = "units"
