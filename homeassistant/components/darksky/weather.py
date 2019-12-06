@@ -45,7 +45,7 @@ MAP_CONDITION = {
     "rain": "rainy",
     "snow": "snowy",
     "sleet": "snowy-rainy",
-    "wind": "windy",
+    "windy": "windy",
     "fog": "fog",
     "cloudy": "cloudy",
     "partly-cloudy-day": "partlycloudy",
