@@ -3,8 +3,6 @@ import glob
 import logging
 import os
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.http import HomeAssistantView
-from aiohttp.web import Request, Response
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,9 +46,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     else:
         folder = FilesSensor(path, name, DEFAULT_FILTER, config.get(CONF_SORT))
         add_entities([folder], True)
-
-    # aa
-    hass.http.register_view(FileUpladView)
 
 
 class FilesSensor(Entity):
@@ -111,38 +106,3 @@ class FilesSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
-
-
-class FileUpladView(HomeAssistantView):
-    """A view that accepts file upload requests."""
-
-    url = "/api/ais_file/upload"
-    name = "api:ais_file:uplad"
-
-    async def post(self, request: Request) -> Response:
-        """Handle the POST request for upload file."""
-        data = await request.post()
-        file = data["file"]
-        file_name = file.filename
-        file_data = file.file.read()
-        with open(
-            "/data/data/pl.sviete.dom/files/home/AIS/www/img/" + file_name, "wb"
-        ) as f:
-            f.write(file_data)
-            f.close()
-
-        hass = request.app["hass"]
-        hass.async_add_job(
-            hass.services.async_call(
-                "homeassistant",
-                "update_entity",
-                {"entity_id": "sensor.ais_gallery_img"},
-            )
-        )
-        hass.async_add_job(
-            hass.services.async_call(
-                "homeassistant",
-                "update_entity",
-                {"entity_id": "sensor.ais_gallery_video"},
-            )
-        )
