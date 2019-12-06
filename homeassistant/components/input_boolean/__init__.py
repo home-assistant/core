@@ -16,6 +16,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
+import homeassistant.helpers.service
 from homeassistant.loader import bind_hass
 
 DOMAIN = "input_boolean"
@@ -56,8 +57,6 @@ async def async_setup(hass, config):
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     entities = await _async_process_config(config)
-    if not entities:
-        return False
 
     async def reload_service_handler(service_call):
         """Remove all input booleans and load new ones from config."""
@@ -68,8 +67,12 @@ async def async_setup(hass, config):
         if new_entities:
             await component.async_add_entities(new_entities)
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=RELOAD_SERVICE_SCHEMA
+    homeassistant.helpers.service.async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_RELOAD,
+        reload_service_handler,
+        schema=RELOAD_SERVICE_SCHEMA,
     )
 
     component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
@@ -78,7 +81,9 @@ async def async_setup(hass, config):
 
     component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
 
-    await component.async_add_entities(entities)
+    if entities:
+        await component.async_add_entities(entities)
+
     return True
 
 
