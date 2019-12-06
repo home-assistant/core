@@ -1,6 +1,8 @@
 """Support for Vanderbilt (formerly Siemens) SPC alarm systems."""
 import logging
 
+from pyspcwebgw.const import AreaMode
+
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
@@ -92,24 +94,20 @@ class SpcAlarm(alarm.AlarmControlPanel):
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
-        from pyspcwebgw.const import AreaMode
 
         await self._api.change_mode(area=self._area, new_mode=AreaMode.UNSET)
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
-        from pyspcwebgw.const import AreaMode
 
         await self._api.change_mode(area=self._area, new_mode=AreaMode.PART_SET_A)
 
     async def async_alarm_arm_night(self, code=None):
         """Send arm home command."""
-        from pyspcwebgw.const import AreaMode
 
         await self._api.change_mode(area=self._area, new_mode=AreaMode.PART_SET_B)
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
-        from pyspcwebgw.const import AreaMode
 
         await self._api.change_mode(area=self._area, new_mode=AreaMode.FULL_SET)
