@@ -269,6 +269,7 @@ async def test_abort_on_send_verification_code_failed(
 async def test_verification_code(hass: HomeAssistantType):
     """Test verification_code step."""
     flow = init_config_flow(hass)
+    await flow.async_step_user({CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD})
 
     result = await flow.async_step_verification_code()
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
