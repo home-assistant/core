@@ -64,4 +64,4 @@ ignored-classes=_CountingAttr
 expected-line-ending-format=LF
 
 [EXCEPTIONS]
-overgeneral-exceptions=Exception,HomeAssistantError
+overgeneral-exceptions=BaseException,Exception,HomeAssistantError
