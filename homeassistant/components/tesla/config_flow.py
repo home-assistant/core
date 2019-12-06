@@ -1,5 +1,4 @@
 """Tesla Config Flow."""
-from collections import OrderedDict
 import logging
 
 import voluptuous as vol
@@ -13,16 +12,17 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import config_validation as cv
+from teslajsonpy import Controller as teslaAPI
+from teslajsonpy import TeslaException
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
-    OrderedDict(
-        [(vol.Required(CONF_USERNAME), str), (vol.Required(CONF_PASSWORD), str)]
-    )
+    dict([(vol.Required(CONF_USERNAME), str), (vol.Required(CONF_PASSWORD), str)])
 )
 
 
@@ -32,7 +32,6 @@ def configured_instances(hass):
     return set(entry.title for entry in hass.config_entries.async_entries(DOMAIN))
 
 
-@config_entries.HANDLERS.register(DOMAIN)
 class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tesla."""
 
@@ -42,8 +41,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the config flow."""
         self.login = None
-        self.config = OrderedDict()
-        self.data_schema = DATA_SCHEMA
+        self.config = {}
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
@@ -55,7 +53,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not user_input:
             return self.async_show_form(
                 step_id="user",
-                data_schema=self.data_schema,
+                data_schema=DATA_SCHEMA,
                 errors={},
                 description_placeholders={},
             )
@@ -63,7 +61,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input[CONF_USERNAME] in configured_instances(self.hass):
             return self.async_show_form(
                 step_id="user",
-                data_schema=self.data_schema,
+                data_schema=DATA_SCHEMA,
                 errors={CONF_USERNAME: "identifier_exists"},
                 description_placeholders={},
             )
@@ -72,21 +70,21 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_input(self.hass, user_input)
-            return self.async_create_entry(title=user_input[CONF_USERNAME], data=info)
         except CannotConnect:
             return self.async_show_form(
                 step_id="user",
-                data_schema=self.data_schema,
+                data_schema=DATA_SCHEMA,
                 errors={"base": "connection_error"},
                 description_placeholders={},
             )
         except InvalidAuth:
             return self.async_show_form(
                 step_id="user",
-                data_schema=self.data_schema,
+                data_schema=DATA_SCHEMA,
                 errors={"base": "invalid_credentials"},
                 description_placeholders={},
             )
+        return self.async_create_entry(title=user_input[CONF_USERNAME], data=info)
 
     @staticmethod
     @callback
@@ -108,7 +106,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         data_schema = vol.Schema(
-            OrderedDict(
+            dict(
                 [
                     (
                         vol.Optional(
@@ -130,11 +128,10 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    from teslajsonpy import Controller as teslaAPI, TeslaException
 
+    config = {}
+    websession = aiohttp_client.async_get_clientsession(hass)
     try:
-        config = {}
-        websession = aiohttp_client.async_get_clientsession(hass)
         controller = teslaAPI(
             websession,
             email=data[CONF_USERNAME],
@@ -144,13 +141,14 @@ async def validate_input(hass: core.HomeAssistant, data):
         (config[CONF_TOKEN], config[CONF_ACCESS_TOKEN]) = await controller.connect(
             test_login=True
         )
-        _LOGGER.debug("Credentials succesfuly connected to the Tesla API.")
-        return config
     except TeslaException as ex:
         if ex.code == 401:
-            _LOGGER.error("Unable to communicate with Tesla API: %s", ex)
+            _LOGGER.error("Invalid credentials: %s", ex)
             raise InvalidAuth()
+        _LOGGER.error("Unable to communicate with Tesla API: %s", ex)
         raise CannotConnect()
+    _LOGGER.debug("Credentials successfully connected to the Tesla API")
+    return config
 
 
 class CannotConnect(exceptions.HomeAssistantError):

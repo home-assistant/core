@@ -14,7 +14,7 @@ from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Tesla sensor platform."""
     pass
 
@@ -22,20 +22,20 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Tesla binary_sensors by config_entry."""
     controller = hass.data[TESLA_DOMAIN][config_entry.entry_id]["controller"]
-    devices = []
+    entities = []
     for device in hass.data[TESLA_DOMAIN][config_entry.entry_id]["devices"]["sensor"]:
         if device.bin_type == 0x4:
-            devices.append(TeslaSensor(device, controller, "inside", config_entry))
-            devices.append(TeslaSensor(device, controller, "outside", config_entry))
+            entities.append(TeslaSensor(device, controller, config_entry, "inside"))
+            entities.append(TeslaSensor(device, controller, config_entry, "outside"))
         elif device.bin_type in [0xA, 0xB, 0x5]:
-            devices.append(TeslaSensor(device, controller))
-    async_add_entities(devices, True)
+            entities.append(TeslaSensor(device, controller, config_entry))
+    async_add_entities(entities, True)
 
 
 class TeslaSensor(TeslaDevice, Entity):
     """Representation of Tesla sensors."""
 
-    def __init__(self, tesla_device, controller, sensor_type=None, config_entry=None):
+    def __init__(self, tesla_device, controller, config_entry, sensor_type=None):
         """Initialize of the sensor."""
         self.current_value = None
         self._unit = None

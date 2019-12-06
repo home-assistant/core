@@ -9,14 +9,14 @@ from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Tesla lock platform."""
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Tesla binary_sensors by config_entry."""
-    devices = [
+    entities = [
         TeslaLock(
             device,
             hass.data[TESLA_DOMAIN][config_entry.entry_id]["controller"],
@@ -24,20 +24,13 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         )
         for device in hass.data[TESLA_DOMAIN][config_entry.entry_id]["devices"]["lock"]
     ]
-    async_add_devices(devices, True)
-
-
-# async def async_unload_entry(hass, entry) -> bool:
-#     """Unload a config entry."""
-#     for device in hass.data[TESLA_DOMAIN]["devices"]["lock"]:
-#         await device.async_remove()
-#     return True
+    async_add_entities(entities, True)
 
 
 class TeslaLock(TeslaDevice, LockDevice):
     """Representation of a Tesla door lock."""
 
-    def __init__(self, tesla_device, controller, config_entry=None):
+    def __init__(self, tesla_device, controller, config_entry):
         """Initialise of the lock."""
         self._state = None
         super().__init__(tesla_device, controller, config_entry)

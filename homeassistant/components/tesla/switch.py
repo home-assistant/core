@@ -9,28 +9,28 @@ from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Tesla switch platform."""
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Tesla binary_sensors by config_entry."""
     controller = hass.data[TESLA_DOMAIN][config_entry.entry_id]["controller"]
-    devices = []
+    entities = []
     for device in hass.data[TESLA_DOMAIN][config_entry.entry_id]["devices"]["switch"]:
         if device.bin_type == 0x8:
-            devices.append(ChargerSwitch(device, controller, config_entry))
-            devices.append(UpdateSwitch(device, controller, config_entry))
+            entities.append(ChargerSwitch(device, controller, config_entry))
+            entities.append(UpdateSwitch(device, controller, config_entry))
         elif device.bin_type == 0x9:
-            devices.append(RangeSwitch(device, controller, config_entry))
-    async_add_devices(devices, True)
+            entities.append(RangeSwitch(device, controller, config_entry))
+    async_add_entities(entities, True)
 
 
 class ChargerSwitch(TeslaDevice, SwitchDevice):
     """Representation of a Tesla charger switch."""
 
-    def __init__(self, tesla_device, controller, config_entry=None):
+    def __init__(self, tesla_device, controller, config_entry):
         """Initialise of the switch."""
         self._state = None
         super().__init__(tesla_device, controller, config_entry)
@@ -60,7 +60,7 @@ class ChargerSwitch(TeslaDevice, SwitchDevice):
 class RangeSwitch(TeslaDevice, SwitchDevice):
     """Representation of a Tesla max range charging switch."""
 
-    def __init__(self, tesla_device, controller, config_entry=None):
+    def __init__(self, tesla_device, controller, config_entry):
         """Initialise the switch."""
         self._state = None
         super().__init__(tesla_device, controller, config_entry)
@@ -90,7 +90,7 @@ class RangeSwitch(TeslaDevice, SwitchDevice):
 class UpdateSwitch(TeslaDevice, SwitchDevice):
     """Representation of a Tesla update switch."""
 
-    def __init__(self, tesla_device, controller, config_entry=None):
+    def __init__(self, tesla_device, controller, config_entry):
         """Initialise the switch."""
         self._state = None
         tesla_device.type = "update switch"

@@ -1,8 +1,6 @@
 """Support for tracking Tesla cars."""
 import logging
 
-from homeassistant.util import slugify
-
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 
@@ -11,9 +9,9 @@ from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Tesla binary_sensors by config_entry."""
-    devices = [
+    entities = [
         TeslaDeviceEntity(
             device,
             hass.data[TESLA_DOMAIN][config_entry.entry_id]["controller"],
@@ -23,23 +21,18 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
             "devices_tracker"
         ]
     ]
-    async_add_devices(devices, True)
+    async_add_entities(entities, True)
 
 
 class TeslaDeviceEntity(TrackerEntity, TeslaDevice):
     """A class representing a Tesla device."""
 
-    def __init__(self, tesla_device, controller, config_entry=None):
+    def __init__(self, tesla_device, controller, config_entry):
         """Initialize the Tesla device scanner."""
         super().__init__(tesla_device, controller, config_entry)
-        self._unique_id = slugify(self.tesla_device.uniq_name)
         self._latitude = None
         self._longitude = None
-        self._attributes = {
-            "trackr_id": self.unique_id,
-            "id": self.unique_id,
-            "name": self.name,
-        }
+        self._attributes = {"trackr_id": self.unique_id}
         self._listener = None
 
     async def async_update(self):
@@ -52,12 +45,8 @@ class TeslaDeviceEntity(TrackerEntity, TeslaDevice):
             self._longitude = location["longitude"]
             self._attributes = {
                 "trackr_id": self.unique_id,
-                "id": self.unique_id,
-                "name": self.name,
-                "gps": (self.latitude, self.longitude),
                 "heading": location["heading"],
                 "speed": location["speed"],
-                "source_type": self.source_type,
             }
 
     @property
@@ -72,7 +61,7 @@ class TeslaDeviceEntity(TrackerEntity, TeslaDevice):
 
     @property
     def should_poll(self):
-        """No polling needed."""
+        """Return whether polling is needed."""
         return True
 
     @property
