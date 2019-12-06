@@ -2,27 +2,26 @@
 import logging
 from typing import List
 
+from heatmiserV3 import connection, heatmiser
 import voluptuous as vol
 
-from heatmiserV3 import heatmiser, connection
 from homeassistant.components.climate import (
-    ClimateDevice,
-    PLATFORM_SCHEMA,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
+    PLATFORM_SCHEMA,
+    ClimateDevice,
 )
 from homeassistant.components.climate.const import SUPPORT_TARGET_TEMPERATURE
 from homeassistant.const import (
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
     ATTR_TEMPERATURE,
     CONF_HOST,
-    CONF_PORT,
     CONF_ID,
     CONF_NAME,
+    CONF_PORT,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
 )
 import homeassistant.helpers.config_validation as cv
-
 
 _LOGGER = logging.getLogger(__name__)
 
