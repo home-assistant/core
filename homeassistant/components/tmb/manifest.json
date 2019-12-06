@@ -3,7 +3,7 @@
   "name": "Transports Metropolitans de Barcelona",
   "documentation": "https://www.home-assistant.io/components/tmb",
   "requirements": [
-    "tmb==0.0.3"
+    "tmb==0.0.4"
   ],
   "dependencies": [],
   "codeowners": [

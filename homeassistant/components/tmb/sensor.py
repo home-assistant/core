@@ -1,14 +1,19 @@
 """Support for TMB (Transports Metropolitans de Barcelona) Barcelona public transport."""
 from datetime import timedelta
+import logging
+import requests
 
 from tmb import IBus
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
+from homeassistant.exceptions import Unauthorized
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+
+_LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Data provided by Transport Metropolitans de Barcelona"
 
@@ -110,4 +115,10 @@ class TMBSensor(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the next bus information."""
-        self._state = self._ibus_client.get_stop_forecast(self._stop, self._line)
+        try:
+            self._state = self._ibus_client.get_stop_forecast(self._stop, self._line)
+        except requests.HTTPError:
+            _LOGGER.exception(
+                "Unable to fetch data from TMB API. Please check your API keys are valid."
+            )
+            raise Unauthorized()
