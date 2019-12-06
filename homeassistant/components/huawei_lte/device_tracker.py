@@ -116,6 +116,10 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
     _name: str = attr.ib(init=False, default="device")
     _device_state_attributes: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
+    def __attrs_post_init__(self):
+        """Initialize internal state."""
+        self._device_state_attributes["mac_address"] = self.mac
+
     @property
     def _entity_name(self) -> str:
         return self._name
