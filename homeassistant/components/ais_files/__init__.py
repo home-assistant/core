@@ -49,12 +49,7 @@ async def _async_refresh_files(hass):
     # refresh sensor after file was added or deleted
     hass.async_add_job(
         hass.services.async_call(
-            "homeassistant", "update_entity", {"entity_id": "sensor.ais_gallery_img"},
-        )
-    )
-    hass.async_add_job(
-        hass.services.async_call(
-            "homeassistant", "update_entity", {"entity_id": "sensor.ais_gallery_video"},
+            "homeassistant", "update_entity", {"entity_id": "sensor.ais_gallery_img"}
         )
     )
 

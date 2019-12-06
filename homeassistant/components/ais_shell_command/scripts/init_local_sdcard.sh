@@ -16,7 +16,7 @@ if [ ! -e "/sdcard/dom" ] ; then
     mkdir -p /sdcard/dom
 fi
 if [ ! -e "/sdcard/dom/Książki" ] ; then
-    mkdir -p /sdcard/dom/Książk
+    mkdir -p /sdcard/dom/Książki
 fi
 if [ ! -e "/sdcard/dom/Muzyka" ] ; then
     mkdir -p /sdcard/dom/Muzyka
@@ -25,11 +25,9 @@ if [ ! -e "/sdcard/dom/Hasła" ] ; then
     mkdir -p /sdcard/dom/Hasła
 fi
 if [ ! -e "/data/data/pl.sviete.dom/files/home/AIS/www/img" ] ; then
-    mkdir -p /data/data/pl.sviete.dom/files/home/AIS/www/video
+    mkdir -p /data/data/pl.sviete.dom/files/home/AIS/www/img
 fi
-if [ ! -e "/data/data/pl.sviete.dom/files/home/AIS/www/img" ] ; then
-    mkdir -p /data/data/pl.sviete.dom/files/home/AIS/www/video
-fi
+
 
 
 rm -rf /sdcard/dom/informacja.txt
