@@ -1,8 +1,8 @@
 """Support for Modbus Register sensors."""
 import logging
 import struct
-
 from typing import Any, Union
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
