@@ -26,7 +26,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def _get_alarm_state(area):
     """Get the alarm state."""
-    from pyspcwebgw.const import AreaMode
 
     if area.verified_alarm:
         return STATE_ALARM_TRIGGERED
