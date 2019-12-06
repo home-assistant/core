@@ -29,17 +29,6 @@ from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.util import get_local_ip
 from homeassistant.util.decorator import Registry
 
-from . import (  # noqa: F401 pylint: disable=unused-import
-    type_covers,
-    type_fans,
-    type_lights,
-    type_locks,
-    type_media_players,
-    type_security_systems,
-    type_sensors,
-    type_switches,
-    type_thermostats,
-)
 from .accessories import HomeBridge, HomeDriver
 from .const import (
     BRIDGE_NAME,
@@ -371,6 +360,18 @@ class HomeKit:
         if self.status != STATUS_READY:
             return
         self.status = STATUS_WAIT
+
+        from . import (  # noqa: F401 pylint: disable=unused-import, import-outside-toplevel
+            type_covers,
+            type_fans,
+            type_lights,
+            type_locks,
+            type_media_players,
+            type_security_systems,
+            type_sensors,
+            type_switches,
+            type_thermostats,
+        )
 
         for state in self.hass.states.all():
             self.add_bridge_accessory(state)
