@@ -4,5 +4,5 @@
     "documentation": "https://www.home-assistant.io/integrations/binary_max_sensor",
     "requirements": [],
     "dependencies": [],
-    "codeowners": ["@gjbadros"],
+    "codeowners": ["@gjbadros"]
 }
