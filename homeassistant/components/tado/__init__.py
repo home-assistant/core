@@ -7,6 +7,7 @@ from PyTado.interface import Tado
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -50,7 +51,7 @@ def setup(hass, config):
         tado.setDebugging(True)
     except (RuntimeError, urllib.error.HTTPError):
         _LOGGER.error("Unable to connect to Tado with username and password")
-        return False
+        raise PlatformNotReady
 
     hass.data[DOMAIN] = TadoConnector(tado, hass)
 
