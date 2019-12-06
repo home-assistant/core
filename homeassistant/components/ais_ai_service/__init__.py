@@ -1017,7 +1017,7 @@ def say_curr_entity(hass):
         state = hass.states.get("input_boolean.ais_auto_update").state
         info_value = (
             "Automatyczne aktualizacje wyłączone. Aktualizujesz system samodzielnie w "
-            "dogodnym dla Ciebie czasie. Naciśnąć OK by włączyć aktualizacje automatyczne."
+            "dogodnym dla Ciebie czasie. Naciśnij OK by włączyć aktualizacje automatyczne."
         )
         if state == "on":
             info_value = (
