@@ -555,14 +555,6 @@ class AndroidTVDevice(ADBDevice):
 class FireTVDevice(ADBDevice):
     """Representation of a Fire TV device."""
 
-    def __init__(
-        self, aftv, name, apps, get_sources, turn_on_command, turn_off_command
-    ):
-        """Initialize the Fire TV device."""
-        super().__init__(
-            aftv, name, apps, get_sources, turn_on_command, turn_off_command
-        )
-
     @adb_decorator(override_available=True)
     def update(self):
         """Update the device state and, if necessary, re-connect."""
