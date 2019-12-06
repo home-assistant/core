@@ -2,7 +2,7 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
 MINOR_VERSION = 102
-PATCH_VERSION = "3b1"
+PATCH_VERSION = "3b2"
 __short_version__ = "{}.{}".format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = "{}.{}".format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 6, 1)
@@ -10,7 +10,7 @@ REQUIRED_PYTHON_VER = (3, 6, 1)
 # Format for platform files
 PLATFORM_FORMAT = "{platform}.{domain}"
 
-# Can be used to specify a catch all when registering state or event listeners.
+# Can be used to specify a catch all when registering state or event listeners.2
 MATCH_ALL = "*"
 
 # Entity target all constant
