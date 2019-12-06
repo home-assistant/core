@@ -3,6 +3,9 @@ import logging
 
 import voluptuous as vol
 
+from teslajsonpy import Controller as teslaAPI
+from teslajsonpy import TeslaException
+
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -14,8 +17,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers import config_validation as cv
-from teslajsonpy import Controller as teslaAPI
-from teslajsonpy import TeslaException
 
 from .const import DOMAIN
 
