@@ -24,9 +24,9 @@ def uv_index_response():
 @pytest.fixture
 def mock_pyopenuv(uv_index_response):
     """Mock the pyopenuv library."""
-    with patch("homeassistant.components.openuv.config_flow.Client") as mock_pyopenuv_:
-        mock_pyopenuv_().uv_index.return_value = uv_index_response
-        yield mock_pyopenuv_
+    with patch("homeassistant.components.openuv.config_flow.Client") as MockClient:
+        MockClient().uv_index.return_value = uv_index_response
+        yield MockClient
 
 
 async def test_duplicate_error(hass):
