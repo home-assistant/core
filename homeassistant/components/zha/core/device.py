@@ -11,8 +11,8 @@ import logging
 import time
 
 import zigpy.exceptions
-import zigpy.quirks
 from zigpy.profiles import zha, zll
+import zigpy.quirks
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
