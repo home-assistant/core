@@ -2,7 +2,7 @@
 
 import logging
 import re
-from typing import Any, Dict, Set
+from typing import Any, Dict, Optional, Set
 
 import attr
 from stringcase import snakecase
@@ -113,7 +113,7 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
     mac: str = attr.ib()
 
     _is_connected: bool = attr.ib(init=False, default=False)
-    _name: str = attr.ib(init=False, default="device")
+    _hostname: Optional[str] = attr.ib(init=False, default=None)
     _device_state_attributes: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def __attrs_post_init__(self):
@@ -122,7 +122,7 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
 
     @property
     def _entity_name(self) -> str:
-        return self._name
+        return self._hostname or self.mac
 
     @property
     def _device_unique_id(self) -> str:
@@ -149,8 +149,7 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
         host = next((x for x in hosts if x.get("MacAddress") == self.mac), None)
         self._is_connected = host is not None
         if self._is_connected:
-            # HostName may be present with explicit None value
-            self._name = host.get("HostName") or self.mac
+            self._hostname = host.get("HostName")
             self._device_state_attributes = {
                 _better_snakecase(k): v for k, v in host.items() if k != "HostName"
             }
