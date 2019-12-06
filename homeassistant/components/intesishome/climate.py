@@ -1,8 +1,8 @@
 """Support for IntesisHome and airconwithme Smart AC Controllers."""
-from datetime import timedelta
 import logging
+from random import randrange
 
-from pyintesishome import IntesisHome
+from pyintesishome import IHAuthenticationError, IHConnectionError, IntesisHome
 import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
@@ -29,8 +29,10 @@ from homeassistant.const import (
     CONF_USERNAME,
     TEMP_CELSIUS,
 )
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_call_later
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,14 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-# Return cached results if last scan time was less than this value.
-# If a persistent connection is established for the controller, changes to
-# values are in realtime.
-SCAN_INTERVAL = timedelta(seconds=300)
-
-IH_SWING_WIDGET = 42
-
-MAP_OPERATION_MODE = {
+MAP_IH_TO_HVAC_MODE = {
     "auto": HVAC_MODE_HEAT_COOL,
     "cool": HVAC_MODE_COOL,
     "dry": HVAC_MODE_DRY,
@@ -62,6 +57,8 @@ MAP_OPERATION_MODE = {
     "heat": HVAC_MODE_HEAT,
     "off": HVAC_MODE_OFF,
 }
+
+MAP_HVAC_MODE_TO_IH = {v: k for k, v in MAP_IH_TO_HVAC_MODE.items()}
 
 MAP_STATE_ICONS = {
     HVAC_MODE_COOL: "mdi:snowflake",
@@ -94,7 +91,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         websession=async_get_clientsession(hass),
         device_type=device_type,
     )
-    await controller.connect()
+    try:
+        await controller.poll_status()
+    except IHAuthenticationError:
+        _LOGGER.error("Invalid username or password")
+        return
+    except IHConnectionError:
+        _LOGGER.error("Error connecting to the %s server", device_type)
+        raise PlatformNotReady
 
     ih_devices = controller.get_devices()
     if ih_devices:
@@ -124,8 +128,7 @@ class IntesisAC(ClimateDevice):
         self._ih_device = ih_device
         self._device_name = ih_device.get("name")
         self._device_type = controller.device_type
-        self._has_swing_control = IH_SWING_WIDGET in ih_device.get("widgets")
-        self._connected = controller.is_connected
+        self._connected = None
         self._setpoint_step = 1
         self._current_temp = None
         self._max_temp = None
@@ -141,18 +144,28 @@ class IntesisAC(ClimateDevice):
         self._power = False
         self._fan_speed = None
         self._hvac_mode = None
-        self._connection_retries = 0
         self._fan_modes = controller.get_fan_speed_list(ih_device_id)
         self._support = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
+        self._swing_list = [SWING_OFF]
 
-        if self._has_swing_control:
+        if ih_device.get("config_vertical_vanes"):
+            self._swing_list.append(SWING_VERTICAL)
+        if ih_device.get("config_horizontal_vanes"):
+            self._swing_list.append(SWING_HORIZONTAL)
+        if len(self._swing_list) == 3:
+            self._swing_list.append(SWING_BOTH)
             self._support |= SUPPORT_SWING_MODE
-            self._swing_list = [SWING_OFF, SWING_BOTH, SWING_VERTICAL, SWING_HORIZONTAL]
+        elif len(self._swing_list) == 2:
+            self._support |= SUPPORT_SWING_MODE
 
     async def async_added_to_hass(self):
         """Subscribe to event updates."""
-        await self._controller.add_update_callback(self.async_update_callback)
         _LOGGER.debug("Added climate device with state: %s", repr(self._ih_device))
+        await self._controller.add_update_callback(self.async_update_callback)
+        try:
+            await self._controller.connect()
+        except IHConnectionError as e:
+            _LOGGER.error("Exception connecting to IntesisHome:  %s", repr(e))
 
     @property
     def name(self):
@@ -168,7 +181,7 @@ class IntesisAC(ClimateDevice):
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         attrs = {}
-        if self._has_swing_control:
+        if len(self._swing_list) > 1:
             attrs["vertical_vane"] = self._vvane
             attrs["horizontal_vane"] = self._hvane
         if self._outdoor_temp:
@@ -195,8 +208,8 @@ class IntesisAC(ClimateDevice):
 
         if temperature:
             _LOGGER.debug("Setting %s to %s degrees", self._device_type, temperature)
-            self._target_temp = temperature
             await self._controller.set_temperature(self._device_id, temperature)
+            self._target_temp = temperature
 
         # Write updated temperature to HA state to avoid flapping (API confirmation is slow)
         self.async_write_ha_state()
@@ -217,16 +230,7 @@ class IntesisAC(ClimateDevice):
             await self._controller.set_power_on(self._device_id)
 
         # Set the mode
-        if hvac_mode == HVAC_MODE_HEAT:
-            await self._controller.set_mode_heat(self._device_id)
-        elif hvac_mode == HVAC_MODE_COOL:
-            await self._controller.set_mode_cool(self._device_id)
-        elif hvac_mode == HVAC_MODE_HEAT_COOL:
-            await self._controller.set_mode_auto(self._device_id)
-        elif hvac_mode == HVAC_MODE_FAN_ONLY:
-            await self._controller.set_mode_fan(self._device_id)
-        elif hvac_mode == HVAC_MODE_DRY:
-            await self._controller.set_mode_dry(self._device_id)
+        await self._controller.set_mode(self._device_id, MAP_HVAC_MODE_TO_IH[hvac_mode])
 
         # Send the temperature again in case changing modes has changed it
         if self._target_temp:
@@ -258,27 +262,12 @@ class IntesisAC(ClimateDevice):
         elif swing_mode == SWING_VERTICAL:
             await self._controller.set_vertical_vane(self._device_id, "swing")
             await self._controller.set_horizontal_vane(self._device_id, "auto/stop")
+        self._swing = swing_mode
 
     async def async_update(self):
         """Copy values from controller dictionary to climate device."""
-        if self._controller.is_disconnected:
-            if self._connected:
-                self._connected = False
-                _LOGGER.error(
-                    "Connection to %s API was lost. Attempting to reconnect...",
-                    self._device_type,
-                )
-            await self._controller.connect()
-            self._connection_retries += 1
-            return
-
-        # Track connection state
-        if not self._connected:
-            self._connected = True
-            _LOGGER.debug("Restored connection to %s API.", self._device_type)
-            self._connection_retries = 0
-
         # Update values from controller's device dictionary
+        self._connected = self._controller.is_connected
         self._current_temp = self._controller.get_temperature(self._device_id)
         self._fan_speed = self._controller.get_fan_speed(self._device_id)
         self._power = self._controller.is_on(self._device_id)
@@ -291,22 +280,21 @@ class IntesisAC(ClimateDevice):
 
         # Operation mode
         mode = self._controller.get_mode(self._device_id)
-        self._hvac_mode = MAP_OPERATION_MODE.get(mode)
+        self._hvac_mode = MAP_IH_TO_HVAC_MODE.get(mode)
 
         # Swing mode
         # Climate module only supports one swing setting.
-        if self._has_swing_control:
-            self._vvane = self._controller.get_vertical_swing(self._device_id)
-            self._hvane = self._controller.get_horizontal_swing(self._device_id)
+        self._vvane = self._controller.get_vertical_swing(self._device_id)
+        self._hvane = self._controller.get_horizontal_swing(self._device_id)
 
-            if self._vvane == "swing" and self._hvane == "swing":
-                self._swing = SWING_BOTH
-            elif self._vvane == "swing":
-                self._swing = SWING_VERTICAL
-            elif self._hvane == "swing":
-                self._swing = SWING_HORIZONTAL
-            else:
-                self._swing = SWING_OFF
+        if self._vvane == "swing" and self._hvane == "swing":
+            self._swing = SWING_BOTH
+        elif self._vvane == "swing":
+            self._swing = SWING_VERTICAL
+        elif self._hvane == "swing":
+            self._swing = SWING_HORIZONTAL
+        else:
+            self._swing = SWING_OFF
 
     async def async_will_remove_from_hass(self):
         """Shutdown the controller when the device is being removed."""
@@ -322,13 +310,34 @@ class IntesisAC(ClimateDevice):
 
     async def async_update_callback(self, device_id=None):
         """Let HA know there has been an update from the controller."""
-        if device_id and self._device_id == device_id:
+        # Track changes in connection state
+        if not self._controller.is_connected and self._connected:
+            # Connection has dropped
+            self._connected = False
+            reconnect_minutes = 1 + randrange(10)
+            _LOGGER.error(
+                "Connection to %s API was lost. Reconnecting in %i minutes",
+                self._device_type,
+                reconnect_minutes,
+            )
+            # Schedule reconnection
+            async_call_later(
+                self.hass, reconnect_minutes * 60, self._controller.connect()
+            )
+
+        if self._controller.is_connected and not self._connected:
+            # Connection has been restored
+            self._connected = True
+            _LOGGER.debug("Connection to %s API was restored", self._device_type)
+
+        if not device_id or self._device_id == device_id:
+            # Update all devices if no device_id was specified
             _LOGGER.debug(
                 "%s API sent a status update for device %s",
                 self._device_type,
                 device_id,
             )
-            await self.async_update_ha_state(True)
+            self.async_schedule_update_ha_state(True)
 
     @property
     def min_temp(self):
@@ -373,7 +382,7 @@ class IntesisAC(ClimateDevice):
     @property
     def available(self) -> bool:
         """If the device hasn't been able to connect, mark as unavailable."""
-        return self._connected
+        return self._connected or self._connected is None
 
     @property
     def current_temperature(self):
