@@ -778,7 +778,7 @@ liffylights==0.9.4
 lightify==1.0.7.2
 
 # homeassistant.components.lightwave
-lightwave==0.15
+lightwave==0.17
 
 # homeassistant.components.limitlessled
 limitlessled==1.1.3
