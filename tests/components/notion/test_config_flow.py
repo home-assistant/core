@@ -20,7 +20,7 @@ def mock_client_coro():
 def mock_aionotion(mock_client_coro):
     """Mock the aionotion library."""
     with patch("homeassistant.components.notion.config_flow.async_get_client") as mock_:
-        mock_.async_get_client.return_value = mock_client_coro
+        mock_.return_value = mock_client_coro
         yield mock_
 
 
