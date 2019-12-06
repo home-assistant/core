@@ -2,15 +2,13 @@
 import asyncio
 import logging.handlers
 from timeit import default_timer as timer
-
 from types import ModuleType
-from typing import Awaitable, Callable, Optional, Dict, List
+from typing import Any, Awaitable, Callable, Dict, List, Optional
 
-from homeassistant import requirements, core, loader, config as conf_util
+from homeassistant import config as conf_util, core, loader, requirements
 from homeassistant.config import async_notify_setup_error
 from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import ComponentNotReady, HomeAssistantError
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,7 +85,7 @@ async def _async_process_dependencies(
 
 
 async def _async_setup_component(
-    hass: core.HomeAssistant, domain: str, config: Dict, tries=0
+    hass: core.HomeAssistant, domain: str, config: Dict, tries: int = 0
 ) -> bool:
     """Set up a component for Home Assistant.
 
@@ -185,7 +183,7 @@ async def _async_setup_component(
             "Component %s not ready yet. Retrying in %d seconds.", domain, wait_time,
         )
 
-        async def setup_again(now):
+        async def setup_again(now: Any) -> None:
             """Run setup again."""
             await _async_setup_component(hass, domain, config, tries)
 
