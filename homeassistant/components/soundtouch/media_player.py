@@ -2,6 +2,7 @@
 import logging
 import re
 
+from libsoundtouch import soundtouch_device
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
@@ -184,7 +185,6 @@ class SoundTouchDevice(MediaPlayerDevice):
 
     def __init__(self, name, config):
         """Create Soundtouch Entity."""
-        from libsoundtouch import soundtouch_device
 
         self._device = soundtouch_device(config["host"], config["port"])
         if name is None:
