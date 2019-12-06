@@ -10,7 +10,7 @@ import pytest
 
 import homeassistant.core as ha
 from homeassistant.const import ENTITY_MATCH_ALL
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import ComponentNotReady, PlatformNotReady
 from homeassistant.components import group
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
@@ -249,6 +249,43 @@ async def test_platform_not_ready(hass):
         await hass.async_block_till_done()
         assert len(platform1_setup.mock_calls) == 3
         assert "test_domain.mod1" in hass.config.components
+
+
+async def test_component_not_ready(hass):
+    """Test that we retry when component not ready."""
+    component1_setup = Mock(side_effect=[ComponentNotReady, ComponentNotReady, True])
+    mock_integration(hass, MockModule(domain=DOMAIN, setup=component1_setup))
+
+    await async_setup_component(hass, DOMAIN, {})
+
+    assert len(component1_setup.mock_calls) == 1
+    assert "test_domain" not in hass.config.components
+
+    utcnow = dt_util.utcnow()
+
+    with patch("homeassistant.util.dt.utcnow", return_value=utcnow):
+        # Should not trigger attempt 2
+        async_fire_time_changed(hass, utcnow + timedelta(seconds=29))
+        await hass.async_block_till_done()
+        assert len(component1_setup.mock_calls) == 1
+
+        # Should trigger attempt 2
+        async_fire_time_changed(hass, utcnow + timedelta(seconds=30))
+        await hass.async_block_till_done()
+        assert len(component1_setup.mock_calls) == 2
+        assert "test_domain" not in hass.config.components
+
+        # This should not trigger attempt 3
+        async_fire_time_changed(hass, utcnow + timedelta(seconds=59))
+        await hass.async_block_till_done()
+        assert len(component1_setup.mock_calls) == 2
+        assert "test_domain" not in hass.config.components
+
+        # Trigger attempt 3, which succeeds
+        async_fire_time_changed(hass, utcnow + timedelta(seconds=60))
+        await hass.async_block_till_done()
+        assert len(component1_setup.mock_calls) == 3
+        assert "test_domain" in hass.config.components
 
 
 async def test_extract_from_service_fails_if_no_entity_id(hass):

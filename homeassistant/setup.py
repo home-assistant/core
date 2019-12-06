@@ -9,7 +9,7 @@ from typing import Awaitable, Callable, Optional, Dict, List
 from homeassistant import requirements, core, loader, config as conf_util
 from homeassistant.config import async_notify_setup_error
 from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ComponentNotReady, HomeAssistantError
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,7 +87,7 @@ async def _async_process_dependencies(
 
 
 async def _async_setup_component(
-    hass: core.HomeAssistant, domain: str, config: Dict
+    hass: core.HomeAssistant, domain: str, config: Dict, tries=0
 ) -> bool:
     """Set up a component for Home Assistant.
 
@@ -178,6 +178,19 @@ async def _async_setup_component(
         else:
             log_error("No setup function defined.")
             return False
+    except ComponentNotReady:
+        tries += 1
+        wait_time = min(tries, 6) * 30
+        _LOGGER.warning(
+            "Component %s not ready yet. Retrying in %d seconds.", domain, wait_time,
+        )
+
+        async def setup_again(now):
+            """Run setup again."""
+            await _async_setup_component(hass, domain, config, tries)
+
+        hass.helpers.event.async_call_later(wait_time, setup_again)
+        return False
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Error during setup of component %s", domain)
         async_notify_setup_error(hass, domain, True)
