@@ -10,7 +10,7 @@ from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON, STATE_
 from tests.common import get_test_home_assistant
 
 
-@mock.patch("influxdb.InfluxDBClient")
+@mock.patch("homeassistant.components.influxdb.InfluxDBClient")
 @mock.patch(
     "homeassistant.components.influxdb.InfluxThread.batch_timeout",
     mock.Mock(return_value=0),
