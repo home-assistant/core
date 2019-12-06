@@ -101,9 +101,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             return
 
         remote_config = {"id": "ha.component.soundtouch", "host": host, "port": port}
-        soundtouch_device = SoundTouchDevice(None, remote_config)
-        hass.data[DATA_SOUNDTOUCH].append(soundtouch_device)
-        add_entities([soundtouch_device])
+        bose_soundtouch_device = SoundTouchDevice(None, remote_config)
+        hass.data[DATA_SOUNDTOUCH].append(bose_soundtouch_device)
+        add_entities([bose_soundtouch_device])
     else:
         name = config.get(CONF_NAME)
         remote_config = {
@@ -111,9 +111,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             "port": config.get(CONF_PORT),
             "host": config.get(CONF_HOST),
         }
-        soundtouch_device = SoundTouchDevice(name, remote_config)
-        hass.data[DATA_SOUNDTOUCH].append(soundtouch_device)
-        add_entities([soundtouch_device])
+        bose_soundtouch_device = SoundTouchDevice(name, remote_config)
+        hass.data[DATA_SOUNDTOUCH].append(bose_soundtouch_device)
+        add_entities([bose_soundtouch_device])
 
     def service_handle(service):
         """Handle the applying of a service."""
