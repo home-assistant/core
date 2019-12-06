@@ -3,8 +3,8 @@
   "name": "Androidtv",
   "documentation": "https://www.home-assistant.io/integrations/androidtv",
   "requirements": [
-    "adb-shell==0.0.8",
-    "androidtv==0.0.34",
+    "adb-shell==0.0.9",
+    "androidtv==0.0.35",
     "pure-python-adb==0.2.2.dev0"
   ],
   "dependencies": [],
