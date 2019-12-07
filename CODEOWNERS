@@ -85,6 +85,7 @@ homeassistant/components/ecobee/* @marthoc
 homeassistant/components/ecovacs/* @OverloadUT
 homeassistant/components/egardia/* @jeroenterheerdt
 homeassistant/components/eight_sleep/* @mezz64
+homeassistant/components/elgato/* @frenck
 homeassistant/components/elv/* @majuss
 homeassistant/components/emby/* @mezz64
 homeassistant/components/emulated_hue/* @NobleKangaroo
