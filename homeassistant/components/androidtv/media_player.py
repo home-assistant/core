@@ -474,7 +474,6 @@ class AndroidTVDevice(ADBDevice):
             aftv, name, apps, get_sources, turn_on_command, turn_off_command
         )
 
-        self._device = None
         self._is_volume_muted = None
         self._volume_level = None
 
@@ -500,7 +499,7 @@ class AndroidTVDevice(ADBDevice):
             state,
             self._current_app,
             running_apps,
-            self._device,
+            _,
             self._is_volume_muted,
             self._volume_level,
         ) = self.aftv.update(self._get_sources)
