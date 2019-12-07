@@ -18,6 +18,7 @@ async def test_create_schedule(hass):
     start_datetime = dt_util.utcnow() + timedelta(hours=1)
     end_datetime = start_datetime + timedelta(days=1)
 
+    # 1. A schedule with a start datetime only:
     schedule = Schedule(hass, "scene.test_scene_1", start_datetime)
     assert not schedule.active
     assert not schedule.expired
@@ -31,6 +32,7 @@ async def test_create_schedule(hass):
         CONF_RECURRENCE: None,
     }
 
+    # 2. A schedule with a start datetime and an end datetime:
     schedule = Schedule(
         hass, "scene.test_scene_2", start_datetime, end_datetime=end_datetime,
     )
@@ -47,6 +49,7 @@ async def test_create_schedule(hass):
         CONF_RECURRENCE: None,
     }
 
+    # 2. A schedule with a start datetime, an end datetime, and a recurrence:
     start_datetime_rfc5545 = (
         start_datetime.isoformat().split(".")[0].replace("-", "").replace(":", "")
     )

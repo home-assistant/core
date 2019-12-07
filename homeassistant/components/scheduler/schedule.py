@@ -154,7 +154,7 @@ class Schedule:
             return True
 
         # Lastly, look at the recurrence just before right now and see
-        # if we're still inside it:
+        # if we're still inside it; if we are, we're active:
         last_end_dt = last_start_dt + self.instance_duration
         return last_start_dt <= now <= last_end_dt
 
@@ -162,9 +162,14 @@ class Schedule:
     def expired(self) -> bool:
         """Return whether the schedule has expired."""
         now = dt_util.utcnow()
+
+        # If a recurrence exists and there's at least one instance of it in the future,
+        # we're not expired:
         if self.recurrence and self.recurrence.after(now, inc=True):
             return False
 
+        # If either the initial start datetime or the end datetime (if it exists) are in
+        # in the future, we're not expired:
         if self.start_datetime >= now or (
             self.end_datetime and self.end_datetime >= now
         ):
