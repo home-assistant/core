@@ -1,0 +1,16 @@
+{
+  "domain": "google_stackdriver",
+  "name": "Google Stackdriver",
+  "config_flow": false,
+  "documentation": "https://www.home-assistant.io/integrations/google_stackdriver",
+  "requirements": [
+    "google-cloud-logging==1.14.0"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@frog32"
+  ]
+}
