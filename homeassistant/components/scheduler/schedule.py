@@ -194,11 +194,6 @@ class Schedule:
         """Return whether the schedule is enabled."""
         return self._is_on
 
-    async def _async_revert(self, instance: ScheduleInstance) -> None:
-        """Revert the instance."""
-        await instance.async_revert()
-        await self._async_schedule()
-
     @callback
     def _async_schedule(self) -> None:
         """Schedule the next instance."""
@@ -219,11 +214,11 @@ class Schedule:
 
         async def start(self, executed_at: datetime) -> None:
             """Trigger."""
-            await self._async_trigger(instance)
+            await self.async_trigger(instance)
 
         async def stop(self, executed_at: datetime) -> None:
             """Revert."""
-            await self._async_trigger(instance)
+            await self.async_revert(instance)
 
         self._async_trigger_listener = async_track_point_in_time(
             self._hass, start, start_dt
@@ -233,12 +228,6 @@ class Schedule:
             self._async_trigger_listener = async_track_point_in_time(
                 self._hass, stop, end_dt
             )
-
-    async def _async_trigger(self, instance: ScheduleInstance) -> None:
-        """Trigger the instance."""
-        await instance.async_trigger()
-        if not self.instance_duration:
-            await self._async_schedule()
 
     @callback
     def _get_next_instance_datetimes(
@@ -283,6 +272,17 @@ class Schedule:
             the_dict[CONF_RECURRENCE] = None
 
         return the_dict
+
+    async def async_revert(self, instance: ScheduleInstance) -> None:
+        """Revert the instance."""
+        await instance.async_revert()
+        await self._async_schedule()
+
+    async def async_trigger(self, instance: ScheduleInstance) -> None:
+        """Trigger the instance."""
+        await instance.async_trigger()
+        if not self.instance_duration:
+            await self._async_schedule()
 
     @callback
     def async_turn_off(self) -> None:
