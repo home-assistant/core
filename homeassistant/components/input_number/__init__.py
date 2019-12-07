@@ -88,9 +88,6 @@ async def async_setup(hass, config):
 
     entities = await _async_process_config(config)
 
-    if not entities:
-        return False
-
     async def reload_service_handler(service_call):
         """Remove all entities and load new ones from config."""
         conf = await component.async_prepare_reload()
@@ -118,7 +115,8 @@ async def async_setup(hass, config):
 
     component.async_register_entity_service(SERVICE_DECREMENT, {}, "async_decrement")
 
-    await component.async_add_entities(entities)
+    if entities:
+        await component.async_add_entities(entities)
     return True
 
 
