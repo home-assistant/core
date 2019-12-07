@@ -10,6 +10,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, generate_entity_id
+from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(hass: HomeAssistantType, config: ConfigType, add_entities, discovery_info=None):
     """Set up the Last.fm sensor platform."""
     api_key = config[CONF_API_KEY]
     users = config.get(CONF_USERS)
@@ -54,7 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class LastfmSensor(Entity):
     """A class for the Last.fm account."""
 
-    def __init__(self, hass, user, lastfm_api):
+    def __init__(self, hass: HomeAssistantType, user, lastfm_api):
         """Initialize the sensor."""
         self._user = lastfm_api.get_user(user)
         self._name = user
