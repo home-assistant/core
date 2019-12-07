@@ -18,7 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Elgato Key Light components."""
-    hass.data[DOMAIN] = {}
     return True
 
 
@@ -33,6 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ElgatoConnectionError as exception:
         raise ConfigEntryNotReady from exception
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {DATA_ELGATO_CLIENT: elgato}
 
     hass.async_create_task(
