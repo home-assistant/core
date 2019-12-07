@@ -71,6 +71,12 @@ async def async_setup_freebox(hass, config, host, port):
     else:
         hass.data[DATA_FREEBOX] = fbx
 
+        async def async_freebox_reboot(call):
+            """Handle reboot service call."""
+            await fbx.system.reboot()
+
+        hass.services.async_register(DOMAIN, "reboot", async_freebox_reboot)
+
         hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
         hass.async_create_task(
             async_load_platform(hass, "device_tracker", DOMAIN, {}, config)
