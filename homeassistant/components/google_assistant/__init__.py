@@ -27,11 +27,10 @@ from .const import (
     DEFAULT_EXPOSE_BY_DEFAULT,
     DEFAULT_EXPOSED_DOMAINS,
     DOMAIN,
-    EVENT_COMMAND_RECEIVED,
-    EVENT_SYNC_RECEIVED,
     SERVICE_REQUEST_SYNC,
 )
-from .const import EVENT_QUERY_RECEIVED  # noqa: F401; noqa: F401
+from .const import EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED  # noqa: F401
+from .const import EVENT_QUERY_RECEIVED  # noqa: F401
 from .http import GoogleAssistantView, GoogleConfig
 
 _LOGGER = logging.getLogger(__name__)
