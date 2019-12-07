@@ -165,10 +165,20 @@ class Router:
                 )
                 self.subscriptions.pop(key)
             except ResponseErrorLoginRequiredException:
-                _LOGGER.info(
-                    "%s requires authorization, excluding from future updates", key
-                )
-                self.subscriptions.pop(key)
+                if isinstance(self.connection, AuthorizedConnection):
+                    _LOGGER.debug("Trying to authorize again...")
+                    if self.connection.enforce_authorized_connection():
+                        _LOGGER.debug(
+                            "...success, %s will be updated by a future periodic run",
+                            key,
+                        )
+                    else:
+                        _LOGGER.debug("...failed")
+                else:
+                    _LOGGER.info(
+                        "%s requires authorization, excluding from future updates", key
+                    )
+                    self.subscriptions.pop(key)
             finally:
                 _LOGGER.debug("%s=%s", key, self.data.get(key))
 
