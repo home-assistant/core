@@ -430,7 +430,7 @@ async def test_androidtv_select_source_stop_app_id(hass):
     )
 
 
-async def test_andoirdtv_select_source_stop_app_name(hass):
+async def test_androidtv_select_source_stop_app_name(hass):
     """Test that an app can be stopped using its friendly name."""
     assert await _test_select_source(
         hass,
