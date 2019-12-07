@@ -59,28 +59,43 @@ from .const import (
     FEATURE_PLAY_PAUSE,
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
+    KEY_ARROW_DOWN,
+    KEY_ARROW_LEFT,
+    KEY_ARROW_RIGHT,
+    KEY_ARROW_UP,
+    KEY_BACK,
+    KEY_EXIT,
+    KEY_FAST_FORWARD,
+    KEY_INFORMATION,
+    KEY_NEXT_TRACK,
+    KEY_PREVIOUS_TRACK,
+    KEY_REWIND,
+    KEY_SELECT,
+    SERV_INPUT_SOURCE,
     SERV_SWITCH,
     SERV_TELEVISION,
     SERV_TELEVISION_SPEAKER,
-    SERV_INPUT_SOURCE,
+    EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
+    ATTR_KEY_NAME,
+    KEY_PLAY_PAUSE,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 MEDIA_PLAYER_KEYS = {
-    # 0: "Rewind",
-    # 1: "FastForward",
-    # 2: "NextTrack",
-    # 3: "PreviousTrack",
-    # 4: "ArrowUp",
-    # 5: "ArrowDown",
-    # 6: "ArrowLeft",
-    # 7: "ArrowRight",
-    # 8: "Select",
-    # 9: "Back",
-    # 10: "Exit",
-    11: SERVICE_MEDIA_PLAY_PAUSE,
-    # 15: "Information",
+    0: KEY_REWIND,
+    1: KEY_FAST_FORWARD,
+    2: KEY_NEXT_TRACK,
+    3: KEY_PREVIOUS_TRACK,
+    4: KEY_ARROW_UP,
+    5: KEY_ARROW_DOWN,
+    6: KEY_ARROW_LEFT,
+    7: KEY_ARROW_RIGHT,
+    8: KEY_SELECT,
+    9: KEY_BACK,
+    10: KEY_EXIT,
+    11: KEY_PLAY_PAUSE,
+    15: KEY_INFORMATION,
 }
 
 MODE_FRIENDLY_NAME = {
@@ -371,10 +386,10 @@ class TelevisionMediaPlayer(HomeAccessory):
     def set_remote_key(self, value):
         """Send remote key value if call came from HomeKit."""
         _LOGGER.debug("%s: Set remote key to %s", self.entity_id, value)
-        service = MEDIA_PLAYER_KEYS.get(value)
-        if service:
+        key_name = MEDIA_PLAYER_KEYS.get(value)
+        if key_name:
             # Handle Play Pause
-            if service == SERVICE_MEDIA_PLAY_PAUSE:
+            if key_name == KEY_PLAY_PAUSE:
                 state = self.hass.states.get(self.entity_id).state
                 if state in (STATE_PLAYING, STATE_PAUSED):
                     service = (
@@ -382,8 +397,14 @@ class TelevisionMediaPlayer(HomeAccessory):
                         if state == STATE_PAUSED
                         else SERVICE_MEDIA_PAUSE
                     )
-            params = {ATTR_ENTITY_ID: self.entity_id}
-            self.call_service(DOMAIN, service, params)
+                else:
+                    service = SERVICE_MEDIA_PLAY_PAUSE
+                params = {ATTR_ENTITY_ID: self.entity_id}
+                self.call_service(DOMAIN, service, params)
+
+            self.hass.bus.fire(
+                EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED, {ATTR_KEY_NAME: key_name}
+            )
 
     def update_state(self, new_state):
         """Update Television state after state changed."""

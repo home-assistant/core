@@ -7,6 +7,9 @@ from homeassistant.components.homekit.const import (
     FEATURE_PLAY_PAUSE,
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
+    EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
+    ATTR_KEY_NAME,
+    KEY_ARROW_RIGHT,
 )
 from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.components.homekit.type_media_players import (
@@ -303,6 +306,19 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
     assert call_volume_set[0].data[ATTR_MEDIA_VOLUME_LEVEL] == 20
     assert len(events) == 11
     assert events[-1].data[ATTR_VALUE] is None
+
+    events = []
+
+    def listener(event):
+        events.append(event)
+
+    hass.bus.async_listen(EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED, listener)
+
+    await hass.async_add_job(acc.char_remote_key.client_update_value, 7)
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data[ATTR_KEY_NAME] == KEY_ARROW_RIGHT
 
 
 async def test_media_player_television_basic(hass, hk_driver, events, caplog):

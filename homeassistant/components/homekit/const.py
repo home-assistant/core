@@ -8,6 +8,7 @@ HOMEKIT_NOTIFY_ID = 4663548
 # #### Attributes ####
 ATTR_DISPLAY_NAME = "display_name"
 ATTR_VALUE = "value"
+ATTR_KEY_NAME = "key_name"
 
 # #### Config ####
 CONF_ADVERTISE_IP = "advertise_ip"
@@ -34,6 +35,7 @@ FEATURE_TOGGLE_MUTE = "toggle_mute"
 
 # #### HomeKit Component Event ####
 EVENT_HOMEKIT_CHANGED = "homekit_state_change"
+EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED = "homekit_tv_remote_key_pressed"
 
 # #### HomeKit Component Services ####
 SERVICE_HOMEKIT_START = "start"
@@ -175,3 +177,18 @@ THRESHOLD_CO2 = 1000
 # #### Default values ####
 DEFAULT_MIN_TEMP_WATER_HEATER = 40  # °C
 DEFAULT_MAX_TEMP_WATER_HEATER = 60  # °C
+
+# #### Media Player Key Names ####
+KEY_ARROW_DOWN = "arrow_down"
+KEY_ARROW_LEFT = "arrow_left"
+KEY_ARROW_RIGHT = "arrow_right"
+KEY_ARROW_UP = "arrow_up"
+KEY_BACK = "back"
+KEY_EXIT = "exit"
+KEY_FAST_FORWARD = "fast_forward"
+KEY_INFORMATION = "information"
+KEY_NEXT_TRACK = "next_track"
+KEY_PREVIOUS_TRACK = "previous_track"
+KEY_REWIND = "rewind"
+KEY_SELECT = "select"
+KEY_PLAY_PAUSE = "play_pause"
