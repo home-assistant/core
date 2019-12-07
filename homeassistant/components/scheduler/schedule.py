@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from dateutil.rrule import rrule, rrulestr
 
-from homeassistant.const import CONF_ENTITY_ID, MATCH_ALL
+from homeassistant.const import CONF_ENTITY_ID, MATCH_ALL, STATE_OFF, STATE_ON
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.helpers.event import (
     async_track_point_in_time,
@@ -24,6 +24,8 @@ CONF_END_DATETIME = "end_datetime"
 CONF_RECURRENCE = "recurrence"
 CONF_SCHEDULE_ID = "schedule_id"
 CONF_START_DATETIME = "start_datetime"
+
+STATE_EXPIRED = "expired"
 
 
 class ScheduleInstance:
@@ -108,6 +110,7 @@ class Schedule:
         self._async_trigger_listener: Optional[Callable[..., Awaitable]] = None
         self._hass: HomeAssistant = hass
         self._initial_instance_scheduled: bool = False
+        self._is_on: bool = True
         self.active_instance: Optional[ScheduleInstance] = None
         self.end_datetime: Optional[datetime] = end_datetime
         self.entity_id: str = entity_id
@@ -177,6 +180,58 @@ class Schedule:
 
         return True
 
+    @property
+    def state(self) -> str:
+        """Return the current state of the schdule."""
+        if self.expired:
+            return STATE_EXPIRED
+        if not self._is_on:
+            return STATE_OFF
+        return STATE_ON
+
+    @property
+    def is_on(self) -> bool:
+        """Return whether the schedule is enabled."""
+        return self._is_on
+
+    async def _async_revert(self, executed_at: datetime) -> None:
+        """Trigger when the schedule ends."""
+        await self.active_instance.async_revert()
+        await self._async_schedule()
+
+    @callback
+    def _async_schedule(self) -> None:
+        """Schedule the next instance."""
+        if not self._is_on:
+            _LOGGER.warning("Schedule is turned off")
+            return
+
+        start_dt, end_dt = self._get_next_instance_datetimes()
+
+        if not start_dt:
+            _LOGGER.info("No more instances of schedule: %s", self)
+            return
+
+        instance = ScheduleInstance(self._hass, self.entity_id)
+
+        if self.instance_duration:
+            self.active_instance = instance
+
+        self._async_trigger_listener = async_track_point_in_time(
+            self._hass, self._async_trigger, start_dt
+        )
+
+        if end_dt:
+            self._async_trigger_listener = async_track_point_in_time(
+                self._hass, self._async_revert, end_dt
+            )
+
+    async def _async_trigger(self, executed_at: datetime) -> None:
+        """Trigger when the schedule starts."""
+        await self.active_instance.async_trigger()
+        if not self.instance_duration:
+            await self._async_schedule()
+
     @callback
     def _get_next_instance_datetimes(
         self,
@@ -222,11 +277,11 @@ class Schedule:
         return the_dict
 
     @callback
-    def async_cancel(self) -> None:
-        """Cancel the schedule."""
-        self.active_instance.async_cancel()
-        self.active_instance = None
-
+    def async_turn_off(self) -> None:
+        """Disable the schedule."""
+        if self.active_instance:
+            self.active_instance.async_cancel()
+            self.active_instance = None
         if self._async_revert_listener:
             self._async_revert_listener()
             self._async_revert_listener = None
@@ -234,36 +289,17 @@ class Schedule:
             self._async_trigger_listener()
             self._async_trigger_listener = None
 
-    @callback
-    def async_schedule(self) -> None:
-        """Schedule the next instance."""
-        start_dt, end_dt = self._get_next_instance_datetimes()
+        self._is_on = False
 
-        if not start_dt:
-            _LOGGER.info("No more instances of schedule: %s", self)
+    @callback
+    def async_turn_on(self) -> None:
+        """Enable the schedule."""
+        if self.expired:
+            _LOGGER.error("Refusing to turn on expired schedule: %s", self)
             return
 
-        self.active_instance = ScheduleInstance(self._hass, self.entity_id)
-
-        async def trigger(self, executed_at: datetime) -> None:
-            """Trigger when the schedule starts."""
-            await self.active_instance.async_trigger()
-            if not self.end_datetime:
-                await self.async_schedule()
-
-        async def revert(self, executed_at: datetime) -> None:
-            """Trigger when the schedule ends."""
-            await self.active_instance.async_revert()
-            await self.async_schedule()
-
-        self._async_trigger_listener = async_track_point_in_time(
-            self._hass, trigger, start_dt
-        )
-
-        if end_dt:
-            self._async_trigger_listener = async_track_point_in_time(
-                self._hass, revert, end_dt
-            )
+        self._async_schedule()
+        self._is_on = True
 
 
 class Scheduler:
@@ -278,14 +314,14 @@ class Scheduler:
     @callback
     def async_create(self, schedule: Schedule) -> None:
         """Create a schedule."""
-        schedule.async_schedule()
+        schedule.async_turn_on()
         self.schedules[schedule.schedule_id] = schedule
 
     @callback
     def async_delete(self, schedule_id: str) -> None:
         """Delete a schedule."""
         schedule = self.schedules.pop(schedule_id)
-        schedule.async_cancel()
+        schedule.turn_off()
 
     async def async_load(self) -> None:
         """Load all schedules from storage."""
