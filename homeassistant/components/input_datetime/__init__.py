@@ -1,15 +1,21 @@
 """Support to select a date and/or a time."""
-import logging
 import datetime
+import logging
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_DATE, ATTR_TIME, CONF_ICON, CONF_NAME
+from homeassistant.const import (
+    ATTR_DATE,
+    ATTR_TIME,
+    CONF_ICON,
+    CONF_NAME,
+    SERVICE_RELOAD,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
+import homeassistant.helpers.service
 from homeassistant.util import dt as dt_util
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,26 +58,31 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
 async def async_setup(hass, config):
     """Set up an input datetime."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    entities = []
+    entities = await _async_process_config(config)
 
-    for object_id, cfg in config[DOMAIN].items():
-        name = cfg.get(CONF_NAME)
-        has_time = cfg.get(CONF_HAS_TIME)
-        has_date = cfg.get(CONF_HAS_DATE)
-        icon = cfg.get(CONF_ICON)
-        initial = cfg.get(CONF_INITIAL)
-        entities.append(
-            InputDatetime(object_id, name, has_date, has_time, icon, initial)
-        )
+    async def reload_service_handler(service_call):
+        """Remove all entities and load new ones from config."""
+        conf = await component.async_prepare_reload()
+        if conf is None:
+            return
+        new_entities = await _async_process_config(conf)
+        if new_entities:
+            await component.async_add_entities(new_entities)
 
-    if not entities:
-        return False
+    homeassistant.helpers.service.async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_RELOAD,
+        reload_service_handler,
+        schema=RELOAD_SERVICE_SCHEMA,
+    )
 
     async def async_set_datetime_service(entity, call):
         """Handle a call to the input datetime 'set datetime' service."""
@@ -108,8 +119,26 @@ async def async_setup(hass, config):
         async_set_datetime_service,
     )
 
-    await component.async_add_entities(entities)
+    if entities:
+        await component.async_add_entities(entities)
     return True
+
+
+async def _async_process_config(config):
+    """Process config and create list of entities."""
+    entities = []
+
+    for object_id, cfg in config[DOMAIN].items():
+        name = cfg.get(CONF_NAME)
+        has_time = cfg.get(CONF_HAS_TIME)
+        has_date = cfg.get(CONF_HAS_DATE)
+        icon = cfg.get(CONF_ICON)
+        initial = cfg.get(CONF_INITIAL)
+        entities.append(
+            InputDatetime(object_id, name, has_date, has_time, icon, initial)
+        )
+
+    return entities
 
 
 class InputDatetime(RestoreEntity):
