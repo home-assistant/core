@@ -150,14 +150,13 @@ class Schedule:
     @property
     def expired(self) -> bool:
         """Return whether the schedule has expired."""
-        # TODO: accommodate the recurrence
-        now = dt_util.utcnow()
-        if self.end_datetime:
-            return self.end_datetime < now
-        return self.start_datetime < now
+        start_datetime, _ = self._get_next_instance_datetimes()
+        return not start_datetime
 
     @callback
-    def _get_next_datetimes(self) -> Tuple[Optional[datetime], Optional[datetime]]:
+    def _get_next_instance_datetimes(
+        self,
+    ) -> Tuple[Optional[datetime], Optional[datetime]]:
         """Get the next starting (and, optionally, ending) datetimes."""
         if not self._initial_instance_scheduled:
             self._initial_instance_scheduled = True
@@ -208,7 +207,7 @@ class Schedule:
     @callback
     def async_schedule(self) -> None:
         """Schedule the next instance."""
-        start_dt, end_dt = self._get_next_datetimes()
+        start_dt, end_dt = self._get_next_instance_datetimes()
 
         if not start_dt:
             _LOGGER.info("No more instances of schedule: %s", self)
