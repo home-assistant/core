@@ -248,8 +248,8 @@ class Scheduler:
     @callback
     def async_create(self, schedule: Schedule) -> None:
         """Create a schedule."""
+        schedule.async_schedule()
         self.schedules[schedule.schedule_id] = schedule
-        self.schedules[schedule.schedule_id].async_schedule()
 
     @callback
     def async_delete(self, schedule_id: str) -> None:
@@ -300,5 +300,4 @@ class Scheduler:
         """Update a schedule."""
         self.schedules[schedule_id].async_cancel()
         new_schedule.schedule_id = schedule_id
-        self.schedules[schedule_id] = new_schedule
-        self.schedules[schedule_id].async_schedule()
+        self.async_create(new_schedule)
