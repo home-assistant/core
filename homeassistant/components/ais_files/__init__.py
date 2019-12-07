@@ -12,8 +12,10 @@ from aiohttp.web import Request, Response
 
 from . import sensor
 from .const import DOMAIN
+from PIL import Image
 
 _LOGGER = logging.getLogger(__name__)
+IMG_PATH = "/data/data/pl.sviete.dom/files/home/AIS/www/img/"
 
 
 @asyncio.coroutine
@@ -54,6 +56,30 @@ async def _async_refresh_files(hass):
     )
 
 
+def resize_image(file_name):
+    max_size = 1024
+    image = Image.open(IMG_PATH + file_name)
+    original_size = max(image.size[0], image.size[1])
+
+    if original_size >= max_size:
+        resized_file = open(IMG_PATH + "1024_" + file_name, "w")
+        if image.size[0] > image.size[1]:
+            resized_width = max_size
+            resized_height = int(
+                round((max_size / float(image.size[0])) * image.size[1])
+            )
+        else:
+            resized_height = max_size
+            resized_width = int(
+                round((max_size / float(image.size[1])) * image.size[0])
+            )
+
+        image = image.resize((resized_width, resized_height), Image.ANTIALIAS)
+        image.save(resized_file)
+        os.remove(IMG_PATH + file_name)
+        os.rename(IMG_PATH + "1024_" + file_name, IMG_PATH + file_name)
+
+
 class FileUpladView(HomeAssistantView):
     """A view that accepts file upload requests."""
 
@@ -66,11 +92,10 @@ class FileUpladView(HomeAssistantView):
         file = data["file"]
         file_name = file.filename
         file_data = file.file.read()
-        with open(
-            "/data/data/pl.sviete.dom/files/home/AIS/www/img/" + file_name, "wb"
-        ) as f:
+        with open(IMG_PATH + file_name, "wb") as f:
             f.write(file_data)
             f.close()
-
+        # resize the file
+        resize_image(file_name)
         hass = request.app["hass"]
         hass.async_add_job(hass.services.async_call(DOMAIN, "refresh_files"))

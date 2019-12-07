@@ -4,5 +4,7 @@
     "documentation": "https://www.ai-speaker.com",
     "dependencies": [],
     "codeowners": [],
-    "requirements": []
-  }
+     "requirements": [
+         "pillow==6.2.1"
+     ]
+}
