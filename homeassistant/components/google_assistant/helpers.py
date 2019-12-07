@@ -19,7 +19,7 @@ from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import Store
 
-from . import smart_home, trait
+from . import trait
 from .const import (
     CONF_ALIASES,
     CONF_ROOM_HINT,
@@ -214,6 +214,9 @@ class AbstractConfig:
 
     async def _handle_local_webhook(self, hass, webhook_id, request):
         """Handle an incoming local SDK message."""
+        # Circular dep
+        # pylint: disable=import-outside-toplevel
+        from . import smart_home
 
         payload = await request.json()
 
