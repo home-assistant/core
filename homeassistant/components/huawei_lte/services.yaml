@@ -1,0 +1,6 @@
+clear_traffic_statistics:
+  description: Clear traffic statistics.
+  fields:
+    url:
+      description: URL of router to clear.
+      example: http://192.168.100.1/
