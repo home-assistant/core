@@ -44,6 +44,8 @@ async def async_trigger(hass, entity_id=ENTITY_MATCH_ALL):
 
 
 @bind_hass
-async def async_reload(hass):
+async def async_reload(hass, context=None):
     """Reload the automation from config."""
-    await hass.services.async_call(DOMAIN, SERVICE_RELOAD)
+    await hass.services.async_call(
+        DOMAIN, SERVICE_RELOAD, blocking=True, context=context
+    )
