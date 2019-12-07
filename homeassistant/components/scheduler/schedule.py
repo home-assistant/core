@@ -215,7 +215,7 @@ class Schedule:
         async def _async_trigger(self, executed_at: datetime) -> None:
             """Trigger when the schedule starts."""
             await instance.async_trigger()
-            if self.instance_duration:
+            if not self.instance_duration:
                 await self._async_schedule()
 
         async def _async_revert(self, executed_at: datetime) -> None:
