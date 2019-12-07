@@ -106,6 +106,7 @@ class Schedule:
         """Initialize."""
         self._async_revert_listener: Optional[Callable[..., Awaitable]] = None
         self._async_trigger_listener: Optional[Callable[..., Awaitable]] = None
+        self._expired: bool = False
         self._hass: HomeAssistant = hass
         self._initial_instance_scheduled: bool = False
         self.active_instance: Optional[ScheduleInstance] = None
@@ -150,8 +151,7 @@ class Schedule:
     @property
     def expired(self) -> bool:
         """Return whether the schedule has expired."""
-        start_datetime, _ = self._get_next_instance_datetimes()
-        return not start_datetime
+        return self._expired
 
     @callback
     def _get_next_instance_datetimes(
@@ -169,6 +169,8 @@ class Schedule:
             else:
                 end = None
             return (start, end)
+
+        self._expired = True
 
         return (None, None)
 
