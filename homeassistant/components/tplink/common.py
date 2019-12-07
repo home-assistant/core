@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_CONFIG = "config"
 CONF_DIMMER = "dimmer"
 CONF_DISCOVERY = "discovery"
-CONF_TARGET = "target"
+CONF_DISCOVERY_TARGET = "discovery_target"
 CONF_LIGHT = "light"
 CONF_STRIP = "strip"
 CONF_SWITCH = "switch"
@@ -60,7 +60,7 @@ async def async_get_discoverable_devices(hass, config_data):
     """Return if there are devices that can be discovered."""
 
     def discover():
-        devs = Discover.discover(target=config_data[CONF_TARGET])
+        devs = Discover.discover(target=config_data[CONF_DISCOVERY_TARGET])
         return devs
 
     return await hass.async_add_executor_job(discover)

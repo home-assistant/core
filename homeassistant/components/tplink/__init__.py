@@ -12,7 +12,7 @@ from .common import (
     ATTR_CONFIG,
     CONF_DIMMER,
     CONF_DISCOVERY,
-    CONF_TARGET,
+    CONF_DISOVERY_TARGET,
     CONF_LIGHT,
     CONF_SWITCH,
     CONF_STRIP,
@@ -45,7 +45,7 @@ CONFIG_SCHEMA = vol.Schema(
                     cv.ensure_list, [TPLINK_HOST_SCHEMA]
                 ),
                 vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
-                vol.Optional(CONF_TARGET, default='255.255.255.255'): cv.string,
+                vol.Optional(CONF_DISOVERY_TARGET, default='255.255.255.255'): cv.string,
             }
         )
     },
