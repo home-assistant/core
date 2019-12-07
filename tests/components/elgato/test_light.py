@@ -21,7 +21,7 @@ from tests.components.elgato import init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_rgb_light_state(
+async def test_light_state(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the creation and values of the Elgato Key Lights."""
