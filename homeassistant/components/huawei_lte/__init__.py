@@ -59,6 +59,7 @@ from .const import (
     KEY_MONITORING_TRAFFIC_STATISTICS,
     KEY_WLAN_HOST_LIST,
     SERVICE_CLEAR_TRAFFIC_STATISTICS,
+    SERVICE_REBOOT,
     UPDATE_OPTIONS_SIGNAL,
     UPDATE_SIGNAL,
 )
@@ -401,10 +402,13 @@ async def async_setup(hass: HomeAssistantType, config) -> bool:
         if service.service == SERVICE_CLEAR_TRAFFIC_STATISTICS:
             result = router.client.monitoring.set_clear_traffic()
             _LOGGER.debug("%s: %s", service.service, result)
+        elif service.service == SERVICE_REBOOT:
+            result = router.client.device.reboot()
+            _LOGGER.debug("%s: %s", service.service, result)
         else:
             _LOGGER.error("%s: unsupported service", service.service)
 
-    for service in (SERVICE_CLEAR_TRAFFIC_STATISTICS,):
+    for service in (SERVICE_CLEAR_TRAFFIC_STATISTICS, SERVICE_REBOOT):
         hass.services.async_register(
             DOMAIN, service, service_handler, schema=SERVICE_SCHEMA,
         )

@@ -4,3 +4,10 @@ clear_traffic_statistics:
     url:
       description: URL of router to clear.
       example: http://192.168.100.1/
+
+reboot:
+  description: Reboot router.
+  fields:
+    url:
+      description: URL of router to reboot.
+      example: http://192.168.100.1/
