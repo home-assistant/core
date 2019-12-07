@@ -143,7 +143,17 @@ class Schedule:
 
         # Otherwise, look at the recurrence (specifically, the datetime just before
         # now) and see if we're still within it:
+        if not self.recurrence:
+            return False
+
         last_start_dt = self.recurrence.before(now, inc=True)
+
+        # If there's no "before" datetime, that means we're at the beginning of the
+        # recurrence; since we've already established that there _is_ a recurrence,
+        # we're active:
+        if not last_start_dt:
+            return True
+
         last_end_dt = last_start_dt + self.instance_duration
         return last_start_dt <= now <= last_end_dt
 
