@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, generate_entity_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,6 +19,8 @@ ATTR_TOP_PLAYED = "top_played"
 ATTRIBUTION = "Data provided by Last.fm"
 
 CONF_USERS = "users"
+
+ENTITY_ID_FORMAT = "sensor.lastfm_{}"
 
 ICON = "mdi:lastfm"
 
@@ -41,7 +43,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for username in users:
         try:
             lastfm_api.get_user(username).get_image()
-            entities.append(LastfmSensor(username, lastfm_api))
+            entities.append(LastfmSensor(hass, username, lastfm_api))
         except WSError as error:
             _LOGGER.error(error)
             return
@@ -52,7 +54,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class LastfmSensor(Entity):
     """A class for the Last.fm account."""
 
-    def __init__(self, user, lastfm_api):
+    def __init__(self, hass, user, lastfm_api):
         """Initialize the sensor."""
         self._user = lastfm_api.get_user(user)
         self._name = user
@@ -62,16 +64,13 @@ class LastfmSensor(Entity):
         self._lastplayed = None
         self._topplayed = None
         self._cover = None
+        
+        self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, user, hass=hass)
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def entity_id(self):
-        """Return the entity ID."""
-        return f"sensor.lastfm_{self._name}"
 
     @property
     def state(self):
