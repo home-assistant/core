@@ -164,8 +164,8 @@ class IntesisAC(ClimateDevice):
         await self._controller.add_update_callback(self.async_update_callback)
         try:
             await self._controller.connect()
-        except IHConnectionError as e:
-            _LOGGER.error("Exception connecting to IntesisHome:  %s", repr(e))
+        except IHConnectionError as ex:
+            _LOGGER.error("Exception connecting to IntesisHome:  %s", repr(ex))
 
     @property
     def name(self):
