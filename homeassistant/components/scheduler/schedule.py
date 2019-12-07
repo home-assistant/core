@@ -150,6 +150,7 @@ class Schedule:
     @property
     def expired(self) -> bool:
         """Return whether the schedule has expired."""
+        # TODO: accommodate the recurrence
         now = dt_util.utcnow()
         if self.end_datetime:
             return self.end_datetime < now
