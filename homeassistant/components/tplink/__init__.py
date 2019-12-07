@@ -12,7 +12,7 @@ from .common import (
     ATTR_CONFIG,
     CONF_DIMMER,
     CONF_DISCOVERY,
-    CONF_DISOVERY_TARGET,
+    CONF_DISCOVERY_TARGET,
     CONF_LIGHT,
     CONF_SWITCH,
     CONF_STRIP,
@@ -46,7 +46,7 @@ CONFIG_SCHEMA = vol.Schema(
                 ),
                 vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
                 vol.Optional(
-                    CONF_DISOVERY_TARGET, default="255.255.255.255"
+                    CONF_DISCOVERY_TARGET, default="255.255.255.255"
                 ): cv.string,
             }
         )
