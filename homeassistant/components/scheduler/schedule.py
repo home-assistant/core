@@ -164,6 +164,12 @@ class Schedule:
 
         if self.recurrence:
             start = self.recurrence.after(dt_util.utcnow(), inc=True)
+
+            # The recurrence has reached its end:
+            if not start:
+                self._expired = True
+                return (None, None)
+
             if self.end_datetime:
                 end = start + self.instance_duration
             else:
@@ -171,7 +177,6 @@ class Schedule:
             return (start, end)
 
         self._expired = True
-
         return (None, None)
 
     def as_dict(self) -> dict:
