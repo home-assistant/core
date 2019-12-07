@@ -28,7 +28,6 @@ ATTR_LOCK_ORIG = "lock_originator"
 HORIZONTAL_AWNING = "io:HorizontalAwningIOComponent"
 
 TAHOMA_DEVICE_CLASSES = {
-    "io:VerticalInteriorBlindVeluxIOComponent": DEVICE_CLASS_BLIND,
     "io:ExteriorVenetianBlindIOComponent": DEVICE_CLASS_BLIND,
     HORIZONTAL_AWNING: DEVICE_CLASS_AWNING,
     "io:RollerShutterGenericIOComponent": DEVICE_CLASS_SHUTTER,
@@ -36,6 +35,7 @@ TAHOMA_DEVICE_CLASSES = {
     "io:RollerShutterVeluxIOComponent": DEVICE_CLASS_SHUTTER,
     "io:RollerShutterWithLowSpeedManagementIOComponent": DEVICE_CLASS_SHUTTER,
     "io:VerticalExteriorAwningIOComponent": DEVICE_CLASS_AWNING,
+    "io:VerticalInteriorBlindVeluxIOComponent": DEVICE_CLASS_BLIND,
     "io:WindowOpenerVeluxIOComponent": DEVICE_CLASS_WINDOW,
     "io:GarageOpenerIOComponent": DEVICE_CLASS_GARAGE,
     "rts:BlindRTSComponent": DEVICE_CLASS_BLIND,

@@ -33,7 +33,6 @@ CONFIG_SCHEMA = vol.Schema(
 TAHOMA_COMPONENTS = ["scene", "sensor", "cover", "switch", "binary_sensor"]
 
 TAHOMA_TYPES = {
-    "io:VerticalInteriorBlindVeluxIOComponent": "cover",
     "io:ExteriorVenetianBlindIOComponent": "cover",
     "io:HorizontalAwningIOComponent": "cover",
     "io:LightIOSystemSensor": "sensor",
@@ -46,6 +45,7 @@ TAHOMA_TYPES = {
     "io:SomfyBasicContactIOSystemSensor": "sensor",
     "io:SomfyContactIOSystemSensor": "sensor",
     "io:VerticalExteriorAwningIOComponent": "cover",
+    "io:VerticalInteriorBlindVeluxIOComponent": "cover",
     "io:WindowOpenerVeluxIOComponent": "cover",
     "io:GarageOpenerIOComponent": "cover",
     "rtds:RTDSContactSensor": "sensor",
