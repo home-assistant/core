@@ -264,7 +264,6 @@ class Scheduler:
         if not raw_schedules:
             return
 
-        self.schedules = []
         for schedule_id, schedule_dict in raw_schedules.items():
             if schedule_dict.get(CONF_END_DATETIME):
                 end_dt = dt_util.parse_datetime(schedule_dict[CONF_END_DATETIME])
