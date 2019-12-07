@@ -617,6 +617,9 @@ gntp==1.0.3
 # homeassistant.components.google
 google-api-python-client==1.6.4
 
+# homeassistant.components.google_stackdriver
+google-cloud-logging==1.14.0
+
 # homeassistant.components.google_pubsub
 google-cloud-pubsub==0.39.1
 
