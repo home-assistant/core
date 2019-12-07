@@ -53,7 +53,7 @@ class BinaryMaxSensor(Entity):
         """Initialize the binary max sensor."""
         self._hass = hass
         self._entity_ids = entity_ids
-        self._last = None
+        self.last = None
 
         if name:
             self._name = name
