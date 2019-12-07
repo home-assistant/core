@@ -194,11 +194,6 @@ class Schedule:
         """Return whether the schedule is enabled."""
         return self._is_on
 
-    async def _async_revert(self, executed_at: datetime) -> None:
-        """Trigger when the schedule ends."""
-        await self.active_instance.async_revert()
-        await self._async_schedule()
-
     @callback
     def _async_schedule(self) -> None:
         """Schedule the next instance."""
@@ -217,20 +212,25 @@ class Schedule:
         if self.instance_duration:
             self.active_instance = instance
 
+        async def _async_trigger(self, executed_at: datetime) -> None:
+            """Trigger when the schedule starts."""
+            await instance.async_trigger()
+            if self.instance_duration:
+                await self._async_schedule()
+
+        async def _async_revert(self, executed_at: datetime) -> None:
+            """Trigger when the schedule ends."""
+            await instance.async_revert()
+            await self._async_schedule()
+
         self._async_trigger_listener = async_track_point_in_time(
-            self._hass, self._async_trigger, start_dt
+            self._hass, _async_trigger, start_dt
         )
 
         if end_dt:
             self._async_trigger_listener = async_track_point_in_time(
-                self._hass, self._async_revert, end_dt
+                self._hass, _async_revert, end_dt
             )
-
-    async def _async_trigger(self, executed_at: datetime) -> None:
-        """Trigger when the schedule starts."""
-        await self.active_instance.async_trigger()
-        if not self.instance_duration:
-            await self._async_schedule()
 
     @callback
     def _get_next_instance_datetimes(
