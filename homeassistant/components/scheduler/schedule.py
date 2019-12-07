@@ -300,4 +300,5 @@ class Scheduler:
         """Update a schedule."""
         self.schedules[schedule_id].async_cancel()
         new_schedule.schedule_id = schedule_id
-        self.async_create(new_schedule)
+        new_schedule.async_schedule()
+        self.schedules[schedule_id] = new_schedule
