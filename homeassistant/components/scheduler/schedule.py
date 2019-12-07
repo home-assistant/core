@@ -106,7 +106,6 @@ class Schedule:
         """Initialize."""
         self._async_revert_listener: Optional[Callable[..., Awaitable]] = None
         self._async_trigger_listener: Optional[Callable[..., Awaitable]] = None
-        self._expired: bool = False
         self._hass: HomeAssistant = hass
         self._initial_instance_scheduled: bool = False
         self.active_instance: Optional[ScheduleInstance] = None
@@ -151,7 +150,16 @@ class Schedule:
     @property
     def expired(self) -> bool:
         """Return whether the schedule has expired."""
-        return self._expired
+        now = dt_util.utcnow()
+        if self.recurrence and self.recurrence.after(now, inc=True):
+            return False
+
+        if self.start_datetime >= now or (
+            self.end_datetime and self.end_datetime >= now
+        ):
+            return False
+
+        return True
 
     @callback
     def _get_next_instance_datetimes(
@@ -167,16 +175,15 @@ class Schedule:
 
             # The recurrence has reached its end:
             if not start:
-                self._expired = True
                 return (None, None)
 
             if self.end_datetime:
                 end = start + self.instance_duration
             else:
                 end = None
+
             return (start, end)
 
-        self._expired = True
         return (None, None)
 
     def as_dict(self) -> dict:
