@@ -151,9 +151,9 @@ class Schedule:
     def expired(self) -> bool:
         """Return whether the schedule has expired."""
         now = dt_util.utcnow()
-        return (
-            self.end_datetime and self.end_datetime < now
-        ) or self.start_datetime < now
+        if self.end_datetime:
+            return self.end_datetime < now
+        return self.start_datetime < now
 
     @callback
     def _get_next_datetimes(self) -> Tuple[Optional[datetime], Optional[datetime]]:
