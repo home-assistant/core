@@ -184,7 +184,10 @@ class DwdWeatherWarningsAPI:
             "jsonp=loadWarnings",
         )
 
-        self._rest = RestData("GET", resource, None, None, None, True)
+        # a dummy User-Agent is necessary to trick the rest api endpoint (see #29496)
+        headers = {"User-Agent": "HomeAssistant/0.103.0"}
+
+        self._rest = RestData("GET", resource, None, headers, None, True)
         self.region_name = region_name
         self.region_id = None
         self.region_state = None
