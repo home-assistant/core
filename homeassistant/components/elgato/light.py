@@ -62,7 +62,7 @@ class ElgatoLight(Light):
     @property
     def name(self) -> str:
         """Return the name of the entity."""
-        # Return the product name, display name is not set
+        # Return the product name, if display name is not set
         if not self._info.display_name:
             return self._info.product_name
         return self._info.display_name
