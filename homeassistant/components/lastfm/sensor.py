@@ -19,6 +19,8 @@ ATTR_PLAY_COUNT = "play_count"
 ATTR_TOP_PLAYED = "top_played"
 ATTRIBUTION = "Data provided by Last.fm"
 
+STATE_NOT_SCROBBLING = "Not Scrobbling"
+
 CONF_USERS = "users"
 
 ENTITY_ID_FORMAT = "sensor.lastfm_{}"
@@ -60,7 +62,7 @@ class LastfmSensor(Entity):
         self._user = lastfm_api.get_user(user)
         self._name = user
         self._lastfm = lastfm_api
-        self._state = "Not Scrobbling"
+        self._state = STATE_NOT_SCROBBLING
         self._playcount = None
         self._lastplayed = None
         self._topplayed = None
@@ -90,7 +92,7 @@ class LastfmSensor(Entity):
         self._topplayed = "{} - {}".format(topartist.group(1), toptitle.group(1))
         now = self._user.get_now_playing()
         if now is None:
-            self._state = "Not Scrobbling"
+            self._state = STATE_NOT_SCROBBLING
             return
         self._state = f"{now.artist} - {now.title}"
 
