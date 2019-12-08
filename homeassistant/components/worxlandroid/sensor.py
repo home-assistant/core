@@ -141,16 +141,9 @@ class WorxLandroidSensor(Entity):
         state = self.get_error(obj)
 
         if state is None:
-            state_obj = obj["settaggi"]
+            if obj["batteryChargerState"] == "charging":
+                return obj["batteryChargerState"]
 
-            if state_obj[14] == 1:
-                return "manual-stop"
-            if state_obj[5] == 1 and state_obj[13] == 0:
-                return "charging"
-            if state_obj[5] == 1 and state_obj[13] == 1:
-                return "charging-complete"
-            if state_obj[15] == 1:
-                return "going-home"
-            return "mowing"
+            return obj["state"]
 
         return state
