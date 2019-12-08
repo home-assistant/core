@@ -1,11 +1,12 @@
 """Reads vehicle status from StarLine API."""
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice,
     DEVICE_CLASS_DOOR,
     DEVICE_CLASS_LOCK,
-    DEVICE_CLASS_PROBLEM,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_PROBLEM,
+    BinarySensorDevice,
 )
+
 from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
 from .entity import StarlineEntity
