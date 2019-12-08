@@ -39,11 +39,11 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import (
     DOMAIN,
+    SERVICE_CLEAN_ZONE,
     SERVICE_MOVE_REMOTE_CONTROL,
     SERVICE_MOVE_REMOTE_CONTROL_STEP,
     SERVICE_START_REMOTE_CONTROL,
     SERVICE_STOP_REMOTE_CONTROL,
-    SERVICE_CLEAN_ZONE,
 )
 
 _LOGGER = logging.getLogger(__name__)
