@@ -403,7 +403,7 @@ async def async_setup(hass: HomeAssistantType, config) -> bool:
             _LOGGER.error(
                 "%s: more than one router configured, must specify one of URLs %s",
                 service.service,
-                sorted(routers.keys()),
+                sorted(routers),
             )
             return
         if not router:
