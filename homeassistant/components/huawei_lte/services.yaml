@@ -2,12 +2,12 @@ clear_traffic_statistics:
   description: Clear traffic statistics.
   fields:
     url:
-      description: URL of router to clear.
+      description: URL of router to clear; optional when only one is configured.
       example: http://192.168.100.1/
 
 reboot:
   description: Reboot router.
   fields:
     url:
-      description: URL of router to reboot.
+      description: URL of router to reboot; optional when only one is configured.
       example: http://192.168.100.1/

@@ -105,7 +105,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_SCHEMA = vol.Schema({vol.Required(CONF_URL): cv.url})
+SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_URL): cv.url})
 
 CONFIG_ENTRY_PLATFORMS = (
     BINARY_SENSOR_DOMAIN,
@@ -394,7 +394,19 @@ async def async_setup(hass: HomeAssistantType, config) -> bool:
     def service_handler(service) -> None:
         """Apply a service."""
         url = service.data.get(CONF_URL)
-        router = hass.data[DOMAIN].routers.get(url)
+        routers = hass.data[DOMAIN].routers
+        if url:
+            router = routers.get(url)
+        else:
+            if len(routers) == 1:
+                router = next(iter(routers.values()))
+            else:
+                _LOGGER.error(
+                    "%s: more than one router configured, must specify one of URLs %s",
+                    service.service,
+                    sorted(routers.keys()),
+                )
+                return
         if not router:
             _LOGGER.error("%s: router %s unavailable", service.service, url)
             return
