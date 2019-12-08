@@ -1,8 +1,8 @@
 """Support for Ecobee Send Message service."""
 import voluptuous as vol
 
+from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.notify import BaseNotificationService, PLATFORM_SCHEMA
 
 from .const import CONF_INDEX, DOMAIN
 
