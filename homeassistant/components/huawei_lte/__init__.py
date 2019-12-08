@@ -174,11 +174,11 @@ class Router:
                         )
                     else:
                         _LOGGER.debug("...failed")
-                else:
-                    _LOGGER.info(
-                        "%s requires authorization, excluding from future updates", key
-                    )
-                    self.subscriptions.pop(key)
+                    return
+                _LOGGER.info(
+                    "%s requires authorization, excluding from future updates", key
+                )
+                self.subscriptions.pop(key)
             finally:
                 _LOGGER.debug("%s=%s", key, self.data.get(key))
 
