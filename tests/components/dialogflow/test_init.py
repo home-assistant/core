@@ -1,6 +1,6 @@
 """The tests for the Dialogflow component."""
-import json
 import copy
+import json
 from unittest.mock import Mock
 
 import pytest
