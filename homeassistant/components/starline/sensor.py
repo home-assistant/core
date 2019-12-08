@@ -2,6 +2,7 @@
 from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level, icon_for_signal_level
+
 from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
 from .entity import StarlineEntity
