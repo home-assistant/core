@@ -1,9 +1,9 @@
 """Support for ecobee."""
 import asyncio
 from datetime import timedelta
-import voluptuous as vol
 
-from pyecobee import Ecobee, ECOBEE_API_KEY, ECOBEE_REFRESH_TOKEN, ExpiredTokenError
+from pyecobee import ECOBEE_API_KEY, ECOBEE_REFRESH_TOKEN, Ecobee, ExpiredTokenError
+import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY
@@ -11,11 +11,11 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
 
 from .const import (
+    _LOGGER,
     CONF_REFRESH_TOKEN,
     DATA_ECOBEE_CONFIG,
     DOMAIN,
     ECOBEE_PLATFORMS,
-    _LOGGER,
 )
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
