@@ -20,6 +20,7 @@ FLOWS = [
     "deconz",
     "dialogflow",
     "ecobee",
+    "elgato",
     "emulated_roku",
     "esphome",
     "geofency",
