@@ -7,7 +7,6 @@ from homeassistant.exceptions import Unauthorized
 
 from . import messages
 
-
 # mypy: allow-untyped-calls, allow-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
