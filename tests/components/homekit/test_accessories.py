@@ -3,15 +3,15 @@
 This includes tests for all mock object types.
 """
 from datetime import datetime, timedelta
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant.components.homekit.accessories import (
-    debounce,
     HomeAccessory,
     HomeBridge,
     HomeDriver,
+    debounce,
 )
 from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
@@ -30,13 +30,13 @@ from homeassistant.components.homekit.const import (
     SERV_ACCESSORY_INFO,
 )
 from homeassistant.const import (
-    __version__,
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
-    ATTR_SERVICE,
     ATTR_NOW,
+    ATTR_SERVICE,
     EVENT_TIME_CHANGED,
+    __version__,
 )
 import homeassistant.util.dt as dt_util
 
