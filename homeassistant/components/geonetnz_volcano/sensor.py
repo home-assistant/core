@@ -3,11 +3,11 @@ import logging
 from typing import Optional
 
 from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
     CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_KILOMETERS,
-    ATTR_ATTRIBUTION,
-    ATTR_LONGITUDE,
-    ATTR_LATITUDE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
