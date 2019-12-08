@@ -1,5 +1,6 @@
 """Support for StarLine lock."""
 from homeassistant.components.lock import LockDevice
+
 from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
 from .entity import StarlineEntity
