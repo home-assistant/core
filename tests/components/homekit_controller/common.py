@@ -250,7 +250,7 @@ async def setup_test_accessories(hass, accessories):
 
     config_entry.add_to_hass(hass)
 
-    pairing_cls_loc = "homekit.controller.ip_implementation.IpPairing"
+    pairing_cls_loc = "homeassistant.components.homekit_controller.connection.IpPairing"
     with mock.patch(pairing_cls_loc) as pairing_cls:
         pairing_cls.return_value = pairing
         await config_entry.async_setup(hass)
