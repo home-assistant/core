@@ -1,34 +1,33 @@
 """Support for Actions on Google Assistant Smart Home Control."""
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
 
 import voluptuous as vol
 
 # Typing imports
-from homeassistant.core import HomeAssistant, ServiceCall
-
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
-    DOMAIN,
-    CONF_PROJECT_ID,
-    CONF_EXPOSE_BY_DEFAULT,
-    DEFAULT_EXPOSE_BY_DEFAULT,
-    CONF_EXPOSED_DOMAINS,
-    DEFAULT_EXPOSED_DOMAINS,
+    CONF_ALIASES,
+    CONF_ALLOW_UNLOCK,
     CONF_API_KEY,
-    SERVICE_REQUEST_SYNC,
+    CONF_CLIENT_EMAIL,
     CONF_ENTITY_CONFIG,
     CONF_EXPOSE,
-    CONF_ALIASES,
+    CONF_EXPOSE_BY_DEFAULT,
+    CONF_EXPOSED_DOMAINS,
+    CONF_PRIVATE_KEY,
+    CONF_PROJECT_ID,
     CONF_REPORT_STATE,
     CONF_ROOM_HINT,
-    CONF_ALLOW_UNLOCK,
     CONF_SECURE_DEVICES_PIN,
     CONF_SERVICE_ACCOUNT,
-    CONF_CLIENT_EMAIL,
-    CONF_PRIVATE_KEY,
+    DEFAULT_EXPOSE_BY_DEFAULT,
+    DEFAULT_EXPOSED_DOMAINS,
+    DOMAIN,
+    SERVICE_REQUEST_SYNC,
 )
 from .const import EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED  # noqa: F401
 from .const import EVENT_QUERY_RECEIVED  # noqa: F401
