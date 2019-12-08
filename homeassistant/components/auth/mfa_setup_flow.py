@@ -6,7 +6,7 @@ import voluptuous_serialize
 
 from homeassistant import data_entry_flow
 from homeassistant.components import websocket_api
-from homeassistant.core import callback, HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 WS_TYPE_SETUP_MFA = "auth/setup_mfa"
 SCHEMA_WS_SETUP_MFA = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
