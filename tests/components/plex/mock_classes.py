@@ -1,6 +1,6 @@
 """Mock classes used in tests."""
-from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.components.plex.const import CONF_SERVER, CONF_SERVER_IDENTIFIER
+from homeassistant.const import CONF_HOST, CONF_PORT
 
 MOCK_SERVERS = [
     {
