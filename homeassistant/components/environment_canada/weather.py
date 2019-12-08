@@ -54,7 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 ICON_CONDITION_MAP = {
     "sunny": [0, 1],
     "clear-night": [30, 31],
-    "partlycloudy": [2, 3, 4, 5, 22, 32, 33, 34, 35],
+    "partly-cloudy": [2, 3, 4, 5, 22, 32, 33, 34, 35],
     "cloudy": [10],
     "rainy": [6, 9, 11, 12, 28, 36],
     "lightning-rainy": [19, 39, 46, 47],
