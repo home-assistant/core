@@ -1,11 +1,11 @@
 """Support for Nest devices."""
+from datetime import datetime, timedelta
 import logging
 import socket
-from datetime import datetime, timedelta
 import threading
 
 from nest import Nest
-from nest.nest import AuthorizationError, APIError
+from nest.nest import APIError, AuthorizationError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -20,11 +20,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import dispatcher_send, async_dispatcher_connect
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
 from . import local_auth
+from .const import DOMAIN
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
