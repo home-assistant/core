@@ -4,30 +4,30 @@ from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components.sensor import (
+    DEVICE_CLASSES_SCHEMA,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
-    DEVICE_CLASSES_SCHEMA,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONF_VALUE_TEMPLATE,
-    CONF_ICON_TEMPLATE,
-    CONF_ENTITY_PICTURE_TEMPLATE,
-    ATTR_ENTITY_ID,
-    CONF_SENSORS,
-    EVENT_HOMEASSISTANT_START,
-    CONF_FRIENDLY_NAME_TEMPLATE,
-    MATCH_ALL,
     CONF_DEVICE_CLASS,
+    CONF_ENTITY_PICTURE_TEMPLATE,
+    CONF_FRIENDLY_NAME_TEMPLATE,
+    CONF_ICON_TEMPLATE,
+    CONF_SENSORS,
+    CONF_VALUE_TEMPLATE,
+    EVENT_HOMEASSISTANT_START,
+    MATCH_ALL,
 )
-
+from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
+
 from . import extract_entities, initialise_templates
 from .const import CONF_AVAILABILITY_TEMPLATE
 
