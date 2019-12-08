@@ -165,7 +165,7 @@ class IntesisAC(ClimateDevice):
         try:
             await self._controller.connect()
         except IHConnectionError as ex:
-            _LOGGER.error("Exception connecting to IntesisHome:  %s", repr(ex))
+            _LOGGER.error("Exception connecting to IntesisHome: %s", ex)
 
     @property
     def name(self):
