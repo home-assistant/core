@@ -409,7 +409,7 @@ async def async_setup(hass: HomeAssistantType, config) -> bool:
             _LOGGER.error("%s: unsupported service", service.service)
 
     for service in (SERVICE_CLEAR_TRAFFIC_STATISTICS, SERVICE_REBOOT):
-        hass.services.async_register(
+        hass.helpers.service.async_register_admin_service(
             DOMAIN, service, service_handler, schema=SERVICE_SCHEMA,
         )
 
