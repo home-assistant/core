@@ -742,10 +742,10 @@ kaiterra-async-client==0.0.2
 keba-kecontact==0.2.0
 
 # homeassistant.scripts.keyring
-keyring==19.2.0
+keyring==19.3.0
 
 # homeassistant.scripts.keyring
-keyrings.alt==3.1.1
+keyrings.alt==3.2.0
 
 # homeassistant.components.kiwi
 kiwiki-client==0.1.1
