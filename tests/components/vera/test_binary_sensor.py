@@ -1,57 +1,34 @@
 """Vera tests."""
+from unittest.mock import MagicMock
+
+from pyvera import VeraBinarySensor
 
 from homeassistant.core import HomeAssistant
 
-from .common import (
-    DEVICE_DOOR_SENSOR_ID,
-    DEVICE_MOTION_SENSOR_ID,
-    RESPONSE_LU_SDATA_EMPTY,
-    RESPONSE_SDATA,
-    RESPONSE_STATUS,
-    assert_state,
-    async_configure_component,
-    update_device,
-)
+from .common import async_configure_component
 
 
 async def test_binary_sensor(hass: HomeAssistant) -> None:
     """Test function."""
-    component_data = await async_configure_component(
-        hass=hass,
-        response_sdata=RESPONSE_SDATA,
-        response_status=RESPONSE_STATUS,
-        respone_lu_sdata=RESPONSE_LU_SDATA_EMPTY,
-    )
+    vera_device = MagicMock(spec=VeraBinarySensor)  # type: VeraBinarySensor
+    vera_device.device_id = 1
+    vera_device.name = "dev1"
+    vera_device.is_tripped = False
+    entity_id = "binary_sensor.dev1_1"
 
-    assert_state(hass, component_data, DEVICE_DOOR_SENSOR_ID, "binary_sensor", "off")
-    await update_device(
-        hass=hass,
-        data=component_data,
-        device_id=DEVICE_DOOR_SENSOR_ID,
-        key="tripped",
-        value="1",
-    )
-    assert_state(
-        hass=hass,
-        data=component_data,
-        device_id=DEVICE_DOOR_SENSOR_ID,
-        platform="binary_sensor",
-        expected_state="on",
-    )
+    component_data = await async_configure_component(hass=hass, devices=(vera_device,))
+    controller = component_data.controller
 
-    # Motion sensor.
-    assert_state(hass, component_data, DEVICE_MOTION_SENSOR_ID, "binary_sensor", "off")
-    await update_device(
-        hass=hass,
-        data=component_data,
-        device_id=DEVICE_MOTION_SENSOR_ID,
-        key="tripped",
-        value="1",
-    )
-    assert_state(
-        hass=hass,
-        data=component_data,
-        device_id=DEVICE_DOOR_SENSOR_ID,
-        platform="binary_sensor",
-        expected_state="on",
-    )
+    update_callback = controller.register.call_args_list[0][0][1]
+
+    vera_device.is_tripped = False
+    update_callback(vera_device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "off"
+    controller.register.reset_mock()
+
+    vera_device.is_tripped = True
+    update_callback(vera_device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "on"
+    controller.register.reset_mock()

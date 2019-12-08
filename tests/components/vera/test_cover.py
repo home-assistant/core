@@ -1,61 +1,72 @@
 """Vera tests."""
+from unittest.mock import MagicMock
+
+from pyvera import CATEGORY_CURTAIN, VeraCurtain
 
 from homeassistant.core import HomeAssistant
 
-from .common import (
-    DEVICE_CURTAIN_ID,
-    RESPONSE_LU_SDATA_EMPTY,
-    RESPONSE_SDATA,
-    RESPONSE_STATUS,
-    assert_state,
-    async_call_service,
-    async_configure_component,
-)
+from .common import async_configure_component
 
 
 async def test_cover(hass: HomeAssistant) -> None:
     """Test function."""
-    component_data = await async_configure_component(
-        hass=hass,
-        response_sdata=RESPONSE_SDATA,
-        response_status=RESPONSE_STATUS,
-        respone_lu_sdata=RESPONSE_LU_SDATA_EMPTY,
-    )
+    vera_device = MagicMock(spec=VeraCurtain)  # type: VeraCurtain
+    vera_device.device_id = 1
+    vera_device.name = "dev1"
+    vera_device.category = CATEGORY_CURTAIN
+    vera_device.is_closed = False
+    vera_device.get_level.return_value = 0
+    entity_id = "cover.dev1_1"
 
-    # Curtain
-    assert_state(hass, component_data, DEVICE_CURTAIN_ID, "cover", "closed")
-    await async_call_service(
-        hass, component_data, DEVICE_CURTAIN_ID, "cover", "open_cover"
+    component_data = await async_configure_component(hass=hass, devices=(vera_device,),)
+    controller = component_data.controller
+    update_callback = controller.register.call_args_list[0][0][1]
+
+    assert hass.states.get(entity_id).state == "closed"
+    assert hass.states.get(entity_id).attributes["current_position"] == 0
+
+    await hass.services.async_call(
+        "cover", "open_cover", {"entity_id": entity_id},
     )
-    assert_state(hass, component_data, DEVICE_CURTAIN_ID, "cover", "open")
-    await async_call_service(
-        hass,
-        component_data,
-        DEVICE_CURTAIN_ID,
-        "cover",
-        "set_cover_position",
-        {"position": 50},
+    await hass.async_block_till_done()
+    vera_device.open.assert_called()
+    vera_device.is_open.return_value = True
+    vera_device.get_level.return_value = 100
+    update_callback(vera_device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "open"
+    assert hass.states.get(entity_id).attributes["current_position"] == 100
+
+    await hass.services.async_call(
+        "cover", "set_cover_position", {"entity_id": entity_id, "position": 50},
     )
-    assert_state(
-        hass,
-        component_data,
-        DEVICE_CURTAIN_ID,
-        "cover",
-        expected_state="open",
-        expected_current_position=50,
+    await hass.async_block_till_done()
+    vera_device.set_level.assert_called_with(50)
+    vera_device.is_open.return_value = True
+    vera_device.get_level.return_value = 50
+    update_callback(vera_device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "open"
+    assert hass.states.get(entity_id).attributes["current_position"] == 50
+
+    await hass.services.async_call(
+        "cover", "stop_cover", {"entity_id": entity_id},
     )
-    await async_call_service(
-        hass, component_data, DEVICE_CURTAIN_ID, "cover", "stop_cover"
+    await hass.async_block_till_done()
+    vera_device.stop.assert_called()
+    update_callback(vera_device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "open"
+    assert hass.states.get(entity_id).attributes["current_position"] == 50
+
+    await hass.services.async_call(
+        "cover", "close_cover", {"entity_id": entity_id},
     )
-    assert_state(hass, component_data, DEVICE_CURTAIN_ID, "cover", "open")
-    await async_call_service(
-        hass, component_data, DEVICE_CURTAIN_ID, "cover", "close_cover"
-    )
-    assert_state(
-        hass,
-        component_data,
-        DEVICE_CURTAIN_ID,
-        "cover",
-        "closed",
-        expected_current_position=0,
-    )
+    await hass.async_block_till_done()
+    vera_device.close.assert_called()
+    vera_device.is_open.return_value = False
+    vera_device.get_level.return_value = 00
+    update_callback(vera_device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "closed"
+    assert hass.states.get(entity_id).attributes["current_position"] == 00

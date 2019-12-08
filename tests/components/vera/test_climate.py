@@ -1,138 +1,149 @@
 """Vera tests."""
+from unittest.mock import MagicMock
 
+from pyvera import CATEGORY_THERMOSTAT, VeraController, VeraThermostat
+
+from homeassistant.components.climate.const import (
+    FAN_AUTO,
+    FAN_ON,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_OFF,
+)
 from homeassistant.core import HomeAssistant
 
-from .common import (
-    DEVICE_THERMOSTAT_ID,
-    RESPONSE_LU_SDATA_EMPTY,
-    RESPONSE_SDATA,
-    RESPONSE_STATUS,
-    assert_state,
-    async_call_service,
-    async_configure_component,
-    update_device,
-)
+from .common import async_configure_component
 
 
 async def test_climate(hass: HomeAssistant) -> None:
     """Test function."""
+    vera_device = MagicMock(spec=VeraThermostat)  # type: VeraThermostat
+    vera_device.device_id = 1
+    vera_device.name = "dev1"
+    vera_device.category = CATEGORY_THERMOSTAT
+    vera_device.power = 10
+    vera_device.get_current_temperature.return_value = 71
+    vera_device.get_hvac_mode.return_value = "Off"
+    vera_device.get_current_goal_temperature.return_value = 72
+    entity_id = "climate.dev1_1"
+
+    component_data = await async_configure_component(hass=hass, devices=(vera_device,),)
+    controller = component_data.controller
+    update_callback = controller.register.call_args_list[0][0][1]
+
+    assert hass.states.get(entity_id).state == HVAC_MODE_OFF
+
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {"entity_id": entity_id, "hvac_mode": HVAC_MODE_COOL},
+    )
+    await hass.async_block_till_done()
+    vera_device.turn_cool_on.assert_called()
+    vera_device.get_hvac_mode.return_value = "CoolOn"
+    update_callback(vera_device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == HVAC_MODE_COOL
+
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {"entity_id": entity_id, "hvac_mode": HVAC_MODE_HEAT},
+    )
+    await hass.async_block_till_done()
+    vera_device.turn_heat_on.assert_called()
+    vera_device.get_hvac_mode.return_value = "HeatOn"
+    update_callback(vera_device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == HVAC_MODE_HEAT
+
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {"entity_id": entity_id, "hvac_mode": HVAC_MODE_HEAT_COOL},
+    )
+    await hass.async_block_till_done()
+    vera_device.turn_auto_on.assert_called()
+    vera_device.get_hvac_mode.return_value = "AutoChangeOver"
+    update_callback(vera_device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == HVAC_MODE_HEAT_COOL
+
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {"entity_id": entity_id, "hvac_mode": HVAC_MODE_OFF},
+    )
+    await hass.async_block_till_done()
+    vera_device.turn_auto_on.assert_called()
+    vera_device.get_hvac_mode.return_value = "Off"
+    update_callback(vera_device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == HVAC_MODE_OFF
+
+    await hass.services.async_call(
+        "climate", "set_fan_mode", {"entity_id": entity_id, "fan_mode": "on"},
+    )
+    await hass.async_block_till_done()
+    vera_device.turn_auto_on.assert_called()
+    vera_device.get_fan_mode.return_value = "ContinuousOn"
+    update_callback(vera_device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).attributes["fan_mode"] == FAN_ON
+
+    await hass.services.async_call(
+        "climate", "set_fan_mode", {"entity_id": entity_id, "fan_mode": "off"},
+    )
+    await hass.async_block_till_done()
+    vera_device.turn_auto_on.assert_called()
+    vera_device.get_fan_mode.return_value = "Auto"
+    update_callback(vera_device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).attributes["fan_mode"] == FAN_AUTO
+
+    await hass.services.async_call(
+        "climate", "set_temperature", {"entity_id": entity_id, "temperature": 30},
+    )
+    await hass.async_block_till_done()
+    vera_device.set_temperature.assert_called_with(30)
+    vera_device.get_current_goal_temperature.return_value = 30
+    vera_device.get_current_temperature.return_value = 25
+    update_callback(vera_device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).attributes["current_temperature"] == 25
+    assert hass.states.get(entity_id).attributes["temperature"] == 30
+
+
+async def test_climate_f(hass: HomeAssistant) -> None:
+    """Test function."""
+    vera_device = MagicMock(spec=VeraThermostat)  # type: VeraThermostat
+    vera_device.device_id = 1
+    vera_device.name = "dev1"
+    vera_device.category = CATEGORY_THERMOSTAT
+    vera_device.power = 10
+    vera_device.get_current_temperature.return_value = 71
+    vera_device.get_hvac_mode.return_value = "Off"
+    vera_device.get_current_goal_temperature.return_value = 72
+    entity_id = "climate.dev1_1"
+
+    def setup_callback(controller: VeraController, hass_config: dict) -> None:
+        controller.temperature_units = "F"
+
     component_data = await async_configure_component(
-        hass=hass,
-        response_sdata=RESPONSE_SDATA,
-        response_status=RESPONSE_STATUS,
-        respone_lu_sdata=RESPONSE_LU_SDATA_EMPTY,
+        hass=hass, devices=(vera_device,), setup_callback=setup_callback
     )
+    controller = component_data.controller
+    update_callback = controller.register.call_args_list[0][0][1]
 
-    # Thermostat
-    assert_state(hass, component_data, DEVICE_THERMOSTAT_ID, "climate", "off")
-    await async_call_service(
-        hass, component_data, DEVICE_THERMOSTAT_ID, "climate", "turn_on"
+    await hass.services.async_call(
+        "climate", "set_temperature", {"entity_id": entity_id, "temperature": 30},
     )
-    assert_state(
-        hass=hass,
-        data=component_data,
-        device_id=DEVICE_THERMOSTAT_ID,
-        platform="climate",
-        expected_state="heat_cool",
-    )
-    await async_call_service(
-        hass,
-        component_data,
-        DEVICE_THERMOSTAT_ID,
-        "climate",
-        "set_hvac_mode",
-        {"hvac_mode": "heat"},
-    )
-    assert_state(
-        hass=hass,
-        data=component_data,
-        device_id=DEVICE_THERMOSTAT_ID,
-        platform="climate",
-        expected_state="heat",
-    )
-    await async_call_service(
-        hass,
-        component_data,
-        DEVICE_THERMOSTAT_ID,
-        "climate",
-        "set_hvac_mode",
-        {"hvac_mode": "cool"},
-    )
-    assert_state(
-        hass=hass,
-        data=component_data,
-        device_id=DEVICE_THERMOSTAT_ID,
-        platform="climate",
-        expected_state="cool",
-    )
-
-    assert_state(
-        hass=hass,
-        data=component_data,
-        device_id=DEVICE_THERMOSTAT_ID,
-        platform="climate",
-        expected_fan_mode="auto",
-    )
-    await async_call_service(
-        hass,
-        component_data,
-        DEVICE_THERMOSTAT_ID,
-        "climate",
-        "set_fan_mode",
-        {"fan_mode": "on"},
-    )
-    assert_state(
-        hass=hass,
-        data=component_data,
-        device_id=DEVICE_THERMOSTAT_ID,
-        platform="climate",
-        expected_fan_mode="on",
-    )
-
-    assert_state(
-        hass=hass,
-        data=component_data,
-        device_id=DEVICE_THERMOSTAT_ID,
-        platform="climate",
-        expected_temperature=None,
-        expected_current_temperature=None,
-    )
-    await update_device(
-        hass=hass,
-        data=component_data,
-        device_id=DEVICE_THERMOSTAT_ID,
-        key="temperature",
-        value="30",
-    )
-    await async_call_service(
-        hass,
-        component_data,
-        DEVICE_THERMOSTAT_ID,
-        "climate",
-        "set_temperature",
-        {"temperature": 25},
-    )
-    assert_state(
-        hass=hass,
-        data=component_data,
-        device_id=DEVICE_THERMOSTAT_ID,
-        platform="climate",
-        expected_temperature=25,
-        expected_current_temperature=30,
-    )
-
-    await async_call_service(
-        hass,
-        component_data,
-        DEVICE_THERMOSTAT_ID,
-        "climate",
-        "set_hvac_mode",
-        {"hvac_mode": "off"},
-    )
-    assert_state(
-        hass=hass,
-        data=component_data,
-        device_id=DEVICE_THERMOSTAT_ID,
-        platform="climate",
-        expected_state="off",
-    )
+    await hass.async_block_till_done()
+    vera_device.set_temperature.assert_called_with(86)
+    vera_device.get_current_goal_temperature.return_value = 30
+    vera_device.get_current_temperature.return_value = 25
+    update_callback(vera_device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).attributes["current_temperature"] == -3.9
+    assert hass.states.get(entity_id).attributes["temperature"] == -1.1

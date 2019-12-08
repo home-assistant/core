@@ -1,30 +1,45 @@
 """Vera tests."""
+from unittest.mock import MagicMock
 
+from pyvera import CATEGORY_LOCK, VeraLock
+
+from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import HomeAssistant
 
-from .common import (
-    DEVICE_LOCK_ID,
-    RESPONSE_LU_SDATA_EMPTY,
-    RESPONSE_SDATA,
-    RESPONSE_STATUS,
-    assert_state,
-    async_call_service,
-    async_configure_component,
-)
+from .common import async_configure_component
 
 
 async def test_lock(hass: HomeAssistant) -> None:
     """Test function."""
-    component_data = await async_configure_component(
-        hass=hass,
-        response_sdata=RESPONSE_SDATA,
-        response_status=RESPONSE_STATUS,
-        respone_lu_sdata=RESPONSE_LU_SDATA_EMPTY,
-    )
+    vera_device = MagicMock(spec=VeraLock)  # type: VeraLock
+    vera_device.device_id = 1
+    vera_device.name = "dev1"
+    vera_device.category = CATEGORY_LOCK
+    vera_device.is_locked = MagicMock(return_value=False)
+    entity_id = "lock.dev1_1"
 
-    # Lock
-    assert_state(hass, component_data, DEVICE_LOCK_ID, "lock", "unlocked")
-    await async_call_service(hass, component_data, DEVICE_LOCK_ID, "lock", "lock")
-    assert_state(hass, component_data, DEVICE_LOCK_ID, "lock", "locked")
-    await async_call_service(hass, component_data, DEVICE_LOCK_ID, "lock", "unlock")
-    assert_state(hass, component_data, DEVICE_LOCK_ID, "lock", "unlocked")
+    component_data = await async_configure_component(hass=hass, devices=(vera_device,),)
+    controller = component_data.controller
+    update_callback = controller.register.call_args_list[0][0][1]
+
+    assert hass.states.get(entity_id).state == STATE_UNLOCKED
+
+    await hass.services.async_call(
+        "lock", "lock", {"entity_id": entity_id},
+    )
+    await hass.async_block_till_done()
+    vera_device.lock.assert_called()
+    vera_device.is_locked.return_value = True
+    update_callback(vera_device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_LOCKED
+
+    await hass.services.async_call(
+        "lock", "unlock", {"entity_id": entity_id},
+    )
+    await hass.async_block_till_done()
+    vera_device.unlock.assert_called()
+    vera_device.is_locked.return_value = False
+    update_callback(vera_device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNLOCKED

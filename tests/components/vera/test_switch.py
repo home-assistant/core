@@ -1,105 +1,44 @@
 """Vera tests."""
+from unittest.mock import MagicMock
+
+from pyvera import CATEGORY_SWITCH, VeraSwitch
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import async_get_registry
 
-from .common import (
-    DEVICE_DOOR_SENSOR_ID,
-    DEVICE_IGNORE,
-    DEVICE_MOTION_SENSOR_ID,
-    DEVICE_SCENE_CONTROLLER_ID,
-    DEVICE_SWITCH2_ID,
-    DEVICE_SWITCH_ID,
-    DEVICE_THERMOSTAT_ID,
-    RESPONSE_LU_SDATA_EMPTY,
-    RESPONSE_SDATA,
-    RESPONSE_STATUS,
-    assert_state,
-    async_call_service,
-    async_configure_component,
-    get_device,
-    get_entity_id,
-)
+from .common import async_configure_component
 
 
 async def test_switch(hass: HomeAssistant) -> None:
     """Test function."""
-    component_data = await async_configure_component(
-        hass=hass,
-        response_sdata=RESPONSE_SDATA,
-        response_status=RESPONSE_STATUS,
-        respone_lu_sdata=RESPONSE_LU_SDATA_EMPTY,
-    )
+    vera_device = MagicMock(spec=VeraSwitch)  # type: VeraSwitch
+    vera_device.device_id = 1
+    vera_device.name = "dev1"
+    vera_device.category = CATEGORY_SWITCH
+    vera_device.is_switched_on = MagicMock(return_value=False)
+    entity_id = "switch.dev1_1"
 
-    registry = await async_get_registry(hass)
+    component_data = await async_configure_component(hass=hass, devices=(vera_device,),)
+    controller = component_data.controller
+    update_callback = controller.register.call_args_list[0][0][1]
 
-    # Ignore device.
-    ignore_device = get_device(DEVICE_IGNORE, component_data)
-    entry = registry.async_get(get_entity_id(ignore_device, "switch"))
-    assert entry is None
+    assert hass.states.get(entity_id).state == "off"
 
-    # Door sensor.
-    assert_state(hass, component_data, DEVICE_DOOR_SENSOR_ID, "switch", "off")
-    await async_call_service(
-        hass, component_data, DEVICE_DOOR_SENSOR_ID, "switch", "turn_on"
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": entity_id},
     )
-    assert_state(hass, component_data, DEVICE_DOOR_SENSOR_ID, "switch", "on")
-    await async_call_service(
-        hass, component_data, DEVICE_DOOR_SENSOR_ID, "switch", "turn_off"
-    )
-    assert_state(hass, component_data, DEVICE_DOOR_SENSOR_ID, "switch", "off")
+    await hass.async_block_till_done()
+    vera_device.switch_on.assert_called()
+    vera_device.is_switched_on.return_value = True
+    update_callback(vera_device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "on"
 
-    # Motion sensor.
-    assert_state(hass, component_data, DEVICE_MOTION_SENSOR_ID, "switch", "off")
-    await async_call_service(
-        hass, component_data, DEVICE_MOTION_SENSOR_ID, "switch", "turn_on"
+    await hass.services.async_call(
+        "switch", "turn_off", {"entity_id": entity_id},
     )
-    assert_state(hass, component_data, DEVICE_MOTION_SENSOR_ID, "switch", "on")
-    await async_call_service(
-        hass, component_data, DEVICE_MOTION_SENSOR_ID, "switch", "turn_off"
-    )
-    assert_state(hass, component_data, DEVICE_MOTION_SENSOR_ID, "switch", "off")
-
-    # Switch
-    assert_state(hass, component_data, DEVICE_SWITCH_ID, "switch", "off")
-    await async_call_service(
-        hass, component_data, DEVICE_SWITCH_ID, "switch", "turn_on"
-    )
-    assert_state(hass, component_data, DEVICE_SWITCH_ID, "switch", "on")
-    await async_call_service(
-        hass, component_data, DEVICE_SWITCH_ID, "switch", "turn_off"
-    )
-    assert_state(hass, component_data, DEVICE_SWITCH_ID, "switch", "off")
-
-    # Switch 2
-    assert_state(hass, component_data, DEVICE_SWITCH2_ID, "light", "off")
-    await async_call_service(
-        hass, component_data, DEVICE_SWITCH2_ID, "light", "turn_on"
-    )
-    assert_state(hass, component_data, DEVICE_SWITCH2_ID, "light", "on")
-    await async_call_service(
-        hass, component_data, DEVICE_SWITCH2_ID, "light", "turn_off"
-    )
-    assert_state(hass, component_data, DEVICE_SWITCH2_ID, "light", "off")
-
-    # Thermostat
-    assert_state(hass, component_data, DEVICE_THERMOSTAT_ID, "switch", "off")
-    await async_call_service(
-        hass, component_data, DEVICE_THERMOSTAT_ID, "switch", "turn_on"
-    )
-    assert_state(hass, component_data, DEVICE_THERMOSTAT_ID, "switch", "on")
-    await async_call_service(
-        hass, component_data, DEVICE_THERMOSTAT_ID, "switch", "turn_off"
-    )
-    assert_state(hass, component_data, DEVICE_THERMOSTAT_ID, "switch", "off")
-
-    # Scene
-    assert_state(hass, component_data, DEVICE_SCENE_CONTROLLER_ID, "switch", "off")
-    await async_call_service(
-        hass, component_data, DEVICE_SCENE_CONTROLLER_ID, "switch", "turn_on"
-    )
-    assert_state(hass, component_data, DEVICE_SCENE_CONTROLLER_ID, "switch", "on")
-    await async_call_service(
-        hass, component_data, DEVICE_SCENE_CONTROLLER_ID, "switch", "turn_off"
-    )
-    assert_state(hass, component_data, DEVICE_SCENE_CONTROLLER_ID, "switch", "off")
+    await hass.async_block_till_done()
+    vera_device.switch_off.assert_called()
+    vera_device.is_switched_on.return_value = False
+    update_callback(vera_device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "off"

@@ -1,30 +1,25 @@
 """Vera tests."""
+from unittest.mock import MagicMock
+
+from pyvera import VeraScene
 
 from homeassistant.core import HomeAssistant
 
-from .common import (
-    DEVICE_SCENE_CONTROLLER_ID,
-    RESPONSE_LU_SDATA_EMPTY,
-    RESPONSE_SDATA,
-    RESPONSE_STATUS,
-    assert_state,
-    async_call_service,
-    async_configure_component,
-)
+from .common import async_configure_component
 
 
 async def test_scene(hass: HomeAssistant) -> None:
     """Test function."""
-    component_data = await async_configure_component(
-        hass=hass,
-        response_sdata=RESPONSE_SDATA,
-        response_status=RESPONSE_STATUS,
-        respone_lu_sdata=RESPONSE_LU_SDATA_EMPTY,
+    vera_scene = MagicMock(spec=VeraScene)  # type: VeraScene
+    vera_scene.scene_id = 1
+    vera_scene.name = "dev1"
+    entity_id = "scene.dev1_1"
+
+    await async_configure_component(
+        hass=hass, scenes=(vera_scene,),
     )
 
-    # Scene
-    # Possible bug. Using the service against a scene does not result in an API call.
-    await async_call_service(
-        hass, component_data, DEVICE_SCENE_CONTROLLER_ID, "scene", "turn_on"
+    await hass.services.async_call(
+        "scene", "turn_on", {"entity_id": entity_id},
     )
-    assert_state(hass, component_data, DEVICE_SCENE_CONTROLLER_ID, "switch", "off")
+    await hass.async_block_till_done()
