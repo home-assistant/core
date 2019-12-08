@@ -24,7 +24,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class TeslaDeviceEntity(TrackerEntity, TeslaDevice):
+class TeslaDeviceEntity(TeslaDevice, TrackerEntity):
     """A class representing a Tesla device."""
 
     def __init__(self, tesla_device, controller, config_entry):

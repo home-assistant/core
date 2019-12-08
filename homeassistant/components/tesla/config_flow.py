@@ -1,10 +1,8 @@
 """Tesla Config Flow."""
 import logging
 
+from teslajsonpy import Controller as TeslaAPI, TeslaException
 import voluptuous as vol
-
-from teslajsonpy import Controller as teslaAPI
-from teslajsonpy import TeslaException
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import (
@@ -15,15 +13,14 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
-    dict([(vol.Required(CONF_USERNAME), str), (vol.Required(CONF_PASSWORD), str)])
+    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
 )
 
 
@@ -33,7 +30,7 @@ def configured_instances(hass):
     return set(entry.title for entry in hass.config_entries.async_entries(DOMAIN))
 
 
-class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tesla."""
 
     VERSION = 1
@@ -107,19 +104,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         data_schema = vol.Schema(
-            dict(
-                [
-                    (
-                        vol.Optional(
-                            CONF_SCAN_INTERVAL,
-                            default=self.config_entry.options.get(
-                                CONF_SCAN_INTERVAL, 300
-                            ),
-                        ),
-                        vol.All(cv.positive_int, vol.Clamp(min=300)),
-                    )
-                ]
-            )
+            {
+                vol.Optional(
+                    CONF_SCAN_INTERVAL,
+                    default=self.config_entry.options.get(CONF_SCAN_INTERVAL, 300),
+                ): vol.All(cv.positive_int, vol.Clamp(min=300))
+            }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)
 
@@ -133,7 +123,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     config = {}
     websession = aiohttp_client.async_get_clientsession(hass)
     try:
-        controller = teslaAPI(
+        controller = TeslaAPI(
             websession,
             email=data[CONF_USERNAME],
             password=data[CONF_PASSWORD],

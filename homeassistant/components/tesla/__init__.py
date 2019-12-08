@@ -3,7 +3,7 @@ import asyncio
 from collections import defaultdict
 import logging
 
-from teslajsonpy import Controller as teslaAPI, TeslaException
+from teslajsonpy import Controller as TeslaAPI, TeslaException
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -22,10 +22,10 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.util import slugify
 
 from .config_flow import (
-    configured_instances,
-    validate_input,
     CannotConnect,
     InvalidAuth,
+    configured_instances,
+    validate_input,
 )
 from .const import DATA_LISTENER, DOMAIN, TESLA_COMPONENTS
 
@@ -75,7 +75,7 @@ async def async_setup(hass, base_config):
         return True
     email = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
-    scan_interval = config.get(CONF_SCAN_INTERVAL)
+    scan_interval = config[CONF_SCAN_INTERVAL]
     if email in configured_instances(hass):
         try:
             info = await validate_input(hass, config)
@@ -100,7 +100,7 @@ async def async_setup(hass, base_config):
         async_call_later(
             hass,
             15,
-            lambda: _update_entry(email, options={CONF_SCAN_INTERVAL: scan_interval}),
+            lambda _: _update_entry(email, options={CONF_SCAN_INTERVAL: scan_interval}),
         )
     return True
 
@@ -110,11 +110,11 @@ async def async_setup_entry(hass, config_entry):
 
     if DOMAIN not in hass.data or config_entry.entry_id not in hass.data[DOMAIN]:
         config = config_entry.data
-        if DOMAIN not in hass.data:
-            hass.data[DOMAIN] = {}
+        hass.data.setdefault(DOMAIN, {})
+
         try:
             websession = aiohttp_client.async_get_clientsession(hass)
-            controller = teslaAPI(
+            controller = TeslaAPI(
                 websession,
                 refresh_token=config[CONF_TOKEN],
                 update_interval=config_entry.options.get(CONF_SCAN_INTERVAL, 300),
