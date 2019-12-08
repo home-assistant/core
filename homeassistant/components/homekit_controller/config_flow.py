@@ -1,7 +1,7 @@
 """Config flow to configure homekit_controller."""
-import os
 import json
 import logging
+import os
 
 import homekit
 import voluptuous as vol
@@ -9,9 +9,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 
+from .connection import get_accessory_name, get_bridge_information
 from .const import DOMAIN, KNOWN_DEVICES
-from .connection import get_bridge_information, get_accessory_name
-
 
 HOMEKIT_IGNORE = ["Home Assistant Bridge"]
 HOMEKIT_DIR = ".homekit"

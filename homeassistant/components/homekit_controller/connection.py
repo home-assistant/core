@@ -8,13 +8,12 @@ from homekit.exceptions import (
     AccessoryNotFoundError,
     EncryptionError,
 )
-from homekit.model.services import ServicesTypes
 from homekit.model.characteristics import CharacteristicsTypes
+from homekit.model.services import ServicesTypes
 
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, ENTITY_MAP
-
+from .const import DOMAIN, ENTITY_MAP, HOMEKIT_ACCESSORY_DISPATCH
 
 DEFAULT_SCAN_INTERVAL = datetime.timedelta(seconds=60)
 RETRY_INTERVAL = 60  # seconds
