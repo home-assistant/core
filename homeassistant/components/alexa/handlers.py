@@ -34,20 +34,20 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 import homeassistant.util.color as color_util
-import homeassistant.util.dt as dt_util
 from homeassistant.util.decorator import Registry
+import homeassistant.util.dt as dt_util
 from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import (
     API_TEMP_UNITS,
-    API_THERMOSTAT_MODES_CUSTOM,
     API_THERMOSTAT_MODES,
+    API_THERMOSTAT_MODES_CUSTOM,
     API_THERMOSTAT_PRESETS,
-    Cause,
-    Inputs,
     PERCENTAGE_FAN_MAP,
     RANGE_FAN_MAP,
     SPEED_FAN_MAP,
+    Cause,
+    Inputs,
 )
 from .entities import async_get_entities
 from .errors import (
