@@ -100,7 +100,7 @@ class NMBSLiveBoard(Entity):
     @property
     def name(self):
         """Return the sensor default name."""
-        return "Live {}".format(self._name)
+        return "{} Live".format(self._name)
 
     @property
     def icon(self):
