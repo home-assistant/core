@@ -34,7 +34,7 @@ CONDITION_CLASSES = {
     "hail": [],
     "lightning": [21],
     "lightning-rainy": [11],
-    "partlycloudy": [3, 4],
+    "partly-cloudy": [3, 4],
     "pouring": [10, 20],
     "rainy": [8, 9, 18, 19],
     "snowy": [15, 16, 17, 25, 26, 27],
