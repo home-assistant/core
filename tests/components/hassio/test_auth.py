@@ -1,5 +1,5 @@
 """The tests for the hassio component."""
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from homeassistant.exceptions import HomeAssistantError
 

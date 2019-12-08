@@ -1,9 +1,9 @@
 """Test config flow."""
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro
 
