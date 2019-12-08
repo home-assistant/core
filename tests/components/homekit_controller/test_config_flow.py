@@ -7,13 +7,13 @@ import pytest
 
 from homeassistant.components.homekit_controller import config_flow
 from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
+
 from tests.common import MockConfigEntry
 from tests.components.homekit_controller.common import (
     Accessory,
     FakeService,
     setup_platform,
 )
-
 
 PAIRING_START_FORM_ERRORS = [
     (homekit.BusyError, "busy_error"),
