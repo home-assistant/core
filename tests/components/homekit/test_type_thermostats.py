@@ -20,12 +20,12 @@ from homeassistant.components.climate.const import (
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     DOMAIN as DOMAIN_CLIMATE,
+    HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
+    HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_AUTO,
 )
 from homeassistant.components.homekit.const import (
     ATTR_VALUE,

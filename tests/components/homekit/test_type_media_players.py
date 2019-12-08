@@ -8,11 +8,11 @@ from homeassistant.components.homekit.const import (
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
 )
-from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.components.homekit.type_media_players import (
     MediaPlayer,
     TelevisionMediaPlayer,
 )
+from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
