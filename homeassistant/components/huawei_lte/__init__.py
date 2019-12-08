@@ -58,6 +58,8 @@ from .const import (
     KEY_MONITORING_STATUS,
     KEY_MONITORING_TRAFFIC_STATISTICS,
     KEY_WLAN_HOST_LIST,
+    SERVICE_CLEAR_TRAFFIC_STATISTICS,
+    SERVICE_REBOOT,
     UPDATE_OPTIONS_SIGNAL,
     UPDATE_SIGNAL,
 )
@@ -102,6 +104,8 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_URL): cv.url})
 
 CONFIG_ENTRY_PLATFORMS = (
     BINARY_SENSOR_DOMAIN,
@@ -386,6 +390,39 @@ async def async_setup(hass: HomeAssistantType, config) -> bool:
         hass.data[DOMAIN] = HuaweiLteData(hass_config=config, config=domain_config)
     for router_config in config.get(DOMAIN, []):
         domain_config[url_normalize(router_config.pop(CONF_URL))] = router_config
+
+    def service_handler(service) -> None:
+        """Apply a service."""
+        url = service.data.get(CONF_URL)
+        routers = hass.data[DOMAIN].routers
+        if url:
+            router = routers.get(url)
+        elif len(routers) == 1:
+            router = next(iter(routers.values()))
+        else:
+            _LOGGER.error(
+                "%s: more than one router configured, must specify one of URLs %s",
+                service.service,
+                sorted(routers),
+            )
+            return
+        if not router:
+            _LOGGER.error("%s: router %s unavailable", service.service, url)
+            return
+
+        if service.service == SERVICE_CLEAR_TRAFFIC_STATISTICS:
+            result = router.client.monitoring.set_clear_traffic()
+            _LOGGER.debug("%s: %s", service.service, result)
+        elif service.service == SERVICE_REBOOT:
+            result = router.client.device.reboot()
+            _LOGGER.debug("%s: %s", service.service, result)
+        else:
+            _LOGGER.error("%s: unsupported service", service.service)
+
+    for service in (SERVICE_CLEAR_TRAFFIC_STATISTICS, SERVICE_REBOOT):
+        hass.helpers.service.async_register_admin_service(
+            DOMAIN, service, service_handler, schema=SERVICE_SCHEMA,
+        )
 
     for url, router_config in domain_config.items():
         hass.async_create_task(
