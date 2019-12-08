@@ -113,7 +113,7 @@ CONDITION_CLASSES = OrderedDict(
         ("fog", ["Fog/mist"]),
         ("clear", ["Fair/clear"]),  # sunny and clear-night
         ("cloudy", ["Mostly cloudy", "Overcast"]),
-        ("partlycloudy", ["A few clouds", "Partly cloudy"]),
+        ("partly-cloudy", ["A few clouds", "Partly cloudy"]),
     ]
 )
 
