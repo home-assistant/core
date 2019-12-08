@@ -10,6 +10,7 @@ from withings_api.common import (
     get_measure_value,
     MeasureGroupAttribs,
     SleepState,
+    SleepGetSerie
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -382,7 +383,11 @@ class WithingsHealthSensor(Entity):
             self._state = None
             return
 
-        serie = data.series[len(data.series) - 1]
+        def sort_serie(serie: SleepGetSerie) -> str:
+            return serie.startdate
+
+        sorted_series = sorted(data.series, key=sort_serie)
+        serie = sorted_series[len(data.series) - 1]
         state = None
         if serie.state == SleepState.AWAKE:
             state = const.STATE_AWAKE

@@ -308,6 +308,11 @@ async def test_full_setup(hass: HomeAssistant, aiohttp_client, aioclient_mock) -
                     {
                         "startdate": "2019-02-01 00:00:00",
                         "enddate": "2019-02-01 01:00:00",
+                        "state": SleepState.REM.real,
+                    },
+                    {
+                        "startdate": "2019-02-01 01:00:00",
+                        "enddate": "2019-02-01 02:00:00",
                         "state": SleepState.AWAKE.real,
                     }
                 ],
@@ -330,9 +335,14 @@ async def test_full_setup(hass: HomeAssistant, aiohttp_client, aioclient_mock) -
                 "model": SleepModel.TRACKER.real,
                 "series": [
                     {
+                        "startdate": "2019-02-01 01:00:00",
+                        "enddate": "2019-02-01 02:00:00",
+                        "state": SleepState.LIGHT.real,
+                    },
+                    {
                         "startdate": "2019-02-01 00:00:00",
                         "enddate": "2019-02-01 01:00:00",
-                        "state": SleepState.LIGHT.real,
+                        "state": SleepState.REM.real,
                     }
                 ],
             },
@@ -356,7 +366,17 @@ async def test_full_setup(hass: HomeAssistant, aiohttp_client, aioclient_mock) -
                     {
                         "startdate": "2019-02-01 00:00:00",
                         "enddate": "2019-02-01 01:00:00",
+                        "state": SleepState.LIGHT.real,
+                    },
+                    {
+                        "startdate": "2019-02-01 02:00:00",
+                        "enddate": "2019-02-01 03:00:00",
                         "state": SleepState.REM.real,
+                    },
+                    {
+                        "startdate": "2019-02-01 01:00:00",
+                        "enddate": "2019-02-01 02:00:00",
+                        "state": SleepState.AWAKE.real,
                     }
                 ],
             },
