@@ -4,11 +4,10 @@ from typing import Any, Callable, Dict, Hashable
 
 import voluptuous as vol
 
-from homeassistant.core import callback, Context
+from homeassistant.core import Context, callback
 from homeassistant.exceptions import Unauthorized
 
 from . import const, messages
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
