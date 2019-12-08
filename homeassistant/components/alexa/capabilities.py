@@ -1,6 +1,10 @@
 """Alexa capabilities."""
 import logging
 
+from homeassistant.components import cover, fan, light
+from homeassistant.components.alarm_control_panel import ATTR_CODE_FORMAT, FORMAT_NUMBER
+import homeassistant.components.climate.const as climate
+import homeassistant.components.media_player.const as media_player
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
@@ -20,21 +24,17 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     STATE_UNLOCKED,
 )
-import homeassistant.components.climate.const as climate
-import homeassistant.components.media_player.const as media_player
-from homeassistant.components.alarm_control_panel import ATTR_CODE_FORMAT, FORMAT_NUMBER
-from homeassistant.components import light, fan, cover
 import homeassistant.util.color as color_util
 import homeassistant.util.dt as dt_util
 
 from .const import (
-    Catalog,
     API_TEMP_UNITS,
     API_THERMOSTAT_MODES,
     API_THERMOSTAT_PRESETS,
     DATE_FORMAT,
     PERCENTAGE_FAN_MAP,
     RANGE_FAN_MAP,
+    Catalog,
     Inputs,
 )
 from .errors import UnsupportedProperty
