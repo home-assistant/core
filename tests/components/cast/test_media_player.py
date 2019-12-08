@@ -2,18 +2,18 @@
 # pylint: disable=protected-access
 import asyncio
 from typing import Optional
-from unittest.mock import patch, MagicMock, Mock
+from unittest.mock import MagicMock, Mock, patch
 from uuid import UUID
 
 import attr
 import pytest
 
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.components.cast import media_player as cast
 from homeassistant.components.cast.media_player import ChromecastInfo
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.components.cast import media_player as cast
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_coro
