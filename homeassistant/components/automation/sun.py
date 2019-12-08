@@ -4,16 +4,15 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.const import (
     CONF_EVENT,
     CONF_OFFSET,
     CONF_PLATFORM,
     SUN_EVENT_SUNRISE,
 )
-from homeassistant.helpers.event import async_track_sunrise, async_track_sunset
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-
+from homeassistant.helpers.event import async_track_sunrise, async_track_sunset
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
