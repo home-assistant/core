@@ -1,17 +1,17 @@
 """Use serial protocol of Acer projector to obtain state of the projector."""
 import logging
 import re
-import serial
 
+import serial
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
-    STATE_ON,
-    STATE_OFF,
-    STATE_UNKNOWN,
-    CONF_NAME,
     CONF_FILENAME,
+    CONF_NAME,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNKNOWN,
 )
 import homeassistant.helpers.config_validation as cv
 
