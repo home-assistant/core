@@ -2,22 +2,22 @@
 from typing import Callable, List, Union
 
 from withings_api.common import (
-    MeasureType,
     GetSleepSummaryField,
     MeasureGetMeasResponse,
-    SleepGetResponse,
-    SleepGetSummaryResponse,
-    get_measure_value,
     MeasureGroupAttribs,
+    MeasureType,
+    SleepGetResponse,
+    SleepGetSerie,
+    SleepGetSummaryResponse,
     SleepState,
-    SleepGetSerie
+    get_measure_value,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
-from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import const
 from .common import _LOGGER, WithingsDataManager, get_data_manager
