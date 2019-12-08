@@ -332,6 +332,7 @@ omit =
     homeassistant/components/influxdb/sensor.py
     homeassistant/components/insteon/*
     homeassistant/components/incomfort/*
+    homeassistant/components/intesishome/*
     homeassistant/components/ios/*
     homeassistant/components/iota/*
     homeassistant/components/iperf3/*
