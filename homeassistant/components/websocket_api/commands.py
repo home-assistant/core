@@ -10,7 +10,6 @@ from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.service import async_get_all_descriptions
 
 from . import const, decorators, messages
-from .permissions import SUBSCRIBE_WHITELIST
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -45,6 +44,9 @@ def handle_subscribe_events(hass, connection, msg):
 
     Async friendly.
     """
+    # Circular dep
+    # pylint: disable=import-outside-toplevel
+    from .permissions import SUBSCRIBE_WHITELIST
 
     event_type = msg["event_type"]
 
