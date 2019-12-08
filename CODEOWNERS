@@ -162,6 +162,7 @@ homeassistant/components/input_select/* @home-assistant/core
 homeassistant/components/input_text/* @home-assistant/core
 homeassistant/components/integration/* @dgomes
 homeassistant/components/intent/* @home-assistant/core
+homeassistant/components/intesishome/* @jnimmo
 homeassistant/components/ios/* @robbiet480
 homeassistant/components/iperf3/* @rohankapoorcom
 homeassistant/components/ipma/* @dgomes
