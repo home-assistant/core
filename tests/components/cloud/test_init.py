@@ -3,13 +3,14 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.core import Context
-from homeassistant.exceptions import Unauthorized
 from homeassistant.components import cloud
 from homeassistant.components.cloud.const import DOMAIN
 from homeassistant.components.cloud.prefs import STORAGE_KEY
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Context
+from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import async_setup_component
+
 from tests.common import mock_coro
 
 
