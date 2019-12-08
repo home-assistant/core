@@ -8,12 +8,12 @@ from plexauth import PlexAuth
 import requests.exceptions
 import voluptuous as vol
 
-from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant import config_entries
+from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.const import CONF_URL, CONF_TOKEN, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_SSL, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.json import load_json
 
 from .const import (  # pylint: disable=unused-import
@@ -22,16 +22,16 @@ from .const import (  # pylint: disable=unused-import
     CONF_CLIENT_IDENTIFIER,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
-    CONF_USE_EPISODE_ART,
     CONF_SHOW_ALL_CONTROLS,
+    CONF_USE_EPISODE_ART,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     PLEX_CONFIG_FILE,
     PLEX_SERVER_CONFIG,
     X_PLEX_DEVICE_NAME,
-    X_PLEX_VERSION,
-    X_PLEX_PRODUCT,
     X_PLEX_PLATFORM,
+    X_PLEX_PRODUCT,
+    X_PLEX_VERSION,
 )
 from .errors import NoServersFound, ServerNotSpecified
 from .server import PlexServer
