@@ -118,7 +118,7 @@ homeassistant/components/gearbest/* @HerrHofrat
 homeassistant/components/geniushub/* @zxdavb
 homeassistant/components/geo_rss_events/* @exxamalte
 homeassistant/components/geonetnz_quakes/* @exxamalte
-<homeassistant/components/geonetnz_volcano/* @exxamalte
+homeassistant/components/geonetnz_volcano/* @exxamalte
 homeassistant/components/gios/* @bieniu
 homeassistant/components/gitter/* @fabaff
 homeassistant/components/glances/* @fabaff @engrbm87
