@@ -611,6 +611,8 @@ omit =
     homeassistant/components/shodan/sensor.py
     homeassistant/components/sht31/sensor.py
     homeassistant/components/sigfox/sensor.py
+    homeassistant/components/signal_messenger/__init__.py
+    homeassistant/components/signal_messenger/notify.py
     homeassistant/components/simplepush/notify.py
     homeassistant/components/simplisafe/__init__.py
     homeassistant/components/simplisafe/alarm_control_panel.py
