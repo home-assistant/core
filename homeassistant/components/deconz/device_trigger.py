@@ -2,7 +2,6 @@
 import voluptuous as vol
 
 import homeassistant.components.automation.event as event
-
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
@@ -148,6 +147,7 @@ TRADFRI_WIRELESS_DIMMER = {
 }
 
 AQARA_CUBE_MODEL = "lumi.sensor_cube"
+AQARA_CUBE_MODEL_ALT1 = "lumi.sensor_cube.aqgl01"
 AQARA_CUBE = {
     (CONF_ROTATE_FROM_SIDE_1, CONF_SIDE_2): 6002,
     (CONF_ROTATE_FROM_SIDE_1, CONF_SIDE_3): 3002,
@@ -209,6 +209,13 @@ AQARA_DOUBLE_WALL_SWITCH = {
     (CONF_DOUBLE_PRESS, CONF_BOTH_BUTTONS): 3004,
 }
 
+AQARA_DOUBLE_WALL_SWITCH_WXKG02LM_MODEL = "lumi.sensor_86sw2"
+AQARA_DOUBLE_WALL_SWITCH_WXKG02LM = {
+    (CONF_SHORT_PRESS, CONF_LEFT): 1002,
+    (CONF_SHORT_PRESS, CONF_RIGHT): 2002,
+    (CONF_SHORT_PRESS, CONF_BOTH_BUTTONS): 3002,
+}
+
 AQARA_MINI_SWITCH_MODEL = "lumi.remote.b1acn01"
 AQARA_MINI_SWITCH = {
     (CONF_SHORT_PRESS, CONF_TURN_ON): 1002,
@@ -238,6 +245,14 @@ AQARA_SQUARE_SWITCH = {
     (CONF_SHAKE, ""): 1007,
 }
 
+AQARA_SQUARE_SWITCH_WXKG11LM_2016_MODEL = "lumi.sensor_switch.aq2"
+AQARA_SQUARE_SWITCH_WXKG11LM_2016 = {
+    (CONF_SHORT_PRESS, CONF_TURN_ON): 1002,
+    (CONF_DOUBLE_PRESS, CONF_TURN_ON): 1004,
+    (CONF_TRIPLE_PRESS, CONF_TURN_ON): 1005,
+    (CONF_QUADRUPLE_PRESS, CONF_TURN_ON): 1006,
+}
+
 REMOTES = {
     HUE_DIMMER_REMOTE_MODEL_GEN1: HUE_DIMMER_REMOTE,
     HUE_DIMMER_REMOTE_MODEL_GEN2: HUE_DIMMER_REMOTE,
@@ -248,10 +263,13 @@ REMOTES = {
     TRADFRI_REMOTE_MODEL: TRADFRI_REMOTE,
     TRADFRI_WIRELESS_DIMMER_MODEL: TRADFRI_WIRELESS_DIMMER,
     AQARA_CUBE_MODEL: AQARA_CUBE,
+    AQARA_CUBE_MODEL_ALT1: AQARA_CUBE,
     AQARA_DOUBLE_WALL_SWITCH_MODEL: AQARA_DOUBLE_WALL_SWITCH,
+    AQARA_DOUBLE_WALL_SWITCH_WXKG02LM_MODEL: AQARA_DOUBLE_WALL_SWITCH_WXKG02LM,
     AQARA_MINI_SWITCH_MODEL: AQARA_MINI_SWITCH,
     AQARA_ROUND_SWITCH_MODEL: AQARA_ROUND_SWITCH,
     AQARA_SQUARE_SWITCH_MODEL: AQARA_SQUARE_SWITCH,
+    AQARA_SQUARE_SWITCH_WXKG11LM_2016_MODEL: AQARA_SQUARE_SWITCH_WXKG11LM_2016,
 }
 
 TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
@@ -282,7 +300,11 @@ async def async_validate_trigger_config(hass, config):
 
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
 
-    if device.model not in REMOTES or trigger not in REMOTES[device.model]:
+    if (
+        not device
+        or device.model not in REMOTES
+        or trigger not in REMOTES[device.model]
+    ):
         raise InvalidDeviceAutomationConfig
 
     return config

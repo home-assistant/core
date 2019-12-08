@@ -4,7 +4,15 @@ import voluptuous as vol
 from homeassistant.helpers import config_validation as cv
 
 from .config_flow import get_master_gateway
-from .const import CONF_BRIDGEID, DOMAIN, _LOGGER
+from .const import (
+    _LOGGER,
+    CONF_BRIDGEID,
+    DOMAIN,
+    NEW_GROUP,
+    NEW_LIGHT,
+    NEW_SCENE,
+    NEW_SENSOR,
+)
 
 DECONZ_SERVICES = "deconz_services"
 
@@ -105,7 +113,7 @@ async def async_configure_service(hass, data):
             _LOGGER.error("Could not find the entity %s", entity_id)
             return
 
-    await gateway.api.async_put_state(field, data)
+    await gateway.api.request("put", field, json=data)
 
 
 async def async_refresh_devices_service(hass, data):
@@ -119,10 +127,10 @@ async def async_refresh_devices_service(hass, data):
     scenes = set(gateway.api.scenes.keys())
     sensors = set(gateway.api.sensors.keys())
 
-    await gateway.api.async_load_parameters()
+    await gateway.api.refresh_state()
 
     gateway.async_add_device_callback(
-        "group",
+        NEW_GROUP,
         [
             group
             for group_id, group in gateway.api.groups.items()
@@ -131,7 +139,7 @@ async def async_refresh_devices_service(hass, data):
     )
 
     gateway.async_add_device_callback(
-        "light",
+        NEW_LIGHT,
         [
             light
             for light_id, light in gateway.api.lights.items()
@@ -140,7 +148,7 @@ async def async_refresh_devices_service(hass, data):
     )
 
     gateway.async_add_device_callback(
-        "scene",
+        NEW_SCENE,
         [
             scene
             for scene_id, scene in gateway.api.scenes.items()
@@ -149,7 +157,7 @@ async def async_refresh_devices_service(hass, data):
     )
 
     gateway.async_add_device_callback(
-        "sensor",
+        NEW_SENSOR,
         [
             sensor
             for sensor_id, sensor in gateway.api.sensors.items()

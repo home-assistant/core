@@ -1,16 +1,21 @@
 """The tests for the Input number component."""
 # pylint: disable=protected-access
 import asyncio
+from unittest.mock import patch
 
-from homeassistant.core import CoreState, State, Context
+import pytest
+
 from homeassistant.components.input_number import (
     ATTR_VALUE,
     DOMAIN,
     SERVICE_DECREMENT,
     SERVICE_INCREMENT,
+    SERVICE_RELOAD,
     SERVICE_SET_VALUE,
 )
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import Context, CoreState, State
+from homeassistant.exceptions import Unauthorized
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_setup_component
 
@@ -254,3 +259,57 @@ async def test_input_number_context(hass, hass_admin_user):
     assert state2 is not None
     assert state.state != state2.state
     assert state2.context.user_id == hass_admin_user.id
+
+
+async def test_reload(hass, hass_admin_user, hass_read_only_user):
+    """Test reload service."""
+    count_start = len(hass.states.async_entity_ids())
+
+    assert await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {"test_1": {"initial": 50, "min": 0, "max": 51}}}
+    )
+
+    assert count_start + 1 == len(hass.states.async_entity_ids())
+
+    state_1 = hass.states.get("input_number.test_1")
+    state_2 = hass.states.get("input_number.test_2")
+
+    assert state_1 is not None
+    assert state_2 is None
+    assert 50 == float(state_1.state)
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={
+            DOMAIN: {
+                "test_1": {"initial": 40, "min": 0, "max": 51},
+                "test_2": {"initial": 20, "min": 10, "max": 30},
+            }
+        },
+    ):
+        with patch("homeassistant.config.find_config_file", return_value=""):
+            with pytest.raises(Unauthorized):
+                await hass.services.async_call(
+                    DOMAIN,
+                    SERVICE_RELOAD,
+                    blocking=True,
+                    context=Context(user_id=hass_read_only_user.id),
+                )
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_RELOAD,
+                blocking=True,
+                context=Context(user_id=hass_admin_user.id),
+            )
+            await hass.async_block_till_done()
+
+    assert count_start + 2 == len(hass.states.async_entity_ids())
+
+    state_1 = hass.states.get("input_number.test_1")
+    state_2 = hass.states.get("input_number.test_2")
+
+    assert state_1 is not None
+    assert state_2 is not None
+    assert 40 == float(state_1.state)
+    assert 20 == float(state_2.state)

@@ -52,7 +52,7 @@ class TestEmulatedHue(unittest.TestCase):
 
     def test_description_xml(self):
         """Test the description."""
-        import xml.etree.ElementTree as ET
+        import defusedxml.ElementTree as ET
 
         result = requests.get(BRIDGE_URL_BASE.format("/description.xml"), timeout=5)
 
@@ -81,6 +81,31 @@ class TestEmulatedHue(unittest.TestCase):
 
         assert "success" in success_json
         assert "username" in success_json["success"]
+
+    def test_unauthorized_view(self):
+        """Test unauthorized view."""
+        request_json = {"devicetype": "my_device"}
+
+        result = requests.get(
+            BRIDGE_URL_BASE.format("/api/unauthorized"),
+            data=json.dumps(request_json),
+            timeout=5,
+        )
+
+        assert result.status_code == 200
+        assert "application/json" in result.headers["content-type"]
+
+        resp_json = result.json()
+        assert len(resp_json) == 1
+        success_json = resp_json[0]
+        assert len(success_json) == 1
+
+        assert "error" in success_json
+        error_json = success_json["error"]
+        assert len(error_json) == 3
+        assert "/" in error_json["address"]
+        assert "unauthorized user" in error_json["description"]
+        assert "1" in error_json["type"]
 
     def test_valid_username_request(self):
         """Test request with a valid username."""

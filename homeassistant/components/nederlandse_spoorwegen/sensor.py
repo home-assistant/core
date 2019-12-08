@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 import logging
 
+import ns_api
 import requests
 import voluptuous as vol
 
@@ -46,7 +47,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the departure sensor."""
-    import ns_api
 
     nsapi = ns_api.NSAPI(config.get(CONF_EMAIL), config.get(CONF_PASSWORD))
     try:

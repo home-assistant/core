@@ -4,9 +4,9 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/plex",
   "requirements": [
-    "plexapi==3.0.6",
+    "plexapi==3.3.0",
     "plexauth==0.0.5",
-    "plexwebsocket==0.0.4"
+    "plexwebsocket==0.0.6"
   ],
   "dependencies": [
     "http"

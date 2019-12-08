@@ -385,7 +385,7 @@ CONDITION_PICTURES = {
     ],
     "partly-cloudy-night": [
         "/static/images/darksky/weather-cloudy.svg",
-        "mdi:weather-partly-cloudy",
+        "mdi:weather-night-partly-cloudy",
     ],
 }
 

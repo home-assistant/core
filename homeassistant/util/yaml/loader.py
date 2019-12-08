@@ -68,7 +68,6 @@ def load_yaml(fname: str) -> JSON_TYPE:
         raise HomeAssistantError(exc)
 
 
-# pylint: disable=pointless-statement
 @overload
 def _add_reference(
     obj: Union[list, NodeListClass], loader: yaml.SafeLoader, node: yaml.nodes.Node
@@ -76,14 +75,14 @@ def _add_reference(
     ...
 
 
-@overload  # noqa: F811
+@overload
 def _add_reference(
     obj: Union[str, NodeStrClass], loader: yaml.SafeLoader, node: yaml.nodes.Node
 ) -> NodeStrClass:
     ...
 
 
-@overload  # noqa: F811
+@overload
 def _add_reference(
     obj: DICT_T, loader: yaml.SafeLoader, node: yaml.nodes.Node
 ) -> DICT_T:
@@ -93,7 +92,7 @@ def _add_reference(
 # pylint: enable=pointless-statement
 
 
-def _add_reference(  # type: ignore # noqa: F811
+def _add_reference(  # type: ignore
     obj, loader: SafeLineLoader, node: yaml.nodes.Node
 ):
     """Add file reference information to an object."""
@@ -211,7 +210,7 @@ def _ordered_dict(loader: SafeLineLoader, node: yaml.nodes.MappingNode) -> Order
 
         if key in seen:
             fname = getattr(loader.stream, "name", "")
-            _LOGGER.error(
+            _LOGGER.warning(
                 'YAML file %s contains duplicate key "%s". ' "Check lines %d and %d.",
                 fname,
                 key,

@@ -50,6 +50,10 @@ stages:
         . venv/bin/activate
         pre-commit run flake8 --all-files
       displayName: 'Run flake8'
+    - script: |
+        . venv/bin/activate
+        pre-commit run bandit --all-files
+      displayName: 'Run bandit'
   - job: 'Validate'
     pool:
       vmImage: 'ubuntu-latest'
@@ -158,7 +162,7 @@ stages:
           python -m venv venv
 
           . venv/bin/activate
-          pip install -U pip setuptools
+          pip install -U pip setuptools wheel
           pip install -r requirements_all.txt -c homeassistant/package_constraints.txt
           pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
     - script: |

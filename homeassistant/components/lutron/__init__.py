@@ -1,11 +1,12 @@
 """Component for interacting with a Lutron RadioRA 2 system."""
 import logging
 
+from pylutron import Button, Lutron
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import ATTR_ID, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
@@ -36,7 +37,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, base_config):
     """Set up the Lutron component."""
-    from pylutron import Lutron
 
     hass.data[LUTRON_BUTTONS] = []
     hass.data[LUTRON_CONTROLLER] = None
@@ -72,6 +72,8 @@ def setup(hass, base_config):
                 if button.name != "Unknown Button" and button.button_type in (
                     "SingleAction",
                     "Toggle",
+                    "SingleSceneRaiseLower",
+                    "MasterRaiseLower",
                 ):
                     # Associate an LED with a button if there is one
                     led = next(
@@ -145,7 +147,6 @@ class LutronButton:
 
     def button_callback(self, button, context, event, params):
         """Fire an event about a button being pressed or released."""
-        from pylutron import Button
 
         # Events per button type:
         #   RaiseLower -> pressed/released

@@ -1,6 +1,7 @@
 """Define tests for the OpenUV config flow."""
 import pytest
 from pyopenuv.errors import OpenUvError
+from unittest.mock import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.openuv import DOMAIN, config_flow
@@ -11,7 +12,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
 )
 
-from tests.common import MockConfigEntry, MockDependency, mock_coro
+from tests.common import MockConfigEntry, mock_coro
 
 
 @pytest.fixture
@@ -23,9 +24,9 @@ def uv_index_response():
 @pytest.fixture
 def mock_pyopenuv(uv_index_response):
     """Mock the pyopenuv library."""
-    with MockDependency("pyopenuv") as mock_pyopenuv_:
-        mock_pyopenuv_.Client().uv_index.return_value = uv_index_response
-        yield mock_pyopenuv_
+    with patch("homeassistant.components.openuv.config_flow.Client") as MockClient:
+        MockClient().uv_index.return_value = uv_index_response
+        yield MockClient
 
 
 async def test_duplicate_error(hass):

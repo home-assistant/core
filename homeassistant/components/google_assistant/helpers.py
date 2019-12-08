@@ -7,25 +7,27 @@ from typing import List, Optional
 
 from aiohttp.web import json_response
 
-from homeassistant.core import Context, callback, HomeAssistant, State
-from homeassistant.helpers.event import async_call_later
 from homeassistant.components import webhook
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_SUPPORTED_FEATURES,
+    CLOUD_NEVER_EXPOSED_ENTITIES,
     CONF_NAME,
     STATE_UNAVAILABLE,
-    ATTR_SUPPORTED_FEATURES,
-    ATTR_DEVICE_CLASS,
-    CLOUD_NEVER_EXPOSED_ENTITIES,
 )
+from homeassistant.core import Context, HomeAssistant, State, callback
+from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.storage import Store
 
 from . import trait
 from .const import (
+    CONF_ALIASES,
+    CONF_ROOM_HINT,
+    DEVICE_CLASS_TO_GOOGLE_TYPES,
     DOMAIN,
     DOMAIN_TO_GOOGLE_TYPES,
-    CONF_ALIASES,
     ERR_FUNCTION_NOT_SUPPORTED,
-    DEVICE_CLASS_TO_GOOGLE_TYPES,
-    CONF_ROOM_HINT,
+    STORE_AGENT_USER_IDS,
 )
 from .error import SmartHomeError
 
@@ -41,18 +43,19 @@ class AbstractConfig:
     def __init__(self, hass):
         """Initialize abstract config."""
         self.hass = hass
-        self._google_sync_unsub = None
+        self._store = None
+        self._google_sync_unsub = {}
         self._local_sdk_active = False
+
+    async def async_initialize(self):
+        """Perform async initialization of config."""
+        self._store = GoogleConfigStore(self.hass)
+        await self._store.async_load()
 
     @property
     def enabled(self):
         """Return if Google is enabled."""
         return False
-
-    @property
-    def agent_user_id(self):
-        """Return Agent User Id to use for query responses."""
-        return None
 
     @property
     def entity_config(self):
@@ -77,7 +80,6 @@ class AbstractConfig:
     @property
     def should_report_state(self):
         """Return if states should be proactively reported."""
-        # pylint: disable=no-self-use
         return False
 
     @property
@@ -102,13 +104,22 @@ class AbstractConfig:
         # pylint: disable=no-self-use
         return True
 
-    async def async_report_state(self, message):
+    async def async_report_state(self, message, agent_user_id: str):
         """Send a state report to Google."""
         raise NotImplementedError
+
+    async def async_report_state_all(self, message):
+        """Send a state report to Google for all previously synced users."""
+        jobs = [
+            self.async_report_state(message, agent_user_id)
+            for agent_user_id in self._store.agent_user_ids
+        ]
+        await gather(*jobs)
 
     def async_enable_report_state(self):
         """Enable proactive mode."""
         # Circular dep
+        # pylint: disable=import-outside-toplevel
         from .report_state import async_enable_report_state
 
         if self._unsub_report_state is None:
@@ -120,42 +131,63 @@ class AbstractConfig:
             self._unsub_report_state()
             self._unsub_report_state = None
 
-    async def async_sync_entities(self):
+    async def async_sync_entities(self, agent_user_id: str):
         """Sync all entities to Google."""
         # Remove any pending sync
-        if self._google_sync_unsub:
-            self._google_sync_unsub()
-            self._google_sync_unsub = None
+        self._google_sync_unsub.pop(agent_user_id, lambda: None)()
+        return await self._async_request_sync_devices(agent_user_id)
 
-        return await self._async_request_sync_devices()
-
-    async def _schedule_callback(self, _now):
-        """Handle a scheduled sync callback."""
-        self._google_sync_unsub = None
-        await self.async_sync_entities()
+    async def async_sync_entities_all(self):
+        """Sync all entities to Google for all registered agents."""
+        res = await gather(
+            *[
+                self.async_sync_entities(agent_user_id)
+                for agent_user_id in self._store.agent_user_ids
+            ]
+        )
+        return max(res, default=204)
 
     @callback
-    def async_schedule_google_sync(self):
+    def async_schedule_google_sync(self, agent_user_id: str):
         """Schedule a sync."""
-        if self._google_sync_unsub:
-            self._google_sync_unsub()
 
-        self._google_sync_unsub = async_call_later(
-            self.hass, SYNC_DELAY, self._schedule_callback
+        async def _schedule_callback(_now):
+            """Handle a scheduled sync callback."""
+            self._google_sync_unsub.pop(agent_user_id, None)
+            await self.async_sync_entities(agent_user_id)
+
+        self._google_sync_unsub.pop(agent_user_id, lambda: None)()
+
+        self._google_sync_unsub[agent_user_id] = async_call_later(
+            self.hass, SYNC_DELAY, _schedule_callback
         )
 
-    async def _async_request_sync_devices(self) -> int:
+    @callback
+    def async_schedule_google_sync_all(self):
+        """Schedule a sync for all registered agents."""
+        for agent_user_id in self._store.agent_user_ids:
+            self.async_schedule_google_sync(agent_user_id)
+
+    async def _async_request_sync_devices(self, agent_user_id: str) -> int:
         """Trigger a sync with Google.
 
         Return value is the HTTP status code of the sync request.
         """
         raise NotImplementedError
 
-    async def async_deactivate_report_state(self):
+    async def async_connect_agent_user(self, agent_user_id: str):
+        """Add an synced and known agent_user_id.
+
+        Called when a completed sync response have been sent to Google.
+        """
+        self._store.add_agent_user_id(agent_user_id)
+
+    async def async_disconnect_agent_user(self, agent_user_id: str):
         """Turn off report state and disable further state reporting.
 
         Called when the user disconnects their account from Google.
         """
+        self._store.pop_agent_user_id(agent_user_id)
 
     @callback
     def async_enable_local_sdk(self):
@@ -166,7 +198,7 @@ class AbstractConfig:
             return
 
         webhook.async_register(
-            self.hass, DOMAIN, "Local Support", webhook_id, self._handle_local_webhook
+            self.hass, DOMAIN, "Local Support", webhook_id, self._handle_local_webhook,
         )
 
         self._local_sdk_active = True
@@ -182,6 +214,8 @@ class AbstractConfig:
 
     async def _handle_local_webhook(self, hass, webhook_id, request):
         """Handle an incoming local SDK message."""
+        # Circular dep
+        # pylint: disable=import-outside-toplevel
         from . import smart_home
 
         payload = await request.json()
@@ -200,6 +234,44 @@ class AbstractConfig:
             _LOGGER.debug("Responding to local message:\n%s\n", pprint.pformat(result))
 
         return json_response(result)
+
+
+class GoogleConfigStore:
+    """A configuration store for google assistant."""
+
+    _STORAGE_VERSION = 1
+    _STORAGE_KEY = DOMAIN
+
+    def __init__(self, hass):
+        """Initialize a configuration store."""
+        self._hass = hass
+        self._store = Store(hass, self._STORAGE_VERSION, self._STORAGE_KEY)
+        self._data = {STORE_AGENT_USER_IDS: {}}
+
+    @property
+    def agent_user_ids(self):
+        """Return a list of connected agent user_ids."""
+        return self._data[STORE_AGENT_USER_IDS]
+
+    @callback
+    def add_agent_user_id(self, agent_user_id):
+        """Add an agent user id to store."""
+        if agent_user_id not in self._data[STORE_AGENT_USER_IDS]:
+            self._data[STORE_AGENT_USER_IDS][agent_user_id] = {}
+            self._store.async_delay_save(lambda: self._data, 1.0)
+
+    @callback
+    def pop_agent_user_id(self, agent_user_id):
+        """Remove agent user id from store."""
+        if agent_user_id in self._data[STORE_AGENT_USER_IDS]:
+            self._data[STORE_AGENT_USER_IDS].pop(agent_user_id, None)
+            self._store.async_delay_save(lambda: self._data, 1.0)
+
+    async def async_load(self):
+        """Store current configuration to disk."""
+        data = await self._store.async_load()
+        if data:
+            self._data = data
 
 
 class RequestData:
@@ -267,7 +339,7 @@ class GoogleEntity:
     @callback
     def is_supported(self) -> bool:
         """Return if the entity is supported by Google."""
-        return self.state.state != STATE_UNAVAILABLE and bool(self.traits())
+        return bool(self.traits())
 
     @callback
     def might_2fa(self) -> bool:
@@ -281,7 +353,7 @@ class GoogleEntity:
             trait.might_2fa(domain, features, device_class) for trait in self.traits()
         )
 
-    async def sync_serialize(self):
+    async def sync_serialize(self, agent_user_id):
         """Serialize entity for a SYNC response.
 
         https://developers.google.com/actions/smarthome/create-app#actiondevicessync
@@ -317,7 +389,7 @@ class GoogleEntity:
                 "webhookId": self.config.local_sdk_webhook_id,
                 "httpPort": self.hass.config.api.port,
                 "httpSSL": self.hass.config.api.use_ssl,
-                "proxyDeviceId": self.config.agent_user_id,
+                "proxyDeviceId": agent_user_id,
             }
 
         for trt in traits:

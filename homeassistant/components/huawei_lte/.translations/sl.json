@@ -1,10 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ta naprava je \u017ee nastavljena"
+            "already_configured": "Ta naprava je \u017ee konfigurirana",
+            "already_in_progress": "Ta naprava se \u017ee nastavlja",
+            "not_huawei_lte": "Ni naprava Huawei LTE"
         },
         "error": {
             "connection_failed": "Povezava ni uspela",
+            "connection_timeout": "\u010casovna omejitev povezave",
             "incorrect_password": "Nepravilno geslo",
             "incorrect_username": "Nepravilno uporabni\u0161ko ime",
             "incorrect_username_or_password": "Nepravilno uporabni\u0161ko ime ali geslo",

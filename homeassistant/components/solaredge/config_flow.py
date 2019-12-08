@@ -1,14 +1,14 @@
 """Config flow for the SolarEdge platform."""
+from requests.exceptions import ConnectTimeout, HTTPError
 import solaredge
 import voluptuous as vol
-from requests.exceptions import HTTPError, ConnectTimeout
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
-from .const import DOMAIN, DEFAULT_NAME, CONF_SITE_ID
+from .const import CONF_SITE_ID, DEFAULT_NAME, DOMAIN
 
 
 @callback

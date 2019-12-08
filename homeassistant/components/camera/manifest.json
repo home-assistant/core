@@ -3,11 +3,7 @@
   "name": "Camera",
   "documentation": "https://www.home-assistant.io/integrations/camera",
   "requirements": [],
-  "dependencies": [
-    "http"
-  ],
-  "after_dependencies": [
-    "stream"
-  ],
+  "dependencies": ["http"],
+  "after_dependencies": ["stream", "media_player"],
   "codeowners": []
 }

@@ -7,6 +7,7 @@ from typing import Any, Dict, Optional, Union
 from wled import WLED, WLEDConnectionError, WLEDError
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME, CONF_HOST
@@ -34,6 +35,7 @@ from .const import (
 )
 
 SCAN_INTERVAL = timedelta(seconds=5)
+WLED_COMPONENTS = (LIGHT_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = {DATA_WLED_CLIENT: wled}
 
     # Set up all platforms for this device/entry.
-    for component in LIGHT_DOMAIN, SWITCH_DOMAIN:
+    for component in WLED_COMPONENTS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
@@ -93,8 +95,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Unload entities for this entry/device.
     await asyncio.gather(
-        hass.config_entries.async_forward_entry_unload(entry, LIGHT_DOMAIN),
-        hass.config_entries.async_forward_entry_unload(entry, SWITCH_DOMAIN),
+        *(
+            hass.config_entries.async_forward_entry_unload(entry, component)
+            for component in WLED_COMPONENTS
+        )
     )
 
     # Cleanup

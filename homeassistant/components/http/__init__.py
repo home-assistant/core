@@ -20,12 +20,11 @@ from homeassistant.util import ssl as ssl_util
 
 from .auth import setup_auth
 from .ban import setup_bans
-from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_HASS_USER, KEY_REAL_IP  # noqa
+from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_HASS_USER, KEY_REAL_IP  # noqa: F401
 from .cors import setup_cors
 from .real_ip import setup_real_ip
 from .static import CACHE_HEADERS, CachingStaticResource
-from .view import HomeAssistantView  # noqa
-
+from .view import HomeAssistantView  # noqa: F401
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
