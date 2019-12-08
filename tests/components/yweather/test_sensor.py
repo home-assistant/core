@@ -1,12 +1,11 @@
 """The tests for the Yahoo weather sensor component."""
 import json
-
 import unittest
 from unittest.mock import patch
 
 from homeassistant.setup import setup_component
 
-from tests.common import get_test_home_assistant, load_fixture, MockDependency
+from tests.common import MockDependency, get_test_home_assistant, load_fixture
 
 VALID_CONFIG_MINIMAL = {
     "sensor": {"platform": "yweather", "monitored_conditions": ["weather"]}
