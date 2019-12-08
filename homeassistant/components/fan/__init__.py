@@ -7,15 +7,15 @@ from typing import Optional
 import voluptuous as vol
 
 from homeassistant.components import group
-from homeassistant.const import SERVICE_TURN_ON, SERVICE_TOGGLE, SERVICE_TURN_OFF
-from homeassistant.loader import bind_hass
-from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.const import SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
