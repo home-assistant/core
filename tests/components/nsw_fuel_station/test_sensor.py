@@ -87,7 +87,7 @@ class TestNSWFuelStation(unittest.TestCase):
         "homeassistant.components.nsw_fuel_station.sensor.FuelCheckClient",
         new=FuelCheckClientMock,
     )
-    def test_setup(self, mock_nsw_fuel):
+    def test_setup(self):
         """Test the setup with custom settings."""
         with assert_setup_component(1, sensor.DOMAIN):
             assert setup_component(self.hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
@@ -102,7 +102,7 @@ class TestNSWFuelStation(unittest.TestCase):
         "homeassistant.components.nsw_fuel_station.sensor.FuelCheckClient",
         new=FuelCheckClientMock,
     )
-    def test_sensor_values(self, mock_nsw_fuel):
+    def test_sensor_values(self):
         """Test retrieval of sensor values."""
         assert setup_component(self.hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
 
