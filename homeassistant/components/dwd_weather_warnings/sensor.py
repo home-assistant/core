@@ -19,7 +19,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
+from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE as HA_USER_AGENT
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, CONF_MONITORED_CONDITIONS
@@ -185,8 +185,8 @@ class DwdWeatherWarningsAPI:
             "jsonp=loadWarnings",
         )
 
-        # a dummy User-Agent is necessary to trick the rest api endpoint (see #29496)
-        headers = {"User-Agent": SERVER_SOFTWARE}
+        # a User-Agent is necessary for this rest api endpoint (#29496)
+        headers = {"User-Agent": HA_USER_AGENT}
 
         self._rest = RestData("GET", resource, None, headers, None, True)
         self.region_name = region_name
