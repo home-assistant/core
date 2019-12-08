@@ -24,7 +24,7 @@ from homeassistant.components.vera import (
 )
 from homeassistant.core import HomeAssistant
 
-from .common import async_configure_component
+from .common import ComponentFactory
 
 
 def new_vera_device(cls, device_id: int) -> VeraDevice:
@@ -41,14 +41,16 @@ def assert_hass_vera_devices(hass: HomeAssistant, platform: str, arr_len: int) -
     assert len(hass.data[VERA_DEVICES][platform]) == arr_len
 
 
-async def test_init(hass: HomeAssistant) -> None:
+async def test_init(
+    hass: HomeAssistant, vera_component_factory: ComponentFactory
+) -> None:
     """Test function."""
 
     def setup_callback(controller: VeraController, hass_config: dict) -> None:
         hass_config[DOMAIN][CONF_EXCLUDE] = [11]
         hass_config[DOMAIN][CONF_LIGHTS] = [10]
 
-    await async_configure_component(
+    await vera_component_factory.configure_component(
         hass=hass,
         devices=(
             new_vera_device(VeraDimmer, 1),

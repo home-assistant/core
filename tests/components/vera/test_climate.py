@@ -13,10 +13,12 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .common import async_configure_component
+from .common import ComponentFactory
 
 
-async def test_climate(hass: HomeAssistant) -> None:
+async def test_climate(
+    hass: HomeAssistant, vera_component_factory: ComponentFactory
+) -> None:
     """Test function."""
     vera_device = MagicMock(spec=VeraThermostat)  # type: VeraThermostat
     vera_device.device_id = 1
@@ -28,7 +30,9 @@ async def test_climate(hass: HomeAssistant) -> None:
     vera_device.get_current_goal_temperature.return_value = 72
     entity_id = "climate.dev1_1"
 
-    component_data = await async_configure_component(hass=hass, devices=(vera_device,),)
+    component_data = await vera_component_factory.configure_component(
+        hass=hass, devices=(vera_device,),
+    )
     controller = component_data.controller
     update_callback = controller.register.call_args_list[0][0][1]
 
@@ -115,7 +119,9 @@ async def test_climate(hass: HomeAssistant) -> None:
     assert hass.states.get(entity_id).attributes["temperature"] == 30
 
 
-async def test_climate_f(hass: HomeAssistant) -> None:
+async def test_climate_f(
+    hass: HomeAssistant, vera_component_factory: ComponentFactory
+) -> None:
     """Test function."""
     vera_device = MagicMock(spec=VeraThermostat)  # type: VeraThermostat
     vera_device.device_id = 1
@@ -130,7 +136,7 @@ async def test_climate_f(hass: HomeAssistant) -> None:
     def setup_callback(controller: VeraController, hass_config: dict) -> None:
         controller.temperature_units = "F"
 
-    component_data = await async_configure_component(
+    component_data = await vera_component_factory.configure_component(
         hass=hass, devices=(vera_device,), setup_callback=setup_callback
     )
     controller = component_data.controller

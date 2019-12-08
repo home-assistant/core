@@ -5,17 +5,19 @@ from pyvera import VeraScene
 
 from homeassistant.core import HomeAssistant
 
-from .common import async_configure_component
+from .common import ComponentFactory
 
 
-async def test_scene(hass: HomeAssistant) -> None:
+async def test_scene(
+    hass: HomeAssistant, vera_component_factory: ComponentFactory
+) -> None:
     """Test function."""
     vera_scene = MagicMock(spec=VeraScene)  # type: VeraScene
     vera_scene.scene_id = 1
     vera_scene.name = "dev1"
     entity_id = "scene.dev1_1"
 
-    await async_configure_component(
+    await vera_component_factory.configure_component(
         hass=hass, scenes=(vera_scene,),
     )
 

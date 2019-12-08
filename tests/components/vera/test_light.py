@@ -6,10 +6,12 @@ from pyvera import CATEGORY_DIMMER, VeraDimmer
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_HS_COLOR
 from homeassistant.core import HomeAssistant
 
-from .common import async_configure_component
+from .common import ComponentFactory
 
 
-async def test_light(hass: HomeAssistant) -> None:
+async def test_light(
+    hass: HomeAssistant, vera_component_factory: ComponentFactory
+) -> None:
     """Test function."""
     vera_device = MagicMock(spec=VeraDimmer)  # type: VeraDimmer
     vera_device.device_id = 1
@@ -21,7 +23,9 @@ async def test_light(hass: HomeAssistant) -> None:
     vera_device.is_dimmable = True
     entity_id = "light.dev1_1"
 
-    component_data = await async_configure_component(hass=hass, devices=(vera_device,),)
+    component_data = await vera_component_factory.configure_component(
+        hass=hass, devices=(vera_device,),
+    )
     controller = component_data.controller
     update_callback = controller.register.call_args_list[0][0][1]
 

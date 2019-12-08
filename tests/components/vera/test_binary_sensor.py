@@ -5,10 +5,12 @@ from pyvera import VeraBinarySensor
 
 from homeassistant.core import HomeAssistant
 
-from .common import async_configure_component
+from .common import ComponentFactory
 
 
-async def test_binary_sensor(hass: HomeAssistant) -> None:
+async def test_binary_sensor(
+    hass: HomeAssistant, vera_component_factory: ComponentFactory
+) -> None:
     """Test function."""
     vera_device = MagicMock(spec=VeraBinarySensor)  # type: VeraBinarySensor
     vera_device.device_id = 1
@@ -16,7 +18,9 @@ async def test_binary_sensor(hass: HomeAssistant) -> None:
     vera_device.is_tripped = False
     entity_id = "binary_sensor.dev1_1"
 
-    component_data = await async_configure_component(hass=hass, devices=(vera_device,))
+    component_data = await vera_component_factory.configure_component(
+        hass=hass, devices=(vera_device,)
+    )
     controller = component_data.controller
 
     update_callback = controller.register.call_args_list[0][0][1]
