@@ -114,31 +114,29 @@ Result will be a long-lived access token:
 }
 
 """
+from datetime import timedelta
 import logging
 import uuid
-from datetime import timedelta
 
 from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.auth.models import (
-    User,
-    Credentials,
     TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+    Credentials,
+    User,
 )
-from homeassistant.loader import bind_hass
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_REAL_IP
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.core import callback, HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 
-from . import indieauth
-from . import login_flow
-from . import mfa_setup_flow
+from . import indieauth, login_flow, mfa_setup_flow
 
 DOMAIN = "auth"
 WS_TYPE_CURRENT_USER = "auth/current_user"

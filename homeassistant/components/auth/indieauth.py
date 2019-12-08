@@ -1,9 +1,9 @@
 """Helpers to resolve client ID/secret."""
-import logging
 import asyncio
-from ipaddress import ip_address
 from html.parser import HTMLParser
-from urllib.parse import urlparse, urljoin
+from ipaddress import ip_address
+import logging
+from urllib.parse import urljoin, urlparse
 
 import aiohttp
 
