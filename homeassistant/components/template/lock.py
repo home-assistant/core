@@ -3,22 +3,22 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-
-from homeassistant.core import callback
-from homeassistant.components.lock import LockDevice, PLATFORM_SCHEMA
+from homeassistant.components.lock import PLATFORM_SCHEMA, LockDevice
 from homeassistant.const import (
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
-    STATE_ON,
-    STATE_LOCKED,
     MATCH_ALL,
+    STATE_LOCKED,
+    STATE_ON,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
+
 from . import extract_entities, initialise_templates
 from .const import CONF_AVAILABILITY_TEMPLATE
 

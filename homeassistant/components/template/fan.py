@@ -3,35 +3,36 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.fan import (
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_HIGH,
-    SUPPORT_SET_SPEED,
-    SUPPORT_OSCILLATE,
-    FanEntity,
-    ATTR_SPEED,
+    ATTR_DIRECTION,
     ATTR_OSCILLATING,
-    ENTITY_ID_FORMAT,
-    SUPPORT_DIRECTION,
+    ATTR_SPEED,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
-    ATTR_DIRECTION,
+    ENTITY_ID_FORMAT,
+    SPEED_HIGH,
+    SPEED_LOW,
+    SPEED_MEDIUM,
+    SUPPORT_DIRECTION,
+    SUPPORT_OSCILLATE,
+    SUPPORT_SET_SPEED,
+    FanEntity,
 )
 from homeassistant.const import (
+    CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
     CONF_VALUE_TEMPLATE,
-    CONF_ENTITY_ID,
-    STATE_ON,
-    STATE_OFF,
     EVENT_HOMEASSISTANT_START,
+    STATE_OFF,
+    STATE_ON,
     STATE_UNKNOWN,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.script import Script
+
 from . import extract_entities, initialise_templates
 from .const import CONF_AVAILABILITY_TEMPLATE
 
