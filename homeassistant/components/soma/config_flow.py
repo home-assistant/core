@@ -1,12 +1,13 @@
 """Config flow for Soma."""
 import logging
 
-import voluptuous as vol
 from api.soma_api import SomaApi
 from requests import RequestException
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
+
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
