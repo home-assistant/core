@@ -1,10 +1,10 @@
 """Test Axis component setup process."""
 from unittest.mock import Mock, patch
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import axis
+from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro, MockConfigEntry
+from tests.common import MockConfigEntry, mock_coro
 
 
 async def test_setup(hass):
