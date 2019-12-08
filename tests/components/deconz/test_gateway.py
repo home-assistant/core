@@ -51,8 +51,12 @@ async def setup_deconz_integration(hass, config, options, get_state_response):
         entry_id="1",
     )
 
+    for resource in ("groups", "lights", "sensors"):
+        if resource not in get_state_response:
+            get_state_response[resource] = {}
+
     with patch(
-        "pydeconz.DeconzSession.async_get_state", return_value=get_state_response
+        "pydeconz.DeconzSession.request", return_value=get_state_response
     ), patch("pydeconz.DeconzSession.start", return_value=True):
         await deconz.async_setup_entry(hass, config_entry)
     await hass.async_block_till_done()
@@ -172,15 +176,14 @@ async def test_reset_after_successful_setup(hass):
 
 async def test_get_gateway(hass):
     """Successful call."""
-    with patch("pydeconz.DeconzSession.async_load_parameters", return_value=True):
+    with patch("pydeconz.DeconzSession.initialize", return_value=True):
         assert await deconz.gateway.get_gateway(hass, ENTRY_CONFIG, Mock(), Mock())
 
 
 async def test_get_gateway_fails_unauthorized(hass):
     """Failed call."""
     with patch(
-        "pydeconz.DeconzSession.async_load_parameters",
-        side_effect=pydeconz.errors.Unauthorized,
+        "pydeconz.DeconzSession.initialize", side_effect=pydeconz.errors.Unauthorized,
     ), pytest.raises(deconz.errors.AuthenticationRequired):
         assert (
             await deconz.gateway.get_gateway(hass, ENTRY_CONFIG, Mock(), Mock())
@@ -191,8 +194,7 @@ async def test_get_gateway_fails_unauthorized(hass):
 async def test_get_gateway_fails_cannot_connect(hass):
     """Failed call."""
     with patch(
-        "pydeconz.DeconzSession.async_load_parameters",
-        side_effect=pydeconz.errors.RequestError,
+        "pydeconz.DeconzSession.initialize", side_effect=pydeconz.errors.RequestError,
     ), pytest.raises(deconz.errors.CannotConnect):
         assert (
             await deconz.gateway.get_gateway(hass, ENTRY_CONFIG, Mock(), Mock())

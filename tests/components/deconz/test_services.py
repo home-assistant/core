@@ -104,14 +104,14 @@ async def test_configure_service_with_field(hass):
         deconz.services.SERVICE_DATA: {"on": True, "attr1": 10, "attr2": 20},
     }
 
-    with patch(
-        "pydeconz.DeconzSession.async_put_state", return_value=Mock(True)
-    ) as put_state:
+    with patch("pydeconz.DeconzSession.request", return_value=Mock(True)) as put_state:
         await hass.services.async_call(
             deconz.DOMAIN, deconz.services.SERVICE_CONFIGURE_DEVICE, service_data=data
         )
         await hass.async_block_till_done()
-        put_state.assert_called_with("/light/2", {"on": True, "attr1": 10, "attr2": 20})
+        put_state.assert_called_with(
+            "put", "/light/2", json={"on": True, "attr1": 10, "attr2": 20}
+        )
 
 
 async def test_configure_service_with_entity(hass):
@@ -127,14 +127,14 @@ async def test_configure_service_with_entity(hass):
         deconz.services.SERVICE_DATA: {"on": True, "attr1": 10, "attr2": 20},
     }
 
-    with patch(
-        "pydeconz.DeconzSession.async_put_state", return_value=Mock(True)
-    ) as put_state:
+    with patch("pydeconz.DeconzSession.request", return_value=Mock(True)) as put_state:
         await hass.services.async_call(
             deconz.DOMAIN, deconz.services.SERVICE_CONFIGURE_DEVICE, service_data=data
         )
         await hass.async_block_till_done()
-        put_state.assert_called_with("/light/1", {"on": True, "attr1": 10, "attr2": 20})
+        put_state.assert_called_with(
+            "put", "/light/1", json={"on": True, "attr1": 10, "attr2": 20}
+        )
 
 
 async def test_configure_service_with_entity_and_field(hass):
@@ -151,15 +151,13 @@ async def test_configure_service_with_entity_and_field(hass):
         deconz.services.SERVICE_DATA: {"on": True, "attr1": 10, "attr2": 20},
     }
 
-    with patch(
-        "pydeconz.DeconzSession.async_put_state", return_value=Mock(True)
-    ) as put_state:
+    with patch("pydeconz.DeconzSession.request", return_value=Mock(True)) as put_state:
         await hass.services.async_call(
             deconz.DOMAIN, deconz.services.SERVICE_CONFIGURE_DEVICE, service_data=data
         )
         await hass.async_block_till_done()
         put_state.assert_called_with(
-            "/light/1/state", {"on": True, "attr1": 10, "attr2": 20}
+            "put", "/light/1/state", json={"on": True, "attr1": 10, "attr2": 20}
         )
 
 
@@ -191,9 +189,7 @@ async def test_configure_service_with_faulty_entity(hass):
         deconz.services.SERVICE_DATA: {},
     }
 
-    with patch(
-        "pydeconz.DeconzSession.async_put_state", return_value=Mock(True)
-    ) as put_state:
+    with patch("pydeconz.DeconzSession.request", return_value=Mock(True)) as put_state:
         await hass.services.async_call(
             deconz.DOMAIN, deconz.services.SERVICE_CONFIGURE_DEVICE, service_data=data
         )
@@ -211,7 +207,7 @@ async def test_service_refresh_devices(hass):
     data = {deconz.CONF_BRIDGEID: BRIDGEID}
 
     with patch(
-        "pydeconz.DeconzSession.async_get_state",
+        "pydeconz.DeconzSession.request",
         return_value={"groups": GROUP, "lights": LIGHT, "sensors": SENSOR},
     ):
         await hass.services.async_call(

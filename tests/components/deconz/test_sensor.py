@@ -143,8 +143,23 @@ async def test_sensors(hass):
     consumption_sensor = hass.states.get("sensor.consumption_sensor")
     assert consumption_sensor.state == "0.002"
 
-    gateway.api.sensors["1"].async_update({"state": {"lightlevel": 2000}})
-    gateway.api.sensors["4"].async_update({"config": {"battery": 75}})
+    state_changed_event = {
+        "t": "event",
+        "e": "changed",
+        "r": "sensors",
+        "id": "1",
+        "state": {"lightlevel": 2000},
+    }
+    gateway.api.async_event_handler(state_changed_event)
+
+    state_changed_event = {
+        "t": "event",
+        "e": "changed",
+        "r": "sensors",
+        "id": "4",
+        "config": {"battery": 75},
+    }
+    gateway.api.async_event_handler(state_changed_event)
     await hass.async_block_till_done()
 
     light_level_sensor = hass.states.get("sensor.light_level_sensor")
@@ -219,14 +234,14 @@ async def test_add_new_sensor(hass):
     )
     assert len(gateway.deconz_ids) == 0
 
-    state_added = {
+    state_added_event = {
         "t": "event",
         "e": "added",
         "r": "sensors",
         "id": "1",
         "sensor": deepcopy(SENSORS["1"]),
     }
-    gateway.api.async_event_handler(state_added)
+    gateway.api.async_event_handler(state_added_event)
     await hass.async_block_till_done()
 
     assert "sensor.light_level_sensor" in gateway.deconz_ids
