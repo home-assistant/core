@@ -11,14 +11,14 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     DOMAIN,
     SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP,
     SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    STATE_ON,
     STATE_OFF,
+    STATE_ON,
     STATE_UNKNOWN,
 )
 
