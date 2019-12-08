@@ -1,9 +1,7 @@
 """Test for smart home alexa support."""
 import pytest
 
-from homeassistant.core import Context, callback
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.components.alexa import smart_home, messages
+from homeassistant.components.alexa import messages, smart_home
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -18,21 +16,23 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import Context, callback
 from homeassistant.helpers import entityfilter
 
-from tests.common import async_mock_service
-
 from . import (
-    get_new_request,
-    MockConfig,
     DEFAULT_CONFIG,
-    assert_request_calls_service,
-    assert_request_fails,
+    MockConfig,
     ReportedProperties,
     assert_power_controller_works,
+    assert_request_calls_service,
+    assert_request_fails,
     assert_scene_controller_works,
+    get_new_request,
     reported_properties,
 )
+
+from tests.common import async_mock_service
 
 
 @pytest.fixture
