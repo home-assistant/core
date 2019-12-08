@@ -28,7 +28,16 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, EVO_FOLLOW, GWS, STORAGE_KEY, STORAGE_VERSION, TCS
+from .const import (
+    DOMAIN,
+    EVO_FOLLOW,
+    EVO_RESET,
+    EVO_SYSTEM_MODES,
+    GWS,
+    STORAGE_KEY,
+    STORAGE_VERSION,
+    TCS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,6 +66,46 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+# TODO: new from here
+ATTR_SYSTEM_MODE = "mode"
+ATTR_ZONE_ID = "zone_id"
+ATTR_ZONE_NAME = "zone_name"
+ATTR_ZONE_TEMP = "setpoint"
+
+ATTR_DURATION_DAYS = "days"
+ATTR_DURATION_HOURS = "hours"
+
+ATTR_UNTIL_MINUTES = "duration"
+ATTR_UNTIL_TIME = "until"
+
+HH_MM_REGEXP = r"^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"  # 24h format, with leading 0
+
+SET_SYSTEM_MODE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_SYSTEM_MODE): vol.In(EVO_SYSTEM_MODES),
+        vol.Exclusive(ATTR_DURATION_DAYS, "duration"): cv.positive_int,
+        vol.Exclusive(ATTR_DURATION_HOURS, "duration"): cv.positive_int,
+    }
+)
+RESET_SYSTEM_MODE_SCHEMA = vol.Schema({})
+SET_ZONE_MODE_SCHEMA = vol.Schema(
+    {
+        vol.Exclusive(ATTR_ZONE_ID, "zone"): cv.string,
+        vol.Exclusive(ATTR_ZONE_NAME, "zone"): cv.string,
+        vol.Required(ATTR_ZONE_TEMP): vol.Coerce(float),
+        vol.Exclusive(ATTR_UNTIL_MINUTES, "until"): cv.positive_int,
+        vol.Exclusive(ATTR_UNTIL_TIME, "until"): vol.All(
+            cv.string, vol.Match(HH_MM_REGEXP)
+        ),
+    }
+)
+RESET_ZONE_MODE_SCHEMA = vol.Schema({vol.Required(ATTR_ZONE_NAME): cv.string})
+
+SVC_SET_SYSTEM_MODE = "set_system_mode"
+SVC_RESET_SYSTEM_MODE = "reset_system_mode"
+SVC_SET_ZONE_MODE = "set_zone_setpoint"
+SVC_RESET_ZONE_MODE = "reset_zone_setpoint"
 
 
 def _local_dt_to_aware(dt_naive: datetime) -> datetime:
@@ -221,7 +270,116 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         broker.update, config[DOMAIN][CONF_SCAN_INTERVAL]
     )
 
+    setup_service_functions(hass, broker)
+
     return True
+
+
+def setup_service_functions(hass: HomeAssistantType, broker):
+    """Set up the service functions."""
+
+    # async def _call_client_api(self, api_function, refresh=True) -> Any:
+    #     try:
+    #         result = await api_function
+    #     except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
+    #         if not _handle_exception(err):
+    #             return
+
+    #     if refresh is True:
+    #         self.hass.helpers.event.async_call_later(1, self._evo_broker.update())
+
+    #     return result
+
+    def _clean_dt(dtm):
+        if dtm is not None:
+            format_str = "%Y-%m-%d %H:%M:00"  # round down to the nearest minute
+            dtm = datetime.strptime(datetime.strftime(dtm, format_str), format_str)
+            if dtm < datetime.now():
+                dtm += timedelta(days=1)
+        return dtm
+
+    async def set_system_mode(call):
+        """Set the system mode."""
+        _LOGGER.warn("service = %s, data = %s", call.service, call.data)
+
+        if call.service == SVC_SET_SYSTEM_MODE:
+            mode = call.data[ATTR_SYSTEM_MODE]
+        else:
+            mode = EVO_RESET
+
+        tcs = broker.tcs
+
+        try:
+            attrs = [m for m in tcs.allowedSystemModes if m["systemMode"] == mode][0]
+        except IndexError:
+            raise ValueError(f"'{mode}' mode is not supported by this system")
+
+        until = None
+        # the following two are mutually exclusive
+        if ATTR_DURATION_DAYS in call.data:
+            if attrs.get("timingResolution") != "1.00:00:00":
+                raise ValueError(f"'{mode}' mode does not support days, only hours")
+            duration = min(call.data[ATTR_DURATION_DAYS], 99)
+            if duration:
+                until = datetime.now() + timedelta(days=duration)
+
+        if ATTR_DURATION_HOURS in call.data:
+            if attrs.get("timingResolution") != "01:00:00":
+                raise ValueError(f"'{mode}' mode does not support hours, only days")
+            duration = min(call.data[ATTR_DURATION_HOURS], 24)
+            if duration:  # can be 0
+                until = datetime.now() + timedelta(hours=duration)
+
+        _LOGGER.warn("tcs._set_status(%s, %s)", mode, _clean_dt(until))
+        # await broker._call_client_api(tcs._set_status(mode, _clean_dt(until)))
+
+    async def set_zone_setpoint(call):
+        """Set the system mode."""
+        _LOGGER.warn("service = %s, data = %s", call.service, call.data)
+
+        zone_name = call.data[ATTR_ZONE_NAME]
+        try:
+            zone = broker.tcs.zones[zone_name]
+        except KeyError:
+            raise KeyError(f"'{zone_name}' is not a known zone")
+
+        if call.service == SVC_RESET_ZONE_MODE:
+            _LOGGER.warn("zone.cancel_temp_override()")
+            # await broker._call_client_api(zone.cancel_temp_override())
+            return
+
+        attrs = zone.setpointCapabilities
+        resolution = attrs["valueResolution"]
+        temp = round(call.data[ATTR_ZONE_TEMP] * resolution) / resolution
+        temp = max(min(temp, attrs["maxHeatSetpoint"]), attrs["minHeatSetpoint"])
+
+        until = None
+        # the following two are mutually exclusive
+        if ATTR_UNTIL_MINUTES in call.data:
+            duration = min(call.data[ATTR_UNTIL_MINUTES], 24 * 60)
+            if duration:
+                until = datetime.now() + timedelta(minutes=duration)
+
+        if ATTR_UNTIL_TIME in call.data:
+            until_time = call.data[ATTR_UNTIL_TIME]
+            until_str = datetime.strftime(datetime.now(), "%Y-%m-%d ")
+            until = datetime.strptime(until_str + until_time, "%Y-%m-%d %H:%M")
+
+        _LOGGER.warn("zone.set_temperature(%s, %s)", temp, _clean_dt(until))
+        # broker._call_client_api(zone.set_temperature(temp, _clean_dt(until)))
+
+    hass.services.async_register(
+        DOMAIN, SVC_SET_SYSTEM_MODE, set_system_mode, schema=SET_SYSTEM_MODE_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SVC_RESET_SYSTEM_MODE, set_system_mode, schema=RESET_SYSTEM_MODE_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SVC_SET_ZONE_MODE, set_zone_setpoint, schema=SET_ZONE_MODE_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SVC_RESET_ZONE_MODE, set_zone_setpoint, schema=RESET_ZONE_MODE_SCHEMA
+    )
 
 
 class EvoBroker:

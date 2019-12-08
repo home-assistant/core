@@ -1,0 +1,50 @@
+# Describes the format for available services
+
+set_system_mode:
+  description: 'Set the system to a mode, either indefinitely, or for a period of time
+                after which the system will revert to "Auto" mode.'
+  fields:
+    mode:
+      description: 'One of "AutoWithEco", "Away", "DayOff", "HeatingOff", or "Custom".'
+      example: Away
+    days:
+      description: 'The duration in days (today is day 1). Only used for "Away",
+                    "DayOff", or "Custom" modes. If unset (or equal to 0), the mode
+                    remains enabled indefinitely.'
+      example: 2
+    hours:
+      description: 'The duration in hours. Only used for "AutoWithEco" mode. If unset
+                    (or set to 0), the mode remains enabled indefinitely.'
+      example:
+
+reset_system_mode:
+  description: 'Set the system to "Auto" (i.e. "AutoWithReset") mode and set all the
+                zones to "FollowSchedule" mode.'
+
+set_zone_setpoint:
+  description: 'Set a zone to a setpoint, either indefinitely ("PermanentOverride"), or
+                for a period of time ("TemporaryOverride") after which the zone will
+                revert to "FollowSchedule" mode.'
+  fields:
+    zone_name:
+      description: 'The name of the zone.'
+      example: 'Master Bedroom'
+    setpoint:
+      description: 'The temperature to be used instead of the scheduled setpoint.'
+      example: 5.0
+    duration:
+      description: 'The zone will resume "FollowSchedule" mode after this many
+                    minutes. If unset (or equal to 0), the change is permanent.'
+      example: 60
+    until:
+      description: 'The zone will resume "FollowSchedule" mode after this time (HH:MM)
+                    If unset, the change is permanent.'
+      example:
+
+reset_zone_setpoint:
+  description: 'Set a zone to "FollowSchedule" mode.'
+  fields:
+    zone_name:
+      description: 'The name of the zone.'
+      example: 'Master Bedroom'
+
