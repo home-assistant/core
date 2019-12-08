@@ -1,7 +1,9 @@
 """Support for UV data from openuv.io."""
-import logging
 import asyncio
+import logging
 
+from pyopenuv import Client
+from pyopenuv.errors import OpenUvError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -164,8 +166,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up OpenUV as config entry."""
-    from pyopenuv import Client
-    from pyopenuv.errors import OpenUvError
 
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
@@ -233,8 +233,12 @@ async def async_unload_entry(hass, config_entry):
     """Unload an OpenUV config entry."""
     hass.data[DOMAIN][DATA_OPENUV_CLIENT].pop(config_entry.entry_id)
 
-    for component in ("binary_sensor", "sensor"):
-        await hass.config_entries.async_forward_entry_unload(config_entry, component)
+    tasks = [
+        hass.config_entries.async_forward_entry_unload(config_entry, component)
+        for component in ("binary_sensor", "sensor")
+    ]
+
+    await asyncio.gather(*tasks)
 
     return True
 
@@ -251,7 +255,6 @@ class OpenUV:
 
     async def async_update_protection_data(self):
         """Update binary sensor (protection window) data."""
-        from pyopenuv.errors import OpenUvError
 
         if TYPE_PROTECTION_WINDOW in self.binary_sensor_conditions:
             try:
@@ -264,7 +267,6 @@ class OpenUV:
 
     async def async_update_uv_index_data(self):
         """Update sensor (uv index, etc) data."""
-        from pyopenuv.errors import OpenUvError
 
         if any(c in self.sensor_conditions for c in SENSORS):
             try:

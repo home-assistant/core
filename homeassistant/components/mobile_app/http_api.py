@@ -6,11 +6,6 @@ from aiohttp.web import Request, Response
 from nacl.secret import SecretBox
 
 from homeassistant.auth.util import generate_secret
-from homeassistant.components.cloud import (
-    CloudNotAvailable,
-    async_create_cloudhook,
-    async_remote_ui_url,
-)
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import CONF_WEBHOOK_ID, HTTP_CREATED
@@ -42,7 +37,9 @@ class RegistrationsView(HomeAssistantView):
         webhook_id = generate_secret()
 
         if hass.components.cloud.async_active_subscription():
-            data[CONF_CLOUDHOOK_URL] = await async_create_cloudhook(hass, webhook_id)
+            data[
+                CONF_CLOUDHOOK_URL
+            ] = await hass.components.cloud.async_create_cloudhook(webhook_id)
 
         data[ATTR_DEVICE_ID] = str(uuid.uuid4()).replace("-", "")
 
@@ -60,8 +57,8 @@ class RegistrationsView(HomeAssistantView):
 
         remote_ui_url = None
         try:
-            remote_ui_url = async_remote_ui_url(hass)
-        except CloudNotAvailable:
+            remote_ui_url = hass.components.cloud.async_remote_ui_url()
+        except hass.components.cloud.CloudNotAvailable:
             pass
 
         return self.json(

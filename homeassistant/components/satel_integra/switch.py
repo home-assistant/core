@@ -9,8 +9,8 @@ from . import (
     CONF_DEVICE_CODE,
     CONF_SWITCHABLE_OUTPUTS,
     CONF_ZONE_NAME,
-    SIGNAL_OUTPUTS_UPDATED,
     DATA_SATEL,
+    SIGNAL_OUTPUTS_UPDATED,
 )
 
 _LOGGER = logging.getLogger(__name__)

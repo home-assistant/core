@@ -4,7 +4,7 @@ import voluptuous as vol
 from homeassistant.helpers import config_validation as cv
 
 from .config_flow import get_master_gateway
-from .const import CONF_BRIDGEID, DOMAIN, _LOGGER
+from .const import _LOGGER, CONF_BRIDGEID, DOMAIN
 
 DECONZ_SERVICES = "deconz_services"
 

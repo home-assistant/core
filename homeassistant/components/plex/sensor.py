@@ -93,6 +93,7 @@ class PlexSensor(Entity):
 
     def update(self):
         """Update method for Plex sensor."""
+        _LOGGER.debug("Refreshing sensor [%s]", self.unique_id)
         now_playing = []
         for sess in self.sessions:
             user = sess.usernames[0]

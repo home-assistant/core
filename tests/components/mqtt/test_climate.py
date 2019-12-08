@@ -23,6 +23,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_FAN_ONLY,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
     PRESET_NONE,
+    PRESET_ECO,
 )
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
@@ -446,6 +447,19 @@ async def test_set_away_mode(hass, mqtt_mock):
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("preset_mode") is None
 
+    await common.async_set_preset_mode(hass, "hold-on", ENTITY_CLIMATE)
+    mqtt_mock.async_publish.reset_mock()
+
+    await common.async_set_preset_mode(hass, "away", ENTITY_CLIMATE)
+    mqtt_mock.async_publish.assert_has_calls(
+        [
+            unittest.mock.call("hold-topic", "off", 0, False),
+            unittest.mock.call("away-mode-topic", "AN", 0, False),
+        ]
+    )
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("preset_mode") == "away"
+
 
 async def test_set_hvac_action(hass, mqtt_mock):
     """Test setting of the HVAC action."""
@@ -494,6 +508,12 @@ async def test_set_hold(hass, mqtt_mock):
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("preset_mode") == "hold-on"
+
+    await common.async_set_preset_mode(hass, PRESET_ECO, ENTITY_CLIMATE)
+    mqtt_mock.async_publish.assert_called_once_with("hold-topic", "eco", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("preset_mode") == PRESET_ECO
 
     await common.async_set_preset_mode(hass, PRESET_NONE, ENTITY_CLIMATE)
     mqtt_mock.async_publish.assert_called_once_with("hold-topic", "off", 0, False)
@@ -566,6 +586,39 @@ async def test_custom_availability_payload(hass, mqtt_mock):
 
     state = hass.states.get("climate.test")
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_set_target_temperature_low_high_with_templates(hass, mqtt_mock, caplog):
+    """Test setting of temperature high/low templates."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["climate"]["temperature_low_state_topic"] = "temperature-state"
+    config["climate"]["temperature_high_state_topic"] = "temperature-state"
+    config["climate"]["temperature_low_state_template"] = "{{ value_json.temp_low }}"
+    config["climate"]["temperature_high_state_template"] = "{{ value_json.temp_high }}"
+
+    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+
+    state = hass.states.get(ENTITY_CLIMATE)
+
+    # Temperature - with valid value
+    assert state.attributes.get("target_temp_low") is None
+    assert state.attributes.get("target_temp_high") is None
+
+    async_fire_mqtt_message(
+        hass, "temperature-state", '{"temp_low": "1031", "temp_high": "1032"}'
+    )
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("target_temp_low") == 1031
+    assert state.attributes.get("target_temp_high") == 1032
+
+    # Temperature - with invalid value
+    async_fire_mqtt_message(hass, "temperature-state", '"-INVALID-"')
+    state = hass.states.get(ENTITY_CLIMATE)
+    # make sure, the invalid value gets logged...
+    assert "Could not parse temperature from" in caplog.text
+    # ... but the actual value stays unchanged.
+    assert state.attributes.get("target_temp_low") == 1031
+    assert state.attributes.get("target_temp_high") == 1032
 
 
 async def test_set_with_templates(hass, mqtt_mock, caplog):

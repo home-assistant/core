@@ -6,15 +6,22 @@ from homeassistant.components.androidtv.media_player import (
     ANDROIDTV_DOMAIN,
     CONF_ADB_SERVER_IP,
     CONF_ADBKEY,
+    CONF_APPS,
 )
-from homeassistant.components.media_player.const import DOMAIN
+from homeassistant.components.media_player.const import (
+    ATTR_INPUT_SOURCE,
+    DOMAIN,
+    SERVICE_SELECT_SOURCE,
+)
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
     CONF_HOST,
     CONF_NAME,
     CONF_PLATFORM,
     STATE_IDLE,
     STATE_OFF,
+    STATE_PLAYING,
     STATE_UNAVAILABLE,
 )
 
@@ -276,3 +283,108 @@ async def test_setup_with_adbkey(hass):
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_OFF
+
+
+async def test_firetv_sources(hass):
+    """Test that sources (i.e., apps) are handled correctly for Fire TV devices."""
+    config = CONFIG_FIRETV_ADB_SERVER.copy()
+    config[DOMAIN][CONF_APPS] = {"com.app.test1": "TEST 1"}
+    patch_key, entity_id = _setup(hass, config)
+
+    with patchers.PATCH_ADB_DEVICE, patchers.patch_connect(True)[
+        patch_key
+    ], patchers.patch_shell("")[patch_key]:
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.helpers.entity_component.async_update_entity(entity_id)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_OFF
+
+    with patchers.patch_firetv_update(
+        "playing", "com.app.test1", ["com.app.test1", "com.app.test2"]
+    ):
+        await hass.helpers.entity_component.async_update_entity(entity_id)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_PLAYING
+        assert state.attributes["source"] == "TEST 1"
+        assert state.attributes["source_list"] == ["TEST 1", "com.app.test2"]
+
+    with patchers.patch_firetv_update(
+        "playing", "com.app.test2", ["com.app.test2", "com.app.test1"]
+    ):
+        await hass.helpers.entity_component.async_update_entity(entity_id)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_PLAYING
+        assert state.attributes["source"] == "com.app.test2"
+        assert state.attributes["source_list"] == ["com.app.test2", "TEST 1"]
+
+
+async def _test_firetv_select_source(hass, source, expected_arg, method_patch):
+    """Test that the `FireTV.launch_app` and `FireTV.stop_app` methods are called with the right parameter."""
+    config = CONFIG_FIRETV_ADB_SERVER.copy()
+    config[DOMAIN][CONF_APPS] = {"com.app.test1": "TEST 1"}
+    patch_key, entity_id = _setup(hass, config)
+
+    with patchers.PATCH_ADB_DEVICE, patchers.patch_connect(True)[
+        patch_key
+    ], patchers.patch_shell("")[patch_key]:
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.helpers.entity_component.async_update_entity(entity_id)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_OFF
+
+    with method_patch as method_patch_:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SELECT_SOURCE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_INPUT_SOURCE: source},
+            blocking=True,
+        )
+        method_patch_.assert_called_with(expected_arg)
+
+    return True
+
+
+async def test_firetv_select_source_launch_app_id(hass):
+    """Test that an app can be launched using its app ID."""
+    assert await _test_firetv_select_source(
+        hass, "com.app.test1", "com.app.test1", patchers.PATCH_LAUNCH_APP
+    )
+
+
+async def test_firetv_select_source_launch_app_name(hass):
+    """Test that an app can be launched using its friendly name."""
+    assert await _test_firetv_select_source(
+        hass, "TEST 1", "com.app.test1", patchers.PATCH_LAUNCH_APP
+    )
+
+
+async def test_firetv_select_source_launch_app_id_no_name(hass):
+    """Test that an app can be launched using its app ID when it has no friendly name."""
+    assert await _test_firetv_select_source(
+        hass, "com.app.test2", "com.app.test2", patchers.PATCH_LAUNCH_APP
+    )
+
+
+async def test_firetv_select_source_stop_app_id(hass):
+    """Test that an app can be stopped using its app ID."""
+    assert await _test_firetv_select_source(
+        hass, "!com.app.test1", "com.app.test1", patchers.PATCH_STOP_APP
+    )
+
+
+async def test_firetv_select_source_stop_app_name(hass):
+    """Test that an app can be stopped using its friendly name."""
+    assert await _test_firetv_select_source(
+        hass, "!TEST 1", "com.app.test1", patchers.PATCH_STOP_APP
+    )
+
+
+async def test_firetv_select_source_stop_app_id_no_name(hass):
+    """Test that an app can be stopped using its app ID when it has no friendly name."""
+    assert await _test_firetv_select_source(
+        hass, "!com.app.test2", "com.app.test2", patchers.PATCH_STOP_APP
+    )

@@ -6,6 +6,13 @@
             "arm_night": "uzbr\u00f3j (noc) {entity_name}",
             "disarm": "rozbr\u00f3j {entity_name}",
             "trigger": "wyzw\u00f3l {entity_name}"
+        },
+        "trigger_type": {
+            "armed_away": "{entity_name} zostanie uzbrojony (poza domem)",
+            "armed_home": "{entity_name} zostanie uzbrojony (w domu)",
+            "armed_night": "{entity_name} zostanie uzbrojony (noc)",
+            "disarmed": "{entity_name} zostanie rozbrojony",
+            "triggered": "{entity_name} zostanie wyzwolony"
         }
     }
 }

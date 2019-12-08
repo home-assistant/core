@@ -1,9 +1,9 @@
 """Support for the Airly air_quality service."""
 from homeassistant.components.air_quality import (
-    AirQualityEntity,
     ATTR_AQI,
-    ATTR_PM_10,
     ATTR_PM_2_5,
+    ATTR_PM_10,
+    AirQualityEntity,
 )
 from homeassistant.const import CONF_NAME
 

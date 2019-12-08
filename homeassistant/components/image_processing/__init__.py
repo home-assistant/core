@@ -11,7 +11,7 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, CONF_ENTITY_ID, CONF_
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
+from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -85,7 +85,8 @@ def draw_box(
     the bounding box will be `(40, 10)` to `(180, 50)` (in (x,y) coordinates).
     """
 
-    line_width = 5
+    line_width = 3
+    font_height = 8
     y_min, x_min, y_max, x_max = box
     (left, right, top, bottom) = (
         x_min * img_width,
@@ -99,7 +100,9 @@ def draw_box(
         fill=color,
     )
     if text:
-        draw.text((left + line_width, abs(top - line_width)), text, fill=color)
+        draw.text(
+            (left + line_width, abs(top - line_width - font_height)), text, fill=color
+        )
 
 
 async def async_setup(hass, config):
@@ -121,7 +124,7 @@ async def async_setup(hass, config):
             await asyncio.wait(update_tasks)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SCAN, async_scan_service, schema=ENTITY_SERVICE_SCHEMA
+        DOMAIN, SERVICE_SCAN, async_scan_service, schema=make_entity_service_schema({})
     )
 
     return True
