@@ -60,14 +60,12 @@ async def test_scenes(hass):
 
     group_scene = gateway.api.groups["1"].scenes["1"]
 
-    with patch.object(
-        group_scene, "_async_set_state_callback", return_value=True
-    ) as set_callback:
+    with patch.object(group_scene, "_request", return_value=True) as set_callback:
         await hass.services.async_call(
             "scene", "turn_on", {"entity_id": "scene.light_group_scene"}, blocking=True
         )
         await hass.async_block_till_done()
-        set_callback.assert_called_with("/groups/1/scenes/1/recall", {})
+        set_callback.assert_called_with("put", "/groups/1/scenes/1/recall", json={})
 
     await gateway.async_reset()
 
