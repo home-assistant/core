@@ -9,9 +9,9 @@ from homeassistant.components.plex import config_flow
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_TOKEN, CONF_URL
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
-
 from .mock_classes import MOCK_SERVERS, MockPlexAccount, MockPlexServer
+
+from tests.common import MockConfigEntry
 
 MOCK_TOKEN = "secret_token"
 MOCK_FILE_CONTENTS = {
