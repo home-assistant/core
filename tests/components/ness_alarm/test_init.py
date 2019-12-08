@@ -31,7 +31,6 @@ from homeassistant.const import (
     CONF_HOST,
 )
 from homeassistant.setup import async_setup_component
-from tests.common import MockDependency
 
 VALID_CONFIG = {
     DOMAIN: {
@@ -261,7 +260,12 @@ def mock_nessclient():
     _mock_factory = MagicMock()
     _mock_factory.return_value = _mock_instance
 
-    with MockDependency("nessclient"), patch(
+    with patch(
         "homeassistant.components.ness_alarm.Client", new=_mock_factory, create=True
-    ), patch("homeassistant.components.ness_alarm.ArmingState", new=MockArmingState):
+    ), patch(
+        "homeassistant.components.ness_alarm.ArmingState", new=MockArmingState
+    ), patch(
+        "homeassistant.components.ness_alarm.alarm_control_panel.ArmingState",
+        new=MockArmingState,
+    ):
         yield _mock_instance
