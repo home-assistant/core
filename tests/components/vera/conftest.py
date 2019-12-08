@@ -7,15 +7,7 @@ from .common import ComponentFactory
 
 
 @pytest.fixture()
-def vera_component_factory(request):
+def vera_component_factory():
     """Return a factory for initializing the vera component."""
-    init_controller_patch = patch("pyvera.init_controller")
-    init_controller_mock = init_controller_patch.start()
-
-    def fin():
-        nonlocal init_controller_patch
-        init_controller_patch.stop()
-
-    request.addfinalizer(fin)
-
-    return ComponentFactory(init_controller_mock)
+    with patch("pyvera.init_controller") as init_controller_mock:
+        yield ComponentFactory(init_controller_mock)
