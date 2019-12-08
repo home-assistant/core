@@ -26,9 +26,9 @@ from homeassistant.components.vacuum import (
 from homeassistant.const import (
     CONF_NAME,
     CONF_PLATFORM,
+    ENTITY_MATCH_ALL,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    ENTITY_MATCH_ALL,
 )
 from homeassistant.setup import async_setup_component
 

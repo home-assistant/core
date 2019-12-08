@@ -15,8 +15,8 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import callback
-from homeassistant.setup import async_setup_component
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
