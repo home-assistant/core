@@ -1,5 +1,6 @@
 """Provides device automations for Cover."""
 from typing import Any, Dict, List
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -8,14 +9,14 @@ from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
     CONF_CONDITION,
-    CONF_DOMAIN,
-    CONF_TYPE,
     CONF_DEVICE_ID,
+    CONF_DOMAIN,
     CONF_ENTITY_ID,
-    STATE_OPEN,
+    CONF_TYPE,
     STATE_CLOSED,
-    STATE_OPENING,
     STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -24,8 +25,9 @@ from homeassistant.helpers import (
     entity_registry,
     template,
 )
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+
 from . import (
     DOMAIN,
     SUPPORT_CLOSE,
