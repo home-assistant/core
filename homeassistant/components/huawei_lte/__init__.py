@@ -397,16 +397,15 @@ async def async_setup(hass: HomeAssistantType, config) -> bool:
         routers = hass.data[DOMAIN].routers
         if url:
             router = routers.get(url)
+        elif len(routers) == 1:
+            router = next(iter(routers.values()))
         else:
-            if len(routers) == 1:
-                router = next(iter(routers.values()))
-            else:
-                _LOGGER.error(
-                    "%s: more than one router configured, must specify one of URLs %s",
-                    service.service,
-                    sorted(routers.keys()),
-                )
-                return
+            _LOGGER.error(
+                "%s: more than one router configured, must specify one of URLs %s",
+                service.service,
+                sorted(routers.keys()),
+            )
+            return
         if not router:
             _LOGGER.error("%s: router %s unavailable", service.service, url)
             return
