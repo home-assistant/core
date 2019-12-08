@@ -240,6 +240,13 @@ async def test_self_reset_monthly(hass):
     )
 
 
+async def test_self_reset_quarterly(hass):
+    """Test quarterly reset of meter."""
+    await _test_self_reset(
+        hass, gen_config("quarterly"), "2017-03-31T23:59:00.000000+00:00"
+    )
+
+
 async def test_self_reset_yearly(hass):
     """Test yearly reset of meter."""
     await _test_self_reset(
