@@ -23,7 +23,6 @@ from .const import (
 from .core import PROVIDERS
 from .hls import async_setup_hls
 
-
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
@@ -83,6 +82,7 @@ def request_stream(hass, stream_source, *, fmt="hls", keepalive=False, options=N
 async def async_setup(hass, config):
     """Set up stream."""
     # Keep import here so that we can import stream integration without installing reqs
+    # pylint: disable=import-outside-toplevel
     from .recorder import async_setup_recorder
 
     hass.data[DOMAIN] = {}
@@ -163,6 +163,7 @@ class Stream:
     def start(self):
         """Start a stream."""
         # Keep import here so that we can import stream integration without installing reqs
+        # pylint: disable=import-outside-toplevel
         from .worker import stream_worker
 
         if self._thread is None or not self._thread.isAlive():
