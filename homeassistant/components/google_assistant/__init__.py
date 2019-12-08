@@ -29,9 +29,9 @@ from .const import (
     DOMAIN,
     SERVICE_REQUEST_SYNC,
 )
-from .const import EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED  # noqa: F401
-from .const import EVENT_QUERY_RECEIVED  # noqa: F401
 from .http import GoogleAssistantView, GoogleConfig
+
+from .const import EVENT_QUERY_RECEIVED  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
