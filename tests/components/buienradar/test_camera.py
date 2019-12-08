@@ -1,10 +1,10 @@
 """The tests for generic camera component."""
 import asyncio
+
 from aiohttp.client_exceptions import ClientResponseError
 
-from homeassistant.util import dt as dt_util
-
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 # An infinitesimally small time-delta.
 EPSILON_DELTA = 0.0000000001
