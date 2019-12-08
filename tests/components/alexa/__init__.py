@@ -1,8 +1,8 @@
 """Tests for the Alexa integration."""
 from uuid import uuid4
 
-from homeassistant.core import Context
 from homeassistant.components.alexa import config, smart_home
+from homeassistant.core import Context
 
 from tests.common import async_mock_service
 

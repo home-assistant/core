@@ -1,18 +1,6 @@
 """Alexa entity adapters."""
 from typing import List
 
-from homeassistant.core import callback
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_SUPPORTED_FEATURES,
-    ATTR_UNIT_OF_MEASUREMENT,
-    CLOUD_NEVER_EXPOSED_ENTITIES,
-    CONF_NAME,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
-from homeassistant.util.decorator import Registry
-from homeassistant.components.climate import const as climate
 from homeassistant.components import (
     alarm_control_panel,
     alert,
@@ -30,8 +18,19 @@ from homeassistant.components import (
     sensor,
     switch,
 )
+from homeassistant.components.climate import const as climate
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_SUPPORTED_FEATURES,
+    ATTR_UNIT_OF_MEASUREMENT,
+    CLOUD_NEVER_EXPOSED_ENTITIES,
+    CONF_NAME,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
+from homeassistant.core import callback
+from homeassistant.util.decorator import Registry
 
-from .const import CONF_DESCRIPTION, CONF_DISPLAY_CATEGORIES
 from .capabilities import (
     Alexa,
     AlexaBrightnessController,
@@ -60,6 +59,7 @@ from .capabilities import (
     AlexaThermostatController,
     AlexaToggleController,
 )
+from .const import CONF_DESCRIPTION, CONF_DISPLAY_CATEGORIES
 
 ENTITY_ADAPTERS = Registry()
 
