@@ -3,8 +3,8 @@ from collections import OrderedDict
 import uuid
 
 from homeassistant.components.scene import DOMAIN, PLATFORM_SCHEMA
-from homeassistant.const import CONF_ID, SERVICE_RELOAD
 from homeassistant.config import SCENE_CONFIG_PATH
+from homeassistant.const import CONF_ID, SERVICE_RELOAD
 import homeassistant.helpers.config_validation as cv
 
 from . import EditIdBasedConfigView
