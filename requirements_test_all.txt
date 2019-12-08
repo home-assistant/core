@@ -536,6 +536,9 @@ pytraccar==0.9.0
 # homeassistant.components.tradfri
 pytradfri[async]==6.4.0
 
+# homeassistant.components.vera
+pyvera==0.3.7
+
 # homeassistant.components.vesync
 pyvesync==1.1.0
 

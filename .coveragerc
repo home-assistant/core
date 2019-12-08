@@ -750,7 +750,6 @@ omit =
     homeassistant/components/velbus/switch.py
     homeassistant/components/velux/*
     homeassistant/components/venstar/climate.py
-    homeassistant/components/vera/*
     homeassistant/components/verisure/*
     homeassistant/components/versasense/*
     homeassistant/components/vesync/__init__.py
