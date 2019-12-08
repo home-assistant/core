@@ -1,15 +1,16 @@
 """Fixtures for Hass.io."""
 import os
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
+from homeassistant.components.hassio.handler import HassIO, HassioAPIError
 from homeassistant.core import CoreState
 from homeassistant.setup import async_setup_component
-from homeassistant.components.hassio.handler import HassIO, HassioAPIError
+
+from . import HASSIO_TOKEN
 
 from tests.common import mock_coro
-from . import HASSIO_TOKEN
 
 
 @pytest.fixture
