@@ -1,17 +1,17 @@
 """Config flow to configure homekit_controller."""
-import os
 import json
 import logging
+import os
 
 import homekit
+from homekit.controller.ip_implementation import IpPairing
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback
 
+from .connection import get_accessory_name, get_bridge_information
 from .const import DOMAIN, KNOWN_DEVICES
-from .connection import get_bridge_information, get_accessory_name
-
 
 HOMEKIT_IGNORE = ["Home Assistant Bridge"]
 HOMEKIT_DIR = ".homekit"
@@ -194,7 +194,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
     async def async_import_legacy_pairing(self, discovery_props, pairing_data):
         """Migrate a legacy pairing to config entries."""
-        from homekit.controller.ip_implementation import IpPairing
 
         hkid = discovery_props["id"]
 

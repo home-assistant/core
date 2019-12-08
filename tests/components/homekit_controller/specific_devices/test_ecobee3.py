@@ -154,7 +154,7 @@ async def test_ecobee3_setup_connection_failure(hass):
     # make sure the IpPairing mock is in place or we'll try to connect to
     # a real device. Normally this mocking is done by the helper in
     # setup_test_accessories.
-    pairing_cls_loc = "homekit.controller.ip_implementation.IpPairing"
+    pairing_cls_loc = "homeassistant.components.homekit_controller.connection.IpPairing"
     with mock.patch(pairing_cls_loc) as pairing_cls:
         pairing_cls.return_value = pairing
         await time_changed(hass, 5 * 60)

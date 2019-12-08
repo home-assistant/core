@@ -3,18 +3,18 @@ import asyncio
 import datetime
 import logging
 
+from homekit.controller.ip_implementation import IpPairing
 from homekit.exceptions import (
     AccessoryDisconnectedError,
     AccessoryNotFoundError,
     EncryptionError,
 )
-from homekit.model.services import ServicesTypes
 from homekit.model.characteristics import CharacteristicsTypes
+from homekit.model.services import ServicesTypes
 
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import DOMAIN, HOMEKIT_ACCESSORY_DISPATCH, ENTITY_MAP
-
+from .const import DOMAIN, ENTITY_MAP, HOMEKIT_ACCESSORY_DISPATCH
 
 DEFAULT_SCAN_INTERVAL = datetime.timedelta(seconds=60)
 RETRY_INTERVAL = 60  # seconds
@@ -57,7 +57,6 @@ class HKDevice:
 
     def __init__(self, hass, config_entry, pairing_data):
         """Initialise a generic HomeKit device."""
-        from homekit.controller.ip_implementation import IpPairing
 
         self.hass = hass
         self.config_entry = config_entry
