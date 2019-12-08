@@ -538,8 +538,8 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         """
         Call Squeezebox JSON/RPC method.
 
-        Escaped optional parameters are added to the command to form the list
-        of positional parameters (p0, p1...,  pN) passed to JSON/RPC server.
+        Additional parameters are added to the command to form the list of
+        positional parameters (p0, p1...,  pN) passed to JSON/RPC server.
         """
         all_params = [command]
         if parameters:
