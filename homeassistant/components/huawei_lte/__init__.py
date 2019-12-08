@@ -151,7 +151,7 @@ class Router:
         return {(dr.CONNECTION_NETWORK_MAC, self.mac)} if self.mac else set()
 
     def _get_data(self, key: str, func: Callable[[None], Any]) -> None:
-        if not self.subscriptions[key]:
+        if not self.subscriptions.get(key):
             return
         _LOGGER.debug("Getting %s for subscribers %s", key, self.subscriptions[key])
         try:
