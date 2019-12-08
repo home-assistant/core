@@ -60,7 +60,7 @@ async def async_setup_freebox(hass, config, host, port):
     }
 
     token_file = hass.config.path(FREEBOX_CONFIG_FILE)
-    api_version = "v4"
+    api_version = "v6"
 
     fbx = Freepybox(app_desc=app_desc, token_file=token_file, api_version=api_version)
 
