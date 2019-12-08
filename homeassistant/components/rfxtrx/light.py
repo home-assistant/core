@@ -4,7 +4,13 @@ import logging
 import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
-from homeassistant.components import rfxtrx
+from . import (
+    RfxtrxDevice,
+    get_devices_from_config,
+    get_new_device,
+    RECEIVED_EVT_SUBSCRIBERS,
+    apply_received_command,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
@@ -46,7 +52,7 @@ SUPPORT_RFXTRX = SUPPORT_BRIGHTNESS
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RFXtrx platform."""
-    lights = rfxtrx.get_devices_from_config(config, RfxtrxLight)
+    lights = get_devices_from_config(config, RfxtrxLight)
     add_entities(lights)
 
     def light_update(event):
@@ -57,18 +63,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ):
             return
 
-        new_device = rfxtrx.get_new_device(event, config, RfxtrxLight)
+        new_device = get_new_device(event, config, RfxtrxLight)
         if new_device:
             add_entities([new_device])
 
-        rfxtrx.apply_received_command(event)
+        apply_received_command(event)
 
     # Subscribe to main RFXtrx events
-    if light_update not in rfxtrx.RECEIVED_EVT_SUBSCRIBERS:
-        rfxtrx.RECEIVED_EVT_SUBSCRIBERS.append(light_update)
+    if light_update not in RECEIVED_EVT_SUBSCRIBERS:
+        RECEIVED_EVT_SUBSCRIBERS.append(light_update)
 
 
-class RfxtrxLight(rfxtrx.RfxtrxDevice, Light):
+class RfxtrxLight(RfxtrxDevice, Light):
     """Representation of a RFXtrx light."""
 
     @property
