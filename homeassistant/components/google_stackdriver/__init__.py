@@ -3,9 +3,10 @@
 import logging
 import voluptuous as vol
 
+from homeassistant.components.logger import _VALID_LOG_LEVEL
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.logger import _VALID_LOG_LEVEL
+
 from google.cloud.logging import Client
 
 from .const import DOMAIN
