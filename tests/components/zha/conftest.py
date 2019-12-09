@@ -1,7 +1,10 @@
 """Test configuration for the ZHA component."""
+from unittest import mock
 from unittest.mock import patch
 
 import pytest
+import zigpy
+from zigpy.application import ControllerApplication
 
 from homeassistant import config_entries
 from homeassistant.components.zha.core.const import COMPONENTS, DATA_ZHA, DOMAIN
@@ -11,6 +14,9 @@ from homeassistant.components.zha.core.store import async_get_registry
 from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
 
 from .common import async_setup_entry
+
+FIXTURE_GRP_ID = 0x1001
+FIXTURE_GRP_NAME = "fixture group"
 
 
 @pytest.fixture(name="config_entry")
@@ -43,6 +49,11 @@ async def zha_gateway_fixture(hass, config_entry):
     gateway = ZHAGateway(hass, {}, config_entry)
     gateway.zha_storage = zha_storage
     gateway.ha_device_registry = dev_reg
+    gateway.application_controller = mock.MagicMock(spec_set=ControllerApplication)
+    groups = zigpy.group.Groups(gateway.application_controller)
+    groups.listener_event = mock.MagicMock()
+    groups.add_group(FIXTURE_GRP_ID, FIXTURE_GRP_NAME, suppress_event=True)
+    gateway.application_controller.groups = groups
     return gateway
 
 
