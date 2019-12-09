@@ -53,6 +53,9 @@ def mock_controller_service_with_cookie():
         "homeassistant.components.icloud.config_flow.PyiCloudService"
     ) as service_mock:
         service_mock.return_value.requires_2fa = False
+        service_mock.return_value.trusted_devices = TRUSTED_DEVICES
+        service_mock.return_value.send_verification_code = Mock(return_value=True)
+        service_mock.return_value.validate_verification_code = Mock(return_value=True)
         yield service_mock
 
 
@@ -274,6 +277,23 @@ async def test_verification_code(hass: HomeAssistantType):
     result = await flow.async_step_verification_code()
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == CONF_VERIFICATION_CODE
+
+
+async def test_verification_code_success(
+    hass: HomeAssistantType, service_with_cookie: MagicMock
+):
+    """Test verification_code step success."""
+    flow = init_config_flow(hass)
+    await flow.async_step_user({CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD})
+
+    result = await flow.async_step_verification_code({CONF_VERIFICATION_CODE: 0})
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == USERNAME
+    assert result["data"][CONF_USERNAME] == USERNAME
+    assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_ACCOUNT_NAME] is None
+    assert result["data"][CONF_MAX_INTERVAL] == DEFAULT_MAX_INTERVAL
+    assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
 
 async def test_validate_verification_code_failed(
