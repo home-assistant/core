@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Home Assistant setup script."""
 from datetime import datetime as dt
-from setuptools import setup, find_packages
+
+from setuptools import find_packages, setup
 
 import homeassistant.const as hass_const
 
