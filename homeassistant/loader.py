@@ -217,17 +217,17 @@ class Integration:
     @property
     def dependencies(self) -> List[str]:
         """Return dependencies."""
-        return cast(List[str], self.manifest["dependencies"])
+        return cast(List[str], self.manifest.get("dependencies", []))
 
     @property
-    def after_dependencies(self) -> Optional[List[str]]:
+    def after_dependencies(self) -> List[str]:
         """Return after_dependencies."""
-        return cast(Optional[List[str]], self.manifest.get("after_dependencies"))
+        return cast(Optional[List[str]], self.manifest.get("after_dependencies", []))
 
     @property
     def requirements(self) -> List[str]:
         """Return requirements."""
-        return cast(List[str], self.manifest["requirements"])
+        return cast(List[str], self.manifest.get("requirements", []))
 
     @property
     def config_flow(self) -> bool:
