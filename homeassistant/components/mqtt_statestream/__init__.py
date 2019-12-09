@@ -3,6 +3,7 @@ import json
 
 import voluptuous as vol
 
+from homeassistant.components.mqtt import valid_publish_topic
 from homeassistant.const import (
     CONF_DOMAINS,
     CONF_ENTITIES,
@@ -11,11 +12,10 @@ from homeassistant.const import (
     MATCH_ALL,
 )
 from homeassistant.core import callback
-from homeassistant.components.mqtt import valid_publish_topic
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import generate_filter
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.json import JSONEncoder
-import homeassistant.helpers.config_validation as cv
 
 CONF_BASE_TOPIC = "base_topic"
 CONF_PUBLISH_ATTRIBUTES = "publish_attributes"
