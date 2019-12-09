@@ -4,9 +4,9 @@ import unittest.mock as mock
 
 import pytest
 
-from homeassistant.setup import setup_component
 from homeassistant.components import switch
 from homeassistant.components.mochad import switch as mochad
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 

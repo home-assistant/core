@@ -6,10 +6,10 @@ from pymyq.errors import MyQError
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-    CoverDevice,
     PLATFORM_SCHEMA,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
+    CoverDevice,
 )
 from homeassistant.const import (
     CONF_PASSWORD,
