@@ -2,16 +2,13 @@
 from copy import deepcopy
 
 from asynctest import Mock, patch
-
+import pydeconz
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import deconz
-from homeassistant.components import ssdp
+from homeassistant.components import deconz, ssdp
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-
-import pydeconz
 
 BRIDGEID = "0123456789"
 
