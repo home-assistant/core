@@ -57,7 +57,7 @@ async def async_get_integration_with_requirements(
 
     deps_to_check = [
         dep
-        for dep in integration.dependencies + (integration.after_dependencies or [])
+        for dep in integration.dependencies + integration.after_dependencies
         if dep not in done
     ]
 

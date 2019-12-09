@@ -222,7 +222,7 @@ class Integration:
     @property
     def after_dependencies(self) -> List[str]:
         """Return after_dependencies."""
-        return cast(Optional[List[str]], self.manifest.get("after_dependencies", []))
+        return cast(List[str], self.manifest.get("after_dependencies", []))
 
     @property
     def requirements(self) -> List[str]:
