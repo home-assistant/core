@@ -1,33 +1,10 @@
 """The tests for the DirecTV Media player platform."""
+from datetime import datetime, timedelta
 from unittest.mock import call, patch
 
-from datetime import datetime, timedelta
-import requests
 import pytest
+import requests
 
-from homeassistant.components.media_player.const import (
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
-    MEDIA_TYPE_TVSHOW,
-    ATTR_MEDIA_ENQUEUE,
-    ATTR_MEDIA_DURATION,
-    ATTR_MEDIA_TITLE,
-    ATTR_MEDIA_POSITION,
-    ATTR_MEDIA_SERIES_TITLE,
-    ATTR_MEDIA_CHANNEL,
-    ATTR_INPUT_SOURCE,
-    ATTR_MEDIA_POSITION_UPDATED_AT,
-    DOMAIN,
-    SERVICE_PLAY_MEDIA,
-    SUPPORT_PAUSE,
-    SUPPORT_TURN_ON,
-    SUPPORT_TURN_OFF,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_STOP,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_PLAY,
-)
 from homeassistant.components.directv.media_player import (
     ATTR_MEDIA_CURRENTLY_RECORDING,
     ATTR_MEDIA_RATING,
@@ -35,6 +12,29 @@ from homeassistant.components.directv.media_player import (
     ATTR_MEDIA_START_TIME,
     DEFAULT_DEVICE,
     DEFAULT_PORT,
+)
+from homeassistant.components.media_player.const import (
+    ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_CHANNEL,
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_DURATION,
+    ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_POSITION_UPDATED_AT,
+    ATTR_MEDIA_SERIES_TITLE,
+    ATTR_MEDIA_TITLE,
+    DOMAIN,
+    MEDIA_TYPE_TVSHOW,
+    SERVICE_PLAY_MEDIA,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_STOP,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
