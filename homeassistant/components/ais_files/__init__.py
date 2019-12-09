@@ -33,6 +33,13 @@ async def async_setup(hass, config):
     async def async_refresh_files(call):
         await _async_refresh_files(hass)
 
+    @asyncio.coroutine
+    async def async_pick_file(call):
+        if "idx" not in call.data:
+            return
+        await _async_pick_file(hass, call.data["idx"])
+
+    hass.services.async_register(DOMAIN, "pick_file", async_pick_file)
     hass.services.async_register(DOMAIN, "refresh_files", async_refresh_files)
     hass.services.async_register(DOMAIN, "remove_file", async_remove_file)
 
@@ -45,6 +52,13 @@ async def _async_remove_file(hass, path):
     path = path.replace("/local/", "/data/data/pl.sviete.dom/files/home/AIS/www/")
     os.remove(path)
     await _async_refresh_files(hass)
+    await _async_pick_file(hass, 0)
+
+
+async def _async_pick_file(hass, idx):
+    state = hass.states.get("sensor.ais_gallery_img")
+    attr = state.attributes
+    hass.states.async_set("sensor.ais_gallery_img", idx, attr)
 
 
 async def _async_refresh_files(hass):
@@ -62,7 +76,7 @@ def resize_image(file_name):
     original_size = max(image.size[0], image.size[1])
 
     if original_size >= max_size:
-        resized_file = open(IMG_PATH + "1024_" + file_name, "w")
+        resized_file = open(IMG_PATH + "1024_" + file_name, "wb")
         if image.size[0] > image.size[1]:
             resized_width = max_size
             resized_height = int(
@@ -96,6 +110,8 @@ class FileUpladView(HomeAssistantView):
             f.write(file_data)
             f.close()
         # resize the file
-        resize_image(file_name)
+        if file_name.endswith(".svg") is False:
+            resize_image(file_name)
         hass = request.app["hass"]
         hass.async_add_job(hass.services.async_call(DOMAIN, "refresh_files"))
+        hass.async_add_job(hass.services.async_call(DOMAIN, "pick_file", {"idx": 0}))

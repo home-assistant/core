@@ -64,13 +64,21 @@ class FilesSensor(Entity):
         self._name = name
         self._unit_of_measurement = "MB"
         self._sort = sort
+        self.fileList = []
+        self._state = 0
 
     def update(self):
         """Update the sensor."""
         files_list = get_files_list(self._folder_path, self._filter_term, self._sort)
-        self.fileList = files_list
+        fl = []
+        for f in files_list:
+            fl.append(
+                f.replace("/data/data/pl.sviete.dom/files/home/AIS/www/", "/local/")
+            )
+        self.fileList = fl
         self._number_of_files = len(files_list)
         self._size = get_size(files_list)
+        self._state = self._state
 
     @property
     def name(self):
@@ -80,9 +88,7 @@ class FilesSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        decimals = 2
-        size_mb = round(self._size / 1e6, decimals)
-        return size_mb
+        return self._state
 
     @property
     def icon(self):
