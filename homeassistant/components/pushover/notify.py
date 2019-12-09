@@ -1,12 +1,9 @@
 """Pushover platform for notify component."""
 import logging
 
+from pushover import Client, InitError, RequestError
 import requests
 import voluptuous as vol
-from pushover import InitError, Client, RequestError
-
-from homeassistant.const import CONF_API_KEY
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -16,6 +13,8 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONF_API_KEY
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
