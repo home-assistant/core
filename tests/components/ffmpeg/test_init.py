@@ -11,9 +11,9 @@ from homeassistant.components.ffmpeg import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import callback
-from homeassistant.setup import setup_component, async_setup_component
+from homeassistant.setup import async_setup_component, setup_component
 
-from tests.common import get_test_home_assistant, assert_setup_component
+from tests.common import assert_setup_component, get_test_home_assistant
 
 
 @callback
