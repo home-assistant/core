@@ -1,13 +1,14 @@
 """Support for Somfy Covers."""
-from pymfy.api.devices.category import Category
 from pymfy.api.devices.blind import Blind
+from pymfy.api.devices.category import Category
 
 from homeassistant.components.cover import (
-    CoverDevice,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    CoverDevice,
 )
-from . import DOMAIN, SomfyEntity, DEVICES, API
+
+from . import API, DEVICES, DOMAIN, SomfyEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
