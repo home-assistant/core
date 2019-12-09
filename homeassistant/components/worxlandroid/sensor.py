@@ -1,18 +1,16 @@
 """Support for Worx Landroid mower."""
-import logging
 import asyncio
+import logging
 
 import aiohttp
 import async_timeout
-
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_TIMEOUT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
