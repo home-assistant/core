@@ -4,7 +4,6 @@ import logging
 import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
-from . import RfxtrxDevice
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers import config_validation as cv
@@ -19,6 +18,7 @@ from . import (
     get_new_device,
     RECEIVED_EVT_SUBSCRIBERS,
     apply_received_command,
+    RfxtrxDevice,
 )
 
 _LOGGER = logging.getLogger(__name__)
