@@ -2,9 +2,9 @@
 from asynctest.mock import ANY, patch
 import pytest
 
-import homeassistant.loader as loader
 from homeassistant.components import http, hue
 from homeassistant.components.hue import light as hue_light
+import homeassistant.loader as loader
 
 from tests.common import MockModule, async_mock_service, mock_integration
 
