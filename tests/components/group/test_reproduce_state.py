@@ -2,6 +2,7 @@
 
 from asyncio import Future
 from unittest.mock import patch
+
 from homeassistant.components.group.reproduce_state import async_reproduce_states
 from homeassistant.core import Context, State
 
