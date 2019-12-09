@@ -2,12 +2,11 @@
 from collections import deque
 from datetime import timedelta
 
+import aiounifi
 from asynctest import Mock, patch
-
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.components import unifi
 from homeassistant.components.unifi.const import (
     CONF_CONTROLLER,
@@ -22,7 +21,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-import aiounifi
+from homeassistant.exceptions import ConfigEntryNotReady
 
 CONTROLLER_HOST = {
     "hostname": "controller_host",
