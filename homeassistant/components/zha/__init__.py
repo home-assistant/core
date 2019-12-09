@@ -8,6 +8,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 
 from . import api
+from . import config_flow  # noqa: F401 pylint: disable=unused-import
 from .core import ZHAGateway
 from .core.const import (
     COMPONENTS,
