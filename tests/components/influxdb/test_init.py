@@ -3,9 +3,9 @@ import datetime
 import unittest
 from unittest import mock
 
-from homeassistant.setup import setup_component
 import homeassistant.components.influxdb as influxdb
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON, STATE_STANDBY
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 

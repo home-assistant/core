@@ -4,7 +4,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.helpers import intent, template, script, config_validation as cv
+from homeassistant.helpers import config_validation as cv, intent, script, template
 
 DOMAIN = "intent_script"
 

@@ -4,13 +4,13 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant
-from homeassistant.const import EVENT_COMPONENT_LOADED
-from homeassistant.setup import ATTR_COMPONENT
 from homeassistant.components import http
 from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.const import EVENT_COMPONENT_LOADED
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, intent
-from homeassistant.loader import async_get_integration, IntegrationNotFound
+from homeassistant.loader import IntegrationNotFound, async_get_integration
+from homeassistant.setup import ATTR_COMPONENT
 
 from .const import DOMAIN
 

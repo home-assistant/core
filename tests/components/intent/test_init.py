@@ -1,9 +1,9 @@
 """Tests for Intent component."""
 import pytest
 
-from homeassistant.setup import async_setup_component
-from homeassistant.helpers import intent
 from homeassistant.components.cover import SERVICE_OPEN_COVER
+from homeassistant.helpers import intent
+from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
 
