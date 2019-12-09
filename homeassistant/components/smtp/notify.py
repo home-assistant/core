@@ -10,6 +10,13 @@ import smtplib
 
 import voluptuous as vol
 
+from homeassistant.components.notify import (
+    ATTR_DATA,
+    ATTR_TITLE,
+    ATTR_TITLE_DEFAULT,
+    PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
@@ -20,14 +27,6 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-
-from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_TITLE,
-    ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
-    BaseNotificationService,
-)
 
 _LOGGER = logging.getLogger(__name__)
 

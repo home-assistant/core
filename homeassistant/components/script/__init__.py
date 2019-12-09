@@ -6,23 +6,22 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_TOGGLE,
-    SERVICE_RELOAD,
-    STATE_ON,
+    ATTR_NAME,
     CONF_ALIAS,
     EVENT_SCRIPT_STARTED,
-    ATTR_NAME,
+    SERVICE_RELOAD,
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_ON,
 )
-from homeassistant.loader import bind_hass
-from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.helpers.entity_component import EntityComponent
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
-from homeassistant.helpers.service import async_set_service_schema
-
+from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.service import async_set_service_schema
+from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,12 +1,12 @@
 """Test the SSDP integration."""
 import asyncio
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import aiohttp
 import pytest
 
-from homeassistant.generated import ssdp as gn_ssdp
 from homeassistant.components import ssdp
+from homeassistant.generated import ssdp as gn_ssdp
 
 from tests.common import mock_coro
 
