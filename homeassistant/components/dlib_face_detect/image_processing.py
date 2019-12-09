@@ -4,15 +4,18 @@ import logging
 
 import face_recognition  # pylint: disable=import-error
 
-# pylint: disable=unused-import
 from homeassistant.components.image_processing import (
     CONF_ENTITY_ID,
     CONF_NAME,
     CONF_SOURCE,
     ImageProcessingFaceEntity,
 )
-from homeassistant.components.image_processing import PLATFORM_SCHEMA  # noqa: F401
 from homeassistant.core import split_entity_id
+
+# pylint: disable=unused-import
+from homeassistant.components.image_processing import (  # noqa: F401, isort:skip
+    PLATFORM_SCHEMA,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
