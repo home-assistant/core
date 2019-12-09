@@ -2,9 +2,10 @@
 
 import logging
 
-import voluptuous as vol
 from libpyvivotek import VivotekCamera
+import voluptuous as vol
 
+from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
@@ -13,7 +14,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
