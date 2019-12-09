@@ -262,7 +262,7 @@ class AlexaEndpointHealth(AlexaCapability):
 
     def properties_proactively_reported(self):
         """Return True if properties asynchronously reported."""
-        return False
+        return True
 
     def properties_retrievable(self):
         """Return True if properties can be retrieved."""
