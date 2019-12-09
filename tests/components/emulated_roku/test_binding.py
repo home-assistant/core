@@ -2,16 +2,16 @@
 from unittest.mock import Mock, patch
 
 from homeassistant.components.emulated_roku.binding import (
-    EmulatedRoku,
-    EVENT_ROKU_COMMAND,
-    ATTR_SOURCE_NAME,
+    ATTR_APP_ID,
     ATTR_COMMAND_TYPE,
     ATTR_KEY,
-    ATTR_APP_ID,
-    ROKU_COMMAND_KEYPRESS,
+    ATTR_SOURCE_NAME,
+    EVENT_ROKU_COMMAND,
     ROKU_COMMAND_KEYDOWN,
+    ROKU_COMMAND_KEYPRESS,
     ROKU_COMMAND_KEYUP,
     ROKU_COMMAND_LAUNCH,
+    EmulatedRoku,
 )
 
 from tests.common import mock_coro_func
