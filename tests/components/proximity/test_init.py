@@ -3,8 +3,8 @@ import unittest
 
 from homeassistant.components import proximity
 from homeassistant.components.proximity import DOMAIN
-
 from homeassistant.setup import setup_component
+
 from tests.common import get_test_home_assistant
 
 
