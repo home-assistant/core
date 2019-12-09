@@ -2,18 +2,18 @@
 # pylint: disable=protected-access
 import asyncio
 
-from homeassistant.loader import bind_hass
 from homeassistant.components.input_select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN,
-    SERVICE_SET_OPTIONS,
     SERVICE_SELECT_NEXT,
     SERVICE_SELECT_OPTION,
     SERVICE_SELECT_PREVIOUS,
+    SERVICE_SET_OPTIONS,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON
-from homeassistant.core import State, Context
+from homeassistant.core import Context, State
+from homeassistant.loader import bind_hass
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_restore_cache
