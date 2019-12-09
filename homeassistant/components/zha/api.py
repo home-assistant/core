@@ -23,6 +23,7 @@ from .core.const import (
     ATTR_ENDPOINT_ID,
     ATTR_LEVEL,
     ATTR_MANUFACTURER,
+    ATTR_MEMBERS,
     ATTR_NAME,
     ATTR_VALUE,
     ATTR_WARNING_DEVICE_DURATION,
@@ -39,6 +40,9 @@ from .core.const import (
     DATA_ZHA,
     DATA_ZHA_GATEWAY,
     DOMAIN,
+    GROUP_ID,
+    GROUP_IDS,
+    GROUP_NAME,
     MFG_CLUSTER_ID_START,
     WARNING_DEVICE_MODE_EMERGENCY,
     WARNING_DEVICE_SOUND_HIGH,
@@ -213,6 +217,34 @@ async def websocket_get_devices(hass, connection, msg):
 
 @websocket_api.require_admin
 @websocket_api.async_response
+@websocket_api.websocket_command({vol.Required(TYPE): "zha/devices/groupable"})
+async def websocket_get_groupable_devices(hass, connection, msg):
+    """Get ZHA devices that can be grouped."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    ha_device_registry = await async_get_registry(hass)
+
+    devices = []
+    for device in zha_gateway.devices.values():
+        if device.is_groupable:
+            devices.append(
+                async_get_device_info(
+                    hass, device, ha_device_registry=ha_device_registry
+                )
+            )
+    connection.send_result(msg[ID], devices)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command({vol.Required(TYPE): "zha/groups"})
+async def websocket_get_groups(hass, connection, msg):
+    """Get ZHA groups."""
+    groups = await get_groups(hass)
+    connection.send_result(msg[ID], groups)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
 @websocket_api.websocket_command(
     {vol.Required(TYPE): "zha/device", vol.Required(ATTR_IEEE): EUI64.convert}
 )
@@ -234,6 +266,161 @@ async def websocket_get_device(hass, connection, msg):
         )
         return
     connection.send_result(msg[ID], device)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {vol.Required(TYPE): "zha/group", vol.Required(GROUP_ID): cv.positive_int}
+)
+async def websocket_get_group(hass, connection, msg):
+    """Get ZHA group."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    ha_device_registry = await async_get_registry(hass)
+    group_id = msg[GROUP_ID]
+    group = None
+
+    if group_id in zha_gateway.application_controller.groups:
+        group = async_get_group_info(
+            hass,
+            zha_gateway,
+            zha_gateway.application_controller.groups[group_id],
+            ha_device_registry,
+        )
+    if not group:
+        connection.send_message(
+            websocket_api.error_message(
+                msg[ID], websocket_api.const.ERR_NOT_FOUND, "ZHA Group not found"
+            )
+        )
+        return
+    connection.send_result(msg[ID], group)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zha/group/add",
+        vol.Required(GROUP_NAME): cv.string,
+        vol.Optional(ATTR_MEMBERS): vol.All(cv.ensure_list, [EUI64.convert]),
+    }
+)
+async def websocket_add_group(hass, connection, msg):
+    """Add a new ZHA group."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    ha_device_registry = await async_get_registry(hass)
+    group_id = len(zha_gateway.application_controller.groups) + 1
+    group_name = msg[GROUP_NAME]
+    zigpy_group = async_get_group_by_name(zha_gateway, group_name)
+    ret_group = None
+    members = msg.get(ATTR_MEMBERS)
+
+    # guard against group already existing
+    if zigpy_group is None:
+        zigpy_group = zha_gateway.application_controller.groups.add_group(
+            group_id, group_name
+        )
+        if members is not None:
+            tasks = []
+            for ieee in members:
+                tasks.append(zha_gateway.devices[ieee].async_add_to_group(group_id))
+            await asyncio.gather(*tasks)
+    ret_group = async_get_group_info(hass, zha_gateway, zigpy_group, ha_device_registry)
+    connection.send_result(msg[ID], ret_group)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zha/group/remove",
+        vol.Required(GROUP_IDS): vol.All(cv.ensure_list, [cv.positive_int]),
+    }
+)
+async def websocket_remove_groups(hass, connection, msg):
+    """Remove the specified ZHA groups."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    groups = zha_gateway.application_controller.groups
+    group_ids = msg[GROUP_IDS]
+
+    if len(group_ids) > 1:
+        tasks = []
+        for group_id in group_ids:
+            tasks.append(remove_group(groups[group_id], zha_gateway))
+        await asyncio.gather(*tasks)
+    else:
+        await remove_group(groups[group_ids[0]], zha_gateway)
+    ret_groups = await get_groups(hass)
+    connection.send_result(msg[ID], ret_groups)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zha/group/members/add",
+        vol.Required(GROUP_ID): cv.positive_int,
+        vol.Required(ATTR_MEMBERS): vol.All(cv.ensure_list, [EUI64.convert]),
+    }
+)
+async def websocket_add_group_members(hass, connection, msg):
+    """Add members to a ZHA group."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    ha_device_registry = await async_get_registry(hass)
+    group_id = msg[GROUP_ID]
+    members = msg[ATTR_MEMBERS]
+    zigpy_group = None
+
+    if group_id in zha_gateway.application_controller.groups:
+        zigpy_group = zha_gateway.application_controller.groups[group_id]
+        tasks = []
+        for ieee in members:
+            tasks.append(zha_gateway.devices[ieee].async_add_to_group(group_id))
+        await asyncio.gather(*tasks)
+    if not zigpy_group:
+        connection.send_message(
+            websocket_api.error_message(
+                msg[ID], websocket_api.const.ERR_NOT_FOUND, "ZHA Group not found"
+            )
+        )
+        return
+    ret_group = async_get_group_info(hass, zha_gateway, zigpy_group, ha_device_registry)
+    connection.send_result(msg[ID], ret_group)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zha/group/members/remove",
+        vol.Required(GROUP_ID): cv.positive_int,
+        vol.Required(ATTR_MEMBERS): vol.All(cv.ensure_list, [EUI64.convert]),
+    }
+)
+async def websocket_remove_group_members(hass, connection, msg):
+    """Remove members from a ZHA group."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    ha_device_registry = await async_get_registry(hass)
+    group_id = msg[GROUP_ID]
+    members = msg[ATTR_MEMBERS]
+    zigpy_group = None
+
+    if group_id in zha_gateway.application_controller.groups:
+        zigpy_group = zha_gateway.application_controller.groups[group_id]
+        tasks = []
+        for ieee in members:
+            tasks.append(zha_gateway.devices[ieee].async_remove_from_group(group_id))
+        await asyncio.gather(*tasks)
+    if not zigpy_group:
+        connection.send_message(
+            websocket_api.error_message(
+                msg[ID], websocket_api.const.ERR_NOT_FOUND, "ZHA Group not found"
+            )
+        )
+        return
+    ret_group = async_get_group_info(hass, zha_gateway, zigpy_group, ha_device_registry)
+    connection.send_result(msg[ID], ret_group)
 
 
 @callback
@@ -259,6 +446,62 @@ def async_get_device_info(hass, device, ha_device_registry=None):
             ret_device["device_reg_id"] = reg_device.id
             ret_device["area_id"] = reg_device.area_id
     return ret_device
+
+
+async def get_groups(hass,):
+    """Get ZHA Groups."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    ha_device_registry = await async_get_registry(hass)
+
+    groups = []
+    for group in zha_gateway.application_controller.groups.values():
+        groups.append(
+            async_get_group_info(hass, zha_gateway, group, ha_device_registry)
+        )
+    return groups
+
+
+async def remove_group(group, zha_gateway):
+    """Remove ZHA Group."""
+    if group.members:
+        tasks = []
+        for member_ieee in group.members.keys():
+            if member_ieee[0] in zha_gateway.devices:
+                tasks.append(
+                    zha_gateway.devices[member_ieee[0]].async_remove_from_group(
+                        group.group_id
+                    )
+                )
+        await asyncio.gather(*tasks)
+    else:
+        zha_gateway.application_controller.groups.pop(group.group_id)
+
+
+@callback
+def async_get_group_info(hass, zha_gateway, group, ha_device_registry):
+    """Get ZHA group."""
+    ret_group = {}
+    ret_group["group_id"] = group.group_id
+    ret_group["name"] = group.name
+    ret_group["members"] = [
+        async_get_device_info(
+            hass,
+            zha_gateway.get_device(member_ieee[0]),
+            ha_device_registry=ha_device_registry,
+        )
+        for member_ieee in group.members.keys()
+        if member_ieee[0] in zha_gateway.devices
+    ]
+    return ret_group
+
+
+@callback
+def async_get_group_by_name(zha_gateway, group_name):
+    """Get ZHA group by name."""
+    for group in zha_gateway.application_controller.groups.values():
+        if group.name == group_name:
+            return group
+    return None
 
 
 @websocket_api.require_admin
@@ -785,7 +1028,14 @@ def async_load_api(hass):
 
     websocket_api.async_register_command(hass, websocket_permit_devices)
     websocket_api.async_register_command(hass, websocket_get_devices)
+    websocket_api.async_register_command(hass, websocket_get_groupable_devices)
+    websocket_api.async_register_command(hass, websocket_get_groups)
     websocket_api.async_register_command(hass, websocket_get_device)
+    websocket_api.async_register_command(hass, websocket_get_group)
+    websocket_api.async_register_command(hass, websocket_add_group)
+    websocket_api.async_register_command(hass, websocket_remove_groups)
+    websocket_api.async_register_command(hass, websocket_add_group_members)
+    websocket_api.async_register_command(hass, websocket_remove_group_members)
     websocket_api.async_register_command(hass, websocket_reconfigure_node)
     websocket_api.async_register_command(hass, websocket_device_clusters)
     websocket_api.async_register_command(hass, websocket_device_cluster_attributes)
