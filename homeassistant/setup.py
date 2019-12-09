@@ -2,15 +2,13 @@
 import asyncio
 import logging.handlers
 from timeit import default_timer as timer
-
 from types import ModuleType
-from typing import Awaitable, Callable, Optional, Dict, List
+from typing import Awaitable, Callable, Dict, List, Optional
 
-from homeassistant import requirements, core, loader, config as conf_util
+from homeassistant import config as conf_util, core, loader, requirements
 from homeassistant.config import async_notify_setup_error
 from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
-
 
 _LOGGER = logging.getLogger(__name__)
 
