@@ -2,9 +2,9 @@
 from numbers import Number
 from typing import Optional
 
+from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS
 from homeassistant.core import HomeAssistant
 from homeassistant.util.temperature import convert as convert_temperature
-from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS
 
 
 def display_temp(

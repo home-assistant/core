@@ -1,13 +1,11 @@
 """Asyncio backports for Python 3.6 compatibility."""
-import concurrent.futures
-import threading
-import logging
-from asyncio import coroutines
-from asyncio.events import AbstractEventLoop
-
 import asyncio
-from asyncio import ensure_future
-from typing import Any, Coroutine, Callable, TypeVar, Awaitable
+from asyncio import coroutines, ensure_future
+from asyncio.events import AbstractEventLoop
+import concurrent.futures
+import logging
+import threading
+from typing import Any, Awaitable, Callable, Coroutine, TypeVar
 
 _LOGGER = logging.getLogger(__name__)
 
