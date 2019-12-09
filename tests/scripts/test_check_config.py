@@ -2,8 +2,9 @@
 import logging
 from unittest.mock import patch
 
-import homeassistant.scripts.check_config as check_config
 from homeassistant.config import YAML_CONFIG_FILE
+import homeassistant.scripts.check_config as check_config
+
 from tests.common import get_test_config_dir, patch_yaml_files
 
 _LOGGER = logging.getLogger(__name__)
