@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Inspect all component SCHEMAS."""
-import os
 import importlib
+import os
 import pkgutil
 
 from homeassistant.config import _identify_config_schema

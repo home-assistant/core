@@ -2,8 +2,8 @@
 import pathlib
 import sys
 
-from .model import Integration, Config
 from . import codeowners, config_flow, dependencies, manifest, services, ssdp, zeroconf
+from .model import Config, Integration
 
 PLUGINS = [codeowners, config_flow, dependencies, manifest, services, ssdp, zeroconf]
 
