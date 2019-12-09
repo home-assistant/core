@@ -35,7 +35,7 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Required(CONF_KEYFILE): cv.isfile,
-                vol.Optional(CONF_LEVEL, default=logging.INFO): _VALID_LOG_LEVEL,
+                vol.Optional(CONF_LEVEL, default="info"): _VALID_LOG_LEVEL,
                 vol.Optional(CONF_LABELS): dict,
             }
         )
@@ -52,5 +52,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     except ValueError as e:
         _LOGGER.warning("Failed to load credentials: %s", e)
         return False
-    client.setup_logging(log_level=sd_config[CONF_LEVEL], labels=sd_config[CONF_LABELS])
+    client.setup_logging(
+        log_level=sd_config[CONF_LEVEL], labels=sd_config.get(CONF_LABELS, {})
+    )
     return True
