@@ -2,11 +2,10 @@
 import asyncio
 
 from asynctest import Mock, patch
-
 import pytest
 
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.components import deconz
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from tests.common import MockConfigEntry
 

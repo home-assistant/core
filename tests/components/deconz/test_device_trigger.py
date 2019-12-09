@@ -3,9 +3,9 @@ from copy import deepcopy
 
 from homeassistant.components.deconz import device_trigger
 
-from tests.common import assert_lists_same, async_get_device_automations
+from .test_gateway import DECONZ_WEB_REQUEST, ENTRY_CONFIG, setup_deconz_integration
 
-from .test_gateway import ENTRY_CONFIG, DECONZ_WEB_REQUEST, setup_deconz_integration
+from tests.common import assert_lists_same, async_get_device_automations
 
 SENSORS = {
     "1": {
