@@ -5,15 +5,14 @@ import homekit
 from homekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.entity import Entity
 
 # We need an import from .config_flow, without it .config_flow is never loaded.
 from .config_flow import HomekitControllerFlowHandler  # noqa: F401
-from .connection import get_accessory_information, HKDevice
-from .const import CONTROLLER, ENTITY_MAP, KNOWN_DEVICES
-from .const import DOMAIN
+from .connection import HKDevice, get_accessory_information
+from .const import CONTROLLER, DOMAIN, ENTITY_MAP, KNOWN_DEVICES
 from .storage import EntityMapStorage
 
 _LOGGER = logging.getLogger(__name__)

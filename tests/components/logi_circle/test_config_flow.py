@@ -8,8 +8,8 @@ from homeassistant import data_entry_flow
 from homeassistant.components.logi_circle import config_flow
 from homeassistant.components.logi_circle.config_flow import (
     DOMAIN,
-    LogiCircleAuthCallbackView,
     AuthorizationFailed,
+    LogiCircleAuthCallbackView,
 )
 from homeassistant.setup import async_setup_component
 

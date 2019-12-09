@@ -1,0 +1,5 @@
+# Freebox service entries description.
+
+reboot:
+  # Description of the service
+  description: Reboots the Freebox.

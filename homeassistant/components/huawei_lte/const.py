@@ -12,6 +12,9 @@ UNIT_SECONDS = "s"
 
 CONNECTION_TIMEOUT = 10
 
+SERVICE_CLEAR_TRAFFIC_STATISTICS = "clear_traffic_statistics"
+SERVICE_REBOOT = "reboot"
+
 KEY_DEVICE_BASIC_INFORMATION = "device_basic_information"
 KEY_DEVICE_INFORMATION = "device_information"
 KEY_DEVICE_SIGNAL = "device_signal"

@@ -3,40 +3,41 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components.cover import (
-    ENTITY_ID_FORMAT,
-    CoverDevice,
-    PLATFORM_SCHEMA,
-    DEVICE_CLASSES_SCHEMA,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_STOP_TILT,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_OPEN,
-    SUPPORT_CLOSE,
-    SUPPORT_STOP,
-    SUPPORT_SET_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    DEVICE_CLASSES_SCHEMA,
+    ENTITY_ID_FORMAT,
+    PLATFORM_SCHEMA,
+    SUPPORT_CLOSE,
+    SUPPORT_CLOSE_TILT,
+    SUPPORT_OPEN,
+    SUPPORT_OPEN_TILT,
+    SUPPORT_SET_POSITION,
+    SUPPORT_SET_TILT_POSITION,
+    SUPPORT_STOP,
+    SUPPORT_STOP_TILT,
+    CoverDevice,
 )
 from homeassistant.const import (
-    CONF_FRIENDLY_NAME,
-    CONF_ENTITY_ID,
-    EVENT_HOMEASSISTANT_START,
-    CONF_VALUE_TEMPLATE,
-    CONF_ICON_TEMPLATE,
     CONF_DEVICE_CLASS,
+    CONF_ENTITY_ID,
     CONF_ENTITY_PICTURE_TEMPLATE,
+    CONF_FRIENDLY_NAME,
+    CONF_ICON_TEMPLATE,
     CONF_OPTIMISTIC,
-    STATE_OPEN,
+    CONF_VALUE_TEMPLATE,
+    EVENT_HOMEASSISTANT_START,
     STATE_CLOSED,
+    STATE_OPEN,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
+
 from . import extract_entities, initialise_templates
 from .const import CONF_AVAILABILITY_TEMPLATE
 

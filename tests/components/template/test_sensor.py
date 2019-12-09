@@ -1,9 +1,13 @@
 """The test for the Template sensor platform."""
-from homeassistant.const import EVENT_HOMEASSISTANT_START
-from homeassistant.setup import setup_component, async_setup_component
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
+from homeassistant.setup import async_setup_component, setup_component
 
-from tests.common import get_test_home_assistant, assert_setup_component
-from homeassistant.const import STATE_UNAVAILABLE, STATE_ON, STATE_OFF
+from tests.common import assert_setup_component, get_test_home_assistant
 
 
 class TestTemplateSensor:

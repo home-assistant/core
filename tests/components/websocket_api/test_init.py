@@ -1,6 +1,6 @@
 """Tests for the Home Assistant Websocket API."""
 import asyncio
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from aiohttp import WSMsgType
 import pytest

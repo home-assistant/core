@@ -14,8 +14,8 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_when_setup
 
-from .const import DOMAIN
 from .config_flow import CONF_SECRET
+from .const import DOMAIN
 from .messages import async_handle_message
 
 _LOGGER = logging.getLogger(__name__)

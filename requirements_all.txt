@@ -4,7 +4,7 @@ astral==1.10.1
 async_timeout==3.0.1
 attrs==19.3.0
 bcrypt==3.1.7
-certifi>=2019.9.11
+certifi>=2019.11.28
 contextvars==2.4;python_version<"3.7"
 importlib-metadata==0.23
 jinja2>=2.10.3
@@ -13,7 +13,7 @@ cryptography==2.8
 pip>=8.0.3
 python-slugify==4.0.0
 pytz>=2019.03
-pyyaml==5.1.2
+pyyaml==5.2.0
 requests==2.22.0
 ruamel.yaml==0.15.100
 voluptuous==0.11.7
@@ -459,6 +459,9 @@ ecoaliface==0.4.0
 # homeassistant.components.ee_brightbox
 eebrightbox==0.0.4
 
+# homeassistant.components.elgato
+elgato==0.1.0
+
 # homeassistant.components.eliqonline
 eliqonline==1.2.2
 
@@ -563,7 +566,7 @@ geojson_client==0.4
 geopy==1.19.0
 
 # homeassistant.components.geo_rss_events
-georss_generic_client==0.2
+georss_generic_client==0.3
 
 # homeassistant.components.ign_sismologia
 georss_ign_sismologia_client==0.2
@@ -664,10 +667,10 @@ hole==0.5.0
 holidays==0.9.11
 
 # homeassistant.components.frontend
-home-assistant-frontend==20191204.0
+home-assistant-frontend==20191204.1
 
 # homeassistant.components.zwave
-homeassistant-pyozw==0.1.6
+homeassistant-pyozw==0.1.7
 
 # homeassistant.components.homekit_controller
 homekit[IP]==0.15.0
@@ -739,10 +742,10 @@ kaiterra-async-client==0.0.2
 keba-kecontact==0.2.0
 
 # homeassistant.scripts.keyring
-keyring==19.2.0
+keyring==19.3.0
 
 # homeassistant.scripts.keyring
-keyrings.alt==3.1.1
+keyrings.alt==3.2.0
 
 # homeassistant.components.kiwi
 kiwiki-client==0.1.1
@@ -778,7 +781,7 @@ liffylights==0.9.4
 lightify==1.0.7.2
 
 # homeassistant.components.lightwave
-lightwave==0.15
+lightwave==0.17
 
 # homeassistant.components.limitlessled
 limitlessled==1.1.3
@@ -1177,7 +1180,7 @@ pydaikin==1.6.1
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==64
+pydeconz==65
 
 # homeassistant.components.delijn
 pydelijn==0.5.1
@@ -1281,6 +1284,9 @@ pyialarm==0.3
 
 # homeassistant.components.icloud
 pyicloud==0.9.1
+
+# homeassistant.components.intesishome
+pyintesishome==1.5
 
 # homeassistant.components.ipma
 pyipma==1.2.1
@@ -1476,6 +1482,9 @@ pysesame2==1.0.1
 # homeassistant.components.goalfeed
 pysher==1.0.1
 
+# homeassistant.components.signal_messenger
+pysignalclirestapi==0.1.4
+
 # homeassistant.components.sma
 pysma==0.3.4
 
@@ -1664,7 +1673,7 @@ pyuptimerobot==0.0.5
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.3.6
+pyvera==0.3.7
 
 # homeassistant.components.versasense
 pyversasense==0.0.6
@@ -1896,9 +1905,6 @@ swisshydrodata==0.0.3
 
 # homeassistant.components.synology_srm
 synology-srm==0.0.7
-
-# homeassistant.components.tahoma
-tahoma-api==0.0.14
 
 # homeassistant.components.tank_utility
 tank_utility==1.4.0

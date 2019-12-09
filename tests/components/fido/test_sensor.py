@@ -2,12 +2,12 @@
 import asyncio
 import logging
 import sys
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.fido import sensor as fido
-from tests.common import assert_setup_component
 
+from tests.common import assert_setup_component
 
 CONTRACT = "123456789"
 
@@ -66,29 +66,25 @@ def fake_async_add_entities(component, update_before_add=False):
 @asyncio.coroutine
 def test_fido_sensor(loop, hass):
     """Test the Fido number sensor."""
-    sys.modules["pyfido"] = MagicMock()
-    sys.modules["pyfido.client"] = MagicMock()
-    sys.modules["pyfido.client.PyFidoError"] = PyFidoErrorMock
-    import pyfido.client
-
-    pyfido.FidoClient = FidoClientMock
-    pyfido.client.PyFidoError = PyFidoErrorMock
-    config = {
-        "sensor": {
-            "platform": "fido",
-            "name": "fido",
-            "username": "myusername",
-            "password": "password",
-            "monitored_variables": ["balance", "data_remaining"],
+    with patch(
+        "homeassistant.components.fido.sensor.FidoClient", new=FidoClientMock
+    ), patch("homeassistant.components.fido.sensor.PyFidoError", new=PyFidoErrorMock):
+        config = {
+            "sensor": {
+                "platform": "fido",
+                "name": "fido",
+                "username": "myusername",
+                "password": "password",
+                "monitored_variables": ["balance", "data_remaining"],
+            }
         }
-    }
-    with assert_setup_component(1):
-        yield from async_setup_component(hass, "sensor", config)
-    state = hass.states.get("sensor.fido_1112223344_balance")
-    assert state.state == "160.12"
-    assert state.attributes.get("number") == "1112223344"
-    state = hass.states.get("sensor.fido_1112223344_data_remaining")
-    assert state.state == "100.33"
+        with assert_setup_component(1):
+            yield from async_setup_component(hass, "sensor", config)
+        state = hass.states.get("sensor.fido_1112223344_balance")
+        assert state.state == "160.12"
+        assert state.attributes.get("number") == "1112223344"
+        state = hass.states.get("sensor.fido_1112223344_data_remaining")
+        assert state.state == "100.33"
 
 
 @asyncio.coroutine

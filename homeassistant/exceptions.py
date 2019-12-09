@@ -1,5 +1,6 @@
 """The exceptions used by Home Assistant."""
-from typing import Optional, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Tuple
+
 import jinja2
 
 if TYPE_CHECKING:
