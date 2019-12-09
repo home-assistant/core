@@ -3,8 +3,8 @@ import json
 import logging
 
 from homeassistant.components import mqtt
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
-from homeassistant.const import TEMP_FAHRENHEIT, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
