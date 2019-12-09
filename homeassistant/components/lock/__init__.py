@@ -5,26 +5,25 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.loader import bind_hass
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    make_entity_service_schema,
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components import group
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_CODE_FORMAT,
+    SERVICE_LOCK,
+    SERVICE_OPEN,
+    SERVICE_UNLOCK,
     STATE_LOCKED,
     STATE_UNLOCKED,
-    SERVICE_LOCK,
-    SERVICE_UNLOCK,
-    SERVICE_OPEN,
 )
-from homeassistant.components import group
-
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import (  # noqa: F401
+    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA_BASE,
+    make_entity_service_schema,
+)
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.loader import bind_hass
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
