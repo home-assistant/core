@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant import core, config_entries, exceptions
+from homeassistant import config_entries, core, exceptions
 
 from .const import DOMAIN  # pylint:disable=unused-import
 
