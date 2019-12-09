@@ -317,7 +317,6 @@ homeassistant/components/syncthru/* @nielstron
 homeassistant/components/synology_srm/* @aerialls
 homeassistant/components/syslog/* @fabaff
 homeassistant/components/tado/* @michaelarnauts
-homeassistant/components/tahoma/* @philklei
 homeassistant/components/tautulli/* @ludeeus
 homeassistant/components/tellduslive/* @fredrike
 homeassistant/components/template/* @PhracturedBlue
