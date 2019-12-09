@@ -346,13 +346,13 @@ class LightTemplate(Light):
 
     async def async_update(self):
         """Update from templates."""
-        await self.update_state()
+        self.update_state()
 
-        await self.update_brightness()
+        self.update_brightness()
 
-        await self.update_temperature()
+        self.update_temperature()
 
-        await self.update_color()
+        self.update_color()
 
         for property_name, template in (
             ("_icon", self._icon_template),
@@ -390,7 +390,8 @@ class LightTemplate(Light):
                         ex,
                     )
 
-    async def update_temperature(self):
+    @callback
+    def update_temperature(self):
         """Update the temperature from the template."""
         if self._temperature_template is not None:
             try:
@@ -409,7 +410,8 @@ class LightTemplate(Light):
                 )
                 self._temperature = None
 
-    async def update_brightness(self):
+    @callback
+    def update_brightness(self):
         """Update the brightness from the template."""
         if self._level_template is not None:
             try:
@@ -426,7 +428,8 @@ class LightTemplate(Light):
                 )
                 self._brightness = None
 
-    async def update_color(self):
+    @callback
+    def update_color(self):
         """Update the hs_color from the template."""
         if self._color_template is not None:
             h_str = None
@@ -454,7 +457,8 @@ class LightTemplate(Light):
                     s_str,
                 )
 
-    async def update_state(self):
+    @callback
+    def update_state(self):
         """Update the state from the template."""
         if self._template is not None:
             try:
