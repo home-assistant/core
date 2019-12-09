@@ -106,10 +106,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         device_id = slugify(event.device.id_string.lower())
 
-        if device_id in RFX_DEVICES:
-            sensor = RFX_DEVICES[device_id]
-        else:
-            sensor = get_pt2262_device(device_id)
+        sensor = RFX_DEVICES.get(device_id, get_pt2262_device(device_id))
 
         if sensor is None:
             # Add the entity if not exists and automatic_add is True
