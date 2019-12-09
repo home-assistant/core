@@ -4,6 +4,8 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant import config as conf_util
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, STATES, Scene
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_STATE,
@@ -11,21 +13,19 @@ from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
     CONF_PLATFORM,
+    SERVICE_RELOAD,
     STATE_OFF,
     STATE_ON,
-    SERVICE_RELOAD,
 )
-from homeassistant.core import State, DOMAIN as HA_DOMAIN
-from homeassistant import config as conf_util
+from homeassistant.core import DOMAIN as HA_DOMAIN, State
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import async_get_integration
 from homeassistant.helpers import (
     config_per_platform,
     config_validation as cv,
     entity_platform,
 )
 from homeassistant.helpers.state import async_reproduce_state
-from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, STATES, Scene
+from homeassistant.loader import async_get_integration
 
 
 def _convert_states(states):
