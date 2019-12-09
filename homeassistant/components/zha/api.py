@@ -314,9 +314,7 @@ async def websocket_add_group(hass, connection, msg):
     group_name = msg[GROUP_NAME]
     zigpy_group = async_get_group_by_name(zha_gateway, group_name)
     ret_group = None
-    members = None
-    if ATTR_MEMBERS in msg:
-        members = msg[ATTR_MEMBERS]
+    members = msg.get(ATTR_MEMBERS)
 
     # guard against group already existing
     if zigpy_group is None:
