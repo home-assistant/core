@@ -2,13 +2,13 @@
 
 import pytest
 
-import homeassistant.util.volume as volume_util
 from homeassistant.const import (
+    VOLUME_FLUID_OUNCE,
+    VOLUME_GALLONS,
     VOLUME_LITERS,
     VOLUME_MILLILITERS,
-    VOLUME_GALLONS,
-    VOLUME_FLUID_OUNCE,
 )
+import homeassistant.util.volume as volume_util
 
 INVALID_SYMBOL = "bob"
 VALID_SYMBOL = VOLUME_LITERS
