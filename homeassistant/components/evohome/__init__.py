@@ -2,7 +2,7 @@
 
 Such systems include evohome (multi-zone), and Round Thermostat (single zone).
 """
-from datetime import datetime, timedelta
+from datetime import datetime as dt, timedelta
 import logging
 import re
 from typing import Any, Dict, Optional, Tuple
@@ -13,6 +13,7 @@ import evohomeasync2
 import voluptuous as vol
 
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
@@ -67,56 +68,57 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-# TODO: new from here
 ATTR_SYSTEM_MODE = "mode"
-ATTR_ZONE_ID = "zone_id"
-ATTR_ZONE_NAME = "zone_name"
-ATTR_ZONE_TEMP = "setpoint"
-
 ATTR_DURATION_DAYS = "days"
 ATTR_DURATION_HOURS = "hours"
 
+ATTR_ZONE_TEMP = "setpoint"
 ATTR_UNTIL_MINUTES = "duration"
 ATTR_UNTIL_TIME = "until"
+
+SVC_SET_SYSTEM_MODE = "set_system_mode"
+SVC_RESET_SYSTEM = "reset_system"
+SVC_SET_ZONE_MODE = "set_zone_override"
+SVC_RESET_ZONE_MODE = "clear_zone_override"
 
 HH_MM_REGEXP = r"^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"  # 24h format, with leading 0
 
 SET_SYSTEM_MODE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_SYSTEM_MODE): vol.In(EVO_SYSTEM_MODES),
-        vol.Exclusive(ATTR_DURATION_DAYS, "duration"): cv.positive_int,
-        vol.Exclusive(ATTR_DURATION_HOURS, "duration"): cv.positive_int,
+        vol.Exclusive(ATTR_DURATION_DAYS, "duration"): vol.All(
+            cv.positive_int, vol.Range(min=1, max=99)
+        ),
+        vol.Exclusive(ATTR_DURATION_HOURS, "duration"): vol.All(
+            cv.positive_int, vol.Range(min=1, max=24)
+        ),
     }
 )
-RESET_SYSTEM_MODE_SCHEMA = vol.Schema({})
+RESET_SYSTEM_SCHEMA = vol.Schema({})
 SET_ZONE_MODE_SCHEMA = vol.Schema(
     {
-        vol.Exclusive(ATTR_ZONE_ID, "zone"): cv.string,
-        vol.Exclusive(ATTR_ZONE_NAME, "zone"): cv.string,
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
         vol.Required(ATTR_ZONE_TEMP): vol.Coerce(float),
-        vol.Exclusive(ATTR_UNTIL_MINUTES, "until"): cv.positive_int,
+        vol.Exclusive(ATTR_UNTIL_MINUTES, "until"): vol.All(
+            cv.positive_int, vol.Range(min=0, max=24 * 60)
+        ),
         vol.Exclusive(ATTR_UNTIL_TIME, "until"): vol.All(
             cv.string, vol.Match(HH_MM_REGEXP)
         ),
     }
 )
-RESET_ZONE_MODE_SCHEMA = vol.Schema({vol.Required(ATTR_ZONE_NAME): cv.string})
-
-SVC_SET_SYSTEM_MODE = "set_system_mode"
-SVC_RESET_SYSTEM_MODE = "reset_system_mode"
-SVC_SET_ZONE_MODE = "set_zone_setpoint"
-SVC_RESET_ZONE_MODE = "reset_zone_setpoint"
+RESET_ZONE_MODE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_id})
 
 
-def _local_dt_to_aware(dt_naive: datetime) -> datetime:
-    dt_aware = dt_util.now() + (dt_naive - datetime.now())
+def _local_dt_to_aware(dt_naive: dt) -> dt:
+    dt_aware = dt_util.now() + (dt_naive - dt.now())
     if dt_aware.microsecond >= 500000:
         dt_aware += timedelta(seconds=1)
     return dt_aware.replace(microsecond=0)
 
 
-def _dt_to_local_naive(dt_aware: datetime) -> datetime:
-    dt_naive = datetime.now() + (dt_aware - dt_util.now())
+def _dt_to_local_naive(dt_aware: dt) -> dt:
+    dt_naive = dt.now() + (dt_aware - dt_util.now())
     if dt_naive.microsecond >= 500000:
         dt_naive += timedelta(seconds=1)
     return dt_naive.replace(microsecond=0)
@@ -278,23 +280,11 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 def setup_service_functions(hass: HomeAssistantType, broker):
     """Set up the service functions."""
 
-    # async def _call_client_api(self, api_function, refresh=True) -> Any:
-    #     try:
-    #         result = await api_function
-    #     except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
-    #         if not _handle_exception(err):
-    #             return
-
-    #     if refresh is True:
-    #         self.hass.helpers.event.async_call_later(1, self._evo_broker.update())
-
-    #     return result
-
     def _clean_dt(dtm):
         if dtm is not None:
             format_str = "%Y-%m-%d %H:%M:00"  # round down to the nearest minute
-            dtm = datetime.strptime(datetime.strftime(dtm, format_str), format_str)
-            if dtm < datetime.now():
+            dtm = dt.strptime(dt.strftime(dtm, format_str), format_str)
+            if dtm < dt.now():
                 dtm += timedelta(days=1)
         return dtm
 
@@ -312,40 +302,41 @@ def setup_service_functions(hass: HomeAssistantType, broker):
         try:
             attrs = [m for m in tcs.allowedSystemModes if m["systemMode"] == mode][0]
         except IndexError:
-            raise ValueError(f"'{mode}' mode is not supported by this system")
+            raise KeyError(f"'{mode}' mode is not supported by this system")
 
         until = None
-        # the following two are mutually exclusive
+        # the following two attrs are mutually exclusive
         if ATTR_DURATION_DAYS in call.data:
             if attrs.get("timingResolution") != "1.00:00:00":
-                raise ValueError(f"'{mode}' mode does not support days, only hours")
-            duration = min(call.data[ATTR_DURATION_DAYS], 99)
-            if duration:
-                until = datetime.now() + timedelta(days=duration)
+                raise TypeError(f"'{mode}' mode does not support days, only hours")
+            until = dt.combine(dt.now().date(), dt.min.time())
+            until += timedelta(days=call.data[ATTR_DURATION_DAYS])
 
         if ATTR_DURATION_HOURS in call.data:
             if attrs.get("timingResolution") != "01:00:00":
-                raise ValueError(f"'{mode}' mode does not support hours, only days")
-            duration = min(call.data[ATTR_DURATION_HOURS], 24)
-            if duration:  # can be 0
-                until = datetime.now() + timedelta(hours=duration)
+                raise TypeError(f"'{mode}' mode does not support hours, only days")
+            until = dt.now() + timedelta(hours=call.data[ATTR_DURATION_HOURS])
 
-        _LOGGER.warn("tcs._set_status(%s, %s)", mode, _clean_dt(until))
-        # await broker._call_client_api(tcs._set_status(mode, _clean_dt(until)))
+        _LOGGER.warn("tcs._set_status('%s', %s)", mode, _clean_dt(until))
+        await broker.call_client_api(
+            tcs._set_status(mode, _clean_dt(until))
+        )  # pylint: disable=protected-access
 
     async def set_zone_setpoint(call):
         """Set the system mode."""
         _LOGGER.warn("service = %s, data = %s", call.service, call.data)
 
-        zone_name = call.data[ATTR_ZONE_NAME]
+        entity_id = call.data[ATTR_ENTITY_ID]
+
+        zone_id = broker.hass.data["entity_registry"].entities[entity_id].unique_id
         try:
-            zone = broker.tcs.zones[zone_name]
+            zone = broker.tcs.zones_by_id[zone_id]
         except KeyError:
-            raise KeyError(f"'{zone_name}' is not a known zone")
+            raise KeyError(f"'{entity_id}' is not a known evohome zone")
 
         if call.service == SVC_RESET_ZONE_MODE:
             _LOGGER.warn("zone.cancel_temp_override()")
-            # await broker._call_client_api(zone.cancel_temp_override())
+            await broker.call_client_api(zone.cancel_temp_override())
             return
 
         attrs = zone.setpointCapabilities
@@ -354,25 +345,28 @@ def setup_service_functions(hass: HomeAssistantType, broker):
         temp = max(min(temp, attrs["maxHeatSetpoint"]), attrs["minHeatSetpoint"])
 
         until = None
-        # the following two are mutually exclusive
+        # the following two attrs are mutually exclusive
         if ATTR_UNTIL_MINUTES in call.data:
-            duration = min(call.data[ATTR_UNTIL_MINUTES], 24 * 60)
-            if duration:
-                until = datetime.now() + timedelta(minutes=duration)
+            duration = call.data[ATTR_UNTIL_MINUTES]
+            if duration == 0:
+                until = 0  # until next setpoint
+            else:
+                until = dt.now() + timedelta(minutes=duration)
 
         if ATTR_UNTIL_TIME in call.data:
-            until_time = call.data[ATTR_UNTIL_TIME]
-            until_str = datetime.strftime(datetime.now(), "%Y-%m-%d ")
-            until = datetime.strptime(until_str + until_time, "%Y-%m-%d %H:%M")
+            until = dt.strptime(
+                dt.strftime(dt.now(), "%Y-%m-%d ") + call.data[ATTR_UNTIL_TIME],
+                "%Y-%m-%d %H:%M",
+            )
 
-        _LOGGER.warn("zone.set_temperature(%s, %s)", temp, _clean_dt(until))
-        # broker._call_client_api(zone.set_temperature(temp, _clean_dt(until)))
+        _LOGGER.warn("zone.set_temperature('%s', %s)", temp, _clean_dt(until))
+        broker.call_client_api(zone.set_temperature(temp, _clean_dt(until)))
 
     hass.services.async_register(
         DOMAIN, SVC_SET_SYSTEM_MODE, set_system_mode, schema=SET_SYSTEM_MODE_SCHEMA
     )
     hass.services.async_register(
-        DOMAIN, SVC_RESET_SYSTEM_MODE, set_system_mode, schema=RESET_SYSTEM_MODE_SCHEMA
+        DOMAIN, SVC_RESET_SYSTEM, set_system_mode, schema=RESET_SYSTEM_SCHEMA
     )
     hass.services.async_register(
         DOMAIN, SVC_SET_ZONE_MODE, set_zone_setpoint, schema=SET_ZONE_MODE_SCHEMA
@@ -417,6 +411,19 @@ class EvoBroker:
             app_storage[USER_DATA] = None
 
         await self._store.async_save(app_storage)
+
+    async def call_client_api(self, api_function, refresh=True) -> Any:
+        """Call a client API."""
+        try:
+            result = await api_function
+        except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
+            if not _handle_exception(err):
+                return
+
+        if refresh is True:
+            self.hass.helpers.event.async_call_later(1, self.update())
+
+        return result
 
     async def _update_v1(self, *args, **kwargs) -> None:
         """Get the latest high-precision temperatures of the default Location."""
@@ -565,18 +572,6 @@ class EvoDevice(Entity):
         """Return the temperature unit to use in the frontend UI."""
         return TEMP_CELSIUS
 
-    async def _call_client_api(self, api_function, refresh=True) -> Any:
-        try:
-            result = await api_function
-        except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
-            if not _handle_exception(err):
-                return
-
-        if refresh is True:
-            self.hass.helpers.event.async_call_later(1, self._evo_broker.update())
-
-        return result
-
 
 class EvoChild(EvoDevice):
     """Base for any evohome child.
@@ -660,7 +655,7 @@ class EvoChild(EvoDevice):
             if not self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
                 return  # avoid unnecessary I/O - there's nothing to update
 
-        self._schedule = await self._call_client_api(
+        self._schedule = await self._evo_broker.call_client_api(
             self._evo_device.schedule(), refresh=False
         )
 

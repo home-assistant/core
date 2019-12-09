@@ -121,7 +121,7 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
 
     async def _set_tcs_mode(self, op_mode: str) -> None:
         """Set a Controller to any of its native EVO_* operating modes."""
-        await self._call_client_api(self._evo_tcs.set_status(op_mode))
+        await self._evo_broker.call_client_api(self._evo_tcs.set_status(op_mode))
 
     @property
     def hvac_modes(self) -> List[str]:
@@ -215,7 +215,7 @@ class EvoZone(EvoChild, EvoClimateDevice):
         else:  # EVO_PERMOVER
             until = None
 
-        await self._call_client_api(
+        await self._evo_broker.call_client_api(
             self._evo_device.set_temperature(temperature, until)
         )
 
@@ -237,18 +237,22 @@ class EvoZone(EvoChild, EvoClimateDevice):
         and 'Away', Zones to (by default) 12C.
         """
         if hvac_mode == HVAC_MODE_OFF:
-            await self._call_client_api(
+            await self._evo_broker.call_client_api(
                 self._evo_device.set_temperature(self.min_temp, until=None)
             )
         else:  # HVAC_MODE_HEAT
-            await self._call_client_api(self._evo_device.cancel_temp_override())
+            await self._evo_broker.call_client_api(
+                self._evo_device.cancel_temp_override()
+            )
 
     async def async_set_preset_mode(self, preset_mode: Optional[str]) -> None:
         """Set the preset mode; if None, then revert to following the schedule."""
         evo_preset_mode = HA_PRESET_TO_EVO.get(preset_mode, EVO_FOLLOW)
 
         if evo_preset_mode == EVO_FOLLOW:
-            await self._call_client_api(self._evo_device.cancel_temp_override())
+            await self._evo_broker.call_client_api(
+                self._evo_device.cancel_temp_override()
+            )
             return
 
         temperature = self._evo_device.setpointStatus["targetHeatTemperature"]
@@ -259,7 +263,7 @@ class EvoZone(EvoChild, EvoClimateDevice):
         else:  # EVO_PERMOVER
             until = None
 
-        await self._call_client_api(
+        await self._evo_broker.call_client_api(
             self._evo_device.set_temperature(temperature, until)
         )
 

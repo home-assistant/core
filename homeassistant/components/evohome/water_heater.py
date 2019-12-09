@@ -88,23 +88,27 @@ class EvoDHW(EvoChild, WaterHeaterDevice):
         Except for Auto, the mode is only until the next SetPoint.
         """
         if operation_mode == STATE_AUTO:
-            await self._call_client_api(self._evo_device.set_dhw_auto())
+            await self._evo_broker.call_client_api(self._evo_device.set_dhw_auto())
         else:
             await self._update_schedule()
             until = parse_datetime(str(self.setpoints.get("next_sp_from")))
 
             if operation_mode == STATE_ON:
-                await self._call_client_api(self._evo_device.set_dhw_on(until))
+                await self._evo_broker.call_client_api(
+                    self._evo_device.set_dhw_on(until)
+                )
             else:  # STATE_OFF
-                await self._call_client_api(self._evo_device.set_dhw_off(until))
+                await self._evo_broker.call_client_api(
+                    self._evo_device.set_dhw_off(until)
+                )
 
     async def async_turn_away_mode_on(self):
         """Turn away mode on."""
-        await self._call_client_api(self._evo_device.set_dhw_off())
+        await self._evo_broker.call_client_api(self._evo_device.set_dhw_off())
 
     async def async_turn_away_mode_off(self):
         """Turn away mode off."""
-        await self._call_client_api(self._evo_device.set_dhw_auto())
+        await self._evo_broker.call_client_api(self._evo_device.set_dhw_auto())
 
     async def async_update(self) -> None:
         """Get the latest state data for a DHW controller."""
