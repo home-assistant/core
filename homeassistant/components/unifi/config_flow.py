@@ -2,7 +2,6 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import callback
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -10,6 +9,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import callback
 
 from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
@@ -21,10 +21,10 @@ from .const import (
     CONF_TRACK_WIRED_CLIENTS,
     CONTROLLER_ID,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
+    DEFAULT_DETECTION_TIME,
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
-    DEFAULT_DETECTION_TIME,
     DOMAIN,
     LOGGER,
 )
