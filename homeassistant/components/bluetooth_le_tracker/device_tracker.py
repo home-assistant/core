@@ -4,18 +4,18 @@ import logging
 
 import pygatt  # pylint: disable=import-error
 
-from homeassistant.helpers.event import track_point_in_utc_time
+from homeassistant.components.device_tracker.const import (
+    CONF_SCAN_INTERVAL,
+    CONF_TRACK_NEW,
+    SCAN_INTERVAL,
+    SOURCE_TYPE_BLUETOOTH_LE,
+)
 from homeassistant.components.device_tracker.legacy import (
     YAML_DEVICES,
     async_load_config,
 )
-from homeassistant.components.device_tracker.const import (
-    CONF_TRACK_NEW,
-    CONF_SCAN_INTERVAL,
-    SCAN_INTERVAL,
-    SOURCE_TYPE_BLUETOOTH_LE,
-)
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.helpers.event import track_point_in_utc_time
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
