@@ -11,9 +11,9 @@ from homeassistant.components.switch import (
     SwitchDevice,
 )
 from homeassistant.const import CONF_URL
+
 from . import HuaweiLteBaseEntity
 from .const import DOMAIN, KEY_DIALUP_MOBILE_DATASWITCH
-
 
 _LOGGER = logging.getLogger(__name__)
 
