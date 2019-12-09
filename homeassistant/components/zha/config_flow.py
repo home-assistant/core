@@ -15,11 +15,11 @@ import zigpy_zigate.api
 import zigpy_zigate.zigbee
 
 from homeassistant import config_entries
-from .core.const import DEFAULT_BAUDRATE
 
 from .core.const import (
     CONF_RADIO_TYPE,
     CONF_USB_PATH,
+    DEFAULT_BAUDRATE,
     DEFAULT_DATABASE_NAME,
     DOMAIN,
     RadioType,
