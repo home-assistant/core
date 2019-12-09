@@ -432,6 +432,9 @@ pyheos==0.6.0
 # homeassistant.components.homematic
 pyhomematic==0.1.62
 
+# homeassistant.components.icloud
+pyicloud==0.9.1
+
 # homeassistant.components.ipma
 pyipma==1.2.1
 
