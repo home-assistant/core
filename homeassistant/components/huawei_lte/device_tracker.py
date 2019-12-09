@@ -15,9 +15,9 @@ from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.const import CONF_URL
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
 from . import HuaweiLteBaseEntity
 from .const import DOMAIN, KEY_WLAN_HOST_LIST, UPDATE_SIGNAL
-
 
 _LOGGER = logging.getLogger(__name__)
 

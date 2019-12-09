@@ -2,14 +2,13 @@
 
 from huawei_lte_api.enums.client import ResponseCodeEnum
 from huawei_lte_api.enums.user import LoginErrorEnum, LoginStateEnum, PasswordTypeEnum
-from requests_mock import ANY
-from requests.exceptions import ConnectionError
 import pytest
+from requests.exceptions import ConnectionError
+from requests_mock import ANY
 
 from homeassistant import data_entry_flow
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_URL
-from homeassistant.components.huawei_lte.const import DOMAIN
 from homeassistant.components.huawei_lte.config_flow import ConfigFlowHandler
+from homeassistant.components.huawei_lte.const import DOMAIN
 from homeassistant.components.ssdp import (
     ATTR_HOST,
     ATTR_MANUFACTURER,
@@ -24,9 +23,9 @@ from homeassistant.components.ssdp import (
     ATTR_UDN,
     ATTR_UPNP_DEVICE_TYPE,
 )
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 
 from tests.common import MockConfigEntry
-
 
 FIXTURE_USER_INPUT = {
     CONF_URL: "http://192.168.1.1/",

@@ -8,10 +8,10 @@ from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
 from huawei_lte_api.Client import Client
 from huawei_lte_api.Connection import Connection
 from huawei_lte_api.exceptions import (
-    LoginErrorUsernameWrongException,
     LoginErrorPasswordWrongException,
-    LoginErrorUsernamePasswordWrongException,
     LoginErrorUsernamePasswordOverrunException,
+    LoginErrorUsernamePasswordWrongException,
+    LoginErrorUsernameWrongException,
     ResponseErrorException,
 )
 from requests.exceptions import Timeout
@@ -22,11 +22,10 @@ from homeassistant import config_entries
 from homeassistant.components.ssdp import ATTR_HOST, ATTR_NAME, ATTR_PRESENTATIONURL
 from homeassistant.const import CONF_PASSWORD, CONF_RECIPIENT, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
+
+# see https://github.com/PyCQA/pylint/issues/3202 about the DOMAIN's pylint issue
 from .const import CONNECTION_TIMEOUT, DEFAULT_DEVICE_NAME
-
-# https://github.com/PyCQA/pylint/issues/3202
 from .const import DOMAIN  # pylint: disable=unused-import
-
 
 _LOGGER = logging.getLogger(__name__)
 
