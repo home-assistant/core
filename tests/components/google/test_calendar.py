@@ -25,7 +25,6 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import async_mock_service
 
-
 GOOGLE_CONFIG = {CONF_CLIENT_ID: "client_id", CONF_CLIENT_SECRET: "client_secret"}
 TEST_ENTITY = "calendar.we_are_we_are_a_test_calendar"
 TEST_ENTITY_NAME = "We are, we are, a... Test Calendar"
