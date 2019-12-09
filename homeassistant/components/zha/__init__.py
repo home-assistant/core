@@ -1,4 +1,8 @@
-"""Support for Zigbee Home Automation devices."""
+"""Support for Zigbee Home Automation devices.
+
+isort:skip_file
+"""
+
 import logging
 
 import voluptuous as vol
@@ -7,8 +11,8 @@ from homeassistant import config_entries, const as ha_const
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 
-from . import api
 from . import config_flow  # noqa: F401 pylint: disable=unused-import
+from . import api
 from .core import ZHAGateway
 from .core.const import (
     COMPONENTS,
