@@ -42,19 +42,21 @@ _BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Netatmo weather and homecoach platform."""
-    auth = hass.data[DOMAIN][AUTH]
 
     def get_devices():
         """Retrieve Netatmo devices."""
         devices = []
         try:
-            data = CameraData(hass, auth)
-            for camera_id in data.get_camera_ids():
-                camera_type = data.get_camera_type(cid=camera_id)
+            camera_data = CameraData(hass, hass.data[DOMAIN][AUTH])
+            for camera_id in camera_data.get_camera_ids():
+                _LOGGER.debug("Setting up camera %s", camera_id)
+                camera_type = camera_data.get_camera_type(camera_id=camera_id)
                 devices.append(
-                    NetatmoCamera(data, camera_id, camera_type, True, DEFAULT_QUALITY)
+                    NetatmoCamera(
+                        camera_data, camera_id, camera_type, True, DEFAULT_QUALITY
+                    )
                 )
-            data.get_persons()
+            camera_data.get_persons()
         except pyatmo.NoDevice:
             _LOGGER.debug("No cameras found")
         return devices
@@ -260,6 +262,11 @@ class NetatmoCamera(Camera):
             self.hass, f"set_light_off_{self.entity_id}", self.set_light_off
         )
 
+    @property
+    def unique_id(self):
+        """Return the unique ID for this sensor."""
+        return self._unique_id
+
     def update(self):
         """Update entity status."""
 
@@ -274,25 +281,25 @@ class NetatmoCamera(Camera):
         )
 
         # Monitoring status
-        self._status = camera["status"]
+        self._status = camera.get("status")
 
         # SD Card status
-        self._sd_status = camera["sd_status"]
+        self._sd_status = camera.get("sd_status")
 
         # Power status
-        self._alim_status = camera["alim_status"]
+        self._alim_status = camera.get("alim_status")
 
         # Is local
-        self._is_local = camera["is_local"]
+        self._is_local = camera.get("is_local")
 
         # VPN URL
-        self._vpn_url = camera["vpn_url"]
+        self._vpn_url = camera.get("vpn_url")
 
         self.is_streaming = self._alim_status == "on"
 
         if self.model == "Presence":
             # Light mode status
-            self._light_mode_status = camera["light_mode_status"]
+            self._light_mode_status = camera.get("light_mode_status")
 
     # Camera method overrides
 
@@ -408,6 +415,14 @@ class CameraData:
         self.module_names = []
         self.camera_type = None
 
+    def get_camera_home_id(self, camera_id):
+        """Return the home id for a given camera id."""
+        for home_id in self.camera_data.cameras:
+            for camera in self.camera_data.cameras[home_id].values():
+                if camera["id"] == camera_id:
+                    return home_id
+        return None
+
     def get_camera_ids(self):
         """Return all camera available on the API as a list."""
         self.camera_ids = []
@@ -426,9 +441,9 @@ class CameraData:
                 self.module_names.append(module["name"])
         return self.module_names
 
-    def get_camera_type(self, cid=None):
+    def get_camera_type(self, camera_id=None):
         """Return camera type for a camera, cid has preference over camera."""
-        self.camera_type = self.camera_data.cameraType(cid=cid)
+        self.camera_type = self.camera_data.cameraType(cid=camera_id)
         return self.camera_type
 
     def get_persons(self):

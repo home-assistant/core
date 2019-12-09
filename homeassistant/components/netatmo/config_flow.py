@@ -26,9 +26,20 @@ class NetatmoFlowHandler(
         """Extra data that needs to be appended to the authorize url."""
         return {
             "scope": (
-                "read_station read_camera access_camera read_thermostat "
-                "write_thermostat read_presence access_presence "
-                "read_homecoach read_smokedetector"
+                " ".join(
+                    [
+                        "read_station",
+                        "read_camera",
+                        "access_camera",
+                        "write_camera",
+                        "read_presence",
+                        "access_presence",
+                        "read_homecoach",
+                        "read_smokedetector",
+                        "read_thermostat",
+                        "write_thermostat",
+                    ]
+                )
             )
         }
 

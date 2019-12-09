@@ -1,6 +1,7 @@
 """Support for the Netatmo Weather Service."""
 from datetime import timedelta
 import logging
+
 import threading
 from time import time
 
@@ -36,7 +37,7 @@ CONF_LON_SW = "lon_sw"
 DEFAULT_MODE = "avg"
 MODE_TYPES = {"max", "avg"}
 
-DEFAULT_NAME_PUBLIC = "Netatmo Public Data"
+DEFAULT_NAME_PUBLIC = "Public Data"
 
 # This is the Netatmo data upload interval in seconds
 NETATMO_UPDATE_INTERVAL = 600
@@ -90,8 +91,6 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_STATION): cv.string,
-        vol.Optional(CONF_MODULES): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_AREAS): vol.All(
             cv.ensure_list,
             [
@@ -104,7 +103,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                     vol.Optional(CONF_NAME, default=DEFAULT_NAME_PUBLIC): cv.string,
                 }
             ],
-        ),
+        )
     }
 )
 
@@ -139,13 +138,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     def get_devices():
         """Retrieve Netatmo devices."""
         devices = []
+
         for data_class in [pyatmo.WeatherStationData, pyatmo.HomeCoachData]:
             try:
                 dc_data = data_class(auth)
                 _LOGGER.debug("%s detected!", NETATMO_DEVICE_TYPES[data_class.__name__])
-                data = NetatmoData(dc_data)
+                data = NetatmoData(auth, dc_data)
             except pyatmo.NoDevice:
-                _LOGGER.info(
+                _LOGGER.debug(
                     "No %s devices found", NETATMO_DEVICE_TYPES[data_class.__name__]
                 )
                 continue
@@ -157,9 +157,31 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(await hass.async_add_executor_job(get_devices), True)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the available Netatmo weather sensors."""
-    return
+
+    def get_devices():
+        devices = []
+
+        if config.get(CONF_AREAS) is not None:
+            for area in config[CONF_AREAS]:
+                _LOGGER.debug("Adding public weather sensor %s", area[CONF_NAME])
+                data = NetatmoPublicData(
+                    hass.data[DOMAIN][AUTH],
+                    lat_ne=area[CONF_LAT_NE],
+                    lon_ne=area[CONF_LON_NE],
+                    lat_sw=area[CONF_LAT_SW],
+                    lon_sw=area[CONF_LON_SW],
+                )
+                for sensor_type in SUPPORTED_PUBLIC_SENSOR_TYPES:
+                    devices.append(
+                        NetatmoPublicSensor(
+                            area[CONF_NAME], data, sensor_type, area[CONF_MODE]
+                        )
+                    )
+        return devices
+
+    async_add_entities(await hass.async_add_executor_job(get_devices), True)
 
 
 class NetatmoSensor(Entity):
@@ -244,7 +266,8 @@ class NetatmoSensor(Entity):
         data = self.netatmo_data.data.get(self._module_id)
 
         if data is None:
-            _LOGGER.warning("No data found for %s", self.module_name)
+            _LOGGER.info("No data found for %s (%s)", self.module_name, self._module_id)
+            _LOGGER.error("data: %s", self.netatmo_data.data)
             self._state = None
             return
 
@@ -399,7 +422,7 @@ class NetatmoSensor(Entity):
                 elif data["health_idx"] == 4:
                     self._state = "Unhealthy"
         except KeyError:
-            _LOGGER.error("No %s data found for %s", self.type, self.module_name)
+            _LOGGER.info("No %s data found for %s", self.type, self.module_name)
             self._state = None
             return
 
@@ -412,7 +435,7 @@ class NetatmoPublicSensor(Entity):
         self.netatmo_data = data
         self.type = sensor_type
         self._mode = mode
-        self._name = "{} {}".format(area_name, SENSOR_TYPES[self.type][0])
+        self._name = f"{MANUFAKTURER} {area_name} {SENSOR_TYPES[self.type][0]}"
         self._area_name = area_name
         self._state = None
         self._device_class = SENSOR_TYPES[self.type][3]
@@ -435,6 +458,16 @@ class NetatmoPublicSensor(Entity):
         return self._device_class
 
     @property
+    def device_info(self):
+        """Return the device info for the sensor."""
+        return {
+            "identifiers": {(DOMAIN, self._area_name)},
+            "name": self._area_name,
+            "manufacturer": MANUFAKTURER,
+            "model": "public",
+        }
+
+    @property
     def state(self):
         """Return the state of the device."""
         return self._state
@@ -449,7 +482,7 @@ class NetatmoPublicSensor(Entity):
         self.netatmo_data.update()
 
         if self.netatmo_data.data is None:
-            _LOGGER.warning("No data found for %s", self._name)
+            _LOGGER.info("No data found for %s", self._name)
             self._state = None
             return
 
@@ -501,14 +534,21 @@ class NetatmoPublicData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Request an update from the Netatmo API."""
-        data = pyatmo.PublicData(
-            self.auth,
-            LAT_NE=self.lat_ne,
-            LON_NE=self.lon_ne,
-            LAT_SW=self.lat_sw,
-            LON_SW=self.lon_sw,
-            filtering=True,
-        )
+        try:
+            data = pyatmo.PublicData(
+                self.auth,
+                LAT_NE=self.lat_ne,
+                LON_NE=self.lon_ne,
+                LAT_SW=self.lat_sw,
+                LON_SW=self.lon_sw,
+                filtering=True,
+            )
+        except pyatmo.NoDevice:
+            data = None
+
+        if not data:
+            _LOGGER.debug("No data received when updating public station data")
+            return
 
         if data.CountStationInArea() == 0:
             _LOGGER.warning("No Stations available in this area.")
@@ -520,18 +560,16 @@ class NetatmoPublicData:
 class NetatmoData:
     """Get the latest data from Netatmo."""
 
-    def __init__(self, station_data, station_id=None):
+    def __init__(self, auth, station_data):
         """Initialize the data object."""
         self.data = {}
         self.station_data = station_data
-        self.station_id = station_id
         self._next_update = time()
+        self.auth = auth
         self._update_in_progress = threading.Lock()
 
     def get_module_infos(self):
         """Return all modules available on the API as a dict."""
-        if self.station_id is not None:
-            return self.station_data.getModules(station_id=self.station_id)
         return self.station_data.getModules()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -542,10 +580,16 @@ class NetatmoData:
         but with a custom logic, which takes into account the time
         of the last update from the cloud.
         """
-        data = self.station_data.lastData(
-            station=self.station_id, exclude=3600, byId=True
-        )
-        if not data:
-            _LOGGER.debug("No data received when updating station %s", self.station_id)
+        if not self._update_in_progress.acquire(False):
             return
-        self.data = data
+
+        try:
+            self.station_data = self.station_data.__class__(self.auth)
+
+            data = self.station_data.lastData(exclude=3600, byId=True)
+            if not data:
+                _LOGGER.debug("No data received when updating station data")
+                return
+            self.data = data
+        finally:
+            self._update_in_progress.release()

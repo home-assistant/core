@@ -6,8 +6,9 @@ API = "api"
 DOMAIN = "netatmo"
 MANUFAKTURER = "Netatmo"
 
-# DATA_NETATMO = "netatmo"
 AUTH = "netatmo_auth"
+CAMERA_DATA = "netatmo_camera"
+HOME_DATA = "netatmo_home_data"
 
 OAUTH2_AUTHORIZE = "https://api.netatmo.com/oauth2/authorize"
 OAUTH2_TOKEN = "https://api.netatmo.com/oauth2/token"

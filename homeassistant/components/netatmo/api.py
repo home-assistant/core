@@ -27,7 +27,7 @@ class ConfigEntryNetatmoAuth(pyatmo.auth.NetatmOAuth2):
         )
         super().__init__(token=self.session.token)
 
-    def refresh_tokens(self) -> dict:
+    def refresh_tokens(self,) -> dict:
         """Refresh and return new Netatmo tokens using Home Assistant OAuth2 session."""
         run_coroutine_threadsafe(
             self.session.async_ensure_token_valid(), self.hass.loop

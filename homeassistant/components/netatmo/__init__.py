@@ -27,7 +27,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 # PLATFORMS = ["binary_sensor", "camera", "climate", "light", "sensor", "switch"]
-PLATFORMS = ["camera", "climate", "sensor"]
+PLATFORMS = ["binary_sensor", "camera", "climate", "sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -69,13 +69,17 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Netatmo from a config entry."""
+    # Backwards compat
+    if "auth_implementation" not in entry.data:
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, "auth_implementation": DOMAIN}
+        )
+
     implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
         hass, entry
     )
 
-    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-
-    hass.data[DOMAIN][AUTH] = api.ConfigEntryNetatmoAuth(hass, entry, session)
+    hass.data[DOMAIN][AUTH] = api.ConfigEntryNetatmoAuth(hass, entry, implementation)
 
     for component in PLATFORMS:
         hass.async_create_task(
