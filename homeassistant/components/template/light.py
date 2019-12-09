@@ -1,9 +1,9 @@
 """Support for Template lights."""
 import logging
 
-from ast import literal_eval as make_tuple
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -27,12 +27,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
-
 from . import extract_entities, initialise_templates
 from .const import CONF_AVAILABILITY_TEMPLATE
 
@@ -398,10 +396,10 @@ class LightTemplate(Light):
             try:
                 temperature = int(self._temperature_template.async_render())
             except TemplateError as ex:
-                _LOGGER.error(ex)
+                _LOGGER.error("Cannot evaluate temperature template", ex)
                 self._temperature = None
 
-            if 0 <= temperature <= self.max_mireds:
+            if self.min_mireds <= temperature <= self.max_mireds:
                 self._temperature = temperature
             else:
                 _LOGGER.error(
@@ -431,24 +429,29 @@ class LightTemplate(Light):
     async def update_color(self):
         """Update the hs_color from the template."""
         if self._color_template is not None:
-            hs_color = None
+            h_str = None
+            s_str = None
             self._color = None
 
             try:
-                hs_color = make_tuple(self._color_template.async_render())
+                render = self._color_template.async_render()
+                h_str, s_str = map(
+                    int, render.replace("(", "").replace(")", "").split(",", 1)
+                )
             except TemplateError as ex:
                 _LOGGER.error(ex)
             if (
-                hs_color is not None
-                and 0 <= hs_color[0] <= 360
-                and 0 <= hs_color[1] <= 100
+                h_str is not None
+                and s_str is not None
+                and 0 <= h_str <= 360
+                and 0 <= s_str <= 100
             ):
-                self._color = hs_color
-            elif hs_color is not None:
+                self._color = (h_str, s_str)
+            elif h_str is not None and s_str is not None:
                 _LOGGER.error(
                     "Received invalid hs_color : (%s, %s). Expected: (0-360, 0-100)",
-                    hs_color[0],
-                    hs_color[1],
+                    h_str,
+                    s_str,
                 )
 
     async def update_state(self):
