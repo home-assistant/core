@@ -5,16 +5,16 @@ from random import randrange
 import metno
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components.weather import PLATFORM_SCHEMA, WeatherEntity
 from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
-    TEMP_CELSIUS,
     EVENT_CORE_CONFIG_UPDATE,
+    TEMP_CELSIUS,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_call_later
