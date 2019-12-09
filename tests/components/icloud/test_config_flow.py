@@ -218,7 +218,7 @@ async def test_abort_if_already_setup(hass: HomeAssistantType):
     assert result["errors"] == {CONF_USERNAME: "username_exists"}
 
 
-async def test_abort_on_login_failed(hass: HomeAssistantType):
+async def test_login_failed(hass: HomeAssistantType):
     """Test when we have errors during login."""
     flow = init_config_flow(hass)
 
@@ -253,7 +253,7 @@ async def test_trusted_device_success(hass: HomeAssistantType, service: MagicMoc
     assert result["step_id"] == CONF_VERIFICATION_CODE
 
 
-async def test_abort_on_send_verification_code_failed(
+async def test_send_verification_code_failed(
     hass: HomeAssistantType, service_send_verification_code_failed: MagicMock
 ):
     """Test when we have errors during send_verification_code."""
@@ -276,7 +276,7 @@ async def test_verification_code(hass: HomeAssistantType):
     assert result["step_id"] == CONF_VERIFICATION_CODE
 
 
-async def test_abort_on_validate_verification_code_failed(
+async def test_validate_verification_code_failed(
     hass: HomeAssistantType, service_validate_verification_code_failed: MagicMock
 ):
     """Test when we have errors during validate_verification_code."""
