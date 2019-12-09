@@ -1,5 +1,6 @@
 """Support for EDL21 Smart Meters."""
 
+from datetime import timedelta
 import logging
 
 import voluptuous as vol
@@ -9,12 +10,14 @@ from homeassistant.const import STATE_UNKNOWN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import Optional
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "edl21"
 CONF_SERIAL_PORT = "serial_port"
 ICON_POWER = "mdi:flash"
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_SERIAL_PORT): cv.string})
 
@@ -146,6 +149,7 @@ class EDL21Entity(Entity):
         """Return an icon."""
         return ICON_POWER
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update_telegram(self, telegram: dict) -> bool:
         """Update attributes from last received telegram for this object."""
         if self._telegram == telegram:
