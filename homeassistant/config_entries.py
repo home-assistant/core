@@ -75,6 +75,14 @@ class OperationNotAllowed(ConfigError):
     """Raised when a config entry operation is not allowed."""
 
 
+class UniqueIdExists(data_entry_flow.AbortFlow):
+    """Error to indicate that the unique Id already exists."""
+
+
+class UniqueIdInProgress(data_entry_flow.AbortFlow):
+    """Error to indicate that the unique Id is in progress."""
+
+
 class ConfigEntry:
     """Hold a configuration entry."""
 
@@ -85,6 +93,7 @@ class ConfigEntry:
         "title",
         "data",
         "options",
+        "unique_id",
         "system_options",
         "source",
         "connection_class",
@@ -104,6 +113,7 @@ class ConfigEntry:
         connection_class: str,
         system_options: dict,
         options: Optional[dict] = None,
+        unique_id: Optional[str] = None,
         entry_id: Optional[str] = None,
         state: str = ENTRY_STATE_NOT_LOADED,
     ) -> None:
@@ -137,6 +147,9 @@ class ConfigEntry:
 
         # State of the entry (LOADED, NOT_LOADED)
         self.state = state
+
+        # Unique ID of this entry.
+        self.unique_id = unique_id
 
         # Listeners to call on update
         self.update_listeners: List = []
@@ -611,6 +624,7 @@ class ConfigEntries:
             system_options={},
             source=flow.context["source"],
             connection_class=flow.CONNECTION_CLASS,
+            unique_id=flow.context.get("unique_id"),
         )
         self._entries.append(entry)
         self._async_schedule_save()
@@ -687,6 +701,8 @@ async def _old_conf_migrator(old_config: Dict[str, Any]) -> Dict[str, Any]:
 class ConfigFlow(data_entry_flow.FlowHandler):
     """Base class for config flows with some helpers."""
 
+    unique_id = None
+
     def __init_subclass__(cls, domain: Optional[str] = None, **kwargs: Any) -> None:
         """Initialize a subclass, register if possible."""
         super().__init_subclass__(**kwargs)  # type: ignore
@@ -700,6 +716,19 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     def async_get_options_flow(config_entry: ConfigEntry) -> "OptionsFlow":
         """Get the options flow for this handler."""
         raise data_entry_flow.UnknownHandler
+
+    async def async_set_unique_id(self, unique_id: str) -> None:
+        """Set a unique ID for the config flow."""
+        for entry in self._async_current_entries():
+            if entry.unique_id == unique_id:
+                raise UniqueIdExists("already_configured")
+
+        for progress in self._async_in_progress():
+            if progress["context"].get("unique_id") == unique_id:
+                raise UniqueIdInProgress("already_in_progress")
+
+        # pylint: disable=no-member
+        self.context["unique_id"] = unique_id
 
     @callback
     def _async_current_entries(self) -> List[ConfigEntry]:
