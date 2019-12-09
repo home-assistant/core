@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from homeassistant import config_entries
 from homeassistant.components import unifi
+import homeassistant.components.device_tracker as device_tracker
 from homeassistant.components.unifi.const import (
     CONF_SSID_FILTER,
     CONF_TRACK_DEVICES,
@@ -12,8 +13,6 @@ from homeassistant.components.unifi.const import (
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
-
-import homeassistant.components.device_tracker as device_tracker
 import homeassistant.util.dt as dt_util
 
 from .test_controller import ENTRY_CONFIG, SITES, setup_unifi_integration
