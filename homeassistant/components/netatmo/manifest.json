@@ -11,5 +11,10 @@
   "codeowners": [
     "@cgtobi"
   ],
-  "config_flow": true
+  "config_flow": true,
+  "homekit": {
+    "models": [
+      "Relay"
+    ]
+  }
 }

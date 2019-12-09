@@ -7,6 +7,7 @@ DOMAIN = "netatmo"
 MANUFAKTURER = "Netatmo"
 
 AUTH = "netatmo_auth"
+CONF_PUBLIC = "public_sensor_config"
 CAMERA_DATA = "netatmo_camera"
 HOME_DATA = "netatmo_home_data"
 

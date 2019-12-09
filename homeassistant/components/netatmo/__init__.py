@@ -9,7 +9,14 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_validation as cv, config_entry_oauth2_flow
 from homeassistant.config_entries import ConfigEntry
 
-from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN, AUTH, DATA_PERSONS
+from .const import (
+    AUTH,
+    CONF_PUBLIC,
+    DATA_PERSONS,
+    DOMAIN,
+    OAUTH2_AUTHORIZE,
+    OAUTH2_TOKEN,
+)
 from . import api, config_flow
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,6 +41,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Netatmo component."""
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA_PERSONS] = {}
+    hass.data[DOMAIN][CONF_PUBLIC] = config.get("sensor", {})
 
     if DOMAIN not in config:
         return True

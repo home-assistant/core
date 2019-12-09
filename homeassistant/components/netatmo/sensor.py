@@ -22,7 +22,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-from .const import AUTH, DOMAIN, MANUFAKTURER
+from .const import AUTH, CONF_PUBLIC, DOMAIN, MANUFAKTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,6 +122,7 @@ NETATMO_DEVICE_TYPES = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Netatmo weather and homecoach platform."""
     auth = hass.data[DOMAIN][AUTH]
+    config_public = hass.data[DOMAIN][CONF_PUBLIC]
 
     def find_devices(data):
         """Find all devices."""
@@ -134,6 +135,28 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             ):
                 entities.append(NetatmoSensor(data, module, condition.lower()))
         return entities
+
+    def setup_public():
+        devices = []
+        _LOGGER.debug("Adding public weather sensor %s", config_public)
+
+        if config_public.get(CONF_AREAS) is not None:
+            for area in config_public[CONF_AREAS]:
+                _LOGGER.debug("Adding public weather sensor %s", area[CONF_NAME])
+                data = NetatmoPublicData(
+                    hass.data[DOMAIN][AUTH],
+                    lat_ne=area[CONF_LAT_NE],
+                    lon_ne=area[CONF_LON_NE],
+                    lat_sw=area[CONF_LAT_SW],
+                    lon_sw=area[CONF_LON_SW],
+                )
+                for sensor_type in SUPPORTED_PUBLIC_SENSOR_TYPES:
+                    devices.append(
+                        NetatmoPublicSensor(
+                            area[CONF_NAME], data, sensor_type, area[CONF_MODE]
+                        )
+                    )
+        return devices
 
     def get_devices():
         """Retrieve Netatmo devices."""
@@ -155,33 +178,36 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         return devices
 
     async_add_entities(await hass.async_add_executor_job(get_devices), True)
+    async_add_entities(await hass.async_add_executor_job(setup_public), True)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the available Netatmo weather sensors."""
+    return
 
-    def get_devices():
-        devices = []
 
-        if config.get(CONF_AREAS) is not None:
-            for area in config[CONF_AREAS]:
-                _LOGGER.debug("Adding public weather sensor %s", area[CONF_NAME])
-                data = NetatmoPublicData(
-                    hass.data[DOMAIN][AUTH],
-                    lat_ne=area[CONF_LAT_NE],
-                    lon_ne=area[CONF_LON_NE],
-                    lat_sw=area[CONF_LAT_SW],
-                    lon_sw=area[CONF_LON_SW],
-                )
-                for sensor_type in SUPPORTED_PUBLIC_SENSOR_TYPES:
-                    devices.append(
-                        NetatmoPublicSensor(
-                            area[CONF_NAME], data, sensor_type, area[CONF_MODE]
-                        )
-                    )
-        return devices
+#     def get_devices():
+#         devices = []
 
-    async_add_entities(await hass.async_add_executor_job(get_devices), True)
+#         if config.get(CONF_AREAS) is not None:
+#             for area in config[CONF_AREAS]:
+#                 _LOGGER.debug("Adding public weather sensor %s", area[CONF_NAME])
+#                 data = NetatmoPublicData(
+#                     hass.data[DOMAIN][AUTH],
+#                     lat_ne=area[CONF_LAT_NE],
+#                     lon_ne=area[CONF_LON_NE],
+#                     lat_sw=area[CONF_LAT_SW],
+#                     lon_sw=area[CONF_LON_SW],
+#                 )
+#                 for sensor_type in SUPPORTED_PUBLIC_SENSOR_TYPES:
+#                     devices.append(
+#                         NetatmoPublicSensor(
+#                             area[CONF_NAME], data, sensor_type, area[CONF_MODE]
+#                         )
+#                     )
+#         return devices
+
+#     async_add_entities(await hass.async_add_executor_job(get_devices), True)
 
 
 class NetatmoSensor(Entity):
