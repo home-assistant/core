@@ -41,7 +41,7 @@ _BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Netatmo weather and homecoach platform."""
+    """Set up the Netatmo camera platform."""
 
     def get_devices():
         """Retrieve Netatmo devices."""
@@ -91,7 +91,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class NetatmoCamera(Camera):
-    """Representation of the images published from a Netatmo camera."""
+    """Representation of a Netatmo camera."""
 
     def __init__(self, data, camera_id, camera_type, verify_ssl, quality):
         """Set up for access to the Netatmo camera images."""
