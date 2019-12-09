@@ -1,5 +1,4 @@
 """Support to check for available updates."""
-# pylint: disable=import-error
 import asyncio
 from datetime import timedelta
 from distutils.version import StrictVersion
@@ -9,7 +8,7 @@ import uuid
 
 import aiohttp
 import async_timeout
-from distro import linux_distribution
+from distro import linux_distribution  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.const import __version__ as current_version
