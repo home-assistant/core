@@ -4,7 +4,7 @@ from typing import Dict, Union
 
 from pymfy.api import somfy_api
 
-from homeassistant import core, config_entries
+from homeassistant import config_entries, core
 from homeassistant.helpers import config_entry_oauth2_flow
 
 
