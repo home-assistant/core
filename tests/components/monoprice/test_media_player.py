@@ -1,31 +1,32 @@
 """The tests for Monoprice Media player platform."""
+from collections import defaultdict
 import unittest
 from unittest import mock
+
+import pytest
 import voluptuous as vol
 
-from collections import defaultdict
 from homeassistant.components.media_player.const import (
-    SUPPORT_TURN_ON,
+    SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
-    SUPPORT_SELECT_SOURCE,
-)
-from homeassistant.const import STATE_ON, STATE_OFF
-
-import tests.common
-from homeassistant.components.monoprice.media_player import (
-    DATA_MONOPRICE,
-    PLATFORM_SCHEMA,
-    setup_platform,
 )
 from homeassistant.components.monoprice.const import (
     DOMAIN,
     SERVICE_RESTORE,
     SERVICE_SNAPSHOT,
 )
-import pytest
+from homeassistant.components.monoprice.media_player import (
+    DATA_MONOPRICE,
+    PLATFORM_SCHEMA,
+    setup_platform,
+)
+from homeassistant.const import STATE_OFF, STATE_ON
+
+import tests.common
 
 
 class AttrDict(dict):
