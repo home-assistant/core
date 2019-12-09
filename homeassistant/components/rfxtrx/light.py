@@ -4,13 +4,6 @@ import logging
 import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
-from . import (
-    RfxtrxDevice,
-    get_devices_from_config,
-    get_new_device,
-    RECEIVED_EVT_SUBSCRIBERS,
-    apply_received_command,
-)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
@@ -26,6 +19,11 @@ from . import (
     CONF_FIRE_EVENT,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
+    RfxtrxDevice,
+    get_devices_from_config,
+    get_new_device,
+    RECEIVED_EVT_SUBSCRIBERS,
+    apply_received_command,
 )
 
 _LOGGER = logging.getLogger(__name__)

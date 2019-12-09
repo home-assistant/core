@@ -2,13 +2,6 @@
 import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
-from . import (
-    RfxtrxDevice,
-    RECEIVED_EVT_SUBSCRIBERS,
-    apply_received_command,
-    get_new_device,
-    get_devices_from_config,
-)
 from homeassistant.components.cover import PLATFORM_SCHEMA, CoverDevice
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers import config_validation as cv
@@ -19,6 +12,11 @@ from . import (
     CONF_FIRE_EVENT,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
+    RfxtrxDevice,
+    RECEIVED_EVT_SUBSCRIBERS,
+    apply_received_command,
+    get_new_device,
+    get_devices_from_config,
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

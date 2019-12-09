@@ -3,16 +3,6 @@ import logging
 
 import RFXtrx as rfxtrxmod
 import voluptuous as vol
-from . import (
-    get_pt2262_deviceid,
-    RECEIVED_EVT_SUBSCRIBERS,
-    apply_received_command,
-    RFX_DEVICES,
-    get_pt2262_cmd,
-    get_pt2262_device,
-    find_possible_pt2262_device,
-    get_rfx_object,
-)
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
@@ -35,6 +25,14 @@ from . import (
     CONF_DEVICES,
     CONF_FIRE_EVENT,
     CONF_OFF_DELAY,
+    get_pt2262_deviceid,
+    RECEIVED_EVT_SUBSCRIBERS,
+    apply_received_command,
+    RFX_DEVICES,
+    get_pt2262_cmd,
+    get_pt2262_device,
+    find_possible_pt2262_device,
+    get_rfx_object,
 )
 
 _LOGGER = logging.getLogger(__name__)
