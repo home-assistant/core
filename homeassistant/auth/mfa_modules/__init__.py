@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant import requirements, data_entry_flow
+from homeassistant import data_entry_flow, requirements
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
