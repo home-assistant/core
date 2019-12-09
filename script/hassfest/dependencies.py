@@ -1,7 +1,7 @@
 """Validate dependencies."""
 import pathlib
 import re
-from typing import Set, Dict
+from typing import Dict, Set
 
 from .model import Integration
 
