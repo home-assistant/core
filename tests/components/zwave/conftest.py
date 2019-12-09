@@ -19,9 +19,11 @@ def mock_openzwave():
         "sys.modules",
         {
             "libopenzwave": libopenzwave,
-            "openzwave.group": base_mock.group,
-            "openzwave.network": base_mock.network,
-            "openzwave.option": base_mock.option,
+            "homeassistant.components.zwave.__init__.group": base_mock.group,
+            "homeassistant.components.zwave.__init__.network": base_mock.network,
+            "homeassistant.components.zwave.node_entity.network": base_mock.network,
+            "homeassistant.components.zwave.__init__.option": base_mock.option,
+            "homeassistant.components.zwave.config_flow.option": base_mock.option,
         },
     ):
         yield base_mock
