@@ -1,7 +1,6 @@
 """The tests for the androidtv platform."""
 import logging
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components.androidtv.media_player import (
     ANDROIDTV_DOMAIN,
     CONF_ADB_SERVER_IP,
@@ -24,9 +23,9 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_UNAVAILABLE,
 )
+from homeassistant.setup import async_setup_component
 
 from . import patchers
-
 
 # Android TV device with Python ADB implementation
 CONFIG_ANDROIDTV_PYTHON_ADB = {

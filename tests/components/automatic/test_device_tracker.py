@@ -2,11 +2,12 @@
 import asyncio
 from datetime import datetime
 import logging
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 import aioautomatic
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components.automatic.device_tracker import async_setup_scanner
+from homeassistant.setup import async_setup_component
 
 _LOGGER = logging.getLogger(__name__)
 
