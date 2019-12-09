@@ -1,6 +1,6 @@
 """Support for a Hue API to control Home Assistant."""
-import logging
 import hashlib
+import logging
 
 from homeassistant import core
 from homeassistant.components import (
@@ -34,8 +34,8 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.const import KEY_REAL_IP
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_HS_COLOR,
     ATTR_COLOR_TEMP,
+    ATTR_HS_COLOR,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
@@ -49,8 +49,8 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     HTTP_BAD_REQUEST,
-    HTTP_UNAUTHORIZED,
     HTTP_NOT_FOUND,
+    HTTP_UNAUTHORIZED,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_TURN_OFF,
