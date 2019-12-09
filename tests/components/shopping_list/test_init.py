@@ -1,8 +1,8 @@
 """Test shopping list component."""
 import asyncio
 
-from homeassistant.helpers import intent
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.helpers import intent
 
 
 @asyncio.coroutine
