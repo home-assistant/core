@@ -1,23 +1,22 @@
 """Tests for the iCloud config flow."""
-from unittest.mock import patch, Mock, MagicMock
-import pytest
+from unittest.mock import MagicMock, Mock, patch
 
 from pyicloud.exceptions import PyiCloudFailedLoginException
+import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.icloud import config_flow
-
 from homeassistant.components.icloud.config_flow import (
     CONF_TRUSTED_DEVICE,
     CONF_VERIFICATION_CODE,
 )
 from homeassistant.components.icloud.const import (
-    DOMAIN,
     CONF_ACCOUNT_NAME,
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
     DEFAULT_GPS_ACCURACY_THRESHOLD,
     DEFAULT_MAX_INTERVAL,
+    DOMAIN,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.typing import HomeAssistantType
