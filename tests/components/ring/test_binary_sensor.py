@@ -1,13 +1,14 @@
 """The tests for the Ring binary sensor platform."""
 import os
 import unittest
+
 import requests_mock
 
-from homeassistant.components.ring import binary_sensor as ring
 from homeassistant.components import ring as base_ring
+from homeassistant.components.ring import binary_sensor as ring
 
-from tests.components.ring.test_init import ATTRIBUTION, VALID_CONFIG
 from tests.common import get_test_config_dir, get_test_home_assistant, load_fixture
+from tests.components.ring.test_init import ATTRIBUTION, VALID_CONFIG
 
 
 class TestRingBinarySensorSetup(unittest.TestCase):
