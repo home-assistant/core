@@ -110,14 +110,16 @@ class NetgearDeviceScanner(DeviceScanner):
                     or dev.name in self.excluded_devices
                 )
             )
-            tracked = tracked and dev.link_rate is not None
             if tracked:
-                devices.append(dev.mac)
-                if (
-                    self.tracked_accesspoints
-                    and dev.conn_ap_mac in self.tracked_accesspoints
-                ):
-                    devices.append(dev.mac + "_" + dev.conn_ap_mac)
+                # if link_rate is None, the device is still remembered by the router however,
+                # it is no longer connected. Therefore, we will not report it as seen.
+                if dev.link_rate is not None:
+                    devices.append(dev.mac)
+                    if (
+                        self.tracked_accesspoints
+                        and dev.conn_ap_mac in self.tracked_accesspoints
+                    ):
+                        devices.append(dev.mac + "_" + dev.conn_ap_mac)
 
         return devices
 
