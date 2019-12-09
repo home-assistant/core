@@ -3,13 +3,28 @@
 import logging
 import voluptuous as vol
 
-from homeassistant.components.logger import _VALID_LOG_LEVEL
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
 from google.cloud.logging import Client
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
+
+LOGSEVERITY = {
+    "CRITICAL": 50,
+    "FATAL": 50,
+    "ERROR": 40,
+    "WARNING": 30,
+    "WARN": 30,
+    "INFO": 20,
+    "DEBUG": 10,
+    "NOTSET": 0,
+}
+
+_VALID_LOG_LEVEL = vol.All(vol.Upper, vol.In(LOGSEVERITY))
+
 
 CONF_KEYFILE = "key_file"
 CONF_LEVEL = "level"
@@ -27,8 +42,6 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
