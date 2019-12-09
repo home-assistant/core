@@ -4,10 +4,10 @@ import logging
 from homeassistant.helpers.entity import Entity
 
 from .const import (
-    DOMAIN as PIHOLE_DOMAIN,
     ATTR_BLOCKED_DOMAINS,
-    SENSOR_LIST,
+    DOMAIN as PIHOLE_DOMAIN,
     SENSOR_DICT,
+    SENSOR_LIST,
 )
 
 LOGGER = logging.getLogger(__name__)

@@ -1,11 +1,13 @@
 """Test pi_hole component."""
 
+from unittest.mock import patch
+
 from asynctest import CoroutineMock
 from hole import Hole
 
 from homeassistant.components import pi_hole
+
 from tests.common import async_setup_component
-from unittest.mock import patch
 
 
 def mock_pihole_data_call(Hole):

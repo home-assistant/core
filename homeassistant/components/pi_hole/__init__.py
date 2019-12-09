@@ -1,31 +1,31 @@
 """The pi_hole component."""
 import logging
 
-import voluptuous as vol
 from hole import Hole
 from hole.exceptions import HoleError
+import voluptuous as vol
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
+    CONF_API_KEY,
     CONF_HOST,
     CONF_NAME,
-    CONF_API_KEY,
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.util import Throttle
 
 from .const import (
-    DOMAIN,
     CONF_LOCATION,
     DEFAULT_HOST,
     DEFAULT_LOCATION,
     DEFAULT_NAME,
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
+    DOMAIN,
     MIN_TIME_BETWEEN_UPDATES,
     SERVICE_DISABLE,
     SERVICE_DISABLE_ATTR_DURATION,
