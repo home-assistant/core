@@ -1,13 +1,13 @@
 """Support for Snips on-device ASR and NLU."""
+from datetime import timedelta
 import json
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.helpers import intent, config_validation as cv
 from homeassistant.components import mqtt
+from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv, intent
 
 DOMAIN = "snips"
 CONF_INTENTS = "intents"
