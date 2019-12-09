@@ -1,14 +1,14 @@
 """Switch logic for loading/unloading pulseaudio loopback modules."""
+from datetime import timedelta
 import logging
 import re
 import socket
-from datetime import timedelta
 
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_HOST, CONF_PORT
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
