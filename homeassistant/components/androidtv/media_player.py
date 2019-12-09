@@ -2,7 +2,6 @@
 import functools
 import logging
 import os
-import voluptuous as vol
 
 from adb_shell.auth.keygen import keygen
 from adb_shell.exceptions import (
@@ -11,10 +10,11 @@ from adb_shell.exceptions import (
     InvalidResponseError,
     TcpTimeoutException,
 )
-from androidtv import setup, ha_state_detection_rules_validator
+from androidtv import ha_state_detection_rules_validator, setup
 from androidtv.constants import APPS, KEYS
+import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
