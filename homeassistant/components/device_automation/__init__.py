@@ -1,21 +1,20 @@
 """Helpers for device automations."""
 import asyncio
 import logging
-from typing import Any, List, MutableMapping
 from types import ModuleType
+from typing import Any, List, MutableMapping
 
 import voluptuous as vol
 import voluptuous_serialize
 
-from homeassistant.const import CONF_PLATFORM, CONF_DOMAIN, CONF_DEVICE_ID
 from homeassistant.components import websocket_api
+from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_registry import async_entries_for_device
-from homeassistant.loader import async_get_integration, IntegrationNotFound
+from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 from .exceptions import InvalidDeviceAutomationConfig
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
