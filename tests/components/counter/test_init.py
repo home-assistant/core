@@ -14,6 +14,7 @@ from homeassistant.components.counter import (
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.core import Context, CoreState, State
 from homeassistant.setup import async_setup_component
+
 from tests.common import mock_restore_cache
 from tests.components.counter.common import (
     async_decrement,
