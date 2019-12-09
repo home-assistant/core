@@ -1,6 +1,5 @@
 """The tests for generic camera component."""
 import asyncio
-
 from unittest import mock
 
 from homeassistant.setup import async_setup_component
