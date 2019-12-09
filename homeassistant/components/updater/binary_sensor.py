@@ -1,7 +1,7 @@
 """Support for Home Assistant Updater binary sensors."""
 
-from homeassistant.core import callback
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import ATTR_NEWEST_VERSION, ATTR_RELEASE_NOTES, DISPATCHER_REMOTE_UPDATE, Updater
