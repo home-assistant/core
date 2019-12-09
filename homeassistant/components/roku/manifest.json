@@ -3,8 +3,8 @@
   "name": "Roku",
   "documentation": "https://www.home-assistant.io/integrations/roku",
   "requirements": [
-        "roku==4.0"
-    ],
-    "dependencies": [],
-    "codeowners": []
+    "roku==4.0"
+  ],
+  "dependencies": [],
+  "codeowners": []
 }
