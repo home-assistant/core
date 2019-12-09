@@ -1,23 +1,24 @@
 """The test for sensor device automation."""
 from datetime import timedelta
+
 import pytest
 
+import homeassistant.components.automation as automation
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.components.sensor.device_trigger import ENTITY_TRIGGERS
-from homeassistant.const import STATE_UNKNOWN, CONF_PLATFORM
-from homeassistant.setup import async_setup_component
-import homeassistant.components.automation as automation
+from homeassistant.const import CONF_PLATFORM, STATE_UNKNOWN
 from homeassistant.helpers import device_registry
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
+    async_get_device_automation_capabilities,
+    async_get_device_automations,
     async_mock_service,
     mock_device_registry,
     mock_registry,
-    async_get_device_automations,
-    async_get_device_automation_capabilities,
 )
 from tests.testing_config.custom_components.test.sensor import DEVICE_CLASSES
 
