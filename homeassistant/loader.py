@@ -13,14 +13,14 @@ import pathlib
 import sys
 from types import ModuleType
 from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
     Optional,
     Set,
-    TYPE_CHECKING,
-    Callable,
-    Any,
     TypeVar,
-    List,
-    Dict,
     Union,
     cast,
 )

@@ -1,12 +1,17 @@
 """Custom loader."""
+from collections import OrderedDict
+import fnmatch
 import logging
 import os
 import sys
-import fnmatch
-from collections import OrderedDict
-from typing import Union, List, Dict, Iterator, overload, TypeVar
+from typing import Dict, Iterator, List, TypeVar, Union, overload
 
 import yaml
+
+from homeassistant.exceptions import HomeAssistantError
+
+from .const import _SECRET_NAMESPACE, SECRET_YAML
+from .objects import NodeListClass, NodeStrClass
 
 try:
     import keyring
@@ -17,11 +22,6 @@ try:
     import credstash
 except ImportError:
     credstash = None
-
-from homeassistant.exceptions import HomeAssistantError
-
-from .const import _SECRET_NAMESPACE, SECRET_YAML
-from .objects import NodeListClass, NodeStrClass
 
 
 # mypy: allow-untyped-calls, no-warn-return-any
