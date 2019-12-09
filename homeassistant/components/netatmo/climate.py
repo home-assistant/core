@@ -2,7 +2,6 @@
 
 # TODO
 # * expose schedule switching
-# *
 
 from datetime import timedelta
 import logging
@@ -31,7 +30,6 @@ from homeassistant.const import (
     STATE_OFF,
     TEMP_CELSIUS,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 from .const import AUTH, DOMAIN, MANUFAKTURER
@@ -122,6 +120,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         return devices
 
     async_add_entities(await hass.async_add_executor_job(get_devices), True)
+
+    # def _service_setschedule(service):
+    #     """Service to change current home schedule."""
+    #     schedule_name = service.data.get(ATTR_SCHEDULE)
+    #     home_data.switchHomeSchedule(schedule=schedule_name)
+    #     _LOGGER.info("Set home schedule to %s", schedule_name)
+
+    # if home_data is not None:
+    #     hass.services.register(
+    #         DOMAIN,
+    #         SERVICE_SETSCHEDULE,
+    #         _service_setschedule,
+    #         schema=SCHEMA_SERVICE_SETSCHEDULE,
+    #     )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

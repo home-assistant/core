@@ -58,20 +58,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
         ),
     )
 
-    def _service_setschedule(service):
-        """Service to change current home schedule."""
-        schedule_name = service.data.get(ATTR_SCHEDULE)
-        home_data.switchHomeSchedule(schedule=schedule_name)
-        _LOGGER.info("Set home schedule to %s", schedule_name)
-
-    if home_data is not None:
-        hass.services.register(
-            DOMAIN,
-            SERVICE_SETSCHEDULE,
-            _service_setschedule,
-            schema=SCHEMA_SERVICE_SETSCHEDULE,
-        )
-
     return True
 
 
