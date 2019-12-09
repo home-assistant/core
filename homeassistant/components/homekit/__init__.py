@@ -45,8 +45,8 @@ from .const import (
     DEVICE_CLASS_PM25,
     DOMAIN,
     HOMEKIT_FILE,
-    SERVICE_HOMEKIT_START,
     SERVICE_HOMEKIT_RESET_ACCESSORY,
+    SERVICE_HOMEKIT_START,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -54,7 +54,6 @@ from .const import (
     TYPE_SWITCH,
     TYPE_VALVE,
 )
-
 from .util import (
     show_setup_message,
     validate_entity_config,
@@ -362,8 +361,7 @@ class HomeKit:
             return
         self.status = STATUS_WAIT
 
-        # pylint: disable=unused-import
-        from . import (  # noqa F401
+        from . import (  # noqa: F401 pylint: disable=unused-import
             type_covers,
             type_fans,
             type_lights,

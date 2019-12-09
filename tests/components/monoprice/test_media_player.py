@@ -5,7 +5,6 @@ import voluptuous as vol
 
 from collections import defaultdict
 from homeassistant.components.media_player.const import (
-    DOMAIN,
     SUPPORT_TURN_ON,
     SUPPORT_TURN_OFF,
     SUPPORT_VOLUME_MUTE,
@@ -19,9 +18,12 @@ import tests.common
 from homeassistant.components.monoprice.media_player import (
     DATA_MONOPRICE,
     PLATFORM_SCHEMA,
-    SERVICE_SNAPSHOT,
-    SERVICE_RESTORE,
     setup_platform,
+)
+from homeassistant.components.monoprice.const import (
+    DOMAIN,
+    SERVICE_RESTORE,
+    SERVICE_SNAPSHOT,
 )
 import pytest
 
@@ -172,7 +174,10 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
         self.hass = tests.common.get_test_home_assistant()
         self.hass.start()
         # Note, source dictionary is unsorted!
-        with mock.patch("pymonoprice.get_monoprice", new=lambda *a: self.monoprice):
+        with mock.patch(
+            "homeassistant.components.monoprice.media_player.get_monoprice",
+            new=lambda *a: self.monoprice,
+        ):
             setup_platform(
                 self.hass,
                 {

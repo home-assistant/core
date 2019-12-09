@@ -21,11 +21,16 @@ DOMAIN = "dovado"
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
-    }
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_HOST): cv.string,
+                vol.Optional(CONF_PORT): cv.port,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
@@ -36,10 +41,10 @@ def setup(hass, config):
 
     hass.data[DOMAIN] = DovadoData(
         dovado.Dovado(
-            config[CONF_USERNAME],
-            config[CONF_PASSWORD],
-            config.get(CONF_HOST),
-            config.get(CONF_PORT),
+            config[DOMAIN].get(CONF_USERNAME),
+            config[DOMAIN].get(CONF_PASSWORD),
+            config[DOMAIN].get(CONF_HOST),
+            config[DOMAIN].get(CONF_PORT),
         )
     )
     return True

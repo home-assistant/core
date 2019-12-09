@@ -1,6 +1,6 @@
 """Mock classes used in tests."""
-from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.components.plex.const import CONF_SERVER, CONF_SERVER_IDENTIFIER
+from homeassistant.const import CONF_HOST, CONF_PORT
 
 MOCK_SERVERS = [
     {
@@ -30,7 +30,7 @@ class MockResource:
         self.provides = ["server"]
         self._mock_plex_server = MockPlexServer(index)
 
-    def connect(self):
+    def connect(self, timeout):
         """Mock the resource connect method."""
         return self._mock_plex_server
 

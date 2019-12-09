@@ -6,16 +6,17 @@ from aiohttp import StreamReader
 from homeassistant.components.stt import Provider, SpeechMetadata, SpeechResult
 from homeassistant.components.stt.const import (
     AudioBitRates,
+    AudioChannels,
+    AudioCodecs,
     AudioFormats,
     AudioSampleRates,
-    AudioCodecs,
     SpeechResultState,
 )
 
 SUPPORT_LANGUAGES = ["en", "de"]
 
 
-async def async_get_engine(hass, config):
+async def async_get_engine(hass, config, discovery_info=None):
     """Set up Demo speech component."""
     return DemoProvider()
 
@@ -47,6 +48,11 @@ class DemoProvider(Provider):
     def supported_sample_rates(self) -> List[AudioSampleRates]:
         """Return a list of supported sample rates."""
         return [AudioSampleRates.SAMPLERATE_16000, AudioSampleRates.SAMPLERATE_44100]
+
+    @property
+    def supported_channels(self) -> List[AudioChannels]:
+        """Return a list of supported channels."""
+        return [AudioChannels.CHANNEL_STEREO]
 
     async def async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: StreamReader

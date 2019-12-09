@@ -3,10 +3,10 @@ import copy
 import logging
 import uuid
 
-import homeassistant.util.dt as dt_util
 from homeassistant.components import http
 from homeassistant.core import callback
 from homeassistant.helpers import template
+import homeassistant.util.dt as dt_util
 
 from .const import (
     ATTR_MAIN_TEXT,

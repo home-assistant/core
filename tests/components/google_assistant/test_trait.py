@@ -1629,3 +1629,29 @@ async def test_temperature_setting_sensor(hass):
 
     assert trt.query_attributes() == {"thermostatTemperatureAmbient": 21.1}
     hass.config.units.temperature_unit = TEMP_CELSIUS
+
+
+async def test_humidity_setting_sensor(hass):
+    """Test HumiditySetting trait support for humidity sensor."""
+    assert (
+        helpers.get_google_type(sensor.DOMAIN, sensor.DEVICE_CLASS_HUMIDITY) is not None
+    )
+    assert not trait.HumiditySettingTrait.supported(
+        sensor.DOMAIN, 0, sensor.DEVICE_CLASS_TEMPERATURE
+    )
+    assert trait.HumiditySettingTrait.supported(
+        sensor.DOMAIN, 0, sensor.DEVICE_CLASS_HUMIDITY
+    )
+
+    trt = trait.HumiditySettingTrait(
+        hass,
+        State("sensor.test", "70", {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_HUMIDITY}),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {"queryOnlyHumiditySetting": True}
+    assert trt.query_attributes() == {"humidityAmbientPercent": 70}
+
+    with pytest.raises(helpers.SmartHomeError) as err:
+        await trt.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+    assert err.value.code == const.ERR_NOT_SUPPORTED

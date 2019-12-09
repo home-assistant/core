@@ -11,8 +11,8 @@ from homeassistant.components.light import (
     Light,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.util.color import rgb_hex_to_rgb_list
 import homeassistant.util.color as color_util
+from homeassistant.util.color import rgb_hex_to_rgb_list
 
 SUPPORT_MYSENSORS_RGBW = SUPPORT_COLOR | SUPPORT_WHITE_VALUE
 

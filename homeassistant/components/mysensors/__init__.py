@@ -25,7 +25,7 @@ from .const import (
     MYSENSORS_GATEWAYS,
 )
 from .device import get_mysensors_devices
-from .gateway import get_mysensors_gateway, setup_gateways, finish_setup
+from .gateway import finish_setup, get_mysensors_gateway, setup_gateways
 
 _LOGGER = logging.getLogger(__name__)
 

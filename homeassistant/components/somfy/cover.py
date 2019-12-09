@@ -1,16 +1,13 @@
-"""
-Support for Somfy Covers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.somfy/
-"""
+"""Support for Somfy Covers."""
+from pymfy.api.devices.category import Category
+from pymfy.api.devices.blind import Blind
 
 from homeassistant.components.cover import (
     CoverDevice,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
 )
-from homeassistant.components.somfy import DOMAIN, SomfyEntity, DEVICES, API
+from . import DOMAIN, SomfyEntity, DEVICES, API
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -18,8 +15,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     def get_covers():
         """Retrieve covers."""
-        from pymfy.api.devices.category import Category
-
         categories = {
             Category.ROLLER_SHUTTER.value,
             Category.INTERIOR_BLIND.value,
@@ -37,29 +32,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(await hass.async_add_executor_job(get_covers), True)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up platform.
-
-    Can only be called when a user accidentally mentions the platform in their
-    config. But even in that case it would have been ignored.
-    """
-    pass
-
-
 class SomfyCover(SomfyEntity, CoverDevice):
     """Representation of a Somfy cover device."""
 
     def __init__(self, device, api):
         """Initialize the Somfy device."""
-        from pymfy.api.devices.blind import Blind
-
         super().__init__(device, api)
         self.cover = Blind(self.device, self.api)
 
     async def async_update(self):
         """Update the device with the latest data."""
-        from pymfy.api.devices.blind import Blind
-
         await super().async_update()
         self.cover = Blind(self.device, self.api)
 

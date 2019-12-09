@@ -76,14 +76,9 @@ async def async_setup_entry(hass, entry):
 
     device_registry = await dr.async_get_registry(hass)
 
-    identifiers = {
-        (ATTR_DEVICE_ID, registration[ATTR_DEVICE_ID]),
-        (CONF_WEBHOOK_ID, registration[CONF_WEBHOOK_ID]),
-    }
-
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers=identifiers,
+        identifiers={(DOMAIN, registration[ATTR_DEVICE_ID])},
         manufacturer=registration[ATTR_MANUFACTURER],
         model=registration[ATTR_MODEL],
         name=registration[ATTR_DEVICE_NAME],
