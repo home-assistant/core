@@ -1,15 +1,15 @@
 """The tests for the emulated Hue component."""
 import json
-
 import unittest
 from unittest.mock import patch
-import requests
-from aiohttp.hdrs import CONTENT_TYPE
 
-from homeassistant import setup, const
+from aiohttp.hdrs import CONTENT_TYPE
+import requests
+
+from homeassistant import const, setup
 from homeassistant.components import emulated_hue, http
 
-from tests.common import get_test_instance_port, get_test_home_assistant
+from tests.common import get_test_home_assistant, get_test_instance_port
 
 HTTP_SERVER_PORT = get_test_instance_port()
 BRIDGE_SERVER_PORT = get_test_instance_port()
