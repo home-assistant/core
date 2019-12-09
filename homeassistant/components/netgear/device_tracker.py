@@ -31,9 +31,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_USERNAME, default=""): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_PORT, default=None): vol.Any(None, cv.port),
-        vol.Optional(CONF_DEVICES, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_EXCLUDE, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_APS, default=[]): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_DEVICES, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
+        vol.Optional(CONF_EXCLUDE, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
+        vol.Optional(CONF_APS, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
     }
 )
 
@@ -51,7 +57,14 @@ def get_scanner(hass, config):
     accesspoints = info.get(CONF_APS)
 
     scanner = NetgearDeviceScanner(
-        host, ssl, username, password, port, devices, excluded_devices, accesspoints
+        host,
+        ssl,
+        username,
+        password,
+        port,
+        devices,
+        excluded_devices,
+        accesspoints,
     )
 
     return scanner if scanner.success_init else None
@@ -110,7 +123,6 @@ class NetgearDeviceScanner(DeviceScanner):
                     or dev.name in self.excluded_devices
                 )
             )
-            tracked = tracked and dev.link_rate is not None
             if tracked:
                 devices.append(dev.mac)
                 if (
