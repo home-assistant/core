@@ -4,11 +4,10 @@ from copy import deepcopy
 from asynctest import patch
 
 from homeassistant.components import deconz
+import homeassistant.components.cover as cover
 from homeassistant.setup import async_setup_component
 
-import homeassistant.components.cover as cover
-
-from .test_gateway import ENTRY_CONFIG, DECONZ_WEB_REQUEST, setup_deconz_integration
+from .test_gateway import DECONZ_WEB_REQUEST, ENTRY_CONFIG, setup_deconz_integration
 
 COVERS = {
     "1": {
