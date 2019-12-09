@@ -1,14 +1,13 @@
 """The tests for the nexbus sensor component."""
 from copy import deepcopy
-
-import pytest
 from unittest.mock import patch
 
-import homeassistant.components.sensor as sensor
+import pytest
+
 import homeassistant.components.nextbus.sensor as nextbus
+import homeassistant.components.sensor as sensor
 
 from tests.common import assert_setup_component, async_setup_component
-
 
 VALID_AGENCY = "sf-muni"
 VALID_ROUTE = "F"
