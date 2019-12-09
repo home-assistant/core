@@ -1,7 +1,7 @@
 """The tests for the Sonarr platform."""
-import unittest
-import time
 from datetime import datetime
+import time
+import unittest
 
 import pytest
 
