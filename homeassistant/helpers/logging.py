@@ -2,7 +2,6 @@
 import inspect
 import logging
 
-
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 

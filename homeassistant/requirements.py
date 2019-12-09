@@ -1,14 +1,14 @@
 """Module to handle installing requirements."""
 import asyncio
-from pathlib import Path
 import logging
 import os
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
-from homeassistant.exceptions import HomeAssistantError
-import homeassistant.util.package as pkg_util
 from homeassistant.core import HomeAssistant
-from homeassistant.loader import async_get_integration, Integration
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import Integration, async_get_integration
+import homeassistant.util.package as pkg_util
 
 DATA_PIP_LOCK = "pip_lock"
 DATA_PKG_CACHE = "pkg_cache"

@@ -1,9 +1,9 @@
 """Provide a way to connect entities belonging to one device."""
-import logging
-import uuid
 from asyncio import Event
 from collections import OrderedDict
+import logging
 from typing import List, Optional, cast
+import uuid
 
 import attr
 
@@ -11,7 +11,6 @@ from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 
 from .typing import HomeAssistantType
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any

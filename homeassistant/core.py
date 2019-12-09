@@ -14,65 +14,59 @@ import os
 import pathlib
 import threading
 from time import monotonic
-import uuid
-
 from types import MappingProxyType
 from typing import (
-    Optional,
-    Any,
-    Callable,
-    List,
-    TypeVar,
-    Dict,
-    Coroutine,
-    Set,
     TYPE_CHECKING,
+    Any,
     Awaitable,
+    Callable,
+    Coroutine,
+    Dict,
+    List,
     Mapping,
+    Optional,
+    Set,
+    TypeVar,
 )
+import uuid
 
 from async_timeout import timeout
 import attr
 import voluptuous as vol
 
+from homeassistant import loader, util
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
     ATTR_NOW,
+    ATTR_SECONDS,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
-    ATTR_SECONDS,
     CONF_UNIT_SYSTEM_IMPERIAL,
     EVENT_CALL_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
+    EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_CLOSE,
-    EVENT_SERVICE_REMOVED,
     EVENT_SERVICE_REGISTERED,
+    EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED,
     EVENT_TIMER_OUT_OF_SYNC,
     MATCH_ALL,
     __version__,
 )
-from homeassistant import loader
 from homeassistant.exceptions import (
     HomeAssistantError,
     InvalidEntityFormatError,
     InvalidStateError,
-    Unauthorized,
     ServiceNotFound,
+    Unauthorized,
 )
-from homeassistant.util.async_ import run_callback_threadsafe, fire_coroutine_threadsafe
-from homeassistant import util
-import homeassistant.util.dt as dt_util
 from homeassistant.util import location, slugify
-from homeassistant.util.unit_system import (
-    UnitSystem,
-    IMPERIAL_SYSTEM,
-    METRIC_SYSTEM,
-)
+from homeassistant.util.async_ import fire_coroutine_threadsafe, run_callback_threadsafe
+import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:

@@ -6,26 +6,24 @@ import attr
 import voluptuous as vol
 
 from homeassistant import loader
-from homeassistant.core import HomeAssistant
 from homeassistant.config import (
     CONF_CORE,
-    CORE_CONFIG_SCHEMA,
     CONF_PACKAGES,
-    merge_packages_config,
+    CORE_CONFIG_SCHEMA,
     _format_config_error,
+    config_per_platform,
+    extract_domain_configs,
     find_config_file,
     load_yaml_config_file,
-    extract_domain_configs,
-    config_per_platform,
+    merge_packages_config,
 )
-from homeassistant.requirements import (
-    async_get_integration_with_requirements,
-    RequirementsNotFound,
-)
-
-import homeassistant.util.yaml.loader as yaml_loader
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
+from homeassistant.requirements import (
+    RequirementsNotFound,
+    async_get_integration_with_requirements,
+)
+import homeassistant.util.yaml.loader as yaml_loader
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-warn-return-any
 

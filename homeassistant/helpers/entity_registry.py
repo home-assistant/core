@@ -23,7 +23,6 @@ from homeassistant.util.yaml import load_yaml
 
 from .typing import HomeAssistantType
 
-
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 PATH_REGISTRY = "entity_registry.yaml"

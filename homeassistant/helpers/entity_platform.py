@@ -4,13 +4,12 @@ from contextvars import ContextVar
 from typing import Optional
 
 from homeassistant.const import DEVICE_DEFAULT_NAME
-from homeassistant.core import callback, valid_entity_id, split_entity_id
+from homeassistant.core import callback, split_entity_id, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.util.async_ import run_callback_threadsafe
 
 from .entity_registry import DISABLED_INTEGRATION
-from .event import async_track_time_interval, async_call_later
-
+from .event import async_call_later, async_track_time_interval
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
