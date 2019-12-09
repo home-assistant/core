@@ -6,7 +6,6 @@ import re
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN,
     PLATFORM_SCHEMA,
@@ -14,12 +13,13 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.const import (
     CONF_HOST,
+    CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
-    CONF_VERIFY_SSL,
-    CONF_PASSWORD,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
+import homeassistant.helpers.config_validation as cv
 
 CONF_HTTP_ID = "http_id"
 
