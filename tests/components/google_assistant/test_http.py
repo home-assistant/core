@@ -1,16 +1,17 @@
 """Test Google http services."""
-from datetime import datetime, timezone, timedelta
-from asynctest import patch, ANY
+from datetime import datetime, timedelta, timezone
 
+from asynctest import ANY, patch
+
+from homeassistant.components.google_assistant import GOOGLE_ASSISTANT_SCHEMA
+from homeassistant.components.google_assistant.const import (
+    HOMEGRAPH_TOKEN_URL,
+    REPORT_STATE_BASE_URL,
+)
 from homeassistant.components.google_assistant.http import (
     GoogleConfig,
     _get_homegraph_jwt,
     _get_homegraph_token,
-)
-from homeassistant.components.google_assistant import GOOGLE_ASSISTANT_SCHEMA
-from homeassistant.components.google_assistant.const import (
-    REPORT_STATE_BASE_URL,
-    HOMEGRAPH_TOKEN_URL,
 )
 
 DUMMY_CONFIG = GOOGLE_ASSISTANT_SCHEMA(
