@@ -7,7 +7,7 @@ import requests_mock
 from homeassistant import setup
 import homeassistant.components.sleepiq as sleepiq
 
-from tests.common import load_fixture, get_test_home_assistant
+from tests.common import get_test_home_assistant, load_fixture
 
 
 def mock_responses(mock, single=False):
