@@ -1,7 +1,7 @@
 """Support for Ness D8X/D16X devices."""
+from collections import namedtuple
 import datetime
 import logging
-from collections import namedtuple
 
 import voluptuous as vol
 
@@ -9,9 +9,9 @@ from homeassistant.components.binary_sensor import DEVICE_CLASSES
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_STATE,
-    EVENT_HOMEASSISTANT_STOP,
-    CONF_SCAN_INTERVAL,
     CONF_HOST,
+    CONF_SCAN_INTERVAL,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
