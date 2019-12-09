@@ -3,6 +3,7 @@ from collections import namedtuple
 import datetime
 import logging
 
+from nessclient import ArmingState, Client
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES
@@ -82,7 +83,6 @@ SERVICE_SCHEMA_AUX = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Ness Alarm platform."""
-    from nessclient import Client, ArmingState
 
     conf = config[DOMAIN]
 
