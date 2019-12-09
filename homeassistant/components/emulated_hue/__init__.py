@@ -5,22 +5,22 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant import util
+from homeassistant.components.http import real_ip
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.deprecation import get_deprecated
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.util.json import load_json, save_json
-from homeassistant.components.http import real_ip
 
 from .hue_api import (
-    HueUsernameView,
-    HueUnauthorizedUser,
-    HueAllLightsStateView,
-    HueOneLightStateView,
-    HueOneLightChangeView,
-    HueGroupView,
     HueAllGroupsStateView,
+    HueAllLightsStateView,
     HueFullStateView,
+    HueGroupView,
+    HueOneLightChangeView,
+    HueOneLightStateView,
+    HueUnauthorizedUser,
+    HueUsernameView,
 )
 from .upnp import DescriptionXmlView, UPNPResponderThread
 
