@@ -50,4 +50,3 @@ clear_zone_override:
     entity_id:
       description: The entity_id of the zone.
       example: climate.bathroom
-
