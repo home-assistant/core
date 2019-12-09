@@ -3,12 +3,11 @@
 from collections import defaultdict
 from datetime import timedelta
 from functools import partial
-from urllib.parse import urlparse
 import ipaddress
 import logging
 from typing import Any, Callable, Dict, List, Set, Tuple
+from urllib.parse import urlparse
 
-import voluptuous as vol
 import attr
 from getmac import get_mac_address
 from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
@@ -20,13 +19,14 @@ from huawei_lte_api.exceptions import (
 )
 from requests.exceptions import Timeout
 from url_normalize import url_normalize
+import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import ConfigEntry, SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_RECIPIENT,
@@ -36,8 +36,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, discovery
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    discovery,
+)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -46,6 +49,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
+
 from .const import (
     ALL_KEYS,
     CONNECTION_TIMEOUT,
@@ -63,7 +67,6 @@ from .const import (
     UPDATE_OPTIONS_SIGNAL,
     UPDATE_SIGNAL,
 )
-
 
 _LOGGER = logging.getLogger(__name__)
 
