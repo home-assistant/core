@@ -2,13 +2,13 @@
 import pypck
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_BRIGHTNESS,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
 )
+import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_CONNECTIONS,
