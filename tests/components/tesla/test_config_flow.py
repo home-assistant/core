@@ -1,10 +1,9 @@
 """Test the Tesla config flow."""
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from teslajsonpy import TeslaException
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.tesla import config_flow
 from homeassistant.components.tesla.const import DOMAIN
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -87,25 +86,18 @@ async def test_form_cannot_connect(hass):
 
 async def test_import(hass):
     """Test import step."""
-    flow = init_config_flow(hass)
 
     with patch(
         "homeassistant.components.tesla.config_flow.TeslaAPI.connect",
         return_value=mock_coro(("test-refresh-token", "test-access-token")),
     ):
-        result = await flow.async_step_import(
-            {CONF_PASSWORD: "test", CONF_USERNAME: "test@email.com"}
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={CONF_PASSWORD: "test", CONF_USERNAME: "test@email.com"},
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "test@email.com"
     assert result["data"][CONF_ACCESS_TOKEN] == "test-access-token"
     assert result["data"][CONF_TOKEN] == "test-refresh-token"
     assert result["description_placeholders"] is None
-
-
-def init_config_flow(hass):
-    """Init a configuration flow."""
-    hass.config.api = Mock()
-    flow = config_flow.TeslaConfigFlow()
-    flow.hass = hass
-    return flow
