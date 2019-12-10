@@ -108,29 +108,26 @@ async def async_setup(hass, base_config):
 async def async_setup_entry(hass, config_entry):
     """Set up Tesla as config entry."""
 
-    if DOMAIN not in hass.data or config_entry.entry_id not in hass.data[DOMAIN]:
-        config = config_entry.data
-        hass.data.setdefault(DOMAIN, {})
-
-        try:
-            websession = aiohttp_client.async_get_clientsession(hass)
-            controller = TeslaAPI(
-                websession,
-                refresh_token=config[CONF_TOKEN],
-                update_interval=config_entry.options.get(CONF_SCAN_INTERVAL, 300),
-            )
-            (refresh_token, access_token) = await controller.connect()
-        except TeslaException as ex:
-            _LOGGER.error("Unable to communicate with Tesla API: %s", ex.message)
-            return False
-        _async_save_tokens(hass, config_entry, access_token, refresh_token)
-        entry_data = hass.data[DOMAIN][config_entry.entry_id] = {
-            "controller": controller,
-            "devices": defaultdict(list),
-            DATA_LISTENER: [config_entry.add_update_listener(update_listener)],
-        }
-        _LOGGER.debug("Connected to the Tesla API.")
-
+    hass.data.setdefault(DOMAIN, {})
+    config = config_entry.data
+    websession = aiohttp_client.async_get_clientsession(hass)
+    try:
+        controller = TeslaAPI(
+            websession,
+            refresh_token=config[CONF_TOKEN],
+            update_interval=config_entry.options.get(CONF_SCAN_INTERVAL, 300),
+        )
+        (refresh_token, access_token) = await controller.connect()
+    except TeslaException as ex:
+        _LOGGER.error("Unable to communicate with Tesla API: %s", ex.message)
+        return False
+    _async_save_tokens(hass, config_entry, access_token, refresh_token)
+    entry_data = hass.data[DOMAIN][config_entry.entry_id] = {
+        "controller": controller,
+        "devices": defaultdict(list),
+        DATA_LISTENER: [config_entry.add_update_listener(update_listener)],
+    }
+    _LOGGER.debug("Connected to the Tesla API.")
     all_devices = entry_data["controller"].get_homeassistant_components()
 
     if not all_devices:
