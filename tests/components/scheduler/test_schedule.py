@@ -68,6 +68,7 @@ async def test_create_schedule(hass):
     )
     assert not schedule.active
     assert not schedule.expired
+    assert not schedule.is_on
     assert schedule.state == "off"
     assert schedule.as_dict() == {
         CONF_ENTITY_ID: "scene.test_scene_3",
@@ -90,6 +91,7 @@ async def test_create_schedule(hass):
     )
     assert not schedule.active
     assert not schedule.expired
+    assert not schedule.is_on
     assert schedule.state == "off"
     assert schedule.as_dict() == {
         CONF_ENTITY_ID: "scene.test_scene_4",
@@ -113,6 +115,7 @@ async def test_expired_schedule(hass):
     )
     assert not schedule.active
     assert schedule.expired
+    assert not schedule.is_on
     assert schedule.state == "expired"
     assert schedule.as_dict() == {
         CONF_ENTITY_ID: "scene.test_scene_1",
@@ -135,6 +138,7 @@ async def test_expired_schedule(hass):
     )
     assert not schedule.active
     assert not schedule.expired
+    assert not schedule.is_on
     assert schedule.state == "off"
     assert schedule.as_dict() == {
         CONF_ENTITY_ID: "scene.test_scene_2",
