@@ -14,7 +14,9 @@
   "config_flow": true,
   "homekit": {
     "models": [
-      "Relay"
+      "Netatmo Relay",
+      "Presence",
+      "Welcome"
     ]
   }
 }

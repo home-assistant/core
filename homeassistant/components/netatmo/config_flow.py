@@ -3,6 +3,7 @@ import logging
 
 from homeassistant import config_entries
 from homeassistant.helpers import config_entry_oauth2_flow
+
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,3 +50,7 @@ class NetatmoFlowHandler(
             return self.async_abort(reason="already_setup")
 
         return await super().async_step_user(user_input)
+
+    async def async_step_homekit(self, homekit_info):
+        """Handle HomeKit discovery."""
+        return await self.async_step_user()
