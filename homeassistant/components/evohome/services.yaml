@@ -24,7 +24,7 @@ reset_system:
 
 force_refresh:
   description: >-
-      Pull the latest data from the vendor's server's.
+      Pull the latest data from the vendor's servers.
 
 set_zone_override:
   description: >-
