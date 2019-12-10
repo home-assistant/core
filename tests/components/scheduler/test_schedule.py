@@ -35,6 +35,7 @@ async def test_create_schedule(hass):
         CONF_END_DATETIME: None,
         CONF_RECURRENCE: None,
     }
+    assert not schedule.active_instance
 
     # 2. A schedule with a start datetime and an end datetime:
     schedule = Schedule(
@@ -53,6 +54,7 @@ async def test_create_schedule(hass):
         CONF_END_DATETIME: end_datetime.isoformat(),
         CONF_RECURRENCE: None,
     }
+    assert not schedule.active_instance
 
     # 3. A schedule with a start datetime and a recurrence:
     schedule = Schedule(
@@ -76,6 +78,7 @@ async def test_create_schedule(hass):
         CONF_END_DATETIME: None,
         CONF_RECURRENCE: f"DTSTART:{start_datetime_rfc5545}\nRRULE:FREQ=DAILY",
     }
+    assert not schedule.active_instance
 
     # 4. A schedule with a start datetime, an end datetime, and a recurrence:
     schedule = Schedule(
@@ -99,6 +102,7 @@ async def test_create_schedule(hass):
         CONF_END_DATETIME: end_datetime.isoformat(),
         CONF_RECURRENCE: f"DTSTART:{start_datetime_rfc5545}\nRRULE:FREQ=DAILY",
     }
+    assert not schedule.active_instance
 
 
 async def test_expired_schedule(hass):
@@ -123,6 +127,7 @@ async def test_expired_schedule(hass):
         CONF_END_DATETIME: None,
         CONF_RECURRENCE: None,
     }
+    assert not schedule.active_instance
 
     # 2. A schedule with a start datetime in the past, but a future-facing recurrence:
     schedule = Schedule(
@@ -146,3 +151,4 @@ async def test_expired_schedule(hass):
         CONF_END_DATETIME: None,
         CONF_RECURRENCE: f"DTSTART:{start_datetime_rfc5545}\nRRULE:FREQ=DAILY",
     }
+    assert not schedule.active_instance
