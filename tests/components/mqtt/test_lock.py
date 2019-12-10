@@ -34,6 +34,8 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
                 "command_topic": "command-topic",
                 "payload_lock": "LOCK",
                 "payload_unlock": "UNLOCK",
+                "state_locked": "LOCKED",
+                "state_unlocked": "UNLOCKED",
             }
         },
     )
@@ -42,12 +44,12 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
     assert state.state is STATE_UNLOCKED
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
-    async_fire_mqtt_message(hass, "state-topic", "LOCK")
+    async_fire_mqtt_message(hass, "state-topic", "LOCKED")
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_LOCKED
 
-    async_fire_mqtt_message(hass, "state-topic", "UNLOCK")
+    async_fire_mqtt_message(hass, "state-topic", "UNLOCKED")
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
@@ -66,6 +68,8 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock):
                 "command_topic": "command-topic",
                 "payload_lock": "LOCK",
                 "payload_unlock": "UNLOCK",
+                "state_locked": "LOCKED",
+                "state_unlocked": "UNLOCKED",
                 "value_template": "{{ value_json.val }}",
             }
         },
@@ -74,12 +78,12 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock):
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
 
-    async_fire_mqtt_message(hass, "state-topic", '{"val":"LOCK"}')
+    async_fire_mqtt_message(hass, "state-topic", '{"val":"LOCKED"}')
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_LOCKED
 
-    async_fire_mqtt_message(hass, "state-topic", '{"val":"UNLOCK"}')
+    async_fire_mqtt_message(hass, "state-topic", '{"val":"UNLOCKED"}')
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
@@ -97,6 +101,8 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
                 "command_topic": "command-topic",
                 "payload_lock": "LOCK",
                 "payload_unlock": "UNLOCK",
+                "state_locked": "LOCKED",
+                "state_unlocked": "UNLOCKED",
             }
         },
     )
@@ -135,6 +141,8 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
                 "command_topic": "command-topic",
                 "payload_lock": "LOCK",
                 "payload_unlock": "UNLOCK",
+                "state_locked": "LOCKED",
+                "state_unlocked": "UNLOCKED",
                 "optimistic": True,
             }
         },
@@ -206,6 +214,8 @@ async def test_custom_availability_payload(hass, mqtt_mock):
                 "command_topic": "command-topic",
                 "payload_lock": "LOCK",
                 "payload_unlock": "UNLOCK",
+                "state_locked": "LOCKED",
+                "state_unlocked": "UNLOCKED",
                 "availability_topic": "availability-topic",
                 "payload_available": "good",
                 "payload_not_available": "nogood",
