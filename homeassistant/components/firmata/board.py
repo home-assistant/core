@@ -17,9 +17,9 @@ _LOGGER = logging.getLogger(__name__)
 class FirmataBoard:
     """Manages a single Firmata board."""
 
-    def __init__(self, hass, config: dict):
+    def __init__(self, hass, config_entry):
         """Initialize the board."""
-        self.config_entry = config
+        self.config_entry = config_entry
         self.config = self.config_entry.data
         self.hass = hass
         self.available = True
@@ -34,12 +34,12 @@ class FirmataBoard:
     async def async_setup(self, tries=0):
         """Set up a Firmata instance."""
         try:
-            _LOGGER.info('Attempting Firmata connection for %s', self.name)
+            _LOGGER.info('Connecting to Firmata %s', self.name)
             self.api = await get_board(self.config)
             self.firmware_version = await self.api.get_firmware_version()
         except RuntimeError as err:
-            _LOGGER.error('Error connecting with PyMata board %s: %s',
-                          self.name, repr(err))
+            _LOGGER.error('Error connecting to PyMata board %s: %s',
+                          self.name, err)
             return False
 
         if CONF_SAMPLING_INTERVAL in self.config:
@@ -49,7 +49,7 @@ class FirmataBoard:
             except RuntimeError as err:
                 _LOGGER.error('Error setting sampling interval for PyMata \
 board %s: %s',
-                              self.name, repr(err))
+                              self.name, err)
                 return False
 
         if CONF_SWITCHES in self.config:
@@ -84,9 +84,9 @@ board %s: %s',
         )
 
 
-async def get_board(data: dict) -> dict:
+async def get_board(data: dict):
     """Create a Pymata board object."""
-    board_data = dict()
+    board_data = {}
 
     if CONF_REMOTE in data:
         board_data['ip_address'] = data[CONF_HOST]
@@ -121,7 +121,6 @@ class FirmataBoardPin(Entity):
         self._board_name = board_name
         self._board = hass.data[DOMAIN][self._board_name]
         self._conf = kwargs
-        _LOGGER.info(self._conf)
         self._pin = self._conf[CONF_PIN]
         self._pin_mode = self._conf[CONF_PIN_MODE]
         self._firmata_pin_mode = None
@@ -137,11 +136,11 @@ class FirmataBoardPin(Entity):
         self._identifiers = {
             (DOMAIN, self._unique_id)
         }
-        self._attributes = {}
+        self._device_info = {}
 
-    def _set_attributes(self):
+    def _set_device_info(self):
         """Set the entity's attributes."""
-        self._attributes = {
+        self._device_info = {
             'config_entry_id': self._board.config_entry.entry_id,
             'via_hub': (DOMAIN, self._board_name),
             'pin_type': self._pin_type,
@@ -150,7 +149,7 @@ class FirmataBoardPin(Entity):
             'identifiers': self._identifiers,
             'manufacturer': 'Firmata'
         }
-        self._attributes.update(self._conf)
+        self._device_info.update(self._conf)
 
     def _mark_pin_used(self):
         """Test if a pin is used already on the board or mark as used."""
@@ -170,18 +169,6 @@ class FirmataBoardPin(Entity):
         return False
 
     @property
-    def available(self) -> bool:
-        """Return True because the board is always available."""
-        return True
-
-    @property
-    def device_state_attributes(self) -> dict:
-        """Return device specific state attributes."""
-        if self._state is not None:
-            self._attributes['state'] = self._state
-        return self._attributes
-
-    @property
     def unique_id(self):
         """Return a unique identifier for this device."""
         return self._unique_id
@@ -189,8 +176,4 @@ class FirmataBoardPin(Entity):
     @property
     def device_info(self) -> dict:
         """Return device info."""
-        device_info = {
-            'name': self.name
-        }
-        device_info.update(self._attributes)
-        return device_info
+        return self._device_info

@@ -9,18 +9,15 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import CONF_NAME, ATTR_TRIPPED
 
 from .board import FirmataBoardPin
-from .const import (CONF_NEGATE_STATE, CONF_PIN_MODE_INPUT,
-                    CONF_PIN_MODE_PULLUP, DOMAIN)
+from .const import (CONF_NEGATE_STATE, PIN_MODE_INPUT, PIN_MODE_PULLUP, DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
-PYMATA_ASYNC = PymataConstants.CB_TYPE_ASYNCIO
+PYMATA_DIRECT = PymataConstants.CB_TYPE_DIRECT
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Firmata binary sensors."""
-    _LOGGER.debug("Setting up firmata binary sensors")
-
     new_entities = []
 
     board_name = config_entry.data[CONF_NAME]
@@ -32,11 +29,8 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         new_binary_sensor = await binary_sensor_entity.setup_pin()
         if new_binary_sensor:
             new_entities.append(binary_sensor_entity)
-        else:
-            _LOGGER.warning('Prevented setting up binary sensor on in use pin \
-%d', binary_sensor.pin)
 
-    async_add_devices(new_entities)
+    async_add_entities(new_entities)
 
 
 class FirmataDigitalBinaryInput(FirmataBoardPin, BinarySensorDevice):
@@ -50,11 +44,11 @@ class FirmataDigitalBinaryInput(FirmataBoardPin, BinarySensorDevice):
             _LOGGER.warning('Pin %s already used! Cannot use for binary \
 sensor %s', str(self._pin), self._name)
             return False
-        if self._pin_mode == CONF_PIN_MODE_INPUT:
+        if self._pin_mode == PIN_MODE_INPUT:
             self._firmata_pin_mode = PymataConstants.INPUT
-        elif self._pin_mode == CONF_PIN_MODE_PULLUP:
+        elif self._pin_mode == PIN_MODE_PULLUP:
             self._firmata_pin_mode = PymataConstants.PULLUP
-        self._set_attributes()
+        self._set_device_info()
 
         # get current state
         new_state = bool(
@@ -68,12 +62,12 @@ sensor %s', str(self._pin), self._name)
             self._firmata_pin,
             self._firmata_pin_mode,
             callback=self.latch_callback,
-            callback_type=PYMATA_ASYNC
+            callback_type=PYMATA_DIRECT
         )
         return True
 
     @callback
-    async def latch_callback(self, data):
+    def latch_callback(self, data):
         """Update pin state on callback."""
         if data[0] == self._firmata_pin:
             new_state = bool(data[1])
@@ -81,16 +75,10 @@ sensor %s', str(self._pin), self._name)
                 new_state = not new_state
             if self._state != new_state:
                 self._state = new_state
-                self.async_write_ha_state()
+                if self.entity_id is not None:
+                    self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool:
         """Return true if binary sensor is on."""
         return self._state
-
-    @property
-    def device_state_attributes(self) -> dict:
-        """Return device specific state attributes."""
-        if self._state is not None:
-            self._attributes[ATTR_TRIPPED] = self._state
-        return super().device_state_attributes
