@@ -167,7 +167,7 @@ class Schedule:
         """Define the string representation of this schedule."""
         return (
             f'<Schedule start="{self.start_datetime}" '
-            f'end="{self.end_datetime}" rrule="{self.recurrence}">'
+            f'end="{self.end_datetime}" recurrence="{self.recurrence}">'
         )
 
     @property
