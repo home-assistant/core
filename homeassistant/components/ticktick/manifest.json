@@ -2,7 +2,7 @@
   "domain": "ticktick",
   "name": "TickTick",
   "config_flow": true,
-  "documentation": "https://github.com/BeryJu/hass-ticktick",
+  "documentation": "https://www.home-assistant.io/integrations/ticktick",
   "requirements": ["ticktick==0.1.4"],
   "ssdp": [],
   "zeroconf": [],
