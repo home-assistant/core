@@ -695,6 +695,7 @@ omit =
     homeassistant/components/thinkingcleaner/*
     homeassistant/components/thomson/device_tracker.py
     homeassistant/components/tibber/*
+    homeassistant/components/ticktick/*
     homeassistant/components/tikteck/light.py
     homeassistant/components/tile/device_tracker.py
     homeassistant/components/time_date/sensor.py

@@ -1,0 +1,14 @@
+{
+  "config": {
+    "title": "TickTick",
+    "step": {
+      "user": {
+        "title": "Enter your TickTick credentials.",
+        "data": {
+          "username": "Your TickTick Username",
+          "password": "Your TickTick Password"
+        }
+      }
+    }
+  }
+}
