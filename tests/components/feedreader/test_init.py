@@ -1,13 +1,12 @@
 """The tests for the feedreader component."""
 from datetime import timedelta
+from genericpath import exists
 from logging import getLogger
 from os import remove
 import time
 import unittest
 from unittest import mock
 from unittest.mock import patch
-
-from genericpath import exists
 
 from homeassistant.components import feedreader
 from homeassistant.components.feedreader import (

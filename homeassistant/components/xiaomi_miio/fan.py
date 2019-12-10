@@ -58,7 +58,6 @@ from .const import (
     SERVICE_SET_VOLUME,
 )
 
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Xiaomi Miio Device"
