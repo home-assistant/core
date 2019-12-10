@@ -51,9 +51,9 @@ from .core.const import (
     WARNING_DEVICE_STROBE_YES,
 )
 from .core.helpers import (
+    async_get_device_info,
     async_is_bindable_target,
     get_matched_clusters,
-    async_get_device_info,
 )
 
 _LOGGER = logging.getLogger(__name__)
