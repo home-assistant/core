@@ -23,7 +23,9 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 CONF_INITIAL = "initial"
 CONF_MIN = "min"
+CONF_MIN_VALUE = 0
 CONF_MAX = "max"
+CONF_MAX_VALUE = 100
 
 MODE_TEXT = "text"
 MODE_PASSWORD = "password"
@@ -59,8 +61,8 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.All(
                     {
                         vol.Optional(CONF_NAME): cv.string,
-                        vol.Optional(CONF_MIN, default=0): vol.Coerce(int),
-                        vol.Optional(CONF_MAX, default=100): vol.Coerce(int),
+                        vol.Optional(CONF_MIN, default=CONF_MIN_VALUE): vol.Coerce(int),
+                        vol.Optional(CONF_MAX, default=CONF_MAX_VALUE): vol.Coerce(int),
                         vol.Optional(CONF_INITIAL, ""): cv.string,
                         vol.Optional(CONF_ICON): cv.icon,
                         vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
@@ -121,8 +123,8 @@ async def _async_process_config(config):
         if cfg is None:
             cfg = {}
         name = cfg.get(CONF_NAME)
-        minimum = cfg.get(CONF_MIN)
-        maximum = cfg.get(CONF_MAX)
+        minimum = cfg.get(CONF_MIN, CONF_MIN_VALUE)
+        maximum = cfg.get(CONF_MAX, CONF_MAX_VALUE)
         initial = cfg.get(CONF_INITIAL)
         icon = cfg.get(CONF_ICON)
         unit = cfg.get(ATTR_UNIT_OF_MEASUREMENT)

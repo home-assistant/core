@@ -100,8 +100,7 @@ async def test_mode(hass):
     assert "password" == state.attributes["mode"]
 
 
-@asyncio.coroutine
-def test_restore_state(hass):
+async def test_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass,
@@ -110,10 +109,8 @@ def test_restore_state(hass):
 
     hass.state = CoreState.starting
 
-    yield from async_setup_component(
-        hass,
-        DOMAIN,
-        {DOMAIN: {"b1": {"min": 0, "max": 10}, "b2": {"min": 0, "max": 10}}},
+    assert await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {"b1": None, "b2": {"min": 0, "max": 10}}},
     )
 
     state = hass.states.get("input_text.b1")
