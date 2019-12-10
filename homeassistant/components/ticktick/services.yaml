@@ -1,0 +1,9 @@
+add_task:
+  description: "Add tasks to TickTick."
+  fields:
+    title:
+      description: Title of the task to add
+    content:
+      description: Content of the task to add.
+    project:
+      description: Id of the project to add the task to. Defaults to "Inbox".

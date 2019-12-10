@@ -1,0 +1,12 @@
+{
+  "domain": "ticktick",
+  "name": "TickTick",
+  "config_flow": true,
+  "documentation": "https://github.com/BeryJu/hass-ticktick",
+  "requirements": ["ticktick==0.1.4"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@BeryJu"]
+}
