@@ -240,6 +240,8 @@ class Schedule:
             self._hass, TOPIC_SCHEDULE_NEXT, self._async_schedule
         )
 
+        _LOGGER.info("Scheduled instance of %s", self)
+
     @callback
     def _get_next_instance_datetimes(
         self,
@@ -252,7 +254,11 @@ class Schedule:
         if not self.recurrence:
             return (None, None)
 
-        start = self.recurrence.after(dt_util.utcnow(), inc=True)
+        now = dt_util.utcnow()
+        if now > self.start_datetime:
+            start = self.recurrence.after(now, inc=True)
+        else:
+            start = self.recurrence.after(self.start_datetime, inc=True)
 
         # The recurrence has reached its end:
         if not start:

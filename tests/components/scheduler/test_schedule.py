@@ -157,7 +157,7 @@ async def test_expired_schedule(hass):
     assert not schedule.active_instance
 
 
-async def test_schedule_instance_with_start(hass):
+async def test_schedule_instance_with_start(hass, scheduler):
     """Test turning a schedule on."""
     assert await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
     assert hass.states.get("light.bed_light").state == "off"
@@ -169,7 +169,7 @@ async def test_schedule_instance_with_start(hass):
 
     start_datetime = dt_util.utcnow() + timedelta(hours=1)
     schedule = Schedule(hass, "scene.test_scene_1", start_datetime)
-    schedule.async_turn_on()
+    scheduler.async_create(schedule)
     await hass.async_block_till_done()
 
     async_fire_time_changed(hass, start_datetime)
@@ -178,7 +178,50 @@ async def test_schedule_instance_with_start(hass):
     assert not schedule.active_instance
 
 
-async def test_schedule_instance_with_end(hass):
+async def test_schedule_instance_with_start_and_recurrence(hass, scheduler):
+    """Test turning a schedule on."""
+    assert await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
+    assert hass.states.get("light.bed_light").state == "off"
+    assert await async_setup_component(
+        hass,
+        "scene",
+        {"scene": {"name": "test_scene_1", "entities": {"light.bed_light": "on"}}},
+    )
+
+    original_state = hass.states.get("light.bed_light")
+
+    start_datetime = dt_util.utcnow() + timedelta(hours=1)
+    schedule = Schedule(
+        hass,
+        "scene.test_scene_1",
+        start_datetime,
+        recurrence=rrule(DAILY, dtstart=start_datetime),
+    )
+    scheduler.async_create(schedule)
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, start_datetime)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.bed_light").state == "on"
+    assert not schedule.active_instance
+
+    # Reset the light before the next schedule instance:
+    await hass.services.async_call(
+        "scene",
+        "apply",
+        service_data={"entities": {"light.bed_light": original_state.as_dict()}},
+        blocking=True,
+    )
+    assert hass.states.get("light.bed_light").state == "off"
+    next_start_datetime = schedule.recurrence.after(start_datetime)
+
+    async_fire_time_changed(hass, next_start_datetime)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.bed_light").state == "on"
+    assert not schedule.active_instance
+
+
+async def test_schedule_instance_with_end(hass, scheduler):
     """Test turning a schedule on."""
     assert await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
     assert hass.states.get("light.bed_light").state == "off"
@@ -193,7 +236,7 @@ async def test_schedule_instance_with_end(hass):
     schedule = Schedule(
         hass, "scene.test_scene_1", start_datetime, end_datetime=end_datetime
     )
-    schedule.async_turn_on()
+    scheduler.async_create(schedule)
     await hass.async_block_till_done()
 
     async_fire_time_changed(hass, start_datetime)
@@ -205,3 +248,58 @@ async def test_schedule_instance_with_end(hass):
     await hass.async_block_till_done()
     assert hass.states.get("light.bed_light").state == "off"
     assert not schedule.active_instance
+
+
+async def test_schedule_instance_with_end_and_recurrence(hass, scheduler):
+    """Test turning a schedule on."""
+    assert await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
+    assert hass.states.get("light.bed_light").state == "off"
+    assert await async_setup_component(
+        hass,
+        "scene",
+        {"scene": {"name": "test_scene_1", "entities": {"light.bed_light": "on"}}},
+    )
+
+    original_state = hass.states.get("light.bed_light")
+
+    start_datetime = dt_util.utcnow() + timedelta(hours=1)
+    end_datetime = start_datetime + timedelta(hours=1)
+    schedule = Schedule(
+        hass,
+        "scene.test_scene_1",
+        start_datetime,
+        end_datetime=end_datetime,
+        recurrence=rrule(DAILY, dtstart=start_datetime),
+    )
+    scheduler.async_create(schedule)
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, start_datetime)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.bed_light").state == "on"
+    assert schedule.active_instance
+
+    async_fire_time_changed(hass, end_datetime)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.bed_light").state == "off"
+    assert schedule.active_instance
+
+    # Reset the light before the next schedule instance:
+    await hass.services.async_call(
+        "scene",
+        "apply",
+        service_data={"entities": {"light.bed_light": original_state.as_dict()}},
+        blocking=True,
+    )
+    assert hass.states.get("light.bed_light").state == "off"
+    next_start_datetime = schedule.recurrence.after(start_datetime)
+
+    async_fire_time_changed(hass, next_start_datetime)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.bed_light").state == "on"
+    assert schedule.active_instance
+
+    async_fire_time_changed(hass, next_start_datetime + timedelta(hours=1))
+    await hass.async_block_till_done()
+    assert hass.states.get("light.bed_light").state == "off"
+    assert schedule.active_instance
