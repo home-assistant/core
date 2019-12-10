@@ -28,7 +28,7 @@ async def test_create_schedule(hass):
     )
     assert not schedule.active
     assert not schedule.expired
-    assert schedule.state == "on"
+    assert schedule.state == "off"
     assert schedule.as_dict() == {
         CONF_ENTITY_ID: "scene.test_scene_1",
         CONF_START_DATETIME: start_datetime.isoformat(),
@@ -46,7 +46,7 @@ async def test_create_schedule(hass):
     )
     assert not schedule.active
     assert not schedule.expired
-    assert schedule.state == "on"
+    assert schedule.state == "off"
     assert schedule.as_dict() == {
         CONF_ENTITY_ID: "scene.test_scene_2",
         CONF_START_DATETIME: start_datetime.isoformat(),
@@ -68,7 +68,7 @@ async def test_create_schedule(hass):
     )
     assert not schedule.active
     assert not schedule.expired
-    assert schedule.state == "on"
+    assert schedule.state == "off"
     assert schedule.as_dict() == {
         CONF_ENTITY_ID: "scene.test_scene_3",
         CONF_START_DATETIME: start_datetime.isoformat(),
@@ -90,7 +90,7 @@ async def test_create_schedule(hass):
     )
     assert not schedule.active
     assert not schedule.expired
-    assert schedule.state == "on"
+    assert schedule.state == "off"
     assert schedule.as_dict() == {
         CONF_ENTITY_ID: "scene.test_scene_4",
         CONF_START_DATETIME: start_datetime.isoformat(),
@@ -135,7 +135,7 @@ async def test_expired_schedule(hass):
     )
     assert not schedule.active
     assert not schedule.expired
-    assert schedule.state == "on"
+    assert schedule.state == "off"
     assert schedule.as_dict() == {
         CONF_ENTITY_ID: "scene.test_scene_2",
         CONF_START_DATETIME: start_datetime.isoformat(),

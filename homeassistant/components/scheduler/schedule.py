@@ -146,7 +146,7 @@ class Schedule:
         """Initialize."""
         self._hass: HomeAssistant = hass
         self._initial_instance_scheduled: bool = False
-        self._is_on: bool = True
+        self._is_on: bool = False
         self.active_instance: Optional[ScheduleInstance] = None
         self.end_datetime: Optional[datetime] = end_datetime
         self.entity_id: str = entity_id
@@ -202,7 +202,10 @@ class Schedule:
 
     @property
     def is_on(self) -> bool:
-        """Return whether the schedule is enabled."""
+        """Return whether the schedule is turned on.
+
+        Schedules are off until specifically turned on via async_turn_on().
+        """
         return self._is_on
 
     @callback
