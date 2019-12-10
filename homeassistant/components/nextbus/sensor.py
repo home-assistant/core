@@ -225,7 +225,9 @@ class NextBusDepartureSensor(Entity):
             return
 
         # Generate list of upcoming times
-        self._attributes["upcoming"] = ", ".join(p["minutes"] for p in predictions)
+        self._attributes["upcoming"] = ", ".join(
+            sorted(p["minutes"] for p in predictions)
+        )
 
         latest_prediction = maybe_first(predictions)
         self._state = utc_from_timestamp(
