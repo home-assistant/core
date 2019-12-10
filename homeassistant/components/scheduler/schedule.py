@@ -53,21 +53,21 @@ class ScheduleInstance:
     def async_init(self) -> None:
         """Set up scheduling for this instance."""
 
-        async def start(self, executed_at: datetime) -> None:
-            """Trigger."""
-            await self.async_trigger()
-
-        async def stop(self, executed_at: datetime) -> None:
+        async def revert(self, executed_at: datetime) -> None:
             """Revert."""
             await self.async_revert()
 
+        async def trigger(self, executed_at: datetime) -> None:
+            """Trigger."""
+            await self.async_trigger()
+
         self._async_trigger_listener = async_track_point_in_time(
-            self._hass, start, self.start_datetime
+            self._hass, trigger, self.start_datetime
         )
 
         if self.end_datetime:
             self._async_trigger_listener = async_track_point_in_time(
-                self._hass, stop, self.end_datetime
+                self._hass, revert, self.end_datetime
             )
 
     @callback
