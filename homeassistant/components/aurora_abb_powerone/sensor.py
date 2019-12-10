@@ -2,8 +2,8 @@
 
 import logging
 
+from aurorapy.client import AuroraError, AuroraSerialClient
 import voluptuous as vol
-from aurorapy.client import AuroraSerialClient, AuroraError
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -49,7 +49,7 @@ class AuroraABBSolarPVMonitorSensor(Entity):
 
     def __init__(self, client, name, typename):
         """Initialize the sensor."""
-        self._name = "{} {}".format(name, typename)
+        self._name = f"{name} {typename}"
         self.client = client
         self._state = None
 

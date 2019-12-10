@@ -5,6 +5,7 @@ import json
 import logging
 import os
 
+import aioautomatic
 from aiohttp import web
 import voluptuous as vol
 
@@ -82,7 +83,6 @@ def _write_refresh_token_to_file(hass, filename, refresh_token):
 @asyncio.coroutine
 def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Validate the configuration and return an Automatic scanner."""
-    import aioautomatic
 
     hass.http.register_view(AutomaticAuthCallbackView())
 
@@ -215,7 +215,6 @@ class AutomaticData:
     @asyncio.coroutine
     def handle_event(self, name, event):
         """Coroutine to update state for a real time event."""
-        import aioautomatic
 
         self.hass.bus.async_fire(EVENT_AUTOMATIC_UPDATE, event.data)
 
@@ -261,7 +260,6 @@ class AutomaticData:
     @asyncio.coroutine
     def ws_connect(self, now=None):
         """Open the websocket connection."""
-        import aioautomatic
 
         self.ws_close_requested = False
 
@@ -321,7 +319,6 @@ class AutomaticData:
     @asyncio.coroutine
     def get_vehicle_info(self, vehicle):
         """Fetch the latest vehicle info from automatic."""
-        import aioautomatic
 
         name = vehicle.display_name
         if name is None:

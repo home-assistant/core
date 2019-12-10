@@ -2,9 +2,11 @@
 import logging
 import socket
 
+import snapcast.control
+from snapcast.control.server import CONTROL_PORT
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_VOLUME_MUTE,
@@ -24,12 +26,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
-    DOMAIN,
-    SERVICE_SNAPSHOT,
-    SERVICE_RESTORE,
-    SERVICE_JOIN,
-    SERVICE_UNJOIN,
     ATTR_MASTER,
+    DOMAIN,
+    SERVICE_JOIN,
+    SERVICE_RESTORE,
+    SERVICE_SNAPSHOT,
+    SERVICE_UNJOIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,8 +57,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Snapcast platform."""
-    import snapcast.control
-    from snapcast.control.server import CONTROL_PORT
 
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT, CONTROL_PORT)
@@ -98,7 +98,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return
 
     # Note: Host part is needed, when using multiple snapservers
-    hpid = "{}:{}".format(host, port)
+    hpid = f"{host}:{port}"
 
     groups = [SnapcastGroupDevice(group, hpid) for group in server.groups]
     clients = [SnapcastClientDevice(client, hpid) for client in server.clients]
@@ -114,7 +114,7 @@ class SnapcastGroupDevice(MediaPlayerDevice):
         """Initialize the Snapcast group device."""
         group.set_callback(self.schedule_update_ha_state)
         self._group = group
-        self._uid = "{}{}_{}".format(GROUP_PREFIX, uid_part, self._group.identifier)
+        self._uid = f"{GROUP_PREFIX}{uid_part}_{self._group.identifier}"
 
     @property
     def state(self):
@@ -133,7 +133,7 @@ class SnapcastGroupDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return "{}{}".format(GROUP_PREFIX, self._group.identifier)
+        return f"{GROUP_PREFIX}{self._group.identifier}"
 
     @property
     def source(self):
@@ -163,7 +163,7 @@ class SnapcastGroupDevice(MediaPlayerDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        name = "{} {}".format(self._group.friendly_name, GROUP_SUFFIX)
+        name = f"{self._group.friendly_name} {GROUP_SUFFIX}"
         return {"friendly_name": name}
 
     @property
@@ -204,7 +204,7 @@ class SnapcastClientDevice(MediaPlayerDevice):
         """Initialize the Snapcast client device."""
         client.set_callback(self.schedule_update_ha_state)
         self._client = client
-        self._uid = "{}{}_{}".format(CLIENT_PREFIX, uid_part, self._client.identifier)
+        self._uid = f"{CLIENT_PREFIX}{uid_part}_{self._client.identifier}"
 
     @property
     def unique_id(self):
@@ -223,7 +223,7 @@ class SnapcastClientDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return "{}{}".format(CLIENT_PREFIX, self._client.identifier)
+        return f"{CLIENT_PREFIX}{self._client.identifier}"
 
     @property
     def source(self):
@@ -260,7 +260,7 @@ class SnapcastClientDevice(MediaPlayerDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        name = "{} {}".format(self._client.friendly_name, CLIENT_SUFFIX)
+        name = f"{self._client.friendly_name} {CLIENT_SUFFIX}"
         return {"friendly_name": name}
 
     @property

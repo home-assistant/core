@@ -139,7 +139,7 @@ class SmappeeSensor(Entity):
         else:
             location_name = "Local"
 
-        return "{} {} {}".format(SENSOR_PREFIX, location_name, self._name)
+        return f"{SENSOR_PREFIX} {location_name} {self._name}"
 
     @property
     def icon(self):

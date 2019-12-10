@@ -93,7 +93,7 @@ class MockSwitcherV2Device:
 @fixture(name="mock_bridge")
 def mock_bridge_fixture() -> Generator[None, Any, None]:
     """Fixture for mocking aioswitcher.bridge.SwitcherV2Bridge."""
-    queue = Queue()  # type: Queue
+    queue = Queue()
 
     async def mock_queue():
         """Mock asyncio's Queue."""
@@ -103,10 +103,22 @@ def mock_bridge_fixture() -> Generator[None, Any, None]:
     mock_bridge = CoroutineMock()
 
     patchers = [
-        patch("aioswitcher.bridge.SwitcherV2Bridge.start", new=mock_bridge),
-        patch("aioswitcher.bridge.SwitcherV2Bridge.stop", new=mock_bridge),
-        patch("aioswitcher.bridge.SwitcherV2Bridge.queue", get=mock_queue),
-        patch("aioswitcher.bridge.SwitcherV2Bridge.running", return_value=True),
+        patch(
+            "homeassistant.components.switcher_kis.SwitcherV2Bridge.start",
+            new=mock_bridge,
+        ),
+        patch(
+            "homeassistant.components.switcher_kis.SwitcherV2Bridge.stop",
+            new=mock_bridge,
+        ),
+        patch(
+            "homeassistant.components.switcher_kis.SwitcherV2Bridge.queue",
+            get=mock_queue,
+        ),
+        patch(
+            "homeassistant.components.switcher_kis.SwitcherV2Bridge.running",
+            return_value=True,
+        ),
     ]
 
     for patcher in patchers:
@@ -127,9 +139,18 @@ def mock_failed_bridge_fixture() -> Generator[None, Any, None]:
         raise RuntimeError
 
     patchers = [
-        patch("aioswitcher.bridge.SwitcherV2Bridge.start", return_value=None),
-        patch("aioswitcher.bridge.SwitcherV2Bridge.stop", return_value=None),
-        patch("aioswitcher.bridge.SwitcherV2Bridge.queue", get=mock_queue),
+        patch(
+            "homeassistant.components.switcher_kis.SwitcherV2Bridge.start",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.switcher_kis.SwitcherV2Bridge.stop",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.switcher_kis.SwitcherV2Bridge.queue",
+            get=mock_queue,
+        ),
     ]
 
     for patcher in patchers:
@@ -147,8 +168,13 @@ def mock_api_fixture() -> Generator[CoroutineMock, Any, None]:
     mock_api = CoroutineMock()
 
     patchers = [
-        patch("aioswitcher.api.SwitcherV2Api.connect", new=mock_api),
-        patch("aioswitcher.api.SwitcherV2Api.disconnect", new=mock_api),
+        patch(
+            "homeassistant.components.switcher_kis.SwitcherV2Api.connect", new=mock_api
+        ),
+        patch(
+            "homeassistant.components.switcher_kis.SwitcherV2Api.disconnect",
+            new=mock_api,
+        ),
     ]
 
     for patcher in patchers:

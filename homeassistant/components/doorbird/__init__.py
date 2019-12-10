@@ -2,6 +2,7 @@
 import logging
 from urllib.error import HTTPError
 
+from doorbirdpy import DoorBird
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
@@ -20,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "doorbird"
 
-API_URL = "/api/{}".format(DOMAIN)
+API_URL = f"/api/{DOMAIN}"
 
 CONF_CUSTOM_URL = "hass_url_override"
 CONF_EVENTS = "events"
@@ -51,7 +52,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the DoorBird component."""
-    from doorbirdpy import DoorBird
 
     # Provide an endpoint for the doorstations to call to trigger events
     hass.http.register_view(DoorBirdRequestView)
@@ -67,8 +67,14 @@ def setup(hass, config):
         token = doorstation_config.get(CONF_TOKEN)
         name = doorstation_config.get(CONF_NAME) or "DoorBird {}".format(index + 1)
 
-        device = DoorBird(device_ip, username, password)
-        status = device.ready()
+        try:
+            device = DoorBird(device_ip, username, password)
+            status = device.ready()
+        except OSError as oserr:
+            _LOGGER.error(
+                "Failed to setup doorbird at %s: %s; not retrying", device_ip, oserr
+            )
+            continue
 
         if status[0]:
             doorstation = ConfiguredDoorBird(device, name, events, custom_url, token)
@@ -195,17 +201,15 @@ class ConfiguredDoorBird:
         return slugify(self._name)
 
     def _get_event_name(self, event):
-        return "{}_{}".format(self.slug, event)
+        return f"{self.slug}_{event}"
 
     def _register_event(self, hass_url, event):
         """Add a schedule entry in the device for a sensor."""
-        url = "{}{}/{}?token={}".format(hass_url, API_URL, event, self._token)
+        url = f"{hass_url}{API_URL}/{event}?token={self._token}"
 
         # Register HA URL as webhook if not already, then get the ID
         if not self.webhook_is_registered(url):
-            self.device.change_favorite(
-                "http", "Home Assistant ({})".format(event), url
-            )
+            self.device.change_favorite("http", f"Home Assistant ({event})", url)
 
         fav_id = self.get_webhook_id(url)
 
@@ -266,7 +270,6 @@ class DoorBirdRequestView(HomeAssistantView):
     name = API_URL[1:].replace("/", ":")
     extra_urls = [API_URL + "/{event}"]
 
-    # pylint: disable=no-self-use
     async def get(self, request, event):
         """Respond to requests from the device."""
         from aiohttp import web
@@ -288,9 +291,9 @@ class DoorBirdRequestView(HomeAssistantView):
         if event == "clear":
             hass.bus.async_fire(RESET_DEVICE_FAVORITES, {"token": token})
 
-            message = "HTTP Favorites cleared for {}".format(device.slug)
+            message = f"HTTP Favorites cleared for {device.slug}"
             return web.Response(status=200, text=message)
 
-        hass.bus.async_fire("{}_{}".format(DOMAIN, event), event_data)
+        hass.bus.async_fire(f"{DOMAIN}_{event}", event_data)
 
         return web.Response(status=200, text="OK")

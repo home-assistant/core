@@ -4,6 +4,8 @@ import logging
 
 import voluptuous as vol
 
+# mypy: allow-untyped-defs
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -40,9 +42,7 @@ class RequestDataValidator:
                 kwargs["data"] = self._schema(data)
             except vol.Invalid as err:
                 _LOGGER.error("Data does not match schema: %s", err)
-                return view.json_message(
-                    "Message format incorrect: {}".format(err), 400
-                )
+                return view.json_message(f"Message format incorrect: {err}", 400)
 
             result = await method(view, request, *args, **kwargs)
             return result

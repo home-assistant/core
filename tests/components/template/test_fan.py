@@ -1,23 +1,23 @@
 """The tests for the Template fan platform."""
 import logging
-import pytest
 
+import pytest
 import voluptuous as vol
 
 from homeassistant import setup
-from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.components.fan import (
-    ATTR_SPEED,
-    ATTR_OSCILLATING,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_HIGH,
     ATTR_DIRECTION,
+    ATTR_OSCILLATING,
+    ATTR_SPEED,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
+    SPEED_HIGH,
+    SPEED_LOW,
+    SPEED_MEDIUM,
 )
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 
-from tests.common import async_mock_service, assert_setup_component
+from tests.common import assert_setup_component, async_mock_service
 from tests.components.fan import common
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,6 +26,8 @@ _LOGGER = logging.getLogger(__name__)
 _TEST_FAN = "fan.test_fan"
 # Represent for fan's state
 _STATE_INPUT_BOOLEAN = "input_boolean.state"
+# Represent for fan's state
+_STATE_AVAILABILITY_BOOLEAN = "availability_boolean.state"
 # Represent for fan's speed
 _SPEED_INPUT_SELECT = "input_select.speed"
 # Represent for fan's oscillating
@@ -214,6 +216,49 @@ async def test_templates_with_entities(hass, calls):
     _verify(hass, STATE_ON, SPEED_MEDIUM, True, DIRECTION_FORWARD)
 
 
+async def test_availability_template_with_entities(hass, calls):
+    """Test availability tempalates with values from other entities."""
+
+    with assert_setup_component(1, "fan"):
+        assert await setup.async_setup_component(
+            hass,
+            "fan",
+            {
+                "fan": {
+                    "platform": "template",
+                    "fans": {
+                        "test_fan": {
+                            "availability_template": "{{ is_state('availability_boolean.state', 'on') }}",
+                            "value_template": "{{ 'on' }}",
+                            "speed_template": "{{ 'medium' }}",
+                            "oscillating_template": "{{ 1 == 1 }}",
+                            "direction_template": "{{ 'forward' }}",
+                            "turn_on": {"service": "script.fan_on"},
+                            "turn_off": {"service": "script.fan_off"},
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    # When template returns true..
+    hass.states.async_set(_STATE_AVAILABILITY_BOOLEAN, STATE_ON)
+    await hass.async_block_till_done()
+
+    # Device State should not be unavailable
+    assert hass.states.get(_TEST_FAN).state != STATE_UNAVAILABLE
+
+    # When Availability template returns false
+    hass.states.async_set(_STATE_AVAILABILITY_BOOLEAN, STATE_OFF)
+    await hass.async_block_till_done()
+
+    # device state should be unavailable
+    assert hass.states.get(_TEST_FAN).state == STATE_UNAVAILABLE
+
+
 async def test_templates_with_valid_values(hass, calls):
     """Test templates with valid values."""
     with assert_setup_component(1, "fan"):
@@ -270,6 +315,39 @@ async def test_templates_invalid_values(hass, calls):
     await hass.async_block_till_done()
 
     _verify(hass, STATE_OFF, None, None, None)
+
+
+async def test_invalid_availability_template_keeps_component_available(hass, caplog):
+    """Test that an invalid availability keeps the device available."""
+
+    with assert_setup_component(1, "fan"):
+        assert await setup.async_setup_component(
+            hass,
+            "fan",
+            {
+                "fan": {
+                    "platform": "template",
+                    "fans": {
+                        "test_fan": {
+                            "value_template": "{{ 'on' }}",
+                            "availability_template": "{{ x - 12 }}",
+                            "speed_template": "{{ states('input_select.speed') }}",
+                            "oscillating_template": "{{ states('input_select.osc') }}",
+                            "direction_template": "{{ states('input_select.direction') }}",
+                            "turn_on": {"service": "script.fan_on"},
+                            "turn_off": {"service": "script.fan_off"},
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("fan.test_fan").state != STATE_UNAVAILABLE
+    assert ("Could not render availability_template template") in caplog.text
+    assert ("UndefinedError: 'x' is undefined") in caplog.text
 
 
 # End of template tests #

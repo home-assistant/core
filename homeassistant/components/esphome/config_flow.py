@@ -2,6 +2,7 @@
 from collections import OrderedDict
 from typing import Optional
 
+from aioesphomeapi import APIClient, APIConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -19,9 +20,9 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
 
     def __init__(self):
         """Initialize flow."""
-        self._host = None  # type: Optional[str]
-        self._port = None  # type: Optional[int]
-        self._password = None  # type: Optional[str]
+        self._host: Optional[str] = None
+        self._port: Optional[int] = None
+        self._password: Optional[str] = None
 
     async def async_step_user(
         self, user_input: Optional[ConfigType] = None, error: Optional[str] = None
@@ -44,11 +45,12 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
 
     @property
     def _name(self):
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         return self.context.get("name")
 
     @_name.setter
     def _name(self, value):
-        # pylint: disable=unsupported-assignment-operation
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["name"] = value
         self.context["title_placeholders"] = {"name": self._name}
 
@@ -94,9 +96,7 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
                 already_configured = True
             elif entry.entry_id in self.hass.data.get(DATA_KEY, {}):
                 # Does a config entry with this name already exist?
-                data = self.hass.data[DATA_KEY][
-                    entry.entry_id
-                ]  # type: RuntimeEntryData
+                data: RuntimeEntryData = self.hass.data[DATA_KEY][entry.entry_id]
                 # Node names are unique in the network
                 if data.device_info is not None:
                     already_configured = data.device_info.name == node_name
@@ -148,8 +148,6 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
 
     async def fetch_device_info(self):
         """Fetch device info from API and return any errors."""
-        from aioesphomeapi import APIClient, APIConnectionError
-
         cli = APIClient(self.hass.loop, self._host, self._port, "")
 
         try:
@@ -166,8 +164,6 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
 
     async def try_login(self):
         """Try logging in to device and return any errors."""
-        from aioesphomeapi import APIClient, APIConnectionError
-
         cli = APIClient(self.hass.loop, self._host, self._port, self._password)
 
         try:

@@ -2,20 +2,22 @@
 from asynctest.mock import patch
 import pytest
 
-from homeassistant.setup import async_setup_component
-from homeassistant.components import switch, light
+from homeassistant.components import light, switch
 from homeassistant.const import (
     CONF_PLATFORM,
-    STATE_ON,
     SERVICE_TURN_ON,
+    STATE_ON,
     SUN_EVENT_SUNRISE,
 )
+from homeassistant.core import State
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
     async_mock_service,
+    mock_restore_cache,
 )
 from tests.components.light import common as common_light
 from tests.components.switch import common
@@ -34,6 +36,52 @@ async def test_valid_config(hass):
             }
         },
     )
+
+    state = hass.states.get("switch.flux")
+    assert state
+    assert state.state == "off"
+
+
+async def test_restore_state_last_on(hass):
+    """Test restoring state when the last state is on."""
+    mock_restore_cache(hass, [State("switch.flux", "on")])
+
+    assert await async_setup_component(
+        hass,
+        "switch",
+        {
+            "switch": {
+                "platform": "flux",
+                "name": "flux",
+                "lights": ["light.desk", "light.lamp"],
+            }
+        },
+    )
+
+    state = hass.states.get("switch.flux")
+    assert state
+    assert state.state == "on"
+
+
+async def test_restore_state_last_off(hass):
+    """Test restoring state when the last state is off."""
+    mock_restore_cache(hass, [State("switch.flux", "off")])
+
+    assert await async_setup_component(
+        hass,
+        "switch",
+        {
+            "switch": {
+                "platform": "flux",
+                "name": "flux",
+                "lights": ["light.desk", "light.lamp"],
+            }
+        },
+    )
+
+    state = hass.states.get("switch.flux")
+    assert state
+    assert state.state == "off"
 
 
 async def test_valid_config_with_info(hass):
@@ -82,10 +130,10 @@ async def test_flux_when_switch_is_off(hass):
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
 
-    dev1 = platform.DEVICES[0]
+    ent1 = platform.ENTITIES[0]
 
     # Verify initial state of light
-    state = hass.states.get(dev1.entity_id)
+    state = hass.states.get(ent1.entity_id)
     assert STATE_ON == state.state
     assert state.attributes.get("xy_color") is None
     assert state.attributes.get("brightness") is None
@@ -113,7 +161,7 @@ async def test_flux_when_switch_is_off(hass):
                 switch.DOMAIN: {
                     "platform": "flux",
                     "name": "flux",
-                    "lights": [dev1.entity_id],
+                    "lights": [ent1.entity_id],
                 }
             },
         )
@@ -131,10 +179,10 @@ async def test_flux_before_sunrise(hass):
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
 
-    dev1 = platform.DEVICES[0]
+    ent1 = platform.ENTITIES[0]
 
     # Verify initial state of light
-    state = hass.states.get(dev1.entity_id)
+    state = hass.states.get(ent1.entity_id)
     assert STATE_ON == state.state
     assert state.attributes.get("xy_color") is None
     assert state.attributes.get("brightness") is None
@@ -162,7 +210,7 @@ async def test_flux_before_sunrise(hass):
                 switch.DOMAIN: {
                     "platform": "flux",
                     "name": "flux",
-                    "lights": [dev1.entity_id],
+                    "lights": [ent1.entity_id],
                 }
             },
         )
@@ -184,10 +232,10 @@ async def test_flux_before_sunrise_known_location(hass):
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
 
-    dev1 = platform.DEVICES[0]
+    ent1 = platform.ENTITIES[0]
 
     # Verify initial state of light
-    state = hass.states.get(dev1.entity_id)
+    state = hass.states.get(ent1.entity_id)
     assert STATE_ON == state.state
     assert state.attributes.get("xy_color") is None
     assert state.attributes.get("brightness") is None
@@ -210,7 +258,7 @@ async def test_flux_before_sunrise_known_location(hass):
                 switch.DOMAIN: {
                     "platform": "flux",
                     "name": "flux",
-                    "lights": [dev1.entity_id],
+                    "lights": [ent1.entity_id],
                     # 'brightness': 255,
                     # 'disable_brightness_adjust': True,
                     # 'mode': 'rgb',
@@ -237,10 +285,10 @@ async def test_flux_after_sunrise_before_sunset(hass):
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
 
-    dev1 = platform.DEVICES[0]
+    ent1 = platform.ENTITIES[0]
 
     # Verify initial state of light
-    state = hass.states.get(dev1.entity_id)
+    state = hass.states.get(ent1.entity_id)
     assert STATE_ON == state.state
     assert state.attributes.get("xy_color") is None
     assert state.attributes.get("brightness") is None
@@ -267,7 +315,7 @@ async def test_flux_after_sunrise_before_sunset(hass):
                 switch.DOMAIN: {
                     "platform": "flux",
                     "name": "flux",
-                    "lights": [dev1.entity_id],
+                    "lights": [ent1.entity_id],
                 }
             },
         )
@@ -290,10 +338,10 @@ async def test_flux_after_sunset_before_stop(hass):
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
 
-    dev1 = platform.DEVICES[0]
+    ent1 = platform.ENTITIES[0]
 
     # Verify initial state of light
-    state = hass.states.get(dev1.entity_id)
+    state = hass.states.get(ent1.entity_id)
     assert STATE_ON == state.state
     assert state.attributes.get("xy_color") is None
     assert state.attributes.get("brightness") is None
@@ -320,7 +368,7 @@ async def test_flux_after_sunset_before_stop(hass):
                 switch.DOMAIN: {
                     "platform": "flux",
                     "name": "flux",
-                    "lights": [dev1.entity_id],
+                    "lights": [ent1.entity_id],
                     "stop_time": "22:00",
                 }
             },
@@ -344,10 +392,10 @@ async def test_flux_after_stop_before_sunrise(hass):
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
 
-    dev1 = platform.DEVICES[0]
+    ent1 = platform.ENTITIES[0]
 
     # Verify initial state of light
-    state = hass.states.get(dev1.entity_id)
+    state = hass.states.get(ent1.entity_id)
     assert STATE_ON == state.state
     assert state.attributes.get("xy_color") is None
     assert state.attributes.get("brightness") is None
@@ -374,7 +422,7 @@ async def test_flux_after_stop_before_sunrise(hass):
                 switch.DOMAIN: {
                     "platform": "flux",
                     "name": "flux",
-                    "lights": [dev1.entity_id],
+                    "lights": [ent1.entity_id],
                 }
             },
         )
@@ -397,10 +445,10 @@ async def test_flux_with_custom_start_stop_times(hass):
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
 
-    dev1 = platform.DEVICES[0]
+    ent1 = platform.ENTITIES[0]
 
     # Verify initial state of light
-    state = hass.states.get(dev1.entity_id)
+    state = hass.states.get(ent1.entity_id)
     assert STATE_ON == state.state
     assert state.attributes.get("xy_color") is None
     assert state.attributes.get("brightness") is None
@@ -427,7 +475,7 @@ async def test_flux_with_custom_start_stop_times(hass):
                 switch.DOMAIN: {
                     "platform": "flux",
                     "name": "flux",
-                    "lights": [dev1.entity_id],
+                    "lights": [ent1.entity_id],
                     "start_time": "6:00",
                     "stop_time": "23:30",
                 }
@@ -454,10 +502,10 @@ async def test_flux_before_sunrise_stop_next_day(hass):
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
 
-    dev1 = platform.DEVICES[0]
+    ent1 = platform.ENTITIES[0]
 
     # Verify initial state of light
-    state = hass.states.get(dev1.entity_id)
+    state = hass.states.get(ent1.entity_id)
     assert STATE_ON == state.state
     assert state.attributes.get("xy_color") is None
     assert state.attributes.get("brightness") is None
@@ -484,7 +532,7 @@ async def test_flux_before_sunrise_stop_next_day(hass):
                 switch.DOMAIN: {
                     "platform": "flux",
                     "name": "flux",
-                    "lights": [dev1.entity_id],
+                    "lights": [ent1.entity_id],
                     "stop_time": "01:00",
                 }
             },
@@ -512,10 +560,10 @@ async def test_flux_after_sunrise_before_sunset_stop_next_day(hass):
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
 
-    dev1 = platform.DEVICES[0]
+    ent1 = platform.ENTITIES[0]
 
     # Verify initial state of light
-    state = hass.states.get(dev1.entity_id)
+    state = hass.states.get(ent1.entity_id)
     assert STATE_ON == state.state
     assert state.attributes.get("xy_color") is None
     assert state.attributes.get("brightness") is None
@@ -542,7 +590,7 @@ async def test_flux_after_sunrise_before_sunset_stop_next_day(hass):
                 switch.DOMAIN: {
                     "platform": "flux",
                     "name": "flux",
-                    "lights": [dev1.entity_id],
+                    "lights": [ent1.entity_id],
                     "stop_time": "01:00",
                 }
             },
@@ -570,10 +618,10 @@ async def test_flux_after_sunset_before_midnight_stop_next_day(hass, x):
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
 
-    dev1 = platform.DEVICES[0]
+    ent1 = platform.ENTITIES[0]
 
     # Verify initial state of light
-    state = hass.states.get(dev1.entity_id)
+    state = hass.states.get(ent1.entity_id)
     assert STATE_ON == state.state
     assert state.attributes.get("xy_color") is None
     assert state.attributes.get("brightness") is None
@@ -600,7 +648,7 @@ async def test_flux_after_sunset_before_midnight_stop_next_day(hass, x):
                 switch.DOMAIN: {
                     "platform": "flux",
                     "name": "flux",
-                    "lights": [dev1.entity_id],
+                    "lights": [ent1.entity_id],
                     "stop_time": "01:00",
                 }
             },
@@ -627,10 +675,10 @@ async def test_flux_after_sunset_after_midnight_stop_next_day(hass):
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
 
-    dev1 = platform.DEVICES[0]
+    ent1 = platform.ENTITIES[0]
 
     # Verify initial state of light
-    state = hass.states.get(dev1.entity_id)
+    state = hass.states.get(ent1.entity_id)
     assert STATE_ON == state.state
     assert state.attributes.get("xy_color") is None
     assert state.attributes.get("brightness") is None
@@ -657,7 +705,7 @@ async def test_flux_after_sunset_after_midnight_stop_next_day(hass):
                 switch.DOMAIN: {
                     "platform": "flux",
                     "name": "flux",
-                    "lights": [dev1.entity_id],
+                    "lights": [ent1.entity_id],
                     "stop_time": "01:00",
                 }
             },
@@ -684,10 +732,10 @@ async def test_flux_after_stop_before_sunrise_stop_next_day(hass):
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
 
-    dev1 = platform.DEVICES[0]
+    ent1 = platform.ENTITIES[0]
 
     # Verify initial state of light
-    state = hass.states.get(dev1.entity_id)
+    state = hass.states.get(ent1.entity_id)
     assert STATE_ON == state.state
     assert state.attributes.get("xy_color") is None
     assert state.attributes.get("brightness") is None
@@ -714,7 +762,7 @@ async def test_flux_after_stop_before_sunrise_stop_next_day(hass):
                 switch.DOMAIN: {
                     "platform": "flux",
                     "name": "flux",
-                    "lights": [dev1.entity_id],
+                    "lights": [ent1.entity_id],
                     "stop_time": "01:00",
                 }
             },
@@ -738,10 +786,10 @@ async def test_flux_with_custom_colortemps(hass):
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
 
-    dev1 = platform.DEVICES[0]
+    ent1 = platform.ENTITIES[0]
 
     # Verify initial state of light
-    state = hass.states.get(dev1.entity_id)
+    state = hass.states.get(ent1.entity_id)
     assert STATE_ON == state.state
     assert state.attributes.get("xy_color") is None
     assert state.attributes.get("brightness") is None
@@ -768,7 +816,7 @@ async def test_flux_with_custom_colortemps(hass):
                 switch.DOMAIN: {
                     "platform": "flux",
                     "name": "flux",
-                    "lights": [dev1.entity_id],
+                    "lights": [ent1.entity_id],
                     "start_colortemp": "1000",
                     "stop_colortemp": "6000",
                     "stop_time": "22:00",
@@ -794,10 +842,10 @@ async def test_flux_with_custom_brightness(hass):
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
 
-    dev1 = platform.DEVICES[0]
+    ent1 = platform.ENTITIES[0]
 
     # Verify initial state of light
-    state = hass.states.get(dev1.entity_id)
+    state = hass.states.get(ent1.entity_id)
     assert STATE_ON == state.state
     assert state.attributes.get("xy_color") is None
     assert state.attributes.get("brightness") is None
@@ -824,7 +872,7 @@ async def test_flux_with_custom_brightness(hass):
                 switch.DOMAIN: {
                     "platform": "flux",
                     "name": "flux",
-                    "lights": [dev1.entity_id],
+                    "lights": [ent1.entity_id],
                     "brightness": 255,
                     "stop_time": "22:00",
                 }
@@ -848,23 +896,23 @@ async def test_flux_with_multiple_lights(hass):
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
 
-    dev1, dev2, dev3 = platform.DEVICES
-    common_light.turn_on(hass, entity_id=dev2.entity_id)
+    ent1, ent2, ent3 = platform.ENTITIES
+    common_light.turn_on(hass, entity_id=ent2.entity_id)
     await hass.async_block_till_done()
-    common_light.turn_on(hass, entity_id=dev3.entity_id)
+    common_light.turn_on(hass, entity_id=ent3.entity_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(dev1.entity_id)
+    state = hass.states.get(ent1.entity_id)
     assert STATE_ON == state.state
     assert state.attributes.get("xy_color") is None
     assert state.attributes.get("brightness") is None
 
-    state = hass.states.get(dev2.entity_id)
+    state = hass.states.get(ent2.entity_id)
     assert STATE_ON == state.state
     assert state.attributes.get("xy_color") is None
     assert state.attributes.get("brightness") is None
 
-    state = hass.states.get(dev3.entity_id)
+    state = hass.states.get(ent3.entity_id)
     assert STATE_ON == state.state
     assert state.attributes.get("xy_color") is None
     assert state.attributes.get("brightness") is None
@@ -893,7 +941,7 @@ async def test_flux_with_multiple_lights(hass):
                 switch.DOMAIN: {
                     "platform": "flux",
                     "name": "flux",
-                    "lights": [dev1.entity_id, dev2.entity_id, dev3.entity_id],
+                    "lights": [ent1.entity_id, ent2.entity_id, ent3.entity_id],
                 }
             },
         )
@@ -921,10 +969,10 @@ async def test_flux_with_mired(hass):
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
 
-    dev1 = platform.DEVICES[0]
+    ent1 = platform.ENTITIES[0]
 
     # Verify initial state of light
-    state = hass.states.get(dev1.entity_id)
+    state = hass.states.get(ent1.entity_id)
     assert STATE_ON == state.state
     assert state.attributes.get("color_temp") is None
 
@@ -950,7 +998,7 @@ async def test_flux_with_mired(hass):
                 switch.DOMAIN: {
                     "platform": "flux",
                     "name": "flux",
-                    "lights": [dev1.entity_id],
+                    "lights": [ent1.entity_id],
                     "mode": "mired",
                 }
             },
@@ -972,10 +1020,10 @@ async def test_flux_with_rgb(hass):
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
 
-    dev1 = platform.DEVICES[0]
+    ent1 = platform.ENTITIES[0]
 
     # Verify initial state of light
-    state = hass.states.get(dev1.entity_id)
+    state = hass.states.get(ent1.entity_id)
     assert STATE_ON == state.state
     assert state.attributes.get("color_temp") is None
 
@@ -1001,7 +1049,7 @@ async def test_flux_with_rgb(hass):
                 switch.DOMAIN: {
                     "platform": "flux",
                     "name": "flux",
-                    "lights": [dev1.entity_id],
+                    "lights": [ent1.entity_id],
                     "mode": "rgb",
                 }
             },

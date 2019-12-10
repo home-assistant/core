@@ -3,17 +3,16 @@ import asyncio
 from json import JSONEncoder
 import logging
 import os
-from typing import Dict, List, Optional, Callable, Union, Any, Type
+from typing import Any, Callable, Dict, List, Optional, Type, Union
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.loader import bind_hass
 from homeassistant.util import json as json_util
-from homeassistant.helpers.event import async_call_later
 
-
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
-# mypy: no-warn-return-any
+# mypy: allow-untyped-calls, allow-untyped-defs, no-warn-return-any
+# mypy: no-check-untyped-defs
 
 STORAGE_DIR = ".storage"
 _LOGGER = logging.getLogger(__name__)
@@ -59,7 +58,7 @@ class Store:
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         version: int,
         key: str,
         private: bool = False,
@@ -71,11 +70,11 @@ class Store:
         self.key = key
         self.hass = hass
         self._private = private
-        self._data = None  # type: Optional[Dict[str, Any]]
-        self._unsub_delay_listener = None
-        self._unsub_stop_listener = None
+        self._data: Optional[Dict[str, Any]] = None
+        self._unsub_delay_listener: Optional[CALLBACK_TYPE] = None
+        self._unsub_stop_listener: Optional[CALLBACK_TYPE] = None
         self._write_lock = asyncio.Lock()
-        self._load_task = None  # type: Optional[asyncio.Future]
+        self._load_task: Optional[asyncio.Future] = None
         self._encoder = encoder
 
     @property
@@ -94,6 +93,7 @@ class Store:
         """
         if self._load_task is None:
             self._load_task = self.hass.async_add_job(self._async_load())
+            assert self._load_task is not None
 
         return await self._load_task
 
@@ -136,9 +136,7 @@ class Store:
         await self._async_handle_write_data()
 
     @callback
-    def async_delay_save(
-        self, data_func: Callable[[], Dict], delay: Optional[int] = None
-    ):
+    def async_delay_save(self, data_func: Callable[[], Dict], delay: float = 0) -> None:
         """Save data with an optional delay."""
         self._data = {"version": self.version, "key": self.key, "data_func": data_func}
 
@@ -201,7 +199,7 @@ class Store:
             except (json_util.SerializationError, json_util.WriteError) as err:
                 _LOGGER.error("Error writing config for %s: %s", self.key, err)
 
-    def _write_data(self, path: str, data: Dict):
+    def _write_data(self, path: str, data: Dict) -> None:
         """Write the data."""
         if not os.path.isdir(os.path.dirname(path)):
             os.makedirs(os.path.dirname(path))

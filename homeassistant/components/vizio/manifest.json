@@ -1,7 +1,7 @@
 {
   "domain": "vizio",
   "name": "Vizio",
-  "documentation": "https://www.home-assistant.io/components/vizio",
+  "documentation": "https://www.home-assistant.io/integrations/vizio",
   "requirements": [
     "pyvizio==0.0.7"
   ],

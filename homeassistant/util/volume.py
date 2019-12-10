@@ -2,13 +2,14 @@
 
 import logging
 from numbers import Number
+
 from homeassistant.const import (
+    UNIT_NOT_RECOGNIZED_TEMPLATE,
+    VOLUME,
+    VOLUME_FLUID_OUNCE,
+    VOLUME_GALLONS,
     VOLUME_LITERS,
     VOLUME_MILLILITERS,
-    VOLUME_GALLONS,
-    VOLUME_FLUID_OUNCE,
-    VOLUME,
-    UNIT_NOT_RECOGNIZED_TEMPLATE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +35,7 @@ def convert(volume: float, from_unit: str, to_unit: str) -> float:
         raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(to_unit, VOLUME))
 
     if not isinstance(volume, Number):
-        raise TypeError("{} is not of numeric type".format(volume))
+        raise TypeError(f"{volume} is not of numeric type")
 
     # type ignore: https://github.com/python/mypy/issues/7207
     if from_unit == to_unit:  # type: ignore

@@ -3,6 +3,8 @@ from datetime import timedelta
 import logging
 from typing import List
 
+import boto3
+from ipify import exceptions, get_ip
 import voluptuous as vol
 
 from homeassistant.const import CONF_DOMAIN, CONF_TTL, CONF_ZONE
@@ -72,10 +74,6 @@ def _update_route53(
     records: List[str],
     ttl: int,
 ):
-    import boto3
-    from ipify import get_ip
-    from ipify import exceptions
-
     _LOGGER.debug("Starting update for zone %s", zone)
 
     client = boto3.client(
@@ -104,7 +102,7 @@ def _update_route53(
             {
                 "Action": "UPSERT",
                 "ResourceRecordSet": {
-                    "Name": "{}.{}".format(record, domain),
+                    "Name": f"{record}.{domain}",
                     "Type": "A",
                     "TTL": ttl,
                     "ResourceRecords": [{"Value": ipaddress}],

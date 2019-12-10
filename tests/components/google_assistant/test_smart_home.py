@@ -1,39 +1,40 @@
 """Test Google Smart Home."""
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
+
 import pytest
 
-from homeassistant.core import State, EVENT_CALL_SERVICE
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS
-from homeassistant.setup import async_setup_component
 from homeassistant.components import camera
 from homeassistant.components.climate.const import (
-    ATTR_MIN_TEMP,
     ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
     HVAC_MODE_HEAT,
-)
-from homeassistant.components.google_assistant import (
-    const,
-    trait,
-    smart_home as sh,
-    EVENT_COMMAND_RECEIVED,
-    EVENT_QUERY_RECEIVED,
-    EVENT_SYNC_RECEIVED,
 )
 from homeassistant.components.demo.binary_sensor import DemoBinarySensor
 from homeassistant.components.demo.cover import DemoCover
 from homeassistant.components.demo.light import DemoLight
 from homeassistant.components.demo.media_player import AbstractDemoPlayer
 from homeassistant.components.demo.switch import DemoSwitch
-
-from homeassistant.helpers import device_registry
-from tests.common import (
-    mock_device_registry,
-    mock_registry,
-    mock_area_registry,
-    mock_coro,
+from homeassistant.components.google_assistant import (
+    EVENT_COMMAND_RECEIVED,
+    EVENT_QUERY_RECEIVED,
+    EVENT_SYNC_RECEIVED,
+    const,
+    smart_home as sh,
+    trait,
 )
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, __version__
+from homeassistant.core import EVENT_CALL_SERVICE, State
+from homeassistant.helpers import device_registry
+from homeassistant.setup import async_setup_component
 
 from . import BASIC_CONFIG, MockConfig
+
+from tests.common import (
+    mock_area_registry,
+    mock_coro,
+    mock_device_registry,
+    mock_registry,
+)
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
 
@@ -226,7 +227,7 @@ async def test_query_message(hass):
         "payload": {
             "devices": {
                 "light.non_existing": {"online": False},
-                "light.demo_light": {"on": False, "online": True},
+                "light.demo_light": {"on": False, "online": True, "brightness": 0},
                 "light.another_light": {
                     "on": True,
                     "online": True,
@@ -455,7 +456,7 @@ async def test_serialize_input_boolean(hass):
     state = State("input_boolean.bla", "on")
     # pylint: disable=protected-access
     entity = sh.GoogleEntity(hass, BASIC_CONFIG, state)
-    result = await entity.sync_serialize()
+    result = await entity.sync_serialize(None)
     assert result == {
         "id": "input_boolean.bla",
         "attributes": {},
@@ -466,13 +467,16 @@ async def test_serialize_input_boolean(hass):
     }
 
 
-async def test_unavailable_state_doesnt_sync(hass):
-    """Test that an unavailable entity does not sync over."""
-    light = DemoLight(None, "Demo Light", state=False)
+async def test_unavailable_state_does_sync(hass):
+    """Test that an unavailable entity does sync over."""
+    light = DemoLight(None, "Demo Light", state=False, hs_color=(180, 75))
     light.hass = hass
     light.entity_id = "light.demo_light"
     light._available = False  # pylint: disable=protected-access
     await light.async_update_ha_state()
+
+    events = []
+    hass.bus.async_listen(EVENT_SYNC_RECEIVED, events.append)
 
     result = await sh.async_handle_message(
         hass,
@@ -483,8 +487,35 @@ async def test_unavailable_state_doesnt_sync(hass):
 
     assert result == {
         "requestId": REQ_ID,
-        "payload": {"agentUserId": "test-agent", "devices": []},
+        "payload": {
+            "agentUserId": "test-agent",
+            "devices": [
+                {
+                    "id": "light.demo_light",
+                    "name": {"name": "Demo Light"},
+                    "traits": [
+                        trait.TRAIT_BRIGHTNESS,
+                        trait.TRAIT_ONOFF,
+                        trait.TRAIT_COLOR_SETTING,
+                    ],
+                    "type": const.TYPE_LIGHT,
+                    "willReportState": False,
+                    "attributes": {
+                        "colorModel": "hsv",
+                        "colorTemperatureRange": {
+                            "temperatureMinK": 2000,
+                            "temperatureMaxK": 6535,
+                        },
+                    },
+                }
+            ],
+        },
     }
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].event_type == EVENT_SYNC_RECEIVED
+    assert events[0].data == {"request_id": REQ_ID}
 
 
 @pytest.mark.parametrize(
@@ -498,6 +529,7 @@ async def test_unavailable_state_doesnt_sync(hass):
 async def test_device_class_switch(hass, device_class, google_type):
     """Test that a cover entity syncs to the correct device type."""
     sensor = DemoSwitch(
+        None,
         "Demo Sensor",
         state=False,
         icon="mdi:switch",
@@ -545,7 +577,9 @@ async def test_device_class_switch(hass, device_class, google_type):
 )
 async def test_device_class_binary_sensor(hass, device_class, google_type):
     """Test that a binary entity syncs to the correct device type."""
-    sensor = DemoBinarySensor("Demo Sensor", state=False, device_class=device_class)
+    sensor = DemoBinarySensor(
+        None, "Demo Sensor", state=False, device_class=device_class
+    )
     sensor.hass = hass
     sensor.entity_id = "binary_sensor.demo_sensor"
     await sensor.async_update_ha_state()
@@ -585,7 +619,7 @@ async def test_device_class_binary_sensor(hass, device_class, google_type):
 )
 async def test_device_class_cover(hass, device_class, google_type):
     """Test that a binary entity syncs to the correct device type."""
-    sensor = DemoCover(hass, "Demo Sensor", device_class=device_class)
+    sensor = DemoCover(None, hass, "Demo Sensor", device_class=device_class)
     sensor.hass = hass
     sensor.entity_id = "cover.demo_sensor"
     await sensor.async_update_ha_state()
@@ -657,14 +691,20 @@ async def test_device_media_player(hass, device_class, google_type):
 
 async def test_query_disconnect(hass):
     """Test a disconnect message."""
-    result = await sh.async_handle_message(
-        hass,
-        BASIC_CONFIG,
-        "test-agent",
-        {"inputs": [{"intent": "action.devices.DISCONNECT"}], "requestId": REQ_ID},
-    )
-
+    config = MockConfig(hass=hass)
+    config.async_enable_report_state()
+    assert config._unsub_report_state is not None
+    with patch.object(
+        config, "async_disconnect_agent_user", side_effect=mock_coro
+    ) as mock_disconnect:
+        result = await sh.async_handle_message(
+            hass,
+            config,
+            "test-agent",
+            {"inputs": [{"intent": "action.devices.DISCONNECT"}], "requestId": REQ_ID},
+        )
     assert result is None
+    assert len(mock_disconnect.mock_calls) == 1
 
 
 async def test_trait_execute_adding_query_data(hass):
@@ -727,4 +767,143 @@ async def test_trait_execute_adding_query_data(hass):
                 }
             ]
         },
+    }
+
+
+async def test_identify(hass):
+    """Test identify message."""
+    user_agent_id = "mock-user-id"
+    proxy_device_id = user_agent_id
+    result = await sh.async_handle_message(
+        hass,
+        BASIC_CONFIG,
+        user_agent_id,
+        {
+            "requestId": REQ_ID,
+            "inputs": [
+                {
+                    "intent": "action.devices.IDENTIFY",
+                    "payload": {
+                        "device": {
+                            "mdnsScanData": {
+                                "additionals": [
+                                    {
+                                        "type": "TXT",
+                                        "class": "IN",
+                                        "name": "devhome._home-assistant._tcp.local",
+                                        "ttl": 4500,
+                                        "data": [
+                                            "version=0.101.0.dev0",
+                                            "base_url=http://192.168.1.101:8123",
+                                            "requires_api_password=true",
+                                        ],
+                                    }
+                                ]
+                            }
+                        },
+                        "structureData": {},
+                    },
+                }
+            ],
+            "devices": [
+                {
+                    "id": "light.ceiling_lights",
+                    "customData": {
+                        "httpPort": 8123,
+                        "httpSSL": False,
+                        "proxyDeviceId": proxy_device_id,
+                        "webhookId": "dde3b9800a905e886cc4d38e226a6e7e3f2a6993d2b9b9f63d13e42ee7de3219",
+                    },
+                }
+            ],
+        },
+    )
+
+    assert result == {
+        "requestId": REQ_ID,
+        "payload": {
+            "device": {
+                "id": proxy_device_id,
+                "isLocalOnly": True,
+                "isProxy": True,
+                "deviceInfo": {
+                    "hwVersion": "UNKNOWN_HW_VERSION",
+                    "manufacturer": "Home Assistant",
+                    "model": "Home Assistant",
+                    "swVersion": __version__,
+                },
+            }
+        },
+    }
+
+
+async def test_reachable_devices(hass):
+    """Test REACHABLE_DEVICES intent."""
+    # Matching passed in device.
+    hass.states.async_set("light.ceiling_lights", "on")
+
+    # Unsupported entity
+    hass.states.async_set("not_supported.entity", "something")
+
+    # Excluded via config
+    hass.states.async_set("light.not_expose", "on")
+
+    # Not passed in as google_id
+    hass.states.async_set("light.not_mentioned", "on")
+
+    config = MockConfig(
+        should_expose=lambda state: state.entity_id != "light.not_expose"
+    )
+
+    user_agent_id = "mock-user-id"
+    proxy_device_id = user_agent_id
+
+    result = await sh.async_handle_message(
+        hass,
+        config,
+        user_agent_id,
+        {
+            "requestId": REQ_ID,
+            "inputs": [
+                {
+                    "intent": "action.devices.REACHABLE_DEVICES",
+                    "payload": {
+                        "device": {
+                            "proxyDevice": {
+                                "id": proxy_device_id,
+                                "customData": "{}",
+                                "proxyData": "{}",
+                            }
+                        },
+                        "structureData": {},
+                    },
+                }
+            ],
+            "devices": [
+                {
+                    "id": "light.ceiling_lights",
+                    "customData": {
+                        "httpPort": 8123,
+                        "httpSSL": False,
+                        "proxyDeviceId": proxy_device_id,
+                        "webhookId": "dde3b9800a905e886cc4d38e226a6e7e3f2a6993d2b9b9f63d13e42ee7de3219",
+                    },
+                },
+                {
+                    "id": "light.not_expose",
+                    "customData": {
+                        "httpPort": 8123,
+                        "httpSSL": False,
+                        "proxyDeviceId": proxy_device_id,
+                        "webhookId": "dde3b9800a905e886cc4d38e226a6e7e3f2a6993d2b9b9f63d13e42ee7de3219",
+                    },
+                },
+                {"id": proxy_device_id, "customData": {}},
+            ],
+        },
+    )
+
+    assert result == {
+        "requestId": REQ_ID,
+        "payload": {"devices": [{"verificationId": "light.ceiling_lights"}]},
     }

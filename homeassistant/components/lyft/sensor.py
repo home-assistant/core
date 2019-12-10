@@ -1,13 +1,16 @@
 """Support for the Lyft API."""
-import logging
 from datetime import timedelta
+import logging
 
+from lyft_rides.auth import ClientCredentialGrant
+from lyft_rides.client import LyftRidesClient
+from lyft_rides.errors import APIError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,8 +41,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Lyft sensor."""
-    from lyft_rides.auth import ClientCredentialGrant
-    from lyft_rides.errors import APIError
 
     auth_flow = ClientCredentialGrant(
         client_id=config.get(CONF_CLIENT_ID),
@@ -85,7 +86,7 @@ class LyftSensor(Entity):
         self._sensortype = sensorType
         self._name = "{} {}".format(self._product["display_name"], self._sensortype)
         if "lyft" not in self._name.lower():
-            self._name = "Lyft{}".format(self._name)
+            self._name = f"Lyft{self._name}"
         if self._sensortype == "time":
             self._unit_of_measurement = "min"
         elif self._sensortype == "price":
@@ -208,7 +209,6 @@ class LyftEstimate:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest product info and estimates from the Lyft API."""
-        from lyft_rides.errors import APIError
 
         try:
             self.fetch_data()
@@ -217,7 +217,6 @@ class LyftEstimate:
 
     def fetch_data(self):
         """Get the latest product info and estimates from the Lyft API."""
-        from lyft_rides.client import LyftRidesClient
 
         client = LyftRidesClient(self._session)
 

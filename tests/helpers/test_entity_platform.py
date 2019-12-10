@@ -1,30 +1,29 @@
 """Tests for the EntityPlatform helper."""
 import asyncio
-import logging
-from unittest.mock import patch, Mock, MagicMock
 from datetime import timedelta
+import logging
+from unittest.mock import MagicMock, Mock, patch
 
 import asynctest
 import pytest
 
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import entity_platform, entity_registry
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_component import (
-    EntityComponent,
     DEFAULT_SCAN_INTERVAL,
+    EntityComponent,
 )
-from homeassistant.helpers import entity_platform, entity_registry
-
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
-    MockPlatform,
-    async_fire_time_changed,
-    mock_registry,
+    MockConfigEntry,
     MockEntity,
     MockEntityPlatform,
-    MockConfigEntry,
+    MockPlatform,
+    async_fire_time_changed,
     mock_entity_platform,
+    mock_registry,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -491,7 +490,7 @@ async def test_registry_respect_entity_disabled(hass):
     platform = MockEntityPlatform(hass)
     entity = MockEntity(unique_id="1234")
     await platform.async_add_entities([entity])
-    assert entity.entity_id is None
+    assert entity.entity_id == "test_domain.world"
     assert hass.states.async_entity_ids() == []
 
 
@@ -775,3 +774,22 @@ async def test_device_info_not_overrides(hass):
     assert device.id == device2.id
     assert device2.manufacturer == "test-manufacturer"
     assert device2.model == "test-model"
+
+
+async def test_entity_disabled_by_integration(hass):
+    """Test entity disabled by integration."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+
+    entity_default = MockEntity(unique_id="default")
+    entity_disabled = MockEntity(
+        unique_id="disabled", entity_registry_enabled_default=False
+    )
+
+    await component.async_add_entities([entity_default, entity_disabled])
+
+    registry = await hass.helpers.entity_registry.async_get_registry()
+
+    entry_default = registry.async_get_or_create(DOMAIN, DOMAIN, "default")
+    assert entry_default.disabled_by is None
+    entry_disabled = registry.async_get_or_create(DOMAIN, DOMAIN, "disabled")
+    assert entry_disabled.disabled_by == "integration"

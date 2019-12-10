@@ -2,22 +2,23 @@
 Support for Somfy hubs.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/somfy/
+https://home-assistant.io/integrations/somfy/
 """
-import logging
+import asyncio
 from datetime import timedelta
-from functools import partial
+import logging
 
+from requests import HTTPError
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant import config_entries
 from homeassistant.components.somfy import config_flow
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TOKEN
+from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
+
+from . import api
 
 API = "api"
 
@@ -25,7 +26,7 @@ DEVICES = "devices"
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 DOMAIN = "somfy"
 
@@ -47,24 +48,26 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SOMFY_COMPONENTS = ["cover"]
+SOMFY_COMPONENTS = ["cover", "switch"]
 
 
 async def async_setup(hass, config):
     """Set up the Somfy component."""
+    hass.data[DOMAIN] = {}
+
     if DOMAIN not in config:
         return True
 
-    hass.data[DOMAIN] = {}
-
-    config_flow.register_flow_implementation(
-        hass, config[DOMAIN][CONF_CLIENT_ID], config[DOMAIN][CONF_CLIENT_SECRET]
-    )
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-        )
+    config_flow.SomfyFlowHandler.async_register_implementation(
+        hass,
+        config_entry_oauth2_flow.LocalOAuth2Implementation(
+            hass,
+            DOMAIN,
+            config[DOMAIN][CONF_CLIENT_ID],
+            config[DOMAIN][CONF_CLIENT_SECRET],
+            "https://accounts.somfy.com/oauth/oauth/v2/auth",
+            "https://accounts.somfy.com/oauth/oauth/v2/token",
+        ),
     )
 
     return True
@@ -72,24 +75,17 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Somfy from a config entry."""
-
-    def token_saver(token):
-        _LOGGER.debug("Saving updated token")
-        entry.data[CONF_TOKEN] = token
-        update_entry = partial(
-            hass.config_entries.async_update_entry, data={**entry.data}
+    # Backwards compat
+    if "auth_implementation" not in entry.data:
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, "auth_implementation": DOMAIN}
         )
-        hass.add_job(update_entry, entry)
 
-    # Force token update.
-    from pymfy.api.somfy_api import SomfyApi
-
-    hass.data[DOMAIN][API] = SomfyApi(
-        entry.data["refresh_args"]["client_id"],
-        entry.data["refresh_args"]["client_secret"],
-        token=entry.data[CONF_TOKEN],
-        token_updater=token_saver,
+    implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
+        hass, entry
     )
+
+    hass.data[DOMAIN][API] = api.ConfigEntrySomfyApi(hass, entry, implementation)
 
     await update_all_devices(hass)
 
@@ -104,16 +100,22 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload a config entry."""
     hass.data[DOMAIN].pop(API, None)
+    await asyncio.gather(
+        *[
+            hass.config_entries.async_forward_entry_unload(entry, component)
+            for component in SOMFY_COMPONENTS
+        ]
+    )
     return True
 
 
 class SomfyEntity(Entity):
     """Representation of a generic Somfy device."""
 
-    def __init__(self, device, api):
+    def __init__(self, device, somfy_api):
         """Initialize the Somfy device."""
         self.device = device
-        self.api = api
+        self.api = somfy_api
 
     @property
     def unique_id(self):
@@ -155,13 +157,8 @@ class SomfyEntity(Entity):
 @Throttle(SCAN_INTERVAL)
 async def update_all_devices(hass):
     """Update all the devices."""
-    from requests import HTTPError
-    from oauthlib.oauth2 import TokenExpiredError
-
     try:
         data = hass.data[DOMAIN]
         data[DEVICES] = await hass.async_add_executor_job(data[API].get_devices)
-    except TokenExpiredError:
-        _LOGGER.warning("Cannot update devices due to expired token")
-    except HTTPError:
-        _LOGGER.warning("Cannot update devices")
+    except HTTPError as err:
+        _LOGGER.warning("Cannot update devices: %s", err.response.status_code)

@@ -6,6 +6,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import group
+from homeassistant.components.recorder.models import States
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -216,7 +217,7 @@ class Plant(Entity):
             )
         else:
             raise HomeAssistantError(
-                "Unknown reading from sensor {}: {}".format(entity_id, value)
+                f"Unknown reading from sensor {entity_id}: {value}"
             )
         if ATTR_UNIT_OF_MEASUREMENT in new_state.attributes:
             self._unit_of_measurement[reading] = new_state.attributes.get(
@@ -229,10 +230,10 @@ class Plant(Entity):
         result = []
         for sensor_name in self._sensormap.values():
             params = self.READINGS[sensor_name]
-            value = getattr(self, "_{}".format(sensor_name))
+            value = getattr(self, f"_{sensor_name}")
             if value is not None:
                 if value == STATE_UNAVAILABLE:
-                    result.append("{} unavailable".format(sensor_name))
+                    result.append(f"{sensor_name} unavailable")
                 else:
                     if sensor_name == READING_BRIGHTNESS:
                         result.append(
@@ -260,14 +261,14 @@ class Plant(Entity):
         if "min" in params and params["min"] in self._config:
             min_value = self._config[params["min"]]
             if value < min_value:
-                return "{} low".format(sensor_name)
+                return f"{sensor_name} low"
 
     def _check_max(self, sensor_name, value, params):
         """If configured, check the value against the defined maximum value."""
         if "max" in params and params["max"] in self._config:
             max_value = self._config[params["max"]]
             if value > max_value:
-                return "{} high".format(sensor_name)
+                return f"{sensor_name} high"
         return None
 
     async def async_added_to_hass(self):
@@ -288,7 +289,6 @@ class Plant(Entity):
 
         This only needs to be done once during startup.
         """
-        from homeassistant.components.recorder.models import States
 
         start_date = datetime.now() - timedelta(days=self._conf_check_days)
         entity_id = self._readingmap.get(READING_BRIGHTNESS)
@@ -352,7 +352,7 @@ class Plant(Entity):
         }
 
         for reading in self._sensormap.values():
-            attrib[reading] = getattr(self, "_{}".format(reading))
+            attrib[reading] = getattr(self, f"_{reading}")
 
         if self._brightness_history.max is not None:
             attrib[ATTR_MAX_BRIGHTNESS_HISTORY] = self._brightness_history.max

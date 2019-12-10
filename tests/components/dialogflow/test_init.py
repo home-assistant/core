@@ -1,4 +1,5 @@
 """The tests for the Dialogflow component."""
+import copy
 import json
 from unittest.mock import Mock
 
@@ -90,108 +91,16 @@ async def fixture(hass, aiohttp_client):
     return await aiohttp_client(hass.http.app), webhook_id
 
 
-async def test_intent_action_incomplete(fixture):
-    """Test when action is not completed."""
-    mock_client, webhook_id = fixture
-    data = {
+class _Data:
+    _v1 = {
         "id": REQUEST_ID,
         "timestamp": REQUEST_TIMESTAMP,
         "result": {
             "source": "agent",
             "resolvedQuery": "my zodiac sign is virgo",
-            "speech": "",
-            "action": "GetZodiacHoroscopeIntent",
-            "actionIncomplete": True,
-            "parameters": {"ZodiacSign": "virgo"},
-            "metadata": {
-                "intentId": INTENT_ID,
-                "webhookUsed": "true",
-                "webhookForSlotFillingUsed": "false",
-                "intentName": INTENT_NAME,
-            },
-            "fulfillment": {"speech": "", "messages": [{"type": 0, "speech": ""}]},
-            "score": 1,
-        },
-        "status": {"code": 200, "errorType": "success"},
-        "sessionId": SESSION_ID,
-        "originalRequest": None,
-    }
-
-    response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
-    )
-    assert 200 == response.status
-    assert "" == await response.text()
-
-
-async def test_intent_slot_filling(fixture):
-    """Test when Dialogflow asks for slot-filling return none."""
-    mock_client, webhook_id = fixture
-    data = {
-        "id": REQUEST_ID,
-        "timestamp": REQUEST_TIMESTAMP,
-        "result": {
-            "source": "agent",
-            "resolvedQuery": "my zodiac sign is",
-            "speech": "",
-            "action": "GetZodiacHoroscopeIntent",
-            "actionIncomplete": True,
-            "parameters": {"ZodiacSign": ""},
-            "contexts": [
-                {
-                    "name": CONTEXT_NAME,
-                    "parameters": {"ZodiacSign.original": "", "ZodiacSign": ""},
-                    "lifespan": 2,
-                },
-                {
-                    "name": "tests_ha_dialog_context",
-                    "parameters": {"ZodiacSign.original": "", "ZodiacSign": ""},
-                    "lifespan": 2,
-                },
-                {
-                    "name": "tests_ha_dialog_params_zodiacsign",
-                    "parameters": {"ZodiacSign.original": "", "ZodiacSign": ""},
-                    "lifespan": 1,
-                },
-            ],
-            "metadata": {
-                "intentId": INTENT_ID,
-                "webhookUsed": "true",
-                "webhookForSlotFillingUsed": "true",
-                "intentName": INTENT_NAME,
-            },
-            "fulfillment": {
-                "speech": "What is the ZodiacSign?",
-                "messages": [{"type": 0, "speech": "What is the ZodiacSign?"}],
-            },
-            "score": 0.77,
-        },
-        "status": {"code": 200, "errorType": "success"},
-        "sessionId": SESSION_ID,
-        "originalRequest": None,
-    }
-
-    response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
-    )
-    assert 200 == response.status
-    assert "" == await response.text()
-
-
-async def test_intent_request_with_parameters(fixture):
-    """Test a request with parameters."""
-    mock_client, webhook_id = fixture
-    data = {
-        "id": REQUEST_ID,
-        "timestamp": REQUEST_TIMESTAMP,
-        "result": {
-            "source": "agent",
-            "resolvedQuery": "my zodiac sign is virgo",
-            "speech": "",
             "action": "GetZodiacHoroscopeIntent",
             "actionIncomplete": False,
             "parameters": {"ZodiacSign": "virgo"},
-            "contexts": [],
             "metadata": {
                 "intentId": INTENT_ID,
                 "webhookUsed": "true",
@@ -205,6 +114,122 @@ async def test_intent_request_with_parameters(fixture):
         "sessionId": SESSION_ID,
         "originalRequest": None,
     }
+
+    _v2 = {
+        "responseId": REQUEST_ID,
+        "timestamp": REQUEST_TIMESTAMP,
+        "queryResult": {
+            "queryText": "my zodiac sign is virgo",
+            "action": "GetZodiacHoroscopeIntent",
+            "allRequiredParamsPresent": True,
+            "parameters": {"ZodiacSign": "virgo"},
+            "intent": {
+                "name": INTENT_ID,
+                "webhookState": "true",
+                "displayName": INTENT_NAME,
+            },
+            "fulfillment": {"text": "", "messages": [{"type": 0, "speech": ""}]},
+            "intentDetectionConfidence": 1,
+        },
+        "status": {"code": 200, "errorType": "success"},
+        "session": SESSION_ID,
+        "originalDetectIntentRequest": None,
+    }
+
+    @property
+    def v1(self):
+        return copy.deepcopy(self._v1)
+
+    @property
+    def v2(self):
+        return copy.deepcopy(self._v2)
+
+
+Data = _Data()
+
+
+async def test_v1_data():
+    """Test for version 1 api based on message."""
+    assert dialogflow.get_api_version(Data.v1) == 1
+
+
+async def test_v2_data():
+    """Test for version 2 api based on message."""
+    assert dialogflow.get_api_version(Data.v2) == 2
+
+
+async def test_intent_action_incomplete_v1(fixture):
+    """Test when action is not completed."""
+    mock_client, webhook_id = fixture
+    data = Data.v1
+    data["result"]["actionIncomplete"] = True
+
+    response = await mock_client.post(
+        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+    )
+    assert 200 == response.status
+    assert "" == await response.text()
+
+
+async def test_intent_action_incomplete_v2(fixture):
+    """Test when action is not completed."""
+    mock_client, webhook_id = fixture
+    data = Data.v2
+    data["queryResult"]["allRequiredParamsPresent"] = False
+
+    response = await mock_client.post(
+        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+    )
+    assert 200 == response.status
+    assert "" == await response.text()
+
+
+async def test_intent_slot_filling_v1(fixture):
+    """Test when Dialogflow asks for slot-filling return none."""
+    mock_client, webhook_id = fixture
+
+    data = Data.v1
+    data["result"].update(
+        resolvedQuery="my zodiac sign is",
+        speech="",
+        actionIncomplete=True,
+        parameters={"ZodiacSign": ""},
+        contexts=[
+            {
+                "name": CONTEXT_NAME,
+                "parameters": {"ZodiacSign.original": "", "ZodiacSign": ""},
+                "lifespan": 2,
+            },
+            {
+                "name": "tests_ha_dialog_context",
+                "parameters": {"ZodiacSign.original": "", "ZodiacSign": ""},
+                "lifespan": 2,
+            },
+            {
+                "name": "tests_ha_dialog_params_zodiacsign",
+                "parameters": {"ZodiacSign.original": "", "ZodiacSign": ""},
+                "lifespan": 1,
+            },
+        ],
+        fulfillment={
+            "speech": "What is the ZodiacSign?",
+            "messages": [{"type": 0, "speech": "What is the ZodiacSign?"}],
+        },
+        score=0.77,
+    )
+    data["result"]["metadata"].update(webhookForSlotFillingUsed="true")
+
+    response = await mock_client.post(
+        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+    )
+    assert 200 == response.status
+    assert "" == await response.text()
+
+
+async def test_intent_request_with_parameters_v1(fixture):
+    """Test a request with parameters."""
+    mock_client, webhook_id = fixture
+    data = Data.v1
     response = await mock_client.post(
         "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
     )
@@ -213,33 +238,23 @@ async def test_intent_request_with_parameters(fixture):
     assert "You told us your sign is virgo." == text
 
 
-async def test_intent_request_with_parameters_but_empty(fixture):
+async def test_intent_request_with_parameters_v2(fixture):
+    """Test a request with parameters."""
+    mock_client, webhook_id = fixture
+    data = Data.v2
+    response = await mock_client.post(
+        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+    )
+    assert 200 == response.status
+    text = (await response.json()).get("fulfillmentText")
+    assert "You told us your sign is virgo." == text
+
+
+async def test_intent_request_with_parameters_but_empty_v1(fixture):
     """Test a request with parameters but empty value."""
     mock_client, webhook_id = fixture
-    data = {
-        "id": REQUEST_ID,
-        "timestamp": REQUEST_TIMESTAMP,
-        "result": {
-            "source": "agent",
-            "resolvedQuery": "my zodiac sign is virgo",
-            "speech": "",
-            "action": "GetZodiacHoroscopeIntent",
-            "actionIncomplete": False,
-            "parameters": {"ZodiacSign": ""},
-            "contexts": [],
-            "metadata": {
-                "intentId": INTENT_ID,
-                "webhookUsed": "true",
-                "webhookForSlotFillingUsed": "false",
-                "intentName": INTENT_NAME,
-            },
-            "fulfillment": {"speech": "", "messages": [{"type": 0, "speech": ""}]},
-            "score": 1,
-        },
-        "status": {"code": 200, "errorType": "success"},
-        "sessionId": SESSION_ID,
-        "originalRequest": None,
-    }
+    data = Data.v1
+    data["result"].update(parameters={"ZodiacSign": ""})
     response = await mock_client.post(
         "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
     )
@@ -248,33 +263,30 @@ async def test_intent_request_with_parameters_but_empty(fixture):
     assert "You told us your sign is ." == text
 
 
-async def test_intent_request_without_slots(hass, fixture):
+async def test_intent_request_with_parameters_but_empty_v2(fixture):
+    """Test a request with parameters but empty value."""
+    mock_client, webhook_id = fixture
+    data = Data.v2
+    data["queryResult"].update(parameters={"ZodiacSign": ""})
+    response = await mock_client.post(
+        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+    )
+    assert 200 == response.status
+    text = (await response.json()).get("fulfillmentText")
+    assert "You told us your sign is ." == text
+
+
+async def test_intent_request_without_slots_v1(hass, fixture):
     """Test a request without slots."""
     mock_client, webhook_id = fixture
-    data = {
-        "id": REQUEST_ID,
-        "timestamp": REQUEST_TIMESTAMP,
-        "result": {
-            "source": "agent",
-            "resolvedQuery": "where are we",
-            "speech": "",
-            "action": "WhereAreWeIntent",
-            "actionIncomplete": False,
-            "parameters": {},
-            "contexts": [],
-            "metadata": {
-                "intentId": INTENT_ID,
-                "webhookUsed": "true",
-                "webhookForSlotFillingUsed": "false",
-                "intentName": INTENT_NAME,
-            },
-            "fulfillment": {"speech": "", "messages": [{"type": 0, "speech": ""}]},
-            "score": 1,
-        },
-        "status": {"code": 200, "errorType": "success"},
-        "sessionId": SESSION_ID,
-        "originalRequest": None,
-    }
+    data = Data.v1
+    data["result"].update(
+        resolvedQuery="where are we",
+        action="WhereAreWeIntent",
+        parameters={},
+        contexts=[],
+    )
+
     response = await mock_client.post(
         "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
     )
@@ -294,37 +306,45 @@ async def test_intent_request_without_slots(hass, fixture):
     assert "You are both home, you silly" == text
 
 
-async def test_intent_request_calling_service(fixture, calls):
+async def test_intent_request_without_slots_v2(hass, fixture):
+    """Test a request without slots."""
+    mock_client, webhook_id = fixture
+    data = Data.v2
+    data["queryResult"].update(
+        queryText="where are we",
+        action="WhereAreWeIntent",
+        parameters={},
+        outputContexts=[],
+    )
+
+    response = await mock_client.post(
+        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+    )
+    assert 200 == response.status
+    text = (await response.json()).get("fulfillmentText")
+
+    assert "Anne Therese is at unknown and Paulus is at unknown" == text
+
+    hass.states.async_set("device_tracker.paulus", "home")
+    hass.states.async_set("device_tracker.anne_therese", "home")
+
+    response = await mock_client.post(
+        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+    )
+    assert 200 == response.status
+    text = (await response.json()).get("fulfillmentText")
+    assert "You are both home, you silly" == text
+
+
+async def test_intent_request_calling_service_v1(fixture, calls):
     """Test a request for calling a service.
 
     If this request is done async the test could finish before the action
     has been executed. Hard to test because it will be a race condition.
     """
     mock_client, webhook_id = fixture
-    data = {
-        "id": REQUEST_ID,
-        "timestamp": REQUEST_TIMESTAMP,
-        "result": {
-            "source": "agent",
-            "resolvedQuery": "my zodiac sign is virgo",
-            "speech": "",
-            "action": "CallServiceIntent",
-            "actionIncomplete": False,
-            "parameters": {"ZodiacSign": "virgo"},
-            "contexts": [],
-            "metadata": {
-                "intentId": INTENT_ID,
-                "webhookUsed": "true",
-                "webhookForSlotFillingUsed": "false",
-                "intentName": INTENT_NAME,
-            },
-            "fulfillment": {"speech": "", "messages": [{"type": 0, "speech": ""}]},
-            "score": 1,
-        },
-        "status": {"code": 200, "errorType": "success"},
-        "sessionId": SESSION_ID,
-        "originalRequest": None,
-    }
+    data = Data.v1
+    data["result"]["action"] = "CallServiceIntent"
     call_count = len(calls)
     response = await mock_client.post(
         "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
@@ -338,33 +358,34 @@ async def test_intent_request_calling_service(fixture, calls):
     assert "virgo" == call.data.get("hello")
 
 
-async def test_intent_with_no_action(fixture):
+async def test_intent_request_calling_service_v2(fixture, calls):
+    """Test a request for calling a service.
+
+    If this request is done async the test could finish before the action
+    has been executed. Hard to test because it will be a race condition.
+    """
+    mock_client, webhook_id = fixture
+    data = Data.v2
+    data["queryResult"]["action"] = "CallServiceIntent"
+    call_count = len(calls)
+    response = await mock_client.post(
+        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+    )
+    assert 200 == response.status
+    assert call_count + 1 == len(calls)
+    call = calls[-1]
+    assert "test" == call.domain
+    assert "dialogflow" == call.service
+    assert ["switch.test"] == call.data.get("entity_id")
+    assert "virgo" == call.data.get("hello")
+
+
+async def test_intent_with_no_action_v1(fixture):
     """Test an intent with no defined action."""
     mock_client, webhook_id = fixture
-    data = {
-        "id": REQUEST_ID,
-        "timestamp": REQUEST_TIMESTAMP,
-        "result": {
-            "source": "agent",
-            "resolvedQuery": "my zodiac sign is virgo",
-            "speech": "",
-            "action": "",
-            "actionIncomplete": False,
-            "parameters": {"ZodiacSign": ""},
-            "contexts": [],
-            "metadata": {
-                "intentId": INTENT_ID,
-                "webhookUsed": "true",
-                "webhookForSlotFillingUsed": "false",
-                "intentName": INTENT_NAME,
-            },
-            "fulfillment": {"speech": "", "messages": [{"type": 0, "speech": ""}]},
-            "score": 1,
-        },
-        "status": {"code": 200, "errorType": "success"},
-        "sessionId": SESSION_ID,
-        "originalRequest": None,
-    }
+    data = Data.v1
+    del data["result"]["action"]
+    assert "action" not in data["result"]
     response = await mock_client.post(
         "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
     )
@@ -373,36 +394,41 @@ async def test_intent_with_no_action(fixture):
     assert "You have not defined an action in your Dialogflow intent." == text
 
 
-async def test_intent_with_unknown_action(fixture):
+async def test_intent_with_no_action_v2(fixture):
+    """Test an intent with no defined action."""
+    mock_client, webhook_id = fixture
+    data = Data.v2
+    del data["queryResult"]["action"]
+    assert "action" not in data["queryResult"]
+    response = await mock_client.post(
+        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+    )
+    assert 200 == response.status
+    text = (await response.json()).get("fulfillmentText")
+    assert "You have not defined an action in your Dialogflow intent." == text
+
+
+async def test_intent_with_unknown_action_v1(fixture):
     """Test an intent with an action not defined in the conf."""
     mock_client, webhook_id = fixture
-    data = {
-        "id": REQUEST_ID,
-        "timestamp": REQUEST_TIMESTAMP,
-        "result": {
-            "source": "agent",
-            "resolvedQuery": "my zodiac sign is virgo",
-            "speech": "",
-            "action": "unknown",
-            "actionIncomplete": False,
-            "parameters": {"ZodiacSign": ""},
-            "contexts": [],
-            "metadata": {
-                "intentId": INTENT_ID,
-                "webhookUsed": "true",
-                "webhookForSlotFillingUsed": "false",
-                "intentName": INTENT_NAME,
-            },
-            "fulfillment": {"speech": "", "messages": [{"type": 0, "speech": ""}]},
-            "score": 1,
-        },
-        "status": {"code": 200, "errorType": "success"},
-        "sessionId": SESSION_ID,
-        "originalRequest": None,
-    }
+    data = Data.v1
+    data["result"]["action"] = "unknown"
     response = await mock_client.post(
         "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
     )
     assert 200 == response.status
     text = (await response.json()).get("speech")
+    assert "This intent is not yet configured within Home Assistant." == text
+
+
+async def test_intent_with_unknown_action_v2(fixture):
+    """Test an intent with an action not defined in the conf."""
+    mock_client, webhook_id = fixture
+    data = Data.v2
+    data["queryResult"]["action"] = "unknown"
+    response = await mock_client.post(
+        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+    )
+    assert 200 == response.status
+    text = (await response.json()).get("fulfillmentText")
     assert "This intent is not yet configured within Home Assistant." == text

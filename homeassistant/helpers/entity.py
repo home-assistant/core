@@ -1,15 +1,21 @@
 """An abstract class for entities."""
-from datetime import timedelta
-import logging
+from abc import ABC
+import asyncio
+from datetime import datetime, timedelta
 import functools as ft
+import logging
 from timeit import default_timer as timer
-from typing import Optional, List, Iterable
+from typing import Any, Dict, Iterable, List, Optional, Union
 
+from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
+    ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
     ATTR_HIDDEN,
     ATTR_ICON,
+    ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_DEFAULT_NAME,
     STATE_OFF,
@@ -18,24 +24,18 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    ATTR_ENTITY_PICTURE,
-    ATTR_SUPPORTED_FEATURES,
-    ATTR_DEVICE_CLASS,
 )
+from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
+from homeassistant.exceptions import NoEntitySpecifiedError
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.entity_registry import (
     EVENT_ENTITY_REGISTRY_UPDATED,
     RegistryEntry,
 )
-from homeassistant.core import HomeAssistant, callback, CALLBACK_TYPE
-from homeassistant.config import DATA_CUSTOMIZE
-from homeassistant.exceptions import NoEntitySpecifiedError
-from homeassistant.util import ensure_unique_string, slugify
+from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 from homeassistant.util.async_ import run_callback_threadsafe
-from homeassistant.util import dt as dt_util
 
-
-# mypy: allow-incomplete-defs, allow-untyped-defs, no-check-untyped-defs
-# mypy: no-warn-return-any
+# mypy: allow-untyped-defs, no-check-untyped-defs, no-warn-return-any
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -83,7 +83,7 @@ def async_generate_entity_id(
     return ensure_unique_string(entity_id_format.format(slugify(name)), current_ids)
 
 
-class Entity:
+class Entity(ABC):
     """An abstract class for Home Assistant entities."""
 
     # SAFE TO OVERWRITE
@@ -92,29 +92,32 @@ class Entity:
     entity_id = None  # type: str
 
     # Owning hass instance. Will be set by EntityPlatform
-    hass = None  # type: Optional[HomeAssistant]
+    hass: Optional[HomeAssistant] = None
 
     # Owning platform instance. Will be set by EntityPlatform
-    platform = None
+    platform: Optional[EntityPlatform] = None
 
     # If we reported if this entity was slow
     _slow_reported = False
+
+    # If we reported this entity is updated while disabled
+    _disabled_reported = False
 
     # Protect for multiple updates
     _update_staged = False
 
     # Process updates in parallel
-    parallel_updates = None
+    parallel_updates: Optional[asyncio.Semaphore] = None
 
     # Entry in the entity registry
-    registry_entry = None  # type: Optional[RegistryEntry]
+    registry_entry: Optional[RegistryEntry] = None
 
     # Hold list for functions to call on remove.
-    _on_remove = None  # type: Optional[List[CALLBACK_TYPE]]
+    _on_remove: Optional[List[CALLBACK_TYPE]] = None
 
     # Context
-    _context = None
-    _context_set = None
+    _context: Optional[Context] = None
+    _context_set: Optional[datetime] = None
 
     @property
     def should_poll(self) -> bool:
@@ -135,28 +138,41 @@ class Entity:
         return None
 
     @property
-    def state(self) -> str:
+    def state(self) -> Union[None, str, int, float]:
         """Return the state of the entity."""
         return STATE_UNKNOWN
 
     @property
-    def state_attributes(self):
+    def capability_attributes(self) -> Optional[Dict[str, Any]]:
+        """Return the capability attributes.
+
+        Attributes that explain the capabilities of an entity.
+
+        Implemented by component base class. Convention for attribute names
+        is lowercase snake_case.
+        """
+        return None
+
+    @property
+    def state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes.
 
-        Implemented by component base class.
+        Implemented by component base class. Convention for attribute names
+        is lowercase snake_case.
         """
         return None
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return device specific state attributes.
 
-        Implemented by platform classes.
+        Implemented by platform classes. Convention for attribute names
+        is lowercase snake_case.
         """
         return None
 
     @property
-    def device_info(self):
+    def device_info(self) -> Optional[Dict[str, Any]]:
         """Return device specific attributes.
 
         Implemented by platform classes.
@@ -169,17 +185,17 @@ class Entity:
         return None
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> Optional[str]:
         """Return the unit of measurement of this entity, if any."""
         return None
 
     @property
-    def icon(self):
+    def icon(self) -> Optional[str]:
         """Return the icon to use in the frontend, if any."""
         return None
 
     @property
-    def entity_picture(self):
+    def entity_picture(self) -> Optional[str]:
         """Return the entity picture to use in the frontend, if any."""
         return None
 
@@ -213,17 +229,31 @@ class Entity:
         return None
 
     @property
-    def context_recent_time(self):
+    def context_recent_time(self) -> timedelta:
         """Time that a context is considered recent."""
         return timedelta(seconds=5)
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return True
 
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
     # are used to perform a very specific function. Overwriting these may
     # produce undesirable effects in the entity's operation.
 
+    @property
+    def enabled(self) -> bool:
+        """Return if the entity is enabled in the entity registry.
+
+        If an entity is not part of the registry, it cannot be disabled
+        and will therefore always be enabled.
+        """
+        return self.registry_entry is None or not self.registry_entry.disabled
+
     @callback
-    def async_set_context(self, context):
+    def async_set_context(self, context: Context) -> None:
         """Set the context the entity currently operates under."""
         self._context = context
         self._context_set = dt_util.utcnow()
@@ -236,11 +266,11 @@ class Entity:
         This method must be run in the event loop.
         """
         if self.hass is None:
-            raise RuntimeError("Attribute hass is None for {}".format(self))
+            raise RuntimeError(f"Attribute hass is None for {self}")
 
         if self.entity_id is None:
             raise NoEntitySpecifiedError(
-                "No entity id specified for entity {}".format(self.name)
+                f"No entity id specified for entity {self.name}"
             )
 
         # update entity data
@@ -257,11 +287,11 @@ class Entity:
     def async_write_ha_state(self):
         """Write the state to the state machine."""
         if self.hass is None:
-            raise RuntimeError("Attribute hass is None for {}".format(self))
+            raise RuntimeError(f"Attribute hass is None for {self}")
 
         if self.entity_id is None:
             raise NoEntitySpecifiedError(
-                "No entity id specified for entity {}".format(self.name)
+                f"No entity id specified for entity {self.name}"
             )
 
         self._async_write_ha_state()
@@ -269,9 +299,19 @@ class Entity:
     @callback
     def _async_write_ha_state(self):
         """Write the state to the state machine."""
+        if self.registry_entry and self.registry_entry.disabled_by:
+            if not self._disabled_reported:
+                self._disabled_reported = True
+                _LOGGER.warning(
+                    "Entity %s is incorrectly being triggered for updates while it is disabled. This is a bug in the %s integration.",
+                    self.entity_id,
+                    self.platform.platform_name,
+                )
+            return
+
         start = timer()
 
-        attr = {}
+        attr = self.capability_attributes or {}
         if not self.available:
             state = STATE_UNAVAILABLE
         else:
@@ -486,6 +526,10 @@ class Entity:
         old = self.registry_entry
         self.registry_entry = ent_reg.async_get(data["entity_id"])
 
+        if self.registry_entry.disabled_by is not None:
+            await self.async_remove()
+            return
+
         if self.registry_entry.entity_id == old.entity_id:
             self.async_write_ha_state()
             return
@@ -514,9 +558,22 @@ class Entity:
 
         return self.unique_id == other.unique_id
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return the representation."""
         return "<Entity {}: {}>".format(self.name, self.state)
+
+    # call an requests
+    async def async_request_call(self, coro):
+        """Process request batched."""
+
+        if self.parallel_updates:
+            await self.parallel_updates.acquire()
+
+        try:
+            await coro
+        finally:
+            if self.parallel_updates:
+                self.parallel_updates.release()
 
 
 class ToggleEntity(Entity):
@@ -532,7 +589,7 @@ class ToggleEntity(Entity):
         """Return True if entity is on."""
         raise NotImplementedError()
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         raise NotImplementedError()
 
@@ -543,7 +600,7 @@ class ToggleEntity(Entity):
         """
         return self.hass.async_add_job(ft.partial(self.turn_on, **kwargs))
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         raise NotImplementedError()
 
@@ -554,7 +611,7 @@ class ToggleEntity(Entity):
         """
         return self.hass.async_add_job(ft.partial(self.turn_off, **kwargs))
 
-    def toggle(self, **kwargs) -> None:
+    def toggle(self, **kwargs: Any) -> None:
         """Toggle the entity."""
         if self.is_on:
             self.turn_off(**kwargs)

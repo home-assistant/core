@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 
 import voluptuous as vol
+import whois
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
@@ -32,8 +33,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the WHOIS sensor."""
-    import whois
-
     domain = config.get(CONF_DOMAIN)
     name = config.get(CONF_NAME)
 
@@ -41,9 +40,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if "expiration_date" in whois.whois(domain):
             add_entities([WhoisSensor(name, domain)], True)
         else:
-            _LOGGER.error("WHOIS lookup for %s didn't contain expiration_date", domain)
+            _LOGGER.error(
+                "WHOIS lookup for %s didn't contain an expiration date", domain
+            )
             return
-    except whois.BaseException as ex:
+    except whois.BaseException as ex:  # pylint: disable=broad-except
         _LOGGER.error("Exception %s occurred during WHOIS lookup for %s", ex, domain)
         return
 
@@ -53,8 +54,6 @@ class WhoisSensor(Entity):
 
     def __init__(self, name, domain):
         """Initialize the sensor."""
-        import whois
-
         self.whois = whois.whois
 
         self._name = name
@@ -95,11 +94,9 @@ class WhoisSensor(Entity):
 
     def update(self):
         """Get the current WHOIS data for the domain."""
-        import whois
-
         try:
             response = self.whois(self._domain)
-        except whois.BaseException as ex:
+        except whois.BaseException as ex:  # pylint: disable=broad-except
             _LOGGER.error("Exception %s occurred during WHOIS lookup", ex)
             self._empty_state_and_attributes()
             return
@@ -122,7 +119,10 @@ class WhoisSensor(Entity):
             attrs = {}
 
             expiration_date = response["expiration_date"]
-            attrs[ATTR_EXPIRES] = expiration_date.isoformat()
+            if isinstance(expiration_date, list):
+                attrs[ATTR_EXPIRES] = expiration_date[0].isoformat()
+            else:
+                attrs[ATTR_EXPIRES] = expiration_date.isoformat()
 
             if "nameservers" in response:
                 attrs[ATTR_NAME_SERVERS] = " ".join(response["nameservers"])

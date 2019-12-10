@@ -2,10 +2,8 @@
 import logging
 import mimetypes
 
+from pushbullet import InvalidKeyError, PushBullet, PushError
 import voluptuous as vol
-
-from homeassistant.const import CONF_API_KEY
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -15,6 +13,8 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONF_API_KEY
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,8 +28,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_API_KEY): cv.string}
 
 def get_service(hass, config, discovery_info=None):
     """Get the Pushbullet notification service."""
-    from pushbullet import PushBullet
-    from pushbullet import InvalidKeyError
 
     try:
         pushbullet = PushBullet(config[CONF_API_KEY])
@@ -124,7 +122,6 @@ class PushBulletNotificationService(BaseNotificationService):
 
     def _push_data(self, message, title, data, pusher, email=None):
         """Create the message content."""
-        from pushbullet import PushError
 
         if data is None:
             data = {}

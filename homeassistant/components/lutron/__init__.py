@@ -1,11 +1,12 @@
 """Component for interacting with a Lutron RadioRA 2 system."""
 import logging
 
+from pylutron import Button, Lutron
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import ATTR_ID, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
@@ -36,11 +37,16 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, base_config):
     """Set up the Lutron component."""
-    from pylutron import Lutron
 
     hass.data[LUTRON_BUTTONS] = []
     hass.data[LUTRON_CONTROLLER] = None
-    hass.data[LUTRON_DEVICES] = {"light": [], "cover": [], "switch": [], "scene": []}
+    hass.data[LUTRON_DEVICES] = {
+        "light": [],
+        "cover": [],
+        "switch": [],
+        "scene": [],
+        "binary_sensor": [],
+    }
 
     config = base_config.get(DOMAIN)
     hass.data[LUTRON_CONTROLLER] = Lutron(
@@ -62,23 +68,30 @@ def setup(hass, base_config):
                 hass.data[LUTRON_DEVICES]["switch"].append((area.name, output))
         for keypad in area.keypads:
             for button in keypad.buttons:
-                # This is the best way to determine if a button does anything
-                # useful until pylutron is updated to provide information on
-                # which buttons actually control scenes.
-                for led in keypad.leds:
-                    if (
-                        led.number == button.number
-                        and button.name != "Unknown Button"
-                        and button.button_type in ("SingleAction", "Toggle")
-                    ):
-                        hass.data[LUTRON_DEVICES]["scene"].append(
-                            (area.name, keypad.name, button, led)
-                        )
+                # If the button has a function assigned to it, add it as a scene
+                if button.name != "Unknown Button" and button.button_type in (
+                    "SingleAction",
+                    "Toggle",
+                    "SingleSceneRaiseLower",
+                    "MasterRaiseLower",
+                ):
+                    # Associate an LED with a button if there is one
+                    led = next(
+                        (led for led in keypad.leds if led.number == button.number),
+                        None,
+                    )
+                    hass.data[LUTRON_DEVICES]["scene"].append(
+                        (area.name, keypad.name, button, led)
+                    )
 
                 hass.data[LUTRON_BUTTONS].append(LutronButton(hass, keypad, button))
+        if area.occupancy_group is not None:
+            hass.data[LUTRON_DEVICES]["binary_sensor"].append(
+                (area.name, area.occupancy_group)
+            )
 
-    for component in ("light", "cover", "switch", "scene"):
-        discovery.load_platform(hass, component, DOMAIN, None, base_config)
+    for component in ("light", "cover", "switch", "scene", "binary_sensor"):
+        discovery.load_platform(hass, component, DOMAIN, {}, base_config)
     return True
 
 
@@ -104,7 +117,7 @@ class LutronDevice(Entity):
     @property
     def name(self):
         """Return the name of the device."""
-        return "{} {}".format(self._area_name, self._lutron_device.name)
+        return f"{self._area_name} {self._lutron_device.name}"
 
     @property
     def should_poll(self):
@@ -122,7 +135,7 @@ class LutronButton:
 
     def __init__(self, hass, keypad, button):
         """Register callback for activity on the button."""
-        name = "{}: {}".format(keypad.name, button.name)
+        name = f"{keypad.name}: {button.name}"
         self._hass = hass
         self._has_release_event = (
             button.button_type is not None and "RaiseLower" in button.button_type
@@ -134,7 +147,6 @@ class LutronButton:
 
     def button_callback(self, button, context, event, params):
         """Fire an event about a button being pressed or released."""
-        from pylutron import Button
 
         # Events per button type:
         #   RaiseLower -> pressed/released

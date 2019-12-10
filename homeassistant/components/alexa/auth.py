@@ -1,8 +1,9 @@
 """Support for Alexa skill auth."""
 import asyncio
+from datetime import timedelta
 import json
 import logging
-from datetime import timedelta
+
 import aiohttp
 import async_timeout
 
@@ -55,6 +56,11 @@ class Auth:
         )
 
         return await self._async_request_new_token(lwa_params)
+
+    @callback
+    def async_invalidate_access_token(self):
+        """Invalidate access token."""
+        self._prefs[STORAGE_ACCESS_TOKEN] = None
 
     async def async_get_access_token(self):
         """Perform access token or token refresh request."""

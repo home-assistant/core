@@ -1,18 +1,17 @@
 """The tests for the Dark Sky platform."""
+from datetime import timedelta
 import re
 import unittest
 from unittest.mock import MagicMock, patch
-from datetime import timedelta
-
-from requests.exceptions import HTTPError
-import requests_mock
 
 import forecastio
+from requests.exceptions import HTTPError
+import requests_mock
 
 from homeassistant.components.darksky import sensor as darksky
 from homeassistant.setup import setup_component
 
-from tests.common import load_fixture, get_test_home_assistant, MockDependency
+from tests.common import MockDependency, get_test_home_assistant, load_fixture
 
 VALID_CONFIG_MINIMAL = {
     "sensor": {
@@ -112,7 +111,10 @@ class TestDarkSkySetup(unittest.TestCase):
         self.hass.stop()
 
     @MockDependency("forecastio")
-    @patch("forecastio.load_forecast", new=load_forecastMock)
+    @patch(
+        "homeassistant.components.darksky.sensor.forecastio.load_forecast",
+        new=load_forecastMock,
+    )
     def test_setup_with_config(self, mock_forecastio):
         """Test the platform setup with configuration."""
         setup_component(self.hass, "sensor", VALID_CONFIG_MINIMAL)
@@ -120,9 +122,7 @@ class TestDarkSkySetup(unittest.TestCase):
         state = self.hass.states.get("sensor.dark_sky_summary")
         assert state is not None
 
-    @MockDependency("forecastio")
-    @patch("forecastio.load_forecast", new=load_forecastMock)
-    def test_setup_with_invalid_config(self, mock_forecastio):
+    def test_setup_with_invalid_config(self):
         """Test the platform setup with invalid configuration."""
         setup_component(self.hass, "sensor", INVALID_CONFIG_MINIMAL)
 
@@ -130,7 +130,10 @@ class TestDarkSkySetup(unittest.TestCase):
         assert state is None
 
     @MockDependency("forecastio")
-    @patch("forecastio.load_forecast", new=load_forecastMock)
+    @patch(
+        "homeassistant.components.darksky.sensor.forecastio.load_forecast",
+        new=load_forecastMock,
+    )
     def test_setup_with_language_config(self, mock_forecastio):
         """Test the platform setup with language configuration."""
         setup_component(self.hass, "sensor", VALID_CONFIG_LANG_DE)
@@ -138,9 +141,7 @@ class TestDarkSkySetup(unittest.TestCase):
         state = self.hass.states.get("sensor.dark_sky_summary")
         assert state is not None
 
-    @MockDependency("forecastio")
-    @patch("forecastio.load_forecast", new=load_forecastMock)
-    def test_setup_with_invalid_language_config(self, mock_forecastio):
+    def test_setup_with_invalid_language_config(self):
         """Test the platform setup with language configuration."""
         setup_component(self.hass, "sensor", INVALID_CONFIG_LANG)
 
@@ -164,7 +165,10 @@ class TestDarkSkySetup(unittest.TestCase):
         assert not response
 
     @MockDependency("forecastio")
-    @patch("forecastio.load_forecast", new=load_forecastMock)
+    @patch(
+        "homeassistant.components.darksky.sensor.forecastio.load_forecast",
+        new=load_forecastMock,
+    )
     def test_setup_with_alerts_config(self, mock_forecastio):
         """Test the platform setup with alert configuration."""
         setup_component(self.hass, "sensor", VALID_CONFIG_ALERTS)

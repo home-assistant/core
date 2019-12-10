@@ -1,6 +1,8 @@
 """Support for Homekit covers."""
 import logging
 
+from homekit.model.characteristics import CharacteristicsTypes
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
@@ -9,8 +11,8 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN,
     SUPPORT_OPEN_TILT,
     SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
     SUPPORT_SET_TILT_POSITION,
+    SUPPORT_STOP,
     CoverDevice,
 )
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
@@ -31,7 +33,7 @@ CURRENT_GARAGE_STATE_MAP = {
 
 TARGET_GARAGE_STATE_MAP = {STATE_OPEN: 0, STATE_CLOSED: 1, STATE_STOPPED: 2}
 
-CURRENT_WINDOW_STATE_MAP = {0: STATE_OPENING, 1: STATE_CLOSING, 2: STATE_STOPPED}
+CURRENT_WINDOW_STATE_MAP = {0: STATE_CLOSING, 1: STATE_OPENING, 2: STATE_STOPPED}
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -76,9 +78,6 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverDevice):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
-
         return [
             CharacteristicsTypes.DOOR_STATE_CURRENT,
             CharacteristicsTypes.DOOR_STATE_TARGET,
@@ -154,9 +153,6 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
-
         return [
             CharacteristicsTypes.POSITION_STATE,
             CharacteristicsTypes.POSITION_CURRENT,

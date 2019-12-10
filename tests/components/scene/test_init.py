@@ -2,8 +2,8 @@
 import io
 import unittest
 
-from homeassistant.setup import setup_component
 from homeassistant.components import light, scene
+from homeassistant.setup import setup_component
 from homeassistant.util.yaml import loader as yaml_loader
 
 from tests.common import get_test_home_assistant
@@ -24,7 +24,7 @@ class TestScene(unittest.TestCase):
             self.hass, light.DOMAIN, {light.DOMAIN: {"platform": "test"}}
         )
 
-        self.light_1, self.light_2 = test_light.DEVICES[0:2]
+        self.light_1, self.light_2 = test_light.ENTITIES[0:2]
 
         common_light.turn_off(
             self.hass, [self.light_1.entity_id, self.light_2.entity_id]

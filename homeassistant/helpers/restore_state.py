@@ -1,24 +1,23 @@
 """Support for restoring entity states on startup."""
 import asyncio
+from datetime import datetime, timedelta
 import logging
-from datetime import timedelta, datetime
-from typing import Any, Dict, List, Set, Optional  # noqa  pylint_disable=unused-import
+from typing import Any, Dict, List, Optional, Set
 
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import (
-    HomeAssistant,
-    callback,
-    State,
     CoreState,
+    HomeAssistant,
+    State,
+    callback,
     valid_entity_id,
 )
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
-import homeassistant.util.dt as dt_util
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.json import JSONEncoder
-from homeassistant.helpers.storage import Store  # noqa  pylint_disable=unused-import
-
+from homeassistant.helpers.storage import Store
+import homeassistant.util.dt as dt_util
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 # mypy: no-warn-return-any
@@ -108,12 +107,12 @@ class RestoreStateData:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the restore state data class."""
-        self.hass = hass  # type: HomeAssistant
-        self.store = Store(
+        self.hass: HomeAssistant = hass
+        self.store: Store = Store(
             hass, STORAGE_VERSION, STORAGE_KEY, encoder=JSONEncoder
-        )  # type: Store
-        self.last_states = {}  # type: Dict[str, StoredState]
-        self.entity_ids = set()  # type: Set[str]
+        )
+        self.last_states: Dict[str, StoredState] = {}
+        self.entity_ids: Set[str] = set()
 
     def async_get_stored_states(self) -> List[StoredState]:
         """Get the set of states which should be stored.
@@ -164,23 +163,20 @@ class RestoreStateData:
     @callback
     def async_setup_dump(self, *args: Any) -> None:
         """Set up the restore state listeners."""
+
+        def _async_dump_states(*_: Any) -> None:
+            self.hass.async_create_task(self.async_dump_states())
+
         # Dump the initial states now. This helps minimize the risk of having
         # old states loaded by overwritting the last states once home assistant
         # has started and the old states have been read.
-        self.hass.async_create_task(self.async_dump_states())
+        _async_dump_states()
 
         # Dump states periodically
-        async_track_time_interval(
-            self.hass,
-            lambda *_: self.hass.async_create_task(self.async_dump_states()),
-            STATE_DUMP_INTERVAL,
-        )
+        async_track_time_interval(self.hass, _async_dump_states, STATE_DUMP_INTERVAL)
 
         # Dump states when stopping hass
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP,
-            lambda *_: self.hass.async_create_task(self.async_dump_states()),
-        )
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_dump_states)
 
     @callback
     def async_restore_entity_added(self, entity_id: str) -> None:

@@ -1,16 +1,17 @@
 """Tests for the Config Entry Flow helper."""
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.helpers import config_entry_flow
+
 from tests.common import (
     MockConfigEntry,
     MockModule,
     mock_coro,
-    mock_integration,
     mock_entity_platform,
+    mock_integration,
 )
 
 
@@ -80,6 +81,7 @@ async def test_discovery_single_instance(hass, discovery_flow_conf, source):
     """Test we not allow duplicates."""
     flow = config_entries.HANDLERS["test"]()
     flow.hass = hass
+    flow.context = {}
 
     MockConfigEntry(domain="test").add_to_hass(hass)
     result = await getattr(flow, "async_step_{}".format(source))({})
@@ -93,6 +95,7 @@ async def test_discovery_confirmation(hass, discovery_flow_conf, source):
     """Test we ask for confirmation via discovery."""
     flow = config_entries.HANDLERS["test"]()
     flow.hass = hass
+    flow.context = {}
 
     result = await getattr(flow, "async_step_{}".format(source))({})
 

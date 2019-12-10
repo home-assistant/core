@@ -2,10 +2,13 @@
 Device discovery functions for Zigbee Home Automation.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zha/
+https://home-assistant.io/integrations/zha/
 """
 
 import logging
+
+import zigpy.profiles
+from zigpy.zcl.clusters.general import OnOff, PowerConfiguration
 
 from homeassistant import const as ha_const
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
@@ -13,12 +16,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .channels import (
-    ZIGBEE_CHANNEL_REGISTRY,
-    AttributeListeningChannel,
-    EventRelayChannel,
-    ZDOChannel,
-)
+from .channels import AttributeListeningChannel, EventRelayChannel, ZDOChannel
 from .const import (
     COMPONENTS,
     CONF_DEVICE_CONFIG,
@@ -39,6 +37,7 @@ from .registries import (
     SENSOR_TYPES,
     SINGLE_INPUT_CLUSTER_DEVICE_CLASS,
     SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS,
+    ZIGBEE_CHANNEL_REGISTRY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,8 +55,6 @@ def async_process_endpoint(
     is_new_join,
 ):
     """Process an endpoint on a zigpy device."""
-    import zigpy.profiles
-
     if endpoint_id == 0:  # ZDO
         _async_create_cluster_channel(
             endpoint, zha_device, is_new_join, channel_class=ZDOChannel
@@ -66,7 +63,7 @@ def async_process_endpoint(
 
     component = None
     profile_clusters = []
-    device_key = "{}-{}".format(device.ieee, endpoint_id)
+    device_key = f"{device.ieee}-{endpoint_id}"
     node_config = {}
     if CONF_DEVICE_CONFIG in config:
         node_config = config[CONF_DEVICE_CONFIG].get(device_key, {})
@@ -183,8 +180,6 @@ def _async_handle_single_cluster_matches(
     hass, endpoint, zha_device, profile_clusters, device_key, is_new_join
 ):
     """Dispatch single cluster matches to HA components."""
-    from zigpy.zcl.clusters.general import OnOff, PowerConfiguration
-
     cluster_matches = []
     cluster_match_results = []
     matched_power_configuration = False
@@ -203,11 +198,13 @@ def _async_handle_single_cluster_matches(
                 zha_device.is_mains_powered or matched_power_configuration
             ):
                 continue
-            elif (
+
+            if (
                 cluster.cluster_id == PowerConfiguration.cluster_id
                 and not zha_device.is_mains_powered
             ):
                 matched_power_configuration = True
+
             cluster_match_results.append(
                 _async_handle_single_cluster_match(
                     hass,
@@ -285,12 +282,12 @@ def _async_handle_single_cluster_match(
     channels = []
     _async_create_cluster_channel(cluster, zha_device, is_new_join, channels=channels)
 
-    cluster_key = "{}-{}".format(device_key, cluster.cluster_id)
+    cluster_key = f"{device_key}-{cluster.cluster_id}"
     discovery_info = {
         "unique_id": cluster_key,
         "zha_device": zha_device,
         "channels": channels,
-        "entity_suffix": "_{}".format(cluster.cluster_id),
+        "entity_suffix": f"_{cluster.cluster_id}",
         "component": component,
     }
 

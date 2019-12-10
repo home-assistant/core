@@ -395,7 +395,7 @@ def test_template_complex():
     """Test template_complex validator."""
     schema = vol.Schema(cv.template_complex)
 
-    for value in (None, "{{ partial_print }", "{% if True %}Hello"):
+    for value in ("{{ partial_print }", "{% if True %}Hello"):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
@@ -419,6 +419,10 @@ def test_template_complex():
         {"test": 1, "test2": "{{ beer }}"},
         ["{{ beer }}", 1],
     )
+
+    # Ensure we don't mutate non-string types that cannot be templates.
+    for value in (1, True, None):
+        assert schema(value) == value
 
 
 def test_time_zone():
@@ -494,7 +498,10 @@ def test_deprecated_with_no_optionals(caplog, schema):
     test_data = {"mars": True}
     output = deprecated_schema(test_data.copy())
     assert len(caplog.records) == 1
-    assert caplog.records[0].name == __name__
+    assert caplog.records[0].name in [
+        __name__,
+        "homeassistant.helpers.config_validation",
+    ]
     assert (
         "The 'mars' option (with value 'True') is deprecated, "
         "please remove it from your configuration"

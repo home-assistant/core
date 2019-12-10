@@ -2,18 +2,19 @@
 import logging
 
 import requests
+from synology.surveillance_station import SurveillanceStation
 import voluptuous as vol
 
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.const import (
     CONF_NAME,
-    CONF_USERNAME,
     CONF_PASSWORD,
-    CONF_URL,
-    CONF_WHITELIST,
-    CONF_VERIFY_SSL,
     CONF_TIMEOUT,
+    CONF_URL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    CONF_WHITELIST,
 )
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_web,
     async_get_clientsession,
@@ -44,8 +45,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     timeout = config.get(CONF_TIMEOUT)
 
     try:
-        from synology.surveillance_station import SurveillanceStation
-
         surveillance = SurveillanceStation(
             config.get(CONF_URL),
             config.get(CONF_USERNAME),
@@ -62,7 +61,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     # add cameras
     devices = []
     for camera in cameras:
-        if not config.get(CONF_WHITELIST):
+        if not config[CONF_WHITELIST] or camera.name in config[CONF_WHITELIST]:
             device = SynologyCamera(surveillance, camera.camera_id, verify_ssl)
             devices.append(device)
 
@@ -105,6 +104,7 @@ class SynologyCamera(Camera):
         """Return true if the device is recording."""
         return self._camera.is_recording
 
+    @property
     def should_poll(self):
         """Update the recording state periodically."""
         return True

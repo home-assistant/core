@@ -1,24 +1,26 @@
 """Support for statistics for sensor values."""
+from collections import deque
 import logging
 import statistics
-from collections import deque
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.recorder.models import States
+from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME,
-    CONF_ENTITY_ID,
-    EVENT_HOMEASSISTANT_START,
-    STATE_UNKNOWN,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_ENTITY_ID,
+    CONF_NAME,
+    EVENT_HOMEASSISTANT_START,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.util import dt as dt_util
-from homeassistant.components.recorder.util import session_scope, execute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,10 +83,7 @@ class StatisticsSensor(Entity):
         """Initialize the Statistics sensor."""
         self._entity_id = entity_id
         self.is_binary = self._entity_id.split(".")[0] == "binary_sensor"
-        if not self.is_binary:
-            self._name = "{} {}".format(name, ATTR_MEAN)
-        else:
-            self._name = "{} {}".format(name, ATTR_COUNT)
+        self._name = name
         self._sampling_size = sampling_size
         self._max_age = max_age
         self._precision = precision
@@ -131,7 +130,7 @@ class StatisticsSensor(Entity):
 
     def _add_state_to_queue(self, new_state):
         """Add the state to the queue."""
-        if new_state.state == STATE_UNKNOWN:
+        if new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
             return
 
         try:
@@ -277,7 +276,6 @@ class StatisticsSensor(Entity):
         If MaxAge is provided then query will restrict to entries younger then
         current datetime - MaxAge.
         """
-        from homeassistant.components.recorder.models import States
 
         _LOGGER.debug("%s: initializing values from the database", self.entity_id)
 

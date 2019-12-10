@@ -1,5 +1,6 @@
 """Constants for Google Assistant."""
 from homeassistant.components import (
+    alarm_control_panel,
     binary_sensor,
     camera,
     climate,
@@ -31,6 +32,10 @@ CONF_API_KEY = "api_key"
 CONF_ROOM_HINT = "room"
 CONF_ALLOW_UNLOCK = "allow_unlock"
 CONF_SECURE_DEVICES_PIN = "secure_devices_pin"
+CONF_REPORT_STATE = "report_state"
+CONF_SERVICE_ACCOUNT = "service_account"
+CONF_CLIENT_EMAIL = "client_email"
+CONF_PRIVATE_KEY = "private_key"
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
@@ -48,6 +53,7 @@ DEFAULT_EXPOSED_DOMAINS = [
     "lock",
     "binary_sensor",
     "sensor",
+    "alarm_control_panel",
 ]
 
 PREFIX_TYPES = "action.devices.types."
@@ -66,10 +72,14 @@ TYPE_SENSOR = PREFIX_TYPES + "SENSOR"
 TYPE_DOOR = PREFIX_TYPES + "DOOR"
 TYPE_TV = PREFIX_TYPES + "TV"
 TYPE_SPEAKER = PREFIX_TYPES + "SPEAKER"
+TYPE_ALARM = PREFIX_TYPES + "SECURITYSYSTEM"
 
 SERVICE_REQUEST_SYNC = "request_sync"
 HOMEGRAPH_URL = "https://homegraph.googleapis.com/"
+HOMEGRAPH_SCOPE = "https://www.googleapis.com/auth/homegraph"
+HOMEGRAPH_TOKEN_URL = "https://accounts.google.com/o/oauth2/token"
 REQUEST_SYNC_BASE_URL = HOMEGRAPH_URL + "v1/devices:requestSync"
+REPORT_STATE_BASE_URL = HOMEGRAPH_URL + "v1/devices:reportStateAndNotification"
 
 # Error codes used for SmartHomeError class
 # https://developers.google.com/actions/reference/smarthome/errors-exceptions
@@ -80,6 +90,9 @@ ERR_NOT_SUPPORTED = "notSupported"
 ERR_PROTOCOL_ERROR = "protocolError"
 ERR_UNKNOWN_ERROR = "unknownError"
 ERR_FUNCTION_NOT_SUPPORTED = "functionNotSupported"
+
+ERR_ALREADY_DISARMED = "alreadyDisarmed"
+ERR_ALREADY_ARMED = "alreadyArmed"
 
 ERR_CHALLENGE_NEEDED = "challengeNeeded"
 ERR_CHALLENGE_NOT_SETUP = "challengeFailedNotSetup"
@@ -106,6 +119,7 @@ DOMAIN_TO_GOOGLE_TYPES = {
     script.DOMAIN: TYPE_SCENE,
     switch.DOMAIN: TYPE_SWITCH,
     vacuum.DOMAIN: TYPE_VACUUM,
+    alarm_control_panel.DOMAIN: TYPE_ALARM,
 }
 
 DEVICE_CLASS_TO_GOOGLE_TYPES = {
@@ -121,8 +135,11 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (media_player.DOMAIN, media_player.DEVICE_CLASS_TV): TYPE_TV,
     (media_player.DOMAIN, media_player.DEVICE_CLASS_SPEAKER): TYPE_SPEAKER,
     (sensor.DOMAIN, sensor.DEVICE_CLASS_TEMPERATURE): TYPE_SENSOR,
+    (sensor.DOMAIN, sensor.DEVICE_CLASS_HUMIDITY): TYPE_SENSOR,
 }
 
 CHALLENGE_ACK_NEEDED = "ackNeeded"
 CHALLENGE_PIN_NEEDED = "pinNeeded"
 CHALLENGE_FAILED_PIN_NEEDED = "challengeFailedPinNeeded"
+
+STORE_AGENT_USER_IDS = "agent_user_ids"

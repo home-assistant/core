@@ -1,9 +1,9 @@
 """Provide a way to connect entities belonging to one device."""
-import logging
-import uuid
 from asyncio import Event
 from collections import OrderedDict
+import logging
 from typing import List, Optional, cast
+import uuid
 
 import attr
 
@@ -12,8 +12,7 @@ from homeassistant.loader import bind_hass
 
 from .typing import HomeAssistantType
 
-
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,7 +83,9 @@ class DeviceRegistry:
         return self.devices.get(device_id)
 
     @callback
-    def async_get_device(self, identifiers: set, connections: set):
+    def async_get_device(
+        self, identifiers: set, connections: set
+    ) -> Optional[DeviceEntry]:
         """Check if device is registered."""
         for device in self.devices.values():
             if any(iden in device.identifiers for iden in identifiers) or any(
@@ -155,6 +156,7 @@ class DeviceRegistry:
         name_by_user=_UNDEF,
         new_identifiers=_UNDEF,
         via_device_id=_UNDEF,
+        remove_config_entry_id=_UNDEF,
     ):
         """Update properties of a device."""
         return self._async_update_device(
@@ -164,6 +166,7 @@ class DeviceRegistry:
             name_by_user=name_by_user,
             new_identifiers=new_identifiers,
             via_device_id=via_device_id,
+            remove_config_entry_id=remove_config_entry_id,
         )
 
     @callback
@@ -201,6 +204,10 @@ class DeviceRegistry:
             remove_config_entry_id is not _UNDEF
             and remove_config_entry_id in config_entries
         ):
+            if config_entries == {remove_config_entry_id}:
+                self.async_remove_device(device_id)
+                return
+
             config_entries = config_entries - {remove_config_entry_id}
 
         if config_entries is not old.config_entries:

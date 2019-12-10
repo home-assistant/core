@@ -2,14 +2,15 @@
 from datetime import datetime, timedelta
 from logging import getLogger
 from os.path import exists
-from threading import Lock
 import pickle
+from threading import Lock
 
+import feedparser
 import voluptuous as vol
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START, CONF_SCAN_INTERVAL
-from homeassistant.helpers.event import track_time_interval
+from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import track_time_interval
 
 _LOGGER = getLogger(__name__)
 
@@ -44,7 +45,7 @@ def setup(hass, config):
     urls = config.get(DOMAIN)[CONF_URLS]
     scan_interval = config.get(DOMAIN).get(CONF_SCAN_INTERVAL)
     max_entries = config.get(DOMAIN).get(CONF_MAX_ENTRIES)
-    data_file = hass.config.path("{}.pickle".format(DOMAIN))
+    data_file = hass.config.path(f"{DOMAIN}.pickle")
     storage = StoredData(data_file)
     feeds = [
         FeedManager(url, scan_interval, max_entries, hass, storage) for url in urls
@@ -87,8 +88,6 @@ class FeedManager:
 
     def _update(self):
         """Update the feed and publish new entries to the event bus."""
-        import feedparser
-
         _LOGGER.info("Fetching new data from feed %s", self._url)
         self._feed = feedparser.parse(
             self._url,
@@ -140,9 +139,10 @@ class FeedManager:
 
     def _update_and_fire_entry(self, entry):
         """Update last_entry_timestamp and fire entry."""
-        # We are lucky, `published_parsed` data available, let's make use of
-        # it to publish only new available entries since the last run
-        if "published_parsed" in entry.keys():
+        # Check if the entry has a published date.
+        if "published_parsed" in entry.keys() and entry.published_parsed:
+            # We are lucky, `published_parsed` data available, let's make use of
+            # it to publish only new available entries since the last run
             self._has_published_parsed = True
             self._last_entry_timestamp = max(
                 entry.published_parsed, self._last_entry_timestamp

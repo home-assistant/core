@@ -1,13 +1,20 @@
 """Support for Songpal-enabled (Sony) media devices."""
 import asyncio
-import logging
 from collections import OrderedDict
+import logging
 
+from songpal import (
+    ConnectChange,
+    ContentChange,
+    Device,
+    PowerChange,
+    SongpalException,
+    VolumeChange,
+)
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
-    DOMAIN,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
@@ -18,12 +25,14 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_NAME,
+    EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
     STATE_ON,
-    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+
+from .const import DOMAIN, SET_SOUND_SETTING
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,8 +42,6 @@ PARAM_NAME = "name"
 PARAM_VALUE = "value"
 
 PLATFORM = "songpal"
-
-SET_SOUND_SETTING = "songpal_set_sound_setting"
 
 SUPPORT_SONGPAL = (
     SUPPORT_VOLUME_SET
@@ -60,8 +67,6 @@ SET_SOUND_SCHEMA = vol.Schema(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Songpal platform."""
-    from songpal import SongpalException
-
     if PLATFORM not in hass.data:
         hass.data[PLATFORM] = {}
 
@@ -117,8 +122,6 @@ class SongpalDevice(MediaPlayerDevice):
 
     def __init__(self, name, endpoint, poll=False):
         """Init."""
-        from songpal import Device
-
         self._name = name
         self._endpoint = endpoint
         self._poll = poll
@@ -151,7 +154,6 @@ class SongpalDevice(MediaPlayerDevice):
     async def async_activate_websocket(self):
         """Activate websocket for listening if wanted."""
         _LOGGER.info("Activating websocket connection..")
-        from songpal import VolumeChange, ContentChange, PowerChange, ConnectChange
 
         async def _volume_changed(volume: VolumeChange):
             _LOGGER.debug("Volume changed: %s", volume)
@@ -230,8 +232,6 @@ class SongpalDevice(MediaPlayerDevice):
 
     async def async_update(self):
         """Fetch updates from the device."""
-        from songpal import SongpalException
-
         try:
             volumes = await self.dev.get_volume_information()
             if not volumes:

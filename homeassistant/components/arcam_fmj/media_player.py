@@ -6,14 +6,13 @@ from arcam.fmj import DecodeMode2CH, DecodeModeMCH, IncomingAudioFormat, SourceC
 from arcam.fmj.state import State
 
 from homeassistant import config_entries
-from homeassistant.core import callback
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_ON,
     SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
@@ -25,15 +24,16 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
+from homeassistant.core import callback
 from homeassistant.helpers.service import async_call_from_config
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import (
+    DOMAIN,
+    DOMAIN_DATA_ENTRIES,
     SIGNAL_CLIENT_DATA,
     SIGNAL_CLIENT_STARTED,
     SIGNAL_CLIENT_STOPPED,
-    DOMAIN_DATA_ENTRIES,
-    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -319,7 +319,7 @@ class ArcamFmj(MediaPlayerDevice):
         channel = self.media_channel
 
         if channel:
-            value = "{} - {}".format(source.name, channel)
+            value = f"{source.name} - {channel}"
         else:
             value = source.name
         return value

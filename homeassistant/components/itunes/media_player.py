@@ -4,7 +4,7 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
@@ -14,11 +14,11 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SEEK,
+    SUPPORT_SHUFFLE_SET,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
-    SUPPORT_SHUFFLE_SET,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -84,13 +84,13 @@ class Itunes:
             uri_scheme = "http://"
 
         if self.port:
-            return "{}{}:{}".format(uri_scheme, self.host, self.port)
+            return f"{uri_scheme}{self.host}:{self.port}"
 
-        return "{}{}".format(uri_scheme, self.host)
+        return f"{uri_scheme}{self.host}"
 
     def _request(self, method, path, params=None):
         """Make the actual request and return the parsed response."""
-        url = "{}{}".format(self._base_url, path)
+        url = f"{self._base_url}{path}"
 
         try:
             if method == "GET":

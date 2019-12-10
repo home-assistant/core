@@ -2,13 +2,16 @@
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import POLICY_READ
-from homeassistant.const import MATCH_ALL, EVENT_TIME_CHANGED, EVENT_STATE_CHANGED
-from homeassistant.core import callback, DOMAIN as HASS_DOMAIN
-from homeassistant.exceptions import Unauthorized, ServiceNotFound, HomeAssistantError
+from homeassistant.const import EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL
+from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, Unauthorized
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.service import async_get_all_descriptions
 
 from . import const, decorators, messages
+
+# mypy: allow-untyped-calls, allow-untyped-defs
 
 
 @callback
@@ -21,6 +24,7 @@ def async_register_commands(hass, async_reg):
     async_reg(hass, handle_get_services)
     async_reg(hass, handle_get_config)
     async_reg(hass, handle_ping)
+    async_reg(hass, handle_render_template)
 
 
 def pong_message(iden):
@@ -40,6 +44,8 @@ def handle_subscribe_events(hass, connection, msg):
 
     Async friendly.
     """
+    # Circular dep
+    # pylint: disable=import-outside-toplevel
     from .permissions import SUBSCRIBE_WHITELIST
 
     event_type = msg["event_type"]
@@ -127,7 +133,9 @@ async def handle_call_service(hass, connection, msg):
             blocking,
             connection.context(msg),
         )
-        connection.send_message(messages.result_message(msg["id"]))
+        connection.send_message(
+            messages.result_message(msg["id"], {"context": connection.context(msg)})
+        )
     except ServiceNotFound as err:
         if err.domain == msg["domain"] and err.service == msg["service"]:
             connection.send_message(
@@ -202,3 +210,45 @@ def handle_ping(hass, connection, msg):
     Async friendly.
     """
     connection.send_message(pong_message(msg["id"]))
+
+
+@callback
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "render_template",
+        vol.Required("template"): cv.template,
+        vol.Optional("entity_ids"): cv.entity_ids,
+        vol.Optional("variables"): dict,
+    }
+)
+def handle_render_template(hass, connection, msg):
+    """Handle render_template command.
+
+    Async friendly.
+    """
+    template = msg["template"]
+    template.hass = hass
+
+    variables = msg.get("variables")
+
+    entity_ids = msg.get("entity_ids")
+    if entity_ids is None:
+        entity_ids = template.extract_entities(variables)
+
+    @callback
+    def state_listener(*_):
+        connection.send_message(
+            messages.event_message(
+                msg["id"], {"result": template.async_render(variables)}
+            )
+        )
+
+    if entity_ids and entity_ids != MATCH_ALL:
+        connection.subscriptions[msg["id"]] = async_track_state_change(
+            hass, entity_ids, state_listener
+        )
+    else:
+        connection.subscriptions[msg["id"]] = lambda: None
+
+    connection.send_result(msg["id"])
+    state_listener()

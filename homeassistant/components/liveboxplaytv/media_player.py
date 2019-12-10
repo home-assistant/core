@@ -2,10 +2,12 @@
 from datetime import timedelta
 import logging
 
+from liveboxplaytv import LiveboxPlayTv
+import pyteleloisirs
 import requests
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
@@ -70,7 +72,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     try:
         device = LiveboxPlayTvDevice(host, port, name)
         livebox_devices.append(device)
-    except IOError:
+    except OSError:
         _LOGGER.error(
             "Failed to connect to Livebox Play TV at %s:%s. "
             "Please check your configuration",
@@ -85,7 +87,6 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
 
     def __init__(self, host, port, name):
         """Initialize the Livebox Play TV device."""
-        from liveboxplaytv import LiveboxPlayTv
 
         self._client = LiveboxPlayTv(host, port)
         # Assume that the appliance is not muted
@@ -103,7 +104,6 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
 
     async def async_update(self):
         """Retrieve the latest data."""
-        import pyteleloisirs
 
         try:
             self._state = self.refresh_state()
@@ -178,7 +178,7 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         """Title of current playing media."""
         if self._current_channel:
             if self._current_program:
-                return "{}: {}".format(self._current_channel, self._current_program)
+                return f"{self._current_channel}: {self._current_program}"
             return self._current_channel
 
     @property

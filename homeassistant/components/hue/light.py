@@ -2,8 +2,8 @@
 import asyncio
 from datetime import timedelta
 import logging
-from time import monotonic
 import random
+from time import monotonic
 
 import aiohue
 import async_timeout
@@ -14,21 +14,23 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_FLASH,
-    ATTR_TRANSITION,
     ATTR_HS_COLOR,
+    ATTR_TRANSITION,
     EFFECT_COLORLOOP,
     EFFECT_RANDOM,
     FLASH_LONG,
     FLASH_SHORT,
     SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
     SUPPORT_FLASH,
-    SUPPORT_COLOR,
     SUPPORT_TRANSITION,
     Light,
 )
 from homeassistant.util import color
+
+from .helpers import remove_devices
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
@@ -147,6 +149,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         tasks.append(
             async_update_items(
                 hass,
+                config_entry,
                 bridge,
                 async_add_entities,
                 request_update,
@@ -160,6 +163,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             tasks.append(
                 async_update_items(
                     hass,
+                    config_entry,
                     bridge,
                     async_add_entities,
                     request_update,
@@ -176,6 +180,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 async def async_update_items(
     hass,
+    config_entry,
     bridge,
     async_add_entities,
     request_bridge_update,
@@ -184,6 +189,9 @@ async def async_update_items(
     progress_waiting,
 ):
     """Update either groups or lights from the bridge."""
+    if not bridge.authorized:
+        return
+
     if is_group:
         api_type = "group"
         api = bridge.api.groups
@@ -194,7 +202,10 @@ async def async_update_items(
     try:
         start = monotonic()
         with async_timeout.timeout(4):
-            await api.update()
+            await bridge.async_request_call(api.update())
+    except aiohue.Unauthorized:
+        await bridge.handle_unauthorized_error()
+        return
     except (asyncio.TimeoutError, aiohue.AiohueException) as err:
         _LOGGER.debug("Failed to fetch %s: %s", api_type, err)
 
@@ -204,9 +215,9 @@ async def async_update_items(
         _LOGGER.error("Unable to reach bridge %s (%s)", bridge.host, err)
         bridge.available = False
 
-        for light_id, light in current.items():
-            if light_id not in progress_waiting:
-                light.async_schedule_update_ha_state()
+        for item_id, item in current.items():
+            if item_id not in progress_waiting:
+                item.async_schedule_update_ha_state()
 
         return
 
@@ -219,7 +230,7 @@ async def async_update_items(
         _LOGGER.info("Reconnected to bridge %s", bridge.host)
         bridge.available = True
 
-    new_lights = []
+    new_items = []
 
     for item_id in api:
         if item_id not in current:
@@ -227,12 +238,14 @@ async def async_update_items(
                 api[item_id], request_bridge_update, bridge, is_group
             )
 
-            new_lights.append(current[item_id])
+            new_items.append(current[item_id])
         elif item_id not in progress_waiting:
             current[item_id].async_schedule_update_ha_state()
 
-    if new_lights:
-        async_add_entities(new_lights)
+    await remove_devices(hass, config_entry, api, current)
+
+    if new_items:
+        async_add_entities(new_items)
 
 
 class HueLight(Light):
@@ -271,8 +284,13 @@ class HueLight(Light):
 
     @property
     def unique_id(self):
-        """Return the ID of this Hue light."""
+        """Return the unique ID of this Hue light."""
         return self.light.uniqueid
+
+    @property
+    def device_id(self):
+        """Return the ID of this Hue light."""
+        return self.unique_id
 
     @property
     def name(self):
@@ -325,10 +343,14 @@ class HueLight(Light):
     @property
     def available(self):
         """Return if light is available."""
-        return self.bridge.available and (
-            self.is_group
-            or self.bridge.allow_unreachable
-            or self.light.state["reachable"]
+        return (
+            self.bridge.available
+            and self.bridge.authorized
+            and (
+                self.is_group
+                or self.bridge.allow_unreachable
+                or self.light.state["reachable"]
+            )
         )
 
     @property
@@ -355,7 +377,7 @@ class HueLight(Light):
             return None
 
         return {
-            "identifiers": {(hue.DOMAIN, self.unique_id)},
+            "identifiers": {(hue.DOMAIN, self.device_id)},
             "name": self.name,
             "manufacturer": self.light.manufacturername,
             # productname added in Hue Bridge API 1.24
@@ -412,9 +434,9 @@ class HueLight(Light):
                 command["effect"] = "none"
 
         if self.is_group:
-            await self.light.set_action(**command)
+            await self.bridge.async_request_call(self.light.set_action(**command))
         else:
-            await self.light.set_state(**command)
+            await self.bridge.async_request_call(self.light.set_state(**command))
 
     async def async_turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
@@ -435,9 +457,9 @@ class HueLight(Light):
             command["alert"] = "none"
 
         if self.is_group:
-            await self.light.set_action(**command)
+            await self.bridge.async_request_call(self.light.set_action(**command))
         else:
-            await self.light.set_state(**command)
+            await self.bridge.async_request_call(self.light.set_state(**command))
 
     async def async_update(self):
         """Synchronize state with bridge."""

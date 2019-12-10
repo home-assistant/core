@@ -1,15 +1,24 @@
 """Support to send and receive Telegram messages."""
-import io
-from ipaddress import ip_network
 from functools import partial
 import importlib
+import io
+from ipaddress import ip_network
 import logging
 
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
+from telegram import (
+    Bot,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    ReplyKeyboardMarkup,
+    ReplyKeyboardRemove,
+)
+from telegram.error import TelegramError
+from telegram.parsemode import ParseMode
+from telegram.utils.request import Request
 import voluptuous as vol
 
-from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.const import (
     ATTR_COMMAND,
     ATTR_LATITUDE,
@@ -17,13 +26,17 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_PLATFORM,
     CONF_TIMEOUT,
-    HTTP_DIGEST_AUTHENTICATION,
     CONF_URL,
+    HTTP_DIGEST_AUTHENTICATION,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import TemplateError
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_DATA = "data"
+ATTR_MESSAGE = "message"
+ATTR_TITLE = "title"
 
 ATTR_ARGS = "args"
 ATTR_AUTHENTICATION = "authentication"
@@ -375,8 +388,6 @@ async def async_setup(hass, config):
 
 def initialize_bot(p_config):
     """Initialize telegram bot with proxy support."""
-    from telegram import Bot
-    from telegram.utils.request import Request
 
     api_key = p_config.get(CONF_API_KEY)
     proxy_url = p_config.get(CONF_PROXY_URL)
@@ -396,7 +407,6 @@ class TelegramNotificationService:
 
     def __init__(self, hass, bot, allowed_chat_ids, parser):
         """Initialize the service."""
-        from telegram.parsemode import ParseMode
 
         self.allowed_chat_ids = allowed_chat_ids
         self._default_user = self.allowed_chat_ids[0]
@@ -457,7 +467,6 @@ class TelegramNotificationService:
               - a string like: `/cmd1, /cmd2, /cmd3`
               - or a string like: `text_b1:/cmd1, text_b2:/cmd2`
             """
-            from telegram import InlineKeyboardButton
 
             buttons = []
             if isinstance(row_keyboard, str):
@@ -507,8 +516,6 @@ class TelegramNotificationService:
                 params[ATTR_REPLY_TO_MSGID] = data[ATTR_REPLY_TO_MSGID]
             # Keyboards:
             if ATTR_KEYBOARD in data:
-                from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
-
                 keys = data.get(ATTR_KEYBOARD)
                 keys = keys if isinstance(keys, list) else [keys]
                 if keys:
@@ -517,9 +524,8 @@ class TelegramNotificationService:
                     )
                 else:
                     params[ATTR_REPLYMARKUP] = ReplyKeyboardRemove(True)
-            elif ATTR_KEYBOARD_INLINE in data:
-                from telegram import InlineKeyboardMarkup
 
+            elif ATTR_KEYBOARD_INLINE in data:
                 keys = data.get(ATTR_KEYBOARD_INLINE)
                 keys = keys if isinstance(keys, list) else [keys]
                 params[ATTR_REPLYMARKUP] = InlineKeyboardMarkup(
@@ -529,7 +535,6 @@ class TelegramNotificationService:
 
     def _send_msg(self, func_send, msg_error, *args_msg, **kwargs_msg):
         """Send one message."""
-        from telegram.error import TelegramError
 
         try:
             out = func_send(*args_msg, **kwargs_msg)
@@ -554,7 +559,7 @@ class TelegramNotificationService:
     def send_message(self, message="", target=None, **kwargs):
         """Send a message to one or multiple pre-allowed chat IDs."""
         title = kwargs.get(ATTR_TITLE)
-        text = "{}\n{}".format(title, message) if title else message
+        text = f"{title}\n{message}" if title else message
         params = self._get_msg_kwargs(kwargs)
         for chat_id in self._get_target_chat_ids(target):
             _LOGGER.debug("Send message in chat ID %s with params: %s", chat_id, params)
@@ -590,7 +595,7 @@ class TelegramNotificationService:
         if type_edit == SERVICE_EDIT_MESSAGE:
             message = kwargs.get(ATTR_MESSAGE)
             title = kwargs.get(ATTR_TITLE)
-            text = "{}\n{}".format(title, message) if title else message
+            text = f"{title}\n{message}" if title else message
             _LOGGER.debug(
                 "Editing message with ID %s.", message_id or inline_message_id
             )
@@ -729,6 +734,8 @@ class BaseTelegramBotEntity:
             ATTR_USER_ID: msg_data["from"]["id"],
             ATTR_FROM_FIRST: msg_data["from"]["first_name"],
         }
+        if "message_id" in msg_data:
+            data[ATTR_MSGID] = msg_data["message_id"]
         if "last_name" in msg_data["from"]:
             data[ATTR_FROM_LAST] = msg_data["from"]["last_name"]
         if "chat" in msg_data:
@@ -749,6 +756,9 @@ class BaseTelegramBotEntity:
             message_ok, event_data = self._get_message_data(data)
             if event_data is None:
                 return message_ok
+
+            if ATTR_MSGID in data:
+                event_data[ATTR_MSGID] = data[ATTR_MSGID]
 
             if "text" in data:
                 if data["text"][0] == "/":

@@ -3,36 +3,38 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.fan import (
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_HIGH,
-    SUPPORT_SET_SPEED,
-    SUPPORT_OSCILLATE,
-    FanEntity,
-    ATTR_SPEED,
+    ATTR_DIRECTION,
     ATTR_OSCILLATING,
-    ENTITY_ID_FORMAT,
-    SUPPORT_DIRECTION,
+    ATTR_SPEED,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
-    ATTR_DIRECTION,
+    ENTITY_ID_FORMAT,
+    SPEED_HIGH,
+    SPEED_LOW,
+    SPEED_MEDIUM,
+    SUPPORT_DIRECTION,
+    SUPPORT_OSCILLATE,
+    SUPPORT_SET_SPEED,
+    FanEntity,
 )
 from homeassistant.const import (
+    CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
     CONF_VALUE_TEMPLATE,
-    CONF_ENTITY_ID,
-    STATE_ON,
-    STATE_OFF,
-    MATCH_ALL,
     EVENT_HOMEASSISTANT_START,
+    STATE_OFF,
+    STATE_ON,
     STATE_UNKNOWN,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.script import Script
+
+from . import extract_entities, initialise_templates
+from .const import CONF_AVAILABILITY_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,6 +60,7 @@ FAN_SCHEMA = vol.Schema(
         vol.Optional(CONF_SPEED_TEMPLATE): cv.template,
         vol.Optional(CONF_OSCILLATING_TEMPLATE): cv.template,
         vol.Optional(CONF_DIRECTION_TEMPLATE): cv.template,
+        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
         vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
         vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_SET_SPEED_ACTION): cv.SCRIPT_SCHEMA,
@@ -86,6 +89,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         speed_template = device_config.get(CONF_SPEED_TEMPLATE)
         oscillating_template = device_config.get(CONF_OSCILLATING_TEMPLATE)
         direction_template = device_config.get(CONF_DIRECTION_TEMPLATE)
+        availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
 
         on_action = device_config[CONF_ON_ACTION]
         off_action = device_config[CONF_OFF_ACTION]
@@ -95,32 +99,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
         speed_list = device_config[CONF_SPEED_LIST]
 
-        entity_ids = set()
-        manual_entity_ids = device_config.get(CONF_ENTITY_ID)
+        templates = {
+            CONF_VALUE_TEMPLATE: state_template,
+            CONF_SPEED_TEMPLATE: speed_template,
+            CONF_OSCILLATING_TEMPLATE: oscillating_template,
+            CONF_DIRECTION_TEMPLATE: direction_template,
+            CONF_AVAILABILITY_TEMPLATE: availability_template,
+        }
 
-        for template in (
-            state_template,
-            speed_template,
-            oscillating_template,
-            direction_template,
-        ):
-            if template is None:
-                continue
-            template.hass = hass
-
-            if entity_ids == MATCH_ALL or manual_entity_ids is not None:
-                continue
-
-            template_entity_ids = template.extract_entities()
-            if template_entity_ids == MATCH_ALL:
-                entity_ids = MATCH_ALL
-            else:
-                entity_ids |= set(template_entity_ids)
-
-        if manual_entity_ids is not None:
-            entity_ids = manual_entity_ids
-        elif entity_ids != MATCH_ALL:
-            entity_ids = list(entity_ids)
+        initialise_templates(hass, templates)
+        entity_ids = extract_entities(device, "fan", None, templates)
 
         fans.append(
             TemplateFan(
@@ -131,6 +119,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 speed_template,
                 oscillating_template,
                 direction_template,
+                availability_template,
                 on_action,
                 off_action,
                 set_speed_action,
@@ -156,6 +145,7 @@ class TemplateFan(FanEntity):
         speed_template,
         oscillating_template,
         direction_template,
+        availability_template,
         on_action,
         off_action,
         set_speed_action,
@@ -175,6 +165,8 @@ class TemplateFan(FanEntity):
         self._speed_template = speed_template
         self._oscillating_template = oscillating_template
         self._direction_template = direction_template
+        self._availability_template = availability_template
+        self._available = True
         self._supported_features = 0
 
         self._on_script = Script(hass, on_action)
@@ -207,6 +199,8 @@ class TemplateFan(FanEntity):
         if self._direction_template:
             self._direction_template.hass = self.hass
             self._supported_features |= SUPPORT_DIRECTION
+        if self._availability_template:
+            self._availability_template.hass = self.hass
 
         self._entities = entity_ids
         # List of valid speeds
@@ -243,7 +237,7 @@ class TemplateFan(FanEntity):
         return self._oscillating
 
     @property
-    def direction(self):
+    def current_direction(self):
         """Return the oscillation state."""
         return self._direction
 
@@ -252,10 +246,15 @@ class TemplateFan(FanEntity):
         """Return the polling state."""
         return False
 
+    @property
+    def available(self):
+        """Return availability of Device."""
+        return self._available
+
     # pylint: disable=arguments-differ
     async def async_turn_on(self, speed: str = None) -> None:
         """Turn on the fan."""
-        await self._on_script.async_run(context=self._context)
+        await self._on_script.async_run({ATTR_SPEED: speed}, context=self._context)
         self._state = STATE_ON
 
         if speed is not None:
@@ -422,3 +421,17 @@ class TemplateFan(FanEntity):
                     ", ".join(_VALID_DIRECTIONS),
                 )
                 self._direction = None
+
+        # Update Availability if 'availability_template' is defined
+        if self._availability_template is not None:
+            try:
+                self._available = (
+                    self._availability_template.async_render().lower() == "true"
+                )
+            except (TemplateError, ValueError) as ex:
+                _LOGGER.error(
+                    "Could not render %s template %s: %s",
+                    CONF_AVAILABILITY_TEMPLATE,
+                    self._name,
+                    ex,
+                )

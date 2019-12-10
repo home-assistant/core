@@ -1,14 +1,14 @@
 """Details about printers which are connected to CUPS."""
+from datetime import timedelta
 import importlib
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.exceptions import PlatformNotReady
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -276,11 +276,11 @@ class MarkerSensor(Entity):
         if self._attributes is None:
             return None
 
-        high_level = self._attributes[self._printer]["marker-high-levels"]
+        high_level = self._attributes[self._printer].get("marker-high-levels")
         if isinstance(high_level, list):
             high_level = high_level[self._index]
 
-        low_level = self._attributes[self._printer]["marker-low-levels"]
+        low_level = self._attributes[self._printer].get("marker-low-levels")
         if isinstance(low_level, list):
             low_level = low_level[self._index]
 
@@ -306,7 +306,6 @@ class MarkerSensor(Entity):
         self._attributes = self.data.attributes
 
 
-# pylint: disable=no-name-in-module
 class CupsData:
     """Get the latest data from CUPS and update the state."""
 
@@ -333,7 +332,7 @@ class CupsData:
             else:
                 for ipp_printer in self._ipp_printers:
                     self.attributes[ipp_printer] = conn.getPrinterAttributes(
-                        uri="ipp://{}:{}/{}".format(self._host, self._port, ipp_printer)
+                        uri=f"ipp://{self._host}:{self._port}/{ipp_printer}"
                     )
 
             self.available = True

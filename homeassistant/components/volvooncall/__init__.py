@@ -1,10 +1,10 @@
 """Support for Volvo On Call."""
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
+from volvooncall import Connection
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -14,6 +14,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -36,7 +37,7 @@ CONF_SERVICE_URL = "service_url"
 CONF_SCANDINAVIAN_MILES = "scandinavian_miles"
 CONF_MUTABLE = "mutable"
 
-SIGNAL_STATE_UPDATED = "{}.updated".format(DOMAIN)
+SIGNAL_STATE_UPDATED = f"{DOMAIN}.updated"
 
 COMPONENTS = {
     "sensor": "sensor",
@@ -114,8 +115,6 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Set up the Volvo On Call component."""
     session = async_get_clientsession(hass)
-
-    from volvooncall import Connection
 
     connection = Connection(
         session=session,
@@ -261,7 +260,7 @@ class VolvoEntity(Entity):
     @property
     def name(self):
         """Return full name of the entity."""
-        return "{} {}".format(self._vehicle_name, self._entity_name)
+        return f"{self._vehicle_name} {self._entity_name}"
 
     @property
     def should_poll(self):
@@ -278,5 +277,5 @@ class VolvoEntity(Entity):
         """Return device specific state attributes."""
         return dict(
             self.instrument.attributes,
-            model="{}/{}".format(self.vehicle.vehicle_type, self.vehicle.model_year),
+            model=f"{self.vehicle.vehicle_type}/{self.vehicle.model_year}",
         )

@@ -13,8 +13,8 @@ from .const import (
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
 )
-from .state_report import async_enable_proactive_mode
 from .smart_home import async_handle_message
+from .state_report import async_enable_proactive_mode
 
 _LOGGER = logging.getLogger(__name__)
 SMART_HOME_HTTP_ENDPOINT = "/api/alexa/smart_home"
@@ -56,6 +56,11 @@ class AlexaConfig(AbstractConfig):
     def should_expose(self, entity_id):
         """If an entity should be exposed."""
         return self._config[CONF_FILTER](entity_id)
+
+    @core.callback
+    def async_invalidate_access_token(self):
+        """Invalidate access token."""
+        self._auth.async_invalidate_access_token()
 
     async def async_get_access_token(self):
         """Get an access token."""

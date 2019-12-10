@@ -6,6 +6,7 @@ import socket
 import sys
 
 import async_timeout
+from mysensors import mysensors
 import voluptuous as vol
 
 from homeassistant.const import CONF_OPTIMISTIC, EVENT_HOMEASSISTANT_STOP
@@ -44,7 +45,7 @@ def is_serial_port(value):
         ports = ("COM{}".format(idx + 1) for idx in range(256))
         if value in ports:
             return value
-        raise vol.Invalid("{} is not a serial port".format(value))
+        raise vol.Invalid(f"{value} is not a serial port")
     return cv.isdevice(value)
 
 
@@ -84,7 +85,6 @@ async def setup_gateways(hass, config):
 
 async def _get_gateway(hass, config, gateway_conf, persistence_file):
     """Return gateway after setup of the gateway."""
-    from mysensors import mysensors
 
     conf = config[DOMAIN]
     persistence = conf[CONF_PERSISTENCE]

@@ -3,6 +3,8 @@ import asyncio
 import logging
 from typing import Sequence, TypeVar, Union
 
+from pyatv import AppleTVDevice, connect_to_apple_tv, scan_for_apple_tvs
+from pyatv.exceptions import DeviceAuthenticationError
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_APPLE_TV
@@ -80,7 +82,6 @@ def request_configuration(hass, config, atv, credentials):
 
     async def configuration_callback(callback_data):
         """Handle the submitted configuration."""
-        from pyatv import exceptions
 
         pin = callback_data.get("pin")
 
@@ -93,7 +94,7 @@ def request_configuration(hass, config, atv, credentials):
                 title=NOTIFICATION_AUTH_TITLE,
                 notification_id=NOTIFICATION_AUTH_ID,
             )
-        except exceptions.DeviceAuthenticationError as ex:
+        except DeviceAuthenticationError as ex:
             hass.components.persistent_notification.async_create(
                 "Authentication failed! Did you enter correct PIN?<br /><br />"
                 "Details: {0}".format(ex),
@@ -112,11 +113,10 @@ def request_configuration(hass, config, atv, credentials):
     )
 
 
-async def scan_for_apple_tvs(hass):
+async def scan_apple_tvs(hass):
     """Scan for devices and present a notification of the ones found."""
-    import pyatv
 
-    atvs = await pyatv.scan_for_apple_tvs(hass.loop, timeout=3)
+    atvs = await scan_for_apple_tvs(hass.loop, timeout=3)
 
     devices = []
     for atv in atvs:
@@ -149,7 +149,7 @@ async def async_setup(hass, config):
         entity_ids = service.data.get(ATTR_ENTITY_ID)
 
         if service.service == SERVICE_SCAN:
-            hass.async_add_job(scan_for_apple_tvs, hass)
+            hass.async_add_job(scan_apple_tvs, hass)
             return
 
         if entity_ids:
@@ -207,7 +207,6 @@ async def async_setup(hass, config):
 
 async def _setup_atv(hass, hass_config, atv_config):
     """Set up an Apple TV."""
-    import pyatv
 
     name = atv_config.get(CONF_NAME)
     host = atv_config.get(CONF_HOST)
@@ -218,9 +217,9 @@ async def _setup_atv(hass, hass_config, atv_config):
     if host in hass.data[DATA_APPLE_TV]:
         return
 
-    details = pyatv.AppleTVDevice(name, host, login_id)
+    details = AppleTVDevice(name, host, login_id)
     session = async_get_clientsession(hass)
-    atv = pyatv.connect_to_apple_tv(details, hass.loop, session=session)
+    atv = connect_to_apple_tv(details, hass.loop, session=session)
     if credentials:
         await atv.airplay.load_credentials(credentials)
 

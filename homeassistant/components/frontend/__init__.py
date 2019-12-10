@@ -4,23 +4,25 @@ import logging
 import mimetypes
 import os
 import pathlib
+from typing import Any, Dict, Optional, Set, Tuple
 
-from aiohttp import web, web_urldispatcher, hdrs
-import voluptuous as vol
+from aiohttp import hdrs, web, web_urldispatcher
 import jinja2
+import voluptuous as vol
 from yarl import URL
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components import websocket_api
+from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.config import find_config_file, load_yaml_config_file
 from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
 
 from .storage import async_setup_frontend_storage
 
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 # Fix mimetypes for borked Windows machines
 # https://github.com/home-assistant/home-assistant-polymer/issues/3336
@@ -45,22 +47,21 @@ MANIFEST_JSON = {
     "description": "Home automation platform that puts local control and privacy first.",
     "dir": "ltr",
     "display": "standalone",
-    "icons": [],
+    "icons": [
+        {
+            "src": "/static/icons/favicon-{size}x{size}.png".format(size=size),
+            "sizes": "{size}x{size}".format(size=size),
+            "type": "image/png",
+            "purpose": "maskable any",
+        }
+        for size in (192, 384, 512, 1024)
+    ],
     "lang": "en-US",
     "name": "Home Assistant",
     "short_name": "Assistant",
     "start_url": "/?homescreen=1",
     "theme_color": DEFAULT_THEME_COLOR,
 }
-
-for size in (192, 384, 512, 1024):
-    MANIFEST_JSON["icons"].append(
-        {
-            "src": "/static/icons/favicon-{size}x{size}.png".format(size=size),
-            "sizes": "{size}x{size}".format(size=size),
-            "type": "image/png",
-        }
-    )
 
 DATA_PANELS = "frontend_panels"
 DATA_JS_VERSION = "frontend_js_version"
@@ -121,19 +122,19 @@ class Panel:
     """Abstract class for panels."""
 
     # Name of the webcomponent
-    component_name = None
+    component_name: Optional[str] = None
 
-    # Icon to show in the sidebar (optional)
-    sidebar_icon = None
+    # Icon to show in the sidebar
+    sidebar_icon: Optional[str] = None
 
-    # Title to show in the sidebar (optional)
-    sidebar_title = None
+    # Title to show in the sidebar
+    sidebar_title: Optional[str] = None
 
     # Url to show the panel in the frontend
-    frontend_url_path = None
+    frontend_url_path: Optional[str] = None
 
     # Config to pass to the webcomponent
-    config = None
+    config: Optional[Dict[str, Any]] = None
 
     # If the panel should only be visible to admins
     require_admin = False
@@ -240,7 +241,8 @@ def _frontend_root(dev_repo_path):
     """Return root path to the frontend files."""
     if dev_repo_path is not None:
         return pathlib.Path(dev_repo_path) / "hass_frontend"
-
+    # Keep import here so that we can import frontend without installing reqs
+    # pylint: disable=import-outside-toplevel
     import hass_frontend
 
     return hass_frontend.where()
@@ -274,9 +276,7 @@ async def async_setup(hass, config):
         ("frontend_latest", True),
         ("frontend_es5", True),
     ):
-        hass.http.register_static_path(
-            "/{}".format(path), str(root_path / path), should_cache
-        )
+        hass.http.register_static_path(f"/{path}", str(root_path / path), should_cache)
 
     hass.http.register_static_path(
         "/auth/authorize", str(root_path / "authorize.html"), False
@@ -294,9 +294,7 @@ async def async_setup(hass, config):
     # To smooth transition to new urls, add redirects to new urls of dev tools
     # Added June 27, 2019. Can be removed in 2021.
     for panel in ("event", "info", "service", "state", "template", "mqtt"):
-        hass.http.register_redirect(
-            "/dev-{}".format(panel), "/developer-tools/{}".format(panel)
-        )
+        hass.http.register_redirect(f"/dev-{panel}", f"/developer-tools/{panel}")
 
     async_register_built_in_panel(
         hass,
@@ -404,7 +402,9 @@ class IndexView(web_urldispatcher.AbstractResource):
         """Construct url for resource with additional params."""
         return URL("/")
 
-    async def resolve(self, request: web.Request):
+    async def resolve(
+        self, request: web.Request
+    ) -> Tuple[Optional[web_urldispatcher.UrlMappingMatchInfo], Set[str]]:
         """Resolve resource.
 
         Return (UrlMappingMatchInfo, allowed_methods) pair.
@@ -451,7 +451,7 @@ class IndexView(web_urldispatcher.AbstractResource):
 
         return tpl
 
-    async def get(self, request: web.Request):
+    async def get(self, request: web.Request) -> web.Response:
         """Serve the index page for panel pages."""
         hass = request.app["hass"]
 

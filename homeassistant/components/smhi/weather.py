@@ -6,6 +6,8 @@ from typing import Dict, List
 
 import aiohttp
 import async_timeout
+from smhi import Smhi
+from smhi.smhi_lib import SmhiForecastException
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -90,7 +92,6 @@ class SmhiWeather(WeatherEntity):
         session: aiohttp.ClientSession = None,
     ) -> None:
         """Initialize the SMHI weather entity."""
-        from smhi import Smhi
 
         self._name = name
         self._latitude = latitude
@@ -102,12 +103,11 @@ class SmhiWeather(WeatherEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique id."""
-        return "{}, {}".format(self._latitude, self._longitude)
+        return f"{self._latitude}, {self._longitude}"
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Refresh the forecast data from SMHI weather API."""
-        from smhi.smhi_lib import SmhiForecastException
 
         def fail():
             """Postpone updates."""

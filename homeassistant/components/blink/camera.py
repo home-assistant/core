@@ -30,9 +30,9 @@ class BlinkCamera(Camera):
         """Initialize a camera."""
         super().__init__()
         self.data = data
-        self._name = "{} {}".format(BLINK_DATA, name)
+        self._name = f"{BLINK_DATA} {name}"
         self._camera = camera
-        self._unique_id = "{}-camera".format(camera.serial)
+        self._unique_id = f"{camera.serial}-camera"
         self.response = None
         self.current_image = None
         self.last_image = None

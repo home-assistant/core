@@ -1,11 +1,11 @@
 """Support for interfacing with an instance of getchannels.com."""
 import logging
 
+from pychannels import Channels
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
-    DOMAIN,
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_EPISODE,
     MEDIA_TYPE_MOVIE,
@@ -29,6 +29,8 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 import homeassistant.helpers.config_validation as cv
+
+from .const import DOMAIN, SERVICE_SEEK_BACKWARD, SERVICE_SEEK_BY, SERVICE_SEEK_FORWARD
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,9 +57,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-SERVICE_SEEK_FORWARD = "channels_seek_forward"
-SERVICE_SEEK_BACKWARD = "channels_seek_backward"
-SERVICE_SEEK_BY = "channels_seek_by"
 
 # Service call validation schemas
 ATTR_SECONDS = "seconds"
@@ -124,7 +123,6 @@ class ChannelsPlayer(MediaPlayerDevice):
 
     def __init__(self, name, host, port):
         """Initialize the Channels app."""
-        from pychannels import Channels
 
         self._name = name
         self._host = host

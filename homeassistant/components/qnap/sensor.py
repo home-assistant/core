@@ -1,26 +1,27 @@
 """Support for QNAP NAS Sensors."""
-import logging
 from datetime import timedelta
+import logging
 
+from qnapstats import QNAPStats
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
+    ATTR_NAME,
     CONF_HOST,
-    CONF_USERNAME,
+    CONF_MONITORED_CONDITIONS,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
-    ATTR_NAME,
-    CONF_VERIFY_SSL,
     CONF_TIMEOUT,
-    CONF_MONITORED_CONDITIONS,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
     TEMP_CELSIUS,
 )
-from homeassistant.util import Throttle
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -170,7 +171,6 @@ class QNAPStatsAPI:
 
     def __init__(self, config):
         """Initialize the API wrapper."""
-        from qnapstats import QNAPStats
 
         protocol = "https" if config.get(CONF_SSL) else "http"
         self._api = QNAPStats(
@@ -215,8 +215,8 @@ class QNAPSensor(Entity):
         server_name = self._api.data["system_stats"]["system"]["name"]
 
         if self.monitor_device is not None:
-            return "{} {} ({})".format(server_name, self.var_name, self.monitor_device)
-        return "{} {}".format(server_name, self.var_name)
+            return f"{server_name} {self.var_name} ({self.monitor_device})"
+        return f"{server_name} {self.var_name}"
 
     @property
     def icon(self):
@@ -270,7 +270,7 @@ class QNAPMemorySensor(QNAPSensor):
         if self._api.data:
             data = self._api.data["system_stats"]["memory"]
             size = round_nicely(float(data["total"]) / 1024)
-            return {ATTR_MEMORY_SIZE: "{} GB".format(size)}
+            return {ATTR_MEMORY_SIZE: f"{size} GB"}
 
 
 class QNAPNetworkSensor(QNAPSensor):
@@ -331,7 +331,7 @@ class QNAPSystemSensor(QNAPSensor):
                 ATTR_NAME: data["system"]["name"],
                 ATTR_MODEL: data["system"]["model"],
                 ATTR_SERIAL: data["system"]["serial_number"],
-                ATTR_UPTIME: "{:0>2d}d {:0>2d}h {:0>2d}m".format(days, hours, minutes),
+                ATTR_UPTIME: f"{days:0>2d}d {hours:0>2d}h {minutes:0>2d}m",
             }
 
 

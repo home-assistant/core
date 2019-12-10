@@ -2,17 +2,18 @@
 
 import logging
 
+from brunt import BruntAPI
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    CoverDevice,
     PLATFORM_SCHEMA,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
+    CoverDevice,
 )
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,8 +36,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the brunt platform."""
-    # pylint: disable=no-name-in-module
-    from brunt import BruntAPI
 
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]

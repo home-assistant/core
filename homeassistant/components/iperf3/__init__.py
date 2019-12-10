@@ -1,25 +1,26 @@
 """Support for Iperf3 network measurement tool."""
-import logging
 from datetime import timedelta
+import logging
 
+import iperf3
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
+    CONF_HOST,
+    CONF_HOSTS,
     CONF_MONITORED_CONDITIONS,
     CONF_PORT,
-    CONF_HOST,
     CONF_PROTOCOL,
-    CONF_HOSTS,
     CONF_SCAN_INTERVAL,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 DOMAIN = "iperf3"
-DATA_UPDATED = "{}_data_updated".format(DOMAIN)
+DATA_UPDATED = f"{DOMAIN}_data_updated"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,23 +81,11 @@ SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_HOST, default=None): cv.string})
 
 async def async_setup(hass, config):
     """Set up the iperf3 component."""
-    import iperf3
-
     hass.data[DOMAIN] = {}
 
     conf = config[DOMAIN]
     for host in conf[CONF_HOSTS]:
-        host_name = host[CONF_HOST]
-
-        client = iperf3.Client()
-        client.duration = host[CONF_DURATION]
-        client.server_hostname = host_name
-        client.port = host[CONF_PORT]
-        client.num_streams = host[CONF_PARALLEL]
-        client.protocol = host[CONF_PROTOCOL]
-        client.verbose = False
-
-        data = hass.data[DOMAIN][host_name] = Iperf3Data(hass, client)
+        data = hass.data[DOMAIN][host[CONF_HOST]] = Iperf3Data(hass, host)
 
         if not conf[CONF_MANUAL]:
             async_track_time_interval(hass, data.update, conf[CONF_SCAN_INTERVAL])
@@ -124,26 +113,37 @@ async def async_setup(hass, config):
 class Iperf3Data:
     """Get the latest data from iperf3."""
 
-    def __init__(self, hass, client):
+    def __init__(self, hass, host):
         """Initialize the data object."""
         self._hass = hass
-        self._client = client
+        self._host = host
         self.data = {ATTR_DOWNLOAD: None, ATTR_UPLOAD: None, ATTR_VERSION: None}
+
+    def create_client(self):
+        """Create a new iperf3 client to use for measurement."""
+        client = iperf3.Client()
+        client.duration = self._host[CONF_DURATION]
+        client.server_hostname = self._host[CONF_HOST]
+        client.port = self._host[CONF_PORT]
+        client.num_streams = self._host[CONF_PARALLEL]
+        client.protocol = self._host[CONF_PROTOCOL]
+        client.verbose = False
+        return client
 
     @property
     def protocol(self):
         """Return the protocol used for this connection."""
-        return self._client.protocol
+        return self._host[CONF_PROTOCOL]
 
     @property
     def host(self):
         """Return the host connected to."""
-        return self._client.server_hostname
+        return self._host[CONF_HOST]
 
     @property
     def port(self):
         """Return the port on the host connected to."""
-        return self._client.port
+        return self._host[CONF_PORT]
 
     def update(self, now=None):
         """Get the latest data from iperf3."""
@@ -166,9 +166,10 @@ class Iperf3Data:
 
     def _run_test(self, test_type):
         """Run and return the iperf3 data."""
-        self._client.reverse = test_type == ATTR_DOWNLOAD
+        client = self.create_client()
+        client.reverse = test_type == ATTR_DOWNLOAD
         try:
-            result = self._client.run()
+            result = client.run()
         except (AttributeError, OSError, ValueError) as error:
             _LOGGER.error("Iperf3 error: %s", error)
             return None

@@ -1,15 +1,15 @@
 """Sensor for SigFox devices."""
-import logging
 import datetime
 import json
+import logging
 from urllib.parse import urljoin
 
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,7 +90,7 @@ class SigfoxAPI:
         """Get the device_id of each device registered."""
         devices = []
         for unique_type in device_types:
-            location_url = "devicetypes/{}/devices".format(unique_type)
+            location_url = f"devicetypes/{unique_type}/devices"
             url = urljoin(API_URL, location_url)
             response = requests.get(url, auth=self._auth, timeout=10)
             devices_data = json.loads(response.text)["data"]
@@ -117,12 +117,12 @@ class SigfoxDevice(Entity):
         self._device_id = device_id
         self._auth = auth
         self._message_data = {}
-        self._name = "{}_{}".format(name, device_id)
+        self._name = f"{name}_{device_id}"
         self._state = None
 
     def get_last_message(self):
         """Return the last message from a device."""
-        device_url = "devices/{}/messages?limit=1".format(self._device_id)
+        device_url = f"devices/{self._device_id}/messages?limit=1"
         url = urljoin(API_URL, device_url)
         response = requests.get(url, auth=self._auth, timeout=10)
         data = json.loads(response.text)["data"][0]

@@ -1,18 +1,19 @@
 """Support for Enphase Envoy solar energy monitor."""
 import logging
 
+from envoy_reader.envoy_reader import EnvoyReader
 import voluptuous as vol
 
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_MONITORED_CONDITIONS,
-    POWER_WATT,
+    CONF_NAME,
     ENERGY_WATT_HOUR,
+    POWER_WATT,
 )
-
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,16 +45,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSORS)): vol.All(
             cv.ensure_list, [vol.In(list(SENSORS))]
         ),
+        vol.Optional(CONF_NAME, default=""): cv.string,
     }
 )
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Enphase Envoy sensor."""
-    from envoy_reader.envoy_reader import EnvoyReader
 
     ip_address = config[CONF_IP_ADDRESS]
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
+    name = config[CONF_NAME]
 
     entities = []
     # Iterate through the list of sensors
@@ -66,14 +68,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                         Envoy(
                             ip_address,
                             condition,
-                            "{} {}".format(SENSORS[condition][0], inverter),
+                            f"{name}{SENSORS[condition][0]} {inverter}",
                             SENSORS[condition][1],
                         )
                     )
         else:
             entities.append(
                 Envoy(
-                    ip_address, condition, SENSORS[condition][0], SENSORS[condition][1]
+                    ip_address,
+                    condition,
+                    f"{name}{SENSORS[condition][0]}",
+                    SENSORS[condition][1],
                 )
             )
     async_add_entities(entities)
@@ -112,7 +117,6 @@ class Envoy(Entity):
 
     async def async_update(self):
         """Get the energy production data from the Enphase Envoy."""
-        from envoy_reader.envoy_reader import EnvoyReader
 
         if self._type != "inverters":
             _state = await getattr(EnvoyReader(self._ip_address), self._type)()

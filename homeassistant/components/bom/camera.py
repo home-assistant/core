@@ -1,4 +1,5 @@
 """Provide animated GIF loops of BOM radar imagery."""
+from bomradarloop import BOMRadarLoop
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
@@ -84,7 +85,7 @@ def _validate_schema(config):
 LOCATIONS_MSG = "Set '{}' to one of: {}".format(
     CONF_LOCATION, ", ".join(sorted(LOCATIONS))
 )
-XOR_MSG = "Specify exactly one of '{}' or '{}'".format(CONF_ID, CONF_LOCATION)
+XOR_MSG = f"Specify exactly one of '{CONF_ID}' or '{CONF_LOCATION}'"
 
 PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend(
@@ -106,7 +107,7 @@ PLATFORM_SCHEMA = vol.All(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up BOM radar-loop camera component."""
     location = config.get(CONF_LOCATION) or "ID {}".format(config.get(CONF_ID))
-    name = config.get(CONF_NAME) or "BOM Radar Loop - {}".format(location)
+    name = config.get(CONF_NAME) or f"BOM Radar Loop - {location}"
     args = [
         config.get(x)
         for x in (CONF_LOCATION, CONF_ID, CONF_DELTA, CONF_FRAMES, CONF_OUTFILE)
@@ -119,7 +120,6 @@ class BOMRadarCam(Camera):
 
     def __init__(self, name, location, radar_id, delta, frames, outfile):
         """Initialize the component."""
-        from bomradarloop import BOMRadarLoop
 
         super().__init__()
         self._name = name

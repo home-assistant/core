@@ -1,6 +1,19 @@
 """Support for SNMP enabled switch."""
 import logging
 
+from pyasn1.type.univ import Integer
+import pysnmp.hlapi.asyncio as hlapi
+from pysnmp.hlapi.asyncio import (
+    CommunityData,
+    ContextData,
+    ObjectIdentity,
+    ObjectType,
+    SnmpEngine,
+    UdpTransportTarget,
+    UsmUserData,
+    getCmd,
+    setCmd,
+)
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
@@ -136,13 +149,6 @@ class SnmpSwitch(SwitchDevice):
         command_payload_off,
     ):
         """Initialize the switch."""
-        from pysnmp.hlapi.asyncio import (
-            CommunityData,
-            ContextData,
-            SnmpEngine,
-            UdpTransportTarget,
-            UsmUserData,
-        )
 
         self._name = name
         self._baseoid = baseoid
@@ -157,7 +163,6 @@ class SnmpSwitch(SwitchDevice):
         self._payload_off = payload_off
 
         if version == "3":
-            import pysnmp.hlapi.asyncio as hlapi
 
             if not authkey:
                 authproto = "none"
@@ -186,21 +191,20 @@ class SnmpSwitch(SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Turn on the switch."""
-        from pyasn1.type.univ import Integer
-
-        await self._set(Integer(self._command_payload_on))
+        if self._command_payload_on.isdigit():
+            await self._set(Integer(self._command_payload_on))
+        else:
+            await self._set(self._command_payload_on)
 
     async def async_turn_off(self, **kwargs):
         """Turn off the switch."""
-        from pyasn1.type.univ import Integer
-
-        await self._set(Integer(self._command_payload_off))
+        if self._command_payload_on.isdigit():
+            await self._set(Integer(self._command_payload_off))
+        else:
+            await self._set(self._command_payload_off)
 
     async def async_update(self):
         """Update the state."""
-        from pysnmp.hlapi.asyncio import getCmd, ObjectType, ObjectIdentity
-        from pyasn1.type.univ import Integer
-
         errindication, errstatus, errindex, restable = await getCmd(
             *self._request_args, ObjectType(ObjectIdentity(self._baseoid))
         )
@@ -215,8 +219,12 @@ class SnmpSwitch(SwitchDevice):
             )
         else:
             for resrow in restable:
-                if resrow[-1] == Integer(self._payload_on):
+                if resrow[-1] == self._payload_on:
                     self._state = True
+                elif resrow[-1] == Integer(self._payload_on):
+                    self._state = True
+                elif resrow[-1] == self._payload_off:
+                    self._state = False
                 elif resrow[-1] == Integer(self._payload_off):
                     self._state = False
                 else:
@@ -233,7 +241,6 @@ class SnmpSwitch(SwitchDevice):
         return self._state
 
     async def _set(self, value):
-        from pysnmp.hlapi.asyncio import setCmd, ObjectType, ObjectIdentity
 
         await setCmd(
             *self._request_args, ObjectType(ObjectIdentity(self._commandoid), value)

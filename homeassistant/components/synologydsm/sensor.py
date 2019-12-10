@@ -1,24 +1,25 @@
 """Support for Synology NAS Sensors."""
-import logging
 from datetime import timedelta
+import logging
 
+from SynologyDSM import SynologyDSM
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME,
+    ATTR_ATTRIBUTION,
+    CONF_DISKS,
     CONF_HOST,
-    CONF_USERNAME,
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
-    ATTR_ATTRIBUTION,
-    TEMP_CELSIUS,
-    CONF_MONITORED_CONDITIONS,
+    CONF_USERNAME,
     EVENT_HOMEASSISTANT_START,
-    CONF_DISKS,
+    TEMP_CELSIUS,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -119,24 +120,26 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ]
 
         # Handle all volumes
-        for volume in config.get(CONF_VOLUMES, api.storage.volumes):
-            sensors += [
-                SynoNasStorageSensor(
-                    api, name, variable, _STORAGE_VOL_MON_COND[variable], volume
-                )
-                for variable in monitored_conditions
-                if variable in _STORAGE_VOL_MON_COND
-            ]
+        if api.storage.volumes is not None:
+            for volume in config.get(CONF_VOLUMES, api.storage.volumes):
+                sensors += [
+                    SynoNasStorageSensor(
+                        api, name, variable, _STORAGE_VOL_MON_COND[variable], volume
+                    )
+                    for variable in monitored_conditions
+                    if variable in _STORAGE_VOL_MON_COND
+                ]
 
         # Handle all disks
-        for disk in config.get(CONF_DISKS, api.storage.disks):
-            sensors += [
-                SynoNasStorageSensor(
-                    api, name, variable, _STORAGE_DSK_MON_COND[variable], disk
-                )
-                for variable in monitored_conditions
-                if variable in _STORAGE_DSK_MON_COND
-            ]
+        if api.storage.disks is not None:
+            for disk in config.get(CONF_DISKS, api.storage.disks):
+                sensors += [
+                    SynoNasStorageSensor(
+                        api, name, variable, _STORAGE_DSK_MON_COND[variable], disk
+                    )
+                    for variable in monitored_conditions
+                    if variable in _STORAGE_DSK_MON_COND
+                ]
 
         add_entities(sensors, True)
 
@@ -149,7 +152,6 @@ class SynoApi:
 
     def __init__(self, host, port, username, password, temp_unit, use_ssl):
         """Initialize the API wrapper class."""
-        from SynologyDSM import SynologyDSM
 
         self.temp_unit = temp_unit
 
@@ -184,7 +186,7 @@ class SynoNasSensor(Entity):
     def name(self):
         """Return the name of the sensor, if any."""
         if self.monitor_device is not None:
-            return "{} ({})".format(self.var_name, self.monitor_device)
+            return f"{self.var_name} ({self.monitor_device})"
         return self.var_name
 
     @property

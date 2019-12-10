@@ -8,11 +8,11 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_FILENAME, CONF_HOST
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
-from .const import DOMAIN
 from .bridge import HueBridge
-
-# Loading the config flow file will register the flow
-from .config_flow import configured_hosts
+from .config_flow import (  # Loading the config flow file will register the flow
+    configured_hosts,
+)
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,70 +1,58 @@
 """Support for an Intergas boiler via an InComfort/Intouch Lan2RF gateway."""
 import asyncio
 import logging
+from typing import Any, Dict
 
 from aiohttp import ClientResponseError
-from homeassistant.components.water_heater import WaterHeaterDevice
+
+from homeassistant.components.water_heater import ENTITY_ID_FORMAT, WaterHeaterDevice
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import DOMAIN
+from . import DOMAIN, IncomfortEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-HEATER_SUPPORT_FLAGS = 0
-
-HEATER_MAX_TEMP = 80.0
-HEATER_MIN_TEMP = 30.0
-
-HEATER_NAME = "Boiler"
-HEATER_ATTRS = [
-    "display_code",
-    "display_text",
-    "is_burning",
-    "rf_message_rssi",
-    "nodenr",
-    "rfstatus_cntr",
-]
+HEATER_ATTRS = ["display_code", "display_text", "is_burning"]
 
 
-async def async_setup_platform(
-    hass, hass_config, async_add_entities, discovery_info=None
-):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up an InComfort/Intouch water_heater device."""
+    if discovery_info is None:
+        return
+
     client = hass.data[DOMAIN]["client"]
-    heater = hass.data[DOMAIN]["heater"]
+    heaters = hass.data[DOMAIN]["heaters"]
 
-    async_add_entities([IncomfortWaterHeater(client, heater)], update_before_add=True)
+    async_add_entities([IncomfortWaterHeater(client, h) for h in heaters])
 
 
-class IncomfortWaterHeater(WaterHeaterDevice):
+class IncomfortWaterHeater(IncomfortEntity, WaterHeaterDevice):
     """Representation of an InComfort/Intouch water_heater device."""
 
-    def __init__(self, client, heater):
+    def __init__(self, client, heater) -> None:
         """Initialize the water_heater device."""
+        super().__init__()
+
+        self._unique_id = f"{heater.serial_no}"
+        self.entity_id = ENTITY_ID_FORMAT.format(DOMAIN)
+        self._name = "Boiler"
+
         self._client = client
         self._heater = heater
 
     @property
-    def name(self):
-        """Return the name of the water_heater device."""
-        return HEATER_NAME
-
-    @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon of the water_heater device."""
-        return "mdi:oil-temperature"
+        return "mdi:thermometer-lines"
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the device state attributes."""
-        state = {
-            k: self._heater.status[k] for k in self._heater.status if k in HEATER_ATTRS
-        }
-        return state
+        return {k: v for k, v in self._heater.status.items() if k in HEATER_ATTRS}
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float:
         """Return the current temperature."""
         if self._heater.is_tapping:
             return self._heater.tap_temp
@@ -73,34 +61,34 @@ class IncomfortWaterHeater(WaterHeaterDevice):
         return max(self._heater.heater_temp, self._heater.tap_temp)
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return max valid temperature that can be set."""
-        return HEATER_MIN_TEMP
+        return 80.0
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return max valid temperature that can be set."""
-        return HEATER_MAX_TEMP
+        return 30.0
 
     @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         return TEMP_CELSIUS
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Return the list of supported features."""
-        return HEATER_SUPPORT_FLAGS
+        return 0
 
     @property
-    def current_operation(self):
+    def current_operation(self) -> str:
         """Return the current operation mode."""
         if self._heater.is_failed:
-            return "Fault code: {}".format(self._heater.fault_code)
+            return f"Fault code: {self._heater.fault_code}"
 
         return self._heater.display_text
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest state data from the gateway."""
         try:
             await self._heater.update()
@@ -108,4 +96,5 @@ class IncomfortWaterHeater(WaterHeaterDevice):
         except (ClientResponseError, asyncio.TimeoutError) as err:
             _LOGGER.warning("Update failed, message is: %s", err)
 
-        async_dispatcher_send(self.hass, DOMAIN)
+        else:
+            async_dispatcher_send(self.hass, DOMAIN)

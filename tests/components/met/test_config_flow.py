@@ -1,10 +1,10 @@
 """Tests for Met.no config flow."""
 from unittest.mock import Mock, patch
 
-from tests.common import MockConfigEntry, mock_coro
-
-from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.components.met import config_flow
+from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
+
+from tests.common import MockConfigEntry, mock_coro
 
 
 async def test_show_config_form():
@@ -102,7 +102,7 @@ async def test_flow_entry_created_from_user_input():
 async def test_flow_entry_config_entry_already_exists():
     """Test that create data from user input and config_entry already exists.
 
-    Test when the form should show when user puts existing name
+    Test when the form should show when user puts existing location
     in the config gui. Then the form should show with error
     """
     hass = Mock()
@@ -112,6 +112,8 @@ async def test_flow_entry_config_entry_already_exists():
 
     first_entry = MockConfigEntry(domain="met")
     first_entry.data["name"] = "home"
+    first_entry.data[CONF_LONGITUDE] = "0"
+    first_entry.data[CONF_LATITUDE] = "0"
     first_entry.add_to_hass(hass)
 
     test_data = {

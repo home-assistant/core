@@ -1,5 +1,6 @@
 """The tests the cover command line platform."""
 import logging
+
 import pytest
 
 from homeassistant import setup
@@ -8,15 +9,18 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
-    SERVICE_TOGGLE,
-    SERVICE_TOGGLE_COVER_TILT,
     SERVICE_OPEN_COVER,
     SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
+    SERVICE_TOGGLE,
+    SERVICE_TOGGLE_COVER_TILT,
     STATE_CLOSED,
+    STATE_OFF,
+    STATE_ON,
     STATE_OPEN,
+    STATE_UNAVAILABLE,
 )
 
 from tests.common import assert_setup_component, async_mock_service
@@ -837,6 +841,112 @@ async def test_entity_picture_template(hass, calls):
     state = hass.states.get("cover.test_template_cover")
 
     assert state.attributes["entity_picture"] == "/local/cover.png"
+
+
+async def test_availability_template(hass, calls):
+    """Test availability template."""
+    with assert_setup_component(1, "cover"):
+        assert await setup.async_setup_component(
+            hass,
+            "cover",
+            {
+                "cover": {
+                    "platform": "template",
+                    "covers": {
+                        "test_template_cover": {
+                            "value_template": "open",
+                            "open_cover": {
+                                "service": "cover.open_cover",
+                                "entity_id": "cover.test_state",
+                            },
+                            "close_cover": {
+                                "service": "cover.close_cover",
+                                "entity_id": "cover.test_state",
+                            },
+                            "availability_template": "{{ is_state('availability_state.state','on') }}",
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    hass.states.async_set("availability_state.state", STATE_OFF)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("cover.test_template_cover").state == STATE_UNAVAILABLE
+
+    hass.states.async_set("availability_state.state", STATE_ON)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("cover.test_template_cover").state != STATE_UNAVAILABLE
+
+
+async def test_availability_without_availability_template(hass, calls):
+    """Test that component is availble if there is no."""
+    assert await setup.async_setup_component(
+        hass,
+        "cover",
+        {
+            "cover": {
+                "platform": "template",
+                "covers": {
+                    "test_template_cover": {
+                        "value_template": "open",
+                        "open_cover": {
+                            "service": "cover.open_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                        "close_cover": {
+                            "service": "cover.close_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_invalid_availability_template_keeps_component_available(hass, caplog):
+    """Test that an invalid availability keeps the device available."""
+    assert await setup.async_setup_component(
+        hass,
+        "cover",
+        {
+            "cover": {
+                "platform": "template",
+                "covers": {
+                    "test_template_cover": {
+                        "availability_template": "{{ x - 12 }}",
+                        "value_template": "open",
+                        "open_cover": {
+                            "service": "cover.open_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                        "close_cover": {
+                            "service": "cover.close_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("cover.test_template_cover") != STATE_UNAVAILABLE
+    assert ("UndefinedError: 'x' is undefined") in caplog.text
 
 
 async def test_device_class(hass, calls):

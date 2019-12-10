@@ -6,23 +6,22 @@ from typing import Awaitable
 
 import voluptuous as vol
 
-import homeassistant.core as ha
 import homeassistant.config as conf_util
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.service import async_extract_entity_ids
-from homeassistant.helpers import intent
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    SERVICE_TURN_ON,
-    SERVICE_TURN_OFF,
-    SERVICE_TOGGLE,
-    SERVICE_HOMEASSISTANT_STOP,
-    SERVICE_HOMEASSISTANT_RESTART,
-    RESTART_EXIT_CODE,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    RESTART_EXIT_CODE,
+    SERVICE_HOMEASSISTANT_RESTART,
+    SERVICE_HOMEASSISTANT_STOP,
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
-from homeassistant.helpers import config_validation as cv
+import homeassistant.core as ha
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, intent
+from homeassistant.helpers.service import async_extract_entity_ids
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = ha.DOMAIN
@@ -108,9 +107,9 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
         if errors:
             _LOGGER.error(errors)
             hass.components.persistent_notification.async_create(
-                "Config error. See dev-info panel for details.",
+                "Config error. See [the logs](/developer-tools/logs) for details.",
                 "Config validating",
-                "{0}.check_config".format(ha.DOMAIN),
+                f"{ha.DOMAIN}.check_config",
             )
             return
 

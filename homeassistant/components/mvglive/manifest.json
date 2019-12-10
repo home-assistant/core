@@ -1,7 +1,7 @@
 {
   "domain": "mvglive",
   "name": "Mvglive",
-  "documentation": "https://www.home-assistant.io/components/mvglive",
+  "documentation": "https://www.home-assistant.io/integrations/mvglive",
   "requirements": [
     "PyMVGLive==1.1.4"
   ],

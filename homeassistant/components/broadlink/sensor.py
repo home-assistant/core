@@ -1,21 +1,22 @@
 """Support for the Broadlink RM2 Pro (only temperature) and A1 devices."""
 import binascii
-import logging
 from datetime import timedelta
+import logging
 
+import broadlink
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
-    TEMP_CELSIUS,
-    CONF_TIMEOUT,
     CONF_SCAN_INTERVAL,
+    CONF_TIMEOUT,
+    TEMP_CELSIUS,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -128,7 +129,6 @@ class BroadlinkData:
             _LOGGER.warning("Failed to connect to device")
 
     def _connect(self):
-        import broadlink
 
         self._device = broadlink.a1((self.ip_addr, 80), self.mac_addr, None)
         self._device.timeout = self.timeout

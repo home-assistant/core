@@ -1,28 +1,13 @@
 """Helpers for data entry flows for config entries."""
-from functools import partial
+from typing import Awaitable, Callable, Union
 
 from homeassistant import config_entries
 
+from .typing import HomeAssistantType
 
-# mypy: allow-incomplete-defs, allow-untyped-defs
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
-
-def register_discovery_flow(domain, title, discovery_function, connection_class):
-    """Register flow for discovered integrations that not require auth."""
-    config_entries.HANDLERS.register(domain)(
-        partial(
-            DiscoveryFlowHandler, domain, title, discovery_function, connection_class
-        )
-    )
-
-
-def register_webhook_flow(domain, title, description_placeholder, allow_multiple=False):
-    """Register flow for webhook integrations."""
-    config_entries.HANDLERS.register(domain)(
-        partial(
-            WebhookFlowHandler, domain, title, description_placeholder, allow_multiple
-        )
-    )
+DiscoveryFunctionType = Callable[[], Union[Awaitable[bool], bool]]
 
 
 class DiscoveryFlowHandler(config_entries.ConfigFlow):
@@ -30,12 +15,18 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
 
     VERSION = 1
 
-    def __init__(self, domain, title, discovery_function, connection_class):
+    def __init__(
+        self,
+        domain: str,
+        title: str,
+        discovery_function: DiscoveryFunctionType,
+        connection_class: str,
+    ) -> None:
         """Initialize the discovery config flow."""
         self._domain = domain
         self._title = title
         self._discovery_function = discovery_function
-        self.CONNECTION_CLASS = connection_class  # pylint: disable=C0103
+        self.CONNECTION_CLASS = connection_class  # pylint: disable=invalid-name
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -49,7 +40,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         if user_input is None:
             return self.async_show_form(step_id="confirm")
 
-        if (
+        if (  # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
             self.context
             and self.context.get("source") != config_entries.SOURCE_DISCOVERY
         ):
@@ -90,12 +81,35 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         return self.async_create_entry(title=self._title, data={})
 
 
+def register_discovery_flow(
+    domain: str,
+    title: str,
+    discovery_function: DiscoveryFunctionType,
+    connection_class: str,
+) -> None:
+    """Register flow for discovered integrations that not require auth."""
+
+    class DiscoveryFlow(DiscoveryFlowHandler):
+        """Discovery flow handler."""
+
+        def __init__(self) -> None:
+            super().__init__(domain, title, discovery_function, connection_class)
+
+    config_entries.HANDLERS.register(domain)(DiscoveryFlow)
+
+
 class WebhookFlowHandler(config_entries.ConfigFlow):
     """Handle a webhook config flow."""
 
     VERSION = 1
 
-    def __init__(self, domain, title, description_placeholder, allow_multiple):
+    def __init__(
+        self,
+        domain: str,
+        title: str,
+        description_placeholder: dict,
+        allow_multiple: bool,
+    ) -> None:
         """Initialize the discovery config flow."""
         self._domain = domain
         self._title = title
@@ -112,7 +126,10 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
 
         webhook_id = self.hass.components.webhook.async_generate_id()
 
-        if self.hass.components.cloud.async_active_subscription():
+        if (
+            "cloud" in self.hass.config.components
+            and self.hass.components.cloud.async_active_subscription()
+        ):
             webhook_url = await self.hass.components.cloud.async_create_cloudhook(
                 webhook_id
             )
@@ -130,7 +147,23 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
         )
 
 
-async def webhook_async_remove_entry(hass, entry) -> None:
+def register_webhook_flow(
+    domain: str, title: str, description_placeholder: dict, allow_multiple: bool = False
+) -> None:
+    """Register flow for webhook integrations."""
+
+    class WebhookFlow(WebhookFlowHandler):
+        """Webhook flow handler."""
+
+        def __init__(self) -> None:
+            super().__init__(domain, title, description_placeholder, allow_multiple)
+
+    config_entries.HANDLERS.register(domain)(WebhookFlow)
+
+
+async def webhook_async_remove_entry(
+    hass: HomeAssistantType, entry: config_entries.ConfigEntry
+) -> None:
     """Remove a webhook config entry."""
     if not entry.data.get("cloudhook") or "cloud" not in hass.config.components:
         return

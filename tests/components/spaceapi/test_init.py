@@ -3,10 +3,11 @@
 from unittest.mock import patch
 
 import pytest
-from tests.common import mock_coro
 
 from homeassistant.components.spaceapi import DOMAIN, SPACEAPI_VERSION, URL_API_SPACEAPI
 from homeassistant.setup import async_setup_component
+
+from tests.common import mock_coro
 
 CONFIG = {
     DOMAIN: {
@@ -25,6 +26,34 @@ CONFIG = {
             "temperature": ["test.temp1", "test.temp2"],
             "humidity": ["test.hum1"],
         },
+        "spacefed": {"spacenet": True, "spacesaml": False, "spacephone": True},
+        "cam": ["https://home-assistant.io/cam1", "https://home-assistant.io/cam2"],
+        "stream": {
+            "m4": "https://home-assistant.io/m4",
+            "mjpeg": "https://home-assistant.io/mjpeg",
+            "ustream": "https://home-assistant.io/ustream",
+        },
+        "feeds": {
+            "blog": {"url": "https://home-assistant.io/blog"},
+            "wiki": {"type": "mediawiki", "url": "https://home-assistant.io/wiki"},
+            "calendar": {"type": "ical", "url": "https://home-assistant.io/calendar"},
+            "flicker": {"url": "https://www.flickr.com/photos/home-assistant"},
+        },
+        "cache": {"schedule": "m.02"},
+        "projects": [
+            "https://home-assistant.io/projects/1",
+            "https://home-assistant.io/projects/2",
+            "https://home-assistant.io/projects/3",
+        ],
+        "radio_show": [
+            {
+                "name": "Radioshow",
+                "url": "https://home-assistant.io/radio",
+                "type": "ogg",
+                "start": "2019-09-02T10:00Z",
+                "end": "2019-09-02T12:00Z",
+            }
+        ],
     }
 }
 
@@ -61,11 +90,37 @@ async def test_spaceapi_get(hass, mock_client):
     assert data["space"] == "Home"
     assert data["contact"]["email"] == "hello@home-assistant.io"
     assert data["location"]["address"] == "In your Home"
-    assert data["location"]["latitude"] == 32.87336
-    assert data["location"]["longitude"] == -117.22743
+    assert data["location"]["lat"] == 32.87336
+    assert data["location"]["lon"] == -117.22743
     assert data["state"]["open"] == "null"
     assert data["state"]["icon"]["open"] == "https://home-assistant.io/open.png"
     assert data["state"]["icon"]["close"] == "https://home-assistant.io/close.png"
+    assert data["spacefed"]["spacenet"] == bool(1)
+    assert data["spacefed"]["spacesaml"] == bool(0)
+    assert data["spacefed"]["spacephone"] == bool(1)
+    assert data["cam"][0] == "https://home-assistant.io/cam1"
+    assert data["cam"][1] == "https://home-assistant.io/cam2"
+    assert data["stream"]["m4"] == "https://home-assistant.io/m4"
+    assert data["stream"]["mjpeg"] == "https://home-assistant.io/mjpeg"
+    assert data["stream"]["ustream"] == "https://home-assistant.io/ustream"
+    assert data["feeds"]["blog"]["url"] == "https://home-assistant.io/blog"
+    assert data["feeds"]["wiki"]["type"] == "mediawiki"
+    assert data["feeds"]["wiki"]["url"] == "https://home-assistant.io/wiki"
+    assert data["feeds"]["calendar"]["type"] == "ical"
+    assert data["feeds"]["calendar"]["url"] == "https://home-assistant.io/calendar"
+    assert (
+        data["feeds"]["flicker"]["url"]
+        == "https://www.flickr.com/photos/home-assistant"
+    )
+    assert data["cache"]["schedule"] == "m.02"
+    assert data["projects"][0] == "https://home-assistant.io/projects/1"
+    assert data["projects"][1] == "https://home-assistant.io/projects/2"
+    assert data["projects"][2] == "https://home-assistant.io/projects/3"
+    assert data["radio_show"][0]["name"] == "Radioshow"
+    assert data["radio_show"][0]["url"] == "https://home-assistant.io/radio"
+    assert data["radio_show"][0]["type"] == "ogg"
+    assert data["radio_show"][0]["start"] == "2019-09-02T10:00Z"
+    assert data["radio_show"][0]["end"] == "2019-09-02T12:00Z"
 
 
 async def test_spaceapi_state_get(hass, mock_client):

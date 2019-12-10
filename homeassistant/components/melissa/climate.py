@@ -3,6 +3,10 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
+    FAN_AUTO,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
@@ -12,7 +16,6 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
 
 from . import DATA_MELISSA
@@ -29,7 +32,7 @@ OP_MODES = [
     HVAC_MODE_OFF,
 ]
 
-FAN_MODES = [HVAC_MODE_AUTO, SPEED_HIGH, SPEED_MEDIUM, SPEED_LOW]
+FAN_MODES = [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW]
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -156,7 +159,9 @@ class MelissaClimate(ClimateDevice):
             return
 
         mode = self.hass_mode_to_melissa(hvac_mode)
-        await self.async_send({self._api.MODE: mode})
+        await self.async_send(
+            {self._api.MODE: mode, self._api.STATE: self._api.STATE_ON}
+        )
 
     async def async_send(self, value):
         """Send action to service."""
@@ -198,11 +203,11 @@ class MelissaClimate(ClimateDevice):
         if fan == self._api.FAN_AUTO:
             return HVAC_MODE_AUTO
         if fan == self._api.FAN_LOW:
-            return SPEED_LOW
+            return FAN_LOW
         if fan == self._api.FAN_MEDIUM:
-            return SPEED_MEDIUM
+            return FAN_MEDIUM
         if fan == self._api.FAN_HIGH:
-            return SPEED_HIGH
+            return FAN_HIGH
         _LOGGER.warning("Fan mode %s could not be mapped to hass", fan)
         return None
 
@@ -222,10 +227,10 @@ class MelissaClimate(ClimateDevice):
         """Translate hass fan modes to melissa modes."""
         if fan == HVAC_MODE_AUTO:
             return self._api.FAN_AUTO
-        if fan == SPEED_LOW:
+        if fan == FAN_LOW:
             return self._api.FAN_LOW
-        if fan == SPEED_MEDIUM:
+        if fan == FAN_MEDIUM:
             return self._api.FAN_MEDIUM
-        if fan == SPEED_HIGH:
+        if fan == FAN_HIGH:
             return self._api.FAN_HIGH
         _LOGGER.warning("Melissa have no setting for %s fan mode", fan)

@@ -1,13 +1,14 @@
 """Support for the (unofficial) Tado API."""
+from datetime import timedelta
 import logging
 import urllib
-from datetime import timedelta
 
+from PyTado.interface import Tado
 import voluptuous as vol
 
-from homeassistant.helpers.discovery import load_platform
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_validation as cv
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,8 +37,6 @@ def setup(hass, config):
     """Set up of the Tado component."""
     username = config[DOMAIN][CONF_USERNAME]
     password = config[DOMAIN][CONF_PASSWORD]
-
-    from PyTado.interface import Tado
 
     try:
         tado = Tado(username, password)
@@ -117,7 +116,7 @@ class TadoDataStore:
         return self.tado.getCapabilities(tado_id)
 
     def get_me(self):
-        """Wrap for getMet()."""
+        """Wrap for getMe()."""
         return self.tado.getMe()
 
     def reset_zone_overlay(self, zone_id):
@@ -125,12 +124,22 @@ class TadoDataStore:
         self.tado.resetZoneOverlay(zone_id)
         self.update(no_throttle=True)  # pylint: disable=unexpected-keyword-arg
 
-    def set_zone_overlay(self, zone_id, mode, temperature=None, duration=None):
+    def set_zone_overlay(
+        self,
+        zone_id,
+        overlay_mode,
+        temperature=None,
+        duration=None,
+        device_type="HEATING",
+        mode=None,
+    ):
         """Wrap for setZoneOverlay(..)."""
-        self.tado.setZoneOverlay(zone_id, mode, temperature, duration)
+        self.tado.setZoneOverlay(
+            zone_id, overlay_mode, temperature, duration, device_type, "ON", mode
+        )
         self.update(no_throttle=True)  # pylint: disable=unexpected-keyword-arg
 
-    def set_zone_off(self, zone_id, mode):
+    def set_zone_off(self, zone_id, overlay_mode, device_type="HEATING"):
         """Set a zone to off."""
-        self.tado.setZoneOverlay(zone_id, mode, None, None, "HEATING", "OFF")
+        self.tado.setZoneOverlay(zone_id, overlay_mode, None, None, device_type, "OFF")
         self.update(no_throttle=True)  # pylint: disable=unexpected-keyword-arg

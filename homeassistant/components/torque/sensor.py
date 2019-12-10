@@ -4,12 +4,12 @@ import re
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_EMAIL, CONF_NAME
-from homeassistant.helpers.entity import Entity
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,7 +88,12 @@ class TorqueReceiveDataView(HomeAssistantView):
                 names[pid] = data[key]
             elif is_unit:
                 pid = convert_pid(is_unit.group(1))
-                units[pid] = data[key]
+
+                temp_unit = data[key]
+                if "\\xC2\\xB0" in temp_unit:
+                    temp_unit = temp_unit.replace("\\xC2\\xB0", "°")
+
+                units[pid] = temp_unit
             elif is_value:
                 pid = convert_pid(is_value.group(1))
                 if pid in self.sensors:

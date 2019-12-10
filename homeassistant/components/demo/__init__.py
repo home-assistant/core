@@ -3,31 +3,37 @@ import asyncio
 import logging
 import time
 
-from homeassistant import bootstrap
-import homeassistant.core as ha
+from homeassistant import bootstrap, config_entries
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
+import homeassistant.core as ha
 
 DOMAIN = "demo"
 _LOGGER = logging.getLogger(__name__)
-COMPONENTS_WITH_DEMO_PLATFORM = [
+
+COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     "air_quality",
     "alarm_control_panel",
     "binary_sensor",
-    "calendar",
     "camera",
     "climate",
     "cover",
-    "device_tracker",
     "fan",
-    "image_processing",
     "light",
     "lock",
     "media_player",
-    "notify",
     "sensor",
     "switch",
+    "water_heater",
+]
+
+COMPONENTS_WITH_DEMO_PLATFORM = [
     "tts",
+    "stt",
     "mailbox",
+    "notify",
+    "image_processing",
+    "calendar",
+    "device_tracker",
 ]
 
 
@@ -36,14 +42,21 @@ async def async_setup(hass, config):
     if DOMAIN not in config:
         return True
 
-    config.setdefault(ha.DOMAIN, {})
-    config.setdefault(DOMAIN, {})
+    if not hass.config_entries.async_entries(DOMAIN):
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
+            )
+        )
 
     # Set up demo platforms
     for component in COMPONENTS_WITH_DEMO_PLATFORM:
         hass.async_create_task(
             hass.helpers.discovery.async_load_platform(component, DOMAIN, {}, config)
         )
+
+    config.setdefault(ha.DOMAIN, {})
+    config.setdefault(DOMAIN, {})
 
     # Set up sun
     if not hass.config.latitude:
@@ -174,10 +187,27 @@ async def async_setup(hass, config):
     return True
 
 
+async def async_setup_entry(hass, config_entry):
+    """Set the config entry up."""
+    # Set up demo platforms with config entry
+    for component in COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, component)
+        )
+    return True
+
+
 async def finish_setup(hass, config):
     """Finish set up once demo platforms are set up."""
-    lights = sorted(hass.states.async_entity_ids("light"))
-    switches = sorted(hass.states.async_entity_ids("switch"))
+    switches = None
+    lights = None
+
+    while not switches and not lights:
+        # Not all platforms might be loaded.
+        if switches is not None:
+            await asyncio.sleep(0)
+        switches = sorted(hass.states.async_entity_ids("switch"))
+        lights = sorted(hass.states.async_entity_ids("light"))
 
     # Set up history graph
     await bootstrap.async_setup_component(

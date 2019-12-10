@@ -1,9 +1,9 @@
 """The tests for the  Template switch platform."""
-from homeassistant.core import callback
 from homeassistant import setup
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.core import callback
 
-from tests.common import get_test_home_assistant, assert_setup_component
+from tests.common import assert_setup_component, get_test_home_assistant
 from tests.components.switch import common
 
 
@@ -474,3 +474,76 @@ class TestTemplateSwitch:
         self.hass.block_till_done()
 
         assert len(self.calls) == 1
+
+
+async def test_available_template_with_entities(hass):
+    """Test availability templates with values from other entities."""
+    await setup.async_setup_component(
+        hass,
+        "switch",
+        {
+            "switch": {
+                "platform": "template",
+                "switches": {
+                    "test_template_switch": {
+                        "value_template": "{{ 1 == 1 }}",
+                        "turn_on": {
+                            "service": "switch.turn_on",
+                            "entity_id": "switch.test_state",
+                        },
+                        "turn_off": {
+                            "service": "switch.turn_off",
+                            "entity_id": "switch.test_state",
+                        },
+                        "availability_template": "{{ is_state('availability_state.state', 'on') }}",
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    hass.states.async_set("availability_state.state", STATE_ON)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.test_template_switch").state != STATE_UNAVAILABLE
+
+    hass.states.async_set("availability_state.state", STATE_OFF)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.test_template_switch").state == STATE_UNAVAILABLE
+
+
+async def test_invalid_availability_template_keeps_component_available(hass, caplog):
+    """Test that an invalid availability keeps the device available."""
+    await setup.async_setup_component(
+        hass,
+        "switch",
+        {
+            "switch": {
+                "platform": "template",
+                "switches": {
+                    "test_template_switch": {
+                        "value_template": "{{ true }}",
+                        "turn_on": {
+                            "service": "switch.turn_on",
+                            "entity_id": "switch.test_state",
+                        },
+                        "turn_off": {
+                            "service": "switch.turn_off",
+                            "entity_id": "switch.test_state",
+                        },
+                        "availability_template": "{{ x - 12 }}",
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.test_template_switch").state != STATE_UNAVAILABLE
+    assert ("UndefinedError: 'x' is undefined") in caplog.text

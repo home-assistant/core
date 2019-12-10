@@ -1,18 +1,18 @@
 """The test for the statistics sensor platform."""
-import unittest
+from datetime import datetime, timedelta
 import statistics
+import unittest
+from unittest.mock import patch
 
 import pytest
 
-from homeassistant.setup import setup_component
-from homeassistant.components.statistics.sensor import StatisticsSensor
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, STATE_UNKNOWN
-from homeassistant.util import dt as dt_util
-from tests.common import get_test_home_assistant
-from unittest.mock import patch
-from datetime import datetime, timedelta
-from tests.common import init_recorder_component
 from homeassistant.components import recorder
+from homeassistant.components.statistics.sensor import StatisticsSensor
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, TEMP_CELSIUS
+from homeassistant.setup import setup_component
+from homeassistant.util import dt as dt_util
+
+from tests.common import get_test_home_assistant, init_recorder_component
 
 
 class TestStatisticsSensor(unittest.TestCase):
@@ -60,7 +60,7 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass.states.set("binary_sensor.test_monitored", value)
             self.hass.block_till_done()
 
-        state = self.hass.states.get("sensor.test_count")
+        state = self.hass.states.get("sensor.test")
 
         assert str(len(values)) == state.state
 
@@ -87,7 +87,7 @@ class TestStatisticsSensor(unittest.TestCase):
             )
             self.hass.block_till_done()
 
-        state = self.hass.states.get("sensor.test_mean")
+        state = self.hass.states.get("sensor.test")
 
         assert str(self.mean) == state.state
         assert self.min == state.attributes.get("min_value")
@@ -126,7 +126,7 @@ class TestStatisticsSensor(unittest.TestCase):
             )
             self.hass.block_till_done()
 
-        state = self.hass.states.get("sensor.test_mean")
+        state = self.hass.states.get("sensor.test")
 
         assert 3.8 == state.attributes.get("min_value")
         assert 14 == state.attributes.get("max_value")
@@ -155,7 +155,7 @@ class TestStatisticsSensor(unittest.TestCase):
             )
             self.hass.block_till_done()
 
-        state = self.hass.states.get("sensor.test_mean")
+        state = self.hass.states.get("sensor.test")
 
         # require only one data point
         assert self.values[-1] == state.attributes.get("min_value")
@@ -206,7 +206,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 # insert the next value one minute later
                 mock_data["return_time"] += timedelta(minutes=1)
 
-            state = self.hass.states.get("sensor.test_mean")
+            state = self.hass.states.get("sensor.test")
 
         assert 6 == state.attributes.get("min_value")
         assert 14 == state.attributes.get("max_value")
@@ -248,7 +248,7 @@ class TestStatisticsSensor(unittest.TestCase):
                 # insert the next value one minute later
                 mock_data["return_time"] += timedelta(minutes=1)
 
-            state = self.hass.states.get("sensor.test_mean")
+            state = self.hass.states.get("sensor.test")
 
         assert datetime(
             2017, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC
@@ -290,7 +290,7 @@ class TestStatisticsSensor(unittest.TestCase):
         self.hass.block_till_done()
 
         # check if the result is as in test_sensor_source()
-        state = self.hass.states.get("sensor.test_mean")
+        state = self.hass.states.get("sensor.test")
         assert str(self.mean) == state.state
 
     @pytest.mark.skip("Flaky in CI")
@@ -355,7 +355,7 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass.block_till_done()
 
             # check if the result is as in test_sensor_source()
-            state = self.hass.states.get("sensor.test_mean")
+            state = self.hass.states.get("sensor.test")
 
         assert expected_min_age == state.attributes.get("min_age")
         # The max_age timestamp should be 1 hour before what we have right

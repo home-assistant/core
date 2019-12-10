@@ -1,10 +1,13 @@
 """Test the python_script component."""
 import asyncio
 import logging
-from unittest.mock import patch, mock_open
+from unittest.mock import mock_open, patch
 
+from homeassistant.components.python_script import DOMAIN, FOLDER, execute
+from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.setup import async_setup_component
-from homeassistant.components.python_script import execute
+
+from tests.common import patch_yaml_files
 
 
 @asyncio.coroutine
@@ -287,6 +290,101 @@ def test_reload(hass):
     assert hass.services.has_service("python_script", "hello2")
     assert hass.services.has_service("python_script", "world_beer")
     assert hass.services.has_service("python_script", "reload")
+
+
+async def test_service_descriptions(hass):
+    """Test that service descriptions are loaded and reloaded correctly."""
+    # Test 1: no user-provided services.yaml file
+    scripts1 = [
+        "/some/config/dir/python_scripts/hello.py",
+        "/some/config/dir/python_scripts/world_beer.py",
+    ]
+
+    service_descriptions1 = (
+        "hello:\n"
+        "  description: Description of hello.py.\n"
+        "  fields:\n"
+        "    fake_param:\n"
+        "      description: Parameter used by hello.py.\n"
+        "      example: 'This is a test of python_script.hello'"
+    )
+    services_yaml1 = {
+        "{}/{}/services.yaml".format(
+            hass.config.config_dir, FOLDER
+        ): service_descriptions1
+    }
+
+    with patch(
+        "homeassistant.components.python_script.os.path.isdir", return_value=True
+    ), patch(
+        "homeassistant.components.python_script.glob.iglob", return_value=scripts1
+    ), patch(
+        "homeassistant.components.python_script.os.path.exists", return_value=True
+    ), patch_yaml_files(
+        services_yaml1
+    ):
+        await async_setup_component(hass, DOMAIN, {})
+
+        descriptions = await async_get_all_descriptions(hass)
+
+    assert len(descriptions) == 1
+
+    assert descriptions[DOMAIN]["hello"]["description"] == "Description of hello.py."
+    assert (
+        descriptions[DOMAIN]["hello"]["fields"]["fake_param"]["description"]
+        == "Parameter used by hello.py."
+    )
+    assert (
+        descriptions[DOMAIN]["hello"]["fields"]["fake_param"]["example"]
+        == "This is a test of python_script.hello"
+    )
+
+    assert descriptions[DOMAIN]["world_beer"]["description"] == ""
+    assert bool(descriptions[DOMAIN]["world_beer"]["fields"]) is False
+
+    # Test 2: user-provided services.yaml file
+    scripts2 = [
+        "/some/config/dir/python_scripts/hello2.py",
+        "/some/config/dir/python_scripts/world_beer.py",
+    ]
+
+    service_descriptions2 = (
+        "hello2:\n"
+        "  description: Description of hello2.py.\n"
+        "  fields:\n"
+        "    fake_param:\n"
+        "      description: Parameter used by hello2.py.\n"
+        "      example: 'This is a test of python_script.hello2'"
+    )
+    services_yaml2 = {
+        "{}/{}/services.yaml".format(
+            hass.config.config_dir, FOLDER
+        ): service_descriptions2
+    }
+
+    with patch(
+        "homeassistant.components.python_script.os.path.isdir", return_value=True
+    ), patch(
+        "homeassistant.components.python_script.glob.iglob", return_value=scripts2
+    ), patch(
+        "homeassistant.components.python_script.os.path.exists", return_value=True
+    ), patch_yaml_files(
+        services_yaml2
+    ):
+        await hass.services.async_call(DOMAIN, "reload", {}, blocking=True)
+        descriptions = await async_get_all_descriptions(hass)
+
+    assert len(descriptions) == 1
+
+    assert descriptions[DOMAIN]["hello2"]["description"] == "Description of hello2.py."
+    assert (
+        descriptions[DOMAIN]["hello2"]["fields"]["fake_param"]["description"]
+        == "Parameter used by hello2.py."
+    )
+    assert (
+        descriptions[DOMAIN]["hello2"]["fields"]["fake_param"]["example"]
+        == "This is a test of python_script.hello2"
+    )
 
 
 @asyncio.coroutine

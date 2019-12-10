@@ -2,12 +2,14 @@
 import json
 import logging
 
+import pyfttt
 import requests
 import voluptuous as vol
 
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
+
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,6 +24,7 @@ ATTR_VALUE3 = "value3"
 
 CONF_KEY = "key"
 
+SERVICE_PUSH_ALARM_STATE = "push_alarm_state"
 SERVICE_TRIGGER = "trigger"
 
 SERVICE_TRIGGER_SCHEMA = vol.Schema(
@@ -69,7 +72,6 @@ async def async_setup(hass, config):
             target_keys[target] = api_keys[target]
 
         try:
-            import pyfttt
 
             for target, key in target_keys.items():
                 res = pyfttt.send_event(key, event, value1, value2, value3)

@@ -15,34 +15,25 @@ from homeassistant.components.mqtt.discovery import (
     clear_discovery_hash,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+
+from .schema import CONF_SCHEMA, MQTT_LIGHT_SCHEMA_SCHEMA
+from .schema_basic import PLATFORM_SCHEMA_BASIC, async_setup_entity_basic
+from .schema_json import PLATFORM_SCHEMA_JSON, async_setup_entity_json
+from .schema_template import PLATFORM_SCHEMA_TEMPLATE, async_setup_entity_template
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_SCHEMA = "schema"
 
 
 def validate_mqtt_light(value):
     """Validate MQTT light schema."""
-    from . import schema_basic
-    from . import schema_json
-    from . import schema_template
-
     schemas = {
-        "basic": schema_basic.PLATFORM_SCHEMA_BASIC,
-        "json": schema_json.PLATFORM_SCHEMA_JSON,
-        "template": schema_template.PLATFORM_SCHEMA_TEMPLATE,
+        "basic": PLATFORM_SCHEMA_BASIC,
+        "json": PLATFORM_SCHEMA_JSON,
+        "template": PLATFORM_SCHEMA_TEMPLATE,
     }
     return schemas[value[CONF_SCHEMA]](value)
 
-
-MQTT_LIGHT_SCHEMA_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_SCHEMA, default="basic"): vol.All(
-            vol.Lower, vol.Any("basic", "json", "template")
-        )
-    }
-)
 
 PLATFORM_SCHEMA = vol.All(
     MQTT_LIGHT_SCHEMA_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA), validate_mqtt_light
@@ -81,14 +72,10 @@ async def _async_setup_entity(
     config, async_add_entities, config_entry=None, discovery_hash=None
 ):
     """Set up a MQTT Light."""
-    from . import schema_basic
-    from . import schema_json
-    from . import schema_template
-
     setup_entity = {
-        "basic": schema_basic.async_setup_entity_basic,
-        "json": schema_json.async_setup_entity_json,
-        "template": schema_template.async_setup_entity_template,
+        "basic": async_setup_entity_basic,
+        "json": async_setup_entity_json,
+        "template": async_setup_entity_template,
     }
     await setup_entity[config[CONF_SCHEMA]](
         config, async_add_entities, config_entry, discovery_hash

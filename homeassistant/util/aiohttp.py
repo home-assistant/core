@@ -1,7 +1,7 @@
 """Utilities to help with aiohttp."""
 import json
-from urllib.parse import parse_qsl
 from typing import Any, Dict, Optional
+from urllib.parse import parse_qsl
 
 from multidict import CIMultiDict, MultiDict
 
@@ -22,7 +22,7 @@ class MockRequest:
         self.method = method
         self.url = url
         self.status = status
-        self.headers = CIMultiDict(headers or {})  # type: CIMultiDict[str]
+        self.headers: CIMultiDict[str] = CIMultiDict(headers or {})
         self.query_string = query_string or ""
         self._content = content
 

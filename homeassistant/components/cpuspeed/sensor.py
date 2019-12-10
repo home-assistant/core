@@ -1,11 +1,12 @@
 """Support for displaying the current CPU speed."""
 import logging
 
+from cpuinfo import cpuinfo
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,7 +76,6 @@ class CpuSpeedSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the state."""
-        from cpuinfo import cpuinfo
 
         self.info = cpuinfo.get_cpu_info()
         if HZ_ACTUAL_RAW in self.info:

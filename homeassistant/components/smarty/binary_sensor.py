@@ -2,9 +2,10 @@
 
 import logging
 
-from homeassistant.core import callback
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
 from . import DOMAIN, SIGNAL_UPDATE_SMARTY
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,9 +70,7 @@ class BoostSensor(SmartyBinarySensor):
 
     def __init__(self, name, smarty):
         """Alarm Sensor Init."""
-        super().__init__(
-            name="{} Boost State".format(name), device_class=None, smarty=smarty
-        )
+        super().__init__(name=f"{name} Boost State", device_class=None, smarty=smarty)
 
     def update(self) -> None:
         """Update state."""
@@ -84,9 +83,7 @@ class AlarmSensor(SmartyBinarySensor):
 
     def __init__(self, name, smarty):
         """Alarm Sensor Init."""
-        super().__init__(
-            name="{} Alarm".format(name), device_class="problem", smarty=smarty
-        )
+        super().__init__(name=f"{name} Alarm", device_class="problem", smarty=smarty)
 
     def update(self) -> None:
         """Update state."""
@@ -99,9 +96,7 @@ class WarningSensor(SmartyBinarySensor):
 
     def __init__(self, name, smarty):
         """Warning Sensor Init."""
-        super().__init__(
-            name="{} Warning".format(name), device_class="problem", smarty=smarty
-        )
+        super().__init__(name=f"{name} Warning", device_class="problem", smarty=smarty)
 
     def update(self) -> None:
         """Update state."""

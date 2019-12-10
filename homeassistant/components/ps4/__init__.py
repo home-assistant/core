@@ -2,9 +2,9 @@
 import logging
 import os
 
+from pyps4_2ndscreen.ddp import async_create_ddp_endpoint
+from pyps4_2ndscreen.media_art import COUNTRIES
 import voluptuous as vol
-from pyps4_homeassistant.ddp import async_create_ddp_endpoint
-from pyps4_homeassistant.media_art import COUNTRIES
 
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_TYPE,
@@ -20,7 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import split_entity_id
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry, config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import location
 from homeassistant.util.json import load_json, save_json
@@ -127,7 +127,7 @@ async def async_migrate_entry(hass, entry):
                     DOMAIN,
                     unique_id,
                     suggested_object_id=new_id,
-                    config_entry_id=e_entry.config_entry_id,
+                    config_entry=entry,
                     device_id=e_entry.device_id,
                 )
                 entry.version = 3
@@ -156,7 +156,7 @@ async def async_migrate_entry(hass, entry):
 def format_unique_id(creds, mac_address):
     """Use last 4 Chars of credential as suffix. Unique ID per PSN user."""
     suffix = creds[-4:]
-    return "{}_{}".format(mac_address, suffix)
+    return f"{mac_address}_{suffix}"
 
 
 def load_games(hass: HomeAssistantType) -> dict:
@@ -172,12 +172,8 @@ def load_games(hass: HomeAssistantType) -> dict:
         _LOGGER.error("Games file was not parsed correctly")
         games = {}
 
-    # If file does not exist, create empty file.
-    if not os.path.isfile(g_file):
-        _LOGGER.info("Creating PS4 Games File")
-        games = {}
-        save_games(hass, games)
-    else:
+    # If file exists
+    if os.path.isfile(g_file):
         games = _reformat_data(hass, games)
     return games
 

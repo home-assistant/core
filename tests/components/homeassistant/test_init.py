@@ -1,41 +1,41 @@
 """The tests for Core components."""
 # pylint: disable=protected-access
+import asyncio
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import yaml
 
-import homeassistant.core as ha
 from homeassistant import config
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_ON,
-    STATE_OFF,
-    SERVICE_HOMEASSISTANT_RESTART,
-    SERVICE_HOMEASSISTANT_STOP,
-    SERVICE_TURN_ON,
-    SERVICE_TURN_OFF,
-    SERVICE_TOGGLE,
-    EVENT_CORE_CONFIG_UPDATE,
-)
 import homeassistant.components as comps
-from homeassistant.setup import async_setup_component
 from homeassistant.components.homeassistant import (
     SERVICE_CHECK_CONFIG,
     SERVICE_RELOAD_CORE_CONFIG,
 )
-import homeassistant.helpers.intent as intent
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    EVENT_CORE_CONFIG_UPDATE,
+    SERVICE_HOMEASSISTANT_RESTART,
+    SERVICE_HOMEASSISTANT_STOP,
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+)
+import homeassistant.core as ha
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity
-from homeassistant.util.async_ import run_coroutine_threadsafe
+import homeassistant.helpers.intent as intent
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
+    async_capture_events,
+    async_mock_service,
     get_test_home_assistant,
+    mock_coro,
     mock_service,
     patch_yaml_files,
-    mock_coro,
-    async_mock_service,
-    async_capture_events,
 )
 
 
@@ -111,7 +111,7 @@ class TestComponentsCore(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        assert run_coroutine_threadsafe(
+        assert asyncio.run_coroutine_threadsafe(
             async_setup_component(self.hass, "homeassistant", {}), self.hass.loop
         ).result()
 

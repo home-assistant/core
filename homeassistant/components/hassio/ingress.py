@@ -1,8 +1,8 @@
 """Hass.io Add-on ingress service."""
 import asyncio
+from ipaddress import ip_address
 import logging
 import os
-from ipaddress import ip_address
 from typing import Dict, Union
 
 import aiohttp
@@ -42,7 +42,7 @@ class HassIOIngress(HomeAssistantView):
 
     def _create_url(self, token: str, path: str) -> str:
         """Create URL to service."""
-        return "http://{}/ingress/{}/{}".format(self._host, token, path)
+        return f"http://{self._host}/ingress/{token}/{path}"
 
     async def _handle(
         self, request: web.Request, token: str, path: str
@@ -91,7 +91,7 @@ class HassIOIngress(HomeAssistantView):
 
         # Support GET query
         if request.query_string:
-            url = "{}?{}".format(url, request.query_string)
+            url = f"{url}?{request.query_string}"
 
         # Start proxy
         async with self._websession.ws_connect(
@@ -167,7 +167,14 @@ def _init_header(
 
     # filter flags
     for name, value in request.headers.items():
-        if name in (hdrs.CONTENT_LENGTH, hdrs.CONTENT_ENCODING):
+        if name in (
+            hdrs.CONTENT_LENGTH,
+            hdrs.CONTENT_ENCODING,
+            hdrs.SEC_WEBSOCKET_EXTENSIONS,
+            hdrs.SEC_WEBSOCKET_PROTOCOL,
+            hdrs.SEC_WEBSOCKET_VERSION,
+            hdrs.SEC_WEBSOCKET_KEY,
+        ):
             continue
         headers[name] = value
 
@@ -175,15 +182,15 @@ def _init_header(
     headers[X_HASSIO] = os.environ.get("HASSIO_TOKEN", "")
 
     # Ingress information
-    headers[X_INGRESS_PATH] = "/api/hassio_ingress/{}".format(token)
+    headers[X_INGRESS_PATH] = f"/api/hassio_ingress/{token}"
 
     # Set X-Forwarded-For
     forward_for = request.headers.get(hdrs.X_FORWARDED_FOR)
     connected_ip = ip_address(request.transport.get_extra_info("peername")[0])
     if forward_for:
-        forward_for = "{}, {!s}".format(forward_for, connected_ip)
+        forward_for = f"{forward_for}, {connected_ip!s}"
     else:
-        forward_for = "{!s}".format(connected_ip)
+        forward_for = f"{connected_ip!s}"
     headers[hdrs.X_FORWARDED_FOR] = forward_for
 
     # Set X-Forwarded-Host

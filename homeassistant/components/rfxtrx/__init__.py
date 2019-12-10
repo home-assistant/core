@@ -1,7 +1,9 @@
 """Support for RFXtrx devices."""
+import binascii
 from collections import OrderedDict
 import logging
 
+import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -10,10 +12,12 @@ from homeassistant.const import (
     ATTR_STATE,
     CONF_DEVICE,
     CONF_DEVICES,
+    CONF_HOST,
+    CONF_PORT,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    TEMP_CELSIUS,
     POWER_WATT,
+    TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -78,17 +82,21 @@ RFX_DEVICES = {}
 _LOGGER = logging.getLogger(__name__)
 DATA_RFXOBJECT = "rfxobject"
 
-CONFIG_SCHEMA = vol.Schema(
+BASE_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_DEVICE): cv.string,
-                vol.Optional(CONF_DEBUG, default=False): cv.boolean,
-                vol.Optional(CONF_DUMMY, default=False): cv.boolean,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
+        vol.Optional(CONF_DEBUG, default=False): cv.boolean,
+        vol.Optional(CONF_DUMMY, default=False): cv.boolean,
+    }
+)
+
+DEVICE_SCHEMA = BASE_SCHEMA.extend({vol.Required(CONF_DEVICE): cv.string})
+
+PORT_SCHEMA = BASE_SCHEMA.extend(
+    {vol.Required(CONF_PORT): cv.port, vol.Optional(CONF_HOST): cv.string}
+)
+
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.Any(DEVICE_SCHEMA, PORT_SCHEMA)}, extra=vol.ALLOW_EXTRA
 )
 
 
@@ -106,23 +114,30 @@ def setup(hass, config):
             slugify(event.device.id_string.lower()),
             event.device.__class__.__name__,
             event.device.subtype,
-            "".join("{0:02x}".format(x) for x in event.data),
+            "".join(f"{x:02x}" for x in event.data),
         )
 
         # Callback to HA registered components.
         for subscriber in RECEIVED_EVT_SUBSCRIBERS:
             subscriber(event)
 
-    # Try to load the RFXtrx module.
-    import RFXtrx as rfxtrxmod
-
-    device = config[DOMAIN][ATTR_DEVICE]
+    device = config[DOMAIN].get(ATTR_DEVICE)
+    host = config[DOMAIN].get(CONF_HOST)
+    port = config[DOMAIN].get(CONF_PORT)
     debug = config[DOMAIN][ATTR_DEBUG]
     dummy_connection = config[DOMAIN][ATTR_DUMMY]
 
     if dummy_connection:
         rfx_object = rfxtrxmod.Connect(
             device, None, debug=debug, transport_protocol=rfxtrxmod.DummyTransport2
+        )
+    elif port is not None:
+        # If port is set then we create a TCP connection
+        rfx_object = rfxtrxmod.Connect(
+            (host, port),
+            None,
+            debug=debug,
+            transport_protocol=rfxtrxmod.PyNetworkTransport,
         )
     else:
         rfx_object = rfxtrxmod.Connect(device, None, debug=debug)
@@ -144,8 +159,6 @@ def setup(hass, config):
 
 def get_rfx_object(packetid):
     """Return the RFXObject with the packetid."""
-    import RFXtrx as rfxtrxmod
-
     try:
         binarypacket = bytearray.fromhex(packetid)
     except ValueError:
@@ -167,7 +180,6 @@ def get_pt2262_deviceid(device_id, nb_data_bits):
     """Extract and return the address bits from a Lighting4/PT2262 packet."""
     if nb_data_bits is None:
         return
-    import binascii
 
     try:
         data = bytearray.fromhex(device_id)
@@ -270,7 +282,7 @@ def get_new_device(event, config, device):
     if not config[ATTR_AUTOMATIC_ADD]:
         return
 
-    pkt_id = "".join("{0:02x}".format(x) for x in event.data)
+    pkt_id = "".join(f"{x:02x}" for x in event.data)
     _LOGGER.debug(
         "Automatic add %s rfxtrx device (Class: %s Sub: %s Packet_id: %s)",
         device_id,

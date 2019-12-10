@@ -1,6 +1,8 @@
 """Support for IBM Watson TTS integration."""
 import logging
 
+from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+from ibm_watson import TextToSpeechV1
 import voluptuous as vol
 
 from homeassistant.components.tts import PLATFORM_SCHEMA, Provider
@@ -90,15 +92,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_engine(hass, config):
+def get_engine(hass, config, discovery_info=None):
     """Set up IBM Watson TTS component."""
-    from ibm_watson import TextToSpeechV1
 
-    service = TextToSpeechV1(url=config[CONF_URL], iam_apikey=config[CONF_APIKEY])
+    authenticator = IAMAuthenticator(config[CONF_APIKEY])
+    service = TextToSpeechV1(authenticator)
+    service.set_service_url(config[CONF_URL])
 
     supported_languages = list({s[:5] for s in SUPPORTED_VOICES})
     default_voice = config[CONF_VOICE]
     output_format = config[CONF_OUTPUT_FORMAT]
+    service.set_default_headers({"x-watson-learning-opt-out": "true"})
 
     return WatsonTTSProvider(service, supported_languages, default_voice, output_format)
 

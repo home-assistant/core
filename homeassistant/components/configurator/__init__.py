@@ -9,14 +9,14 @@ the user has submitted configuration information.
 import functools as ft
 import logging
 
-from homeassistant.core import callback as async_callback
 from homeassistant.const import (
-    EVENT_TIME_CHANGED,
-    ATTR_FRIENDLY_NAME,
     ATTR_ENTITY_PICTURE,
+    ATTR_FRIENDLY_NAME,
+    EVENT_TIME_CHANGED,
 )
-from homeassistant.loader import bind_hass
+from homeassistant.core import callback as async_callback
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,10 +61,10 @@ def async_request_config(
     Will return an ID to be used for sequent calls.
     """
     if link_name is not None and link_url is not None:
-        description += "\n\n[{}]({})".format(link_name, link_url)
+        description += f"\n\n[{link_name}]({link_url})"
 
     if description_image is not None:
-        description += "\n\n![Description image]({})".format(description_image)
+        description += f"\n\n![Description image]({description_image})"
 
     instance = hass.data.get(_KEY_INSTANCE)
 

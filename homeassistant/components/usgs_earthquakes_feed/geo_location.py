@@ -3,6 +3,9 @@ from datetime import timedelta
 import logging
 from typing import Optional
 
+from geojson_client.usgs_earthquake_hazards_program_feed import (
+    UsgsEarthquakeHazardsProgramFeedManager,
+)
 import voluptuous as vol
 
 from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
@@ -122,9 +125,6 @@ class UsgsEarthquakesFeedEntityManager:
         minimum_magnitude,
     ):
         """Initialize the Feed Entity Manager."""
-        from geojson_client.usgs_earthquake_hazards_program_feed import (
-            UsgsEarthquakeHazardsProgramFeedManager,
-        )
 
         self._hass = hass
         self._feed_manager = UsgsEarthquakeHazardsProgramFeedManager(
@@ -242,6 +242,11 @@ class UsgsEarthquakesEvent(GeolocationEvent):
         self._status = feed_entry.status
         self._type = feed_entry.type
         self._alert = feed_entry.alert
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        return "mdi:pulse"
 
     @property
     def source(self) -> str:

@@ -1,15 +1,15 @@
 """Support for USCIS Case Status."""
-
-import logging
 from datetime import timedelta
+import logging
+
+import uscisstatus
 import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_FRIENDLY_NAME
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers import config_validation as cv
-from homeassistant.const import CONF_FRIENDLY_NAME
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,8 +67,6 @@ class UscisSensor(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Fetch data from the USCIS website and update state attributes."""
-        import uscisstatus
-
         try:
             status = uscisstatus.get_case_status(self._case_id)
             self._attributes = {self.CURRENT_STATUS: status["status"]}

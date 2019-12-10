@@ -1,8 +1,11 @@
 """Support for performing TensorFlow classification on images."""
+import io
 import logging
 import os
 import sys
 
+from PIL import Image, ImageDraw
+import numpy as np
 import voluptuous as vol
 
 from homeassistant.components.image_processing import (
@@ -12,6 +15,7 @@ from homeassistant.components.image_processing import (
     CONF_SOURCE,
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
+    draw_box,
 )
 from homeassistant.core import split_entity_id
 from homeassistant.helpers import template
@@ -67,24 +71,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def draw_box(draw, box, img_width, img_height, text="", color=(255, 255, 0)):
-    """Draw bounding box on image."""
-    ymin, xmin, ymax, xmax = box
-    (left, right, top, bottom) = (
-        xmin * img_width,
-        xmax * img_width,
-        ymin * img_height,
-        ymax * img_height,
-    )
-    draw.line(
-        [(left, top), (left, bottom), (right, bottom), (right, top), (left, top)],
-        width=5,
-        fill=color,
-    )
-    if text:
-        draw.text((left, abs(top - 15)), text, fill=color)
-
-
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the TensorFlow image processing platform."""
     model_config = config.get(CONF_MODEL)
@@ -103,23 +89,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         # Verify that the TensorFlow Object Detection API is pre-installed
-        # pylint: disable=unused-import,unused-variable
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-        import tensorflow as tf  # noqa
-        from object_detection.utils import label_map_util  # noqa
+        # These imports shouldn't be moved to the top, because they depend on code from the model_dir.
+        # (The model_dir is created during the manual setup process. See integration docs.)
+        import tensorflow as tf
+        from object_detection.utils import label_map_util
     except ImportError:
-        # pylint: disable=line-too-long
         _LOGGER.error(
             "No TensorFlow Object Detection library found! Install or compile "
             "for your system following instructions here: "
             "https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/installation.md"
-        )  # noqa
+        )
         return
 
     try:
         # Display warning that PIL will be used if no OpenCV is found.
-        # pylint: disable=unused-import,unused-variable
-        import cv2  # noqa
+        import cv2  # noqa: F401 pylint: disable=unused-import
     except ImportError:
         _LOGGER.warning(
             "No OpenCV library found. TensorFlow will process image with "
@@ -253,9 +238,6 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         }
 
     def _save_image(self, image, matches, paths):
-        from PIL import Image, ImageDraw
-        import io
-
         img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
         img_width, img_height = img.size
         draw = ImageDraw.Draw(img)
@@ -297,7 +279,6 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
 
     def process_image(self, image):
         """Process the image."""
-        import numpy as np
 
         try:
             import cv2  # pylint: disable=import-error
@@ -306,9 +287,6 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
             inp = img[:, :, [2, 1, 0]]  # BGR->RGB
             inp_expanded = inp.reshape(1, inp.shape[0], inp.shape[1], 3)
         except ImportError:
-            from PIL import Image
-            import io
-
             img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
             img.thumbnail((460, 460), Image.ANTIALIAS)
             img_width, img_height = img.size

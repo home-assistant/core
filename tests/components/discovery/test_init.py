@@ -1,6 +1,6 @@
 """The tests for the discovery component."""
 import asyncio
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -9,7 +9,7 @@ from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import discovery
 from homeassistant.util.dt import utcnow
 
-from tests.common import mock_coro, async_fire_time_changed
+from tests.common import async_fire_time_changed, mock_coro
 
 # One might consider to "mock" services, but it's easy enough to just use
 # what is already available.

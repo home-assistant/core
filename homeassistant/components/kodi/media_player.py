@@ -1,5 +1,4 @@
 """Support for interfacing with the XBMC/Kodi JSON-RPC API."""
-import asyncio
 from collections import OrderedDict
 from functools import wraps
 import logging
@@ -8,11 +7,15 @@ import socket
 import urllib
 
 import aiohttp
+import jsonrpc_async
+import jsonrpc_base
+import jsonrpc_websocket
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.kodi import SERVICE_CALL_METHOD
+from homeassistant.components.kodi.const import DOMAIN
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
-    DOMAIN,
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
@@ -34,7 +37,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -49,12 +51,11 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import script
+from homeassistant.helpers import config_validation as cv, script
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.template import Template
-from homeassistant.util.yaml import dump
 import homeassistant.util.dt as dt_util
+from homeassistant.util.yaml import dump
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -134,42 +135,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-SERVICE_ADD_MEDIA = "kodi_add_to_playlist"
-SERVICE_CALL_METHOD = "kodi_call_method"
-
-DATA_KODI = "kodi"
-
-ATTR_MEDIA_TYPE = "media_type"
-ATTR_MEDIA_NAME = "media_name"
-ATTR_MEDIA_ARTIST_NAME = "artist_name"
-ATTR_MEDIA_ID = "media_id"
-ATTR_METHOD = "method"
-
-MEDIA_PLAYER_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
-
-MEDIA_PLAYER_ADD_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend(
-    {
-        vol.Required(ATTR_MEDIA_TYPE): cv.string,
-        vol.Optional(ATTR_MEDIA_ID): cv.string,
-        vol.Optional(ATTR_MEDIA_NAME): cv.string,
-        vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
-    }
-)
-MEDIA_PLAYER_CALL_METHOD_SCHEMA = MEDIA_PLAYER_SCHEMA.extend(
-    {vol.Required(ATTR_METHOD): cv.string}, extra=vol.ALLOW_EXTRA
-)
-
-SERVICE_TO_METHOD = {
-    SERVICE_ADD_MEDIA: {
-        "method": "async_add_media_to_playlist",
-        "schema": MEDIA_PLAYER_ADD_MEDIA_SCHEMA,
-    },
-    SERVICE_CALL_METHOD: {
-        "method": "async_call_method",
-        "schema": MEDIA_PLAYER_CALL_METHOD_SCHEMA,
-    },
-}
-
 
 def _check_deprecated_turn_off(hass, turn_off_action):
     """Create an equivalent script for old turn off actions."""
@@ -177,7 +142,7 @@ def _check_deprecated_turn_off(hass, turn_off_action):
         method = DEPRECATED_TURN_OFF_ACTIONS[turn_off_action]
         new_config = OrderedDict(
             [
-                ("service", "{}.{}".format(DOMAIN, SERVICE_CALL_METHOD)),
+                ("service", f"{DOMAIN}.{SERVICE_CALL_METHOD}"),
                 (
                     "data_template",
                     OrderedDict([("entity_id", "{{ entity_id }}"), ("method", method)]),
@@ -205,8 +170,8 @@ def _check_deprecated_turn_off(hass, turn_off_action):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Kodi platform."""
-    if DATA_KODI not in hass.data:
-        hass.data[DATA_KODI] = dict()
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = dict()
 
     unique_id = None
     # Is this a manual configuration?
@@ -231,14 +196,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     # Only add a device once, so discovered devices do not override manual
     # config.
     ip_addr = socket.gethostbyname(host)
-    if ip_addr in hass.data[DATA_KODI]:
+    if ip_addr in hass.data[DOMAIN]:
         return
 
     # If we got an unique id, check that it does not exist already.
     # This is necessary as netdisco does not deterministally return the same
     # advertisement when the service is offered over multiple IP addresses.
     if unique_id is not None:
-        for device in hass.data[DATA_KODI].values():
+        for device in hass.data[DOMAIN].values():
             if device.unique_id == unique_id:
                 return
 
@@ -258,48 +223,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         unique_id=unique_id,
     )
 
-    hass.data[DATA_KODI][ip_addr] = entity
+    hass.data[DOMAIN][ip_addr] = entity
     async_add_entities([entity], update_before_add=True)
-
-    async def async_service_handler(service):
-        """Map services to methods on MediaPlayerDevice."""
-        method = SERVICE_TO_METHOD.get(service.service)
-        if not method:
-            return
-
-        params = {
-            key: value for key, value in service.data.items() if key != "entity_id"
-        }
-        entity_ids = service.data.get("entity_id")
-        if entity_ids:
-            target_players = [
-                player
-                for player in hass.data[DATA_KODI].values()
-                if player.entity_id in entity_ids
-            ]
-        else:
-            target_players = hass.data[DATA_KODI].values()
-
-        update_tasks = []
-        for player in target_players:
-            await getattr(player, method["method"])(**params)
-
-        for player in target_players:
-            if player.should_poll:
-                update_coro = player.async_update_ha_state(True)
-                update_tasks.append(update_coro)
-
-        if update_tasks:
-            await asyncio.wait(update_tasks)
-
-    if hass.services.has_service(DOMAIN, SERVICE_ADD_MEDIA):
-        return
-
-    for service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service]["schema"]
-        hass.services.async_register(
-            DOMAIN, service, async_service_handler, schema=schema
-        )
 
 
 def cmd(func):
@@ -308,8 +233,6 @@ def cmd(func):
     @wraps(func)
     async def wrapper(obj, *args, **kwargs):
         """Wrap all command methods."""
-        import jsonrpc_base
-
         try:
             await func(obj, *args, **kwargs)
         except jsonrpc_base.jsonrpc.TransportError as exc:
@@ -345,9 +268,6 @@ class KodiDevice(MediaPlayerDevice):
         unique_id=None,
     ):
         """Initialize the Kodi device."""
-        import jsonrpc_async
-        import jsonrpc_websocket
-
         self.hass = hass
         self._name = name
         self._unique_id = unique_id
@@ -358,18 +278,18 @@ class KodiDevice(MediaPlayerDevice):
 
         if username is not None:
             kwargs["auth"] = aiohttp.BasicAuth(username, password)
-            image_auth_string = "{}:{}@".format(username, password)
+            image_auth_string = f"{username}:{password}@"
         else:
             image_auth_string = ""
 
         http_protocol = "https" if encryption else "http"
         ws_protocol = "wss" if encryption else "ws"
 
-        self._http_url = "{}://{}:{}/jsonrpc".format(http_protocol, host, port)
+        self._http_url = f"{http_protocol}://{host}:{port}/jsonrpc"
         self._image_url = "{}://{}{}:{}/image".format(
             http_protocol, image_auth_string, host, port
         )
-        self._ws_url = "{}://{}:{}/jsonrpc".format(ws_protocol, host, tcp_port)
+        self._ws_url = f"{ws_protocol}://{host}:{tcp_port}/jsonrpc"
 
         self._http_server = jsonrpc_async.Server(self._http_url, **kwargs)
         if websocket:
@@ -403,14 +323,14 @@ class KodiDevice(MediaPlayerDevice):
             turn_on_action = script.Script(
                 self.hass,
                 turn_on_action,
-                "{} turn ON script".format(self.name),
+                f"{self.name} turn ON script",
                 self.async_update_ha_state(True),
             )
         if turn_off_action is not None:
             turn_off_action = script.Script(
                 self.hass,
                 _check_deprecated_turn_off(hass, turn_off_action),
-                "{} turn OFF script".format(self.name),
+                f"{self.name} turn OFF script",
             )
         self._turn_on_action = turn_on_action
         self._turn_off_action = turn_off_action
@@ -466,8 +386,6 @@ class KodiDevice(MediaPlayerDevice):
 
     async def _get_players(self):
         """Return the active player objects or None."""
-        import jsonrpc_base
-
         try:
             return await self.server.Player.GetActivePlayers()
         except jsonrpc_base.jsonrpc.TransportError:
@@ -497,8 +415,6 @@ class KodiDevice(MediaPlayerDevice):
 
     async def async_ws_connect(self):
         """Connect to Kodi via websocket protocol."""
-        import jsonrpc_base
-
         try:
             ws_loop_future = await self._ws_server.ws_connect()
         except jsonrpc_base.jsonrpc.TransportError:
@@ -878,8 +794,6 @@ class KodiDevice(MediaPlayerDevice):
 
     async def async_call_method(self, method, **kwargs):
         """Run Kodi JSONRPC API method with params."""
-        import jsonrpc_base
-
         _LOGGER.debug("Run API method %s, kwargs=%s", method, kwargs)
         result_ok = False
         try:
@@ -927,8 +841,6 @@ class KodiDevice(MediaPlayerDevice):
         All the albums of an artist can be added with
         media_name="ALL"
         """
-        import jsonrpc_base
-
         params = {"playlistid": 0}
         if media_type == "SONG":
             if media_id is None:

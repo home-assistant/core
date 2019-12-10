@@ -6,8 +6,9 @@ import logging
 import aiohttp
 import async_timeout
 
-from homeassistant.components.camera import Camera, SUPPORT_STREAM
+from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.util.dt as dt_util
 
 from . import DOMAIN as DOORBIRD_DOMAIN
 
@@ -77,7 +78,7 @@ class DoorBirdCamera(Camera):
 
     async def async_camera_image(self):
         """Pull a still image from the camera."""
-        now = datetime.datetime.now()
+        now = dt_util.utcnow()
 
         if self._last_image and now - self._last_update < self._interval:
             return self._last_image

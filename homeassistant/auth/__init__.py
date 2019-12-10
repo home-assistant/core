@@ -1,21 +1,21 @@
 """Provide an authentication layer for Home Assistant."""
 import asyncio
-import logging
 from collections import OrderedDict
 from datetime import timedelta
+import logging
 from typing import Any, Dict, List, Optional, Tuple, cast
 
 import jwt
 
 from homeassistant import data_entry_flow
 from homeassistant.auth.const import ACCESS_TOKEN_EXPIRATION
-from homeassistant.core import callback, HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
 from . import auth_store, models
 from .const import GROUP_ID_ADMIN
-from .mfa_modules import auth_mfa_module_from_config, MultiFactorAuthModule
-from .providers import auth_provider_from_config, AuthProvider, LoginFlow
+from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
+from .providers import AuthProvider, LoginFlow, auth_provider_from_config
 
 EVENT_USER_ADDED = "user_added"
 EVENT_USER_REMOVED = "user_removed"
@@ -45,9 +45,9 @@ async def auth_manager_from_config(
             )
         )
     else:
-        providers = ()
+        providers = []
     # So returned auth providers are in same order as config
-    provider_hash = OrderedDict()  # type: _ProviderDict
+    provider_hash: _ProviderDict = OrderedDict()
     for provider in providers:
         key = (provider.type, provider.id)
         provider_hash[key] = provider
@@ -57,9 +57,9 @@ async def auth_manager_from_config(
             *(auth_mfa_module_from_config(hass, config) for config in module_configs)
         )
     else:
-        modules = ()
+        modules = []
     # So returned auth modules are in same order as config
-    module_hash = OrderedDict()  # type: _MfaModuleDict
+    module_hash: _MfaModuleDict = OrderedDict()
     for module in modules:
         module_hash[module.id] = module
 
@@ -85,18 +85,6 @@ class AuthManager:
         self.login_flow = data_entry_flow.FlowManager(
             hass, self._async_create_login_flow, self._async_finish_login_flow
         )
-
-    @property
-    def support_legacy(self) -> bool:
-        """
-        Return if legacy_api_password auth providers are registered.
-
-        Should be removed when we removed legacy_api_password auth providers.
-        """
-        for provider_type, _ in self._providers:
-            if provider_type == "legacy_api_password":
-                return True
-        return False
 
     @property
     def auth_providers(self) -> List[AuthProvider]:
@@ -168,11 +156,11 @@ class AuthManager:
 
     async def async_create_user(self, name: str) -> models.User:
         """Create a user."""
-        kwargs = {
+        kwargs: Dict[str, Any] = {
             "name": name,
             "is_active": True,
             "group_ids": [GROUP_ID_ADMIN],
-        }  # type: Dict[str, Any]
+        }
 
         if await self._user_should_be_owner():
             kwargs["is_owner"] = True
@@ -238,7 +226,7 @@ class AuthManager:
         group_ids: Optional[List[str]] = None,
     ) -> None:
         """Update a user."""
-        kwargs = {}  # type: Dict[str,Any]
+        kwargs: Dict[str, Any] = {}
         if name is not None:
             kwargs["name"] = name
         if group_ids is not None:
@@ -273,14 +261,12 @@ class AuthManager:
         """Enable a multi-factor auth module for user."""
         if user.system_generated:
             raise ValueError(
-                "System generated users cannot enable " "multi-factor auth module."
+                "System generated users cannot enable multi-factor auth module."
             )
 
         module = self.get_auth_mfa_module(mfa_module_id)
         if module is None:
-            raise ValueError(
-                "Unable find multi-factor auth module: {}".format(mfa_module_id)
-            )
+            raise ValueError(f"Unable find multi-factor auth module: {mfa_module_id}")
 
         await module.async_setup_user(user.id, data)
 
@@ -290,20 +276,18 @@ class AuthManager:
         """Disable a multi-factor auth module for user."""
         if user.system_generated:
             raise ValueError(
-                "System generated users cannot disable " "multi-factor auth module."
+                "System generated users cannot disable multi-factor auth module."
             )
 
         module = self.get_auth_mfa_module(mfa_module_id)
         if module is None:
-            raise ValueError(
-                "Unable find multi-factor auth module: {}".format(mfa_module_id)
-            )
+            raise ValueError(f"Unable find multi-factor auth module: {mfa_module_id}")
 
         await module.async_depose_user(user.id)
 
     async def async_get_enabled_mfa(self, user: models.User) -> Dict[str, str]:
         """List enabled mfa modules for user."""
-        modules = OrderedDict()  # type: Dict[str, str]
+        modules: Dict[str, str] = OrderedDict()
         for module_id, module in self._mfa_modules.items():
             if await module.async_is_user_setup(user.id):
                 modules[module_id] = module.name
@@ -336,7 +320,7 @@ class AuthManager:
 
         if user.system_generated != (token_type == models.TOKEN_TYPE_SYSTEM):
             raise ValueError(
-                "System generated users can only have system type " "refresh tokens"
+                "System generated users can only have system type refresh tokens"
             )
 
         if token_type == models.TOKEN_TYPE_NORMAL and client_id is None:
@@ -346,7 +330,7 @@ class AuthManager:
             token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
             and client_name is None
         ):
-            raise ValueError("Client_name is required for long-lived access " "token")
+            raise ValueError("Client_name is required for long-lived access token")
 
         if token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN:
             for token in user.refresh_tokens.values():
@@ -356,7 +340,7 @@ class AuthManager:
                 ):
                     # Each client_name can only have one
                     # long_lived_access_token type of refresh token
-                    raise ValueError("{} already exists".format(client_name))
+                    raise ValueError(f"{client_name} already exists")
 
         return await self._store.async_create_refresh_token(
             user,
@@ -458,7 +442,7 @@ class AuthManager:
             result["data"]
         )
 
-        if flow.context is not None and flow.context.get("credential_only"):
+        if flow.context.get("credential_only"):
             result["result"] = credentials
             return result
 

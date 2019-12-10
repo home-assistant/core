@@ -1,11 +1,12 @@
 """Test Alexa config."""
 import contextlib
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from homeassistant.components.cloud import ALEXA_SCHEMA, alexa_config
-from homeassistant.util.dt import utcnow
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
-from tests.common import mock_coro, async_fire_time_changed
+from homeassistant.util.dt import utcnow
+
+from tests.common import async_fire_time_changed, mock_coro
 
 
 async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs):
@@ -43,6 +44,42 @@ async def test_alexa_config_report_state(hass, cloud_prefs):
     assert conf.is_reporting_states is False
 
 
+async def test_alexa_config_invalidate_token(hass, cloud_prefs, aioclient_mock):
+    """Test Alexa config should expose using prefs."""
+    aioclient_mock.post(
+        "http://example/alexa_token",
+        json={
+            "access_token": "mock-token",
+            "event_endpoint": "http://example.com/alexa_endpoint",
+            "expires_in": 30,
+        },
+    )
+    conf = alexa_config.AlexaConfig(
+        hass,
+        ALEXA_SCHEMA({}),
+        cloud_prefs,
+        Mock(
+            alexa_access_token_url="http://example/alexa_token",
+            auth=Mock(async_check_token=Mock(side_effect=mock_coro)),
+            websession=hass.helpers.aiohttp_client.async_get_clientsession(),
+        ),
+    )
+
+    token = await conf.async_get_access_token()
+    assert token == "mock-token"
+    assert len(aioclient_mock.mock_calls) == 1
+
+    token = await conf.async_get_access_token()
+    assert token == "mock-token"
+    assert len(aioclient_mock.mock_calls) == 1
+    assert conf._token_valid is not None
+    conf.async_invalidate_access_token()
+    assert conf._token_valid is None
+    token = await conf.async_get_access_token()
+    assert token == "mock-token"
+    assert len(aioclient_mock.mock_calls) == 2
+
+
 @contextlib.contextmanager
 def patch_sync_helper():
     """Patch sync helper.
@@ -52,15 +89,16 @@ def patch_sync_helper():
     to_update = []
     to_remove = []
 
+    async def sync_helper(to_upd, to_rem):
+        to_update.extend([ent_id for ent_id in to_upd if ent_id not in to_update])
+        to_remove.extend([ent_id for ent_id in to_rem if ent_id not in to_remove])
+        return True
+
     with patch("homeassistant.components.cloud.alexa_config.SYNC_DELAY", 0), patch(
         "homeassistant.components.cloud.alexa_config.AlexaConfig._sync_helper",
-        side_effect=mock_coro,
-    ) as mock_helper:
+        side_effect=sync_helper,
+    ):
         yield to_update, to_remove
-
-    actual_to_update, actual_to_remove = mock_helper.mock_calls[0][1]
-    to_update.extend(actual_to_update)
-    to_remove.extend(actual_to_remove)
 
 
 async def test_alexa_update_expose_trigger_sync(hass, cloud_prefs):
@@ -123,7 +161,11 @@ async def test_alexa_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
     with patch_sync_helper() as (to_update, to_remove):
         hass.bus.async_fire(
             EVENT_ENTITY_REGISTRY_UPDATED,
-            {"action": "update", "entity_id": "light.kitchen"},
+            {
+                "action": "update",
+                "entity_id": "light.kitchen",
+                "changes": ["entity_id"],
+            },
         )
         await hass.async_block_till_done()
 

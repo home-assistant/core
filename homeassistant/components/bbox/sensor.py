@@ -1,19 +1,26 @@
 """Support for Bbox Bouygues Modem Router."""
-import logging
 from datetime import timedelta
+import logging
 
+import pybbox
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_MONITORED_VARIABLES, ATTR_ATTRIBUTION
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    CONF_MONITORED_VARIABLES,
+    CONF_NAME,
+    DEVICE_CLASS_TIMESTAMP,
+)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
 
-BANDWIDTH_MEGABITS_SECONDS = "Mb/s"  # type: str
+BANDWIDTH_MEGABITS_SECONDS = "Mb/s"
 
 ATTRIBUTION = "Powered by Bouygues Telecom"
 
@@ -43,6 +50,8 @@ SENSOR_TYPES = {
         BANDWIDTH_MEGABITS_SECONDS,
         "mdi:upload",
     ],
+    "uptime": ["Uptime", None, "mdi:clock"],
+    "number_of_reboots": ["Number of reboot", None, "mdi:restart"],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -70,9 +79,59 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     sensors = []
     for variable in config[CONF_MONITORED_VARIABLES]:
-        sensors.append(BboxSensor(bbox_data, variable, name))
+        if variable == "uptime":
+            sensors.append(BboxUptimeSensor(bbox_data, variable, name))
+        else:
+            sensors.append(BboxSensor(bbox_data, variable, name))
 
     add_entities(sensors, True)
+
+
+class BboxUptimeSensor(Entity):
+    """Bbox uptime sensor."""
+
+    def __init__(self, bbox_data, sensor_type, name):
+        """Initialize the sensor."""
+        self.client_name = name
+        self.type = sensor_type
+        self._name = SENSOR_TYPES[sensor_type][0]
+        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._icon = SENSOR_TYPES[sensor_type][2]
+        self.bbox_data = bbox_data
+        self._state = None
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"{self.client_name} {self._name}"
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return self._icon
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {ATTR_ATTRIBUTION: ATTRIBUTION}
+
+    @property
+    def device_class(self):
+        """Return the class of this sensor."""
+        return DEVICE_CLASS_TIMESTAMP
+
+    def update(self):
+        """Get the latest data from Bbox and update the state."""
+        self.bbox_data.update()
+        uptime = utcnow() - timedelta(
+            seconds=self.bbox_data.router_infos["device"]["uptime"]
+        )
+        self._state = uptime.replace(microsecond=0).isoformat()
 
 
 class BboxSensor(Entity):
@@ -91,7 +150,7 @@ class BboxSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self.client_name, self._name)
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):
@@ -124,6 +183,8 @@ class BboxSensor(Entity):
             self._state = round(self.bbox_data.data["rx"]["bandwidth"] / 1000, 2)
         elif self.type == "current_up_bandwidth":
             self._state = round(self.bbox_data.data["tx"]["bandwidth"] / 1000, 2)
+        elif self.type == "number_of_reboots":
+            self._state = self.bbox_data.router_infos["device"]["numberofboots"]
 
 
 class BboxData:
@@ -132,16 +193,18 @@ class BboxData:
     def __init__(self):
         """Initialize the data object."""
         self.data = None
+        self.router_infos = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from the Bbox."""
-        import pybbox
 
         try:
             box = pybbox.Bbox()
             self.data = box.get_ip_stats()
+            self.router_infos = box.get_bbox_info()
         except requests.exceptions.HTTPError as error:
             _LOGGER.error(error)
             self.data = None
+            self.router_infos = None
             return False

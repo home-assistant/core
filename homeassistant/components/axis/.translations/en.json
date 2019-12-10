@@ -12,6 +12,7 @@
             "device_unavailable": "Device is not available",
             "faulty_credentials": "Bad user credentials"
         },
+        "flow_title": "Axis device: {name} ({host})",
         "step": {
             "user": {
                 "data": {

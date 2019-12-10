@@ -1,29 +1,32 @@
 """Support for the definition of zones."""
 import logging
+from typing import Set, cast
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.loader import bind_hass
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_NAME,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    CONF_ICON,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_ICON,
+    CONF_NAME,
     CONF_RADIUS,
     EVENT_CORE_CONFIG_UPDATE,
 )
+from homeassistant.core import State, callback
 from homeassistant.helpers import config_per_platform
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.util.location import distance
 
-
 from .config_flow import configured_zones
-from .const import CONF_PASSIVE, DOMAIN, HOME_ZONE, ATTR_PASSIVE, ATTR_RADIUS
+from .const import ATTR_PASSIVE, ATTR_RADIUS, CONF_PASSIVE, DOMAIN, HOME_ZONE
 from .zone import Zone
+
+# mypy: allow-untyped-calls, allow-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,10 +81,11 @@ def async_active_zone(hass, latitude, longitude, radius=0):
         )
 
         within_zone = zone_dist - radius < zone.attributes[ATTR_RADIUS]
-        closer_zone = closest is None or zone_dist < min_dist
+        closer_zone = closest is None or zone_dist < min_dist  # type: ignore
         smaller_zone = (
             zone_dist == min_dist
-            and zone.attributes[ATTR_RADIUS] < closest.attributes[ATTR_RADIUS]
+            and zone.attributes[ATTR_RADIUS]
+            < cast(State, closest).attributes[ATTR_RADIUS]
         )
 
         if within_zone and (closer_zone or smaller_zone):
@@ -94,7 +98,7 @@ def async_active_zone(hass, latitude, longitude, radius=0):
 async def async_setup(hass, config):
     """Set up configured zones as well as home assistant zone if necessary."""
     hass.data[DOMAIN] = {}
-    entities = set()
+    entities: Set[str] = set()
     zone_entries = configured_zones(hass)
     for _, entry in config_per_platform(config, DOMAIN):
         if slugify(entry[CONF_NAME]) not in zone_entries:

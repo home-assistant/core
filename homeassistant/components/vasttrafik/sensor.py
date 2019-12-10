@@ -2,11 +2,12 @@
 from datetime import timedelta
 import logging
 
+import vasttrafik
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.dt import now
@@ -54,7 +55,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the departure sensor."""
-    import vasttrafik
 
     planner = vasttrafik.JournyPlanner(config.get(CONF_KEY), config.get(CONF_SECRET))
     sensors = []
@@ -62,7 +62,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for departure in config.get(CONF_DEPARTURES):
         sensors.append(
             VasttrafikDepartureSensor(
-                vasttrafik,
                 planner,
                 departure.get(CONF_NAME),
                 departure.get(CONF_FROM),
@@ -77,9 +76,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class VasttrafikDepartureSensor(Entity):
     """Implementation of a Vasttrafik Departure Sensor."""
 
-    def __init__(self, vasttrafik, planner, name, departure, heading, lines, delay):
+    def __init__(self, planner, name, departure, heading, lines, delay):
         """Initialize the sensor."""
-        self._vasttrafik = vasttrafik
         self._planner = planner
         self._name = name or departure
         self._departure = planner.location_name(departure)[0]
@@ -119,7 +117,7 @@ class VasttrafikDepartureSensor(Entity):
                 direction=self._heading["id"] if self._heading else None,
                 date=now() + self._delay,
             )
-        except self._vasttrafik.Error:
+        except vasttrafik.Error:
             _LOGGER.debug("Unable to read departure board, updating token")
             self._planner.update_token()
 

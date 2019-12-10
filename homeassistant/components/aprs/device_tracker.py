@@ -3,6 +3,9 @@
 import logging
 import threading
 
+import aprslib
+from aprslib import ConnectionError as AprsConnectionError, LoginError
+import geopy.distance
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
@@ -59,7 +62,6 @@ def make_filter(callsigns: list) -> str:
 
 def gps_accuracy(gps, posambiguity: int) -> int:
     """Calculate the GPS accuracy based on APRS posambiguity."""
-    import geopy.distance
 
     pos_a_map = {0: 0, 1: 1 / 600, 2: 1 / 60, 3: 1 / 6, 4: 1}
     if posambiguity in pos_a_map:
@@ -70,7 +72,7 @@ def gps_accuracy(gps, posambiguity: int) -> int:
 
         accuracy = round(dist_m)
     else:
-        message = "APRS position ambiguity must be 0-4, not '{0}'.".format(posambiguity)
+        message = f"APRS position ambiguity must be 0-4, not '{posambiguity}'."
         raise ValueError(message)
 
     return accuracy
@@ -115,8 +117,6 @@ class AprsListenerThread(threading.Thread):
         """Initialize the class."""
         super().__init__()
 
-        import aprslib
-
         self.callsign = callsign
         self.host = host
         self.start_event = threading.Event()
@@ -138,8 +138,6 @@ class AprsListenerThread(threading.Thread):
     def run(self):
         """Connect to APRS and listen for data."""
         self.ais.set_filter(self.server_filter)
-        from aprslib import ConnectionError as AprsConnectionError
-        from aprslib import LoginError
 
         try:
             _LOGGER.info(
@@ -147,8 +145,7 @@ class AprsListenerThread(threading.Thread):
             )
             self.ais.connect()
             self.start_complete(
-                True,
-                "Connected to {0} with callsign {1}.".format(self.host, self.callsign),
+                True, f"Connected to {self.host} with callsign {self.callsign}."
             )
             self.ais.consumer(callback=self.rx_msg, immortal=True)
         except (AprsConnectionError, LoginError) as err:

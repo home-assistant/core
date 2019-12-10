@@ -1,7 +1,7 @@
 """The tests for the rss_feed_api component."""
 import asyncio
-from xml.etree import ElementTree
 
+from defusedxml import ElementTree
 import pytest
 
 from homeassistant.setup import async_setup_component

@@ -7,7 +7,7 @@
             "no_flows": "\u5fc5\u9808\u5148\u8a2d\u5b9a Logi Circle \u65b9\u80fd\u9032\u884c\u8a8d\u8b49\u3002[\u8acb\u53c3\u95b1\u6559\u5b78\u6307\u5f15]\uff08https://www.home-assistant.io/components/logi_circle/\uff09\u3002"
         },
         "create_entry": {
-            "default": "\u5df2\u6210\u529f\u8a8d\u8b49 Logi Circle \u88dd\u7f6e\u3002"
+            "default": "\u5df2\u6210\u529f\u8a8d\u8b49 Logi Circle \u8a2d\u5099\u3002"
         },
         "error": {
             "auth_error": "API \u8a8d\u8b49\u5931\u6557\u3002",

@@ -4,9 +4,10 @@ import logging
 
 import requests
 import voluptuous as vol
+import xmltodict
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_API_KEY, CONF_NAME, ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -19,7 +20,7 @@ CONF_ZPID = "zpid"
 
 DEFAULT_NAME = "Zestimate"
 NAME = "zestimate"
-ZESTIMATE = "{}:{}".format(DEFAULT_NAME, NAME)
+ZESTIMATE = f"{DEFAULT_NAME}:{NAME}"
 
 ICON = "mdi:home-variant"
 
@@ -74,7 +75,7 @@ class ZestimateDataSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._name, self.address)
+        return f"{self._name} {self.address}"
 
     @property
     def state(self):
@@ -101,7 +102,6 @@ class ZestimateDataSensor(Entity):
 
     def update(self):
         """Get the latest data and update the states."""
-        import xmltodict
 
         try:
             response = requests.get(_RESOURCE, params=self.params, timeout=5)

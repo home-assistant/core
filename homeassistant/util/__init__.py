@@ -1,23 +1,23 @@
 """Helper methods for various modules."""
 import asyncio
 from datetime import datetime, timedelta
-import threading
-import re
 import enum
-import socket
-import random
-import string
 from functools import wraps
+import random
+import re
+import socket
+import string
+import threading
 from types import MappingProxyType
 from typing import (
     Any,
+    Callable,
+    Coroutine,
+    Iterable,
+    KeysView,
     Optional,
     TypeVar,
-    Callable,
-    KeysView,
-    Union,  # noqa
-    Iterable,
-    Coroutine,
+    Union,
 )
 
 import slugify as unicode_slug
@@ -86,7 +86,7 @@ def ensure_unique_string(
 
     while test_string in current_strings_set:
         tries += 1
-        test_string = "{}_{}".format(preferred_string, tries)
+        test_string = f"{preferred_string}_{tries}"
 
     return test_string
 

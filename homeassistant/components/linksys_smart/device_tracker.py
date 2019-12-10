@@ -4,13 +4,13 @@ import logging
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN,
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST
+import homeassistant.helpers.config_validation as cv
 
 DEFAULT_TIMEOUT = 10
 
@@ -100,7 +100,7 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
         ]
         headers = {"X-JNAP-Action": "http://linksys.com/jnap/core/Transaction"}
         return requests.post(
-            "http://{}/JNAP/".format(self.host),
+            f"http://{self.host}/JNAP/",
             timeout=DEFAULT_TIMEOUT,
             headers=headers,
             json=data,

@@ -2,8 +2,16 @@
 import logging
 
 import aiohttp
+import jsonrpc_async
 import voluptuous as vol
 
+from homeassistant.components.notify import (
+    ATTR_DATA,
+    ATTR_TITLE,
+    ATTR_TITLE_DEFAULT,
+    PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 from homeassistant.const import (
     ATTR_ICON,
     CONF_HOST,
@@ -14,14 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-
-from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_TITLE,
-    ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
-    BaseNotificationService,
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ async def async_get_service(hass, config, discovery_info=None):
         )
 
     http_protocol = "https" if encryption else "http"
-    url = "{}://{}:{}/jsonrpc".format(http_protocol, host, port)
+    url = f"{http_protocol}://{host}:{port}/jsonrpc"
 
     if username is not None:
         auth = aiohttp.BasicAuth(username, password)
@@ -77,8 +77,6 @@ class KodiNotificationService(BaseNotificationService):
 
     def __init__(self, hass, url, auth=None):
         """Initialize the service."""
-        import jsonrpc_async
-
         self._url = url
 
         kwargs = {"timeout": DEFAULT_TIMEOUT, "session": async_get_clientsession(hass)}
@@ -90,8 +88,6 @@ class KodiNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message="", **kwargs):
         """Send a message to Kodi."""
-        import jsonrpc_async
-
         try:
             data = kwargs.get(ATTR_DATA) or {}
 

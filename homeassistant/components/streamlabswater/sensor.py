@@ -79,7 +79,7 @@ class StreamLabsDailyUsage(Entity):
     @property
     def name(self):
         """Return the name for daily usage."""
-        return "{} {}".format(self._location_name, NAME_DAILY_USAGE)
+        return f"{self._location_name} {NAME_DAILY_USAGE}"
 
     @property
     def icon(self):
@@ -107,7 +107,7 @@ class StreamLabsMonthlyUsage(StreamLabsDailyUsage):
     @property
     def name(self):
         """Return the name for monthly usage."""
-        return "{} {}".format(self._location_name, NAME_MONTHLY_USAGE)
+        return f"{self._location_name} {NAME_MONTHLY_USAGE}"
 
     @property
     def state(self):
@@ -121,7 +121,7 @@ class StreamLabsYearlyUsage(StreamLabsDailyUsage):
     @property
     def name(self):
         """Return the name for yearly usage."""
-        return "{} {}".format(self._location_name, NAME_YEARLY_USAGE)
+        return f"{self._location_name} {NAME_YEARLY_USAGE}"
 
     @property
     def state(self):

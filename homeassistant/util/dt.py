@@ -1,25 +1,17 @@
 """Helper methods to handle the time in Home Assistant."""
 import datetime as dt
 import re
-from typing import (
-    Any,
-    Union,
-    Optional,  # noqa pylint: disable=unused-import
-    Tuple,
-    List,
-    cast,
-    Dict,
-)
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import pytz
 import pytz.exceptions as pytzexceptions
-import pytz.tzinfo as pytzinfo  # noqa pylint: disable=unused-import
+import pytz.tzinfo as pytzinfo
 
 from homeassistant.const import MATCH_ALL
 
 DATE_STR_FORMAT = "%Y-%m-%d"
 UTC = pytz.utc
-DEFAULT_TIME_ZONE = pytz.utc  # type: dt.tzinfo
+DEFAULT_TIME_ZONE: dt.tzinfo = pytz.utc
 
 
 # Copyright (c) Django Software Foundation and individual contributors.
@@ -83,7 +75,7 @@ def as_utc(dattim: dt.datetime) -> dt.datetime:
 def as_timestamp(dt_value: dt.datetime) -> float:
     """Convert a date/time into a unix time (seconds since 1970)."""
     if hasattr(dt_value, "timestamp"):
-        parsed_dt = dt_value  # type: Optional[dt.datetime]
+        parsed_dt: Optional[dt.datetime] = dt_value
     else:
         parsed_dt = parse_datetime(str(dt_value))
     if parsed_dt is None:
@@ -111,7 +103,7 @@ def start_of_local_day(
 ) -> dt.datetime:
     """Return local datetime object of start of day from date or datetime."""
     if dt_or_d is None:
-        date = now().date()  # type: dt.date
+        date: dt.date = now().date()
     elif isinstance(dt_or_d, dt.datetime):
         date = dt_or_d.date()
     return DEFAULT_TIME_ZONE.localize(  # type: ignore
@@ -133,12 +125,12 @@ def parse_datetime(dt_str: str) -> Optional[dt.datetime]:
     match = DATETIME_RE.match(dt_str)
     if not match:
         return None
-    kws = match.groupdict()  # type: Dict[str, Any]
+    kws: Dict[str, Any] = match.groupdict()
     if kws["microsecond"]:
         kws["microsecond"] = kws["microsecond"].ljust(6, "0")
     tzinfo_str = kws.pop("tzinfo")
 
-    tzinfo = None  # type: Optional[dt.tzinfo]
+    tzinfo: Optional[dt.tzinfo] = None
     if tzinfo_str == "Z":
         tzinfo = UTC
     elif tzinfo_str is not None:
@@ -193,8 +185,8 @@ def get_age(date: dt.datetime) -> str:
     def formatn(number: int, unit: str) -> str:
         """Add "unit" if it's plural."""
         if number == 1:
-            return "1 {}".format(unit)
-        return "{:d} {}s".format(number, unit)
+            return f"1 {unit}"
+        return f"{number:d} {unit}s"
 
     def q_n_r(first: int, second: int) -> Tuple[int, int]:
         """Return quotient and remaining."""
@@ -228,7 +220,7 @@ def get_age(date: dt.datetime) -> str:
 def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> List[int]:
     """Parse the time expression part and return a list of times to match."""
     if parameter is None or parameter == MATCH_ALL:
-        res = [x for x in range(min_value, max_value + 1)]
+        res = list(range(min_value, max_value + 1))
     elif isinstance(parameter, str) and parameter.startswith("/"):
         parameter = int(parameter[1:])
         res = [x for x in range(min_value, max_value + 1) if x % parameter == 0]
@@ -324,7 +316,7 @@ def find_next_time_expression_time(
     # Now we need to handle timezones. We will make this datetime object
     # "naive" first and then re-convert it to the target timezone.
     # This is so that we can call pytz's localize and handle DST changes.
-    tzinfo = result.tzinfo  # type: pytzinfo.DstTzInfo
+    tzinfo: pytzinfo.DstTzInfo = result.tzinfo
     result = result.replace(tzinfo=None)
 
     try:

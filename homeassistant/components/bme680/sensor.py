@@ -1,14 +1,15 @@
 """Support for BME680 Sensor over SMBus."""
-import importlib
 import logging
+import threading
+from time import sleep, time
 
-from time import time, sleep
-
+import bme680  # pylint: disable=import-error
+from smbus import SMBus  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, TEMP_FAHRENHEIT
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import TEMP_FAHRENHEIT, CONF_NAME, CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
@@ -121,9 +122,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 def _setup_bme680(config):
     """Set up and configure the BME680 sensor."""
-    from smbus import SMBus  # pylint: disable=import-error
-
-    bme680 = importlib.import_module("bme680")
 
     sensor_handler = None
     sensor = None
@@ -171,7 +169,7 @@ def _setup_bme680(config):
             sensor.select_gas_heater_profile(0)
         else:
             sensor.set_gas_status(bme680.DISABLE_GAS_MEAS)
-    except (RuntimeError, IOError):
+    except (RuntimeError, OSError):
         _LOGGER.error("BME680 sensor not detected at 0x%02x", i2c_address)
         return None
 
@@ -224,7 +222,6 @@ class BME680Handler:
         self._gas_baseline = None
 
         if gas_measurement:
-            import threading
 
             threading.Thread(
                 target=self._run_gas_sensor,
@@ -331,7 +328,7 @@ class BME680Sensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self.client_name, self._name)
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):

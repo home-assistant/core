@@ -4,53 +4,55 @@ import base64
 import collections
 from contextlib import suppress
 from datetime import timedelta
-import logging
 import hashlib
+import logging
 from random import SystemRandom
 
-import attr
 from aiohttp import web
 import async_timeout
+import attr
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    CONF_FILENAME,
-)
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import bind_hass
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.config_validation import (  # noqa
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
-from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
+from homeassistant.components import websocket_api
+from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
-    SERVICE_PLAY_MEDIA,
     DOMAIN as DOMAIN_MP,
+    SERVICE_PLAY_MEDIA,
 )
 from homeassistant.components.stream import request_stream
 from homeassistant.components.stream.const import (
-    OUTPUT_FORMATS,
-    FORMAT_CONTENT_TYPE,
-    CONF_STREAM_SOURCE,
-    CONF_LOOKBACK,
     CONF_DURATION,
-    SERVICE_RECORD,
+    CONF_LOOKBACK,
+    CONF_STREAM_SOURCE,
     DOMAIN as DOMAIN_STREAM,
+    FORMAT_CONTENT_TYPE,
+    OUTPUT_FORMATS,
+    SERVICE_RECORD,
 )
-from homeassistant.components import websocket_api
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_FILENAME,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
+from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import (  # noqa: F401
+    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA_BASE,
+)
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.loader import bind_hass
 from homeassistant.setup import async_when_setup
 
-from .const import DOMAIN, DATA_CAMERA_PREFS
+from .const import DATA_CAMERA_PREFS, DOMAIN
 from .prefs import CameraPreferences
+
+# mypy: allow-untyped-calls, allow-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -131,7 +133,7 @@ async def async_request_stream(hass, entity_id, fmt):
 
     if not source:
         raise HomeAssistantError(
-            "{} does not support play stream service".format(camera.entity_id)
+            f"{camera.entity_id} does not support play stream service"
         )
 
     return request_stream(hass, source, fmt=fmt, keepalive=camera_prefs.preload_stream)
@@ -311,7 +313,7 @@ class Camera(Entity):
         """Initialize a camera."""
         self.is_streaming = False
         self.content_type = DEFAULT_CONTENT_TYPE
-        self.access_tokens = collections.deque([], 2)
+        self.access_tokens: collections.deque = collections.deque([], 2)
         self.async_update_token()
 
     @property
@@ -531,9 +533,7 @@ class CameraMjpegStream(CameraView):
             # Compose camera stream from stills
             interval = float(request.query.get("interval"))
             if interval < MIN_STREAM_INTERVAL:
-                raise ValueError(
-                    "Stream interval must be be > {}".format(MIN_STREAM_INTERVAL)
-                )
+                raise ValueError(f"Stream interval must be be > {MIN_STREAM_INTERVAL}")
             return await camera.handle_async_still_stream(request, interval)
         except ValueError:
             raise web.HTTPBadRequest()
@@ -585,7 +585,7 @@ async def ws_camera_stream(hass, connection, msg):
 
         if not source:
             raise HomeAssistantError(
-                "{} does not support play stream service".format(camera.entity_id)
+                f"{camera.entity_id} does not support play stream service"
             )
 
         fmt = msg["format"]
@@ -667,7 +667,7 @@ async def async_handle_play_stream_service(camera, service_call):
 
     if not source:
         raise HomeAssistantError(
-            "{} does not support play stream service".format(camera.entity_id)
+            f"{camera.entity_id} does not support play stream service"
         )
 
     hass = camera.hass
@@ -678,7 +678,7 @@ async def async_handle_play_stream_service(camera, service_call):
     url = request_stream(hass, source, fmt=fmt, keepalive=camera_prefs.preload_stream)
     data = {
         ATTR_ENTITY_ID: entity_ids,
-        ATTR_MEDIA_CONTENT_ID: "{}{}".format(hass.config.api.base_url, url),
+        ATTR_MEDIA_CONTENT_ID: f"{hass.config.api.base_url}{url}",
         ATTR_MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[fmt],
     }
 
@@ -693,9 +693,7 @@ async def async_handle_record_service(camera, call):
         source = await camera.stream_source()
 
     if not source:
-        raise HomeAssistantError(
-            "{} does not support record service".format(camera.entity_id)
-        )
+        raise HomeAssistantError(f"{camera.entity_id} does not support record service")
 
     hass = camera.hass
     filename = call.data[CONF_FILENAME]

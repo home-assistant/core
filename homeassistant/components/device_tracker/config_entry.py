@@ -3,12 +3,12 @@ from typing import Optional
 
 from homeassistant.components import zone
 from homeassistant.const import (
-    STATE_NOT_HOME,
-    STATE_HOME,
+    ATTR_BATTERY_LEVEL,
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    ATTR_BATTERY_LEVEL,
+    STATE_HOME,
+    STATE_NOT_HOME,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -18,7 +18,7 @@ from .const import ATTR_SOURCE_TYPE, DOMAIN, LOGGER
 
 async def async_setup_entry(hass, entry):
     """Set up an entry."""
-    component = hass.data.get(DOMAIN)  # type: Optional[EntityComponent]
+    component: Optional[EntityComponent] = hass.data.get(DOMAIN)
 
     if component is None:
         component = hass.data[DOMAIN] = EntityComponent(LOGGER, DOMAIN, hass)

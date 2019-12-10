@@ -3,11 +3,12 @@ from pydeconz.sensor import Thermostat
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
+    HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -15,12 +16,11 @@ from .const import ATTR_OFFSET, ATTR_VALVE, NEW_SENSOR
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
-SUPPORT_HVAC = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
+SUPPORT_HVAC = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up deCONZ platforms."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -31,23 +31,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
     @callback
-    def async_add_climate(sensors):
+    def async_add_climate(sensors, new=True):
         """Add climate devices from deCONZ."""
         entities = []
 
         for sensor in sensors:
 
-            if sensor.type in Thermostat.ZHATYPE and not (
-                not gateway.allow_clip_sensor and sensor.type.startswith("CLIP")
-            ):
-
+            if new and sensor.type in Thermostat.ZHATYPE:
                 entities.append(DeconzThermostat(sensor, gateway))
 
         async_add_entities(entities, True)
 
     gateway.listeners.append(
         async_dispatcher_connect(
-            hass, gateway.async_event_new_device(NEW_SENSOR), async_add_climate
+            hass, gateway.async_signal_new_device(NEW_SENSOR), async_add_climate
         )
     )
 
@@ -68,7 +65,9 @@ class DeconzThermostat(DeconzDevice, ClimateDevice):
 
         Need to be one of HVAC_MODE_*.
         """
-        if self._device.on:
+        if self._device.mode in SUPPORT_HVAC:
+            return self._device.mode
+        if self._device.state_on:
             return HVAC_MODE_HEAT
         return HVAC_MODE_OFF
 
@@ -101,8 +100,10 @@ class DeconzThermostat(DeconzDevice, ClimateDevice):
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
-        if hvac_mode == HVAC_MODE_HEAT:
+        if hvac_mode == HVAC_MODE_AUTO:
             data = {"mode": "auto"}
+        elif hvac_mode == HVAC_MODE_HEAT:
+            data = {"mode": "heat"}
         elif hvac_mode == HVAC_MODE_OFF:
             data = {"mode": "off"}
 
@@ -117,9 +118,6 @@ class DeconzThermostat(DeconzDevice, ClimateDevice):
     def device_state_attributes(self):
         """Return the state attributes of the thermostat."""
         attr = {}
-
-        if self._device.battery:
-            attr[ATTR_BATTERY_LEVEL] = self._device.battery
 
         if self._device.offset:
             attr[ATTR_OFFSET] = self._device.offset

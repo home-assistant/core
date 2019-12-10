@@ -3,13 +3,13 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.setup import async_setup_component
-from homeassistant.components.websocket_api.http import URL
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
     TYPE_AUTH_REQUIRED,
 )
+from homeassistant.components.websocket_api.http import URL
+from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro
 
@@ -40,7 +40,9 @@ def hass_ws_client(aiohttp_client, hass_access_token):
             assert auth_resp["type"] == TYPE_AUTH_REQUIRED
 
             if access_token is None:
-                await websocket.send_json({"type": TYPE_AUTH, "api_password": "bla"})
+                await websocket.send_json(
+                    {"type": TYPE_AUTH, "access_token": "incorrect"}
+                )
             else:
                 await websocket.send_json(
                     {"type": TYPE_AUTH, "access_token": access_token}

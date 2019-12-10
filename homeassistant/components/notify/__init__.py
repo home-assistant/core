@@ -1,16 +1,20 @@
 """Provides functionality to notify people."""
 import asyncio
-import logging
 from functools import partial
+import logging
+from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.setup import async_prepare_setup_platform
-from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util import slugify
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -119,7 +123,7 @@ async def async_setup(hass, config):
                 p_config.get(CONF_NAME) or discovery_info.get(CONF_NAME) or p_type
             )
             for name, target in notify_service.targets.items():
-                target_name = slugify("{}_{}".format(platform_name, name))
+                target_name = slugify(f"{platform_name}_{name}")
                 targets[target_name] = target
                 hass.services.async_register(
                     DOMAIN,
@@ -140,7 +144,7 @@ async def async_setup(hass, config):
             schema=NOTIFY_SERVICE_SCHEMA,
         )
 
-        hass.config.components.add("{}.{}".format(DOMAIN, p_type))
+        hass.config.components.add(f"{DOMAIN}.{p_type}")
 
         return True
 
@@ -164,7 +168,7 @@ async def async_setup(hass, config):
 class BaseNotificationService:
     """An abstract class for notification services."""
 
-    hass = None
+    hass: Optional[HomeAssistantType] = None
 
     def send_message(self, message, **kwargs):
         """Send a message.

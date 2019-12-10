@@ -80,7 +80,7 @@ class UbusDeviceScanner(DeviceScanner):
 
         self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
         self.last_results = {}
-        self.url = "http://{}/ubus".format(host)
+        self.url = f"http://{host}/ubus"
 
         self.session_id = _get_session_id(self.url, self.username, self.password)
         self.hostapd = []
@@ -146,7 +146,7 @@ class DnsmasqUbusDeviceScanner(UbusDeviceScanner):
 
     def __init__(self, config):
         """Initialize the scanner."""
-        super(DnsmasqUbusDeviceScanner, self).__init__(config)
+        super().__init__(config)
         self.leasefile = None
 
     def _generate_mac2name(self):

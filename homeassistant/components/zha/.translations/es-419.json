@@ -16,5 +16,23 @@
             }
         },
         "title": "ZHA"
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "left": "Izquierda",
+            "open": "Abrir",
+            "right": "Derecha",
+            "turn_off": "Apagar",
+            "turn_on": "Encender"
+        },
+        "trigger_type": {
+            "device_dropped": "Dispositivo ca\u00eddo",
+            "device_flipped": "Dispositivo volteado \"{subtype}\"",
+            "device_knocked": "Dispositivo golpeado \"{subtype}\"",
+            "device_rotated": "Dispositivo girado \"{subtype}\"",
+            "device_shaken": "Dispositivo agitado",
+            "device_slid": "Dispositivo deslizado \"{subtype}\"",
+            "device_tilted": "Dispositivo inclinado"
+        }
     }
 }

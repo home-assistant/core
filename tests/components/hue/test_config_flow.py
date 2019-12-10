@@ -230,6 +230,26 @@ async def test_bridge_ssdp_emulated_hue(hass):
     )
 
     assert result["type"] == "abort"
+    assert result["reason"] == "not_hue_bridge"
+
+
+async def test_bridge_ssdp_espalexa(hass):
+    """Test if discovery info is from an Espalexa based device."""
+    flow = config_flow.HueFlowHandler()
+    flow.hass = hass
+    flow.context = {}
+
+    result = await flow.async_step_ssdp(
+        {
+            "name": "Espalexa (0.0.0.0)",
+            "host": "0.0.0.0",
+            "serial": "1234",
+            "manufacturerURL": config_flow.HUE_MANUFACTURERURL,
+        }
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_hue_bridge"
 
 
 async def test_bridge_ssdp_already_configured(hass):
@@ -255,6 +275,7 @@ async def test_import_with_existing_config(hass):
     """Test importing a host with an existing config file."""
     flow = config_flow.HueFlowHandler()
     flow.hass = hass
+    flow.context = {}
 
     bridge = Mock()
     bridge.username = "username-abc"
@@ -280,6 +301,7 @@ async def test_import_with_no_config(hass):
     """Test importing a host without an existing config file."""
     flow = config_flow.HueFlowHandler()
     flow.hass = hass
+    flow.context = {}
 
     with patch.object(
         config_flow, "get_bridge", side_effect=errors.AuthenticationRequired
@@ -294,6 +316,7 @@ async def test_import_with_existing_but_invalid_config(hass):
     """Test importing a host with a config file with invalid username."""
     flow = config_flow.HueFlowHandler()
     flow.hass = hass
+    flow.context = {}
 
     with patch.object(
         config_flow, "_find_username_from_config", return_value="mock-user"
@@ -310,6 +333,7 @@ async def test_import_cannot_connect(hass):
     """Test importing a host that we cannot conncet to."""
     flow = config_flow.HueFlowHandler()
     flow.hass = hass
+    flow.context = {}
 
     with patch.object(config_flow, "get_bridge", side_effect=errors.CannotConnect):
         result = await flow.async_step_import({"host": "0.0.0.0"})
@@ -337,6 +361,7 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(hass):
 
     flow = config_flow.HueFlowHandler()
     flow.hass = hass
+    flow.context = {}
 
     bridge = Mock()
     bridge.username = "username-abc"

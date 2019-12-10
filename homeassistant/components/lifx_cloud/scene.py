@@ -8,7 +8,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.scene import Scene
-from homeassistant.const import CONF_TOKEN, CONF_TIMEOUT, CONF_PLATFORM
+from homeassistant.const import CONF_PLATFORM, CONF_TIMEOUT, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -31,7 +31,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     token = config.get(CONF_TOKEN)
     timeout = config.get(CONF_TIMEOUT)
 
-    headers = {AUTHORIZATION: "Bearer {}".format(token)}
+    headers = {AUTHORIZATION: f"Bearer {token}"}
 
     url = LIFX_API_URL.format("scenes")
 

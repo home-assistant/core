@@ -1,9 +1,10 @@
 """Support for Anthem Network Receivers and Processors."""
 import logging
 
+import anthemav
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
@@ -46,7 +47,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up our socket to the AVR."""
-    import anthemav
 
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)

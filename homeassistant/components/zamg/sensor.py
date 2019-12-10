@@ -12,18 +12,18 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.weather import (
+    ATTR_WEATHER_ATTRIBUTION,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
-    ATTR_WEATHER_WIND_SPEED,
-    ATTR_WEATHER_ATTRIBUTION,
     ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_WIND_BEARING,
+    ATTR_WEATHER_WIND_SPEED,
 )
 from homeassistant.const import (
-    CONF_NAME,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
     __version__,
 )
 import homeassistant.helpers.config_validation as cv
@@ -124,7 +124,7 @@ class ZamgSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self.client_name, self.variable)
+        return f"{self.client_name} {self.variable}"
 
     @property
     def state(self):
@@ -212,7 +212,7 @@ class ZamgData:
                 }
                 break
         else:
-            raise ValueError("No weather data for station {}".format(self._station_id))
+            raise ValueError(f"No weather data for station {self._station_id}")
 
     def get_data(self, variable):
         """Get the data."""

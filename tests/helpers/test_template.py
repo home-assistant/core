@@ -1,13 +1,12 @@
 """Test Home Assistant template helper methods."""
+from datetime import datetime
 import math
 import random
-from datetime import datetime
 from unittest.mock import patch
 
 import pytest
 import pytz
 
-import homeassistant.util.dt as dt_util
 from homeassistant.components import group
 from homeassistant.const import (
     LENGTH_METERS,
@@ -19,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
+import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
 
 
@@ -227,6 +227,13 @@ def test_rounding_value(hass):
         == "12.8"
     )
 
+    assert (
+        template.Template(
+            '{{ states.sensor.temperature.state | round(1, "half") }}', hass
+        ).async_render()
+        == "13.0"
+    )
+
 
 def test_rounding_value_get_original_value_on_error(hass):
     """Test rounding value get original value on error."""
@@ -349,6 +356,101 @@ def test_sqrt(hass):
         )
 
 
+def test_arc_sine(hass):
+    """Test arcus sine."""
+    tests = [
+        (-2.0, "-2.0"),  # value error
+        (-1.0, "-1.571"),
+        (-0.5, "-0.524"),
+        (0.0, "0.0"),
+        (0.5, "0.524"),
+        (1.0, "1.571"),
+        (2.0, "2.0"),  # value error
+        ('"error"', "error"),
+    ]
+
+    for value, expected in tests:
+        assert (
+            template.Template("{{ %s | asin | round(3) }}" % value, hass).async_render()
+            == expected
+        )
+
+
+def test_arc_cos(hass):
+    """Test arcus cosine."""
+    tests = [
+        (-2.0, "-2.0"),  # value error
+        (-1.0, "3.142"),
+        (-0.5, "2.094"),
+        (0.0, "1.571"),
+        (0.5, "1.047"),
+        (1.0, "0.0"),
+        (2.0, "2.0"),  # value error
+        ('"error"', "error"),
+    ]
+
+    for value, expected in tests:
+        assert (
+            template.Template("{{ %s | acos | round(3) }}" % value, hass).async_render()
+            == expected
+        )
+
+
+def test_arc_tan(hass):
+    """Test arcus tangent."""
+    tests = [
+        (-10.0, "-1.471"),
+        (-2.0, "-1.107"),
+        (-1.0, "-0.785"),
+        (-0.5, "-0.464"),
+        (0.0, "0.0"),
+        (0.5, "0.464"),
+        (1.0, "0.785"),
+        (2.0, "1.107"),
+        (10.0, "1.471"),
+        ('"error"', "error"),
+    ]
+
+    for value, expected in tests:
+        assert (
+            template.Template("{{ %s | atan | round(3) }}" % value, hass).async_render()
+            == expected
+        )
+
+
+def test_arc_tan2(hass):
+    """Test two parameter version of arcus tangent."""
+    tests = [
+        (-10.0, -10.0, "-2.356"),
+        (-10.0, 0.0, "-1.571"),
+        (-10.0, 10.0, "-0.785"),
+        (0.0, -10.0, "3.142"),
+        (0.0, 0.0, "0.0"),
+        (0.0, 10.0, "0.0"),
+        (10.0, -10.0, "2.356"),
+        (10.0, 0.0, "1.571"),
+        (10.0, 10.0, "0.785"),
+        (-4.0, 3.0, "-0.927"),
+        (-1.0, 2.0, "-0.464"),
+        (2.0, 1.0, "1.107"),
+        ('"duck"', '"goose"', "('duck', 'goose')"),
+    ]
+
+    for y, x, expected in tests:
+        assert (
+            template.Template(
+                "{{ (%s, %s) | atan2 | round(3) }}" % (y, x), hass
+            ).async_render()
+            == expected
+        )
+        assert (
+            template.Template(
+                "{{ atan2(%s, %s) | round(3) }}" % (y, x), hass
+            ).async_render()
+            == expected
+        )
+
+
 def test_strptime(hass):
     """Test the parse timestamp method."""
     tests = [
@@ -404,6 +506,30 @@ def test_timestamp_local(hass):
             template.Template("{{ %s | timestamp_local }}" % inp, hass).async_render()
             == out
         )
+
+
+def test_to_json(hass):
+    """Test the object to JSON string filter."""
+
+    # Note that we're not testing the actual json.loads and json.dumps methods,
+    # only the filters, so we don't need to be exhaustive with our sample JSON.
+    expected_result = '{"Foo": "Bar"}'
+    actual_result = template.Template(
+        "{{ {'Foo': 'Bar'} | to_json }}", hass
+    ).async_render()
+    assert actual_result == expected_result
+
+
+def test_from_json(hass):
+    """Test the JSON string to object filter."""
+
+    # Note that we're not testing the actual json.loads and json.dumps methods,
+    # only the filters, so we don't need to be exhaustive with our sample JSON.
+    expected_result = "Bar"
+    actual_result = template.Template(
+        '{{ (\'{"Foo": "Bar"}\' | from_json).Foo }}', hass
+    ).async_render()
+    assert actual_result == expected_result
 
 
 def test_min(hass):
@@ -1670,3 +1796,10 @@ def test_length_of_states(hass):
 
     tpl = template.Template("{{ states.sensor | length }}", hass)
     assert tpl.async_render() == "2"
+
+
+def test_render_complex_handling_non_template_values(hass):
+    """Test that we can render non-template fields."""
+    assert template.render_complex(
+        {True: 1, False: template.Template("{{ hello }}", hass)}, {"hello": 2}
+    ) == {True: 1, False: "2"}

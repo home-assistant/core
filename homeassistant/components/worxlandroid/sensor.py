@@ -1,18 +1,16 @@
 """Support for Worx Landroid mower."""
-import logging
 import asyncio
+import logging
 
 import aiohttp
 import async_timeout
-
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-
-from homeassistant.helpers.entity import Entity
-from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_TIMEOUT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,12 +61,12 @@ class WorxLandroidSensor(Entity):
         self.pin = config.get(CONF_PIN)
         self.timeout = config.get(CONF_TIMEOUT)
         self.allow_unreachable = config.get(CONF_ALLOW_UNREACHABLE)
-        self.url = "http://{}/jsondata.cgi".format(self.host)
+        self.url = f"http://{self.host}/jsondata.cgi"
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "worxlandroid-{}".format(self.sensor)
+        return f"worxlandroid-{self.sensor}"
 
     @property
     def state(self):
@@ -141,16 +139,9 @@ class WorxLandroidSensor(Entity):
         state = self.get_error(obj)
 
         if state is None:
-            state_obj = obj["settaggi"]
+            if obj["batteryChargerState"] == "charging":
+                return obj["batteryChargerState"]
 
-            if state_obj[14] == 1:
-                return "manual-stop"
-            if state_obj[5] == 1 and state_obj[13] == 0:
-                return "charging"
-            if state_obj[5] == 1 and state_obj[13] == 1:
-                return "charging-complete"
-            if state_obj[15] == 1:
-                return "going-home"
-            return "mowing"
+            return obj["state"]
 
         return state

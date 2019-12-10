@@ -1,6 +1,9 @@
 """Support for UV data from openuv.io."""
+import asyncio
 import logging
 
+from pyopenuv import Client
+from pyopenuv.errors import OpenUvError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -35,7 +38,7 @@ DEFAULT_ATTRIBUTION = "Data provided by OpenUV"
 NOTIFICATION_ID = "openuv_notification"
 NOTIFICATION_TITLE = "OpenUV Component Setup"
 
-TOPIC_UPDATE = "{0}_data_update".format(DOMAIN)
+TOPIC_UPDATE = f"{DOMAIN}_data_update"
 
 TYPE_CURRENT_OZONE_LEVEL = "current_ozone_level"
 TYPE_CURRENT_UV_INDEX = "current_uv_index"
@@ -163,8 +166,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up OpenUV as config entry."""
-    from pyopenuv import Client
-    from pyopenuv.errors import OpenUvError
 
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
@@ -198,18 +199,32 @@ async def async_setup_entry(hass, config_entry):
 
     @_verify_domain_control
     async def update_data(service):
-        """Refresh OpenUV data."""
-        _LOGGER.debug("Refreshing OpenUV data")
-
-        try:
-            await openuv.async_update()
-        except OpenUvError as err:
-            _LOGGER.error("Error during data update: %s", err)
-            return
-
+        """Refresh all OpenUV data."""
+        _LOGGER.debug("Refreshing all OpenUV data")
+        await openuv.async_update()
         async_dispatcher_send(hass, TOPIC_UPDATE)
 
     hass.services.async_register(DOMAIN, "update_data", update_data)
+
+    @_verify_domain_control
+    async def update_uv_index_data(service):
+        """Refresh OpenUV UV index data."""
+        _LOGGER.debug("Refreshing OpenUV UV index data")
+        await openuv.async_update_uv_index_data()
+        async_dispatcher_send(hass, TOPIC_UPDATE)
+
+    hass.services.async_register(DOMAIN, "update_uv_index_data", update_uv_index_data)
+
+    @_verify_domain_control
+    async def update_protection_data(service):
+        """Refresh OpenUV protection window data."""
+        _LOGGER.debug("Refreshing OpenUV protection window data")
+        await openuv.async_update_protection_data()
+        async_dispatcher_send(hass, TOPIC_UPDATE)
+
+    hass.services.async_register(
+        DOMAIN, "update_protection_data", update_protection_data
+    )
 
     return True
 
@@ -218,8 +233,12 @@ async def async_unload_entry(hass, config_entry):
     """Unload an OpenUV config entry."""
     hass.data[DOMAIN][DATA_OPENUV_CLIENT].pop(config_entry.entry_id)
 
-    for component in ("binary_sensor", "sensor"):
-        await hass.config_entries.async_forward_entry_unload(config_entry, component)
+    tasks = [
+        hass.config_entries.async_forward_entry_unload(config_entry, component)
+        for component in ("binary_sensor", "sensor")
+    ]
+
+    await asyncio.gather(*tasks)
 
     return True
 
@@ -234,21 +253,34 @@ class OpenUV:
         self.data = {}
         self.sensor_conditions = sensor_conditions
 
-    async def async_update(self):
-        """Update sensor/binary sensor data."""
-        if TYPE_PROTECTION_WINDOW in self.binary_sensor_conditions:
-            resp = await self.client.uv_protection_window()
-            data = resp["result"]
+    async def async_update_protection_data(self):
+        """Update binary sensor (protection window) data."""
 
-            if data.get("from_time") and data.get("to_time"):
-                self.data[DATA_PROTECTION_WINDOW] = data
-            else:
-                _LOGGER.debug("No valid protection window data for this location")
+        if TYPE_PROTECTION_WINDOW in self.binary_sensor_conditions:
+            try:
+                resp = await self.client.uv_protection_window()
+                self.data[DATA_PROTECTION_WINDOW] = resp["result"]
+            except OpenUvError as err:
+                _LOGGER.error("Error during protection data update: %s", err)
                 self.data[DATA_PROTECTION_WINDOW] = {}
+                return
+
+    async def async_update_uv_index_data(self):
+        """Update sensor (uv index, etc) data."""
 
         if any(c in self.sensor_conditions for c in SENSORS):
-            data = await self.client.uv_index()
-            self.data[DATA_UV] = data
+            try:
+                data = await self.client.uv_index()
+                self.data[DATA_UV] = data
+            except OpenUvError as err:
+                _LOGGER.error("Error during uv index data update: %s", err)
+                self.data[DATA_UV] = {}
+                return
+
+    async def async_update(self):
+        """Update sensor/binary sensor data."""
+        tasks = [self.async_update_protection_data(), self.async_update_uv_index_data()]
+        await asyncio.gather(*tasks)
 
 
 class OpenUvEntity(Entity):

@@ -18,8 +18,8 @@ from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import slugify
-from .const import DOMAIN
 
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ BEACON_DEV_PREFIX = "beacon"
 LOCATION_ENTRY = "1"
 LOCATION_EXIT = "0"
 
-TRACKER_UPDATE = "{}_tracker_update".format(DOMAIN)
+TRACKER_UPDATE = f"{DOMAIN}_tracker_update"
 
 
 def _address(value: str) -> str:
@@ -131,7 +131,7 @@ def _set_location(hass, data, location_name):
         data,
     )
 
-    return web.Response(text="Setting location for {}".format(device), status=HTTP_OK)
+    return web.Response(text=f"Setting location for {device}", status=HTTP_OK)
 
 
 async def async_setup_entry(hass, entry):

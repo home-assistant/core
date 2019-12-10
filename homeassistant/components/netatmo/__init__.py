@@ -1,23 +1,24 @@
 """Support for the Netatmo devices."""
-import logging
 from datetime import timedelta
+import logging
 from urllib.error import HTTPError
 
+import pyatmo
 import voluptuous as vol
 
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_PASSWORD,
-    CONF_USERNAME,
     CONF_DISCOVERY,
+    CONF_PASSWORD,
     CONF_URL,
+    CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-from .const import DOMAIN, DATA_NETATMO_AUTH
+from .const import DATA_NETATMO_AUTH, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +30,7 @@ CONF_WEBHOOKS = "webhooks"
 
 SERVICE_ADDWEBHOOK = "addwebhook"
 SERVICE_DROPWEBHOOK = "dropwebhook"
+SERVICE_SETSCHEDULE = "set_schedule"
 
 NETATMO_AUTH = None
 NETATMO_WEBHOOK_URL = None
@@ -62,6 +64,7 @@ ATTR_IS_KNOWN = "is_known"
 ATTR_FACE_URL = "face_url"
 ATTR_SNAPSHOT_URL = "snapshot_url"
 ATTR_VIGNETTE_URL = "vignette_url"
+ATTR_SCHEDULE = "schedule"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 MIN_TIME_BETWEEN_EVENT_UPDATES = timedelta(seconds=5)
@@ -86,10 +89,11 @@ SCHEMA_SERVICE_ADDWEBHOOK = vol.Schema({vol.Optional(CONF_URL): cv.string})
 
 SCHEMA_SERVICE_DROPWEBHOOK = vol.Schema({})
 
+SCHEMA_SERVICE_SETSCHEDULE = vol.Schema({vol.Required(ATTR_SCHEDULE): cv.string})
+
 
 def setup(hass, config):
     """Set up the Netatmo devices."""
-    import pyatmo
 
     hass.data[DATA_PERSONS] = {}
     try:
@@ -105,6 +109,12 @@ def setup(hass, config):
     except HTTPError:
         _LOGGER.error("Unable to connect to Netatmo API")
         return False
+
+    try:
+        home_data = pyatmo.HomeData(auth)
+    except pyatmo.NoDevice:
+        home_data = None
+        _LOGGER.debug("No climate device. Disable %s service", SERVICE_SETSCHEDULE)
 
     # Store config to be used during entry setup
     hass.data[DATA_NETATMO_AUTH] = auth
@@ -150,6 +160,20 @@ def setup(hass, config):
         _service_dropwebhook,
         schema=SCHEMA_SERVICE_DROPWEBHOOK,
     )
+
+    def _service_setschedule(service):
+        """Service to change current home schedule."""
+        schedule_name = service.data.get(ATTR_SCHEDULE)
+        home_data.switchHomeSchedule(schedule=schedule_name)
+        _LOGGER.info("Set home schedule to %s", schedule_name)
+
+    if home_data is not None:
+        hass.services.register(
+            DOMAIN,
+            SERVICE_SETSCHEDULE,
+            _service_setschedule,
+            schema=SCHEMA_SERVICE_SETSCHEDULE,
+        )
 
     return True
 
@@ -254,11 +278,9 @@ class CameraData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Call the Netatmo API to update the data."""
-        import pyatmo
-
         self.camera_data = pyatmo.CameraData(self.auth, size=100)
 
     @Throttle(MIN_TIME_BETWEEN_EVENT_UPDATES)
     def update_event(self):
         """Call the Netatmo API to update the events."""
-        self.camera_data.updateEvent(home=self.home, cameratype=self.camera_type)
+        self.camera_data.updateEvent(home=self.home, devicetype=self.camera_type)

@@ -1,12 +1,14 @@
 """Support for HomeMatic devices."""
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from functools import partial
 import logging
 
+from pyhomematic import HMConnection
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     ATTR_NAME,
     CONF_HOST,
     CONF_HOSTS,
@@ -47,7 +49,6 @@ ATTR_VALUE_TYPE = "value_type"
 ATTR_INTERFACE = "interface"
 ATTR_ERRORCODE = "error"
 ATTR_MESSAGE = "message"
-ATTR_MODE = "mode"
 ATTR_TIME = "time"
 ATTR_UNIQUE_ID = "unique_id"
 ATTR_PARAMSET_KEY = "paramset_key"
@@ -82,6 +83,7 @@ HM_DEVICE_TYPES = {
         "IPKeySwitchPowermeter",
         "IPGarage",
         "IPKeySwitch",
+        "IPKeySwitchLevel",
         "IPMultiIO",
     ],
     DISCOVER_LIGHTS: [
@@ -90,6 +92,7 @@ HM_DEVICE_TYPES = {
         "IPKeyDimmer",
         "IPDimmer",
         "ColorEffectLight",
+        "IPKeySwitchLevel",
     ],
     DISCOVER_SENSORS: [
         "SwitchPowermeter",
@@ -364,7 +367,6 @@ SCHEMA_SERVICE_PUT_PARAMSET = vol.Schema(
 
 def setup(hass, config):
     """Set up the Homematic component."""
-    from pyhomematic import HMConnection
 
     conf = config[DOMAIN]
     hass.data[DATA_CONF] = remotes = {}
@@ -671,6 +673,11 @@ def _get_devices(hass, discovery_type, keys, interface):
                 and class_name not in HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS.get(param, [])
             ):
                 continue
+            if discovery_type == DISCOVER_SWITCHES and class_name == "IPKeySwitchLevel":
+                channels.remove(8)
+                channels.remove(12)
+            if discovery_type == DISCOVER_LIGHTS and class_name == "IPKeySwitchLevel":
+                channels.remove(4)
 
             # Add devices
             _LOGGER.debug(
@@ -711,15 +718,15 @@ def _create_ha_id(name, channel, param, count):
 
     # Has multiple elements/channels
     if count > 1 and param is None:
-        return "{} {}".format(name, channel)
+        return f"{name} {channel}"
 
     # With multiple parameters on first channel
     if count == 1 and param is not None:
-        return "{} {}".format(name, param)
+        return f"{name} {param}"
 
     # Multiple parameters with multiple channels
     if count > 1 and param is not None:
-        return "{} {} {}".format(name, channel, param)
+        return f"{name} {channel} {param}"
 
 
 def _hm_event_handler(hass, interface, device, caller, attribute, value):

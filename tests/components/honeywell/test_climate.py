@@ -2,25 +2,23 @@
 import unittest
 from unittest import mock
 
-import voluptuous as vol
+import pytest
 import requests.exceptions
 import somecomfort
-import pytest
+import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
 from homeassistant.components.climate.const import (
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
     ATTR_HVAC_MODES,
 )
-
 import homeassistant.components.honeywell.climate as honeywell
-
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 
 pytestmark = pytest.mark.skip("Need to be fixed!")
 

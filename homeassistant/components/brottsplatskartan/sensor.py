@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 import uuid
 
+import brottsplatskartan
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -60,7 +61,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Brottsplatskartan platform."""
-    import brottsplatskartan
 
     area = config.get(CONF_AREA)
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
@@ -105,7 +105,6 @@ class BrottsplatskartanSensor(Entity):
 
     def update(self):
         """Update device state."""
-        import brottsplatskartan
 
         incident_counts = defaultdict(int)
         incidents = self._brottsplatskartan.get_incidents()

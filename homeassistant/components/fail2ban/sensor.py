@@ -5,17 +5,16 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.fail2ban/
 
 """
-import os
-import logging
-
 from datetime import timedelta
-
+import logging
+import os
 import re
+
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_FILE_PATH
+from homeassistant.const import CONF_FILE_PATH, CONF_NAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,7 +56,7 @@ class BanSensor(Entity):
 
     def __init__(self, name, jail, log_parser):
         """Initialize the sensor."""
-        self._name = "{} {}".format(name, jail)
+        self._name = f"{name} {jail}"
         self.jail = jail
         self.ban_dict = {STATE_CURRENT_BANS: [], STATE_ALL_BANS: []}
         self.last_ban = None

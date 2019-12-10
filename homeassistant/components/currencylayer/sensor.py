@@ -5,15 +5,15 @@ import logging
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_NAME,
-    CONF_BASE,
-    CONF_QUOTE,
     ATTR_ATTRIBUTION,
+    CONF_API_KEY,
+    CONF_BASE,
+    CONF_NAME,
+    CONF_QUOTE,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -95,7 +95,7 @@ class CurrencylayerSensor(Entity):
         self.rest.update()
         value = self.rest.data
         if value is not None:
-            self._state = round(value["{}{}".format(self._base, self._quote)], 4)
+            self._state = round(value[f"{self._base}{self._quote}"], 4)
 
 
 class CurrencylayerData:

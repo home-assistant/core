@@ -20,17 +20,14 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
-from homeassistant.util import Throttle
-import homeassistant.util.dt as dt
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_FORECAST = "forecast"
 CONF_ATTRIBUTION = "Data provided by Environment Canada"
 CONF_STATION = "station"
-
-MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=10)
 
 
 def validate_station(station):
@@ -171,7 +168,6 @@ class ECWeather(WeatherEntity):
         """Return the forecast array."""
         return get_forecast(self.ec_data, self.forecast_type)
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Environment Canada."""
         self.ec_data.update()

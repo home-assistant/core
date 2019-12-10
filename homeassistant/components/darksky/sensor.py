@@ -1,11 +1,11 @@
 """Support for Dark Sky weather service."""
-import logging
 from datetime import timedelta
+import logging
 
-import voluptuous as vol
+import forecastio
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -14,9 +14,10 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
-    UNIT_UV_INDEX,
     CONF_SCAN_INTERVAL,
+    UNIT_UV_INDEX,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -193,7 +194,7 @@ SENSOR_TYPES = {
         "%",
         "%",
         "%",
-        "mdi:weather-partlycloudy",
+        "mdi:weather-partly-cloudy",
         ["currently", "hourly", "daily"],
     ],
     "humidity": [
@@ -371,7 +372,7 @@ SENSOR_TYPES = {
 
 CONDITION_PICTURES = {
     "clear-day": ["/static/images/darksky/weather-sunny.svg", "mdi:weather-sunny"],
-    "clear-night": ["/static/images/darksky/weather-night.svg", "mdi:weather-sunny"],
+    "clear-night": ["/static/images/darksky/weather-night.svg", "mdi:weather-night"],
     "rain": ["/static/images/darksky/weather-pouring.svg", "mdi:weather-pouring"],
     "snow": ["/static/images/darksky/weather-snowy.svg", "mdi:weather-snowy"],
     "sleet": ["/static/images/darksky/weather-hail.svg", "mdi:weather-snowy-rainy"],
@@ -380,11 +381,11 @@ CONDITION_PICTURES = {
     "cloudy": ["/static/images/darksky/weather-cloudy.svg", "mdi:weather-cloudy"],
     "partly-cloudy-day": [
         "/static/images/darksky/weather-partlycloudy.svg",
-        "mdi:weather-partlycloudy",
+        "mdi:weather-partly-cloudy",
     ],
     "partly-cloudy-night": [
         "/static/images/darksky/weather-cloudy.svg",
-        "mdi:weather-partlycloudy",
+        "mdi:weather-night-partly-cloudy",
     ],
 }
 
@@ -553,10 +554,10 @@ class DarkSkySensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         if self.forecast_day is not None:
-            return "{} {} {}d".format(self.client_name, self._name, self.forecast_day)
+            return f"{self.client_name} {self._name} {self.forecast_day}d"
         if self.forecast_hour is not None:
-            return "{} {} {}h".format(self.client_name, self._name, self.forecast_hour)
-        return "{} {}".format(self.client_name, self._name)
+            return f"{self.client_name} {self._name} {self.forecast_hour}h"
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):
@@ -704,7 +705,7 @@ class DarkSkyAlertSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self.client_name, self._name)
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):
@@ -797,8 +798,6 @@ class DarkSkyData:
 
     def _update(self):
         """Get the latest data from Dark Sky."""
-        import forecastio
-
         try:
             self.data = forecastio.load_forecast(
                 self._api_key,

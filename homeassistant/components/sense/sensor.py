@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+from sense_energy import SenseAPITimeoutException
+
 from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -80,7 +82,7 @@ class Sense(Entity):
     def __init__(self, data, name, sensor_type, is_production, update_call):
         """Initialize the Sense sensor."""
         name_type = PRODUCTION_NAME if is_production else CONSUMPTION_NAME
-        self._name = "{} {}".format(name, name_type)
+        self._name = f"{name} {name_type}"
         self._data = data
         self._sensor_type = sensor_type
         self.update_sensor = update_call
@@ -114,7 +116,6 @@ class Sense(Entity):
 
     async def async_update(self):
         """Get the latest data, update state."""
-        from sense_energy import SenseAPITimeoutException
 
         try:
             await self.update_sensor()

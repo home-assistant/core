@@ -3,8 +3,10 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback, CoreState
-from homeassistant.const import CONF_PLATFORM, CONF_EVENT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_EVENT, CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import CoreState, callback
+
+# mypy: allow-untyped-defs
 
 EVENT_START = "start"
 EVENT_SHUTDOWN = "shutdown"
@@ -18,7 +20,7 @@ TRIGGER_SCHEMA = vol.Schema(
 )
 
 
-async def async_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for events based on configuration."""
     event = config.get(CONF_EVENT)
 

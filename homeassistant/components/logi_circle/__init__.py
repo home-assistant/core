@@ -2,12 +2,16 @@
 import asyncio
 import logging
 
+from aiohttp.client_exceptions import ClientResponseError
 import async_timeout
+from logi_circle import LogiCircle
+from logi_circle.exception import AuthorizationFailed
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.camera import ATTR_FILENAME, CAMERA_SERVICE_SCHEMA
 from homeassistant.const import (
+    ATTR_MODE,
     CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
     EVENT_HOMEASSISTANT_STOP,
@@ -42,7 +46,6 @@ SERVICE_SET_CONFIG = "set_config"
 SERVICE_LIVESTREAM_SNAPSHOT = "livestream_snapshot"
 SERVICE_LIVESTREAM_RECORD = "livestream_record"
 
-ATTR_MODE = "mode"
 ATTR_VALUE = "value"
 ATTR_DURATION = "duration"
 
@@ -116,9 +119,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up Logi Circle from a config entry."""
-    from logi_circle import LogiCircle
-    from logi_circle.exception import AuthorizationFailed
-    from aiohttp.client_exceptions import ClientResponseError
 
     logi_circle = LogiCircle(
         client_id=entry.data[CONF_CLIENT_ID],
@@ -156,7 +156,7 @@ async def async_setup_entry(hass, entry):
     except asyncio.TimeoutError:
         # The TimeoutError exception object returns nothing when casted to a
         # string, so we'll handle it separately.
-        err = "{}s timeout exceeded when connecting to Logi Circle API".format(_TIMEOUT)
+        err = f"{_TIMEOUT}s timeout exceeded when connecting to Logi Circle API"
         hass.components.persistent_notification.create(
             "Error: {}<br />"
             "You will need to restart hass after fixing."

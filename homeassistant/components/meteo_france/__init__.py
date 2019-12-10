@@ -2,71 +2,20 @@
 import datetime
 import logging
 
+from meteofrance.client import meteofranceClient, meteofranceError
+from vigilancemeteo import VigilanceMeteoError, VigilanceMeteoFranceProxy
 import voluptuous as vol
 
-from homeassistant.const import CONF_MONITORED_CONDITIONS, TEMP_CELSIUS
+from homeassistant.const import CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import Throttle
 
+from .const import CONF_CITY, DATA_METEO_FRANCE, DOMAIN, SENSOR_TYPES
+
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by Météo-France"
-
-CONF_CITY = "city"
-
-DATA_METEO_FRANCE = "data_meteo_france"
-DEFAULT_WEATHER_CARD = True
-DOMAIN = "meteo_france"
-
 SCAN_INTERVAL = datetime.timedelta(minutes=5)
-
-SENSOR_TYPES = {
-    "rain_chance": ["Rain chance", "%"],
-    "freeze_chance": ["Freeze chance", "%"],
-    "thunder_chance": ["Thunder chance", "%"],
-    "snow_chance": ["Snow chance", "%"],
-    "weather": ["Weather", None],
-    "wind_speed": ["Wind Speed", "km/h"],
-    "next_rain": ["Next rain", "min"],
-    "temperature": ["Temperature", TEMP_CELSIUS],
-    "uv": ["UV", None],
-    "weather_alert": ["Weather Alert", None],
-}
-
-CONDITION_CLASSES = {
-    "clear-night": ["Nuit Claire"],
-    "cloudy": ["Très nuageux"],
-    "fog": ["Brume ou bancs de brouillard", "Brouillard", "Brouillard givrant"],
-    "hail": ["Risque de grêle"],
-    "lightning": ["Risque d'orages", "Orages"],
-    "lightning-rainy": ["Pluie orageuses", "Pluies orageuses", "Averses orageuses"],
-    "partlycloudy": ["Ciel voilé", "Ciel voilé nuit", "Éclaircies"],
-    "pouring": ["Pluie forte"],
-    "rainy": [
-        "Bruine / Pluie faible",
-        "Bruine",
-        "Pluie faible",
-        "Pluies éparses / Rares averses",
-        "Pluies éparses",
-        "Rares averses",
-        "Pluie / Averses",
-        "Averses",
-        "Pluie",
-    ],
-    "snowy": [
-        "Neige / Averses de neige",
-        "Neige",
-        "Averses de neige",
-        "Neige forte",
-        "Quelques flocons",
-    ],
-    "snowy-rainy": ["Pluie et neige", "Pluie verglaçante"],
-    "sunny": ["Ensoleillé"],
-    "windy": [],
-    "windy-variant": [],
-    "exceptional": [],
-}
 
 
 def has_all_unique_cities(value):
@@ -114,14 +63,13 @@ def setup(hass, config):
     # all weather_alert entities.
     if need_weather_alert_watcher:
         _LOGGER.debug("Weather Alert monitoring expected. Loading vigilancemeteo")
-        from vigilancemeteo import VigilanceMeteoFranceProxy, VigilanceMeteoError
 
         weather_alert_client = VigilanceMeteoFranceProxy()
         try:
             weather_alert_client.update_data()
         except VigilanceMeteoError as exp:
             _LOGGER.error(
-                "Unexpected error when creating the" "vigilance_meteoFrance proxy: %s ",
+                "Unexpected error when creating the vigilance_meteoFrance proxy: %s ",
                 exp,
             )
     else:
@@ -131,8 +79,6 @@ def setup(hass, config):
     for location in config[DOMAIN]:
 
         city = location[CONF_CITY]
-
-        from meteofrance.client import meteofranceClient, meteofranceError
 
         try:
             client = meteofranceClient(city)
@@ -180,7 +126,6 @@ class MeteoFranceUpdater:
     @Throttle(SCAN_INTERVAL)
     def update(self):
         """Get the latest data from Meteo-France."""
-        from meteofrance.client import meteofranceError
 
         try:
             self._client.update()

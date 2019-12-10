@@ -1,14 +1,15 @@
 """Support for the Netatmo binary sensors."""
 import logging
 
+from pyatmo import NoDevice
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
 from homeassistant.const import CONF_TIMEOUT
 from homeassistant.helpers import config_validation as cv
 
-from .const import DATA_NETATMO_AUTH
 from . import CameraData
+from .const import DATA_NETATMO_AUTH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,15 +59,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     module_name = None
 
-    import pyatmo
-
     auth = hass.data[DATA_NETATMO_AUTH]
 
     try:
         data = CameraData(hass, auth, home)
         if not data.get_camera_names():
             return None
-    except pyatmo.NoDevice:
+    except NoDevice:
         return None
 
     welcome_sensors = config.get(CONF_WELCOME_SENSORS, WELCOME_SENSOR_TYPES)
@@ -152,7 +151,7 @@ class NetatmoBinarySensor(BinarySensorDevice):
         self._home = home
         self._timeout = timeout
         if home:
-            self._name = "{} / {}".format(home, camera_name)
+            self._name = f"{home} / {camera_name}"
         else:
             self._name = camera_name
         if module_name:

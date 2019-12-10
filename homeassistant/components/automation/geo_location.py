@@ -2,7 +2,6 @@
 import voluptuous as vol
 
 from homeassistant.components.geo_location import DOMAIN
-from homeassistant.core import callback
 from homeassistant.const import (
     CONF_EVENT,
     CONF_PLATFORM,
@@ -10,8 +9,11 @@ from homeassistant.const import (
     CONF_ZONE,
     EVENT_STATE_CHANGED,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.config_validation import entity_domain
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 EVENT_ENTER = "enter"
 EVENT_LEAVE = "leave"
@@ -34,7 +36,7 @@ def source_match(state, source):
     return state and state.attributes.get("source") == source
 
 
-async def async_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     source = config.get(CONF_SOURCE).lower()
     zone_entity_id = config.get(CONF_ZONE)

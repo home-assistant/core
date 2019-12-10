@@ -1,25 +1,28 @@
 """Support for Flux lights."""
 import logging
-import socket
 import random
+import socket
 
+from flux_led import BulbScanner, WifiLedBulb
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_HS_COLOR,
+    ATTR_COLOR_TEMP,
     ATTR_EFFECT,
+    ATTR_HS_COLOR,
     ATTR_WHITE_VALUE,
     EFFECT_COLORLOOP,
     EFFECT_RANDOM,
+    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
-    SUPPORT_EFFECT,
     SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
+    SUPPORT_EFFECT,
     SUPPORT_WHITE_VALUE,
     Light,
-    PLATFORM_SCHEMA,
 )
+from homeassistant.const import ATTR_MODE, CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
@@ -30,7 +33,6 @@ CONF_CUSTOM_EFFECT = "custom_effect"
 CONF_COLORS = "colors"
 CONF_SPEED_PCT = "speed_pct"
 CONF_TRANSITION = "transition"
-ATTR_MODE = "mode"
 
 DOMAIN = "flux_led"
 
@@ -42,6 +44,10 @@ MODE_RGBW = "rgbw"
 # This mode enables white value to be controlled by brightness.
 # RGB value is ignored when this mode is specified.
 MODE_WHITE = "w"
+
+# Constant color temp values for 2 flux_led special modes
+# Warm-white and Cool-white modes
+COLOR_TEMP_WARM_VS_COLD_WHITE_CUT_OFF = 285
 
 # List of supported effects which aren't already declared in LIGHT
 EFFECT_RED_FADE = "red_fade"
@@ -136,8 +142,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Flux lights."""
-    import flux_led
-
     lights = []
     light_ips = []
 
@@ -157,7 +161,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     # Find the bulbs on the LAN
-    scanner = flux_led.BulbScanner()
+    scanner = BulbScanner()
     scanner.scan(timeout=10)
     for device in scanner.getBulbInfo():
         ipaddr = device["ipaddr"]
@@ -188,9 +192,8 @@ class FluxLight(Light):
 
     def _connect(self):
         """Connect to Flux light."""
-        import flux_led
 
-        self._bulb = flux_led.WifiLedBulb(self._ipaddr, timeout=5)
+        self._bulb = WifiLedBulb(self._ipaddr, timeout=5)
         if self._protocol:
             self._bulb.setProtocol(self._protocol)
 
@@ -238,7 +241,7 @@ class FluxLight(Light):
     def supported_features(self):
         """Flag supported features."""
         if self._mode == MODE_RGBW:
-            return SUPPORT_FLUX_LED | SUPPORT_WHITE_VALUE
+            return SUPPORT_FLUX_LED | SUPPORT_WHITE_VALUE | SUPPORT_COLOR_TEMP
 
         if self._mode == MODE_WHITE:
             return SUPPORT_BRIGHTNESS
@@ -287,6 +290,17 @@ class FluxLight(Light):
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         effect = kwargs.get(ATTR_EFFECT)
         white = kwargs.get(ATTR_WHITE_VALUE)
+        color_temp = kwargs.get(ATTR_COLOR_TEMP)
+
+        # handle special modes
+        if color_temp is not None:
+            if brightness is None:
+                brightness = self.brightness
+            if color_temp > COLOR_TEMP_WARM_VS_COLD_WHITE_CUT_OFF:
+                self._bulb.setRgbw(w=brightness)
+            else:
+                self._bulb.setRgbw(w2=brightness)
+            return
 
         # Show warning if effect set with rgb, brightness, or white level
         if effect and (brightness or white or rgb):

@@ -1,6 +1,8 @@
 """Support for Qwikswitch Binary Sensors."""
 import logging
 
+from pyqwikswitch.qwikswitch import SENSORS
+
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.core import callback
 
@@ -27,7 +29,6 @@ class QSBinarySensor(QSEntity, BinarySensorDevice):
 
     def __init__(self, sensor):
         """Initialize the sensor."""
-        from pyqwikswitch.qwikswitch import SENSORS
 
         super().__init__(sensor["id"], sensor["name"])
         self.channel = sensor["channel"]
@@ -61,7 +62,7 @@ class QSBinarySensor(QSEntity, BinarySensorDevice):
     @property
     def unique_id(self):
         """Return a unique identifier for this sensor."""
-        return "qs{}:{}".format(self.qsid, self.channel)
+        return f"qs{self.qsid}:{self.channel}"
 
     @property
     def device_class(self):

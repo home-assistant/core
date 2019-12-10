@@ -1,11 +1,10 @@
 """Provide configuration end points for Groups."""
 from homeassistant.components.group import DOMAIN, GROUP_SCHEMA
+from homeassistant.config import GROUP_CONFIG_PATH
 from homeassistant.const import SERVICE_RELOAD
 import homeassistant.helpers.config_validation as cv
 
 from . import EditKeyBasedConfigView
-
-CONFIG_PATH = "groups.yaml"
 
 
 async def async_setup(hass):
@@ -17,7 +16,12 @@ async def async_setup(hass):
 
     hass.http.register_view(
         EditKeyBasedConfigView(
-            "group", "config", CONFIG_PATH, cv.slug, GROUP_SCHEMA, post_write_hook=hook
+            "group",
+            "config",
+            GROUP_CONFIG_PATH,
+            cv.slug,
+            GROUP_SCHEMA,
+            post_write_hook=hook,
         )
     )
     return True

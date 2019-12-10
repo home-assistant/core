@@ -4,20 +4,20 @@ from collections import OrderedDict
 from uuid import uuid4
 
 import async_timeout
+from pytradfri import Gateway, RequestError
+from pytradfri.api.aiocoap_api import APIFactory
 import voluptuous as vol
 
 from homeassistant import config_entries
 
 from .const import (
-    CONF_IMPORT_GROUPS,
-    CONF_IDENTITY,
-    CONF_HOST,
-    CONF_KEY,
     CONF_GATEWAY_ID,
+    CONF_HOST,
+    CONF_IDENTITY,
+    CONF_IMPORT_GROUPS,
+    CONF_KEY,
+    KEY_SECURITY_CODE,
 )
-
-KEY_SECURITY_CODE = "security_code"
-KEY_IMPORT_GROUPS = "import_groups"
 
 
 class AuthError(Exception):
@@ -67,13 +67,17 @@ class FlowHandler(config_entries.ConfigFlow):
                     errors[KEY_SECURITY_CODE] = err.code
                 else:
                     errors["base"] = err.code
+        else:
+            user_input = {}
 
         fields = OrderedDict()
 
         if self._host is None:
-            fields[vol.Required(CONF_HOST)] = str
+            fields[vol.Required(CONF_HOST, default=user_input.get(CONF_HOST))] = str
 
-        fields[vol.Required(KEY_SECURITY_CODE)] = str
+        fields[
+            vol.Required(KEY_SECURITY_CODE, default=user_input.get(KEY_SECURITY_CODE))
+        ] = str
 
         return self.async_show_form(
             step_id="auth", data_schema=vol.Schema(fields), errors=errors
@@ -83,7 +87,7 @@ class FlowHandler(config_entries.ConfigFlow):
         """Handle zeroconf discovery."""
         host = user_input["host"]
 
-        # pylint: disable=unsupported-assignment-operation
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["host"] = host
 
         if any(host == flow["context"]["host"] for flow in self._async_in_progress()):
@@ -152,8 +156,6 @@ class FlowHandler(config_entries.ConfigFlow):
 
 async def authenticate(hass, host, security_code):
     """Authenticate with a Tradfri hub."""
-    from pytradfri.api.aiocoap_api import APIFactory
-    from pytradfri import RequestError
 
     identity = uuid4().hex
 
@@ -172,8 +174,6 @@ async def authenticate(hass, host, security_code):
 
 async def get_gateway_info(hass, host, identity, key):
     """Return info for the gateway."""
-    from pytradfri.api.aiocoap_api import APIFactory
-    from pytradfri import Gateway, RequestError
 
     try:
         factory = APIFactory(host, psk_id=identity, psk=key, loop=hass.loop)

@@ -11,9 +11,7 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
-    is_on,
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_RGB_COLOR,
@@ -22,27 +20,31 @@ from homeassistant.components.light import (
     ATTR_XY_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     VALID_TRANSITION,
+    is_on,
 )
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_NAME,
-    CONF_PLATFORM,
     CONF_LIGHTS,
     CONF_MODE,
+    CONF_NAME,
+    CONF_PLATFORM,
     SERVICE_TURN_ON,
+    STATE_ON,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import slugify
 from homeassistant.util.color import (
-    color_temperature_to_rgb,
     color_RGB_to_xy_brightness,
     color_temperature_kelvin_to_mired,
+    color_temperature_to_rgb,
 )
-from homeassistant.util.dt import utcnow as dt_utcnow, as_local
+from homeassistant.util.dt import as_local, utcnow as dt_utcnow
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -169,7 +171,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     hass.services.async_register(DOMAIN, service_name, async_update)
 
 
-class FluxSwitch(SwitchDevice):
+class FluxSwitch(SwitchDevice, RestoreEntity):
     """Representation of a Flux switch."""
 
     def __init__(
@@ -213,6 +215,12 @@ class FluxSwitch(SwitchDevice):
     def is_on(self):
         """Return true if switch is on."""
         return self.unsub_tracker is not None
+
+    async def async_added_to_hass(self):
+        """Call when entity about to be added to hass."""
+        last_state = await self.async_get_last_state()
+        if last_state and last_state.state == STATE_ON:
+            await self.async_turn_on()
 
     async def async_turn_on(self, **kwargs):
         """Turn on flux."""
@@ -302,7 +310,7 @@ class FluxSwitch(SwitchDevice):
             await async_set_lights_xy(
                 self.hass, self._lights, x_val, y_val, brightness, self._transition
             )
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Lights updated to x:%s y:%s brightness:%s, %s%% "
                 "of %s cycle complete at %s",
                 x_val,
@@ -314,7 +322,7 @@ class FluxSwitch(SwitchDevice):
             )
         elif self._mode == MODE_RGB:
             await async_set_lights_rgb(self.hass, self._lights, rgb, self._transition)
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Lights updated to rgb:%s, %s%% " "of %s cycle complete at %s",
                 rgb,
                 round(percentage_complete * 100),
@@ -327,7 +335,7 @@ class FluxSwitch(SwitchDevice):
             await async_set_lights_temp(
                 self.hass, self._lights, mired, brightness, self._transition
             )
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Lights updated to mired:%s brightness:%s, %s%% "
                 "of %s cycle complete at %s",
                 mired,

@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 from typing import Optional
 
+from georss_ign_sismologia_client import IgnSismologiaFeedManager
 import voluptuous as vol
 
 from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
@@ -18,8 +19,6 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.event import track_time_interval
-
-REQUIREMENTS = ["georss_ign_sismologia_client==0.2"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,7 +88,6 @@ class IgnSismologiaFeedEntityManager:
         minimum_magnitude,
     ):
         """Initialize the Feed Entity Manager."""
-        from georss_ign_sismologia_client import IgnSismologiaFeedManager
 
         self._hass = hass
         self._feed_manager = IgnSismologiaFeedManager(
@@ -202,6 +200,11 @@ class IgnSismologiaLocationEvent(GeolocationEvent):
         self._image_url = feed_entry.image_url
 
     @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        return "mdi:pulse"
+
+    @property
     def source(self) -> str:
         """Return source value of this external event."""
         return SOURCE
@@ -210,9 +213,9 @@ class IgnSismologiaLocationEvent(GeolocationEvent):
     def name(self) -> Optional[str]:
         """Return the name of the entity."""
         if self._magnitude and self._region:
-            return "M {:.1f} - {}".format(self._magnitude, self._region)
+            return f"M {self._magnitude:.1f} - {self._region}"
         if self._magnitude:
-            return "M {:.1f}".format(self._magnitude)
+            return f"M {self._magnitude:.1f}"
         if self._region:
             return self._region
         return self._title

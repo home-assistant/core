@@ -1,28 +1,35 @@
 """Config flow to configure zone component."""
 
+from typing import Set
+
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
 from homeassistant.const import (
-    CONF_NAME,
+    CONF_ICON,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_ICON,
+    CONF_NAME,
     CONF_RADIUS,
 )
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
 
 from .const import CONF_PASSIVE, DOMAIN, HOME_ZONE
 
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
 
 @callback
-def configured_zones(hass):
+def configured_zones(hass: HomeAssistantType) -> Set[str]:
     """Return a set of the configured zones."""
     return set(
         (slugify(entry.data[CONF_NAME]))
-        for entry in hass.config_entries.async_entries(DOMAIN)
+        for entry in (
+            hass.config_entries.async_entries(DOMAIN) if hass.config_entries else []
+        )
     )
 
 

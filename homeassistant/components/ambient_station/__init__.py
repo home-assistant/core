@@ -1,4 +1,5 @@
 """Support for Ambient Weather Station Service."""
+import asyncio
 import logging
 
 from aioambient import Client
@@ -7,8 +8,8 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
-    ATTR_NAME,
     ATTR_LOCATION,
+    ATTR_NAME,
     CONF_API_KEY,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -297,8 +298,12 @@ async def async_unload_entry(hass, config_entry):
     ambient = hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
     hass.async_create_task(ambient.ws_disconnect())
 
-    for component in ("binary_sensor", "sensor"):
-        await hass.config_entries.async_forward_entry_unload(config_entry, component)
+    tasks = [
+        hass.config_entries.async_forward_entry_unload(config_entry, component)
+        for component in ("binary_sensor", "sensor")
+    ]
+
+    await asyncio.gather(*tasks)
 
     return True
 
@@ -492,7 +497,7 @@ class AmbientWeatherEntity(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{0}_{1}".format(self._station_name, self._sensor_name)
+        return f"{self._station_name}_{self._sensor_name}"
 
     @property
     def should_poll(self):
@@ -502,7 +507,7 @@ class AmbientWeatherEntity(Entity):
     @property
     def unique_id(self):
         """Return a unique, unchanging string that represents this sensor."""
-        return "{0}_{1}".format(self._mac_address, self._sensor_type)
+        return f"{self._mac_address}_{self._sensor_type}"
 
     async def async_added_to_hass(self):
         """Register callbacks."""

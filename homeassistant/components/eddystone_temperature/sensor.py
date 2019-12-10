@@ -9,6 +9,8 @@ https://home-assistant.io/components/sensor.eddystone_temperature/
 """
 import logging
 
+# pylint: disable=import-error
+from beacontools import BeaconScanner, EddystoneFilter, EddystoneTLMFrame
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -60,8 +62,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if instance is None or namespace is None:
             _LOGGER.error("Skipping %s", dev_name)
             continue
-        else:
-            devices.append(EddystoneTemp(name, namespace, instance))
+
+        devices.append(EddystoneTemp(name, namespace, instance))
 
     if devices:
         mon = Monitor(hass, devices, bt_device_id)
@@ -149,12 +151,6 @@ class Monitor:
                 additional_info["instance"],
                 packet.temperature,
             )
-
-        from beacontools import (  # pylint: disable=import-error
-            BeaconScanner,
-            EddystoneFilter,
-            EddystoneTLMFrame,
-        )
 
         device_filters = [EddystoneFilter(d.namespace, d.instance) for d in devices]
 

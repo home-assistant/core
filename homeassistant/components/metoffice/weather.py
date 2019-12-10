@@ -1,6 +1,7 @@
 """Support for UK Met Office weather service."""
 import logging
 
+import datapoint as dp
 import voluptuous as vol
 
 from homeassistant.components.weather import PLATFORM_SCHEMA, WeatherEntity
@@ -35,8 +36,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Met Office weather platform."""
-    import datapoint as dp
-
     name = config.get(CONF_NAME)
     datapoint = dp.connection(api_key=config.get(CONF_API_KEY))
 
@@ -83,7 +82,7 @@ class MetOfficeWeather(WeatherEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._name, self.site.name)
+        return f"{self._name} {self.site.name}"
 
     @property
     def condition(self):

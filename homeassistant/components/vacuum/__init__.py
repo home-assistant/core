@@ -6,26 +6,28 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import group
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
     ATTR_BATTERY_LEVEL,
     ATTR_COMMAND,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_IDLE,
     STATE_ON,
     STATE_PAUSED,
-    STATE_IDLE,
 )
-from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa
-    ENTITY_SERVICE_SCHEMA,
+from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
+    make_entity_service_schema,
 )
+from homeassistant.helpers.entity import Entity, ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity import ToggleEntity, Entity
 from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.loader import bind_hass
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,23 +54,13 @@ SERVICE_START = "start"
 SERVICE_PAUSE = "pause"
 SERVICE_STOP = "stop"
 
-VACUUM_SET_FAN_SPEED_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_FAN_SPEED): cv.string}
-)
-
-VACUUM_SEND_COMMAND_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {
-        vol.Required(ATTR_COMMAND): cv.string,
-        vol.Optional(ATTR_PARAMS): vol.Any(dict, cv.ensure_list),
-    }
-)
 
 STATE_CLEANING = "cleaning"
 STATE_DOCKED = "docked"
-STATE_IDLE = STATE_IDLE
-STATE_PAUSED = STATE_PAUSED
 STATE_RETURNING = "returning"
 STATE_ERROR = "error"
+
+STATES = [STATE_CLEANING, STATE_DOCKED, STATE_RETURNING, STATE_ERROR]
 
 DEFAULT_NAME = "Vacuum cleaner robot"
 
@@ -103,43 +95,32 @@ async def async_setup(hass, config):
 
     await component.async_setup(config)
 
+    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
+    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
+    component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
     component.async_register_entity_service(
-        SERVICE_TURN_ON, ENTITY_SERVICE_SCHEMA, "async_turn_on"
+        SERVICE_START_PAUSE, {}, "async_start_pause"
     )
+    component.async_register_entity_service(SERVICE_START, {}, "async_start")
+    component.async_register_entity_service(SERVICE_PAUSE, {}, "async_pause")
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, ENTITY_SERVICE_SCHEMA, "async_turn_off"
+        SERVICE_RETURN_TO_BASE, {}, "async_return_to_base"
     )
-    component.async_register_entity_service(
-        SERVICE_TOGGLE, ENTITY_SERVICE_SCHEMA, "async_toggle"
-    )
-    component.async_register_entity_service(
-        SERVICE_START_PAUSE, ENTITY_SERVICE_SCHEMA, "async_start_pause"
-    )
-    component.async_register_entity_service(
-        SERVICE_START, ENTITY_SERVICE_SCHEMA, "async_start"
-    )
-    component.async_register_entity_service(
-        SERVICE_PAUSE, ENTITY_SERVICE_SCHEMA, "async_pause"
-    )
-    component.async_register_entity_service(
-        SERVICE_RETURN_TO_BASE, ENTITY_SERVICE_SCHEMA, "async_return_to_base"
-    )
-    component.async_register_entity_service(
-        SERVICE_CLEAN_SPOT, ENTITY_SERVICE_SCHEMA, "async_clean_spot"
-    )
-    component.async_register_entity_service(
-        SERVICE_LOCATE, ENTITY_SERVICE_SCHEMA, "async_locate"
-    )
-    component.async_register_entity_service(
-        SERVICE_STOP, ENTITY_SERVICE_SCHEMA, "async_stop"
-    )
+    component.async_register_entity_service(SERVICE_CLEAN_SPOT, {}, "async_clean_spot")
+    component.async_register_entity_service(SERVICE_LOCATE, {}, "async_locate")
+    component.async_register_entity_service(SERVICE_STOP, {}, "async_stop")
     component.async_register_entity_service(
         SERVICE_SET_FAN_SPEED,
-        VACUUM_SET_FAN_SPEED_SERVICE_SCHEMA,
+        {vol.Required(ATTR_FAN_SPEED): cv.string},
         "async_set_fan_speed",
     )
     component.async_register_entity_service(
-        SERVICE_SEND_COMMAND, VACUUM_SEND_COMMAND_SERVICE_SCHEMA, "async_send_command"
+        SERVICE_SEND_COMMAND,
+        {
+            vol.Required(ATTR_COMMAND): cv.string,
+            vol.Optional(ATTR_PARAMS): vol.Any(dict, cv.ensure_list),
+        },
+        "async_send_command",
     )
 
     return True
@@ -321,6 +302,14 @@ class VacuumDevice(_BaseVacuum, ToggleEntity):
         """
         await self.hass.async_add_executor_job(partial(self.start_pause, **kwargs))
 
+    async def async_pause(self):
+        """Not supported."""
+        pass
+
+    async def async_start(self):
+        """Not supported."""
+        pass
+
 
 class StateVacuumDevice(_BaseVacuum):
     """Representation of a vacuum cleaner robot that supports states."""
@@ -375,3 +364,15 @@ class StateVacuumDevice(_BaseVacuum):
         This method must be run in the event loop.
         """
         await self.hass.async_add_executor_job(self.pause)
+
+    async def async_turn_on(self, **kwargs):
+        """Not supported."""
+        pass
+
+    async def async_turn_off(self, **kwargs):
+        """Not supported."""
+        pass
+
+    async def async_toggle(self, **kwargs):
+        """Not supported."""
+        pass

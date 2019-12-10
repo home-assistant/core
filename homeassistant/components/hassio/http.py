@@ -7,7 +7,7 @@ from typing import Dict, Union
 
 import aiohttp
 from aiohttp import web
-from aiohttp.hdrs import CONTENT_TYPE, CONTENT_LENGTH
+from aiohttp.hdrs import CONTENT_LENGTH, CONTENT_TYPE
 from aiohttp.web_exceptions import HTTPBadGateway
 import async_timeout
 
@@ -75,7 +75,7 @@ class HassIOView(HomeAssistantView):
 
             method = getattr(self._websession, request.method.lower())
             client = await method(
-                "http://{}/{}".format(self._host, path),
+                f"http://{self._host}/{path}",
                 data=data,
                 headers=headers,
                 timeout=read_timeout,

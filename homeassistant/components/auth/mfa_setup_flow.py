@@ -2,10 +2,11 @@
 import logging
 
 import voluptuous as vol
+import voluptuous_serialize
 
 from homeassistant import data_entry_flow
 from homeassistant.components import websocket_api
-from homeassistant.core import callback, HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 WS_TYPE_SETUP_MFA = "auth/setup_mfa"
 SCHEMA_WS_SETUP_MFA = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
@@ -34,7 +35,7 @@ async def async_setup(hass):
         """Create a setup flow. handler is a mfa module."""
         mfa_module = hass.auth.get_auth_mfa_module(handler)
         if mfa_module is None:
-            raise ValueError("Mfa module {} is not found".format(handler))
+            raise ValueError(f"Mfa module {handler} is not found")
 
         user_id = data.pop("user_id")
         return await mfa_module.async_setup_flow(user_id)
@@ -80,9 +81,7 @@ def websocket_setup_mfa(
         if mfa_module is None:
             connection.send_message(
                 websocket_api.error_message(
-                    msg["id"],
-                    "no_module",
-                    "MFA module {} is not found".format(mfa_module_id),
+                    msg["id"], "no_module", f"MFA module {mfa_module_id} is not found"
                 )
             )
             return
@@ -117,7 +116,7 @@ def websocket_depose_mfa(
                 websocket_api.error_message(
                     msg["id"],
                     "disable_failed",
-                    "Cannot disable MFA Module {}: {}".format(mfa_module_id, err),
+                    f"Cannot disable MFA Module {mfa_module_id}: {err}",
                 )
             )
             return
@@ -135,8 +134,6 @@ def _prepare_result_json(result):
 
     if result["type"] != data_entry_flow.RESULT_TYPE_FORM:
         return result
-
-    import voluptuous_serialize
 
     data = result.copy()
 

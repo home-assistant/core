@@ -1,9 +1,13 @@
 """Support for binary sensor using I2C MCP23017 chip."""
 import logging
 
+import adafruit_mcp230xx  # pylint: disable=import-error
+import board  # pylint: disable=import-error
+import busio  # pylint: disable=import-error
+import digitalio  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import BinarySensorDevice, PLATFORM_SCHEMA
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
 from homeassistant.const import DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -37,10 +41,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the MCP23017 binary sensors."""
-    import board
-    import busio
-    import adafruit_mcp230xx
-
     pull_mode = config[CONF_PULL_MODE]
     invert_logic = config[CONF_INVERT_LOGIC]
     i2c_address = config[CONF_I2C_ADDRESS]
@@ -65,8 +65,6 @@ class MCP23017BinarySensor(BinarySensorDevice):
 
     def __init__(self, name, pin, pull_mode, invert_logic):
         """Initialize the MCP23017 binary sensor."""
-        import digitalio
-
         self._name = name or DEVICE_DEFAULT_NAME
         self._pin = pin
         self._pull_mode = pull_mode

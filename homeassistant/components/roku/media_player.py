@@ -1,6 +1,8 @@
 """Support for the Roku media player."""
 import logging
+
 import requests.exceptions
+from roku import Roku
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
@@ -10,17 +12,17 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
-    SUPPORT_TURN_ON,
-    SUPPORT_TURN_OFF,
 )
 from homeassistant.const import (
     CONF_HOST,
     STATE_HOME,
     STATE_IDLE,
     STATE_PLAYING,
-    STATE_OFF,
+    STATE_STANDBY,
 )
 
 DEFAULT_PORT = 8060
@@ -54,7 +56,6 @@ class RokuDevice(MediaPlayerDevice):
 
     def __init__(self, host):
         """Initialize the Roku device."""
-        from roku import Roku
 
         self.roku = Roku(host)
         self.ip_address = host
@@ -92,13 +93,13 @@ class RokuDevice(MediaPlayerDevice):
         """Return the name of the device."""
         if self._device_info.user_device_name:
             return self._device_info.user_device_name
-        return "Roku {}".format(self._device_info.serial_num)
+        return f"Roku {self._device_info.serial_num}"
 
     @property
     def state(self):
         """Return the state of the device."""
         if self._power_state == "Off":
-            return STATE_OFF
+            return STATE_STANDBY
 
         if self.current_app is None:
             return None
@@ -174,7 +175,7 @@ class RokuDevice(MediaPlayerDevice):
 
     def turn_on(self):
         """Turn on the Roku."""
-        self.roku.power()
+        self.roku.poweron()
 
     def turn_off(self):
         """Turn off the Roku."""

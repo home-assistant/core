@@ -1,43 +1,43 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
 import datetime
 import logging
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, List, Optional
 
 import requests
-import voluptuous as vol
 import somecomfort
+import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_FAN,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
     FAN_AUTO,
     FAN_DIFFUSE,
     FAN_ON,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_OFF,
+    PRESET_AWAY,
+    PRESET_NONE,
     SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_FAN,
-    HVAC_MODE_OFF,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT_COOL,
-    PRESET_AWAY,
-    PRESET_NONE,
 )
 from homeassistant.const import (
+    ATTR_TEMPERATURE,
     CONF_PASSWORD,
+    CONF_REGION,
     CONF_USERNAME,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    ATTR_TEMPERATURE,
-    CONF_REGION,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -141,7 +141,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     _LOGGER.warning(
         "The honeywell component has been deprecated for EU (i.e. non-US) "
         "systems. For EU-based systems, use the evohome component, "
-        "see: https://home-assistant.io/components/evohome"
+        "see: https://home-assistant.io/integrations/evohome"
     )
 
 
@@ -160,11 +160,7 @@ class HoneywellUSThermostat(ClimateDevice):
         self._username = username
         self._password = password
 
-        _LOGGER.debug(
-            # noqa; pylint: disable=protected-access
-            "latestData = %s ",
-            device._data,
-        )
+        _LOGGER.debug("latestData = %s ", device._data)
 
         # not all honeywell HVACs support all modes
         mappings = [v for k, v in HVAC_MODE_TO_HW_MODE.items() if device.raw_ui_data[k]]
@@ -176,14 +172,13 @@ class HoneywellUSThermostat(ClimateDevice):
             | SUPPORT_TARGET_TEMPERATURE_RANGE
         )
 
-        # noqa; pylint: disable=protected-access
         if device._data["canControlHumidification"]:
             self._supported_features |= SUPPORT_TARGET_HUMIDITY
 
         if device.raw_ui_data["SwitchEmergencyHeatAllowed"]:
             self._supported_features |= SUPPORT_AUX_HEAT
 
-        if not device._data["hasFan"]:  # pylint: disable=protected-access
+        if not device._data["hasFan"]:
             return
 
         # not all honeywell fans support all modes
@@ -318,19 +313,17 @@ class HoneywellUSThermostat(ClimateDevice):
             # Get current mode
             mode = self._device.system_mode
             # Set hold if this is not the case
-            if getattr(self._device, "hold_{}".format(mode)) is False:
+            if getattr(self._device, f"hold_{mode}") is False:
                 # Get next period key
-                next_period_key = "{}NextPeriod".format(mode.capitalize())
+                next_period_key = f"{mode.capitalize()}NextPeriod"
                 # Get next period raw value
                 next_period = self._device.raw_ui_data.get(next_period_key)
                 # Get next period time
                 hour, minute = divmod(next_period * 15, 60)
                 # Set hold time
-                setattr(
-                    self._device, "hold_{}".format(mode), datetime.time(hour, minute)
-                )
+                setattr(self._device, f"hold_{mode}", datetime.time(hour, minute))
             # Set temperature
-            setattr(self._device, "setpoint_{}".format(mode), temperature)
+            setattr(self._device, f"setpoint_{mode}", temperature)
         except somecomfort.SomeComfortError:
             _LOGGER.error("Temperature %.1f out of range", temperature)
 
@@ -375,17 +368,14 @@ class HoneywellUSThermostat(ClimateDevice):
         try:
 
             # Set permanent hold
-            setattr(self._device, "hold_{}".format(mode), True)
+            setattr(self._device, f"hold_{mode}", True)
             # Set temperature
             setattr(
-                self._device,
-                "setpoint_{}".format(mode),
-                getattr(self, "_{}_away_temp".format(mode)),
+                self._device, f"setpoint_{mode}", getattr(self, f"_{mode}_away_temp")
             )
         except somecomfort.SomeComfortError:
             _LOGGER.error(
-                "Temperature %.1f out of range",
-                getattr(self, "_{}_away_temp".format(mode)),
+                "Temperature %.1f out of range", getattr(self, f"_{mode}_away_temp")
             )
 
     def _turn_away_mode_off(self) -> None:
@@ -465,7 +455,5 @@ class HoneywellUSThermostat(ClimateDevice):
                 _LOGGER.error("SomeComfort update failed, Retrying - Error: %s", exp)
 
         _LOGGER.debug(
-            # noqa; pylint: disable=protected-access
-            "latestData = %s ",
-            self._device._data,
+            "latestData = %s ", self._device._data  # pylint: disable=protected-access
         )

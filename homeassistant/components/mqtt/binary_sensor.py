@@ -1,4 +1,5 @@
 """Support for MQTT binary sensors."""
+from datetime import timedelta
 import logging
 
 import voluptuous as vol
@@ -21,7 +22,9 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.helpers.event as evt
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.util import dt as dt_util
 
 from . import (
     ATTR_DISCOVERY_HASH,
@@ -43,12 +46,14 @@ CONF_OFF_DELAY = "off_delay"
 DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_FORCE_UPDATE = False
+CONF_EXPIRE_AFTER = "expire_after"
 
 PLATFORM_SCHEMA = (
     mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
             vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_OFF_DELAY): vol.All(vol.Coerce(int), vol.Range(min=0)),
@@ -112,8 +117,9 @@ class MqttBinarySensor(
         self._unique_id = config.get(CONF_UNIQUE_ID)
         self._state = None
         self._sub_state = None
+        self._expiration_trigger = None
         self._delay_listener = None
-
+        self._expired = None
         device_config = config.get(CONF_DEVICE)
 
         MqttAttributes.__init__(self, config)
@@ -153,6 +159,26 @@ class MqttBinarySensor(
         def state_message_received(msg):
             """Handle a new received MQTT state message."""
             payload = msg.payload
+            # auto-expire enabled?
+            expire_after = self._config.get(CONF_EXPIRE_AFTER)
+
+            if expire_after is not None and expire_after > 0:
+
+                # When expire_after is set, and we receive a message, assume device is not expired since it has to be to receive the message
+                self._expired = False
+
+                # Reset old trigger
+                if self._expiration_trigger:
+                    self._expiration_trigger()
+                    self._expiration_trigger = None
+
+                # Set new trigger
+                expiration_at = dt_util.utcnow() + timedelta(seconds=expire_after)
+
+                self._expiration_trigger = async_track_point_in_utc_time(
+                    self.hass, self.value_is_expired, expiration_at
+                )
+
             value_template = self._config.get(CONF_VALUE_TEMPLATE)
             if value_template is not None:
                 payload = value_template.async_render_with_possible_json_value(
@@ -164,9 +190,11 @@ class MqttBinarySensor(
                 self._state = False
             else:  # Payload is not for this entity
                 _LOGGER.warning(
-                    "No matching payload found" " for entity: %s with state_topic: %s",
+                    "No matching payload found for entity: %s with state topic: %s. Payload: %s, with value template %s",
                     self._config[CONF_NAME],
                     self._config[CONF_STATE_TOPIC],
+                    payload,
+                    value_template,
                 )
                 return
 
@@ -202,6 +230,15 @@ class MqttBinarySensor(
         await MqttAttributes.async_will_remove_from_hass(self)
         await MqttAvailability.async_will_remove_from_hass(self)
 
+    @callback
+    def value_is_expired(self, *_):
+        """Triggered when value is expired."""
+
+        self._expiration_trigger = None
+        self._expired = True
+
+        self.async_write_ha_state()
+
     @property
     def should_poll(self):
         """Return the polling state."""
@@ -231,3 +268,12 @@ class MqttBinarySensor(
     def unique_id(self):
         """Return a unique ID."""
         return self._unique_id
+
+    @property
+    def available(self) -> bool:
+        """Return true if the device is available and value has not expired."""
+        expire_after = self._config.get(CONF_EXPIRE_AFTER)
+        # pylint: disable=no-member
+        return MqttAvailability.available.fget(self) and (
+            expire_after is None or not self._expired
+        )

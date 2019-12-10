@@ -3,10 +3,9 @@ import logging
 import unittest
 from unittest.mock import patch
 
-from homeassistant.setup import async_setup_component
-
 import homeassistant.components.http as http
-from homeassistant.util.ssl import server_context_modern, server_context_intermediate
+from homeassistant.setup import async_setup_component
+from homeassistant.util.ssl import server_context_intermediate, server_context_modern
 
 
 class TestView(http.HomeAssistantView):
@@ -133,7 +132,7 @@ async def test_not_log_password(hass, aiohttp_client, caplog, legacy_auth):
 
     resp = await client.get("/api/", params={"api_password": "test-password"})
 
-    assert resp.status == 200
+    assert resp.status == 401
     logs = caplog.text
 
     # Ensure we don't log API passwords

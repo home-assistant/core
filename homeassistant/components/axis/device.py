@@ -1,7 +1,10 @@
 """Axis network device abstraction."""
 
 import asyncio
+
 import async_timeout
+import axis
+from axis.streammanager import SIGNAL_PLAYING
 
 from homeassistant.const import (
     CONF_DEVICE,
@@ -18,7 +21,6 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import CONF_CAMERA, CONF_EVENTS, CONF_MODEL, DOMAIN, LOGGER
-
 from .errors import AuthenticationRequired, CannotConnect
 
 
@@ -65,7 +67,7 @@ class AxisNetworkDevice:
             connections={(CONNECTION_NETWORK_MAC, self.serial)},
             identifiers={(DOMAIN, self.serial)},
             manufacturer="Axis Communications AB",
-            model="{} {}".format(self.model, self.product_type),
+            model=f"{self.model} {self.product_type}",
             name=self.name,
             sw_version=self.fw_version,
         )
@@ -115,7 +117,7 @@ class AxisNetworkDevice:
     @property
     def event_new_address(self):
         """Device specific event to signal new device address."""
-        return "axis_new_address_{}".format(self.serial)
+        return f"axis_new_address_{self.serial}"
 
     @staticmethod
     async def async_new_address_callback(hass, entry):
@@ -131,7 +133,7 @@ class AxisNetworkDevice:
     @property
     def event_reachable(self):
         """Device specific event to signal a change in connection status."""
-        return "axis_reachable_{}".format(self.serial)
+        return f"axis_reachable_{self.serial}"
 
     @callback
     def async_connection_status_callback(self, status):
@@ -140,7 +142,6 @@ class AxisNetworkDevice:
         This is called on every RTSP keep-alive message.
         Only signal state change if state change is true.
         """
-        from axis.streammanager import SIGNAL_PLAYING
 
         if self.available != (status == SIGNAL_PLAYING):
             self.available = not self.available
@@ -149,7 +150,7 @@ class AxisNetworkDevice:
     @property
     def event_new_sensor(self):
         """Device specific event to signal new sensor available."""
-        return "axis_add_sensor_{}".format(self.serial)
+        return f"axis_add_sensor_{self.serial}"
 
     @callback
     def async_event_callback(self, action, event_id):
@@ -198,7 +199,6 @@ class AxisNetworkDevice:
 
 async def get_device(hass, config):
     """Create a Axis device."""
-    import axis
 
     device = axis.AxisDevice(
         loop=hass.loop,

@@ -1,37 +1,43 @@
 """Helpers for config validation using voluptuous."""
-import inspect
-import logging
-import os
-import re
 from datetime import (
-    timedelta,
+    date as date_sys,
     datetime as datetime_sys,
     time as time_sys,
-    date as date_sys,
+    timedelta,
 )
-from socket import _GLOBAL_DEFAULT_TIMEOUT
+import inspect
+import logging
 from numbers import Number
-from typing import Any, Union, TypeVar, Callable, Sequence, Dict, Optional
+import os
+import re
+from socket import _GLOBAL_DEFAULT_TIMEOUT
+from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
 from urllib.parse import urlparse
 from uuid import UUID
 
-import voluptuous as vol
 from pkg_resources import parse_version
+import voluptuous as vol
+import voluptuous_serialize
 
-import homeassistant.util.dt as dt_util
 from homeassistant.const import (
+    ATTR_AREA_ID,
+    ATTR_ENTITY_ID,
     CONF_ABOVE,
     CONF_ALIAS,
     CONF_BELOW,
     CONF_CONDITION,
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_ENTITY_NAMESPACE,
+    CONF_FOR,
     CONF_PLATFORM,
     CONF_SCAN_INTERVAL,
+    CONF_STATE,
+    CONF_TIMEOUT,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
     CONF_VALUE_TEMPLATE,
-    CONF_TIMEOUT,
     ENTITY_MATCH_ALL,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
@@ -39,16 +45,14 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     WEEKDAYS,
     __version__,
-    ATTR_AREA_ID,
-    ATTR_ENTITY_ID,
 )
-from homeassistant.core import valid_entity_id, split_entity_id
+from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.logging import KeywordStyleAdapter
 from homeassistant.util import slugify as util_slugify
+import homeassistant.util.dt as dt_util
 
-
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
 # pylint: disable=invalid-name
 
@@ -86,12 +90,12 @@ def has_at_least_one_key(*keys: str) -> Callable:
         for k in obj.keys():
             if k in keys:
                 return obj
-        raise vol.Invalid("must contain one of {}.".format(", ".join(keys)))
+        raise vol.Invalid("must contain at least one of {}.".format(", ".join(keys)))
 
     return validate
 
 
-def has_at_most_one_key(*keys: str) -> Callable:
+def has_at_most_one_key(*keys: str) -> Callable[[Dict], Dict]:
     """Validate that zero keys exist or one key exists."""
 
     def validate(obj: Dict) -> Dict:
@@ -191,7 +195,7 @@ def isdir(value: Any) -> str:
     return dir_in
 
 
-def ensure_list(value: Union[T, Sequence[T], None]) -> Sequence[T]:
+def ensure_list(value: Union[T, List[T], None]) -> List[T]:
     """Wrap value in list if it is not one."""
     if value is None:
         return []
@@ -207,7 +211,7 @@ def entity_id(value: Any) -> str:
     raise vol.Invalid("Entity ID {} is an invalid entity id".format(value))
 
 
-def entity_ids(value: Union[str, Sequence]) -> Sequence[str]:
+def entity_ids(value: Union[str, List]) -> List[str]:
     """Validate Entity IDs."""
     if value is None:
         raise vol.Invalid("Entity IDs can not be None")
@@ -220,7 +224,7 @@ def entity_ids(value: Union[str, Sequence]) -> Sequence[str]:
 comp_entity_ids = vol.Any(vol.All(vol.Lower, ENTITY_MATCH_ALL), entity_ids)
 
 
-def entity_domain(domain: str):
+def entity_domain(domain: str) -> Callable[[Any], str]:
     """Validate that entity belong to domain."""
 
     def validate(value: Any) -> str:
@@ -231,10 +235,10 @@ def entity_domain(domain: str):
     return validate
 
 
-def entities_domain(domain: str):
+def entities_domain(domain: str) -> Callable[[Union[str, List]], List[str]]:
     """Validate that entities belong to domain."""
 
-    def validate(values: Union[str, Sequence]) -> Sequence[str]:
+    def validate(values: Union[str, List]) -> List[str]:
         """Test if entity domain is domain."""
         values = entity_ids(values)
         for ent_id in values:
@@ -280,7 +284,7 @@ time_period_dict = vol.All(
 )
 
 
-def time(value) -> time_sys:
+def time(value: Any) -> time_sys:
     """Validate and transform a time."""
     if isinstance(value, time_sys):
         return value
@@ -296,7 +300,7 @@ def time(value) -> time_sys:
     return time_val
 
 
-def date(value) -> date_sys:
+def date(value: Any) -> date_sys:
     """Validate and transform a date."""
     if isinstance(value, date_sys):
         return value
@@ -370,7 +374,10 @@ def positive_timedelta(value: timedelta) -> timedelta:
     return value
 
 
-def remove_falsy(value: Sequence[T]) -> Sequence[T]:
+positive_time_period_dict = vol.All(time_period_dict, positive_timedelta)
+
+
+def remove_falsy(value: List[T]) -> List[T]:
     """Remove falsy values from a list."""
     return [v for v in value if v]
 
@@ -378,6 +385,7 @@ def remove_falsy(value: Sequence[T]) -> Sequence[T]:
 def service(value):
     """Validate service."""
     # Services use same format as entities so we can use same helper.
+    value = string(value).lower()
     if valid_entity_id(value):
         return value
     raise vol.Invalid("Service {} does not match format <domain>.<name>".format(value))
@@ -435,7 +443,7 @@ def string(value: Any) -> str:
     return str(value)
 
 
-def temperature_unit(value) -> str:
+def temperature_unit(value: Any) -> str:
     """Validate and transform temperature unit."""
     value = str(value).upper()
     if value == "C":
@@ -480,8 +488,9 @@ def template_complex(value):
         for key, element in return_value.items():
             return_value[key] = template_complex(element)
         return return_value
-
-    return template(value)
+    if isinstance(value, str):
+        return template(value)
+    return value
 
 
 def datetime(value):
@@ -562,7 +571,7 @@ def uuid4_hex(value):
     return result.hex
 
 
-def ensure_list_csv(value: Any) -> Sequence:
+def ensure_list_csv(value: Any) -> List:
     """Ensure that input is a list or make one from comma-separated string."""
     if isinstance(value, str):
         return [member.strip() for member in value.split(",")]
@@ -574,7 +583,7 @@ def deprecated(
     replacement_key: Optional[str] = None,
     invalidation_version: Optional[str] = None,
     default: Optional[Any] = None,
-):
+) -> Callable[[Dict], Dict]:
     """
     Log key as deprecated and provide a replacement (if exists).
 
@@ -592,10 +601,10 @@ def deprecated(
     if module is not None:
         module_name = module.__name__
     else:
-        # Unclear when it is None, but it happens, so let's guard.
+        # If Python is unable to access the sources files, the call stack frame
+        # will be missing information, so let's guard.
         # https://github.com/home-assistant/home-assistant/issues/24982
-        # type ignore/unreachable: https://github.com/python/typeshed/pull/3137
-        module_name = __name__  # type: ignore
+        module_name = __name__
 
     if replacement_key and invalidation_version:
         warning = (
@@ -622,7 +631,7 @@ def deprecated(
             " deprecated, please remove it from your configuration"
         )
 
-    def check_for_invalid_version(value: Optional[Any]):
+    def check_for_invalid_version(value: Optional[Any]) -> None:
         """Raise error if current version has reached invalidation."""
         if not invalidation_version:
             return
@@ -637,7 +646,7 @@ def deprecated(
                 )
             )
 
-    def validator(config: Dict):
+    def validator(config: Dict) -> Dict:
         """Check if key is in config and log warning."""
         if key in config:
             value = config[key]
@@ -687,6 +696,14 @@ def key_dependency(key, dependency):
     return validator
 
 
+def custom_serializer(schema):
+    """Serialize additional types for voluptuous_serialize."""
+    if schema is positive_time_period_dict:
+        return {"type": "positive_time_period_dict"}
+
+    return voluptuous_serialize.UNSUPPORTED
+
+
 # Schemas
 PLATFORM_SCHEMA = vol.Schema(
     {
@@ -698,12 +715,23 @@ PLATFORM_SCHEMA = vol.Schema(
 
 PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
-ENTITY_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_ENTITY_ID): comp_entity_ids,
-        vol.Optional(ATTR_AREA_ID): vol.All(ensure_list, [str]),
-    }
-)
+
+def make_entity_service_schema(
+    schema: dict, *, extra: int = vol.PREVENT_EXTRA
+) -> vol.All:
+    """Create an entity service schema."""
+    return vol.All(
+        vol.Schema(
+            {
+                **schema,
+                vol.Optional(ATTR_ENTITY_ID): comp_entity_ids,
+                vol.Optional(ATTR_AREA_ID): vol.All(ensure_list, [str]),
+            },
+            extra=extra,
+        ),
+        has_at_least_one_key(ATTR_ENTITY_ID, ATTR_AREA_ID),
+    )
+
 
 EVENT_SCHEMA = vol.Schema(
     {
@@ -746,8 +774,8 @@ STATE_CONDITION_SCHEMA = vol.All(
         {
             vol.Required(CONF_CONDITION): "state",
             vol.Required(CONF_ENTITY_ID): entity_id,
-            vol.Required("state"): str,
-            vol.Optional("for"): vol.All(time_period, positive_timedelta),
+            vol.Required(CONF_STATE): str,
+            vol.Optional(CONF_FOR): vol.All(time_period, positive_timedelta),
             # To support use_trigger_value in automation
             # Deprecated 2016/04/25
             vol.Optional("from"): str,
@@ -823,7 +851,17 @@ OR_CONDITION_SCHEMA = vol.Schema(
     }
 )
 
-CONDITION_SCHEMA = vol.Any(
+DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_CONDITION): "device",
+        vol.Required(CONF_DEVICE_ID): str,
+        vol.Required(CONF_DOMAIN): str,
+    }
+)
+
+DEVICE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
+
+CONDITION_SCHEMA: vol.Schema = vol.Any(
     NUMERIC_STATE_CONDITION_SCHEMA,
     STATE_CONDITION_SCHEMA,
     SUN_CONDITION_SCHEMA,
@@ -832,7 +870,8 @@ CONDITION_SCHEMA = vol.Any(
     ZONE_CONDITION_SCHEMA,
     AND_CONDITION_SCHEMA,
     OR_CONDITION_SCHEMA,
-)  # type: vol.Schema
+    DEVICE_CONDITION_SCHEMA,
+)
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema(
     {
@@ -852,6 +891,14 @@ _SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema(
     }
 )
 
+DEVICE_ACTION_BASE_SCHEMA = vol.Schema(
+    {vol.Required(CONF_DEVICE_ID): string, vol.Required(CONF_DOMAIN): str}
+)
+
+DEVICE_ACTION_SCHEMA = DEVICE_ACTION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
+
+_SCRIPT_SCENE_SCHEMA = vol.Schema({vol.Required("scene"): entity_domain("scene")})
+
 SCRIPT_SCHEMA = vol.All(
     ensure_list,
     [
@@ -861,6 +908,8 @@ SCRIPT_SCHEMA = vol.All(
             _SCRIPT_WAIT_TEMPLATE_SCHEMA,
             EVENT_SCHEMA,
             CONDITION_SCHEMA,
+            DEVICE_ACTION_SCHEMA,
+            _SCRIPT_SCENE_SCHEMA,
         )
     ],
 )

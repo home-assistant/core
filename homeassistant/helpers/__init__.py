@@ -1,10 +1,9 @@
 """Helper methods for components within Home Assistant."""
 import re
-from typing import Any, Iterable, Tuple, Sequence, Dict
+from typing import Any, Dict, Iterable, Sequence, Tuple
 
 from homeassistant.const import CONF_PLATFORM
 
-# pylint: disable=invalid-name
 ConfigType = Dict[str, Any]
 
 
@@ -19,7 +18,8 @@ def config_per_platform(config: ConfigType, domain: str) -> Iterable[Tuple[Any, 
 
         if not platform_config:
             continue
-        elif not isinstance(platform_config, list):
+
+        if not isinstance(platform_config, list):
             platform_config = [platform_config]
 
         for item in platform_config:

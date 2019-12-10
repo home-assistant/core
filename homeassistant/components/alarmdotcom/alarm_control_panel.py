@@ -2,10 +2,15 @@
 import logging
 import re
 
+from pyalarmdotcom import Alarmdotcom
 import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+)
 from homeassistant.const import (
     CONF_CODE,
     CONF_NAME,
@@ -49,7 +54,6 @@ class AlarmDotCom(alarm.AlarmControlPanel):
 
     def __init__(self, hass, name, code, username, password):
         """Initialize the Alarm.com status."""
-        from pyalarmdotcom import Alarmdotcom
 
         _LOGGER.debug("Setting up Alarm.com...")
         self._hass = hass
@@ -94,6 +98,11 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         if self._alarm.state.lower() == "armed away":
             return STATE_ALARM_ARMED_AWAY
         return None
+
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
     @property
     def device_state_attributes(self):

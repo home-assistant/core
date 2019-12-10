@@ -1,19 +1,22 @@
-"""
-Support for SolarEdge Monitoring API.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.solaredge_local/
-"""
-import logging
+"""Support for SolarEdge-local Monitoring API."""
+from copy import deepcopy
 from datetime import timedelta
+import logging
+import statistics
 
-from requests.exceptions import HTTPError, ConnectTimeout
+from requests.exceptions import ConnectTimeout, HTTPError
 from solaredge_local import SolarEdge
 import voluptuous as vol
 
-
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME, POWER_WATT, ENERGY_WATT_HOUR
+from homeassistant.const import (
+    CONF_IP_ADDRESS,
+    CONF_NAME,
+    ENERGY_WATT_HOUR,
+    POWER_WATT,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -21,34 +24,108 @@ from homeassistant.util import Throttle
 DOMAIN = "solaredge_local"
 UPDATE_DELAY = timedelta(seconds=10)
 
+INVERTER_MODES = (
+    "SHUTTING_DOWN",
+    "ERROR",
+    "STANDBY",
+    "PAIRING",
+    "POWER_PRODUCTION",
+    "AC_CHARGING",
+    "NOT_PAIRED",
+    "NIGHT_MODE",
+    "GRID_MONITORING",
+    "IDLE",
+)
+
 # Supported sensor types:
-# Key: ['json_key', 'name', unit, icon]
+# Key: ['json_key', 'name', unit, icon, attribute name]
 SENSOR_TYPES = {
-    "lifetime_energy": [
-        "energyTotal",
-        "Lifetime energy",
-        ENERGY_WATT_HOUR,
-        "mdi:solar-power",
+    "current_AC_voltage": ["gridvoltage", "Grid Voltage", "V", "mdi:current-ac", None],
+    "current_DC_voltage": ["dcvoltage", "DC Voltage", "V", "mdi:current-dc", None],
+    "current_frequency": [
+        "gridfrequency",
+        "Grid Frequency",
+        "Hz",
+        "mdi:current-ac",
+        None,
     ],
-    "energy_this_year": [
-        "energyThisYear",
-        "Energy this year",
-        ENERGY_WATT_HOUR,
+    "current_power": [
+        "currentPower",
+        "Current Power",
+        POWER_WATT,
         "mdi:solar-power",
+        None,
     ],
     "energy_this_month": [
         "energyThisMonth",
-        "Energy this month",
+        "Energy This Month",
         ENERGY_WATT_HOUR,
         "mdi:solar-power",
+        None,
+    ],
+    "energy_this_year": [
+        "energyThisYear",
+        "Energy This Year",
+        ENERGY_WATT_HOUR,
+        "mdi:solar-power",
+        None,
     ],
     "energy_today": [
         "energyToday",
-        "Energy today",
+        "Energy Today",
         ENERGY_WATT_HOUR,
         "mdi:solar-power",
+        None,
     ],
-    "current_power": ["currentPower", "Current Power", POWER_WATT, "mdi:solar-power"],
+    "inverter_temperature": [
+        "invertertemperature",
+        "Inverter Temperature",
+        TEMP_CELSIUS,
+        "mdi:thermometer",
+        "operating_mode",
+    ],
+    "lifetime_energy": [
+        "energyTotal",
+        "Lifetime Energy",
+        ENERGY_WATT_HOUR,
+        "mdi:solar-power",
+        None,
+    ],
+    "optimizer_connected": [
+        "optimizers",
+        "Optimizers Online",
+        "optimizers",
+        "mdi:solar-panel",
+        "optimizers_connected",
+    ],
+    "optimizer_current": [
+        "optimizercurrent",
+        "Average Optimizer Current",
+        "A",
+        "mdi:solar-panel",
+        None,
+    ],
+    "optimizer_power": [
+        "optimizerpower",
+        "Average Optimizer Power",
+        POWER_WATT,
+        "mdi:solar-panel",
+        None,
+    ],
+    "optimizer_temperature": [
+        "optimizertemperature",
+        "Average Optimizer Temperature",
+        TEMP_CELSIUS,
+        "mdi:solar-panel",
+        None,
+    ],
+    "optimizer_voltage": [
+        "optimizervoltage",
+        "Average Optimizer Voltage",
+        "V",
+        "mdi:solar-panel",
+        None,
+    ],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -66,30 +143,86 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     ip_address = config[CONF_IP_ADDRESS]
     platform_name = config[CONF_NAME]
 
-    # Create new SolarEdge object to retrieve data
-    api = SolarEdge("http://{}/".format(ip_address))
+    # Create new SolarEdge object to retrieve data.
+    api = SolarEdge(f"http://{ip_address}/")
 
-    # Check if api can be reached and site is active
+    # Check if api can be reached and site is active.
     try:
         status = api.get_status()
-
-        status.energy  # pylint: disable=pointless-statement
         _LOGGER.debug("Credentials correct and site is active")
     except AttributeError:
-        _LOGGER.error("Missing details data in solaredge response")
-        _LOGGER.debug("Response is: %s", status)
+        _LOGGER.error("Missing details data in solaredge status")
+        _LOGGER.debug("Status is: %s", status)
         return
     except (ConnectTimeout, HTTPError):
         _LOGGER.error("Could not retrieve details from SolarEdge API")
         return
+
+    # Changing inverter temperature unit.
+    sensors = deepcopy(SENSOR_TYPES)
+    if status.inverters.primary.temperature.units.farenheit:
+        sensors["inverter_temperature"] = [
+            "invertertemperature",
+            "Inverter Temperature",
+            TEMP_FAHRENHEIT,
+            "mdi:thermometer",
+            "operating_mode",
+            None,
+        ]
+
+    try:
+        if status.metersList[0]:
+            sensors["import_current_power"] = [
+                "currentPowerimport",
+                "current import Power",
+                POWER_WATT,
+                "mdi:arrow-collapse-down",
+                None,
+            ]
+            sensors["import_meter_reading"] = [
+                "totalEnergyimport",
+                "total import Energy",
+                ENERGY_WATT_HOUR,
+                "mdi:counter",
+                None,
+            ]
+    except IndexError:
+        _LOGGER.debug("Import meter sensors are not created")
+
+    try:
+        if status.metersList[1]:
+            sensors["export_current_power"] = [
+                "currentPowerexport",
+                "current export Power",
+                POWER_WATT,
+                "mdi:arrow-expand-up",
+                None,
+            ]
+            sensors["export_meter_reading"] = [
+                "totalEnergyexport",
+                "total export Energy",
+                ENERGY_WATT_HOUR,
+                "mdi:counter",
+                None,
+            ]
+    except IndexError:
+        _LOGGER.debug("Export meter sensors are not created")
 
     # Create solaredge data service which will retrieve and update the data.
     data = SolarEdgeData(hass, api)
 
     # Create a new sensor for each sensor type.
     entities = []
-    for sensor_key in SENSOR_TYPES:
-        sensor = SolarEdgeSensor(platform_name, sensor_key, data)
+    for sensor_info in sensors.values():
+        sensor = SolarEdgeSensor(
+            platform_name,
+            data,
+            sensor_info[0],
+            sensor_info[1],
+            sensor_info[2],
+            sensor_info[3],
+            sensor_info[4],
+        )
         entities.append(sensor)
 
     add_entities(entities, True)
@@ -98,20 +231,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SolarEdgeSensor(Entity):
     """Representation of an SolarEdge Monitoring API sensor."""
 
-    def __init__(self, platform_name, sensor_key, data):
+    def __init__(self, platform_name, data, json_key, name, unit, icon, attr):
         """Initialize the sensor."""
-        self.platform_name = platform_name
-        self.sensor_key = sensor_key
-        self.data = data
+        self._platform_name = platform_name
+        self._data = data
         self._state = None
 
-        self._json_key = SENSOR_TYPES[self.sensor_key][0]
-        self._unit_of_measurement = SENSOR_TYPES[self.sensor_key][2]
+        self._json_key = json_key
+        self._name = name
+        self._unit_of_measurement = unit
+        self._icon = icon
+        self._attr = attr
 
     @property
     def name(self):
         """Return the name."""
-        return "{} ({})".format(self.platform_name, SENSOR_TYPES[self.sensor_key][1])
+        return f"{self._platform_name} ({self._name})"
 
     @property
     def unit_of_measurement(self):
@@ -119,9 +254,19 @@ class SolarEdgeSensor(Entity):
         return self._unit_of_measurement
 
     @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        if self._attr:
+            try:
+                return {self._attr: self._data.info[self._json_key]}
+            except KeyError:
+                return None
+        return None
+
+    @property
     def icon(self):
         """Return the sensor icon."""
-        return SENSOR_TYPES[self.sensor_key][3]
+        return self._icon
 
     @property
     def state(self):
@@ -130,8 +275,8 @@ class SolarEdgeSensor(Entity):
 
     def update(self):
         """Get the latest data from the sensor and update the state."""
-        self.data.update()
-        self._state = self.data.data[self._json_key]
+        self._data.update()
+        self._state = self._data.data[self._json_key]
 
 
 class SolarEdgeData:
@@ -142,32 +287,83 @@ class SolarEdgeData:
         self.hass = hass
         self.api = api
         self.data = {}
+        self.info = {}
 
     @Throttle(UPDATE_DELAY)
     def update(self):
         """Update the data from the SolarEdge Monitoring API."""
         try:
-            response = self.api.get_status()
-            _LOGGER.debug("response from SolarEdge: %s", response)
-
-            self.data["energyTotal"] = response.energy.total
-            self.data["energyThisYear"] = response.energy.thisYear
-            self.data["energyThisMonth"] = response.energy.thisMonth
-            self.data["energyToday"] = response.energy.today
-            self.data["currentPower"] = response.powerWatt
-
-            _LOGGER.debug("Updated SolarEdge overview data: %s", self.data)
-        except AttributeError:
-            _LOGGER.error("Missing details data in solaredge response")
-            _LOGGER.debug("Response is: %s", response)
+            status = self.api.get_status()
+            _LOGGER.debug("Status from SolarEdge: %s", status)
+        except ConnectTimeout:
+            _LOGGER.error("Connection timeout, skipping update")
             return
-        except (ConnectTimeout, HTTPError):
-            _LOGGER.error("Could not retrieve data, skipping update")
+        except HTTPError:
+            _LOGGER.error("Could not retrieve status, skipping update")
             return
 
-        self.data["energyTotal"] = response.energy.total
-        self.data["energyThisYear"] = response.energy.thisYear
-        self.data["energyThisMonth"] = response.energy.thisMonth
-        self.data["energyToday"] = response.energy.today
-        self.data["currentPower"] = response.powerWatt
-        _LOGGER.debug("Updated SolarEdge overview data: %s", self.data)
+        try:
+            maintenance = self.api.get_maintenance()
+            _LOGGER.debug("Maintenance from SolarEdge: %s", maintenance)
+        except ConnectTimeout:
+            _LOGGER.error("Connection timeout, skipping update")
+            return
+        except HTTPError:
+            _LOGGER.error("Could not retrieve maintenance, skipping update")
+            return
+
+        temperature = []
+        voltage = []
+        current = []
+        power = 0
+
+        for optimizer in maintenance.diagnostics.inverters.primary.optimizer:
+            if not optimizer.online:
+                continue
+            temperature.append(optimizer.temperature.value)
+            voltage.append(optimizer.inputV)
+            current.append(optimizer.inputC)
+
+        if not voltage:
+            temperature.append(0)
+            voltage.append(0)
+            current.append(0)
+        else:
+            power = statistics.mean(voltage) * statistics.mean(current)
+
+        if status.sn:
+            self.data["energyTotal"] = round(status.energy.total, 2)
+            self.data["energyThisYear"] = round(status.energy.thisYear, 2)
+            self.data["energyThisMonth"] = round(status.energy.thisMonth, 2)
+            self.data["energyToday"] = round(status.energy.today, 2)
+            self.data["currentPower"] = round(status.powerWatt, 2)
+            self.data["invertertemperature"] = round(
+                status.inverters.primary.temperature.value, 2
+            )
+            self.data["dcvoltage"] = round(status.inverters.primary.voltage, 2)
+            self.data["gridfrequency"] = round(status.frequencyHz, 2)
+            self.data["gridvoltage"] = round(status.voltage, 2)
+            self.data["optimizers"] = status.optimizersStatus.online
+
+            self.info["optimizers"] = status.optimizersStatus.total
+            self.info["invertertemperature"] = INVERTER_MODES[status.status]
+
+            try:
+                if status.metersList[1]:
+                    self.data["currentPowerimport"] = status.metersList[1].currentPower
+                    self.data["totalEnergyimport"] = status.metersList[1].totalEnergy
+            except IndexError:
+                pass
+
+            try:
+                if status.metersList[0]:
+                    self.data["currentPowerexport"] = status.metersList[0].currentPower
+                    self.data["totalEnergyexport"] = status.metersList[0].totalEnergy
+            except IndexError:
+                pass
+
+        if maintenance.system.name:
+            self.data["optimizertemperature"] = round(statistics.mean(temperature), 2)
+            self.data["optimizervoltage"] = round(statistics.mean(voltage), 2)
+            self.data["optimizercurrent"] = round(statistics.mean(current), 2)
+            self.data["optimizerpower"] = round(power, 2)

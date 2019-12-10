@@ -26,8 +26,9 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util import location
 from homeassistant.setup import async_setup_component
+from homeassistant.util import location
+
 from tests.common import MockConfigEntry, mock_coro, mock_registry
 
 MOCK_HOST = "192.168.0.1"
@@ -142,7 +143,7 @@ async def test_config_flow_entry_migrate(hass):
         "media_player",
         "ps4",
         MOCK_UNIQUE_ID,
-        config_entry_id=MOCK_ENTRY_ID,
+        config_entry=mock_entry,
         device_id=MOCK_DEVICE_ID,
     )
     assert len(mock_e_registry.entities) == 1

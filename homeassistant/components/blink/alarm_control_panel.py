@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
+from homeassistant.components.alarm_control_panel.const import SUPPORT_ALARM_ARM_AWAY
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     STATE_ALARM_ARMED_AWAY,
@@ -53,9 +54,14 @@ class BlinkSyncModule(AlarmControlPanel):
         return self._state
 
     @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_AWAY
+
+    @property
     def name(self):
         """Return the name of the panel."""
-        return "{} {}".format(BLINK_DATA, self._name)
+        return f"{BLINK_DATA} {self._name}"
 
     @property
     def device_state_attributes(self):

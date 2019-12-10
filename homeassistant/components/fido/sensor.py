@@ -7,28 +7,30 @@ https://www.fido.ca/pages/#/my-account/wireless
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.fido/
 """
-import logging
 from datetime import timedelta
+import logging
 
+from pyfido import FidoClient
+from pyfido.client import PyFidoError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_NAME,
     CONF_MONITORED_VARIABLES,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-KILOBITS = "Kb"  # type: str
-PRICE = "CAD"  # type: str
-MESSAGES = "messages"  # type: str
-MINUTES = "minutes"  # type: str
+KILOBITS = "Kb"
+PRICE = "CAD"
+MESSAGES = "messages"
+MINUTES = "minutes"
 
 DEFAULT_NAME = "Fido"
 
@@ -108,7 +110,7 @@ class FidoSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {} {}".format(self.client_name, self._number, self._name)
+        return f"{self.client_name} {self._number} {self._name}"
 
     @property
     def state(self):
@@ -147,7 +149,6 @@ class FidoData:
 
     def __init__(self, username, password, httpsession):
         """Initialize the data object."""
-        from pyfido import FidoClient
 
         self.client = FidoClient(username, password, REQUESTS_TIMEOUT, httpsession)
         self.data = {}
@@ -155,7 +156,6 @@ class FidoData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest data from Fido."""
-        from pyfido.client import PyFidoError
 
         try:
             await self.client.fetch_data()

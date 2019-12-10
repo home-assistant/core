@@ -1,23 +1,5 @@
 {
     "config": {
-        "abort": {
-            "few": "kilka",
-            "many": "wiele",
-            "one": "jeden",
-            "other": "inne"
-        },
-        "error": {
-            "few": "kilka",
-            "many": "wiele",
-            "one": "jeden",
-            "other": "inne"
-        },
-        "step": {
-            "few": "kilka",
-            "many": "wiele",
-            "one": "jeden",
-            "other": "inne"
-        },
         "title": "Arcam FMJ"
     }
 }

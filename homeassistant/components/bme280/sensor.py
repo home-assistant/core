@@ -3,11 +3,13 @@ from datetime import timedelta
 from functools import partial
 import logging
 
+from i2csense.bme280 import BME280  # pylint: disable=import-error
+import smbus  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, TEMP_FAHRENHEIT
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import TEMP_FAHRENHEIT, CONF_NAME, CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
@@ -76,8 +78,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the BME280 sensor."""
-    import smbus  # pylint: disable=import-error
-    from i2csense.bme280 import BME280  # pylint: disable=import-error
 
     SENSOR_TYPES[SENSOR_TEMP][1] = hass.config.units.temperature_unit
     name = config.get(CONF_NAME)
@@ -147,7 +147,7 @@ class BME280Sensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self.client_name, self._name)
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):

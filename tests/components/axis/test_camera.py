@@ -4,10 +4,8 @@ from unittest.mock import Mock
 
 from homeassistant import config_entries
 from homeassistant.components import axis
-from homeassistant.setup import async_setup_component
-
 import homeassistant.components.camera as camera
-
+from homeassistant.setup import async_setup_component
 
 ENTRY_CONFIG = {
     axis.CONF_DEVICE: {
@@ -41,6 +39,7 @@ async def setup_device(hass):
         ENTRY_CONFIG,
         "test",
         config_entries.CONN_CLASS_LOCAL_PUSH,
+        system_options={},
         options=ENTRY_OPTIONS,
     )
     device = axis.AxisNetworkDevice(hass, config_entry)

@@ -3,20 +3,21 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .common import (
-    async_discover_devices,
-    get_static_devices,
     ATTR_CONFIG,
     CONF_DIMMER,
     CONF_DISCOVERY,
     CONF_LIGHT,
+    CONF_STRIP,
     CONF_SWITCH,
     SmartDevices,
+    async_discover_devices,
+    get_static_devices,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,6 +35,9 @@ CONFIG_SCHEMA = vol.Schema(
                     cv.ensure_list, [TPLINK_HOST_SCHEMA]
                 ),
                 vol.Optional(CONF_SWITCH, default=[]): vol.All(
+                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
+                ),
+                vol.Optional(CONF_STRIP, default=[]): vol.All(
                     cv.ensure_list, [TPLINK_HOST_SCHEMA]
                 ),
                 vol.Optional(CONF_DIMMER, default=[]): vol.All(

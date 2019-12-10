@@ -5,8 +5,8 @@ from unittest.mock import patch
 
 from homeassistant.bootstrap import async_setup_component
 import homeassistant.util.dt as dt_util
-from tests.common import assert_setup_component, load_fixture
 
+from tests.common import assert_setup_component, load_fixture
 
 NOW = datetime(2016, 6, 9, 1, tzinfo=dt_util.UTC)
 

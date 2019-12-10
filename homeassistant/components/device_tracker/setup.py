@@ -1,27 +1,26 @@
 """Device tracker helpers."""
 import asyncio
-from typing import Dict, Any, Callable, Optional
 from types import ModuleType
+from typing import Any, Callable, Dict, Optional
 
 import attr
 
-from homeassistant.core import callback
-from homeassistant.setup import async_prepare_setup_platform
-from homeassistant.helpers import config_per_platform
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util import dt as dt_util
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
-
+from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_per_platform
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.setup import async_prepare_setup_platform
+from homeassistant.util import dt as dt_util
 
 from .const import (
-    DOMAIN,
-    PLATFORM_TYPE_LEGACY,
     CONF_SCAN_INTERVAL,
+    DOMAIN,
+    LOGGER,
+    PLATFORM_TYPE_LEGACY,
     SCAN_INTERVAL,
     SOURCE_TYPE_ROUTER,
-    LOGGER,
 )
 
 
@@ -147,7 +146,7 @@ def async_setup_scanner_platform(
     scanner.hass = hass
 
     # Initial scan of each mac we also tell about host name for config
-    seen = set()  # type: Any
+    seen: Any = set()
 
     async def async_device_tracker_scan(now: dt_util.dt.datetime):
         """Handle interval matches."""

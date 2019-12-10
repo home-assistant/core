@@ -4,17 +4,16 @@ import logging
 
 import aiohttp
 from aiohttp import hdrs
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_TIMEOUT,
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_URL,
-    CONF_PAYLOAD,
-    CONF_METHOD,
     CONF_HEADERS,
+    CONF_METHOD,
+    CONF_PASSWORD,
+    CONF_PAYLOAD,
+    CONF_TIMEOUT,
+    CONF_URL,
+    CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -28,7 +27,7 @@ DEFAULT_TIMEOUT = 10
 DEFAULT_METHOD = "get"
 DEFAULT_VERIFY_SSL = True
 
-SUPPORT_REST_METHODS = ["get", "post", "put", "delete"]
+SUPPORT_REST_METHODS = ["get", "patch", "post", "put", "delete"]
 
 CONF_CONTENT_TYPE = "content_type"
 
@@ -38,7 +37,7 @@ COMMAND_SCHEMA = vol.Schema(
         vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.All(
             vol.Lower, vol.In(SUPPORT_REST_METHODS)
         ),
-        vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
+        vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.template}),
         vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
         vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
         vol.Optional(CONF_PAYLOAD): cv.template,
@@ -76,15 +75,15 @@ async def async_setup(hass, config):
             template_payload = command_config[CONF_PAYLOAD]
             template_payload.hass = hass
 
-        headers = None
+        template_headers = None
         if CONF_HEADERS in command_config:
-            headers = command_config[CONF_HEADERS]
+            template_headers = command_config[CONF_HEADERS]
+            for template_header in template_headers.values():
+                template_header.hass = hass
 
+        content_type = None
         if CONF_CONTENT_TYPE in command_config:
             content_type = command_config[CONF_CONTENT_TYPE]
-            if headers is None:
-                headers = {}
-            headers[hdrs.CONTENT_TYPE] = content_type
 
         async def async_service_handler(service):
             """Execute a shell command service."""
@@ -94,25 +93,48 @@ async def async_setup(hass, config):
                     template_payload.async_render(variables=service.data), "utf-8"
                 )
 
-            try:
-                with async_timeout.timeout(timeout):
-                    request = await getattr(websession, method)(
-                        template_url.async_render(variables=service.data),
-                        data=payload,
-                        auth=auth,
-                        headers=headers,
+            request_url = template_url.async_render(variables=service.data)
+
+            headers = None
+            if template_headers:
+                headers = {}
+                for header_name, template_header in template_headers.items():
+                    headers[header_name] = template_header.async_render(
+                        variables=service.data
                     )
 
-                if request.status < 400:
-                    _LOGGER.info("Success call %s.", request.url)
-                else:
-                    _LOGGER.warning("Error %d on call %s.", request.status, request.url)
+            if content_type:
+                if headers is None:
+                    headers = {}
+                headers[hdrs.CONTENT_TYPE] = content_type
+
+            try:
+                async with getattr(websession, method)(
+                    request_url,
+                    data=payload,
+                    auth=auth,
+                    headers=headers,
+                    timeout=timeout,
+                ) as response:
+
+                    if response.status < 400:
+                        _LOGGER.debug(
+                            "Success. Url: %s. Status code: %d.",
+                            response.url,
+                            response.status,
+                        )
+                    else:
+                        _LOGGER.warning(
+                            "Error. Url: %s. Status code %d.",
+                            response.url,
+                            response.status,
+                        )
 
             except asyncio.TimeoutError:
-                _LOGGER.warning("Timeout call %s.", request.url)
+                _LOGGER.warning("Timeout call %s.", response.url, exc_info=1)
 
             except aiohttp.ClientError:
-                _LOGGER.error("Client error %s.", request.url)
+                _LOGGER.error("Client error %s.", request_url, exc_info=1)
 
         # register services
         hass.services.async_register(DOMAIN, name, async_service_handler)

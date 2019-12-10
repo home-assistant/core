@@ -133,7 +133,7 @@ class BayesianBinarySensor(BinarySensorDevice):
                 to_observe.update(set([obs.get("entity_id")]))
             if "value_template" in obs:
                 to_observe.update(set(obs.get(CONF_VALUE_TEMPLATE).extract_entities()))
-        self.entity_obs = dict.fromkeys(to_observe, [])
+        self.entity_obs = {key: [] for key in to_observe}
 
         for ind, obs in enumerate(self._observations):
             obs["id"] = ind
@@ -250,7 +250,7 @@ class BayesianBinarySensor(BinarySensorDevice):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
-            ATTR_OBSERVATIONS: [val for val in self.current_obs.values()],
+            ATTR_OBSERVATIONS: list(self.current_obs.values()),
             ATTR_PROBABILITY: round(self.probability, 2),
             ATTR_PROBABILITY_THRESHOLD: self._probability_threshold,
         }

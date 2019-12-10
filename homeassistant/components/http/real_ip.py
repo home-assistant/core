@@ -8,6 +8,8 @@ from homeassistant.core import callback
 
 from .const import KEY_REAL_IP
 
+# mypy: allow-untyped-defs
+
 
 @callback
 def setup_real_ip(app, use_x_forwarded_for, trusted_proxies):

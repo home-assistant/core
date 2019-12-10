@@ -4,21 +4,22 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.loader import bind_hass
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.helpers.config_validation import (  # noqa
+from homeassistant.components import group
+from homeassistant.const import (
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_ON,
+)
+from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
-    ENTITY_SERVICE_SCHEMA,
 )
-from homeassistant.const import (
-    STATE_ON,
-    SERVICE_TURN_ON,
-    SERVICE_TURN_OFF,
-    SERVICE_TOGGLE,
-)
-from homeassistant.components import group
+from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.loader import bind_hass
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 DOMAIN = "switch"
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -65,17 +66,9 @@ async def async_setup(hass, config):
     )
     await component.async_setup(config)
 
-    component.async_register_entity_service(
-        SERVICE_TURN_OFF, ENTITY_SERVICE_SCHEMA, "async_turn_off"
-    )
-
-    component.async_register_entity_service(
-        SERVICE_TURN_ON, ENTITY_SERVICE_SCHEMA, "async_turn_on"
-    )
-
-    component.async_register_entity_service(
-        SERVICE_TOGGLE, ENTITY_SERVICE_SCHEMA, "async_toggle"
-    )
+    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
+    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
+    component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
 
     return True
 

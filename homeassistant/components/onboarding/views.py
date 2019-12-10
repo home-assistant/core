@@ -8,12 +8,12 @@ from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import callback
 
 from .const import (
+    DEFAULT_AREAS,
     DOMAIN,
+    STEP_CORE_CONFIG,
+    STEP_INTEGRATION,
     STEP_USER,
     STEPS,
-    DEFAULT_AREAS,
-    STEP_INTEGRATION,
-    STEP_CORE_CONFIG,
 )
 
 
@@ -122,7 +122,7 @@ class UserOnboardingView(_BaseOnboardingView):
 
             for area in DEFAULT_AREAS:
                 area_registry.async_create(
-                    translations["component.onboarding.area.{}".format(area)]
+                    translations[f"component.onboarding.area.{area}"]
                 )
 
             await self._async_mark_done(hass)

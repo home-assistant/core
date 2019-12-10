@@ -5,24 +5,23 @@ from typing import Iterable, Optional
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import Context, State
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.loader import bind_hass
 
 from .const import (
     ATTR_AUX_HEAT,
+    ATTR_HUMIDITY,
+    ATTR_HVAC_MODE,
+    ATTR_PRESET_MODE,
+    ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    ATTR_PRESET_MODE,
-    ATTR_HVAC_MODE,
-    ATTR_SWING_MODE,
-    ATTR_HUMIDITY,
+    DOMAIN,
     HVAC_MODES,
     SERVICE_SET_AUX_HEAT,
-    SERVICE_SET_TEMPERATURE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_SWING_MODE,
     SERVICE_SET_HUMIDITY,
-    DOMAIN,
+    SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_PRESET_MODE,
+    SERVICE_SET_SWING_MODE,
+    SERVICE_SET_TEMPERATURE,
 )
 
 
@@ -69,7 +68,6 @@ async def _async_reproduce_states(
         await call_service(SERVICE_SET_HUMIDITY, [ATTR_HUMIDITY])
 
 
-@bind_hass
 async def async_reproduce_states(
     hass: HomeAssistantType, states: Iterable[State], context: Optional[Context] = None
 ) -> None:

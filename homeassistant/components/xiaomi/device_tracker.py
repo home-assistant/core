@@ -4,13 +4,13 @@ import logging
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN,
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -143,7 +143,7 @@ def _retrieve_list(host, token, **kwargs):
 
 def _get_token(host, username, password):
     """Get authentication token for the given host+username+password."""
-    url = "http://{}/cgi-bin/luci/api/xqsystem/login".format(host)
+    url = f"http://{host}/cgi-bin/luci/api/xqsystem/login"
     data = {"username": username, "password": password}
     try:
         res = requests.post(url, data=data, timeout=5)

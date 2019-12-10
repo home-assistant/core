@@ -2,13 +2,18 @@
 Device for Zigbee Home Automation.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zha/
+https://home-assistant.io/integrations/zha/
 """
 import asyncio
 from datetime import timedelta
 from enum import Enum
 import logging
 import time
+
+import zigpy.exceptions
+from zigpy.profiles import zha, zll
+import zigpy.quirks
+from zigpy.zcl.clusters.general import Groups
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
@@ -87,9 +92,7 @@ class ZHADevice(LogMixin):
         self._unsub = async_dispatcher_connect(
             self.hass, self._available_signal, self.async_initialize
         )
-        from zigpy.quirks import CustomDevice
-
-        self.quirk_applied = isinstance(self._zigpy_device, CustomDevice)
+        self.quirk_applied = isinstance(self._zigpy_device, zigpy.quirks.CustomDevice)
         self.quirk_class = "{}.{}".format(
             self._zigpy_device.__class__.__module__,
             self._zigpy_device.__class__.__name__,
@@ -102,7 +105,7 @@ class ZHADevice(LogMixin):
     @property
     def name(self):
         """Return device name."""
-        return "{} {}".format(self.manufacturer, self.model)
+        return f"{self.manufacturer} {self.model}"
 
     @property
     def ieee(self):
@@ -178,6 +181,17 @@ class ZHADevice(LogMixin):
         return self._zigpy_device.node_desc.is_end_device
 
     @property
+    def is_groupable(self):
+        """Return true if this device has a group cluster."""
+        if not self.available:
+            return False
+        clusters = self.async_get_clusters()
+        for cluster_map in clusters.values():
+            for clusters in cluster_map.values():
+                if Groups.cluster_id in clusters:
+                    return True
+
+    @property
     def gateway(self):
         """Return the gateway for this device."""
         return self._zha_gateway
@@ -186,6 +200,13 @@ class ZHADevice(LogMixin):
     def all_channels(self):
         """Return cluster channels and relay channels for device."""
         return self._all_channels
+
+    @property
+    def device_automation_triggers(self):
+        """Return the device automation triggers for this device."""
+        if hasattr(self._zigpy_device, "device_automation_triggers"):
+            return self._zigpy_device.device_automation_triggers
+        return None
 
     @property
     def available_signal(self):
@@ -341,7 +362,6 @@ class ZHADevice(LogMixin):
         zdo_task = None
         for channel in channels:
             if channel.name == CHANNEL_ZDO:
-                # pylint: disable=E1111
                 if zdo_task is None:  # We only want to do this once
                     zdo_task = self._async_create_task(
                         semaphore, channel, task_name, *args
@@ -366,8 +386,7 @@ class ZHADevice(LogMixin):
     @callback
     def async_unsub_dispatcher(self):
         """Unsubscribe the dispatcher."""
-        if self._unsub:
-            self._unsub()
+        self._unsub()
 
     @callback
     def async_update_last_seen(self, last_seen):
@@ -389,7 +408,6 @@ class ZHADevice(LogMixin):
     @callback
     def async_get_std_clusters(self):
         """Get ZHA and ZLL clusters for this device."""
-        from zigpy.profiles import zha, zll
 
         return {
             ep_id: {
@@ -443,8 +461,6 @@ class ZHADevice(LogMixin):
         if cluster is None:
             return None
 
-        from zigpy.exceptions import DeliveryError
-
         try:
             response = await cluster.write_attributes(
                 {attribute: value}, manufacturer=manufacturer
@@ -458,13 +474,13 @@ class ZHADevice(LogMixin):
                 response,
             )
             return response
-        except DeliveryError as exc:
+        except zigpy.exceptions.DeliveryError as exc:
             self.debug(
                 "failed to set attribute: %s %s %s %s %s",
-                "{}: {}".format(ATTR_VALUE, value),
-                "{}: {}".format(ATTR_ATTRIBUTE, attribute),
-                "{}: {}".format(ATTR_CLUSTER_ID, cluster_id),
-                "{}: {}".format(ATTR_ENDPOINT_ID, endpoint_id),
+                f"{ATTR_VALUE}: {value}",
+                f"{ATTR_ATTRIBUTE}: {attribute}",
+                f"{ATTR_CLUSTER_ID}: {cluster_id}",
+                f"{ATTR_ENDPOINT_ID}: {endpoint_id}",
                 exc,
             )
             return None
@@ -475,7 +491,7 @@ class ZHADevice(LogMixin):
         cluster_id,
         command,
         command_type,
-        args,
+        *args,
         cluster_type=CLUSTER_TYPE_IN,
         manufacturer=None,
     ):
@@ -483,7 +499,6 @@ class ZHADevice(LogMixin):
         cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
         if cluster is None:
             return None
-        response = None
         if command_type == CLUSTER_COMMAND_SERVER:
             response = await cluster.command(
                 command, *args, manufacturer=manufacturer, expect_reply=True
@@ -493,15 +508,23 @@ class ZHADevice(LogMixin):
 
         self.debug(
             "Issued cluster command: %s %s %s %s %s %s %s",
-            "{}: {}".format(ATTR_CLUSTER_ID, cluster_id),
-            "{}: {}".format(ATTR_COMMAND, command),
-            "{}: {}".format(ATTR_COMMAND_TYPE, command_type),
-            "{}: {}".format(ATTR_ARGS, args),
-            "{}: {}".format(ATTR_CLUSTER_ID, cluster_type),
-            "{}: {}".format(ATTR_MANUFACTURER, manufacturer),
-            "{}: {}".format(ATTR_ENDPOINT_ID, endpoint_id),
+            f"{ATTR_CLUSTER_ID}: {cluster_id}",
+            f"{ATTR_COMMAND}: {command}",
+            f"{ATTR_COMMAND_TYPE}: {command_type}",
+            f"{ATTR_ARGS}: {args}",
+            f"{ATTR_CLUSTER_ID}: {cluster_type}",
+            f"{ATTR_MANUFACTURER}: {manufacturer}",
+            f"{ATTR_ENDPOINT_ID}: {endpoint_id}",
         )
         return response
+
+    async def async_add_to_group(self, group_id):
+        """Add this device to the provided zigbee group."""
+        await self._zigpy_device.add_to_group(group_id)
+
+    async def async_remove_from_group(self, group_id):
+        """Remove this device from the provided zigbee group."""
+        await self._zigpy_device.remove_from_group(group_id)
 
     def log(self, level, msg, *args):
         """Log a message."""

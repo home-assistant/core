@@ -4,5 +4,34 @@ addwebhook:
     url:
       description: URL for which to add the webhook.
       example: https://yourdomain.com:443/api/webhook/webhook_id
+
 dropwebhook:
   description: Drop active webhooks.
+
+set_light_auto:
+  description: Set the camera (Presence only) light in automatic mode.
+  fields:
+    entity_id:
+      description: Entity id.
+      example: 'camera.living_room'
+
+set_light_on:
+  description: Set the camera (Netatmo Presence only) light on.
+  fields:
+    entity_id:
+      description: Entity id.
+      example: 'camera.living_room'
+
+set_light_off:
+  description: Set the camera (Netatmo Presence only) light off.
+  fields:
+    entity_id:
+      description: Entity id.
+      example: 'camera.living_room'
+
+set_schedule:
+  description: Set the home heating schedule
+  fields:
+    schedule:
+      description: Schedule name
+      example: Standard

@@ -22,5 +22,30 @@
             }
         },
         "title": "UniFi Krmilnik"
+    },
+    "options": {
+        "step": {
+            "device_tracker": {
+                "data": {
+                    "detection_time": "\u010cas v sekundah od zadnjega videnja na omre\u017eju do odsotnosti",
+                    "track_clients": "Sledite odjemalcem omre\u017eja",
+                    "track_devices": "Sledite omre\u017enim napravam (naprave Ubiquiti)",
+                    "track_wired_clients": "Vklju\u010dite kliente iz o\u017ei\u010denega omre\u017eja"
+                }
+            },
+            "init": {
+                "data": {
+                    "few": "NEKAJ",
+                    "one": "ENA",
+                    "other": "OSTALO",
+                    "two": "DVA"
+                }
+            },
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "Ustvarite senzorje porabe pasovne \u0161irine za omre\u017ene odjemalce"
+                }
+            }
+        }
     }
 }

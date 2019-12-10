@@ -1,8 +1,10 @@
 """Support for RainMachine devices."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
+from regenmaschine import login
+from regenmaschine.errors import RainMachineError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -10,12 +12,12 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_BINARY_SENSORS,
     CONF_IP_ADDRESS,
+    CONF_MONITORED_CONDITIONS,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_SSL,
-    CONF_MONITORED_CONDITIONS,
     CONF_SWITCHES,
 )
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -41,9 +43,9 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_LISTENER = "listener"
 
-PROGRAM_UPDATE_TOPIC = "{0}_program_update".format(DOMAIN)
-SENSOR_UPDATE_TOPIC = "{0}_data_update".format(DOMAIN)
-ZONE_UPDATE_TOPIC = "{0}_zone_update".format(DOMAIN)
+PROGRAM_UPDATE_TOPIC = f"{DOMAIN}_program_update"
+SENSOR_UPDATE_TOPIC = f"{DOMAIN}_data_update"
+ZONE_UPDATE_TOPIC = f"{DOMAIN}_zone_update"
 
 CONF_CONTROLLERS = "controllers"
 CONF_PROGRAM_ID = "program_id"
@@ -211,8 +213,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up RainMachine as config entry."""
-    from regenmaschine import login
-    from regenmaschine.errors import RainMachineError
 
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
@@ -351,8 +351,12 @@ async def async_unload_entry(hass, config_entry):
     remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(config_entry.entry_id)
     remove_listener()
 
-    for component in ("binary_sensor", "sensor", "switch"):
-        await hass.config_entries.async_forward_entry_unload(config_entry, component)
+    tasks = [
+        hass.config_entries.async_forward_entry_unload(config_entry, component)
+        for component in ("binary_sensor", "sensor", "switch")
+    ]
+
+    await asyncio.gather(*tasks)
 
     return True
 
@@ -373,7 +377,6 @@ class RainMachine:
 
     async def async_update(self):
         """Update sensor/binary sensor data."""
-        from regenmaschine.errors import RainMachineError
 
         tasks = {}
 

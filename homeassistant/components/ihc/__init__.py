@@ -2,6 +2,8 @@
 import logging
 import os.path
 
+from defusedxml import ElementTree
+from ihcsdk.ihccontroller import IHCController
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
@@ -61,7 +63,7 @@ def validate_name(config):
     if CONF_NAME in config:
         return config
     ihcid = config[CONF_ID]
-    name = "ihc_{}".format(ihcid)
+    name = f"ihc_{ihcid}"
     config[CONF_NAME] = name
     return config
 
@@ -214,7 +216,6 @@ def setup(hass, config):
 
 def ihc_setup(hass, config, conf, controller_id):
     """Set up the IHC component."""
-    from ihcsdk.ihccontroller import IHCController
 
     url = conf[CONF_URL]
     username = conf[CONF_USERNAME]
@@ -272,7 +273,6 @@ def autosetup_ihc_products(
     hass: HomeAssistantType, config, ihc_controller, controller_id
 ):
     """Auto setup of IHC products from the IHC project file."""
-    from defusedxml import ElementTree
 
     project_xml = ihc_controller.get_project()
     if not project_xml:
@@ -312,7 +312,7 @@ def get_discovery_info(component_setup, groups, controller_id):
                     if "setting" in node.attrib and node.attrib["setting"] == "yes":
                         continue
                     ihc_id = int(node.attrib["id"].strip("_"), 0)
-                    name = "{}_{}".format(groupname, ihc_id)
+                    name = f"{groupname}_{ihc_id}"
                     device = {
                         "ihc_id": ihc_id,
                         "ctrl_id": controller_id,

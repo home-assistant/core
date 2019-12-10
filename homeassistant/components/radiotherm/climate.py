@@ -1,32 +1,36 @@
 """Support for Radio Thermostat wifi-enabled home thermostats."""
-import datetime
 import logging
 
-import voluptuous as vol
 import radiotherm
+import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    FAN_OFF,
+    FAN_ON,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_FAN_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
     PRECISION_HALVES,
-    TEMP_FAHRENHEIT,
     STATE_ON,
+    TEMP_FAHRENHEIT,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_FAN = "fan"
-ATTR_MODE = "mode"
+ATTR_FAN_ACTION = "fan_action"
 
 CONF_HOLD_TEMP = "hold_temp"
 
@@ -55,11 +59,11 @@ FAN_MODE_TO_CODE = {v: k for k, v in CODE_TO_FAN_MODE.items()}
 
 # Active thermostat state (is it heating or cooling?).  In the future
 # this should probably made into heat and cool binary sensors.
-CODE_TO_TEMP_STATE = {0: HVAC_MODE_OFF, 1: HVAC_MODE_HEAT, 2: HVAC_MODE_COOL}
+CODE_TO_TEMP_STATE = {0: CURRENT_HVAC_IDLE, 1: CURRENT_HVAC_HEAT, 2: CURRENT_HVAC_COOL}
 
 # Active fan state.  This is if the fan is actually on or not.  In the
 # future this should probably made into a binary sensor for the fan.
-CODE_TO_FAN_STATE = {0: HVAC_MODE_OFF, 1: STATE_ON}
+CODE_TO_FAN_STATE = {0: FAN_OFF, 1: FAN_ON}
 
 
 def round_temp(temperature):
@@ -160,7 +164,7 @@ class RadioThermostat(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
-        return {ATTR_FAN: self._fstate, ATTR_MODE: self._tstate}
+        return {ATTR_FAN_ACTION: self._fstate}
 
     @property
     def fan_modes(self):
@@ -199,6 +203,13 @@ class RadioThermostat(ClimateDevice):
     def hvac_modes(self):
         """Return the operation modes list."""
         return OPERATION_LIST
+
+    @property
+    def hvac_action(self):
+        """Return the current running hvac operation if supported."""
+        if self.hvac_mode == HVAC_MODE_OFF:
+            return None
+        return self._tstate
 
     @property
     def target_temperature(self):
@@ -261,9 +272,9 @@ class RadioThermostat(ClimateDevice):
             # This doesn't really work - tstate is only set if the HVAC is
             # active. If it's idle, we don't know what to do with the target
             # temperature.
-            if self._tstate == HVAC_MODE_COOL:
+            if self._tstate == CURRENT_HVAC_COOL:
                 self._target_temperature = data["t_cool"]
-            elif self._tstate == HVAC_MODE_HEAT:
+            elif self._tstate == CURRENT_HVAC_HEAT:
                 self._target_temperature = data["t_heat"]
         else:
             self._current_operation = HVAC_MODE_OFF
@@ -281,9 +292,9 @@ class RadioThermostat(ClimateDevice):
         elif self._current_operation == HVAC_MODE_HEAT:
             self.device.t_heat = temperature
         elif self._current_operation == HVAC_MODE_AUTO:
-            if self._tstate == HVAC_MODE_COOL:
+            if self._tstate == CURRENT_HVAC_COOL:
                 self.device.t_cool = temperature
-            elif self._tstate == HVAC_MODE_HEAT:
+            elif self._tstate == CURRENT_HVAC_HEAT:
                 self.device.t_heat = temperature
 
         # Only change the hold if requested or if hold mode was turned
@@ -299,7 +310,7 @@ class RadioThermostat(ClimateDevice):
         """Set device time."""
         # Calling this clears any local temperature override and
         # reverts to the scheduled temperature.
-        now = datetime.datetime.now()
+        now = dt_util.now()
         self.device.time = {
             "day": now.weekday(),
             "hour": now.hour,

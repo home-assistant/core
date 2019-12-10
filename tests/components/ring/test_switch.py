@@ -1,7 +1,9 @@
 """The tests for the Ring switch platform."""
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from tests.common import load_fixture
+
 from .common import setup_platform
+
+from tests.common import load_fixture
 
 
 async def test_entity_registry(hass, requests_mock):
@@ -52,6 +54,7 @@ async def test_siren_can_be_turned_on(hass, requests_mock):
         "switch", "turn_on", {"entity_id": "switch.front_siren"}, blocking=True
     )
 
+    await hass.async_block_till_done()
     state = hass.states.get("switch.front_siren")
     assert state.state == "on"
 

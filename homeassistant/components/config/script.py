@@ -1,11 +1,10 @@
 """Provide configuration end points for scripts."""
 from homeassistant.components.script import DOMAIN, SCRIPT_ENTRY_SCHEMA
+from homeassistant.config import SCRIPT_CONFIG_PATH
 from homeassistant.const import SERVICE_RELOAD
 import homeassistant.helpers.config_validation as cv
 
 from . import EditKeyBasedConfigView
-
-CONFIG_PATH = "scripts.yaml"
 
 
 async def async_setup(hass):
@@ -19,7 +18,7 @@ async def async_setup(hass):
         EditKeyBasedConfigView(
             "script",
             "config",
-            CONFIG_PATH,
+            SCRIPT_CONFIG_PATH,
             cv.slug,
             SCRIPT_ENTRY_SCHEMA,
             post_write_hook=hook,

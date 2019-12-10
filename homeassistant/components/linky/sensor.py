@@ -3,10 +3,9 @@ from datetime import timedelta
 import json
 import logging
 
-from pylinky.client import DAILY, MONTHLY, YEARLY, LinkyClient, PyLinkyError
-import voluptuous as vol
+from pylinky.client import DAILY, MONTHLY, YEARLY, LinkyClient, PyLinkyException
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_PASSWORD,
@@ -14,10 +13,11 @@ from homeassistant.const import (
     CONF_USERNAME,
     ENERGY_KILO_WATT_HOUR,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import track_time_interval
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import HomeAssistantType
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,71 +29,54 @@ INDEX_CURRENT = -1
 INDEX_LAST = -2
 ATTRIBUTION = "Data provided by Enedis"
 
-DEFAULT_TIMEOUT = 10
-SENSORS = {
-    "yesterday": ("Linky yesterday", DAILY, INDEX_LAST),
-    "current_month": ("Linky current month", MONTHLY, INDEX_CURRENT),
-    "last_month": ("Linky last month", MONTHLY, INDEX_LAST),
-    "current_year": ("Linky current year", YEARLY, INDEX_CURRENT),
-    "last_year": ("Linky last year", YEARLY, INDEX_LAST),
-}
-SENSORS_INDEX_LABEL = 0
-SENSORS_INDEX_SCALE = 1
-SENSORS_INDEX_WHEN = 2
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    }
-)
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Old way of setting up the Linky platform."""
+    pass
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Configure the platform and add the Linky sensor."""
-    username = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
-    timeout = config[CONF_TIMEOUT]
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
+    """Add Linky entries."""
+    account = LinkyAccount(
+        entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], entry.data[CONF_TIMEOUT]
+    )
 
-    account = LinkyAccount(hass, add_entities, username, password, timeout)
-    add_entities(account.sensors, True)
+    await hass.async_add_executor_job(account.update_linky_data)
+
+    sensors = [
+        LinkySensor("Linky yesterday", account, DAILY, INDEX_LAST),
+        LinkySensor("Linky current month", account, MONTHLY, INDEX_CURRENT),
+        LinkySensor("Linky last month", account, MONTHLY, INDEX_LAST),
+        LinkySensor("Linky current year", account, YEARLY, INDEX_CURRENT),
+        LinkySensor("Linky last year", account, YEARLY, INDEX_LAST),
+    ]
+
+    async_track_time_interval(hass, account.update_linky_data, SCAN_INTERVAL)
+
+    async_add_entities(sensors, True)
 
 
 class LinkyAccount:
     """Representation of a Linky account."""
 
-    def __init__(self, hass, add_entities, username, password, timeout):
+    def __init__(self, username, password, timeout):
         """Initialise the Linky account."""
         self._username = username
-        self.__password = password
+        self._password = password
         self._timeout = timeout
         self._data = None
-        self.sensors = []
 
-        self.update_linky_data(dt_util.utcnow())
-
-        self.sensors.append(LinkySensor("Linky yesterday", self, DAILY, INDEX_LAST))
-        self.sensors.append(
-            LinkySensor("Linky current month", self, MONTHLY, INDEX_CURRENT)
-        )
-        self.sensors.append(LinkySensor("Linky last month", self, MONTHLY, INDEX_LAST))
-        self.sensors.append(
-            LinkySensor("Linky current year", self, YEARLY, INDEX_CURRENT)
-        )
-        self.sensors.append(LinkySensor("Linky last year", self, YEARLY, INDEX_LAST))
-
-        track_time_interval(hass, self.update_linky_data, SCAN_INTERVAL)
-
-    def update_linky_data(self, event_time):
+    def update_linky_data(self, event_time=None):
         """Fetch new state data for the sensor."""
-        client = LinkyClient(self._username, self.__password, None, self._timeout)
+        client = LinkyClient(self._username, self._password, None, self._timeout)
         try:
             client.login()
             client.fetch_data()
             self._data = client.get_data()
             _LOGGER.debug(json.dumps(self._data, indent=2))
-        except PyLinkyError as exp:
+        except PyLinkyException as exp:
             _LOGGER.error(exp)
         finally:
             client.close_session()
@@ -115,12 +98,18 @@ class LinkySensor(Entity):
     def __init__(self, name, account: LinkyAccount, scale, when):
         """Initialize the sensor."""
         self._name = name
-        self.__account = account
+        self._account = account
         self._scale = scale
-        self.__when = when
+        self._when = when
         self._username = account.username
-        self.__time = None
-        self.__consumption = None
+        self._time = None
+        self._consumption = None
+        self._unique_id = f"{self._username}_{scale}_{when}"
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def name(self):
@@ -130,7 +119,7 @@ class LinkySensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.__consumption
+        return self._consumption
 
     @property
     def unit_of_measurement(self):
@@ -147,18 +136,27 @@ class LinkySensor(Entity):
         """Return the state attributes of the sensor."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            "time": self.__time,
+            "time": self._time,
             CONF_USERNAME: self._username,
         }
 
-    def update(self):
+    @property
+    def device_info(self):
+        """Return device information."""
+        return {
+            "identifiers": {(DOMAIN, self._username)},
+            "name": "Linky meter",
+            "manufacturer": "Enedis",
+        }
+
+    async def async_update(self) -> None:
         """Retrieve the new data for the sensor."""
-        data = self.__account.data[self._scale][self.__when]
-        self.__consumption = data[CONSUMPTION]
-        self.__time = data[TIME]
+        data = self._account.data[self._scale][self._when]
+        self._consumption = data[CONSUMPTION]
+        self._time = data[TIME]
 
         if self._scale is not YEARLY:
             year_index = INDEX_CURRENT
-            if self.__time.endswith("Dec"):
+            if self._time.endswith("Dec"):
                 year_index = INDEX_LAST
-            self.__time += " " + self.__account.data[YEARLY][year_index][TIME]
+            self._time += " " + self._account.data[YEARLY][year_index][TIME]

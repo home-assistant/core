@@ -1,7 +1,7 @@
 {
   "domain": "bt_home_hub_5",
   "name": "Bt home hub 5",
-  "documentation": "https://www.home-assistant.io/components/bt_home_hub_5",
+  "documentation": "https://www.home-assistant.io/integrations/bt_home_hub_5",
   "requirements": [
     "bthomehub5-devicelist==0.1.1"
   ],

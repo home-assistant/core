@@ -1,9 +1,10 @@
 """Support to interface with the Emby API."""
 import logging
 
+from pyemby import EmbyServer
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MOVIE,
@@ -70,7 +71,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Emby platform."""
-    from pyemby import EmbyServer
 
     host = config.get(CONF_HOST)
     key = config.get(CONF_API_KEY)
@@ -209,8 +209,7 @@ class EmbyDevice(MediaPlayerDevice):
     def name(self):
         """Return the name of the device."""
         return (
-            "Emby - {} - {}".format(self.device.client, self.device.name)
-            or DEVICE_DEFAULT_NAME
+            f"Emby - {self.device.client} - {self.device.name}" or DEVICE_DEFAULT_NAME
         )
 
     @property

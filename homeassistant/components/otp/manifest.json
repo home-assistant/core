@@ -1,9 +1,9 @@
 {
   "domain": "otp",
   "name": "Otp",
-  "documentation": "https://www.home-assistant.io/components/otp",
+  "documentation": "https://www.home-assistant.io/integrations/otp",
   "requirements": [
-    "pyotp==2.2.7"
+    "pyotp==2.3.0"
   ],
   "dependencies": [],
   "codeowners": []

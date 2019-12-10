@@ -9,6 +9,7 @@ set_aux_heat:
     aux_heat:
       description: New value of axillary heater.
       example: true
+
 set_preset_mode:
   description: Set preset mode for climate device.
   fields:
@@ -18,6 +19,7 @@ set_preset_mode:
     preset_mode:
       description: New value of preset mode
       example: 'away'
+
 set_temperature:
   description: Set target temperature of climate device.
   fields:
@@ -36,6 +38,7 @@ set_temperature:
     hvac_mode:
       description: HVAC operation mode to set temperature to.
       example: 'heat'
+
 set_humidity:
   description: Set target humidity of climate device.
   fields:
@@ -45,6 +48,7 @@ set_humidity:
     humidity:
       description: New target humidity for climate device.
       example: 60
+
 set_fan_mode:
   description: Set fan operation for climate device.
   fields:
@@ -54,6 +58,7 @@ set_fan_mode:
     fan_mode:
       description: New value of fan mode.
       example: On Low
+
 set_hvac_mode:
   description: Set HVAC operation mode for climate device.
   fields:
@@ -63,6 +68,7 @@ set_hvac_mode:
     hvac_mode:
       description: New value of operation mode.
       example: heat
+
 set_swing_mode:
   description: Set swing operation for climate device.
   fields:
@@ -71,49 +77,6 @@ set_swing_mode:
       example: 'climate.nest'
     swing_mode:
       description: New value of swing mode.
-
-ecobee_set_fan_min_on_time:
-  description: Set the minimum fan on time.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.kitchen'
-    fan_min_on_time:
-      description: New value of fan min on time.
-      example: 5
-
-ecobee_resume_program:
-  description: Resume the programmed schedule.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.kitchen'
-    resume_all:
-      description: Resume all events and return to the scheduled program. This default to false which removes only the top event.
-      example: true
-
-mill_set_room_temperature:
-  description: Set Mill room temperatures.
-  fields:
-    room_name:
-      description: Name of room to change.
-      example: 'kitchen'
-    away_temp:
-      description: Away temp.
-      example: 12
-    comfort_temp:
-      description: Comfort temp.
-      example: 22
-    sleep_temp:
-      description: Sleep temp.
-      example: 17
-
-nuheat_resume_program:
-  description: Resume the programmed schedule.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: 'climate.kitchen'
 
 turn_on:
   description: Turn climate device on.

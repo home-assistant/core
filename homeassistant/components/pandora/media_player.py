@@ -6,6 +6,8 @@ import re
 import shutil
 import signal
 
+import pexpect
+
 from homeassistant import util
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
@@ -104,8 +106,6 @@ class PandoraMediaPlayer(MediaPlayerDevice):
 
     def turn_on(self):
         """Turn the media player on."""
-        import pexpect
-
         if self._player_state != STATE_OFF:
             return
         self._pianobar = pexpect.spawn("pianobar")
@@ -136,8 +136,6 @@ class PandoraMediaPlayer(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn the media player off."""
-        import pexpect
-
         if self._pianobar is None:
             _LOGGER.info("Pianobar subprocess already stopped")
             return
@@ -220,14 +218,12 @@ class PandoraMediaPlayer(MediaPlayerDevice):
             return
         _LOGGER.debug("Setting station %s, %d", source, station_index)
         self._send_station_list_command()
-        self._pianobar.sendline("{}".format(station_index))
+        self._pianobar.sendline(f"{station_index}")
         self._pianobar.expect("\r\n")
         self._player_state = STATE_PLAYING
 
     def _send_station_list_command(self):
         """Send a station list command."""
-        import pexpect
-
         self._pianobar.send("s")
         try:
             self._pianobar.expect("Select station:", timeout=1)
@@ -248,8 +244,6 @@ class PandoraMediaPlayer(MediaPlayerDevice):
 
     def _query_for_playing_status(self):
         """Query system for info about current track."""
-        import pexpect
-
         self._clear_buffer()
         self._pianobar.send("i")
         try:
@@ -372,8 +366,6 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         This is necessary because there are a bunch of 00:00 in the buffer
 
         """
-        import pexpect
-
         try:
             while not self._pianobar.expect(".+", timeout=0.1):
                 pass

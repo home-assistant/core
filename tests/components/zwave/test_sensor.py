@@ -2,7 +2,7 @@
 from homeassistant.components.zwave import const, sensor
 import homeassistant.const
 
-from tests.mock.zwave import MockNode, MockValue, MockEntityValues, value_changed
+from tests.mock.zwave import MockEntityValues, MockNode, MockValue, value_changed
 
 
 def test_get_device_detects_none(mock_openzwave):
@@ -51,6 +51,23 @@ def test_get_device_detects_multilevel_meter(mock_openzwave):
 
     device = sensor.get_device(node=node, values=values, node_config={})
     assert isinstance(device, sensor.ZWaveMultilevelSensor)
+
+
+def test_get_device_detects_battery_sensor(mock_openzwave):
+    """Test get_device returns a Z-Wave battery sensor."""
+
+    node = MockNode(command_classes=[const.COMMAND_CLASS_BATTERY])
+    value = MockValue(
+        data=0,
+        node=node,
+        type=const.TYPE_DECIMAL,
+        command_class=const.COMMAND_CLASS_BATTERY,
+    )
+    values = MockEntityValues(primary=value)
+
+    device = sensor.get_device(node=node, values=values, node_config={})
+    assert isinstance(device, sensor.ZWaveBatterySensor)
+    assert device.device_class == homeassistant.const.DEVICE_CLASS_BATTERY
 
 
 def test_multilevelsensor_value_changed_temp_fahrenheit(mock_openzwave):

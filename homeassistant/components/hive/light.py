@@ -10,32 +10,28 @@ from homeassistant.components.light import (
 )
 import homeassistant.util.color as color_util
 
-from . import DATA_HIVE, DOMAIN
+from . import DATA_HIVE, DOMAIN, HiveEntity, refresh_system
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Hive light devices."""
     if discovery_info is None:
         return
+
     session = hass.data.get(DATA_HIVE)
+    devs = []
+    for dev in discovery_info:
+        devs.append(HiveDeviceLight(session, dev))
+    add_entities(devs)
 
-    add_entities([HiveDeviceLight(session, discovery_info)])
 
-
-class HiveDeviceLight(Light):
+class HiveDeviceLight(HiveEntity, Light):
     """Hive Active Light Device."""
 
-    def __init__(self, hivesession, hivedevice):
+    def __init__(self, hive_session, hive_device):
         """Initialize the Light device."""
-        self.node_id = hivedevice["Hive_NodeID"]
-        self.node_name = hivedevice["Hive_NodeName"]
-        self.device_type = hivedevice["HA_DeviceType"]
-        self.light_device_type = hivedevice["Hive_Light_DeviceType"]
-        self.session = hivesession
-        self.attributes = {}
-        self.data_updatesource = "{}.{}".format(self.device_type, self.node_id)
-        self._unique_id = "{}-{}".format(self.node_id, self.device_type)
-        self.session.entities.append(self)
+        super().__init__(hive_session, hive_device)
+        self.light_device_type = hive_device["Hive_Light_DeviceType"]
 
     @property
     def unique_id(self):
@@ -46,11 +42,6 @@ class HiveDeviceLight(Light):
     def device_info(self):
         """Return device information."""
         return {"identifiers": {(DOMAIN, self.unique_id)}, "name": self.name}
-
-    def handle_update(self, updatesource):
-        """Handle the new update request."""
-        if "{}.{}".format(self.device_type, self.node_id) not in updatesource:
-            self.schedule_update_ha_state()
 
     @property
     def name(self):
@@ -106,6 +97,7 @@ class HiveDeviceLight(Light):
         """Return true if light is on."""
         return self.session.light.get_state(self.node_id)
 
+    @refresh_system
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
         new_brightness = None
@@ -134,14 +126,10 @@ class HiveDeviceLight(Light):
             new_color,
         )
 
-        for entity in self.session.entities:
-            entity.handle_update(self.data_updatesource)
-
+    @refresh_system
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
         self.session.light.turn_off(self.node_id)
-        for entity in self.session.entities:
-            entity.handle_update(self.data_updatesource)
 
     @property
     def supported_features(self):

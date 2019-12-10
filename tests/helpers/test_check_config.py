@@ -1,13 +1,13 @@
 """Test check_config helper."""
 import logging
-import os  # noqa: F401 pylint: disable=unused-import
 from unittest.mock import patch
 
-from homeassistant.helpers.check_config import (
-    async_check_ha_config_file,
-    CheckConfigError,
-)
 from homeassistant.config import YAML_CONFIG_FILE
+from homeassistant.helpers.check_config import (
+    CheckConfigError,
+    async_check_ha_config_file,
+)
+
 from tests.common import patch_yaml_files
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,7 +75,7 @@ async def test_component_platform_not_found(hass, loop):
 
         assert res.keys() == {"homeassistant"}
         assert res.errors[0] == CheckConfigError(
-            "Integration not found: beer", None, None
+            "Component error: beer - Integration 'beer' not found.", None, None
         )
 
         # Only 1 error expected
@@ -95,9 +95,7 @@ async def test_component_platform_not_found_2(hass, loop):
         assert res["light"] == []
 
         assert res.errors[0] == CheckConfigError(
-            "Integration beer not found when trying to verify its " "light platform.",
-            None,
-            None,
+            "Platform error light.beer - Integration 'beer' not found.", None, None
         )
 
         # Only 1 error expected

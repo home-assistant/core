@@ -4,8 +4,7 @@ from datetime import timedelta
 import logging
 
 from pyiqvia import Client
-from pyiqvia.errors import IQVIAError, InvalidZipError
-
+from pyiqvia.errors import InvalidZipError, IQVIAError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -234,7 +233,7 @@ class IQVIAEntity(Entity):
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        return "{0}_{1}".format(self._zip_code, self._type)
+        return f"{self._zip_code}_{self._type}"
 
     @property
     def unit_of_measurement(self):

@@ -1,24 +1,25 @@
 """Sensor to monitor incoming/outgoing phone calls on a Fritz!Box router."""
+import datetime
 import logging
+import re
 import socket
 import threading
-import datetime
 import time
-import re
 
+import fritzconnection as fc  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST,
-    CONF_PORT,
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_PORT,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,6 +60,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Fritz!Box call monitor sensor platform."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
+    # Try to resolve a hostname; if it is already an IP, it will be returned as-is
+    try:
+        host = socket.gethostbyname(host)
+    except socket.error:
+        _LOGGER.error("Could not resolve hostname %s", host)
+        return
     port = config.get(CONF_PORT)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -247,8 +254,6 @@ class FritzBoxPhonebook:
         self.phonebook_dict = None
         self.number_dict = None
         self.prefixes = prefixes or []
-
-        import fritzconnection as fc  # pylint: disable=import-error
 
         # Establish a connection to the FRITZ!Box.
         self.fph = fc.FritzPhonebook(

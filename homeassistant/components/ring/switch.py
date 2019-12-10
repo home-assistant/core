@@ -1,9 +1,11 @@
 """This component provides HA switch support for Ring Door Bell/Chimes."""
+from datetime import timedelta
 import logging
-from datetime import datetime, timedelta
+
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+import homeassistant.util.dt as dt_util
 
 from . import DATA_RING_STICKUP_CAMS, SIGNAL_UPDATE_RING
 
@@ -38,7 +40,7 @@ class BaseRingSwitch(SwitchDevice):
         """Initialize the switch."""
         self._device = device
         self._device_type = device_type
-        self._unique_id = "{}-{}".format(self._device.id, self._device_type)
+        self._unique_id = f"{self._device.id}-{self._device_type}"
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -53,7 +55,7 @@ class BaseRingSwitch(SwitchDevice):
     @property
     def name(self):
         """Name of the device."""
-        return "{} {}".format(self._device.name, self._device_type)
+        return f"{self._device.name} {self._device_type}"
 
     @property
     def unique_id(self):
@@ -72,14 +74,14 @@ class SirenSwitch(BaseRingSwitch):
     def __init__(self, device):
         """Initialize the switch for a device with a siren."""
         super().__init__(device, "siren")
-        self._no_updates_until = datetime.now()
+        self._no_updates_until = dt_util.utcnow()
         self._siren_on = False
 
     def _set_switch(self, new_state):
         """Update switch state, and causes HASS to correctly update."""
         self._device.siren = new_state
         self._siren_on = new_state > 0
-        self._no_updates_until = datetime.now() + SKIP_UPDATES_DELAY
+        self._no_updates_until = dt_util.utcnow() + SKIP_UPDATES_DELAY
         self.schedule_update_ha_state()
 
     @property
@@ -102,7 +104,7 @@ class SirenSwitch(BaseRingSwitch):
 
     def update(self):
         """Update state of the siren."""
-        if self._no_updates_until > datetime.now():
+        if self._no_updates_until > dt_util.utcnow():
             _LOGGER.debug("Skipping update...")
             return
         self._siren_on = self._device.siren > 0

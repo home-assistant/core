@@ -8,10 +8,10 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
-    HVAC_MODE_OFF,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
@@ -156,7 +156,9 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateDevice):
                 (set_req.V_HVAC_SETPOINT_COOL, high),
             ]
         for value_type, value in updates:
-            self.gateway.set_child_value(self.node_id, self.child_id, value_type, value)
+            self.gateway.set_child_value(
+                self.node_id, self.child_id, value_type, value, ack=1
+            )
             if self.gateway.optimistic:
                 # Optimistically assume that device has changed state
                 self._values[value_type] = value
@@ -166,7 +168,7 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateDevice):
         """Set new target temperature."""
         set_req = self.gateway.const.SetReq
         self.gateway.set_child_value(
-            self.node_id, self.child_id, set_req.V_HVAC_SPEED, fan_mode
+            self.node_id, self.child_id, set_req.V_HVAC_SPEED, fan_mode, ack=1
         )
         if self.gateway.optimistic:
             # Optimistically assume that device has changed state
@@ -176,7 +178,11 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateDevice):
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target temperature."""
         self.gateway.set_child_value(
-            self.node_id, self.child_id, self.value_type, DICT_HA_TO_MYS[hvac_mode]
+            self.node_id,
+            self.child_id,
+            self.value_type,
+            DICT_HA_TO_MYS[hvac_mode],
+            ack=1,
         )
         if self.gateway.optimistic:
             # Optimistically assume that device has changed state

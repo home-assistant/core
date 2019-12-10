@@ -1,13 +1,13 @@
 """Merging of policies."""
-from typing import cast, Dict, List, Set  # noqa: F401
+from typing import Dict, List, Set, cast
 
-from .types import PolicyType, CategoryType
+from .types import CategoryType, PolicyType
 
 
 def merge_policies(policies: List[PolicyType]) -> PolicyType:
     """Merge policies."""
-    new_policy = {}  # type: Dict[str, CategoryType]
-    seen = set()  # type: Set[str]
+    new_policy: Dict[str, CategoryType] = {}
+    seen: Set[str] = set()
     for policy in policies:
         for category in policy:
             if category in seen:
@@ -33,8 +33,8 @@ def _merge_policies(sources: List[CategoryType]) -> CategoryType:
     # If there are multiple sources with a dict as policy, we recursively
     # merge each key in the source.
 
-    policy = None  # type: CategoryType
-    seen = set()  # type: Set[str]
+    policy: CategoryType = None
+    seen: Set[str] = set()
     for source in sources:
         if source is None:
             continue

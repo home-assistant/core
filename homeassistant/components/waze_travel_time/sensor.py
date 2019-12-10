@@ -3,21 +3,22 @@ from datetime import timedelta
 import logging
 import re
 
+import WazeRouteCalculator
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    CONF_NAME,
-    CONF_REGION,
-    EVENT_HOMEASSISTANT_START,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    CONF_UNIT_SYSTEM_METRIC,
+    CONF_NAME,
+    CONF_REGION,
     CONF_UNIT_SYSTEM_IMPERIAL,
+    CONF_UNIT_SYSTEM_METRIC,
+    EVENT_HOMEASSISTANT_START,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import location
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,10 +38,16 @@ CONF_EXCL_FILTER = "excl_filter"
 CONF_REALTIME = "realtime"
 CONF_UNITS = "units"
 CONF_VEHICLE_TYPE = "vehicle_type"
+CONF_AVOID_TOLL_ROADS = "avoid_toll_roads"
+CONF_AVOID_SUBSCRIPTION_ROADS = "avoid_subscription_roads"
+CONF_AVOID_FERRIES = "avoid_ferries"
 
 DEFAULT_NAME = "Waze Travel Time"
 DEFAULT_REALTIME = True
 DEFAULT_VEHICLE_TYPE = "car"
+DEFAULT_AVOID_TOLL_ROADS = False
+DEFAULT_AVOID_SUBSCRIPTION_ROADS = False
+DEFAULT_AVOID_FERRIES = False
 
 ICON = "mdi:car"
 
@@ -64,6 +71,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             VEHICLE_TYPES
         ),
         vol.Optional(CONF_UNITS): vol.In(UNITS),
+        vol.Optional(
+            CONF_AVOID_TOLL_ROADS, default=DEFAULT_AVOID_TOLL_ROADS
+        ): cv.boolean,
+        vol.Optional(
+            CONF_AVOID_SUBSCRIPTION_ROADS, default=DEFAULT_AVOID_SUBSCRIPTION_ROADS
+        ): cv.boolean,
+        vol.Optional(CONF_AVOID_FERRIES, default=DEFAULT_AVOID_FERRIES): cv.boolean,
     }
 )
 
@@ -78,10 +92,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     excl_filter = config.get(CONF_EXCL_FILTER)
     realtime = config.get(CONF_REALTIME)
     vehicle_type = config.get(CONF_VEHICLE_TYPE)
+    avoid_toll_roads = config.get(CONF_AVOID_TOLL_ROADS)
+    avoid_subscription_roads = config.get(CONF_AVOID_SUBSCRIPTION_ROADS)
+    avoid_ferries = config.get(CONF_AVOID_FERRIES)
     units = config.get(CONF_UNITS, hass.config.units.name)
 
     data = WazeTravelTimeData(
-        None, None, region, incl_filter, excl_filter, realtime, units, vehicle_type
+        None,
+        None,
+        region,
+        incl_filter,
+        excl_filter,
+        realtime,
+        units,
+        vehicle_type,
+        avoid_toll_roads,
+        avoid_subscription_roads,
+        avoid_ferries,
     )
 
     sensor = WazeTravelTime(name, origin, destination, data)
@@ -175,7 +202,7 @@ class WazeTravelTime(Entity):
             return _get_location_from_attributes(state)
 
         # Check if device is inside a zone.
-        zone_state = self.hass.states.get("zone.{}".format(state.state))
+        zone_state = self.hass.states.get(f"zone.{state.state}")
         if location.has_location(zone_state):
             _LOGGER.debug(
                 "%s is in %s, getting zone location", entity_id, zone_state.entity_id
@@ -235,9 +262,11 @@ class WazeTravelTimeData:
         realtime,
         units,
         vehicle_type,
+        avoid_toll_roads,
+        avoid_subscription_roads,
+        avoid_ferries,
     ):
         """Set up WazeRouteCalculator."""
-        import WazeRouteCalculator
 
         self._calc = WazeRouteCalculator
 
@@ -251,6 +280,9 @@ class WazeTravelTimeData:
         self.duration = None
         self.distance = None
         self.route = None
+        self.avoid_toll_roads = avoid_toll_roads
+        self.avoid_subscription_roads = avoid_subscription_roads
+        self.avoid_ferries = avoid_ferries
 
         # Currently WazeRouteCalc only supports PRIVATE, TAXI, MOTORCYCLE.
         if vehicle_type.upper() == "CAR":
@@ -268,7 +300,9 @@ class WazeTravelTimeData:
                     self.destination,
                     self.region,
                     self.vehicle_type,
-                    log_lvl=logging.DEBUG,
+                    self.avoid_toll_roads,
+                    self.avoid_subscription_roads,
+                    self.avoid_ferries,
                 )
                 routes = params.calc_all_routes_info(real_time=self.realtime)
 
@@ -286,7 +320,7 @@ class WazeTravelTimeData:
                         if self.exclude.lower() not in k.lower()
                     }
 
-                route = sorted(routes, key=(lambda key: routes[key][0]))[0]
+                route = list(routes)[0]
 
                 self.duration, distance = routes[route]
 

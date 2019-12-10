@@ -1,7 +1,7 @@
 """Support for displaying persistent notifications."""
 from collections import OrderedDict
 import logging
-from typing import Awaitable
+from typing import Any, Mapping, MutableMapping, Optional
 
 import voluptuous as vol
 
@@ -13,6 +13,8 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
+
+# mypy: allow-untyped-calls, allow-untyped-defs
 
 ATTR_CREATED_AT = "created_at"
 ATTR_MESSAGE = "message"
@@ -49,11 +51,6 @@ STATE = "notifying"
 STATUS_UNREAD = "unread"
 STATUS_READ = "read"
 
-WS_TYPE_GET_NOTIFICATIONS = "persistent_notification/get"
-SCHEMA_WS_GET = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_GET_NOTIFICATIONS}
-)
-
 
 @bind_hass
 def create(hass, message, title=None, notification_id=None):
@@ -70,7 +67,10 @@ def dismiss(hass, notification_id):
 @callback
 @bind_hass
 def async_create(
-    hass: HomeAssistant, message: str, title: str = None, notification_id: str = None
+    hass: HomeAssistant,
+    message: str,
+    title: Optional[str] = None,
+    notification_id: Optional[str] = None,
 ) -> None:
     """Generate a notification."""
     data = {
@@ -95,9 +95,9 @@ def async_dismiss(hass: HomeAssistant, notification_id: str) -> None:
     hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_DISMISS, data))
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the persistent notification component."""
-    persistent_notifications = OrderedDict()
+    persistent_notifications: MutableMapping[str, MutableMapping] = OrderedDict()
     hass.data[DOMAIN] = {"notifications": persistent_notifications}
 
     @callback
@@ -192,17 +192,18 @@ async def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
         DOMAIN, SERVICE_MARK_READ, mark_read_service, SCHEMA_SERVICE_MARK_READ
     )
 
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_GET_NOTIFICATIONS, websocket_get_notifications, SCHEMA_WS_GET
-    )
+    hass.components.websocket_api.async_register_command(websocket_get_notifications)
 
     return True
 
 
 @callback
+@websocket_api.websocket_command({vol.Required("type"): "persistent_notification/get"})
 def websocket_get_notifications(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg
-):
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: Mapping[str, Any],
+) -> None:
     """Return a list of persistent_notifications."""
     connection.send_message(
         websocket_api.result_message(

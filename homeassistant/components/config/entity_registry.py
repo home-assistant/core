@@ -1,61 +1,28 @@
 """HTTP views to interact with the entity registry."""
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.components.websocket_api.decorators import (
     async_response,
     require_admin,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-
-WS_TYPE_LIST = "config/entity_registry/list"
-SCHEMA_WS_LIST = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_LIST}
-)
-
-WS_TYPE_GET = "config/entity_registry/get"
-SCHEMA_WS_GET = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_GET, vol.Required("entity_id"): cv.entity_id}
-)
-
-WS_TYPE_UPDATE = "config/entity_registry/update"
-SCHEMA_WS_UPDATE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_UPDATE,
-        vol.Required("entity_id"): cv.entity_id,
-        # If passed in, we update value. Passing None will remove old value.
-        vol.Optional("name"): vol.Any(str, None),
-        vol.Optional("new_entity_id"): str,
-    }
-)
-
-WS_TYPE_REMOVE = "config/entity_registry/remove"
-SCHEMA_WS_REMOVE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_REMOVE, vol.Required("entity_id"): cv.entity_id}
-)
+from homeassistant.helpers.entity_registry import async_get_registry
 
 
 async def async_setup(hass):
     """Enable the Entity Registry views."""
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_LIST, websocket_list_entities, SCHEMA_WS_LIST
-    )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_GET, websocket_get_entity, SCHEMA_WS_GET
-    )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_UPDATE, websocket_update_entity, SCHEMA_WS_UPDATE
-    )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_REMOVE, websocket_remove_entity, SCHEMA_WS_REMOVE
-    )
+    hass.components.websocket_api.async_register_command(websocket_list_entities)
+    hass.components.websocket_api.async_register_command(websocket_get_entity)
+    hass.components.websocket_api.async_register_command(websocket_update_entity)
+    hass.components.websocket_api.async_register_command(websocket_remove_entity)
     return True
 
 
 @async_response
+@websocket_api.websocket_command({vol.Required("type"): "config/entity_registry/list"})
 async def websocket_list_entities(hass, connection, msg):
     """Handle list registry entries command.
 
@@ -70,6 +37,12 @@ async def websocket_list_entities(hass, connection, msg):
 
 
 @async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "config/entity_registry/get",
+        vol.Required("entity_id"): cv.entity_id,
+    }
+)
 async def websocket_get_entity(hass, connection, msg):
     """Handle get entity registry entry command.
 
@@ -89,6 +62,17 @@ async def websocket_get_entity(hass, connection, msg):
 
 @require_admin
 @async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "config/entity_registry/update",
+        vol.Required("entity_id"): cv.entity_id,
+        # If passed in, we update value. Passing None will remove old value.
+        vol.Optional("name"): vol.Any(str, None),
+        vol.Optional("new_entity_id"): str,
+        # We only allow setting disabled_by user via API.
+        vol.Optional("disabled_by"): vol.Any("user", None),
+    }
+)
 async def websocket_update_entity(hass, connection, msg):
     """Handle update entity websocket command.
 
@@ -106,6 +90,9 @@ async def websocket_update_entity(hass, connection, msg):
 
     if "name" in msg:
         changes["name"] = msg["name"]
+
+    if "disabled_by" in msg:
+        changes["disabled_by"] = msg["disabled_by"]
 
     if "new_entity_id" in msg and msg["new_entity_id"] != msg["entity_id"]:
         changes["new_entity_id"] = msg["new_entity_id"]
@@ -132,6 +119,12 @@ async def websocket_update_entity(hass, connection, msg):
 
 @require_admin
 @async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "config/entity_registry/remove",
+        vol.Required("entity_id"): cv.entity_id,
+    }
+)
 async def websocket_remove_entity(hass, connection, msg):
     """Handle remove entity websocket command.
 

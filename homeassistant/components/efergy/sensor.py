@@ -5,7 +5,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_CURRENCY, POWER_WATT, ENERGY_KILO_WATT_HOUR
+from homeassistant.const import CONF_CURRENCY, ENERGY_KILO_WATT_HOUR, POWER_WATT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -99,7 +99,7 @@ class EfergySensor(Entity):
         """Initialize the sensor."""
         self.sid = sid
         if sid:
-            self._name = "efergy_{}".format(sid)
+            self._name = f"efergy_{sid}"
         else:
             self._name = SENSOR_TYPES[sensor_type][0]
         self.type = sensor_type
@@ -109,7 +109,7 @@ class EfergySensor(Entity):
         self.period = period
         self.currency = currency
         if self.type == "cost":
-            self._unit_of_measurement = "{}/{}".format(self.currency, self.period)
+            self._unit_of_measurement = f"{self.currency}/{self.period}"
         else:
             self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 
@@ -132,7 +132,7 @@ class EfergySensor(Entity):
         """Get the Efergy monitor data from the web service."""
         try:
             if self.type == "instant_readings":
-                url_string = "{}getInstant?token={}".format(_RESOURCE, self.app_token)
+                url_string = f"{_RESOURCE}getInstant?token={self.app_token}"
                 response = requests.get(url_string, timeout=10)
                 self._state = response.json()["reading"]
             elif self.type == "amount":
@@ -142,7 +142,7 @@ class EfergySensor(Entity):
                 response = requests.get(url_string, timeout=10)
                 self._state = response.json()["sum"]
             elif self.type == "budget":
-                url_string = "{}getBudget?token={}".format(_RESOURCE, self.app_token)
+                url_string = f"{_RESOURCE}getBudget?token={self.app_token}"
                 response = requests.get(url_string, timeout=10)
                 self._state = response.json()["status"]
             elif self.type == "cost":

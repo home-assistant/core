@@ -8,14 +8,14 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_SSL,
     CONF_HOST,
+    CONF_MONITORED_VARIABLES,
     CONF_NAME,
-    CONF_PORT,
     CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
     CONF_USERNAME,
     CONTENT_TYPE_JSON,
-    CONF_MONITORED_VARIABLES,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     monitored_types = config.get(CONF_MONITORED_VARIABLES)
-    url = "http{}://{}:{}/api/".format(ssl, host, port)
+    url = f"http{ssl}://{host}:{port}/api/"
 
     try:
         pyloadapi = PyLoadAPI(api_url=url, username=username, password=password)

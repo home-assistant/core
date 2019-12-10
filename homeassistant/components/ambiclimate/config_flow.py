@@ -7,14 +7,15 @@ from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
 from .const import (
     AUTH_CALLBACK_NAME,
     AUTH_CALLBACK_PATH,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     DOMAIN,
-    STORAGE_VERSION,
     STORAGE_KEY,
+    STORAGE_VERSION,
 )
 
 DATA_AMBICLIMATE_IMPL = "ambiclimate_flow_implementation"
@@ -130,7 +131,7 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow):
         return oauth
 
     def _cb_url(self):
-        return "{}{}".format(self.hass.config.api.base_url, AUTH_CALLBACK_PATH)
+        return f"{self.hass.config.api.base_url}{AUTH_CALLBACK_PATH}"
 
     async def _get_authorize_url(self):
         oauth = self._generate_oauth()

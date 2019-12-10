@@ -1,16 +1,17 @@
 """Config flow to configure homekit_controller."""
-import os
 import json
 import logging
+import os
 
+import homekit
+from homekit.controller.ip_implementation import IpPairing
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback
 
+from .connection import get_accessory_name, get_bridge_information
 from .const import DOMAIN, KNOWN_DEVICES
-from .connection import get_bridge_information, get_accessory_name
-
 
 HOMEKIT_IGNORE = ["Home Assistant Bridge"]
 HOMEKIT_DIR = ".homekit"
@@ -62,8 +63,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
     def __init__(self):
         """Initialize the homekit_controller flow."""
-        import homekit  # pylint: disable=import-error
-
         self.model = None
         self.hkid = None
         self.devices = {}
@@ -123,7 +122,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
         _LOGGER.debug("Discovered device %s (%s - %s)", name, model, hkid)
 
-        # pylint: disable=unsupported-assignment-operation
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["hkid"] = hkid
         self.context["title_placeholders"] = {"name": name}
 
@@ -195,7 +194,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
     async def async_import_legacy_pairing(self, discovery_props, pairing_data):
         """Migrate a legacy pairing to config entries."""
-        from homekit.controller.ip_implementation import IpPairing
 
         hkid = discovery_props["id"]
 
@@ -224,8 +222,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_pair(self, pair_info=None):
         """Pair with a new HomeKit accessory."""
-        import homekit  # pylint: disable=import-error
-
         # If async_step_pair is called with no pairing code then we do the M1
         # phase of pairing. If this is successful the device enters pairing
         # mode.

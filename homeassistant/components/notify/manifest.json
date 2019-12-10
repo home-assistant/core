@@ -1,7 +1,7 @@
 {
   "domain": "notify",
   "name": "Notify",
-  "documentation": "https://www.home-assistant.io/components/notify",
+  "documentation": "https://www.home-assistant.io/integrations/notify",
   "requirements": [],
   "dependencies": [],
   "codeowners": [

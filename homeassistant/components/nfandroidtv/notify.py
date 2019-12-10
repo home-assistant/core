@@ -7,9 +7,6 @@ import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
-from homeassistant.const import CONF_TIMEOUT, CONF_HOST
-import homeassistant.helpers.config_validation as cv
-
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TITLE,
@@ -17,6 +14,8 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONF_HOST, CONF_TIMEOUT
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -137,7 +136,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
         is_allowed_path,
     ):
         """Initialize the service."""
-        self._target = "http://{}:7676".format(remoteip)
+        self._target = f"http://{remoteip}:7676"
         self._default_duration = duration
         self._default_fontsize = fontsize
         self._default_position = position

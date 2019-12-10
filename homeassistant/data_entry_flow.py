@@ -1,16 +1,11 @@
 """Classes to help gather user submissions."""
 import logging
-from typing import (
-    Dict,
-    Any,
-    Callable,
-    Hashable,
-    List,
-    Optional,
-)  # noqa pylint: disable=unused-import
+from typing import Any, Callable, Dict, List, Optional
 import uuid
+
 import voluptuous as vol
-from .core import callback, HomeAssistant
+
+from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,7 +47,7 @@ class FlowManager:
     ) -> None:
         """Initialize the flow manager."""
         self.hass = hass
-        self._progress = {}  # type: Dict[str, Any]
+        self._progress: Dict[str, Any] = {}
         self._async_create_flow = async_create_flow
         self._async_finish_flow = async_finish_flow
 
@@ -65,7 +60,7 @@ class FlowManager:
         ]
 
     async def async_init(
-        self, handler: Hashable, *, context: Optional[Dict] = None, data: Any = None
+        self, handler: str, *, context: Optional[Dict] = None, data: Any = None
     ) -> Any:
         """Start a configuration flow."""
         if context is None:
@@ -126,7 +121,7 @@ class FlowManager:
         self, flow: Any, step_id: str, user_input: Optional[Dict]
     ) -> Dict:
         """Handle a step of a flow."""
-        method = "async_step_{}".format(step_id)
+        method = f"async_step_{step_id}"
 
         if not hasattr(flow, method):
             self._progress.pop(flow.flow_id)
@@ -136,7 +131,7 @@ class FlowManager:
                 )
             )
 
-        result = await getattr(flow, method)(user_input)  # type: Dict
+        result: Dict = await getattr(flow, method)(user_input)
 
         if result["type"] not in (
             RESULT_TYPE_FORM,
@@ -175,11 +170,11 @@ class FlowHandler:
     """Handle the configuration flow of a component."""
 
     # Set by flow manager
-    flow_id = None
-    hass = None
-    handler = None
-    cur_step = None
-    context = None  # type: Optional[Dict]
+    flow_id: str = None  # type: ignore
+    hass: Optional[HomeAssistant] = None
+    handler: Optional[str] = None
+    cur_step: Optional[Dict[str, str]] = None
+    context: Dict
 
     # Set by _async_create_flow callback
     init_step = "init"
@@ -195,7 +190,7 @@ class FlowHandler:
         data_schema: vol.Schema = None,
         errors: Optional[Dict] = None,
         description_placeholders: Optional[Dict] = None,
-    ) -> Dict:
+    ) -> Dict[str, Any]:
         """Return the definition of a form to gather user input."""
         return {
             "type": RESULT_TYPE_FORM,
@@ -215,7 +210,7 @@ class FlowHandler:
         data: Dict,
         description: Optional[str] = None,
         description_placeholders: Optional[Dict] = None,
-    ) -> Dict:
+    ) -> Dict[str, Any]:
         """Finish config flow and create a config entry."""
         return {
             "version": self.VERSION,
@@ -231,7 +226,7 @@ class FlowHandler:
     @callback
     def async_abort(
         self, *, reason: str, description_placeholders: Optional[Dict] = None
-    ) -> Dict:
+    ) -> Dict[str, Any]:
         """Abort the config flow."""
         return {
             "type": RESULT_TYPE_ABORT,
@@ -244,7 +239,7 @@ class FlowHandler:
     @callback
     def async_external_step(
         self, *, step_id: str, url: str, description_placeholders: Optional[Dict] = None
-    ) -> Dict:
+    ) -> Dict[str, Any]:
         """Return the definition of an external step for the user to take."""
         return {
             "type": RESULT_TYPE_EXTERNAL_STEP,
@@ -256,7 +251,7 @@ class FlowHandler:
         }
 
     @callback
-    def async_external_step_done(self, *, next_step_id: str) -> Dict:
+    def async_external_step_done(self, *, next_step_id: str) -> Dict[str, Any]:
         """Return the definition of an external step for the user to take."""
         return {
             "type": RESULT_TYPE_EXTERNAL_STEP_DONE,

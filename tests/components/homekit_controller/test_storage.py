@@ -1,14 +1,14 @@
 """Basic checks for entity map storage."""
-from tests.common import flush_store
-from tests.components.homekit_controller.common import (
-    FakeService,
-    setup_test_component,
-    setup_platform,
-)
-
 from homeassistant import config_entries
 from homeassistant.components.homekit_controller import async_remove_entry
 from homeassistant.components.homekit_controller.const import ENTITY_MAP
+
+from tests.common import flush_store
+from tests.components.homekit_controller.common import (
+    FakeService,
+    setup_platform,
+    setup_test_component,
+)
 
 
 async def test_load_from_storage(hass, hass_storage):
@@ -97,6 +97,7 @@ async def test_storage_is_removed_on_config_entry_removal(hass, utcnow):
         pairing_data,
         "test",
         config_entries.CONN_CLASS_LOCAL_PUSH,
+        system_options={},
     )
 
     assert hkid in hass.data[ENTITY_MAP].storage_data

@@ -6,17 +6,18 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_ICON,
     CONF_NAME,
+    SERVICE_RELOAD,
+    SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    SERVICE_TOGGLE,
     STATE_ON,
 )
-from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
+import homeassistant.helpers.service
+from homeassistant.loader import bind_hass
 
 DOMAIN = "input_boolean"
 
@@ -42,6 +43,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+RELOAD_SERVICE_SCHEMA = vol.Schema({})
+
 
 @bind_hass
 def is_on(hass, entity_id):
@@ -53,6 +56,39 @@ async def async_setup(hass, config):
     """Set up an input boolean."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
+    entities = await _async_process_config(config)
+
+    async def reload_service_handler(service_call):
+        """Remove all input booleans and load new ones from config."""
+        conf = await component.async_prepare_reload()
+        if conf is None:
+            return
+        new_entities = await _async_process_config(conf)
+        if new_entities:
+            await component.async_add_entities(new_entities)
+
+    homeassistant.helpers.service.async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_RELOAD,
+        reload_service_handler,
+        schema=RELOAD_SERVICE_SCHEMA,
+    )
+
+    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
+
+    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
+
+    component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
+
+    if entities:
+        await component.async_add_entities(entities)
+
+    return True
+
+
+async def _async_process_config(config):
+    """Process config and create list of entities."""
     entities = []
 
     for object_id, cfg in config[DOMAIN].items():
@@ -65,23 +101,7 @@ async def async_setup(hass, config):
 
         entities.append(InputBoolean(object_id, name, initial, icon))
 
-    if not entities:
-        return False
-
-    component.async_register_entity_service(
-        SERVICE_TURN_ON, ENTITY_SERVICE_SCHEMA, "async_turn_on"
-    )
-
-    component.async_register_entity_service(
-        SERVICE_TURN_OFF, ENTITY_SERVICE_SCHEMA, "async_turn_off"
-    )
-
-    component.async_register_entity_service(
-        SERVICE_TOGGLE, ENTITY_SERVICE_SCHEMA, "async_toggle"
-    )
-
-    await component.async_add_entities(entities)
-    return True
+    return entities
 
 
 class InputBoolean(ToggleEntity, RestoreEntity):

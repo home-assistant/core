@@ -1,33 +1,40 @@
 """Helpers to execute scripts."""
-
-import logging
+import asyncio
 from contextlib import suppress
 from datetime import datetime
 from itertools import islice
-from typing import Optional, Sequence, Callable, Dict, List, Set, Tuple
+import logging
+from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, Context, callback, CALLBACK_TYPE
-from homeassistant.const import CONF_CONDITION, CONF_TIMEOUT
 from homeassistant import exceptions
+import homeassistant.components.device_automation as device_automation
+import homeassistant.components.scene as scene
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_CONDITION,
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    CONF_TIMEOUT,
+    SERVICE_TURN_ON,
+)
+from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.helpers import (
-    service,
     condition,
-    template as template,
     config_validation as cv,
+    service,
+    template as template,
 )
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_template,
 )
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as date_util
-from homeassistant.util.async_ import run_coroutine_threadsafe, run_callback_threadsafe
 
-
-# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
-# mypy: no-check-untyped-defs
+# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +48,7 @@ CONF_EVENT_DATA_TEMPLATE = "event_data_template"
 CONF_DELAY = "delay"
 CONF_WAIT_TEMPLATE = "wait_template"
 CONF_CONTINUE = "continue_on_timeout"
+CONF_SCENE = "scene"
 
 
 ACTION_DELAY = "delay"
@@ -48,6 +56,8 @@ ACTION_WAIT_TEMPLATE = "wait_template"
 ACTION_CHECK_CONDITION = "condition"
 ACTION_FIRE_EVENT = "event"
 ACTION_CALL_SERVICE = "call_service"
+ACTION_DEVICE_AUTOMATION = "device"
+ACTION_ACTIVATE_SCENE = "scene"
 
 
 def _determine_action(action):
@@ -64,6 +74,12 @@ def _determine_action(action):
     if CONF_EVENT in action:
         return ACTION_FIRE_EVENT
 
+    if CONF_DEVICE_ID in action:
+        return ACTION_DEVICE_AUTOMATION
+
+    if CONF_SCENE in action:
+        return ACTION_ACTIVATE_SCENE
+
     return ACTION_CALL_SERVICE
 
 
@@ -75,6 +91,26 @@ def call_from_config(
 ) -> None:
     """Call a script based on a config entry."""
     Script(hass, cv.SCRIPT_SCHEMA(config)).run(variables, context)
+
+
+async def async_validate_action_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate config."""
+    action_type = _determine_action(config)
+
+    if action_type == ACTION_DEVICE_AUTOMATION:
+        platform = await device_automation.async_get_device_automation_platform(
+            hass, config[CONF_DOMAIN], "action"
+        )
+        config = platform.ACTION_SCHEMA(config)  # type: ignore
+    if action_type == ACTION_CHECK_CONDITION and config[CONF_CONDITION] == "device":
+        platform = await device_automation.async_get_device_automation_platform(
+            hass, config[CONF_DOMAIN], "condition"
+        )
+        config = platform.CONDITION_SCHEMA(config)  # type: ignore
+
+    return config
 
 
 class _StopScript(Exception):
@@ -91,9 +127,9 @@ class Script:
     def __init__(
         self,
         hass: HomeAssistant,
-        sequence,
+        sequence: Sequence[Dict[str, Any]],
         name: Optional[str] = None,
-        change_listener=None,
+        change_listener: Optional[Callable[..., Any]] = None,
     ) -> None:
         """Initialize the script."""
         self.hass = hass
@@ -102,21 +138,23 @@ class Script:
         self.name = name
         self._change_listener = change_listener
         self._cur = -1
-        self._exception_step = None  # type: Optional[int]
+        self._exception_step: Optional[int] = None
         self.last_action = None
-        self.last_triggered = None  # type: Optional[datetime]
+        self.last_triggered: Optional[datetime] = None
         self.can_cancel = any(
             CONF_DELAY in action or CONF_WAIT_TEMPLATE in action
             for action in self.sequence
         )
-        self._async_listener = []  # type: List[CALLBACK_TYPE]
-        self._config_cache = {}  # type: Dict[Set[Tuple], Callable[..., bool]]
+        self._async_listener: List[CALLBACK_TYPE] = []
+        self._config_cache: Dict[Set[Tuple], Callable[..., bool]] = {}
         self._actions = {
             ACTION_DELAY: self._async_delay,
             ACTION_WAIT_TEMPLATE: self._async_wait_template,
             ACTION_CHECK_CONDITION: self._async_check_condition,
             ACTION_FIRE_EVENT: self._async_fire_event,
             ACTION_CALL_SERVICE: self._async_call_service,
+            ACTION_DEVICE_AUTOMATION: self._async_device_automation,
+            ACTION_ACTIVATE_SCENE: self._async_activate_scene,
         }
 
     @property
@@ -126,7 +164,7 @@ class Script:
 
     def run(self, variables=None, context=None):
         """Run script."""
-        run_coroutine_threadsafe(
+        asyncio.run_coroutine_threadsafe(
             self.async_run(variables, context), self.hass.loop
         ).result()
 
@@ -192,7 +230,6 @@ class Script:
 
         Should only be called on exceptions raised by this scripts async_run.
         """
-        # pylint: disable=protected-access
         step = self._exception_step
         action = self.sequence[step]
         action_type = _determine_action(action)
@@ -242,7 +279,6 @@ class Script:
         @callback
         def async_script_delay(now):
             """Handle delay."""
-            # pylint: disable=cell-var-from-loop
             with suppress(ValueError):
                 self._async_listener.remove(unsub)
 
@@ -318,6 +354,35 @@ class Script:
             context=context,
         )
 
+    async def _async_device_automation(self, action, variables, context):
+        """Perform the device automation specified in the action.
+
+        This method is a coroutine.
+        """
+        self.last_action = action.get(CONF_ALIAS, "device automation")
+        self._log("Executing step %s" % self.last_action)
+        platform = await device_automation.async_get_device_automation_platform(
+            self.hass, action[CONF_DOMAIN], "action"
+        )
+        await platform.async_call_action_from_config(
+            self.hass, action, variables, context
+        )
+
+    async def _async_activate_scene(self, action, variables, context):
+        """Activate the scene specified in the action.
+
+        This method is a coroutine.
+        """
+        self.last_action = action.get(CONF_ALIAS, "activate scene")
+        self._log("Executing step %s" % self.last_action)
+        await self.hass.services.async_call(
+            scene.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: action[CONF_SCENE]},
+            blocking=True,
+            context=context,
+        )
+
     async def _async_fire_event(self, action, variables, context):
         """Fire an event."""
         self.last_action = action.get(CONF_ALIAS, action[CONF_EVENT])
@@ -338,7 +403,7 @@ class Script:
         config_cache_key = frozenset((k, str(v)) for k, v in action.items())
         config = self._config_cache.get(config_cache_key)
         if not config:
-            config = condition.async_from_config(action, False)
+            config = await condition.async_from_config(self.hass, action, False)
             self._config_cache[config_cache_key] = config
 
         self.last_action = action.get(CONF_ALIAS, action[CONF_CONDITION])

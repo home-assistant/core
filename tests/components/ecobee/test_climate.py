@@ -1,8 +1,9 @@
 """The test for the Ecobee thermostat module."""
 import unittest
 from unittest import mock
-import homeassistant.const as const
+
 from homeassistant.components.ecobee import climate as ecobee
+import homeassistant.const as const
 from homeassistant.const import STATE_OFF
 
 
@@ -54,7 +55,7 @@ class TestEcobee(unittest.TestCase):
 
         self.data = mock.Mock()
         self.data.ecobee.get_thermostat.return_value = self.ecobee
-        self.thermostat = ecobee.Thermostat(self.data, 1, False)
+        self.thermostat = ecobee.Thermostat(self.data, 1)
 
     def test_name(self):
         """Test name property."""
@@ -131,6 +132,7 @@ class TestEcobee(unittest.TestCase):
         self.ecobee["equipmentStatus"] = "heatPump2"
         assert {
             "fan": "off",
+            "climate_mode": "Climate1",
             "fan_min_on_time": 10,
             "equipment_running": "heatPump2",
         } == self.thermostat.device_state_attributes
@@ -138,18 +140,21 @@ class TestEcobee(unittest.TestCase):
         self.ecobee["equipmentStatus"] = "auxHeat2"
         assert {
             "fan": "off",
+            "climate_mode": "Climate1",
             "fan_min_on_time": 10,
             "equipment_running": "auxHeat2",
         } == self.thermostat.device_state_attributes
         self.ecobee["equipmentStatus"] = "compCool1"
         assert {
             "fan": "off",
+            "climate_mode": "Climate1",
             "fan_min_on_time": 10,
             "equipment_running": "compCool1",
         } == self.thermostat.device_state_attributes
         self.ecobee["equipmentStatus"] = ""
         assert {
             "fan": "off",
+            "climate_mode": "Climate1",
             "fan_min_on_time": 10,
             "equipment_running": "",
         } == self.thermostat.device_state_attributes
@@ -157,6 +162,15 @@ class TestEcobee(unittest.TestCase):
         self.ecobee["equipmentStatus"] = "Unknown"
         assert {
             "fan": "off",
+            "climate_mode": "Climate1",
+            "fan_min_on_time": 10,
+            "equipment_running": "Unknown",
+        } == self.thermostat.device_state_attributes
+
+        self.ecobee["program"]["currentClimateRef"] = "c2"
+        assert {
+            "fan": "off",
+            "climate_mode": "Climate2",
             "fan_min_on_time": 10,
             "equipment_running": "Unknown",
         } == self.thermostat.device_state_attributes

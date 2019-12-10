@@ -9,8 +9,8 @@ from homeassistant.components.iqvia import (
     DOMAIN,
     SENSORS,
     TYPE_ALLERGY_FORECAST,
-    TYPE_ALLERGY_OUTLOOK,
     TYPE_ALLERGY_INDEX,
+    TYPE_ALLERGY_OUTLOOK,
     TYPE_ALLERGY_TODAY,
     TYPE_ALLERGY_TOMORROW,
     TYPE_ASTHMA_FORECAST,
@@ -174,9 +174,9 @@ class IndexSensor(IQVIAEntity):
                 index = idx + 1
                 self._attrs.update(
                     {
-                        "{0}_{1}".format(ATTR_ALLERGEN_GENUS, index): attrs["Genus"],
-                        "{0}_{1}".format(ATTR_ALLERGEN_NAME, index): attrs["Name"],
-                        "{0}_{1}".format(ATTR_ALLERGEN_TYPE, index): attrs["PlantType"],
+                        f"{ATTR_ALLERGEN_GENUS}_{index}": attrs["Genus"],
+                        f"{ATTR_ALLERGEN_NAME}_{index}": attrs["Name"],
+                        f"{ATTR_ALLERGEN_TYPE}_{index}": attrs["PlantType"],
                     }
                 )
         elif self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW):
@@ -184,8 +184,8 @@ class IndexSensor(IQVIAEntity):
                 index = idx + 1
                 self._attrs.update(
                     {
-                        "{0}_{1}".format(ATTR_ALLERGEN_NAME, index): attrs["Name"],
-                        "{0}_{1}".format(ATTR_ALLERGEN_AMOUNT, index): attrs["PPM"],
+                        f"{ATTR_ALLERGEN_NAME}_{index}": attrs["Name"],
+                        f"{ATTR_ALLERGEN_AMOUNT}_{index}": attrs["PPM"],
                     }
                 )
         elif self._type == TYPE_DISEASE_TODAY:

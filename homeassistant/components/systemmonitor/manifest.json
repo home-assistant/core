@@ -1,9 +1,9 @@
 {
   "domain": "systemmonitor",
   "name": "Systemmonitor",
-  "documentation": "https://www.home-assistant.io/components/systemmonitor",
+  "documentation": "https://www.home-assistant.io/integrations/systemmonitor",
   "requirements": [
-    "psutil==5.6.3"
+    "psutil==5.6.7"
   ],
   "dependencies": [],
   "codeowners": []

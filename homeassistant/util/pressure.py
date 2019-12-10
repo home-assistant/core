@@ -4,13 +4,13 @@ import logging
 from numbers import Number
 
 from homeassistant.const import (
-    PRESSURE_PA,
+    PRESSURE,
     PRESSURE_HPA,
-    PRESSURE_MBAR,
     PRESSURE_INHG,
+    PRESSURE_MBAR,
+    PRESSURE_PA,
     PRESSURE_PSI,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
-    PRESSURE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ def convert(value: float, unit_1: str, unit_2: str) -> float:
         raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit_2, PRESSURE))
 
     if not isinstance(value, Number):
-        raise TypeError("{} is not of numeric type".format(value))
+        raise TypeError(f"{value} is not of numeric type")
 
     # type ignore: https://github.com/python/mypy/issues/7207
     if unit_1 == unit_2 or unit_1 not in VALID_UNITS:  # type: ignore

@@ -1,6 +1,8 @@
 """Support for Qwikswitch devices."""
 import logging
 
+from pyqwikswitch.async_ import QSUsb
+from pyqwikswitch.qwikswitch import CMD_BUTTONS, QS_CMD, QS_ID, SENSORS, QSType
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
@@ -80,7 +82,7 @@ class QSEntity(Entity):
     @property
     def unique_id(self):
         """Return a unique identifier for this sensor."""
-        return "qs{}".format(self.qsid)
+        return f"qs{self.qsid}"
 
     @callback
     def update_packet(self, packet):
@@ -128,8 +130,6 @@ class QSToggleEntity(QSEntity):
 
 async def async_setup(hass, config):
     """Qwiskswitch component setup."""
-    from pyqwikswitch.async_ import QSUsb
-    from pyqwikswitch.qwikswitch import CMD_BUTTONS, QS_CMD, QS_ID, QSType, SENSORS
 
     # Add cmd's to in /&listen packets will fire events
     # By default only buttons of type [TOGGLE,SCENE EXE,LEVEL]

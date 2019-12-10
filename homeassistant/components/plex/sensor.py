@@ -1,131 +1,80 @@
 """Support for Plex media server monitoring."""
-from datetime import timedelta
 import logging
-import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_HOST,
-    CONF_PORT,
-    CONF_TOKEN,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
+
+from .const import (
+    CONF_SERVER_IDENTIFIER,
+    DISPATCHERS,
+    DOMAIN as PLEX_DOMAIN,
+    NAME_FORMAT,
+    PLEX_UPDATE_SENSOR_SIGNAL,
+    SERVERS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SERVER = "server"
 
-DEFAULT_HOST = "localhost"
-DEFAULT_NAME = "Plex"
-DEFAULT_PORT = 32400
-DEFAULT_SSL = False
-DEFAULT_VERIFY_SSL = True
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the Plex sensor platform.
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_TOKEN): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_SERVER): cv.string,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    }
-)
+    Deprecated.
+    """
+    pass
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Plex sensor."""
-    name = config.get(CONF_NAME)
-    plex_user = config.get(CONF_USERNAME)
-    plex_password = config.get(CONF_PASSWORD)
-    plex_server = config.get(CONF_SERVER)
-    plex_host = config.get(CONF_HOST)
-    plex_port = config.get(CONF_PORT)
-    plex_token = config.get(CONF_TOKEN)
-
-    plex_url = "{}://{}:{}".format(
-        "https" if config.get(CONF_SSL) else "http", plex_host, plex_port
-    )
-
-    import plexapi.exceptions
-
-    try:
-        add_entities(
-            [
-                PlexSensor(
-                    name,
-                    plex_url,
-                    plex_user,
-                    plex_password,
-                    plex_server,
-                    plex_token,
-                    config.get(CONF_VERIFY_SSL),
-                )
-            ],
-            True,
-        )
-    except (
-        plexapi.exceptions.BadRequest,
-        plexapi.exceptions.Unauthorized,
-        plexapi.exceptions.NotFound,
-    ) as error:
-        _LOGGER.error(error)
-        return
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Plex sensor from a config entry."""
+    server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
+    plexserver = hass.data[PLEX_DOMAIN][SERVERS][server_id]
+    sensor = PlexSensor(plexserver)
+    async_add_entities([sensor])
 
 
 class PlexSensor(Entity):
     """Representation of a Plex now playing sensor."""
 
-    def __init__(
-        self,
-        name,
-        plex_url,
-        plex_user,
-        plex_password,
-        plex_server,
-        plex_token,
-        verify_ssl,
-    ):
+    def __init__(self, plex_server):
         """Initialize the sensor."""
-        from plexapi.myplex import MyPlexAccount
-        from plexapi.server import PlexServer
-        from requests import Session
-
-        self._name = name
-        self._state = 0
+        self.sessions = []
+        self._state = None
         self._now_playing = []
+        self._server = plex_server
+        self._name = NAME_FORMAT.format(plex_server.friendly_name)
+        self._unique_id = f"sensor-{plex_server.machine_identifier}"
 
-        cert_session = None
-        if not verify_ssl:
-            _LOGGER.info("Ignoring SSL verification")
-            cert_session = Session()
-            cert_session.verify = False
+    async def async_added_to_hass(self):
+        """Run when about to be added to hass."""
+        server_id = self._server.machine_identifier
+        unsub = async_dispatcher_connect(
+            self.hass,
+            PLEX_UPDATE_SENSOR_SIGNAL.format(server_id),
+            self.async_refresh_sensor,
+        )
+        self.hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
-        if plex_token:
-            self._server = PlexServer(plex_url, plex_token, cert_session)
-        elif plex_user and plex_password:
-            user = MyPlexAccount(plex_user, plex_password)
-            server = plex_server if plex_server else user.resources()[0].name
-            self._server = user.resource(server).connect()
-        else:
-            self._server = PlexServer(plex_url, None, cert_session)
+    @callback
+    def async_refresh_sensor(self, sessions):
+        """Set instance object and trigger an entity state update."""
+        self.sessions = sessions
+        self.async_schedule_update_ha_state(True)
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the id of this plex client."""
+        return self._unique_id
+
+    @property
+    def should_poll(self):
+        """Return True if entity has to be polled for state."""
+        return False
 
     @property
     def state(self):
@@ -142,15 +91,14 @@ class PlexSensor(Entity):
         """Return the state attributes."""
         return {content[0]: content[1] for content in self._now_playing}
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update method for Plex sensor."""
-        sessions = self._server.sessions()
+        _LOGGER.debug("Refreshing sensor [%s]", self.unique_id)
         now_playing = []
-        for sess in sessions:
+        for sess in self.sessions:
             user = sess.usernames[0]
             device = sess.players[0].title
-            now_playing_user = "{0} - {1}".format(user, device)
+            now_playing_user = f"{user} - {device}"
             now_playing_title = ""
 
             if sess.TYPE == "episode":
@@ -161,7 +109,7 @@ class PlexSensor(Entity):
                     season_title += " ({0})".format(sess.show().year)
                 season_episode = "S{0}".format(sess.parentIndex)
                 if sess.index is not None:
-                    season_episode += " · E{0}".format(sess.index)
+                    season_episode += f" · E{sess.index}"
                 episode_title = sess.title
                 now_playing_title = "{0} - {1} - {2}".format(
                     season_title, season_episode, episode_title
@@ -181,8 +129,8 @@ class PlexSensor(Entity):
                 # "The Incredible Hulk (2008)"
                 now_playing_title = sess.title
                 if sess.year is not None:
-                    now_playing_title += " ({0})".format(sess.year)
+                    now_playing_title += f" ({sess.year})"
 
             now_playing.append((now_playing_user, now_playing_title))
-        self._state = len(sessions)
+        self._state = len(self.sessions)
         self._now_playing = now_playing

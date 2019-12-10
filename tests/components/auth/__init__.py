@@ -4,7 +4,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import ensure_auth_manager_loaded
 
-
 BASE_CONFIG = [
     {
         "name": "Example",
@@ -30,7 +29,7 @@ async def async_setup_auth(
         hass, provider_configs, module_configs
     )
     ensure_auth_manager_loaded(hass.auth)
-    await async_setup_component(hass, "auth", {"http": {"api_password": "bla"}})
+    await async_setup_component(hass, "auth", {})
     if setup_api:
         await async_setup_component(hass, "api", {})
     return await aiohttp_client(hass.http.app)

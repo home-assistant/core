@@ -1,15 +1,11 @@
 """Support for PCA 301 smart switch."""
 import logging
 
-import voluptuous as vol
+import pypca
+from serial import SerialException
 
-from homeassistant.components.switch import (
-    SwitchDevice,
-    PLATFORM_SCHEMA,
-    ATTR_CURRENT_POWER_W,
-)
-from homeassistant.const import CONF_NAME, CONF_DEVICE, EVENT_HOMEASSISTANT_STOP
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.switch import ATTR_CURRENT_POWER_W, SwitchDevice
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,26 +13,20 @@ ATTR_TOTAL_ENERGY_KWH = "total_energy_kwh"
 
 DEFAULT_NAME = "PCA 301"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_DEVICE): cv.string,
-    }
-)
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the PCA switch platform."""
-    import pypca
-    from serial import SerialException
 
-    name = config[CONF_NAME]
-    usb_device = config[CONF_DEVICE]
+    if discovery_info is None:
+        return
+
+    serial_device = discovery_info["device"]
 
     try:
-        pca = pypca.PCA(usb_device)
+        pca = pypca.PCA(serial_device)
         pca.open()
-        entities = [SmartPlugSwitch(pca, device, name) for device in pca.get_devices()]
+
+        entities = [SmartPlugSwitch(pca, device) for device in pca.get_devices()]
         add_entities(entities, True)
 
     except SerialException as exc:
@@ -51,10 +41,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SmartPlugSwitch(SwitchDevice):
     """Representation of a PCA Smart Plug switch."""
 
-    def __init__(self, pca, device_id, name):
+    def __init__(self, pca, device_id):
         """Initialize the switch."""
         self._device_id = device_id
-        self._name = name
+        self._name = "PCA 301"
         self._state = None
         self._available = True
         self._emeter_params = {}

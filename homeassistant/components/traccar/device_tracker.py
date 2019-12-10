@@ -2,54 +2,69 @@
 from datetime import datetime, timedelta
 import logging
 
+from pytraccar.api import API
+from stringcase import camelcase
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import PLATFORM_SCHEMA, SOURCE_TYPE_GPS
+from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    CONF_SCAN_INTERVAL,
-    CONF_MONITORED_CONDITIONS,
     CONF_EVENT,
+    CONF_HOST,
+    CONF_MONITORED_CONDITIONS,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import callback
+from homeassistant.helpers import device_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
+
+from . import DOMAIN, TRACKER_UPDATE
 from .const import (
+    ATTR_ACCURACY,
     ATTR_ADDRESS,
+    ATTR_ALTITUDE,
+    ATTR_BATTERY,
+    ATTR_BEARING,
     ATTR_CATEGORY,
     ATTR_GEOFENCE,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
     ATTR_MOTION,
     ATTR_SPEED,
-    ATTR_TRACKER,
-    ATTR_TRACCAR_ID,
     ATTR_STATUS,
-    EVENT_DEVICE_MOVING,
-    EVENT_COMMAND_RESULT,
-    EVENT_DEVICE_FUEL_DROP,
-    EVENT_GEOFENCE_ENTER,
-    EVENT_DEVICE_OFFLINE,
-    EVENT_DRIVER_CHANGED,
-    EVENT_GEOFENCE_EXIT,
-    EVENT_DEVICE_OVERSPEED,
-    EVENT_DEVICE_ONLINE,
-    EVENT_DEVICE_STOPPED,
-    EVENT_MAINTENANCE,
-    EVENT_ALARM,
-    EVENT_TEXT_MESSAGE,
-    EVENT_DEVICE_UNKNOWN,
-    EVENT_IGNITION_OFF,
-    EVENT_IGNITION_ON,
-    EVENT_ALL_EVENTS,
+    ATTR_TRACCAR_ID,
+    ATTR_TRACKER,
     CONF_MAX_ACCURACY,
     CONF_SKIP_ACCURACY_ON,
+    EVENT_ALARM,
+    EVENT_ALL_EVENTS,
+    EVENT_COMMAND_RESULT,
+    EVENT_DEVICE_FUEL_DROP,
+    EVENT_DEVICE_MOVING,
+    EVENT_DEVICE_OFFLINE,
+    EVENT_DEVICE_ONLINE,
+    EVENT_DEVICE_OVERSPEED,
+    EVENT_DEVICE_STOPPED,
+    EVENT_DEVICE_UNKNOWN,
+    EVENT_DRIVER_CHANGED,
+    EVENT_GEOFENCE_ENTER,
+    EVENT_GEOFENCE_EXIT,
+    EVENT_IGNITION_OFF,
+    EVENT_IGNITION_ON,
+    EVENT_MAINTENANCE,
+    EVENT_TEXT_MESSAGE,
 )
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,9 +116,47 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+async def async_setup_entry(hass: HomeAssistantType, entry, async_add_entities):
+    """Configure a dispatcher connection based on a config entry."""
+
+    @callback
+    def _receive_data(device, latitude, longitude, battery, accuracy, attrs):
+        """Receive set location."""
+        if device in hass.data[DOMAIN]["devices"]:
+            return
+
+        hass.data[DOMAIN]["devices"].add(device)
+
+        async_add_entities(
+            [TraccarEntity(device, latitude, longitude, battery, accuracy, attrs)]
+        )
+
+    hass.data[DOMAIN]["unsub_device_tracker"][
+        entry.entry_id
+    ] = async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
+
+    # Restore previously loaded devices
+    dev_reg = await device_registry.async_get_registry(hass)
+    dev_ids = {
+        identifier[1]
+        for device in dev_reg.devices.values()
+        for identifier in device.identifiers
+        if identifier[0] == DOMAIN
+    }
+    if not dev_ids:
+        return
+
+    entities = []
+    for dev_id in dev_ids:
+        hass.data[DOMAIN]["devices"].add(dev_id)
+        entity = TraccarEntity(dev_id, None, None, None, None, None)
+        entities.append(entity)
+
+    async_add_entities(entities)
+
+
 async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Validate the configuration and return a Traccar scanner."""
-    from pytraccar.api import API
 
     session = async_get_clientsession(hass, config[CONF_VERIFY_SSL])
 
@@ -146,7 +199,6 @@ class TraccarScanner:
         event_types,
     ):
         """Initialize."""
-        from stringcase import camelcase
 
         self._event_types = {camelcase(evt): evt for evt in event_types}
         self._custom_attributes = custom_attributes
@@ -273,3 +325,123 @@ class TraccarScanner:
                         "attributes": event["attributes"],
                     },
                 )
+
+
+class TraccarEntity(TrackerEntity, RestoreEntity):
+    """Represent a tracked device."""
+
+    def __init__(self, device, latitude, longitude, battery, accuracy, attributes):
+        """Set up Geofency entity."""
+        self._accuracy = accuracy
+        self._attributes = attributes
+        self._name = device
+        self._battery = battery
+        self._latitude = latitude
+        self._longitude = longitude
+        self._unsub_dispatcher = None
+        self._unique_id = device
+
+    @property
+    def battery_level(self):
+        """Return battery value of the device."""
+        return self._battery
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific attributes."""
+        return self._attributes
+
+    @property
+    def latitude(self):
+        """Return latitude value of the device."""
+        return self._latitude
+
+    @property
+    def longitude(self):
+        """Return longitude value of the device."""
+        return self._longitude
+
+    @property
+    def location_accuracy(self):
+        """Return the gps accuracy of the device."""
+        return self._accuracy
+
+    @property
+    def name(self):
+        """Return the name of the device."""
+        return self._name
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
+    def unique_id(self):
+        """Return the unique ID."""
+        return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {"name": self._name, "identifiers": {(DOMAIN, self._unique_id)}}
+
+    @property
+    def source_type(self):
+        """Return the source type, eg gps or router, of the device."""
+        return SOURCE_TYPE_GPS
+
+    async def async_added_to_hass(self):
+        """Register state update callback."""
+        await super().async_added_to_hass()
+        self._unsub_dispatcher = async_dispatcher_connect(
+            self.hass, TRACKER_UPDATE, self._async_receive_data
+        )
+
+        # don't restore if we got created with data
+        if self._latitude is not None or self._longitude is not None:
+            return
+
+        state = await self.async_get_last_state()
+        if state is None:
+            self._latitude = None
+            self._longitude = None
+            self._accuracy = None
+            self._attributes = {
+                ATTR_ALTITUDE: None,
+                ATTR_BEARING: None,
+                ATTR_SPEED: None,
+            }
+            self._battery = None
+            return
+
+        attr = state.attributes
+        self._latitude = attr.get(ATTR_LATITUDE)
+        self._longitude = attr.get(ATTR_LONGITUDE)
+        self._accuracy = attr.get(ATTR_ACCURACY)
+        self._attributes = {
+            ATTR_ALTITUDE: attr.get(ATTR_ALTITUDE),
+            ATTR_BEARING: attr.get(ATTR_BEARING),
+            ATTR_SPEED: attr.get(ATTR_SPEED),
+        }
+        self._battery = attr.get(ATTR_BATTERY)
+
+    async def async_will_remove_from_hass(self):
+        """Clean up after entity before removal."""
+        await super().async_will_remove_from_hass()
+        self._unsub_dispatcher()
+
+    @callback
+    def _async_receive_data(
+        self, device, latitude, longitude, battery, accuracy, attributes
+    ):
+        """Mark the device as seen."""
+        if device != self.name:
+            return
+
+        self._latitude = latitude
+        self._longitude = longitude
+        self._battery = battery
+        self._accuracy = accuracy
+        self._attributes.update(attributes)
+        self.async_write_ha_state()

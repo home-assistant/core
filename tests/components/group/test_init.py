@@ -5,21 +5,21 @@ from collections import OrderedDict
 import unittest
 from unittest.mock import patch
 
-from homeassistant.setup import setup_component, async_setup_component
-from homeassistant.const import (
-    STATE_ON,
-    STATE_OFF,
-    STATE_HOME,
-    STATE_UNKNOWN,
-    ATTR_ICON,
-    ATTR_HIDDEN,
-    ATTR_ASSUMED_STATE,
-    STATE_NOT_HOME,
-    ATTR_FRIENDLY_NAME,
-)
 import homeassistant.components.group as group
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
+    ATTR_FRIENDLY_NAME,
+    ATTR_HIDDEN,
+    ATTR_ICON,
+    STATE_HOME,
+    STATE_NOT_HOME,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNKNOWN,
+)
+from homeassistant.setup import async_setup_component, setup_component
 
-from tests.common import get_test_home_assistant, assert_setup_component
+from tests.common import assert_setup_component, get_test_home_assistant
 from tests.components.group import common
 
 

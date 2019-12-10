@@ -2,7 +2,7 @@
 from collections import OrderedDict
 import logging
 
-from life360 import LoginError
+from life360 import Life360Error, LoginError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -13,7 +13,7 @@ from .helpers import get_api
 
 _LOGGER = logging.getLogger(__name__)
 
-DOCS_URL = "https://www.home-assistant.io/components/life360"
+DOCS_URL = "https://www.home-assistant.io/integrations/life360"
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -54,6 +54,11 @@ class Life360ConfigFlow(config_entries.ConfigFlow):
                 errors[CONF_USERNAME] = "invalid_username"
             except LoginError:
                 errors["base"] = "invalid_credentials"
+            except Life360Error as error:
+                _LOGGER.error(
+                    "Unexpected error communicating with Life360 server: %s", error
+                )
+                errors["base"] = "unexpected"
             else:
                 if self._username in self.configured_usernames:
                     errors["base"] = "user_already_configured"
@@ -88,8 +93,13 @@ class Life360ConfigFlow(config_entries.ConfigFlow):
         except LoginError:
             _LOGGER.error("Invalid credentials for %s", username)
             return self.async_abort(reason="invalid_credentials")
+        except Life360Error as error:
+            _LOGGER.error(
+                "Unexpected error communicating with Life360 server: %s", error
+            )
+            return self.async_abort(reason="unexpected")
         return self.async_create_entry(
-            title="{} (from configuration)".format(username),
+            title=f"{username} (from configuration)",
             data={
                 CONF_USERNAME: username,
                 CONF_PASSWORD: password,

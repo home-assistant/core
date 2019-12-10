@@ -6,7 +6,7 @@ detect_location_info and elevation are mocked by default during tests.
 import asyncio
 import collections
 import math
-from typing import Any, Optional, Tuple, Dict
+from typing import Any, Dict, Optional, Tuple
 
 import aiohttp
 
@@ -46,7 +46,7 @@ LocationInfo = collections.namedtuple(
 
 
 async def async_detect_location_info(
-    session: aiohttp.ClientSession
+    session: aiohttp.ClientSession,
 ) -> Optional[LocationInfo]:
     """Detect location information."""
     data = await _get_ipapi(session)

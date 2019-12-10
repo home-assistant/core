@@ -1,17 +1,23 @@
 """Support for the Yahoo! Weather service."""
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
+from yahooweather import (  # pylint: disable=import-error
+    UNIT_C,
+    UNIT_F,
+    YahooWeather,
+    get_woeid,
+)
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    TEMP_CELSIUS,
+    ATTR_ATTRIBUTION,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
-    ATTR_ATTRIBUTION,
+    TEMP_CELSIUS,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -20,6 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTRIBUTION = "Weather details provided by Yahoo! Inc."
 
 CONF_FORECAST = "forecast"
+
 CONF_WOEID = "woeid"
 
 DEFAULT_NAME = "Yweather"
@@ -52,8 +59,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yahoo! weather sensor."""
-    from yahooweather import get_woeid, UNIT_C, UNIT_F
-
     unit = hass.config.units.temperature_unit
     woeid = config.get(CONF_WOEID)
     forecast = config.get(CONF_FORECAST)
@@ -108,7 +113,7 @@ class YahooWeatherSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._client, self._name)
+        return f"{self._client} {self._name}"
 
     @property
     def state(self):
@@ -181,8 +186,6 @@ class YahooWeatherData:
 
     def __init__(self, woeid, temp_unit):
         """Initialize the data object."""
-        from yahooweather import YahooWeather
-
         self._yahoo = YahooWeather(woeid, temp_unit)
 
     @property

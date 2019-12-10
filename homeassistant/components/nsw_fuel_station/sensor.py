@@ -3,11 +3,12 @@ import datetime
 import logging
 from typing import Optional
 
+from nsw_fuel import FuelCheckClient, FuelCheckError
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.light import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -52,7 +53,6 @@ NOTIFICATION_TITLE = "NSW Fuel Station Sensor Setup"
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NSW Fuel Station sensor."""
-    from nsw_fuel import FuelCheckClient
 
     station_id = config[CONF_STATION_ID]
     fuel_types = config[CONF_FUEL_TYPES]
@@ -97,7 +97,6 @@ class StationPriceData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the internal data using the API client."""
-        from nsw_fuel import FuelCheckError
 
         if self._reference_data is None:
             try:
@@ -141,7 +140,7 @@ class StationPriceData:
                     None,
                 )
 
-            self._station_name = name or "station {}".format(self.station_id)
+            self._station_name = name or f"station {self.station_id}"
 
         return self._station_name
 

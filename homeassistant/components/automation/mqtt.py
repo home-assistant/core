@@ -3,10 +3,12 @@ import json
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components import mqtt
-from homeassistant.const import CONF_PLATFORM, CONF_PAYLOAD
+from homeassistant.const import CONF_PAYLOAD, CONF_PLATFORM
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+
+# mypy: allow-untyped-defs
 
 CONF_ENCODING = "encoding"
 CONF_TOPIC = "topic"
@@ -22,7 +24,7 @@ TRIGGER_SCHEMA = vol.Schema(
 )
 
 
-async def async_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     topic = config[CONF_TOPIC]
     payload = config.get(CONF_PAYLOAD)

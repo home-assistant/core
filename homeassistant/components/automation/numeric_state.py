@@ -4,17 +4,20 @@ import logging
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.core import callback
 from homeassistant.const import (
-    CONF_VALUE_TEMPLATE,
-    CONF_PLATFORM,
-    CONF_ENTITY_ID,
-    CONF_BELOW,
     CONF_ABOVE,
+    CONF_BELOW,
+    CONF_ENTITY_ID,
     CONF_FOR,
+    CONF_PLATFORM,
+    CONF_VALUE_TEMPLATE,
 )
-from homeassistant.helpers.event import async_track_state_change, async_track_same_state
+from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers import condition, config_validation as cv, template
+from homeassistant.helpers.event import async_track_same_state, async_track_state_change
+
+# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: no-check-untyped-defs
 
 TRIGGER_SCHEMA = vol.All(
     vol.Schema(
@@ -37,7 +40,9 @@ TRIGGER_SCHEMA = vol.All(
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass, config, action, automation_info, *, platform_type="numeric_state"
+) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
     below = config.get(CONF_BELOW)
@@ -47,7 +52,7 @@ async def async_trigger(hass, config, action, automation_info):
     value_template = config.get(CONF_VALUE_TEMPLATE)
     unsub_track_same = {}
     entities_triggered = set()
-    period = {}
+    period: dict = {}
 
     if value_template is not None:
         value_template.hass = hass
@@ -81,7 +86,7 @@ async def async_trigger(hass, config, action, automation_info):
                 action(
                     {
                         "trigger": {
-                            "platform": "numeric_state",
+                            "platform": platform_type,
                             "entity_id": entity,
                             "below": below,
                             "above": above,

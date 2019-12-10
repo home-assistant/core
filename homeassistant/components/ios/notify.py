@@ -1,5 +1,4 @@
 """Support for iOS push notifications."""
-from datetime import datetime, timezone
 import logging
 
 import requests
@@ -25,7 +24,7 @@ def log_rate_limits(hass, target, resp, level=20):
     """Output rate limit log line at given level."""
     rate_limits = resp["rateLimits"]
     resetsAt = dt_util.parse_datetime(rate_limits["resetsAt"])
-    resetsAtTime = resetsAt - datetime.now(timezone.utc)
+    resetsAtTime = resetsAt - dt_util.utcnow()
     rate_limit_msg = (
         "iOS push notification rate limits for %s: "
         "%d sent, %d allowed, %d errors, "
@@ -49,12 +48,6 @@ def get_service(hass, config, discovery_info=None):
         hass.config.components.add("notify.ios")
 
     if not ios.devices_with_push(hass):
-        _LOGGER.error(
-            "The notify.ios platform was loaded but no "
-            "devices exist! Please check the documentation at "
-            "https://home-assistant.io/ecosystem/ios/notifications"
-            "/ for more information"
-        )
         return None
 
     return iOSNotificationService()

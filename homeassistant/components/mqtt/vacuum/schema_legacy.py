@@ -1,10 +1,18 @@
 """Support for Legacy MQTT vacuum."""
-import logging
 import json
+import logging
 
 import voluptuous as vol
 
 from homeassistant.components import mqtt
+from homeassistant.components.mqtt import (
+    CONF_UNIQUE_ID,
+    MqttAttributes,
+    MqttAvailability,
+    MqttDiscoveryUpdate,
+    MqttEntityDeviceInfo,
+    subscription,
+)
 from homeassistant.components.vacuum import (
     SUPPORT_BATTERY,
     SUPPORT_CLEAN_SPOT,
@@ -24,16 +32,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.icon import icon_for_battery_level
 
-from homeassistant.components.mqtt import (
-    CONF_UNIQUE_ID,
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
-    subscription,
-)
-
-from . import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
+from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -339,7 +338,7 @@ class MqttVacuum(
             elif self._cleaning:
                 self._status = "Cleaning"
             elif self._error:
-                self._status = "Error: {}".format(self._error)
+                self._status = f"Error: {self._error}"
             else:
                 self._status = "Stopped"
 
@@ -360,7 +359,7 @@ class MqttVacuum(
             self.hass,
             self._sub_state,
             {
-                "topic{}".format(i): {
+                f"topic{i}": {
                     "topic": topic,
                     "msg_callback": message_received,
                     "qos": self._qos,
@@ -550,7 +549,7 @@ class MqttVacuum(
         mqtt.async_publish(
             self.hass, self._set_fan_speed_topic, fan_speed, self._qos, self._retain
         )
-        self._status = "Setting fan to {}...".format(fan_speed)
+        self._status = f"Setting fan to {fan_speed}..."
         self.async_write_ha_state()
 
     async def async_send_command(self, command, params=None, **kwargs):
@@ -566,5 +565,5 @@ class MqttVacuum(
         mqtt.async_publish(
             self.hass, self._send_command_topic, message, self._qos, self._retain
         )
-        self._status = "Sending command {}...".format(message)
+        self._status = f"Sending command {message}..."
         self.async_write_ha_state()

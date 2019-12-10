@@ -1,17 +1,19 @@
 """Support for WeMo switches."""
 import asyncio
-import logging
 from datetime import datetime, timedelta
-import requests
+import logging
 
 import async_timeout
+from pywemo import discovery
+import requests
 
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import convert
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN
 
-from . import SUBSCRIPTION_REGISTRY, DOMAIN as WEMO_DOMAIN
+from . import SUBSCRIPTION_REGISTRY
+from .const import DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
@@ -32,7 +34,6 @@ WEMO_STANDBY = 8
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up discovered WeMo switches."""
-    from pywemo import discovery
 
     if discovery_info is not None:
         location = discovery_info["ssdp_description"]
@@ -96,7 +97,7 @@ class WemoSwitch(SwitchDevice):
     @property
     def device_info(self):
         """Return the device info."""
-        return {"name": self._name, "identifiers": {(WEMO_DOMAIN, self._serialnumber)}}
+        return {"name": self._name, "identifiers": {(DOMAIN, self._serialnumber)}}
 
     @property
     def device_state_attributes(self):

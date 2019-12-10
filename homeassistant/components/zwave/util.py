@@ -91,8 +91,8 @@ def check_value_schema(value, schema):
 def node_name(node):
     """Return the name of the node."""
     if is_node_parsed(node):
-        return node.name or "{} {}".format(node.manufacturer_name, node.product_name)
-    return "Unknown Node {}".format(node.node_id)
+        return node.name or f"{node.manufacturer_name} {node.product_name}"
+    return f"Unknown Node {node.node_id}"
 
 
 def node_device_id_and_name(node, instance=1):
@@ -100,7 +100,7 @@ def node_device_id_and_name(node, instance=1):
     name = node_name(node)
     if instance == 1:
         return ((const.DOMAIN, node.node_id), name)
-    name = "{} ({})".format(name, instance)
+    name = f"{name} ({instance})"
     return ((const.DOMAIN, node.node_id, instance), name)
 
 

@@ -8,21 +8,23 @@ and grouped by category.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.geo_rss_events/
 """
-import logging
 from datetime import timedelta
+import logging
 
+from georss_client import UPDATE_OK, UPDATE_OK_NO_DATA
+from georss_client.generic_feed import GenericFeed
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_UNIT_OF_MEASUREMENT,
-    CONF_NAME,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    CONF_NAME,
     CONF_RADIUS,
+    CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -108,7 +110,6 @@ class GeoRssServiceSensor(Entity):
         self._state = None
         self._state_attributes = None
         self._unit_of_measurement = unit_of_measurement
-        from georss_client.generic_feed import GenericFeed
 
         self._feed = GenericFeed(
             coordinates,
@@ -146,10 +147,9 @@ class GeoRssServiceSensor(Entity):
 
     def update(self):
         """Update this sensor from the GeoRSS service."""
-        import georss_client
 
         status, feed_entries = self._feed.update()
-        if status == georss_client.UPDATE_OK:
+        if status == UPDATE_OK:
             _LOGGER.debug(
                 "Adding events to sensor %s: %s", self.entity_id, feed_entries
             )
@@ -157,9 +157,9 @@ class GeoRssServiceSensor(Entity):
             # And now compute the attributes from the filtered events.
             matrix = {}
             for entry in feed_entries:
-                matrix[entry.title] = "{:.0f}km".format(entry.distance_to_home)
+                matrix[entry.title] = f"{entry.distance_to_home:.0f}km"
             self._state_attributes = matrix
-        elif status == georss_client.UPDATE_OK_NO_DATA:
+        elif status == UPDATE_OK_NO_DATA:
             _LOGGER.debug("Update successful, but no data received from %s", self._feed)
             # Don't change the state or state attributes.
         else:

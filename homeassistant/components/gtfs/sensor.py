@@ -5,6 +5,8 @@ import os
 import threading
 from typing import Any, Callable, Optional
 
+import pygtfs
+from sqlalchemy.sql import text
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -122,14 +124,12 @@ def get_next_departure(
     include_tomorrow: bool = False,
 ) -> dict:
     """Get the next departure for the given schedule."""
-    now = datetime.datetime.now() + offset
+    now = dt_util.now().replace(tzinfo=None) + offset
     now_date = now.strftime(dt_util.DATE_STR_FORMAT)
     yesterday = now - datetime.timedelta(days=1)
     yesterday_date = yesterday.strftime(dt_util.DATE_STR_FORMAT)
     tomorrow = now + datetime.timedelta(days=1)
     tomorrow_date = tomorrow.strftime(dt_util.DATE_STR_FORMAT)
-
-    from sqlalchemy.sql import text
 
     # Fetch all departures for yesterday, today and optionally tomorrow,
     # up to an overkill maximum in case of a departure every minute for those
@@ -139,9 +139,9 @@ def get_next_departure(
     if include_tomorrow:
         limit = int(limit / 2 * 3)
         tomorrow_name = tomorrow.strftime("%A").lower()
-        tomorrow_select = "calendar.{} AS tomorrow,".format(tomorrow_name)
-        tomorrow_where = "OR calendar.{} = 1".format(tomorrow_name)
-        tomorrow_order = "calendar.{} DESC,".format(tomorrow_name)
+        tomorrow_select = f"calendar.{tomorrow_name} AS tomorrow,"
+        tomorrow_where = f"OR calendar.{tomorrow_name} = 1"
+        tomorrow_order = f"calendar.{tomorrow_name} DESC,"
 
     sql_query = """
         SELECT trip.trip_id, trip.route_id,
@@ -256,7 +256,7 @@ def get_next_departure(
 
     _LOGGER.debug("Timetable: %s", sorted(timetable.keys()))
 
-    item = {}  # type: dict
+    item = {}
     for key in sorted(timetable.keys()):
         if dt_util.parse_datetime(key) > now:
             item = timetable[key]
@@ -353,11 +353,9 @@ def setup_platform(
         _LOGGER.error("The given GTFS data file/folder was not found")
         return
 
-    import pygtfs
-
     (gtfs_root, _) = os.path.splitext(data)
 
-    sqlite_file = "{}.sqlite?check_same_thread=False".format(gtfs_root)
+    sqlite_file = f"{gtfs_root}.sqlite?check_same_thread=False"
     joined_path = os.path.join(gtfs_dir, sqlite_file)
     gtfs = pygtfs.Schedule(joined_path)
 
@@ -375,7 +373,7 @@ class GTFSDepartureSensor(Entity):
 
     def __init__(
         self,
-        pygtfs: Any,
+        gtfs: Any,
         name: Optional[Any],
         origin: Any,
         destination: Any,
@@ -383,7 +381,7 @@ class GTFSDepartureSensor(Entity):
         include_tomorrow: bool,
     ) -> None:
         """Initialize the sensor."""
-        self._pygtfs = pygtfs
+        self._pygtfs = gtfs
         self.origin = origin
         self.destination = destination
         self._include_tomorrow = include_tomorrow
@@ -393,11 +391,11 @@ class GTFSDepartureSensor(Entity):
         self._available = False
         self._icon = ICON
         self._name = ""
-        self._state = None  # type: Optional[str]
-        self._attributes = {}  # type: dict
+        self._state: Optional[str] = None
+        self._attributes = {}
 
         self._agency = None
-        self._departure = {}  # type: dict
+        self._departure = {}
         self._destination = None
         self._origin = None
         self._route = None
@@ -673,7 +671,7 @@ class GTFSDepartureSensor(Entity):
                 continue
             key = attr
             if prefix and not key.startswith(prefix):
-                key = "{} {}".format(prefix, key)
+                key = f"{prefix} {key}"
             key = slugify(key)
             self._attributes[key] = val
 

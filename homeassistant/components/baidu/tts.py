@@ -1,6 +1,7 @@
 """Support for Baidu speech service."""
 import logging
 
+from aip import AipSpeech
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
@@ -51,7 +52,7 @@ _OPTIONS = {
 SUPPORTED_OPTIONS = [CONF_PERSON, CONF_PITCH, CONF_SPEED, CONF_VOLUME]
 
 
-def get_engine(hass, config):
+def get_engine(hass, config, discovery_info=None):
     """Set up Baidu TTS component."""
     return BaiduTTSProvider(hass, config)
 
@@ -106,7 +107,6 @@ class BaiduTTSProvider(Provider):
 
     def get_tts_audio(self, message, language, options=None):
         """Load TTS from BaiduTTS."""
-        from aip import AipSpeech
 
         aip_speech = AipSpeech(
             self._app_data["appid"],

@@ -2,7 +2,6 @@
 import inspect
 import logging
 
-
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 
@@ -29,7 +28,7 @@ class KeywordStyleAdapter(logging.LoggerAdapter):
 
     def __init__(self, logger, extra=None):
         """Initialize a new StyleAdapter for the provided logger."""
-        super(KeywordStyleAdapter, self).__init__(logger, extra or {})
+        super().__init__(logger, extra or {})
 
     def log(self, level, msg, *args, **kwargs):
         """Log the message provided at the appropriate level."""

@@ -1,14 +1,22 @@
 """Support for Google - Calendar Event Devices."""
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 import logging
 import os
-import yaml
 
+from googleapiclient import discovery as google_discovery
+import httplib2
+from oauth2client.client import (
+    FlowExchangeError,
+    OAuth2DeviceCodeError,
+    OAuth2WebServerFlow,
+)
+from oauth2client.file import Storage
 import voluptuous as vol
 from voluptuous.error import Error as VoluptuousError
+import yaml
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, dt
@@ -59,10 +67,10 @@ SERVICE_ADD_EVENT = "add_event"
 
 DATA_INDEX = "google_calendars"
 
-YAML_DEVICES = "{}_calendars.yaml".format(DOMAIN)
+YAML_DEVICES = f"{DOMAIN}_calendars.yaml"
 SCOPES = "https://www.googleapis.com/auth/calendar"
 
-TOKEN_FILE = ".{}.token".format(DOMAIN)
+TOKEN_FILE = f".{DOMAIN}.token"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -126,13 +134,6 @@ def do_authentication(hass, hass_config, config):
     Notify user of user_code and verification_url then poll
     until we have an access token.
     """
-    from oauth2client.client import (
-        OAuth2WebServerFlow,
-        OAuth2DeviceCodeError,
-        FlowExchangeError,
-    )
-    from oauth2client.file import Storage
-
     oauth = OAuth2WebServerFlow(
         client_id=config[CONF_CLIENT_ID],
         client_secret=config[CONF_CLIENT_SECRET],
@@ -341,10 +342,6 @@ class GoogleCalendarService:
 
     def get(self):
         """Get the calendar service from the storage file token."""
-        import httplib2
-        from oauth2client.file import Storage
-        from googleapiclient import discovery as google_discovery
-
         credentials = Storage(self.token_file).get()
         http = credentials.authorize(httplib2.Http())
         service = google_discovery.build(

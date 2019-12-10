@@ -2,27 +2,27 @@
 import logging
 from typing import Dict
 
-import voluptuous as vol
 from aiohttp import web
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.const import (
-    HTTP_UNPROCESSABLE_ENTITY,
+    ATTR_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    STATE_NOT_HOME,
     CONF_WEBHOOK_ID,
-    ATTR_ID,
     HTTP_OK,
+    HTTP_UNPROCESSABLE_ENTITY,
+    STATE_NOT_HOME,
 )
 from homeassistant.helpers import config_entry_flow
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "locative"
-TRACKER_UPDATE = "{}_tracker_update".format(DOMAIN)
+TRACKER_UPDATE = f"{DOMAIN}_tracker_update"
 
 
 ATTR_DEVICE_ID = "device"
@@ -76,12 +76,10 @@ async def handle_webhook(hass, webhook_id, request):
 
     if direction == "enter":
         async_dispatcher_send(hass, TRACKER_UPDATE, device, gps_location, location_name)
-        return web.Response(
-            text="Setting location to {}".format(location_name), status=HTTP_OK
-        )
+        return web.Response(text=f"Setting location to {location_name}", status=HTTP_OK)
 
     if direction == "exit":
-        current_state = hass.states.get("{}.{}".format(DEVICE_TRACKER, device))
+        current_state = hass.states.get(f"{DEVICE_TRACKER}.{device}")
 
         if current_state is None or current_state.state == location_name:
             location_name = STATE_NOT_HOME
@@ -108,7 +106,7 @@ async def handle_webhook(hass, webhook_id, request):
 
     _LOGGER.error("Received unidentified message from Locative: %s", direction)
     return web.Response(
-        text="Received unidentified message: {}".format(direction),
+        text=f"Received unidentified message: {direction}",
         status=HTTP_UNPROCESSABLE_ENTITY,
     )
 
@@ -129,8 +127,7 @@ async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
     hass.data[DOMAIN]["unsub_device_tracker"].pop(entry.entry_id)()
-    await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
-    return True
+    return await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
 
 
 # pylint: disable=invalid-name

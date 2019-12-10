@@ -4,16 +4,15 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_FILENAME
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
-
 from homeassistant.components.notify import (
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONF_FILENAME
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 CONF_TIMESTAMP = "timestamp"
 
@@ -57,5 +56,5 @@ class FileNotificationService(BaseNotificationService):
             if self.add_timestamp:
                 text = "{} {}\n".format(dt_util.utcnow().isoformat(), message)
             else:
-                text = "{}\n".format(message)
+                text = f"{message}\n"
             file.write(text)

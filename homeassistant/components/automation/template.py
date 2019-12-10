@@ -3,12 +3,13 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.const import CONF_VALUE_TEMPLATE, CONF_PLATFORM, CONF_FOR
 from homeassistant import exceptions
-from homeassistant.helpers import condition
+from homeassistant.const import CONF_FOR, CONF_PLATFORM, CONF_VALUE_TEMPLATE
+from homeassistant.core import callback
+from homeassistant.helpers import condition, config_validation as cv, template
 from homeassistant.helpers.event import async_track_same_state, async_track_template
-from homeassistant.helpers import config_validation as cv, template
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +26,9 @@ TRIGGER_SCHEMA = IF_ACTION_SCHEMA = vol.Schema(
 )
 
 
-async def async_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass, config, action, automation_info, *, platform_type="numeric_state"
+):
     """Listen for state changes based on configuration."""
     value_template = config.get(CONF_VALUE_TEMPLATE)
     value_template.hass = hass
@@ -62,7 +65,7 @@ async def async_trigger(hass, config, action, automation_info):
 
         variables = {
             "trigger": {
-                "platform": "template",
+                "platform": platform_type,
                 "entity_id": entity_id,
                 "from_state": from_s,
                 "to_state": to_s,

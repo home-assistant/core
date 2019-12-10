@@ -1,9 +1,9 @@
 """Custom dumper and representers."""
 from collections import OrderedDict
+
 import yaml
 
 from .objects import NodeListClass
-
 
 # mypy: allow-untyped-calls, no-warn-return-any
 
@@ -29,7 +29,7 @@ def represent_odict(  # type: ignore
     dump, tag, mapping, flow_style=None
 ) -> yaml.MappingNode:
     """Like BaseRepresenter.represent_mapping but does not issue the sort()."""
-    value = []  # type: list
+    value: list = []
     node = yaml.MappingNode(tag, value, flow_style=flow_style)
     if dump.alias_key is not None:
         dump.represented_objects[dump.alias_key] = node

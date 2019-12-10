@@ -1,6 +1,6 @@
 """Integrates Native Apps to Home Assistant."""
-from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.components.webhook import async_register as webhook_register
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.helpers import device_registry as dr, discovery
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
@@ -20,7 +20,6 @@ from .const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
-
 from .http_api import RegistrationsView
 from .webhook import handle_webhook
 from .websocket_api import register_websocket_handlers
@@ -77,14 +76,9 @@ async def async_setup_entry(hass, entry):
 
     device_registry = await dr.async_get_registry(hass)
 
-    identifiers = {
-        (ATTR_DEVICE_ID, registration[ATTR_DEVICE_ID]),
-        (CONF_WEBHOOK_ID, registration[CONF_WEBHOOK_ID]),
-    }
-
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers=identifiers,
+        identifiers={(DOMAIN, registration[ATTR_DEVICE_ID])},
         manufacturer=registration[ATTR_MANUFACTURER],
         model=registration[ATTR_MODEL],
         name=registration[ATTR_DEVICE_NAME],

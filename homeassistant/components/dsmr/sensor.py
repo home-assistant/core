@@ -4,6 +4,9 @@ from datetime import timedelta
 from functools import partial
 import logging
 
+from dsmr_parser import obis_references as obis_ref
+from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
+import serial
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -51,10 +54,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the DSMR sensor."""
     # Suppress logging
     logging.getLogger("dsmr_parser").setLevel(logging.ERROR)
-
-    from dsmr_parser import obis_references as obis_ref
-    from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
-    import serial
 
     dsmr_version = config[CONF_DSMR_VERSION]
 
@@ -212,11 +211,9 @@ class DSMREntity(Entity):
     @property
     def state(self):
         """Return the state of sensor, if available, translate if needed."""
-        from dsmr_parser import obis_references as obis
-
         value = self.get_dsmr_object_attr("value")
 
-        if self._obis == obis.ELECTRICITY_ACTIVE_TARIFF:
+        if self._obis == obis_ref.ELECTRICITY_ACTIVE_TARIFF:
             return self.translate_tariff(value)
 
         try:

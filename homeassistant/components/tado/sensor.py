@@ -12,12 +12,23 @@ ATTR_DATA_ID = "data_id"
 ATTR_DEVICE = "device"
 ATTR_ZONE = "zone"
 
-CLIMATE_SENSOR_TYPES = [
+CLIMATE_HEAT_SENSOR_TYPES = [
     "temperature",
     "humidity",
     "power",
     "link",
     "heating",
+    "tado mode",
+    "overlay",
+    "early start",
+]
+
+CLIMATE_COOL_SENSOR_TYPES = [
+    "temperature",
+    "humidity",
+    "power",
+    "link",
+    "ac",
     "tado mode",
     "overlay",
 ]
@@ -38,12 +49,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensor_items = []
     for zone in zones:
         if zone["type"] == "HEATING":
-            for variable in CLIMATE_SENSOR_TYPES:
+            for variable in CLIMATE_HEAT_SENSOR_TYPES:
                 sensor_items.append(
                     create_zone_sensor(tado, zone, zone["name"], zone["id"], variable)
                 )
         elif zone["type"] == "HOT_WATER":
             for variable in HOT_WATER_SENSOR_TYPES:
+                sensor_items.append(
+                    create_zone_sensor(tado, zone, zone["name"], zone["id"], variable)
+                )
+        elif zone["type"] == "AIR_CONDITIONING":
+            for variable in CLIMATE_COOL_SENSOR_TYPES:
                 sensor_items.append(
                     create_zone_sensor(tado, zone, zone["name"], zone["id"], variable)
                 )
@@ -65,7 +81,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 def create_zone_sensor(tado, zone, name, zone_id, variable):
     """Create a zone sensor."""
-    data_id = "zone {} {}".format(name, zone_id)
+    data_id = f"zone {name} {zone_id}"
 
     tado.add_sensor(
         data_id,
@@ -77,7 +93,7 @@ def create_zone_sensor(tado, zone, name, zone_id, variable):
 
 def create_device_sensor(tado, device, name, device_id, variable):
     """Create a device sensor."""
-    data_id = "device {} {}".format(name, device_id)
+    data_id = f"device {name} {device_id}"
 
     tado.add_sensor(
         data_id,
@@ -103,7 +119,7 @@ class TadoSensor(Entity):
         self.zone_id = zone_id
         self.zone_variable = zone_variable
 
-        self._unique_id = "{} {}".format(zone_variable, zone_id)
+        self._unique_id = f"{zone_variable} {zone_id}"
         self._data_id = data_id
 
         self._state = None
@@ -117,7 +133,7 @@ class TadoSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self.zone_name, self.zone_variable)
+        return f"{self.zone_name} {self.zone_variable}"
 
     @property
     def state(self):
@@ -138,6 +154,8 @@ class TadoSensor(Entity):
             return "%"
         if self.zone_variable == "heating":
             return "%"
+        if self.zone_variable == "ac":
+            return ""
 
     @property
     def icon(self):
@@ -198,10 +216,25 @@ class TadoSensor(Entity):
         elif self.zone_variable == "heating":
             if "activityDataPoints" in data:
                 activity_data = data["activityDataPoints"]
-                self._state = float(activity_data["heatingPower"]["percentage"])
-                self._state_attributes = {
-                    "time": activity_data["heatingPower"]["timestamp"]
-                }
+
+                if (
+                    "heatingPower" in activity_data
+                    and activity_data["heatingPower"] is not None
+                ):
+                    self._state = float(activity_data["heatingPower"]["percentage"])
+                    self._state_attributes = {
+                        "time": activity_data["heatingPower"]["timestamp"]
+                    }
+
+        elif self.zone_variable == "ac":
+            if "activityDataPoints" in data:
+                activity_data = data["activityDataPoints"]
+
+                if "acPower" in activity_data and activity_data["acPower"] is not None:
+                    self._state = activity_data["acPower"]["value"]
+                    self._state_attributes = {
+                        "time": activity_data["acPower"]["timestamp"]
+                    }
 
         elif self.zone_variable == "tado bridge status":
             if "connectionState" in data:
@@ -220,3 +253,9 @@ class TadoSensor(Entity):
             else:
                 self._state = False
                 self._state_attributes = {}
+
+        elif self.zone_variable == "early start":
+            if "preparation" in data and data["preparation"] is not None:
+                self._state = True
+            else:
+                self._state = False

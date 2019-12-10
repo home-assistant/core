@@ -12,18 +12,19 @@ import zipfile
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS,
-    TEMP_CELSIUS,
-    CONF_NAME,
     ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
+    TEMP_CELSIUS,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+import homeassistant.util.dt as dt_util
 
 _RESOURCE = "http://www.bom.gov.au/fwo/{}/{}.{}.json"
 _LOGGER = logging.getLogger(__name__)
@@ -117,7 +118,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 CONF_WMO_ID,
             )
     elif zone_id and wmo_id:
-        station = "{}.{}".format(zone_id, wmo_id)
+        station = f"{zone_id}.{wmo_id}"
     else:
         station = closest_station(
             config.get(CONF_LATITUDE),
@@ -240,7 +241,7 @@ class BOMCurrentData:
             # Never updated before, therefore an update should occur.
             return True
 
-        now = datetime.datetime.now()
+        now = dt_util.utcnow()
         update_due_at = self.last_updated + datetime.timedelta(minutes=35)
         return now > update_due_at
 
@@ -251,8 +252,8 @@ class BOMCurrentData:
             _LOGGER.debug(
                 "BOM was updated %s minutes ago, skipping update as"
                 " < 35 minutes, Now: %s, LastUpdate: %s",
-                (datetime.datetime.now() - self.last_updated),
-                datetime.datetime.now(),
+                (dt_util.utcnow() - self.last_updated),
+                dt_util.utcnow(),
                 self.last_updated,
             )
             return
@@ -263,8 +264,10 @@ class BOMCurrentData:
 
             # set lastupdate using self._data[0] as the first element in the
             # array is the latest date in the json
-            self.last_updated = datetime.datetime.strptime(
-                str(self._data[0]["local_date_time_full"]), "%Y%m%d%H%M%S"
+            self.last_updated = dt_util.as_utc(
+                datetime.datetime.strptime(
+                    str(self._data[0]["local_date_time_full"]), "%Y%m%d%H%M%S"
+                )
             )
             return
 

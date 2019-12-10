@@ -2,38 +2,40 @@
 HVAC channels module for Zigbee Home Automation.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zha/
+https://home-assistant.io/integrations/zha/
 """
 import logging
 
+from zigpy.exceptions import DeliveryError
 import zigpy.zcl.clusters.hvac as hvac
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import ZIGBEE_CHANNEL_REGISTRY, ZigbeeChannel
+from . import ZigbeeChannel
+from .. import registries
 from ..const import REPORT_CONFIG_OP, SIGNAL_ATTR_UPDATED
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(hvac.Dehumidification.cluster_id)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(hvac.Dehumidification.cluster_id)
 class Dehumidification(ZigbeeChannel):
     """Dehumidification channel."""
 
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(hvac.Fan.cluster_id)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(hvac.Fan.cluster_id)
 class FanChannel(ZigbeeChannel):
     """Fan channel."""
 
     _value_attribute = 0
+
     REPORT_CONFIG = ({"attr": "fan_mode", "config": REPORT_CONFIG_OP},)
 
     async def async_set_speed(self, value) -> None:
         """Set the speed of the fan."""
-        from zigpy.exceptions import DeliveryError
 
         try:
             await self.cluster.write_attributes({"fan_mode": value})
@@ -46,9 +48,7 @@ class FanChannel(ZigbeeChannel):
         result = await self.get_attribute_value("fan_mode", from_cache=True)
 
         async_dispatcher_send(
-            self._zha_device.hass,
-            "{}_{}".format(self.unique_id, SIGNAL_ATTR_UPDATED),
-            result,
+            self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", result
         )
 
     @callback
@@ -60,9 +60,7 @@ class FanChannel(ZigbeeChannel):
         )
         if attrid == self._value_attribute:
             async_dispatcher_send(
-                self._zha_device.hass,
-                "{}_{}".format(self.unique_id, SIGNAL_ATTR_UPDATED),
-                value,
+                self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value
             )
 
     async def async_initialize(self, from_cache):
@@ -71,21 +69,21 @@ class FanChannel(ZigbeeChannel):
         await super().async_initialize(from_cache)
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(hvac.Pump.cluster_id)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(hvac.Pump.cluster_id)
 class Pump(ZigbeeChannel):
     """Pump channel."""
 
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(hvac.Thermostat.cluster_id)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(hvac.Thermostat.cluster_id)
 class Thermostat(ZigbeeChannel):
     """Thermostat channel."""
 
     pass
 
 
-@ZIGBEE_CHANNEL_REGISTRY.register(hvac.UserInterface.cluster_id)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(hvac.UserInterface.cluster_id)
 class UserInterface(ZigbeeChannel):
     """User interface (thermostat) channel."""
 

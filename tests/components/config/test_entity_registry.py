@@ -3,9 +3,10 @@ from collections import OrderedDict
 
 import pytest
 
-from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.components.config import entity_registry
-from tests.common import mock_registry, MockEntity, MockEntityPlatform
+from homeassistant.helpers.entity_registry import RegistryEntry
+
+from tests.common import MockEntity, MockEntityPlatform, mock_registry
 
 
 @pytest.fixture
@@ -105,9 +106,9 @@ async def test_get_entity(hass, client):
     }
 
 
-async def test_update_entity_name(hass, client):
-    """Test updating entity name."""
-    mock_registry(
+async def test_update_entity(hass, client):
+    """Test updating entity."""
+    registry = mock_registry(
         hass,
         {
             "test_domain.world": RegistryEntry(
@@ -127,6 +128,7 @@ async def test_update_entity_name(hass, client):
     assert state is not None
     assert state.name == "before update"
 
+    # UPDATE NAME
     await client.send_json(
         {
             "id": 6,
@@ -149,6 +151,42 @@ async def test_update_entity_name(hass, client):
 
     state = hass.states.get("test_domain.world")
     assert state.name == "after update"
+
+    # UPDATE DISABLED_BY TO USER
+    await client.send_json(
+        {
+            "id": 7,
+            "type": "config/entity_registry/update",
+            "entity_id": "test_domain.world",
+            "disabled_by": "user",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert hass.states.get("test_domain.world") is None
+    assert registry.entities["test_domain.world"].disabled_by == "user"
+
+    # UPDATE DISABLED_BY TO NONE
+    await client.send_json(
+        {
+            "id": 8,
+            "type": "config/entity_registry/update",
+            "entity_id": "test_domain.world",
+            "disabled_by": None,
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["result"] == {
+        "config_entry_id": None,
+        "device_id": None,
+        "disabled_by": None,
+        "platform": "test_platform",
+        "entity_id": "test_domain.world",
+        "name": "after update",
+    }
 
 
 async def test_update_entity_no_changes(hass, client):

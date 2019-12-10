@@ -1,40 +1,41 @@
 """Provide the functionality to group entities."""
 import asyncio
 import logging
+from typing import Any, Iterable, List, Optional, cast
 
 import voluptuous as vol
 
 from homeassistant import core as ha
 from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
+    ATTR_ICON,
+    ATTR_NAME,
     CONF_ICON,
     CONF_NAME,
+    SERVICE_RELOAD,
     STATE_CLOSED,
     STATE_HOME,
+    STATE_LOCKED,
     STATE_NOT_HOME,
     STATE_OFF,
+    STATE_OK,
     STATE_ON,
     STATE_OPEN,
-    STATE_LOCKED,
-    STATE_UNLOCKED,
-    STATE_OK,
     STATE_PROBLEM,
     STATE_UNKNOWN,
-    ATTR_ASSUMED_STATE,
-    SERVICE_RELOAD,
-    ATTR_NAME,
-    ATTR_ICON,
+    STATE_UNLOCKED,
 )
 from homeassistant.core import callback
-from homeassistant.loader import bind_hass
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
-from homeassistant.util.async_ import run_coroutine_threadsafe
+from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.loader import bind_hass
 
-from .reproduce_state import async_reproduce_states  # noqa
+# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
 DOMAIN = "group"
 
@@ -60,28 +61,6 @@ SERVICE_SET = "set"
 SERVICE_REMOVE = "remove"
 
 CONTROL_TYPES = vol.In(["hidden", None])
-
-SET_VISIBILITY_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_VISIBLE): cv.boolean}
-)
-
-RELOAD_SERVICE_SCHEMA = vol.Schema({})
-
-SET_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_OBJECT_ID): cv.slug,
-        vol.Optional(ATTR_NAME): cv.string,
-        vol.Optional(ATTR_VIEW): cv.boolean,
-        vol.Optional(ATTR_ICON): cv.string,
-        vol.Optional(ATTR_CONTROL): CONTROL_TYPES,
-        vol.Optional(ATTR_VISIBLE): cv.boolean,
-        vol.Optional(ATTR_ALL): cv.boolean,
-        vol.Exclusive(ATTR_ENTITIES, "entities"): cv.entity_ids,
-        vol.Exclusive(ATTR_ADD_ENTITIES, "entities"): cv.entity_ids,
-    }
-)
-
-REMOVE_SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_OBJECT_ID): cv.slug})
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -144,12 +123,12 @@ def is_on(hass, entity_id):
 
 
 @bind_hass
-def expand_entity_ids(hass, entity_ids):
+def expand_entity_ids(hass: HomeAssistantType, entity_ids: Iterable[Any]) -> List[str]:
     """Return entity_ids with group entity ids replaced by their members.
 
     Async friendly.
     """
-    found_ids = []
+    found_ids: List[str] = []
     for entity_id in entity_ids:
         if not isinstance(entity_id, str):
             continue
@@ -183,7 +162,9 @@ def expand_entity_ids(hass, entity_ids):
 
 
 @bind_hass
-def get_entity_ids(hass, entity_id, domain_filter=None):
+def get_entity_ids(
+    hass: HomeAssistantType, entity_id: str, domain_filter: Optional[str] = None
+) -> List[str]:
     """Get members of this group.
 
     Async friendly.
@@ -195,7 +176,7 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
 
     entity_ids = group.attributes[ATTR_ENTITY_ID]
     if not domain_filter:
-        return entity_ids
+        return cast(List[str], entity_ids)
 
     domain_filter = domain_filter.lower() + "."
 
@@ -223,7 +204,7 @@ async def async_setup(hass, config):
         await component.async_add_entities(auto)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=RELOAD_SERVICE_SCHEMA
+        DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
     )
 
     service_lock = asyncio.Lock()
@@ -315,11 +296,29 @@ async def async_setup(hass, config):
             await component.async_remove_entity(entity_id)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET, locked_service_handler, schema=SET_SERVICE_SCHEMA
+        DOMAIN,
+        SERVICE_SET,
+        locked_service_handler,
+        schema=vol.Schema(
+            {
+                vol.Required(ATTR_OBJECT_ID): cv.slug,
+                vol.Optional(ATTR_NAME): cv.string,
+                vol.Optional(ATTR_VIEW): cv.boolean,
+                vol.Optional(ATTR_ICON): cv.string,
+                vol.Optional(ATTR_CONTROL): CONTROL_TYPES,
+                vol.Optional(ATTR_VISIBLE): cv.boolean,
+                vol.Optional(ATTR_ALL): cv.boolean,
+                vol.Exclusive(ATTR_ENTITIES, "entities"): cv.entity_ids,
+                vol.Exclusive(ATTR_ADD_ENTITIES, "entities"): cv.entity_ids,
+            }
+        ),
     )
 
     hass.services.async_register(
-        DOMAIN, SERVICE_REMOVE, groups_service_handler, schema=REMOVE_SERVICE_SCHEMA
+        DOMAIN,
+        SERVICE_REMOVE,
+        groups_service_handler,
+        schema=vol.Schema({vol.Required(ATTR_OBJECT_ID): cv.slug}),
     )
 
     async def visibility_service_handler(service):
@@ -340,7 +339,7 @@ async def async_setup(hass, config):
         DOMAIN,
         SERVICE_SET_VISIBILITY,
         visibility_service_handler,
-        schema=SET_VISIBILITY_SERVICE_SCHEMA,
+        schema=make_entity_service_schema({vol.Required(ATTR_VISIBLE): cv.boolean}),
     )
 
     return True
@@ -425,7 +424,7 @@ class Group(Entity):
         mode=None,
     ):
         """Initialize a group."""
-        return run_coroutine_threadsafe(
+        return asyncio.run_coroutine_threadsafe(
             Group.async_create_group(
                 hass,
                 name,
@@ -541,7 +540,7 @@ class Group(Entity):
 
     def update_tracked_entity_ids(self, entity_ids):
         """Update the member entity IDs."""
-        run_coroutine_threadsafe(
+        asyncio.run_coroutine_threadsafe(
             self.async_update_tracked_entity_ids(entity_ids), self.hass.loop
         ).result()
 
@@ -652,7 +651,6 @@ class Group(Entity):
         if gr_on is None:
             return
 
-        # pylint: disable=too-many-boolean-expressions
         if tr_state is None or (
             (gr_state == gr_on and tr_state.state == gr_off)
             or (gr_state == gr_off and tr_state.state == gr_on)

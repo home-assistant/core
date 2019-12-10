@@ -1,10 +1,19 @@
 {
   "domain": "huawei_lte",
   "name": "Huawei LTE",
-  "documentation": "https://www.home-assistant.io/components/huawei_lte",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/huawei_lte",
   "requirements": [
     "getmac==0.8.1",
-    "huawei-lte-api==1.2.0"
+    "huawei-lte-api==1.4.4",
+    "stringcase==1.2.0",
+    "url-normalize==1.4.1"
+  ],
+  "ssdp": [
+    {
+      "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+      "manufacturer": "Huawei"
+    }
   ],
   "dependencies": [],
   "codeowners": [

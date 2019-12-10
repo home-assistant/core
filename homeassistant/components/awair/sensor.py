@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 import math
 
+from python_awair import AwairClient
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -105,7 +106,6 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
 # used at this time is the `uuid` value.
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Connect to the Awair API and find devices."""
-    from python_awair import AwairClient
 
     token = config[CONF_ACCESS_TOKEN]
     client = AwairClient(token, session=async_get_clientsession(hass))
@@ -150,7 +150,7 @@ class AwairSensor(Entity):
         """Initialize the sensor."""
         self._uuid = device[CONF_UUID]
         self._device_class = SENSOR_TYPES[sensor_type]["device_class"]
-        self._name = "Awair {}".format(self._device_class)
+        self._name = f"Awair {self._device_class}"
         unit = SENSOR_TYPES[sensor_type]["unit_of_measurement"]
         self._unit_of_measurement = unit
         self._data = data
@@ -202,7 +202,7 @@ class AwairSensor(Entity):
     @property
     def unique_id(self):
         """Return the unique id of this entity."""
-        return "{}_{}".format(self._uuid, self._type)
+        return f"{self._uuid}_{self._type}"
 
     @property
     def unit_of_measurement(self):

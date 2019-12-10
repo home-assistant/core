@@ -9,18 +9,21 @@ https://home-assistant.io/components/sensor.thermoworks_smoke/
 import logging
 
 from requests import RequestException
+from requests.exceptions import HTTPError
+from stringcase import camelcase, snakecase
+import thermoworks_smoke
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    TEMP_FAHRENHEIT,
-    CONF_EMAIL,
-    CONF_PASSWORD,
-    CONF_MONITORED_CONDITIONS,
-    CONF_EXCLUDE,
     ATTR_BATTERY_LEVEL,
+    CONF_EMAIL,
+    CONF_EXCLUDE,
+    CONF_MONITORED_CONDITIONS,
+    CONF_PASSWORD,
+    TEMP_FAHRENHEIT,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,8 +68,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the thermoworks sensor."""
-    import thermoworks_smoke
-    from requests.exceptions import HTTPError
 
     email = config[CONF_EMAIL]
     password = config[CONF_PASSWORD]
@@ -86,7 +87,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         add_entities(dev, True)
     except HTTPError as error:
-        msg = "{}".format(error.strerror)
+        msg = f"{error.strerror}"
         if "EMAIL_NOT_FOUND" in msg or "INVALID_PASSWORD" in msg:
             _LOGGER.error("Invalid email and password combination")
         else:
@@ -105,7 +106,7 @@ class ThermoworksSmokeSensor(Entity):
         self._state = None
         self._attributes = {}
         self._unit_of_measurement = TEMP_FAHRENHEIT
-        self._unique_id = "{serial}-{type}".format(serial=serial, type=sensor_type)
+        self._unique_id = f"{serial}-{sensor_type}"
         self.serial = serial
         self.mgr = mgr
         self.update_unit()
@@ -144,7 +145,6 @@ class ThermoworksSmokeSensor(Entity):
 
     def update(self):
         """Get the monitored data from firebase."""
-        from stringcase import camelcase, snakecase
 
         try:
             values = self.mgr.data(self.serial)

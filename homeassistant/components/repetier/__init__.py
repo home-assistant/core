@@ -1,7 +1,8 @@
 """Support for Repetier-Server sensors."""
-import logging
 from datetime import timedelta
+import logging
 
+import pyrepetier
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -107,7 +108,7 @@ def has_all_unique_names(value):
 
 
 SENSOR_TYPES = {
-    # Type, Unit, Icon
+    # Type, Unit, Icon, post
     "bed_temperature": ["temperature", TEMP_CELSIUS, "mdi:thermometer", "_bed_"],
     "extruder_temperature": [
         "temperature",
@@ -160,8 +161,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the Repetier Server component."""
-    import pyrepetier
-
     hass.data[REPETIER_API] = {}
 
     for repetier in config[DOMAIN]:
@@ -239,7 +238,7 @@ class PrinterAPI:
                 info["name"] = printer.slug
                 info["printer_name"] = self.conf_name
 
-                known = "{}-{}".format(printer.slug, sensor_type)
+                known = f"{printer.slug}-{sensor_type}"
                 if known in self._known_entities:
                     continue
 
@@ -249,12 +248,12 @@ class PrinterAPI:
                     if prop_data is None:
                         continue
                     for idx, _ in enumerate(prop_data):
-                        info["temp_id"] = idx
-                        sensor_info.append(info)
+                        prop_info = info.copy()
+                        prop_info["temp_id"] = idx
+                        sensor_info.append(prop_info)
                 else:
                     info["temp_id"] = None
                     sensor_info.append(info)
-
                 self._known_entities.add(known)
 
         if not sensor_info:

@@ -1,114 +1,31 @@
 """Support gathering system information of hosts which are running glances."""
-from datetime import timedelta
 import logging
 
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
-    CONF_RESOURCES,
-    STATE_UNAVAILABLE,
-    TEMP_CELSIUS,
-)
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+
+from .const import DATA_UPDATED, DOMAIN, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_VERSION = "version"
-
-DEFAULT_HOST = "localhost"
-DEFAULT_NAME = "Glances"
-DEFAULT_PORT = "61208"
-DEFAULT_VERSION = 2
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
-
-SENSOR_TYPES = {
-    "disk_use_percent": ["Disk used percent", "%", "mdi:harddisk"],
-    "disk_use": ["Disk used", "GiB", "mdi:harddisk"],
-    "disk_free": ["Disk free", "GiB", "mdi:harddisk"],
-    "memory_use_percent": ["RAM used percent", "%", "mdi:memory"],
-    "memory_use": ["RAM used", "MiB", "mdi:memory"],
-    "memory_free": ["RAM free", "MiB", "mdi:memory"],
-    "swap_use_percent": ["Swap used percent", "%", "mdi:memory"],
-    "swap_use": ["Swap used", "GiB", "mdi:memory"],
-    "swap_free": ["Swap free", "GiB", "mdi:memory"],
-    "processor_load": ["CPU load", "15 min", "mdi:memory"],
-    "process_running": ["Running", "Count", "mdi:memory"],
-    "process_total": ["Total", "Count", "mdi:memory"],
-    "process_thread": ["Thread", "Count", "mdi:memory"],
-    "process_sleeping": ["Sleeping", "Count", "mdi:memory"],
-    "cpu_use_percent": ["CPU used", "%", "mdi:memory"],
-    "cpu_temp": ["CPU Temp", TEMP_CELSIUS, "mdi:thermometer"],
-    "docker_active": ["Containers active", "", "mdi:docker"],
-    "docker_cpu_use": ["Containers CPU used", "%", "mdi:docker"],
-    "docker_memory_use": ["Containers RAM used", "MiB", "mdi:docker"],
-}
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_SSL, default=False): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-        vol.Optional(CONF_RESOURCES, default=["disk_use"]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        ),
-        vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.In([2, 3]),
-    }
-)
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the Glances sensors is done through async_setup_entry."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Glances sensors."""
-    from glances_api import Glances
 
-    name = config[CONF_NAME]
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
-    version = config[CONF_VERSION]
-    var_conf = config[CONF_RESOURCES]
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    ssl = config[CONF_SSL]
-    verify_ssl = config[CONF_VERIFY_SSL]
-
-    session = async_get_clientsession(hass, verify_ssl)
-    glances = GlancesData(
-        Glances(
-            hass.loop,
-            session,
-            host=host,
-            port=port,
-            version=version,
-            username=username,
-            password=password,
-            ssl=ssl,
-        )
-    )
-
-    await glances.async_update()
-
-    if glances.api.data is None:
-        raise PlatformNotReady
-
+    glances_data = hass.data[DOMAIN][config_entry.entry_id]
+    name = config_entry.data[CONF_NAME]
     dev = []
-    for resource in var_conf:
-        dev.append(GlancesSensor(glances, name, resource))
+    for sensor_type in SENSOR_TYPES:
+        dev.append(
+            GlancesSensor(glances_data, name, SENSOR_TYPES[sensor_type][0], sensor_type)
+        )
 
     async_add_entities(dev, True)
 
@@ -116,9 +33,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class GlancesSensor(Entity):
     """Implementation of a Glances sensor."""
 
-    def __init__(self, glances, name, sensor_type):
+    def __init__(self, glances_data, name, sensor_name, sensor_type):
         """Initialize the sensor."""
-        self.glances = glances
+        self.glances_data = glances_data
+        self._sensor_name = sensor_name
         self._name = name
         self.type = sensor_type
         self._state = None
@@ -127,7 +45,12 @@ class GlancesSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._name, SENSOR_TYPES[self.type][0])
+        return f"{self._name} {self._sensor_name}"
+
+    @property
+    def unique_id(self):
+        """Set unique_id for sensor."""
+        return f"{self.glances_data.host}-{self.name}"
 
     @property
     def icon(self):
@@ -142,17 +65,31 @@ class GlancesSensor(Entity):
     @property
     def available(self):
         """Could the device be accessed during the last update call."""
-        return self.glances.available
+        return self.glances_data.available
 
     @property
     def state(self):
         """Return the state of the resources."""
         return self._state
 
+    @property
+    def should_poll(self):
+        """Return the polling requirement for this sensor."""
+        return False
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        async_dispatcher_connect(
+            self.hass, DATA_UPDATED, self._schedule_immediate_update
+        )
+
+    @callback
+    def _schedule_immediate_update(self):
+        self.async_schedule_update_ha_state(True)
+
     async def async_update(self):
         """Get the latest data from REST API."""
-        await self.glances.async_update()
-        value = self.glances.api.data
+        value = self.glances_data.api.data
 
         if value is not None:
             if self.type == "disk_use_percent":
@@ -197,16 +134,20 @@ class GlancesSensor(Entity):
             elif self.type == "cpu_temp":
                 for sensor in value["sensors"]:
                     if sensor["label"] in [
-                        "CPU",
+                        "amdgpu 1",
+                        "aml_thermal",
+                        "Core 0",
+                        "Core 1",
                         "CPU Temperature",
+                        "CPU",
+                        "cpu-thermal 1",
+                        "cpu_thermal 1",
+                        "exynos-therm 1",
                         "Package id 0",
                         "Physical id 0",
-                        "cpu_thermal 1",
-                        "cpu-thermal 1",
-                        "exynos-therm 1",
-                        "soc_thermal 1",
+                        "radeon 1",
                         "soc-thermal 1",
-                        "aml_thermal",
+                        "soc_thermal 1",
                     ]:
                         self._state = sensor["value"]
             elif self.type == "docker_active":
@@ -245,24 +186,3 @@ class GlancesSensor(Entity):
                         self._state = round(mem_use / 1024 ** 2, 1)
                 except KeyError:
                     self._state = STATE_UNAVAILABLE
-
-
-class GlancesData:
-    """The class for handling the data retrieval."""
-
-    def __init__(self, api):
-        """Initialize the data object."""
-        self.api = api
-        self.available = True
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self):
-        """Get the latest data from the Glances REST API."""
-        from glances_api.exceptions import GlancesApiError
-
-        try:
-            await self.api.get_data()
-            self.available = True
-        except GlancesApiError:
-            _LOGGER.error("Unable to fetch data from Glances")
-            self.available = False

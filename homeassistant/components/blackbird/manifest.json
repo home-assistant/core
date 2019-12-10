@@ -1,7 +1,7 @@
 {
   "domain": "blackbird",
   "name": "Blackbird",
-  "documentation": "https://www.home-assistant.io/components/blackbird",
+  "documentation": "https://www.home-assistant.io/integrations/blackbird",
   "requirements": [
     "pyblackbird==0.5"
   ],

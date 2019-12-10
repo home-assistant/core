@@ -1,6 +1,6 @@
 """The tests for the Geofency device tracker platform."""
 # pylint: disable=redefined-outer-name
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import pytest
 

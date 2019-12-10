@@ -1,17 +1,18 @@
 """Sensor to indicate whether the current day is a workday."""
-import logging
 from datetime import datetime, timedelta
+import logging
 
+import holidays
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
 from homeassistant.const import CONF_NAME, WEEKDAYS
-from homeassistant.components.binary_sensor import BinarySensorDevice
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 # List of all countries currently supported by holidays
+# Source: https://github.com/dr-prodigy/python-holidays#available-countries
 # There seems to be no way to get the list out at runtime
 ALL_COUNTRIES = [
     "Argentina",
@@ -41,6 +42,8 @@ ALL_COUNTRIES = [
     "Denmark",
     "DK",
     "England",
+    "Estonia",
+    "EE",
     "EuropeanCentralBank",
     "ECB",
     "TAR",
@@ -53,7 +56,9 @@ ALL_COUNTRIES = [
     "Hungary",
     "HU",
     "Honduras",
-    "HUD",
+    "HND",
+    "Iceland",
+    "IS",
     "India",
     "IND",
     "Ireland",
@@ -63,6 +68,8 @@ ALL_COUNTRIES = [
     "IT",
     "Japan",
     "JP",
+    "Kenya",
+    "KE",
     "Lithuania",
     "LT",
     "Luxembourg",
@@ -76,6 +83,9 @@ ALL_COUNTRIES = [
     "Northern Ireland",
     "Norway",
     "NO",
+    "Peru",
+    "PE",
+    "Poland",
     "Polish",
     "PL",
     "Portugal",
@@ -141,8 +151,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Workday sensor."""
-    import holidays
-
     sensor_name = config.get(CONF_NAME)
     country = config.get(CONF_COUNTRY)
     province = config.get(CONF_PROVINCE)

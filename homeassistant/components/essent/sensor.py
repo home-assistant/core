@@ -95,7 +95,7 @@ class EssentMeter(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "Essent {} ({})".format(self._type, self._tariff)
+        return f"Essent {self._type} ({self._tariff})"
 
     @property
     def state(self):

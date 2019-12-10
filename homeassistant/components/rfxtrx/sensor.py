@@ -1,6 +1,7 @@
 """Support for RFXtrx sensors."""
 import logging
 
+from RFXtrx import SensorEvent
 import voluptuous as vol
 
 from homeassistant.components import rfxtrx
@@ -43,8 +44,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RFXtrx platform."""
-    from RFXtrx import SensorEvent
-
     sensors = []
     for packet_id, entity_info in config[CONF_DEVICES].items():
         event = rfxtrx.get_rfx_object(packet_id)
@@ -98,7 +97,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if not config[CONF_AUTOMATIC_ADD]:
             return
 
-        pkt_id = "".join("{0:02x}".format(x) for x in event.data)
+        pkt_id = "".join(f"{x:02x}" for x in event.data)
         _LOGGER.info("Automatic add rfxtrx.sensor: %s", pkt_id)
 
         data_type = ""
@@ -141,7 +140,7 @@ class RfxtrxSensor(Entity):
     @property
     def name(self):
         """Get the name of the sensor."""
-        return "{} {}".format(self._name, self.data_type)
+        return f"{self._name} {self.data_type}"
 
     @property
     def device_state_attributes(self):

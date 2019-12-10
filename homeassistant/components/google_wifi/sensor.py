@@ -1,21 +1,20 @@
 """Support for retrieving status info from Google Wifi/OnHub routers."""
-import logging
 from datetime import timedelta
+import logging
 
-import voluptuous as vol
 import requests
+import voluptuous as vol
 
-from homeassistant.util import dt
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME,
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
     STATE_UNKNOWN,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+from homeassistant.util import Throttle, dt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,7 +87,7 @@ class GoogleWifiSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{}_{}".format(self._name, self._var_name)
+        return f"{self._name}_{self._var_name}"
 
     @property
     def icon(self):
@@ -125,7 +124,7 @@ class GoogleWifiAPI:
     def __init__(self, host, conditions):
         """Initialize the data object."""
         uri = "http://"
-        resource = "{}{}{}".format(uri, host, ENDPOINT)
+        resource = f"{uri}{host}{ENDPOINT}"
         self._request = requests.Request("GET", resource).prepare()
         self.raw_data = None
         self.conditions = conditions

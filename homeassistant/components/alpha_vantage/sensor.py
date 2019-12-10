@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+from alpha_vantage.foreignexchange import ForeignExchange
+from alpha_vantage.timeseries import TimeSeries
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -62,15 +64,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Alpha Vantage sensor."""
-    from alpha_vantage.timeseries import TimeSeries
-    from alpha_vantage.foreignexchange import ForeignExchange
-
     api_key = config.get(CONF_API_KEY)
     symbols = config.get(CONF_SYMBOLS, [])
     conversions = config.get(CONF_FOREIGN_EXCHANGE, [])
 
     if not symbols and not conversions:
-        msg = "Warning: No symbols or currencies configured."
+        msg = "No symbols or currencies configured."
         hass.components.persistent_notification.create(msg, "Sensor alpha_vantage")
         _LOGGER.warning(msg)
         return
@@ -168,7 +167,7 @@ class AlphaVantageForeignExchange(Entity):
         if CONF_NAME in config:
             self._name = config.get(CONF_NAME)
         else:
-            self._name = "{}/{}".format(self._to_currency, self._from_currency)
+            self._name = f"{self._to_currency}/{self._from_currency}"
         self._unit_of_measurement = self._to_currency
         self._icon = ICONS.get(self._from_currency, "USD")
         self.values = None

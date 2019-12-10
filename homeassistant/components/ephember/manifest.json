@@ -1,9 +1,9 @@
 {
   "domain": "ephember",
   "name": "Ephember",
-  "documentation": "https://www.home-assistant.io/components/ephember",
+  "documentation": "https://www.home-assistant.io/integrations/ephember",
   "requirements": [
-    "pyephember==0.2.0"
+    "pyephember==0.3.1"
   ],
   "dependencies": [],
   "codeowners": [

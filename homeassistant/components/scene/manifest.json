@@ -1,7 +1,7 @@
 {
   "domain": "scene",
   "name": "Scene",
-  "documentation": "https://www.home-assistant.io/components/scene",
+  "documentation": "https://www.home-assistant.io/integrations/scene",
   "requirements": [],
   "dependencies": [],
   "codeowners": [

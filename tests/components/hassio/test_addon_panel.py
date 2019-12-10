@@ -1,13 +1,11 @@
 """Test add-on panel."""
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant.setup import async_setup_component
-from homeassistant.const import HTTP_HEADER_HA_AUTH
 
 from tests.common import mock_coro
-from . import API_PASSWORD
 
 
 @pytest.fixture(autouse=True)
@@ -53,9 +51,7 @@ async def test_hassio_addon_panel_startup(hass, aioclient_mock, hassio_env):
         "homeassistant.components.hassio.addon_panel._register_panel",
         Mock(return_value=mock_coro()),
     ) as mock_panel:
-        await async_setup_component(
-            hass, "hassio", {"http": {"api_password": API_PASSWORD}}
-        )
+        await async_setup_component(hass, "hassio", {})
         await hass.async_block_till_done()
 
         assert aioclient_mock.call_count == 3
@@ -98,9 +94,7 @@ async def test_hassio_addon_panel_api(hass, aioclient_mock, hassio_env, hass_cli
         "homeassistant.components.hassio.addon_panel._register_panel",
         Mock(return_value=mock_coro()),
     ) as mock_panel:
-        await async_setup_component(
-            hass, "hassio", {"http": {"api_password": API_PASSWORD}}
-        )
+        await async_setup_component(hass, "hassio", {})
         await hass.async_block_till_done()
 
         assert aioclient_mock.call_count == 3
@@ -113,14 +107,10 @@ async def test_hassio_addon_panel_api(hass, aioclient_mock, hassio_env, hass_cli
 
         hass_client = await hass_client()
 
-        resp = await hass_client.post(
-            "/api/hassio_push/panel/test2", headers={HTTP_HEADER_HA_AUTH: API_PASSWORD}
-        )
+        resp = await hass_client.post("/api/hassio_push/panel/test2")
         assert resp.status == 400
 
-        resp = await hass_client.post(
-            "/api/hassio_push/panel/test1", headers={HTTP_HEADER_HA_AUTH: API_PASSWORD}
-        )
+        resp = await hass_client.post("/api/hassio_push/panel/test1")
         assert resp.status == 200
         assert mock_panel.call_count == 2
 

@@ -2,8 +2,21 @@
 Mapping registries for Zigbee Home Automation.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zha/
+https://home-assistant.io/integrations/zha/
 """
+import collections
+
+import bellows.ezsp
+import bellows.zigbee.application
+import zigpy.profiles.zha
+import zigpy.profiles.zll
+import zigpy.zcl as zcl
+import zigpy_deconz.api
+import zigpy_deconz.zigbee.application
+import zigpy_xbee.api
+import zigpy_xbee.zigbee.application
+import zigpy_zigate.api
+import zigpy_zigate.zigbee.application
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
@@ -13,11 +26,10 @@ from homeassistant.components.lock import DOMAIN as LOCK
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
 
+# importing channels updates registries
+from . import channels  # noqa: F401 pylint: disable=unused-import
 from .const import (
     CONTROLLER,
-    REPORT_CONFIG_ASAP,
-    REPORT_CONFIG_MAX_INT,
-    REPORT_CONFIG_MIN_INT,
     SENSOR_ACCELERATION,
     SENSOR_BATTERY,
     SENSOR_ELECTRICAL_MEASUREMENT,
@@ -33,24 +45,25 @@ from .const import (
     ZONE,
     RadioType,
 )
+from .decorators import DictRegistry, SetRegistry
 
-BINARY_SENSOR_CLUSTERS = set()
+BINARY_SENSOR_CLUSTERS = SetRegistry()
 BINARY_SENSOR_TYPES = {}
-BINDABLE_CLUSTERS = []
-CHANNEL_ONLY_CLUSTERS = []
+BINDABLE_CLUSTERS = SetRegistry()
+CHANNEL_ONLY_CLUSTERS = SetRegistry()
 CLUSTER_REPORT_CONFIGS = {}
 CUSTOM_CLUSTER_MAPPINGS = {}
-DEVICE_CLASS = {}
-DEVICE_TRACKER_CLUSTERS = set()
-EVENT_RELAY_CLUSTERS = []
-LIGHT_CLUSTERS = set()
-OUTPUT_CHANNEL_ONLY_CLUSTERS = []
+DEVICE_CLASS = collections.defaultdict(dict)
+DEVICE_TRACKER_CLUSTERS = SetRegistry()
+EVENT_RELAY_CLUSTERS = SetRegistry()
+LIGHT_CLUSTERS = SetRegistry()
+OUTPUT_CHANNEL_ONLY_CLUSTERS = SetRegistry()
 RADIO_TYPES = {}
-REMOTE_DEVICE_TYPES = {}
+REMOTE_DEVICE_TYPES = collections.defaultdict(list)
 SENSOR_TYPES = {}
 SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {}
 SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {}
-SWITCH_CLUSTERS = set()
+SWITCH_CLUSTERS = SetRegistry()
 SMARTTHINGS_ACCELERATION_CLUSTER = 0xFC02
 SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE = 0x8000
 SMARTTHINGS_HUMIDITY_CLUSTER = 0xFC45
@@ -62,6 +75,8 @@ COMPONENT_CLUSTERS = {
     SWITCH: SWITCH_CLUSTERS,
 }
 
+ZIGBEE_CHANNEL_REGISTRY = DictRegistry()
+
 
 def establish_device_mappings():
     """Establish mappings between ZCL objects and HA ZHA objects.
@@ -69,73 +84,31 @@ def establish_device_mappings():
     These cannot be module level, as importing bellows must be done in a
     in a function.
     """
-    from zigpy import zcl
-    from zigpy.profiles import zha, zll
-
-    if zha.PROFILE_ID not in DEVICE_CLASS:
-        DEVICE_CLASS[zha.PROFILE_ID] = {}
-    if zll.PROFILE_ID not in DEVICE_CLASS:
-        DEVICE_CLASS[zll.PROFILE_ID] = {}
-
-    if zha.PROFILE_ID not in REMOTE_DEVICE_TYPES:
-        REMOTE_DEVICE_TYPES[zha.PROFILE_ID] = []
-    if zll.PROFILE_ID not in REMOTE_DEVICE_TYPES:
-        REMOTE_DEVICE_TYPES[zll.PROFILE_ID] = []
-
-    def get_ezsp_radio():
-        import bellows.ezsp
-        from bellows.zigbee.application import ControllerApplication
-
-        return {ZHA_GW_RADIO: bellows.ezsp.EZSP(), CONTROLLER: ControllerApplication}
-
     RADIO_TYPES[RadioType.ezsp.name] = {
-        ZHA_GW_RADIO: get_ezsp_radio,
+        ZHA_GW_RADIO: bellows.ezsp.EZSP,
+        CONTROLLER: bellows.zigbee.application.ControllerApplication,
         ZHA_GW_RADIO_DESCRIPTION: "EZSP",
     }
 
-    def get_deconz_radio():
-        import zigpy_deconz.api
-        from zigpy_deconz.zigbee.application import ControllerApplication
-
-        return {
-            ZHA_GW_RADIO: zigpy_deconz.api.Deconz(),
-            CONTROLLER: ControllerApplication,
-        }
-
     RADIO_TYPES[RadioType.deconz.name] = {
-        ZHA_GW_RADIO: get_deconz_radio,
+        ZHA_GW_RADIO: zigpy_deconz.api.Deconz,
+        CONTROLLER: zigpy_deconz.zigbee.application.ControllerApplication,
         ZHA_GW_RADIO_DESCRIPTION: "Deconz",
     }
 
-    def get_xbee_radio():
-        import zigpy_xbee.api
-        from zigpy_xbee.zigbee.application import ControllerApplication
-
-        return {ZHA_GW_RADIO: zigpy_xbee.api.XBee(), CONTROLLER: ControllerApplication}
-
     RADIO_TYPES[RadioType.xbee.name] = {
-        ZHA_GW_RADIO: get_xbee_radio,
+        ZHA_GW_RADIO: zigpy_xbee.api.XBee,
+        CONTROLLER: zigpy_xbee.zigbee.application.ControllerApplication,
         ZHA_GW_RADIO_DESCRIPTION: "XBee",
     }
 
-    def get_zigate_radio():
-        import zigpy_zigate.api
-        from zigpy_zigate.zigbee.application import ControllerApplication
-
-        return {
-            ZHA_GW_RADIO: zigpy_zigate.api.ZiGate(),
-            CONTROLLER: ControllerApplication,
-        }
-
     RADIO_TYPES[RadioType.zigate.name] = {
-        ZHA_GW_RADIO: get_zigate_radio,
+        ZHA_GW_RADIO: zigpy_zigate.api.ZiGate,
+        CONTROLLER: zigpy_zigate.zigbee.application.ControllerApplication,
         ZHA_GW_RADIO_DESCRIPTION: "ZiGate",
     }
 
     BINARY_SENSOR_CLUSTERS.add(SMARTTHINGS_ACCELERATION_CLUSTER)
-    BINARY_SENSOR_CLUSTERS.add(zcl.clusters.general.OnOff.cluster_id)
-    BINARY_SENSOR_CLUSTERS.add(zcl.clusters.measurement.OccupancySensing.cluster_id)
-    BINARY_SENSOR_CLUSTERS.add(zcl.clusters.security.IasZone.cluster_id)
 
     BINARY_SENSOR_TYPES.update(
         {
@@ -146,70 +119,35 @@ def establish_device_mappings():
         }
     )
 
-    BINDABLE_CLUSTERS.append(zcl.clusters.general.LevelControl.cluster_id)
-    BINDABLE_CLUSTERS.append(zcl.clusters.general.OnOff.cluster_id)
-    BINDABLE_CLUSTERS.append(zcl.clusters.lighting.Color.cluster_id)
-
-    CHANNEL_ONLY_CLUSTERS.append(zcl.clusters.general.Basic.cluster_id)
-    CHANNEL_ONLY_CLUSTERS.append(zcl.clusters.lightlink.LightLink.cluster_id)
-
-    CLUSTER_REPORT_CONFIGS.update(
-        {
-            SMARTTHINGS_ACCELERATION_CLUSTER: [
-                {"attr": "acceleration", "config": REPORT_CONFIG_ASAP},
-                {"attr": "x_axis", "config": REPORT_CONFIG_ASAP},
-                {"attr": "y_axis", "config": REPORT_CONFIG_ASAP},
-                {"attr": "z_axis", "config": REPORT_CONFIG_ASAP},
-            ],
-            SMARTTHINGS_HUMIDITY_CLUSTER: [
-                {
-                    "attr": "measured_value",
-                    "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
-                }
-            ],
-        }
-    )
-
-    DEVICE_CLASS[zha.PROFILE_ID].update(
+    DEVICE_CLASS[zigpy.profiles.zha.PROFILE_ID].update(
         {
             SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE: DEVICE_TRACKER,
-            zha.DeviceType.COLOR_DIMMABLE_LIGHT: LIGHT,
-            zha.DeviceType.COLOR_TEMPERATURE_LIGHT: LIGHT,
-            zha.DeviceType.DIMMABLE_BALLAST: LIGHT,
-            zha.DeviceType.DIMMABLE_LIGHT: LIGHT,
-            zha.DeviceType.DIMMABLE_PLUG_IN_UNIT: LIGHT,
-            zha.DeviceType.EXTENDED_COLOR_LIGHT: LIGHT,
-            zha.DeviceType.LEVEL_CONTROLLABLE_OUTPUT: LIGHT,
-            zha.DeviceType.ON_OFF_BALLAST: SWITCH,
-            zha.DeviceType.ON_OFF_LIGHT: LIGHT,
-            zha.DeviceType.ON_OFF_LIGHT_SWITCH: SWITCH,
-            zha.DeviceType.ON_OFF_PLUG_IN_UNIT: SWITCH,
-            zha.DeviceType.SMART_PLUG: SWITCH,
+            zigpy.profiles.zha.DeviceType.COLOR_DIMMABLE_LIGHT: LIGHT,
+            zigpy.profiles.zha.DeviceType.COLOR_TEMPERATURE_LIGHT: LIGHT,
+            zigpy.profiles.zha.DeviceType.DIMMABLE_BALLAST: LIGHT,
+            zigpy.profiles.zha.DeviceType.DIMMABLE_LIGHT: LIGHT,
+            zigpy.profiles.zha.DeviceType.DIMMABLE_PLUG_IN_UNIT: LIGHT,
+            zigpy.profiles.zha.DeviceType.EXTENDED_COLOR_LIGHT: LIGHT,
+            zigpy.profiles.zha.DeviceType.LEVEL_CONTROLLABLE_OUTPUT: LIGHT,
+            zigpy.profiles.zha.DeviceType.ON_OFF_BALLAST: SWITCH,
+            zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT: LIGHT,
+            zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT_SWITCH: SWITCH,
+            zigpy.profiles.zha.DeviceType.ON_OFF_PLUG_IN_UNIT: SWITCH,
+            zigpy.profiles.zha.DeviceType.SMART_PLUG: SWITCH,
         }
     )
 
-    DEVICE_CLASS[zll.PROFILE_ID].update(
+    DEVICE_CLASS[zigpy.profiles.zll.PROFILE_ID].update(
         {
-            zll.DeviceType.COLOR_LIGHT: LIGHT,
-            zll.DeviceType.COLOR_TEMPERATURE_LIGHT: LIGHT,
-            zll.DeviceType.DIMMABLE_LIGHT: LIGHT,
-            zll.DeviceType.DIMMABLE_PLUGIN_UNIT: LIGHT,
-            zll.DeviceType.EXTENDED_COLOR_LIGHT: LIGHT,
-            zll.DeviceType.ON_OFF_LIGHT: LIGHT,
-            zll.DeviceType.ON_OFF_PLUGIN_UNIT: SWITCH,
+            zigpy.profiles.zll.DeviceType.COLOR_LIGHT: LIGHT,
+            zigpy.profiles.zll.DeviceType.COLOR_TEMPERATURE_LIGHT: LIGHT,
+            zigpy.profiles.zll.DeviceType.DIMMABLE_LIGHT: LIGHT,
+            zigpy.profiles.zll.DeviceType.DIMMABLE_PLUGIN_UNIT: LIGHT,
+            zigpy.profiles.zll.DeviceType.EXTENDED_COLOR_LIGHT: LIGHT,
+            zigpy.profiles.zll.DeviceType.ON_OFF_LIGHT: LIGHT,
+            zigpy.profiles.zll.DeviceType.ON_OFF_PLUGIN_UNIT: SWITCH,
         }
     )
-
-    DEVICE_TRACKER_CLUSTERS.add(zcl.clusters.general.PowerConfiguration.cluster_id)
-
-    EVENT_RELAY_CLUSTERS.append(zcl.clusters.general.LevelControl.cluster_id)
-    EVENT_RELAY_CLUSTERS.append(zcl.clusters.general.OnOff.cluster_id)
-
-    OUTPUT_CHANNEL_ONLY_CLUSTERS.append(zcl.clusters.general.Scenes.cluster_id)
-
-    LIGHT_CLUSTERS.add(zcl.clusters.general.LevelControl.cluster_id)
-    LIGHT_CLUSTERS.add(zcl.clusters.general.OnOff.cluster_id)
-    LIGHT_CLUSTERS.add(zcl.clusters.lighting.Color.cluster_id)
 
     SINGLE_INPUT_CLUSTER_DEVICE_CLASS.update(
         {
@@ -251,21 +189,21 @@ def establish_device_mappings():
         }
     )
 
-    SWITCH_CLUSTERS.add(zcl.clusters.general.OnOff.cluster_id)
+    zha = zigpy.profiles.zha
+    REMOTE_DEVICE_TYPES[zha.PROFILE_ID].append(zha.DeviceType.COLOR_CONTROLLER)
+    REMOTE_DEVICE_TYPES[zha.PROFILE_ID].append(zha.DeviceType.COLOR_DIMMER_SWITCH)
+    REMOTE_DEVICE_TYPES[zha.PROFILE_ID].append(zha.DeviceType.COLOR_SCENE_CONTROLLER)
+    REMOTE_DEVICE_TYPES[zha.PROFILE_ID].append(zha.DeviceType.DIMMER_SWITCH)
+    REMOTE_DEVICE_TYPES[zha.PROFILE_ID].append(zha.DeviceType.NON_COLOR_CONTROLLER)
+    REMOTE_DEVICE_TYPES[zha.PROFILE_ID].append(
+        zha.DeviceType.NON_COLOR_SCENE_CONTROLLER
+    )
+    REMOTE_DEVICE_TYPES[zha.PROFILE_ID].append(zha.DeviceType.REMOTE_CONTROL)
+    REMOTE_DEVICE_TYPES[zha.PROFILE_ID].append(zha.DeviceType.SCENE_SELECTOR)
 
-    zhap = zha.PROFILE_ID
-    REMOTE_DEVICE_TYPES[zhap].append(zha.DeviceType.COLOR_CONTROLLER)
-    REMOTE_DEVICE_TYPES[zhap].append(zha.DeviceType.COLOR_DIMMER_SWITCH)
-    REMOTE_DEVICE_TYPES[zhap].append(zha.DeviceType.COLOR_SCENE_CONTROLLER)
-    REMOTE_DEVICE_TYPES[zhap].append(zha.DeviceType.DIMMER_SWITCH)
-    REMOTE_DEVICE_TYPES[zhap].append(zha.DeviceType.NON_COLOR_CONTROLLER)
-    REMOTE_DEVICE_TYPES[zhap].append(zha.DeviceType.NON_COLOR_SCENE_CONTROLLER)
-    REMOTE_DEVICE_TYPES[zhap].append(zha.DeviceType.REMOTE_CONTROL)
-    REMOTE_DEVICE_TYPES[zhap].append(zha.DeviceType.SCENE_SELECTOR)
-
-    zllp = zll.PROFILE_ID
-    REMOTE_DEVICE_TYPES[zllp].append(zll.DeviceType.COLOR_CONTROLLER)
-    REMOTE_DEVICE_TYPES[zllp].append(zll.DeviceType.COLOR_SCENE_CONTROLLER)
-    REMOTE_DEVICE_TYPES[zllp].append(zll.DeviceType.CONTROL_BRIDGE)
-    REMOTE_DEVICE_TYPES[zllp].append(zll.DeviceType.CONTROLLER)
-    REMOTE_DEVICE_TYPES[zllp].append(zll.DeviceType.SCENE_CONTROLLER)
+    zll = zigpy.profiles.zll
+    REMOTE_DEVICE_TYPES[zll.PROFILE_ID].append(zll.DeviceType.COLOR_CONTROLLER)
+    REMOTE_DEVICE_TYPES[zll.PROFILE_ID].append(zll.DeviceType.COLOR_SCENE_CONTROLLER)
+    REMOTE_DEVICE_TYPES[zll.PROFILE_ID].append(zll.DeviceType.CONTROL_BRIDGE)
+    REMOTE_DEVICE_TYPES[zll.PROFILE_ID].append(zll.DeviceType.CONTROLLER)
+    REMOTE_DEVICE_TYPES[zll.PROFILE_ID].append(zll.DeviceType.SCENE_CONTROLLER)

@@ -1,11 +1,9 @@
 """Support to turn on lights based on the states."""
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-import homeassistant.util.dt as dt_util
 from homeassistant.components.light import (
     ATTR_PROFILE,
     ATTR_TRANSITION,
@@ -20,12 +18,14 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_state_change,
 )
-from homeassistant.helpers.sun import is_up, get_astral_event_next
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.sun import get_astral_event_next, is_up
+import homeassistant.util.dt as dt_util
 
 DOMAIN = "device_sun_light_trigger"
 CONF_DEVICE_GROUP = "device_group"
@@ -63,12 +63,14 @@ async def async_setup(hass, config):
     device_tracker = hass.components.device_tracker
     group = hass.components.group
     light = hass.components.light
+    person = hass.components.person
     conf = config[DOMAIN]
     disable_turn_off = conf.get(CONF_DISABLE_TURN_OFF)
     light_group = conf.get(CONF_LIGHT_GROUP, light.ENTITY_ID_ALL_LIGHTS)
     light_profile = conf.get(CONF_LIGHT_PROFILE)
     device_group = conf.get(CONF_DEVICE_GROUP, device_tracker.ENTITY_ID_ALL_DEVICES)
     device_entity_ids = group.get_entity_ids(device_group, device_tracker.DOMAIN)
+    device_entity_ids.extend(group.get_entity_ids(device_group, person.DOMAIN))
 
     if not device_entity_ids:
         logger.error("No devices found to track")

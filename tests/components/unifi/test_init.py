@@ -1,20 +1,10 @@
 """Test UniFi setup process."""
-from datetime import timedelta
 from unittest.mock import Mock, patch
 
 from homeassistant.components import unifi
-from homeassistant.components.unifi import config_flow
 from homeassistant.setup import async_setup_component
-from homeassistant.components.unifi.const import CONF_CONTROLLER, CONF_SITE_ID
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-)
 
-from tests.common import mock_coro, MockConfigEntry
+from tests.common import MockConfigEntry, mock_coro
 
 
 async def test_setup_with_no_config(hass):
@@ -44,7 +34,7 @@ async def test_setup_with_config(hass):
             unifi.CONF_HOST: "1.2.3.4",
             unifi.CONF_SITE_ID: "My site",
             unifi.CONF_BLOCK_CLIENT: ["12:34:56:78:90:AB"],
-            unifi.CONF_DETECTION_TIME: timedelta(seconds=3),
+            unifi.CONF_DETECTION_TIME: 3,
             unifi.CONF_SSID_FILTER: ["ssid"],
         }
     ]
@@ -114,8 +104,7 @@ async def test_controller_fail_setup(hass):
         mock_cntrlr.return_value.async_setup.return_value = mock_coro(False)
         assert await unifi.async_setup_entry(hass, entry) is False
 
-    controller_id = unifi.CONTROLLER_ID.format(host="0.0.0.0", site="default")
-    assert controller_id in hass.data[unifi.DOMAIN]
+    assert hass.data[unifi.DOMAIN] == {}
 
 
 async def test_controller_no_mac(hass):
@@ -181,164 +170,3 @@ async def test_unload_entry(hass):
     assert await unifi.async_unload_entry(hass, entry)
     assert len(mock_controller.return_value.async_reset.mock_calls) == 1
     assert hass.data[unifi.DOMAIN] == {}
-
-
-async def test_flow_works(hass, aioclient_mock):
-    """Test config flow."""
-    flow = config_flow.UnifiFlowHandler()
-    flow.hass = hass
-
-    with patch("aiounifi.Controller") as mock_controller:
-
-        def mock_constructor(
-            host, username, password, port, site, websession, sslcontext
-        ):
-            """Fake the controller constructor."""
-            mock_controller.host = host
-            mock_controller.username = username
-            mock_controller.password = password
-            mock_controller.port = port
-            mock_controller.site = site
-            return mock_controller
-
-        mock_controller.side_effect = mock_constructor
-        mock_controller.login.return_value = mock_coro()
-        mock_controller.sites.return_value = mock_coro(
-            {"site1": {"name": "default", "role": "admin", "desc": "site name"}}
-        )
-
-        await flow.async_step_user(
-            user_input={
-                CONF_HOST: "1.2.3.4",
-                CONF_USERNAME: "username",
-                CONF_PASSWORD: "password",
-                CONF_PORT: 1234,
-                CONF_VERIFY_SSL: True,
-            }
-        )
-
-        result = await flow.async_step_site(user_input={})
-
-    assert mock_controller.host == "1.2.3.4"
-    assert len(mock_controller.login.mock_calls) == 1
-    assert len(mock_controller.sites.mock_calls) == 1
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "site name"
-    assert result["data"] == {
-        CONF_CONTROLLER: {
-            CONF_HOST: "1.2.3.4",
-            CONF_USERNAME: "username",
-            CONF_PASSWORD: "password",
-            CONF_PORT: 1234,
-            CONF_SITE_ID: "default",
-            CONF_VERIFY_SSL: True,
-        }
-    }
-
-
-async def test_controller_multiple_sites(hass):
-    """Test config flow."""
-    flow = config_flow.UnifiFlowHandler()
-    flow.hass = hass
-
-    flow.config = {
-        CONF_HOST: "1.2.3.4",
-        CONF_USERNAME: "username",
-        CONF_PASSWORD: "password",
-    }
-    flow.sites = {
-        "site1": {"name": "default", "role": "admin", "desc": "site name"},
-        "site2": {"name": "site2", "role": "admin", "desc": "site2 name"},
-    }
-
-    result = await flow.async_step_site()
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "site"
-
-    assert result["data_schema"]({"site": "site name"})
-    assert result["data_schema"]({"site": "site2 name"})
-
-
-async def test_controller_site_already_configured(hass):
-    """Test config flow."""
-    flow = config_flow.UnifiFlowHandler()
-    flow.hass = hass
-
-    entry = MockConfigEntry(
-        domain=unifi.DOMAIN, data={"controller": {"host": "1.2.3.4", "site": "default"}}
-    )
-    entry.add_to_hass(hass)
-
-    flow.config = {
-        CONF_HOST: "1.2.3.4",
-        CONF_USERNAME: "username",
-        CONF_PASSWORD: "password",
-    }
-    flow.desc = "site name"
-    flow.sites = {"site1": {"name": "default", "role": "admin", "desc": "site name"}}
-
-    result = await flow.async_step_site()
-
-    assert result["type"] == "abort"
-
-
-async def test_user_credentials_faulty(hass, aioclient_mock):
-    """Test config flow."""
-    flow = config_flow.UnifiFlowHandler()
-    flow.hass = hass
-
-    with patch.object(
-        config_flow, "get_controller", side_effect=unifi.errors.AuthenticationRequired
-    ):
-        result = await flow.async_step_user(
-            {
-                CONF_HOST: "1.2.3.4",
-                CONF_USERNAME: "username",
-                CONF_PASSWORD: "password",
-                CONF_SITE_ID: "default",
-            }
-        )
-
-    assert result["type"] == "form"
-    assert result["errors"] == {"base": "faulty_credentials"}
-
-
-async def test_controller_is_unavailable(hass, aioclient_mock):
-    """Test config flow."""
-    flow = config_flow.UnifiFlowHandler()
-    flow.hass = hass
-
-    with patch.object(
-        config_flow, "get_controller", side_effect=unifi.errors.CannotConnect
-    ):
-        result = await flow.async_step_user(
-            {
-                CONF_HOST: "1.2.3.4",
-                CONF_USERNAME: "username",
-                CONF_PASSWORD: "password",
-                CONF_SITE_ID: "default",
-            }
-        )
-
-    assert result["type"] == "form"
-    assert result["errors"] == {"base": "service_unavailable"}
-
-
-async def test_controller_unkown_problem(hass, aioclient_mock):
-    """Test config flow."""
-    flow = config_flow.UnifiFlowHandler()
-    flow.hass = hass
-
-    with patch.object(config_flow, "get_controller", side_effect=Exception):
-        result = await flow.async_step_user(
-            {
-                CONF_HOST: "1.2.3.4",
-                CONF_USERNAME: "username",
-                CONF_PASSWORD: "password",
-                CONF_SITE_ID: "default",
-            }
-        )
-
-    assert result["type"] == "abort"

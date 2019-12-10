@@ -1,81 +1,56 @@
 """Offer reusable conditions."""
+import asyncio
 from datetime import datetime, timedelta
 import functools as ft
 import logging
 import sys
 from typing import Callable, Container, Optional, Union, cast
 
-from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
-
-from homeassistant.core import HomeAssistant, State
 from homeassistant.components import zone as zone_cmp
+from homeassistant.components.device_automation import (
+    async_get_device_automation_platform,
+)
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    CONF_ENTITY_ID,
-    CONF_VALUE_TEMPLATE,
-    CONF_CONDITION,
-    WEEKDAYS,
-    CONF_STATE,
-    CONF_ZONE,
-    CONF_BEFORE,
-    CONF_AFTER,
-    CONF_WEEKDAY,
-    SUN_EVENT_SUNRISE,
-    SUN_EVENT_SUNSET,
-    CONF_BELOW,
     CONF_ABOVE,
+    CONF_AFTER,
+    CONF_BEFORE,
+    CONF_BELOW,
+    CONF_CONDITION,
+    CONF_DOMAIN,
+    CONF_ENTITY_ID,
+    CONF_STATE,
+    CONF_VALUE_TEMPLATE,
+    CONF_WEEKDAY,
+    CONF_ZONE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    SUN_EVENT_SUNRISE,
+    SUN_EVENT_SUNSET,
+    WEEKDAYS,
 )
-from homeassistant.exceptions import TemplateError, HomeAssistantError
+from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.sun import get_astral_event_date
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.util.async_ import run_callback_threadsafe
+import homeassistant.util.dt as dt_util
 
 FROM_CONFIG_FORMAT = "{}_from_config"
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 
 _LOGGER = logging.getLogger(__name__)
 
-# PyLint does not like the use of _threaded_factory
-# pylint: disable=invalid-name
+ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]
 
 
-def _threaded_factory(
-    async_factory: Callable[[ConfigType, bool], Callable[..., bool]]
-) -> Callable[[ConfigType, bool], Callable[..., bool]]:
-    """Create threaded versions of async factories."""
-
-    @ft.wraps(async_factory)
-    def factory(
-        config: ConfigType, config_validation: bool = True
-    ) -> Callable[..., bool]:
-        """Threaded factory."""
-        async_check = async_factory(config, config_validation)
-
-        def condition_if(
-            hass: HomeAssistant, variables: TemplateVarsType = None
-        ) -> bool:
-            """Validate condition."""
-            return cast(
-                bool,
-                run_callback_threadsafe(
-                    hass.loop, async_check, hass, variables
-                ).result(),
-            )
-
-        return condition_if
-
-    return factory
-
-
-def async_from_config(
-    config: ConfigType, config_validation: bool = True
-) -> Callable[..., bool]:
+async def async_from_config(
+    hass: HomeAssistant, config: ConfigType, config_validation: bool = True
+) -> ConditionCheckerType:
     """Turn a condition configuration into a method.
 
     Should be run on the event loop.
@@ -95,29 +70,32 @@ def async_from_config(
             )
         )
 
-    return cast(Callable[..., bool], factory(config, config_validation))
+    # Check for partials to properly determine if coroutine function
+    check_factory = factory
+    while isinstance(check_factory, ft.partial):
+        check_factory = check_factory.func
+
+    if asyncio.iscoroutinefunction(check_factory):
+        return cast(
+            ConditionCheckerType, await factory(hass, config, config_validation)
+        )
+    return cast(ConditionCheckerType, factory(config, config_validation))
 
 
-from_config = _threaded_factory(async_from_config)
-
-
-def async_and_from_config(
-    config: ConfigType, config_validation: bool = True
-) -> Callable[..., bool]:
+async def async_and_from_config(
+    hass: HomeAssistant, config: ConfigType, config_validation: bool = True
+) -> ConditionCheckerType:
     """Create multi condition matcher using 'AND'."""
     if config_validation:
         config = cv.AND_CONDITION_SCHEMA(config)
-    checks = None
+    checks = [
+        await async_from_config(hass, entry, False) for entry in config["conditions"]
+    ]
 
     def if_and_condition(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
         """Test and condition."""
-        nonlocal checks
-
-        if checks is None:
-            checks = [async_from_config(entry, False) for entry in config["conditions"]]
-
         try:
             for check in checks:
                 if not check(hass, variables):
@@ -131,26 +109,20 @@ def async_and_from_config(
     return if_and_condition
 
 
-and_from_config = _threaded_factory(async_and_from_config)
-
-
-def async_or_from_config(
-    config: ConfigType, config_validation: bool = True
-) -> Callable[..., bool]:
+async def async_or_from_config(
+    hass: HomeAssistant, config: ConfigType, config_validation: bool = True
+) -> ConditionCheckerType:
     """Create multi condition matcher using 'OR'."""
     if config_validation:
         config = cv.OR_CONDITION_SCHEMA(config)
-    checks = None
+    checks = [
+        await async_from_config(hass, entry, False) for entry in config["conditions"]
+    ]
 
     def if_or_condition(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
         """Test and condition."""
-        nonlocal checks
-
-        if checks is None:
-            checks = [async_from_config(entry, False) for entry in config["conditions"]]
-
         try:
             for check in checks:
                 if check(hass, variables):
@@ -161,9 +133,6 @@ def async_or_from_config(
         return False
 
     return if_or_condition
-
-
-or_from_config = _threaded_factory(async_or_from_config)
 
 
 def numeric_state(
@@ -240,7 +209,7 @@ def async_numeric_state(
 
 def async_numeric_state_from_config(
     config: ConfigType, config_validation: bool = True
-) -> Callable[..., bool]:
+) -> ConditionCheckerType:
     """Wrap action method with state based condition."""
     if config_validation:
         config = cv.NUMERIC_STATE_CONDITION_SCHEMA(config)
@@ -261,9 +230,6 @@ def async_numeric_state_from_config(
         )
 
     return if_numeric_state
-
-
-numeric_state_from_config = _threaded_factory(async_numeric_state_from_config)
 
 
 def state(
@@ -293,7 +259,7 @@ def state(
 
 def state_from_config(
     config: ConfigType, config_validation: bool = True
-) -> Callable[..., bool]:
+) -> ConditionCheckerType:
     """Wrap action method with state based condition."""
     if config_validation:
         config = cv.STATE_CONDITION_SCHEMA(config)
@@ -321,8 +287,24 @@ def sun(
     before_offset = before_offset or timedelta(0)
     after_offset = after_offset or timedelta(0)
 
-    sunrise = get_astral_event_date(hass, SUN_EVENT_SUNRISE, today)
-    sunset = get_astral_event_date(hass, SUN_EVENT_SUNSET, today)
+    sunrise_today = get_astral_event_date(hass, SUN_EVENT_SUNRISE, today)
+    sunset_today = get_astral_event_date(hass, SUN_EVENT_SUNSET, today)
+
+    sunrise = sunrise_today
+    sunset = sunset_today
+    if today > dt_util.as_local(
+        cast(datetime, sunrise_today)
+    ).date() and SUN_EVENT_SUNRISE in (before, after):
+        tomorrow = dt_util.as_local(utcnow + timedelta(days=1)).date()
+        sunrise_tomorrow = get_astral_event_date(hass, SUN_EVENT_SUNRISE, tomorrow)
+        sunrise = sunrise_tomorrow
+
+    if today > dt_util.as_local(
+        cast(datetime, sunset_today)
+    ).date() and SUN_EVENT_SUNSET in (before, after):
+        tomorrow = dt_util.as_local(utcnow + timedelta(days=1)).date()
+        sunset_tomorrow = get_astral_event_date(hass, SUN_EVENT_SUNSET, tomorrow)
+        sunset = sunset_tomorrow
 
     if sunrise is None and SUN_EVENT_SUNRISE in (before, after):
         # There is no sunrise today
@@ -349,7 +331,7 @@ def sun(
 
 def sun_from_config(
     config: ConfigType, config_validation: bool = True
-) -> Callable[..., bool]:
+) -> ConditionCheckerType:
     """Wrap action method with sun based condition."""
     if config_validation:
         config = cv.SUN_CONDITION_SCHEMA(config)
@@ -392,7 +374,7 @@ def async_template(
 
 def async_template_from_config(
     config: ConfigType, config_validation: bool = True
-) -> Callable[..., bool]:
+) -> ConditionCheckerType:
     """Wrap action method with state based condition."""
     if config_validation:
         config = cv.TEMPLATE_CONDITION_SCHEMA(config)
@@ -405,9 +387,6 @@ def async_template_from_config(
         return async_template(hass, value_template, variables)
 
     return template_if
-
-
-template_from_config = _threaded_factory(async_template_from_config)
 
 
 def time(
@@ -452,7 +431,7 @@ def time(
 
 def time_from_config(
     config: ConfigType, config_validation: bool = True
-) -> Callable[..., bool]:
+) -> ConditionCheckerType:
     """Wrap action method with time based condition."""
     if config_validation:
         config = cv.TIME_CONDITION_SCHEMA(config)
@@ -501,7 +480,7 @@ def zone(
 
 def zone_from_config(
     config: ConfigType, config_validation: bool = True
-) -> Callable[..., bool]:
+) -> ConditionCheckerType:
     """Wrap action method with zone based condition."""
     if config_validation:
         config = cv.ZONE_CONDITION_SCHEMA(config)
@@ -513,3 +492,40 @@ def zone_from_config(
         return zone(hass, zone_entity_id, entity_id)
 
     return if_in_zone
+
+
+async def async_device_from_config(
+    hass: HomeAssistant, config: ConfigType, config_validation: bool = True
+) -> ConditionCheckerType:
+    """Test a device condition."""
+    if config_validation:
+        config = cv.DEVICE_CONDITION_SCHEMA(config)
+    platform = await async_get_device_automation_platform(
+        hass, config[CONF_DOMAIN], "condition"
+    )
+    return cast(
+        ConditionCheckerType,
+        platform.async_condition_from_config(config, config_validation),  # type: ignore
+    )
+
+
+async def async_validate_condition_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate config."""
+    condition = config[CONF_CONDITION]
+    if condition in ("and", "or"):
+        conditions = []
+        for sub_cond in config["conditions"]:
+            sub_cond = await async_validate_condition_config(hass, sub_cond)
+            conditions.append(sub_cond)
+        config["conditions"] = conditions
+
+    if condition == "device":
+        config = cv.DEVICE_CONDITION_SCHEMA(config)
+        platform = await async_get_device_automation_platform(
+            hass, config[CONF_DOMAIN], "condition"
+        )
+        return cast(ConfigType, platform.CONDITION_SCHEMA(config))  # type: ignore
+
+    return config

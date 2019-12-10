@@ -1,41 +1,40 @@
 """Test to verify that Home Assistant core works."""
 # pylint: disable=protected-access
 import asyncio
+from datetime import datetime, timedelta
 import functools
 import logging
 import os
-import unittest
-from unittest.mock import patch, MagicMock
-from datetime import datetime, timedelta
 from tempfile import TemporaryDirectory
+import unittest
+from unittest.mock import MagicMock, patch
 
-import voluptuous as vol
-import pytz
 import pytest
+import pytz
+import voluptuous as vol
 
-import homeassistant.core as ha
-from homeassistant.exceptions import InvalidEntityFormatError, InvalidStateError
-from homeassistant.util.async_ import run_coroutine_threadsafe
-import homeassistant.util.dt as dt_util
-from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.const import (
-    __version__,
-    EVENT_STATE_CHANGED,
     ATTR_FRIENDLY_NAME,
-    CONF_UNIT_SYSTEM,
     ATTR_NOW,
-    EVENT_TIME_CHANGED,
-    EVENT_TIMER_OUT_OF_SYNC,
     ATTR_SECONDS,
-    EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_CLOSE,
-    EVENT_SERVICE_REGISTERED,
-    EVENT_SERVICE_REMOVED,
+    CONF_UNIT_SYSTEM,
     EVENT_CALL_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
+    EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_HOMEASSISTANT_STOP,
+    EVENT_SERVICE_REGISTERED,
+    EVENT_SERVICE_REMOVED,
+    EVENT_STATE_CHANGED,
+    EVENT_TIME_CHANGED,
+    EVENT_TIMER_OUT_OF_SYNC,
+    __version__,
 )
+import homeassistant.core as ha
+from homeassistant.exceptions import InvalidEntityFormatError, InvalidStateError
+import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from tests.common import get_test_home_assistant, async_mock_service
+from tests.common import async_mock_service, get_test_home_assistant
 
 PST = pytz.timezone("America/Los_Angeles")
 
@@ -191,7 +190,7 @@ class TestHomeAssistant(unittest.TestCase):
         for _ in range(3):
             self.hass.add_job(test_coro())
 
-        run_coroutine_threadsafe(
+        asyncio.run_coroutine_threadsafe(
             asyncio.wait(self.hass._pending_tasks), loop=self.hass.loop
         ).result()
 
@@ -216,7 +215,9 @@ class TestHomeAssistant(unittest.TestCase):
             yield from asyncio.sleep(0)
             yield from asyncio.sleep(0)
 
-        run_coroutine_threadsafe(wait_finish_callback(), self.hass.loop).result()
+        asyncio.run_coroutine_threadsafe(
+            wait_finish_callback(), self.hass.loop
+        ).result()
 
         assert len(self.hass._pending_tasks) == 2
         self.hass.block_till_done()
@@ -239,7 +240,9 @@ class TestHomeAssistant(unittest.TestCase):
         for _ in range(2):
             self.hass.add_job(test_executor)
 
-        run_coroutine_threadsafe(wait_finish_callback(), self.hass.loop).result()
+        asyncio.run_coroutine_threadsafe(
+            wait_finish_callback(), self.hass.loop
+        ).result()
 
         assert len(self.hass._pending_tasks) == 2
         self.hass.block_till_done()
@@ -263,7 +266,9 @@ class TestHomeAssistant(unittest.TestCase):
         for _ in range(2):
             self.hass.add_job(test_callback)
 
-        run_coroutine_threadsafe(wait_finish_callback(), self.hass.loop).result()
+        asyncio.run_coroutine_threadsafe(
+            wait_finish_callback(), self.hass.loop
+        ).result()
 
         self.hass.block_till_done()
 

@@ -7,7 +7,6 @@ import time
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -17,6 +16,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
 )
 from homeassistant.helpers import state
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ class GraphiteFeeder(threading.Thread):
 
     def __init__(self, hass, host, port, prefix):
         """Initialize the feeder."""
-        super(GraphiteFeeder, self).__init__(daemon=True)
+        super().__init__(daemon=True)
         self._hass = hass
         self._host = host
         self._port = port

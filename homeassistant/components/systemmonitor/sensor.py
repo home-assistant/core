@@ -1,16 +1,18 @@
 """Support for monitoring the local system."""
-from datetime import datetime
 import logging
 import os
 import socket
 
+import psutil
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_RESOURCES, STATE_OFF, STATE_ON, CONF_TYPE
-from homeassistant.helpers.entity import Entity
+from homeassistant.const import CONF_RESOURCES, CONF_TYPE, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
+
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -132,8 +134,6 @@ class SystemMonitorSensor(Entity):
 
     def update(self):
         """Get the latest system information."""
-        import psutil
-
         if self.type == "disk_use_percent":
             self._state = psutil.disk_usage(self.argument).percent
         elif self.type == "disk_use":
@@ -190,7 +190,7 @@ class SystemMonitorSensor(Entity):
             counters = psutil.net_io_counters(pernic=True)
             if self.argument in counters:
                 counter = counters[self.argument][IO_COUNTER[self.type]]
-                now = datetime.now()
+                now = dt_util.utcnow()
                 if self._last_value and self._last_value < counter:
                     self._state = round(
                         (counter - self._last_value)
@@ -217,8 +217,8 @@ class SystemMonitorSensor(Entity):
                 dt_util.utc_from_timestamp(psutil.boot_time())
             ).isoformat()
         elif self.type == "load_1m":
-            self._state = os.getloadavg()[0]
+            self._state = round(os.getloadavg()[0], 2)
         elif self.type == "load_5m":
-            self._state = os.getloadavg()[1]
+            self._state = round(os.getloadavg()[1], 2)
         elif self.type == "load_15m":
-            self._state = os.getloadavg()[2]
+            self._state = round(os.getloadavg()[2], 2)

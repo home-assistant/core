@@ -9,11 +9,11 @@ from homeassistant.const import (
     CONF_ENTITY_NAMESPACE,
     CONF_MONITORED_CONDITIONS,
 )
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.core import callback
 
 from . import (
     ATTRIBUTION,
@@ -110,7 +110,7 @@ class RingSensor(Entity):
 
     def __init__(self, hass, data, sensor_type):
         """Initialize a sensor for Ring device."""
-        super(RingSensor, self).__init__()
+        super().__init__()
         self._sensor_type = sensor_type
         self._data = data
         self._extra = None
@@ -121,7 +121,7 @@ class RingSensor(Entity):
         )
         self._state = None
         self._tz = str(hass.config.time_zone)
-        self._unique_id = "{}-{}".format(self._data.id, self._sensor_type)
+        self._unique_id = f"{self._data.id}-{self._sensor_type}"
 
     async def async_added_to_hass(self):
         """Register callbacks."""

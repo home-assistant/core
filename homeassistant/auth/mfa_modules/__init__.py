@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant import requirements, data_entry_flow
+from homeassistant import data_entry_flow, requirements
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -42,7 +42,7 @@ class MultiFactorAuthModule:
         self.config = config
 
     @property
-    def id(self) -> str:  # pylint: disable=invalid-name
+    def id(self) -> str:
         """Return id of the auth module.
 
         Default is same as type
@@ -109,7 +109,7 @@ class SetupFlow(data_entry_flow.FlowHandler):
         Return self.async_show_form(step_id='init') if user_input is None.
         Return self.async_create_entry(data={'result': result}) if finish.
         """
-        errors = {}  # type: Dict[str, str]
+        errors: Dict[str, str] = {}
 
         if user_input:
             result = await self._auth_module.async_setup_user(self._user_id, user_input)
@@ -144,15 +144,13 @@ async def auth_mfa_module_from_config(
 
 async def _load_mfa_module(hass: HomeAssistant, module_name: str) -> types.ModuleType:
     """Load an mfa auth module."""
-    module_path = "homeassistant.auth.mfa_modules.{}".format(module_name)
+    module_path = f"homeassistant.auth.mfa_modules.{module_name}"
 
     try:
         module = importlib.import_module(module_path)
     except ImportError as err:
         _LOGGER.error("Unable to load mfa module %s: %s", module_name, err)
-        raise HomeAssistantError(
-            "Unable to load mfa module {}: {}".format(module_name, err)
-        )
+        raise HomeAssistantError(f"Unable to load mfa module {module_name}: {err}")
 
     if hass.config.skip_pip or not hasattr(module, "REQUIREMENTS"):
         return module
@@ -164,14 +162,9 @@ async def _load_mfa_module(hass: HomeAssistant, module_name: str) -> types.Modul
     processed = hass.data[DATA_REQS] = set()
 
     # https://github.com/python/mypy/issues/1424
-    req_success = await requirements.async_process_requirements(
+    await requirements.async_process_requirements(
         hass, module_path, module.REQUIREMENTS  # type: ignore
     )
-
-    if not req_success:
-        raise HomeAssistantError(
-            "Unable to process requirements of mfa module {}".format(module_name)
-        )
 
     processed.add(module_name)
     return module

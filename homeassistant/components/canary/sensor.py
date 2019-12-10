@@ -1,4 +1,5 @@
 """Support for Canary sensors."""
+from canary.api import SensorType
 
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
@@ -53,7 +54,7 @@ class CanarySensor(Entity):
         self._sensor_value = None
 
         sensor_type_name = sensor_type[0].replace("_", " ").title()
-        self._name = "{} {} {}".format(location.name, device.name, sensor_type_name)
+        self._name = f"{location.name} {device.name} {sensor_type_name}"
 
     @property
     def name(self):
@@ -102,8 +103,6 @@ class CanarySensor(Entity):
     def update(self):
         """Get the latest state of the sensor."""
         self._data.update()
-
-        from canary.api import SensorType
 
         canary_sensor_type = None
         if self._sensor_type[0] == "air_quality":

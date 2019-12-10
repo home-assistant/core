@@ -1,11 +1,12 @@
 """Helpers for sun events."""
 import datetime
-from typing import Optional, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Union
 
 from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.core import callback
-from homeassistant.util import dt as dt_util
 from homeassistant.loader import bind_hass
+from homeassistant.util import dt as dt_util
+
 from .typing import HomeAssistantType
 
 if TYPE_CHECKING:
@@ -68,14 +69,14 @@ def get_location_astral_event_next(
     mod = -1
     while True:
         try:
-            next_dt = (
+            next_dt: datetime.datetime = (
                 getattr(location, event)(
                     dt_util.as_local(utc_point_in_time).date()
                     + datetime.timedelta(days=mod),
                     local=False,
                 )
                 + offset
-            )  # type: datetime.datetime
+            )
             if next_dt > utc_point_in_time:
                 return next_dt
         except AstralError:

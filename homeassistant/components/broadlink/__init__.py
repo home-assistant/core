@@ -1,10 +1,12 @@
 """The broadlink component."""
 import asyncio
 from base64 import b64decode, b64encode
+from binascii import unhexlify
+from datetime import timedelta
 import logging
+import re
 import socket
 
-from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST
@@ -25,6 +27,31 @@ def data_packet(value):
     if extra > 0:
         value = value + ("=" * (4 - extra))
     return b64decode(value)
+
+
+def hostname(value):
+    """Validate a hostname."""
+    host = str(value).lower()
+    if len(host) > 253:
+        raise ValueError
+    if host[-1] == ".":
+        host = host[:-1]
+    allowed = re.compile(r"(?!-)[a-z\d-]{1,63}(?<!-)$")
+    if not all(allowed.match(elem) for elem in host.split(".")):
+        raise ValueError
+    return host
+
+
+def mac_address(value):
+    """Validate and coerce a 48-bit MAC address."""
+    mac = str(value).lower()
+    if len(mac) == 17:
+        mac = mac[0:2] + mac[3:5] + mac[6:8] + mac[9:11] + mac[12:14] + mac[15:17]
+    elif len(mac) == 14:
+        mac = mac[0:2] + mac[2:4] + mac[5:7] + mac[7:9] + mac[10:12] + mac[12:14]
+    elif len(mac) != 12:
+        raise ValueError
+    return unhexlify(mac)
 
 
 SERVICE_SEND_SCHEMA = vol.Schema(
@@ -64,7 +91,7 @@ def async_setup_service(hass, host, device):
                 packet = await hass.async_add_executor_job(device.check_data)
                 if packet:
                     data = b64encode(packet).decode("utf8")
-                    log_msg = "Received packet is: {}".format(data)
+                    log_msg = f"Received packet is: {data}"
                     _LOGGER.info(log_msg)
                     hass.components.persistent_notification.async_create(
                         log_msg, title="Broadlink switch"

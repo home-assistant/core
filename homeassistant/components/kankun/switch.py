@@ -4,15 +4,15 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
-    CONF_PORT,
-    CONF_PATH,
-    CONF_USERNAME,
     CONF_PASSWORD,
+    CONF_PATH,
+    CONF_PORT,
     CONF_SWITCHES,
+    CONF_USERNAME,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -66,7 +66,7 @@ class KankunSwitch(SwitchDevice):
         self._hass = hass
         self._name = name
         self._state = False
-        self._url = "http://{}:{}{}".format(host, port, path)
+        self._url = f"http://{host}:{port}{path}"
         if user is not None:
             self._auth = (user, passwd)
         else:
@@ -78,7 +78,7 @@ class KankunSwitch(SwitchDevice):
 
         try:
             req = requests.get(
-                "{}?set={}".format(self._url, newstate), auth=self._auth, timeout=5
+                f"{self._url}?set={newstate}", auth=self._auth, timeout=5
             )
             return req.json()["ok"]
         except requests.RequestException:
@@ -89,9 +89,7 @@ class KankunSwitch(SwitchDevice):
         _LOGGER.info("Querying state from: %s", self._url)
 
         try:
-            req = requests.get(
-                "{}?get=state".format(self._url), auth=self._auth, timeout=5
-            )
+            req = requests.get(f"{self._url}?get=state", auth=self._auth, timeout=5)
             return req.json()["state"] == "on"
         except requests.RequestException:
             _LOGGER.error("State query failed")

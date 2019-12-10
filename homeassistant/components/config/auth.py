@@ -3,7 +3,6 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 
-
 WS_TYPE_LIST = "config/auth/list"
 SCHEMA_WS_LIST = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
     {vol.Required("type"): WS_TYPE_LIST}

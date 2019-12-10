@@ -1,13 +1,14 @@
 """Support for Velbus devices."""
 import asyncio
 import logging
+
 import velbus
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_PORT, CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.exceptions import ConfigEntryNotReady
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -119,7 +120,7 @@ class VelbusEntity(Entity):
             serial = self._module.get_module_address()
         else:
             serial = self._module.serial
-        return "{}-{}".format(serial, self._channel)
+        return f"{serial}-{self._channel}"
 
     @property
     def name(self):

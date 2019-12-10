@@ -5,8 +5,9 @@ import socket
 import time
 
 import voluptuous as vol
+from websocket import _exceptions, create_connection
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_NEXT_TRACK,
@@ -65,8 +66,6 @@ def request_configuration(hass, config, url, add_entities_callback):
         )
 
         return
-    from websocket import create_connection
-
     websocket = create_connection((url), timeout=1)
     websocket.send(
         json.dumps(
@@ -81,7 +80,6 @@ def request_configuration(hass, config, url, add_entities_callback):
     def gpmdp_configuration_callback(callback_data):
         """Handle configuration changes."""
         while True:
-            from websocket import _exceptions
 
             try:
                 msg = json.loads(websocket.recv())
@@ -142,7 +140,7 @@ def setup_gpmdp(hass, config, code, add_entities):
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
-    url = "ws://{}:{}".format(host, port)
+    url = f"ws://{host}:{port}"
 
     if not code:
         request_configuration(hass, config, url, add_entities)
@@ -174,7 +172,6 @@ class GPMDP(MediaPlayerDevice):
 
     def __init__(self, name, url, code):
         """Initialize the media player."""
-        from websocket import create_connection
 
         self._connection = create_connection
         self._url = url
@@ -210,7 +207,6 @@ class GPMDP(MediaPlayerDevice):
 
     def send_gpmdp_msg(self, namespace, method, with_id=True):
         """Send ws messages to GPMDP and verify request id in response."""
-        from websocket import _exceptions
 
         try:
             websocket = self.get_ws()

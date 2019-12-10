@@ -2,10 +2,28 @@
 import pathlib
 import sys
 
-from .model import Integration, Config
-from . import codeowners, config_flow, dependencies, manifest, services, ssdp, zeroconf
+from . import (
+    codeowners,
+    config_flow,
+    dependencies,
+    json,
+    manifest,
+    services,
+    ssdp,
+    zeroconf,
+)
+from .model import Config, Integration
 
-PLUGINS = [codeowners, config_flow, dependencies, manifest, services, ssdp, zeroconf]
+PLUGINS = [
+    json,
+    codeowners,
+    config_flow,
+    dependencies,
+    manifest,
+    services,
+    ssdp,
+    zeroconf,
+]
 
 
 def get_config() -> Config:
@@ -68,7 +86,7 @@ def main():
         print()
 
     for integration in sorted(invalid_itg, key=lambda itg: itg.domain):
-        print("Integration {}:".format(integration.domain))
+        print(f"Integration {integration.domain}:")
         for error in integration.errors:
             print("*", error)
         print()
