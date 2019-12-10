@@ -76,6 +76,7 @@ ATTR_ZONE_TEMP = "setpoint"
 ATTR_UNTIL_MINUTES = "duration"
 ATTR_UNTIL_TIME = "until"
 
+SVC_REFRESH_SYSTEM = "force_refresh"
 SVC_SET_SYSTEM_MODE = "set_system_mode"
 SVC_RESET_SYSTEM = "reset_system"
 SVC_SET_ZONE_MODE = "set_zone_override"
@@ -94,7 +95,6 @@ SET_SYSTEM_MODE_SCHEMA = vol.Schema(
         ),
     }
 )
-RESET_SYSTEM_SCHEMA = vol.Schema({})
 SET_ZONE_MODE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
@@ -288,17 +288,18 @@ def setup_service_functions(hass: HomeAssistantType, broker):
                 dtm += timedelta(days=1)
         return dtm
 
+    async def force_refresh(call):
+        """Obtain the latest state data via the vendor's RESTful API."""
+        await broker.update()
+
     async def set_system_mode(call):
         """Set the system mode."""
-        _LOGGER.warn("service = %s, data = %s", call.service, call.data)
-
         if call.service == SVC_SET_SYSTEM_MODE:
             mode = call.data[ATTR_SYSTEM_MODE]
         else:
             mode = EVO_RESET
 
         tcs = broker.tcs
-
         try:
             attrs = [m for m in tcs.allowedSystemModes if m["systemMode"] == mode][0]
         except IndexError:
@@ -309,6 +310,7 @@ def setup_service_functions(hass: HomeAssistantType, broker):
         if ATTR_DURATION_DAYS in call.data:
             if attrs.get("timingResolution") != "1.00:00:00":
                 raise TypeError(f"'{mode}' mode does not support days, only hours")
+
             until = dt.combine(dt.now().date(), dt.min.time())
             until += timedelta(days=call.data[ATTR_DURATION_DAYS])
 
@@ -317,29 +319,26 @@ def setup_service_functions(hass: HomeAssistantType, broker):
                 raise TypeError(f"'{mode}' mode does not support hours, only days")
             until = dt.now() + timedelta(hours=call.data[ATTR_DURATION_HOURS])
 
-        _LOGGER.warn("tcs._set_status('%s', %s)", mode, _clean_dt(until))
         await broker.call_client_api(
-            tcs._set_status(mode, _clean_dt(until))
-        )  # pylint: disable=protected-access
+            tcs._set_status(mode, _clean_dt(until))  # pylint: disable=protected-access
+        )
 
     async def set_zone_setpoint(call):
         """Set the system mode."""
-        _LOGGER.warn("service = %s, data = %s", call.service, call.data)
-
         entity_id = call.data[ATTR_ENTITY_ID]
 
-        zone_id = broker.hass.data["entity_registry"].entities[entity_id].unique_id
         try:
-            zone = broker.tcs.zones_by_id[zone_id]
+            unique_id = hass.data["entity_registry"].entities[entity_id].unique_id
+            zone_entity = broker.entities[unique_id]
+            zone_device = broker.tcs.zones_by_id[unique_id]
         except KeyError:
             raise KeyError(f"'{entity_id}' is not a known evohome zone")
 
         if call.service == SVC_RESET_ZONE_MODE:
-            _LOGGER.warn("zone.cancel_temp_override()")
-            await broker.call_client_api(zone.cancel_temp_override())
+            await broker.call_client_api(zone_device.cancel_temp_override())
             return
 
-        attrs = zone.setpointCapabilities
+        attrs = zone_device.setpointCapabilities
         resolution = attrs["valueResolution"]
         temp = round(call.data[ATTR_ZONE_TEMP] * resolution) / resolution
         temp = max(min(temp, attrs["maxHeatSetpoint"]), attrs["minHeatSetpoint"])
@@ -348,8 +347,11 @@ def setup_service_functions(hass: HomeAssistantType, broker):
         # the following two attrs are mutually exclusive
         if ATTR_UNTIL_MINUTES in call.data:
             duration = call.data[ATTR_UNTIL_MINUTES]
-            if duration == 0:
-                until = 0  # until next setpoint
+            if duration == 0:  # until next setpoint
+                await zone_entity._update_schedule()  # pylint: disable=protected-access
+                until = dt_util.parse_datetime(
+                    str(zone_entity.setpoints.get("next_sp_from"))
+                )
             else:
                 until = dt.now() + timedelta(minutes=duration)
 
@@ -359,14 +361,18 @@ def setup_service_functions(hass: HomeAssistantType, broker):
                 "%Y-%m-%d %H:%M",
             )
 
-        _LOGGER.warn("zone.set_temperature('%s', %s)", temp, _clean_dt(until))
-        broker.call_client_api(zone.set_temperature(temp, _clean_dt(until)))
+        await broker.call_client_api(
+            zone_device.set_temperature(temp, _clean_dt(until))
+        )
 
+    hass.services.async_register(
+        DOMAIN, SVC_REFRESH_SYSTEM, force_refresh, schema=vol.Schema({})
+    )
     hass.services.async_register(
         DOMAIN, SVC_SET_SYSTEM_MODE, set_system_mode, schema=SET_SYSTEM_MODE_SCHEMA
     )
     hass.services.async_register(
-        DOMAIN, SVC_RESET_SYSTEM, set_system_mode, schema=RESET_SYSTEM_SCHEMA
+        DOMAIN, SVC_RESET_SYSTEM, set_system_mode, schema=vol.Schema({})
     )
     hass.services.async_register(
         DOMAIN, SVC_SET_ZONE_MODE, set_zone_setpoint, schema=SET_ZONE_MODE_SCHEMA
@@ -390,7 +396,9 @@ class EvoBroker:
         loc_idx = params[CONF_LOCATION_IDX]
         self.config = client.installation_info[loc_idx][GWS][0][TCS][0]
         self.tcs = client.locations[loc_idx]._gateways[0]._control_systems[0]
-        self.temps = None
+        self.temps = {}
+
+        self._entities = {}
 
     async def save_auth_tokens(self) -> None:
         """Save access tokens and session IDs to the store for later use."""

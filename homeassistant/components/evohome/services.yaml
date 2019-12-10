@@ -22,6 +22,10 @@ reset_system:
       Set the system to Auto mode and reset all the zones to follow their schedules
       (i.e. AutoWithReset mode).
 
+force_refresh:
+  description: >-
+      Pull the latest data from the vendor's server's.
+
 set_zone_override:
   description: >-
       Override a zone's setpoint, either indefinitely, or for a set period, after which

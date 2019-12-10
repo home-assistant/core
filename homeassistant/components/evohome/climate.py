@@ -90,11 +90,14 @@ async def async_setup_platform(
             zone.zoneId,
             zone.name,
         )
+        new_entity = EvoThermostat(broker, zone)
+        broker.entities = {zone.zoneId: new_entity}
 
-        async_add_entities([EvoThermostat(broker, zone)], update_before_add=True)
+        async_add_entities([new_entity], update_before_add=True)
         return
 
     controller = EvoController(broker, broker.tcs)
+    broker.entities = {broker.tcs.systemId: controller}
 
     zones = []
     for zone in broker.tcs.zones.values():
@@ -105,7 +108,10 @@ async def async_setup_platform(
             zone.zoneId,
             zone.name,
         )
-        zones.append(EvoZone(broker, zone))
+        new_entity = EvoZone(broker, zone)
+        broker.entities[zone.zoneId] = new_entity
+
+        zones.append(new_entity)
 
     async_add_entities([controller] + zones, update_before_add=True)
 
