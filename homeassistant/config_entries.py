@@ -615,6 +615,22 @@ class ConfigEntries:
         if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
             return result
 
+        # TODO check if config entry exists with unique ID. Unload it.
+        existing_entry = None
+        unique_id = flow.context.get("unique_id")
+
+        if unique_id is not None:
+            for check_entry in self.async_entries(result["handler"]):
+                if check_entry.unique_id == unique_id:
+                    existing_entry = check_entry
+                    break
+
+        if (
+            existing_entry is not None
+            and existing_entry.state not in UNRECOVERABLE_STATES
+        ):
+            await self.async_unload(existing_entry.entry_id)
+
         entry = ConfigEntry(
             version=result["version"],
             domain=result["handler"],
@@ -624,12 +640,15 @@ class ConfigEntries:
             system_options={},
             source=flow.context["source"],
             connection_class=flow.CONNECTION_CLASS,
-            unique_id=flow.context.get("unique_id"),
+            unique_id=unique_id,
         )
         self._entries.append(entry)
         self._async_schedule_save()
 
         await self.async_setup(entry.entry_id)
+
+        if existing_entry is not None:
+            await self.async_remove(existing_entry.entry_id)
 
         result["result"] = entry
         return result
@@ -717,18 +736,23 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         """Get the options flow for this handler."""
         raise data_entry_flow.UnknownHandler
 
-    async def async_set_unique_id(self, unique_id: str) -> None:
-        """Set a unique ID for the config flow."""
-        for entry in self._async_current_entries():
-            if entry.unique_id == unique_id:
-                raise UniqueIdExists("already_configured")
+    async def async_set_unique_id(self, unique_id: str) -> Optional[ConfigEntry]:
+        """Set a unique ID for the config flow.
 
+        Returns optionally existing config entry with same ID.
+        """
         for progress in self._async_in_progress():
             if progress["context"].get("unique_id") == unique_id:
                 raise UniqueIdInProgress("already_in_progress")
 
         # pylint: disable=no-member
         self.context["unique_id"] = unique_id
+
+        for entry in self._async_current_entries():
+            if entry.unique_id == unique_id:
+                return entry
+
+        return None
 
     @callback
     def _async_current_entries(self) -> List[ConfigEntry]:
