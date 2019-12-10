@@ -116,6 +116,8 @@ class TankUtilitySensor(Entity):
             if (
                 http_error.response.status_code
                 == requests.codes.unauthorized  # pylint: disable=no-member
+                or http_error.response.status_code
+                == requests.codes.bad_request  # pylint: disable=no-member
             ):
                 _LOGGER.info("Getting new token")
                 self._token = tank_utility.auth.get_token(
