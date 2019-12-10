@@ -127,6 +127,7 @@ class UniFiClientTracker(ScannerEntity):
         self.client = client
         self.controller = controller
         self.is_wired = self.client.mac not in controller.wireless_clients
+        self.wired_bug = None
 
     @property
     def entity_registry_enabled_default(self):
@@ -169,13 +170,18 @@ class UniFiClientTracker(ScannerEntity):
 
         If is_wired and client.is_wired differ it means that the device is offline and UniFi bug shows device as wired.
         """
-        if self.is_wired == self.client.is_wired and (
-            (
-                dt_util.utcnow()
-                - dt_util.utc_from_timestamp(float(self.client.last_seen))
+        if self.is_wired != self.client.is_wired:
+            if not self.wired_bug:
+                self.wired_bug = dt_util.utcnow()
+            since_last_seen = dt_util.utcnow() - self.wired_bug
+
+        else:
+            self.wired_bug = None
+            since_last_seen = dt_util.utcnow() - dt_util.utc_from_timestamp(
+                float(self.client.last_seen)
             )
-            < self.controller.option_detection_time
-        ):
+
+        if since_last_seen < self.controller.option_detection_time:
             return True
 
         return False
