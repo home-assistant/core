@@ -143,5 +143,4 @@ async def async_unload_entry(hass, config_entry):
     for component in COMPONENTS:
         await hass.config_entries.async_forward_entry_unload(config_entry, component)
 
-    del hass.data[DATA_ZHA]
     return True
