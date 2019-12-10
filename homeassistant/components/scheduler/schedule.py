@@ -1,5 +1,5 @@
 """Define the scheduler object and its associated schedule objects."""
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 from typing import Awaitable, Callable, Dict, List, Optional, Tuple
 from uuid import uuid4
@@ -8,6 +8,10 @@ from dateutil.rrule import rrule, rrulestr
 
 from homeassistant.const import CONF_ENTITY_ID, MATCH_ALL, STATE_OFF, STATE_ON
 from homeassistant.core import Context, HomeAssistant, State, callback
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change,
@@ -26,6 +30,8 @@ CONF_SCHEDULE_ID = "schedule_id"
 CONF_START_DATETIME = "start_datetime"
 
 STATE_EXPIRED = "expired"
+
+TOPIC_SCHEDULE_NEXT = "scheduler_schedule_next"
 
 
 class ScheduleInstance:
@@ -104,6 +110,8 @@ class ScheduleInstance:
 
         _LOGGER.info("Scheduler reverted scene: %s", self.entity_id)
 
+        async_dispatcher_send(self._hass, TOPIC_SCHEDULE_NEXT)
+
     async def async_trigger(self) -> None:
         """Trigger the schedule's scene."""
 
@@ -130,6 +138,9 @@ class ScheduleInstance:
 
         _LOGGER.info("Scheduler triggered scene: %s", self.entity_id)
 
+        if not self.end_datetime:
+            async_dispatcher_send(self._hass, TOPIC_SCHEDULE_NEXT)
+
 
 class Schedule:
     """A class to represent a schedule."""
@@ -144,6 +155,7 @@ class Schedule:
         recurrence: Optional[rrule] = None,
     ):
         """Initialize."""
+        self._async_unsub_dispatcher_connect: Optional[Callable[..., Awaitable]] = None
         self._hass: HomeAssistant = hass
         self._initial_instance_scheduled: bool = False
         self._is_on: bool = False
@@ -153,12 +165,6 @@ class Schedule:
         self.recurrence: Optional[rrule] = recurrence
         self.schedule_id: str = uuid4().hex
         self.start_datetime: datetime = start_datetime
-
-        self.instance_duration: Optional[timedelta]
-        if self.end_datetime:
-            self.instance_duration = self.end_datetime - self.start_datetime
-        else:
-            self.instance_duration = None
 
     def __str__(self) -> str:
         """Define the string representation of this schedule."""
@@ -219,15 +225,20 @@ class Schedule:
 
         if not start_dt:
             _LOGGER.info("No more instances of schedule: %s", self)
+            self.active_instance = None
             return
 
         instance = ScheduleInstance(self._hass, self.entity_id, start_dt, end_dt)
         instance.async_init()
 
-        if self.instance_duration:
+        if self.end_datetime:
             self.active_instance = instance
         else:
             self.active_instance = None
+
+        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
+            self._hass, TOPIC_SCHEDULE_NEXT, self._async_schedule
+        )
 
     @callback
     def _get_next_instance_datetimes(
@@ -248,7 +259,7 @@ class Schedule:
             return (None, None)
 
         if self.end_datetime:
-            end = start + self.instance_duration
+            end = start + (self.end_datetime - self.start_datetime)
         else:
             end = None
 
@@ -272,17 +283,6 @@ class Schedule:
             the_dict[CONF_RECURRENCE] = None
 
         return the_dict
-
-    async def async_revert(self, instance: ScheduleInstance) -> None:
-        """Revert the instance."""
-        await instance.async_revert()
-        await self._async_schedule()
-
-    async def async_trigger(self, instance: ScheduleInstance) -> None:
-        """Trigger the instance."""
-        await instance.async_trigger()
-        if not self.instance_duration:
-            await self._async_schedule()
 
     @callback
     def async_turn_off(self) -> None:
