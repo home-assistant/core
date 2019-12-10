@@ -75,10 +75,6 @@ class OperationNotAllowed(ConfigError):
     """Raised when a config entry operation is not allowed."""
 
 
-class UniqueIdExists(data_entry_flow.AbortFlow):
-    """Error to indicate that the unique Id already exists."""
-
-
 class UniqueIdInProgress(data_entry_flow.AbortFlow):
     """Error to indicate that the unique Id is in progress."""
 
