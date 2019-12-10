@@ -88,7 +88,7 @@ async def test_create_schedule(hass):
         f'<Schedule start="{start_datetime}" end="{end_datetime}" '
         f'rrule="DTSTART:{start_datetime_rfc5545}\nRRULE:FREQ=DAILY">'
     )
-    assert schedule.active
+    assert not schedule.active
     assert not schedule.expired
     assert schedule.state == "on"
     assert schedule.as_dict() == {
