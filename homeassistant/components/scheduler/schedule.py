@@ -46,48 +46,44 @@ class ScheduleInstance:
     ):
         """Initialize."""
         self._affected_states: List[State] = []
-        self._async_revert_listener: Optional[Callable[..., Awaitable]] = None
         self._async_state_listener: Optional[Callable[..., Awaitable]] = None
-        self._async_trigger_listener: Optional[Callable[..., Awaitable]] = None
+        self._async_unsub_revert_event: Optional[Callable[..., Awaitable]] = None
+        self._async_unsub_trigger_event: Optional[Callable[..., Awaitable]] = None
         self._context: Context = Context()
         self._hass: HomeAssistant = hass
         self.end_datetime: Optional[datetime] = end_datetime
         self.entity_id: str = entity_id
         self.start_datetime: datetime = start_datetime
 
-    @callback
-    def async_init(self) -> None:
-        """Perform some post-instantiation initialization."""
-
-        async def revert(executed_at: datetime) -> None:
-            """Revert."""
-            await self.async_revert()
-
-        async def trigger(executed_at: datetime) -> None:
-            """Trigger."""
-            await self.async_trigger()
-
-        self._async_trigger_listener = async_track_point_in_time(
-            self._hass, trigger, self.start_datetime
+        self._async_unsub_trigger_event = async_track_point_in_time(
+            hass, self._async_trigger_event, start_datetime
         )
 
-        if self.end_datetime:
-            self._async_trigger_listener = async_track_point_in_time(
-                self._hass, revert, self.end_datetime
+        if end_datetime:
+            self._async_unsub_revert_event = async_track_point_in_time(
+                hass, self._async_revert_event, end_datetime
             )
+
+    async def _async_revert_event(self, executed_at: datetime) -> None:
+        """Revert."""
+        await self.async_revert()
+
+    async def _async_trigger_event(self, executed_at: datetime) -> None:
+        """Trigger."""
+        await self.async_trigger()
 
     @callback
     def async_cancel(self) -> None:
         """Cancel the instance."""
-        if self._async_revert_listener:
-            self._async_revert_listener()
-            self._async_revert_listener = None
+        if self._async_unsub_revert_event:
+            self._async_unsub_revert_event()
+            self._async_unsub_revert_event = None
         if self._async_state_listener:
             self._async_state_listener()
             self._async_state_listener = None
-        if self._async_trigger_listener:
-            self._async_trigger_listener()
-            self._async_trigger_listener = None
+        if self._async_unsub_trigger_event:
+            self._async_unsub_trigger_event()
+            self._async_unsub_trigger_event = None
 
     async def async_revert(self) -> None:
         """Restore the entities touched by the schedule."""
@@ -232,7 +228,6 @@ class Schedule:
             return
 
         instance = ScheduleInstance(self._hass, self.entity_id, start_dt, end_dt)
-        instance.async_init()
 
         if self.end_datetime:
             self.active_instance = instance
