@@ -12,10 +12,10 @@ set_system_mode:
       description: >-
           The duration in days; used with Away, DayOff, or Custom. The system will
           revert to Auto at midnight (today is day 1).
-      example: 2
+      example: 28
     hours:
       description: The duration in hours; used only with AutoWithEco.
-      example:
+      example: 8
 
 reset_system:
   description: >-
@@ -46,7 +46,7 @@ set_zone_override:
       description: >-
           Used as an alternative to duration; the zone will revert after this time
           (HH:MM).
-      example:
+      example: '16:30'
 
 clear_zone_override:
   description: Set a zone to follow its schedule.
