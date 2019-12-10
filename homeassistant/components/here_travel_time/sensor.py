@@ -1,5 +1,5 @@
 """Support for HERE travel time sensors."""
-from datetime import timedelta
+from datetime import timedelta, datetime
 import logging
 from typing import Callable, Dict, Optional, Union
 
@@ -36,6 +36,8 @@ CONF_ORIGIN_ENTITY_ID = "origin_entity_id"
 CONF_API_KEY = "api_key"
 CONF_TRAFFIC_MODE = "traffic_mode"
 CONF_ROUTE_MODE = "route_mode"
+CONF_ARRIVAL = "arrival"
+CONF_DEPARTURE = "departure"
 
 DEFAULT_NAME = "HERE Travel Time"
 
@@ -90,32 +92,43 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 NO_ROUTE_ERROR_MESSAGE = "HERE could not find a route based on the input"
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Inclusive(
+            CONF_DESTINATION_LATITUDE, "destination_coordinates"
+        ): cv.latitude,
+        vol.Inclusive(
+            CONF_DESTINATION_LONGITUDE, "destination_coordinates"
+        ): cv.longitude,
+        vol.Exclusive(CONF_DESTINATION_LATITUDE, "destination"): cv.latitude,
+        vol.Exclusive(CONF_DESTINATION_ENTITY_ID, "destination"): cv.entity_id,
+        vol.Inclusive(CONF_ORIGIN_LATITUDE, "origin_coordinates"): cv.latitude,
+        vol.Inclusive(CONF_ORIGIN_LONGITUDE, "origin_coordinates"): cv.longitude,
+        vol.Exclusive(CONF_ORIGIN_LATITUDE, "origin"): cv.latitude,
+        vol.Exclusive(CONF_ORIGIN_ENTITY_ID, "origin"): cv.entity_id,
+        vol.Exclusive(CONF_ARRIVAL, "arrival_departure"): cv.datetime,
+        vol.Exclusive(CONF_DEPARTURE, "arrival_departure"): cv.datetime,
+        vol.Optional(CONF_DEPARTURE, default="now"): cv.datetime,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_MODE, default=TRAVEL_MODE_CAR): vol.In(TRAVEL_MODE),
+        vol.Optional(CONF_ROUTE_MODE, default=ROUTE_MODE_FASTEST): vol.In(ROUTE_MODE),
+        vol.Optional(CONF_TRAFFIC_MODE, default=False): cv.boolean,
+        vol.Optional(CONF_UNIT_SYSTEM): vol.In(UNITS),
+    }
+)
+
 PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_DESTINATION_LATITUDE, CONF_DESTINATION_ENTITY_ID),
     cv.has_at_least_one_key(CONF_ORIGIN_LATITUDE, CONF_ORIGIN_ENTITY_ID),
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_API_KEY): cv.string,
-            vol.Inclusive(
-                CONF_DESTINATION_LATITUDE, "destination_coordinates"
-            ): cv.latitude,
-            vol.Inclusive(
-                CONF_DESTINATION_LONGITUDE, "destination_coordinates"
-            ): cv.longitude,
-            vol.Exclusive(CONF_DESTINATION_LATITUDE, "destination"): cv.latitude,
-            vol.Exclusive(CONF_DESTINATION_ENTITY_ID, "destination"): cv.entity_id,
-            vol.Inclusive(CONF_ORIGIN_LATITUDE, "origin_coordinates"): cv.latitude,
-            vol.Inclusive(CONF_ORIGIN_LONGITUDE, "origin_coordinates"): cv.longitude,
-            vol.Exclusive(CONF_ORIGIN_LATITUDE, "origin"): cv.latitude,
-            vol.Exclusive(CONF_ORIGIN_ENTITY_ID, "origin"): cv.entity_id,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_MODE, default=TRAVEL_MODE_CAR): vol.In(TRAVEL_MODE),
-            vol.Optional(CONF_ROUTE_MODE, default=ROUTE_MODE_FASTEST): vol.In(
-                ROUTE_MODE
-            ),
-            vol.Optional(CONF_TRAFFIC_MODE, default=False): cv.boolean,
-            vol.Optional(CONF_UNIT_SYSTEM): vol.In(UNITS),
-        }
+    vol.Any(
+        PLATFORM_SCHEMA.extend(
+            {
+                vol.Required(CONF_MODE): vol.Match(TRAVEL_MODE_PUBLIC_TIME_TABLE),
+                vol.Required(CONF_ARRIVAL): cv.datetime,
+            }
+        ),
+        PLATFORM_SCHEMA,
     ),
 )
 
@@ -160,9 +173,11 @@ async def async_setup_platform(
     route_mode = config[CONF_ROUTE_MODE]
     name = config[CONF_NAME]
     units = config.get(CONF_UNIT_SYSTEM, hass.config.units.name)
+    arrival = config.get(CONF_ARRIVAL)
+    departure = config.get(CONF_DEPARTURE)
 
     here_data = HERETravelTimeData(
-        here_client, travel_mode, traffic_mode, route_mode, units
+        here_client, travel_mode, traffic_mode, route_mode, units, arrival, departure
     )
 
     sensor = HERETravelTimeSensor(
@@ -361,6 +376,8 @@ class HERETravelTimeData:
         traffic_mode: bool,
         route_mode: str,
         units: str,
+        arrival: datetime,
+        departure: datetime,
     ) -> None:
         """Initialize herepy."""
         self.origin = None
@@ -368,6 +385,8 @@ class HERETravelTimeData:
         self.travel_mode = travel_mode
         self.traffic_mode = traffic_mode
         self.route_mode = route_mode
+        self.arrival = arrival
+        self.departure = departure
         self.attribution = None
         self.traffic_time = None
         self.distance = None
@@ -377,6 +396,7 @@ class HERETravelTimeData:
         self.destination_name = None
         self.units = units
         self._client = here_client
+        self.combine_change = True
 
     def update(self) -> None:
         """Get the latest data from HERE."""
@@ -399,14 +419,17 @@ class HERETravelTimeData:
                 herepy.RouteMode[traffic_mode],
             )
             try:
-                response = self._client.car_route(
+                response = self._client.public_transport_timetable(
                     origin,
                     destination,
+                    self.combine_change,
                     [
                         herepy.RouteMode[self.route_mode],
                         herepy.RouteMode[self.travel_mode],
                         herepy.RouteMode[traffic_mode],
                     ],
+                    arrival=self.arrival,
+                    departure=self.departure,
                 )
             except herepy.NoRouteFoundError:
                 # Better error message for cryptic no route error codes
