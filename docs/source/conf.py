@@ -17,11 +17,11 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import sys
-import os
 import inspect
+import os
+import sys
 
-from homeassistant.const import __version__, __short_version__
+from homeassistant.const import __short_version__, __version__
 
 PROJECT_NAME = 'Home Assistant'
 PROJECT_PACKAGE_NAME = 'homeassistant'
