@@ -53,7 +53,8 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
-    
+
+
 async def test_controlling_non_default_state_via_topic(hass, mqtt_mock):
     """Test the controlling state via topic."""
     assert await async_setup_component(
@@ -120,7 +121,8 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock):
 
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
-    
+
+
 async def test_controlling_non_default_state_via_topic_and_json_message(hass, mqtt_mock):
     """Test the controlling state via topic and JSON message."""
     assert await async_setup_component(
