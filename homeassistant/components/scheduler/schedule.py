@@ -53,11 +53,11 @@ class ScheduleInstance:
     def async_init(self) -> None:
         """Set up scheduling for this instance."""
 
-        async def revert(self, executed_at: datetime) -> None:
+        async def revert(executed_at: datetime) -> None:
             """Revert."""
             await self.async_revert()
 
-        async def trigger(self, executed_at: datetime) -> None:
+        async def trigger(executed_at: datetime) -> None:
             """Trigger."""
             await self.async_trigger()
 
@@ -299,8 +299,8 @@ class Schedule:
         if self.expired:
             raise ValueError("Cannot turn on expired schedule")
 
-        self._async_schedule()
         self._is_on = True
+        self._async_schedule()
 
 
 class Scheduler:

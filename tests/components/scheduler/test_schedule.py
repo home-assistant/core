@@ -10,7 +10,10 @@ from homeassistant.components.scheduler.schedule import (
     Schedule,
 )
 from homeassistant.const import CONF_ENTITY_ID
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+
+from tests.common import async_fire_time_changed
 
 
 async def test_create_schedule(hass):
@@ -152,3 +155,24 @@ async def test_expired_schedule(hass):
         CONF_RECURRENCE: f"DTSTART:{start_datetime_rfc5545}\nRRULE:FREQ=DAILY",
     }
     assert not schedule.active_instance
+
+
+async def test_turn_schedule_on(hass):
+    """Test turning a schedule on."""
+    assert await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
+    assert hass.states.get("light.bed_light").state == "off"
+    assert await async_setup_component(
+        hass,
+        "scene",
+        {"scene": {"name": "test_scene_1", "entities": {"light.bed_light": "on"}}},
+    )
+
+    start_datetime = dt_util.utcnow() + timedelta(hours=1)
+
+    schedule = Schedule(hass, "scene.test_scene_1", start_datetime)
+    schedule.async_turn_on()
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, start_datetime)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.bed_light").state == "on"
