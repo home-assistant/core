@@ -603,6 +603,9 @@ sunwatcher==0.2.1
 # homeassistant.components.tellduslive
 tellduslive==0.10.10
 
+# homeassistant.components.ticktick
+ticktick==0.1.4
+
 # homeassistant.components.toon
 toonapilib==3.2.4
 

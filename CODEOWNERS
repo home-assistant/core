@@ -326,6 +326,7 @@ homeassistant/components/tfiac/* @fredrike @mellado
 homeassistant/components/thethingsnetwork/* @fabaff
 homeassistant/components/threshold/* @fabaff
 homeassistant/components/tibber/* @danielhiversen
+homeassistant/components/ticktick/* @BeryJu
 homeassistant/components/tile/* @bachya
 homeassistant/components/time_date/* @fabaff
 homeassistant/components/todoist/* @boralyl
