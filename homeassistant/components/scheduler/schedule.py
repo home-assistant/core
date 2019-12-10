@@ -170,32 +170,7 @@ class Schedule:
     @property
     def active(self) -> bool:
         """Return whether the schedule has an active instance."""
-        # Instances with no end datetimes are one-shots and are not active:
-        if not self.end_datetime:
-            return False
-
-        now = dt_util.utcnow()
-
-        # If we're between the initial start and the end time, we're active:
-        if self.start_datetime <= now <= self.end_datetime:
-            return True
-
-        # If we have no recurrence (and we've already established that we're outside the
-        # initial start and end datetimes), we aren't active:
-        if not self.recurrence:
-            return False
-
-        # If there's no "before" datetime, that means we're at the beginning of the
-        # recurrence; since we've already established that there _is_ a recurrence,
-        # we're active:
-        last_start_dt = self.recurrence.before(now, inc=True)
-        if not last_start_dt:
-            return True
-
-        # Lastly, look at the recurrence just before right now and see
-        # if we're still inside it; if we are, we're active:
-        last_end_dt = last_start_dt + self.instance_duration
-        return last_start_dt <= now <= last_end_dt
+        return self.active_instance is not None
 
     @property
     def expired(self) -> bool:
