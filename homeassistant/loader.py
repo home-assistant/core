@@ -195,21 +195,44 @@ class Integration:
         hass: "HomeAssistant",
         pkg_path: str,
         file_path: pathlib.Path,
-        manifest: Dict,
+        manifest: Dict[str, Any],
     ):
         """Initialize an integration."""
         self.hass = hass
         self.pkg_path = pkg_path
         self.file_path = file_path
-        self.name: str = manifest["name"]
-        self.domain: str = manifest["domain"]
-        self.dependencies: List[str] = manifest["dependencies"]
-        self.after_dependencies: Optional[List[str]] = manifest.get(
-            "after_dependencies"
-        )
-        self.requirements: List[str] = manifest["requirements"]
-        self.config_flow: bool = manifest.get("config_flow", False)
+        self.manifest = manifest
         _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
+
+    @property
+    def name(self) -> str:
+        """Return name."""
+        return cast(str, self.manifest["name"])
+
+    @property
+    def domain(self) -> str:
+        """Return domain."""
+        return cast(str, self.manifest["domain"])
+
+    @property
+    def dependencies(self) -> List[str]:
+        """Return dependencies."""
+        return cast(List[str], self.manifest.get("dependencies", []))
+
+    @property
+    def after_dependencies(self) -> List[str]:
+        """Return after_dependencies."""
+        return cast(List[str], self.manifest.get("after_dependencies", []))
+
+    @property
+    def requirements(self) -> List[str]:
+        """Return requirements."""
+        return cast(List[str], self.manifest.get("requirements", []))
+
+    @property
+    def config_flow(self) -> bool:
+        """Return config_flow."""
+        return cast(bool, self.manifest.get("config_flow", False))
 
     @property
     def is_built_in(self) -> bool:

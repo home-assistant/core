@@ -3,6 +3,8 @@ import pathlib
 import re
 from typing import Dict, Set
 
+from homeassistant.requirements import DISCOVERY_INTEGRATIONS
+
 from .model import Integration
 
 
@@ -49,7 +51,6 @@ ALLOWED_USED_COMPONENTS = {
     "system_log",
     "person",
     # Discovery
-    "ssdp",
     "discovery",
     # Other
     "mjpeg",  # base class, has no reqs or component to load.
@@ -92,6 +93,13 @@ def validate_dependencies(integration: Integration):
     referenced -= ALLOWED_USED_COMPONENTS
     referenced -= set(integration.manifest["dependencies"])
     referenced -= set(integration.manifest.get("after_dependencies", []))
+
+    # Discovery requirements are ok if referenced in manifest
+    for check_domain, to_check in DISCOVERY_INTEGRATIONS.items():
+        if check_domain in referenced and any(
+            check in integration.manifest for check in to_check
+        ):
+            referenced.remove(check_domain)
 
     if referenced:
         for domain in sorted(referenced):
