@@ -47,22 +47,20 @@ class ScheduleInstance:
         """Initialize."""
         self._affected_states: List[State] = []
         self._async_state_listener: Optional[Callable[..., Awaitable]] = None
-        self._async_unsub_revert_event: Optional[Callable[..., Awaitable]] = None
-        self._async_unsub_trigger_event: Optional[Callable[..., Awaitable]] = None
         self._context: Context = Context()
         self._hass: HomeAssistant = hass
         self.end_datetime: Optional[datetime] = end_datetime
         self.entity_id: str = entity_id
         self.start_datetime: datetime = start_datetime
 
-        self._async_unsub_trigger_event = async_track_point_in_time(
-            hass, self._async_trigger_event, start_datetime
-        )
+        self._async_unsub_trigger_event: Optional[
+            Callable[..., Awaitable]
+        ] = async_track_point_in_time(hass, self._async_trigger_event, start_datetime)
 
         if end_datetime:
-            self._async_unsub_revert_event = async_track_point_in_time(
-                hass, self._async_revert_event, end_datetime
-            )
+            self._async_unsub_revert_event: Optional[
+                Callable[..., Awaitable]
+            ] = async_track_point_in_time(hass, self._async_revert_event, end_datetime)
 
     async def _async_revert_event(self, executed_at: datetime) -> None:
         """Revert."""
@@ -161,9 +159,9 @@ class Schedule:
         self.schedule_id: str = uuid4().hex
         self.start_datetime: datetime = start_datetime
 
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            hass, TOPIC_SCHEDULE_NEXT, self._async_schedule
-        )
+        self._async_unsub_dispatcher_connect: Callable[
+            ..., Awaitable
+        ] = async_dispatcher_connect(hass, TOPIC_SCHEDULE_NEXT, self._async_schedule)
 
     def __str__(self) -> str:
         """Define the string representation of this schedule."""
