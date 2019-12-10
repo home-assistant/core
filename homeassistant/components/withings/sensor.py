@@ -2,21 +2,21 @@
 from typing import Callable, List, Union
 
 from withings_api.common import (
-    MeasureType,
     GetSleepSummaryField,
     MeasureGetMeasResponse,
+    MeasureGroupAttribs,
+    MeasureType,
     SleepGetResponse,
     SleepGetSummaryResponse,
-    get_measure_value,
-    MeasureGroupAttribs,
     SleepState,
+    get_measure_value,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
-from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import const
 from .common import _LOGGER, WithingsDataManager, get_data_manager
@@ -382,7 +382,8 @@ class WithingsHealthSensor(Entity):
             self._state = None
             return
 
-        serie = data.series[len(data.series) - 1]
+        sorted_series = sorted(data.series, key=lambda serie: serie.startdate)
+        serie = sorted_series[len(sorted_series) - 1]
         state = None
         if serie.state == SleepState.AWAKE:
             state = const.STATE_AWAKE

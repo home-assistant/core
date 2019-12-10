@@ -1,4 +1,5 @@
 """Common code for Withings."""
+from asyncio import run_coroutine_threadsafe
 import datetime
 from functools import partial
 import logging
@@ -6,15 +7,14 @@ import re
 import time
 from typing import Any, Dict
 
-from asyncio import run_coroutine_threadsafe
 import requests
 from withings_api import (
     AbstractWithingsApi,
-    SleepGetResponse,
     MeasureGetMeasResponse,
+    SleepGetResponse,
     SleepGetSummaryResponse,
 )
-from withings_api.common import UnauthorizedException, AuthFailedException
+from withings_api.common import AuthFailedException, UnauthorizedException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
