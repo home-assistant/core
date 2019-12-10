@@ -42,7 +42,7 @@ class StarlineSensor(StarlineEntity, Entity):
         unit: str,
         icon: str,
     ):
-        """Constructor."""
+        """Initialize StarLine sensor."""
         super().__init__(account, device, key, name)
         self._device_class = device_class
         self._unit = unit

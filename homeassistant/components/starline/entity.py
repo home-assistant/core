@@ -12,7 +12,7 @@ class StarlineEntity(Entity):
     def __init__(
         self, account: StarlineAccount, device: StarlineDevice, key: str, name: str
     ):
-        """Constructor."""
+        """Initialize StarLine entity."""
         self._account = account
         self._device = device
         self._key = key

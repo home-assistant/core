@@ -23,7 +23,7 @@ class StarlineAccount:
     """StarLine Account class."""
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry):
-        """Constructor."""
+        """Initialize StarLine account."""
         self._hass: HomeAssistant = hass
         self._config_entry: ConfigEntry = config_entry
         self._update_interval: int = DEFAULT_SCAN_INTERVAL

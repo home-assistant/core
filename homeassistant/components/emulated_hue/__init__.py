@@ -312,7 +312,7 @@ class Config:
 
 
 def _load_json(filename):
-    """Wrapper, because we actually want to handle invalid json."""
+    """Load JSON, handling invalid syntax."""
     try:
         return load_json(filename)
     except HomeAssistantError:

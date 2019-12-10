@@ -51,7 +51,7 @@ class ThrottleData:
     """Throttle data."""
 
     def __init__(self, interval: int, data: Any):
-        """Constructor."""
+        """Initialize throttle data."""
         self._time = int(time.time())
         self._interval = interval
         self._data = data
@@ -126,7 +126,7 @@ class WithingsDataManager:
     service_available = None
 
     def __init__(self, hass: HomeAssistant, profile: str, api: ConfigEntryWithingsApi):
-        """Constructor."""
+        """Initialize data manager."""
         self._hass = hass
         self._api = api
         self._profile = profile

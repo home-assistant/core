@@ -15,7 +15,7 @@ class MockDevice(Device):
     """Mock device for Device."""
 
     def __init__(self, udn):
-        """Initializer."""
+        """Initialize mock device."""
         device = MagicMock()
         device.manufacturer = "mock-manuf"
         device.name = "mock-name"
