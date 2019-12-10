@@ -135,6 +135,8 @@ ABBREVIATIONS = {
     "stat_off": "state_off",
     "stat_on": "state_on",
     "stat_open": "state_open",
+    "stat_locked": "state_locked",
+    "stat_unlocked": "state_unlocked",
     "stat_t": "state_topic",
     "stat_tpl": "state_template",
     "stat_val_tpl": "state_value_template",
