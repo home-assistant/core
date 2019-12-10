@@ -206,7 +206,7 @@ async def test_direction_list(
                 },
                 {
                     "title": "Outbound 2",
-                    "prediction": {"minutes": "4", "epochTime": "1553807374000"},
+                    "prediction": {"minutes": "0", "epochTime": "1553807374000"},
                 },
             ],
         }
@@ -221,7 +221,7 @@ async def test_direction_list(
     assert state.attributes["route"] == VALID_ROUTE_TITLE
     assert state.attributes["stop"] == VALID_STOP_TITLE
     assert state.attributes["direction"] == "Outbound, Outbound 2"
-    assert state.attributes["upcoming"] == "1, 2, 3, 4"
+    assert state.attributes["upcoming"] == "0, 1, 2, 3"
 
 
 async def test_custom_name(
