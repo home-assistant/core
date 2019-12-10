@@ -77,7 +77,10 @@ def setup(hass, config):
                 hass.data[DOMAIN]["entities"][device.object_id()] = None
         for ha_type, dev_ids in device_type_list.items():
             discovery.load_platform(hass, ha_type, DOMAIN, {"dev_ids": dev_ids}, config)
-
+            print(ha_type)
+            print(DOMAIN)
+            print(dev_ids)
+            
     device_list = magichome.get_all_devices()
     load_devices(device_list)
 
