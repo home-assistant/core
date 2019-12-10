@@ -3,10 +3,10 @@
 import logging
 import voluptuous as vol
 
+from google.cloud.logging import Client
+
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-
-from google.cloud.logging import Client
 
 from .const import DOMAIN
 
@@ -49,8 +49,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
     sd_config = config[DOMAIN]
     try:
         client = Client.from_service_account_json(sd_config[CONF_KEYFILE])
-    except ValueError as e:
-        _LOGGER.warning("Failed to load credentials: %s", e)
+    except ValueError as error:
+        _LOGGER.warning("Failed to load credentials: %s", error)
         return False
     client.setup_logging(
         log_level=sd_config[CONF_LEVEL], labels=sd_config.get(CONF_LABELS, {})
