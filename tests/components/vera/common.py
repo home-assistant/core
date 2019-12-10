@@ -16,7 +16,7 @@ class ComponentFactory:
     """Factory class."""
 
     def __init__(self, init_controller_mock):
-        """Constructor."""
+        """Initialize component factory."""
         self.init_controller_mock = init_controller_mock
 
     async def configure_component(

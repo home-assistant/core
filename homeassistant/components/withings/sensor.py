@@ -55,7 +55,7 @@ class WithingsAttribute:
         unit_of_measurement: str,
         icon: str,
     ) -> None:
-        """Constructor."""
+        """Initialize attribute."""
         self.measurement = measurement
         self.measure_type = measure_type
         self.friendly_name = friendly_name
@@ -73,7 +73,7 @@ class WithingsSleepStateAttribute(WithingsAttribute):
     def __init__(
         self, measurement: str, friendly_name: str, unit_of_measurement: str, icon: str
     ) -> None:
-        """Constructor."""
+        """Initialize sleep state attribute."""
         super().__init__(measurement, None, friendly_name, unit_of_measurement, icon)
 
 
