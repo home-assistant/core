@@ -6,7 +6,7 @@ from pymata_aio.constants import Constants as PymataConstants
 
 from homeassistant.core import callback
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.const import CONF_NAME, ATTR_TRIPPED
+from homeassistant.const import CONF_NAME
 
 from .board import FirmataBoardPin
 from .const import (CONF_NEGATE_STATE, PIN_MODE_INPUT, PIN_MODE_PULLUP, DOMAIN)
