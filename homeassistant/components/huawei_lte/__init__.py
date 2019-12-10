@@ -157,40 +157,53 @@ class Router:
         """Get router connections for device registry."""
         return {(dr.CONNECTION_NETWORK_MAC, self.mac)} if self.mac else set()
 
+    def _get_data(self, key: str, func: Callable[[None], Any]) -> None:
+        if not self.subscriptions.get(key):
+            return
+        _LOGGER.debug("Getting %s for subscribers %s", key, self.subscriptions[key])
+        try:
+            self.data[key] = func()
+        except ResponseErrorNotSupportedException:
+            _LOGGER.info(
+                "%s not supported by device, excluding from future updates", key
+            )
+            self.subscriptions.pop(key)
+        except ResponseErrorLoginRequiredException:
+            if isinstance(self.connection, AuthorizedConnection):
+                _LOGGER.debug("Trying to authorize again...")
+                if self.connection.enforce_authorized_connection():
+                    _LOGGER.debug(
+                        "...success, %s will be updated by a future periodic run", key,
+                    )
+                else:
+                    _LOGGER.debug("...failed")
+                return
+            _LOGGER.info(
+                "%s requires authorization, excluding from future updates", key
+            )
+            self.subscriptions.pop(key)
+        finally:
+            _LOGGER.debug("%s=%s", key, self.data.get(key))
+
     def update(self) -> None:
         """Update router data."""
 
-        def get_data(key: str, func: Callable[[None], Any]) -> None:
-            if not self.subscriptions[key]:
-                return
-            _LOGGER.debug("Getting %s for subscribers %s", key, self.subscriptions[key])
-            try:
-                self.data[key] = func()
-            except ResponseErrorNotSupportedException:
-                _LOGGER.info(
-                    "%s not supported by device, excluding from future updates", key
-                )
-                self.subscriptions.pop(key)
-            except ResponseErrorLoginRequiredException:
-                _LOGGER.info(
-                    "%s requires authorization, excluding from future updates", key
-                )
-                self.subscriptions.pop(key)
-            finally:
-                _LOGGER.debug("%s=%s", key, self.data.get(key))
-
-        get_data(KEY_DEVICE_INFORMATION, self.client.device.information)
+        self._get_data(KEY_DEVICE_INFORMATION, self.client.device.information)
         if self.data.get(KEY_DEVICE_INFORMATION):
             # Full information includes everything in basic
             self.subscriptions.pop(KEY_DEVICE_BASIC_INFORMATION, None)
-        get_data(KEY_DEVICE_BASIC_INFORMATION, self.client.device.basic_information)
-        get_data(KEY_DEVICE_SIGNAL, self.client.device.signal)
-        get_data(KEY_DIALUP_MOBILE_DATASWITCH, self.client.dial_up.mobile_dataswitch)
-        get_data(KEY_MONITORING_STATUS, self.client.monitoring.status)
-        get_data(
+        self._get_data(
+            KEY_DEVICE_BASIC_INFORMATION, self.client.device.basic_information
+        )
+        self._get_data(KEY_DEVICE_SIGNAL, self.client.device.signal)
+        self._get_data(
+            KEY_DIALUP_MOBILE_DATASWITCH, self.client.dial_up.mobile_dataswitch
+        )
+        self._get_data(KEY_MONITORING_STATUS, self.client.monitoring.status)
+        self._get_data(
             KEY_MONITORING_TRAFFIC_STATISTICS, self.client.monitoring.traffic_statistics
         )
-        get_data(KEY_WLAN_HOST_LIST, self.client.wlan.host_list)
+        self._get_data(KEY_WLAN_HOST_LIST, self.client.wlan.host_list)
 
         self.signal_update()
 
