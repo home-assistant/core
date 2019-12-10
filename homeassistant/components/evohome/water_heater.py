@@ -38,10 +38,10 @@ async def async_setup_platform(
         broker.tcs.hotwater.zone_type,
         broker.tcs.hotwater.zoneId,
     )
+    new_entity = EvoDHW(broker, broker.tcs.hotwater)
+    broker.entities = {broker.tcs.hotwater.zoneId: new_entity}
 
-    evo_dhw = EvoDHW(broker, broker.tcs.hotwater)
-
-    async_add_entities([evo_dhw], update_before_add=True)
+    async_add_entities([new_entity], update_before_add=True)
 
 
 class EvoDHW(EvoChild, WaterHeaterDevice):
