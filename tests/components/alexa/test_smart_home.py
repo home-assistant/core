@@ -2426,6 +2426,7 @@ async def test_motion_sensor_event_detection(hass):
 
     capabilities = assert_endpoint_capabilities(
         appliance,
+        "Alexa",
         "Alexa.MotionSensor",
         "Alexa.EventDetectionSensor",
         "Alexa.EndpointHealth",
@@ -2455,7 +2456,7 @@ async def test_presence_sensor(hass):
     assert appliance["friendlyName"] == "Test presence sensor"
 
     capabilities = assert_endpoint_capabilities(
-        appliance, "Alexa.EventDetectionSensor", "Alexa.EndpointHealth"
+        appliance, "Alexa", "Alexa.EventDetectionSensor", "Alexa.EndpointHealth"
     )
 
     event_detection_capability = get_capability(
