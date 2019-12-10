@@ -75,6 +75,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Update the values of the controller."""
         for entity in tracked.values():
 
+            if entity.entity_registry_enabled_default == entity.enabled:
+                continue
+
             disabled_by = None
             if not entity.entity_registry_enabled_default and entity.enabled:
                 disabled_by = DISABLED_CONFIG_ENTRY
@@ -227,10 +230,9 @@ class UniFiDeviceTracker(ScannerEntity):
     @property
     def entity_registry_enabled_default(self):
         """Return if the entity should be enabled when first added to the entity registry."""
-        if not self.controller.option_track_devices:
-            return False
-
-        return True
+        if self.controller.option_track_devices:
+            return True
+        return False
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""
