@@ -396,8 +396,8 @@ class LightTemplate(Light):
         if self._temperature_template is not None:
             try:
                 temperature = int(self._temperature_template.async_render())
-            except TemplateError as ex:
-                _LOGGER.error("Cannot evaluate temperature template", ex)
+            except TemplateError:
+                _LOGGER.error("Cannot evaluate temperature template", exc_info=True)
                 self._temperature = None
 
             if self.min_mireds <= temperature <= self.max_mireds:
