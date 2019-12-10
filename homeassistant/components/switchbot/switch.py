@@ -6,39 +6,56 @@ from typing import Any, Dict
 import switchbot
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
-from homeassistant.const import CONF_MAC, CONF_NAME
+from homeassistant.components.switch import (
+    ENTITY_ID_FORMAT,
+    PLATFORM_SCHEMA,
+    SwitchDevice,
+)
+from homeassistant.const import CONF_FRIENDLY_NAME, CONF_MAC, CONF_SWITCHES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Switchbot"
+SWITCH_SCHEMA = vol.Schema(
+    {vol.Required(CONF_MAC): cv.string, vol.Optional(CONF_FRIENDLY_NAME): cv.string}
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_MAC): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
+    {vol.Required(CONF_SWITCHES): cv.schema_with_slug_keys(SWITCH_SCHEMA)}
 )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Perform the setup for Switchbot devices."""
-    name = config.get(CONF_NAME)
-    mac_addr = config[CONF_MAC]
-    add_entities([SwitchBot(mac_addr, name)])
+    devices = config.get(CONF_SWITCHES, {})
+    switches = []
+
+    for object_id, device_config in devices.items():
+        switches.append(
+            SwitchBot(
+                object_id,
+                device_config.get(CONF_FRIENDLY_NAME, object_id),
+                device_config[CONF_MAC],
+            )
+        )
+
+    if not switches:
+        _LOGGER.error("No switches added")
+        return False
+
+    add_entities(switches)
 
 
 class SwitchBot(SwitchDevice, RestoreEntity):
     """Representation of a Switchbot."""
 
-    def __init__(self, mac, name) -> None:
+    def __init__(self, object_id, friendly_name, mac) -> None:
         """Initialize the Switchbot."""
-
         self._state = None
         self._last_run_success = None
-        self._name = name
+        self.entity_id = ENTITY_ID_FORMAT.format(object_id)
+        self._name = friendly_name
         self._mac = mac
         self._device = switchbot.Switchbot(mac=mac)
 
