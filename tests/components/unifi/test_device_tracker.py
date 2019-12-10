@@ -2,6 +2,8 @@
 from copy import copy
 from datetime import timedelta
 
+from asynctest import patch
+
 from homeassistant import config_entries
 from homeassistant.components import unifi
 import homeassistant.components.device_tracker as device_tracker
@@ -16,8 +18,6 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from .test_controller import ENTRY_CONFIG, SITES, setup_unifi_integration
-
-DEFAULT_DETECTION_TIME = timedelta(seconds=300)
 
 CLIENT_1 = {
     "essid": "ssid",
@@ -202,7 +202,20 @@ async def test_wireless_client_go_wired_issue(hass):
     await hass.async_block_till_done()
 
     client_1 = hass.states.get("device_tracker.client_1")
-    assert client_1.state == "not_home"
+    assert client_1.state == "home"
+
+    with patch.object(
+        unifi.device_tracker.dt_util,
+        "utcnow",
+        return_value=(dt_util.utcnow() + timedelta(minutes=5)),
+    ):
+        controller.mock_client_responses.append([client_1_client])
+        controller.mock_device_responses.append({})
+        await controller.async_update()
+        await hass.async_block_till_done()
+
+        client_1 = hass.states.get("device_tracker.client_1")
+        assert client_1.state == "not_home"
 
     client_1_client["is_wired"] = False
     client_1_client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
