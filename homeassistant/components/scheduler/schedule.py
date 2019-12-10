@@ -57,7 +57,7 @@ class ScheduleInstance:
 
     @callback
     def async_init(self) -> None:
-        """Set up scheduling for this instance."""
+        """Perform some post-instantiation initialization."""
 
         async def revert(executed_at: datetime) -> None:
             """Revert."""
@@ -155,7 +155,6 @@ class Schedule:
         recurrence: Optional[rrule] = None,
     ):
         """Initialize."""
-        self._async_unsub_dispatcher_connect: Optional[Callable[..., Awaitable]] = None
         self._hass: HomeAssistant = hass
         self._initial_instance_scheduled: bool = False
         self._is_on: bool = False
@@ -165,6 +164,10 @@ class Schedule:
         self.recurrence: Optional[rrule] = recurrence
         self.schedule_id: str = uuid4().hex
         self.start_datetime: datetime = start_datetime
+
+        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
+            hass, TOPIC_SCHEDULE_NEXT, self._async_schedule
+        )
 
     def __str__(self) -> str:
         """Define the string representation of this schedule."""
@@ -235,10 +238,6 @@ class Schedule:
             self.active_instance = instance
         else:
             self.active_instance = None
-
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self._hass, TOPIC_SCHEDULE_NEXT, self._async_schedule
-        )
 
         _LOGGER.info("Scheduled instance of %s", self)
 
