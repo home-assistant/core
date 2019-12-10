@@ -1,4 +1,8 @@
 """The Netatmo integration."""
+
+# TODO:
+# * fix webhooks
+
 import asyncio
 import logging
 
@@ -34,7 +38,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 # PLATFORMS = ["binary_sensor", "camera", "climate", "light", "sensor", "switch"]
-PLATFORMS = ["binary_sensor", "camera", "climate", "sensor"]
+PLATFORMS = ["binary_sensor", "camera", "climate", "light", "sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
