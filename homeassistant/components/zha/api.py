@@ -50,7 +50,11 @@ from .core.const import (
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
 )
-from .core.helpers import async_is_bindable_target, get_matched_clusters
+from .core.helpers import (
+    async_get_device_info,
+    async_is_bindable_target,
+    get_matched_clusters,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -421,31 +425,6 @@ async def websocket_remove_group_members(hass, connection, msg):
         return
     ret_group = async_get_group_info(hass, zha_gateway, zigpy_group, ha_device_registry)
     connection.send_result(msg[ID], ret_group)
-
-
-@callback
-def async_get_device_info(hass, device, ha_device_registry=None):
-    """Get ZHA device."""
-    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
-    ret_device = {}
-    ret_device.update(device.device_info)
-    ret_device["entities"] = [
-        {
-            "entity_id": entity_ref.reference_id,
-            ATTR_NAME: entity_ref.device_info[ATTR_NAME],
-        }
-        for entity_ref in zha_gateway.device_registry[device.ieee]
-    ]
-
-    if ha_device_registry is not None:
-        reg_device = ha_device_registry.async_get_device(
-            {(DOMAIN, str(device.ieee))}, set()
-        )
-        if reg_device is not None:
-            ret_device["user_given_name"] = reg_device.name_by_user
-            ret_device["device_reg_id"] = reg_device.id
-            ret_device["area_id"] = reg_device.area_id
-    return ret_device
 
 
 async def get_groups(hass,):

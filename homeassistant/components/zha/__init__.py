@@ -1,7 +1,4 @@
-"""Support for Zigbee Home Automation devices.
-
-isort:skip_file
-"""
+"""Support for Zigbee Home Automation devices."""
 
 import logging
 
@@ -11,7 +8,6 @@ from homeassistant import config_entries, const as ha_const
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 
-from . import config_flow  # noqa: F401 pylint: disable=unused-import
 from . import api
 from .core import ZHAGateway
 from .core.const import (
@@ -147,5 +143,4 @@ async def async_unload_entry(hass, config_entry):
     for component in COMPONENTS:
         await hass.config_entries.async_forward_entry_unload(config_entry, component)
 
-    del hass.data[DATA_ZHA]
     return True
