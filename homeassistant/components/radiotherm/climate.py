@@ -1,32 +1,37 @@
 """Support for Radio Thermostat wifi-enabled home thermostats."""
 import logging
 
-import radiotherm
 import voluptuous as vol
+import radiotherm
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    FAN_OFF,
-    FAN_ON,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
+    FAN_ON,
+    FAN_OFF,
+    CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_COOL,
     SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_FAN_MODE,
+    SUPPORT_PRESET_MODE,
+    PRESET_HOME,
+    PRESET_ALTERNATE,
+    PRESET_AWAY,
+    PRESET_HOLIDAY,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
     PRECISION_HALVES,
-    STATE_ON,
     TEMP_FAHRENHEIT,
+    STATE_ON,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +40,8 @@ ATTR_FAN_ACTION = "fan_action"
 CONF_HOLD_TEMP = "hold_temp"
 
 STATE_CIRCULATE = "circulate"
+
+PRESET_MODES = [PRESET_HOME, PRESET_ALTERNATE, PRESET_AWAY, PRESET_HOLIDAY]
 
 OPERATION_LIST = [HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF]
 CT30_FAN_OPERATION_LIST = [STATE_ON, HVAC_MODE_AUTO]
@@ -54,17 +61,41 @@ CODE_TO_TEMP_MODE = {
 TEMP_MODE_TO_CODE = {v: k for k, v in CODE_TO_TEMP_MODE.items()}
 
 # Programmed fan mode (circulate is supported by CT80 models)
-CODE_TO_FAN_MODE = {0: HVAC_MODE_AUTO, 1: STATE_CIRCULATE, 2: STATE_ON}
+CODE_TO_FAN_MODE = {
+    0: HVAC_MODE_AUTO, 
+    1: STATE_CIRCULATE, 
+    2: STATE_ON
+}
 FAN_MODE_TO_CODE = {v: k for k, v in CODE_TO_FAN_MODE.items()}
 
 # Active thermostat state (is it heating or cooling?).  In the future
 # this should probably made into heat and cool binary sensors.
-CODE_TO_TEMP_STATE = {0: CURRENT_HVAC_IDLE, 1: CURRENT_HVAC_HEAT, 2: CURRENT_HVAC_COOL}
+CODE_TO_TEMP_STATE = {
+    0: CURRENT_HVAC_IDLE, 
+    1: CURRENT_HVAC_HEAT, 
+    2: CURRENT_HVAC_COOL
+}
 
 # Active fan state.  This is if the fan is actually on or not.  In the
 # future this should probably made into a binary sensor for the fan.
-CODE_TO_FAN_STATE = {0: FAN_OFF, 1: FAN_ON}
+CODE_TO_FAN_STATE = {
+    0: FAN_OFF, 
+    1: FAN_ON
+}
 
+PRESET_MODE_TO_CODE = {
+   "home": 0,
+   "alternate": 1,
+   "away": 2,
+   "holiday": 3
+}
+
+CODE_TO_PRESET_MODE = {
+   0: "home",
+   1: "alternate",
+   2: "away",
+   3: "holiday"
+}
 
 def round_temp(temperature):
     """Round a temperature to the resolution of the thermostat.
@@ -74,7 +105,6 @@ def round_temp(temperature):
     """
     return round(temperature * 2.0) / 2.0
 
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST): vol.All(cv.ensure_list, [cv.string]),
@@ -82,7 +112,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_PRESET_MODE
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -128,6 +158,8 @@ class RadioThermostat(ClimateDevice):
         self._hold_temp = hold_temp
         self._hold_set = False
         self._prev_temp = None
+        self._program_mode = None
+        self._is_away = False
 
         # Fan circulate mode is only supported by the CT80 models.
         self._is_model_ct80 = isinstance(self.device, radiotherm.thermostat.CT80)
@@ -216,6 +248,27 @@ class RadioThermostat(ClimateDevice):
         """Return the temperature we try to reach."""
         return self._target_temperature
 
+    @property
+    def preset_mode(self):
+        """Return the current preset mode, e.g., home, away, temp."""
+        if self._program_mode == 0:
+            return PRESET_HOME
+        if self._program_mode == 1:
+            return PRESET_ALTERNATE
+        if self._program_mode == 2:
+            return PRESET_AWAY
+        if self._program_mode == 3:
+            return PRESET_HOLIDAY
+
+    @property
+    def preset_modes(self):
+        """Return a list of available preset modes."""
+        return PRESET_MODES
+
+    def set_preset_mode(self, preset_mode):
+        """Set new preset mode."""
+        pass
+
     def update(self):
         """Update and validate the data from the thermostat."""
         # Radio thermostats are very slow, and sometimes don't respond
@@ -262,6 +315,8 @@ class RadioThermostat(ClimateDevice):
         self._fstate = CODE_TO_FAN_STATE[data["fstate"]]
         self._tmode = CODE_TO_TEMP_MODE[data["tmode"]]
         self._tstate = CODE_TO_TEMP_STATE[data["tstate"]]
+        self._program_mode = data["program_mode"]
+        self._preset_mode = CODE_TO_PRESET_MODE[data["program_mode"]]
 
         self._current_operation = self._tmode
         if self._tmode == HVAC_MODE_COOL:
@@ -327,3 +382,9 @@ class RadioThermostat(ClimateDevice):
             self.device.t_cool = self._target_temperature
         elif hvac_mode == HVAC_MODE_HEAT:
             self.device.t_heat = self._target_temperature
+
+    def set_preset_mode(self, preset_mode):
+        if preset_mode in (PRESET_MODES):
+            self.device.program_mode = PRESET_MODE_TO_CODE[preset_mode]
+        else: 
+            _LOGGER.error("preset_mode " + preset_mode + " not in PRESET_MODES")
