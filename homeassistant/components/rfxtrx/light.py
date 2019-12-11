@@ -19,11 +19,11 @@ from . import (
     CONF_FIRE_EVENT,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
+    RECEIVED_EVT_SUBSCRIBERS,
     RfxtrxDevice,
+    apply_received_command,
     get_devices_from_config,
     get_new_device,
-    RECEIVED_EVT_SUBSCRIBERS,
-    apply_received_command,
 )
 
 _LOGGER = logging.getLogger(__name__)

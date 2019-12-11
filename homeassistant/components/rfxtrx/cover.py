@@ -12,11 +12,11 @@ from . import (
     CONF_FIRE_EVENT,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
-    RfxtrxDevice,
     RECEIVED_EVT_SUBSCRIBERS,
+    RfxtrxDevice,
     apply_received_command,
-    get_new_device,
     get_devices_from_config,
+    get_new_device,
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

@@ -18,9 +18,9 @@ from . import (
     CONF_DEVICES,
     CONF_FIRE_EVENT,
     DATA_TYPES,
-    get_rfx_object,
-    RFX_DEVICES,
     RECEIVED_EVT_SUBSCRIBERS,
+    RFX_DEVICES,
+    get_rfx_object,
 )
 
 _LOGGER = logging.getLogger(__name__)

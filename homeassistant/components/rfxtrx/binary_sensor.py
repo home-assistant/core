@@ -25,13 +25,13 @@ from . import (
     CONF_DEVICES,
     CONF_FIRE_EVENT,
     CONF_OFF_DELAY,
-    get_pt2262_deviceid,
     RECEIVED_EVT_SUBSCRIBERS,
-    apply_received_command,
     RFX_DEVICES,
+    apply_received_command,
+    find_possible_pt2262_device,
     get_pt2262_cmd,
     get_pt2262_device,
-    find_possible_pt2262_device,
+    get_pt2262_deviceid,
     get_rfx_object,
 )
 
