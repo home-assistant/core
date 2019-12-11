@@ -133,7 +133,7 @@ class TestLight(unittest.TestCase):
 
     def test_services(self):
         """Test the provided services."""
-        platform = MagicHomeApi()
+        platform = magichome.setup(config)
 
         platform.init()
         assert setup_component(
