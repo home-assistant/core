@@ -22,6 +22,7 @@ from homeassistant.components.rest.sensor import RestData
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE as HA_USER_AGENT
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
@@ -184,7 +185,10 @@ class DwdWeatherWarningsAPI:
             "jsonp=loadWarnings",
         )
 
-        self._rest = RestData("GET", resource, None, None, None, True)
+        # a User-Agent is necessary for this rest api endpoint (#29496)
+        headers = {"User-Agent": HA_USER_AGENT}
+
+        self._rest = RestData("GET", resource, None, headers, None, True)
         self.region_name = region_name
         self.region_id = None
         self.region_state = None
