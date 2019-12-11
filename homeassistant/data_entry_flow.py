@@ -187,7 +187,7 @@ class FlowHandler:
     # Set by flow manager
     flow_id: str = None  # type: ignore
     hass: Optional[HomeAssistant] = None
-    handler: Optional[str] = None
+    handler: str
     cur_step: Optional[Dict[str, str]] = None
     context: Dict
 
@@ -243,7 +243,6 @@ class FlowHandler:
         self, *, reason: str, description_placeholders: Optional[Dict] = None
     ) -> Dict[str, Any]:
         """Abort the config flow."""
-        assert self.handler is not None
         return _create_abort_data(
             self.flow_id, self.handler, reason, description_placeholders
         )

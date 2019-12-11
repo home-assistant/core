@@ -611,7 +611,7 @@ class ConfigEntries:
         if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
             return result
 
-        # TODO check if config entry exists with unique ID. Unload it.
+        # Check if config entry exists with unique ID. Unload it.
         existing_entry = None
         unique_id = flow.context.get("unique_id")
 
