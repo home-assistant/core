@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 def set_loop() -> None:
-    """Attempt to use uvloop."""
+    """Attempt to use different loop."""
     import asyncio
     from asyncio.events import BaseDefaultEventLoopPolicy
 
@@ -33,13 +33,6 @@ def set_loop() -> None:
                 _loop_factory = asyncio.ProactorEventLoop
 
             policy = ProactorPolicy()
-    else:
-        try:
-            import uvloop
-        except ImportError:
-            pass
-        else:
-            policy = uvloop.EventLoopPolicy()
 
     if policy is not None:
         asyncio.set_event_loop_policy(policy)
