@@ -1,0 +1,20 @@
+# Describes the format for available services
+
+set_zone_mode:
+  description: >-
+      Set the zone to an operating mode.
+  fields:
+    entity_id:
+      description: The zone's entity_id.
+      example: climate.bathroom
+    mode:
+      description: 'The mode, one of: off, override, timer or footprint.'
+      example: override
+    temperature:
+      description: The target temperature. Used only by override mode.
+      example: 21.5
+    duration:
+      description: >-
+          The duration in minutes. Used only by override mode. Set to 0 for the override
+          to end at the next setpoint.
+      example: 60
