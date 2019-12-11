@@ -8,7 +8,7 @@ from io import StringIO
 import pytest
 
 from homeassistant import core
-from homeassistant.component import magichome as MagicHomeApi
+from homeassistant.components import magichome as MagicHomeApi
 from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import (
@@ -385,9 +385,7 @@ class TestLight(unittest.TestCase):
             with mock.patch("builtins.open", side_effect=_mock_open):
                 with mock_storage():
                     assert setup_component(
-                        self.hass,
-                        light.DOMAIN,
-                        {light.DOMAIN: {CONF_PLATFORM: "magichome"}},
+                        self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "magichome"}}
                     )
 
         ent, _, _ = platform.ENTITIES
@@ -424,9 +422,7 @@ class TestLight(unittest.TestCase):
             with mock.patch("builtins.open", side_effect=_mock_open):
                 with mock_storage():
                     assert setup_component(
-                        self.hass,
-                        light.DOMAIN,
-                        {light.DOMAIN: {CONF_PLATFORM: "magichome"}},
+                        self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "magichome"}}
                     )
 
         dev = next(
@@ -521,9 +517,7 @@ async def test_intent_set_color_and_brightness(hass):
 
 async def test_light_context(hass, hass_admin_user):
     """Test that light context works."""
-    assert await async_setup_component(
-        hass, "light", {"light": {"platform": "magichome"}}
-    )
+    assert await async_setup_component(hass, "light", {"light": {"platform": "magichome"}})
 
     state = hass.states.get("light.dc4f22e3c446")
     assert state is not None
@@ -544,9 +538,7 @@ async def test_light_context(hass, hass_admin_user):
 
 async def test_light_turn_on_auth(hass, hass_admin_user):
     """Test that light context works."""
-    assert await async_setup_component(
-        hass, "light", {"light": {"platform": "magichome"}}
-    )
+    assert await async_setup_component(hass, "light", {"light": {"platform": "magichome"}})
 
     state = hass.states.get("light.dc4f22e3c446")
     assert state is not None
