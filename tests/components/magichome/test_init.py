@@ -32,12 +32,8 @@ from tests.common import (
 )
 from tests.components.light import common
 
-config = {
-    "magichome":{
-        "username":"test@user.com",
-        "password":"1234"
-    }
-}
+config = {"magichome": {"username": "test@user.com", "password": "1234"}}
+
 
 class TestLight(unittest.TestCase):
     """Test the light module."""
@@ -318,7 +314,7 @@ class TestLight(unittest.TestCase):
     def test_broken_light_profiles(self):
         """Test light profiles."""
         platform = magichome.setup(config)
-        
+
         platform.init()
 
         user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
