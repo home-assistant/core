@@ -1,7 +1,7 @@
 """The Netatmo integration."""
 
 # TODO:
-# * fix webhooks
+# * fix/add webhooks
 
 import asyncio
 import logging
@@ -37,7 +37,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-# PLATFORMS = ["binary_sensor", "camera", "climate", "light", "sensor", "switch"]
 PLATFORMS = ["binary_sensor", "camera", "climate", "light", "sensor"]
 
 

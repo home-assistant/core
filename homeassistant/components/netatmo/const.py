@@ -41,12 +41,17 @@ ATTR_NAME = "name"
 ATTR_EVENT_TYPE = "event_type"
 ATTR_MESSAGE = "message"
 ATTR_CAMERA_ID = "camera_id"
+ATTR_HOME_ID = "home_id"
 ATTR_HOME_NAME = "home_name"
 ATTR_PERSONS = "persons"
 ATTR_IS_KNOWN = "is_known"
 ATTR_FACE_URL = "face_url"
 ATTR_SNAPSHOT_URL = "snapshot_url"
 ATTR_VIGNETTE_URL = "vignette_url"
+ATTR_SCHEDULE_ID = "schedule_id"
+ATTR_SCHEDULE_NAME = "schedule_name"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 MIN_TIME_BETWEEN_EVENT_UPDATES = timedelta(seconds=5)
+
+SERVICE_SETSCHEDULE = "set_schedule"

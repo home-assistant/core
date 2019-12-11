@@ -29,3 +29,13 @@ set_light_off:
     entity_id:
       description: Entity id.
       example: "camera.living_room"
+
+set_schedule:
+  description: Set the home heating schedule
+  fields:
+    schedule_name:
+      description: Schedule name
+      example: Standard
+    home_name:
+      description: Home name
+      example: MyHome

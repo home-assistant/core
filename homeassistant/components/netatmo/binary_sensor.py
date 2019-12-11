@@ -48,7 +48,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         except NoDevice:
             _LOGGER.debug("No camera devices to add")
 
-        for camera_id in data.get_camera_ids():
+        for camera_id in data.get_all_camera_ids():
             camera_type = data.get_camera_type(camera_id=camera_id)
             home_id = data.get_camera_home_id(camera_id=camera_id)
 

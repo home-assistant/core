@@ -6,6 +6,7 @@
 from datetime import timedelta
 import logging
 from typing import List, Optional
+import voluptuous as vol
 
 import pyatmo
 import requests
@@ -30,9 +31,17 @@ from homeassistant.const import (
     STATE_OFF,
     TEMP_CELSIUS,
 )
+from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
 
-from .const import AUTH, DOMAIN, MANUFAKTURER
+from .const import (
+    ATTR_HOME_NAME,
+    ATTR_SCHEDULE_NAME,
+    AUTH,
+    DOMAIN,
+    MANUFAKTURER,
+    SERVICE_SETSCHEDULE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,21 +100,28 @@ DEFAULT_MAX_TEMP = 30
 NA_THERM = "NATherm1"
 NA_VALVE = "NRV"
 
+SCHEMA_SERVICE_SETSCHEDULE = vol.Schema(
+    {
+        vol.Required(ATTR_SCHEDULE_NAME): cv.string,
+        vol.Required(ATTR_HOME_NAME): cv.string,
+    }
+)
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Netatmo energy platform."""
     auth = hass.data[DOMAIN][AUTH]
 
+    home_data = HomeData(auth)
+
     def get_devices():
         """Retrieve Netatmo devices."""
         devices = []
-
-        home_data = HomeData(auth)
         try:
             home_data.setup()
         except pyatmo.NoDevice:
             return
-        home_ids = home_data.get_home_ids()
+        home_ids = home_data.get_all_home_ids()
 
         for home_id in home_ids:
             _LOGGER.debug("Setting up home %s ...", home_id)
@@ -121,19 +137,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_add_entities(await hass.async_add_executor_job(get_devices), True)
 
-    # def _service_setschedule(service):
-    #     """Service to change current home schedule."""
-    #     schedule_name = service.data.get(ATTR_SCHEDULE)
-    #     home_data.switchHomeSchedule(schedule=schedule_name)
-    #     _LOGGER.info("Set home schedule to %s", schedule_name)
+    def _service_setschedule(service):
+        """Service to change current home schedule."""
+        home_name = service.data.get(ATTR_HOME_NAME)
+        schedule_name = service.data.get(ATTR_SCHEDULE_NAME)
+        home_data.homedata.switchHomeSchedule(schedule=schedule_name, home=home_name)
+        _LOGGER.info("Set home (%s) schedule to %s", home_name, schedule_name)
 
-    # if home_data is not None:
-    #     hass.services.register(
-    #         DOMAIN,
-    #         SERVICE_SETSCHEDULE,
-    #         _service_setschedule,
-    #         schema=SCHEMA_SERVICE_SETSCHEDULE,
-    #     )
+    if home_data.homedata is not None:
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_SETSCHEDULE,
+            _service_setschedule,
+            schema=SCHEMA_SERVICE_SETSCHEDULE,
+        )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -364,7 +381,7 @@ class HomeData:
         self.home = home
         self.home_id = None
 
-    def get_home_ids(self):
+    def get_all_home_ids(self):
         """Get all the home ids returned by NetAtmo API."""
         if self.homedata is None:
             return []
