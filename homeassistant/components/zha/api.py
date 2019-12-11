@@ -70,8 +70,6 @@ ATTR_IEEE_ADDRESS = "ieee_address"
 ATTR_IEEE = "ieee"
 ATTR_SOURCE_IEEE = "source_ieee"
 ATTR_TARGET_IEEE = "target_ieee"
-BIND_REQUEST = 0x0021
-UNBIND_REQUEST = 0x0022
 
 SERVICE_PERMIT = "permit"
 SERVICE_REMOVE = "remove"
@@ -717,7 +715,9 @@ async def websocket_bind_devices(hass, connection, msg):
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     source_ieee = msg[ATTR_SOURCE_IEEE]
     target_ieee = msg[ATTR_TARGET_IEEE]
-    await async_binding_operation(zha_gateway, source_ieee, target_ieee, BIND_REQUEST)
+    await async_binding_operation(
+        zha_gateway, source_ieee, target_ieee, zdo_types.ZDOCmd.Bind_req
+    )
     _LOGGER.info(
         "Issued bind devices: %s %s",
         f"{ATTR_SOURCE_IEEE}: [{source_ieee}]",
@@ -739,7 +739,9 @@ async def websocket_unbind_devices(hass, connection, msg):
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     source_ieee = msg[ATTR_SOURCE_IEEE]
     target_ieee = msg[ATTR_TARGET_IEEE]
-    await async_binding_operation(zha_gateway, source_ieee, target_ieee, UNBIND_REQUEST)
+    await async_binding_operation(
+        zha_gateway, source_ieee, target_ieee, zdo_types.ZDOCmd.Unbind_req
+    )
     _LOGGER.info(
         "Issued unbind devices: %s %s",
         f"{ATTR_SOURCE_IEEE}: [{source_ieee}]",
@@ -764,8 +766,9 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operati
 
         zdo = cluster_pair.source_cluster.endpoint.device.zdo
 
-        op_msg = "bind/unbind operation for: %s: [%s] %s [%s] cluster: %s"
+        op_msg = "%s operation for: %s: [%s] %s [%s] cluster: %s"
         op_params = (
+            operation.name,
             ATTR_SOURCE_IEEE,
             source_ieee,
             ATTR_TARGET_IEEE,
