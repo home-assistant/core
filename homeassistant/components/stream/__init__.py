@@ -1,10 +1,10 @@
 """Provide functionality to stream video source."""
 import logging
+import secrets
 import threading
 
 import voluptuous as vol
 
-from homeassistant.auth.util import generate_secret
 from homeassistant.const import CONF_FILENAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -72,7 +72,7 @@ def request_stream(hass, stream_source, *, fmt="hls", keepalive=False, options=N
         stream.add_provider(fmt)
 
         if not stream.access_token:
-            stream.access_token = generate_secret()
+            stream.access_token = secrets.token_hex()
             stream.start()
         return hass.data[DOMAIN][ATTR_ENDPOINTS][fmt].format(stream.access_token)
     except Exception:
