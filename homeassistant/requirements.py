@@ -3,7 +3,7 @@ import asyncio
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Iterable
+from typing import Any, Dict, Iterable, List, Optional, Set
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
