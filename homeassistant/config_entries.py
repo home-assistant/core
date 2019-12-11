@@ -754,6 +754,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     def _async_current_entries(self) -> List[ConfigEntry]:
         """Return current entries."""
         assert self.hass is not None
+        # pylint: disable=no-member
         return self.hass.config_entries.async_entries(self.handler)
 
     @callback
@@ -763,6 +764,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return [
             flw
             for flw in self.hass.config_entries.flow.async_progress()
+            # pylint: disable=no-member
             if flw["handler"] == self.handler and flw["flow_id"] != self.flow_id
         ]
 
