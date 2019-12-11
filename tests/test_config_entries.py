@@ -12,14 +12,14 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
 from tests.common import (
-    MockModule,
-    mock_coro,
     MockConfigEntry,
-    async_fire_time_changed,
-    MockPlatform,
     MockEntity,
-    mock_integration,
+    MockModule,
+    MockPlatform,
+    async_fire_time_changed,
+    mock_coro,
     mock_entity_platform,
+    mock_integration,
     mock_registry,
 )
 

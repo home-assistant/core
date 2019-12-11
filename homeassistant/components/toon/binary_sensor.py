@@ -8,11 +8,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import (
-    ToonData,
-    ToonEntity,
-    ToonDisplayDeviceEntity,
     ToonBoilerDeviceEntity,
     ToonBoilerModuleDeviceEntity,
+    ToonData,
+    ToonDisplayDeviceEntity,
+    ToonEntity,
 )
 from .const import DATA_TOON, DOMAIN
 

@@ -4,15 +4,15 @@ from datetime import timedelta
 import unittest
 from unittest.mock import patch, sentinel
 
-from homeassistant.setup import setup_component, async_setup_component
-import homeassistant.core as ha
-import homeassistant.util.dt as dt_util
 from homeassistant.components import history, recorder
+import homeassistant.core as ha
+from homeassistant.setup import async_setup_component, setup_component
+import homeassistant.util.dt as dt_util
 
 from tests.common import (
+    get_test_home_assistant,
     init_recorder_component,
     mock_state_change_event,
-    get_test_home_assistant,
 )
 
 

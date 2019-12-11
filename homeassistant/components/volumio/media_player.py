@@ -14,7 +14,7 @@ import socket
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_CLEAR_PLAYLIST,
@@ -25,11 +25,11 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SEEK,
     SUPPORT_SELECT_SOURCE,
+    SUPPORT_SHUFFLE_SET,
     SUPPORT_STOP,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
-    SUPPORT_SHUFFLE_SET,
 )
 from homeassistant.const import (
     CONF_HOST,

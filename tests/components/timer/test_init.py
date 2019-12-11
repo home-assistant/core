@@ -1,31 +1,31 @@
 """The tests for the timer component."""
 # pylint: disable=protected-access
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
-from homeassistant.core import CoreState
-from homeassistant.setup import async_setup_component
 from homeassistant.components.timer import (
-    DOMAIN,
+    ATTR_DURATION,
     CONF_DURATION,
+    CONF_ICON,
     CONF_NAME,
+    DOMAIN,
+    EVENT_TIMER_CANCELLED,
+    EVENT_TIMER_FINISHED,
+    EVENT_TIMER_PAUSED,
+    EVENT_TIMER_RESTARTED,
+    EVENT_TIMER_STARTED,
+    SERVICE_CANCEL,
+    SERVICE_FINISH,
+    SERVICE_PAUSE,
+    SERVICE_START,
     STATUS_ACTIVE,
     STATUS_IDLE,
     STATUS_PAUSED,
-    CONF_ICON,
-    ATTR_DURATION,
-    EVENT_TIMER_FINISHED,
-    EVENT_TIMER_CANCELLED,
-    EVENT_TIMER_STARTED,
-    EVENT_TIMER_RESTARTED,
-    EVENT_TIMER_PAUSED,
-    SERVICE_START,
-    SERVICE_PAUSE,
-    SERVICE_CANCEL,
-    SERVICE_FINISH,
 )
-from homeassistant.const import ATTR_ICON, ATTR_FRIENDLY_NAME, CONF_ENTITY_ID
+from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON, CONF_ENTITY_ID
+from homeassistant.core import CoreState
+from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed

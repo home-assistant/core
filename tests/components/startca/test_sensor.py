@@ -1,5 +1,6 @@
 """Tests for the Start.ca sensor platform."""
 import asyncio
+
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.startca.sensor import StartcaData
 from homeassistant.helpers.aiohttp_client import async_get_clientsession

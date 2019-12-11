@@ -6,6 +6,7 @@ from apns2.errors import Unregistered
 from apns2.payload import Payload
 import voluptuous as vol
 
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
@@ -17,7 +18,6 @@ from homeassistant.const import ATTR_NAME, CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers import template as template_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_state_change
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 
 from .const import DOMAIN
 

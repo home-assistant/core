@@ -1,12 +1,12 @@
 """Support for KEBA charging station binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_PLUG,
     DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_PLUG,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_SAFETY,
+    BinarySensorDevice,
 )
 
 from . import DOMAIN

@@ -8,15 +8,12 @@ from homeassistant import data_entry_flow
 from homeassistant.components.logi_circle import config_flow
 from homeassistant.components.logi_circle.config_flow import (
     DOMAIN,
+    AuthorizationFailed,
     LogiCircleAuthCallbackView,
 )
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockDependency, mock_coro
-
-
-class AuthorizationFailed(Exception):
-    """Dummy Exception."""
+from tests.common import mock_coro
 
 
 class MockRequest:
@@ -50,19 +47,15 @@ def init_config_flow(hass):
 @pytest.fixture
 def mock_logi_circle():
     """Mock logi_circle."""
-    with MockDependency("logi_circle", "exception") as mock_logi_circle_:
-        mock_logi_circle_.exception.AuthorizationFailed = AuthorizationFailed
-        mock_logi_circle_.LogiCircle().authorize = Mock(
-            return_value=mock_coro(return_value=True)
-        )
-        mock_logi_circle_.LogiCircle().close = Mock(
-            return_value=mock_coro(return_value=True)
-        )
-        mock_logi_circle_.LogiCircle().account = mock_coro(
-            return_value={"accountId": "testId"}
-        )
-        mock_logi_circle_.LogiCircle().authorize_url = "http://authorize.url"
-        yield mock_logi_circle_
+    with patch(
+        "homeassistant.components.logi_circle.config_flow.LogiCircle"
+    ) as logi_circle:
+        LogiCircle = logi_circle()
+        LogiCircle.authorize = Mock(return_value=mock_coro(return_value=True))
+        LogiCircle.close = Mock(return_value=mock_coro(return_value=True))
+        LogiCircle.account = mock_coro(return_value={"accountId": "testId"})
+        LogiCircle.authorize_url = "http://authorize.url"
+        yield LogiCircle
 
 
 async def test_step_import(
@@ -159,7 +152,7 @@ async def test_abort_if_authorize_fails(
 ):  # pylint: disable=redefined-outer-name
     """Test we abort if authorizing fails."""
     flow = init_config_flow(hass)
-    mock_logi_circle.LogiCircle().authorize.side_effect = side_effect
+    mock_logi_circle.authorize.side_effect = side_effect
 
     result = await flow.async_step_code("123ABC")
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -219,4 +212,4 @@ async def test_callback_view_accepts_code(
     assert resp.status == 200
 
     await hass.async_block_till_done()
-    mock_logi_circle.LogiCircle.return_value.authorize.assert_called_with("456")
+    mock_logi_circle.authorize.assert_called_with("456")

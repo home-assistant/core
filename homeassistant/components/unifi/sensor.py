@@ -40,6 +40,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Update the values of the controller."""
         for entity in sensors.values():
 
+            if entity.entity_registry_enabled_default == entity.enabled:
+                continue
+
             disabled_by = None
             if not entity.entity_registry_enabled_default and entity.enabled:
                 disabled_by = DISABLED_CONFIG_ENTRY

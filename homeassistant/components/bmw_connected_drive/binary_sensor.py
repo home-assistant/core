@@ -59,7 +59,7 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
     def __init__(
         self, account, vehicle, attribute: str, sensor_name, device_class, icon
     ):
-        """Constructor."""
+        """Initialize sensor."""
         self._account = account
         self._vehicle = vehicle
         self._attribute = attribute

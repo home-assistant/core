@@ -1,9 +1,7 @@
 """Test for smart home alexa support."""
 import pytest
 
-from homeassistant.core import Context, callback
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.components.alexa import smart_home, messages
+from homeassistant.components.alexa import messages, smart_home
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -18,21 +16,23 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import Context, callback
 from homeassistant.helpers import entityfilter
 
-from tests.common import async_mock_service
-
 from . import (
-    get_new_request,
-    MockConfig,
     DEFAULT_CONFIG,
-    assert_request_calls_service,
-    assert_request_fails,
+    MockConfig,
     ReportedProperties,
     assert_power_controller_works,
+    assert_request_calls_service,
+    assert_request_fails,
     assert_scene_controller_works,
+    get_new_request,
     reported_properties,
 )
+
+from tests.common import async_mock_service
 
 
 @pytest.fixture
@@ -935,7 +935,7 @@ async def test_media_player(hass):
         "media_player#test",
         "media_player.play_media",
         hass,
-        payload={"channel": {"number": 24}},
+        payload={"channel": {"number": "24"}, "channelMetadata": {"name": ""}},
     )
 
     call, _ = await assert_request_calls_service(
@@ -944,7 +944,7 @@ async def test_media_player(hass):
         "media_player#test",
         "media_player.play_media",
         hass,
-        payload={"channel": {"callSign": "ABC"}},
+        payload={"channel": {"callSign": "ABC"}, "channelMetadata": {"name": ""}},
     )
 
     call, _ = await assert_request_calls_service(
@@ -953,7 +953,7 @@ async def test_media_player(hass):
         "media_player#test",
         "media_player.play_media",
         hass,
-        payload={"channel": {"affiliateCallSign": "ABC"}},
+        payload={"channel": {"number": ""}, "channelMetadata": {"name": "ABC"}},
     )
 
     call, _ = await assert_request_calls_service(
@@ -962,7 +962,19 @@ async def test_media_player(hass):
         "media_player#test",
         "media_player.play_media",
         hass,
-        payload={"channel": {"uri": "ABC"}},
+        payload={
+            "channel": {"affiliateCallSign": "ABC"},
+            "channelMetadata": {"name": ""},
+        },
+    )
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.ChannelController",
+        "ChangeChannel",
+        "media_player#test",
+        "media_player.play_media",
+        hass,
+        payload={"channel": {"uri": "ABC"}, "channelMetadata": {"name": ""}},
     )
 
     call, _ = await assert_request_calls_service(
@@ -1473,6 +1485,35 @@ async def test_contact_sensor(hass):
     properties.assert_equal("Alexa.EndpointHealth", "connectivity", {"value": "OK"})
 
 
+async def test_forced_contact_sensor(hass):
+    """Test contact sensor discovery with specified display_category."""
+    device = (
+        "binary_sensor.test_contact_forced",
+        "on",
+        {"friendly_name": "Test Contact Sensor With DisplayCategory"},
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "binary_sensor#test_contact_forced"
+    assert appliance["displayCategories"][0] == "CONTACT_SENSOR"
+    assert appliance["friendlyName"] == "Test Contact Sensor With DisplayCategory"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance, "Alexa.ContactSensor", "Alexa.EndpointHealth", "Alexa"
+    )
+
+    contact_sensor_capability = get_capability(capabilities, "Alexa.ContactSensor")
+    assert contact_sensor_capability is not None
+    properties = contact_sensor_capability["properties"]
+    assert properties["retrievable"] is True
+    assert {"name": "detectionState"} in properties["supported"]
+
+    properties = await reported_properties(hass, "binary_sensor#test_contact_forced")
+    properties.assert_equal("Alexa.ContactSensor", "detectionState", "DETECTED")
+
+    properties.assert_equal("Alexa.EndpointHealth", "connectivity", {"value": "OK"})
+
+
 async def test_motion_sensor(hass):
     """Test motion sensor discovery."""
     device = (
@@ -1498,6 +1539,35 @@ async def test_motion_sensor(hass):
 
     properties = await reported_properties(hass, "binary_sensor#test_motion")
     properties.assert_equal("Alexa.MotionSensor", "detectionState", "DETECTED")
+
+
+async def test_forced_motion_sensor(hass):
+    """Test motion sensor discovery with specified display_category."""
+    device = (
+        "binary_sensor.test_motion_forced",
+        "on",
+        {"friendly_name": "Test Motion Sensor With DisplayCategory"},
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "binary_sensor#test_motion_forced"
+    assert appliance["displayCategories"][0] == "MOTION_SENSOR"
+    assert appliance["friendlyName"] == "Test Motion Sensor With DisplayCategory"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance, "Alexa.MotionSensor", "Alexa.EndpointHealth", "Alexa"
+    )
+
+    motion_sensor_capability = get_capability(capabilities, "Alexa.MotionSensor")
+    assert motion_sensor_capability is not None
+    properties = motion_sensor_capability["properties"]
+    assert properties["retrievable"] is True
+    assert {"name": "detectionState"} in properties["supported"]
+
+    properties = await reported_properties(hass, "binary_sensor#test_motion_forced")
+    properties.assert_equal("Alexa.MotionSensor", "detectionState", "DETECTED")
+
+    properties.assert_equal("Alexa.EndpointHealth", "connectivity", {"value": "OK"})
 
 
 async def test_doorbell_sensor(hass):

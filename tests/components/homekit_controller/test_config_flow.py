@@ -7,13 +7,13 @@ import pytest
 
 from homeassistant.components.homekit_controller import config_flow
 from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
+
 from tests.common import MockConfigEntry
 from tests.components.homekit_controller.common import (
     Accessory,
     FakeService,
     setup_platform,
 )
-
 
 PAIRING_START_FORM_ERRORS = [
     (homekit.BusyError, "busy_error"),
@@ -554,7 +554,9 @@ async def test_import_works(hass):
 
     flow = _setup_flow_handler(hass)
 
-    pairing_cls_imp = "homekit.controller.ip_implementation.IpPairing"
+    pairing_cls_imp = (
+        "homeassistant.components.homekit_controller.config_flow.IpPairing"
+    )
 
     with mock.patch(pairing_cls_imp) as pairing_cls:
         pairing_cls.return_value = pairing
@@ -694,7 +696,9 @@ async def test_parse_new_homekit_json(hass):
 
     flow = _setup_flow_handler(hass)
 
-    pairing_cls_imp = "homekit.controller.ip_implementation.IpPairing"
+    pairing_cls_imp = (
+        "homeassistant.components.homekit_controller.config_flow.IpPairing"
+    )
 
     with mock.patch(pairing_cls_imp) as pairing_cls:
         pairing_cls.return_value = pairing
@@ -742,7 +746,9 @@ async def test_parse_old_homekit_json(hass):
 
     flow = _setup_flow_handler(hass)
 
-    pairing_cls_imp = "homekit.controller.ip_implementation.IpPairing"
+    pairing_cls_imp = (
+        "homeassistant.components.homekit_controller.config_flow.IpPairing"
+    )
 
     with mock.patch(pairing_cls_imp) as pairing_cls:
         pairing_cls.return_value = pairing
@@ -798,7 +804,9 @@ async def test_parse_overlapping_homekit_json(hass):
 
     flow = _setup_flow_handler(hass)
 
-    pairing_cls_imp = "homekit.controller.ip_implementation.IpPairing"
+    pairing_cls_imp = (
+        "homeassistant.components.homekit_controller.config_flow.IpPairing"
+    )
 
     with mock.patch(pairing_cls_imp) as pairing_cls:
         pairing_cls.return_value = pairing

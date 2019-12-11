@@ -27,10 +27,10 @@ from homeassistant.helpers.dispatcher import (
 )
 
 from .const import (
-    CONF_USE_EPISODE_ART,
-    CONF_SHOW_ALL_CONTROLS,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
+    CONF_SHOW_ALL_CONTROLS,
+    CONF_USE_EPISODE_ART,
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,

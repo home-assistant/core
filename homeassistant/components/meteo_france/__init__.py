@@ -2,6 +2,8 @@
 import datetime
 import logging
 
+from meteofrance.client import meteofranceClient, meteofranceError
+from vigilancemeteo import VigilanceMeteoError, VigilanceMeteoFranceProxy
 import voluptuous as vol
 
 from homeassistant.const import CONF_MONITORED_CONDITIONS
@@ -9,7 +11,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import Throttle
 
-from .const import DOMAIN, CONF_CITY, SENSOR_TYPES, DATA_METEO_FRANCE
+from .const import CONF_CITY, DATA_METEO_FRANCE, DOMAIN, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +63,6 @@ def setup(hass, config):
     # all weather_alert entities.
     if need_weather_alert_watcher:
         _LOGGER.debug("Weather Alert monitoring expected. Loading vigilancemeteo")
-        from vigilancemeteo import VigilanceMeteoFranceProxy, VigilanceMeteoError
 
         weather_alert_client = VigilanceMeteoFranceProxy()
         try:
@@ -78,8 +79,6 @@ def setup(hass, config):
     for location in config[DOMAIN]:
 
         city = location[CONF_CITY]
-
-        from meteofrance.client import meteofranceClient, meteofranceError
 
         try:
             client = meteofranceClient(city)
@@ -127,7 +126,6 @@ class MeteoFranceUpdater:
     @Throttle(SCAN_INTERVAL)
     def update(self):
         """Get the latest data from Meteo-France."""
-        from meteofrance.client import meteofranceError
 
         try:
             self._client.update()

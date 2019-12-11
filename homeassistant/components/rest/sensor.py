@@ -1,35 +1,35 @@
 """Support for RESTful API sensors."""
-import logging
 import json
+import logging
 
-import voluptuous as vol
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
+import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA
+from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_AUTHENTICATION,
+    CONF_DEVICE_CLASS,
+    CONF_FILE_PATH,
     CONF_FORCE_UPDATE,
     CONF_HEADERS,
-    CONF_NAME,
     CONF_METHOD,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_RESOURCE,
     CONF_RESOURCE_TEMPLATE,
+    CONF_TIMEOUT,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
-    CONF_TIMEOUT,
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
-    CONF_DEVICE_CLASS,
-    CONF_FILE_PATH,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 

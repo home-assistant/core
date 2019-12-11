@@ -3,9 +3,8 @@ from pathlib import Path
 
 from aiohttp import hdrs
 from aiohttp.web import FileResponse
-from aiohttp.web_exceptions import HTTPNotFound, HTTPForbidden
+from aiohttp.web_exceptions import HTTPForbidden, HTTPNotFound
 from aiohttp.web_urldispatcher import StaticResource
-
 
 # mypy: allow-untyped-defs
 

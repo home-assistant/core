@@ -6,8 +6,8 @@ import os
 import time
 
 from aiohttp.web import Response
-import pywink
 from pubnubsubhandler import PubNubSubscriptionHandler
+import pywink
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
@@ -25,7 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
+from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import track_time_interval
@@ -131,11 +131,11 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-RENAME_DEVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+RENAME_DEVICE_SCHEMA = make_entity_service_schema(
     {vol.Required(ATTR_NAME): cv.string}, extra=vol.ALLOW_EXTRA
 )
 
-DELETE_DEVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
+DELETE_DEVICE_SCHEMA = make_entity_service_schema({}, extra=vol.ALLOW_EXTRA)
 
 SET_PAIRING_MODE_SCHEMA = vol.Schema(
     {
@@ -146,31 +146,31 @@ SET_PAIRING_MODE_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SET_VOLUME_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+SET_VOLUME_SCHEMA = make_entity_service_schema(
     {vol.Required(ATTR_VOLUME): vol.In(VOLUMES)}
 )
 
-SET_SIREN_TONE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+SET_SIREN_TONE_SCHEMA = make_entity_service_schema(
     {vol.Required(ATTR_TONE): vol.In(TONES)}
 )
 
-SET_CHIME_MODE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+SET_CHIME_MODE_SCHEMA = make_entity_service_schema(
     {vol.Required(ATTR_TONE): vol.In(CHIME_TONES)}
 )
 
-SET_AUTO_SHUTOFF_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+SET_AUTO_SHUTOFF_SCHEMA = make_entity_service_schema(
     {vol.Required(ATTR_AUTO_SHUTOFF): vol.In(AUTO_SHUTOFF_TIMES)}
 )
 
-SET_STROBE_ENABLED_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+SET_STROBE_ENABLED_SCHEMA = make_entity_service_schema(
     {vol.Required(ATTR_ENABLED): cv.boolean}
 )
 
-ENABLED_SIREN_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+ENABLED_SIREN_SCHEMA = make_entity_service_schema(
     {vol.Required(ATTR_ENABLED): cv.boolean}
 )
 
-DIAL_CONFIG_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+DIAL_CONFIG_SCHEMA = make_entity_service_schema(
     {
         vol.Optional(ATTR_MIN_VALUE): vol.Coerce(int),
         vol.Optional(ATTR_MAX_VALUE): vol.Coerce(int),
@@ -182,7 +182,7 @@ DIAL_CONFIG_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
     }
 )
 
-DIAL_STATE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+DIAL_STATE_SCHEMA = make_entity_service_schema(
     {
         vol.Required(ATTR_VALUE): vol.Coerce(int),
         vol.Optional(ATTR_LABELS): cv.ensure_list(cv.string),

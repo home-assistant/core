@@ -21,6 +21,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ENTITY_MATCH_ALL,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -31,7 +32,7 @@ from homeassistant.loader import bind_hass
 @bind_hass
 def turn_on(
     hass,
-    entity_id=None,
+    entity_id=ENTITY_MATCH_ALL,
     transition=None,
     brightness=None,
     brightness_pct=None,
@@ -69,7 +70,7 @@ def turn_on(
 
 async def async_turn_on(
     hass,
-    entity_id=None,
+    entity_id=ENTITY_MATCH_ALL,
     transition=None,
     brightness=None,
     brightness_pct=None,
@@ -110,12 +111,12 @@ async def async_turn_on(
 
 
 @bind_hass
-def turn_off(hass, entity_id=None, transition=None):
+def turn_off(hass, entity_id=ENTITY_MATCH_ALL, transition=None):
     """Turn all or specified light off."""
     hass.add_job(async_turn_off, hass, entity_id, transition)
 
 
-async def async_turn_off(hass, entity_id=None, transition=None):
+async def async_turn_off(hass, entity_id=ENTITY_MATCH_ALL, transition=None):
     """Turn all or specified light off."""
     data = {
         key: value
@@ -127,12 +128,12 @@ async def async_turn_off(hass, entity_id=None, transition=None):
 
 
 @bind_hass
-def toggle(hass, entity_id=None, transition=None):
+def toggle(hass, entity_id=ENTITY_MATCH_ALL, transition=None):
     """Toggle all or specified light."""
     hass.add_job(async_toggle, hass, entity_id, transition)
 
 
-async def async_toggle(hass, entity_id=None, transition=None):
+async def async_toggle(hass, entity_id=ENTITY_MATCH_ALL, transition=None):
     """Toggle all or specified light."""
     data = {
         key: value

@@ -1,6 +1,7 @@
 """The tests for the Light Switch platform."""
 
 from homeassistant.setup import async_setup_component
+
 from tests.components.light import common
 from tests.components.switch import common as switch_common
 

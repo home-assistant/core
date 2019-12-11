@@ -19,8 +19,8 @@ from homeassistant.components.zwave import (
 )
 from homeassistant.components.zwave.binary_sensor import get_device
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
-from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
+from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.setup import setup_component
 
 from tests.common import (

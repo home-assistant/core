@@ -1,9 +1,9 @@
 """The tests for google-assistant init."""
 import asyncio
 
+from homeassistant.components import google_assistant as ga
 from homeassistant.core import Context
 from homeassistant.setup import async_setup_component
-from homeassistant.components import google_assistant as ga
 
 GA_API_KEY = "Agdgjsj399sdfkosd932ksd"
 

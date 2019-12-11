@@ -1,10 +1,9 @@
 """JSON utility functions."""
-import logging
-from typing import Union, List, Dict, Optional, Type
-
 import json
+import logging
 import os
 import tempfile
+from typing import Dict, List, Optional, Type, Union
 
 from homeassistant.exceptions import HomeAssistantError
 

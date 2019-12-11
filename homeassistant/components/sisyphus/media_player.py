@@ -2,6 +2,7 @@
 import logging
 
 import aiohttp
+from sisyphus_control import Track
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
@@ -140,7 +141,6 @@ class SisyphusPlayer(MediaPlayerDevice):
     @property
     def media_image_url(self):
         """Return the URL for a thumbnail image of the current track."""
-        from sisyphus_control import Track
 
         if self._table.active_track:
             return self._table.active_track.get_thumbnail_url(Track.ThumbnailSize.LARGE)

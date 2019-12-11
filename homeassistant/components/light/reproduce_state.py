@@ -6,16 +6,15 @@ from typing import Iterable, Optional
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    STATE_ON,
-    STATE_OFF,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
 )
 from homeassistant.core import Context, State
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import (
-    DOMAIN,
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_NAME,
@@ -29,6 +28,7 @@ from . import (
     ATTR_TRANSITION,
     ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)

@@ -3,7 +3,6 @@ from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
 
 from tests.components.homekit_controller.common import FakeService, setup_test_component
 
-
 LIGHT_ON = ("lightbulb", "on")
 LIGHT_BRIGHTNESS = ("lightbulb", "brightness")
 LIGHT_HUE = ("lightbulb", "hue")
