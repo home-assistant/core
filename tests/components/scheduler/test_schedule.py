@@ -27,7 +27,8 @@ async def test_instantiate(hass):
     # 1. A schedule with a start datetime only:
     schedule = Schedule(hass, "scene.test_scene_1", start_datetime)
     assert (
-        str(schedule) == f'<Schedule start="{start_datetime}" end="None" rrule="None">'
+        str(schedule)
+        == f'<Schedule start="{start_datetime}" end="None" recurrence="None">'
     )
     assert not schedule.active
     assert not schedule.expired
@@ -38,7 +39,7 @@ async def test_instantiate(hass):
         CONF_END_DATETIME: None,
         CONF_RECURRENCE: None,
     }
-    assert not schedule.active_instance
+    assert not schedule.active
 
     # 2. A schedule with a start datetime and an end datetime:
     schedule = Schedule(
@@ -46,7 +47,7 @@ async def test_instantiate(hass):
     )
     assert (
         str(schedule)
-        == f'<Schedule start="{start_datetime}" end="{end_datetime}" rrule="None">'
+        == f'<Schedule start="{start_datetime}" end="{end_datetime}" recurrence="None">'
     )
     assert not schedule.active
     assert not schedule.expired
@@ -57,7 +58,7 @@ async def test_instantiate(hass):
         CONF_END_DATETIME: end_datetime.isoformat(),
         CONF_RECURRENCE: None,
     }
-    assert not schedule.active_instance
+    assert not schedule.active
 
     # 3. A schedule with a start datetime and a recurrence:
     schedule = Schedule(
@@ -69,7 +70,7 @@ async def test_instantiate(hass):
     )
     assert str(schedule) == (
         f'<Schedule start="{start_datetime}" end="None" '
-        f'rrule="DTSTART:{start_datetime_rfc5545}\nRRULE:FREQ=DAILY">'
+        f'recurrence="DTSTART:{start_datetime_rfc5545}\nRRULE:FREQ=DAILY">'
     )
     assert not schedule.active
     assert not schedule.expired
@@ -81,7 +82,7 @@ async def test_instantiate(hass):
         CONF_END_DATETIME: None,
         CONF_RECURRENCE: f"DTSTART:{start_datetime_rfc5545}\nRRULE:FREQ=DAILY",
     }
-    assert not schedule.active_instance
+    assert not schedule.active
 
     # 4. A schedule with a start datetime, an end datetime, and a recurrence:
     schedule = Schedule(
@@ -93,7 +94,7 @@ async def test_instantiate(hass):
     )
     assert str(schedule) == (
         f'<Schedule start="{start_datetime}" end="{end_datetime}" '
-        f'rrule="DTSTART:{start_datetime_rfc5545}\nRRULE:FREQ=DAILY">'
+        f'recurrence="DTSTART:{start_datetime_rfc5545}\nRRULE:FREQ=DAILY">'
     )
     assert not schedule.active
     assert not schedule.expired
@@ -105,7 +106,7 @@ async def test_instantiate(hass):
         CONF_END_DATETIME: end_datetime.isoformat(),
         CONF_RECURRENCE: f"DTSTART:{start_datetime_rfc5545}\nRRULE:FREQ=DAILY",
     }
-    assert not schedule.active_instance
+    assert not schedule.active
 
 
 async def test_instantiate_expired(hass):
@@ -118,7 +119,8 @@ async def test_instantiate_expired(hass):
     # 1. A schedule with a start datetime in the past:
     schedule = Schedule(hass, "scene.test_scene_1", start_datetime)
     assert (
-        str(schedule) == f'<Schedule start="{start_datetime}" end="None" rrule="None">'
+        str(schedule)
+        == f'<Schedule start="{start_datetime}" end="None" recurrence="None">'
     )
     assert not schedule.active
     assert schedule.expired
@@ -130,7 +132,7 @@ async def test_instantiate_expired(hass):
         CONF_END_DATETIME: None,
         CONF_RECURRENCE: None,
     }
-    assert not schedule.active_instance
+    assert not schedule.active
 
     # 2. A schedule with a start datetime in the past, but a future-facing recurrence:
     schedule = Schedule(
@@ -142,7 +144,7 @@ async def test_instantiate_expired(hass):
     )
     assert str(schedule) == (
         f'<Schedule start="{start_datetime}" end="None" '
-        f'rrule="DTSTART:{start_datetime_rfc5545}\nRRULE:FREQ=DAILY">'
+        f'recurrence="DTSTART:{start_datetime_rfc5545}\nRRULE:FREQ=DAILY">'
     )
     assert not schedule.active
     assert not schedule.expired
@@ -154,7 +156,7 @@ async def test_instantiate_expired(hass):
         CONF_END_DATETIME: None,
         CONF_RECURRENCE: f"DTSTART:{start_datetime_rfc5545}\nRRULE:FREQ=DAILY",
     }
-    assert not schedule.active_instance
+    assert not schedule.active
 
 
 async def test_create_schedule(hass, scheduler):
@@ -175,7 +177,7 @@ async def test_create_schedule(hass, scheduler):
     async_fire_time_changed(hass, start_datetime)
     await hass.async_block_till_done()
     assert hass.states.get("light.bed_light").state == "on"
-    assert not schedule.active_instance
+    assert not schedule.active
 
 
 async def test_create_schedule_recurrence(hass, scheduler):
@@ -203,7 +205,7 @@ async def test_create_schedule_recurrence(hass, scheduler):
     async_fire_time_changed(hass, start_datetime)
     await hass.async_block_till_done()
     assert hass.states.get("light.bed_light").state == "on"
-    assert not schedule.active_instance
+    assert not schedule.active
 
     # Reset the light before the next schedule instance:
     await hass.services.async_call(
@@ -218,7 +220,7 @@ async def test_create_schedule_recurrence(hass, scheduler):
     async_fire_time_changed(hass, next_start_datetime)
     await hass.async_block_till_done()
     assert hass.states.get("light.bed_light").state == "on"
-    assert not schedule.active_instance
+    assert not schedule.active
 
 
 async def test_create_schedule_end(hass, scheduler):
@@ -242,12 +244,12 @@ async def test_create_schedule_end(hass, scheduler):
     async_fire_time_changed(hass, start_datetime)
     await hass.async_block_till_done()
     assert hass.states.get("light.bed_light").state == "on"
-    assert schedule.active_instance
+    assert schedule.active
 
     async_fire_time_changed(hass, end_datetime)
     await hass.async_block_till_done()
     assert hass.states.get("light.bed_light").state == "off"
-    assert not schedule.active_instance
+    assert not schedule.active
 
 
 async def test_create_schedule_end_recurrence(hass, scheduler):
@@ -277,12 +279,12 @@ async def test_create_schedule_end_recurrence(hass, scheduler):
     async_fire_time_changed(hass, start_datetime)
     await hass.async_block_till_done()
     assert hass.states.get("light.bed_light").state == "on"
-    assert schedule.active_instance
+    assert schedule.active
 
     async_fire_time_changed(hass, end_datetime)
     await hass.async_block_till_done()
     assert hass.states.get("light.bed_light").state == "off"
-    assert schedule.active_instance
+    assert schedule.active
 
     # Reset the light before the next schedule instance:
     await hass.services.async_call(
@@ -297,9 +299,9 @@ async def test_create_schedule_end_recurrence(hass, scheduler):
     async_fire_time_changed(hass, next_start_datetime)
     await hass.async_block_till_done()
     assert hass.states.get("light.bed_light").state == "on"
-    assert schedule.active_instance
+    assert schedule.active
 
     async_fire_time_changed(hass, next_start_datetime + timedelta(hours=1))
     await hass.async_block_till_done()
     assert hass.states.get("light.bed_light").state == "off"
-    assert schedule.active_instance
+    assert schedule.active

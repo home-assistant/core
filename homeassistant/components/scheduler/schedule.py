@@ -149,10 +149,10 @@ class Schedule:
         recurrence: Optional[rrule] = None,
     ):
         """Initialize."""
+        self._active_instance: Optional[ScheduleInstance] = None
         self._hass: HomeAssistant = hass
         self._initial_instance_scheduled: bool = False
         self._is_on: bool = False
-        self.active_instance: Optional[ScheduleInstance] = None
         self.end_datetime: Optional[datetime] = end_datetime
         self.entity_id: str = entity_id
         self.recurrence: Optional[rrule] = recurrence
@@ -173,7 +173,7 @@ class Schedule:
     @property
     def active(self) -> bool:
         """Return whether the schedule has an active instance."""
-        return self.active_instance is not None
+        return self._active_instance is not None
 
     @property
     def expired(self) -> bool:
@@ -222,15 +222,15 @@ class Schedule:
 
         if not start_dt:
             _LOGGER.info("No more instances of schedule: %s", self)
-            self.active_instance = None
+            self._active_instance = None
             return
 
         instance = ScheduleInstance(self._hass, self.entity_id, start_dt, end_dt)
 
         if self.end_datetime:
-            self.active_instance = instance
+            self._active_instance = instance
         else:
-            self.active_instance = None
+            self._active_instance = None
 
         _LOGGER.info("Scheduled instance of %s", self)
 
@@ -285,9 +285,9 @@ class Schedule:
     @callback
     def async_turn_off(self) -> None:
         """Disable the schedule."""
-        if self.active_instance:
-            self.active_instance.async_cancel()
-            self.active_instance = None
+        if self._active_instance:
+            self._active_instance.async_cancel()
+            self._active_instance = None
 
         self._is_on = False
 
