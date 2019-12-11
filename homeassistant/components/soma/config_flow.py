@@ -48,7 +48,7 @@ class SomaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     data={"host": user_input["host"], "port": user_input["port"]},
                 )
             _LOGGER.error(
-                "Connection to SOMA Connect failed (result:%s)" % (result["result"])
+                "Connection to SOMA Connect failed (result:%s)", result["result"]
             )
             return self.async_abort(reason="result_error")
         except RequestException:
