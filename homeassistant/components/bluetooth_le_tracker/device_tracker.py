@@ -77,11 +77,8 @@ def setup_scanner(hass, config, see, discovery_info=None):
 
             devices = {x["address"]: x["name"] for x in devs}
             _LOGGER.debug("Bluetooth LE devices discovered = %s", devices)
-        except RuntimeError as error:
+        except (RuntimeError, pygatt.exceptions.BLEError) as error:
             _LOGGER.error("Error during Bluetooth LE scan: %s", error)
-            return {}
-        except pygatt.exceptions.BLEError as error:
-            _LOGGER.error("BLEError during Bluetooth LE scan: %s", error)
             return {}
         return devices
 
