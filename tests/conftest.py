@@ -1,8 +1,6 @@
 """Set up some common test helper things."""
-import asyncio
 import functools
 import logging
-import os
 from unittest.mock import patch
 
 import pytest
