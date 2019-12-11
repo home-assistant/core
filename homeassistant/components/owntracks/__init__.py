@@ -14,12 +14,12 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_when_setup
 
+from .const import DOMAIN
 from .config_flow import CONF_SECRET
 from .messages import async_handle_message
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "owntracks"
 CONF_MAX_GPS_ACCURACY = "max_gps_accuracy"
 CONF_WAYPOINT_IMPORT = "waypoints"
 CONF_WAYPOINT_WHITELIST = "waypoint_whitelist"

@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "profile": {
+                "data": {
+                    "profile": "Profil"
+                },
+                "description": "Kter\u00fd profil jste vybrali na webu Withings? Je d\u016fle\u017eit\u00e9, aby se profily shodovaly, jinak budou data nespr\u00e1vn\u011b ozna\u010dena.",
+                "title": "U\u017eivatelsk\u00fd profil."
+            }
+        }
+    }
+}

@@ -69,6 +69,7 @@ omit =
     homeassistant/components/avea/light.py
     homeassistant/components/avion/light.py
     homeassistant/components/azure_event_hub/*
+    homeassistant/components/azure_service_bus/*
     homeassistant/components/baidu/tts.py
     homeassistant/components/beewi_smartclim/sensor.py
     homeassistant/components/bbb_gpio/*
@@ -274,7 +275,6 @@ omit =
     homeassistant/components/growatt_server/sensor.py
     homeassistant/components/gstreamer/media_player.py
     homeassistant/components/gtfs/sensor.py
-    homeassistant/components/gtt/sensor.py
     homeassistant/components/habitica/*
     homeassistant/components/hangouts/*
     homeassistant/components/hangouts/__init__.py
@@ -499,6 +499,7 @@ omit =
     homeassistant/components/panasonic_bluray/media_player.py
     homeassistant/components/panasonic_viera/media_player.py
     homeassistant/components/pandora/media_player.py
+    homeassistant/components/pcal9535a/*
     homeassistant/components/pencom/switch.py
     homeassistant/components/philips_js/media_player.py
     homeassistant/components/pi_hole/sensor.py
@@ -720,6 +721,7 @@ omit =
     homeassistant/components/uber/sensor.py
     homeassistant/components/ubus/device_tracker.py
     homeassistant/components/ue_smart_radio/media_player.py
+    homeassistant/components/unifiled/*
     homeassistant/components/upcloud/*
     homeassistant/components/upnp/*
     homeassistant/components/upc_connect/*

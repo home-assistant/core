@@ -138,7 +138,7 @@ class EsphomeClimateDevice(EsphomeEntity, ClimateDevice):
     @esphome_state_property
     def preset_mode(self):
         """Return current preset mode."""
-        return PRESET_AWAY if self._state.away else None
+        return PRESET_AWAY if self._state.away else PRESET_HOME
 
     @esphome_state_property
     def current_temperature(self) -> Optional[float]:

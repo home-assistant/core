@@ -16,53 +16,6 @@
                         {
                             "cards": [
                                 {
-                                    "entities": [
-                                        {
-                                            "entity": "input_text.ais_knowledge_query"
-                                        }
-                                    ],
-                                    "show_header_toggle": false,
-                                    "title": "Asystentka",
-                                    "type": "entities"
-                                },
-                                {
-                                    "content": "<ha-icon icon=\"mdi:speaker-wireless\"></ha-icon> [[ sensor.aisknowledgeanswer.attributes.text ]]\n",
-                                    "type": "markdown"
-                                }
-                            ],
-                            "type": "vertical-stack"
-                        },
-                        {
-                            "entity": "weather.openweathermap",
-                            "name": "Pogoda",
-                            "type": "weather-forecast"
-                        },
-                        {
-                            "card": {
-                                "show_header_toggle": false,
-                                "title": "Osoby",
-                                "type": "entities"
-                            },
-                            "filter": {
-                                "include": [
-                                    {
-                                        "domain": "person"
-                                    }
-                                ]
-                            },
-                            "type": "ais-monster"
-                        }
-                    ],
-                    "icon": "mdi:home-outline",
-                    "path": "default_view",
-                    "title": "Dom"
-                },
-                {
-                    "badges": [],
-                    "cards": [
-                        {
-                            "cards": [
-                                {
                                     "artwork": "full-cover",
                                     "entity": "media_player.wbudowany_glosnik",
                                     "hide": {
@@ -74,7 +27,9 @@
                                     "icon": "mdi:speaker",
                                     "more_info": false,
                                     "name": " ",
+                                    "tts": {"platform": "ais"},
                                     "shortcuts": {
+                                        "list": [],
                                         "buttons": [
                                             {
                                                 "icon": "mdi:bookmark-music",
@@ -415,7 +370,6 @@
                                         "cards": [
                                             {
                                                 "entity": "input_select.rss_news_category",
-                                                "title": "Kategoria wiadomo\u015bci",
                                                 "type": "ais-easy-picker"
                                             }
                                         ],
@@ -434,7 +388,6 @@
                                         "cards": [
                                             {
                                                 "entity": "input_select.book_autor",
-                                                "title": "Autor",
                                                 "type": "ais-easy-picker"
                                             }
                                         ],
@@ -473,7 +426,6 @@
                                         "cards": [
                                             {
                                                 "entity": "input_select.rss_news_channel",
-                                                "title": "Kana\u0142 wiadomo\u015bci",
                                                 "type": "ais-easy-picker"
                                             },
                                             {
@@ -482,7 +434,6 @@
                                                         "sensor.rssnewslist"
                                                     ],
                                                     "media_source": "News",
-                                                    "title": "Artyku\u0142y",
                                                     "type": "ais-list"
                                                 },
                                                 "conditions": [
@@ -510,7 +461,6 @@
                                             "sensor.aisbookmarkslist"
                                         ],
                                         "media_source": "Bookmark",
-                                        "title": "Lista zak\u0142adek",
                                         "show_delete_icon": true,
                                         "type": "ais-list"
                                     },
@@ -528,7 +478,6 @@
                                             "sensor.aisfavoriteslist"
                                         ],
                                         "media_source": "Favorite",
-                                        "title": "Lista ulubionych audio",
                                         "show_delete_icon": true,
                                         "type": "ais-list"
                                     },
@@ -547,7 +496,6 @@
                                         ],
                                         "media_source": "Music",
                                         "show_delete_icon": true,
-                                        "title": "Lista utwor\u00f3w z YouTube",
                                         "type": "ais-list"
                                     },
                                     "conditions": [
@@ -568,7 +516,6 @@
                                             "sensor.spotifysearchlist"
                                         ],
                                         "media_source": "SpotifySearch",
-                                        "title": "Wynik wyszukania na Spotify",
                                         "show_delete_icon": true,
                                         "type": "ais-list"
                                     },
@@ -587,7 +534,6 @@
                                 {
                                     "card": {
                                         "entity": "input_select.radio_type",
-                                        "title": "Typ radia",
                                         "type": "ais-easy-picker"
                                     },
                                     "conditions": [
@@ -601,7 +547,6 @@
                                 {
                                     "card": {
                                         "entity": "input_select.podcast_type",
-                                        "title": "Typ podcasta",
                                         "type": "ais-easy-picker"
                                     },
                                     "conditions": [
@@ -618,7 +563,6 @@
                                             "sensor.podcastnamelist"
                                         ],
                                         "media_source": "PodcastName",
-                                        "title": "Audycje",
                                         "type": "ais-list"
                                     },
                                     "conditions": [
@@ -635,7 +579,6 @@
                                             "sensor.audiobookslist"
                                         ],
                                         "media_source": "AudioBook",
-                                        "title": "Ksi\u0105\u017cki",
                                         "type": "ais-list"
                                     },
                                     "conditions": [
@@ -657,7 +600,6 @@
                                             "sensor.spotifylist"
                                         ],
                                         "media_source": "Spotify",
-                                        "title": "Lista utwor\u00f3w na Spotify",
                                         "show_delete_icon": true,
                                         "type": "ais-list"
                                     },
@@ -679,7 +621,6 @@
                                             "sensor.radiolist"
                                         ],
                                         "media_source": "Radio",
-                                        "title": "Stacje radiowe",
                                         "type": "ais-list"
                                     },
                                     "conditions": [
@@ -696,7 +637,6 @@
                                             "sensor.podcastlist"
                                         ],
                                         "media_source": "Podcast",
-                                        "title": "Odcinki audycji",
                                         "type": "ais-list"
                                     },
                                     "conditions": [
@@ -713,7 +653,6 @@
                                             "sensor.audiobookschapterslist"
                                         ],
                                         "media_source": "AudioBookChapter",
-                                        "title": "Rozdzia\u0142y",
                                         "type": "ais-list"
                                     },
                                     "conditions": [
@@ -747,56 +686,54 @@
                     "title": "Audio"
                 },
                 {
-                "badges": [
-                    "sensor.time",
-                    "sensor.daytodisplay",
-                    "binary_sensor.dzien_pracujacy",
-                    "sun.sun"
-                ],
+                    "badges": [
+                        "sensor.time",
+                        "sensor.daytodisplay",
+                        "binary_sensor.dzien_pracujacy",
+                        "sun.sun"
+                    ],
                     "cards": [
                         {
                             "cards": [
-                            {
-                                "card": {
-                                    "show_header_toggle": false,
-                                    "title": "Automatyzacje",
-                                    "type": "entities"
-                                },
-                                "filter": {
-                                    "exclude": [
-                                        {
-                                            "entity_id": "automation.ais_*"
-                                        }
-                                    ],
-                                    "include": [
-                                        {
-                                            "domain": "automation"
-                                        }
-                                    ]
-                                },
-                                "type": "ais-monster"
-                            },
                                 {
-                                    "entities": [],
-                                    "show_header_toggle": false,
-                                    "title": "Urz\u0105dzenia w Twojej sieci",
-                                    "type": "entities"
+                                    "entity": "weather.openweathermap",
+                                    "name": "Pogoda",
+                                    "type": "weather-forecast"
                                 },
                                 {
-                                    "content": "Po wykryciu urz\u0105dzenia mo\u017cesz klikn\u0105\u0107 w jego link by przej\u015b\u0107 do ustawie\u0144 urz\u0105dzenia.\n",
-                                    "type": "markdown"
+                                    "card": {
+                                        "show_header_toggle": false,
+                                        "title": "Osoby",
+                                        "type": "entities"
+                                    },
+                                    "filter": {
+                                        "include": [
+                                            {
+                                                "domain": "person"
+                                            }
+                                        ]
+                                    },
+                                    "type": "ais-auto-entities"
                                 },
                                 {
-                                    "content": "[[ sensor.network_devices_info_value.attributes.text ]]\n",
-                                    "type": "markdown"
-                                },
-                                {
-                                    "entities": [
-                                        {
-                                            "entity": "script.ais_scan_network_devices"
-                                        }
-                                    ],
-                                    "type": "entities"
+                                    "card": {
+                                        "show_header_toggle": false,
+                                        "title": "Automatyzacje",
+                                        "type": "entities"
+                                    },
+                                    "filter": {
+                                        "exclude": [
+                                            {
+                                                "entity_id": "automation.ais_*"
+                                            }
+                                        ],
+                                        "include": [
+                                            {
+                                                "domain": "automation"
+                                            }
+                                        ]
+                                    },
+                                    "type": "ais-auto-entities"
                                 }
                             ],
                             "type": "vertical-stack"
@@ -814,7 +751,7 @@
                                     }
                                 ]
                             },
-                            "type": "ais-monster"
+                            "type": "ais-auto-entities"
                         },
                         {
                             "card": {
@@ -871,7 +808,7 @@
                                     }
                                 ]
                             },
-                            "type": "ais-monster"
+                            "type": "ais-auto-entities"
                         },
                         {
                             "card": {
@@ -886,7 +823,7 @@
                                     }
                                 ]
                             },
-                            "type": "ais-monster"
+                            "type": "ais-auto-entities"
                         },
                         {
                             "cards": [
@@ -915,7 +852,7 @@
                                             }
                                         ]
                                     },
-                                    "type": "ais-monster"
+                                    "type": "ais-auto-entities"
                                 }
                             ],
                             "show_header_toggle": false,
@@ -1095,23 +1032,25 @@
                         },
                         {
                             "card": {
-                                "show_header_toggle": false,
-                                "title": "Kamery",
-                                "type": "entities"
+                                "show_icon": true,
+                                "show_name": true,
+                                "show_state": false,
+                                "title": "Urz\u0105dzenia",
+                                "type": "glance"
                             },
                             "filter": {
                                 "include": [
                                     {
-                                        "domain": "camera"
+                                        "device": "/^.*"
                                     }
                                 ]
                             },
-                            "type": "ais-monster"
+                            "type": "ais-auto-entities"
                         }
                     ],
                     "icon": "mdi:google-circles-extended",
                     "path": "dev",
-                    "title": "Urz\u0105dzenia"
+                    "title": "Jednostki"
                 }
             ]
         }

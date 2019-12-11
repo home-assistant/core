@@ -1017,7 +1017,7 @@ def say_curr_entity(hass):
         state = hass.states.get("input_boolean.ais_auto_update").state
         info_value = (
             "Automatyczne aktualizacje wyłączone. Aktualizujesz system samodzielnie w "
-            "dogodnym dla Ciebie czasie. Naciśnąć OK by włączyć aktualizacje automatyczne."
+            "dogodnym dla Ciebie czasie. Naciśnij OK by włączyć aktualizacje automatyczne."
         )
         if state == "on":
             info_value = (
@@ -2146,7 +2146,7 @@ async def async_setup(hass, config):
         _say_it(hass, text, img)
 
     def say_in_browser(service):
-        """Info to the via browser"""
+        """Info to the via browser - this is handled by ais-tts in card"""
         pass
 
     def welcome_home(service):
@@ -2864,7 +2864,11 @@ def _process_command_from_frame(hass, service):
 
         service.data = ast.literal_eval(service.data["web_hook_json"])
     if service.data["topic"] == "ais/speech_command":
-        hass.async_run_job(_process(hass, service.data["payload"]))
+        hass.async_run_job(
+            hass.services.async_call(
+                "conversation", "process", {"text": service.data["payload"]}
+            )
+        )
         return
     elif service.data["topic"] == "ais/key_command":
         _process_code(hass, json.loads(service.data["payload"]))
@@ -3191,12 +3195,12 @@ def _post_message(message, hass):
     }
 
     tts_browser_text = message
-    if len(tts_browser_text) > 75:
-        space_position = tts_browser_text.find(" ", 75)
-        if space_position > 75:
+    if len(tts_browser_text) > 150:
+        space_position = tts_browser_text.find(" ", 150)
+        if space_position > 150:
             tts_browser_text = tts_browser_text[0:space_position]
         else:
-            tts_browser_text = tts_browser_text[0:75]
+            tts_browser_text = tts_browser_text[0:150]
 
     hass.async_add_job(
         hass.services.async_call(
@@ -3572,7 +3576,10 @@ def _process(hass, text):
                                     if match:
                                         # we have a match
                                         found_intent = intent_type
-                                        m, s = yield from hass.helpers.intent.async_handle(
+                                        (
+                                            m,
+                                            s,
+                                        ) = yield from hass.helpers.intent.async_handle(
                                             DOMAIN,
                                             intent_type,
                                             {

@@ -1,3 +1,9 @@
 group:
   all_ais_sensors:
     name: Wszystkie czujniki
+
+sensor:
+  - platform: ais_files
+    folder: "/data/data/pl.sviete.dom/files/home/AIS/www/img/"
+    name: ais_gallery_img
+    sort: date

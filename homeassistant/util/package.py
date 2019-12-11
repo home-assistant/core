@@ -66,8 +66,16 @@ def install_package(
     ais_global.say_direct(
         "Instaluje zależności pakietu: " + str(package).split("==")[0] + "; poczekaj."
     )
-
     env = os.environ.copy()
+    # AIS dom prefer to use the version of libsodium provided by distribution
+    # SODIUM_INSTALL=system pip install pynacl
+    if package.lower().startswith("pynacl"):
+        # "SODIUM_INSTALL=system pip install --quiet " + package
+        env["SODIUM_INSTALL"] = "system"
+    if package.lower().startswith("pillow"):
+        # LDFLAGS="-L/system/lib/" CFLAGS="-I/data/data/pl.sviete.dom/files/usr/include/" pip install Pillow
+        env["LDFLAGS"] = "-L/system/lib/"
+        env["CFLAGS"] = "-I/data/data/pl.sviete.dom/files/usr/include/"
     args = [sys.executable, "-m", "pip", "install", "--quiet", package]
     if no_cache_dir:
         args.append("--no-cache-dir")

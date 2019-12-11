@@ -9,7 +9,7 @@
         },
         "step": {
             "user": {
-                "description": "Czy na pewno chcesz skonfigurowa\u0107 Traccar?",
+                "description": "Na pewno chcesz skonfigurowa\u0107 Traccar?",
                 "title": "Skonfiguruj Traccar"
             }
         },

@@ -1,0 +1,10 @@
+{
+    "domain": "ais_files",
+    "name": "Files in a Folder",
+    "documentation": "https://www.ai-speaker.com",
+    "dependencies": [],
+    "codeowners": [],
+     "requirements": [
+         "pillow==6.2.1"
+     ]
+}

@@ -1,28 +1,28 @@
 """Support for the Xiaomi IR Remote (Chuangmi IR)."""
 import asyncio
+from datetime import timedelta
 import logging
 import time
 
-from datetime import timedelta
-
+from miio import ChuangmiIr, DeviceException  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.remote import (
-    PLATFORM_SCHEMA,
-    DOMAIN,
-    ATTR_NUM_REPEATS,
     ATTR_DELAY_SECS,
+    ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
+    DOMAIN,
+    PLATFORM_SCHEMA,
     RemoteDevice,
 )
 from homeassistant.const import (
-    CONF_NAME,
-    CONF_HOST,
-    CONF_TOKEN,
-    CONF_TIMEOUT,
     ATTR_ENTITY_ID,
     ATTR_HIDDEN,
     CONF_COMMAND,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_TIMEOUT,
+    CONF_TOKEN,
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -73,10 +73,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Xiaomi IR Remote (Chuangmi IR) platform."""
-    from miio import ChuangmiIr, DeviceException
-
-    host = config.get(CONF_HOST)
-    token = config.get(CONF_TOKEN)
+    host = config[CONF_HOST]
+    token = config[CONF_TOKEN]
 
     # Create handler
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
@@ -88,7 +86,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     # Check that we can communicate with device.
     try:
-        device_info = device.info()
+        device_info = await hass.async_add_executor_job(device.info)
         model = device_info.model
         unique_id = f"{model}-{device_info.mac_address}"
         _LOGGER.info(
@@ -226,8 +224,6 @@ class XiaomiMiioRemote(RemoteDevice):
     @property
     def is_on(self):
         """Return False if device is unreachable, else True."""
-        from miio import DeviceException
-
         try:
             self.device.info()
             return True
@@ -262,8 +258,6 @@ class XiaomiMiioRemote(RemoteDevice):
 
     def _send_command(self, payload):
         """Send a command."""
-        from miio import DeviceException
-
         _LOGGER.debug("Sending payload: '%s'", payload)
         try:
             self.device.play(payload)

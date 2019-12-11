@@ -189,7 +189,9 @@ class HomeAssistantHTTP:
         ssl_profile,
     ):
         """Initialize the HTTP Home Assistant server."""
-        app = self.app = web.Application(middlewares=[])
+        # 1024^2 bytes = 1 MBx5 = 5MB we need this to upload from camera, going to resize after POST
+        max_size = (1024 ** 2) * 5
+        app = self.app = web.Application(middlewares=[], client_max_size=max_size)
         app[KEY_HASS] = hass
 
         # This order matters

@@ -53,7 +53,6 @@ def scan_for_wifi(hass, loop) -> []:
 
 def connect_to_wifi(network, password) -> str:
     import requests
-    from homeassistant.components import ais_ai_service as ais_ai_service
 
     # send add request to frame
     url = ais_global.G_HTTP_REST_SERVICE_BASE_URL.format("127.0.0.1")

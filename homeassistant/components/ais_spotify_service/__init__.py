@@ -112,6 +112,10 @@ def async_setup(hass, config):
         _LOGGER.info("search " + str(call))
         yield from data.process_search_async(call)
 
+    @asyncio.coroutine
+    def get_favorites(call):
+        yield from data.process_get_favorites_async(call)
+
     def select_search_uri(call):
         _LOGGER.info("select_search_uri")
         data.select_search_uri(call)
@@ -125,6 +129,7 @@ def async_setup(hass, config):
         data.change_play_queue(call)
 
     hass.services.async_register(DOMAIN, "search", search)
+    hass.services.async_register(DOMAIN, "get_favorites", get_favorites)
     hass.services.async_register(DOMAIN, "select_search_uri", select_search_uri)
     hass.services.async_register(DOMAIN, "select_track_uri", select_track_uri)
     hass.services.async_register(DOMAIN, "change_play_queue", change_play_queue)
@@ -309,6 +314,47 @@ class SpotifyData:
         # else:
         #     # play the first one
         #     yield from self.hass.services.async_call('ais_spotify_service', 'select_track_uri', {"id": 0})
+
+    @asyncio.coroutine
+    def process_get_favorites_async(self, call):
+        """Get favorites from Spotify."""
+        self.refresh_spotify_instance()
+
+        # Don't true search when token is expired
+        if self._oauth.is_token_expired(self._token_info):
+            _LOGGER.warning("Spotify failed to update, token expired.")
+            return
+
+        list_info = {}
+
+        # TODO change the scope playlist-read-private user-library-read
+        # user_playlists
+        # results = self._spotify.current_user_playlists(limit=10)
+        # if results["total"] > 0:
+        #     list_info = self.get_list_from_results(results, "playlist", list_info)
+
+        # current_user_followed_artists
+        # results = self._spotify.current_user_followed_artists(limit=10)
+        # if results["total"] > 0:
+        #     list_info = self.get_list_from_results(results, "artist", list_info)
+
+        # current_user_saved_albums
+        # results = self._spotify.current_user_saved_albums(limit=10)
+        # if results["total"] > 0:
+        #     list_info = self.get_list_from_results(results, "album", list_info)
+        #
+        # # current_user_saved_tracks
+        # results = self._spotify.current_user_saved_tracks(limit=10)
+        # if results["total"] > 0:
+        #     list_info = self.get_list_from_results(results, "track", list_info)
+
+        # featured_playlists
+        results = self._spotify.featured_playlists(limit=10, country="PL")
+        list_info = self.get_list_from_results(results, "playlist", list_info)
+
+        # update lists
+        self.hass.states.async_set("sensor.spotifysearchlist", -1, list_info)
+        self.hass.states.async_set("sensor.spotifylist", -1, {})
 
     @asyncio.coroutine
     def process_search_async(self, call):

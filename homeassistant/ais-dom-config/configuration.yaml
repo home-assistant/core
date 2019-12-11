@@ -11,6 +11,7 @@ homeassistant:
     api_password: dom
   whitelist_external_dirs:
   - /data/data/pl.sviete.dom/files/home/AIS/
+  - /data/data/pl.sviete.dom/files/home/AIS/www/
 
 #
 system_health:
@@ -27,7 +28,6 @@ ais_yt_service:
 ais_updater:
   include_used_components: false
 ais_drives_service:
-ais_conversation:
 
 # Show links to resources in log and frontend
 ais_intro:
@@ -87,3 +87,7 @@ person:
 
 ais_help:
 ais_virtual_devices:
+
+conversation:
+scene:
+mobile_app:

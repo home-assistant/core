@@ -268,5 +268,5 @@ def _config_info(mode, config):
         "mode": mode,
         "resources": len(config.get("resources", [])),
         "views": len(config.get("views", [])),
-        "ais views": 3,
+        "ais views": 2,
     }

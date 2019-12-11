@@ -4,10 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/iaqualink/",
   "dependencies": [],
-  "codeowners": [
-    "@flz"
-  ],
-  "requirements": [
-    "iaqualink==0.2.9"
-  ]
+  "codeowners": ["@flz"],
+  "requirements": ["iaqualink==0.3.0"]
 }

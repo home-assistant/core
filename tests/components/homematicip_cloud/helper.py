@@ -92,7 +92,7 @@ class HomeTemplate(Home):
 
     def init_home(self, json_path=HOME_JSON):
         """Init template with json."""
-        self.init_json_state = json.loads(load_fixture(HOME_JSON), encoding="UTF-8")
+        self.init_json_state = json.loads(load_fixture(HOME_JSON))
         self.update_home(json_state=self.init_json_state, clearConfig=True)
         return self
 
