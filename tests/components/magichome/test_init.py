@@ -32,11 +32,11 @@ from tests.common import (
 )
 from tests.components.light import common
 
-config = {"magichome": {"username": "test@user.com", "password": "1234"}}
-
 
 class TestLight(unittest.TestCase):
     """Test the light module."""
+
+    config = {"magichome": {"username": "test@user.com", "password": "1234"}}
 
     # pylint: disable=invalid-name
     def setUp(self):
