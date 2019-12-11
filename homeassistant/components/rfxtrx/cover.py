@@ -2,7 +2,6 @@
 import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
-from homeassistant.components import rfxtrx
 from homeassistant.components.cover import PLATFORM_SCHEMA, CoverDevice
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers import config_validation as cv
@@ -13,6 +12,11 @@ from . import (
     CONF_FIRE_EVENT,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
+    RECEIVED_EVT_SUBSCRIBERS,
+    RfxtrxDevice,
+    apply_received_command,
+    get_devices_from_config,
+    get_new_device,
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -35,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RFXtrx cover."""
-    covers = rfxtrx.get_devices_from_config(config, RfxtrxCover)
+    covers = get_devices_from_config(config, RfxtrxCover)
     add_entities(covers)
 
     def cover_update(event):
@@ -47,18 +51,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ):
             return
 
-        new_device = rfxtrx.get_new_device(event, config, RfxtrxCover)
+        new_device = get_new_device(event, config, RfxtrxCover)
         if new_device:
             add_entities([new_device])
 
-        rfxtrx.apply_received_command(event)
+        apply_received_command(event)
 
     # Subscribe to main RFXtrx events
-    if cover_update not in rfxtrx.RECEIVED_EVT_SUBSCRIBERS:
-        rfxtrx.RECEIVED_EVT_SUBSCRIBERS.append(cover_update)
+    if cover_update not in RECEIVED_EVT_SUBSCRIBERS:
+        RECEIVED_EVT_SUBSCRIBERS.append(cover_update)
 
 
-class RfxtrxCover(rfxtrx.RfxtrxDevice, CoverDevice):
+class RfxtrxCover(RfxtrxDevice, CoverDevice):
     """Representation of a RFXtrx cover."""
 
     @property
