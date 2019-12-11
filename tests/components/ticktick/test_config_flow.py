@@ -21,29 +21,21 @@ async def test_form(hass):
         "homeassistant.components.ticktick.config_flow.validate_input",
         return_value=mock_coro({"title": "Test Title"}),
     ), patch(
-        "homeassistant.components.ticktick.async_setup", return_value=mock_coro(True)
-    ) as mock_setup, patch(
         "homeassistant.components.ticktick.async_setup_entry",
         return_value=mock_coro(True),
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+            {"username": "test-username", "password": "test-password"},
         )
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Test Title"
     assert result2["data"] == {
-        "host": "1.1.1.1",
         "username": "test-username",
         "password": "test-password",
     }
     await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -59,11 +51,7 @@ async def test_form_invalid_auth(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+            {"username": "test-username", "password": "test-password"},
         )
 
     assert result2["type"] == "form"
@@ -82,11 +70,7 @@ async def test_form_cannot_connect(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+            {"username": "test-username", "password": "test-password"},
         )
 
     assert result2["type"] == "form"
