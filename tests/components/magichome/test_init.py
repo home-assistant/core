@@ -132,7 +132,7 @@ class TestLight(unittest.TestCase):
     def test_services(self):
         """Test the provided services."""
         config_info = {"magichome": {"username": "test@user.com", "password": "1234"}}
-        platform = magichome.setup(config_info)
+        platform = magichome.setup(self.hass, config_info)
 
         platform.init()
         assert setup_component(
@@ -313,7 +313,7 @@ class TestLight(unittest.TestCase):
     def test_broken_light_profiles(self):
         """Test light profiles."""
         config_info = {"magichome": {"username": "test@user.com", "password": "1234"}}
-        platform = magichome.setup(config_info)
+        platform = magichome.setup(self.hass, config_info)
 
         platform.init()
 
@@ -331,7 +331,7 @@ class TestLight(unittest.TestCase):
     def test_light_profiles(self):
         """Test light profiles."""
         config_info = {"magichome": {"username": "test@user.com", "password": "1234"}}
-        platform = magichome.setup(config_info)
+        platform = magichome.setup(self.hass, config_info)
         platform.init()
 
         user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
@@ -368,7 +368,7 @@ class TestLight(unittest.TestCase):
     def test_default_profiles_group(self):
         """Test default turn-on light profile for all lights."""
         config_info = {"magichome": {"username": "test@user.com", "password": "1234"}}
-        platform = magichome.setup(config_info)
+        platform = magichome.setup(self.hass, config_info)
         platform.init()
 
         user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
@@ -404,7 +404,7 @@ class TestLight(unittest.TestCase):
     def test_default_profiles_light(self):
         """Test default turn-on light profile for a specific light."""
         config_info = {"magichome": {"username": "test@user.com", "password": "1234"}}
-        platform = magichome.setup(config_info)
+        platform = magichome.setup(self.hass, config_info)
         platform.init()
 
         user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
