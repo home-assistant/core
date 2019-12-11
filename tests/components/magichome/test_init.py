@@ -8,7 +8,7 @@ from io import StringIO
 import pytest
 
 from homeassistant import core
-from homeassistant.components import magichome as MagicHomeApi
+from homeassistant.components import magichome
 from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import (
@@ -32,6 +32,12 @@ from tests.common import (
 )
 from tests.components.light import common
 
+config = {
+    "magichome":{
+        "username":"test@user.com",
+        "password":"1234"
+    }
+}
 
 class TestLight(unittest.TestCase):
     """Test the light module."""
@@ -311,7 +317,8 @@ class TestLight(unittest.TestCase):
 
     def test_broken_light_profiles(self):
         """Test light profiles."""
-        platform = MagicHomeApi()
+        platform = magichome.setup(config)
+        
         platform.init()
 
         user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
@@ -327,7 +334,7 @@ class TestLight(unittest.TestCase):
 
     def test_light_profiles(self):
         """Test light profiles."""
-        platform = MagicHomeApi()
+        platform = magichome.setup(config)
         platform.init()
 
         user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
@@ -363,7 +370,7 @@ class TestLight(unittest.TestCase):
 
     def test_default_profiles_group(self):
         """Test default turn-on light profile for all lights."""
-        platform = MagicHomeApi()
+        platform = magichome.setup(config)
         platform.init()
 
         user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
@@ -398,7 +405,7 @@ class TestLight(unittest.TestCase):
 
     def test_default_profiles_light(self):
         """Test default turn-on light profile for a specific light."""
-        platform = MagicHomeApi()
+        platform = magichome.setup(config)
         platform.init()
 
         user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
