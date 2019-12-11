@@ -271,8 +271,12 @@ def test_async_get_all_descriptions(hass):
 
     assert len(descriptions) == 1
 
-    assert "description" in descriptions["group"]["reload"]
-    assert "fields" in descriptions["group"]["reload"]
+    assert "description" in descriptions[group.DOMAIN]["reload"]
+    assert "fields" in descriptions[group.DOMAIN]["reload"]
+    assert "limit_entity_domain" in descriptions[group.DOMAIN]["reload"]
+    assert "limit_entity_integration" in descriptions[group.DOMAIN]["reload"]
+    assert descriptions[group.DOMAIN]["reload"]["limit_entity_domain"] == []
+    assert descriptions[group.DOMAIN]["reload"]["limit_entity_integration"] == ""
 
     logger = hass.components.logger
     logger_config = {logger.DOMAIN: {}}
@@ -283,6 +287,10 @@ def test_async_get_all_descriptions(hass):
 
     assert "description" in descriptions[logger.DOMAIN]["set_level"]
     assert "fields" in descriptions[logger.DOMAIN]["set_level"]
+    assert "limit_entity_domain" in descriptions[logger.DOMAIN]["set_level"]
+    assert "limit_entity_integration" in descriptions[logger.DOMAIN]["set_level"]
+    assert descriptions[logger.DOMAIN]["set_level"]["limit_entity_domain"] == []
+    assert descriptions[logger.DOMAIN]["set_level"]["limit_entity_integration"] == ""
 
 
 async def test_call_with_required_features(hass, mock_entities):
