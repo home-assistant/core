@@ -1,15 +1,18 @@
 """A sensor for incoming calls using a USB modem that supports caller ID."""
 import logging
+
+from basicmodem.basicmodem import BasicModem as bm
 import voluptuous as vol
-from homeassistant.const import (
-    STATE_IDLE,
-    EVENT_HOMEASSISTANT_STOP,
-    CONF_NAME,
-    CONF_DEVICE,
-)
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_NAME,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_IDLE,
+)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Modem CallerID"
@@ -29,7 +32,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up modem caller ID sensor platform."""
-    from basicmodem.basicmodem import BasicModem as bm
 
     name = config.get(CONF_NAME)
     port = config.get(CONF_DEVICE)

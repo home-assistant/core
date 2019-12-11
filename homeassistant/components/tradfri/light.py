@@ -1,29 +1,30 @@
 """Support for IKEA Tradfri lights."""
 import logging
 
-import homeassistant.util.color as color_util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    Light,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
+    Light,
 )
-from .base_class import TradfriBaseDevice, TradfriBaseClass
+import homeassistant.util.color as color_util
+
+from .base_class import TradfriBaseClass, TradfriBaseDevice
 from .const import (
     ATTR_DIMMER,
     ATTR_HUE,
     ATTR_SAT,
     ATTR_TRANSITION_TIME,
-    SUPPORTED_LIGHT_FEATURES,
-    SUPPORTED_GROUP_FEATURES,
     CONF_GATEWAY_ID,
     CONF_IMPORT_GROUPS,
-    KEY_GATEWAY,
     KEY_API,
+    KEY_GATEWAY,
+    SUPPORTED_GROUP_FEATURES,
+    SUPPORTED_LIGHT_FEATURES,
 )
 
 _LOGGER = logging.getLogger(__name__)

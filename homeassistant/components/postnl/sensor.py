@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+from postnl_api import PostNL_API, UnauthorizedException
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -36,7 +37,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the PostNL sensor platform."""
-    from postnl_api import PostNL_API, UnauthorizedException
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)

@@ -44,7 +44,9 @@ async def test_events_fired_properly(hass):
     def listener(event):
         events.append(event)
 
-    with patch("emulated_roku.EmulatedRokuServer", instantiate):
+    with patch(
+        "homeassistant.components.emulated_roku.binding.EmulatedRokuServer", instantiate
+    ):
         hass.bus.async_listen(EVENT_ROKU_COMMAND, listener)
 
         assert await binding.setup() is True

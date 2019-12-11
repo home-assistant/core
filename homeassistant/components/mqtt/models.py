@@ -3,7 +3,6 @@ from typing import Union, Callable
 
 import attr
 
-# pylint: disable=invalid-name
 PublishPayloadType = Union[str, bytes, int, float, None]
 
 

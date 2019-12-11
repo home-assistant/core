@@ -576,22 +576,22 @@ async def test_no_update_template_match_all(hass, caplog):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 5
     assert (
-        "Template binary sensor all_state has no entity ids "
+        "Template binary sensor 'all_state' has no entity ids "
         "configured to track nor were we able to extract the entities to "
         "track from the value template"
     ) in caplog.text
     assert (
-        "Template binary sensor all_icon has no entity ids "
+        "Template binary sensor 'all_icon' has no entity ids "
         "configured to track nor were we able to extract the entities to "
         "track from the icon template"
     ) in caplog.text
     assert (
-        "Template binary sensor all_entity_picture has no entity ids "
+        "Template binary sensor 'all_entity_picture' has no entity ids "
         "configured to track nor were we able to extract the entities to "
         "track from the entity_picture template"
     ) in caplog.text
     assert (
-        "Template binary sensor all_attribute has no entity ids "
+        "Template binary sensor 'all_attribute' has no entity ids "
         "configured to track nor were we able to extract the entities to "
         "track from the test_attribute template"
     ) in caplog.text
