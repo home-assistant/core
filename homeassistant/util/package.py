@@ -72,6 +72,10 @@ def install_package(
     if package.lower().startswith("pynacl"):
         # "SODIUM_INSTALL=system pip install --quiet " + package
         env["SODIUM_INSTALL"] = "system"
+    if package.lower().startswith("pillow"):
+        # LDFLAGS="-L/system/lib/" CFLAGS="-I/data/data/pl.sviete.dom/files/usr/include/" pip install Pillow
+        env["LDFLAGS"] = "-L/system/lib/"
+        env["CFLAGS"] = "-I/data/data/pl.sviete.dom/files/usr/include/"
     args = [sys.executable, "-m", "pip", "install", "--quiet", package]
     if no_cache_dir:
         args.append("--no-cache-dir")
