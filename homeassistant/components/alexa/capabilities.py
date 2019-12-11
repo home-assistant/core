@@ -1298,11 +1298,15 @@ class AlexaEventDetectionSensor(AlexaCapability):
         human_presence = "NOT_DETECTED"
         state = self.entity.state
 
+        # Return None for unavailable and unknown states.
+        # Allows the Alexa.EndpointHealth Interface to handle the unavailable state in a stateReport.
+        if state in (STATE_UNAVAILABLE, STATE_UNKNOWN, None):
+            return None
+
         if self.entity.domain == image_processing.DOMAIN:
             if int(state):
                 human_presence = "DETECTED"
-
-        if state == STATE_ON:
+        elif state == STATE_ON:
             human_presence = "DETECTED"
 
         return {"value": human_presence}
