@@ -10,6 +10,8 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_MODE,
     CONF_PROTOCOL,
+    CONF_INTERFACE,
+    CONF_DNSMASQ,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -24,6 +26,8 @@ CONF_SSH_KEY = "ssh_key"
 DOMAIN = "asuswrt"
 DATA_ASUSWRT = DOMAIN
 DEFAULT_SSH_PORT = 22
+DEFAULT_INTERFACE = 'eth0'
+DEFAULT_DNSMASQ = '/var/lib/misc'
 
 SECRET_GROUP = "Password or SSH Key"
 SENSOR_TYPES = ["upload_speed", "download_speed", "download", "upload"]
@@ -44,6 +48,8 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_SENSORS): vol.All(
                     cv.ensure_list, [vol.In(SENSOR_TYPES)]
                 ),
+                vol.Optional(CONF_INTERFACE, default=DEFAULT_INTERFACE): cv.string,
+                vol.Optional(CONF_DNSMASQ, default=DEFAULT_DNSMASQ): cv.string,
             }
         )
     },
@@ -66,6 +72,8 @@ async def async_setup(hass, config):
         conf.get("ssh_key", conf.get("pub_key", "")),
         conf.get(CONF_MODE),
         conf.get(CONF_REQUIRE_IP),
+        conf.get(CONF_INTERFACE),
+        conf.get(CONF_DNSMASQ),
     )
 
     await api.connection.async_connect()
