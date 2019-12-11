@@ -3,8 +3,9 @@
 import datetime
 import logging
 
-import voluptuous as vol
 from aiokef.aiokef import AsyncKefSpeaker
+import voluptuous as vol
+
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     SUPPORT_SELECT_SOURCE,
