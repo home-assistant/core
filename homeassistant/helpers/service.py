@@ -223,6 +223,12 @@ async def async_get_all_descriptions(hass):
                 description = descriptions_cache[cache_key] = {
                     "description": yaml_description.get("description", ""),
                     "fields": yaml_description.get("fields", {}),
+                    "limit_entity_domain": cv.ensure_list(
+                        yaml_description.get("limit_entity_domain")
+                    ),
+                    "limit_entity_integration": yaml_description.get(
+                        "limit_entity_integration", ""
+                    ),
                 }
 
             descriptions[domain][service] = description
@@ -239,6 +245,8 @@ def async_set_service_schema(hass, domain, service, schema):
     description = {
         "description": schema.get("description") or "",
         "fields": schema.get("fields") or {},
+        "limit_entity_domain": cv.ensure_list(schema.get("limit_entity_domain")),
+        "limit_entity_integration": schema.get("limit_entity_integration", ""),
     }
 
     hass.data[SERVICE_DESCRIPTION_CACHE]["{}.{}".format(domain, service)] = description
