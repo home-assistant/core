@@ -35,7 +35,7 @@ from tests.components.light import common
 
 class TestLight(unittest.TestCase):
     """Test the light module."""
-    
+
     # pylint: disable=invalid-name
     def setUp(self):
         """Set up things to be run when tests are started."""
