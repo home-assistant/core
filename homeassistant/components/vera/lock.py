@@ -1,10 +1,18 @@
 """Support for Vera locks."""
 import logging
+from typing import Callable, List
 
-from homeassistant.components.lock import ENTITY_ID_FORMAT, LockDevice
+from homeassistant.components.lock import (
+    DOMAIN as PLATFORM_DOMAIN,
+    ENTITY_ID_FORMAT,
+    LockDevice,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
 
-from . import VERA_CONTROLLER, VERA_DEVICES, VeraDevice
+from .common import VeraDevice, setup_device_entities
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -12,14 +20,18 @@ ATTR_LAST_USER_NAME = "changed_by_name"
 ATTR_LOW_BATTERY = "low_battery"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Find and return Vera locks."""
-    add_entities(
-        [
-            VeraLock(device, hass.data[VERA_CONTROLLER])
-            for device in hass.data[VERA_DEVICES]["lock"]
-        ],
-        True,
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], bool], None],
+) -> None:
+    """Set up the sensor config entry."""
+    setup_device_entities(
+        hass=hass,
+        entry=entry,
+        async_add_entities=async_add_entities,
+        platform=PLATFORM_DOMAIN,
+        generator=VeraLock,
     )
 
 

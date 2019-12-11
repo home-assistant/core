@@ -1,21 +1,34 @@
 """Support for Vera cover - curtains, rollershutters etc."""
 import logging
+from typing import Callable, List
 
-from homeassistant.components.cover import ATTR_POSITION, ENTITY_ID_FORMAT, CoverDevice
+from homeassistant.components.cover import (
+    ATTR_POSITION,
+    DOMAIN as PLATFORM_DOMAIN,
+    ENTITY_ID_FORMAT,
+    CoverDevice,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
 
-from . import VERA_CONTROLLER, VERA_DEVICES, VeraDevice
+from .common import VeraDevice, setup_device_entities
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Vera covers."""
-    add_entities(
-        [
-            VeraCover(device, hass.data[VERA_CONTROLLER])
-            for device in hass.data[VERA_DEVICES]["cover"]
-        ],
-        True,
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], bool], None],
+) -> None:
+    """Set up the sensor config entry."""
+    setup_device_entities(
+        hass=hass,
+        entry=entry,
+        async_add_entities=async_add_entities,
+        platform=PLATFORM_DOMAIN,
+        generator=VeraCover,
     )
 
 
