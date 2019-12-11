@@ -1,8 +1,4 @@
 """Support for Netatmo Smart thermostats."""
-
-# TODO
-# * expose schedule switching
-
 from datetime import timedelta
 import logging
 from typing import List, Optional
