@@ -766,16 +766,13 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operati
 
         zdo = cluster_pair.source_cluster.endpoint.device.zdo
 
-        op_msg = "%s operation for: %s: [%s] %s [%s] cluster: %s"
+        op_msg = "cluster: %s %s --> [%s]"
         op_params = (
-            operation.name,
-            ATTR_SOURCE_IEEE,
-            source_ieee,
-            ATTR_TARGET_IEEE,
-            target_ieee,
             cluster_pair.source_cluster.cluster_id,
+            operation.name,
+            target_ieee,
         )
-        _LOGGER.debug("processing " + op_msg, *op_params)
+        zdo.debug("processing " + op_msg, *op_params)
 
         bind_tasks.append(
             (
@@ -796,7 +793,7 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operati
             fmt = op[1] + " failed: %s"
         else:
             fmt = op[1] + " completed: %s"
-        _LOGGER.debug(fmt, *(op[2] + (r,)))
+        zdo.debug(fmt, *(op[2] + (r,)))
 
 
 def async_load_api(hass):
