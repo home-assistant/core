@@ -4,12 +4,12 @@ Lazy 'tox' to quickly check if branch is up to PR standards.
 
 This is NOT a tox replacement, only a quick check during development.
 """
-import os
 import asyncio
-import sys
+from collections import namedtuple
+import os
 import re
 import shlex
-from collections import namedtuple
+import sys
 
 try:
     from colorlog.escape_codes import escape_codes
@@ -120,7 +120,7 @@ async def pylint(files):
 
 async def flake8(files):
     """Exec flake8."""
-    _, log = await async_exec("flake8", "--doctests", *files)
+    _, log = await async_exec("pre-commit", "run", "flake8", "--files", *files)
     res = []
     for line in log.splitlines():
         line = line.split(":")

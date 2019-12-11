@@ -1,14 +1,14 @@
 """The tests for the Demo Media player platform."""
+import asyncio
 import unittest
 from unittest.mock import patch
-import asyncio
 
 import pytest
 import voluptuous as vol
 
-from homeassistant.setup import setup_component, async_setup_component
 import homeassistant.components.media_player as mp
 from homeassistant.helpers.aiohttp_client import DATA_CLIENTSESSION
+from homeassistant.setup import async_setup_component, setup_component
 
 from tests.common import get_test_home_assistant
 from tests.components.media_player import common

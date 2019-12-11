@@ -1,7 +1,7 @@
 """The tests for the Script component."""
 # pylint: disable=protected-access
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -10,20 +10,19 @@ from homeassistant.components.script import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
+    EVENT_SCRIPT_STARTED,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    EVENT_SCRIPT_STARTED,
 )
 from homeassistant.core import Context, callback, split_entity_id
+from homeassistant.exceptions import ServiceNotFound
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import bind_hass
-from homeassistant.setup import setup_component, async_setup_component
-from homeassistant.exceptions import ServiceNotFound
+from homeassistant.setup import async_setup_component, setup_component
 
 from tests.common import get_test_home_assistant
-
 
 ENTITY_ID = "script.test"
 

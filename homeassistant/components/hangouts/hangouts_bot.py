@@ -4,6 +4,8 @@ import io
 import logging
 
 import aiohttp
+import hangups
+from hangups import ChatMessageEvent, ChatMessageSegment, Client, get_auth, hangouts_pb2
 
 from homeassistant.helpers import dispatcher, intent
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -24,6 +26,7 @@ from .const import (
     EVENT_HANGOUTS_MESSAGE_RECEIVED,
     INTENT_HELP,
 )
+from .hangups_utils import HangoutsCredentials, HangoutsRefreshToken
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -126,8 +129,6 @@ class HangoutsBot:
         )
 
     async def _async_handle_conversation_event(self, event):
-        from hangups import ChatMessageEvent
-
         if isinstance(event, ChatMessageEvent):
             dispatcher.async_dispatcher_send(
                 self.hass,
@@ -196,11 +197,6 @@ class HangoutsBot:
 
     async def async_connect(self):
         """Login to the Google Hangouts."""
-        from .hangups_utils import HangoutsRefreshToken, HangoutsCredentials
-
-        from hangups import Client
-        from hangups import get_auth
-
         session = await self.hass.async_add_executor_job(
             get_auth,
             HangoutsCredentials(None, None, None),
@@ -251,8 +247,6 @@ class HangoutsBot:
 
         if not conversations:
             return False
-
-        from hangups import ChatMessageSegment, hangouts_pb2
 
         messages = []
         for segment in message:
@@ -306,8 +300,6 @@ class HangoutsBot:
             await conv.send_message(messages, image_file)
 
     async def _async_list_conversations(self):
-        import hangups
-
         (
             self._user_list,
             self._conversation_list,

@@ -4,16 +4,16 @@ import socket
 
 from maxcube.device import (
     MAX_DEVICE_MODE_AUTOMATIC,
+    MAX_DEVICE_MODE_BOOST,
     MAX_DEVICE_MODE_MANUAL,
     MAX_DEVICE_MODE_VACATION,
-    MAX_DEVICE_MODE_BOOST,
 )
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
-    SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 

@@ -1,11 +1,11 @@
 """Test the python_script component."""
 import asyncio
 import logging
-from unittest.mock import patch, mock_open
+from unittest.mock import mock_open, patch
 
+from homeassistant.components.python_script import DOMAIN, FOLDER, execute
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.setup import async_setup_component
-from homeassistant.components.python_script import DOMAIN, execute, FOLDER
 
 from tests.common import patch_yaml_files
 

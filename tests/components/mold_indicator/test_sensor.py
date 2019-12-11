@@ -1,13 +1,13 @@
 """The tests for the MoldIndicator sensor."""
 import unittest
 
-from homeassistant.setup import setup_component
-import homeassistant.components.sensor as sensor
 from homeassistant.components.mold_indicator.sensor import (
-    ATTR_DEWPOINT,
     ATTR_CRITICAL_TEMP,
+    ATTR_DEWPOINT,
 )
+import homeassistant.components.sensor as sensor
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, TEMP_CELSIUS
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 

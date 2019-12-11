@@ -9,22 +9,21 @@ import pytest
 import requests_mock as _requests_mock
 
 from homeassistant import util
-from homeassistant.util import location
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
-from homeassistant.auth.providers import legacy_api_password, homeassistant
+from homeassistant.auth.providers import homeassistant, legacy_api_password
+from homeassistant.util import location
 
 pytest.register_assert_rewrite("tests.common")
-from tests.common import (  # noqa: E402 module level import not at top of file
-    async_test_home_assistant,
+
+from tests.common import (  # noqa: E402, isort:skip
+    CLIENT_ID,
     INSTANCES,
+    MockUser,
+    async_test_home_assistant,
     mock_coro,
     mock_storage as mock_storage,
-    MockUser,
-    CLIENT_ID,
 )
-from tests.test_util.aiohttp import (
-    mock_aiohttp_client,
-)  # noqa: E402 module level import not at top of file
+from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
 
 if os.environ.get("UVLOOP") == "1":
     import uvloop

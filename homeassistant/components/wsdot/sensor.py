@@ -1,21 +1,21 @@
 """Support for Washington State Department of Transportation (WSDOT) data."""
+from datetime import datetime, timedelta, timezone
 import logging
 import re
-from datetime import datetime, timezone, timedelta
 
 import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_NAME,
     ATTR_ATTRIBUTION,
-    CONF_ID,
     ATTR_NAME,
+    CONF_API_KEY,
+    CONF_ID,
+    CONF_NAME,
 )
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 

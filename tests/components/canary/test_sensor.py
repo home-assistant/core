@@ -3,16 +3,16 @@ import copy
 import unittest
 from unittest.mock import Mock
 
-from homeassistant.components.canary import DATA_CANARY
-from homeassistant.components.canary import sensor as canary
+from homeassistant.components.canary import DATA_CANARY, sensor as canary
 from homeassistant.components.canary.sensor import (
-    CanarySensor,
-    SENSOR_TYPES,
     ATTR_AIR_QUALITY,
-    STATE_AIR_QUALITY_NORMAL,
+    SENSOR_TYPES,
     STATE_AIR_QUALITY_ABNORMAL,
+    STATE_AIR_QUALITY_NORMAL,
     STATE_AIR_QUALITY_VERY_ABNORMAL,
+    CanarySensor,
 )
+
 from tests.common import get_test_home_assistant
 from tests.components.canary.test_init import mock_device, mock_location
 

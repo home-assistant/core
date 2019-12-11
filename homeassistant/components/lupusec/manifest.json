@@ -3,8 +3,8 @@
   "name": "Lupusec",
   "documentation": "https://www.home-assistant.io/integrations/lupusec",
   "requirements": [
-    "lupupy==0.0.17"
+    "lupupy==0.0.18"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@majuss"]
 }

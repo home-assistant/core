@@ -10,8 +10,7 @@ from typing import List, Optional, Sequence, Text
 from homeassistant.bootstrap import async_mount_local_lib_path
 from homeassistant.config import get_default_config_dir
 from homeassistant.requirements import pip_kwargs
-from homeassistant.util.package import install_package, is_virtual_env, is_installed
-
+from homeassistant.util.package import install_package, is_installed, is_virtual_env
 
 # mypy: allow-untyped-defs, no-warn-return-any
 

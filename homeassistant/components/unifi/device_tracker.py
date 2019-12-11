@@ -1,16 +1,15 @@
 """Track devices using UniFi controllers."""
 import logging
 
-from homeassistant.components.unifi.config_flow import get_controller_from_config_entry
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
+from homeassistant.components.unifi.config_flow import get_controller_from_config_entry
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_registry import DISABLED_CONFIG_ENTRY
-
 import homeassistant.util.dt as dt_util
 
 from .const import ATTR_MANUFACTURER
@@ -76,6 +75,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Update the values of the controller."""
         for entity in tracked.values():
 
+            if entity.entity_registry_enabled_default == entity.enabled:
+                continue
+
             disabled_by = None
             if not entity.entity_registry_enabled_default and entity.enabled:
                 disabled_by = DISABLED_CONFIG_ENTRY
@@ -125,6 +127,7 @@ class UniFiClientTracker(ScannerEntity):
         self.client = client
         self.controller = controller
         self.is_wired = self.client.mac not in controller.wireless_clients
+        self.wired_bug = None
 
     @property
     def entity_registry_enabled_default(self):
@@ -167,13 +170,18 @@ class UniFiClientTracker(ScannerEntity):
 
         If is_wired and client.is_wired differ it means that the device is offline and UniFi bug shows device as wired.
         """
-        if self.is_wired == self.client.is_wired and (
-            (
-                dt_util.utcnow()
-                - dt_util.utc_from_timestamp(float(self.client.last_seen))
+        if self.is_wired != self.client.is_wired:
+            if not self.wired_bug:
+                self.wired_bug = dt_util.utcnow()
+            since_last_seen = dt_util.utcnow() - self.wired_bug
+
+        else:
+            self.wired_bug = None
+            since_last_seen = dt_util.utcnow() - dt_util.utc_from_timestamp(
+                float(self.client.last_seen)
             )
-            < self.controller.option_detection_time
-        ):
+
+        if since_last_seen < self.controller.option_detection_time:
             return True
 
         return False
@@ -228,10 +236,9 @@ class UniFiDeviceTracker(ScannerEntity):
     @property
     def entity_registry_enabled_default(self):
         """Return if the entity should be enabled when first added to the entity registry."""
-        if not self.controller.option_track_devices:
-            return False
-
-        return True
+        if self.controller.option_track_devices:
+            return True
+        return False
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""

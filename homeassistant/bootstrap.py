@@ -1,22 +1,22 @@
 """Provide methods to bootstrap a Home Assistant instance."""
 import asyncio
+from collections import OrderedDict
 import logging
 import logging.handlers
 import os
 import sys
 from time import time
-from collections import OrderedDict
-from typing import Any, Optional, Dict, Set
+from typing import Any, Dict, Optional, Set
 
 import voluptuous as vol
 
-from homeassistant import core, config as conf_util, config_entries, loader
+from homeassistant import config as conf_util, config_entries, core, loader
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util.logging import AsyncHandler
 from homeassistant.util.package import async_get_user_site, is_virtual_env
 from homeassistant.util.yaml import clear_secret_cache
-from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
 
