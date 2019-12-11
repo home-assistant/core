@@ -1,0 +1,9 @@
+{
+  "domain": "brother",
+  "name": "Brother Printer",
+  "documentation": "https://www.home-assistant.io/integrations/brother",
+  "dependencies": [],
+  "codeowners": ["@bieniu"],
+  "requirements": ["pysnmp==4.4.12", "brother==0.1.1"],
+  "config_flow": true
+}
