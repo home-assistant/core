@@ -1,8 +1,8 @@
 """The tests for frontend storage."""
 import pytest
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components.frontend import storage
+from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture(autouse=True)

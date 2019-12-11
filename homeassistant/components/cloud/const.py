@@ -17,6 +17,7 @@ PREF_DISABLE_2FA = "disable_2fa"
 PREF_ALIASES = "aliases"
 PREF_SHOULD_EXPOSE = "should_expose"
 PREF_GOOGLE_LOCAL_WEBHOOK_ID = "google_local_webhook_id"
+PREF_USERNAME = "username"
 DEFAULT_SHOULD_EXPOSE = True
 DEFAULT_DISABLE_2FA = False
 DEFAULT_ALEXA_REPORT_STATE = False
@@ -38,6 +39,7 @@ CONF_ACME_DIRECTORY_SERVER = "acme_directory_server"
 CONF_ALEXA_ACCESS_TOKEN_URL = "alexa_access_token_url"
 CONF_GOOGLE_ACTIONS_REPORT_STATE_URL = "google_actions_report_state_url"
 CONF_ACCOUNT_LINK_URL = "account_link_url"
+CONF_VOICE_API_URL = "voice_api_url"
 
 MODE_DEV = "development"
 MODE_PROD = "production"

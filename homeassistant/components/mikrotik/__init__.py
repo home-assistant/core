@@ -2,34 +2,35 @@
 import logging
 import ssl
 
-import voluptuous as vol
 import librouteros
 from librouteros.login import login_plain, login_token
+import voluptuous as vol
 
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.const import (
     CONF_HOST,
+    CONF_METHOD,
     CONF_PASSWORD,
-    CONF_USERNAME,
     CONF_PORT,
     CONF_SSL,
-    CONF_METHOD,
+    CONF_USERNAME,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
+
 from .const import (
-    NAME,
+    CONF_ARP_PING,
+    CONF_ENCODING,
+    CONF_LOGIN_METHOD,
+    CONF_TRACK_DEVICES,
+    DEFAULT_ENCODING,
     DOMAIN,
     HOSTS,
+    IDENTITY,
+    MIKROTIK_SERVICES,
     MTK_LOGIN_PLAIN,
     MTK_LOGIN_TOKEN,
-    DEFAULT_ENCODING,
-    IDENTITY,
-    CONF_TRACK_DEVICES,
-    CONF_ENCODING,
-    CONF_ARP_PING,
-    CONF_LOGIN_METHOD,
-    MIKROTIK_SERVICES,
+    NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)

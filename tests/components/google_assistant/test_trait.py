@@ -1,13 +1,16 @@
 """Tests for the Google Assistant traits."""
-from unittest.mock import patch, Mock
 import logging
+from unittest.mock import Mock, patch
+
 import pytest
 
 from homeassistant.components import (
+    alarm_control_panel,
     binary_sensor,
     camera,
     cover,
     fan,
+    group,
     input_boolean,
     light,
     lock,
@@ -17,32 +20,32 @@ from homeassistant.components import (
     sensor,
     switch,
     vacuum,
-    group,
-    alarm_control_panel,
 )
 from homeassistant.components.climate import const as climate
-from homeassistant.components.google_assistant import trait, helpers, const, error
+from homeassistant.components.google_assistant import const, error, helpers, trait
 from homeassistant.const import (
-    STATE_ON,
-    STATE_OFF,
+    ATTR_ASSUMED_STATE,
+    ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    ATTR_TEMPERATURE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_ON,
-    SERVICE_TURN_OFF,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    ATTR_SUPPORTED_FEATURES,
-    ATTR_TEMPERATURE,
-    ATTR_DEVICE_CLASS,
-    ATTR_ASSUMED_STATE,
-    STATE_UNKNOWN,
 )
-from homeassistant.core import State, DOMAIN as HA_DOMAIN, EVENT_CALL_SERVICE
+from homeassistant.core import DOMAIN as HA_DOMAIN, EVENT_CALL_SERVICE, State
 from homeassistant.util import color
-from tests.common import async_mock_service, mock_coro
+
 from . import BASIC_CONFIG, MockConfig
+
+from tests.common import async_mock_service, mock_coro
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -1629,3 +1632,29 @@ async def test_temperature_setting_sensor(hass):
 
     assert trt.query_attributes() == {"thermostatTemperatureAmbient": 21.1}
     hass.config.units.temperature_unit = TEMP_CELSIUS
+
+
+async def test_humidity_setting_sensor(hass):
+    """Test HumiditySetting trait support for humidity sensor."""
+    assert (
+        helpers.get_google_type(sensor.DOMAIN, sensor.DEVICE_CLASS_HUMIDITY) is not None
+    )
+    assert not trait.HumiditySettingTrait.supported(
+        sensor.DOMAIN, 0, sensor.DEVICE_CLASS_TEMPERATURE
+    )
+    assert trait.HumiditySettingTrait.supported(
+        sensor.DOMAIN, 0, sensor.DEVICE_CLASS_HUMIDITY
+    )
+
+    trt = trait.HumiditySettingTrait(
+        hass,
+        State("sensor.test", "70", {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_HUMIDITY}),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {"queryOnlyHumiditySetting": True}
+    assert trt.query_attributes() == {"humidityAmbientPercent": 70}
+
+    with pytest.raises(helpers.SmartHomeError) as err:
+        await trt.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+    assert err.value.code == const.ERR_NOT_SUPPORTED

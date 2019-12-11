@@ -1,7 +1,12 @@
 """Support for monitoring a Sense energy sensor."""
-import logging
 from datetime import timedelta
+import logging
 
+from sense_energy import (
+    ASyncSenseable,
+    SenseAPITimeoutException,
+    SenseAuthenticationException,
+)
 import voluptuous as vol
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TIMEOUT
@@ -36,11 +41,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Sense sensor."""
-    from sense_energy import (
-        ASyncSenseable,
-        SenseAuthenticationException,
-        SenseAPITimeoutException,
-    )
 
     username = config[DOMAIN][CONF_EMAIL]
     password = config[DOMAIN][CONF_PASSWORD]

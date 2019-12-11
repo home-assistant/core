@@ -2,7 +2,6 @@
 import logging
 
 from pyasn1.type.univ import Integer
-
 import pysnmp.hlapi.asyncio as hlapi
 from pysnmp.hlapi.asyncio import (
     CommunityData,

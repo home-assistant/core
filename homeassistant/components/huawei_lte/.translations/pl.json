@@ -1,10 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_in_progress": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "not_huawei_lte": "To nie jest urz\u0105dzenie Huawei LTE"
         },
         "error": {
             "connection_failed": "Po\u0142\u0105czenie nie powiod\u0142o si\u0119",
+            "connection_timeout": "Przekroczono limit czasu pr\u00f3by po\u0142\u0105czenia.",
             "incorrect_password": "Nieprawid\u0142owe has\u0142o",
             "incorrect_username": "Nieprawid\u0142owa nazwa u\u017cytkownika",
             "incorrect_username_or_password": "Nieprawid\u0142owa nazwa u\u017cytkownika lub has\u0142o",

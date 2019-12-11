@@ -4,7 +4,6 @@ import voluptuous as vol
 from homeassistant.auth.providers import homeassistant as auth_ha
 from homeassistant.components import websocket_api
 
-
 WS_TYPE_CREATE = "config/auth_provider/homeassistant/create"
 SCHEMA_WS_CREATE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
     {

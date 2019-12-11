@@ -1,12 +1,12 @@
 """Support for Enviro pHAT sensors."""
+from datetime import timedelta
 import importlib
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import TEMP_CELSIUS, CONF_DISPLAY_OPTIONS, CONF_NAME
+from homeassistant.const import CONF_DISPLAY_OPTIONS, CONF_NAME, TEMP_CELSIUS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle

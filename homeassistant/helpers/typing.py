@@ -1,5 +1,5 @@
 """Typing Helpers for Home Assistant."""
-from typing import Dict, Any, Tuple, Optional
+from typing import Any, Dict, Optional, Tuple
 
 import homeassistant.core
 

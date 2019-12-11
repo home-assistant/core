@@ -1,8 +1,8 @@
 """Tests for the cloud binary sensor."""
 from unittest.mock import Mock
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components.cloud.const import DISPATCHER_REMOTE_UPDATE
+from homeassistant.setup import async_setup_component
 
 
 async def test_remote_connection_sensor(hass):

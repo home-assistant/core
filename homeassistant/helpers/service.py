@@ -7,7 +7,7 @@ from typing import Callable
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
-from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, ATTR_AREA_ID
+from homeassistant.const import ATTR_AREA_ID, ATTR_ENTITY_ID, ENTITY_MATCH_ALL
 import homeassistant.core as ha
 from homeassistant.exceptions import (
     HomeAssistantError,
@@ -16,12 +16,11 @@ from homeassistant.exceptions import (
     UnknownUser,
 )
 from homeassistant.helpers import template, typing
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.yaml import load_yaml
 from homeassistant.util.yaml.loader import JSON_TYPE
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -260,19 +259,7 @@ async def entity_service_call(
     else:
         entity_perms = None
 
-    # Are we trying to target all entities
-    if ATTR_ENTITY_ID in call.data:
-        target_all_entities = call.data[ATTR_ENTITY_ID] == ENTITY_MATCH_ALL
-    else:
-        # Remove the service_name parameter along with this warning
-        _LOGGER.warning(
-            "Not passing an entity ID to a service to target all "
-            "entities is deprecated. Update your call to %s to be "
-            "instead: entity_id: %s",
-            service_name,
-            ENTITY_MATCH_ALL,
-        )
-        target_all_entities = True
+    target_all_entities = call.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_ALL
 
     if not target_all_entities:
         # A set of entities we're trying to target.

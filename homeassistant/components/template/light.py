@@ -3,31 +3,32 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ENTITY_ID_FORMAT,
-    Light,
     SUPPORT_BRIGHTNESS,
+    Light,
 )
 from homeassistant.const import (
-    CONF_VALUE_TEMPLATE,
-    CONF_ICON_TEMPLATE,
-    CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_ENTITY_ID,
+    CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_FRIENDLY_NAME,
-    STATE_ON,
-    STATE_OFF,
-    EVENT_HOMEASSISTANT_START,
-    MATCH_ALL,
+    CONF_ICON_TEMPLATE,
     CONF_LIGHTS,
+    CONF_VALUE_TEMPLATE,
+    EVENT_HOMEASSISTANT_START,
+    STATE_OFF,
+    STATE_ON,
 )
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
+from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
+
+from . import extract_entities, initialise_templates
 from .const import CONF_AVAILABILITY_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,46 +65,27 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     for device, device_config in config[CONF_LIGHTS].items():
         friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
+
         state_template = device_config.get(CONF_VALUE_TEMPLATE)
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         entity_picture_template = device_config.get(CONF_ENTITY_PICTURE_TEMPLATE)
         availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
+        level_template = device_config.get(CONF_LEVEL_TEMPLATE)
+
         on_action = device_config[CONF_ON_ACTION]
         off_action = device_config[CONF_OFF_ACTION]
         level_action = device_config.get(CONF_LEVEL_ACTION)
-        level_template = device_config.get(CONF_LEVEL_TEMPLATE)
 
-        template_entity_ids = set()
+        templates = {
+            CONF_VALUE_TEMPLATE: state_template,
+            CONF_ICON_TEMPLATE: icon_template,
+            CONF_ENTITY_PICTURE_TEMPLATE: entity_picture_template,
+            CONF_AVAILABILITY_TEMPLATE: availability_template,
+            CONF_LEVEL_TEMPLATE: level_template,
+        }
 
-        if state_template is not None:
-            temp_ids = state_template.extract_entities()
-            if str(temp_ids) != MATCH_ALL:
-                template_entity_ids |= set(temp_ids)
-
-        if level_template is not None:
-            temp_ids = level_template.extract_entities()
-            if str(temp_ids) != MATCH_ALL:
-                template_entity_ids |= set(temp_ids)
-
-        if icon_template is not None:
-            temp_ids = icon_template.extract_entities()
-            if str(temp_ids) != MATCH_ALL:
-                template_entity_ids |= set(temp_ids)
-
-        if entity_picture_template is not None:
-            temp_ids = entity_picture_template.extract_entities()
-            if str(temp_ids) != MATCH_ALL:
-                template_entity_ids |= set(temp_ids)
-
-        if availability_template is not None:
-            temp_ids = availability_template.extract_entities()
-            if str(temp_ids) != MATCH_ALL:
-                template_entity_ids |= set(temp_ids)
-
-        if not template_entity_ids:
-            template_entity_ids = MATCH_ALL
-
-        entity_ids = device_config.get(CONF_ENTITY_ID, template_entity_ids)
+        initialise_templates(hass, templates)
+        entity_ids = extract_entities(device, "light", None, templates)
 
         lights.append(
             LightTemplate(

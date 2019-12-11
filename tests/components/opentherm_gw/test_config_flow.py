@@ -1,18 +1,19 @@
 """Test the Opentherm Gateway config flow."""
 import asyncio
-from serial import SerialException
 from unittest.mock import patch
 
+from pyotgw import OTGW_ABOUT
+from serial import SerialException
+
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_NAME, PRECISION_HALVES
 from homeassistant.components.opentherm_gw.const import (
-    DOMAIN,
     CONF_FLOOR_TEMP,
     CONF_PRECISION,
+    DOMAIN,
 )
+from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_NAME, PRECISION_HALVES
 
-from pyotgw import OTGW_ABOUT
-from tests.common import mock_coro, MockConfigEntry
+from tests.common import MockConfigEntry, mock_coro
 
 
 async def test_form_user(hass):

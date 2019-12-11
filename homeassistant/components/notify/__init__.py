@@ -1,19 +1,18 @@
 """Provides functionality to notify people."""
 import asyncio
-import logging
 from functools import partial
+import logging
 from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.setup import async_prepare_setup_platform
-from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util import slugify
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 

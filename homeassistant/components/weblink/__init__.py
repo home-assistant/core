@@ -3,10 +3,10 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, CONF_ICON, CONF_URL
+from homeassistant.const import CONF_ICON, CONF_NAME, CONF_URL
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 

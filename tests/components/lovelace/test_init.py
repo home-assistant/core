@@ -1,10 +1,10 @@
 """Test the Lovelace initialization."""
 from unittest.mock import patch
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import frontend, lovelace
+from homeassistant.setup import async_setup_component
 
-from tests.common import get_system_health_info, async_capture_events
+from tests.common import async_capture_events, get_system_health_info
 
 
 async def test_lovelace_from_storage(hass, hass_ws_client, hass_storage):

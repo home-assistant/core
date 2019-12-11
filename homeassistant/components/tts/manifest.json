@@ -2,13 +2,8 @@
   "domain": "tts",
   "name": "Tts",
   "documentation": "https://www.home-assistant.io/integrations/tts",
-  "requirements": [
-    "mutagen==1.42.0"
-  ],
-  "dependencies": [
-    "http"
-  ],
-  "codeowners": [
-    "@robbiet480"
-  ]
+  "requirements": ["mutagen==1.43.0"],
+  "dependencies": ["http"],
+  "after_dependencies": ["media_player"],
+  "codeowners": ["@robbiet480"]
 }

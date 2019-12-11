@@ -1,10 +1,9 @@
 """Provide a way to connect devices to one physical location."""
-import logging
-import uuid
 from asyncio import Event
 from collections import OrderedDict
-from typing import MutableMapping
-from typing import Iterable, Optional, cast
+import logging
+from typing import Iterable, MutableMapping, Optional, cast
+import uuid
 
 import attr
 

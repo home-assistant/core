@@ -4,20 +4,21 @@ from unittest import mock
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components import sensor
+import homeassistant.components.geo_rss_events.sensor as geo_rss_events
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
     ATTR_FRIENDLY_NAME,
-    EVENT_HOMEASSISTANT_START,
     ATTR_ICON,
+    ATTR_UNIT_OF_MEASUREMENT,
+    EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.setup import setup_component
+import homeassistant.util.dt as dt_util
+
 from tests.common import (
-    get_test_home_assistant,
     assert_setup_component,
     fire_time_changed,
+    get_test_home_assistant,
 )
-import homeassistant.components.geo_rss_events.sensor as geo_rss_events
-import homeassistant.util.dt as dt_util
 
 URL = "http://geo.rss.local/geo_rss_events.xml"
 VALID_CONFIG_WITH_CATEGORIES = {

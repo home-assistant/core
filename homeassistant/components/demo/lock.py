@@ -1,18 +1,22 @@
 """Demo lock platform that has two fake locks."""
+from homeassistant.components.lock import SUPPORT_OPEN, LockDevice
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 
-from homeassistant.components.lock import SUPPORT_OPEN, LockDevice
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Demo lock platform."""
-    add_entities(
+    async_add_entities(
         [
             DemoLock("Front Door", STATE_LOCKED),
             DemoLock("Kitchen Door", STATE_UNLOCKED),
             DemoLock("Openable Lock", STATE_LOCKED, True),
         ]
     )
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Demo config entry."""
+    await async_setup_platform(hass, {}, async_add_entities)
 
 
 class DemoLock(LockDevice):
