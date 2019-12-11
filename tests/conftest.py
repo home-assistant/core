@@ -1,8 +1,6 @@
 """Set up some common test helper things."""
-import asyncio
 import functools
 import logging
-import os
 from unittest.mock import patch
 
 import pytest
@@ -25,10 +23,6 @@ from tests.common import (  # noqa: E402, isort:skip
 )
 from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
 
-if os.environ.get("UVLOOP") == "1":
-    import uvloop
-
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
