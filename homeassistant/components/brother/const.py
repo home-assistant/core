@@ -13,9 +13,9 @@ ATTR_LABEL = "label"
 ATTR_LASER_REMAINING_LIFE = "laser_remaining_life"
 ATTR_MAGENTA_INK_REMAINING = "magenta_ink_remaining"
 ATTR_MAGENTA_TONER_REMAINING = "magenta_toner_remaining"
+ATTR_PAGE_COUNTER = "page_counter"
 ATTR_PF_KIT_1_REMAINING_LIFE = "pf_kit_1_remaining_life"
 ATTR_PF_KIT_MP_REMAINING_LIFE = "pf_kit_mp_remaining_life"
-ATTR_PRINTER_COUNTER = "printer_counter"
 ATTR_STATUS = "status"
 ATTR_UNIT = "unit"
 ATTR_YELLOW_INK_REMAINING = "yellow_ink_remaining"
@@ -38,9 +38,9 @@ SENSOR_TYPES = {
         ATTR_LABEL: ATTR_STATUS.title(),
         ATTR_UNIT: None,
     },
-    ATTR_PRINTER_COUNTER: {
+    ATTR_PAGE_COUNTER: {
         ATTR_ICON: "mdi:file-document-outline",
-        ATTR_LABEL: ATTR_PRINTER_COUNTER.replace("_", " ").title(),
+        ATTR_LABEL: ATTR_PAGE_COUNTER.replace("_", " ").title(),
         ATTR_UNIT: UNIT_PAGES,
     },
     ATTR_DRUM_REMAINING_LIFE: {
