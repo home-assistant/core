@@ -2,6 +2,7 @@
 import asyncio
 import functools
 import logging
+import secrets
 from urllib.parse import urlparse
 from uuid import uuid4
 
@@ -208,7 +209,7 @@ async def setup_smartapp_endpoint(hass: HomeAssistantType):
         # Create config
         config = {
             CONF_INSTANCE_ID: str(uuid4()),
-            CONF_WEBHOOK_ID: webhook.generate_secret(),
+            CONF_WEBHOOK_ID: secrets.token_hex(),
             CONF_CLOUDHOOK_URL: None,
         }
         await store.async_save(config)
