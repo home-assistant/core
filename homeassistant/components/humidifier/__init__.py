@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
-    ENTITY_SERVICE_SCHEMA,
+    make_entity_service_schema,
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
@@ -64,39 +64,35 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     )
     await component.async_setup(config)
 
-    component.async_register_entity_service(
-        SERVICE_TURN_ON, ENTITY_SERVICE_SCHEMA, "async_turn_on"
-    )
-    component.async_register_entity_service(
-        SERVICE_TURN_OFF, ENTITY_SERVICE_SCHEMA, "async_turn_off"
-    )
+    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
+    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
     component.async_register_entity_service(
         SERVICE_SET_FAN_MODE,
-        ENTITY_SERVICE_SCHEMA.extend({vol.Required(ATTR_FAN_MODE): cv.string}),
+        make_entity_service_schema({vol.Required(ATTR_FAN_MODE): cv.string}),
         "async_set_fan_mode",
         [SUPPORT_FAN_MODE],
     )
     component.async_register_entity_service(
         SERVICE_SET_OPERATION_MODE,
-        ENTITY_SERVICE_SCHEMA.extend(
+        make_entity_service_schema(
             {vol.Required(ATTR_OPERATION_MODE): vol.In(OPERATION_MODES)}
         ),
         "async_set_operation_mode",
     )
     component.async_register_entity_service(
         SERVICE_SET_PRESET_MODE,
-        ENTITY_SERVICE_SCHEMA.extend({vol.Required(ATTR_PRESET_MODE): cv.string}),
+        make_entity_service_schema({vol.Required(ATTR_PRESET_MODE): cv.string}),
         "async_set_preset_mode",
         [SUPPORT_PRESET_MODE],
     )
     component.async_register_entity_service(
         SERVICE_SET_AUX_HEAT,
-        ENTITY_SERVICE_SCHEMA.extend({vol.Required(ATTR_AUX_HEAT): cv.boolean}),
+        make_entity_service_schema({vol.Required(ATTR_AUX_HEAT): cv.boolean}),
         async_service_aux_heat,
     )
     component.async_register_entity_service(
         SERVICE_SET_HUMIDITY,
-        ENTITY_SERVICE_SCHEMA.extend({vol.Required(ATTR_HUMIDITY): vol.Coerce(int)}),
+        make_entity_service_schema({vol.Required(ATTR_HUMIDITY): vol.Coerce(int)}),
         "async_set_humidity",
     )
 

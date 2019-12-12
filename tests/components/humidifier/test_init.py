@@ -5,7 +5,7 @@ from typing import List
 import pytest
 import voluptuous as vol
 
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
+from homeassistant.helpers.config_validation import make_entity_service_schema
 
 from homeassistant.components.humidifier import (
     HumidifierDevice,
@@ -15,7 +15,7 @@ from homeassistant.components.humidifier import (
 )
 from tests.common import async_mock_service
 
-SET_HUMIDITY_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+SET_HUMIDITY_SCHEMA = make_entity_service_schema(
     {vol.Required(ATTR_HUMIDITY): vol.Coerce(int)}
 )
 
