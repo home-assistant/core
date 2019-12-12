@@ -46,7 +46,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                         camera_data, camera["id"], camera["type"], True, DEFAULT_QUALITY
                     )
                 )
-            camera_data.get_persons()
+            camera_data.update_persons()
         except pyatmo.NoDevice:
             _LOGGER.debug("No cameras found")
         return devices
@@ -283,7 +283,7 @@ class CameraData:
         """Return camera type for a camera, cid has preference over camera."""
         return self.camera_data.cameraType(cid=camera_id)
 
-    def get_persons(self):
+    def update_persons(self):
         """Gather person data for webhooks."""
         for person_id, person_data in self.camera_data.persons.items():
             self._hass.data[DOMAIN][DATA_PERSONS][person_id] = person_data.get(
