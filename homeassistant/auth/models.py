@@ -1,5 +1,6 @@
 """Auth models."""
 from datetime import datetime, timedelta
+import secrets
 from typing import Dict, List, NamedTuple, Optional
 import uuid
 
@@ -9,7 +10,6 @@ from homeassistant.util import dt as dt_util
 
 from . import permissions as perm_mdl
 from .const import GROUP_ID_ADMIN
-from .util import generate_secret
 
 TOKEN_TYPE_NORMAL = "normal"
 TOKEN_TYPE_SYSTEM = "system"
@@ -96,8 +96,8 @@ class RefreshToken:
     )
     id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
     created_at = attr.ib(type=datetime, factory=dt_util.utcnow)
-    token = attr.ib(type=str, factory=lambda: generate_secret(64))
-    jwt_key = attr.ib(type=str, factory=lambda: generate_secret(64))
+    token = attr.ib(type=str, factory=lambda: secrets.token_hex(64))
+    jwt_key = attr.ib(type=str, factory=lambda: secrets.token_hex(64))
 
     last_used_at = attr.ib(type=Optional[datetime], default=None)
     last_used_ip = attr.ib(type=Optional[str], default=None)
