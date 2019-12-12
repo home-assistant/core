@@ -22,7 +22,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-from .const import AUTH, DOMAIN, MANUFAKTURER
+from .const import AUTH, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -230,7 +230,7 @@ class NetatmoSensor(Entity):
                 f"{module_info['station_name']} {module_info['module_name']}"
             )
 
-        self._name = f"{MANUFAKTURER} {self.module_name} {SENSOR_TYPES[sensor_type][0]}"
+        self._name = f"{MANUFACTURER} {self.module_name} {SENSOR_TYPES[sensor_type][0]}"
         self.type = sensor_type
         self._state = None
         self._device_class = SENSOR_TYPES[self.type][3]
@@ -261,7 +261,7 @@ class NetatmoSensor(Entity):
         return {
             "identifiers": {(DOMAIN, self._module_id)},
             "name": self.module_name,
-            "manufacturer": MANUFAKTURER,
+            "manufacturer": MANUFACTURER,
             "model": self._module_type,
         }
 
@@ -462,7 +462,7 @@ class NetatmoPublicSensor(Entity):
         self.netatmo_data = data
         self.type = sensor_type
         self._mode = mode
-        self._name = f"{MANUFAKTURER} {area_name} {SENSOR_TYPES[self.type][0]}"
+        self._name = f"{MANUFACTURER} {area_name} {SENSOR_TYPES[self.type][0]}"
         self._area_name = area_name
         self._state = None
         self._device_class = SENSOR_TYPES[self.type][3]
@@ -490,7 +490,7 @@ class NetatmoPublicSensor(Entity):
         return {
             "identifiers": {(DOMAIN, self._area_name)},
             "name": self._area_name,
-            "manufacturer": MANUFAKTURER,
+            "manufacturer": MANUFACTURER,
             "model": "public",
         }
 

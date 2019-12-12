@@ -35,7 +35,7 @@ from .const import (
     ATTR_SCHEDULE_NAME,
     AUTH,
     DOMAIN,
-    MANUFAKTURER,
+    MANUFACTURER,
     SERVICE_SETSCHEDULE,
 )
 
@@ -163,7 +163,7 @@ class NetatmoThermostat(ClimateDevice):
         self._state = None
         self._room_id = room_id
         self._room_name = self._data.homedata.rooms[self._data.home_id][room_id]["name"]
-        self._name = f"{MANUFAKTURER} {self._room_name}"
+        self._name = f"{MANUFACTURER} {self._room_name}"
         self._current_temperature = None
         self._target_temperature = None
         self._preset = None
@@ -186,7 +186,7 @@ class NetatmoThermostat(ClimateDevice):
         return {
             "identifiers": {(DOMAIN, self._room_id)},
             "name": self._room_name,
-            "manufacturer": MANUFAKTURER,
+            "manufacturer": MANUFACTURER,
             "model": self._module_type,
         }
 

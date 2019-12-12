@@ -5,7 +5,7 @@ from pyatmo import NoDevice
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
-from .const import AUTH, DOMAIN, MANUFAKTURER
+from .const import AUTH, DOMAIN, MANUFACTURER
 from .camera import CameraData
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,11 +85,16 @@ class NetatmoBinarySensor(BinarySensorDevice):
         self._home_name = self._data.camera_data.getHomeName(home_id=home_id)
         self._timeout = DEFAULT_TIMEOUT
         self._name = (
-            f"{MANUFAKTURER}{self._camera_name} {self._module_name} {sensor_type}"
+            f"{MANUFACTURER} {self._camera_name} {self._module_name} {sensor_type}"
             if module_id is not None
-            else f"{MANUFAKTURER}{self._camera_name} {sensor_type}"
+            else f"{MANUFACTURER} {self._camera_name} {sensor_type}"
         )
         self._state = None
+        self._unique_id = (
+            f"{self._camera_id}-{self._module_name}-{self._camera_type}-{sensor_type}"
+            if module_id is not None
+            else f"{self._camera_id}-{self._camera_type}-{sensor_type}"
+        )
 
     @property
     def name(self):
@@ -97,13 +102,19 @@ class NetatmoBinarySensor(BinarySensorDevice):
         return self._name
 
     @property
-    def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        if self._camera_type == "NACamera":
-            return WELCOME_SENSOR_TYPES.get(self._sensor_type)
-        if self._camera_type == "NOC":
-            return PRESENCE_SENSOR_TYPES.get(self._sensor_type)
-        return TAG_SENSOR_TYPES.get(self._sensor_type)
+    def unique_id(self):
+        """Return the unique ID for this sensor."""
+        return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return the device info for the sensor."""
+        return {
+            "identifiers": {(DOMAIN, self._camera_id)},
+            "name": self._camera_name,
+            "manufacturer": MANUFACTURER,
+            "model": self._camera_type,
+        }
 
     @property
     def is_on(self):

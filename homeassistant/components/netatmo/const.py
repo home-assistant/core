@@ -4,7 +4,7 @@ from datetime import timedelta
 API = "api"
 
 DOMAIN = "netatmo"
-MANUFAKTURER = "Netatmo"
+MANUFACTURER = "Netatmo"
 
 AUTH = "netatmo_auth"
 CONF_PUBLIC = "public_sensor_config"

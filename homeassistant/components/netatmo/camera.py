@@ -11,7 +11,7 @@ from homeassistant.util import Throttle
 from .const import (
     AUTH,
     DOMAIN,
-    MANUFAKTURER,
+    MANUFACTURER,
     DATA_PERSONS,
     ATTR_PSEUDO,
     MIN_TIME_BETWEEN_UPDATES,
@@ -69,7 +69,7 @@ class NetatmoCamera(Camera):
         self._data = data
         self._camera_id = camera_id
         self._camera_name = self._data.camera_data.get_camera(cid=camera_id).get("name")
-        self._name = f"{MANUFAKTURER} {self._camera_name}"
+        self._name = f"{MANUFACTURER} {self._camera_name}"
         self._camera_type = camera_type
         self._unique_id = f"{self._camera_id}-{self._camera_type}"
         self._verify_ssl = verify_ssl
@@ -141,7 +141,7 @@ class NetatmoCamera(Camera):
         return {
             "identifiers": {(DOMAIN, self._camera_id)},
             "name": self._camera_name,
-            "manufacturer": MANUFAKTURER,
+            "manufacturer": MANUFACTURER,
             "model": self._camera_type,
         }
 
@@ -176,7 +176,7 @@ class NetatmoCamera(Camera):
     @property
     def brand(self):
         """Return the camera brand."""
-        return MANUFAKTURER
+        return MANUFACTURER
 
     @property
     def motion_detection_enabled(self):

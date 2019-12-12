@@ -7,14 +7,7 @@ import requests
 
 from homeassistant.components.light import Light
 
-# from homeassistant.const import STATE_ON, STATE_OFF
-
-# from homeassistant.helpers.dispatcher import (
-#     async_dispatcher_send,
-#         async_dispatcher_connect,
-# )
-
-from .const import AUTH, DOMAIN, MANUFAKTURER
+from .const import AUTH, DOMAIN, MANUFACTURER
 from .camera import CameraData
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +42,7 @@ class NetatmoLight(Light):
         self._data = camera_data
         self._camera_type = self._data.camera_data.cameraById(camera_id).get("type")
         self._name = (
-            f"{MANUFAKTURER} {self._data.camera_data.cameraById(camera_id).get('name')}"
+            f"{MANUFACTURER} {self._data.camera_data.cameraById(camera_id).get('name')}"
         )
         self._is_on = False
         self._unique_id = f"{self._camera_id}-{self._camera_type}-light"
@@ -67,7 +60,7 @@ class NetatmoLight(Light):
         return {
             "identifiers": {(DOMAIN, self._camera_id)},
             "name": self._name,
-            "manufacturer": MANUFAKTURER,
+            "manufacturer": MANUFACTURER,
             "model": self._camera_type,
         }
 
