@@ -271,39 +271,27 @@ class CameraData:
         self._hass = hass
         self.auth = auth
         self.camera_data = None
-        self.camera_ids = []
-        self.module_names = []
-        self.camera_type = None
-
-    def get_camera_home_id(self, camera_id):
-        """Return the home id for a given camera id."""
-        for home_id in self.camera_data.cameras:
-            for camera in self.camera_data.cameras[home_id].values():
-                if camera["id"] == camera_id:
-                    return home_id
-        return None
 
     def get_all_camera_ids(self):
         """Return all camera available on the API as a list."""
-        self.camera_ids = []
         self.update()
+        camera_ids = []
         for home_id in self.camera_data.cameras:
-            self.camera_ids.extend(self.camera_data.cameras[home_id])
-        return self.camera_ids
+            camera_ids.extend(self.camera_data.cameras[home_id])
+        return camera_ids
 
     def get_module_names(self, camera_id):
         """Return all module available on the API as a list."""
-        self.module_names = []
+        module_names = []
         self.update()
         for module in self.camera_data.modules.values():
             if camera_id == module["cam_id"]:
-                self.module_names.append(module["name"])
-        return self.module_names
+                module_names.append(module["name"])
+        return module_names
 
-    def get_camera_type(self, camera_id=None):
+    def get_camera_type(self, camera_id):
         """Return camera type for a camera, cid has preference over camera."""
-        self.camera_type = self.camera_data.cameraType(cid=camera_id)
-        return self.camera_type
+        return self.camera_data.cameraType(cid=camera_id)
 
     def get_persons(self):
         """Gather person data for webhooks."""
@@ -318,6 +306,6 @@ class CameraData:
         self.camera_data = pyatmo.CameraData(self.auth, size=100)
 
     @Throttle(MIN_TIME_BETWEEN_EVENT_UPDATES)
-    def update_event(self):
+    def update_event(self, camera_type):
         """Call the Netatmo API to update the events."""
-        self.camera_data.updateEvent(devicetype=self.camera_type)
+        self.camera_data.updateEvent(devicetype=camera_type)

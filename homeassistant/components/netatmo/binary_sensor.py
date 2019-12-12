@@ -48,9 +48,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
         except NoDevice:
             _LOGGER.debug("No camera devices to add")
 
+        def get_camera_home_id(data, camera_id):
+            """Return the home id for a given camera id."""
+            for home_id in data.camera_data.cameras:
+                for camera in data.camera_data.cameras[home_id].values():
+                    if camera["id"] == camera_id:
+                        return home_id
+            return None
+
         for camera_id in data.get_all_camera_ids():
             camera_type = data.get_camera_type(camera_id=camera_id)
-            home_id = data.get_camera_home_id(camera_id=camera_id)
+            home_id = get_camera_home_id(data, camera_id=camera_id)
 
             sensor_types = {}
             sensor_types.update(SENSOR_TYPES[camera_type])
@@ -131,7 +139,7 @@ class NetatmoBinarySensor(BinarySensorDevice):
     def update(self):
         """Request an update from the Netatmo API."""
         self._data.update()
-        self._data.update_event()
+        self._data.update_event(camera_type=self._camera_type)
 
         if self._camera_type == "NACamera":
             if self._sensor_type == "Someone known":
