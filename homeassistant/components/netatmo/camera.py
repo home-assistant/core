@@ -279,15 +279,6 @@ class CameraData:
             cameras.extend(self.camera_data.cameras[home_id].values())
         return cameras
 
-    def get_module_names(self, camera_id):
-        """Return all module available on the API as a list."""
-        module_names = []
-        self.update()
-        for module in self.camera_data.modules.values():
-            if camera_id == module["cam_id"]:
-                module_names.append(module["name"])
-        return module_names
-
     def get_camera_type(self, camera_id):
         """Return camera type for a camera, cid has preference over camera."""
         return self.camera_data.cameraType(cid=camera_id)
