@@ -182,9 +182,11 @@ class TPLinkSmartBulb(Light):
     def update(self):
         """Update the TP-Link Bulb's state."""
         if self._supported_features is None:
+            # First run, update by blocking.
             self.do_update()
         else:
-            self.hass.async_run_job(self.do_update)
+            # Not first run, update in the background.
+            self.hass.add_job(self.do_update)
 
     def do_update(self):
         """Update states."""
