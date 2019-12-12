@@ -2,10 +2,10 @@
 from datetime import timedelta
 import logging
 from typing import List, Optional
-import voluptuous as vol
 
 import pyatmo
 import requests
+import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (

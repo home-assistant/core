@@ -1,5 +1,5 @@
 """Test the Netatmo config flow."""
-from homeassistant import config_entries, setup, data_entry_flow
+from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.netatmo.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,

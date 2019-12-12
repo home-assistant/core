@@ -2,13 +2,12 @@
 import logging
 
 import pyatmo
-
 import requests
 
 from homeassistant.components.light import Light
 
-from .const import AUTH, DOMAIN, MANUFACTURER
 from .camera import CameraData
+from .const import AUTH, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 

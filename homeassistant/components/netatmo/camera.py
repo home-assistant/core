@@ -4,18 +4,18 @@ import logging
 import pyatmo
 import requests
 
-from homeassistant.components.camera import Camera, SUPPORT_STREAM
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.components.camera import SUPPORT_STREAM, Camera
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.util import Throttle
 
 from .const import (
+    ATTR_PSEUDO,
     AUTH,
+    DATA_PERSONS,
     DOMAIN,
     MANUFACTURER,
-    DATA_PERSONS,
-    ATTR_PSEUDO,
-    MIN_TIME_BETWEEN_UPDATES,
     MIN_TIME_BETWEEN_EVENT_UPDATES,
+    MIN_TIME_BETWEEN_UPDATES,
 )
 
 _LOGGER = logging.getLogger(__name__)

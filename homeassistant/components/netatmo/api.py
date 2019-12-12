@@ -4,7 +4,7 @@ import logging
 
 import pyatmo
 
-from homeassistant import core, config_entries
+from homeassistant import config_entries, core
 from homeassistant.helpers import config_entry_oauth2_flow
 
 _LOGGER = logging.getLogger(__name__)

@@ -5,8 +5,8 @@ from pyatmo import NoDevice
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
-from .const import AUTH, DOMAIN, MANUFACTURER
 from .camera import CameraData
+from .const import AUTH, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 

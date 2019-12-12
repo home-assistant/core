@@ -1,13 +1,10 @@
 """Support for the Netatmo Weather Service."""
 from datetime import timedelta
 import logging
-
 import threading
 from time import time
 
 import pyatmo
-
-# import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -22,6 +19,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+
 from .const import AUTH, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
@@ -185,30 +183,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the available Netatmo weather sensors."""
     return
-
-
-#     def get_devices():
-#         devices = []
-
-#         if config.get(CONF_AREAS) is not None:
-#             for area in config[CONF_AREAS]:
-#                 _LOGGER.debug("Adding public weather sensor %s", area[CONF_NAME])
-#                 data = NetatmoPublicData(
-#                     hass.data[DOMAIN][AUTH],
-#                     lat_ne=area[CONF_LAT_NE],
-#                     lon_ne=area[CONF_LON_NE],
-#                     lat_sw=area[CONF_LAT_SW],
-#                     lon_sw=area[CONF_LON_SW],
-#                 )
-#                 for sensor_type in SUPPORTED_PUBLIC_SENSOR_TYPES:
-#                     devices.append(
-#                         NetatmoPublicSensor(
-#                             area[CONF_NAME], data, sensor_type, area[CONF_MODE]
-#                         )
-#                     )
-#         return devices
-
-#     async_add_entities(await hass.async_add_executor_job(get_devices), True)
 
 
 class NetatmoSensor(Entity):

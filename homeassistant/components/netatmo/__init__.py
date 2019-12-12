@@ -8,13 +8,13 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
-from homeassistant.helpers import config_validation as cv, config_entry_oauth2_flow
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 
-from .const import AUTH, DATA_PERSONS, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from . import api, config_flow
+from .const import AUTH, DATA_PERSONS, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
 _LOGGER = logging.getLogger(__name__)
 
