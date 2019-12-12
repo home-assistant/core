@@ -236,46 +236,29 @@ class NetatmoCamera(Camera):
 
         self.is_streaming = self._alim_status == "on"
 
-    def enable_motion_detection(self):
+    def turn_on(self):
         """Enable motion detection in the camera."""
         _LOGGER.debug("Enable motion detection of the camera '%s'", self._name)
-        self._enable_motion_detection(True)
+        self._toggle_camera_operation(True)
 
-    def disable_motion_detection(self):
+    def turn_off(self):
         """Disable motion detection in camera."""
         _LOGGER.debug("Disable motion detection of the camera '%s'", self._name)
-        self._enable_motion_detection(False)
+        self._toggle_camera_operation(False)
 
-    def _enable_motion_detection(self, enable):
+    def _toggle_camera_operation(self, enable):
         """Enable or disable motion detection."""
         try:
-            if self._localurl:
-                requests.get(
-                    f"{self._localurl}/command/changestatus?status="
-                    f"{_BOOL_TO_STATE.get(enable)}",
-                    timeout=10,
-                )
-            elif self._vpnurl:
-                requests.get(
-                    f"{self._vpnurl}/command/changestatus?status="
-                    f"{_BOOL_TO_STATE.get(enable)}",
-                    timeout=10,
-                    verify=self._verify_ssl,
-                )
-            else:
-                _LOGGER.error("Welcome/Presence VPN URL is None")
-                self._data.update()
-                (self._vpnurl, self._localurl) = self._data.camera_data.camera_urls(
-                    cid=self._camera_id
-                )
-                return None
+            camera_url = self._localurl if self._localurl else self._vpnurl
+
+            requests.get(
+                url=f"{camera_url}/command/changestatus",
+                params={"status": _BOOL_TO_STATE.get(enable)},
+                timeout=10,
+                verify=self._verify_ssl,
+            )
         except requests.exceptions.RequestException as error:
             _LOGGER.error("Welcome/Presence URL changed: %s", error)
-            self._data.update()
-            (self._vpnurl, self._localurl) = self._data.camera_data.camera_urls(
-                cid=self._camera_id
-            )
-            return None
         else:
             self.async_schedule_update_ha_state(True)
 
