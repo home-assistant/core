@@ -294,6 +294,7 @@ class CameraData:
     def update(self):
         """Call the Netatmo API to update the data."""
         self.camera_data = pyatmo.CameraData(self.auth, size=100)
+        self.update_persons()
 
     @Throttle(MIN_TIME_BETWEEN_EVENT_UPDATES)
     def update_event(self, camera_type):
