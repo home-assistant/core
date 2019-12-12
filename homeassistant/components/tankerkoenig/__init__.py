@@ -92,9 +92,9 @@ class TankerkoenigData:
 
     def __init__(self, hass, conf):
         """Initialize the data object."""
-        self.api_key = conf.get(CONF_API_KEY)
-        self.entities = {}
-        self.fuel_types = conf.get(CONF_FUEL_TYPES)
+        self._api_key = conf.get(CONF_API_KEY)
+        self._entities = {}
+        self._fuel_types = conf.get(CONF_FUEL_TYPES)
 
         latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
         longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
@@ -106,7 +106,7 @@ class TankerkoenigData:
 
         try:
             data = pytankerkoenig.getNearbyStations(
-                self.api_key, latitude, longitude, radius, "all", "dist"
+                self._api_key, latitude, longitude, radius, "all", "dist"
             )
         except pytankerkoenig.customException as err:
             data = {"ok": False, "message": err, "exception": True}
@@ -132,7 +132,7 @@ class TankerkoenigData:
         for station_id in additional_stations:
             try:
                 additional_station_data = pytankerkoenig.getStationData(
-                    self.api_key, station_id
+                    self._api_key, station_id
                 )
             except pytankerkoenig.customException as err:
                 additional_station_data = {
@@ -148,7 +148,7 @@ class TankerkoenigData:
                     additional_station_data["message"],
                 )
                 # Clear entity dictionary, so that the platform setup fails / no sensors get loaded in hass
-                self.entities = {}
+                self._entities = {}
             else:
                 self.add_station(additional_station_data["station"])
 
@@ -159,18 +159,18 @@ class TankerkoenigData:
         # Get flat list from the dictionary of lists
         return [
             sensor_entity
-            for sublist in self.entities.values()
+            for sublist in self._entities.values()
             for sensor_entity in sublist
         ]
 
     def update(self, now=None):
         """Get the latest data from tankerkoenig.de."""
         _LOGGER.debug("Fetching new data from tankerkoenig.de")
-        data = pytankerkoenig.getPriceList(self.api_key, list(self.entities.keys()))
+        data = pytankerkoenig.getPriceList(self._api_key, list(self._entities.keys()))
 
         if data["ok"]:
             _LOGGER.debug("Received data: %s", data)
-            for station_id, station_list in self.entities.items():
+            for station_id, station_list in self._entities.items():
                 for station in station_list:
                     station.new_data(data["prices"].get(station_id))
         else:
@@ -181,23 +181,23 @@ class TankerkoenigData:
     def add_station(self, station: dict):
         """Add fuel station to the entity list."""
         station_id = station["id"]
-        if station_id in self.entities.keys():
+        if station_id in self._entities.keys():
             _LOGGER.warning(
                 "Sensor for station with id %s was already created.", station_id
             )
             return
 
-        self.entities[station_id] = []
+        self._entities[station_id] = []
         _LOGGER.debug(
             "add_station called for station: %s and fuel types: %s",
             station,
-            self.fuel_types,
+            self._fuel_types,
         )
-        for fuel in self.fuel_types:
+        for fuel in self._fuel_types:
             if fuel in station.keys():
                 station_sensor = FuelPriceSensor(
                     fuel, station, f"{NAME}_{station['name']}_{fuel}"
                 )
-                self.entities[station_id].append(station_sensor)
+                self._entities[station_id].append(station_sensor)
             else:
                 _LOGGER.info("Station %s does not offer %s fuel", station_id, fuel)
