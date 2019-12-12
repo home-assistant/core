@@ -21,8 +21,8 @@ import voluptuous as vol
 from homeassistant.components.rest.sensor import RestData
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, CONF_NAME
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE as HA_USER_AGENT
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
