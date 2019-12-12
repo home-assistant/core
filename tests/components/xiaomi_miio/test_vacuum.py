@@ -36,6 +36,7 @@ from homeassistant.components.xiaomi_miio.vacuum import (
     CONF_HOST,
     CONF_NAME,
     CONF_TOKEN,
+    DOMAIN as XIAOMI_DOMAIN,
     SERVICE_MOVE_REMOTE_CONTROL,
     SERVICE_MOVE_REMOTE_CONTROL_STEP,
     SERVICE_START_REMOTE_CONTROL,
@@ -212,6 +213,7 @@ def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
         "Balanced",
         "Turbo",
         "Max",
+        "Gentle",
     ]
     assert state.attributes.get(ATTR_MAIN_BRUSH_LEFT) == 12
     assert state.attributes.get(ATTR_SIDE_BRUSH_LEFT) == 12
@@ -354,6 +356,7 @@ def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
         "Balanced",
         "Turbo",
         "Max",
+        "Gentle",
     ]
     assert state.attributes.get(ATTR_MAIN_BRUSH_LEFT) == 11
     assert state.attributes.get(ATTR_SIDE_BRUSH_LEFT) == 11
@@ -364,7 +367,10 @@ def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
 
     # Xiaomi vacuum specific services:
     yield from hass.services.async_call(
-        DOMAIN, SERVICE_START_REMOTE_CONTROL, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        XIAOMI_DOMAIN,
+        SERVICE_START_REMOTE_CONTROL,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
     )
 
     mock_mirobo_is_on.assert_has_calls([mock.call.manual_start()], any_order=True)
@@ -373,7 +379,7 @@ def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
 
     control = {"duration": 1000, "rotation": -40, "velocity": -0.1}
     yield from hass.services.async_call(
-        DOMAIN, SERVICE_MOVE_REMOTE_CONTROL, control, blocking=True
+        XIAOMI_DOMAIN, SERVICE_MOVE_REMOTE_CONTROL, control, blocking=True
     )
     mock_mirobo_is_on.manual_control.assert_has_calls(
         [mock.call(**control)], any_order=True
@@ -382,7 +388,7 @@ def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     mock_mirobo_is_on.reset_mock()
 
     yield from hass.services.async_call(
-        DOMAIN, SERVICE_STOP_REMOTE_CONTROL, {}, blocking=True
+        XIAOMI_DOMAIN, SERVICE_STOP_REMOTE_CONTROL, {}, blocking=True
     )
     mock_mirobo_is_on.assert_has_calls([mock.call.manual_stop()], any_order=True)
     mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
@@ -390,7 +396,7 @@ def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
 
     control_once = {"duration": 2000, "rotation": 120, "velocity": 0.1}
     yield from hass.services.async_call(
-        DOMAIN, SERVICE_MOVE_REMOTE_CONTROL_STEP, control_once, blocking=True
+        XIAOMI_DOMAIN, SERVICE_MOVE_REMOTE_CONTROL_STEP, control_once, blocking=True
     )
     mock_mirobo_is_on.manual_control_once.assert_has_calls(
         [mock.call(**control_once)], any_order=True
@@ -400,7 +406,7 @@ def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
 
     control = {"zone": [[123, 123, 123, 123]], "repeats": 2}
     yield from hass.services.async_call(
-        DOMAIN, SERVICE_CLEAN_ZONE, control, blocking=True
+        XIAOMI_DOMAIN, SERVICE_CLEAN_ZONE, control, blocking=True
     )
     mock_mirobo_is_on.zoned_clean.assert_has_calls(
         [mock.call([[123, 123, 123, 123, 2]])], any_order=True

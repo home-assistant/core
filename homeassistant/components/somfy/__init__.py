@@ -26,7 +26,7 @@ DEVICES = "devices"
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 DOMAIN = "somfy"
 
@@ -48,7 +48,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SOMFY_COMPONENTS = ["cover"]
+SOMFY_COMPONENTS = ["cover", "switch"]
 
 
 async def async_setup(hass, config):

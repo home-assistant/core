@@ -1,15 +1,16 @@
 """Component for interfacing RFK101 proximity card readers."""
 import logging
 
+from rfk101py.rfk101py import rfk101py
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_HOST,
-    CONF_PORT,
     CONF_NAME,
+    CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
 )
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +69,6 @@ class IdteckReader:
 
     def connect(self):
         """Connect to the reader."""
-        from rfk101py.rfk101py import rfk101py
 
         self._connection = rfk101py(self._host, self._port, self._callback)
 

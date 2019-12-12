@@ -260,19 +260,7 @@ async def entity_service_call(
     else:
         entity_perms = None
 
-    # Are we trying to target all entities
-    if ATTR_ENTITY_ID in call.data:
-        target_all_entities = call.data[ATTR_ENTITY_ID] == ENTITY_MATCH_ALL
-    else:
-        # Remove the service_name parameter along with this warning
-        _LOGGER.warning(
-            "Not passing an entity ID to a service to target all "
-            "entities is deprecated. Update your call to %s to be "
-            "instead: entity_id: %s",
-            service_name,
-            ENTITY_MATCH_ALL,
-        )
-        target_all_entities = True
+    target_all_entities = call.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_ALL
 
     if not target_all_entities:
         # A set of entities we're trying to target.

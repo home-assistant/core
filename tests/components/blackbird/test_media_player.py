@@ -5,7 +5,6 @@ import voluptuous as vol
 
 from collections import defaultdict
 from homeassistant.components.media_player.const import (
-    DOMAIN,
     SUPPORT_TURN_ON,
     SUPPORT_TURN_OFF,
     SUPPORT_SELECT_SOURCE,
@@ -16,9 +15,9 @@ import tests.common
 from homeassistant.components.blackbird.media_player import (
     DATA_BLACKBIRD,
     PLATFORM_SCHEMA,
-    SERVICE_SETALLZONES,
     setup_platform,
 )
+from homeassistant.components.blackbird.const import DOMAIN, SERVICE_SETALLZONES
 import pytest
 
 

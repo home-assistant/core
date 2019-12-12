@@ -298,16 +298,12 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
     @property
     def preset_mode(self):
         """Return the current preset mode, e.g., home, away, temp."""
-        if self._is_away:
-            return PRESET_AWAY
-        return None
+        return PRESET_AWAY if self._is_away else PRESET_NONE
 
     @property
     def preset_modes(self):
-        """Return a list of available preset modes."""
-        if self._away_temp:
-            return [PRESET_NONE, PRESET_AWAY]
-        return None
+        """Return a list of available preset modes or PRESET_NONE if _away_temp is undefined."""
+        return [PRESET_NONE, PRESET_AWAY] if self._away_temp else PRESET_NONE
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set hvac mode."""

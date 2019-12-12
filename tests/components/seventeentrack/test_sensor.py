@@ -119,7 +119,10 @@ def fixture_mock_py17track():
 @pytest.fixture(autouse=True, name="mock_client")
 def fixture_mock_client(mock_py17track):
     """Mock py17track client."""
-    with mock.patch("py17track.Client", new=ClientMock):
+    with mock.patch(
+        "homeassistant.components.seventeentrack.sensor.SeventeenTrackClient",
+        new=ClientMock,
+    ):
         yield
     ProfileMock.reset()
 

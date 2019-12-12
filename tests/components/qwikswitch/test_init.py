@@ -57,7 +57,7 @@ def aioclient_mock():
         yield mock_session
 
 
-async def test_binary_sensor_device(hass, aioclient_mock):  # noqa
+async def test_binary_sensor_device(hass, aioclient_mock):  # noqa: F811
     """Test a binary sensor device."""
     config = {
         "qwikswitch": {
@@ -86,7 +86,7 @@ async def test_binary_sensor_device(hass, aioclient_mock):  # noqa
     assert state_obj.state == "off"
 
 
-async def test_sensor_device(hass, aioclient_mock):  # noqa
+async def test_sensor_device(hass, aioclient_mock):  # noqa: F811
     """Test a sensor device."""
     config = {
         "qwikswitch": {

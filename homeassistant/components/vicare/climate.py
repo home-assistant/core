@@ -1,7 +1,6 @@
 """Viessmann ViCare climate device."""
 import logging
 import requests
-import simplejson
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -169,7 +168,7 @@ class ViCareClimate(ClimateDevice):
                 ] = self._api.getReturnTemperature()
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
-        except simplejson.errors.JSONDecodeError:
+        except ValueError:
             _LOGGER.error("Unable to decode data from ViCare server")
 
     @property
