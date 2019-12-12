@@ -39,7 +39,6 @@ def host_valid(host):
     except ValueError:
         disallowed = re.compile(r"[^a-zA-Z\d\-]")
         return all(map(lambda x: len(x) and not disallowed.search(x), host.split(".")))
-    return False
 
 
 async def configured_devices(hass, serial):
