@@ -27,6 +27,7 @@ from homeassistant.const import (
     CONF_HOST,
     PRECISION_HALVES,
     STATE_ON,
+    TEMP_FAHRENHEIT
 )
 from homeassistant.util import dt as dt_util
 
