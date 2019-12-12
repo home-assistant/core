@@ -97,12 +97,15 @@ CODE_TO_PRESET_MODE = {
     3: "holiday"
 }
 
+
 def round_temp(temperature):
     """Round a temperature to the resolution of the thermostat.
+    
     RadioThermostats can handle 0.5 degree temps so the input
     temperature is rounded to that value and returned.
     """
     return round(temperature * 2.0) / 2.0
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -265,10 +268,6 @@ class RadioThermostat(ClimateDevice):
         """Return a list of available preset modes."""
         return PRESET_MODES
 
-    def set_preset_mode(self, preset_mode):
-        """Set new preset mode."""
-        pass
-
     def update(self):
         """Update and validate the data from the thermostat."""
         # Radio thermostats are very slow, and sometimes don't respond
@@ -384,7 +383,7 @@ class RadioThermostat(ClimateDevice):
             self.device.t_heat = self._target_temperature
 
     def set_preset_mode(self, preset_mode):
-        """Set Preset mode (Home, Alternate, Away, Holiday)"""
+        """Set Preset mode (Home, Alternate, Away, Holiday)."""
         if preset_mode in (PRESET_MODES):
             self.device.program_mode = PRESET_MODE_TO_CODE[preset_mode]
         else: 
