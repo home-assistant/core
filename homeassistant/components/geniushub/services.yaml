@@ -12,9 +12,8 @@ set_zone_mode:
       example: override
     temperature:
       description: The target temperature. Used only by override mode.
-      example: 21.5
+      example: 18.5
     duration:
       description: >-
-          The duration in minutes. Used only by override mode. Set to 0 for the override
-          to end at the next setpoint.
-      example: 60
+          The duration in minutes. Optional, defaults to 60. Used only by override mode.
+      example: 120
