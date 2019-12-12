@@ -100,7 +100,7 @@ CODE_TO_PRESET_MODE = {
 
 def round_temp(temperature):
     """Round a temperature to the resolution of the thermostat.
-    
+
     RadioThermostats can handle 0.5 degree temps so the input
     temperature is rounded to that value and returned.
     """
@@ -386,5 +386,5 @@ class RadioThermostat(ClimateDevice):
         """Set Preset mode (Home, Alternate, Away, Holiday)."""
         if preset_mode in (PRESET_MODES):
             self.device.program_mode = PRESET_MODE_TO_CODE[preset_mode]
-        else: 
+        else:
             _LOGGER.error("preset_mode " + preset_mode + " not in PRESET_MODES")
