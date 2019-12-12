@@ -100,7 +100,7 @@ async def test_set_target_humidity(hass):
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
-    assert 64.0 == state.attributes.get(ATTR_HUMIDITY)
+    assert 64 == state.attributes.get(ATTR_HUMIDITY)
 
 
 async def test_set_fan_mode_bad_attr(hass):

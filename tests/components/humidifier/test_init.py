@@ -16,7 +16,7 @@ from homeassistant.components.humidifier import (
 from tests.common import async_mock_service
 
 SET_HUMIDITY_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_HUMIDITY): vol.Coerce(float)}
+    {vol.Required(ATTR_HUMIDITY): vol.Coerce(int)}
 )
 
 
@@ -42,7 +42,7 @@ async def test_set_hum_schema(hass, caplog):
     schema = SET_HUMIDITY_SCHEMA
     calls = async_mock_service(hass, domain, service, schema)
 
-    data = {"humidity": 50.0, "entity_id": ["humidifier.test_id"]}
+    data = {"humidity": 50, "entity_id": ["humidifier.test_id"]}
     await hass.services.async_call(domain, service, data)
     await hass.async_block_till_done()
 
