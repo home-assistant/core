@@ -28,12 +28,18 @@ def magichome_cleanup(hass):
 
 async def test_setting_up_magichome(hass):
     """Test if we can set up the magichome and dump it to JSON."""
-    assert await async_setup_component(hass, magichome.DOMAIN, {"magichome": {
+    assert await async_setup_component(
+        hass,
+        magichome.DOMAIN,
+        {
+            "magichome": {
                 "username": "test@user.com",
                 "password": "1234",
                 "company": "ZG001",
-                "platform": "ZG001"
-            }})
+                "platform": "ZG001",
+            }
+        },
+    )
     await hass.async_start()
 
     # This is done to make sure entity components don't accidentally store
