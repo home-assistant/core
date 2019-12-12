@@ -236,60 +236,6 @@ class NetatmoCamera(Camera):
 
         self.is_streaming = self._alim_status == "on"
 
-    def turn_on(self):
-        """Instruct the light to turn on."""
-        _LOGGER.debug("Set the flood light on for the camera '%s'", self._name)
-        if self._set_mode("on"):
-            self.is_streaming = True
-            self.schedule_update_ha_state()
-
-    def turn_off(self):
-        """Instruct the light to turn off."""
-        _LOGGER.debug("Set the flood light off for the camera '%s'", self._name)
-        if self._set_mode("off"):
-            self.is_streaming = False
-            self.schedule_update_ha_state()
-
-    def _set_mode(self, mode: str):
-        """Set camera mode ('on', 'off')."""
-        try:
-            config = f'{{"mode":"{mode}"}}'
-            if self._localurl:
-                resp = requests.get(
-                    f"{self._localurl}/command/changestatus?status=" f"{config}",
-                    timeout=10,
-                )
-            elif self._vpnurl:
-                resp = requests.get(
-                    f"{self._vpnurl}/command/changestatus?status=" f"{config}",
-                    timeout=10,
-                    verify=self._verify_ssl,
-                )
-            else:
-                _LOGGER.error("Camera VPN URL is None")
-                self._data.update()
-                (self._vpnurl, self._localurl) = self._data.camera_data.camera_urls(
-                    cid=self._camera_id
-                )
-
-            if resp.status_code == 200:
-                return True
-            _LOGGER.debug(
-                "Turning camera %s %s failed (%s)",
-                self._camera_id,
-                mode,
-                resp.status_code,
-            )
-            return None
-
-        except requests.exceptions.RequestException as error:
-            _LOGGER.error("Camera URL changed: %s", error)
-            self._data.update()
-            (self._vpnurl, self._localurl) = self._data.camera_data.camera_urls(
-                cid=self._camera_id
-            )
-            return None
-
     def enable_motion_detection(self):
         """Enable motion detection in the camera."""
         _LOGGER.debug("Enable motion detection of the camera '%s'", self._name)
