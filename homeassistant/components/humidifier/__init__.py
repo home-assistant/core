@@ -285,6 +285,22 @@ class HumidifierDevice(Entity):
         """Set new preset mode."""
         await self.hass.async_add_executor_job(self.set_preset_mode, preset_mode)
 
+    def turn_aux_heat_on(self) -> None:
+        """Turn auxiliary heater on."""
+        raise NotImplementedError()
+
+    async def async_turn_aux_heat_on(self) -> None:
+        """Turn auxiliary heater on."""
+        await self.hass.async_add_executor_job(self.turn_aux_heat_on)
+
+    def turn_aux_heat_off(self) -> None:
+        """Turn auxiliary heater off."""
+        raise NotImplementedError()
+
+    async def async_turn_aux_heat_off(self) -> None:
+        """Turn auxiliary heater off."""
+        await self.hass.async_add_executor_job(self.turn_aux_heat_off)
+
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
         if hasattr(self, "turn_on"):
