@@ -7,6 +7,7 @@ from homeassistant.components.humidifier.const import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
+    ATTR_AUX_HEAT,
     ATTR_HUMIDITY,
     ATTR_HUMIDIFIER_ACTION,
     ATTR_OPERATION_MODE,
@@ -21,12 +22,19 @@ from homeassistant.components.humidifier.const import (
     OPERATION_MODE_OFF,
     PRESET_AWAY,
     PRESET_ECO,
+    SERVICE_SET_AUX_HEAT,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_PRESET_MODE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.setup import async_setup_component
 
 ENTITY_DEHUMIDIFIER = "humidifier.dehumidifier"
@@ -199,6 +207,51 @@ async def test_set_hold_mode_eco(hass):
 
     state = hass.states.get(ENTITY_HYGROSTAT)
     assert state.attributes.get(ATTR_PRESET_MODE) == PRESET_ECO
+
+
+async def test_set_aux_heat_bad_attr(hass):
+    """Test setting the auxiliary heater without required attribute."""
+    state = hass.states.get(ENTITY_DEHUMIDIFIER)
+    assert state.attributes.get(ATTR_AUX_HEAT) == STATE_OFF
+
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_AUX_HEAT,
+            {ATTR_ENTITY_ID: ENTITY_DEHUMIDIFIER},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    assert state.attributes.get(ATTR_AUX_HEAT) == STATE_OFF
+
+
+async def test_set_aux_heat_on(hass):
+    """Test setting the axillary heater on/true."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_AUX_HEAT,
+        {ATTR_AUX_HEAT: True, ATTR_ENTITY_ID: ENTITY_DEHUMIDIFIER},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_DEHUMIDIFIER)
+    assert state.attributes.get(ATTR_AUX_HEAT) == STATE_ON
+
+
+async def test_set_aux_heat_off(hass):
+    """Test setting the auxiliary heater off/false."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_AUX_HEAT,
+        {ATTR_AUX_HEAT: False, ATTR_ENTITY_ID: ENTITY_DEHUMIDIFIER},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_DEHUMIDIFIER)
+    assert state.attributes.get(ATTR_AUX_HEAT) == STATE_OFF
 
 
 async def test_turn_on(hass):

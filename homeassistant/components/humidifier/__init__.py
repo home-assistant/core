@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional
 
 import voluptuous as vol
 
-from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     ENTITY_SERVICE_SCHEMA,
@@ -15,9 +15,10 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceDataType
 
 from .const import (
+    ATTR_AUX_HEAT,
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -37,10 +38,12 @@ from .const import (
     OPERATION_MODE_HUMIDIFY_DRY,
     OPERATION_MODE_OFF,
     OPERATION_MODES,
+    SERVICE_SET_AUX_HEAT,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_PRESET_MODE,
+    SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TEMPERATURE,
@@ -85,6 +88,11 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         ENTITY_SERVICE_SCHEMA.extend({vol.Required(ATTR_PRESET_MODE): cv.string}),
         "async_set_preset_mode",
         [SUPPORT_PRESET_MODE],
+    )
+    component.async_register_entity_service(
+        SERVICE_SET_AUX_HEAT,
+        ENTITY_SERVICE_SCHEMA.extend({vol.Required(ATTR_AUX_HEAT): cv.boolean}),
+        async_service_aux_heat,
     )
     component.async_register_entity_service(
         SERVICE_SET_HUMIDITY,
@@ -136,6 +144,9 @@ class HumidifierDevice(Entity):
 
         if supported_features & SUPPORT_WATER_LEVEL:
             data[ATTR_WATER_LEVEL] = self.water_level
+
+        if supported_features & SUPPORT_AUX_HEAT:
+            data[ATTR_AUX_HEAT] = STATE_ON if self.is_aux_heat else STATE_OFF
 
         return data
 
@@ -233,6 +244,14 @@ class HumidifierDevice(Entity):
         """
         raise NotImplementedError
 
+    @property
+    def is_aux_heat(self) -> Optional[bool]:
+        """Return true if aux heater.
+
+        Requires SUPPORT_AUX_HEAT.
+        """
+        raise NotImplementedError
+
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         raise NotImplementedError()
@@ -308,3 +327,13 @@ class HumidifierDevice(Entity):
     def max_humidity(self) -> int:
         """Return the maximum humidity."""
         return DEFAULT_MAX_HUMIDITY
+
+
+async def async_service_aux_heat(
+    entity: HumidifierDevice, service: ServiceDataType
+) -> None:
+    """Handle aux heat service."""
+    if service.data[ATTR_AUX_HEAT]:
+        await entity.async_turn_aux_heat_on()
+    else:
+        await entity.async_turn_aux_heat_off()
