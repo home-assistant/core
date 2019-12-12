@@ -238,16 +238,16 @@ class NetatmoCamera(Camera):
 
     def turn_on(self):
         """Enable motion detection in the camera."""
-        _LOGGER.debug("Enable motion detection of the camera '%s'", self._name)
+        _LOGGER.debug("Turn the camera '%s' on", self._name)
         self._toggle_camera_operation(True)
 
     def turn_off(self):
         """Disable motion detection in camera."""
-        _LOGGER.debug("Disable motion detection of the camera '%s'", self._name)
+        _LOGGER.debug("Turn the camera '%s' off", self._name)
         self._toggle_camera_operation(False)
 
     def _toggle_camera_operation(self, enable):
-        """Enable or disable motion detection."""
+        """Enable or disable the camera."""
         try:
             camera_url = self._localurl if self._localurl else self._vpnurl
 
@@ -288,8 +288,7 @@ class CameraData:
         self.camera_ids = []
         self.update()
         for home_id in self.camera_data.cameras:
-            for camera in self.camera_data.cameras[home_id].values():
-                self.camera_ids.append(camera["id"])
+            self.camera_ids.extend(self.camera_data.cameras[home_id])
         return self.camera_ids
 
     def get_module_names(self, camera_id):
