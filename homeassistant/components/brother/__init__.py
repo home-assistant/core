@@ -72,7 +72,7 @@ class BrotherPrinterData:
         self.firmware = None
         self.available = False
         self.data = {}
-        self.error_logged = False
+        self.unavailable_logged = False
 
     @Throttle(DEFAULT_SCAN_INTERVAL)
     async def async_update(self):
@@ -80,15 +80,12 @@ class BrotherPrinterData:
         try:
             await self._brother.async_update()
         except (ConnectionError, SnmpError, UnsupportedModel) as error:
-            if not self.error_logged:
+            if not self.unavailable_logged:
                 _LOGGER.error(
                     "Could not fetch data from %s, error: %s", self.host, error
                 )
-                self.error_logged = True
+                self.unavailable_logged = True
             self.available = self._brother.available
-            if self.available and self.error_logged:
-                _LOGGER.info("Printer is available again.")
-                self.error_logged = False
             return
 
         self.model = self._brother.model
@@ -96,3 +93,6 @@ class BrotherPrinterData:
         self.firmware = self._brother.firmware
         self.available = self._brother.available
         self.data = self._brother.data
+        if self.available and self.unavailable_logged:
+            _LOGGER.info("Printer %s is available again.", self.host)
+            self.unavailable_logged = False
