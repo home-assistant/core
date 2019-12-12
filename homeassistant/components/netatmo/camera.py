@@ -275,8 +275,8 @@ class CameraData:
         """Return all camera available on the API as a list."""
         self.update()
         cameras = []
-        for home_id in self.camera_data.cameras:
-            cameras.extend(self.camera_data.cameras[home_id].values())
+        for camera in self.camera_data.cameras.values():
+            cameras.extend(camera.values())
         return cameras
 
     def get_camera_type(self, camera_id):
