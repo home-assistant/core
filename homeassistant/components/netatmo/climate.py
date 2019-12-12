@@ -104,9 +104,9 @@ SCHEMA_SERVICE_SETSCHEDULE = vol.Schema(
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Netatmo energy platform."""
-    auth = hass.data[DOMAIN][AUTH]
+    auth = hass.data[DOMAIN][entry.entry_id][AUTH]
 
     home_data = HomeData(auth)
 

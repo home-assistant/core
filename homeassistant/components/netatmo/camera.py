@@ -31,14 +31,14 @@ VALID_QUALITIES = ["high", "medium", "low", "poor"]
 _BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Netatmo camera platform."""
 
     def get_devices():
         """Retrieve Netatmo devices."""
         devices = []
         try:
-            camera_data = CameraData(hass, hass.data[DOMAIN][AUTH])
+            camera_data = CameraData(hass, hass.data[DOMAIN][entry.entry_id][AUTH])
             for camera_id in camera_data.get_all_camera_ids():
                 _LOGGER.debug("Setting up camera %s", camera_id)
                 camera_type = camera_data.get_camera_type(camera_id=camera_id)

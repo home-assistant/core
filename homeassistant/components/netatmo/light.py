@@ -20,14 +20,14 @@ from .camera import CameraData
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Netatmo camera light platform."""
 
     def get_devices():
         """Retrieve Netatmo devices."""
         devices = []
         try:
-            camera_data = CameraData(hass, hass.data[DOMAIN][AUTH])
+            camera_data = CameraData(hass, hass.data[DOMAIN][entry.entry_id][AUTH])
             for camera_id in camera_data.get_all_camera_ids():
                 camera_type = camera_data.get_camera_type(camera_id=camera_id)
                 if camera_type == "NOC":

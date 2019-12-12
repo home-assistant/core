@@ -13,14 +13,7 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_validation as cv, config_entry_oauth2_flow
 from homeassistant.config_entries import ConfigEntry
 
-from .const import (
-    AUTH,
-    CONF_PUBLIC,
-    DATA_PERSONS,
-    DOMAIN,
-    OAUTH2_AUTHORIZE,
-    OAUTH2_TOKEN,
-)
+from .const import AUTH, DATA_PERSONS, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from . import api, config_flow
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,7 +37,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Netatmo component."""
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA_PERSONS] = {}
-    hass.data[DOMAIN][CONF_PUBLIC] = config.get("sensor", {})
 
     if DOMAIN not in config:
         return True
@@ -70,7 +62,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass, entry
     )
 
-    hass.data[DOMAIN][AUTH] = api.ConfigEntryNetatmoAuth(hass, entry, implementation)
+    hass.data[DOMAIN][entry.entry_id] = {
+        AUTH: api.ConfigEntryNetatmoAuth(hass, entry, implementation)
+    }
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -91,6 +85,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN].pop(AUTH)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
