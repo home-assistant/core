@@ -127,39 +127,44 @@ class HumidifierDevice(Entity):
         data = {}
         supported_features = self.supported_features
 
-        data[ATTR_HUMIDITY] = self.target_humidity
         data[ATTR_MIN_HUMIDITY] = self.min_humidity
         data[ATTR_MAX_HUMIDITY] = self.max_humidity
+        data[ATTR_OPERATION_MODES] = self.operation_modes
 
         if supported_features & SUPPORT_FAN_MODE:
-            data[ATTR_FAN_MODE] = self.fan_mode
             data[ATTR_FAN_MODES] = self.fan_modes
 
         if supported_features & SUPPORT_PRESET_MODE:
-            data[ATTR_PRESET_MODE] = self.preset_mode
             data[ATTR_PRESET_MODES] = self.preset_modes
-
-        if supported_features & SUPPORT_TEMPERATURE:
-            data[ATTR_CURRENT_TEMPERATURE] = self.current_temperature
-
-        if supported_features & SUPPORT_WATER_LEVEL:
-            data[ATTR_WATER_LEVEL] = self.water_level
-
-        if supported_features & SUPPORT_AUX_HEAT:
-            data[ATTR_AUX_HEAT] = STATE_ON if self.is_aux_heat else STATE_OFF
 
         return data
 
     @property
     def state_attributes(self) -> Dict[str, Any]:
         """Return the optional state attributes."""
-        data = {
-            ATTR_OPERATION_MODES: self.operation_modes,
-            ATTR_CURRENT_HUMIDITY: self.current_humidity,
-        }
+        data = {}
+        supported_features = self.supported_features
+
+        data[ATTR_HUMIDITY] = self.target_humidity
+        data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
+
+        if supported_features & SUPPORT_FAN_MODE:
+            data[ATTR_FAN_MODE] = self.fan_mode
+
+        if supported_features & SUPPORT_PRESET_MODE:
+            data[ATTR_PRESET_MODE] = self.preset_mode
+
+        if supported_features & SUPPORT_TEMPERATURE:
+            data[ATTR_CURRENT_TEMPERATURE] = self.current_temperature
 
         if self.humidifier_action:
             data[ATTR_HUMIDIFIER_ACTION] = self.humidifier_action
+
+        if supported_features & SUPPORT_WATER_LEVEL:
+            data[ATTR_WATER_LEVEL] = self.water_level
+
+        if supported_features & SUPPORT_AUX_HEAT:
+            data[ATTR_AUX_HEAT] = STATE_ON if self.is_aux_heat else STATE_OFF
 
         return data
 
