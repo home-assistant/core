@@ -1906,6 +1906,9 @@ swisshydrodata==0.0.3
 # homeassistant.components.synology_srm
 synology-srm==0.0.7
 
+# homeassistant.components.tahoma
+tahoma-api==0.0.14
+
 # homeassistant.components.tank_utility
 tank_utility==1.4.0
 
