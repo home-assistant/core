@@ -165,7 +165,7 @@ class RunThreadsafeTests(TestCase):
 
     def test_run_callback_threadsafe_with_invalid(self):
         """Test callback submission from thread to event loop on invalid."""
-        callback = lambda: self.target_callback(invalid=True)  # noqa
+        callback = lambda: self.target_callback(invalid=True)  # noqa: E731
         future = self.loop.run_in_executor(None, callback)
         with self.assertRaises(ValueError) as exc_context:
             self.loop.run_until_complete(future)

@@ -336,7 +336,7 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
 
         ais_config = await hass.async_add_executor_job(_load_ais_yaml_config)
         ais_utils.dict_merge(ais_config, config)
-    except:
+    except:  # noqa: E722 pylint: disable=bare-except
         _LOGGER.error("Error loading user customize")
         return config
     return ais_config
@@ -648,7 +648,6 @@ async def merge_packages_config(
     _log_pkg_error: Callable = _log_pkg_error,
 ) -> Dict:
     """Merge packages into the top-level configuration. Mutate config."""
-    # pylint: disable=too-many-nested-blocks
     PACKAGES_CONFIG_SCHEMA(packages)
     for pack_name, pack_conf in packages.items():
         for comp_name, comp_conf in pack_conf.items():
@@ -787,7 +786,6 @@ async def async_process_component_config(
 
         # Validate platform specific schema
         if hasattr(platform, "PLATFORM_SCHEMA"):
-            # pylint: disable=no-member
             try:
                 p_validated = platform.PLATFORM_SCHEMA(  # type: ignore
                     p_config

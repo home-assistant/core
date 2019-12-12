@@ -4,20 +4,10 @@ from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.auth.util import generate_secret
 
 from .const import DOMAIN  # noqa pylint: disable=unused-import
+from .helper import supports_encryption
 
 CONF_SECRET = "secret"
 CONF_CLOUDHOOK = "cloudhook"
-
-
-def supports_encryption():
-    """Test if we support encryption."""
-    try:
-        import nacl  # noqa pylint: disable=unused-import
-
-        return True
-    # ais dom
-    except:
-        return False
 
 
 class OwnTracksFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -55,7 +45,7 @@ class OwnTracksFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_CLOUDHOOK: cloudhook,
             },
             description_placeholders={
-                "secret": "",
+                "secret": secret_desc,
                 "webhook_url": webhook_url,
                 "android_url": "https://play.google.com/store/apps/details?id=org.owntracks.android",
                 "ios_url": "https://itunes.apple.com/us/app/owntracks/id692424691?mt=8",

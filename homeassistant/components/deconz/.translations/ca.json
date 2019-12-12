@@ -55,12 +55,12 @@
             "left": "Esquerra",
             "open": "Obert",
             "right": "Dreta",
-            "side_1": "Costat 1",
-            "side_2": "Costat 2",
-            "side_3": "Costat 3",
-            "side_4": "Costat 4",
-            "side_5": "Costat 5",
-            "side_6": "Costat 6",
+            "side_1": "cara 1",
+            "side_2": "cara 2",
+            "side_3": "cara 3",
+            "side_4": "cara 4",
+            "side_5": "cara 5",
+            "side_6": "cara 6",
             "turn_off": "Desactiva",
             "turn_on": "Activa"
         },
@@ -76,8 +76,16 @@
             "remote_button_short_press": "Bot\u00f3 \"{subtype}\" premut",
             "remote_button_short_release": "Bot\u00f3 \"{subtype}\" alliberat",
             "remote_button_triple_press": "Bot\u00f3 \"{subtype}\" clicat tres vegades consecutives",
+            "remote_double_tap": "Dispositiu \"{subtype}\" tocat dues vegades",
             "remote_falling": "Dispositiu en caiguda lliure",
-            "remote_gyro_activated": "Dispositiu sacsejat"
+            "remote_gyro_activated": "Dispositiu sacsejat",
+            "remote_moved": "Dispositiu mogut amb la \"{subtype}\" amunt",
+            "remote_rotate_from_side_1": "Dispositiu rotat de la \"cara 1\" a la \"{subtype}\"",
+            "remote_rotate_from_side_2": "Dispositiu rotat de la \"cara 2\" a la \"{subtype}\"",
+            "remote_rotate_from_side_3": "Dispositiu rotat de la \"cara 3\" a la \"{subtype}\"",
+            "remote_rotate_from_side_4": "Dispositiu rotat de la \"cara 4\" a la \"{subtype}\"",
+            "remote_rotate_from_side_5": "Dispositiu rotat de la \"cara 5\" a la \"{subtype}\"",
+            "remote_rotate_from_side_6": "Dispositiu rotat de la \"cara 6\" a la \"{subtype}\""
         }
     },
     "options": {

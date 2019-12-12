@@ -7,7 +7,7 @@
         },
         "error": {
             "connection_failed": "La connexion a \u00e9chou\u00e9",
-            "connection_timeout": "D\u00e9lai de connection d\u00e9pass\u00e9",
+            "connection_timeout": "D\u00e9lai de connexion d\u00e9pass\u00e9",
             "incorrect_password": "Mot de passe incorrect",
             "incorrect_username": "Nom d'utilisateur incorrect",
             "incorrect_username_or_password": "identifiant ou mot de passe incorrect",

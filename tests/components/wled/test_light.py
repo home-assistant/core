@@ -8,6 +8,7 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_RGB_COLOR,
     ATTR_TRANSITION,
+    ATTR_WHITE_VALUE,
     DOMAIN as LIGHT_DOMAIN,
 )
 from homeassistant.components.wled.const import (
@@ -164,7 +165,8 @@ async def test_rgbw_light(
 
     state = hass.states.get("light.wled_rgbw_light")
     assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_HS_COLOR) == (0.0, 64.706)
+    assert state.attributes.get(ATTR_HS_COLOR) == (0.0, 100.0)
+    assert state.attributes.get(ATTR_WHITE_VALUE) == 139
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -177,3 +179,17 @@ async def test_rgbw_light(
     state = hass.states.get("light.wled_rgbw_light")
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_HS_COLOR) == (28.874, 72.522)
+    assert state.attributes.get(ATTR_WHITE_VALUE) == 139
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.wled_rgbw_light", ATTR_WHITE_VALUE: 100},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.wled_rgbw_light")
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_HS_COLOR) == (28.874, 72.522)
+    assert state.attributes.get(ATTR_WHITE_VALUE) == 100

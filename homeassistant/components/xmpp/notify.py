@@ -190,7 +190,6 @@ async def async_send_message(
                     message = self.Message(sto=recipient, stype="chat")
 
                 message["body"] = url
-                # pylint: disable=invalid-sequence-index
                 message["oob"]["url"] = url
                 try:
                     message.send()

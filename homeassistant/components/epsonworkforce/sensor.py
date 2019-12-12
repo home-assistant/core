@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+from epsonprinter_pkg.epsonprinterapi import EpsonPrinterAPI
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -33,8 +34,6 @@ SCAN_INTERVAL = timedelta(minutes=60)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the cartridge sensor."""
     host = config.get(CONF_HOST)
-
-    from epsonprinter_pkg.epsonprinterapi import EpsonPrinterAPI
 
     api = EpsonPrinterAPI(host)
     if not api.available:

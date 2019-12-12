@@ -1,6 +1,7 @@
 """Support for monitoring a GreenEye Monitor energy monitor."""
 import logging
 
+from greeneye import Monitors
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -110,7 +111,6 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: COMPONENT_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 async def async_setup(hass, config):
     """Set up the GreenEye Monitor component."""
-    from greeneye import Monitors
 
     monitors = Monitors()
     hass.data[DATA_GREENEYE_MONITOR] = monitors
