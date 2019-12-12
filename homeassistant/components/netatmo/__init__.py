@@ -66,12 +66,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Netatmo from a config entry."""
-    # Backwards compat
-    if "auth_implementation" not in entry.data:
-        hass.config_entries.async_update_entry(
-            entry, data={**entry.data, "auth_implementation": DOMAIN}
-        )
-
     implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
         hass, entry
     )
