@@ -9,9 +9,9 @@ from homeassistant.const import CONF_FILENAME, CONF_HOST
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .bridge import HueBridge
-from .config_flow import (
+from .config_flow import (  # Loading the config flow file will register the flow
     configured_hosts,
-)  # Loading the config flow file will register the flow
+)
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)

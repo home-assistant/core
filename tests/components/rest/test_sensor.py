@@ -1,20 +1,20 @@
 """The tests for the REST sensor platform."""
 import unittest
-from pytest import raises
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
+import pytest
+from pytest import raises
 import requests
-from requests.exceptions import Timeout, RequestException
+from requests.exceptions import RequestException, Timeout
 import requests_mock
 
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.setup import setup_component
-import homeassistant.components.sensor as sensor
 import homeassistant.components.rest.sensor as rest
+import homeassistant.components.sensor as sensor
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.config_validation import template
+from homeassistant.setup import setup_component
 
-from tests.common import get_test_home_assistant, assert_setup_component
-import pytest
+from tests.common import assert_setup_component, get_test_home_assistant
 
 
 class TestRestSensorSetup(unittest.TestCase):

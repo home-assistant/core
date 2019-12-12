@@ -158,6 +158,9 @@ dsmr_parser==0.12
 # homeassistant.components.ee_brightbox
 eebrightbox==0.0.4
 
+# homeassistant.components.elgato
+elgato==0.1.0
+
 # homeassistant.components.emulated_roku
 emulated_roku==0.1.8
 
@@ -181,7 +184,7 @@ geojson_client==0.4
 geopy==1.19.0
 
 # homeassistant.components.geo_rss_events
-georss_generic_client==0.2
+georss_generic_client==0.3
 
 # homeassistant.components.ign_sismologia
 georss_ign_sismologia_client==0.2
@@ -228,10 +231,10 @@ hole==0.5.0
 holidays==0.9.11
 
 # homeassistant.components.frontend
-home-assistant-frontend==20191119.6
+home-assistant-frontend==20191204.1
 
 # homeassistant.components.zwave
-homeassistant-pyozw==0.1.4
+homeassistant-pyozw==0.1.7
 
 # homeassistant.components.homekit_controller
 homekit[IP]==0.15.0
@@ -256,10 +259,10 @@ influxdb==5.2.3
 jsonpath==0.82
 
 # homeassistant.scripts.keyring
-keyring==19.2.0
+keyring==19.3.0
 
 # homeassistant.scripts.keyring
-keyrings.alt==3.1.1
+keyrings.alt==3.2.0
 
 # homeassistant.components.dyson
 libpurecool==0.5.0
@@ -403,7 +406,7 @@ pycoolmasternet==0.0.4
 pydaikin==1.6.1
 
 # homeassistant.components.deconz
-pydeconz==64
+pydeconz==65
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -427,7 +430,10 @@ pyhaversion==3.1.0
 pyheos==0.6.0
 
 # homeassistant.components.homematic
-pyhomematic==0.1.61
+pyhomematic==0.1.62
+
+# homeassistant.components.icloud
+pyicloud==0.9.1
 
 # homeassistant.components.ipma
 pyipma==1.2.1
@@ -532,6 +538,9 @@ pytraccar==0.9.0
 
 # homeassistant.components.tradfri
 pytradfri[async]==6.4.0
+
+# homeassistant.components.vera
+pyvera==0.3.7
 
 # homeassistant.components.vesync
 pyvesync==1.1.0

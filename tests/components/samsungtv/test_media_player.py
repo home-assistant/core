@@ -1,13 +1,12 @@
 """Tests for samsungtv component."""
 import asyncio
-from unittest.mock import call, patch
 from datetime import timedelta
-
 import logging
+from unittest.mock import call, patch
+
 from asynctest import mock
 import pytest
 from samsungctl import exceptions
-from tests.common import async_fire_time_changed
 from websocket import WebSocketException
 
 from homeassistant.components.media_player import DEVICE_CLASS_TV
@@ -17,11 +16,11 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN,
+    MEDIA_TYPE_CHANNEL,
+    MEDIA_TYPE_URL,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     SUPPORT_TURN_ON,
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_URL,
 )
 from homeassistant.components.samsungtv.const import DOMAIN as SAMSUNGTV_DOMAIN
 from homeassistant.components.samsungtv.media_player import (
@@ -56,6 +55,7 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from tests.common import async_fire_time_changed
 
 ENTITY_ID = f"{DOMAIN}.fake"
 MOCK_CONFIG = {

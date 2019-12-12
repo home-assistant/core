@@ -2,7 +2,6 @@
 import voluptuous as vol
 
 import homeassistant.components.automation.event as event
-
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
@@ -148,6 +147,7 @@ TRADFRI_WIRELESS_DIMMER = {
 }
 
 AQARA_CUBE_MODEL = "lumi.sensor_cube"
+AQARA_CUBE_MODEL_ALT1 = "lumi.sensor_cube.aqgl01"
 AQARA_CUBE = {
     (CONF_ROTATE_FROM_SIDE_1, CONF_SIDE_2): 6002,
     (CONF_ROTATE_FROM_SIDE_1, CONF_SIDE_3): 3002,
@@ -263,6 +263,7 @@ REMOTES = {
     TRADFRI_REMOTE_MODEL: TRADFRI_REMOTE,
     TRADFRI_WIRELESS_DIMMER_MODEL: TRADFRI_WIRELESS_DIMMER,
     AQARA_CUBE_MODEL: AQARA_CUBE,
+    AQARA_CUBE_MODEL_ALT1: AQARA_CUBE,
     AQARA_DOUBLE_WALL_SWITCH_MODEL: AQARA_DOUBLE_WALL_SWITCH,
     AQARA_DOUBLE_WALL_SWITCH_WXKG02LM_MODEL: AQARA_DOUBLE_WALL_SWITCH_WXKG02LM,
     AQARA_MINI_SWITCH_MODEL: AQARA_MINI_SWITCH,

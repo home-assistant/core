@@ -23,11 +23,10 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
 )
-from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_registry import async_entries_for_device
 
 from . import DOMAIN
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 

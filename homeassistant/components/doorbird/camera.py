@@ -6,7 +6,7 @@ import logging
 import aiohttp
 import async_timeout
 
-from homeassistant.components.camera import Camera, SUPPORT_STREAM
+from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.util.dt as dt_util
 

@@ -1,24 +1,24 @@
 """Email sensor support."""
-import logging
+from collections import deque
 import datetime
 import email
-from collections import deque
-
 import imaplib
+import logging
+
 import voluptuous as vol
 
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
+    ATTR_DATE,
     CONF_NAME,
+    CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
-    CONF_PASSWORD,
     CONF_VALUE_TEMPLATE,
     CONTENT_TYPE_TEXT_PLAIN,
-    ATTR_DATE,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 

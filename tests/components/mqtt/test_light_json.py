@@ -117,7 +117,7 @@ class JsonValidator(object):
     """Helper to compare JSON."""
 
     def __init__(self, jsondata):
-        """Constructor."""
+        """Initialize JSON validator."""
         self.jsondata = jsondata
 
     def __eq__(self, other):

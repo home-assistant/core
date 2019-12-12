@@ -17,13 +17,13 @@ class Device:
     """Hass representation of an UPnP/IGD."""
 
     def __init__(self, igd_device):
-        """Initializer."""
+        """Initialize UPnP/IGD device."""
         self._igd_device = igd_device
         self._mapped_ports = []
 
     @classmethod
     async def async_discover(cls, hass: HomeAssistantType):
-        """Discovery UPNP/IGD devices."""
+        """Discover UPnP/IGD devices."""
         _LOGGER.debug("Discovering UPnP/IGD devices")
         local_ip = None
         if DOMAIN in hass.data and "config" in hass.data[DOMAIN]:

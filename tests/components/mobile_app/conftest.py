@@ -2,13 +2,12 @@
 # pylint: disable=redefined-outer-name,unused-import
 import pytest
 
-from tests.common import mock_device_registry
-
+from homeassistant.components.mobile_app.const import DOMAIN
 from homeassistant.setup import async_setup_component
 
-from homeassistant.components.mobile_app.const import DOMAIN
-
 from .const import REGISTER, REGISTER_CLEARTEXT
+
+from tests.common import mock_device_registry
 
 
 @pytest.fixture
@@ -18,7 +17,7 @@ def registry(hass):
 
 
 @pytest.fixture
-async def create_registrations(authed_api_client):
+async def create_registrations(hass, authed_api_client):
     """Return two new registrations."""
     enc_reg = await authed_api_client.post(
         "/api/mobile_app/registrations", json=REGISTER
@@ -33,6 +32,8 @@ async def create_registrations(authed_api_client):
 
     assert clear_reg.status == 201
     clear_reg_json = await clear_reg.json()
+
+    await hass.async_block_till_done()
 
     return (enc_reg_json, clear_reg_json)
 

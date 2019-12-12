@@ -5,7 +5,7 @@ from asynctest import Mock
 
 from homeassistant.components.deconz.deconz_event import CONF_DECONZ_EVENT
 
-from .test_gateway import ENTRY_CONFIG, DECONZ_WEB_REQUEST, setup_deconz_integration
+from .test_gateway import DECONZ_WEB_REQUEST, ENTRY_CONFIG, setup_deconz_integration
 
 SENSORS = {
     "1": {

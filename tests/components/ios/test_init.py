@@ -4,8 +4,8 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.setup import async_setup_component
 from homeassistant.components import ios
+from homeassistant.setup import async_setup_component
 
 from tests.common import mock_component, mock_coro
 

@@ -1,16 +1,17 @@
 """Test Home Assistant yaml loader."""
 import io
+import logging
 import os
 import unittest
-import logging
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.yaml import loader as yaml_loader
-import homeassistant.util.yaml as yaml
 from homeassistant.config import YAML_CONFIG_FILE, load_yaml_config_file
+from homeassistant.exceptions import HomeAssistantError
+import homeassistant.util.yaml as yaml
+from homeassistant.util.yaml import loader as yaml_loader
+
 from tests.common import get_test_config_dir, patch_yaml_files
 
 

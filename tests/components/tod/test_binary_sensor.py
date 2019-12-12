@@ -1,16 +1,18 @@
 """Test Times of the Day Binary Sensor."""
+from datetime import datetime, timedelta
 import unittest
 from unittest.mock import patch
-from datetime import timedelta, datetime
+
 import pytz
 
 from homeassistant import setup
-import homeassistant.core as ha
 from homeassistant.const import STATE_OFF, STATE_ON
-import homeassistant.util.dt as dt_util
-from homeassistant.setup import setup_component
-from tests.common import get_test_home_assistant, assert_setup_component
+import homeassistant.core as ha
 from homeassistant.helpers.sun import get_astral_event_date, get_astral_event_next
+from homeassistant.setup import setup_component
+import homeassistant.util.dt as dt_util
+
+from tests.common import assert_setup_component, get_test_home_assistant
 
 
 class TestBinarySensorTod(unittest.TestCase):

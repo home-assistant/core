@@ -10,9 +10,9 @@ from homeassistant.components.homeassistant import SERVICE_CHECK_CONFIG
 import homeassistant.config as conf_util
 from homeassistant.const import (
     ATTR_NAME,
+    EVENT_CORE_CONFIG_UPDATE,
     SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP,
-    EVENT_CORE_CONFIG_UPDATE,
 )
 from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -20,8 +20,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import utcnow
 
-from .auth import async_setup_auth_view
 from .addon_panel import async_setup_addon_panel
+from .auth import async_setup_auth_view
 from .discovery import async_setup_discovery_view
 from .handler import HassIO, HassioAPIError
 from .http import HassIOView

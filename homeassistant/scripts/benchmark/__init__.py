@@ -11,7 +11,6 @@ from homeassistant import core
 from homeassistant.const import ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED
 from homeassistant.util import dt as dt_util
 
-
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 # mypy: no-warn-return-any
 

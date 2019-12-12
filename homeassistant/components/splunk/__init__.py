@@ -7,12 +7,12 @@ import requests
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_SSL,
-    CONF_VERIFY_SSL,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
+    CONF_SSL,
     CONF_TOKEN,
+    CONF_VERIFY_SSL,
     EVENT_STATE_CHANGED,
 )
 from homeassistant.helpers import state as state_helper

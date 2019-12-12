@@ -1,17 +1,17 @@
 """Read status of growatt inverters."""
-import re
+import datetime
 import json
 import logging
-import datetime
+import re
 
 import growattServer
 import voluptuous as vol
 
-from homeassistant.util import Throttle
-from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 

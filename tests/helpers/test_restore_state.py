@@ -8,14 +8,13 @@ from homeassistant.core import CoreState, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import (
-    RestoreStateData,
-    RestoreEntity,
-    StoredState,
     DATA_RESTORE_STATE_TASK,
     STORAGE_KEY,
+    RestoreEntity,
+    RestoreStateData,
+    StoredState,
 )
 from homeassistant.util import dt as dt_util
-
 
 from tests.common import mock_coro
 

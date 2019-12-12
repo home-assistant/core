@@ -4,13 +4,13 @@ import logging
 from numbers import Number
 
 from homeassistant.const import (
-    PRESSURE_PA,
+    PRESSURE,
     PRESSURE_HPA,
-    PRESSURE_MBAR,
     PRESSURE_INHG,
+    PRESSURE_MBAR,
+    PRESSURE_PA,
     PRESSURE_PSI,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
-    PRESSURE,
 )
 
 _LOGGER = logging.getLogger(__name__)

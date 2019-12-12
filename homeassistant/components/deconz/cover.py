@@ -1,11 +1,11 @@
 """Support for deCONZ covers."""
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    CoverDevice,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
-    SUPPORT_STOP,
     SUPPORT_SET_POSITION,
+    SUPPORT_STOP,
+    CoverDevice,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect

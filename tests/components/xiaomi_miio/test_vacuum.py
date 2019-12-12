@@ -1,6 +1,6 @@
 """The tests for the Xiaomi vacuum platform."""
 import asyncio
-from datetime import timedelta, time
+from datetime import time, timedelta
 from unittest import mock
 
 import pytest
@@ -22,26 +22,26 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.components.xiaomi_miio.vacuum import (
     ATTR_CLEANED_AREA,
+    ATTR_CLEANED_TOTAL_AREA,
+    ATTR_CLEANING_COUNT,
     ATTR_CLEANING_TIME,
+    ATTR_CLEANING_TOTAL_TIME,
     ATTR_DO_NOT_DISTURB,
-    ATTR_DO_NOT_DISTURB_START,
     ATTR_DO_NOT_DISTURB_END,
+    ATTR_DO_NOT_DISTURB_START,
     ATTR_ERROR,
+    ATTR_FILTER_LEFT,
     ATTR_MAIN_BRUSH_LEFT,
     ATTR_SIDE_BRUSH_LEFT,
-    ATTR_FILTER_LEFT,
-    ATTR_CLEANING_COUNT,
-    ATTR_CLEANED_TOTAL_AREA,
-    ATTR_CLEANING_TOTAL_TIME,
     CONF_HOST,
     CONF_NAME,
     CONF_TOKEN,
     DOMAIN as XIAOMI_DOMAIN,
+    SERVICE_CLEAN_ZONE,
     SERVICE_MOVE_REMOTE_CONTROL,
     SERVICE_MOVE_REMOTE_CONTROL_STEP,
     SERVICE_START_REMOTE_CONTROL,
     SERVICE_STOP_REMOTE_CONTROL,
-    SERVICE_CLEAN_ZONE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
