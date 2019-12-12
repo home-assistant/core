@@ -18,9 +18,6 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.unifiled.config_flow.unifiled",
-        return_value=mock_coro(True),
-    ), patch(
         "homeassistant.components.unifiled.config_flow.unifiled.getloginstate",
         return_value=mock_coro(True),
     ), patch(
