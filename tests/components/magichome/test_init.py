@@ -141,7 +141,7 @@ class TestLight(unittest.TestCase):
         }
         platform = magichome.setup(self.hass, config_info)
 
-        platform.init()
+        # platform.init()
         assert setup_component(
             self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "magichome"}}
         )
@@ -329,7 +329,7 @@ class TestLight(unittest.TestCase):
         }
         platform = magichome.setup(self.hass, config_info)
 
-        platform.init()
+        # platform.init()
 
         user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
 
@@ -353,7 +353,7 @@ class TestLight(unittest.TestCase):
             }
         }
         platform = magichome.setup(self.hass, config_info)
-        platform.init()
+        # platform.init()
 
         user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
 
@@ -397,7 +397,7 @@ class TestLight(unittest.TestCase):
             }
         }
         platform = magichome.setup(self.hass, config_info)
-        platform.init()
+        # platform.init()
 
         user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
         real_isfile = os.path.isfile
@@ -440,7 +440,7 @@ class TestLight(unittest.TestCase):
             }
         }
         platform = magichome.setup(self.hass, config_info)
-        platform.init()
+        # platform.init()
 
         user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
         real_isfile = os.path.isfile
