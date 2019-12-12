@@ -20,14 +20,13 @@ from homeassistant.components.climate.const import (
     PRESET_HOME,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
     PRECISION_HALVES,
     STATE_ON,
-    TEMP_FAHRENHEIT,
 )
 from homeassistant.util import dt as dt_util
 
