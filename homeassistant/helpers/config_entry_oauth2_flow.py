@@ -8,6 +8,7 @@ This module exists of the following parts:
 from abc import ABC, ABCMeta, abstractmethod
 import asyncio
 import logging
+import secrets
 import time
 from typing import Any, Awaitable, Callable, Dict, Optional, cast
 
@@ -18,7 +19,6 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant import config_entries
-from homeassistant.auth.util import generate_secret
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 
@@ -441,7 +441,7 @@ def _encode_jwt(hass: HomeAssistant, data: dict) -> str:
     secret = hass.data.get(DATA_JWT_SECRET)
 
     if secret is None:
-        secret = hass.data[DATA_JWT_SECRET] = generate_secret()
+        secret = hass.data[DATA_JWT_SECRET] = secrets.token_hex()
 
     return jwt.encode(data, secret, algorithm="HS256").decode()
 
