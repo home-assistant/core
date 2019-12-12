@@ -453,8 +453,6 @@ class ThermostatData:
         except requests.exceptions.Timeout:
             _LOGGER.warning("Timed out when connecting to Netatmo server")
             return
-        # _LOGGER.debug("Following is the debugging output for homestatus:")
-        # _LOGGER.debug(self.homestatus.rawData)
         for room in self.homestatus.rooms:
             try:
                 roomstatus = {}
