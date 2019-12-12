@@ -11,7 +11,7 @@ from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.loader import bind_hass
 
 from .agent import AbstractConversationAgent
-from .default_agent import async_register, DefaultAgent
+from .default_agent import DefaultAgent, async_register
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,35 +75,6 @@ async def async_setup(hass, config):
     return True
 
 
-async def process(hass: core.HomeAssistant, text: str, conversation_id: str):
-    """Process text and get intent."""
-    # agent = await get_agent(hass)
-    # return await agent.async_process(text, conversation_id)
-    # default agent is hardcoded to AIS dom TODO
-    return await get_intent(hass, text, conversation_id)
-
-
-async def get_intent(hass: core.HomeAssistant, text: str, conversation_id: str):
-    """Process text and get intent."""
-    # try:
-    #     intent_result = await process(hass, text, conversation_id)
-    # except intent.IntentHandleError as err:
-    #     intent_result = intent.IntentResponse()
-    #     intent_result.async_set_speech(str(err))
-
-    # ask ais dom agent
-    from homeassistant.components import ais_ai_service as ais_ai
-
-    intent_result = await ais_ai._process(hass, text)
-    if intent_result is None:
-        intent_result = intent.IntentResponse()
-        intent_result.async_set_speech(
-            "Przepraszam, jeszcze tego nie potrafię zrozumieć."
-        )
-
-    return intent_result
-
-
 @websocket_api.async_response
 @websocket_api.websocket_command(
     {"type": "conversation/process", "text": str, vol.Optional("conversation_id"): str}
@@ -163,17 +134,6 @@ class ConversationProcessView(http.HomeAssistantView):
         intent_result = await _async_converse(
             hass, data["text"], data.get("conversation_id"), self.context(request)
         )
-
-        # if intent_result is None:
-        #     # ais-dom ask
-        #     from homeassistant.components import ais_ai_service as ais_ai
-        #
-        #     intent_result = await ais_ai._process(hass, data["text"])
-        #     if intent_result is None:
-        #         intent_result = intent.IntentResponse()
-        #         intent_result.async_set_speech(
-        #             "Przepraszam, jeszcze tego nie potrafię zrozumieć."
-        #         )
 
         return self.json(intent_result)
 
