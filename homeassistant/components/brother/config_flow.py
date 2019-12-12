@@ -105,9 +105,6 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "snmp_error"
             except UnsupportedModel:
                 return self.async_abort(reason="unsupported_model")
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
