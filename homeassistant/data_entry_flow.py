@@ -187,7 +187,7 @@ class FlowHandler:
     # Set by flow manager
     flow_id: str = None  # type: ignore
     hass: Optional[HomeAssistant] = None
-    handler: str
+    handler: str = None  # type: ignore
     cur_step: Optional[Dict[str, str]] = None
     context: Dict
 
