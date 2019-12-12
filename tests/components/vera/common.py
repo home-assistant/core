@@ -50,7 +50,7 @@ class ComponentFactory:
     """Factory class."""
 
     def __init__(self, vera_controller_class_mock):
-        """Constructor."""
+        """Initialize the factory."""
         self.vera_controller_class_mock = vera_controller_class_mock
 
     async def configure_component(
