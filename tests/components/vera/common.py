@@ -35,6 +35,7 @@ class ComponentFactory:
 
         controller = MagicMock(spec=VeraController)  # type: VeraController
         controller.base_url = controller_url
+        controller.serial_number = "1111"
         controller.register = MagicMock()
         controller.get_devices = MagicMock(return_value=devices or ())
         controller.get_scenes = MagicMock(return_value=scenes or ())

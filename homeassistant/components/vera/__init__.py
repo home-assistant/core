@@ -84,6 +84,10 @@ def setup(hass, base_config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_subscription)
 
     try:
+        # Load controller information like serial number.
+        controller.refresh_data()
+
+        # Get devices.
         all_devices = controller.get_devices()
 
         all_scenes = controller.get_scenes()
@@ -170,6 +174,19 @@ class VeraDevice(Entity):
     def should_poll(self):
         """Get polling requirement from vera device."""
         return self.vera_device.should_poll
+
+    @property
+    def device_info(self):
+        """Return information about the device."""
+        unique_id = f"{self.controller.serial_number}_{self.vera_device.vera_device_id}"
+        return {
+            "name": self._name,
+            "model": "Unknown",
+            "manufacturer": "Unknown",
+            "connections": {("serial_id", unique_id)},
+            "identifiers": {unique_id},
+            "battery": self.vera_device.battery_level,
+        }
 
     @property
     def device_state_attributes(self):

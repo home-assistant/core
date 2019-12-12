@@ -21,6 +21,7 @@ from homeassistant.components.vera import (
     CONF_LIGHTS,
     DOMAIN,
     VERA_DEVICES,
+    VeraDevice as VeraDeviceEntity,
 )
 from homeassistant.core import HomeAssistant
 
@@ -76,3 +77,24 @@ async def test_init(
     assert_hass_vera_devices(hass, "lock", 1)
     assert_hass_vera_devices(hass, "climate", 1)
     assert_hass_vera_devices(hass, "cover", 1)
+
+
+def test_vera_device_entity():
+    """Test function."""
+    controller = MagicMock(spec=VeraController)  # type: VeraController
+    controller.serial_number = "SN"
+    device = MagicMock(spec=VeraDevice)  # type: VeraDevice
+    device.name = "first device"
+    device.device_id = "1"
+    device.vera_device_id = "1"
+    device.battery_level = 23
+
+    entity = VeraDeviceEntity(device, controller)
+    assert entity.device_info == {
+        "name": device.name,
+        "model": "Unknown",
+        "manufacturer": "Unknown",
+        "connections": {("serial_id", "SN_1")},
+        "identifiers": {"SN_1"},
+        "battery": 23,
+    }
