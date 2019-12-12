@@ -2,8 +2,6 @@ sudo: false
 dist: bionic
 addons:
   apt:
-    sources:
-      - sourceline: "ppa:jonathonf/ffmpeg-4"
     packages:
       - libudev-dev
       - libavformat-dev
