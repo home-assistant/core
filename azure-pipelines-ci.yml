@@ -54,6 +54,10 @@ stages:
         . venv/bin/activate
         pre-commit run bandit --all-files
       displayName: 'Run bandit'
+    - script: |
+        . venv/bin/activate
+        pre-commit run isort --all-files
+      displayName: 'Run isort'
   - job: 'Validate'
     pool:
       vmImage: 'ubuntu-latest'
