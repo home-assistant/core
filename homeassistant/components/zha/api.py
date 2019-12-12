@@ -70,8 +70,6 @@ ATTR_IEEE_ADDRESS = "ieee_address"
 ATTR_IEEE = "ieee"
 ATTR_SOURCE_IEEE = "source_ieee"
 ATTR_TARGET_IEEE = "target_ieee"
-BIND_REQUEST = 0x0021
-UNBIND_REQUEST = 0x0022
 
 SERVICE_PERMIT = "permit"
 SERVICE_REMOVE = "remove"
@@ -717,9 +715,11 @@ async def websocket_bind_devices(hass, connection, msg):
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     source_ieee = msg[ATTR_SOURCE_IEEE]
     target_ieee = msg[ATTR_TARGET_IEEE]
-    await async_binding_operation(zha_gateway, source_ieee, target_ieee, BIND_REQUEST)
+    await async_binding_operation(
+        zha_gateway, source_ieee, target_ieee, zdo_types.ZDOCmd.Bind_req
+    )
     _LOGGER.info(
-        "Issue bind devices: %s %s",
+        "Issued bind devices: %s %s",
         f"{ATTR_SOURCE_IEEE}: [{source_ieee}]",
         f"{ATTR_TARGET_IEEE}: [{target_ieee}]",
     )
@@ -739,9 +739,11 @@ async def websocket_unbind_devices(hass, connection, msg):
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     source_ieee = msg[ATTR_SOURCE_IEEE]
     target_ieee = msg[ATTR_TARGET_IEEE]
-    await async_binding_operation(zha_gateway, source_ieee, target_ieee, UNBIND_REQUEST)
+    await async_binding_operation(
+        zha_gateway, source_ieee, target_ieee, zdo_types.ZDOCmd.Unbind_req
+    )
     _LOGGER.info(
-        "Issue unbind devices: %s %s",
+        "Issued unbind devices: %s %s",
         f"{ATTR_SOURCE_IEEE}: [{source_ieee}]",
         f"{ATTR_TARGET_IEEE}: [{target_ieee}]",
     )
@@ -764,22 +766,34 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operati
 
         zdo = cluster_pair.source_cluster.endpoint.device.zdo
 
-        _LOGGER.debug(
-            "processing binding operation for: %s %s %s",
-            f"{ATTR_SOURCE_IEEE}: [{source_ieee}]",
-            f"{ATTR_TARGET_IEEE}: [{target_ieee}]",
-            "{}: {}".format("cluster", cluster_pair.source_cluster.cluster_id),
+        op_msg = "cluster: %s %s --> [%s]"
+        op_params = (
+            cluster_pair.source_cluster.cluster_id,
+            operation.name,
+            target_ieee,
         )
+        zdo.debug("processing " + op_msg, *op_params)
+
         bind_tasks.append(
-            zdo.request(
-                operation,
-                source_device.ieee,
-                cluster_pair.source_cluster.endpoint.endpoint_id,
-                cluster_pair.source_cluster.cluster_id,
-                destination_address,
+            (
+                zdo.request(
+                    operation,
+                    source_device.ieee,
+                    cluster_pair.source_cluster.endpoint.endpoint_id,
+                    cluster_pair.source_cluster.cluster_id,
+                    destination_address,
+                ),
+                op_msg,
+                op_params,
             )
         )
-    await asyncio.gather(*bind_tasks)
+    res = await asyncio.gather(*(t[0] for t in bind_tasks), return_exceptions=True)
+    for outcome, log_msg in zip(res, bind_tasks):
+        if isinstance(outcome, Exception):
+            fmt = log_msg[1] + " failed: %s"
+        else:
+            fmt = log_msg[1] + " completed: %s"
+        zdo.debug(fmt, *(log_msg[2] + (outcome,)))
 
 
 def async_load_api(hass):
