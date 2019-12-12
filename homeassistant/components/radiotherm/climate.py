@@ -62,8 +62,8 @@ TEMP_MODE_TO_CODE = {v: k for k, v in CODE_TO_TEMP_MODE.items()}
 
 # Programmed fan mode (circulate is supported by CT80 models)
 CODE_TO_FAN_MODE = {
-    0: HVAC_MODE_AUTO, 
-    1: STATE_CIRCULATE, 
+    0: HVAC_MODE_AUTO,
+    1: STATE_CIRCULATE,
     2: STATE_ON
 }
 FAN_MODE_TO_CODE = {v: k for k, v in CODE_TO_FAN_MODE.items()}
@@ -71,35 +71,34 @@ FAN_MODE_TO_CODE = {v: k for k, v in CODE_TO_FAN_MODE.items()}
 # Active thermostat state (is it heating or cooling?).  In the future
 # this should probably made into heat and cool binary sensors.
 CODE_TO_TEMP_STATE = {
-    0: CURRENT_HVAC_IDLE, 
-    1: CURRENT_HVAC_HEAT, 
+    0: CURRENT_HVAC_IDLE,
+    1: CURRENT_HVAC_HEAT,
     2: CURRENT_HVAC_COOL
 }
 
 # Active fan state.  This is if the fan is actually on or not.  In the
 # future this should probably made into a binary sensor for the fan.
 CODE_TO_FAN_STATE = {
-    0: FAN_OFF, 
+    0: FAN_OFF,
     1: FAN_ON
 }
 
 PRESET_MODE_TO_CODE = {
-   "home": 0,
-   "alternate": 1,
-   "away": 2,
-   "holiday": 3
+    "home": 0,
+    "alternate": 1,
+    "away": 2,
+    "holiday": 3
 }
 
 CODE_TO_PRESET_MODE = {
-   0: "home",
-   1: "alternate",
-   2: "away",
-   3: "holiday"
+    0: "home",
+    1: "alternate",
+    2: "away",
+    3: "holiday"
 }
 
 def round_temp(temperature):
     """Round a temperature to the resolution of the thermostat.
-
     RadioThermostats can handle 0.5 degree temps so the input
     temperature is rounded to that value and returned.
     """
@@ -111,6 +110,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_HOLD_TEMP, default=False): cv.boolean,
     }
 )
+
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_PRESET_MODE
 
@@ -384,6 +384,7 @@ class RadioThermostat(ClimateDevice):
             self.device.t_heat = self._target_temperature
 
     def set_preset_mode(self, preset_mode):
+        """Set Preset mode (Home, Alternate, Away, Holiday)"""
         if preset_mode in (PRESET_MODES):
             self.device.program_mode = PRESET_MODE_TO_CODE[preset_mode]
         else: 
