@@ -207,3 +207,5 @@ class MinMaxSensor(Entity):
         self.min_value = calc_min(sensor_values)
         self.max_value = calc_max(sensor_values)
         self.mean = calc_mean(sensor_values, self._round_digits)
+        if self._sensor_type == ATTR_LAST and all(state in [STATE_UNKNOWN, STATE_UNAVAILABLE] for state in self.states.values()):
+            self.last = STATE_UNKNOWN
