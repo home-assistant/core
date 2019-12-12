@@ -21,11 +21,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
         devices = []
         try:
             camera_data = CameraData(hass, hass.data[DOMAIN][entry.entry_id][AUTH])
-            for camera_id in camera_data.get_all_camera_ids():
-                camera_type = camera_data.get_camera_type(camera_id=camera_id)
-                if camera_type == "NOC":
-                    _LOGGER.debug("Setting up camera %s", camera_id)
-                    devices.append(NetatmoLight(camera_id, camera_data))
+            for camera in camera_data.get_all_cameras():
+                if camera["type"] == "NOC":
+                    _LOGGER.debug("Setting up camera %s", camera["id"])
+                    devices.append(NetatmoLight(camera_data, camera["id"]))
         except pyatmo.NoDevice:
             _LOGGER.debug("No cameras found")
         return devices
@@ -36,7 +35,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class NetatmoLight(Light):
     """Representation of a Netatmo Presence camera light."""
 
-    def __init__(self, camera_id: str, camera_data: CameraData):
+    def __init__(self, camera_data: CameraData, camera_id: str):
         """Initialize a Netatmo Presence camera light."""
         self._camera_id = camera_id
         self._data = camera_data

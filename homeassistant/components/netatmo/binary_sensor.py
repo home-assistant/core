@@ -56,20 +56,19 @@ async def async_setup_entry(hass, entry, async_add_entities):
                         return home_id
             return None
 
-        for camera_id in data.get_all_camera_ids():
-            camera_type = data.get_camera_type(camera_id=camera_id)
-            home_id = get_camera_home_id(data, camera_id=camera_id)
+        for camera in data.get_all_cameras():
+            home_id = get_camera_home_id(data, camera_id=camera["id"])
 
             sensor_types = {}
-            sensor_types.update(SENSOR_TYPES[camera_type])
+            sensor_types.update(SENSOR_TYPES[camera["type"]])
 
             # Tags are only supported with Netatmo Welcome indoor cameras
-            if camera_type == "NACamera":
+            if camera["type"] == "NACamera":
                 sensor_types.update(TAG_SENSOR_TYPES)
 
             for sensor_name in sensor_types:
                 devices.append(
-                    NetatmoBinarySensor(data, camera_id, home_id, sensor_name)
+                    NetatmoBinarySensor(data, camera["id"], home_id, sensor_name)
                 )
 
         return devices

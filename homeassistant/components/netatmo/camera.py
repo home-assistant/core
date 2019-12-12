@@ -39,12 +39,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
         devices = []
         try:
             camera_data = CameraData(hass, hass.data[DOMAIN][entry.entry_id][AUTH])
-            for camera_id in camera_data.get_all_camera_ids():
-                _LOGGER.debug("Setting up camera %s", camera_id)
-                camera_type = camera_data.get_camera_type(camera_id=camera_id)
+            for camera in camera_data.get_all_cameras():
+                _LOGGER.debug("Setting up camera %s", camera["id"])
                 devices.append(
                     NetatmoCamera(
-                        camera_data, camera_id, camera_type, True, DEFAULT_QUALITY
+                        camera_data, camera["id"], camera["type"], True, DEFAULT_QUALITY
                     )
                 )
             camera_data.get_persons()
@@ -272,13 +271,13 @@ class CameraData:
         self.auth = auth
         self.camera_data = None
 
-    def get_all_camera_ids(self):
+    def get_all_cameras(self):
         """Return all camera available on the API as a list."""
         self.update()
-        camera_ids = []
+        cameras = []
         for home_id in self.camera_data.cameras:
-            camera_ids.extend(self.camera_data.cameras[home_id])
-        return camera_ids
+            cameras.extend(self.camera_data.cameras[home_id].values())
+        return cameras
 
     def get_module_names(self, camera_id):
         """Return all module available on the API as a list."""
