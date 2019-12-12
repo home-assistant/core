@@ -16,7 +16,7 @@ from pyvera import (
 from homeassistant.const import UNIT_PERCENTAGE
 from homeassistant.core import HomeAssistant
 
-from .common import ComponentFactory
+from .common import ComponentFactory, new_simple_controller_config
 
 
 async def run_sensor_test(
@@ -37,10 +37,12 @@ async def run_sensor_test(
     entity_id = "sensor.dev1_1"
 
     component_data = await vera_component_factory.configure_component(
-        hass=hass, devices=(vera_device,), setup_callback=setup_callback
+        hass=hass,
+        controller_config=new_simple_controller_config(
+            devices=(vera_device,), setup_callback=setup_callback
+        ),
     )
-    controller = component_data.controller
-    update_callback = controller.register.call_args_list[0][0][1]
+    update_callback = component_data.controller_data.update_callback
 
     for (initial_value, state_value) in assert_states:
         setattr(vera_device, class_property, initial_value)
@@ -188,10 +190,10 @@ async def test_scene_controller_sensor(
     entity_id = "sensor.dev1_1"
 
     component_data = await vera_component_factory.configure_component(
-        hass=hass, devices=(vera_device,)
+        hass=hass,
+        controller_config=new_simple_controller_config(devices=(vera_device,)),
     )
-    controller = component_data.controller
-    update_callback = controller.register.call_args_list[0][0][1]
+    update_callback = component_data.controller_data.update_callback
 
     vera_device.get_last_scene_time = "1111"
     update_callback(vera_device)

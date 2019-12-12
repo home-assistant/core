@@ -1,40 +1,26 @@
 """Support for Vera devices."""
-from collections import defaultdict
 import logging
 
-import pyvera as veraApi
 from requests.exceptions import RequestException
 import voluptuous as vol
 
-from homeassistant.const import (
-    ATTR_ARMED,
-    ATTR_BATTERY_LEVEL,
-    ATTR_LAST_TRIP_TIME,
-    ATTR_TRIPPED,
-    CONF_EXCLUDE,
-    CONF_LIGHTS,
-    EVENT_HOMEASSISTANT_STOP,
+from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+
+from .common import (
+    get_configured_platforms,
+    get_controller_data_by_config,
+    initialize_controller,
+    set_controller_data,
 )
-from homeassistant.helpers import config_validation as cv, discovery
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import convert, slugify
-from homeassistant.util.dt import utc_from_timestamp
+from .const import CONF_CONTROLLER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "vera"
-
 VERA_CONTROLLER = "vera_controller"
-
-CONF_CONTROLLER = "vera_controller_url"
-
-VERA_ID_FORMAT = "{}_{}"
-
-ATTR_CURRENT_POWER_W = "current_power_w"
-ATTR_CURRENT_ENERGY_KWH = "current_energy_kwh"
-
-VERA_DEVICES = "vera_devices"
-VERA_SCENES = "vera_scenes"
 
 VERA_ID_LIST_SCHEMA = vol.Schema([int])
 
@@ -51,164 +37,68 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-VERA_COMPONENTS = [
-    "binary_sensor",
-    "sensor",
-    "light",
-    "switch",
-    "lock",
-    "climate",
-    "cover",
-    "scene",
-]
 
+def setup(hass: HomeAssistant, base_config: dict) -> bool:
+    """Set up for Vera controllers."""
+    config = base_config.get(DOMAIN, [])
 
-def setup(hass, base_config):
-    """Set up for Vera devices."""
+    # Normalize the base url.
+    config[CONF_CONTROLLER] = config.get(CONF_CONTROLLER).rstrip("/")
 
-    def stop_subscription(event):
-        """Shutdown Vera subscriptions and subscription thread on exit."""
-        _LOGGER.info("Shutting down subscriptions")
-        hass.data[VERA_CONTROLLER].stop()
+    # Build a map of already configured controllers.
+    base_url_entries_map = {}
+    for config_entry in hass.config_entries.async_entries(DOMAIN):
+        base_url = config_entry.data.get(CONF_CONTROLLER)
+        base_url_entries_map[base_url] = config_entry
 
-    config = base_config.get(DOMAIN)
-
-    # Get Vera specific configuration.
     base_url = config.get(CONF_CONTROLLER)
-    light_ids = config.get(CONF_LIGHTS)
-    exclude_ids = config.get(CONF_EXCLUDE)
 
-    # Initialize the Vera controller.
-    controller, _ = veraApi.init_controller(base_url)
-    hass.data[VERA_CONTROLLER] = controller
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_subscription)
+    entry = base_url_entries_map.get(base_url)
+    if entry:
+        _LOGGER.debug("Updating existing config for %s", base_url)
+        hass.config_entries.async_update_entry(entry=entry, data=config)
+        return True
 
+    _LOGGER.debug("Creating new config for %s", base_url)
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config,
+        )
+    )
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Do setup of vera."""
     try:
-        all_devices = controller.get_devices()
-
-        all_scenes = controller.get_scenes()
+        controller_data = initialize_controller(hass, config_entry.data)
     except RequestException:
         # There was a network related error connecting to the Vera controller.
         _LOGGER.exception("Error communicating with Vera API")
         return False
 
-    # Exclude devices unwanted by user.
-    devices = [device for device in all_devices if device.device_id not in exclude_ids]
+    set_controller_data(hass, controller_data)
 
-    vera_devices = defaultdict(list)
-    for device in devices:
-        device_type = map_vera_device(device, light_ids)
-        if device_type is None:
-            continue
-
-        vera_devices[device_type].append(device)
-    hass.data[VERA_DEVICES] = vera_devices
-
-    vera_scenes = []
-    for scene in all_scenes:
-        vera_scenes.append(scene)
-    hass.data[VERA_SCENES] = vera_scenes
-
-    for component in VERA_COMPONENTS:
-        discovery.load_platform(hass, component, DOMAIN, {}, base_config)
+    # Forward the config data to the necessary platforms.
+    for platform in get_configured_platforms(controller_data):
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
+        )
 
     return True
 
 
-def map_vera_device(vera_device, remap):
-    """Map vera classes to Home Assistant types."""
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Unload Withings config entry."""
+    controller_data = get_controller_data_by_config(hass=hass, entry=config_entry)
 
-    if isinstance(vera_device, veraApi.VeraDimmer):
-        return "light"
-    if isinstance(vera_device, veraApi.VeraBinarySensor):
-        return "binary_sensor"
-    if isinstance(vera_device, veraApi.VeraSensor):
-        return "sensor"
-    if isinstance(vera_device, veraApi.VeraArmableDevice):
-        return "switch"
-    if isinstance(vera_device, veraApi.VeraLock):
-        return "lock"
-    if isinstance(vera_device, veraApi.VeraThermostat):
-        return "climate"
-    if isinstance(vera_device, veraApi.VeraCurtain):
-        return "cover"
-    if isinstance(vera_device, veraApi.VeraSceneController):
-        return "sensor"
-    if isinstance(vera_device, veraApi.VeraSwitch):
-        if vera_device.device_id in remap:
-            return "light"
-        return "switch"
-    return None
+    if not controller_data:
+        return True
 
-
-class VeraDevice(Entity):
-    """Representation of a Vera device entity."""
-
-    def __init__(self, vera_device, controller):
-        """Initialize the device."""
-        self.vera_device = vera_device
-        self.controller = controller
-
-        self._name = self.vera_device.name
-        # Append device id to prevent name clashes in HA.
-        self.vera_id = VERA_ID_FORMAT.format(
-            slugify(vera_device.name), vera_device.device_id
+    for platform in get_configured_platforms(controller_data):
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_unload(config_entry, platform)
         )
 
-        self.controller.register(vera_device, self._update_callback)
-
-    def _update_callback(self, _device):
-        """Update the state."""
-        self.schedule_update_ha_state(True)
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def should_poll(self):
-        """Get polling requirement from vera device."""
-        return self.vera_device.should_poll
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the device."""
-        attr = {}
-
-        if self.vera_device.has_battery:
-            attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level
-
-        if self.vera_device.is_armable:
-            armed = self.vera_device.is_armed
-            attr[ATTR_ARMED] = "True" if armed else "False"
-
-        if self.vera_device.is_trippable:
-            last_tripped = self.vera_device.last_trip
-            if last_tripped is not None:
-                utc_time = utc_from_timestamp(int(last_tripped))
-                attr[ATTR_LAST_TRIP_TIME] = utc_time.isoformat()
-            else:
-                attr[ATTR_LAST_TRIP_TIME] = None
-            tripped = self.vera_device.is_tripped
-            attr[ATTR_TRIPPED] = "True" if tripped else "False"
-
-        power = self.vera_device.power
-        if power:
-            attr[ATTR_CURRENT_POWER_W] = convert(power, float, 0.0)
-
-        energy = self.vera_device.energy
-        if energy:
-            attr[ATTR_CURRENT_ENERGY_KWH] = convert(energy, float, 0.0)
-
-        attr["Vera Device Id"] = self.vera_device.vera_device_id
-
-        return attr
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID.
-
-        The Vera assigns a unique and immutable ID number to each device.
-        """
-        return str(self.vera_device.vera_device_id)
+    return True

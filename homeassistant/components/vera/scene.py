@@ -1,22 +1,31 @@
 """Support for Vera scenes."""
 import logging
+from typing import Callable, List
 
-from homeassistant.components.scene import Scene
+from homeassistant.components.scene import DOMAIN as PLATFORM_DOMAIN, Scene
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-from . import VERA_CONTROLLER, VERA_ID_FORMAT, VERA_SCENES
+from .common import setup_scene_entities
+from .const import VERA_ID_FORMAT
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Vera scenes."""
-    add_entities(
-        [
-            VeraScene(scene, hass.data[VERA_CONTROLLER])
-            for scene in hass.data[VERA_SCENES]
-        ],
-        True,
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], bool], None],
+) -> None:
+    """Set up the sensor config entry."""
+    setup_scene_entities(
+        hass=hass,
+        entry=entry,
+        async_add_entities=async_add_entities,
+        platform=PLATFORM_DOMAIN,
+        generator=VeraScene,
     )
 
 
