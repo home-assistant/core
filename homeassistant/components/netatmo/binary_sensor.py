@@ -79,22 +79,22 @@ class NetatmoBinarySensor(BinarySensorDevice):
         camera_info = data.camera_data.cameraById(cid=camera_id)
         self._camera_name = camera_info["name"]
         self._camera_type = camera_info["type"]
-        if module_id:
-            self._module_name = data.camera_data.moduleById(mid=module_id)["name"]
         self._home_id = home_id
         self._home_name = self._data.camera_data.getHomeName(home_id=home_id)
         self._timeout = DEFAULT_TIMEOUT
-        self._name = (
-            f"{MANUFACTURER} {self._camera_name} {self._module_name} {sensor_type}"
-            if module_id is not None
-            else f"{MANUFACTURER} {self._camera_name} {sensor_type}"
-        )
+        if module_id:
+            self._module_name = data.camera_data.moduleById(mid=module_id)["name"]
+            self._name = (
+                f"{MANUFACTURER} {self._camera_name} {self._module_name} {sensor_type}"
+            )
+            self._unique_id = (
+                f"{self._camera_id}-{self._module_name}-"
+                f"{self._camera_type}-{sensor_type}"
+            )
+        else:
+            self._name = f"{MANUFACTURER} {self._camera_name} {sensor_type}"
+            self._unique_id = f"{self._camera_id}-{self._camera_type}-{sensor_type}"
         self._state = None
-        self._unique_id = (
-            f"{self._camera_id}-{self._module_name}-{self._camera_type}-{sensor_type}"
-            if module_id is not None
-            else f"{self._camera_id}-{self._camera_type}-{sensor_type}"
-        )
 
     @property
     def name(self):
