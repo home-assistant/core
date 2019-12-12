@@ -1,37 +1,28 @@
 """Support for Radio Thermostat wifi-enabled home thermostats."""
 import logging
 
-import voluptuous as vol
-import radiotherm
-
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
-from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    FAN_ON,
-    FAN_OFF,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_COOL,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    PRESET_HOME,
-    PRESET_ALTERNATE,
-    PRESET_AWAY,
-    PRESET_HOLIDAY,
-)
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_HOST,
-    PRECISION_HALVES,
-    TEMP_FAHRENHEIT,
-    STATE_ON,
-)
-from homeassistant.util import dt as dt_util
 import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate.const import (CURRENT_HVAC_COOL,
+                                                    CURRENT_HVAC_HEAT,
+                                                    CURRENT_HVAC_IDLE, FAN_OFF,
+                                                    FAN_ON, HVAC_MODE_AUTO,
+                                                    HVAC_MODE_COOL,
+                                                    HVAC_MODE_HEAT,
+                                                    HVAC_MODE_OFF,
+                                                    PRESET_ALTERNATE,
+                                                    PRESET_AWAY,
+                                                    PRESET_HOLIDAY,
+                                                    PRESET_HOME,
+                                                    SUPPORT_FAN_MODE,
+                                                    SUPPORT_PRESET_MODE,
+                                                    SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.const import (ATTR_TEMPERATURE, CONF_HOST, PRECISION_HALVES,
+                                 STATE_ON, TEMP_FAHRENHEIT)
+from homeassistant.util import dt as dt_util
+
+import radiotherm
 
 _LOGGER = logging.getLogger(__name__)
 
