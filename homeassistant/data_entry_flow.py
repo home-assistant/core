@@ -37,7 +37,7 @@ class UnknownStep(FlowError):
 
 
 class AbortFlow(FlowError):
-    """Class to indicate a flow needs to be aborted."""
+    """Exception to indicate a flow needs to be aborted."""
 
     def __init__(self, reason: str, description_placeholders: Optional[Dict] = None):
         """Initialize an abort flow exception."""

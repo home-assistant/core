@@ -4,7 +4,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant import core, config_entries
 from homeassistant.const import CONF_FILENAME, CONF_HOST
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
@@ -102,7 +102,9 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
+async def async_setup_entry(
+    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
+):
     """Set up a bridge from a config entry."""
     host = entry.data["host"]
     config = hass.data[DATA_CONFIGS].get(host)
@@ -122,6 +124,7 @@ async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
     hass.data[DOMAIN][host] = bridge
     config = bridge.api.config
 
+    # For backwards compat
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(
             entry, unique_id=normalize_bridge_id(config.bridgeid)

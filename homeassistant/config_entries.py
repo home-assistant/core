@@ -542,7 +542,7 @@ class ConfigEntries:
         self,
         entry: ConfigEntry,
         *,
-        unique_id: Union[str, dict] = _UNDEF,
+        unique_id: Union[str, dict, None] = _UNDEF,
         data: dict = _UNDEF,
         options: dict = _UNDEF,
         system_options: dict = _UNDEF,
@@ -625,6 +625,9 @@ class ConfigEntries:
                     existing_entry = check_entry
                     break
 
+        # Unload the entry before setting up the new one.
+        # We will remove it only after the other one is set up,
+        # so that device customizations are not getting lost.
         if (
             existing_entry is not None
             and existing_entry.state not in UNRECOVERABLE_STATES
@@ -761,7 +764,6 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     def _async_current_entries(self) -> List[ConfigEntry]:
         """Return current entries."""
         assert self.hass is not None
-        # pylint: disable=no-member
         return self.hass.config_entries.async_entries(self.handler)
 
     @callback
@@ -771,7 +773,6 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return [
             flw
             for flw in self.hass.config_entries.flow.async_progress()
-            # pylint: disable=no-member
             if flw["handler"] == self.handler and flw["flow_id"] != self.flow_id
         ]
 
