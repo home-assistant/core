@@ -279,6 +279,13 @@ class CameraData:
             cameras.extend(camera.values())
         return cameras
 
+    def get_modules(self, camera_id):
+        """Return all modules for a given camera."""
+        return [
+            module
+            for module in self.camera_data.get_camera(camera_id).get("modules", [])
+        ]
+
     def get_camera_type(self, camera_id):
         """Return camera type for a camera, cid has preference over camera."""
         return self.camera_data.cameraType(cid=camera_id)
