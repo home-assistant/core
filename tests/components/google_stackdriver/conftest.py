@@ -1,4 +1,4 @@
-"""Configuration for HEOS tests."""
+"""Configuration for Google Stackdriver tests."""
 import pytest
 
 from homeassistant.components.google_stackdriver import DOMAIN, CONF_KEYFILE

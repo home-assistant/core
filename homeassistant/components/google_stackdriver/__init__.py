@@ -26,7 +26,7 @@ LOGSEVERITY = {
 _VALID_LOG_LEVEL = vol.All(vol.Upper, vol.In(LOGSEVERITY))
 
 
-CONF_KEYFILE = "key_file"
+CONF_KEY_FILE = "key_file"
 CONF_LEVEL = "level"
 CONF_LABELS = "labels"
 
@@ -34,7 +34,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Required(CONF_KEYFILE): cv.isfile,
+                vol.Required(CONF_KEY_FILE): cv.isfile,
                 vol.Optional(CONF_LEVEL, default="info"): _VALID_LOG_LEVEL,
                 vol.Optional(CONF_LABELS): dict,
             }
@@ -48,7 +48,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Google Stackdriver integration."""
     sd_config = config[DOMAIN]
     try:
-        client = Client.from_service_account_json(sd_config[CONF_KEYFILE])
+        client = Client.from_service_account_json(sd_config[CONF_KEY_FILE])
     except ValueError as error:
         _LOGGER.warning("Failed to load credentials: %s", error)
         return False

@@ -1,4 +1,4 @@
-"""Tests for the init module."""
+"""Tests for the Google Stackdriver integration."""
 from asynctest import Mock, patch
 
 from google.cloud.logging import Client
