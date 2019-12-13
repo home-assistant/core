@@ -5,6 +5,9 @@ PATCH_VERSION = "3"
 __short_version__ = "{}.{}".format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = "{}.{}".format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 6, 1)
+# Truthy date string triggers showing related deprecation warning messages.
+REQUIRED_NEXT_PYTHON_VER = (3, 7, 0)
+REQUIRED_NEXT_PYTHON_DATE = "December 15, 2019"
 
 # Format for platform files
 PLATFORM_FORMAT = "{platform}.{domain}"
