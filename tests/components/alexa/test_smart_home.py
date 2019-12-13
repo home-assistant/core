@@ -2490,6 +2490,20 @@ async def test_cover_position_mode(hass):
     assert properties["namespace"] == "Alexa.ModeController"
     assert properties["value"] == "position.open"
 
+    call, msg = await assert_request_calls_service(
+        "Alexa.ModeController",
+        "SetMode",
+        "cover#test_mode",
+        "cover.stop_cover",
+        hass,
+        payload={"mode": "position.custom"},
+        instance="cover.position",
+    )
+    properties = msg["context"]["properties"][0]
+    assert properties["name"] == "mode"
+    assert properties["namespace"] == "Alexa.ModeController"
+    assert properties["value"] == "position.custom"
+
 
 async def test_image_processing(hass):
     """Test image_processing discovery as event detection."""
