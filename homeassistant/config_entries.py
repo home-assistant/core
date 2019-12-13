@@ -2,7 +2,7 @@
 import asyncio
 import functools
 import logging
-from typing import Any, Callable, Dict, List, Optional, Set, cast
+from typing import Any, Callable, Dict, List, Optional, Set, Union, cast
 import uuid
 import weakref
 
@@ -542,11 +542,15 @@ class ConfigEntries:
         self,
         entry: ConfigEntry,
         *,
+        unique_id: Union[str, dict] = _UNDEF,
         data: dict = _UNDEF,
         options: dict = _UNDEF,
         system_options: dict = _UNDEF,
     ) -> None:
         """Update a config entry."""
+        if unique_id is not _UNDEF:
+            entry.unique_id = cast(Optional[str], unique_id)
+
         if data is not _UNDEF:
             entry.data = data
 
@@ -732,14 +736,17 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         """Get the options flow for this handler."""
         raise data_entry_flow.UnknownHandler
 
-    async def async_set_unique_id(self, unique_id: str) -> Optional[ConfigEntry]:
+    async def async_set_unique_id(
+        self, unique_id: str, *, raise_on_progress: bool = True
+    ) -> Optional[ConfigEntry]:
         """Set a unique ID for the config flow.
 
         Returns optionally existing config entry with same ID.
         """
-        for progress in self._async_in_progress():
-            if progress["context"].get("unique_id") == unique_id:
-                raise UniqueIdInProgress("already_in_progress")
+        if raise_on_progress:
+            for progress in self._async_in_progress():
+                if progress["context"].get("unique_id") == unique_id:
+                    raise UniqueIdInProgress("already_in_progress")
 
         # pylint: disable=no-member
         self.context["unique_id"] = unique_id
