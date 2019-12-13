@@ -2,8 +2,8 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries, setup
-from homeassistant.components.unifiled.const import DOMAIN
 from homeassistant.components.unifiled.config_flow import CannotConnect
+from homeassistant.components.unifiled.const import DOMAIN
 
 from tests.common import mock_coro
 
