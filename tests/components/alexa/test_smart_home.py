@@ -422,9 +422,29 @@ async def test_variable_fan(hass):
     )
     assert call.data["speed"] == "medium"
 
+    call, _ = await assert_request_calls_service(
+        "Alexa.PercentageController",
+        "SetPercentage",
+        "fan#test_2",
+        "fan.set_speed",
+        hass,
+        payload={"percentage": "33"},
+    )
+    assert call.data["speed"] == "low"
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.PercentageController",
+        "SetPercentage",
+        "fan#test_2",
+        "fan.set_speed",
+        hass,
+        payload={"percentage": "100"},
+    )
+    assert call.data["speed"] == "high"
+
     await assert_percentage_changes(
         hass,
-        [("high", "-5"), ("off", "5"), ("low", "-80")],
+        [("high", "-5"), ("off", "5"), ("low", "-80"), ("medium", "-34")],
         "Alexa.PercentageController",
         "AdjustPercentage",
         "fan#test_2",
@@ -439,9 +459,29 @@ async def test_variable_fan(hass):
         "fan#test_2",
         "fan.set_speed",
         hass,
+        payload={"powerLevel": "20"},
+    )
+    assert call.data["speed"] == "low"
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.PowerLevelController",
+        "SetPowerLevel",
+        "fan#test_2",
+        "fan.set_speed",
+        hass,
         payload={"powerLevel": "50"},
     )
     assert call.data["speed"] == "medium"
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.PowerLevelController",
+        "SetPowerLevel",
+        "fan#test_2",
+        "fan.set_speed",
+        hass,
+        payload={"powerLevel": "99"},
+    )
+    assert call.data["speed"] == "high"
 
     await assert_percentage_changes(
         hass,
@@ -1396,6 +1436,34 @@ async def test_cover_position_range(hass):
         instance="cover.position",
     )
     assert call.data["position"] == 50
+
+    call, msg = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "SetRangeValue",
+        "cover#test_range",
+        "cover.close_cover",
+        hass,
+        payload={"rangeValue": "0"},
+        instance="cover.position",
+    )
+    properties = msg["context"]["properties"][0]
+    assert properties["name"] == "rangeValue"
+    assert properties["namespace"] == "Alexa.RangeController"
+    assert properties["value"] == 0
+
+    call, msg = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "SetRangeValue",
+        "cover#test_range",
+        "cover.open_cover",
+        hass,
+        payload={"rangeValue": "100"},
+        instance="cover.position",
+    )
+    properties = msg["context"]["properties"][0]
+    assert properties["name"] == "rangeValue"
+    assert properties["namespace"] == "Alexa.RangeController"
+    assert properties["value"] == 100
 
     await assert_range_changes(
         hass,
@@ -2549,6 +2617,34 @@ async def test_cover_tilt_position_range(hass):
         instance="cover.tilt_position",
     )
     assert call.data["position"] == 50
+
+    call, msg = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "SetRangeValue",
+        "cover#test_tilt_range",
+        "cover.close_cover_tilt",
+        hass,
+        payload={"rangeValue": "0"},
+        instance="cover.tilt_position",
+    )
+    properties = msg["context"]["properties"][0]
+    assert properties["name"] == "rangeValue"
+    assert properties["namespace"] == "Alexa.RangeController"
+    assert properties["value"] == 0
+
+    call, msg = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "SetRangeValue",
+        "cover#test_tilt_range",
+        "cover.open_cover_tilt",
+        hass,
+        payload={"rangeValue": "100"},
+        instance="cover.tilt_position",
+    )
+    properties = msg["context"]["properties"][0]
+    assert properties["name"] == "rangeValue"
+    assert properties["namespace"] == "Alexa.RangeController"
+    assert properties["value"] == 100
 
     await assert_range_changes(
         hass,
