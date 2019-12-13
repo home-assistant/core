@@ -36,10 +36,10 @@ from .const import (
 )
 from .errors import UnsupportedProperty
 from .resources import (
+    AlexaCapabilityResource,
     AlexaGlobalCatalog,
     AlexaModeResource,
     AlexaPresetResource,
-    AlexaCapabilityResource,
     AlexaSemantics,
 )
 
