@@ -2,6 +2,8 @@
 ATTR_BELT_UNIT_REMAINING_LIFE = "belt_unit_remaining_life"
 ATTR_BLACK_INK_REMAINING = "black_ink_remaining"
 ATTR_BLACK_TONER_REMAINING = "black_toner_remaining"
+ATTR_BW_COUNTER = "b/w_counter"
+ATTR_COLOR_COUNTER = "color_counter"
 ATTR_CYAN_INK_REMAINING = "cyan_ink_remaining"
 ATTR_CYAN_TONER_REMAINING = "cyan_toner_remaining"
 ATTR_DRUM_COUNTER = "drum_counter"
@@ -41,6 +43,16 @@ SENSOR_TYPES = {
     ATTR_PAGE_COUNTER: {
         ATTR_ICON: "mdi:file-document-outline",
         ATTR_LABEL: ATTR_PAGE_COUNTER.replace("_", " ").title(),
+        ATTR_UNIT: UNIT_PAGES,
+    },
+    ATTR_BW_COUNTER: {
+        ATTR_ICON: "mdi:file-document-outline",
+        ATTR_LABEL: ATTR_BW_COUNTER.replace("_", " ").title(),
+        ATTR_UNIT: UNIT_PAGES,
+    },
+    ATTR_COLOR_COUNTER: {
+        ATTR_ICON: "mdi:file-document-outline",
+        ATTR_LABEL: ATTR_COLOR_COUNTER.replace("_", " ").title(),
         ATTR_UNIT: UNIT_PAGES,
     },
     ATTR_DRUM_REMAINING_LIFE: {

@@ -26,11 +26,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     brother = hass.data[DOMAIN][config_entry.entry_id]
 
     name = config_entry.data[CONF_NAME]
-    serial = config_entry.data[CONF_SERIAL]
-    sensors_list = config_entry.data[CONF_SENSORS]
     sensors = []
+    sensors_list = []
 
     if brother.available:
+        serial = brother.serial
+        for sensor in SENSOR_TYPES:
+            if sensor in brother.data:
+                sensors_list.append(sensor)
         device_info = {
             "identifiers": {(DOMAIN, serial)},
             "name": brother.model,
@@ -40,6 +43,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         }
     else:
         _LOGGER.info("Printer is unavailable, reading device info from registry.")
+        serial = config_entry.data[CONF_SERIAL]
+        sensors_list = config_entry.data[CONF_SENSORS]
         dev_reg = await device_registry.async_get_registry(hass)
         for device in dev_reg.devices.values():
             if config_entry.entry_id in device.config_entries:
@@ -82,7 +87,7 @@ class BrotherPrinterSensor(Entity):
     @property
     def state(self):
         """Return the state."""
-        self._state = self.printer.data[self.kind]
+        self._state = self.printer.data.get(self.kind)
         return self._state
 
     @property

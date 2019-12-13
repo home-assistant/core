@@ -11,7 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry
 
-from .const import (  # pylint:disable=unused-import
+from .const import (
     DEFAULT_NAME,
     DOMAIN,
     CONF_SENSORS,

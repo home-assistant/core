@@ -7,7 +7,7 @@ from brother import SnmpError, UnsupportedModel
 
 from homeassistant import data_entry_flow
 from homeassistant.components.brother import config_flow
-from homeassistant.components.brother.const import CONF_SENSORS, CONF_SERIAL, DOMAIN
+from homeassistant.components.brother.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TYPE
 
 from tests.common import MockConfigEntry, load_fixture
@@ -32,13 +32,6 @@ async def test_create_entry_with_hostname(hass):
         CONF_HOST: "localhost",
         CONF_NAME: "Printer",
         CONF_TYPE: "laser",
-        CONF_SERIAL: "foofoofoo",
-        CONF_SENSORS: [
-            "status",
-            "page_counter",
-            "drum_remaining_life",
-            "black_toner_remaining",
-        ],
     }
 
     with patch(
@@ -62,13 +55,6 @@ async def test_create_entry_with_ip_address(hass):
         CONF_HOST: "localhost",
         CONF_NAME: "Printer",
         CONF_TYPE: "laser",
-        CONF_SERIAL: "foofoofoo",
-        CONF_SENSORS: [
-            "status",
-            "page_counter",
-            "drum_remaining_life",
-            "black_toner_remaining",
-        ],
     }
 
     with patch(
@@ -93,13 +79,6 @@ async def test_invalid_hostname(hass):
         CONF_HOST: "localhost",
         CONF_NAME: "Printer",
         CONF_TYPE: "laser",
-        CONF_SERIAL: "foofoofoo",
-        CONF_SENSORS: [
-            "status",
-            "page_counter",
-            "drum_remaining_life",
-            "black_toner_remaining",
-        ],
     }
 
     flow = config_flow.BrotherConfigFlow()
@@ -117,13 +96,6 @@ async def test_duplicate_name_error(hass):
         CONF_HOST: "localhost",
         CONF_NAME: "Printer",
         CONF_TYPE: "laser",
-        CONF_SERIAL: "foofoofoo",
-        CONF_SENSORS: [
-            "status",
-            "page_counter",
-            "drum_remaining_life",
-            "black_toner_remaining",
-        ],
     }
 
     with patch(
@@ -145,13 +117,6 @@ async def test_connection_error(hass):
         CONF_HOST: "localhost",
         CONF_NAME: "Printer",
         CONF_TYPE: "laser",
-        CONF_SERIAL: "foofoofoo",
-        CONF_SENSORS: [
-            "status",
-            "page_counter",
-            "drum_remaining_life",
-            "black_toner_remaining",
-        ],
     }
 
     with patch("brother.Brother._get_data", side_effect=ConnectionError()):
@@ -169,13 +134,6 @@ async def test_snmp_error(hass):
         CONF_HOST: "localhost",
         CONF_NAME: "Printer",
         CONF_TYPE: "laser",
-        CONF_SERIAL: "foofoofoo",
-        CONF_SENSORS: [
-            "status",
-            "page_counter",
-            "drum_remaining_life",
-            "black_toner_remaining",
-        ],
     }
 
     with patch("brother.Brother._get_data", side_effect=SnmpError("error")):
@@ -193,13 +151,6 @@ async def test_unsupported_model_error(hass):
         CONF_HOST: "localhost",
         CONF_NAME: "Printer",
         CONF_TYPE: "laser",
-        CONF_SERIAL: "foofoofoo",
-        CONF_SENSORS: [
-            "status",
-            "page_counter",
-            "drum_remaining_life",
-            "black_toner_remaining",
-        ],
     }
 
     with patch("brother.Brother._get_data", side_effect=UnsupportedModel("error")):
