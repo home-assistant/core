@@ -3,6 +3,7 @@
 from collections import OrderedDict
 import logging
 from typing import Optional
+from urllib.parse import urlparse
 
 from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
 from huawei_lte_api.Client import Client
@@ -19,7 +20,11 @@ from url_normalize import url_normalize
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.ssdp import ATTR_HOST, ATTR_NAME, ATTR_PRESENTATIONURL
+from homeassistant.components.ssdp import (
+    ATTR_NAME,
+    ATTR_PRESENTATIONURL,
+    ATTR_SSDP_LOCATION,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_RECIPIENT, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
 
@@ -214,7 +219,8 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # https://github.com/PyCQA/pylint/issues/3167
         url = self.context[CONF_URL] = url_normalize(  # pylint: disable=no-member
             discovery_info.get(
-                ATTR_PRESENTATIONURL, f"http://{discovery_info[ATTR_HOST]}/"
+                ATTR_PRESENTATIONURL,
+                f"http://{urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname}/",
             )
         )
 

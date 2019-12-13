@@ -10,16 +10,15 @@ from homeassistant import data_entry_flow
 from homeassistant.components.huawei_lte.config_flow import ConfigFlowHandler
 from homeassistant.components.huawei_lte.const import DOMAIN
 from homeassistant.components.ssdp import (
-    ATTR_HOST,
     ATTR_MANUFACTURER,
     ATTR_MANUFACTURERURL,
     ATTR_MODEL_NAME,
     ATTR_MODEL_NUMBER,
     ATTR_NAME,
-    ATTR_PORT,
     ATTR_PRESENTATIONURL,
     ATTR_SERIAL,
-    ATTR_ST,
+    ATTR_SSDP_LOCATION,
+    ATTR_SSDP_ST,
     ATTR_UDN,
     ATTR_UPNP_DEVICE_TYPE,
 )
@@ -156,9 +155,8 @@ async def test_ssdp(flow):
     url = "http://192.168.100.1/"
     result = await flow.async_step_ssdp(
         discovery_info={
-            ATTR_ST: "upnp:rootdevice",
-            ATTR_PORT: 60957,
-            ATTR_HOST: "192.168.100.1",
+            ATTR_SSDP_LOCATION: "http://192.168.100.1:60957/rootDesc.xml",
+            ATTR_SSDP_ST: "upnp:rootdevice",
             ATTR_MANUFACTURER: "Huawei",
             ATTR_MANUFACTURERURL: "http://www.huawei.com/",
             ATTR_MODEL_NAME: "Huawei router",

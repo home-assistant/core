@@ -2,7 +2,6 @@
 import asyncio
 from datetime import timedelta
 import logging
-from urllib.parse import urlparse
 
 import aiohttp
 from defusedxml import ElementTree
@@ -15,10 +14,8 @@ DOMAIN = "ssdp"
 SCAN_INTERVAL = timedelta(seconds=60)
 
 # Attributes for accessing info from SSDP response
-ATTR_HOST = "host"
-ATTR_PORT = "port"
-ATTR_SSDP_DESCRIPTION = "ssdp_description"
-ATTR_ST = "ssdp_st"
+ATTR_SSDP_LOCATION = "ssdp_location"
+ATTR_SSDP_ST = "ssdp_st"
 # Attributes for accessing info from retrieved UPnP device description
 ATTR_NAME = "friendlyName"
 ATTR_MODEL_NAME = "modelName"
@@ -160,12 +157,9 @@ class Scanner:
 
 def info_from_entry(entry, device_info):
     """Get info from an entry."""
-    url = urlparse(entry.location)
     info = {
-        ATTR_HOST: url.hostname,
-        ATTR_PORT: url.port,
-        ATTR_SSDP_DESCRIPTION: entry.location,
-        ATTR_ST: entry.st,
+        ATTR_SSDP_LOCATION: entry.location,
+        ATTR_SSDP_ST: entry.st,
     }
     if device_info:
         info.update(device_info)
