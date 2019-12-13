@@ -1,26 +1,25 @@
 """Sensor for the Open Sky Network."""
-import logging
 from datetime import timedelta
+import logging
 
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_RADIUS,
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    CONF_RADIUS,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import distance as util_distance
-from homeassistant.util import location as util_location
+from homeassistant.util import distance as util_distance, location as util_location
 
 _LOGGER = logging.getLogger(__name__)
 

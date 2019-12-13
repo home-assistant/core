@@ -4,7 +4,7 @@ import logging
 import homeassistant.core as ha
 
 from .const import API_DIRECTIVE, API_HEADER
-from .errors import AlexaError, AlexaBridgeUnreachableError
+from .errors import AlexaBridgeUnreachableError, AlexaError
 from .handlers import HANDLERS
 from .messages import AlexaDirective
 

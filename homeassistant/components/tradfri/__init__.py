@@ -1,32 +1,33 @@
 """Support for IKEA Tradfri."""
 import logging
 
-import voluptuous as vol
 from pytradfri import Gateway, RequestError
 from pytradfri.api.aiocoap_api import APIFactory
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import ConfigEntryNotReady
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json
-from . import config_flow  # noqa  pylint_disable=unused-import
+
+from . import config_flow  # noqa: F401
 from .const import (
-    DOMAIN,
-    CONFIG_FILE,
-    KEY_GATEWAY,
-    KEY_API,
-    CONF_ALLOW_TRADFRI_GROUPS,
-    DEFAULT_ALLOW_TRADFRI_GROUPS,
-    TRADFRI_DEVICE_TYPES,
-    ATTR_TRADFRI_MANUFACTURER,
     ATTR_TRADFRI_GATEWAY,
     ATTR_TRADFRI_GATEWAY_MODEL,
-    CONF_IMPORT_GROUPS,
-    CONF_IDENTITY,
-    CONF_HOST,
-    CONF_KEY,
+    ATTR_TRADFRI_MANUFACTURER,
+    CONF_ALLOW_TRADFRI_GROUPS,
     CONF_GATEWAY_ID,
+    CONF_HOST,
+    CONF_IDENTITY,
+    CONF_IMPORT_GROUPS,
+    CONF_KEY,
+    CONFIG_FILE,
+    DEFAULT_ALLOW_TRADFRI_GROUPS,
+    DOMAIN,
+    KEY_API,
+    KEY_GATEWAY,
+    TRADFRI_DEVICE_TYPES,
 )
 
 _LOGGER = logging.getLogger(__name__)

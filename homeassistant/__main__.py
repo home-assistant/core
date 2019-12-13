@@ -5,21 +5,19 @@ import platform
 import subprocess
 import sys
 import threading
-from typing import List, Dict, Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, List
 
 from homeassistant import monkey_patch
-from homeassistant.const import __version__, REQUIRED_PYTHON_VER, RESTART_EXIT_CODE
+from homeassistant.const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE, __version__
 
 if TYPE_CHECKING:
     from homeassistant import core
 
 
 def set_loop() -> None:
-    """Attempt to use uvloop."""
+    """Attempt to use different loop."""
     import asyncio
     from asyncio.events import BaseDefaultEventLoopPolicy
-
-    policy = None
 
     if sys.platform == "win32":
         if hasattr(asyncio, "WindowsProactorEventLoopPolicy"):
@@ -33,15 +31,7 @@ def set_loop() -> None:
                 _loop_factory = asyncio.ProactorEventLoop
 
             policy = ProactorPolicy()
-    else:
-        try:
-            import uvloop
-        except ImportError:
-            pass
-        else:
-            policy = uvloop.EventLoopPolicy()
 
-    if policy is not None:
         asyncio.set_event_loop_policy(policy)
 
 
@@ -272,7 +262,6 @@ def cmdline() -> List[str]:
 
 async def setup_and_run_hass(config_dir: str, args: argparse.Namespace) -> int:
     """Set up HASS and run."""
-    # pylint: disable=redefined-outer-name
     from homeassistant import bootstrap, core
 
     hass = core.HomeAssistant()

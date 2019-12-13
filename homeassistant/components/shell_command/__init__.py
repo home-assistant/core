@@ -5,8 +5,8 @@ import shlex
 
 import voluptuous as vol
 
-from homeassistant.exceptions import TemplateError
 from homeassistant.core import ServiceCall
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 

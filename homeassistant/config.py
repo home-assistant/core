@@ -1,59 +1,59 @@
 """Module to help with parsing and generating configuration files."""
-from collections import OrderedDict
-
 # pylint: disable=no-name-in-module
+from collections import OrderedDict
 from distutils.version import LooseVersion  # pylint: disable=import-error
 import logging
 import os
 import re
 import shutil
-from typing import Any, Tuple, Optional, Dict, Union, Callable, Sequence, Set
 from types import ModuleType
+from typing import Any, Callable, Dict, Optional, Sequence, Set, Tuple, Union
+
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant import auth
 from homeassistant.auth import (
-    providers as auth_providers,
     mfa_modules as auth_mfa_modules,
+    providers as auth_providers,
 )
 from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
     ATTR_HIDDEN,
-    ATTR_ASSUMED_STATE,
+    CONF_AUTH_MFA_MODULES,
+    CONF_AUTH_PROVIDERS,
+    CONF_CUSTOMIZE,
+    CONF_CUSTOMIZE_DOMAIN,
+    CONF_CUSTOMIZE_GLOB,
+    CONF_ELEVATION,
+    CONF_ID,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_PACKAGES,
-    CONF_UNIT_SYSTEM,
-    CONF_TIME_ZONE,
-    CONF_ELEVATION,
-    CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_TEMPERATURE_UNIT,
+    CONF_TIME_ZONE,
+    CONF_TYPE,
+    CONF_UNIT_SYSTEM,
+    CONF_UNIT_SYSTEM_IMPERIAL,
+    CONF_WHITELIST_EXTERNAL_DIRS,
     TEMP_CELSIUS,
     __version__,
-    CONF_CUSTOMIZE,
-    CONF_CUSTOMIZE_DOMAIN,
-    CONF_CUSTOMIZE_GLOB,
-    CONF_WHITELIST_EXTERNAL_DIRS,
-    CONF_AUTH_PROVIDERS,
-    CONF_AUTH_MFA_MODULES,
-    CONF_TYPE,
-    CONF_ID,
 )
 from homeassistant.core import DOMAIN as CONF_CORE, SOURCE_YAML, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_per_platform, extract_domain_configs
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.loader import Integration, IntegrationNotFound
 from homeassistant.requirements import (
-    async_get_integration_with_requirements,
     RequirementsNotFound,
+    async_get_integration_with_requirements,
 )
-from homeassistant.util.yaml import load_yaml, SECRET_YAML
 from homeassistant.util.package import is_docker_env
-import homeassistant.helpers.config_validation as cv
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
-from homeassistant.helpers.entity_values import EntityValues
-from homeassistant.helpers import config_per_platform, extract_domain_configs
+from homeassistant.util.yaml import SECRET_YAML, load_yaml
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,6 +69,7 @@ DATA_CUSTOMIZE = "hass_customize"
 GROUP_CONFIG_PATH = "groups.yaml"
 AUTOMATION_CONFIG_PATH = "automations.yaml"
 SCRIPT_CONFIG_PATH = "scripts.yaml"
+SCENE_CONFIG_PATH = "scenes.yaml"
 
 DEFAULT_CONFIG = f"""
 # Configure a default setup of Home Assistant (frontend, api, etc)
@@ -85,6 +86,7 @@ tts:
 group: !include {GROUP_CONFIG_PATH}
 automation: !include {AUTOMATION_CONFIG_PATH}
 script: !include {SCRIPT_CONFIG_PATH}
+scene: !include {SCENE_CONFIG_PATH}
 """
 DEFAULT_SECRETS = """
 # Use this file to store secrets like usernames and passwords.
@@ -261,6 +263,7 @@ def _write_default_config(config_dir: str) -> Optional[str]:
     group_yaml_path = os.path.join(config_dir, GROUP_CONFIG_PATH)
     automation_yaml_path = os.path.join(config_dir, AUTOMATION_CONFIG_PATH)
     script_yaml_path = os.path.join(config_dir, SCRIPT_CONFIG_PATH)
+    scene_yaml_path = os.path.join(config_dir, SCENE_CONFIG_PATH)
 
     # Writing files with YAML does not create the most human readable results
     # So we're hard coding a YAML template.
@@ -281,6 +284,9 @@ def _write_default_config(config_dir: str) -> Optional[str]:
             fil.write("[]")
 
         with open(script_yaml_path, "wt"):
+            pass
+
+        with open(scene_yaml_path, "wt"):
             pass
 
         return config_path
@@ -450,9 +456,10 @@ def _format_config_error(ex: Exception, domain: str, config: Dict) -> str:
     )
 
     if domain != CONF_CORE:
+        integration = domain.split(".")[-1]
         message += (
             "Please check the docs at "
-            "https://home-assistant.io/integrations/{}/".format(domain)
+            f"https://home-assistant.io/integrations/{integration}/"
         )
 
     return message
@@ -620,7 +627,6 @@ async def merge_packages_config(
     _log_pkg_error: Callable = _log_pkg_error,
 ) -> Dict:
     """Merge packages into the top-level configuration. Mutate config."""
-    # pylint: disable=too-many-nested-blocks
     PACKAGES_CONFIG_SCHEMA(packages)
     for pack_name, pack_conf in packages.items():
         for comp_name, comp_conf in pack_conf.items():
@@ -759,7 +765,6 @@ async def async_process_component_config(
 
         # Validate platform specific schema
         if hasattr(platform, "PLATFORM_SCHEMA"):
-            # pylint: disable=no-member
             try:
                 p_validated = platform.PLATFORM_SCHEMA(  # type: ignore
                     p_config

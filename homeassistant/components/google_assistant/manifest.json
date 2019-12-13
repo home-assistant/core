@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/google_assistant",
   "requirements": [],
   "dependencies": ["http"],
+  "after_dependencies": ["camera"],
   "codeowners": ["@home-assistant/cloud"]
 }

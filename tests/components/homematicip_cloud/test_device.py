@@ -105,7 +105,7 @@ async def test_hap_reconnected(hass, default_mock_hap):
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_UNAVAILABLE
 
-    default_mock_hap._accesspoint_connected = False  # pylint: disable=W0212
+    default_mock_hap._accesspoint_connected = False  # pylint: disable=protected-access
     await async_manipulate_test_data(hass, default_mock_hap.home, "connected", True)
     await hass.async_block_till_done()
     ha_state = hass.states.get(entity_id)

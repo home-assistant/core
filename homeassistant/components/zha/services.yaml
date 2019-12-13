@@ -78,7 +78,27 @@ issue_zigbee_cluster_command:
       example: "server"
     args:
       description: args to pass to the command
-      example: {}
+      example: '[arg1, arg2, argN]'
+    manufacturer:
+      description: manufacturer code
+      example: 0x00FC
+
+issue_zigbee_group_command:
+  description: >-
+    Issue command on the specified cluster on the specified group.
+  fields:
+    group:
+      description: Hexadecimal address of the group
+      example: 0x0222
+    cluster_id:
+      description: ZCL cluster to send command to
+      example: 6
+    command:
+      description: id of the command to execute
+      example: 0
+    args:
+      description: args to pass to the command
+      example: '[arg1, arg2, argN]'
     manufacturer:
       description: manufacturer code
       example: 0x00FC

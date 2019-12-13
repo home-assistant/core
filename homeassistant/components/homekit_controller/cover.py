@@ -11,8 +11,8 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN,
     SUPPORT_OPEN_TILT,
     SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
     SUPPORT_SET_TILT_POSITION,
+    SUPPORT_STOP,
     CoverDevice,
 )
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING

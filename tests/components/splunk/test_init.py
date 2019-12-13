@@ -3,12 +3,12 @@ import json
 import unittest
 from unittest import mock
 
-from homeassistant.setup import setup_component
 import homeassistant.components.splunk as splunk
-from homeassistant.const import STATE_ON, STATE_OFF, EVENT_STATE_CHANGED
-from homeassistant.helpers import state as state_helper
-import homeassistant.util.dt as dt_util
+from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON
 from homeassistant.core import State
+from homeassistant.helpers import state as state_helper
+from homeassistant.setup import setup_component
+import homeassistant.util.dt as dt_util
 
 from tests.common import get_test_home_assistant, mock_state_change_event
 

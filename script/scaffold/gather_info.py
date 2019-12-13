@@ -4,9 +4,8 @@ import json
 from homeassistant.util import slugify
 
 from .const import COMPONENT_DIR
-from .model import Info
 from .error import ExitApp
-
+from .model import Info
 
 CHECK_EMPTY = ["Cannot be empty", lambda value: value]
 
@@ -120,7 +119,7 @@ def _load_existing_integration(domain) -> Info:
 
     manifest = json.loads((COMPONENT_DIR / domain / "manifest.json").read_text())
 
-    return Info(domain=domain, name=manifest["name"])
+    return Info(domain=domain, name=manifest["name"], is_new=False)
 
 
 def _gather_info(fields) -> dict:

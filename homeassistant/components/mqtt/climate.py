@@ -20,14 +20,14 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
+    PRESET_AWAY,
+    PRESET_NONE,
     SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
     SUPPORT_SWING_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    PRESET_AWAY,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
-    PRESET_NONE,
 )
 from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
 from homeassistant.const import (
@@ -214,7 +214,9 @@ PLATFORM_SCHEMA = (
             vol.Optional(CONF_TEMP_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(CONF_TEMP_HIGH_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(CONF_TEMP_HIGH_STATE_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_TEMP_HIGH_STATE_TEMPLATE): cv.template,
             vol.Optional(CONF_TEMP_LOW_COMMAND_TOPIC): mqtt.valid_publish_topic,
+            vol.Optional(CONF_TEMP_LOW_STATE_TEMPLATE): cv.template,
             vol.Optional(CONF_TEMP_LOW_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_TEMP_STATE_TEMPLATE): cv.template,
             vol.Optional(CONF_TEMP_STATE_TOPIC): mqtt.valid_subscribe_topic,
@@ -754,12 +756,14 @@ class MqttClimate(
         if self._away:
             optimistic_update = optimistic_update or self._set_away_mode(False)
         elif preset_mode == PRESET_AWAY:
+            if self._hold:
+                self._set_hold_mode(None)
             optimistic_update = optimistic_update or self._set_away_mode(True)
-
-        if self._hold:
-            optimistic_update = optimistic_update or self._set_hold_mode(None)
-        elif preset_mode not in (None, PRESET_AWAY):
-            optimistic_update = optimistic_update or self._set_hold_mode(preset_mode)
+        else:
+            hold_mode = preset_mode
+            if preset_mode == PRESET_NONE:
+                hold_mode = None
+            optimistic_update = optimistic_update or self._set_hold_mode(hold_mode)
 
         if optimistic_update:
             self.async_write_ha_state()

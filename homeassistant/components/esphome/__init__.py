@@ -38,7 +38,7 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 # Import config flow so that it's added to the registry
-from .config_flow import EsphomeFlowHandler  # noqa
+from .config_flow import EsphomeFlowHandler  # noqa: F401
 from .entry_data import (
     DATA_KEY,
     DISPATCHER_ON_DEVICE_UPDATE,

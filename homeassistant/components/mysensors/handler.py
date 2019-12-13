@@ -5,7 +5,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import decorator
 
-from .const import MYSENSORS_GATEWAY_READY, CHILD_CALLBACK, NODE_CALLBACK
+from .const import CHILD_CALLBACK, MYSENSORS_GATEWAY_READY, NODE_CALLBACK
 from .device import get_mysensors_devices
 from .helpers import discover_mysensors_platform, validate_set_msg
 
