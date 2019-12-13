@@ -1,16 +1,12 @@
 """The Intent integration."""
-import asyncio
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components import http
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, intent
-from homeassistant.loader import IntegrationNotFound, async_get_integration
-from homeassistant.setup import ATTR_COMPONENT
+from homeassistant.helpers import config_validation as cv, integration_platform, intent
 
 from .const import DOMAIN
 
@@ -22,32 +18,16 @@ async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Intent component."""
     hass.http.register_view(IntentHandleView())
 
-    tasks = [_async_process_intent(hass, comp) for comp in hass.config.components]
-
-    async def async_component_loaded(event):
-        """Handle a new component loaded."""
-        await _async_process_intent(hass, event.data[ATTR_COMPONENT])
-
-    hass.bus.async_listen(EVENT_COMPONENT_LOADED, async_component_loaded)
-
-    if tasks:
-        await asyncio.gather(*tasks)
+    await integration_platform.async_process_integration_platforms(
+        hass, DOMAIN, _async_process_intent
+    )
 
     return True
 
 
-async def _async_process_intent(hass: HomeAssistant, component_name: str):
-    """Process the intents of a component."""
-    try:
-        integration = await async_get_integration(hass, component_name)
-        platform = integration.get_platform(DOMAIN)
-    except (IntegrationNotFound, ImportError):
-        return
-
-    try:
-        await platform.async_setup_intents(hass)
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception("Error setting up intents for %s", component_name)
+async def _async_process_intent(hass: HomeAssistant, domain: str, platform):
+    """Process the intents of an integration."""
+    await platform.async_setup_intents(hass)
 
 
 class IntentHandleView(http.HomeAssistantView):
