@@ -12,7 +12,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 
-from .common import VeraDevice, setup_device_entities
+from . import VeraDevice
+from .common import setup_device_entities
 
 _LOGGER = logging.getLogger(__name__)
 

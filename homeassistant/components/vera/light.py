@@ -16,7 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.color as color_util
 
-from .common import VeraDevice, setup_device_entities
+from . import VeraDevice
+from .common import setup_device_entities
 
 _LOGGER = logging.getLogger(__name__)
 

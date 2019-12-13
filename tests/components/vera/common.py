@@ -49,9 +49,9 @@ def new_simple_controller_config(
 class ComponentFactory:
     """Factory class."""
 
-    def __init__(self, vera_controller_class_mock):
+    def __init__(self, init_controller_mock):
         """Initialize the factory."""
-        self.vera_controller_class_mock = vera_controller_class_mock
+        self.init_controller_mock = init_controller_mock
 
     async def configure_component(
         self, hass: HomeAssistant, controller_config: ControllerConfig
@@ -81,7 +81,7 @@ class ComponentFactory:
         if controller_config.setup_callback:
             controller_config.setup_callback(controller, hass_config)
 
-        self.vera_controller_class_mock.return_value = controller
+        self.init_controller_mock.return_value = [controller, 0]
 
         # Setup Home Assistant.
         assert await async_setup_component(hass, DOMAIN, hass_config)
