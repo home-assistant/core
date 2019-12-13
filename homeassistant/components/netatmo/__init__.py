@@ -1,8 +1,4 @@
 """The Netatmo integration."""
-
-# TODO:
-# * fix/add webhooks
-
 import asyncio
 import logging
 
