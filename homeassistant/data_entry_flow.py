@@ -1,6 +1,6 @@
 """Classes to help gather user submissions."""
 import logging
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, cast
 import uuid
 
 import voluptuous as vol
@@ -187,7 +187,7 @@ class FlowHandler:
     # Set by flow manager
     flow_id: str = None  # type: ignore
     hass: Optional[HomeAssistant] = None
-    handler: str = None  # type: ignore
+    handler: Optional[str] = None
     cur_step: Optional[Dict[str, str]] = None
     context: Dict
 
@@ -244,7 +244,7 @@ class FlowHandler:
     ) -> Dict[str, Any]:
         """Abort the config flow."""
         return _create_abort_data(
-            self.flow_id, self.handler, reason, description_placeholders
+            self.flow_id, cast(str, self.handler), reason, description_placeholders
         )
 
     @callback
