@@ -21,7 +21,6 @@ class ConfigEntryNetatmoAuth(pyatmo.auth.NetatmOAuth2):
     ):
         """Initialize Netatmo Auth."""
         self.hass = hass
-        self.config_entry = config_entry
         self.session = config_entry_oauth2_flow.OAuth2Session(
             hass, config_entry, implementation
         )

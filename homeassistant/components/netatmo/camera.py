@@ -34,14 +34,14 @@ _BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Netatmo camera platform."""
 
-    def get_devices():
-        """Retrieve Netatmo devices."""
-        devices = []
+    def get_entities():
+        """Retrieve Netatmo entities."""
+        entities = []
         try:
             camera_data = CameraData(hass, hass.data[DOMAIN][entry.entry_id][AUTH])
             for camera in camera_data.get_all_cameras():
                 _LOGGER.debug("Setting up camera %s", camera["id"])
-                devices.append(
+                entities.append(
                     NetatmoCamera(
                         camera_data, camera["id"], camera["type"], True, DEFAULT_QUALITY
                     )
@@ -49,9 +49,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
             camera_data.update_persons()
         except pyatmo.NoDevice:
             _LOGGER.debug("No cameras found")
-        return devices
+        return entities
 
-    async_add_entities(await hass.async_add_executor_job(get_devices), True)
+    async_add_entities(await hass.async_add_executor_job(get_entities), True)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

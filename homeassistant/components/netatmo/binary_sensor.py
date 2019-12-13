@@ -39,9 +39,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Netatmo energy platform."""
     auth = hass.data[DOMAIN][entry.entry_id][AUTH]
 
-    def get_devices():
-        """Retrieve Netatmo devices."""
-        devices = []
+    def get_entities():
+        """Retrieve Netatmo entities."""
+        entities = []
 
         def get_camera_home_id(data, camera_id):
             """Return the home id for a given camera id."""
@@ -65,20 +65,20 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     sensor_types.update(TAG_SENSOR_TYPES)
 
                 for sensor_name in sensor_types:
-                    devices.append(
+                    entities.append(
                         NetatmoBinarySensor(data, camera["id"], home_id, sensor_name)
                     )
         except pyatmo.NoDevice:
-            _LOGGER.debug("No camera devices to add")
+            _LOGGER.debug("No camera entities to add")
 
-        return devices
+        return entities
 
-    async_add_entities(await hass.async_add_executor_job(get_devices), True)
+    async_add_entities(await hass.async_add_executor_job(get_entities), True)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the access to Netatmo binary sensor."""
-    return
+    pass
 
 
 class NetatmoBinarySensor(BinarySensorDevice):
