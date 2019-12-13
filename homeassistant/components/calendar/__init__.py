@@ -79,7 +79,33 @@ def normalize_event(event):
 
 
 def calculate_offset(event, offset):
-    """Calculate event offset.
+    """Choose the appropriate offset function based on contents of the offset variable."""
+    if re.match("[+-]\\d\\d?:\\d\\d?:\\d\\d?", offset):
+        # offset contains the actual offset
+        return _calculate_offset_absolute(event, offset)
+
+    # offset is a marker string for finding the actual offset in
+    # the event title
+    return _calculate_offset_title(event, offset)
+
+
+def _calculate_offset_absolute(event, offset):
+    """Calculate offset based on the time delta in the supplied offset string."""
+    negative = offset[0] == "-"
+    offset = offset[1:]
+    hours, minutes, seconds = (int(x) for x in offset.split(":"))
+    delta = dt.dt.timedelta(hours=hours, minutes=minutes, seconds=seconds)
+    if negative:
+        delta *= -1
+    event["offset_time"] = delta
+    return event
+
+
+def _calculate_offset_title(event, offset):
+    """Calculate event offset from event title.
+
+    The offset parameter contains a marker string (defaults to !!)
+    which is used to find the actual offset in the event title.
 
     Return the updated event with the offset_time included.
     """
