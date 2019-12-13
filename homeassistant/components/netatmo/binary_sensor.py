@@ -1,7 +1,7 @@
 """Support for the Netatmo binary sensors."""
 import logging
 
-from pyatmo import NoDevice
+import pyatmo
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
@@ -43,11 +43,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         """Retrieve Netatmo devices."""
         devices = []
 
-        try:
-            data = CameraData(hass, auth)
-        except NoDevice:
-            _LOGGER.debug("No camera devices to add")
-
         def get_camera_home_id(data, camera_id):
             """Return the home id for a given camera id."""
             for home_id in data.camera_data.cameras:
@@ -56,20 +51,25 @@ async def async_setup_entry(hass, entry, async_add_entities):
                         return home_id
             return None
 
-        for camera in data.get_all_cameras():
-            home_id = get_camera_home_id(data, camera_id=camera["id"])
+        try:
+            data = CameraData(hass, auth)
 
-            sensor_types = {}
-            sensor_types.update(SENSOR_TYPES[camera["type"]])
+            for camera in data.get_all_cameras():
+                home_id = get_camera_home_id(data, camera_id=camera["id"])
 
-            # Tags are only supported with Netatmo Welcome indoor cameras
-            if camera["type"] == "NACamera":
-                sensor_types.update(TAG_SENSOR_TYPES)
+                sensor_types = {}
+                sensor_types.update(SENSOR_TYPES[camera["type"]])
 
-            for sensor_name in sensor_types:
-                devices.append(
-                    NetatmoBinarySensor(data, camera["id"], home_id, sensor_name)
-                )
+                # Tags are only supported with Netatmo Welcome indoor cameras
+                if camera["type"] == "NACamera":
+                    sensor_types.update(TAG_SENSOR_TYPES)
+
+                for sensor_name in sensor_types:
+                    devices.append(
+                        NetatmoBinarySensor(data, camera["id"], home_id, sensor_name)
+                    )
+        except pyatmo.NoDevice:
+            _LOGGER.debug("No camera devices to add")
 
         return devices
 

@@ -14,18 +14,22 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Netatmo camera light platform."""
+    auth = hass.data[DOMAIN][entry.entry_id][AUTH]
 
     def get_devices():
         """Retrieve Netatmo devices."""
         devices = []
+
         try:
-            camera_data = CameraData(hass, hass.data[DOMAIN][entry.entry_id][AUTH])
+            camera_data = CameraData(hass, auth)
+
             for camera in camera_data.get_all_cameras():
                 if camera["type"] == "NOC":
                     _LOGGER.debug("Setting up camera %s", camera["id"])
                     devices.append(NetatmoLight(camera_data, camera["id"]))
         except pyatmo.NoDevice:
             _LOGGER.debug("No cameras found")
+
         return devices
 
     async_add_entities(await hass.async_add_executor_job(get_devices), True)
