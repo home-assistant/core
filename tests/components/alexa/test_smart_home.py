@@ -1336,7 +1336,7 @@ async def test_group(hass):
 
 
 async def test_cover_position_range(hass):
-    """Test cover discovery and position using rangeController"""
+    """Test cover discovery and position using rangeController."""
     device = (
         "cover.test_range",
         "open",
@@ -2322,7 +2322,7 @@ async def test_mode_unsupported_domain(hass):
 
 
 async def test_cover_position_mode(hass):
-    """Test cover discovery and position using modeController"""
+    """Test cover discovery and position using modeController."""
     device = (
         "cover.test_mode",
         "open",
@@ -2505,7 +2505,7 @@ async def test_presence_sensor(hass):
 
 
 async def test_cover_tilt_position_range(hass):
-    """Test cover discovery and tilt position using rangeController"""
+    """Test cover discovery and tilt position using rangeController."""
     device = (
         "cover.test_tilt_range",
         "open",
@@ -2564,7 +2564,7 @@ async def test_cover_tilt_position_range(hass):
 
 
 async def test_cover_semantics(hass):
-    """Test cover discovery and semantics"""
+    """Test cover discovery and semantics."""
     device = (
         "cover.test_semantics",
         "open",
