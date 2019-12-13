@@ -45,7 +45,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Google Stackdriver component."""
+    """Set up the Google Stackdriver integration."""
     sd_config = config[DOMAIN]
     try:
         client = Client.from_service_account_json(sd_config[CONF_KEYFILE])
