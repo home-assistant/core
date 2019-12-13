@@ -571,9 +571,11 @@ class BinarySensorCapabilities(AlexaEntity):
             binary_sensor.DEVICE_CLASS_WINDOW,
         ):
             return self.TYPE_CONTACT
-        elif attrs.get(ATTR_DEVICE_CLASS) == binary_sensor.DEVICE_CLASS_MOTION:
+
+        if attrs.get(ATTR_DEVICE_CLASS) == binary_sensor.DEVICE_CLASS_MOTION:
             return self.TYPE_MOTION
-        elif attrs.get(ATTR_DEVICE_CLASS) == binary_sensor.DEVICE_CLASS_PRESENCE:
+
+        if attrs.get(ATTR_DEVICE_CLASS) == binary_sensor.DEVICE_CLASS_PRESENCE:
             return self.TYPE_PRESENCE
 
 
