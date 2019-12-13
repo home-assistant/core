@@ -1,5 +1,5 @@
 """Support for HERE travel time sensors."""
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 import logging
 from typing import Callable, Dict, Optional, Union
 
@@ -24,6 +24,7 @@ from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import location
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+import homeassistant.util.dt as dt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,9 +108,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Inclusive(CONF_ORIGIN_LONGITUDE, "origin_coordinates"): cv.longitude,
         vol.Exclusive(CONF_ORIGIN_LATITUDE, "origin"): cv.latitude,
         vol.Exclusive(CONF_ORIGIN_ENTITY_ID, "origin"): cv.entity_id,
-        vol.Exclusive(CONF_ARRIVAL, "arrival_departure"): cv.datetime,
-        vol.Exclusive(CONF_DEPARTURE, "arrival_departure"): cv.datetime,
-        vol.Optional(CONF_DEPARTURE, default="now"): cv.datetime,
+        vol.Exclusive(CONF_ARRIVAL, "arrival_departure"): cv.time,
+        vol.Exclusive(CONF_DEPARTURE, "arrival_departure"): cv.time,
+        vol.Optional(CONF_DEPARTURE, default="now"): cv.time,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_MODE, default=TRAVEL_MODE_CAR): vol.In(TRAVEL_MODE),
         vol.Optional(CONF_ROUTE_MODE, default=ROUTE_MODE_FASTEST): vol.In(ROUTE_MODE),
@@ -125,7 +126,7 @@ PLATFORM_SCHEMA = vol.All(
         PLATFORM_SCHEMA.extend(
             {
                 vol.Required(CONF_MODE): vol.Match(TRAVEL_MODE_PUBLIC_TIME_TABLE),
-                vol.Required(CONF_ARRIVAL): cv.datetime,
+                vol.Required(CONF_ARRIVAL): cv.time,
             }
         ),
         PLATFORM_SCHEMA,
@@ -409,15 +410,24 @@ class HERETravelTimeData:
             # Convert location to HERE friendly location
             destination = self.destination.split(",")
             origin = self.origin.split(",")
+            arrival = self.arrival
+            if arrival is not None:
+                arrival = convert_time_to_isodate(arrival)
+            departure = self.departure
+            if departure is not None:
+                departure = convert_time_to_isodate(departure)
 
             _LOGGER.debug(
-                "Requesting route for origin: %s, destination: %s, route_mode: %s, mode: %s, traffic_mode: %s",
+                "Requesting route for origin: %s, destination: %s, route_mode: %s, mode: %s, traffic_mode: %s, arrival: %s, departure: %s",
                 origin,
                 destination,
                 herepy.RouteMode[self.route_mode],
                 herepy.RouteMode[self.travel_mode],
                 herepy.RouteMode[traffic_mode],
+                arrival,
+                departure,
             )
+
             try:
                 response = self._client.public_transport_timetable(
                     origin,
@@ -428,8 +438,8 @@ class HERETravelTimeData:
                         herepy.RouteMode[self.travel_mode],
                         herepy.RouteMode[traffic_mode],
                     ],
-                    arrival=self.arrival,
-                    departure=self.departure,
+                    arrival=arrival,
+                    departure=departure,
                 )
             except herepy.NoRouteFoundError:
                 # Better error message for cryptic no route error codes
@@ -476,3 +486,11 @@ class HERETravelTimeData:
             joined_supplier_titles = ",".join(supplier_titles)
             attribution = f"With the support of {joined_supplier_titles}. All information is provided without warranty of any kind."
             return attribution
+
+
+def convert_time_to_isodate(timestr: str) -> str:
+    """Take a string like 08:00:00 and combine it with the current date."""
+    combined = datetime.combine(dt.start_of_local_day(), dt.parse_time(timestr))
+    if combined < datetime.now():
+        combined = combined + timedelta(days=1)
+    return combined.isoformat()

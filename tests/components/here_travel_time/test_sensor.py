@@ -37,6 +37,8 @@ from homeassistant.components.here_travel_time.sensor import (
     TRAVEL_MODE_PUBLIC,
     TRAVEL_MODE_PUBLIC_TIME_TABLE,
     TRAVEL_MODE_TRUCK,
+    UNIT_OF_MEASUREMENT,
+    convert_time_to_isodate,
 )
 from homeassistant.const import ATTR_ICON, EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
@@ -1056,10 +1058,11 @@ async def test_arrival(hass, requests_mock_credentials_check):
     """Test that arrival works."""
     origin = "41.9798,-87.8801"
     destination = "41.9043,-87.9216"
-    arrival = "2013-07-04T17:00:00+02:00"
+    arrival = "01:00:00"
+    arrival_isodate = convert_time_to_isodate(arrival)
     modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_PUBLIC_TIME_TABLE, TRAFFIC_MODE_DISABLED]
     response_url = _build_mock_url(
-        origin, destination, modes, API_KEY, arrival=arrival
+        origin, destination, modes, API_KEY, arrival=arrival_isodate
     )
     requests_mock_credentials_check.get(
         response_url,
@@ -1092,10 +1095,11 @@ async def test_departure(hass, requests_mock_credentials_check):
     """Test that arrival works."""
     origin = "41.9798,-87.8801"
     destination = "41.9043,-87.9216"
-    departure = "2013-07-04T17:00:00+02:00"
+    departure = "23:00:00"
+    departure_isodate = convert_time_to_isodate(departure)
     modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_PUBLIC_TIME_TABLE, TRAFFIC_MODE_DISABLED]
     response_url = _build_mock_url(
-        origin, destination, modes, API_KEY, departure=departure
+        origin, destination, modes, API_KEY, departure=departure_isodate
     )
     requests_mock_credentials_check.get(
         response_url,
