@@ -733,7 +733,10 @@
                                             }
                                         ]
                                     },
-                                    "type": "ais-auto-entities"
+                                    "type": "ais-auto-entities",
+                                    "sort": {
+                                        "method": "name"
+                                    }
                                 }
                             ],
                             "type": "vertical-stack"
