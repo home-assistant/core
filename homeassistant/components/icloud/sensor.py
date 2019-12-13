@@ -19,38 +19,27 @@ async def async_setup_entry(
 ) -> None:
     """Set up iCloud devices sensors based on a config entry."""
     username = entry.data[CONF_USERNAME]
-    icloud = hass.data[DOMAIN][username]
 
-    devices = []
-    for device_name, icloud_device in icloud.devices.items():
-        if icloud_device.battery_level is not None:
-            _LOGGER.debug("Adding sensors from iCloud device=%s", device_name)
-            devices.append(
-                IcloudDeviceBatterySensor(hass, icloud.username, icloud_device)
-            )
+    entities = []
+    for device in hass.data[DOMAIN][username].devices.values():
+        if device.battery_level is not None:
+            _LOGGER.debug("Adding battery sensor for %s", device.name)
+            entities.append(IcloudDeviceBatterySensor(device))
 
-    async_add_entities(devices, True)
+    async_add_entities(entities, True)
 
 
 class IcloudDeviceBatterySensor(Entity):
     """Representation of a iCloud device battery sensor."""
 
-    def __init__(self, hass: HomeAssistantType, username: str, device: IcloudDevice):
+    def __init__(self, device: IcloudDevice):
         """Initialize the battery sensor."""
-        self._hass = hass
-        self._username = username
         self._device = device
-
-    def update(self):
-        """Fetch new state data for the sensor."""
-        self._device = self._hass.data[DOMAIN][self._username].devices[
-            self._device.unique_id
-        ]
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return self._device.unique_id
+        return f"{self._device.unique_id}_battery"
 
     @property
     def name(self) -> str:
@@ -89,7 +78,7 @@ class IcloudDeviceBatterySensor(Entity):
     def device_info(self) -> Dict[str, any]:
         """Return the device information."""
         return {
-            "identifiers": {(DOMAIN, self.unique_id)},
+            "identifiers": {(DOMAIN, self._device.unique_id)},
             "name": self._device.name,
             "manufacturer": "Apple",
             "model": self._device.device_model,

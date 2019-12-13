@@ -36,7 +36,7 @@ async def async_setup_entry(
 
     for device in hass.data[DOMAIN][username].devices.values():
         if device.location is None:
-            _LOGGER.debug("No position found for device %s", device.name)
+            _LOGGER.debug("No position found for %s", device.name)
             continue
 
         _LOGGER.debug("Adding device_tracker for %s", device.name)
@@ -106,7 +106,7 @@ class IcloudTrackerEntity(TrackerEntity):
     def device_info(self) -> Dict[str, any]:
         """Return the device information."""
         return {
-            "identifiers": {(DOMAIN, self.unique_id)},
+            "identifiers": {(DOMAIN, self._device.unique_id)},
             "name": self._device.name,
             "manufacturer": "Apple",
             "model": self._device.device_model,
