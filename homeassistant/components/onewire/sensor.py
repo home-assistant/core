@@ -1,25 +1,24 @@
 """Support for 1-Wire environment sensors."""
+from glob import glob
+import logging
 import os
 import time
-import logging
-from glob import glob
 
 from pyownet import protocol
-
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    TEMP_CELSIUS,
     CONF_HOST,
     CONF_PORT,
-    STATE_PROBLEM,
+    STATE_OFF,
     STATE_OK,
     STATE_ON,
-    STATE_OFF,
+    STATE_PROBLEM,
+    TEMP_CELSIUS,
 )
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,10 +39,7 @@ DEVICE_SENSORS = {
     "28": {"temperature": "temperature"},
     "3B": {"temperature": "temperature"},
     "42": {"temperature": "temperature"},
-    "1D": {
-        "counter_a": "counter.A",
-        "counter_b": "counter.B",
-    },
+    "1D": {"counter_a": "counter.A", "counter_b": "counter.B"},
     "EF": {"HobbyBoard": "special"},
 }
 
@@ -111,11 +107,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-def info_from_type(type="std"):
-    if 'std' in type:
+
+def hb_info_from_type(type="std"):
+    """Return the proper info array for the device type."""
+    if "std" in type:
         return DEVICE_SENSORS
-    if 'HobbyBoard' in type:
+    if "HobbyBoard" in type:
         return HOBBYBOARD_EF
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the one wire Sensors."""
@@ -134,27 +133,33 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             owproxy = protocol.proxy(host=owhost, port=owport)
             devices = owproxy.dir()
         except protocol.Error as exc:
-            _LOGGER.error('Cannot connect to owserver on {0}:{1}, got:{2}'.format(owhost, owport, exc))
+            _LOGGER.error(
+                "Cannot connect to owserver on {0}:{1}, got:{2}".format(
+                    owhost, owport, exc
+                )
+            )
 
         for device in devices:
-            _LOGGER.debug('found device={0}'.format(device))
-            family = bytes.decode(owproxy.read(device + 'family'))
-            type = 'std'
-            if 'EF' in family:
-                type = 'HobbyBoard'
-                family = bytes.decode(owproxy.read(device + 'type'))
+            _LOGGER.debug("found device={0}".format(device))
+            family = bytes.decode(owproxy.read(device + "family"))
+            type = "std"
+            if "EF" in family:
+                type = "HobbyBoard"
+                family = bytes.decode(owproxy.read(device + "type"))
 
-            if family in info_from_type(type):
-                for sensor_key, sensor_value in info_from_type(type)[family].items():
-                    if 'moisture' in sensor_key:
-                        id = sensor_key.split('_')[1]
-                        is_leaf = int(bytes.decode(owproxy.read(device + 'moisture/is_leaf.' + id)))
+            if family in hb_info_from_type(type):
+                for sensor_key, sensor_value in hb_info_from_type(type)[family].items():
+                    if "moisture" in sensor_key:
+                        id = sensor_key.split("_")[1]
+                        is_leaf = int(
+                            bytes.decode(
+                                owproxy.read(device + "moisture/is_leaf." + id)
+                            )
+                        )
                         if is_leaf:
-                            sensor_key = 'wetness_' + id
+                            sensor_key = "wetness_" + id
                     sensor_id = os.path.split(os.path.split(device)[0])[1]
-                    device_file = os.path.join(
-                        os.path.split(device)[0], sensor_value
-                    )
+                    device_file = os.path.join(os.path.split(device)[0], sensor_value)
                     devs.append(
                         OneWireProxy(
                             device_names.get(sensor_id, sensor_id),
@@ -164,7 +169,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                         )
                     )
             else:
-                _LOGGER.warning('Ignoring unknown family ({0}) of sensor found for device: {1}'.format(family, device))
+                _LOGGER.warning(
+                    "Ignoring unknown family ({0}) of sensor found for device: {1}".format(
+                        family, device
+                    )
+                )
 
     # We have a raw GPIO ow sensor on a Pi
     elif base_dir == DEFAULT_MOUNT_DIR:
@@ -185,7 +194,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for family_file_path in glob(os.path.join(base_dir, "*", "family")):
             with open(family_file_path, "r") as family_file:
                 family = family_file.read()
-            if 'EF' in family:
+            if "EF" in family:
                 next
             if family in DEVICE_SENSORS:
                 for sensor_key, sensor_value in DEVICE_SENSORS[family].items():
@@ -242,11 +251,11 @@ class OneWire(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if 'count' in self._unit_of_measurement:
+        if "count" in self._unit_of_measurement:
             return int(self._state)
-        if 'short' in self._unit_of_measurement:
+        if "short" in self._unit_of_measurement:
             return STATE_PROBLEM if int(self._state) else STATE_OK
-        if 'present' in self._unit_of_measurement:
+        if "present" in self._unit_of_measurement:
             return STATE_ON if int(self._state) else STATE_OFF
         return self._state
 
@@ -258,6 +267,7 @@ class OneWire(Entity):
 
 class OneWireProxy(OneWire):
     """Implementation of a One wire Sensor through owserver."""
+
     def update(self):
         """Get the latest data from the device."""
         value = None
@@ -266,7 +276,7 @@ class OneWireProxy(OneWire):
             if len(value_read) > 0:
                 value = round(float(value_read), 1)
         except protocol.Error as exc:
-            _LOGGER.error('Owserver failure in read(), got:{0}'.format(exc))
+            _LOGGER.error("Owserver failure in read(), got:{0}".format(exc))
 
         self._state = value
 
