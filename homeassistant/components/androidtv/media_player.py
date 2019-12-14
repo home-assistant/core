@@ -133,7 +133,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Android TV / Fire TV platform."""
     hass.data.setdefault(ANDROIDTV_DOMAIN, {})
 
-    host = f"{config[CONF_HOST]}:{config[CONF_PORT]}"
+    address = f"{config[CONF_HOST]}:{config[CONF_PORT]}"
 
     if CONF_ADB_SERVER_IP not in config:
         # Use "adb_shell" (Python ADB implementation)
@@ -146,7 +146,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             adb_log = f"using Python ADB implementation with adbkey='{adbkey}'"
 
             aftv = setup(
-                host,
+                config[CONF_HOST],
+                config[CONF_PORT],
                 adbkey,
                 device_class=config[CONF_DEVICE_CLASS],
                 state_detection_rules=config[CONF_STATE_DETECTION_RULES],
@@ -159,7 +160,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             )
 
             aftv = setup(
-                host,
+                config[CONF_HOST],
+                config[CONF_PORT],
                 config[CONF_ADBKEY],
                 device_class=config[CONF_DEVICE_CLASS],
                 state_detection_rules=config[CONF_STATE_DETECTION_RULES],
@@ -171,7 +173,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         adb_log = f"using ADB server at {config[CONF_ADB_SERVER_IP]}:{config[CONF_ADB_SERVER_PORT]}"
 
         aftv = setup(
-            host,
+            config[CONF_HOST],
+            config[CONF_PORT],
             adb_server_ip=config[CONF_ADB_SERVER_IP],
             adb_server_port=config[CONF_ADB_SERVER_PORT],
             device_class=config[CONF_DEVICE_CLASS],
@@ -189,11 +192,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         else:
             device_name = "Android TV / Fire TV device"
 
-        _LOGGER.warning("Could not connect to %s at %s %s", device_name, host, adb_log)
+        _LOGGER.warning(
+            "Could not connect to %s at %s %s", device_name, address, adb_log
+        )
         raise PlatformNotReady
 
-    if host in hass.data[ANDROIDTV_DOMAIN]:
-        _LOGGER.warning("Platform already setup on %s, skipping", host)
+    if address in hass.data[ANDROIDTV_DOMAIN]:
+        _LOGGER.warning("Platform already setup on %s, skipping", address)
     else:
         if aftv.DEVICE_CLASS == DEVICE_ANDROIDTV:
             device = AndroidTVDevice(
@@ -217,8 +222,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             device_name = config[CONF_NAME] if CONF_NAME in config else "Fire TV"
 
         add_entities([device])
-        _LOGGER.debug("Setup %s at %s %s", device_name, host, adb_log)
-        hass.data[ANDROIDTV_DOMAIN][host] = device
+        _LOGGER.debug("Setup %s at %s %s", device_name, address, adb_log)
+        hass.data[ANDROIDTV_DOMAIN][address] = device
 
     if hass.services.has_service(ANDROIDTV_DOMAIN, SERVICE_ADB_COMMAND):
         return
