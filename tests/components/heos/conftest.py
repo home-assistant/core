@@ -6,6 +6,16 @@ from pyheos import Dispatcher, Heos, HeosPlayer, HeosSource, InputSource, const
 import pytest
 
 from homeassistant.components.heos import DOMAIN
+from homeassistant.components.ssdp import (
+    ATTR_MANUFACTURER,
+    ATTR_MODEL_NAME,
+    ATTR_MODEL_NUMBER,
+    ATTR_NAME,
+    ATTR_SERIAL,
+    ATTR_SSDP_LOCATION,
+    ATTR_UDN,
+    ATTR_UPNP_DEVICE_TYPE,
+)
 from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
@@ -118,16 +128,14 @@ def dispatcher_fixture() -> Dispatcher:
 def discovery_data_fixture() -> dict:
     """Return mock discovery data for testing."""
     return {
-        "host": "127.0.0.1",
-        "manufacturer": "Denon",
-        "model_name": "HEOS Drive",
-        "model_number": "DWSA-10 4.0",
-        "name": "Office",
-        "port": 60006,
-        "serial": None,
-        "ssdp_description": "http://127.0.0.1:60006/upnp/desc/aios_device/aios_device.xml",
-        "udn": "uuid:e61de70c-2250-1c22-0080-0005cdf512be",
-        "upnp_device_type": "urn:schemas-denon-com:device:AiosDevice:1",
+        ATTR_SSDP_LOCATION: "http://127.0.0.1:60006/upnp/desc/aios_device/aios_device.xml",
+        ATTR_MANUFACTURER: "Denon",
+        ATTR_MODEL_NAME: "HEOS Drive",
+        ATTR_MODEL_NUMBER: "DWSA-10 4.0",
+        ATTR_NAME: "Office",
+        ATTR_SERIAL: None,
+        ATTR_UDN: "uuid:e61de70c-2250-1c22-0080-0005cdf512be",
+        ATTR_UPNP_DEVICE_TYPE: "urn:schemas-denon-com:device:AiosDevice:1",
     }
 
 
