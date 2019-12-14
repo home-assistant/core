@@ -1,6 +1,7 @@
 """Support for Enphase Envoy solar energy monitor."""
 import logging
 
+from envoy_reader.envoy_reader import EnvoyReader
 import voluptuous as vol
 
 from homeassistant.helpers.entity import Entity
@@ -56,7 +57,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Enphase Envoy sensor."""
-    from envoy_reader.envoy_reader import EnvoyReader
 
     ip_address = config[CONF_IP_ADDRESS]
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
@@ -64,20 +64,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
 
+    envoy_reader = EnvoyReader(ip_address, username, password)
+
     entities = []
     # Iterate through the list of sensors
     for condition in monitored_conditions:
         if condition == "inverters":
-            inverters = await EnvoyReader(
-                ip_address, username, password
-            ).inverters_production()
+            inverters = await envoy_reader.inverters_production()
             if isinstance(inverters, dict):
                 for inverter in inverters:
                     entities.append(
                         Envoy(
-                            ip_address,
-                            username,
-                            password,
+                            envoy_reader,
                             condition,
                             f"{name}{SENSORS[condition][0]} {inverter}",
                             SENSORS[condition][1],
@@ -86,9 +84,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         else:
             entities.append(
                 Envoy(
-                    ip_address,
-                    username,
-                    password,
+                    envoy_reader,
                     condition,
                     f"{name}{SENSORS[condition][0]}",
                     SENSORS[condition][1],
@@ -100,12 +96,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class Envoy(Entity):
     """Implementation of the Enphase Envoy sensors."""
 
-    def __init__(self, ip_address, username, password, sensor_type, name, unit):
+    def __init__(self, envoy_reader, sensor_type, name, unit):
         """Initialize the sensor."""
-        self._ip_address = ip_address
+        self._envoy_reader = envoy_reader
         self._name = name
-        self._username = username
-        self._password = password
         self._unit_of_measurement = unit
         self._type = sensor_type
         self._state = None
@@ -141,10 +135,9 @@ class Envoy(Entity):
 
     async def async_update(self):
         """Get the energy production data from the Enphase Envoy."""
-        from envoy_reader.envoy_reader import EnvoyReader
 
         if self._type != "inverters":
-            _state = await getattr(EnvoyReader(self._ip_address), self._type)()
+            _state = await getattr(self._envoy_reader, self._type)()
             if isinstance(_state, int):
                 self._state = _state
             else:
@@ -152,14 +145,7 @@ class Envoy(Entity):
                 self._state = None
 
         elif self._type == "inverters":
-            if self._username:
-                inverters = await (
-                    EnvoyReader(
-                        self._ip_address, self._username, self._password
-                    ).inverters_production()
-                )
-            else:
-                inverters = await (EnvoyReader(self._ip_address).inverters_production())
+            inverters = await (self._envoy_reader.inverters_production())
             if isinstance(inverters, dict):
                 serial_number = self._name.split(" ")[2]
                 self._state = inverters[serial_number][0]
