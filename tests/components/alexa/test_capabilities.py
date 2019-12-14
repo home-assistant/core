@@ -667,3 +667,45 @@ async def test_report_playback_state(hass):
     properties.assert_equal(
         "Alexa.PlaybackStateReporter", "playbackState", {"state": "STOPPED"}
     )
+
+
+async def test_report_image_processing(hass):
+    """Test EventDetectionSensor implements humanPresenceDetectionState property."""
+    hass.states.async_set(
+        "image_processing.test_face",
+        0,
+        {
+            "friendly_name": "Test face",
+            "device_class": "face",
+            "faces": [],
+            "total_faces": 0,
+        },
+    )
+
+    properties = await reported_properties(hass, "image_processing#test_face")
+    properties.assert_equal(
+        "Alexa.EventDetectionSensor",
+        "humanPresenceDetectionState",
+        {"value": "NOT_DETECTED"},
+    )
+
+    hass.states.async_set(
+        "image_processing.test_classifier",
+        3,
+        {
+            "friendly_name": "Test classifier",
+            "device_class": "face",
+            "faces": [
+                {"confidence": 98.34, "name": "Hans", "age": 16.0, "gender": "male"},
+                {"name": "Helena", "age": 28.0, "gender": "female"},
+                {"confidence": 62.53, "name": "Luna"},
+            ],
+            "total_faces": 3,
+        },
+    )
+    properties = await reported_properties(hass, "image_processing#test_classifier")
+    properties.assert_equal(
+        "Alexa.EventDetectionSensor",
+        "humanPresenceDetectionState",
+        {"value": "DETECTED"},
+    )
