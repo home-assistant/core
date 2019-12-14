@@ -91,7 +91,10 @@ class DisplayCategory:
 
     # Indicates a doorbell.
     DOORBELL = "DOORBELL"
-
+    
+    # Indicates an exterior blind.
+    EXTERIOR_BLIND = "EXTERIOR_BLIND"
+    
     # Indicates a fan.
     FAN = "FAN"
 
@@ -320,6 +323,8 @@ class CoverCapabilities(AlexaEntity):
         device_class = self.entity.attributes.get(ATTR_DEVICE_CLASS)
         if device_class in (cover.DEVICE_CLASS_GARAGE, cover.DEVICE_CLASS_DOOR):
             return [DisplayCategory.DOOR]
+        elif device_class in (cover.DEVICE_CLASS_BLIND)
+            return [DisplayCategory.EXTERIOR_BLIND]
         return [DisplayCategory.OTHER]
 
     def interfaces(self):
