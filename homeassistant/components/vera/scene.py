@@ -2,14 +2,13 @@
 import logging
 from typing import Callable, List
 
-from homeassistant.components.scene import DOMAIN as PLATFORM_DOMAIN, Scene
+from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-from .common import setup_scene_entities
-from .const import VERA_ID_FORMAT
+from .const import DOMAIN, VERA_ID_FORMAT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,12 +19,12 @@ async def async_setup_entry(
     async_add_entities: Callable[[List[Entity], bool], None],
 ) -> None:
     """Set up the sensor config entry."""
-    setup_scene_entities(
-        hass=hass,
-        entry=entry,
-        async_add_entities=async_add_entities,
-        platform=PLATFORM_DOMAIN,
-        generator=VeraScene,
+    controller_data = hass.data[DOMAIN]
+    async_add_entities(
+        [
+            VeraScene(device, controller_data.controller)
+            for device in controller_data.scenes
+        ]
     )
 
 

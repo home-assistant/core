@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import convert
 
 from . import VeraDevice
-from .common import setup_device_entities
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,12 +24,12 @@ async def async_setup_entry(
     async_add_entities: Callable[[List[Entity], bool], None],
 ) -> None:
     """Set up the sensor config entry."""
-    setup_device_entities(
-        hass=hass,
-        entry=entry,
-        async_add_entities=async_add_entities,
-        platform=PLATFORM_DOMAIN,
-        generator=VeraSwitch,
+    controller_data = hass.data[DOMAIN]
+    async_add_entities(
+        [
+            VeraSwitch(device, controller_data.controller)
+            for device in controller_data.devices.get(PLATFORM_DOMAIN)
+        ]
     )
 
 

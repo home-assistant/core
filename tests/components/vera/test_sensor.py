@@ -195,7 +195,7 @@ async def test_scene_controller_sensor(
     )
     update_callback = component_data.controller_data.update_callback
 
-    vera_device.get_last_scene_time = "1111"
+    vera_device.get_last_scene_time.return_value = "1111"
     update_callback(vera_device)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == "id0"

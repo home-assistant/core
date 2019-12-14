@@ -23,12 +23,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import convert, slugify
 from homeassistant.util.dt import utc_from_timestamp
 
-from .common import (
-    ControllerData,
-    get_configured_platforms,
-    get_controller_data_by_config,
-    set_controller_data,
-)
+from .common import ControllerData, get_configured_platforms
 from .const import (
     ATTR_CURRENT_ENERGY_KWH,
     ATTR_CURRENT_POWER_W,
@@ -130,7 +125,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         controller=controller, devices=vera_devices, scenes=vera_scenes
     )
 
-    set_controller_data(hass, controller_data)
+    hass.data[DOMAIN] = controller_data
 
     # Forward the config data to the necessary platforms.
     for platform in get_configured_platforms(controller_data):
@@ -143,7 +138,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Withings config entry."""
-    controller_data = get_controller_data_by_config(hass=hass, entry=config_entry)
+    controller_data = hass.data[DOMAIN]
 
     if not controller_data:
         return True
