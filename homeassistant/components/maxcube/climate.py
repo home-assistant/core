@@ -32,7 +32,7 @@ from . import DATA_KEY
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_VALVE_POSITION = "valve_position"
-PRESET_MANUAL = "manual"
+PRESET_ON = "on"
 
 # There are two magic temperature values, which indicate:
 # Off (valve fully closed)
@@ -111,9 +111,9 @@ class MaxCubeClimate(ClimateDevice):
     def hvac_mode(self):
         """Return current operation mode."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
-        if device.target_temperature == OFF_TEMPERATURE:
-            return HVAC_MODE_OFF
-        if device.target_temperature == ON_TEMPERATURE:
+        if device.mode == MAX_DEVICE_MODE_MANUAL:
+            if device.target_temperature == OFF_TEMPERATURE:
+                return HVAC_MODE_OFF
             return HVAC_MODE_HEAT
         return HVAC_MODE_AUTO
 
@@ -132,7 +132,6 @@ class MaxCubeClimate(ClimateDevice):
             temp = OFF_TEMPERATURE
             mode = MAX_DEVICE_MODE_MANUAL
         elif hvac_mode == HVAC_MODE_HEAT:
-            temp = ON_TEMPERATURE
             mode = MAX_DEVICE_MODE_MANUAL
         else:
             # Reset the temperature to a sane value.
@@ -204,7 +203,7 @@ class MaxCubeClimate(ClimateDevice):
     def preset_mode(self):
         """Return the current preset mode."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
-        if self.hvac_mode in [HVAC_MODE_OFF, HVAC_MODE_HEAT]:
+        if self.hvac_mode == HVAC_MODE_OFF:
             return PRESET_NONE
 
         if device.mode == MAX_DEVICE_MODE_MANUAL:
@@ -212,8 +211,11 @@ class MaxCubeClimate(ClimateDevice):
                 return PRESET_COMFORT
             if device.target_temperature == device.eco_temperature:
                 return PRESET_ECO
+            if device.target_temperature == ON_TEMPERATURE:
+                return PRESET_ON
+            return PRESET_NONE
 
-        return self.map_mode_max_hass(device.mode)
+        return self.map_preset_max_hass(device.mode)
 
     @property
     def preset_modes(self):
@@ -223,8 +225,8 @@ class MaxCubeClimate(ClimateDevice):
             PRESET_BOOST,
             PRESET_COMFORT,
             PRESET_ECO,
-            PRESET_MANUAL,
             PRESET_AWAY,
+            PRESET_ON,
         ]
 
     def set_preset_mode(self, preset_mode):
@@ -233,14 +235,16 @@ class MaxCubeClimate(ClimateDevice):
         temp = device.target_temperature
         mode = MAX_DEVICE_MODE_AUTOMATIC
 
-        if preset_mode in [PRESET_COMFORT, PRESET_ECO]:
+        if preset_mode in [PRESET_COMFORT, PRESET_ECO, PRESET_ON]:
             mode = MAX_DEVICE_MODE_MANUAL
             if preset_mode == PRESET_COMFORT:
                 temp = device.comfort_temperature
-            else:
+            elif preset_mode == PRESET_ECO:
                 temp = device.eco_temperature
+            else:
+                temp = ON_TEMPERATURE
         else:
-            mode = self.map_mode_hass_max(preset_mode) or MAX_DEVICE_MODE_AUTOMATIC
+            mode = self.map_preset_hass_max(preset_mode) or MAX_DEVICE_MODE_AUTOMATIC
 
         with self._cubehandle.mutex:
             try:
@@ -274,33 +278,31 @@ class MaxCubeClimate(ClimateDevice):
         return temperature
 
     @staticmethod
-    def map_mode_hass_max(mode):
-        """Map Home Assistant Operation Modes to MAX! Operation Modes."""
-        if mode == PRESET_NONE:
+    def map_preset_hass_max(preset):
+        """Map Home Assistant Preset Modes to MAX! Operation Modes."""
+        if preset == PRESET_NONE:
             mode = MAX_DEVICE_MODE_AUTOMATIC
-        elif mode == PRESET_MANUAL:
-            mode = MAX_DEVICE_MODE_MANUAL
-        elif mode == PRESET_AWAY:
+        elif preset == PRESET_AWAY:
             mode = MAX_DEVICE_MODE_VACATION
-        elif mode == PRESET_BOOST:
+        elif preset == PRESET_BOOST:
             mode = MAX_DEVICE_MODE_BOOST
+        elif preset == PRESET_ON:
+            mode = MAX_DEVICE_MODE_MANUAL
         else:
             mode = None
 
         return mode
 
     @staticmethod
-    def map_mode_max_hass(mode):
-        """Map MAX! Operation Modes to Home Assistant Operation Modes."""
-        if mode == MAX_DEVICE_MODE_AUTOMATIC:
-            operation_mode = PRESET_NONE
-        elif mode == MAX_DEVICE_MODE_MANUAL:
-            operation_mode = PRESET_MANUAL
+    def map_preset_max_hass(mode):
+        """Map MAX! Operation Modes to Home Assistant Preset Modes."""
+        if mode in [MAX_DEVICE_MODE_AUTOMATIC, MAX_DEVICE_MODE_MANUAL]:
+            preset = PRESET_NONE
         elif mode == MAX_DEVICE_MODE_VACATION:
-            operation_mode = PRESET_AWAY
+            preset = PRESET_AWAY
         elif mode == MAX_DEVICE_MODE_BOOST:
-            operation_mode = PRESET_BOOST
+            preset = PRESET_BOOST
         else:
-            operation_mode = None
+            preset = None
 
-        return operation_mode
+        return preset
