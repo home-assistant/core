@@ -559,11 +559,8 @@ async def test_setup_two_devices(hass):
     ], patchers.patch_shell("")[patch_key]:
         assert await async_setup_component(hass, DOMAIN, config)
 
-        for entity_id in ["media_player.android_tv", "media_player.fire_tv"]:
-            state = hass.states.get(entity_id)
-            assert state is not None
 
-    async def test_setup_same_device_twice(hass):
+async def test_setup_same_device_twice(hass):
     """Test that setup succeeds with a duplicated config entry."""
     config = {
         DOMAIN: {
