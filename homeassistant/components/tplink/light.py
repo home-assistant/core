@@ -31,6 +31,9 @@ ATTR_CURRENT_POWER_W = "current_power_w"
 ATTR_DAILY_ENERGY_KWH = "daily_energy_kwh"
 ATTR_MONTHLY_ENERGY_KWH = "monthly_energy_kwh"
 
+MAX_ATTEMPTS = 10
+SLEEP_TIME = 2
+
 
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the platform.
@@ -177,49 +180,59 @@ class TPLinkSmartBulb(Light):
 
     def update(self):
         """Update the TP-Link Bulb's state."""
-        try:
-            if self._supported_features is None:
-                self.get_features()
+        for update_attempt in range(MAX_ATTEMPTS):
+            try:
+                if self._supported_features is None:
+                    self.get_features()
 
-            self._state = self.smartbulb.state == SmartBulb.BULB_STATE_ON
+                self._state = self.smartbulb.state == SmartBulb.BULB_STATE_ON
 
-            if self._supported_features & SUPPORT_BRIGHTNESS:
-                self._brightness = brightness_from_percentage(self.smartbulb.brightness)
+                if self._supported_features & SUPPORT_BRIGHTNESS:
+                    self._brightness = brightness_from_percentage(
+                        self.smartbulb.brightness
+                    )
 
-            if self._supported_features & SUPPORT_COLOR_TEMP:
-                if (
-                    self.smartbulb.color_temp is not None
-                    and self.smartbulb.color_temp != 0
-                ):
-                    self._color_temp = kelvin_to_mired(self.smartbulb.color_temp)
+                if self._supported_features & SUPPORT_COLOR_TEMP:
+                    if (
+                        self.smartbulb.color_temp is not None
+                        and self.smartbulb.color_temp != 0
+                    ):
+                        self._color_temp = kelvin_to_mired(self.smartbulb.color_temp)
 
-            if self._supported_features & SUPPORT_COLOR:
-                hue, sat, _ = self.smartbulb.hsv
-                self._hs = (hue, sat)
+                if self._supported_features & SUPPORT_COLOR:
+                    hue, sat, _ = self.smartbulb.hsv
+                    self._hs = (hue, sat)
 
-            if self.smartbulb.has_emeter:
-                self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.1f}".format(
-                    self.smartbulb.current_consumption()
+                if self.smartbulb.has_emeter:
+                    self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.1f}".format(
+                        self.smartbulb.current_consumption()
+                    )
+                    daily_statistics = self.smartbulb.get_emeter_daily()
+                    monthly_statistics = self.smartbulb.get_emeter_monthly()
+                    try:
+                        self._emeter_params[ATTR_DAILY_ENERGY_KWH] = "{:.3f}".format(
+                            daily_statistics[int(time.strftime("%d"))]
+                        )
+                        self._emeter_params[ATTR_MONTHLY_ENERGY_KWH] = "{:.3f}".format(
+                            monthly_statistics[int(time.strftime("%m"))]
+                        )
+                    except KeyError:
+                        # device returned no daily/monthly history
+                        pass
+
+                self._available = True
+
+            except (SmartDeviceException, OSError) as ex:
+                _LOGGER.warning(
+                    f"Retrying in {SLEEP_TIME} for {self.smartbulb.host}|{self._alias} due to: {ex}"
                 )
-                daily_statistics = self.smartbulb.get_emeter_daily()
-                monthly_statistics = self.smartbulb.get_emeter_monthly()
-                try:
-                    self._emeter_params[ATTR_DAILY_ENERGY_KWH] = "{:.3f}".format(
-                        daily_statistics[int(time.strftime("%d"))]
-                    )
-                    self._emeter_params[ATTR_MONTHLY_ENERGY_KWH] = "{:.3f}".format(
-                        monthly_statistics[int(time.strftime("%m"))]
-                    )
-                except KeyError:
-                    # device returned no daily/monthly history
-                    pass
-
-            self._available = True
-
-        except (SmartDeviceException, OSError) as ex:
+                time.sleep(SLEEP_TIME)
+            else:
+                break
+        else:
             if self._available:
                 _LOGGER.warning(
-                    "Could not read state for %s: %s", self.smartbulb.host, ex
+                    f"Could not read state for {self.smartbulb.host}|{self._alias}"
                 )
             self._available = False
 
