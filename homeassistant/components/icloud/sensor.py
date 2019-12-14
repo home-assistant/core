@@ -44,7 +44,7 @@ class IcloudDeviceBatterySensor(Entity):
     @property
     def name(self) -> str:
         """Sensor name."""
-        return self._device.name + " battery state"
+        return f"{self._device.name} battery state"
 
     @property
     def device_class(self) -> str:
