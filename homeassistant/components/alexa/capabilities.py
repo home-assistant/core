@@ -1,7 +1,7 @@
 """Alexa capabilities."""
 import logging
 
-from homeassistant.components import cover, fan, light
+from homeassistant.components import cover, fan, image_processing, light
 from homeassistant.components.alarm_control_panel import ATTR_CODE_FORMAT, FORMAT_NUMBER
 import homeassistant.components.climate.const as climate
 import homeassistant.components.media_player.const as media_player
@@ -1265,3 +1265,60 @@ class AlexaSeekController(AlexaCapability):
     def name(self):
         """Return the Alexa API name of this interface."""
         return "Alexa.SeekController"
+
+
+class AlexaEventDetectionSensor(AlexaCapability):
+    """Implements Alexa.EventDetectionSensor.
+
+    https://developer.amazon.com/docs/device-apis/alexa-eventdetectionsensor.html
+    """
+
+    def __init__(self, hass, entity):
+        """Initialize the entity."""
+        super().__init__(entity)
+        self.hass = hass
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.EventDetectionSensor"
+
+    def properties_supported(self):
+        """Return what properties this entity supports."""
+        return [{"name": "humanPresenceDetectionState"}]
+
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
+
+    def get_property(self, name):
+        """Read and return a property."""
+        if name != "humanPresenceDetectionState":
+            raise UnsupportedProperty(name)
+
+        human_presence = "NOT_DETECTED"
+        state = self.entity.state
+
+        # Return None for unavailable and unknown states.
+        # Allows the Alexa.EndpointHealth Interface to handle the unavailable state in a stateReport.
+        if state in (STATE_UNAVAILABLE, STATE_UNKNOWN, None):
+            return None
+
+        if self.entity.domain == image_processing.DOMAIN:
+            if int(state):
+                human_presence = "DETECTED"
+        elif state == STATE_ON:
+            human_presence = "DETECTED"
+
+        return {"value": human_presence}
+
+    def configuration(self):
+        """Return supported detection types."""
+        return {
+            "detectionMethods": ["AUDIO", "VIDEO"],
+            "detectionModes": {
+                "humanPresence": {
+                    "featureAvailability": "ENABLED",
+                    "supportsNotDetected": True,
+                }
+            },
+        }
