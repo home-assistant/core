@@ -157,21 +157,21 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
         except IndexError:
             raise KeyError(f"'{mode}' mode is not supported by this system")
 
-        until = None
-        # the following two attrs are mutually exclusive
         if ATTR_DURATION_DAYS in data:
             if attrs.get("timingResolution") != "1.00:00:00":
                 raise TypeError(f"'{mode}' mode does not support days, only hours")
-
             until = dt.combine(dt.now().date(), dt.min.time())
             until += timedelta(days=data[ATTR_DURATION_DAYS])
 
-        if ATTR_DURATION_HOURS in data:
+        elif ATTR_DURATION_HOURS in data:
             if attrs.get("timingResolution") != "01:00:00":
                 raise TypeError(f"'{mode}' mode does not support hours, only days")
             until = dt.now() + timedelta(hours=data[ATTR_DURATION_HOURS])
 
-        await self._set_tcs_mode(mode, _clean_dt(until))
+        else:
+            until = None
+
+        await self._set_tcs_mode(mode, until=_clean_dt(until))
 
     async def _set_tcs_mode(self, mode: str, until=None) -> None:
         """Set a Controller to any of its native EVO_* operating modes."""
@@ -215,24 +215,21 @@ class EvoZone(EvoChild, EvoClimateDevice):
             return
 
         # otherwise it is SVC_SET_ZONE_OVERRIDE
-        attrs = self._evo_device.setpointCapabilities
-        resolution = attrs["valueResolution"]
-        temp = round(data[ATTR_ZONE_TEMP] * resolution) / resolution
-        temp = max(min(temp, attrs["maxHeatSetpoint"]), attrs["minHeatSetpoint"])
+        temp = round(data[ATTR_ZONE_TEMP] * self.precision) / self.precision
+        temp = max(min(temp, self.max_temp), self.min_temp)
 
-        # the following two attrs are mutually exclusive
         if ATTR_UNTIL_MINUTES in data:
             duration = data[ATTR_UNTIL_MINUTES]
             until = None if duration == 0 else dt.now() + timedelta(minutes=duration)
+
         elif ATTR_UNTIL_TIME in data:
-            until_str = dt.strftime(dt.now(), "%Y-%m-%d ") + data[ATTR_UNTIL_TIME]
-            until = dt.strptime(until_str, "%Y-%m-%d %H:%M",)
+            until = dt.strftime(dt.now(), "%Y-%m-%d ") + data[ATTR_UNTIL_TIME]
+            until = dt.strptime(until, "%Y-%m-%d %H:%M")
+
         else:
             until = None
 
-        await self._evo_broker.call_client_api(
-            self._evo_device.set_temperature(temp, _clean_dt(until))
-        )
+        await self.async_set_temperature(temperature=temp, until=_clean_dt(until))
 
     @property
     def hvac_mode(self) -> str:
