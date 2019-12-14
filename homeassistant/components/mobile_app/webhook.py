@@ -190,10 +190,7 @@ async def handle_webhook(
 
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
-            identifiers={
-                (ATTR_DEVICE_ID, registration[ATTR_DEVICE_ID]),
-                (CONF_WEBHOOK_ID, registration[CONF_WEBHOOK_ID]),
-            },
+            identifiers={(DOMAIN, registration[ATTR_DEVICE_ID])},
             manufacturer=new_registration[ATTR_MANUFACTURER],
             model=new_registration[ATTR_MODEL],
             name=new_registration[ATTR_DEVICE_NAME],
