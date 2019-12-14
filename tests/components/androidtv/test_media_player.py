@@ -542,3 +542,23 @@ async def test_setup_fail_androidtv(hass):
 async def test_setup_fail_firetv(hass):
     """Test that the Fire TV entity is not created when the ADB connection is not established."""
     assert await _test_setup_fail(hass, CONFIG_FIRETV_PYTHON_ADB)
+
+
+async def test_setup_two_devices(hass):
+    """Test that two devices can be set up."""
+    config = {
+        DOMAIN: {
+            "android_tv": CONFIG_ANDROIDTV_PYTHON_ADB[DOMAIN],
+            "fire_tv": CONFIG_FIRETV_PYTHON_ADB[DOMAIN],
+        }
+    }
+
+    patch_key = "python"
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
+        patch_key
+    ], patchers.patch_shell("")[patch_key]:
+        assert await async_setup_component(hass, DOMAIN, config)
+
+        for entity_id in ["media_player.android_tv", "media_player.fire_tv"]:
+            state = hass.states.get(entity_id)
+            assert state is not None
