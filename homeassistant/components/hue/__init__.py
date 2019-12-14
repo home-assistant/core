@@ -4,7 +4,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant import core, config_entries
+from homeassistant import config_entries, core
 from homeassistant.const import CONF_FILENAME, CONF_HOST
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
