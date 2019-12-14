@@ -2386,3 +2386,84 @@ async def test_cover_position(hass):
     assert properties["name"] == "mode"
     assert properties["namespace"] == "Alexa.ModeController"
     assert properties["value"] == "position.open"
+
+
+async def test_image_processing(hass):
+    """Test image_processing discovery as event detection."""
+    device = (
+        "image_processing.test_face",
+        0,
+        {
+            "friendly_name": "Test face",
+            "device_class": "face",
+            "faces": [],
+            "total_faces": 0,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "image_processing#test_face"
+    assert appliance["displayCategories"][0] == "CAMERA"
+    assert appliance["friendlyName"] == "Test face"
+
+    assert_endpoint_capabilities(
+        appliance, "Alexa.EventDetectionSensor", "Alexa.EndpointHealth"
+    )
+
+
+async def test_motion_sensor_event_detection(hass):
+    """Test motion sensor with EventDetectionSensor discovery."""
+    device = (
+        "binary_sensor.test_motion_camera_event",
+        "off",
+        {"friendly_name": "Test motion camera event", "device_class": "motion"},
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "binary_sensor#test_motion_camera_event"
+    assert appliance["displayCategories"][0] == "CAMERA"
+    assert appliance["friendlyName"] == "Test motion camera event"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa",
+        "Alexa.MotionSensor",
+        "Alexa.EventDetectionSensor",
+        "Alexa.EndpointHealth",
+    )
+
+    event_detection_capability = get_capability(
+        capabilities, "Alexa.EventDetectionSensor"
+    )
+    assert event_detection_capability is not None
+    properties = event_detection_capability["properties"]
+    assert properties["proactivelyReported"] is True
+    assert not properties["retrievable"]
+    assert {"name": "humanPresenceDetectionState"} in properties["supported"]
+
+
+async def test_presence_sensor(hass):
+    """Test presence sensor."""
+    device = (
+        "binary_sensor.test_presence_sensor",
+        "off",
+        {"friendly_name": "Test presence sensor", "device_class": "presence"},
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "binary_sensor#test_presence_sensor"
+    assert appliance["displayCategories"][0] == "CAMERA"
+    assert appliance["friendlyName"] == "Test presence sensor"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance, "Alexa", "Alexa.EventDetectionSensor", "Alexa.EndpointHealth"
+    )
+
+    event_detection_capability = get_capability(
+        capabilities, "Alexa.EventDetectionSensor"
+    )
+    assert event_detection_capability is not None
+    properties = event_detection_capability["properties"]
+    assert properties["proactivelyReported"] is True
+    assert not properties["retrievable"]
+    assert {"name": "humanPresenceDetectionState"} in properties["supported"]
