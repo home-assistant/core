@@ -26,13 +26,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
 
 from .const import (
     DOMAIN,
     EVO_FOLLOW,
-    EVO_RESET,
     EVO_SYSTEM_MODES,
     GWS,
     STORAGE_KEY,
@@ -79,8 +79,8 @@ ATTR_UNTIL_TIME = "until"
 SVC_REFRESH_SYSTEM = "force_refresh"
 SVC_SET_SYSTEM_MODE = "set_system_mode"
 SVC_RESET_SYSTEM = "reset_system"
-SVC_SET_ZONE_MODE = "set_zone_override"
-SVC_RESET_ZONE_MODE = "clear_zone_override"
+SVC_SET_ZONE_OVERRIDE = "set_zone_override"
+SVC_RESET_ZONE_OVERRIDE = "clear_zone_override"
 
 HH_MM_REGEXP = r"^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"  # 24h format, with leading 0
 
@@ -95,7 +95,7 @@ SET_SYSTEM_MODE_SCHEMA = vol.Schema(
         ),
     }
 )
-SET_ZONE_MODE_SCHEMA = vol.Schema(
+SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
         vol.Required(ATTR_ZONE_TEMP): vol.Coerce(float),
@@ -107,7 +107,7 @@ SET_ZONE_MODE_SCHEMA = vol.Schema(
         ),
     }
 )
-RESET_ZONE_MODE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_id})
+RESET_ZONE_OVERRIDE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_id})
 
 
 def _local_dt_to_aware(dt_naive: dt) -> dt:
@@ -280,90 +280,40 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 def setup_service_functions(hass: HomeAssistantType, broker):
     """Set up the service functions."""
 
-    def _clean_dt(dtm):
-        if dtm is not None:
-            format_str = "%Y-%m-%d %H:%M:00"  # round down to the nearest minute
-            dtm = dt.strptime(dt.strftime(dtm, format_str), format_str)
-            if dtm < dt.now():
-                dtm += timedelta(days=1)
-        return dtm
-
     async def force_refresh(call):
         """Obtain the latest state data via the vendor's RESTful API."""
         await broker.update()
 
     async def set_system_mode(call):
         """Set the system mode."""
-        if call.service == SVC_SET_SYSTEM_MODE:
-            mode = call.data[ATTR_SYSTEM_MODE]
-        else:
-            mode = EVO_RESET
+        payload = {
+            "unique_id": broker.tcs.systemId,
+            "service": call.service,
+            "data": call.data,
+        }
 
-        tcs = broker.tcs
-        try:
-            attrs = [m for m in tcs.allowedSystemModes if m["systemMode"] == mode][0]
-        except IndexError:
-            raise KeyError(f"'{mode}' mode is not supported by this system")
+        hass.helpers.dispatcher.async_dispatcher_send(DOMAIN, payload)
 
-        until = None
-        # the following two attrs are mutually exclusive
-        if ATTR_DURATION_DAYS in call.data:
-            if attrs.get("timingResolution") != "1.00:00:00":
-                raise TypeError(f"'{mode}' mode does not support days, only hours")
-
-            until = dt.combine(dt.now().date(), dt.min.time())
-            until += timedelta(days=call.data[ATTR_DURATION_DAYS])
-
-        if ATTR_DURATION_HOURS in call.data:
-            if attrs.get("timingResolution") != "01:00:00":
-                raise TypeError(f"'{mode}' mode does not support hours, only days")
-            until = dt.now() + timedelta(hours=call.data[ATTR_DURATION_HOURS])
-
-        await broker.call_client_api(
-            tcs._set_status(mode, _clean_dt(until))  # pylint: disable=protected-access
-        )
-
-    async def set_zone_setpoint(call):
-        """Set the system mode."""
+    async def set_zone_override(call):
+        """Set the zone override (setpoint)."""
         entity_id = call.data[ATTR_ENTITY_ID]
 
-        try:
-            unique_id = hass.data["entity_registry"].entities[entity_id].unique_id
-            zone_entity = broker.entities[unique_id]
-            zone_device = broker.tcs.zones_by_id[unique_id]
-        except KeyError:
-            raise KeyError(f"'{entity_id}' is not a known evohome zone")
+        registry = await async_get_registry(hass)
+        registry_entry = registry.async_get(entity_id)
 
-        if call.service == SVC_RESET_ZONE_MODE:
-            await broker.call_client_api(zone_device.cancel_temp_override())
-            return
+        if registry_entry is None or registry_entry.platform != DOMAIN:
+            raise KeyError(f"'{entity_id}' is not a known evohome entity")
 
-        attrs = zone_device.setpointCapabilities
-        resolution = attrs["valueResolution"]
-        temp = round(call.data[ATTR_ZONE_TEMP] * resolution) / resolution
-        temp = max(min(temp, attrs["maxHeatSetpoint"]), attrs["minHeatSetpoint"])
+        if registry_entry.domain != "climate":
+            raise KeyError(f"'{entity_id}' is not an evohome zone")
 
-        until = None
-        # the following two attrs are mutually exclusive
-        if ATTR_UNTIL_MINUTES in call.data:
-            duration = call.data[ATTR_UNTIL_MINUTES]
-            if duration == 0:  # until next setpoint
-                await zone_entity._update_schedule()  # pylint: disable=protected-access
-                until = dt_util.parse_datetime(
-                    str(zone_entity.setpoints.get("next_sp_from"))
-                )
-            else:
-                until = dt.now() + timedelta(minutes=duration)
+        payload = {
+            "unique_id": registry_entry.unique_id,
+            "service": call.service,
+            "data": call.data,
+        }
 
-        if ATTR_UNTIL_TIME in call.data:
-            until = dt.strptime(
-                dt.strftime(dt.now(), "%Y-%m-%d ") + call.data[ATTR_UNTIL_TIME],
-                "%Y-%m-%d %H:%M",
-            )
-
-        await broker.call_client_api(
-            zone_device.set_temperature(temp, _clean_dt(until))
-        )
+        hass.helpers.dispatcher.async_dispatcher_send(DOMAIN, payload)
 
     hass.services.async_register(
         DOMAIN, SVC_REFRESH_SYSTEM, force_refresh, schema=vol.Schema({})
@@ -375,10 +325,16 @@ def setup_service_functions(hass: HomeAssistantType, broker):
         DOMAIN, SVC_RESET_SYSTEM, set_system_mode, schema=vol.Schema({})
     )
     hass.services.async_register(
-        DOMAIN, SVC_SET_ZONE_MODE, set_zone_setpoint, schema=SET_ZONE_MODE_SCHEMA
+        DOMAIN,
+        SVC_SET_ZONE_OVERRIDE,
+        set_zone_override,
+        schema=SET_ZONE_OVERRIDE_SCHEMA,
     )
     hass.services.async_register(
-        DOMAIN, SVC_RESET_ZONE_MODE, set_zone_setpoint, schema=RESET_ZONE_MODE_SCHEMA
+        DOMAIN,
+        SVC_RESET_ZONE_OVERRIDE,
+        set_zone_override,
+        schema=RESET_ZONE_OVERRIDE_SCHEMA,
     )
 
 
@@ -397,8 +353,6 @@ class EvoBroker:
         self.config = client.installation_info[loc_idx][GWS][0][TCS][0]
         self.tcs = client.locations[loc_idx]._gateways[0]._control_systems[0]
         self.temps = {}
-
-        self._entities = {}
 
     async def save_auth_tokens(self) -> None:
         """Save access tokens and session IDs to the store for later use."""
@@ -428,7 +382,7 @@ class EvoBroker:
             if not _handle_exception(err):
                 return
 
-        if refresh is True:
+        if refresh:
             self.hass.helpers.event.async_call_later(1, self.update())
 
         return result
@@ -525,8 +479,21 @@ class EvoDevice(Entity):
         self._device_state_attrs = {}
 
     @callback
-    def _refresh(self) -> None:
-        self.async_schedule_update_ha_state(force_refresh=True)
+    def _refresh(self, payload=None) -> None:
+        if payload is None:
+            self.async_schedule_update_ha_state(force_refresh=True)
+        elif payload["unique_id"] == self._unique_id:
+            if payload["service"] in [SVC_SET_SYSTEM_MODE, SVC_RESET_SYSTEM]:
+                self.aync_tcs_svc_request(payload["service"], payload["data"])
+            self.aync_zone_svc_request(payload["service"], payload["data"])
+
+    def aync_tcs_svc_request(self, service, data) -> None:
+        """Process a service request (system mode) for a controller."""
+        raise NotImplementedError
+
+    def aync_zone_svc_request(self, service, data) -> None:
+        """Process a service request (setpoint override) for a zone."""
+        raise NotImplementedError
 
     @property
     def should_poll(self) -> bool:

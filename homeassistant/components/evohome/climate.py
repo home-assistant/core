@@ -1,4 +1,5 @@
 """Support for Climate devices of (EMEA/EU-based) Honeywell TCC systems."""
+from datetime import datetime as dt, timedelta
 import logging
 from typing import List, Optional
 
@@ -21,7 +22,19 @@ from homeassistant.const import PRECISION_TENTHS
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util.dt import parse_datetime
 
-from . import CONF_LOCATION_IDX, EvoChild, EvoDevice
+from . import (
+    ATTR_DURATION_DAYS,
+    ATTR_DURATION_HOURS,
+    ATTR_SYSTEM_MODE,
+    ATTR_UNTIL_MINUTES,
+    ATTR_UNTIL_TIME,
+    ATTR_ZONE_TEMP,
+    CONF_LOCATION_IDX,
+    SVC_RESET_ZONE_OVERRIDE,
+    SVC_SET_SYSTEM_MODE,
+    EvoChild,
+    EvoDevice,
+)
 from .const import (
     DOMAIN,
     EVO_AUTO,
@@ -64,6 +77,15 @@ STATE_ATTRS_TCS = ["systemId", "activeFaults", "systemModeStatus"]
 STATE_ATTRS_ZONES = ["zoneId", "activeFaults", "setpointStatus", "temperatureStatus"]
 
 
+def _clean_dt(dtm) -> Optional[str]:
+    if dtm is not None:
+        format_str = "%Y-%m-%d %H:%M:00"  # round down to the nearest minute
+        dtm = dt.strptime(dt.strftime(dtm, format_str), format_str)
+        if dtm < dt.now():
+            dtm += timedelta(days=1)
+    return dtm
+
+
 async def async_setup_platform(
     hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ) -> None:
@@ -91,13 +113,11 @@ async def async_setup_platform(
             zone.name,
         )
         new_entity = EvoThermostat(broker, zone)
-        broker.entities = {zone.zoneId: new_entity}
 
         async_add_entities([new_entity], update_before_add=True)
         return
 
     controller = EvoController(broker, broker.tcs)
-    broker.entities = {broker.tcs.systemId: controller}
 
     zones = []
     for zone in broker.tcs.zones.values():
@@ -109,7 +129,6 @@ async def async_setup_platform(
             zone.name,
         )
         new_entity = EvoZone(broker, zone)
-        broker.entities[zone.zoneId] = new_entity
 
         zones.append(new_entity)
 
@@ -125,7 +144,36 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
 
         self._preset_modes = None
 
-    async def _set_tcs_mode(self, op_mode: str) -> None:
+    async def aync_tcs_svc_request(self, service, data) -> None:
+        """Process a service request (system mode) for a controller."""
+        if service == SVC_SET_SYSTEM_MODE:
+            mode = data[ATTR_SYSTEM_MODE]
+        else:  # otherwise it is SVC_RESET_SYSTEM
+            mode = EVO_RESET
+
+        allowed_system_modes = self._evo_device.allowedSystemModes
+        try:
+            attrs = [m for m in allowed_system_modes if m["systemMode"] == mode][0]
+        except IndexError:
+            raise KeyError(f"'{mode}' mode is not supported by this system")
+
+        until = None
+        # the following two attrs are mutually exclusive
+        if ATTR_DURATION_DAYS in data:
+            if attrs.get("timingResolution") != "1.00:00:00":
+                raise TypeError(f"'{mode}' mode does not support days, only hours")
+
+            until = dt.combine(dt.now().date(), dt.min.time())
+            until += timedelta(days=data[ATTR_DURATION_DAYS])
+
+        if ATTR_DURATION_HOURS in data:
+            if attrs.get("timingResolution") != "01:00:00":
+                raise TypeError(f"'{mode}' mode does not support hours, only days")
+            until = dt.now() + timedelta(hours=data[ATTR_DURATION_HOURS])
+
+        await self._set_tcs_mode(mode, _clean_dt(until))
+
+    async def _set_tcs_mode(self, mode: str, until=None) -> None:
         """Set a Controller to any of its native EVO_* operating modes."""
         await self._evo_broker.call_client_api(self._evo_tcs.set_status(op_mode))
 
@@ -157,6 +205,40 @@ class EvoZone(EvoChild, EvoClimateDevice):
             self._precision = PRECISION_TENTHS
         else:
             self._precision = self._evo_device.setpointCapabilities["valueResolution"]
+
+    async def aync_zone_svc_request(self, service, data) -> None:
+        """Process a service request (setpoint override) for a zone."""
+        if service == SVC_RESET_ZONE_OVERRIDE:
+            await self._evo_broker.call_client_api(
+                self._evo_device.cancel_temp_override()
+            )
+            return
+
+        # otherwise it is SVC_SET_ZONE_OVERRIDE
+        attrs = self._evo_device.setpointCapabilities
+        resolution = attrs["valueResolution"]
+        temp = round(data[ATTR_ZONE_TEMP] * resolution) / resolution
+        temp = max(min(temp, attrs["maxHeatSetpoint"]), attrs["minHeatSetpoint"])
+
+        until = None
+        # the following two attrs are mutually exclusive
+        if ATTR_UNTIL_MINUTES in data:
+            duration = data[ATTR_UNTIL_MINUTES]
+            if duration == 0:  # then until next setpoint
+                await self._update_schedule()
+                until = parse_datetime(str(self.setpoints.get("next_sp_from")))
+            else:
+                until = dt.now() + timedelta(minutes=duration)
+
+        if ATTR_UNTIL_TIME in data:
+            until = dt.strptime(
+                dt.strftime(dt.now(), "%Y-%m-%d ") + data[ATTR_UNTIL_TIME],
+                "%Y-%m-%d %H:%M",
+            )
+
+        await self._evo_broker.call_client_api(
+            self._evo_device.set_temperature(temp, _clean_dt(until))
+        )
 
     @property
     def hvac_mode(self) -> str:
@@ -211,7 +293,7 @@ class EvoZone(EvoChild, EvoClimateDevice):
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set a new target temperature."""
-        temperature = kwargs["temperature"]
+        temp = kwargs["temperature"]
 
         if self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
             await self._update_schedule()
@@ -222,7 +304,7 @@ class EvoZone(EvoChild, EvoClimateDevice):
             until = None
 
         await self._evo_broker.call_client_api(
-            self._evo_device.set_temperature(temperature, until)
+            self._evo_device.set_temperature(temp, _clean_dt(until))
         )
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:

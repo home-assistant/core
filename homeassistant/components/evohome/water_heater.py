@@ -39,7 +39,6 @@ async def async_setup_platform(
         broker.tcs.hotwater.zoneId,
     )
     new_entity = EvoDHW(broker, broker.tcs.hotwater)
-    broker.entities = {broker.tcs.hotwater.zoneId: new_entity}
 
     async_add_entities([new_entity], update_before_add=True)
 
