@@ -1,30 +1,32 @@
 """Provides device automations for Cover."""
 from typing import List
+
 import voluptuous as vol
 
+from homeassistant.components.automation import (
+    AutomationActionType,
+    numeric_state as numeric_state_automation,
+    state as state_automation,
+)
+from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     CONF_ABOVE,
     CONF_BELOW,
-    CONF_DOMAIN,
-    CONF_TYPE,
-    CONF_PLATFORM,
     CONF_DEVICE_ID,
+    CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_PLATFORM,
+    CONF_TYPE,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.core import HomeAssistant, CALLBACK_TYPE
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.components.automation import (
-    state as state_automation,
-    numeric_state as numeric_state_automation,
-    AutomationActionType,
-)
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+
 from . import (
     DOMAIN,
     SUPPORT_CLOSE,

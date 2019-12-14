@@ -4,9 +4,8 @@ import json
 from homeassistant.util import slugify
 
 from .const import COMPONENT_DIR
-from .model import Info
 from .error import ExitApp
-
+from .model import Info
 
 CHECK_EMPTY = ["Cannot be empty", lambda value: value]
 

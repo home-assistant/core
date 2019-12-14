@@ -1,14 +1,13 @@
 """The tests for the nexbus sensor component."""
 from copy import deepcopy
-
-import pytest
 from unittest.mock import patch
 
-import homeassistant.components.sensor as sensor
+import pytest
+
 import homeassistant.components.nextbus.sensor as nextbus
+import homeassistant.components.sensor as sensor
 
 from tests.common import assert_setup_component, async_setup_component
-
 
 VALID_AGENCY = "sf-muni"
 VALID_ROUTE = "F"
@@ -207,7 +206,7 @@ async def test_direction_list(
                 },
                 {
                     "title": "Outbound 2",
-                    "prediction": {"minutes": "4", "epochTime": "1553807374000"},
+                    "prediction": {"minutes": "0", "epochTime": "1553807374000"},
                 },
             ],
         }
@@ -222,7 +221,7 @@ async def test_direction_list(
     assert state.attributes["route"] == VALID_ROUTE_TITLE
     assert state.attributes["stop"] == VALID_STOP_TITLE
     assert state.attributes["direction"] == "Outbound, Outbound 2"
-    assert state.attributes["upcoming"] == "1, 2, 3, 4"
+    assert state.attributes["upcoming"] == "0, 1, 2, 3"
 
 
 async def test_custom_name(

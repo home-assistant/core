@@ -4,7 +4,7 @@ import datetime
 import logging
 
 import requests
-import tank_utility
+from tank_utility import auth, device as tank_monitor
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     devices = config.get(CONF_DEVICES)
 
     try:
-        token = tank_utility.auth.get_token(email, password)
+        token = auth.get_token(email, password)
     except requests.exceptions.HTTPError as http_error:
         if (
             http_error.response.status_code
@@ -111,17 +111,17 @@ class TankUtilitySensor(Entity):
 
         data = {}
         try:
-            data = tank_utility.device.get_device_data(self._token, self.device)
+            data = tank_monitor.get_device_data(self._token, self.device)
         except requests.exceptions.HTTPError as http_error:
             if (
                 http_error.response.status_code
                 == requests.codes.unauthorized  # pylint: disable=no-member
+                or http_error.response.status_code
+                == requests.codes.bad_request  # pylint: disable=no-member
             ):
                 _LOGGER.info("Getting new token")
-                self._token = tank_utility.auth.get_token(
-                    self._email, self._password, force=True
-                )
-                data = tank_utility.device.get_device_data(self._token, self.device)
+                self._token = auth.get_token(self._email, self._password, force=True)
+                data = tank_monitor.get_device_data(self._token, self.device)
             else:
                 raise http_error
         data.update(data.pop("device", {}))

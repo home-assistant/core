@@ -3,12 +3,11 @@
 from collections import defaultdict
 from datetime import timedelta
 from functools import partial
-from urllib.parse import urlparse
 import ipaddress
 import logging
 from typing import Any, Callable, Dict, List, Set, Tuple
+from urllib.parse import urlparse
 
-import voluptuous as vol
 import attr
 from getmac import get_mac_address
 from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
@@ -20,13 +19,14 @@ from huawei_lte_api.exceptions import (
 )
 from requests.exceptions import Timeout
 from url_normalize import url_normalize
+import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import ConfigEntry, SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_RECIPIENT,
@@ -36,8 +36,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, discovery
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    discovery,
+)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -46,6 +49,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
+
 from .const import (
     ALL_KEYS,
     CONNECTION_TIMEOUT,
@@ -63,7 +67,6 @@ from .const import (
     UPDATE_OPTIONS_SIGNAL,
     UPDATE_SIGNAL,
 )
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -154,40 +157,53 @@ class Router:
         """Get router connections for device registry."""
         return {(dr.CONNECTION_NETWORK_MAC, self.mac)} if self.mac else set()
 
+    def _get_data(self, key: str, func: Callable[[None], Any]) -> None:
+        if not self.subscriptions.get(key):
+            return
+        _LOGGER.debug("Getting %s for subscribers %s", key, self.subscriptions[key])
+        try:
+            self.data[key] = func()
+        except ResponseErrorNotSupportedException:
+            _LOGGER.info(
+                "%s not supported by device, excluding from future updates", key
+            )
+            self.subscriptions.pop(key)
+        except ResponseErrorLoginRequiredException:
+            if isinstance(self.connection, AuthorizedConnection):
+                _LOGGER.debug("Trying to authorize again...")
+                if self.connection.enforce_authorized_connection():
+                    _LOGGER.debug(
+                        "...success, %s will be updated by a future periodic run", key,
+                    )
+                else:
+                    _LOGGER.debug("...failed")
+                return
+            _LOGGER.info(
+                "%s requires authorization, excluding from future updates", key
+            )
+            self.subscriptions.pop(key)
+        finally:
+            _LOGGER.debug("%s=%s", key, self.data.get(key))
+
     def update(self) -> None:
         """Update router data."""
 
-        def get_data(key: str, func: Callable[[None], Any]) -> None:
-            if not self.subscriptions[key]:
-                return
-            _LOGGER.debug("Getting %s for subscribers %s", key, self.subscriptions[key])
-            try:
-                self.data[key] = func()
-            except ResponseErrorNotSupportedException:
-                _LOGGER.info(
-                    "%s not supported by device, excluding from future updates", key
-                )
-                self.subscriptions.pop(key)
-            except ResponseErrorLoginRequiredException:
-                _LOGGER.info(
-                    "%s requires authorization, excluding from future updates", key
-                )
-                self.subscriptions.pop(key)
-            finally:
-                _LOGGER.debug("%s=%s", key, self.data.get(key))
-
-        get_data(KEY_DEVICE_INFORMATION, self.client.device.information)
+        self._get_data(KEY_DEVICE_INFORMATION, self.client.device.information)
         if self.data.get(KEY_DEVICE_INFORMATION):
             # Full information includes everything in basic
             self.subscriptions.pop(KEY_DEVICE_BASIC_INFORMATION, None)
-        get_data(KEY_DEVICE_BASIC_INFORMATION, self.client.device.basic_information)
-        get_data(KEY_DEVICE_SIGNAL, self.client.device.signal)
-        get_data(KEY_DIALUP_MOBILE_DATASWITCH, self.client.dial_up.mobile_dataswitch)
-        get_data(KEY_MONITORING_STATUS, self.client.monitoring.status)
-        get_data(
+        self._get_data(
+            KEY_DEVICE_BASIC_INFORMATION, self.client.device.basic_information
+        )
+        self._get_data(KEY_DEVICE_SIGNAL, self.client.device.signal)
+        self._get_data(
+            KEY_DIALUP_MOBILE_DATASWITCH, self.client.dial_up.mobile_dataswitch
+        )
+        self._get_data(KEY_MONITORING_STATUS, self.client.monitoring.status)
+        self._get_data(
             KEY_MONITORING_TRAFFIC_STATISTICS, self.client.monitoring.traffic_statistics
         )
-        get_data(KEY_WLAN_HOST_LIST, self.client.wlan.host_list)
+        self._get_data(KEY_WLAN_HOST_LIST, self.client.wlan.host_list)
 
         self.signal_update()
 

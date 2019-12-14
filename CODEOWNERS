@@ -152,6 +152,7 @@ homeassistant/components/huawei_lte/* @scop
 homeassistant/components/huawei_router/* @abmantis
 homeassistant/components/hue/* @balloob
 homeassistant/components/iaqualink/* @flz
+homeassistant/components/icloud/* @Quentame
 homeassistant/components/ign_sismologia/* @exxamalte
 homeassistant/components/incomfort/* @zxdavb
 homeassistant/components/influxdb/* @fabaff
@@ -281,6 +282,7 @@ homeassistant/components/seventeentrack/* @bachya
 homeassistant/components/shell_command/* @home-assistant/core
 homeassistant/components/shiftr/* @fabaff
 homeassistant/components/shodan/* @fabaff
+homeassistant/components/signal_messenger/* @bbernhard
 homeassistant/components/simplisafe/* @bachya
 homeassistant/components/sinch/* @bendikrb
 homeassistant/components/slide/* @ualex73

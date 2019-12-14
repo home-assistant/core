@@ -1,15 +1,15 @@
 """The tests for the microsoft face identify platform."""
-from unittest.mock import patch, PropertyMock
+from unittest.mock import PropertyMock, patch
 
-from homeassistant.core import callback
-from homeassistant.const import ATTR_ENTITY_PICTURE, STATE_UNKNOWN
-from homeassistant.setup import setup_component
 import homeassistant.components.image_processing as ip
 import homeassistant.components.microsoft_face as mf
+from homeassistant.const import ATTR_ENTITY_PICTURE, STATE_UNKNOWN
+from homeassistant.core import callback
+from homeassistant.setup import setup_component
 
 from tests.common import (
-    get_test_home_assistant,
     assert_setup_component,
+    get_test_home_assistant,
     load_fixture,
     mock_coro,
 )

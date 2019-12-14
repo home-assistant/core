@@ -1,14 +1,14 @@
 """The tests for the Async Media player helper functions."""
-import unittest
 import asyncio
+import unittest
 
 import homeassistant.components.media_player as mp
 from homeassistant.const import (
-    STATE_PLAYING,
-    STATE_PAUSED,
-    STATE_ON,
-    STATE_OFF,
     STATE_IDLE,
+    STATE_OFF,
+    STATE_ON,
+    STATE_PAUSED,
+    STATE_PLAYING,
 )
 
 from tests.common import get_test_home_assistant

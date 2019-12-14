@@ -1,31 +1,27 @@
 """The tests for the Light component."""
 # pylint: disable=protected-access
+from io import StringIO
+import os
 import unittest
 import unittest.mock as mock
-import os
-from io import StringIO
 
 import pytest
 
 from homeassistant import core
-from homeassistant.exceptions import Unauthorized
-from homeassistant.setup import setup_component, async_setup_component
+from homeassistant.components import light
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    STATE_ON,
-    STATE_OFF,
     CONF_PLATFORM,
-    SERVICE_TURN_ON,
-    SERVICE_TURN_OFF,
     SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
 )
-from homeassistant.components import light
+from homeassistant.exceptions import Unauthorized
+from homeassistant.setup import async_setup_component, setup_component
 
-from tests.common import (
-    mock_service,
-    get_test_home_assistant,
-    mock_storage,
-)
+from tests.common import get_test_home_assistant, mock_service, mock_storage
 from tests.components.light import common
 
 

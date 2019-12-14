@@ -1,15 +1,15 @@
 """Tests for the Somfy config flow."""
 import asyncio
 import logging
-from unittest.mock import patch
 import time
+from unittest.mock import patch
 
 import pytest
 
-from homeassistant import data_entry_flow, setup, config_entries
+from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from tests.common import mock_platform, MockConfigEntry
+from tests.common import MockConfigEntry, mock_platform
 
 TEST_DOMAIN = "oauth2_test"
 CLIENT_SECRET = "5678"

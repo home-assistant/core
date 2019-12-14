@@ -1,16 +1,17 @@
 """Tests for the Linky config flow."""
-import pytest
 from unittest.mock import patch
+
 from pylinky.exceptions import (
     PyLinkyAccessException,
     PyLinkyEnedisException,
     PyLinkyException,
     PyLinkyWrongLoginException,
 )
+import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.linky import config_flow
-from homeassistant.components.linky.const import DOMAIN, DEFAULT_TIMEOUT
+from homeassistant.components.linky.const import DEFAULT_TIMEOUT, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 
 from tests.common import MockConfigEntry

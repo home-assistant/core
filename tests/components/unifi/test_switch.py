@@ -3,10 +3,9 @@ from copy import deepcopy
 
 from homeassistant import config_entries
 from homeassistant.components import unifi
+import homeassistant.components.switch as switch
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
-
-import homeassistant.components.switch as switch
 
 from .test_controller import (
     CONTROLLER_HOST,

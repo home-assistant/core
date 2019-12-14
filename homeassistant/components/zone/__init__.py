@@ -4,28 +4,27 @@ from typing import Set, cast
 
 import voluptuous as vol
 
-from homeassistant.core import callback, State
-from homeassistant.loader import bind_hass
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_NAME,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    CONF_ICON,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_ICON,
+    CONF_NAME,
     CONF_RADIUS,
     EVENT_CORE_CONFIG_UPDATE,
 )
+from homeassistant.core import State, callback
 from homeassistant.helpers import config_per_platform
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.util.location import distance
 
-
 from .config_flow import configured_zones
-from .const import CONF_PASSIVE, DOMAIN, HOME_ZONE, ATTR_PASSIVE, ATTR_RADIUS
+from .const import ATTR_PASSIVE, ATTR_RADIUS, CONF_PASSIVE, DOMAIN, HOME_ZONE
 from .zone import Zone
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 

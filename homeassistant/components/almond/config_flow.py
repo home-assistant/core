@@ -2,14 +2,14 @@
 import asyncio
 import logging
 
-import async_timeout
 from aiohttp import ClientError
-from yarl import URL
-import voluptuous as vol
+import async_timeout
 from pyalmond import AlmondLocalAuth, WebAlmondAPI
+import voluptuous as vol
+from yarl import URL
 
-from homeassistant import data_entry_flow, config_entries, core
-from homeassistant.helpers import config_entry_oauth2_flow, aiohttp_client
+from homeassistant import config_entries, core, data_entry_flow
+from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from .const import DOMAIN, TYPE_LOCAL, TYPE_OAUTH2
 

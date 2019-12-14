@@ -29,7 +29,7 @@ YesssSMS==0.4.1
 abodepy==0.16.7
 
 # homeassistant.components.androidtv
-adb-shell==0.0.8
+adb-shell==0.0.9
 
 # homeassistant.components.adguard
 adguardhome==0.3.0
@@ -44,7 +44,7 @@ aio_geojson_geonetnz_volcano==0.5
 aio_geojson_nsw_rfs_incidents==0.1
 
 # homeassistant.components.ambient_station
-aioambient==0.3.2
+aioambient==1.0.2
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.1.22
@@ -84,7 +84,7 @@ airly==0.0.2
 ambiclimate==0.2.1
 
 # homeassistant.components.androidtv
-androidtv==0.0.34
+androidtv==0.0.35
 
 # homeassistant.components.apns
 apns2==0.3.0
@@ -231,10 +231,10 @@ hole==0.5.0
 holidays==0.9.11
 
 # homeassistant.components.frontend
-home-assistant-frontend==20191204.0
+home-assistant-frontend==20191204.1
 
 # homeassistant.components.zwave
-homeassistant-pyozw==0.1.6
+homeassistant-pyozw==0.1.7
 
 # homeassistant.components.homekit_controller
 homekit[IP]==0.15.0
@@ -432,6 +432,9 @@ pyheos==0.6.0
 # homeassistant.components.homematic
 pyhomematic==0.1.62
 
+# homeassistant.components.icloud
+pyicloud==0.9.1
+
 # homeassistant.components.ipma
 pyipma==1.2.1
 
@@ -519,7 +522,7 @@ python-forecastio==1.4.0
 python-izone==1.1.1
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.4.7
+python-miio==0.4.8
 
 # homeassistant.components.nest
 python-nest==4.1.0
@@ -535,6 +538,9 @@ pytraccar==0.9.0
 
 # homeassistant.components.tradfri
 pytradfri[async]==6.4.0
+
+# homeassistant.components.vera
+pyvera==0.3.7
 
 # homeassistant.components.vesync
 pyvesync==1.1.0

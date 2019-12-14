@@ -67,8 +67,14 @@ def setup(hass, config):
         token = doorstation_config.get(CONF_TOKEN)
         name = doorstation_config.get(CONF_NAME) or "DoorBird {}".format(index + 1)
 
-        device = DoorBird(device_ip, username, password)
-        status = device.ready()
+        try:
+            device = DoorBird(device_ip, username, password)
+            status = device.ready()
+        except OSError as oserr:
+            _LOGGER.error(
+                "Failed to setup doorbird at %s: %s; not retrying", device_ip, oserr
+            )
+            continue
 
         if status[0]:
             doorstation = ConfiguredDoorBird(device, name, events, custom_url, token)

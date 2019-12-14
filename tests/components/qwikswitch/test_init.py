@@ -1,14 +1,14 @@
 """Test qwikswitch sensors."""
 import logging
 
+from aiohttp.client_exceptions import ClientError
 import pytest
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START
-from homeassistant.components.qwikswitch import DOMAIN as QWIKSWITCH
 from homeassistant.bootstrap import async_setup_component
-from tests.test_util.aiohttp import mock_aiohttp_client
-from aiohttp.client_exceptions import ClientError
+from homeassistant.components.qwikswitch import DOMAIN as QWIKSWITCH
+from homeassistant.const import EVENT_HOMEASSISTANT_START
 
+from tests.test_util.aiohttp import mock_aiohttp_client
 
 _LOGGER = logging.getLogger(__name__)
 

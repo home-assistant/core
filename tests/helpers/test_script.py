@@ -6,20 +6,18 @@ from unittest import mock
 
 import asynctest
 import jinja2
-import voluptuous as vol
 import pytest
-
-import homeassistant.components.scene as scene
-from homeassistant import exceptions
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
-from homeassistant.core import Context, callback
+import voluptuous as vol
 
 # Otherwise can't test just this file (import order issue)
+from homeassistant import exceptions
+import homeassistant.components.scene as scene
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
+from homeassistant.core import Context, callback
+from homeassistant.helpers import config_validation as cv, script
 import homeassistant.util.dt as dt_util
-from homeassistant.helpers import script, config_validation as cv
 
 from tests.common import async_fire_time_changed
-
 
 ENTITY_ID = "script.test"
 

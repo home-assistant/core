@@ -1,15 +1,15 @@
 """Define tests for the Ambient PWS config flow."""
 import json
+from unittest.mock import patch
 
 import aioambient
 import pytest
-from unittest.mock import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.ambient_station import CONF_APP_KEY, DOMAIN, config_flow
 from homeassistant.const import CONF_API_KEY
 
-from tests.common import load_fixture, MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry, load_fixture, mock_coro
 
 
 @pytest.fixture

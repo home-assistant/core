@@ -1,9 +1,11 @@
 """The tests for the Islamic prayer times sensor platform."""
 from datetime import datetime, timedelta
 from unittest.mock import patch
-from homeassistant.setup import async_setup_component
+
 from homeassistant.components.islamic_prayer_times.sensor import IslamicPrayerTimesData
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+
 from tests.common import async_fire_time_changed
 
 LATITUDE = 41

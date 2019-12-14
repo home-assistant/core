@@ -154,7 +154,7 @@ class PerSecondUPnPIGDSensor(UpnpSensor):
     """Abstract representation of a X Sent/Received per second sensor."""
 
     def __init__(self, device, direction):
-        """Initializer."""
+        """Initialize sensor."""
         super().__init__(device)
         self._direction = direction
 

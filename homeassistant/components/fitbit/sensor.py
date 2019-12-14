@@ -1,7 +1,7 @@
 """Support for the Fitbit API."""
-import os
-import logging
 import datetime
+import logging
+import os
 import time
 
 from fitbit import Fitbit
@@ -9,16 +9,14 @@ from fitbit.api import FitbitOauth2Client
 from oauthlib.oauth2.rfc6749.errors import MismatchingStateError, MissingTokenError
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.const import CONF_UNIT_SYSTEM
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_UNIT_SYSTEM
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
-import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
-
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)

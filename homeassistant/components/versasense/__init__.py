@@ -10,14 +10,14 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
 from .const import (
+    KEY_CONSUMER,
+    KEY_IDENTIFIER,
+    KEY_MEASUREMENT,
+    KEY_PARENT_MAC,
+    KEY_PARENT_NAME,
+    KEY_UNIT,
     PERIPHERAL_CLASS_SENSOR,
     PERIPHERAL_CLASS_SENSOR_ACTUATOR,
-    KEY_IDENTIFIER,
-    KEY_PARENT_NAME,
-    KEY_PARENT_MAC,
-    KEY_UNIT,
-    KEY_MEASUREMENT,
-    KEY_CONSUMER,
 )
 
 _LOGGER = logging.getLogger(__name__)

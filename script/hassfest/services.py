@@ -1,8 +1,8 @@
 """Validate dependencies."""
 import pathlib
+import re
 from typing import Dict
 
-import re
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
