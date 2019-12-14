@@ -149,5 +149,22 @@ def patch_firetv_update(state, current_app, running_apps):
     )
 
 
-PATCH_LAUNCH_APP = patch("androidtv.firetv.FireTV.launch_app")
-PATCH_STOP_APP = patch("androidtv.firetv.FireTV.stop_app")
+def patch_androidtv_update(
+    state, current_app, running_apps, device, is_volume_muted, volume_level
+):
+    """Patch the `AndroidTV.update()` method."""
+    return patch(
+        "androidtv.androidtv.AndroidTV.update",
+        return_value=(
+            state,
+            current_app,
+            running_apps,
+            device,
+            is_volume_muted,
+            volume_level,
+        ),
+    )
+
+
+PATCH_LAUNCH_APP = patch("androidtv.basetv.BaseTV.launch_app")
+PATCH_STOP_APP = patch("androidtv.basetv.BaseTV.stop_app")
