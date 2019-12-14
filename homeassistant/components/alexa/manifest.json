@@ -3,7 +3,7 @@
   "name": "Alexa",
   "documentation": "https://www.home-assistant.io/integrations/alexa",
   "requirements": [],
-  "dependencies": ["http"],
+  "dependencies": ["http", "image_processing"],
   "codeowners": [
     "@home-assistant/cloud",
     "@ochlocracy"
