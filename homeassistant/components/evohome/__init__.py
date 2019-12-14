@@ -82,7 +82,7 @@ SVC_RESET_SYSTEM = "reset_system"
 SVC_SET_ZONE_OVERRIDE = "set_zone_override"
 SVC_RESET_ZONE_OVERRIDE = "clear_zone_override"
 
-HH_MM_REGEXP = r"^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"  # 24h format, with leading 0
+HH_MM_REGEXP = r"^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"  # 24h format, leading 0s
 
 SET_SYSTEM_MODE_SCHEMA = vol.Schema(
     {

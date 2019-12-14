@@ -220,21 +220,15 @@ class EvoZone(EvoChild, EvoClimateDevice):
         temp = round(data[ATTR_ZONE_TEMP] * resolution) / resolution
         temp = max(min(temp, attrs["maxHeatSetpoint"]), attrs["minHeatSetpoint"])
 
-        until = None
         # the following two attrs are mutually exclusive
         if ATTR_UNTIL_MINUTES in data:
             duration = data[ATTR_UNTIL_MINUTES]
-            if duration == 0:  # then until next setpoint
-                await self._update_schedule()
-                until = parse_datetime(str(self.setpoints.get("next_sp_from")))
-            else:
-                until = dt.now() + timedelta(minutes=duration)
-
-        if ATTR_UNTIL_TIME in data:
-            until = dt.strptime(
-                dt.strftime(dt.now(), "%Y-%m-%d ") + data[ATTR_UNTIL_TIME],
-                "%Y-%m-%d %H:%M",
-            )
+            until = None if duration == 0 else dt.now() + timedelta(minutes=duration)
+        elif ATTR_UNTIL_TIME in data:
+            until_str = dt.strftime(dt.now(), "%Y-%m-%d ") + data[ATTR_UNTIL_TIME]
+            until = dt.strptime(until_str, "%Y-%m-%d %H:%M",)
+        else:
+            until = None
 
         await self._evo_broker.call_client_api(
             self._evo_device.set_temperature(temp, _clean_dt(until))
@@ -293,18 +287,18 @@ class EvoZone(EvoChild, EvoClimateDevice):
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set a new target temperature."""
-        temp = kwargs["temperature"]
+        temperature = kwargs["temperature"]
+        until = kwargs.get("until")
 
-        if self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
-            await self._update_schedule()
-            until = parse_datetime(str(self.setpoints.get("next_sp_from")))
-        elif self._evo_device.setpointStatus["setpointMode"] == EVO_TEMPOVER:
-            until = parse_datetime(self._evo_device.setpointStatus["until"])
-        else:  # EVO_PERMOVER
-            until = None
+        if until is None:
+            if self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
+                await self._update_schedule()
+                until = parse_datetime(str(self.setpoints.get("next_sp_from")))
+            elif self._evo_device.setpointStatus["setpointMode"] == EVO_TEMPOVER:
+                until = parse_datetime(self._evo_device.setpointStatus["until"])
 
         await self._evo_broker.call_client_api(
-            self._evo_device.set_temperature(temp, _clean_dt(until))
+            self._evo_device.set_temperature(temperature, until)
         )
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
