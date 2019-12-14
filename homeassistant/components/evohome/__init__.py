@@ -484,14 +484,19 @@ class EvoDevice(Entity):
             self.async_schedule_update_ha_state(force_refresh=True)
         elif payload["unique_id"] == self._unique_id:
             if payload["service"] in [SVC_SET_SYSTEM_MODE, SVC_RESET_SYSTEM]:
-                self.aync_tcs_svc_request(payload["service"], payload["data"])
-            self.aync_zone_svc_request(payload["service"], payload["data"])
+                self.hass.async_create_task(
+                    self.async_tcs_svc_request(payload["service"], payload["data"])
+                )
+            else:
+                self.hass.async_create_task(
+                    self.async_zone_svc_request(payload["service"], payload["data"])
+                )
 
-    def aync_tcs_svc_request(self, service, data) -> None:
+    async def async_tcs_svc_request(self, service, data) -> None:
         """Process a service request (system mode) for a controller."""
         raise NotImplementedError
 
-    def aync_zone_svc_request(self, service, data) -> None:
+    async def async_zone_svc_request(self, service, data) -> None:
         """Process a service request (setpoint override) for a zone."""
         raise NotImplementedError
 

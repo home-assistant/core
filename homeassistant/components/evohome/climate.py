@@ -144,7 +144,7 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
 
         self._preset_modes = None
 
-    async def aync_tcs_svc_request(self, service, data) -> None:
+    async def async_tcs_svc_request(self, service, data) -> None:
         """Process a service request (system mode) for a controller."""
         if service == SVC_SET_SYSTEM_MODE:
             mode = data[ATTR_SYSTEM_MODE]
@@ -206,7 +206,7 @@ class EvoZone(EvoChild, EvoClimateDevice):
         else:
             self._precision = self._evo_device.setpointCapabilities["valueResolution"]
 
-    async def aync_zone_svc_request(self, service, data) -> None:
+    async def async_zone_svc_request(self, service, data) -> None:
         """Process a service request (setpoint override) for a zone."""
         if service == SVC_RESET_ZONE_OVERRIDE:
             await self._evo_broker.call_client_api(
