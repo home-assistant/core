@@ -115,8 +115,8 @@ async def test_entity_availability(hass, monkeypatch):
     assert hass.states.get("sensor.test").state == STATE_UNKNOWN
 
 
-async def test_aliasses(hass, monkeypatch):
-    """Validate the response to sensor's alias (with aliasses)."""
+async def test_aliases(hass, monkeypatch):
+    """Validate the response to sensor's alias (with aliases)."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},
         DOMAIN: {
@@ -125,7 +125,7 @@ async def test_aliasses(hass, monkeypatch):
                 "test_02": {
                     "name": "test_02",
                     "sensor_type": "humidity",
-                    "aliasses": ["test_alias_02_0"],
+                    "aliases": ["test_alias_02_0"],
                 }
             },
         },
