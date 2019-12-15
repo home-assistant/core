@@ -13,6 +13,8 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     POWER_WATT,
     TEMP_CELSIUS,
+    STATE_OPEN,
+    STATE_CLOSED,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -26,6 +28,7 @@ CONF_RANGE_TO = "range_to"
 DEFAULT_NAME = "EnOcean sensor"
 
 DEVICE_CLASS_POWER = "powersensor"
+DEVICE_CLASS_WINDOWHANDLE = "windowhandle"
 
 SENSOR_TYPES = {
     DEVICE_CLASS_HUMIDITY: {
@@ -46,7 +49,16 @@ SENSOR_TYPES = {
         "icon": "mdi:thermometer",
         "class": DEVICE_CLASS_TEMPERATURE,
     },
+    DEVICE_CLASS_WINDOWHANDLE: {
+        "name": "WindowHandle",
+        "unit": "-",
+        "icon": "mdi:window",
+        "class": DEVICE_CLASS_WINDOWHANDLE,
+    },
+    
 }
+
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -85,6 +97,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     elif dev_class == DEVICE_CLASS_POWER:
         add_entities([EnOceanPowerSensor(dev_id, dev_name)])
+    
+    elif dev_class == DEVICE_CLASS_WINDOWHANDLE:
+        add_entities([EnOceanWindowHandle(dev_id, dev_name)])
 
 
 class EnOceanSensor(enocean.EnOceanDevice):
@@ -214,3 +229,39 @@ class EnOceanHumiditySensor(EnOceanSensor):
         humidity = packet.data[2] * 100 / 250
         self._state = round(humidity, 1)
         self.schedule_update_ha_state()
+
+
+class EnOceanWindowHandle(EnOceanSensor):
+    """Representation of an EnOcean window handle device.
+
+    EEPs (EnOcean Equipment Profiles):
+    - F6-10-00 (Mechanical handle / Hoppe AG)
+    """
+
+    def __init__(self, dev_id, dev_name):
+        """Initialize the EnOcean humidity sensor device."""
+        super().__init__(dev_id, dev_name, DEVICE_CLASS_WINDOWHANDLE)
+        self._rawdata = "no packet received"
+
+    def value_changed(self, packet):
+        """Update the internal state of the sensor."""
+
+        self._rawdata = f"{packet}"
+        action = (packet.data[1] & 0x70) >> 4
+        
+        if action == 0x07:
+            self._state = STATE_CLOSED
+        if (action == 0x06) or (action == 0x04):
+            self._state = STATE_OPEN
+        if action == 0x05:
+            self._state = "tilt"
+            
+        self.schedule_update_ha_state()
+
+    @property
+    def state_attributes(self):
+        attr={}
+        
+        attr["rawdata"] = self._rawdata
+        
+        return attr
