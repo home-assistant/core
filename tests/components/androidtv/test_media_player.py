@@ -569,21 +569,14 @@ async def test_setup_two_devices(hass):
 
 async def test_setup_same_device_twice(hass):
     """Test that setup succeeds with a duplicated config entry."""
-    config = {
-        DOMAIN: [
-            CONFIG_ANDROIDTV_ADB_SERVER[DOMAIN],
-            CONFIG_ANDROIDTV_ADB_SERVER[DOMAIN],
-        ]
-    }
-
     patch_key = "server"
+
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
     ], patchers.patch_shell("")[patch_key]:
-        assert await async_setup_component(hass, DOMAIN, config)
+        assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
 
-        entity_id = "media_player.android_tv"
-        await hass.helpers.entity_component.async_update_entity(entity_id)
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == STATE_OFF
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
+        patch_key
+    ], patchers.patch_shell("")[patch_key]:
+        assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
