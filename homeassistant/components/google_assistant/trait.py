@@ -667,7 +667,7 @@ class TemperatureSettingTrait(_Trait):
             device_class = attrs.get(ATTR_DEVICE_CLASS)
             if device_class == sensor.DEVICE_CLASS_TEMPERATURE:
                 current_temp = self.state.state
-                if current_temp != STATE_UNKNOWN and current_temp != STATE_UNAVAILABLE:
+                if current_temp not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                     response["thermostatTemperatureAmbient"] = round(
                         temp_util.convert(float(current_temp), unit, TEMP_CELSIUS), 1
                     )
@@ -888,10 +888,7 @@ class HumiditySettingTrait(_Trait):
             device_class = attrs.get(ATTR_DEVICE_CLASS)
             if device_class == sensor.DEVICE_CLASS_HUMIDITY:
                 current_humidity = self.state.state
-                if (
-                    current_humidity != STATE_UNKNOWN
-                    and current_humidity != STATE_UNAVAILABLE
-                ):
+                if current_humidity not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                     response["humidityAmbientPercent"] = round(float(current_humidity))
 
         return response
