@@ -1,9 +1,9 @@
 """The Google Stackdriver integration."""
 
 import logging
-import voluptuous as vol
 
 from google.cloud.logging import Client
+import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
