@@ -95,7 +95,7 @@ async def _test_reconnect(hass, caplog, config):
     """
     patch_key, entity_id = _setup(hass, config)
 
-    with patchers.PATCH_ADB_DEVICE, patchers.patch_connect(True)[
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
     ], patchers.patch_shell("")[
         patch_key
@@ -166,7 +166,7 @@ async def _test_adb_shell_returns_none(hass, config):
     """
     patch_key, entity_id = _setup(hass, config)
 
-    with patchers.PATCH_ADB_DEVICE, patchers.patch_connect(True)[
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
     ], patchers.patch_shell("")[
         patch_key
@@ -274,7 +274,7 @@ async def test_setup_with_adbkey(hass):
     config[DOMAIN][CONF_ADBKEY] = hass.config.path("user_provided_adbkey")
     patch_key, entity_id = _setup(hass, config)
 
-    with patchers.PATCH_ADB_DEVICE, patchers.patch_connect(True)[
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
     ], patchers.patch_shell("")[
         patch_key
@@ -292,7 +292,7 @@ async def _test_sources(hass, config0):
     config[DOMAIN][CONF_APPS] = {"com.app.test1": "TEST 1"}
     patch_key, entity_id = _setup(hass, config)
 
-    with patchers.PATCH_ADB_DEVICE, patchers.patch_connect(True)[
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
     ], patchers.patch_shell("")[patch_key]:
         assert await async_setup_component(hass, DOMAIN, config)
@@ -364,7 +364,7 @@ async def _test_select_source(hass, config0, source, expected_arg, method_patch)
     config[DOMAIN][CONF_APPS] = {"com.app.test1": "TEST 1"}
     patch_key, entity_id = _setup(hass, config)
 
-    with patchers.PATCH_ADB_DEVICE, patchers.patch_connect(True)[
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
     ], patchers.patch_shell("")[patch_key]:
         assert await async_setup_component(hass, DOMAIN, config)
@@ -515,3 +515,68 @@ async def test_firetv_select_source_stop_app_id_no_name(hass):
         "com.app.test2",
         patchers.PATCH_STOP_APP,
     )
+
+
+async def _test_setup_fail(hass, config):
+    """Test that the entity is not created when the ADB connection is not established."""
+    patch_key, entity_id = _setup(hass, config)
+
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(False)[
+        patch_key
+    ], patchers.patch_shell("")[
+        patch_key
+    ], patchers.PATCH_KEYGEN, patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER:
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.helpers.entity_component.async_update_entity(entity_id)
+        state = hass.states.get(entity_id)
+        assert state is None
+
+    return True
+
+
+async def test_setup_fail_androidtv(hass):
+    """Test that the Android TV entity is not created when the ADB connection is not established."""
+    assert await _test_setup_fail(hass, CONFIG_ANDROIDTV_PYTHON_ADB)
+
+
+async def test_setup_fail_firetv(hass):
+    """Test that the Fire TV entity is not created when the ADB connection is not established."""
+    assert await _test_setup_fail(hass, CONFIG_FIRETV_PYTHON_ADB)
+
+
+async def test_setup_two_devices(hass):
+    """Test that two devices can be set up."""
+    config = {
+        DOMAIN: [
+            CONFIG_ANDROIDTV_ADB_SERVER[DOMAIN],
+            CONFIG_FIRETV_ADB_SERVER[DOMAIN].copy(),
+        ]
+    }
+    config[DOMAIN][1][CONF_HOST] = "127.0.0.2"
+
+    patch_key = "server"
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
+        patch_key
+    ], patchers.patch_shell("")[patch_key]:
+        assert await async_setup_component(hass, DOMAIN, config)
+
+        for entity_id in ["media_player.android_tv", "media_player.fire_tv"]:
+            await hass.helpers.entity_component.async_update_entity(entity_id)
+            state = hass.states.get(entity_id)
+            assert state is not None
+            assert state.state == STATE_OFF
+
+
+async def test_setup_same_device_twice(hass):
+    """Test that setup succeeds with a duplicated config entry."""
+    patch_key = "server"
+
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
+        patch_key
+    ], patchers.patch_shell("")[patch_key]:
+        assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
+
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
+        patch_key
+    ], patchers.patch_shell("")[patch_key]:
+        assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)

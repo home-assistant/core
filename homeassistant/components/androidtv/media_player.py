@@ -146,7 +146,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             adb_log = f"using Python ADB implementation with adbkey='{adbkey}'"
 
             aftv = setup(
-                host,
+                config[CONF_HOST],
+                config[CONF_PORT],
                 adbkey,
                 device_class=config[CONF_DEVICE_CLASS],
                 state_detection_rules=config[CONF_STATE_DETECTION_RULES],
@@ -159,7 +160,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             )
 
             aftv = setup(
-                host,
+                config[CONF_HOST],
+                config[CONF_PORT],
                 config[CONF_ADBKEY],
                 device_class=config[CONF_DEVICE_CLASS],
                 state_detection_rules=config[CONF_STATE_DETECTION_RULES],
@@ -171,7 +173,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         adb_log = f"using ADB server at {config[CONF_ADB_SERVER_IP]}:{config[CONF_ADB_SERVER_PORT]}"
 
         aftv = setup(
-            host,
+            config[CONF_HOST],
+            config[CONF_PORT],
             adb_server_ip=config[CONF_ADB_SERVER_IP],
             adb_server_port=config[CONF_ADB_SERVER_PORT],
             device_class=config[CONF_DEVICE_CLASS],
