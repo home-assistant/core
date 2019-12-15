@@ -8,7 +8,7 @@ import pytest
 from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.core import HomeAssistant
 
-from .conftest import MOCK_HOST, MOCK_NAME, MOCK_PORT, MOCK_ENTITY_ID
+from .conftest import MOCK_ENTITY_ID, MOCK_HOST, MOCK_NAME, MOCK_PORT
 
 MOCK_TURN_ON = {
     "service": "switch.turn_on",
