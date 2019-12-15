@@ -1988,7 +1988,7 @@ uvcclient==0.11.0
 vallox-websocket-api==2.2.0
 
 # homeassistant.components.venstar
-venstarcolortouch==0.9
+venstarcolortouch==0.12
 
 # homeassistant.components.meteo_france
 vigilancemeteo==3.0.0
