@@ -547,29 +547,29 @@ async def test_setup_fail_firetv(hass):
 async def test_setup_two_devices(hass):
     """Test that two devices can be set up."""
     config = {
-        DOMAIN: {
-            "android_tv": CONFIG_ANDROIDTV_PYTHON_ADB[DOMAIN],
-            "fire_tv": CONFIG_FIRETV_PYTHON_ADB[DOMAIN],
-        }
+        DOMAIN: [CONFIG_ANDROIDTV_ADB_SERVER[DOMAIN], CONFIG_FIRETV_ADB_SERVER[DOMAIN]]
     }
 
-    patch_key = "python"
+    patch_key = "server"
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
     ], patchers.patch_shell("")[patch_key]:
         assert await async_setup_component(hass, DOMAIN, config)
 
+    for entity_id in ["media_player.android_tv", "media_player.fire_tv"]:
+        assert hass.states.get(entity_id) is not None
+
 
 async def test_setup_same_device_twice(hass):
     """Test that setup succeeds with a duplicated config entry."""
     config = {
-        DOMAIN: {
-            "android_tv": CONFIG_ANDROIDTV_PYTHON_ADB[DOMAIN],
-            "android_tv2": CONFIG_ANDROIDTV_PYTHON_ADB[DOMAIN],
-        }
+        DOMAIN: [
+            CONFIG_ANDROIDTV_ADB_SERVER[DOMAIN],
+            CONFIG_ANDROIDTV_ADB_SERVER[DOMAIN],
+        ]
     }
 
-    patch_key = "python"
+    patch_key = "server"
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
     ], patchers.patch_shell("")[patch_key]:
