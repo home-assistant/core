@@ -146,9 +146,9 @@ async def test_update_address(hass):
         deconz.config_flow.DOMAIN,
         data={
             ssdp.ATTR_SSDP_LOCATION: "http://2.3.4.5:80/",
-            ssdp.ATTR_SERIAL: BRIDGEID,
-            ssdp.ATTR_MANUFACTURERURL: deconz.config_flow.DECONZ_MANUFACTURERURL,
-            deconz.config_flow.ATTR_UDN: "uuid:456DEF",
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: deconz.config_flow.DECONZ_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_SERIAL: BRIDGEID,
+            ssdp.ATTR_UPNP_UDN: "uuid:456DEF",
         },
         context={"source": "ssdp"},
     )

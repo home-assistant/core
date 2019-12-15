@@ -17,15 +17,15 @@ SCAN_INTERVAL = timedelta(seconds=60)
 ATTR_SSDP_LOCATION = "ssdp_location"
 ATTR_SSDP_ST = "ssdp_st"
 # Attributes for accessing info from retrieved UPnP device description
-ATTR_NAME = "friendlyName"
-ATTR_MODEL_NAME = "modelName"
-ATTR_MODEL_NUMBER = "modelNumber"
-ATTR_SERIAL = "serialNumber"
-ATTR_MANUFACTURER = "manufacturer"
-ATTR_MANUFACTURERURL = "manufacturerURL"
-ATTR_UDN = "UDN"
 ATTR_UPNP_DEVICE_TYPE = "deviceType"
-ATTR_PRESENTATIONURL = "presentationURL"
+ATTR_UPNP_FRIENDLY_NAME = "friendlyName"
+ATTR_UPNP_MANUFACTURER = "manufacturer"
+ATTR_UPNP_MANUFACTURER_URL = "manufacturerURL"
+ATTR_UPNP_MODEL_NAME = "modelName"
+ATTR_UPNP_MODEL_NUMBER = "modelNumber"
+ATTR_UPNP_PRESENTATION_URL = "presentationURL"
+ATTR_UPNP_SERIAL = "serialNumber"
+ATTR_UPNP_UDN = "UDN"
 
 _LOGGER = logging.getLogger(__name__)
 

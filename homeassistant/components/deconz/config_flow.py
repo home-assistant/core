@@ -8,12 +8,7 @@ from pydeconz.utils import async_discovery, async_get_api_key, async_get_gateway
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.ssdp import (
-    ATTR_MANUFACTURERURL,
-    ATTR_SERIAL,
-    ATTR_SSDP_LOCATION,
-    ATTR_UDN,
-)
+from homeassistant.components import ssdp
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
@@ -175,20 +170,20 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered deCONZ bridge."""
-        if discovery_info[ATTR_MANUFACTURERURL] != DECONZ_MANUFACTURERURL:
+        if discovery_info[ssdp.ATTR_UPNP_MANUFACTURER_URL] != DECONZ_MANUFACTURERURL:
             return self.async_abort(reason="not_deconz_bridge")
 
-        uuid = discovery_info[ATTR_UDN].replace("uuid:", "")
+        uuid = discovery_info[ssdp.ATTR_UPNP_UDN].replace("uuid:", "")
 
         _LOGGER.debug("deCONZ gateway discovered (%s)", uuid)
 
-        parsed_url = urlparse(discovery_info[ATTR_SSDP_LOCATION])
+        parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
 
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if uuid == entry.data.get(CONF_UUID):
                 return await self._update_entry(entry, parsed_url.hostname)
 
-        bridgeid = discovery_info[ATTR_SERIAL]
+        bridgeid = discovery_info[ssdp.ATTR_UPNP_SERIAL]
         if any(
             bridgeid == flow["context"][CONF_BRIDGEID]
             for flow in self._async_in_progress()

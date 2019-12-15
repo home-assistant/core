@@ -4,13 +4,8 @@ from unittest.mock import Mock, patch
 
 import pydeconz
 
+from homeassistant.components import ssdp
 from homeassistant.components.deconz import config_flow
-from homeassistant.components.ssdp import (
-    ATTR_MANUFACTURERURL,
-    ATTR_SERIAL,
-    ATTR_SSDP_LOCATION,
-    ATTR_UDN,
-)
 
 from tests.common import MockConfigEntry
 
@@ -218,10 +213,10 @@ async def test_bridge_ssdp_discovery(hass):
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         data={
-            ATTR_SSDP_LOCATION: "http://1.2.3.4:80/",
-            ATTR_SERIAL: "id",
-            ATTR_MANUFACTURERURL: config_flow.DECONZ_MANUFACTURERURL,
-            ATTR_UDN: "uuid:1234",
+            ssdp.ATTR_SSDP_LOCATION: "http://1.2.3.4:80/",
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.DECONZ_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_SERIAL: "id",
+            ssdp.ATTR_UPNP_UDN: "uuid:1234",
         },
         context={"source": "ssdp"},
     )
@@ -234,7 +229,7 @@ async def test_bridge_ssdp_discovery_not_deconz_bridge(hass):
     """Test a non deconz bridge being discovered over ssdp."""
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        data={ATTR_MANUFACTURERURL: "not deconz bridge"},
+        data={ssdp.ATTR_UPNP_MANUFACTURER_URL: "not deconz bridge"},
         context={"source": "ssdp"},
     )
 
@@ -261,10 +256,10 @@ async def test_bridge_discovery_update_existing_entry(hass):
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         data={
-            ATTR_SSDP_LOCATION: "http://mock-deconz/",
-            ATTR_SERIAL: "123ABC",
-            ATTR_MANUFACTURERURL: config_flow.DECONZ_MANUFACTURERURL,
-            ATTR_UDN: "uuid:456DEF",
+            ssdp.ATTR_SSDP_LOCATION: "http://mock-deconz/",
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.DECONZ_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_SERIAL: "123ABC",
+            ssdp.ATTR_UPNP_UDN: "uuid:456DEF",
         },
         context={"source": "ssdp"},
     )
