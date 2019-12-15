@@ -259,10 +259,10 @@ influxdb==5.2.3
 jsonpath==0.82
 
 # homeassistant.scripts.keyring
-keyring==19.3.0
+keyring==20.0.0
 
 # homeassistant.scripts.keyring
-keyrings.alt==3.2.0
+keyrings.alt==3.4.0
 
 # homeassistant.components.dyson
 libpurecool==0.5.0
