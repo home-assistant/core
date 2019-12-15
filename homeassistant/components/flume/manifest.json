@@ -3,7 +3,7 @@
     "name": "Flume",
     "documentation": "https://www.home-assistant.io/integrations/flume/",
     "requirements": [
-        "pyflume==0.2.1"
+        "pyflume==0.2.4"
       ],
     "dependencies": [],
     "codeowners": ["@ChrisMandich"]
