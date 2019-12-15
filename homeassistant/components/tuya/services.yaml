@@ -1,0 +1,7 @@
+# Describes the format for available Tuya services
+
+pull_devices:
+  description: Pull device list from Tuya server.
+
+force_update:
+  description: Force all Tuya devices to pull data.

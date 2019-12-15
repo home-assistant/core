@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Compte d\u00e9j\u00e0 enregistr\u00e9",
+            "invalid_credentials": "Informations d'identification invalides"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Nom d'h\u00f4te ou adresse IP",
+                    "password": "Mot de passe",
+                    "port": "Port"
+                },
+                "title": "Veuillez saisir vos informations"
+            }
+        },
+        "title": "RainMachine"
+    }
+}

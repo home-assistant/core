@@ -1,14 +1,15 @@
 """Test data purging."""
-import json
 from datetime import datetime, timedelta
+import json
 import unittest
 from unittest.mock import patch
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder.const import DATA_INSTANCE
+from homeassistant.components.recorder.models import Events, States
 from homeassistant.components.recorder.purge import purge_old_data
-from homeassistant.components.recorder.models import States, Events
 from homeassistant.components.recorder.util import session_scope
+
 from tests.common import get_test_home_assistant, init_recorder_component
 
 
@@ -30,7 +31,7 @@ class TestRecorderPurge(unittest.TestCase):
         now = datetime.now()
         five_days_ago = now - timedelta(days=5)
         eleven_days_ago = now - timedelta(days=11)
-        attributes = {'test_attr': 5, 'test_attr_10': 'nice'}
+        attributes = {"test_attr": 5, "test_attr_10": "nice"}
 
         self.hass.block_till_done()
         self.hass.data[DATA_INSTANCE].block_till_done()
@@ -39,31 +40,33 @@ class TestRecorderPurge(unittest.TestCase):
             for event_id in range(6):
                 if event_id < 2:
                     timestamp = eleven_days_ago
-                    state = 'autopurgeme'
+                    state = "autopurgeme"
                 elif event_id < 4:
                     timestamp = five_days_ago
-                    state = 'purgeme'
+                    state = "purgeme"
                 else:
                     timestamp = now
-                    state = 'dontpurgeme'
+                    state = "dontpurgeme"
 
-                session.add(States(
-                    entity_id='test.recorder2',
-                    domain='sensor',
-                    state=state,
-                    attributes=json.dumps(attributes),
-                    last_changed=timestamp,
-                    last_updated=timestamp,
-                    created=timestamp,
-                    event_id=event_id + 1000
-                ))
+                session.add(
+                    States(
+                        entity_id="test.recorder2",
+                        domain="sensor",
+                        state=state,
+                        attributes=json.dumps(attributes),
+                        last_changed=timestamp,
+                        last_updated=timestamp,
+                        created=timestamp,
+                        event_id=event_id + 1000,
+                    )
+                )
 
     def _add_test_events(self):
         """Add a few events for testing."""
         now = datetime.now()
         five_days_ago = now - timedelta(days=5)
         eleven_days_ago = now - timedelta(days=11)
-        event_data = {'test_attr': 5, 'test_attr_10': 'nice'}
+        event_data = {"test_attr": 5, "test_attr_10": "nice"}
 
         self.hass.block_till_done()
         self.hass.data[DATA_INSTANCE].block_till_done()
@@ -72,21 +75,23 @@ class TestRecorderPurge(unittest.TestCase):
             for event_id in range(6):
                 if event_id < 2:
                     timestamp = eleven_days_ago
-                    event_type = 'EVENT_TEST_AUTOPURGE'
+                    event_type = "EVENT_TEST_AUTOPURGE"
                 elif event_id < 4:
                     timestamp = five_days_ago
-                    event_type = 'EVENT_TEST_PURGE'
+                    event_type = "EVENT_TEST_PURGE"
                 else:
                     timestamp = now
-                    event_type = 'EVENT_TEST'
+                    event_type = "EVENT_TEST"
 
-                session.add(Events(
-                    event_type=event_type,
-                    event_data=json.dumps(event_data),
-                    origin='LOCAL',
-                    created=timestamp,
-                    time_fired=timestamp,
-                ))
+                session.add(
+                    Events(
+                        event_type=event_type,
+                        event_data=json.dumps(event_data),
+                        origin="LOCAL",
+                        created=timestamp,
+                        time_fired=timestamp,
+                    )
+                )
 
     def test_purge_old_states(self):
         """Test deleting old states."""
@@ -107,8 +112,7 @@ class TestRecorderPurge(unittest.TestCase):
         self._add_test_events()
 
         with session_scope(hass=self.hass) as session:
-            events = session.query(Events).filter(
-                Events.event_type.like("EVENT_TEST%"))
+            events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
             assert events.count() == 6
 
             # run purge_old_data()
@@ -119,7 +123,7 @@ class TestRecorderPurge(unittest.TestCase):
 
     def test_purge_method(self):
         """Test purge method."""
-        service_data = {'keep_days': 4}
+        service_data = {"keep_days": 4}
         self._add_test_events()
         self._add_test_states()
 
@@ -128,14 +132,13 @@ class TestRecorderPurge(unittest.TestCase):
             states = session.query(States)
             assert states.count() == 6
 
-            events = session.query(Events).filter(
-                Events.event_type.like("EVENT_TEST%"))
+            events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
             assert events.count() == 6
 
             self.hass.data[DATA_INSTANCE].block_till_done()
 
             # run purge method - no service data, use defaults
-            self.hass.services.call('recorder', 'purge')
+            self.hass.services.call("recorder", "purge")
             self.hass.block_till_done()
 
             # Small wait for recorder thread
@@ -146,8 +149,7 @@ class TestRecorderPurge(unittest.TestCase):
             assert events.count() == 4
 
             # run purge method - correct service data
-            self.hass.services.call('recorder', 'purge',
-                                    service_data=service_data)
+            self.hass.services.call("recorder", "purge", service_data=service_data)
             self.hass.block_till_done()
 
             # Small wait for recorder thread
@@ -159,16 +161,19 @@ class TestRecorderPurge(unittest.TestCase):
             # now we should only have 2 events left
             assert events.count() == 2
 
-            assert not ('EVENT_TEST_PURGE' in (
-                event.event_type for event in events.all()))
+            assert not (
+                "EVENT_TEST_PURGE" in (event.event_type for event in events.all())
+            )
 
             # run purge method - correct service data, with repack
-            with patch('homeassistant.components.recorder.purge._LOGGER') \
-                    as mock_logger:
-                service_data['repack'] = True
-                self.hass.services.call('recorder', 'purge',
-                                        service_data=service_data)
+            with patch(
+                "homeassistant.components.recorder.purge._LOGGER"
+            ) as mock_logger:
+                service_data["repack"] = True
+                self.hass.services.call("recorder", "purge", service_data=service_data)
                 self.hass.block_till_done()
                 self.hass.data[DATA_INSTANCE].block_till_done()
-                assert mock_logger.debug.mock_calls[4][1][0] == \
-                    "Vacuuming SQLite to free space"
+                assert (
+                    mock_logger.debug.mock_calls[3][1][0]
+                    == "Vacuuming SQL DB to free space"
+                )

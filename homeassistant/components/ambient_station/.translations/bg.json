@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Application \u0438/\u0438\u043b\u0438 API \u043a\u043b\u044e\u0447\u044a\u0442 \u0432\u0435\u0447\u0435 \u0441\u0430 \u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0438\u0440\u0430\u043d\u0438",
+            "invalid_key": "\u041d\u0435\u0432\u0430\u043b\u0438\u0434\u0435\u043d API \u043a\u043b\u044e\u0447 \u0438/\u0438\u043b\u0438 Application \u043a\u043b\u044e\u0447",
+            "no_devices": "\u041d\u0435 \u0441\u0430 \u043d\u0430\u043c\u0435\u0440\u0435\u043d\u0438 \u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u0430 \u0432 \u043f\u0440\u043e\u0444\u0438\u043b\u0430"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API \u043a\u043b\u044e\u0447",
+                    "app_key": "Application \u043a\u043b\u044e\u0447"
+                },
+                "title": "\u041f\u043e\u043f\u044a\u043b\u043d\u0435\u0442\u0435 \u0438\u043d\u0444\u043e\u0440\u043c\u0430\u0446\u0438\u044f\u0442\u0430 \u0441\u0438"
+            }
+        },
+        "title": "\u0410\u0442\u043c\u043e\u0441\u0444\u0435\u0440\u043d\u0430 PWS"
+    }
+}

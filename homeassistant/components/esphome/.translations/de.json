@@ -8,13 +8,18 @@
             "invalid_password": "Ung\u00fcltiges Passwort!",
             "resolve_error": "Adresse des ESP kann nicht aufgel\u00f6st werden. Wenn dieser Fehler weiterhin besteht, legen Sie eine statische IP-Adresse fest: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
+        "flow_title": "ESPHome: {name}",
         "step": {
             "authenticate": {
                 "data": {
                     "password": "Passwort"
                 },
-                "description": "Bitte geben Sie das Passwort der ESPhome-Konfiguration ein:",
+                "description": "Bitte geben Sie das Passwort der ESPHome-Konfiguration f\u00fcr {name} ein:",
                 "title": "Passwort eingeben"
+            },
+            "discovery_confirm": {
+                "description": "Willst du den ESPHome-Knoten `{name}` zu Home Assistant hinzuf\u00fcgen?",
+                "title": "Gefundener ESPHome-Knoten"
             },
             "user": {
                 "data": {

@@ -23,7 +23,9 @@
       "all_configured": "All Philips Hue bridges are already configured",
       "unknown": "Unknown error occurred",
       "cannot_connect": "Unable to connect to the bridge",
-      "already_configured": "Bridge is already configured"
+      "already_configured": "Bridge is already configured",
+      "already_in_progress": "Config flow for bridge is already in progress.",
+      "not_hue_bridge": "Not a Hue bridge"
     }
   }
 }

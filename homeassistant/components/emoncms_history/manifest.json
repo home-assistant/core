@@ -1,0 +1,8 @@
+{
+  "domain": "emoncms_history",
+  "name": "Emoncms history",
+  "documentation": "https://www.home-assistant.io/integrations/emoncms_history",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

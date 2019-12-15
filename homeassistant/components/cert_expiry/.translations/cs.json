@@ -1,0 +1,8 @@
+{
+    "config": {
+        "error": {
+            "certificate_error": "Certifik\u00e1t nelze ov\u011b\u0159it",
+            "wrong_host": "Certifik\u00e1t neodpov\u00edd\u00e1 n\u00e1zvu hostitele"
+        }
+    }
+}
