@@ -1,0 +1,12 @@
+{
+  "domain": "rfxtrx",
+  "name": "Rfxtrx",
+  "documentation": "https://www.home-assistant.io/integrations/rfxtrx",
+  "requirements": [
+    "pyRFXtrx==0.24"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@danielhiversen"
+  ]
+}

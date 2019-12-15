@@ -5,6 +5,8 @@
         "last_quarter": "\u00daltimo cuarto",
         "new_moon": "Luna nueva",
         "waning_crescent": "Luna menguante",
-        "waxing_crescent": "Luna creciente"
+        "waning_gibbous": "Gibosa menguante",
+        "waxing_crescent": "Luna creciente",
+        "waxing_gibbous": "Gibosa creciente"
     }
 }

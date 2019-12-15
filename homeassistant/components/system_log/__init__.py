@@ -1,11 +1,5 @@
-"""
-Support for system log.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/system_log/
-"""
-from collections import deque
-from io import StringIO
+"""Support for system log."""
+from collections import OrderedDict
 import logging
 import re
 import traceback
@@ -14,48 +8,58 @@ import voluptuous as vol
 
 from homeassistant import __path__ as HOMEASSISTANT_PATH
 from homeassistant.components.http import HomeAssistantView
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+import homeassistant.helpers.config_validation as cv
 
-CONF_MAX_ENTRIES = 'max_entries'
-CONF_FIRE_EVENT = 'fire_event'
-CONF_MESSAGE = 'message'
-CONF_LEVEL = 'level'
-CONF_LOGGER = 'logger'
+CONF_MAX_ENTRIES = "max_entries"
+CONF_FIRE_EVENT = "fire_event"
+CONF_MESSAGE = "message"
+CONF_LEVEL = "level"
+CONF_LOGGER = "logger"
 
-DATA_SYSTEM_LOG = 'system_log'
+DATA_SYSTEM_LOG = "system_log"
 DEFAULT_MAX_ENTRIES = 50
 DEFAULT_FIRE_EVENT = False
-DEPENDENCIES = ['http']
-DOMAIN = 'system_log'
+DOMAIN = "system_log"
 
-EVENT_SYSTEM_LOG = 'system_log_event'
+EVENT_SYSTEM_LOG = "system_log_event"
 
-SERVICE_CLEAR = 'clear'
-SERVICE_WRITE = 'write'
+SERVICE_CLEAR = "clear"
+SERVICE_WRITE = "write"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_MAX_ENTRIES, default=DEFAULT_MAX_ENTRIES):
-            cv.positive_int,
-        vol.Optional(CONF_FIRE_EVENT, default=DEFAULT_FIRE_EVENT): cv.boolean,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(
+                    CONF_MAX_ENTRIES, default=DEFAULT_MAX_ENTRIES
+                ): cv.positive_int,
+                vol.Optional(CONF_FIRE_EVENT, default=DEFAULT_FIRE_EVENT): cv.boolean,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 SERVICE_CLEAR_SCHEMA = vol.Schema({})
-SERVICE_WRITE_SCHEMA = vol.Schema({
-    vol.Required(CONF_MESSAGE): cv.string,
-    vol.Optional(CONF_LEVEL, default='error'):
-        vol.In(['debug', 'info', 'warning', 'error', 'critical']),
-    vol.Optional(CONF_LOGGER): cv.string,
-})
+SERVICE_WRITE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_MESSAGE): cv.string,
+        vol.Optional(CONF_LEVEL, default="error"): vol.In(
+            ["debug", "info", "warning", "error", "critical"]
+        ),
+        vol.Optional(CONF_LOGGER): cv.string,
+    }
+)
 
 
 def _figure_out_source(record, call_stack, hass):
     paths = [HOMEASSISTANT_PATH[0], hass.config.config_dir]
     try:
         # If netdisco is installed check its path too.
+        # pylint: disable=import-outside-toplevel
         from netdisco import __path__ as netdisco_path
+
         paths.append(netdisco_path[0])
     except ImportError:
         pass
@@ -74,11 +78,11 @@ def _figure_out_source(record, call_stack, hass):
             # For some reason we couldn't find pathname in the stack.
             stack = [record.pathname]
         else:
-            stack = call_stack[0:index+1]
+            stack = call_stack[0 : index + 1]
 
     # Iterate through the stack call (in reverse) and find the last call from
     # a file in Home Assistant. Try to figure out where error happened.
-    paths_re = r'(?:{})/(.*)'.format('|'.join([re.escape(x) for x in paths]))
+    paths_re = r"(?:{})/(.*)".format("|".join([re.escape(x) for x in paths]))
     for pathname in reversed(stack):
 
         # Try to match with a file within Home Assistant
@@ -89,11 +93,62 @@ def _figure_out_source(record, call_stack, hass):
     return record.pathname
 
 
-def _exception_as_string(exc_info):
-    buf = StringIO()
-    if exc_info:
-        traceback.print_exception(*exc_info, file=buf)
-    return buf.getvalue()
+class LogEntry:
+    """Store HA log entries."""
+
+    def __init__(self, record, stack, source):
+        """Initialize a log entry."""
+        self.first_occured = self.timestamp = record.created
+        self.level = record.levelname
+        self.message = record.getMessage()
+        self.exception = ""
+        self.root_cause = None
+        if record.exc_info:
+            self.exception = "".join(traceback.format_exception(*record.exc_info))
+            _, _, tb = record.exc_info  # pylint: disable=invalid-name
+            # Last line of traceback contains the root cause of the exception
+            if traceback.extract_tb(tb):
+                self.root_cause = str(traceback.extract_tb(tb)[-1])
+        self.source = source
+        self.count = 1
+
+    def hash(self):
+        """Calculate a key for DedupStore."""
+        return frozenset([self.message, self.root_cause])
+
+    def to_dict(self):
+        """Convert object into dict to maintain backward compatibility."""
+        return vars(self)
+
+
+class DedupStore(OrderedDict):
+    """Data store to hold max amount of deduped entries."""
+
+    def __init__(self, maxlen=50):
+        """Initialize a new DedupStore."""
+        super().__init__()
+        self.maxlen = maxlen
+
+    def add_entry(self, entry):
+        """Add a new entry."""
+        key = str(entry.hash())
+
+        if key in self:
+            # Update stored entry
+            self[key].count += 1
+            self[key].timestamp = entry.timestamp
+
+            self.move_to_end(key)
+        else:
+            self[key] = entry
+
+        if len(self) > self.maxlen:
+            # Removes the first record which should also be the oldest
+            self.popitem(last=False)
+
+    def to_list(self):
+        """Return reversed list of log entries - LIFO."""
+        return [value.to_dict() for value in reversed(self.values())]
 
 
 class LogErrorHandler(logging.Handler):
@@ -103,17 +158,8 @@ class LogErrorHandler(logging.Handler):
         """Initialize a new LogErrorHandler."""
         super().__init__()
         self.hass = hass
-        self.records = deque(maxlen=maxlen)
+        self.records = DedupStore(maxlen=maxlen)
         self.fire_event = fire_event
-
-    def _create_entry(self, record, call_stack):
-        return {
-            'timestamp': record.created,
-            'level': record.levelname,
-            'message': record.getMessage(),
-            'exception': _exception_as_string(record.exc_info),
-            'source': _figure_out_source(record, call_stack, self.hass),
-            }
 
     def emit(self, record):
         """Save error and warning logs.
@@ -127,10 +173,12 @@ class LogErrorHandler(logging.Handler):
             if not record.exc_info:
                 stack = [f for f, _, _, _ in traceback.extract_stack()]
 
-            entry = self._create_entry(record, stack)
-            self.records.appendleft(entry)
+            entry = LogEntry(
+                record, stack, _figure_out_source(record, stack, self.hass)
+            )
+            self.records.add_entry(entry)
             if self.fire_event:
-                self.hass.bus.fire(EVENT_SYSTEM_LOG, entry)
+                self.hass.bus.fire(EVENT_SYSTEM_LOG, entry.to_dict())
 
 
 async def async_setup(hass, config):
@@ -139,20 +187,20 @@ async def async_setup(hass, config):
     if conf is None:
         conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
 
-    handler = LogErrorHandler(hass, conf[CONF_MAX_ENTRIES],
-                              conf[CONF_FIRE_EVENT])
+    handler = LogErrorHandler(hass, conf[CONF_MAX_ENTRIES], conf[CONF_FIRE_EVENT])
     logging.getLogger().addHandler(handler)
 
     hass.http.register_view(AllErrorsView(handler))
 
     async def async_service_handler(service):
         """Handle logger services."""
-        if service.service == 'clear':
+        if service.service == "clear":
             handler.records.clear()
             return
-        if service.service == 'write':
+        if service.service == "write":
             logger = logging.getLogger(
-                service.data.get(CONF_LOGGER, '{}.external'.format(__name__)))
+                service.data.get(CONF_LOGGER, f"{__name__}.external")
+            )
             level = service.data[CONF_LEVEL]
             getattr(logger, level)(service.data[CONF_MESSAGE])
 
@@ -161,15 +209,14 @@ async def async_setup(hass, config):
         # This is needed as older logger instances will remain
         logging.getLogger().removeHandler(handler)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
-                               async_shutdown_handler)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_shutdown_handler)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_CLEAR, async_service_handler,
-        schema=SERVICE_CLEAR_SCHEMA)
+        DOMAIN, SERVICE_CLEAR, async_service_handler, schema=SERVICE_CLEAR_SCHEMA
+    )
     hass.services.async_register(
-        DOMAIN, SERVICE_WRITE, async_service_handler,
-        schema=SERVICE_WRITE_SCHEMA)
+        DOMAIN, SERVICE_WRITE, async_service_handler, schema=SERVICE_WRITE_SCHEMA
+    )
 
     return True
 
@@ -186,6 +233,4 @@ class AllErrorsView(HomeAssistantView):
 
     async def get(self, request):
         """Get all errors and warnings."""
-        # deque is not serializable (it's just "list-like") so it must be
-        # converted to a list before it can be serialized to json
-        return self.json(list(self.handler.records))
+        return self.json(self.handler.records.to_list())

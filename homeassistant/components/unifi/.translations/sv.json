@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Controller-platsen \u00e4r redan konfigurerad",
+            "user_privilege": "Anv\u00e4ndaren m\u00e5ste vara administrat\u00f6r"
+        },
+        "error": {
+            "faulty_credentials": "Felaktiga anv\u00e4ndaruppgifter",
+            "service_unavailable": "Ingen tj\u00e4nst tillg\u00e4nglig"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e4rddatorn",
+                    "password": "L\u00f6senord",
+                    "port": "Port",
+                    "site": "Plats-ID",
+                    "username": "Anv\u00e4ndarnamn",
+                    "verify_ssl": "Controller med korrekt certifikat"
+                },
+                "title": "Konfigurera UniFi Controller"
+            }
+        },
+        "title": "UniFi Controller"
+    }
+}

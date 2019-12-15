@@ -2,7 +2,8 @@
 - If you need additional help with this template please refer to https://www.home-assistant.io/help/reporting_issues/
 - Make sure you are running the latest version of Home Assistant before reporting an issue: https://github.com/home-assistant/home-assistant/releases
 - Frontend issues should be submitted to the home-assistant-polymer repository: https://github.com/home-assistant/home-assistant-polymer/issues
-- Do not report issues for components if you are using custom components: files in <config-dir>/custom_components
+- iOS issues should be submitted to the home-assistant-iOS repository: https://github.com/home-assistant/home-assistant-iOS/issues
+- Do not report issues for integrations if you are using custom integration: files in <config-dir>/custom_components
 - This is for bugs only. Feature and enhancement requests should go in our community forum: https://community.home-assistant.io/c/feature-requests
 - Provide as many details as possible. Paste logs, configuration sample and code into the backticks. Do not delete any text from this template!
 -->
@@ -22,9 +23,9 @@
 Please provide details about your environment.
 -->
 
-**Component/platform:**
+**Integration:**
 <!--
-Please add the link to the documentation at https://www.home-assistant.io/components/ of the component/platform in question.
+Please add the link to the documentation at https://www.home-assistant.io/integrations/ of the integration in question.
 -->
 
 

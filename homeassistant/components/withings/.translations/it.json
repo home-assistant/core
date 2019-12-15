@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "no_flows": "\u00c8 necessario configurare Withings prima di potersi autenticare con esso. Si prega di leggere la documentazione."
+        },
+        "create_entry": {
+            "default": "Autenticazione completata con Withings per il profilo selezionato."
+        },
+        "step": {
+            "profile": {
+                "data": {
+                    "profile": "Profilo"
+                },
+                "description": "Quale profilo hai selezionato sul sito web di Withings? \u00c8 importante che i profili corrispondano, altrimenti i dati avranno con un'errata etichettatura.",
+                "title": "Profilo utente."
+            },
+            "user": {
+                "data": {
+                    "profile": "Profilo"
+                },
+                "description": "Seleziona un profilo utente a cui desideri associare Home Assistant con un profilo Withings. Nella pagina Withings, assicurati di selezionare lo stesso utente o i dati non saranno etichettati correttamente.",
+                "title": "Profilo utente."
+            }
+        },
+        "title": "Withings"
+    }
+}

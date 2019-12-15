@@ -5,6 +5,7 @@
             "user_privilege": "\u7528\u6237\u987b\u4e3a\u7ba1\u7406\u5458"
         },
         "error": {
+            "faulty_credentials": "\u9519\u8bef\u7684\u7528\u6237\u51ed\u636e",
             "service_unavailable": "\u6ca1\u6709\u53ef\u7528\u7684\u670d\u52a1"
         },
         "step": {

@@ -22,5 +22,28 @@
             }
         },
         "title": "UniFi kontroller"
+    },
+    "options": {
+        "step": {
+            "device_tracker": {
+                "data": {
+                    "detection_time": "Tid i sekunder fra sist sett til den ble ansett borte",
+                    "track_clients": "Spor nettverksklienter",
+                    "track_devices": "Spore nettverksenheter (Ubiquiti-enheter)",
+                    "track_wired_clients": "Inkluder kablede nettverksklienter"
+                }
+            },
+            "init": {
+                "data": {
+                    "one": "en",
+                    "other": "andre"
+                }
+            },
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "Opprett b\u00e5ndbreddesensorer for nettverksklienter"
+                }
+            }
+        }
     }
 }

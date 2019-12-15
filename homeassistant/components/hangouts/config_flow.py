@@ -1,12 +1,25 @@
 """Config flow to configure Google Hangouts."""
+import functools
+
+from hangups import get_auth
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import callback
 
-from .const import CONF_2FA, CONF_REFRESH_TOKEN
-from .const import DOMAIN as HANGOUTS_DOMAIN
+from .const import (
+    CONF_2FA,
+    CONF_AUTH_CODE,
+    CONF_REFRESH_TOKEN,
+    DOMAIN as HANGOUTS_DOMAIN,
+)
+from .hangups_utils import (
+    Google2FAError,
+    GoogleAuthError,
+    HangoutsCredentials,
+    HangoutsRefreshToken,
+)
 
 
 @callback
@@ -38,35 +51,46 @@ class HangoutsFlowHandler(config_entries.ConfigFlow):
             return self.async_abort(reason="already_configured")
 
         if user_input is not None:
-            from hangups import get_auth
-            from .hangups_utils import (HangoutsCredentials,
-                                        HangoutsRefreshToken,
-                                        GoogleAuthError, Google2FAError)
-            self._credentials = HangoutsCredentials(user_input[CONF_EMAIL],
-                                                    user_input[CONF_PASSWORD])
+            user_email = user_input[CONF_EMAIL]
+            user_password = user_input[CONF_PASSWORD]
+            user_auth_code = user_input.get(CONF_AUTH_CODE)
+            manual_login = user_auth_code is not None
+
+            user_pin = None
+            self._credentials = HangoutsCredentials(
+                user_email, user_password, user_pin, user_auth_code
+            )
             self._refresh_token = HangoutsRefreshToken(None)
             try:
-                await self.hass.async_add_executor_job(get_auth,
-                                                       self._credentials,
-                                                       self._refresh_token)
+                await self.hass.async_add_executor_job(
+                    functools.partial(
+                        get_auth,
+                        self._credentials,
+                        self._refresh_token,
+                        manual_login=manual_login,
+                    )
+                )
 
                 return await self.async_step_final()
             except GoogleAuthError as err:
                 if isinstance(err, Google2FAError):
                     return await self.async_step_2fa()
                 msg = str(err)
-                if msg == 'Unknown verification code input':
-                    errors['base'] = 'invalid_2fa_method'
+                if msg == "Unknown verification code input":
+                    errors["base"] = "invalid_2fa_method"
                 else:
-                    errors['base'] = 'invalid_login'
+                    errors["base"] = "invalid_login"
 
         return self.async_show_form(
-            step_id='user',
-            data_schema=vol.Schema({
-                vol.Required(CONF_EMAIL): str,
-                vol.Required(CONF_PASSWORD): str
-            }),
-            errors=errors
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_EMAIL): str,
+                    vol.Required(CONF_PASSWORD): str,
+                    vol.Optional(CONF_AUTH_CODE): str,
+                }
+            ),
+            errors=errors,
         )
 
     async def async_step_2fa(self, user_input=None):
@@ -74,24 +98,20 @@ class HangoutsFlowHandler(config_entries.ConfigFlow):
         errors = {}
 
         if user_input is not None:
-            from hangups import get_auth
-            from .hangups_utils import GoogleAuthError
             self._credentials.set_verification_code(user_input[CONF_2FA])
             try:
-                await self.hass.async_add_executor_job(get_auth,
-                                                       self._credentials,
-                                                       self._refresh_token)
+                await self.hass.async_add_executor_job(
+                    get_auth, self._credentials, self._refresh_token
+                )
 
                 return await self.async_step_final()
             except GoogleAuthError:
-                errors['base'] = 'invalid_2fa'
+                errors["base"] = "invalid_2fa"
 
         return self.async_show_form(
             step_id=CONF_2FA,
-            data_schema=vol.Schema({
-                vol.Required(CONF_2FA): str,
-            }),
-            errors=errors
+            data_schema=vol.Schema({vol.Required(CONF_2FA): str}),
+            errors=errors,
         )
 
     async def async_step_final(self):
@@ -100,8 +120,9 @@ class HangoutsFlowHandler(config_entries.ConfigFlow):
             title=self._credentials.get_email(),
             data={
                 CONF_EMAIL: self._credentials.get_email(),
-                CONF_REFRESH_TOKEN: self._refresh_token.get()
-            })
+                CONF_REFRESH_TOKEN: self._refresh_token.get(),
+            },
+        )
 
     async def async_step_import(self, _):
         """Handle a flow import."""

@@ -1,15 +1,14 @@
 """Test deprecation helpers."""
-from homeassistant.helpers.deprecation import (
-    deprecated_substitute, get_deprecated)
+from unittest.mock import MagicMock, patch
 
-from unittest.mock import patch, MagicMock
+from homeassistant.helpers.deprecation import deprecated_substitute, get_deprecated
 
 
-class MockBaseClass():
+class MockBaseClass:
     """Mock base class for deprecated testing."""
 
     @property
-    @deprecated_substitute('old_property')
+    @deprecated_substitute("old_property")
     def new_property(self):
         """Test property to fetch."""
         raise NotImplementedError()
@@ -33,7 +32,7 @@ class MockUpdatedClass(MockBaseClass):
         return True
 
 
-@patch('logging.getLogger')
+@patch("logging.getLogger")
 def test_deprecated_substitute_old_class(mock_get_logger):
     """Test deprecated class object."""
     mock_logger = MagicMock()
@@ -46,7 +45,7 @@ def test_deprecated_substitute_old_class(mock_get_logger):
     assert len(mock_logger.warning.mock_calls) == 1
 
 
-@patch('logging.getLogger')
+@patch("logging.getLogger")
 def test_deprecated_substitute_new_class(mock_get_logger):
     """Test deprecated class object."""
     mock_logger = MagicMock()
@@ -58,28 +57,24 @@ def test_deprecated_substitute_new_class(mock_get_logger):
     assert not mock_logger.warning.called
 
 
-@patch('logging.getLogger')
+@patch("logging.getLogger")
 def test_config_get_deprecated_old(mock_get_logger):
     """Test deprecated class object."""
     mock_logger = MagicMock()
     mock_get_logger.return_value = mock_logger
 
-    config = {
-        'old_name': True,
-    }
-    assert get_deprecated(config, 'new_name', 'old_name') is True
+    config = {"old_name": True}
+    assert get_deprecated(config, "new_name", "old_name") is True
     assert mock_logger.warning.called
     assert len(mock_logger.warning.mock_calls) == 1
 
 
-@patch('logging.getLogger')
+@patch("logging.getLogger")
 def test_config_get_deprecated_new(mock_get_logger):
     """Test deprecated class object."""
     mock_logger = MagicMock()
     mock_get_logger.return_value = mock_logger
 
-    config = {
-        'new_name': True,
-    }
-    assert get_deprecated(config, 'new_name', 'old_name') is True
+    config = {"new_name": True}
+    assert get_deprecated(config, "new_name", "old_name") is True
     assert not mock_logger.warning.called

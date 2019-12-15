@@ -1,0 +1,8 @@
+{
+  "domain": "ddwrt",
+  "name": "Ddwrt",
+  "documentation": "https://www.home-assistant.io/integrations/ddwrt",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

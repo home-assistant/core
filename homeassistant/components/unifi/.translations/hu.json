@@ -10,13 +10,16 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host",
+                    "host": "Hoszt",
                     "password": "Jelsz\u00f3",
                     "port": "Port",
                     "site": "Site azonos\u00edt\u00f3",
-                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
-                }
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v",
+                    "verify_ssl": "Vez\u00e9rl\u0151 megfelel\u0151 tan\u00fas\u00edtv\u00e1nnyal"
+                },
+                "title": "UniFi vez\u00e9rl\u0151 be\u00e1ll\u00edt\u00e1sa"
             }
-        }
+        },
+        "title": "UniFi Vez\u00e9rl\u0151"
     }
 }

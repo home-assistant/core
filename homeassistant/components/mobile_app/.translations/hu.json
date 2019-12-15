@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "install_app": "Nyisd meg a mobil alkalmaz\u00e1st a Home Assistant-tal val\u00f3 integr\u00e1ci\u00f3hoz. A kompatibilis alkalmaz\u00e1sok list\u00e1j\u00e1nak megtekint\u00e9s\u00e9hez ellen\u0151rizd [a le\u00edr\u00e1st]({apps_url})."
+        },
+        "step": {
+            "confirm": {
+                "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a mobil alkalmaz\u00e1s komponenst?",
+                "title": "Mobil alkalmaz\u00e1s"
+            }
+        },
+        "title": "Mobil alkalmaz\u00e1s"
+    }
+}

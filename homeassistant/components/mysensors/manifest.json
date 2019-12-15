@@ -1,0 +1,15 @@
+{
+  "domain": "mysensors",
+  "name": "Mysensors",
+  "documentation": "https://www.home-assistant.io/integrations/mysensors",
+  "requirements": [
+    "pymysensors==0.18.0"
+  ],
+  "dependencies": [],
+  "after_dependencies": [
+    "mqtt"
+  ],
+  "codeowners": [
+    "@MartinHjelmare"
+  ]
+}

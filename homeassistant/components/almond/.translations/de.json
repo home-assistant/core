@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Sie k\u00f6nnen nur ein Almond-Konto konfigurieren.",
+            "cannot_connect": "Verbindung zum Almond-Server nicht m\u00f6glich.",
+            "missing_configuration": "Bitte \u00fcberpr\u00fcfen Sie die Dokumentation zur Einrichtung von Almond."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "W\u00e4hle die Authentifizierungsmethode"
+            }
+        },
+        "title": "Almond"
+    }
+}

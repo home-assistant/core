@@ -1,0 +1,1 @@
+"""The foobot component."""

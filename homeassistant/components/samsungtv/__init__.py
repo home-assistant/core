@@ -1,0 +1,1 @@
+"""The Samsung TV integration."""

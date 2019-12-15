@@ -1,0 +1,5 @@
+capture_smartcam:
+  description: Capture a new image from a smartcam.
+  fields:
+    device_serial: {description: The serial number of the smartcam you want to capture
+        an image from., example: 2DEU AT5Z}

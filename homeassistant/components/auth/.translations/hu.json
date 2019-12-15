@@ -9,12 +9,15 @@
             },
             "step": {
                 "init": {
-                    "description": "V\u00e1lassz \u00e9rtes\u00edt\u00e9si szolg\u00e1ltat\u00e1st:"
+                    "description": "K\u00e9rlek, v\u00e1lassz egyet az \u00e9rtes\u00edt\u00e9si szolg\u00e1ltat\u00e1sok k\u00f6z\u00fcl:",
+                    "title": "\u00c1ll\u00edtsa be az \u00e9rtes\u00edt\u00e9si \u00f6sszetev\u0151 \u00e1ltal megadott egyszeri jelsz\u00f3t"
                 },
                 "setup": {
+                    "description": "Az egyszeri jelsz\u00f3 el lett k\u00fcldve a(z) **notify.{notify_service}** szolg\u00e1ltat\u00e1ssal. K\u00e9rlek, add meg al\u00e1bb:",
                     "title": "Be\u00e1ll\u00edt\u00e1s ellen\u0151rz\u00e9se"
                 }
-            }
+            },
+            "title": "Egyszeri Jelsz\u00f3 \u00c9rtes\u00edt\u00e9s"
         },
         "totp": {
             "error": {

@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Username already registered",
+            "invalid_credentials": "Invalid username or password",
+            "no_devices": "No devices found in account"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username/Email Address"
+                },
+                "title": "Fill in your information"
+            }
+        },
+        "title": "Notion"
+    }
+}
