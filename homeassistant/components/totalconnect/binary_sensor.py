@@ -97,7 +97,11 @@ class TotalConnectBinarySensor(BinarySensorDevice):
             self._state = True
         else:
             self._state = False
-            _LOGGER.info("Unknown Total Connect zone status %s returned.", status)
+            _LOGGER.info(
+                "Unknown Total Connect zone status %s returned by zone %s.",
+                status,
+                self._zone_id,
+            )
 
     @property
     def is_on(self):
