@@ -5,6 +5,7 @@ import apprise
 import voluptuous as vol
 
 from homeassistant.components.notify import (
+    ATTR_DATA,
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
@@ -17,6 +18,9 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_FILE = "config"
 CONF_URL = "url"
+
+# Optional Attachments
+ATTR_ATTACHMENTS = "attachments"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -66,6 +70,20 @@ class AppriseNotificationService(BaseNotificationService):
         However, if any tags are specified, then they will be applied
         to the notification causing filtering (if set up that way).
         """
+
         targets = kwargs.get(ATTR_TARGET)
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-        self.apprise.notify(body=message, title=title, tag=targets)
+
+        data = kwargs.get(ATTR_DATA)
+        attachments = data.get(ATTR_ATTACHMENTS) if data else None
+
+        # Default Attachment
+        attach = None
+        if attachments:
+            # Support file attachments (such as security camera images,
+            # documents, icons, etc). The attachments can be a list and/or
+            # a string.  The AppriseAttachment() object accepts both
+            attach = apprise.AppriseAttachment()
+            attach.add(attachments)
+
+        self.apprise.notify(body=message, title=title, tag=targets, attach=attach)
