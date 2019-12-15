@@ -55,7 +55,6 @@ SENSOR_TYPES = {
         "icon": "mdi:window",
         "class": DEVICE_CLASS_WINDOWHANDLE,
     },
-    
 }
 
 
@@ -97,7 +96,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     elif dev_class == DEVICE_CLASS_POWER:
         add_entities([EnOceanPowerSensor(dev_id, dev_name)])
-    
+
     elif dev_class == DEVICE_CLASS_WINDOWHANDLE:
         add_entities([EnOceanWindowHandle(dev_id, dev_name)])
 
@@ -248,20 +247,20 @@ class EnOceanWindowHandle(EnOceanSensor):
 
         self._rawdata = f"{packet}"
         action = (packet.data[1] & 0x70) >> 4
-        
+
         if action == 0x07:
             self._state = STATE_CLOSED
         if (action == 0x06) or (action == 0x04):
             self._state = STATE_OPEN
         if action == 0x05:
             self._state = "tilt"
-            
+
         self.schedule_update_ha_state()
 
     @property
     def state_attributes(self):
         attr={}
-        
+
         attr["rawdata"] = self._rawdata
-        
+
         return attr
