@@ -1,4 +1,5 @@
 """Support for Vera devices."""
+import asyncio
 from collections import defaultdict
 import logging
 
@@ -50,20 +51,22 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, base_config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, base_config: dict) -> bool:
     """Set up for Vera controllers."""
-    config = base_config.get(DOMAIN, [])
+    config = base_config.get(DOMAIN)
 
     # Normalize the base url.
     config[CONF_CONTROLLER] = config.get(CONF_CONTROLLER).rstrip("/")
+    base_url = config.get(CONF_CONTROLLER)
+
+    controller, _ = veraApi.init_controller(base_url)
+    hass.data[DOMAIN] = ControllerData(controller=controller, devices=(), scenes=())
 
     # Build a map of already configured controllers.
     base_url_entries_map = {}
     for config_entry in hass.config_entries.async_entries(DOMAIN):
         base_url = config_entry.data.get(CONF_CONTROLLER)
         base_url_entries_map[base_url] = config_entry
-
-    base_url = config.get(CONF_CONTROLLER)
 
     entry = base_url_entries_map.get(base_url)
     if entry:
@@ -87,14 +90,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     config = config_entry.data
 
     # Get Vera specific configuration.
-    base_url = config.get(CONF_CONTROLLER)
     light_ids = config.get(CONF_LIGHTS)
     exclude_ids = config.get(CONF_EXCLUDE)
 
     # Initialize the Vera controller.
-    controller, _ = veraApi.init_controller(base_url)
+    controller = hass.data[DOMAIN].controller  # type: veraApi.VeraController
     hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, lambda event: controller.stop()
+        EVENT_HOMEASSISTANT_STOP,
+        lambda event: hass.async_add_executor_job(controller.stop),
     )
 
     try:
@@ -140,13 +143,11 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     """Unload Withings config entry."""
     controller_data = hass.data[DOMAIN]
 
-    if not controller_data:
-        return True
-
-    for platform in get_configured_platforms(controller_data):
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_unload(config_entry, platform)
-        )
+    tasks = [
+        hass.config_entries.async_forward_entry_unload(config_entry, platform)
+        for platform in get_configured_platforms(controller_data)
+    ]
+    await asyncio.gather(*tasks)
 
     return True
 

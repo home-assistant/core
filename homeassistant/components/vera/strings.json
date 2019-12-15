@@ -1,5 +1,8 @@
 {
   "config": {
-    "title": "Vera"
+    "title": "Vera",
+    "abort": {
+      "cannot-connect": "Could not connect to controller with url {base_url}"
+    }
   }
 }

@@ -22,7 +22,7 @@ ControllerData = NamedTuple(
 def get_configured_platforms(controller_data: ControllerData) -> Set[str]:
     """Get configured platforms for a controller."""
     platforms = []
-    for platform in controller_data.devices.keys():
+    for platform in controller_data.devices:
         platforms.append(platform)
 
     if controller_data.scenes:
