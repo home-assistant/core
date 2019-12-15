@@ -547,8 +547,12 @@ async def test_setup_fail_firetv(hass):
 async def test_setup_two_devices(hass):
     """Test that two devices can be set up."""
     config = {
-        DOMAIN: [CONFIG_ANDROIDTV_ADB_SERVER[DOMAIN], CONFIG_FIRETV_ADB_SERVER[DOMAIN]]
+        DOMAIN: [
+            CONFIG_ANDROIDTV_ADB_SERVER[DOMAIN],
+            CONFIG_FIRETV_ADB_SERVER[DOMAIN].copy(),
+        ]
     }
+    config[DOMAIN][1][CONF_HOST] = "127.0.0.2"
 
     patch_key = "server"
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
