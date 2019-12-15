@@ -1,0 +1,10 @@
+{
+  "domain": "dpi4relay",
+  "name": "DockerPi 4 Channel Relay expansion board",
+  "documentation": "https://wiki.52pi.com/index.php/DockerPi_4_Channel_Relay_SKU:_EP-0099",
+  "requirements": [
+    "smbus2==0.3.0"
+    ],
+  "dependencies": [],
+  "codeowners": ["@delfer"]
+}
