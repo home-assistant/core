@@ -259,6 +259,29 @@ hass.states.set('module.datetime',
 
 
 @asyncio.coroutine
+def test_execute_functions(hass, caplog):
+    """Test functions defined in script can call one another."""
+    caplog.set_level(logging.ERROR)
+    source = """
+def a():
+    hass.states.set('hello.a', 'one')
+
+def b():
+    a()
+    hass.states.set('hello.b', 'two')
+
+b()
+"""
+    hass.async_add_job(execute, hass, "test.py", source, {})
+    yield from hass.async_block_till_done()
+
+    assert hass.states.is_state("hello.a", "one")
+    assert hass.states.is_state("hello.b", "two")
+    # No errors logged = good
+    assert caplog.text == ""
+
+
+@asyncio.coroutine
 def test_reload(hass):
     """Test we can re-discover scripts."""
     scripts = [
