@@ -1,15 +1,18 @@
 """The tests for the cover platform."""
 
-from homeassistant.components.cover import SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER
+from homeassistant.components.cover import (
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
+    intent as cover_intent,
+)
 from homeassistant.helpers import intent
-import homeassistant.components as comps
+
 from tests.common import async_mock_service
 
 
 async def test_open_cover_intent(hass):
     """Test HassOpenCover intent."""
-    result = await comps.cover.async_setup(hass, {})
-    assert result
+    await cover_intent.async_setup_intents(hass)
 
     hass.states.async_set("cover.garage_door", "closed")
     calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
@@ -29,8 +32,7 @@ async def test_open_cover_intent(hass):
 
 async def test_close_cover_intent(hass):
     """Test HassCloseCover intent."""
-    result = await comps.cover.async_setup(hass, {})
-    assert result
+    await cover_intent.async_setup_intents(hass)
 
     hass.states.async_set("cover.garage_door", "open")
     calls = async_mock_service(hass, "cover", SERVICE_CLOSE_COVER)

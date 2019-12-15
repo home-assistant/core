@@ -23,6 +23,7 @@ from .core.const import (
     ATTR_ENDPOINT_ID,
     ATTR_LEVEL,
     ATTR_MANUFACTURER,
+    ATTR_MEMBERS,
     ATTR_NAME,
     ATTR_VALUE,
     ATTR_WARNING_DEVICE_DURATION,
@@ -39,6 +40,9 @@ from .core.const import (
     DATA_ZHA,
     DATA_ZHA_GATEWAY,
     DOMAIN,
+    GROUP_ID,
+    GROUP_IDS,
+    GROUP_NAME,
     MFG_CLUSTER_ID_START,
     WARNING_DEVICE_MODE_EMERGENCY,
     WARNING_DEVICE_SOUND_HIGH,
@@ -46,7 +50,11 @@ from .core.const import (
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
 )
-from .core.helpers import async_is_bindable_target, get_matched_clusters
+from .core.helpers import (
+    async_get_device_info,
+    async_is_bindable_target,
+    get_matched_clusters,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,17 +65,17 @@ RESPONSE = "response"
 DEVICE_INFO = "device_info"
 
 ATTR_DURATION = "duration"
+ATTR_GROUP = "group"
 ATTR_IEEE_ADDRESS = "ieee_address"
 ATTR_IEEE = "ieee"
 ATTR_SOURCE_IEEE = "source_ieee"
 ATTR_TARGET_IEEE = "target_ieee"
-BIND_REQUEST = 0x0021
-UNBIND_REQUEST = 0x0022
 
 SERVICE_PERMIT = "permit"
 SERVICE_REMOVE = "remove"
 SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE = "set_zigbee_cluster_attribute"
 SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND = "issue_zigbee_cluster_command"
+SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND = "issue_zigbee_group_command"
 SERVICE_DIRECT_ZIGBEE_BIND = "issue_direct_zigbee_bind"
 SERVICE_DIRECT_ZIGBEE_UNBIND = "issue_direct_zigbee_unbind"
 SERVICE_WARNING_DEVICE_SQUAWK = "warning_device_squawk"
@@ -139,7 +147,17 @@ SERVICE_SCHEMAS = {
             vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
             vol.Required(ATTR_COMMAND): cv.positive_int,
             vol.Required(ATTR_COMMAND_TYPE): cv.string,
-            vol.Optional(ATTR_ARGS, default=""): cv.string,
+            vol.Optional(ATTR_ARGS, default=[]): cv.ensure_list,
+            vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
+        }
+    ),
+    SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND: vol.Schema(
+        {
+            vol.Required(ATTR_GROUP): cv.positive_int,
+            vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
+            vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
+            vol.Required(ATTR_COMMAND): cv.positive_int,
+            vol.Optional(ATTR_ARGS, default=[]): cv.ensure_list,
             vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
         }
     ),
@@ -201,6 +219,34 @@ async def websocket_get_devices(hass, connection, msg):
 
 @websocket_api.require_admin
 @websocket_api.async_response
+@websocket_api.websocket_command({vol.Required(TYPE): "zha/devices/groupable"})
+async def websocket_get_groupable_devices(hass, connection, msg):
+    """Get ZHA devices that can be grouped."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    ha_device_registry = await async_get_registry(hass)
+
+    devices = []
+    for device in zha_gateway.devices.values():
+        if device.is_groupable:
+            devices.append(
+                async_get_device_info(
+                    hass, device, ha_device_registry=ha_device_registry
+                )
+            )
+    connection.send_result(msg[ID], devices)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command({vol.Required(TYPE): "zha/groups"})
+async def websocket_get_groups(hass, connection, msg):
+    """Get ZHA groups."""
+    groups = await get_groups(hass)
+    connection.send_result(msg[ID], groups)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
 @websocket_api.websocket_command(
     {vol.Required(TYPE): "zha/device", vol.Required(ATTR_IEEE): EUI64.convert}
 )
@@ -224,29 +270,215 @@ async def websocket_get_device(hass, connection, msg):
     connection.send_result(msg[ID], device)
 
 
-@callback
-def async_get_device_info(hass, device, ha_device_registry=None):
-    """Get ZHA device."""
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {vol.Required(TYPE): "zha/group", vol.Required(GROUP_ID): cv.positive_int}
+)
+async def websocket_get_group(hass, connection, msg):
+    """Get ZHA group."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
-    ret_device = {}
-    ret_device.update(device.device_info)
-    ret_device["entities"] = [
-        {
-            "entity_id": entity_ref.reference_id,
-            ATTR_NAME: entity_ref.device_info[ATTR_NAME],
-        }
-        for entity_ref in zha_gateway.device_registry[device.ieee]
-    ]
+    ha_device_registry = await async_get_registry(hass)
+    group_id = msg[GROUP_ID]
+    group = None
 
-    if ha_device_registry is not None:
-        reg_device = ha_device_registry.async_get_device(
-            {(DOMAIN, str(device.ieee))}, set()
+    if group_id in zha_gateway.application_controller.groups:
+        group = async_get_group_info(
+            hass,
+            zha_gateway,
+            zha_gateway.application_controller.groups[group_id],
+            ha_device_registry,
         )
-        if reg_device is not None:
-            ret_device["user_given_name"] = reg_device.name_by_user
-            ret_device["device_reg_id"] = reg_device.id
-            ret_device["area_id"] = reg_device.area_id
-    return ret_device
+    if not group:
+        connection.send_message(
+            websocket_api.error_message(
+                msg[ID], websocket_api.const.ERR_NOT_FOUND, "ZHA Group not found"
+            )
+        )
+        return
+    connection.send_result(msg[ID], group)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zha/group/add",
+        vol.Required(GROUP_NAME): cv.string,
+        vol.Optional(ATTR_MEMBERS): vol.All(cv.ensure_list, [EUI64.convert]),
+    }
+)
+async def websocket_add_group(hass, connection, msg):
+    """Add a new ZHA group."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    ha_device_registry = await async_get_registry(hass)
+    group_id = len(zha_gateway.application_controller.groups) + 1
+    group_name = msg[GROUP_NAME]
+    zigpy_group = async_get_group_by_name(zha_gateway, group_name)
+    ret_group = None
+    members = msg.get(ATTR_MEMBERS)
+
+    # guard against group already existing
+    if zigpy_group is None:
+        zigpy_group = zha_gateway.application_controller.groups.add_group(
+            group_id, group_name
+        )
+        if members is not None:
+            tasks = []
+            for ieee in members:
+                tasks.append(zha_gateway.devices[ieee].async_add_to_group(group_id))
+            await asyncio.gather(*tasks)
+    ret_group = async_get_group_info(hass, zha_gateway, zigpy_group, ha_device_registry)
+    connection.send_result(msg[ID], ret_group)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zha/group/remove",
+        vol.Required(GROUP_IDS): vol.All(cv.ensure_list, [cv.positive_int]),
+    }
+)
+async def websocket_remove_groups(hass, connection, msg):
+    """Remove the specified ZHA groups."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    groups = zha_gateway.application_controller.groups
+    group_ids = msg[GROUP_IDS]
+
+    if len(group_ids) > 1:
+        tasks = []
+        for group_id in group_ids:
+            tasks.append(remove_group(groups[group_id], zha_gateway))
+        await asyncio.gather(*tasks)
+    else:
+        await remove_group(groups[group_ids[0]], zha_gateway)
+    ret_groups = await get_groups(hass)
+    connection.send_result(msg[ID], ret_groups)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zha/group/members/add",
+        vol.Required(GROUP_ID): cv.positive_int,
+        vol.Required(ATTR_MEMBERS): vol.All(cv.ensure_list, [EUI64.convert]),
+    }
+)
+async def websocket_add_group_members(hass, connection, msg):
+    """Add members to a ZHA group."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    ha_device_registry = await async_get_registry(hass)
+    group_id = msg[GROUP_ID]
+    members = msg[ATTR_MEMBERS]
+    zigpy_group = None
+
+    if group_id in zha_gateway.application_controller.groups:
+        zigpy_group = zha_gateway.application_controller.groups[group_id]
+        tasks = []
+        for ieee in members:
+            tasks.append(zha_gateway.devices[ieee].async_add_to_group(group_id))
+        await asyncio.gather(*tasks)
+    if not zigpy_group:
+        connection.send_message(
+            websocket_api.error_message(
+                msg[ID], websocket_api.const.ERR_NOT_FOUND, "ZHA Group not found"
+            )
+        )
+        return
+    ret_group = async_get_group_info(hass, zha_gateway, zigpy_group, ha_device_registry)
+    connection.send_result(msg[ID], ret_group)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zha/group/members/remove",
+        vol.Required(GROUP_ID): cv.positive_int,
+        vol.Required(ATTR_MEMBERS): vol.All(cv.ensure_list, [EUI64.convert]),
+    }
+)
+async def websocket_remove_group_members(hass, connection, msg):
+    """Remove members from a ZHA group."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    ha_device_registry = await async_get_registry(hass)
+    group_id = msg[GROUP_ID]
+    members = msg[ATTR_MEMBERS]
+    zigpy_group = None
+
+    if group_id in zha_gateway.application_controller.groups:
+        zigpy_group = zha_gateway.application_controller.groups[group_id]
+        tasks = []
+        for ieee in members:
+            tasks.append(zha_gateway.devices[ieee].async_remove_from_group(group_id))
+        await asyncio.gather(*tasks)
+    if not zigpy_group:
+        connection.send_message(
+            websocket_api.error_message(
+                msg[ID], websocket_api.const.ERR_NOT_FOUND, "ZHA Group not found"
+            )
+        )
+        return
+    ret_group = async_get_group_info(hass, zha_gateway, zigpy_group, ha_device_registry)
+    connection.send_result(msg[ID], ret_group)
+
+
+async def get_groups(hass,):
+    """Get ZHA Groups."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    ha_device_registry = await async_get_registry(hass)
+
+    groups = []
+    for group in zha_gateway.application_controller.groups.values():
+        groups.append(
+            async_get_group_info(hass, zha_gateway, group, ha_device_registry)
+        )
+    return groups
+
+
+async def remove_group(group, zha_gateway):
+    """Remove ZHA Group."""
+    if group.members:
+        tasks = []
+        for member_ieee in group.members.keys():
+            if member_ieee[0] in zha_gateway.devices:
+                tasks.append(
+                    zha_gateway.devices[member_ieee[0]].async_remove_from_group(
+                        group.group_id
+                    )
+                )
+        await asyncio.gather(*tasks)
+    else:
+        zha_gateway.application_controller.groups.pop(group.group_id)
+
+
+@callback
+def async_get_group_info(hass, zha_gateway, group, ha_device_registry):
+    """Get ZHA group."""
+    ret_group = {}
+    ret_group["group_id"] = group.group_id
+    ret_group["name"] = group.name
+    ret_group["members"] = [
+        async_get_device_info(
+            hass,
+            zha_gateway.get_device(member_ieee[0]),
+            ha_device_registry=ha_device_registry,
+        )
+        for member_ieee in group.members.keys()
+        if member_ieee[0] in zha_gateway.devices
+    ]
+    return ret_group
+
+
+@callback
+def async_get_group_by_name(zha_gateway, group_name):
+    """Get ZHA group by name."""
+    for group in zha_gateway.application_controller.groups.values():
+        if group.name == group_name:
+            return group
+    return None
 
 
 @websocket_api.require_admin
@@ -333,11 +565,15 @@ async def websocket_device_cluster_attributes(hass, connection, msg):
                     {ID: attr_id, ATTR_NAME: attributes[attr_id][0]}
                 )
     _LOGGER.debug(
-        "Requested attributes for: %s %s %s %s",
-        f"{ATTR_CLUSTER_ID}: [{cluster_id}]",
-        f"{ATTR_CLUSTER_TYPE}: [{cluster_type}]",
-        f"{ATTR_ENDPOINT_ID}: [{endpoint_id}]",
-        f"{RESPONSE}: [{cluster_attributes}]",
+        "Requested attributes for: %s: %s, %s: '%s', %s: %s, %s: %s",
+        ATTR_CLUSTER_ID,
+        cluster_id,
+        ATTR_CLUSTER_TYPE,
+        cluster_type,
+        ATTR_ENDPOINT_ID,
+        endpoint_id,
+        RESPONSE,
+        cluster_attributes,
     )
 
     connection.send_result(msg[ID], cluster_attributes)
@@ -387,11 +623,15 @@ async def websocket_device_cluster_commands(hass, connection, msg):
                     }
                 )
     _LOGGER.debug(
-        "Requested commands for: %s %s %s %s",
-        f"{ATTR_CLUSTER_ID}: [{cluster_id}]",
-        f"{ATTR_CLUSTER_TYPE}: [{cluster_type}]",
-        f"{ATTR_ENDPOINT_ID}: [{endpoint_id}]",
-        f"{RESPONSE}: [{cluster_commands}]",
+        "Requested commands for: %s: %s, %s: '%s', %s: %s, %s: %s",
+        ATTR_CLUSTER_ID,
+        cluster_id,
+        ATTR_CLUSTER_TYPE,
+        cluster_type,
+        ATTR_ENDPOINT_ID,
+        endpoint_id,
+        RESPONSE,
+        cluster_commands,
     )
 
     connection.send_result(msg[ID], cluster_commands)
@@ -431,14 +671,21 @@ async def websocket_read_zigbee_cluster_attributes(hass, connection, msg):
             [attribute], allow_cache=False, only_cache=False, manufacturer=manufacturer
         )
     _LOGGER.debug(
-        "Read attribute for: %s %s %s %s %s %s %s",
-        f"{ATTR_CLUSTER_ID}: [{cluster_id}]",
-        f"{ATTR_CLUSTER_TYPE}: [{cluster_type}]",
-        f"{ATTR_ENDPOINT_ID}: [{endpoint_id}]",
-        f"{ATTR_ATTRIBUTE}: [{attribute}]",
-        f"{ATTR_MANUFACTURER}: [{manufacturer}]",
-        "{}: [{}]".format(RESPONSE, str(success.get(attribute))),
-        "{}: [{}]".format("failure", failure),
+        "Read attribute for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s],",
+        ATTR_CLUSTER_ID,
+        cluster_id,
+        ATTR_CLUSTER_TYPE,
+        cluster_type,
+        ATTR_ENDPOINT_ID,
+        endpoint_id,
+        ATTR_ATTRIBUTE,
+        attribute,
+        ATTR_MANUFACTURER,
+        manufacturer,
+        RESPONSE,
+        str(success.get(attribute)),
+        "failure",
+        failure,
     )
     connection.send_result(msg[ID], str(success.get(attribute)))
 
@@ -461,9 +708,11 @@ async def websocket_get_bindable_devices(hass, connection, msg):
     ]
 
     _LOGGER.debug(
-        "Get bindable devices: %s %s",
-        f"{ATTR_SOURCE_IEEE}: [{source_ieee}]",
-        "{}: [{}]".format("bindable devices:", devices),
+        "Get bindable devices: %s: [%s], %s: [%s]",
+        ATTR_SOURCE_IEEE,
+        source_ieee,
+        "bindable devices",
+        devices,
     )
 
     connection.send_message(websocket_api.result_message(msg[ID], devices))
@@ -483,11 +732,15 @@ async def websocket_bind_devices(hass, connection, msg):
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     source_ieee = msg[ATTR_SOURCE_IEEE]
     target_ieee = msg[ATTR_TARGET_IEEE]
-    await async_binding_operation(zha_gateway, source_ieee, target_ieee, BIND_REQUEST)
+    await async_binding_operation(
+        zha_gateway, source_ieee, target_ieee, zdo_types.ZDOCmd.Bind_req
+    )
     _LOGGER.info(
-        "Issue bind devices: %s %s",
-        f"{ATTR_SOURCE_IEEE}: [{source_ieee}]",
-        f"{ATTR_TARGET_IEEE}: [{target_ieee}]",
+        "Devices bound: %s: [%s] %s: [%s]",
+        ATTR_SOURCE_IEEE,
+        source_ieee,
+        ATTR_TARGET_IEEE,
+        target_ieee,
     )
 
 
@@ -505,11 +758,15 @@ async def websocket_unbind_devices(hass, connection, msg):
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     source_ieee = msg[ATTR_SOURCE_IEEE]
     target_ieee = msg[ATTR_TARGET_IEEE]
-    await async_binding_operation(zha_gateway, source_ieee, target_ieee, UNBIND_REQUEST)
+    await async_binding_operation(
+        zha_gateway, source_ieee, target_ieee, zdo_types.ZDOCmd.Unbind_req
+    )
     _LOGGER.info(
-        "Issue unbind devices: %s %s",
-        f"{ATTR_SOURCE_IEEE}: [{source_ieee}]",
-        f"{ATTR_TARGET_IEEE}: [{target_ieee}]",
+        "Devices un-bound: %s: [%s] %s: [%s]",
+        ATTR_SOURCE_IEEE,
+        source_ieee,
+        ATTR_TARGET_IEEE,
+        target_ieee,
     )
 
 
@@ -530,22 +787,34 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operati
 
         zdo = cluster_pair.source_cluster.endpoint.device.zdo
 
-        _LOGGER.debug(
-            "processing binding operation for: %s %s %s",
-            f"{ATTR_SOURCE_IEEE}: [{source_ieee}]",
-            f"{ATTR_TARGET_IEEE}: [{target_ieee}]",
-            "{}: {}".format("cluster", cluster_pair.source_cluster.cluster_id),
+        op_msg = "cluster: %s %s --> [%s]"
+        op_params = (
+            cluster_pair.source_cluster.cluster_id,
+            operation.name,
+            target_ieee,
         )
+        zdo.debug("processing " + op_msg, *op_params)
+
         bind_tasks.append(
-            zdo.request(
-                operation,
-                source_device.ieee,
-                cluster_pair.source_cluster.endpoint.endpoint_id,
-                cluster_pair.source_cluster.cluster_id,
-                destination_address,
+            (
+                zdo.request(
+                    operation,
+                    source_device.ieee,
+                    cluster_pair.source_cluster.endpoint.endpoint_id,
+                    cluster_pair.source_cluster.cluster_id,
+                    destination_address,
+                ),
+                op_msg,
+                op_params,
             )
         )
-    await asyncio.gather(*bind_tasks)
+    res = await asyncio.gather(*(t[0] for t in bind_tasks), return_exceptions=True)
+    for outcome, log_msg in zip(res, bind_tasks):
+        if isinstance(outcome, Exception):
+            fmt = log_msg[1] + " failed: %s"
+        else:
+            fmt = log_msg[1] + " completed: %s"
+        zdo.debug(fmt, *(log_msg[2] + (outcome,)))
 
 
 def async_load_api(hass):
@@ -600,14 +869,21 @@ def async_load_api(hass):
                 manufacturer=manufacturer,
             )
         _LOGGER.debug(
-            "Set attribute for: %s %s %s %s %s %s %s",
-            f"{ATTR_CLUSTER_ID}: [{cluster_id}]",
-            f"{ATTR_CLUSTER_TYPE}: [{cluster_type}]",
-            f"{ATTR_ENDPOINT_ID}: [{endpoint_id}]",
-            f"{ATTR_ATTRIBUTE}: [{attribute}]",
-            f"{ATTR_VALUE}: [{value}]",
-            f"{ATTR_MANUFACTURER}: [{manufacturer}]",
-            f"{RESPONSE}: [{response}]",
+            "Set attribute for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s]",
+            ATTR_CLUSTER_ID,
+            cluster_id,
+            ATTR_CLUSTER_TYPE,
+            cluster_type,
+            ATTR_ENDPOINT_ID,
+            endpoint_id,
+            ATTR_ATTRIBUTE,
+            attribute,
+            ATTR_VALUE,
+            value,
+            ATTR_MANUFACTURER,
+            manufacturer,
+            RESPONSE,
+            response,
         )
 
     hass.helpers.service.async_register_admin_service(
@@ -637,20 +913,28 @@ def async_load_api(hass):
                 cluster_id,
                 command,
                 command_type,
-                args,
+                *args,
                 cluster_type=cluster_type,
                 manufacturer=manufacturer,
             )
         _LOGGER.debug(
-            "Issue command for: %s %s %s %s %s %s %s %s",
-            f"{ATTR_CLUSTER_ID}: [{cluster_id}]",
-            f"{ATTR_CLUSTER_TYPE}: [{cluster_type}]",
-            f"{ATTR_ENDPOINT_ID}: [{endpoint_id}]",
-            f"{ATTR_COMMAND}: [{command}]",
-            f"{ATTR_COMMAND_TYPE}: [{command_type}]",
-            f"{ATTR_ARGS}: [{args}]",
-            f"{ATTR_MANUFACTURER}: [{manufacturer}]",
-            f"{RESPONSE}: [{response}]",
+            "Issued command for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: %s %s: [%s] %s: %s",
+            ATTR_CLUSTER_ID,
+            cluster_id,
+            ATTR_CLUSTER_TYPE,
+            cluster_type,
+            ATTR_ENDPOINT_ID,
+            endpoint_id,
+            ATTR_COMMAND,
+            command,
+            ATTR_COMMAND_TYPE,
+            command_type,
+            ATTR_ARGS,
+            args,
+            ATTR_MANUFACTURER,
+            manufacturer,
+            RESPONSE,
+            response,
         )
 
     hass.helpers.service.async_register_admin_service(
@@ -658,6 +942,43 @@ def async_load_api(hass):
         SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND,
         issue_zigbee_cluster_command,
         schema=SERVICE_SCHEMAS[SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND],
+    )
+
+    async def issue_zigbee_group_command(service):
+        """Issue command on zigbee cluster on a zigbee group."""
+        group_id = service.data.get(ATTR_GROUP)
+        cluster_id = service.data.get(ATTR_CLUSTER_ID)
+        command = service.data.get(ATTR_COMMAND)
+        args = service.data.get(ATTR_ARGS)
+        manufacturer = service.data.get(ATTR_MANUFACTURER) or None
+        group = zha_gateway.get_group(group_id)
+        if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
+            _LOGGER.error("Missing manufacturer attribute for cluster: %d", cluster_id)
+        response = None
+        if group is not None:
+            cluster = group.endpoint[cluster_id]
+            response = await cluster.command(
+                command, *args, manufacturer=manufacturer, expect_reply=True
+            )
+        _LOGGER.debug(
+            "Issued group command for: %s: [%s] %s: [%s] %s: %s %s: [%s] %s: %s",
+            ATTR_CLUSTER_ID,
+            cluster_id,
+            ATTR_COMMAND,
+            command,
+            ATTR_ARGS,
+            args,
+            ATTR_MANUFACTURER,
+            manufacturer,
+            RESPONSE,
+            response,
+        )
+
+    hass.helpers.service.async_register_admin_service(
+        DOMAIN,
+        SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND,
+        issue_zigbee_group_command,
+        schema=SERVICE_SCHEMAS[SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND],
     )
 
     async def warning_device_squawk(service):
@@ -674,20 +995,24 @@ def async_load_api(hass):
                 await channel.squawk(mode, strobe, level)
             else:
                 _LOGGER.error(
-                    "Squawking IASWD: %s is missing the required IASWD channel!",
-                    "{}: [{}]".format(ATTR_IEEE, str(ieee)),
+                    "Squawking IASWD: %s: [%s] is missing the required IASWD channel!",
+                    ATTR_IEEE,
+                    str(ieee),
                 )
         else:
             _LOGGER.error(
-                "Squawking IASWD: %s could not be found!",
-                "{}: [{}]".format(ATTR_IEEE, str(ieee)),
+                "Squawking IASWD: %s: [%s] could not be found!", ATTR_IEEE, str(ieee)
             )
         _LOGGER.debug(
-            "Squawking IASWD: %s %s %s %s",
-            "{}: [{}]".format(ATTR_IEEE, str(ieee)),
-            "{}: [{}]".format(ATTR_WARNING_DEVICE_MODE, mode),
-            "{}: [{}]".format(ATTR_WARNING_DEVICE_STROBE, strobe),
-            "{}: [{}]".format(ATTR_LEVEL, level),
+            "Squawking IASWD: %s: [%s] %s: [%s] %s: [%s] %s: [%s]",
+            ATTR_IEEE,
+            str(ieee),
+            ATTR_WARNING_DEVICE_MODE,
+            mode,
+            ATTR_WARNING_DEVICE_STROBE,
+            strobe,
+            ATTR_LEVEL,
+            level,
         )
 
     hass.helpers.service.async_register_admin_service(
@@ -716,20 +1041,24 @@ def async_load_api(hass):
                 )
             else:
                 _LOGGER.error(
-                    "Warning IASWD: %s is missing the required IASWD channel!",
-                    "{}: [{}]".format(ATTR_IEEE, str(ieee)),
+                    "Warning IASWD: %s: [%s] is missing the required IASWD channel!",
+                    ATTR_IEEE,
+                    str(ieee),
                 )
         else:
             _LOGGER.error(
-                "Warning IASWD: %s could not be found!",
-                "{}: [{}]".format(ATTR_IEEE, str(ieee)),
+                "Warning IASWD: %s: [%s] could not be found!", ATTR_IEEE, str(ieee)
             )
         _LOGGER.debug(
-            "Warning IASWD: %s %s %s %s",
-            "{}: [{}]".format(ATTR_IEEE, str(ieee)),
-            "{}: [{}]".format(ATTR_WARNING_DEVICE_MODE, mode),
-            "{}: [{}]".format(ATTR_WARNING_DEVICE_STROBE, strobe),
-            "{}: [{}]".format(ATTR_LEVEL, level),
+            "Warning IASWD: %s: [%s] %s: [%s] %s: [%s] %s: [%s]",
+            ATTR_IEEE,
+            str(ieee),
+            ATTR_WARNING_DEVICE_MODE,
+            mode,
+            ATTR_WARNING_DEVICE_STROBE,
+            strobe,
+            ATTR_LEVEL,
+            level,
         )
 
     hass.helpers.service.async_register_admin_service(
@@ -741,7 +1070,14 @@ def async_load_api(hass):
 
     websocket_api.async_register_command(hass, websocket_permit_devices)
     websocket_api.async_register_command(hass, websocket_get_devices)
+    websocket_api.async_register_command(hass, websocket_get_groupable_devices)
+    websocket_api.async_register_command(hass, websocket_get_groups)
     websocket_api.async_register_command(hass, websocket_get_device)
+    websocket_api.async_register_command(hass, websocket_get_group)
+    websocket_api.async_register_command(hass, websocket_add_group)
+    websocket_api.async_register_command(hass, websocket_remove_groups)
+    websocket_api.async_register_command(hass, websocket_add_group_members)
+    websocket_api.async_register_command(hass, websocket_remove_group_members)
     websocket_api.async_register_command(hass, websocket_reconfigure_node)
     websocket_api.async_register_command(hass, websocket_device_clusters)
     websocket_api.async_register_command(hass, websocket_device_cluster_attributes)
@@ -758,5 +1094,6 @@ def async_unload_api(hass):
     hass.services.async_remove(DOMAIN, SERVICE_REMOVE)
     hass.services.async_remove(DOMAIN, SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE)
     hass.services.async_remove(DOMAIN, SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND)
+    hass.services.async_remove(DOMAIN, SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND)
     hass.services.async_remove(DOMAIN, SERVICE_WARNING_DEVICE_SQUAWK)
     hass.services.async_remove(DOMAIN, SERVICE_WARNING_DEVICE_WARN)

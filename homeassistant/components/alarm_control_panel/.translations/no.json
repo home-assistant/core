@@ -6,6 +6,13 @@
             "arm_night": "Aktiver {entity_name} natt",
             "disarm": "Deaktiver {entity_name}",
             "trigger": "Utl\u00f8ser {entity_name}"
+        },
+        "trigger_type": {
+            "armed_away": "{entity_name} borte sikkring ",
+            "armed_home": "{entity_name} hjemme sikkring",
+            "armed_night": "{entity_name} natt sikkring",
+            "disarmed": "{entity_name} deaktivert",
+            "triggered": "{entity_name} utl\u00f8st"
         }
     }
 }

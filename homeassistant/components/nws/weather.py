@@ -9,32 +9,32 @@ from pynws import SimpleNWS
 import voluptuous as vol
 
 from homeassistant.components.weather import (
-    WeatherEntity,
-    PLATFORM_SCHEMA,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TIME,
-    ATTR_FORECAST_WIND_SPEED,
     ATTR_FORECAST_WIND_BEARING,
+    ATTR_FORECAST_WIND_SPEED,
+    PLATFORM_SCHEMA,
+    WeatherEntity,
 )
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_NAME,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MODE,
+    CONF_NAME,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
     LENGTH_MILES,
     PRESSURE_HPA,
-    PRESSURE_PA,
     PRESSURE_INHG,
+    PRESSURE_PA,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure

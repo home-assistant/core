@@ -6,6 +6,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import group
+from homeassistant.components.recorder.models import States
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -288,7 +289,6 @@ class Plant(Entity):
 
         This only needs to be done once during startup.
         """
-        from homeassistant.components.recorder.models import States
 
         start_date = datetime.now() - timedelta(days=self._conf_check_days)
         entity_id = self._readingmap.get(READING_BRIGHTNESS)

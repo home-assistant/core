@@ -10,8 +10,8 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
-from .const import DOMAIN
 from . import VelbusEntity
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

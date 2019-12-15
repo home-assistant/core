@@ -1,10 +1,13 @@
 {
   "domain": "icloud",
-  "name": "Icloud",
-  "documentation": "https://www.home-assistant.io/integrations/icloud",
+  "name": "iCloud",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/components/icloud",
   "requirements": [
     "pyicloud==0.9.1"
   ],
-  "dependencies": ["configurator"],
-  "codeowners": []
+  "dependencies": [],
+  "codeowners": [
+    "@Quentame"
+  ]
 }

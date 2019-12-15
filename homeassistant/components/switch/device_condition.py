@@ -1,14 +1,15 @@
 """Provides device conditions for switches."""
 from typing import Dict, List
+
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant
 from homeassistant.components.device_automation import toggle_entity
 from homeassistant.const import CONF_DOMAIN
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.condition import ConditionCheckerType
-from . import DOMAIN
+from homeassistant.helpers.typing import ConfigType
 
+from . import DOMAIN
 
 CONDITION_SCHEMA = toggle_entity.CONDITION_SCHEMA.extend(
     {vol.Required(CONF_DOMAIN): DOMAIN}

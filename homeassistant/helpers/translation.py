@@ -3,11 +3,12 @@ import logging
 from typing import Any, Dict, Iterable, Optional
 
 from homeassistant.loader import (
+    async_get_config_flows,
     async_get_integration,
     bind_hass,
-    async_get_config_flows,
 )
 from homeassistant.util.json import load_json
+
 from .typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)

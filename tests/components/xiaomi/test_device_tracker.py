@@ -1,13 +1,13 @@
 """The tests for the Xiaomi router device tracker platform."""
 import logging
-from asynctest import mock, patch
 
+from asynctest import mock, patch
 import requests
 
 from homeassistant.components.device_tracker import DOMAIN
 import homeassistant.components.xiaomi.device_tracker as xiaomi
 from homeassistant.components.xiaomi.device_tracker import get_scanner
-from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PLATFORM
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 

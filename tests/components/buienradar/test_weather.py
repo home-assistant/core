@@ -2,7 +2,6 @@
 from homeassistant.components import weather
 from homeassistant.setup import async_setup_component
 
-
 # Example config snippet from documentation.
 BASE_CONFIG = {
     "weather": [

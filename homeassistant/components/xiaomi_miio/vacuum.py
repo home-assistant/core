@@ -8,7 +8,6 @@ import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     ATTR_CLEANED_AREA,
-    DOMAIN,
     PLATFORM_SCHEMA,
     STATE_CLEANING,
     STATE_DOCKED,
@@ -38,6 +37,15 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
+from .const import (
+    DOMAIN,
+    SERVICE_CLEAN_ZONE,
+    SERVICE_MOVE_REMOTE_CONTROL,
+    SERVICE_MOVE_REMOTE_CONTROL_STEP,
+    SERVICE_START_REMOTE_CONTROL,
+    SERVICE_STOP_REMOTE_CONTROL,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Xiaomi Vacuum cleaner"
@@ -52,13 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_MOVE_REMOTE_CONTROL = "xiaomi_remote_control_move"
-SERVICE_MOVE_REMOTE_CONTROL_STEP = "xiaomi_remote_control_move_step"
-SERVICE_START_REMOTE_CONTROL = "xiaomi_remote_control_start"
-SERVICE_STOP_REMOTE_CONTROL = "xiaomi_remote_control_stop"
-SERVICE_CLEAN_ZONE = "xiaomi_clean_zone"
-
-FAN_SPEEDS = {"Quiet": 38, "Balanced": 60, "Turbo": 77, "Max": 90}
+FAN_SPEEDS = {"Quiet": 38, "Balanced": 60, "Turbo": 77, "Max": 90, "Gentle": 105}
 
 ATTR_CLEAN_START = "clean_start"
 ATTR_CLEAN_STOP = "clean_stop"

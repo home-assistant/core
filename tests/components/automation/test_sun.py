@@ -1,16 +1,16 @@
 """The tests for the sun automation."""
 from datetime import datetime
-
-import pytest
 from unittest.mock import patch
 
-from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
-from homeassistant.setup import async_setup_component
+import pytest
+
 from homeassistant.components import sun
 import homeassistant.components.automation as automation
+from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed, mock_component, async_mock_service
+from tests.common import async_fire_time_changed, async_mock_service, mock_component
 from tests.components.automation import common
 
 ORIG_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE

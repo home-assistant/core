@@ -1,9 +1,11 @@
 """Support for controlling projector via the PJLink protocol."""
 import logging
 
+from pypjlink import MUTE_AUDIO, Projector
+from pypjlink.projector import ProjectorError
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
@@ -90,7 +92,6 @@ class PjLinkDevice(MediaPlayerDevice):
 
     def projector(self):
         """Create PJLink Projector instance."""
-        from pypjlink import Projector
 
         projector = Projector.from_address(self._host, self._port, self._encoding)
         projector.authenticate(self._password)
@@ -98,7 +99,6 @@ class PjLinkDevice(MediaPlayerDevice):
 
     def update(self):
         """Get the latest state from the device."""
-        from pypjlink.projector import ProjectorError
 
         with self.projector() as projector:
             try:
@@ -171,8 +171,6 @@ class PjLinkDevice(MediaPlayerDevice):
     def mute_volume(self, mute):
         """Mute (true) of unmute (false) media player."""
         with self.projector() as projector:
-            from pypjlink import MUTE_AUDIO
-
             projector.set_mute(MUTE_AUDIO, mute)
 
     def select_source(self, source):

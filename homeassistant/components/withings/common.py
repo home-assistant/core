@@ -1,4 +1,5 @@
 """Common code for Withings."""
+from asyncio import run_coroutine_threadsafe
 import datetime
 from functools import partial
 import logging
@@ -6,15 +7,14 @@ import re
 import time
 from typing import Any, Dict
 
-from asyncio import run_coroutine_threadsafe
 import requests
 from withings_api import (
     AbstractWithingsApi,
-    SleepGetResponse,
     MeasureGetMeasResponse,
+    SleepGetResponse,
     SleepGetSummaryResponse,
 )
-from withings_api.common import UnauthorizedException, AuthFailedException
+from withings_api.common import AuthFailedException, UnauthorizedException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -51,7 +51,7 @@ class ThrottleData:
     """Throttle data."""
 
     def __init__(self, interval: int, data: Any):
-        """Constructor."""
+        """Initialize throttle data."""
         self._time = int(time.time())
         self._interval = interval
         self._data = data
@@ -126,7 +126,7 @@ class WithingsDataManager:
     service_available = None
 
     def __init__(self, hass: HomeAssistant, profile: str, api: ConfigEntryWithingsApi):
-        """Constructor."""
+        """Initialize data manager."""
         self._hass = hass
         self._api = api
         self._profile = profile
@@ -226,7 +226,7 @@ class WithingsDataManager:
             WithingsDataManager.print_service_available()
             return result
 
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception as ex:
             # Withings api encountered error.
             if isinstance(ex, (UnauthorizedException, AuthFailedException)):
                 raise NotAuthenticatedError(ex)

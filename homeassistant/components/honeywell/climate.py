@@ -1,43 +1,43 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
 import datetime
 import logging
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, List, Optional
 
 import requests
-import voluptuous as vol
 import somecomfort
+import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_FAN,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
     FAN_AUTO,
     FAN_DIFFUSE,
     FAN_ON,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_OFF,
+    PRESET_AWAY,
+    PRESET_NONE,
     SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_FAN,
-    HVAC_MODE_OFF,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT_COOL,
-    PRESET_AWAY,
-    PRESET_NONE,
 )
 from homeassistant.const import (
+    ATTR_TEMPERATURE,
     CONF_PASSWORD,
+    CONF_REGION,
     CONF_USERNAME,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    ATTR_TEMPERATURE,
-    CONF_REGION,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -160,9 +160,7 @@ class HoneywellUSThermostat(ClimateDevice):
         self._username = username
         self._password = password
 
-        _LOGGER.debug(
-            "latestData = %s ", device._data  # pylint: disable=protected-access
-        )
+        _LOGGER.debug("latestData = %s ", device._data)
 
         # not all honeywell HVACs support all modes
         mappings = [v for k, v in HVAC_MODE_TO_HW_MODE.items() if device.raw_ui_data[k]]
@@ -174,13 +172,13 @@ class HoneywellUSThermostat(ClimateDevice):
             | SUPPORT_TARGET_TEMPERATURE_RANGE
         )
 
-        if device._data["canControlHumidification"]:  # pylint: disable=protected-access
+        if device._data["canControlHumidification"]:
             self._supported_features |= SUPPORT_TARGET_HUMIDITY
 
         if device.raw_ui_data["SwitchEmergencyHeatAllowed"]:
             self._supported_features |= SUPPORT_AUX_HEAT
 
-        if not device._data["hasFan"]:  # pylint: disable=protected-access
+        if not device._data["hasFan"]:
             return
 
         # not all honeywell fans support all modes

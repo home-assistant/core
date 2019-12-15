@@ -1,7 +1,7 @@
 """Support for the Amazon Polly text to speech service."""
 import logging
-import boto3
 
+import boto3
 import voluptuous as vol
 
 from homeassistant.components.tts import PLATFORM_SCHEMA, Provider

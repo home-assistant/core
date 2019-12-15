@@ -1,7 +1,9 @@
 """Support for package tracking sensors from 17track.net."""
-import logging
 from datetime import timedelta
+import logging
 
+from py17track import Client as SeventeenTrackClient
+from py17track.errors import SeventeenTrackError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -61,12 +63,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Configure the platform and add the sensors."""
-    from py17track import Client
-    from py17track.errors import SeventeenTrackError
 
     websession = aiohttp_client.async_get_clientsession(hass)
 
-    client = Client(websession)
+    client = SeventeenTrackClient(websession)
 
     try:
         login_result = await client.profile.login(
@@ -290,7 +290,6 @@ class SeventeenTrackData:
 
     async def _async_update(self):
         """Get updated data from 17track.net."""
-        from py17track.errors import SeventeenTrackError
 
         try:
             packages = await self._client.profile.packages(
