@@ -133,14 +133,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             owproxy = protocol.proxy(host=owhost, port=owport)
             devices = owproxy.dir()
         except protocol.Error as exc:
-            _LOGGER.error(
-                "Cannot connect to owserver on {0}:{1}, got:{2}".format(
-                    owhost, owport, exc
-                )
-            )
-
+            _LOGGER.error(f"Cannot connect to owserver on {owhost}:{owport}, got:{exc}")
         for device in devices:
-            _LOGGER.debug("found device={0}".format(device))
+            _LOGGER.debug(f"found device={device}")
             family = bytes.decode(owproxy.read(device + "family"))
             type = "std"
             if "EF" in family:
@@ -170,9 +165,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     )
             else:
                 _LOGGER.warning(
-                    "Ignoring unknown family ({0}) of sensor found for device: {1}".format(
-                        family, device
-                    )
+                    f"Ignoring unknown family ({family}) of sensor found for device: {device}"
                 )
 
     # We have a raw GPIO ow sensor on a Pi
@@ -276,7 +269,7 @@ class OneWireProxy(OneWire):
             if len(value_read) > 0:
                 value = round(float(value_read), 1)
         except protocol.Error as exc:
-            _LOGGER.error("Owserver failure in read(), got:{0}".format(exc))
+            _LOGGER.error(f"Owserver failure in read(), got:{exc}")
 
         self._state = value
 
@@ -309,8 +302,8 @@ class OneWireOWFS(OneWire):
             if len(value_read) == 1:
                 value = round(float(value_read[0]), 1)
         except ValueError:
-            _LOGGER.warning("Invalid value read from %s", self._device_file)
+            _LOGGER.warning(f"Invalid value read from {self._device_file}")
         except FileNotFoundError:
-            _LOGGER.warning("Cannot read from sensor: %s", self._device_file)
+            _LOGGER.warning(f"Cannot read from sensor: {self._device_file}")
 
         self._state = value
