@@ -556,8 +556,11 @@ async def test_setup_two_devices(hass):
     ], patchers.patch_shell("")[patch_key]:
         assert await async_setup_component(hass, DOMAIN, config)
 
-    for entity_id in ["media_player.android_tv", "media_player.fire_tv"]:
-        assert hass.states.get(entity_id) is not None
+        for entity_id in ["media_player.android_tv", "media_player.fire_tv"]:
+            await hass.helpers.entity_component.async_update_entity(entity_id)
+            state = hass.states.get(entity_id)
+            assert state is not None
+            assert state.state == STATE_OFF
 
 
 async def test_setup_same_device_twice(hass):
@@ -574,3 +577,9 @@ async def test_setup_same_device_twice(hass):
         patch_key
     ], patchers.patch_shell("")[patch_key]:
         assert await async_setup_component(hass, DOMAIN, config)
+
+        entity_id = "media_player.android_tv"
+        await hass.helpers.entity_component.async_update_entity(entity_id)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_OFF
