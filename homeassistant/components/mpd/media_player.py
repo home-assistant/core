@@ -203,7 +203,7 @@ class MpdDevice(MediaPlayerDevice):
         This is returned as part of the mpd status rather than in the details
         of the current song.
         """
-        return self._status.get("time")
+        return self._media_position
 
     @property
     def media_position_updated_at(self):
