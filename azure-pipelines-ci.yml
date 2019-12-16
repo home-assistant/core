@@ -56,6 +56,10 @@ stages:
         . venv/bin/activate
         pre-commit run isort --all-files
       displayName: 'Run isort'
+    - script: |
+        . venv/bin/activate
+        pre-commit run check-json --all-files
+      displayName: 'Run check-json'
   - job: 'Validate'
     pool:
       vmImage: 'ubuntu-latest'
