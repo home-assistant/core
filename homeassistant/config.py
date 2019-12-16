@@ -428,7 +428,7 @@ def async_log_exception(
 
 @callback
 def _format_config_error(
-    ex: Exception, domain: str, config: Dict, link: Optional[str]
+    ex: Exception, domain: str, config: Dict, link: Optional[str] = None
 ) -> str:
     """Generate log exception for configuration validation.
 
