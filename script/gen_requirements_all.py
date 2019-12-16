@@ -58,7 +58,7 @@ CONSTRAINT_PATH = os.path.join(
 CONSTRAINT_BASE = """
 pycryptodome>=3.6.6
 
-# Breaks Python 3.6 and is not needed for our supported Python versions
+# Not needed for our supported Python versions
 enum34==1000000000.0.0
 
 # This is a old unmaintained library and is replaced with pycryptodome
