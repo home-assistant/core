@@ -222,7 +222,7 @@ hbmqtt==0.9.5
 hdate==0.9.3
 
 # homeassistant.components.here_travel_time
-herepy==0.6.3.3
+herepy==2.0.0
 
 # homeassistant.components.pi_hole
 hole==0.5.0
