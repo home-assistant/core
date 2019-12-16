@@ -6,8 +6,9 @@ from unittest.mock import patch
 from pushbullet import PushBullet
 import requests_mock
 
-from homeassistant.setup import setup_component
 import homeassistant.components.notify as notify
+from homeassistant.setup import setup_component
+
 from tests.common import assert_setup_component, get_test_home_assistant, load_fixture
 
 

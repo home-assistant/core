@@ -5,6 +5,12 @@
             "id": "00000000-0000-0000-0000-000000000000",
             "label": "TEST-Client",
             "clientType": "APP"
+        },
+        "AA000000-0000-0000-0000-000000000000": {
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "AA000000-0000-0000-0000-000000000000",
+            "label": "REMOVE_ME",
+            "clientType": "APP"
         }
     },
     "devices": {
@@ -1485,7 +1491,7 @@
             "modelType": "HmIP-SMI",
             "oem": "eQ-3",
             "permanentlyReachable": true,
-            "serializedGlobalTradeItemNumber": "3014F7110000000000000011",
+            "serializedGlobalTradeItemNumber": "3014F711000000000000BB11",
             "type": "MOTION_DETECTOR_INDOOR",
             "updateState": "UP_TO_DATE"
         },
@@ -2202,7 +2208,7 @@
                 }
             },
             "homeId": "00000000-0000-0000-0000-000000000001",
-            "id": "3014F7110000000000000011",
+            "id": "3014F7110000000000000109",
             "label": "Ausschalter Terrasse Bewegungsmelder",
             "lastStatusUpdate": 1570366291250,
             "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
@@ -4075,7 +4081,7 @@
                 },
                 {
                     "channelIndex": 1,
-                    "deviceId": "3014F7110000000000000011"
+                    "deviceId": "3014F7110000000000000008"
                 }
             ],
             "controlMode": "AUTOMATIC",
@@ -4109,7 +4115,7 @@
                     "enabled": true,
                     "groupId": "00000000-0000-0000-0000-000000000012",
                     "index": "PROFILE_1",
-                    "name": "",
+                    "name": "STD",
                     "profileId": "00000000-0000-0000-0000-000000000023",
                     "visible": true
                 },
@@ -4117,7 +4123,7 @@
                     "enabled": true,
                     "groupId": "00000000-0000-0000-0000-000000000012",
                     "index": "PROFILE_2",
-                    "name": "",
+                    "name": "P2",
                     "profileId": "00000000-0000-0000-0000-000000000024",
                     "visible": true
                 },

@@ -3,6 +3,7 @@
   "name": "SSDP",
   "documentation": "https://www.home-assistant.io/integrations/ssdp",
   "requirements": [
+    "defusedxml==0.6.0",
     "netdisco==2.6.0"
   ],
   "dependencies": [

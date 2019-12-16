@@ -105,8 +105,18 @@ class HomeAccessory(Accessory):
         battery_found = self.hass.states.get(self.entity_id).attributes.get(
             ATTR_BATTERY_LEVEL
         )
+
         if self.linked_battery_sensor:
-            battery_found = self.hass.states.get(self.linked_battery_sensor).state
+            state = self.hass.states.get(self.linked_battery_sensor)
+            if state is not None:
+                battery_found = state.state
+            else:
+                self.linked_battery_sensor = None
+                _LOGGER.warning(
+                    "%s: Battery sensor state missing: %s",
+                    self.entity_id,
+                    self.linked_battery_sensor,
+                )
 
         if battery_found is None:
             return

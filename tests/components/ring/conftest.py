@@ -1,8 +1,9 @@
 """Configuration for Ring tests."""
-import requests_mock
-import pytest
-from tests.common import load_fixture
 from asynctest import patch
+import pytest
+import requests_mock
+
+from tests.common import load_fixture
 
 
 @pytest.fixture(name="ring_mock")

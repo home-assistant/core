@@ -2,12 +2,12 @@
 import asyncio
 
 import async_timeout
+from pydeconz.errors import RequestError, ResponseError
+from pydeconz.utils import async_discovery, async_get_api_key, async_get_gateway_config
 import voluptuous as vol
 
-from pydeconz.errors import ResponseError, RequestError
-from pydeconz.utils import async_discovery, async_get_api_key, async_get_gateway_config
-
 from homeassistant import config_entries
+from homeassistant.components.ssdp import ATTR_MANUFACTURERURL, ATTR_SERIAL
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
@@ -170,8 +170,6 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered deCONZ bridge."""
-        from homeassistant.components.ssdp import ATTR_MANUFACTURERURL, ATTR_SERIAL
-
         if discovery_info[ATTR_MANUFACTURERURL] != DECONZ_MANUFACTURERURL:
             return self.async_abort(reason="not_deconz_bridge")
 

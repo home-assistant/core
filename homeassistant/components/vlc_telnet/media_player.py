@@ -1,33 +1,33 @@
 """Provide functionality to interact with the vlc telnet interface."""
 import logging
+
+from python_telnet_vlc import ConnectionError as ConnErr, VLCTelnet
 import voluptuous as vol
 
-from python_telnet_vlc import VLCTelnet, ConnectionError as ConnErr
-
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
+    SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SEEK,
+    SUPPORT_SHUFFLE_SET,
     SUPPORT_STOP,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_SHUFFLE_SET,
 )
 from homeassistant.const import (
+    CONF_HOST,
     CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
     STATE_IDLE,
     STATE_PAUSED,
     STATE_PLAYING,
     STATE_UNAVAILABLE,
-    CONF_HOST,
-    CONF_PORT,
-    CONF_PASSWORD,
 )
 import homeassistant.helpers.config_validation as cv
 

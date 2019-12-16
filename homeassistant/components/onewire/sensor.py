@@ -1,15 +1,15 @@
 """Support for 1-Wire environment sensors."""
+from glob import glob
+import logging
 import os
 import time
-import logging
-from glob import glob
 
 import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import TEMP_CELSIUS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import TEMP_CELSIUS
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 

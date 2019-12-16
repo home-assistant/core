@@ -18,8 +18,8 @@
                     "allow_clip_sensor": "Consenti l'importazione di sensori virtuali",
                     "allow_deconz_groups": "Consenti l'importazione di gruppi deCONZ"
                 },
-                "description": "Vuoi configurare Home Assistant per connettersi al gateway deCONZ fornito dal componente aggiuntivo hass.io {addon} ?",
-                "title": "Gateway Zigbee deCONZ tramite l'add-on Hass.io"
+                "description": "Vuoi configurare Home Assistant per connettersi al gateway deCONZ fornito dal componente aggiuntivo di Hass.io: {addon}?",
+                "title": "Gateway Pigmee deCONZ tramite il componente aggiuntivo di Hass.io"
             },
             "init": {
                 "data": {
@@ -81,7 +81,11 @@
             "remote_gyro_activated": "Dispositivo in vibrazione",
             "remote_moved": "Dispositivo spostato con \"{subtype}\" verso l'alto",
             "remote_rotate_from_side_1": "Dispositivo ruotato da \"lato 1\" a \"{subtype}\"",
-            "remote_rotate_from_side_2": "Dispositivo ruotato da \"lato 2\" a \"{subtype}\""
+            "remote_rotate_from_side_2": "Dispositivo ruotato da \"lato 2\" a \"{subtype}\"",
+            "remote_rotate_from_side_3": "Dispositivo ruotato da \"lato 3\" a \"{subtype}\"",
+            "remote_rotate_from_side_4": "Dispositivo ruotato da \"lato 4\" a \"{subtype}\"",
+            "remote_rotate_from_side_5": "Dispositivo ruotato da \"lato 5\" a \"{subtype}\"",
+            "remote_rotate_from_side_6": "Dispositivo ruotato da \"lato 6\" a \"{subtype}\""
         }
     },
     "options": {

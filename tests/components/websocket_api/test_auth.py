@@ -1,18 +1,17 @@
 """Test auth of websocket API."""
 from unittest.mock import patch
 
-from homeassistant.components.websocket_api.const import (
-    URL,
-    SIGNAL_WEBSOCKET_CONNECTED,
-    SIGNAL_WEBSOCKET_DISCONNECTED,
-)
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_INVALID,
     TYPE_AUTH_OK,
     TYPE_AUTH_REQUIRED,
 )
-
+from homeassistant.components.websocket_api.const import (
+    SIGNAL_WEBSOCKET_CONNECTED,
+    SIGNAL_WEBSOCKET_DISCONNECTED,
+    URL,
+)
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro

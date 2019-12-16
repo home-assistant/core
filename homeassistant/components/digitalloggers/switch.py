@@ -1,17 +1,17 @@
 """Support for Digital Loggers DIN III Relays."""
-import logging
 from datetime import timedelta
+import logging
 
 import dlipower
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
-    CONF_USERNAME,
     CONF_PASSWORD,
     CONF_TIMEOUT,
+    CONF_USERNAME,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle

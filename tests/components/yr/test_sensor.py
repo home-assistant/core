@@ -5,8 +5,8 @@ from unittest.mock import patch
 
 from homeassistant.bootstrap import async_setup_component
 import homeassistant.util.dt as dt_util
-from tests.common import assert_setup_component, load_fixture
 
+from tests.common import assert_setup_component, load_fixture
 
 NOW = datetime(2016, 6, 9, 1, tzinfo=dt_util.UTC)
 
@@ -16,7 +16,7 @@ def test_default_setup(hass, aioclient_mock):
     """Test the default setup."""
     aioclient_mock.get(
         "https://aa015h6buqvih86i1.api.met.no/" "weatherapi/locationforecast/1.9/",
-        text=load_fixture("yr.no.json"),
+        text=load_fixture("yr.no.xml"),
     )
     config = {"platform": "yr", "elevation": 0}
     hass.allow_pool = True
@@ -36,7 +36,7 @@ def test_custom_setup(hass, aioclient_mock):
     """Test a custom setup."""
     aioclient_mock.get(
         "https://aa015h6buqvih86i1.api.met.no/" "weatherapi/locationforecast/1.9/",
-        text=load_fixture("yr.no.json"),
+        text=load_fixture("yr.no.xml"),
     )
 
     config = {
@@ -82,7 +82,7 @@ def test_forecast_setup(hass, aioclient_mock):
     """Test a custom setup with 24h forecast."""
     aioclient_mock.get(
         "https://aa015h6buqvih86i1.api.met.no/" "weatherapi/locationforecast/1.9/",
-        text=load_fixture("yr.no.json"),
+        text=load_fixture("yr.no.xml"),
     )
 
     config = {

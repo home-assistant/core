@@ -89,25 +89,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         # Verify that the TensorFlow Object Detection API is pre-installed
-        # pylint: disable=unused-import,unused-variable
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
         # These imports shouldn't be moved to the top, because they depend on code from the model_dir.
         # (The model_dir is created during the manual setup process. See integration docs.)
-        import tensorflow as tf  # noqa
-        from object_detection.utils import label_map_util  # noqa
+        import tensorflow as tf
+        from object_detection.utils import label_map_util
     except ImportError:
-        # pylint: disable=line-too-long
         _LOGGER.error(
             "No TensorFlow Object Detection library found! Install or compile "
             "for your system following instructions here: "
             "https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/installation.md"
-        )  # noqa
+        )
         return
 
     try:
         # Display warning that PIL will be used if no OpenCV is found.
-        # pylint: disable=unused-import,unused-variable
-        import cv2  # noqa
+        import cv2  # noqa: F401 pylint: disable=unused-import
     except ImportError:
         _LOGGER.warning(
             "No OpenCV library found. TensorFlow will process image with "

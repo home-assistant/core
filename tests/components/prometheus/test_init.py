@@ -1,14 +1,14 @@
 """The tests for the Prometheus exporter."""
 import asyncio
-import pytest
 
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, DEVICE_CLASS_POWER
+import pytest
 
 from homeassistant import setup
 from homeassistant.components import climate, sensor
 from homeassistant.components.demo.sensor import DemoSensor
-from homeassistant.setup import async_setup_component
 import homeassistant.components.prometheus as prometheus
+from homeassistant.const import DEVICE_CLASS_POWER, ENERGY_KILO_WATT_HOUR
+from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture
@@ -24,24 +24,26 @@ async def prometheus_client(loop, hass, hass_client):
         hass, climate.DOMAIN, {"climate": [{"platform": "demo"}]}
     )
 
-    sensor1 = DemoSensor("Television Energy", 74, None, ENERGY_KILO_WATT_HOUR, None)
+    sensor1 = DemoSensor(
+        None, "Television Energy", 74, None, ENERGY_KILO_WATT_HOUR, None
+    )
     sensor1.hass = hass
     sensor1.entity_id = "sensor.television_energy"
     await sensor1.async_update_ha_state()
 
     sensor2 = DemoSensor(
-        "Radio Energy", 14, DEVICE_CLASS_POWER, ENERGY_KILO_WATT_HOUR, None
+        None, "Radio Energy", 14, DEVICE_CLASS_POWER, ENERGY_KILO_WATT_HOUR, None
     )
     sensor2.hass = hass
     sensor2.entity_id = "sensor.radio_energy"
     await sensor2.async_update_ha_state()
 
-    sensor3 = DemoSensor("Electricity price", 0.123, None, "SEK/kWh", None)
+    sensor3 = DemoSensor(None, "Electricity price", 0.123, None, "SEK/kWh", None)
     sensor3.hass = hass
     sensor3.entity_id = "sensor.electricity_price"
     await sensor3.async_update_ha_state()
 
-    sensor4 = DemoSensor("Wind Direction", 25, None, "°", None)
+    sensor4 = DemoSensor(None, "Wind Direction", 25, None, "°", None)
     sensor4.hass = hass
     sensor4.entity_id = "sensor.wind_direction"
     await sensor4.async_update_ha_state()

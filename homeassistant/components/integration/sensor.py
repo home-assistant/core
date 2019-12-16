@@ -1,21 +1,20 @@
 """Numeric integration of data coming from a source sensor over time."""
+from decimal import Decimal, DecimalException
 import logging
 
-from decimal import Decimal, DecimalException
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
-    STATE_UNKNOWN,
+    CONF_NAME,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.restore_state import RestoreEntity
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 

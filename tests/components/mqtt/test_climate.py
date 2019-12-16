@@ -11,18 +11,19 @@ from homeassistant.components import mqtt
 from homeassistant.components.climate import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
 from homeassistant.components.climate.const import (
     DOMAIN as CLIMATE_DOMAIN,
-    SUPPORT_AUX_HEAT,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_FAN_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
+    HVAC_MODE_HEAT,
+    PRESET_ECO,
     PRESET_NONE,
+    SUPPORT_AUX_HEAT,
+    SUPPORT_FAN_MODE,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_SWING_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
@@ -446,6 +447,19 @@ async def test_set_away_mode(hass, mqtt_mock):
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("preset_mode") is None
 
+    await common.async_set_preset_mode(hass, "hold-on", ENTITY_CLIMATE)
+    mqtt_mock.async_publish.reset_mock()
+
+    await common.async_set_preset_mode(hass, "away", ENTITY_CLIMATE)
+    mqtt_mock.async_publish.assert_has_calls(
+        [
+            unittest.mock.call("hold-topic", "off", 0, False),
+            unittest.mock.call("away-mode-topic", "AN", 0, False),
+        ]
+    )
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("preset_mode") == "away"
+
 
 async def test_set_hvac_action(hass, mqtt_mock):
     """Test setting of the HVAC action."""
@@ -494,6 +508,12 @@ async def test_set_hold(hass, mqtt_mock):
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("preset_mode") == "hold-on"
+
+    await common.async_set_preset_mode(hass, PRESET_ECO, ENTITY_CLIMATE)
+    mqtt_mock.async_publish.assert_called_once_with("hold-topic", "eco", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("preset_mode") == PRESET_ECO
 
     await common.async_set_preset_mode(hass, PRESET_NONE, ENTITY_CLIMATE)
     mqtt_mock.async_publish.assert_called_once_with("hold-topic", "off", 0, False)

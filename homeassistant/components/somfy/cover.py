@@ -1,18 +1,14 @@
-"""
-Support for Somfy Covers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.somfy/
-"""
-from pymfy.api.devices.category import Category
+"""Support for Somfy Covers."""
 from pymfy.api.devices.blind import Blind
+from pymfy.api.devices.category import Category
 
 from homeassistant.components.cover import (
-    CoverDevice,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    CoverDevice,
 )
-from homeassistant.components.somfy import DOMAIN, SomfyEntity, DEVICES, API
+
+from . import API, DEVICES, DOMAIN, SomfyEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -35,15 +31,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         ]
 
     async_add_entities(await hass.async_add_executor_job(get_covers), True)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up platform.
-
-    Can only be called when a user accidentally mentions the platform in their
-    config. But even in that case it would have been ignored.
-    """
-    pass
 
 
 class SomfyCover(SomfyEntity, CoverDevice):

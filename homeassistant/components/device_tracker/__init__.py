@@ -3,21 +3,19 @@ import asyncio
 
 import voluptuous as vol
 
-from homeassistant.loader import bind_hass
 from homeassistant.components import group
+from homeassistant.const import ATTR_GPS_ACCURACY, STATE_HOME
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
-
 from homeassistant.helpers.event import async_track_utc_time_change
-from homeassistant.const import ATTR_GPS_ACCURACY, STATE_HOME
+from homeassistant.helpers.typing import ConfigType, GPSType, HomeAssistantType
+from homeassistant.loader import bind_hass
 
 from . import legacy, setup
-from .config_entry import (  # noqa  # pylint: disable=unused-import
+from .config_entry import (  # noqa: F401 pylint: disable=unused-import
     async_setup_entry,
     async_unload_entry,
 )
-from .legacy import DeviceScanner  # noqa  # pylint: disable=unused-import
 from .const import (
     ATTR_ATTRIBUTES,
     ATTR_BATTERY,
@@ -38,11 +36,12 @@ from .const import (
     DEFAULT_TRACK_NEW,
     DOMAIN,
     PLATFORM_TYPE_LEGACY,
-    SOURCE_TYPE_BLUETOOTH_LE,
     SOURCE_TYPE_BLUETOOTH,
+    SOURCE_TYPE_BLUETOOTH_LE,
     SOURCE_TYPE_GPS,
     SOURCE_TYPE_ROUTER,
 )
+from .legacy import DeviceScanner  # noqa: F401 pylint: disable=unused-import
 
 ENTITY_ID_ALL_DEVICES = group.ENTITY_ID_FORMAT.format("all_devices")
 

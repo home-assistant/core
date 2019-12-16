@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Home Assistant setup script."""
 from datetime import datetime as dt
-from setuptools import setup, find_packages
+
+from setuptools import find_packages, setup
 
 import homeassistant.const as hass_const
 
@@ -36,8 +37,7 @@ REQUIRES = [
     "async_timeout==3.0.1",
     "attrs==19.3.0",
     "bcrypt==3.1.7",
-    "certifi>=2019.9.11",
-    'contextvars==2.4;python_version<"3.7"',
+    "certifi>=2019.11.28",
     "importlib-metadata==0.23",
     "jinja2>=2.10.3",
     "PyJWT==1.7.1",
@@ -46,7 +46,7 @@ REQUIRES = [
     "pip>=8.0.3",
     "python-slugify==4.0.0",
     "pytz>=2019.03",
-    "pyyaml==5.1.2",
+    "pyyaml==5.2.0",
     "requests==2.22.0",
     "ruamel.yaml==0.15.100",
     "voluptuous==0.11.7",

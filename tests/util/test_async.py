@@ -1,8 +1,7 @@
 """Tests for async util methods from Python source."""
 import asyncio
-import sys
-from unittest.mock import MagicMock, patch
 from unittest import TestCase
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -112,11 +111,7 @@ class RunThreadsafeTests(TestCase):
         """Wait 0.05 second and return a + b."""
         yield from asyncio.sleep(0.05, loop=self.loop)
         if cancel:
-            if sys.version_info[:2] >= (3, 7):
-                current_task = asyncio.current_task
-            else:
-                current_task = asyncio.tasks.Task.current_task
-            current_task(self.loop).cancel()
+            asyncio.current_task(self.loop).cancel()
             yield
         return self.add_callback(a, b, fail, invalid)
 
@@ -165,7 +160,7 @@ class RunThreadsafeTests(TestCase):
 
     def test_run_callback_threadsafe_with_invalid(self):
         """Test callback submission from thread to event loop on invalid."""
-        callback = lambda: self.target_callback(invalid=True)  # noqa
+        callback = lambda: self.target_callback(invalid=True)  # noqa: E731
         future = self.loop.run_in_executor(None, callback)
         with self.assertRaises(ValueError) as exc_context:
             self.loop.run_until_complete(future)

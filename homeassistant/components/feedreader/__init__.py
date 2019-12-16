@@ -2,15 +2,15 @@
 from datetime import datetime, timedelta
 from logging import getLogger
 from os.path import exists
-from threading import Lock
 import pickle
+from threading import Lock
 
-import voluptuous as vol
 import feedparser
+import voluptuous as vol
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START, CONF_SCAN_INTERVAL
-from homeassistant.helpers.event import track_time_interval
+from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import track_time_interval
 
 _LOGGER = getLogger(__name__)
 

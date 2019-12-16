@@ -14,8 +14,6 @@ pr:
 
 resources:
   containers:
-  - container: 36
-    image: homeassistant/ci-azure:3.6
   - container: 37
     image: homeassistant/ci-azure:3.7
   repositories:
@@ -25,7 +23,7 @@ resources:
       endpoint: 'home-assistant'
 variables:
   - name: PythonMain
-    value: '36'
+    value: '37'
   - group: codecov
 
 stages:
@@ -50,6 +48,18 @@ stages:
         . venv/bin/activate
         pre-commit run flake8 --all-files
       displayName: 'Run flake8'
+    - script: |
+        . venv/bin/activate
+        pre-commit run bandit --all-files
+      displayName: 'Run bandit'
+    - script: |
+        . venv/bin/activate
+        pre-commit run isort --all-files
+      displayName: 'Run isort'
+    - script: |
+        . venv/bin/activate
+        pre-commit run check-json --all-files
+      displayName: 'Run check-json'
   - job: 'Validate'
     pool:
       vmImage: 'ubuntu-latest'
@@ -100,8 +110,6 @@ stages:
     strategy:
       maxParallel: 3
       matrix:
-        Python36:
-          python.container: '36'
         Python37:
           python.container: '37'
     container: $[ variables['python.container'] ]
@@ -158,7 +166,7 @@ stages:
           python -m venv venv
 
           . venv/bin/activate
-          pip install -U pip setuptools
+          pip install -U pip setuptools wheel
           pip install -r requirements_all.txt -c homeassistant/package_constraints.txt
           pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
     - script: |

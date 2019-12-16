@@ -2,23 +2,23 @@
 from datetime import timedelta
 import logging
 
-import voluptuous as vol
 import requests
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_URL,
-    CONF_VALUE_TEMPLATE,
-    CONF_UNIT_OF_MEASUREMENT,
     CONF_ID,
     CONF_SCAN_INTERVAL,
-    STATE_UNKNOWN,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_URL,
+    CONF_VALUE_TEMPLATE,
     POWER_WATT,
+    STATE_UNKNOWN,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import template
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)

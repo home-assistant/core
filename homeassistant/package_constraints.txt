@@ -6,29 +6,29 @@ astral==1.10.1
 async_timeout==3.0.1
 attrs==19.3.0
 bcrypt==3.1.7
-certifi>=2019.9.11
-contextvars==2.4;python_version<"3.7"
+certifi>=2019.11.28
 cryptography==2.8
+defusedxml==0.6.0
 distro==1.4.0
-hass-nabucasa==0.29
-home-assistant-frontend==20191108.0
+hass-nabucasa==0.30
+home-assistant-frontend==20191204.1
 importlib-metadata==0.23
 jinja2>=2.10.3
 netdisco==2.6.0
 pip>=8.0.3
 python-slugify==4.0.0
 pytz>=2019.03
-pyyaml==5.1.2
+pyyaml==5.2.0
 requests==2.22.0
 ruamel.yaml==0.15.100
-sqlalchemy==1.3.10
+sqlalchemy==1.3.11
 voluptuous-serialize==2.3.0
 voluptuous==0.11.7
-zeroconf==0.23.0
+zeroconf==0.24.0
 
 pycryptodome>=3.6.6
 
-# Breaks Python 3.6 and is not needed for our supported Python versions
+# Not needed for our supported Python versions
 enum34==1000000000.0.0
 
 # This is a old unmaintained library and is replaced with pycryptodome

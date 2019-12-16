@@ -1,8 +1,11 @@
 """Tests for ZHA config flow."""
-from asynctest import patch
+from unittest import mock
+
+import asynctest
 
 from homeassistant.components.zha import config_flow
-from homeassistant.components.zha.core.const import DOMAIN
+from homeassistant.components.zha.core.const import CONTROLLER, DOMAIN, ZHA_GW_RADIO
+import homeassistant.components.zha.core.registries
 
 from tests.common import MockConfigEntry
 
@@ -12,7 +15,7 @@ async def test_user_flow(hass):
     flow = config_flow.ZhaFlowHandler()
     flow.hass = hass
 
-    with patch(
+    with asynctest.patch(
         "homeassistant.components.zha.config_flow" ".check_zigpy_connection",
         return_value=False,
     ):
@@ -22,7 +25,7 @@ async def test_user_flow(hass):
 
     assert result["errors"] == {"base": "cannot_connect"}
 
-    with patch(
+    with asynctest.patch(
         "homeassistant.components.zha.config_flow" ".check_zigpy_connection",
         return_value=True,
     ):
@@ -71,3 +74,53 @@ async def test_import_flow_existing_config_entry(hass):
     )
 
     assert result["type"] == "abort"
+
+
+async def test_check_zigpy_connection():
+    """Test config flow validator."""
+
+    mock_radio = asynctest.MagicMock()
+    mock_radio.connect = asynctest.CoroutineMock()
+    radio_cls = asynctest.MagicMock(return_value=mock_radio)
+
+    bad_radio = asynctest.MagicMock()
+    bad_radio.connect = asynctest.CoroutineMock(side_effect=Exception)
+    bad_radio_cls = asynctest.MagicMock(return_value=bad_radio)
+
+    mock_ctrl = asynctest.MagicMock()
+    mock_ctrl.startup = asynctest.CoroutineMock()
+    mock_ctrl.shutdown = asynctest.CoroutineMock()
+    ctrl_cls = asynctest.MagicMock(return_value=mock_ctrl)
+    new_radios = {
+        mock.sentinel.radio: {ZHA_GW_RADIO: radio_cls, CONTROLLER: ctrl_cls},
+        mock.sentinel.bad_radio: {ZHA_GW_RADIO: bad_radio_cls, CONTROLLER: ctrl_cls},
+    }
+
+    with mock.patch.dict(
+        homeassistant.components.zha.core.registries.RADIO_TYPES, new_radios, clear=True
+    ):
+        assert not await config_flow.check_zigpy_connection(
+            mock.sentinel.usb_path, mock.sentinel.unk_radio, mock.sentinel.zigbee_db
+        )
+        assert mock_radio.connect.call_count == 0
+        assert bad_radio.connect.call_count == 0
+        assert mock_ctrl.startup.call_count == 0
+        assert mock_ctrl.shutdown.call_count == 0
+
+        # unsuccessful radio connect
+        assert not await config_flow.check_zigpy_connection(
+            mock.sentinel.usb_path, mock.sentinel.bad_radio, mock.sentinel.zigbee_db
+        )
+        assert mock_radio.connect.call_count == 0
+        assert bad_radio.connect.call_count == 1
+        assert mock_ctrl.startup.call_count == 0
+        assert mock_ctrl.shutdown.call_count == 0
+
+        # successful radio connect
+        assert await config_flow.check_zigpy_connection(
+            mock.sentinel.usb_path, mock.sentinel.radio, mock.sentinel.zigbee_db
+        )
+        assert mock_radio.connect.call_count == 1
+        assert bad_radio.connect.call_count == 1
+        assert mock_ctrl.startup.call_count == 1
+        assert mock_ctrl.shutdown.call_count == 1

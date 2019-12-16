@@ -3,14 +3,13 @@ import asyncio
 from json import JSONEncoder
 import logging
 import os
-from typing import Dict, List, Optional, Callable, Union, Any, Type
+from typing import Any, Callable, Dict, List, Optional, Type, Union
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback, CALLBACK_TYPE
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.loader import bind_hass
 from homeassistant.util import json as json_util
-from homeassistant.helpers.event import async_call_later
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-warn-return-any
 # mypy: no-check-untyped-defs

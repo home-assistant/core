@@ -68,6 +68,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         hass, PLEX_NEW_MP_SIGNAL.format(server_id), async_new_media_players
     )
     hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
+    _LOGGER.debug("New entity listener created")
 
 
 @callback
@@ -289,12 +290,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
             self._media_content_type = MEDIA_TYPE_TVSHOW
 
             # season number (00)
-            if callable(self.session.season):
-                self._media_season = str((self.session.season()).index).zfill(2)
-            elif self.session.parentIndex is not None:
-                self._media_season = self.session.parentIndex.zfill(2)
-            else:
-                self._media_season = None
+            self._media_season = self.session.seasonNumber
             # show name
             self._media_series_title = self.session.grandparentTitle
             # episode number (00)

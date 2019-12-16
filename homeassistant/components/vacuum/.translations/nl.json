@@ -1,0 +1,10 @@
+{
+    "device_automation": {
+        "condtion_type": {
+            "is_cleaning": "{entity_name} is aan het schoonmaken"
+        },
+        "trigger_type": {
+            "cleaning": "{entity_name} begon met schoonmaken"
+        }
+    }
+}

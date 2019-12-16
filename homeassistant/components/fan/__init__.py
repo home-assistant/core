@@ -7,16 +7,15 @@ from typing import Optional
 import voluptuous as vol
 
 from homeassistant.components import group
-from homeassistant.const import SERVICE_TURN_ON, SERVICE_TOGGLE, SERVICE_TURN_OFF
-from homeassistant.loader import bind_hass
-from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.config_validation import (  # noqa
-    ENTITY_SERVICE_SCHEMA,
+from homeassistant.const import SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,20 +56,6 @@ PROP_TO_ATTR = {
     "current_direction": ATTR_DIRECTION,
 }
 
-FAN_SET_SPEED_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_SPEED): cv.string}
-)
-
-FAN_TURN_ON_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({vol.Optional(ATTR_SPEED): cv.string})
-
-FAN_OSCILLATE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_OSCILLATING): cv.boolean}
-)
-
-FAN_SET_DIRECTION_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Optional(ATTR_DIRECTION): cv.string}
-)
-
 
 @bind_hass
 def is_on(hass, entity_id: Optional[str] = None) -> bool:
@@ -89,22 +74,22 @@ async def async_setup(hass, config: dict):
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_TURN_ON, FAN_TURN_ON_SCHEMA, "async_turn_on"
+        SERVICE_TURN_ON, {vol.Optional(ATTR_SPEED): cv.string}, "async_turn_on"
+    )
+    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
+    component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
+    component.async_register_entity_service(
+        SERVICE_SET_SPEED, {vol.Required(ATTR_SPEED): cv.string}, "async_set_speed"
     )
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, ENTITY_SERVICE_SCHEMA, "async_turn_off"
+        SERVICE_OSCILLATE,
+        {vol.Required(ATTR_OSCILLATING): cv.boolean},
+        "async_oscillate",
     )
     component.async_register_entity_service(
-        SERVICE_TOGGLE, ENTITY_SERVICE_SCHEMA, "async_toggle"
-    )
-    component.async_register_entity_service(
-        SERVICE_SET_SPEED, FAN_SET_SPEED_SCHEMA, "async_set_speed"
-    )
-    component.async_register_entity_service(
-        SERVICE_OSCILLATE, FAN_OSCILLATE_SCHEMA, "async_oscillate"
-    )
-    component.async_register_entity_service(
-        SERVICE_SET_DIRECTION, FAN_SET_DIRECTION_SCHEMA, "async_set_direction"
+        SERVICE_SET_DIRECTION,
+        {vol.Optional(ATTR_DIRECTION): cv.string},
+        "async_set_direction",
     )
 
     return True
