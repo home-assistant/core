@@ -17,7 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_PARAMETER = "parameter"
 ATTR_VALUE = "value"
 
-CONF_ID = "id"
 CONF_INVERT_STATE = "invert"
 CONF_SAFE = "safe"
 CONF_GROUP = "group"
