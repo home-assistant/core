@@ -32,6 +32,7 @@ CONF_CALENDARS = "calendars"
 CONF_CUSTOM_CALENDARS = "custom_calendars"
 CONF_CALENDAR = "calendar"
 CONF_SEARCH = "search"
+CONF_ALL_DAY = 'all_day'
 
 OFFSET = "!!"
 
@@ -50,6 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                         vol.Required(CONF_CALENDAR): cv.string,
                         vol.Required(CONF_NAME): cv.string,
                         vol.Required(CONF_SEARCH): cv.string,
+                        vol.Optional(CONF_ALL_DAY, default=True): cv.boolean
                     }
                 )
             ],
@@ -94,7 +96,7 @@ def setup_platform(hass, config, add_entities, disc_info=None):
             entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
             calendar_devices.append(
                 WebDavCalendarEventDevice(
-                    name, calendar, entity_id, True, cust_calendar[CONF_SEARCH]
+                    name, calendar, entity_id, cust_calendar.get(CONF_ALL_DAY,True), cust_calendar[CONF_SEARCH]
                 )
             )
 
