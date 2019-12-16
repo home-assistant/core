@@ -65,6 +65,8 @@ enum34==1000000000.0.0
 pycrypto==1000000000.0.0
 """
 
+IGNORE_PRE_COMMIT_HOOK_ID = ("check-json",)
+
 
 def has_tests(module: str):
     """Test if a module has tests.
@@ -256,8 +258,9 @@ def requirements_pre_commit_output():
     reqs = []
     for repo in (x for x in pre_commit_conf["repos"] if x.get("rev")):
         for hook in repo["hooks"]:
-            reqs.append(f"{hook['id']}=={repo['rev']}")
-            reqs.extend(x for x in hook.get("additional_dependencies", ()))
+            if hook["id"] not in IGNORE_PRE_COMMIT_HOOK_ID:
+                reqs.append(f"{hook['id']}=={repo['rev']}")
+                reqs.extend(x for x in hook.get("additional_dependencies", ()))
     output = [
         f"# Automatically generated "
         f"from {source} by {Path(__file__).name}, do not edit",
