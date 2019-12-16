@@ -33,8 +33,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
-    STATE_UNKNOWN,
     STATE_STANDBY,
+    STATE_UNKNOWN,
 )
 
 from . import TYPES
