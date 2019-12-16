@@ -1,6 +1,10 @@
 """Alexa capabilities."""
 import logging
 
+from homeassistant.components import cover, fan, image_processing, light
+from homeassistant.components.alarm_control_panel import ATTR_CODE_FORMAT, FORMAT_NUMBER
+import homeassistant.components.climate.const as climate
+import homeassistant.components.media_player.const as media_player
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
@@ -9,30 +13,29 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_CLOSED,
     STATE_LOCKED,
     STATE_OFF,
     STATE_ON,
+    STATE_OPEN,
     STATE_PAUSED,
     STATE_PLAYING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     STATE_UNLOCKED,
 )
-import homeassistant.components.climate.const as climate
-import homeassistant.components.media_player.const as media_player
-from homeassistant.components.alarm_control_panel import ATTR_CODE_FORMAT, FORMAT_NUMBER
-from homeassistant.components import light, fan, cover
 import homeassistant.util.color as color_util
 import homeassistant.util.dt as dt_util
 
 from .const import (
-    Catalog,
     API_TEMP_UNITS,
     API_THERMOSTAT_MODES,
     API_THERMOSTAT_PRESETS,
     DATE_FORMAT,
     PERCENTAGE_FAN_MAP,
     RANGE_FAN_MAP,
+    Catalog,
+    Inputs,
 )
 from .errors import UnsupportedProperty
 
@@ -114,6 +117,11 @@ class AlexaCapability:
         return []
 
     @staticmethod
+    def inputs():
+        """Applicable only to media players."""
+        return []
+
+    @staticmethod
     def supported_operations():
         """Return the supportedOperations object."""
         return []
@@ -161,6 +169,10 @@ class AlexaCapability:
         supported_operations = self.supported_operations()
         if supported_operations:
             result["supportedOperations"] = supported_operations
+
+        inputs = self.inputs()
+        if inputs:
+            result["inputs"] = inputs
 
         return result
 
@@ -215,6 +227,20 @@ class AlexaCapability:
         return friendly_names
 
 
+class Alexa(AlexaCapability):
+    """Implements Alexa Interface.
+
+    Although endpoints implement this interface implicitly,
+    The API suggests you should explicitly include this interface.
+
+    https://developer.amazon.com/docs/device-apis/alexa-interface.html
+    """
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa"
+
+
 class AlexaEndpointHealth(AlexaCapability):
     """Implements Alexa.EndpointHealth.
 
@@ -236,7 +262,7 @@ class AlexaEndpointHealth(AlexaCapability):
 
     def properties_proactively_reported(self):
         """Return True if properties asynchronously reported."""
-        return False
+        return True
 
     def properties_retrievable(self):
         """Return True if properties can be retrieved."""
@@ -529,6 +555,23 @@ class AlexaInputController(AlexaCapability):
         """Return the Alexa API name of this interface."""
         return "Alexa.InputController"
 
+    def inputs(self):
+        """Return the list of valid supported inputs."""
+        source_list = self.entity.attributes.get(
+            media_player.ATTR_INPUT_SOURCE_LIST, []
+        )
+        input_list = []
+        for source in source_list:
+            formatted_source = (
+                source.lower().replace("-", "").replace("_", "").replace(" ", "")
+            )
+            if formatted_source in Inputs.VALID_SOURCE_NAME_MAP.keys():
+                input_list.append(
+                    {"name": Inputs.VALID_SOURCE_NAME_MAP[formatted_source]}
+                )
+
+        return input_list
+
 
 class AlexaTemperatureSensor(AlexaCapability):
     """Implements Alexa.TemperatureSensor.
@@ -752,10 +795,11 @@ class AlexaThermostatController(AlexaCapability):
                 supported_modes.append(thermostat_mode)
 
         preset_modes = self.entity.attributes.get(climate.ATTR_PRESET_MODES)
-        for mode in preset_modes:
-            thermostat_mode = API_THERMOSTAT_PRESETS.get(mode)
-            if thermostat_mode:
-                supported_modes.append(thermostat_mode)
+        if preset_modes:
+            for mode in preset_modes:
+                thermostat_mode = API_THERMOSTAT_PRESETS.get(mode)
+                if thermostat_mode:
+                    supported_modes.append(thermostat_mode)
 
         # Return False for supportsScheduling until supported with event listener in handler.
         configuration = {"supportsScheduling": False}
@@ -887,6 +931,9 @@ class AlexaModeController(AlexaCapability):
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
             return self.entity.attributes.get(fan.ATTR_DIRECTION)
 
+        if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+            return self.entity.attributes.get(cover.ATTR_POSITION)
+
         return None
 
     def configuration(self):
@@ -900,6 +947,12 @@ class AlexaModeController(AlexaCapability):
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
             capability_resources = [
                 {"type": Catalog.LABEL_ASSET, "value": Catalog.SETTING_DIRECTION}
+            ]
+
+        if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+            capability_resources = [
+                {"type": Catalog.LABEL_ASSET, "value": Catalog.SETTING_MODE},
+                {"type": Catalog.LABEL_ASSET, "value": Catalog.SETTING_PRESET},
             ]
 
         return capability_resources
@@ -921,6 +974,32 @@ class AlexaModeController(AlexaCapability):
                         "value": f"{fan.ATTR_DIRECTION}.{fan.DIRECTION_REVERSE}",
                         "friendly_names": [
                             {"type": Catalog.LABEL_TEXT, "value": fan.DIRECTION_REVERSE}
+                        ],
+                    },
+                ],
+            }
+
+        if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+            mode_resources = {
+                "ordered": False,
+                "resources": [
+                    {
+                        "value": f"{cover.ATTR_POSITION}.{STATE_OPEN}",
+                        "friendly_names": [
+                            {"type": Catalog.LABEL_TEXT, "value": "open"},
+                            {"type": Catalog.LABEL_TEXT, "value": "opened"},
+                            {"type": Catalog.LABEL_TEXT, "value": "raise"},
+                            {"type": Catalog.LABEL_TEXT, "value": "raised"},
+                        ],
+                    },
+                    {
+                        "value": f"{cover.ATTR_POSITION}.{STATE_CLOSED}",
+                        "friendly_names": [
+                            {"type": Catalog.LABEL_TEXT, "value": "close"},
+                            {"type": Catalog.LABEL_TEXT, "value": "closed"},
+                            {"type": Catalog.LABEL_TEXT, "value": "shut"},
+                            {"type": Catalog.LABEL_TEXT, "value": "lower"},
+                            {"type": Catalog.LABEL_TEXT, "value": "lowered"},
                         ],
                     },
                 ],
@@ -1186,3 +1265,60 @@ class AlexaSeekController(AlexaCapability):
     def name(self):
         """Return the Alexa API name of this interface."""
         return "Alexa.SeekController"
+
+
+class AlexaEventDetectionSensor(AlexaCapability):
+    """Implements Alexa.EventDetectionSensor.
+
+    https://developer.amazon.com/docs/device-apis/alexa-eventdetectionsensor.html
+    """
+
+    def __init__(self, hass, entity):
+        """Initialize the entity."""
+        super().__init__(entity)
+        self.hass = hass
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.EventDetectionSensor"
+
+    def properties_supported(self):
+        """Return what properties this entity supports."""
+        return [{"name": "humanPresenceDetectionState"}]
+
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
+
+    def get_property(self, name):
+        """Read and return a property."""
+        if name != "humanPresenceDetectionState":
+            raise UnsupportedProperty(name)
+
+        human_presence = "NOT_DETECTED"
+        state = self.entity.state
+
+        # Return None for unavailable and unknown states.
+        # Allows the Alexa.EndpointHealth Interface to handle the unavailable state in a stateReport.
+        if state in (STATE_UNAVAILABLE, STATE_UNKNOWN, None):
+            return None
+
+        if self.entity.domain == image_processing.DOMAIN:
+            if int(state):
+                human_presence = "DETECTED"
+        elif state == STATE_ON:
+            human_presence = "DETECTED"
+
+        return {"value": human_presence}
+
+    def configuration(self):
+        """Return supported detection types."""
+        return {
+            "detectionMethods": ["AUDIO", "VIDEO"],
+            "detectionModes": {
+                "humanPresence": {
+                    "featureAvailability": "ENABLED",
+                    "supportsNotDetected": True,
+                }
+            },
+        }

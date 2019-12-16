@@ -24,14 +24,14 @@ from homeassistant.core import Context, CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, extract_domain_configs, script
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
+from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime, utcnow
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
@@ -106,7 +106,7 @@ PLATFORM_SCHEMA = vol.Schema(
     }
 )
 
-TRIGGER_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+TRIGGER_SERVICE_SCHEMA = make_entity_service_schema(
     {vol.Optional(ATTR_VARIABLES, default={}): dict}
 )
 
@@ -179,17 +179,27 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_TRIGGER, trigger_service_handler, schema=TRIGGER_SERVICE_SCHEMA
     )
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=RELOAD_SERVICE_SCHEMA
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_RELOAD,
+        reload_service_handler,
+        schema=RELOAD_SERVICE_SCHEMA,
     )
 
     hass.services.async_register(
-        DOMAIN, SERVICE_TOGGLE, toggle_service_handler, schema=ENTITY_SERVICE_SCHEMA
+        DOMAIN,
+        SERVICE_TOGGLE,
+        toggle_service_handler,
+        schema=make_entity_service_schema({}),
     )
 
     for service in (SERVICE_TURN_ON, SERVICE_TURN_OFF):
         hass.services.async_register(
-            DOMAIN, service, turn_onoff_service_handler, schema=ENTITY_SERVICE_SCHEMA
+            DOMAIN,
+            service,
+            turn_onoff_service_handler,
+            schema=make_entity_service_schema({}),
         )
 
     return True

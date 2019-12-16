@@ -1,8 +1,8 @@
 """OpenTherm Gateway config flow."""
 import asyncio
-from serial import SerialException
 
 import pyotgw
+from serial import SerialException
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -15,7 +15,6 @@ from homeassistant.const import (
     PRECISION_WHOLE,
 )
 from homeassistant.core import callback
-
 import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN

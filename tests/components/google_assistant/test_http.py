@@ -1,18 +1,18 @@
 """Test Google http services."""
-from datetime import datetime, timezone, timedelta
-from asynctest import patch, ANY
+from datetime import datetime, timedelta, timezone
 
+from asynctest import ANY, patch
+
+from homeassistant.components.google_assistant import GOOGLE_ASSISTANT_SCHEMA
+from homeassistant.components.google_assistant.const import (
+    HOMEGRAPH_TOKEN_URL,
+    REPORT_STATE_BASE_URL,
+)
 from homeassistant.components.google_assistant.http import (
     GoogleConfig,
     _get_homegraph_jwt,
     _get_homegraph_token,
 )
-from homeassistant.components.google_assistant import GOOGLE_ASSISTANT_SCHEMA
-from homeassistant.components.google_assistant.const import (
-    REPORT_STATE_BASE_URL,
-    HOMEGRAPH_TOKEN_URL,
-)
-from homeassistant.auth.models import User
 
 DUMMY_CONFIG = GOOGLE_ASSISTANT_SCHEMA(
     {
@@ -67,6 +67,7 @@ async def test_update_access_token(hass):
     jwt = "dummyjwt"
 
     config = GoogleConfig(hass, DUMMY_CONFIG)
+    await config.async_initialize()
 
     base_time = datetime(2019, 10, 14, tzinfo=timezone.utc)
     with patch(
@@ -99,6 +100,8 @@ async def test_update_access_token(hass):
 async def test_call_homegraph_api(hass, aioclient_mock, hass_storage):
     """Test the function to call the homegraph api."""
     config = GoogleConfig(hass, DUMMY_CONFIG)
+    await config.async_initialize()
+
     with patch(
         "homeassistant.components.google_assistant.http._get_homegraph_token"
     ) as mock_get_token:
@@ -106,7 +109,8 @@ async def test_call_homegraph_api(hass, aioclient_mock, hass_storage):
 
         aioclient_mock.post(MOCK_URL, status=200, json={})
 
-        await config.async_call_homegraph_api(MOCK_URL, MOCK_JSON)
+        res = await config.async_call_homegraph_api(MOCK_URL, MOCK_JSON)
+        assert res == 200
 
         assert mock_get_token.call_count == 1
         assert aioclient_mock.call_count == 1
@@ -119,6 +123,8 @@ async def test_call_homegraph_api(hass, aioclient_mock, hass_storage):
 async def test_call_homegraph_api_retry(hass, aioclient_mock, hass_storage):
     """Test the that the calls get retried with new token on 401."""
     config = GoogleConfig(hass, DUMMY_CONFIG)
+    await config.async_initialize()
+
     with patch(
         "homeassistant.components.google_assistant.http._get_homegraph_token"
     ) as mock_get_token:
@@ -139,19 +145,50 @@ async def test_call_homegraph_api_retry(hass, aioclient_mock, hass_storage):
         assert call[3] == MOCK_HEADER
 
 
+async def test_call_homegraph_api_key(hass, aioclient_mock, hass_storage):
+    """Test the function to call the homegraph api."""
+    config = GoogleConfig(
+        hass, GOOGLE_ASSISTANT_SCHEMA({"project_id": "1234", "api_key": "dummy_key"}),
+    )
+    await config.async_initialize()
+
+    aioclient_mock.post(MOCK_URL, status=200, json={})
+
+    res = await config.async_call_homegraph_api_key(MOCK_URL, MOCK_JSON)
+    assert res == 200
+    assert aioclient_mock.call_count == 1
+
+    call = aioclient_mock.mock_calls[0]
+    assert call[1].query == {"key": "dummy_key"}
+    assert call[2] == MOCK_JSON
+
+
+async def test_call_homegraph_api_key_fail(hass, aioclient_mock, hass_storage):
+    """Test the function to call the homegraph api."""
+    config = GoogleConfig(
+        hass, GOOGLE_ASSISTANT_SCHEMA({"project_id": "1234", "api_key": "dummy_key"}),
+    )
+    await config.async_initialize()
+
+    aioclient_mock.post(MOCK_URL, status=666, json={})
+
+    res = await config.async_call_homegraph_api_key(MOCK_URL, MOCK_JSON)
+    assert res == 666
+    assert aioclient_mock.call_count == 1
+
+
 async def test_report_state(hass, aioclient_mock, hass_storage):
     """Test the report state function."""
+    agent_user_id = "user"
     config = GoogleConfig(hass, DUMMY_CONFIG)
+    await config.async_initialize()
+
+    await config.async_connect_agent_user(agent_user_id)
     message = {"devices": {}}
-    owner = User(name="Test User", perm_lookup=None, groups=[], is_owner=True)
 
-    with patch.object(config, "async_call_homegraph_api") as mock_call, patch.object(
-        hass.auth, "async_get_owner"
-    ) as mock_get_owner:
-        mock_get_owner.return_value = owner
-
-        await config.async_report_state(message)
+    with patch.object(config, "async_call_homegraph_api") as mock_call:
+        await config.async_report_state(message, agent_user_id)
         mock_call.assert_called_once_with(
             REPORT_STATE_BASE_URL,
-            {"requestId": ANY, "agentUserId": owner.id, "payload": message},
+            {"requestId": ANY, "agentUserId": agent_user_id, "payload": message},
         )

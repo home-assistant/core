@@ -2,8 +2,8 @@
 import logging
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice,
     DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorDevice,
 )
 
 from . import CONF_DOOR_WINDOW, HUB as hub

@@ -106,7 +106,7 @@ class KebaHandler(KebaKeContact):
     """Representation of a KEBA charging station connection."""
 
     def __init__(self, hass, host, rfid, refresh_interval):
-        """Constructor."""
+        """Initialize charging station connection."""
         super().__init__(host, self.hass_callback)
 
         self._update_listeners = []

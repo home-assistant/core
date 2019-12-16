@@ -1,9 +1,13 @@
 """The test for the Template sensor platform."""
-from homeassistant.const import EVENT_HOMEASSISTANT_START
-from homeassistant.setup import setup_component, async_setup_component
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
+from homeassistant.setup import async_setup_component, setup_component
 
-from tests.common import get_test_home_assistant, assert_setup_component
-from homeassistant.const import STATE_UNAVAILABLE, STATE_ON, STATE_OFF
+from tests.common import assert_setup_component, get_test_home_assistant
 
 
 class TestTemplateSensor:
@@ -377,6 +381,49 @@ class TestTemplateSensor:
         state = self.hass.states.get("sensor.test2")
         assert "device_class" not in state.attributes
 
+    def test_available_template_with_entities(self):
+        """Test availability tempalates with values from other entities."""
+
+        with assert_setup_component(1):
+            assert setup_component(
+                self.hass,
+                "sensor",
+                {
+                    "sensor": {
+                        "platform": "template",
+                        "sensors": {
+                            "test_template_sensor": {
+                                "value_template": "{{ states.sensor.test_state.state }}",
+                                "availability_template": "{{ is_state('availability_boolean.state', 'on') }}",
+                            }
+                        },
+                    }
+                },
+            )
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        # When template returns true..
+        self.hass.states.set("availability_boolean.state", STATE_ON)
+        self.hass.block_till_done()
+
+        # Device State should not be unavailable
+        assert (
+            self.hass.states.get("sensor.test_template_sensor").state
+            != STATE_UNAVAILABLE
+        )
+
+        # When Availability template returns false
+        self.hass.states.set("availability_boolean.state", STATE_OFF)
+        self.hass.block_till_done()
+
+        # device state should be unavailable
+        assert (
+            self.hass.states.get("sensor.test_template_sensor").state
+            == STATE_UNAVAILABLE
+        )
+
 
 async def test_available_template_with_entities(hass):
     """Test availability tempalates with values from other entities."""
@@ -511,27 +558,27 @@ async def test_no_template_match_all(hass, caplog):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 6
     assert (
-        "Template sensor invalid_state has no entity ids "
+        "Template sensor 'invalid_state' has no entity ids "
         "configured to track nor were we able to extract the entities to "
         "track from the value template"
     ) in caplog.text
     assert (
-        "Template sensor invalid_icon has no entity ids "
+        "Template sensor 'invalid_icon' has no entity ids "
         "configured to track nor were we able to extract the entities to "
         "track from the icon template"
     ) in caplog.text
     assert (
-        "Template sensor invalid_entity_picture has no entity ids "
+        "Template sensor 'invalid_entity_picture' has no entity ids "
         "configured to track nor were we able to extract the entities to "
         "track from the entity_picture template"
     ) in caplog.text
     assert (
-        "Template sensor invalid_friendly_name has no entity ids "
+        "Template sensor 'invalid_friendly_name' has no entity ids "
         "configured to track nor were we able to extract the entities to "
         "track from the friendly_name template"
     ) in caplog.text
     assert (
-        "Template sensor invalid_attribute has no entity ids "
+        "Template sensor 'invalid_attribute' has no entity ids "
         "configured to track nor were we able to extract the entities to "
         "track from the test_attribute template"
     ) in caplog.text

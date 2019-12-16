@@ -6,7 +6,6 @@ from asynctest import Mock, patch
 from pysmartthings import InstalledAppStatus, OAuthToken
 import pytest
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import cloud, smartthings
 from homeassistant.components.smartthings.const import (
     CONF_CLOUDHOOK_URL,
@@ -20,6 +19,7 @@ from homeassistant.components.smartthings.const import (
 )
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 

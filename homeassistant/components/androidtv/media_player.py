@@ -2,7 +2,6 @@
 import functools
 import logging
 import os
-import voluptuous as vol
 
 from adb_shell.auth.keygen import keygen
 from adb_shell.exceptions import (
@@ -11,10 +10,11 @@ from adb_shell.exceptions import (
     InvalidResponseError,
     TcpTimeoutException,
 )
-from androidtv import setup, ha_state_detection_rules_validator
+from androidtv import ha_state_detection_rules_validator, setup
 from androidtv.constants import APPS, KEYS
+import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -55,6 +55,7 @@ SUPPORT_ANDROIDTV = (
     | SUPPORT_TURN_OFF
     | SUPPORT_PREVIOUS_TRACK
     | SUPPORT_NEXT_TRACK
+    | SUPPORT_SELECT_SOURCE
     | SUPPORT_STOP
     | SUPPORT_VOLUME_MUTE
     | SUPPORT_VOLUME_STEP
@@ -145,7 +146,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             adb_log = f"using Python ADB implementation with adbkey='{adbkey}'"
 
             aftv = setup(
-                host,
+                config[CONF_HOST],
+                config[CONF_PORT],
                 adbkey,
                 device_class=config[CONF_DEVICE_CLASS],
                 state_detection_rules=config[CONF_STATE_DETECTION_RULES],
@@ -158,7 +160,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             )
 
             aftv = setup(
-                host,
+                config[CONF_HOST],
+                config[CONF_PORT],
                 config[CONF_ADBKEY],
                 device_class=config[CONF_DEVICE_CLASS],
                 state_detection_rules=config[CONF_STATE_DETECTION_RULES],
@@ -170,7 +173,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         adb_log = f"using ADB server at {config[CONF_ADB_SERVER_IP]}:{config[CONF_ADB_SERVER_PORT]}"
 
         aftv = setup(
-            host,
+            config[CONF_HOST],
+            config[CONF_PORT],
             adb_server_ip=config[CONF_ADB_SERVER_IP],
             adb_server_port=config[CONF_ADB_SERVER_PORT],
             device_class=config[CONF_DEVICE_CLASS],
@@ -199,6 +203,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 aftv,
                 config[CONF_NAME],
                 config[CONF_APPS],
+                config[CONF_GET_SOURCES],
                 config.get(CONF_TURN_ON_COMMAND),
                 config.get(CONF_TURN_OFF_COMMAND),
             )
@@ -252,14 +257,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 def adb_decorator(override_available=False):
-    """Send an ADB command if the device is available and catch exceptions."""
+    """Wrap ADB methods and catch exceptions.
+
+    Allows for overriding the available status of the ADB connection via the
+    `override_available` parameter.
+    """
 
     def _adb_decorator(func):
-        """Wait if previous ADB commands haven't finished."""
+        """Wrap the provided ADB method and catch exceptions."""
 
         @functools.wraps(func)
         def _adb_exception_catcher(self, *args, **kwargs):
-            # If the device is unavailable, don't do anything
+            """Call an ADB-related method and catch exceptions."""
             if not self.available and not override_available:
                 return None
 
@@ -283,7 +292,9 @@ def adb_decorator(override_available=False):
 class ADBDevice(MediaPlayerDevice):
     """Representation of an Android TV or Fire TV device."""
 
-    def __init__(self, aftv, name, apps, turn_on_command, turn_off_command):
+    def __init__(
+        self, aftv, name, apps, get_sources, turn_on_command, turn_off_command
+    ):
         """Initialize the Android TV / Fire TV device."""
         self.aftv = aftv
         self._name = name
@@ -292,6 +303,7 @@ class ADBDevice(MediaPlayerDevice):
         self._app_name_to_id = {
             value: key for key, value in self._app_id_to_name.items()
         }
+        self._get_sources = get_sources
         self._keys = KEYS
 
         self._device_properties = self.aftv.device_properties
@@ -319,8 +331,9 @@ class ADBDevice(MediaPlayerDevice):
 
         # Property attributes
         self._adb_response = None
-        self._available = self.aftv.available
+        self._available = True
         self._current_app = None
+        self._sources = None
         self._state = None
 
     @property
@@ -352,6 +365,16 @@ class ADBDevice(MediaPlayerDevice):
     def should_poll(self):
         """Device should be polled."""
         return True
+
+    @property
+    def source(self):
+        """Return the current app."""
+        return self._app_id_to_name.get(self._current_app, self._current_app)
+
+    @property
+    def source_list(self):
+        """Return a list of running apps."""
+        return self._sources
 
     @property
     def state(self):
@@ -405,6 +428,20 @@ class ADBDevice(MediaPlayerDevice):
         self.aftv.media_next_track()
 
     @adb_decorator()
+    def select_source(self, source):
+        """Select input source.
+
+        If the source starts with a '!', then it will close the app instead of
+        opening it.
+        """
+        if isinstance(source, str):
+            if not source.startswith("!"):
+                self.aftv.launch_app(self._app_name_to_id.get(source, source))
+            else:
+                source_ = source[1:].lstrip()
+                self.aftv.stop_app(self._app_name_to_id.get(source_, source_))
+
+    @adb_decorator()
     def adb_command(self, cmd):
         """Send an ADB command to an Android TV / Fire TV device."""
         key = self._keys.get(cmd)
@@ -432,11 +469,14 @@ class ADBDevice(MediaPlayerDevice):
 class AndroidTVDevice(ADBDevice):
     """Representation of an Android TV device."""
 
-    def __init__(self, aftv, name, apps, turn_on_command, turn_off_command):
+    def __init__(
+        self, aftv, name, apps, get_sources, turn_on_command, turn_off_command
+    ):
         """Initialize the Android TV device."""
-        super().__init__(aftv, name, apps, turn_on_command, turn_off_command)
+        super().__init__(
+            aftv, name, apps, get_sources, turn_on_command, turn_off_command
+        )
 
-        self._device = None
         self._is_volume_muted = None
         self._volume_level = None
 
@@ -461,24 +501,27 @@ class AndroidTVDevice(ADBDevice):
         (
             state,
             self._current_app,
-            self._device,
+            running_apps,
+            _,
             self._is_volume_muted,
             self._volume_level,
-        ) = self.aftv.update()
+        ) = self.aftv.update(self._get_sources)
 
         self._state = ANDROIDTV_STATES.get(state)
         if self._state is None:
             self._available = False
 
+        if running_apps:
+            self._sources = [
+                self._app_id_to_name.get(app_id, app_id) for app_id in running_apps
+            ]
+        else:
+            self._sources = None
+
     @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._is_volume_muted
-
-    @property
-    def source(self):
-        """Return the current playback device."""
-        return self._device
 
     @property
     def supported_features(self):
@@ -514,15 +557,6 @@ class AndroidTVDevice(ADBDevice):
 class FireTVDevice(ADBDevice):
     """Representation of a Fire TV device."""
 
-    def __init__(
-        self, aftv, name, apps, get_sources, turn_on_command, turn_off_command
-    ):
-        """Initialize the Fire TV device."""
-        super().__init__(aftv, name, apps, turn_on_command, turn_off_command)
-
-        self._get_sources = get_sources
-        self._sources = None
-
     @adb_decorator(override_available=True)
     def update(self):
         """Update the device state and, if necessary, re-connect."""
@@ -555,16 +589,6 @@ class FireTVDevice(ADBDevice):
             self._sources = None
 
     @property
-    def source(self):
-        """Return the current app."""
-        return self._app_id_to_name.get(self._current_app, self._current_app)
-
-    @property
-    def source_list(self):
-        """Return a list of running apps."""
-        return self._sources
-
-    @property
     def supported_features(self):
         """Flag media player features that are supported."""
         return SUPPORT_FIRETV
@@ -573,17 +597,3 @@ class FireTVDevice(ADBDevice):
     def media_stop(self):
         """Send stop (back) command."""
         self.aftv.back()
-
-    @adb_decorator()
-    def select_source(self, source):
-        """Select input source.
-
-        If the source starts with a '!', then it will close the app instead of
-        opening it.
-        """
-        if isinstance(source, str):
-            if not source.startswith("!"):
-                self.aftv.launch_app(self._app_name_to_id.get(source, source))
-            else:
-                source_ = source[1:].lstrip()
-                self.aftv.stop_app(self._app_name_to_id.get(source_, source_))

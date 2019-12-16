@@ -12,6 +12,8 @@ from homeassistant.const import (
     ATTR_STATE,
     CONF_DEVICE,
     CONF_DEVICES,
+    CONF_HOST,
+    CONF_PORT,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     POWER_WATT,
@@ -80,17 +82,21 @@ RFX_DEVICES = {}
 _LOGGER = logging.getLogger(__name__)
 DATA_RFXOBJECT = "rfxobject"
 
-CONFIG_SCHEMA = vol.Schema(
+BASE_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_DEVICE): cv.string,
-                vol.Optional(CONF_DEBUG, default=False): cv.boolean,
-                vol.Optional(CONF_DUMMY, default=False): cv.boolean,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
+        vol.Optional(CONF_DEBUG, default=False): cv.boolean,
+        vol.Optional(CONF_DUMMY, default=False): cv.boolean,
+    }
+)
+
+DEVICE_SCHEMA = BASE_SCHEMA.extend({vol.Required(CONF_DEVICE): cv.string})
+
+PORT_SCHEMA = BASE_SCHEMA.extend(
+    {vol.Required(CONF_PORT): cv.port, vol.Optional(CONF_HOST): cv.string}
+)
+
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.Any(DEVICE_SCHEMA, PORT_SCHEMA)}, extra=vol.ALLOW_EXTRA
 )
 
 
@@ -115,13 +121,23 @@ def setup(hass, config):
         for subscriber in RECEIVED_EVT_SUBSCRIBERS:
             subscriber(event)
 
-    device = config[DOMAIN][ATTR_DEVICE]
+    device = config[DOMAIN].get(ATTR_DEVICE)
+    host = config[DOMAIN].get(CONF_HOST)
+    port = config[DOMAIN].get(CONF_PORT)
     debug = config[DOMAIN][ATTR_DEBUG]
     dummy_connection = config[DOMAIN][ATTR_DUMMY]
 
     if dummy_connection:
         rfx_object = rfxtrxmod.Connect(
             device, None, debug=debug, transport_protocol=rfxtrxmod.DummyTransport2
+        )
+    elif port is not None:
+        # If port is set then we create a TCP connection
+        rfx_object = rfxtrxmod.Connect(
+            (host, port),
+            None,
+            debug=debug,
+            transport_protocol=rfxtrxmod.PyNetworkTransport,
         )
     else:
         rfx_object = rfxtrxmod.Connect(device, None, debug=debug)

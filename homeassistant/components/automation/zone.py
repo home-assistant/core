@@ -1,17 +1,16 @@
 """Offer zone automation rules."""
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.const import (
-    CONF_EVENT,
     CONF_ENTITY_ID,
+    CONF_EVENT,
+    CONF_PLATFORM,
     CONF_ZONE,
     MATCH_ALL,
-    CONF_PLATFORM,
 )
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.core import callback
 from homeassistant.helpers import condition, config_validation as cv, location
-
+from homeassistant.helpers.event import async_track_state_change
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 

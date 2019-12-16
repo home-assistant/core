@@ -73,12 +73,13 @@ import voluptuous_serialize
 from homeassistant import data_entry_flow
 from homeassistant.components.http import KEY_REAL_IP
 from homeassistant.components.http.ban import (
-    process_wrong_login,
-    process_success_login,
     log_invalid_auth,
+    process_success_login,
+    process_wrong_login,
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
+
 from . import indieauth
 
 

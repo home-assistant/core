@@ -1,23 +1,22 @@
 """Linky Atome."""
-import logging
 from datetime import timedelta
+import logging
 
+from pyatome.client import AtomeClient, PyAtomeError
 import voluptuous as vol
-from pyatome.client import AtomeClient
-from pyatome.client import PyAtomeError
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
-    CONF_NAME,
     DEVICE_CLASS_POWER,
-    POWER_WATT,
     ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
 )
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 

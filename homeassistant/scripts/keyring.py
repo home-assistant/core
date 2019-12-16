@@ -5,10 +5,8 @@ import os
 
 from homeassistant.util.yaml import _SECRET_NAMESPACE
 
-
 # mypy: allow-untyped-defs
-
-REQUIREMENTS = ["keyring==19.2.0", "keyrings.alt==3.1.1"]
+REQUIREMENTS = ["keyring==20.0.0", "keyrings.alt==3.4.0"]
 
 
 def run(args):

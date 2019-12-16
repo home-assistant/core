@@ -4,8 +4,8 @@ import asyncio
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
-    dispatcher_send,
     dispatcher_connect,
+    dispatcher_send,
 )
 
 from tests.common import get_test_home_assistant

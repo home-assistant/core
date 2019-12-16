@@ -1,22 +1,22 @@
 """Runtime entry data for ESPHome stored in hass.data."""
 import asyncio
-from typing import Any, Callable, Dict, List, Optional, Tuple, Set
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from aioesphomeapi import (
     COMPONENT_TYPE_TO_INFO,
-    DeviceInfo,
-    EntityInfo,
-    EntityState,
-    UserService,
     BinarySensorInfo,
     CameraInfo,
     ClimateInfo,
     CoverInfo,
+    DeviceInfo,
+    EntityInfo,
+    EntityState,
     FanInfo,
     LightInfo,
     SensorInfo,
     SwitchInfo,
     TextSensorInfo,
+    UserService,
 )
 import attr
 

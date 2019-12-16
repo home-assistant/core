@@ -3,9 +3,8 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .config_flow import get_controller_id_from_config_entry
 from .const import (

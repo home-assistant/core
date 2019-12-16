@@ -1,7 +1,6 @@
 """The tests for the  MQTT binary sensor platform."""
 from datetime import datetime, timedelta
 import json
-
 from unittest.mock import ANY, patch
 
 from homeassistant.components import binary_sensor, mqtt

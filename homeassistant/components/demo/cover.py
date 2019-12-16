@@ -1,6 +1,4 @@
 """Demo platform for the cover component."""
-from homeassistant.helpers.event import track_utc_time_change
-
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
@@ -8,6 +6,8 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN,
     CoverDevice,
 )
+from homeassistant.helpers.event import track_utc_time_change
+
 from . import DOMAIN
 
 

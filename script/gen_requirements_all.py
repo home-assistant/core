@@ -8,9 +8,9 @@ import pkgutil
 import re
 import sys
 
-from homeassistant.util.yaml.loader import load_yaml
-
 from script.hassfest.model import Integration
+
+from homeassistant.util.yaml.loader import load_yaml
 
 COMMENT_REQUIREMENTS = (
     "Adafruit_BBIO",
@@ -58,12 +58,14 @@ CONSTRAINT_PATH = os.path.join(
 CONSTRAINT_BASE = """
 pycryptodome>=3.6.6
 
-# Breaks Python 3.6 and is not needed for our supported Python versions
+# Not needed for our supported Python versions
 enum34==1000000000.0.0
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
 """
+
+IGNORE_PRE_COMMIT_HOOK_ID = ("check-json",)
 
 
 def has_tests(module: str):
@@ -256,8 +258,9 @@ def requirements_pre_commit_output():
     reqs = []
     for repo in (x for x in pre_commit_conf["repos"] if x.get("rev")):
         for hook in repo["hooks"]:
-            reqs.append(f"{hook['id']}=={repo['rev']}")
-            reqs.extend(x for x in hook.get("additional_dependencies", ()))
+            if hook["id"] not in IGNORE_PRE_COMMIT_HOOK_ID:
+                reqs.append(f"{hook['id']}=={repo['rev']}")
+                reqs.extend(x for x in hook.get("additional_dependencies", ()))
     output = [
         f"# Automatically generated "
         f"from {source} by {Path(__file__).name}, do not edit",

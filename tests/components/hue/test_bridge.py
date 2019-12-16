@@ -3,8 +3,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.components.hue import bridge, errors
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from tests.common import mock_coro
 

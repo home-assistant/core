@@ -4,60 +4,61 @@ import logging
 import voluptuous as vol
 import yeelight
 from yeelight import (
+    BulbException,
+    Flow,
     RGBTransition,
     SleepTransition,
-    Flow,
-    BulbException,
     transitions as yee_transitions,
 )
-from yeelight.enums import PowerMode, LightType, BulbType, SceneClass
+from yeelight.enums import BulbType, LightType, PowerMode, SceneClass
 
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.service import extract_entity_ids
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util.color import (
-    color_temperature_mired_to_kelvin as mired_to_kelvin,
-    color_temperature_kelvin_to_mired as kelvin_to_mired,
-)
-from homeassistant.const import CONF_HOST, ATTR_ENTITY_ID, ATTR_MODE, CONF_NAME
-from homeassistant.core import callback
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_HS_COLOR,
-    ATTR_TRANSITION,
     ATTR_COLOR_TEMP,
-    ATTR_FLASH,
-    FLASH_SHORT,
-    FLASH_LONG,
     ATTR_EFFECT,
+    ATTR_FLASH,
+    ATTR_HS_COLOR,
+    ATTR_KELVIN,
+    ATTR_RGB_COLOR,
+    ATTR_TRANSITION,
+    FLASH_LONG,
+    FLASH_SHORT,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
-    SUPPORT_TRANSITION,
     SUPPORT_COLOR_TEMP,
-    SUPPORT_FLASH,
     SUPPORT_EFFECT,
+    SUPPORT_FLASH,
+    SUPPORT_TRANSITION,
     Light,
-    ATTR_RGB_COLOR,
-    ATTR_KELVIN,
 )
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, CONF_HOST, CONF_NAME
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.service import extract_entity_ids
 import homeassistant.util.color as color_util
+from homeassistant.util.color import (
+    color_temperature_kelvin_to_mired as kelvin_to_mired,
+    color_temperature_mired_to_kelvin as mired_to_kelvin,
+)
+
 from . import (
-    CONF_TRANSITION,
-    DATA_YEELIGHT,
-    CONF_MODE_MUSIC,
-    CONF_SAVE_ON_CHANGE,
-    CONF_CUSTOM_EFFECTS,
-    DATA_UPDATED,
-    YEELIGHT_SERVICE_SCHEMA,
-    DOMAIN,
-    ATTR_TRANSITIONS,
-    YEELIGHT_FLOW_TRANSITION_SCHEMA,
     ACTION_RECOVER,
-    CONF_FLOW_PARAMS,
     ATTR_ACTION,
     ATTR_COUNT,
-    NIGHTLIGHT_SWITCH_TYPE_LIGHT,
+    ATTR_TRANSITIONS,
+    CONF_CUSTOM_EFFECTS,
+    CONF_FLOW_PARAMS,
+    CONF_MODE_MUSIC,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
+    CONF_SAVE_ON_CHANGE,
+    CONF_TRANSITION,
+    DATA_UPDATED,
+    DATA_YEELIGHT,
+    DOMAIN,
+    NIGHTLIGHT_SWITCH_TYPE_LIGHT,
+    YEELIGHT_FLOW_TRANSITION_SCHEMA,
+    YEELIGHT_SERVICE_SCHEMA,
 )
 
 _LOGGER = logging.getLogger(__name__)

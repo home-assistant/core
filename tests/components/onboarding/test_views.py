@@ -4,14 +4,14 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import onboarding
 from homeassistant.components.onboarding import const, views
+from homeassistant.setup import async_setup_component
+
+from . import mock_storage
 
 from tests.common import CLIENT_ID, register_auth_provider
 from tests.components.met.conftest import mock_weather  # noqa: F401
-
-from . import mock_storage
 
 
 @pytest.fixture(autouse=True)

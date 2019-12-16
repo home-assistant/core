@@ -1,6 +1,6 @@
 """The tests for the IPMA weather component."""
-from unittest.mock import patch
 from collections import namedtuple
+from unittest.mock import patch
 
 from homeassistant.components import weather
 from homeassistant.components.weather import (
@@ -11,9 +11,9 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
 )
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_coro
-from homeassistant.setup import async_setup_component
 
 TEST_CONFIG = {"name": "HomeTown", "latitude": "40.00", "longitude": "-8.00"}
 

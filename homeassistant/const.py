@@ -1,10 +1,13 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 102
+MINOR_VERSION = 104
 PATCH_VERSION = "0.dev0"
 __short_version__ = "{}.{}".format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = "{}.{}".format(__short_version__, PATCH_VERSION)
-REQUIRED_PYTHON_VER = (3, 6, 1)
+REQUIRED_PYTHON_VER = (3, 7, 0)
+# Truthy date string triggers showing related deprecation warning messages.
+REQUIRED_NEXT_PYTHON_VER = (3, 8, 0)
+REQUIRED_NEXT_PYTHON_DATE = ""
 
 # Format for platform files
 PLATFORM_FORMAT = "{platform}.{domain}"
@@ -40,6 +43,7 @@ CONF_BELOW = "below"
 CONF_BINARY_SENSORS = "binary_sensors"
 CONF_BLACKLIST = "blacklist"
 CONF_BRIGHTNESS = "brightness"
+CONF_BROADCAST_ADDRESS = "broadcast_address"
 CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
 CONF_CODE = "code"

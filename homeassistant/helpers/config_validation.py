@@ -1,17 +1,17 @@
 """Helpers for config validation using voluptuous."""
-import inspect
-import logging
-import os
-import re
 from datetime import (
-    timedelta,
+    date as date_sys,
     datetime as datetime_sys,
     time as time_sys,
-    date as date_sys,
+    timedelta,
 )
-from socket import _GLOBAL_DEFAULT_TIMEOUT
+import inspect
+import logging
 from numbers import Number
-from typing import Any, Union, TypeVar, Callable, List, Dict, Optional
+import os
+import re
+from socket import _GLOBAL_DEFAULT_TIMEOUT
+from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -19,8 +19,9 @@ from pkg_resources import parse_version
 import voluptuous as vol
 import voluptuous_serialize
 
-import homeassistant.util.dt as dt_util
 from homeassistant.const import (
+    ATTR_AREA_ID,
+    ATTR_ENTITY_ID,
     CONF_ABOVE,
     CONF_ALIAS,
     CONF_BELOW,
@@ -33,10 +34,10 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_SCAN_INTERVAL,
     CONF_STATE,
+    CONF_TIMEOUT,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
     CONF_VALUE_TEMPLATE,
-    CONF_TIMEOUT,
     ENTITY_MATCH_ALL,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
@@ -44,14 +45,12 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     WEEKDAYS,
     __version__,
-    ATTR_AREA_ID,
-    ATTR_ENTITY_ID,
 )
-from homeassistant.core import valid_entity_id, split_entity_id
+from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.logging import KeywordStyleAdapter
 from homeassistant.util import slugify as util_slugify
-
+import homeassistant.util.dt as dt_util
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
@@ -489,8 +488,9 @@ def template_complex(value):
         for key, element in return_value.items():
             return_value[key] = template_complex(element)
         return return_value
-
-    return template(value)
+    if isinstance(value, str):
+        return template(value)
+    return value
 
 
 def datetime(value):
@@ -715,12 +715,23 @@ PLATFORM_SCHEMA = vol.Schema(
 
 PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
-ENTITY_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_ENTITY_ID): comp_entity_ids,
-        vol.Optional(ATTR_AREA_ID): vol.All(ensure_list, [str]),
-    }
-)
+
+def make_entity_service_schema(
+    schema: dict, *, extra: int = vol.PREVENT_EXTRA
+) -> vol.All:
+    """Create an entity service schema."""
+    return vol.All(
+        vol.Schema(
+            {
+                **schema,
+                vol.Optional(ATTR_ENTITY_ID): comp_entity_ids,
+                vol.Optional(ATTR_AREA_ID): vol.All(ensure_list, [str]),
+            },
+            extra=extra,
+        ),
+        has_at_least_one_key(ATTR_ENTITY_ID, ATTR_AREA_ID),
+    )
+
 
 EVENT_SCHEMA = vol.Schema(
     {

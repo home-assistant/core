@@ -1,6 +1,5 @@
 """The tests for the hddtemp platform."""
 import socket
-
 import unittest
 from unittest.mock import patch
 
