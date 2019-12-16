@@ -1,6 +1,5 @@
 """Constants for the HERE Destination Weather service."""
-CONF_APP_ID = "app_id"
-CONF_APP_CODE = "app_code"
+CONF_API_KEY = "api_key"
 CONF_LOCATION_NAME = "location_name"
 CONF_ZIP_CODE = "zip_code"
 CONF_LANGUAGE = "language"
@@ -280,14 +279,7 @@ CONDITION_CLASSES = {
         "isolated_tstorms",
         "a_few_tstorms",
     ],
-    "lightning-rainy": [
-        "strong_thunderstorms",
-        "severe_thunderstorms",
-        "thundershowers",
-        "thunderstorms",
-        "tstorms_late",
-        "tstorms",
-    ],
+    "lightning-rainy": ["thundershowers", "thunderstorms", "tstorms_late", "tstorms"],
     "partlycloudy": [
         "partly_sunny",
         "mostly_cloudy",
@@ -387,7 +379,7 @@ CONDITION_CLASSES = {
         "mixture_of_precip",
     ],
     "sunny": ["sunny", "clear", "mostly_sunny", "mostly_clear"],
-    "windy": [],
+    "windy": ["strong_thunderstorms", "severe_thunderstorms"],
     "windy-variant": [],
     "exceptional": [
         "blizzard",

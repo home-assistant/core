@@ -25,8 +25,7 @@ from . import (
     get_attribute_from_here_data,
 )
 from .const import (
-    CONF_APP_CODE,
-    CONF_APP_ID,
+    CONF_API_KEY,
     CONF_LOCATION_NAME,
     CONF_MODES,
     CONF_OFFSET,
@@ -42,8 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_APP_ID): cv.string,
-        vol.Required(CONF_APP_CODE): cv.string,
+        vol.Required(CONF_API_KEY): cv.string,
         vol.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
         vol.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
         vol.Exclusive(CONF_LATITUDE, "coords_or_name_or_zip_code"): cv.latitude,
@@ -68,10 +66,10 @@ async def async_setup_platform(
     discovery_info: None = None,
 ) -> None:
     """Set up the HERE Destination Weather sensor."""
-    app_id = config[CONF_APP_ID]
-    app_code = config[CONF_APP_CODE]
 
-    here_client = herepy.DestinationWeatherApi(app_id, app_code)
+    api_key = config[CONF_API_KEY]
+
+    here_client = herepy.DestinationWeatherApi(api_key)
 
     if not await hass.async_add_executor_job(
         _are_valid_client_credentials, here_client
