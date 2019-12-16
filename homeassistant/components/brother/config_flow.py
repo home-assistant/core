@@ -9,7 +9,6 @@ import voluptuous as vol
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TYPE
 from homeassistant.core import callback
-from homeassistant.helpers import device_registry
 
 from .const import (
     DEFAULT_NAME,
@@ -41,16 +40,6 @@ def host_valid(host):
         return all(map(lambda x: len(x) and not disallowed.search(x), host.split(".")))
 
 
-async def configured_devices(hass, serial):
-    """Return True if deice is already configured."""
-    d_registry = await device_registry.async_get_registry(hass)
-    for device in d_registry.devices.values():
-        for item in device.identifiers:
-            if serial in item:
-                return True
-    return False
-
-
 @callback
 def configured_instances(hass, condition):
     """Return a set of configured Brother instances."""
@@ -71,13 +60,17 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                if not host_valid(user_input[CONF_HOST]):
-                    raise InvalidHost()
-                brother = Brother(user_input[CONF_HOST])
-                await brother.async_update()
                 if user_input[CONF_NAME] in configured_instances(self.hass, CONF_NAME):
                     raise NameExists()
-                if await configured_devices(self.hass, brother.serial.lower()):
+                if not host_valid(user_input[CONF_HOST]):
+                    raise InvalidHost()
+
+                brother = Brother(user_input[CONF_HOST])
+                await brother.async_update()
+
+                if brother.serial.lower() in configured_instances(
+                    self.hass, CONF_SERIAL
+                ):
                     raise DeviceExists()
 
                 sensors = []
