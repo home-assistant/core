@@ -1615,22 +1615,37 @@ async def test_temperature_setting_sensor(hass):
         sensor.DOMAIN, 0, sensor.DEVICE_CLASS_TEMPERATURE
     )
 
-    hass.config.units.temperature_unit = TEMP_FAHRENHEIT
+
+@pytest.mark.parametrize(
+    "unit_in,unit_out,state,ambient",
+    [
+        (TEMP_FAHRENHEIT, "F", "70", 21.1),
+        (TEMP_CELSIUS, "C", "21.1", 21.1),
+        (TEMP_FAHRENHEIT, "F", "unavailable", None),
+        (TEMP_FAHRENHEIT, "F", "unknown", None),
+    ],
+)
+async def test_temperature_setting_sensor_data(hass, unit_in, unit_out, state, ambient):
+    """Test TemperatureSetting trait support for temperature sensor."""
+    hass.config.units.temperature_unit = unit_in
 
     trt = trait.TemperatureSettingTrait(
         hass,
         State(
-            "sensor.test", "70", {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TEMPERATURE}
+            "sensor.test", state, {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TEMPERATURE}
         ),
         BASIC_CONFIG,
     )
 
     assert trt.sync_attributes() == {
         "queryOnlyTemperatureSetting": True,
-        "thermostatTemperatureUnit": "F",
+        "thermostatTemperatureUnit": unit_out,
     }
 
-    assert trt.query_attributes() == {"thermostatTemperatureAmbient": 21.1}
+    if ambient:
+        assert trt.query_attributes() == {"thermostatTemperatureAmbient": ambient}
+    else:
+        assert trt.query_attributes() == {}
     hass.config.units.temperature_unit = TEMP_CELSIUS
 
 
@@ -1646,14 +1661,23 @@ async def test_humidity_setting_sensor(hass):
         sensor.DOMAIN, 0, sensor.DEVICE_CLASS_HUMIDITY
     )
 
+
+@pytest.mark.parametrize(
+    "state,ambient", [("70", 70), ("unavailable", None), ("unknown", None)]
+)
+async def test_humidity_setting_sensor_data(hass, state, ambient):
+    """Test HumiditySetting trait support for humidity sensor."""
     trt = trait.HumiditySettingTrait(
         hass,
-        State("sensor.test", "70", {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_HUMIDITY}),
+        State("sensor.test", state, {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_HUMIDITY}),
         BASIC_CONFIG,
     )
 
     assert trt.sync_attributes() == {"queryOnlyHumiditySetting": True}
-    assert trt.query_attributes() == {"humidityAmbientPercent": 70}
+    if ambient:
+        assert trt.query_attributes() == {"humidityAmbientPercent": ambient}
+    else:
+        assert trt.query_attributes() == {}
 
     with pytest.raises(helpers.SmartHomeError) as err:
         await trt.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
