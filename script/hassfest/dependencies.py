@@ -1,6 +1,5 @@
 """Validate dependencies."""
-import pathlib
-import re
+import ast
 from typing import Dict, Set
 
 from homeassistant.requirements import DISCOVERY_INTEGRATIONS
@@ -8,31 +7,80 @@ from homeassistant.requirements import DISCOVERY_INTEGRATIONS
 from .model import Integration
 
 
-def grep_dir(path: pathlib.Path, glob_pattern: str, search_pattern: str) -> Set[str]:
-    """Recursively go through a dir and it's children and find the regex."""
-    pattern = re.compile(search_pattern)
-    found = set()
+class ImportCollector(ast.NodeVisitor):
+    """Collect all integrations referenced."""
 
-    for fil in path.glob(glob_pattern):
-        if not fil.is_file():
-            continue
+    def __init__(self, integration: Integration):
+        """Initialize the import collector."""
+        self.integration = integration
+        self.referenced: Set[str] = set()
 
-        for match in pattern.finditer(fil.read_text()):
-            integration = match.groups()[1]
+    def maybe_add_reference(self, reference_domain: str):
+        """Add a reference."""
+        if (
+            # If it's importing something from itself
+            reference_domain == self.integration.path.name
+            # Platform file
+            or (self.integration.path / f"{reference_domain}.py").exists()
+            # Platform dir
+            or (self.integration.path / reference_domain).exists()
+        ):
+            return
 
-            if (
-                # If it's importing something from itself
-                integration == path.name
-                # Platform file
-                or (path / f"{integration}.py").exists()
-                # Dir for platform
-                or (path / integration).exists()
-            ):
-                continue
+        self.referenced.add(reference_domain)
 
-            found.add(match.groups()[1])
+    def visit_ImportFrom(self, node):
+        """Visit ImportFrom node."""
+        if node.module is None:
+            return
 
-    return found
+        if node.module.startswith("homeassistant.components."):
+            # from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
+            # from homeassistant.components.logbook import bla
+            self.maybe_add_reference(node.module.split(".")[2])
+
+        elif node.module == "homeassistant.components":
+            # from homeassistant.components import sun
+            for name_node in node.names:
+                self.maybe_add_reference(name_node.name)
+
+    def visit_Import(self, node):
+        """Visit Import node."""
+        # import homeassistant.components.hue as hue
+        for name_node in node.names:
+            if name_node.name.startswith("homeassistant.components."):
+                self.maybe_add_reference(name_node.name.split(".")[2])
+
+    def visit_Attribute(self, node):
+        """Visit Attribute node."""
+        # hass.components.hue.async_create()
+        # Name(id=hass)
+        #   .Attribute(attr=hue)
+        #   .Attribute(attr=async_create)
+
+        # self.hass.components.hue.async_create()
+        # Name(id=self)
+        #   .Attribute(attr=hass)
+        #   .Attribute(attr=hue)
+        #   .Attribute(attr=async_create)
+        if (
+            isinstance(node.value, ast.Attribute)
+            and node.value.attr == "components"
+            and (
+                (
+                    isinstance(node.value.value, ast.Name)
+                    and node.value.value.id == "hass"
+                )
+                or (
+                    isinstance(node.value.value, ast.Attribute)
+                    and node.value.value.attr == "hass"
+                )
+            )
+        ):
+            self.maybe_add_reference(node.attr)
+        else:
+            # Have it visit other kids
+            self.generic_visit(node)
 
 
 ALLOWED_USED_COMPONENTS = {
@@ -87,12 +135,20 @@ IGNORE_VIOLATIONS = [
 def validate_dependencies(integration: Integration):
     """Validate all dependencies."""
     # Find usage of hass.components
-    referenced = grep_dir(
-        integration.path, "**/*.py", r"(hass|homeassistant)\.components\.(\w+)"
+    collector = ImportCollector(integration)
+
+    for fil in integration.path.glob("**/*.py"):
+        if not fil.is_file():
+            continue
+
+        collector.visit(ast.parse(fil.read_text()))
+
+    referenced = (
+        collector.referenced
+        - ALLOWED_USED_COMPONENTS
+        - set(integration.manifest["dependencies"])
+        - set(integration.manifest.get("after_dependencies", []))
     )
-    referenced -= ALLOWED_USED_COMPONENTS
-    referenced -= set(integration.manifest["dependencies"])
-    referenced -= set(integration.manifest.get("after_dependencies", []))
 
     # Discovery requirements are ok if referenced in manifest
     for check_domain, to_check in DISCOVERY_INTEGRATIONS.items():
