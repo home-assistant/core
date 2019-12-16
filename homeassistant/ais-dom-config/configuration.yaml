@@ -1,5 +1,5 @@
 homeassistant:
-  customize: !include customize.yaml
+  customize_glob: !include customize_glob.yaml
   packages: !include_dir_named ais_packages/
   auth_providers:
   - type: trusted_networks

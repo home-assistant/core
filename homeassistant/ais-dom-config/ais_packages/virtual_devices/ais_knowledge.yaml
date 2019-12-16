@@ -4,11 +4,5 @@ input_text:
     initial: " "
     icon: mdi:comment-question-outline
 
-group:
-  AIS Wyszukiwarka:
-    name: Asystentka
-    entities:
-      - input_text.ais_knowledge_query
-      - sensor.aisknowledgeanswer
 
 

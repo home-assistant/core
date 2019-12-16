@@ -23,11 +23,3 @@ input_boolean:
   ais_audio_mono:
     name: Dzwięk mono
     icon: mdi:speaker
-
-group:
-  Radio Player:
-    control: hidden
-    name: Radia Internetowe
-    entities:
-      - input_select.radio_type
-      - sensor.radiolist

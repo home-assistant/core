@@ -11,12 +11,3 @@ input_select:
       - "-"
     initial: "-"
     icon: mdi:newspaper
-
-group:
-  ais_rss_news_remote:
-    control: hidden
-    name: Wiadomości
-    entities:
-      - input_select.rss_news_category
-      - input_select.rss_news_channel
-      - sensor.rssnewslist
