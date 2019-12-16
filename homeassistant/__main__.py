@@ -1,5 +1,6 @@
 """Start Home Assistant."""
 import argparse
+import asyncio
 import os
 import platform
 import subprocess
@@ -7,7 +8,6 @@ import sys
 import threading
 from typing import TYPE_CHECKING, Any, Dict, List
 
-from homeassistant import monkey_patch
 from homeassistant.const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE, __version__
 
 if TYPE_CHECKING:
@@ -16,7 +16,6 @@ if TYPE_CHECKING:
 
 def set_loop() -> None:
     """Attempt to use different loop."""
-    import asyncio
     from asyncio.events import BaseDefaultEventLoopPolicy
 
     if sys.platform == "win32":
@@ -345,11 +344,6 @@ def main() -> int:
     """Start Home Assistant."""
     validate_python()
 
-    monkey_patch_needed = sys.version_info[:3] < (3, 6, 3)
-    if monkey_patch_needed and os.environ.get("HASS_NO_MONKEY") != "1":
-        monkey_patch.disable_c_asyncio()
-        monkey_patch.patch_weakref_tasks()
-
     set_loop()
 
     # Run a simple daemon runner process on Windows to handle restarts
@@ -383,13 +377,11 @@ def main() -> int:
     if args.pid_file:
         write_pid(args.pid_file)
 
-    from homeassistant.util.async_ import asyncio_run
-
-    exit_code = asyncio_run(setup_and_run_hass(config_dir, args))
+    exit_code = asyncio.run(setup_and_run_hass(config_dir, args))
     if exit_code == RESTART_EXIT_CODE and not args.runner:
         try_to_restart()
 
-    return exit_code  # type: ignore
+    return exit_code
 
 
 if __name__ == "__main__":
