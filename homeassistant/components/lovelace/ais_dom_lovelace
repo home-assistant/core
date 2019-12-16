@@ -12,6 +12,7 @@
                         "sensor.dark_sky_daily_summary",
                         "sun.sun"
                     ],
+                    "visible": false,
                     "cards": [
                         {
                             "cards": [
