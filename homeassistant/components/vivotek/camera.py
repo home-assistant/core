@@ -2,9 +2,10 @@
 
 import logging
 
-import voluptuous as vol
 from libpyvivotek import VivotekCamera
+import voluptuous as vol
 
+from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
@@ -13,18 +14,18 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_FRAMERATE = "framerate"
-
+CONF_SECURITY_LEVEL = "security_level"
 CONF_STREAM_PATH = "stream_path"
 
 DEFAULT_CAMERA_BRAND = "Vivotek"
 DEFAULT_NAME = "Vivotek Camera"
 DEFAULT_EVENT_0_KEY = "event_i0_enable"
+DEFAULT_SECURITY_LEVEL = "admin"
 DEFAULT_STREAM_SOURCE = "live.sdp"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -36,6 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_SSL, default=False): cv.boolean,
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
         vol.Optional(CONF_FRAMERATE, default=2): cv.positive_int,
+        vol.Optional(CONF_SECURITY_LEVEL, default=DEFAULT_SECURITY_LEVEL): cv.string,
         vol.Optional(CONF_STREAM_PATH, default=DEFAULT_STREAM_SOURCE): cv.string,
     }
 )
@@ -52,6 +54,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             verify_ssl=config[CONF_VERIFY_SSL],
             usr=config[CONF_USERNAME],
             pwd=config[CONF_PASSWORD],
+            sec_lvl=config[CONF_SECURITY_LEVEL],
         ),
         stream_source=f"rtsp://{creds}@{config[CONF_IP_ADDRESS]}:554/{config[CONF_STREAM_PATH]}",
     )

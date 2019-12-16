@@ -7,13 +7,13 @@ import pytest
 import requests_mock
 import voluptuous as vol
 
-import homeassistant.components.vultr.sensor as vultr
 from homeassistant.components import vultr as base_vultr
 from homeassistant.components.vultr import CONF_SUBSCRIPTION
-from homeassistant.const import CONF_NAME, CONF_MONITORED_CONDITIONS, CONF_PLATFORM
+import homeassistant.components.vultr.sensor as vultr
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_PLATFORM
 
-from tests.components.vultr.test_init import VALID_CONFIG
 from tests.common import get_test_home_assistant, load_fixture
+from tests.components.vultr.test_init import VALID_CONFIG
 
 
 class TestVultrSensorSetup(unittest.TestCase):

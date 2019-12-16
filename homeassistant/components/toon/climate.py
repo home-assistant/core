@@ -5,6 +5,8 @@ from typing import Any, Dict, List, Optional
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
     HVAC_MODE_HEAT,
     PRESET_AWAY,
     PRESET_COMFORT,
@@ -12,8 +14,6 @@ from homeassistant.components.climate.const import (
     PRESET_SLEEP,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -21,8 +21,8 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from . import ToonData, ToonDisplayDeviceEntity
 from .const import (
-    DATA_TOON_CLIENT,
     DATA_TOON,
+    DATA_TOON_CLIENT,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     DOMAIN,

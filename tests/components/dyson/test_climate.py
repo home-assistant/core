@@ -9,8 +9,9 @@ from libpurecool.dyson_pure_state import DysonPureHotCoolState
 
 from homeassistant.components import dyson as dyson_parent
 from homeassistant.components.dyson import climate as dyson
-from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.setup import async_setup_component
+
 from tests.common import get_test_home_assistant
 
 

@@ -6,7 +6,6 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_ICON, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -36,10 +35,6 @@ SERVICE_START = "start"
 SERVICE_PAUSE = "pause"
 SERVICE_CANCEL = "cancel"
 SERVICE_FINISH = "finish"
-
-SERVICE_SCHEMA_DURATION = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Optional(ATTR_DURATION, default=timedelta(DEFAULT_DURATION)): cv.time_period}
-)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -80,17 +75,17 @@ async def async_setup(hass, config):
         return False
 
     component.async_register_entity_service(
-        SERVICE_START, SERVICE_SCHEMA_DURATION, "async_start"
+        SERVICE_START,
+        {
+            vol.Optional(
+                ATTR_DURATION, default=timedelta(DEFAULT_DURATION)
+            ): cv.time_period
+        },
+        "async_start",
     )
-    component.async_register_entity_service(
-        SERVICE_PAUSE, ENTITY_SERVICE_SCHEMA, "async_pause"
-    )
-    component.async_register_entity_service(
-        SERVICE_CANCEL, ENTITY_SERVICE_SCHEMA, "async_cancel"
-    )
-    component.async_register_entity_service(
-        SERVICE_FINISH, ENTITY_SERVICE_SCHEMA, "async_finish"
-    )
+    component.async_register_entity_service(SERVICE_PAUSE, {}, "async_pause")
+    component.async_register_entity_service(SERVICE_CANCEL, {}, "async_cancel")
+    component.async_register_entity_service(SERVICE_FINISH, {}, "async_finish")
 
     await component.async_add_entities(entities)
     return True
@@ -162,7 +157,6 @@ class Timer(RestoreEntity):
             event = EVENT_TIMER_RESTARTED
 
         self._state = STATUS_ACTIVE
-        # pylint: disable=redefined-outer-name
         start = dt_util.utcnow()
         if self._remaining and newduration is None:
             self._end = start + self._remaining

@@ -2,11 +2,10 @@
 import asyncio
 
 from asynctest import Mock, patch
-
 import pytest
 
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.components import deconz
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from tests.common import MockConfigEntry
 
@@ -41,7 +40,7 @@ async def test_setup_entry_fails(hass):
         deconz.config_flow.CONF_PORT: ENTRY1_PORT,
         deconz.config_flow.CONF_API_KEY: ENTRY1_API_KEY,
     }
-    with patch("pydeconz.DeconzSession.async_load_parameters", side_effect=Exception):
+    with patch("pydeconz.DeconzSession.initialize", side_effect=Exception):
         await deconz.async_setup_entry(hass, entry)
 
 
@@ -54,7 +53,7 @@ async def test_setup_entry_no_available_bridge(hass):
         deconz.config_flow.CONF_API_KEY: ENTRY1_API_KEY,
     }
     with patch(
-        "pydeconz.DeconzSession.async_load_parameters", side_effect=asyncio.TimeoutError
+        "pydeconz.DeconzSession.initialize", side_effect=asyncio.TimeoutError
     ), pytest.raises(ConfigEntryNotReady):
         await deconz.async_setup_entry(hass, entry)
 

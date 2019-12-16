@@ -1,16 +1,15 @@
 """Authentication for HTTP component."""
 import logging
+import secrets
 
 from aiohttp import hdrs
 from aiohttp.web import middleware
 import jwt
 
-from homeassistant.auth.util import generate_secret
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
 from .const import KEY_AUTHENTICATED, KEY_HASS_USER, KEY_REAL_IP
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -27,7 +26,7 @@ def async_sign_path(hass, refresh_token_id, path, expiration):
     secret = hass.data.get(DATA_SIGN_SECRET)
 
     if secret is None:
-        secret = hass.data[DATA_SIGN_SECRET] = generate_secret()
+        secret = hass.data[DATA_SIGN_SECRET] = secrets.token_hex()
 
     now = dt_util.utcnow()
     return "{}?{}={}".format(

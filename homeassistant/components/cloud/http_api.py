@@ -174,7 +174,8 @@ class GoogleActionsSyncView(HomeAssistantView):
         """Trigger a Google Actions sync."""
         hass = request.app["hass"]
         cloud: Cloud = hass.data[DOMAIN]
-        status = await cloud.client.google_config.async_sync_entities()
+        gconf = await cloud.client.get_google_config()
+        status = await gconf.async_sync_entities(gconf.cloud_user)
         return self.json({}, status_code=status)
 
 
@@ -192,11 +193,7 @@ class CloudLoginView(HomeAssistantView):
         """Handle login request."""
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
-
-        with async_timeout.timeout(REQUEST_TIMEOUT):
-            await hass.async_add_job(cloud.auth.login, data["email"], data["password"])
-
-        hass.async_add_job(cloud.iot.connect)
+        await cloud.login(data["email"], data["password"])
         return self.json({"success": True})
 
 
@@ -477,7 +474,8 @@ async def websocket_remote_disconnect(hass, connection, msg):
 async def google_assistant_list(hass, connection, msg):
     """List all google assistant entities."""
     cloud = hass.data[DOMAIN]
-    entities = google_helpers.async_get_entities(hass, cloud.client.google_config)
+    gconf = await cloud.client.get_google_config()
+    entities = google_helpers.async_get_entities(hass, gconf)
 
     result = []
 

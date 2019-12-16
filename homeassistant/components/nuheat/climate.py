@@ -22,7 +22,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-from . import DOMAIN as NUHEAT_DOMAIN
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     temperature_unit = hass.config.units.temperature_unit
-    api, serial_numbers = hass.data[NUHEAT_DOMAIN]
+    api, serial_numbers = hass.data[DOMAIN]
     thermostats = [
         NuHeatThermostat(api, serial_number, temperature_unit)
         for serial_number in serial_numbers
@@ -75,7 +75,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             thermostat.schedule_update_ha_state(True)
 
     hass.services.register(
-        NUHEAT_DOMAIN,
+        DOMAIN,
         SERVICE_RESUME_PROGRAM,
         resume_program_set_service,
         schema=RESUME_PROGRAM_SCHEMA,

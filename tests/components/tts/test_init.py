@@ -2,27 +2,27 @@
 import ctypes
 import os
 import shutil
-from unittest.mock import patch, PropertyMock
+from unittest.mock import PropertyMock, patch
 
 import pytest
 import requests
 
-import homeassistant.components.http as http
-import homeassistant.components.tts as tts
 from homeassistant.components.demo.tts import DemoProvider
+import homeassistant.components.http as http
 from homeassistant.components.media_player.const import (
-    SERVICE_PLAY_MEDIA,
-    MEDIA_TYPE_MUSIC,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as DOMAIN_MP,
+    MEDIA_TYPE_MUSIC,
+    SERVICE_PLAY_MEDIA,
 )
-from homeassistant.setup import setup_component, async_setup_component
+import homeassistant.components.tts as tts
+from homeassistant.setup import async_setup_component, setup_component
 
 from tests.common import (
+    assert_setup_component,
     get_test_home_assistant,
     get_test_instance_port,
-    assert_setup_component,
     mock_service,
 )
 

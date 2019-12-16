@@ -1,38 +1,40 @@
 """Utility meter from sensors providing raw data."""
-import logging
 from datetime import date, timedelta
 from decimal import Decimal, DecimalException
+import logging
 
-import homeassistant.util.dt as dt_util
 from homeassistant.const import (
-    CONF_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_NAME,
     EVENT_HOMEASSISTANT_START,
-    STATE_UNKNOWN,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
     async_track_state_change,
     async_track_time_change,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
+import homeassistant.util.dt as dt_util
+
 from .const import (
-    DATA_UTILITY,
-    SIGNAL_RESET_METER,
-    HOURLY,
-    DAILY,
-    WEEKLY,
-    MONTHLY,
-    YEARLY,
-    CONF_SOURCE_SENSOR,
-    CONF_METER_TYPE,
-    CONF_METER_OFFSET,
+    CONF_METER,
     CONF_METER_NET_CONSUMPTION,
+    CONF_METER_OFFSET,
+    CONF_METER_TYPE,
+    CONF_SOURCE_SENSOR,
     CONF_TARIFF,
     CONF_TARIFF_ENTITY,
-    CONF_METER,
+    DAILY,
+    DATA_UTILITY,
+    HOURLY,
+    MONTHLY,
+    QUARTERLY,
+    SIGNAL_RESET_METER,
+    WEEKLY,
+    YEARLY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -184,6 +186,12 @@ class UtilityMeterSensor(RestoreEntity):
             and now != date(now.year, now.month, 1) + self._period_offset
         ):
             return
+        if (
+            self._period == QUARTERLY
+            and now
+            != date(now.year, (((now.month - 1) // 3) * 3 + 1), 1) + self._period_offset
+        ):
+            return
         if self._period == YEARLY and now != date(now.year, 1, 1) + self._period_offset:
             return
         await self.async_reset_meter(self._tariff_entity)
@@ -209,7 +217,7 @@ class UtilityMeterSensor(RestoreEntity):
                 minute=self._period_offset.seconds // 60,
                 second=self._period_offset.seconds % 60,
             )
-        elif self._period in [DAILY, WEEKLY, MONTHLY, YEARLY]:
+        elif self._period in [DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY]:
             async_track_time_change(
                 self.hass,
                 self._async_reset_meter,

@@ -1,24 +1,23 @@
 """Support for restoring entity states on startup."""
 import asyncio
+from datetime import datetime, timedelta
 import logging
-from datetime import timedelta, datetime
-from typing import Any, Dict, List, Set, Optional
+from typing import Any, Dict, List, Optional, Set
 
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import (
-    HomeAssistant,
-    callback,
-    State,
     CoreState,
+    HomeAssistant,
+    State,
+    callback,
     valid_entity_id,
 )
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
-import homeassistant.util.dt as dt_util
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import Store
-
+import homeassistant.util.dt as dt_util
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 # mypy: no-warn-return-any

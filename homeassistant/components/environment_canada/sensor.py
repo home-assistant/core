@@ -8,18 +8,19 @@ from datetime import datetime, timedelta
 import logging
 import re
 
+from env_canada import ECData
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    TEMP_CELSIUS,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
     ATTR_ATTRIBUTION,
     ATTR_LOCATION,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    TEMP_CELSIUS,
 )
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +57,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Environment Canada sensor."""
-    from env_canada import ECData
 
     if config.get(CONF_STATION):
         ec_data = ECData(
@@ -134,8 +134,11 @@ class ECSensor(Entity):
             )
         elif self.sensor_type == "tendency":
             self._state = str(value).capitalize()
-        else:
+        elif value is not None and len(value) > 255:
             self._state = value[:255]
+            _LOGGER.info("Value for %s truncated to 255 characters", self._unique_id)
+        else:
+            self._state = value
 
         if sensor_data.get("unit") == "C" or self.sensor_type in [
             "wind_chill",

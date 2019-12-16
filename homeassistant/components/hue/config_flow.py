@@ -8,14 +8,16 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.ssdp import ATTR_MANUFACTURERURL, ATTR_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
-from .bridge import get_bridge
+from .bridge import get_bridge, normalize_bridge_id
 from .const import DOMAIN, LOGGER
 from .errors import AuthenticationRequired, CannotConnect
 
 HUE_MANUFACTURERURL = "http://www.philips.com"
+HUE_IGNORED_BRIDGE_NAMES = ["HASS Bridge", "Espalexa"]
 
 
 @callback
@@ -133,14 +135,14 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         This flow is triggered by the SSDP component. It will check if the
         host is already configured and delegate to the import step if not.
         """
-        from homeassistant.components.ssdp import ATTR_MANUFACTURERURL
-
         if discovery_info[ATTR_MANUFACTURERURL] != HUE_MANUFACTURERURL:
             return self.async_abort(reason="not_hue_bridge")
 
-        # Filter out emulated Hue
-        if "HASS Bridge" in discovery_info.get("name", ""):
-            return self.async_abort(reason="already_configured")
+        if any(
+            name in discovery_info.get(ATTR_NAME, "")
+            for name in HUE_IGNORED_BRIDGE_NAMES
+        ):
+            return self.async_abort(reason="not_hue_bridge")
 
         host = self.context["host"] = discovery_info.get("host")
 
@@ -152,17 +154,15 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if host in configured_hosts(self.hass):
             return self.async_abort(reason="already_configured")
 
-        # This value is based off host/description.xml and is, weirdly, missing
-        # 4 characters in the middle of the serial compared to results returned
-        # from the NUPNP API or when querying the bridge API for bridgeid.
-        # (on first gen Hue hub)
-        serial = discovery_info.get("serial")
+        bridge_id = discovery_info.get("serial")
+
+        await self.async_set_unique_id(normalize_bridge_id(bridge_id))
 
         return await self.async_step_import(
             {
                 "host": host,
                 # This format is the legacy format that Hue used for discovery
-                "path": f"phue-{serial}.conf",
+                "path": f"phue-{bridge_id}.conf",
             }
         )
 
@@ -177,6 +177,10 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if host in configured_hosts(self.hass):
             return self.async_abort(reason="already_configured")
+
+        await self.async_set_unique_id(
+            normalize_bridge_id(homekit_info["properties"]["id"].replace(":", ""))
+        )
 
         return await self.async_step_import({"host": host})
 
@@ -232,18 +236,9 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host = bridge.host
         bridge_id = bridge.config.bridgeid
 
-        same_hub_entries = [
-            entry.entry_id
-            for entry in self.hass.config_entries.async_entries(DOMAIN)
-            if entry.data["bridge_id"] == bridge_id or entry.data["host"] == host
-        ]
-
-        if same_hub_entries:
-            await asyncio.wait(
-                [
-                    self.hass.config_entries.async_remove(entry_id)
-                    for entry_id in same_hub_entries
-                ]
+        if self.unique_id is None:
+            await self.async_set_unique_id(
+                normalize_bridge_id(bridge_id), raise_on_progress=False
             )
 
         return self.async_create_entry(

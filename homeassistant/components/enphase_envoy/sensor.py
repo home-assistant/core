@@ -4,9 +4,7 @@ import logging
 from envoy_reader.envoy_reader import EnvoyReader
 import voluptuous as vol
 
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_MONITORED_CONDITIONS,
@@ -15,8 +13,10 @@ from homeassistant.const import (
     CONF_PASSWORD,
     POWER_WATT,
     ENERGY_WATT_HOUR,
+    POWER_WATT,
 )
-
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 

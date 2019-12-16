@@ -2,14 +2,13 @@
 from functools import partial
 import logging
 
-import smbus  # pylint: disable=import-error
 from i2csense.bh1750 import BH1750  # pylint: disable=import-error
-
+import smbus  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME, DEVICE_CLASS_ILLUMINANCE
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)

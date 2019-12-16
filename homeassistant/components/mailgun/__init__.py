@@ -6,12 +6,11 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_API_KEY, CONF_DOMAIN, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_entry_flow
+import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
-
 
 _LOGGER = logging.getLogger(__name__)
 

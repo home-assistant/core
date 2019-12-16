@@ -1,16 +1,16 @@
 """Helpers to execute scripts."""
 import asyncio
-import logging
 from contextlib import suppress
 from datetime import datetime
 from itertools import islice
-from typing import Optional, Sequence, Callable, Dict, List, Set, Tuple, Any
+import logging
+from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple
 
 import voluptuous as vol
 
+from homeassistant import exceptions
 import homeassistant.components.device_automation as device_automation
 import homeassistant.components.scene as scene
-from homeassistant.core import HomeAssistant, Context, callback, CALLBACK_TYPE
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_CONDITION,
@@ -19,21 +19,20 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     SERVICE_TURN_ON,
 )
-from homeassistant import exceptions
+from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.helpers import (
-    service,
     condition,
-    template as template,
     config_validation as cv,
+    service,
+    template as template,
 )
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_template,
 )
 from homeassistant.helpers.typing import ConfigType
-import homeassistant.util.dt as date_util
 from homeassistant.util.async_ import run_callback_threadsafe
-
+import homeassistant.util.dt as date_util
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
@@ -231,7 +230,6 @@ class Script:
 
         Should only be called on exceptions raised by this scripts async_run.
         """
-        # pylint: disable=protected-access
         step = self._exception_step
         action = self.sequence[step]
         action_type = _determine_action(action)
@@ -281,7 +279,6 @@ class Script:
         @callback
         def async_script_delay(now):
             """Handle delay."""
-            # pylint: disable=cell-var-from-loop
             with suppress(ValueError):
                 self._async_listener.remove(unsub)
 

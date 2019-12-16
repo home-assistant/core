@@ -1,27 +1,27 @@
 """Support for WeMo humidifier."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
 import async_timeout
 from pywemo import discovery
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.fan import (
-    DOMAIN,
-    SUPPORT_SET_SPEED,
-    FanEntity,
-    SPEED_OFF,
+    SPEED_HIGH,
     SPEED_LOW,
     SPEED_MEDIUM,
-    SPEED_HIGH,
+    SPEED_OFF,
+    SUPPORT_SET_SPEED,
+    FanEntity,
 )
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.exceptions import PlatformNotReady
+import homeassistant.helpers.config_validation as cv
 
 from . import SUBSCRIPTION_REGISTRY
+from .const import DOMAIN, SERVICE_RESET_FILTER_LIFE, SERVICE_SET_HUMIDITY
 
 SCAN_INTERVAL = timedelta(seconds=10)
 DATA_KEY = "fan.wemo"
@@ -79,8 +79,6 @@ HASS_FAN_SPEED_TO_WEMO = {
     if k not in [WEMO_FAN_LOW, WEMO_FAN_HIGH]
 }
 
-SERVICE_SET_HUMIDITY = "wemo_set_humidity"
-
 SET_HUMIDITY_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
@@ -89,8 +87,6 @@ SET_HUMIDITY_SCHEMA = vol.Schema(
         ),
     }
 )
-
-SERVICE_RESET_FILTER_LIFE = "wemo_reset_filter_life"
 
 RESET_FILTER_LIFE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_ids})
 

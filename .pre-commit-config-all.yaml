@@ -18,14 +18,31 @@ repos:
           - --safe
           - --quiet
         files: ^((homeassistant|script|tests)/.+)?[^/]+\.py$
--   repo: https://gitlab.com/pycqa/flake8
+-   repo: https://github.com/PyCQA/flake8
     rev: 3.7.9
     hooks:
     -   id: flake8
         additional_dependencies:
           - flake8-docstrings==1.5.0
-          - pydocstyle==4.0.1
+          - pydocstyle==5.0.1
         files: ^(homeassistant|script|tests)/.+\.py$
+-   repo: https://github.com/PyCQA/bandit
+    rev: 1.6.2
+    hooks:
+      - id: bandit
+        args:
+          - --quiet
+          - --format=custom
+          - --configfile=tests/bandit.yaml
+        files: ^(homeassistant|script|tests)/.+\.py$
+-   repo: https://github.com/pre-commit/mirrors-isort
+    rev: v4.3.21
+    hooks:
+    -   id: isort
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.4.0
+    hooks:
+    -   id: check-json
 # Using a local "system" mypy instead of the mypy hook, because its
 # results depend on what is installed. And the mypy hook runs in a
 # virtualenv of its own, meaning we'd need to install and maintain

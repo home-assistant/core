@@ -1,23 +1,30 @@
 """HTML5 Push Messaging notification service."""
 from datetime import datetime, timedelta
-
 from functools import partial
-from urllib.parse import urlparse
 import json
 import logging
 import time
+from urllib.parse import urlparse
 import uuid
 
 from aiohttp.hdrs import AUTHORIZATION
 import jwt
-from pywebpush import WebPusher
 from py_vapid import Vapid
+from pywebpush import WebPusher
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant.components import websocket_api
 from homeassistant.components.frontend import add_manifest_json_key
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.notify import (
+    ATTR_DATA,
+    ATTR_TARGET,
+    ATTR_TITLE,
+    ATTR_TITLE_DEFAULT,
+    PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 from homeassistant.const import (
     HTTP_BAD_REQUEST,
     HTTP_INTERNAL_SERVER_ERROR,
@@ -29,21 +36,11 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.util import ensure_unique_string
 from homeassistant.util.json import load_json, save_json
 
-from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_TARGET,
-    ATTR_TITLE,
-    ATTR_TITLE_DEFAULT,
-    DOMAIN,
-    PLATFORM_SCHEMA,
-    BaseNotificationService,
-)
+from .const import DOMAIN, SERVICE_DISMISS
 
 _LOGGER = logging.getLogger(__name__)
 
 REGISTRATIONS_FILE = "html5_push_registrations.conf"
-
-SERVICE_DISMISS = "html5_dismiss"
 
 ATTR_GCM_SENDER_ID = "gcm_sender_id"
 ATTR_GCM_API_KEY = "gcm_api_key"

@@ -41,22 +41,14 @@ class NeatoSensor(Entity):
     def __init__(self, neato, robot):
         """Initialize Neato sensor."""
         self.robot = robot
-        self.neato = neato
-        self._available = self.neato.logged_in if self.neato is not None else False
+        self._available = neato.logged_in if neato is not None else False
         self._robot_name = f"{self.robot.name} {BATTERY}"
         self._robot_serial = self.robot.serial
         self._state = None
 
     def update(self):
         """Update Neato Sensor."""
-        if self.neato is None:
-            _LOGGER.error("Error while updating sensor")
-            self._state = None
-            self._available = False
-            return
-
         try:
-            self.neato.update_robots()
             self._state = self.robot.state
         except NeatoRobotException as ex:
             if self._available:
