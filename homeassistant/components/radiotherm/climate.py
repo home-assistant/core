@@ -141,8 +141,8 @@ class RadioThermostat(ClimateDevice):
         self._hold_temp = hold_temp
         self._hold_set = False
         self._prev_temp = None
-        self._program_mode = None
         self._preset_mode = None
+        self._program_mode = None
         self._is_away = False
 
         # Fan circulate mode is only supported by the CT80 models.
@@ -368,4 +368,6 @@ class RadioThermostat(ClimateDevice):
         if preset_mode in (PRESET_MODES):
             self.device.program_mode = PRESET_MODE_TO_CODE[preset_mode]
         else:
-            _LOGGER.error("preset_mode  %s not in PRESET_MODES", preset_mode,)
+            _LOGGER.error(
+                "preset_mode  %s not in PRESET_MODES", preset_mode,
+            
