@@ -96,7 +96,7 @@ def setup_platform(hass, config, add_entities, disc_info=None):
             entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
             calendar_devices.append(
                 WebDavCalendarEventDevice(
-                    name, calendar, entity_id, cust_calendar.get(CONF_ALL_DAY,True), cust_calendar[CONF_SEARCH]
+                    name, calendar, entity_id, cust_calendar.get(CONF_ALL_DAY, True), cust_calendar[CONF_SEARCH]
                 )
             )
 
