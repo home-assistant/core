@@ -2,7 +2,7 @@
 Support for monitoring the state of a Luxtronik heatpump.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor.luxtronik/
+https://home-assistant.io/integrations/luxtronik/
 """
 import logging
 
