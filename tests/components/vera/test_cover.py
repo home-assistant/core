@@ -1,7 +1,7 @@
 """Vera tests."""
 from unittest.mock import MagicMock
 
-from pyvera import CATEGORY_CURTAIN, VeraCurtain
+import pyvera as pv
 
 from homeassistant.core import HomeAssistant
 
@@ -12,10 +12,10 @@ async def test_cover(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test function."""
-    vera_device = MagicMock(spec=VeraCurtain)  # type: VeraCurtain
+    vera_device = MagicMock(spec=pv.VeraCurtain)  # type: pv.VeraCurtain
     vera_device.device_id = 1
     vera_device.name = "dev1"
-    vera_device.category = CATEGORY_CURTAIN
+    vera_device.category = pv.CATEGORY_CURTAIN
     vera_device.is_closed = False
     vera_device.get_level.return_value = 0
     entity_id = "cover.dev1_1"

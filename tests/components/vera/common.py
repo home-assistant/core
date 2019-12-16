@@ -9,7 +9,7 @@ from homeassistant.components.vera.const import CONF_CONTROLLER, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-SetupCallback = Callable[[pv.VeraController], None]
+SetupCallback = Callable[[pv.VeraController, dict], None]
 
 ControllerData = NamedTuple(
     "ControllerData", (("controller", pv.VeraController), ("update_callback", Callable))
@@ -49,9 +49,9 @@ def new_simple_controller_config(
 class ComponentFactory:
     """Factory class."""
 
-    def __init__(self, init_controller_mock):
+    def __init__(self, vera_controller_class_mock):
         """Initialize the factory."""
-        self.init_controller_mock = init_controller_mock
+        self.vera_controller_class_mock = vera_controller_class_mock
 
     async def configure_component(
         self, hass: HomeAssistant, controller_config: ControllerConfig
@@ -81,7 +81,7 @@ class ComponentFactory:
         if controller_config.setup_callback:
             controller_config.setup_callback(controller, hass_config)
 
-        self.init_controller_mock.return_value = [controller, 0]
+        self.vera_controller_class_mock.return_value = controller
 
         # Setup Home Assistant.
         assert await async_setup_component(hass, DOMAIN, hass_config)

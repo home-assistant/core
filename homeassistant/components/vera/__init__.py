@@ -59,9 +59,6 @@ async def async_setup(hass: HomeAssistant, base_config: dict) -> bool:
     config[CONF_CONTROLLER] = config.get(CONF_CONTROLLER).rstrip("/")
     base_url = config.get(CONF_CONTROLLER)
 
-    controller, _ = veraApi.init_controller(base_url)
-    hass.data[DOMAIN] = ControllerData(controller=controller, devices=(), scenes=())
-
     # Build a map of already configured controllers.
     base_url_entries_map = {}
     for config_entry in hass.config_entries.async_entries(DOMAIN):
@@ -86,15 +83,17 @@ async def async_setup(hass: HomeAssistant, base_config: dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Do setup of vera."""
-
     config = config_entry.data
 
     # Get Vera specific configuration.
+    base_url = config.get(CONF_CONTROLLER)
     light_ids = config.get(CONF_LIGHTS)
     exclude_ids = config.get(CONF_EXCLUDE)
 
     # Initialize the Vera controller.
-    controller = hass.data[DOMAIN].controller  # type: veraApi.VeraController
+    controller = veraApi.VeraController(base_url)
+    controller.start()
+
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP,
         lambda event: hass.async_add_executor_job(controller.stop),

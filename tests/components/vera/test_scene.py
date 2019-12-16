@@ -1,7 +1,7 @@
 """Vera tests."""
 from unittest.mock import MagicMock
 
-from pyvera import VeraScene
+import pyvera as pv
 
 from homeassistant.core import HomeAssistant
 
@@ -12,7 +12,7 @@ async def test_scene(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test function."""
-    vera_scene = MagicMock(spec=VeraScene)  # type: VeraScene
+    vera_scene = MagicMock(spec=pv.VeraScene)  # type: pv.VeraScene
     vera_scene.scene_id = 1
     vera_scene.name = "dev1"
     entity_id = "scene.dev1_1"

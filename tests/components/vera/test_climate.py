@@ -1,7 +1,7 @@
 """Vera tests."""
 from unittest.mock import MagicMock
 
-from pyvera import CATEGORY_THERMOSTAT, VeraController, VeraThermostat
+import pyvera as pv
 
 from homeassistant.components.climate.const import (
     FAN_AUTO,
@@ -20,10 +20,10 @@ async def test_climate(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test function."""
-    vera_device = MagicMock(spec=VeraThermostat)  # type: VeraThermostat
+    vera_device = MagicMock(spec=pv.VeraThermostat)  # type: pv.VeraThermostat
     vera_device.device_id = 1
     vera_device.name = "dev1"
-    vera_device.category = CATEGORY_THERMOSTAT
+    vera_device.category = pv.CATEGORY_THERMOSTAT
     vera_device.power = 10
     vera_device.get_current_temperature.return_value = 71
     vera_device.get_hvac_mode.return_value = "Off"
@@ -123,17 +123,17 @@ async def test_climate_f(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test function."""
-    vera_device = MagicMock(spec=VeraThermostat)  # type: VeraThermostat
+    vera_device = MagicMock(spec=pv.VeraThermostat)  # type: pv.VeraThermostat
     vera_device.device_id = 1
     vera_device.name = "dev1"
-    vera_device.category = CATEGORY_THERMOSTAT
+    vera_device.category = pv.CATEGORY_THERMOSTAT
     vera_device.power = 10
     vera_device.get_current_temperature.return_value = 71
     vera_device.get_hvac_mode.return_value = "Off"
     vera_device.get_current_goal_temperature.return_value = 72
     entity_id = "climate.dev1_1"
 
-    def setup_callback(controller: VeraController, hass_config: dict) -> None:
+    def setup_callback(controller: pv.VeraController, hass_config: dict) -> None:
         controller.temperature_units = "F"
 
     component_data = await vera_component_factory.configure_component(

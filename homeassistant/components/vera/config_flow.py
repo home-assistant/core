@@ -1,9 +1,10 @@
 """Config flow for Vera."""
+import pyvera as pv
 from requests.exceptions import RequestException
 
 from homeassistant import config_entries
 
-from .const import CONF_CONTROLLER, DOMAIN
+from .const import CONF_CONTROLLER, DOMAIN  # pylint: disable=unused-import
 
 
 class VeraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -13,10 +14,9 @@ class VeraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by import."""
         base_url = config.get(CONF_CONTROLLER)
 
-        controller = self.hass.data[DOMAIN].controller
-
         try:
-            controller.refresh_data()
+            controller = pv.VeraController(base_url)
+            await self.hass.async_add_job(controller.refresh_data)
         except RequestException:
             return self.async_abort(
                 reason="cannot-connect", description_placeholders={"base_url": base_url}

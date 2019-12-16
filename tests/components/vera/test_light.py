@@ -1,7 +1,7 @@
 """Vera tests."""
 from unittest.mock import MagicMock
 
-from pyvera import CATEGORY_DIMMER, VeraDimmer
+import pyvera as pv
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_HS_COLOR
 from homeassistant.core import HomeAssistant
@@ -13,10 +13,10 @@ async def test_light(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test function."""
-    vera_device = MagicMock(spec=VeraDimmer)  # type: VeraDimmer
+    vera_device = MagicMock(spec=pv.VeraDimmer)  # type: pv.VeraDimmer
     vera_device.device_id = 1
     vera_device.name = "dev1"
-    vera_device.category = CATEGORY_DIMMER
+    vera_device.category = pv.CATEGORY_DIMMER
     vera_device.is_switched_on = MagicMock(return_value=False)
     vera_device.get_brightness = MagicMock(return_value=0)
     vera_device.get_color = MagicMock(return_value=[0, 0, 0])

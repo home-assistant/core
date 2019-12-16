@@ -1,7 +1,7 @@
 """Vera tests."""
 from unittest.mock import MagicMock
 
-from pyvera import CATEGORY_SWITCH, VeraSwitch
+import pyvera as pv
 
 from homeassistant.core import HomeAssistant
 
@@ -12,10 +12,10 @@ async def test_switch(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test function."""
-    vera_device = MagicMock(spec=VeraSwitch)  # type: VeraSwitch
+    vera_device = MagicMock(spec=pv.VeraSwitch)  # type: pv.VeraSwitch
     vera_device.device_id = 1
     vera_device.name = "dev1"
-    vera_device.category = CATEGORY_SWITCH
+    vera_device.category = pv.CATEGORY_SWITCH
     vera_device.is_switched_on = MagicMock(return_value=False)
     entity_id = "switch.dev1_1"
 

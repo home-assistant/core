@@ -1,7 +1,7 @@
 """Vera tests."""
 from unittest.mock import MagicMock
 
-from pyvera import VeraController
+import pyvera as pv
 from requests.exceptions import RequestException
 
 from homeassistant.components.vera import CONF_CONTROLLER, DOMAIN
@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 
 async def test_async_step_import_error(hass: HomeAssistant) -> None:
     """Test function."""
-    controller = MagicMock(spec=VeraController)  # type: VeraController
+    controller = MagicMock(spec=pv.VeraController)  # type: pv.VeraController
     controller.refresh_data.side_effect = RequestException()
 
     hass.data[DOMAIN] = ControllerData(controller=controller, devices={}, scenes=())
