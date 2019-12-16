@@ -201,3 +201,25 @@ async def get_bridge(hass, host, username=None):
     except aiohue.AiohueException:
         LOGGER.exception("Unknown Hue linking error occurred")
         raise AuthenticationRequired
+
+
+def normalize_bridge_id(bridge_id: str):
+    """Normalize a bridge identifier.
+
+    There are three sources where we receive bridge ID from:
+     - ssdp/upnp: <host>/description.xml, field root/device/serialNumber
+     - nupnp: "id" field
+     - Hue Bridge API: config.bridgeid
+
+    The SSDP/UPNP source does not contain the middle 4 characters compared
+    to the other sources. In all our tests the middle 4 characters are "fffe".
+    """
+    if len(bridge_id) == 16:
+        return bridge_id[0:6] + bridge_id[-6:]
+
+    if len(bridge_id) == 12:
+        return bridge_id
+
+    LOGGER.warning("Unexpected bridge id number found: %s", bridge_id)
+
+    return bridge_id

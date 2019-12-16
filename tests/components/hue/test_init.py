@@ -175,3 +175,19 @@ async def test_unload_entry(hass):
     assert await hue.async_unload_entry(hass, entry)
     assert len(mock_bridge.return_value.async_reset.mock_calls) == 1
     assert hass.data[hue.DOMAIN] == {}
+
+
+async def test_setting_unique_id(hass):
+    """Test we set unique ID if not set yet."""
+    entry = MockConfigEntry(domain=hue.DOMAIN, data={"host": "0.0.0.0"})
+    entry.add_to_hass(hass)
+
+    with patch.object(hue, "HueBridge") as mock_bridge, patch(
+        "homeassistant.helpers.device_registry.async_get_registry",
+        return_value=mock_coro(Mock()),
+    ):
+        mock_bridge.return_value.async_setup.return_value = mock_coro(True)
+        mock_bridge.return_value.api.config = Mock(bridgeid="mock-id")
+        assert await async_setup_component(hass, hue.DOMAIN, {}) is True
+
+    assert entry.unique_id == "mock-id"
