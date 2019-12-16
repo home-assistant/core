@@ -1,3 +1,4 @@
+tests/test_config.py
 """Test config utils."""
 # pylint: disable=protected-access
 import asyncio
