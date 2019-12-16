@@ -9,17 +9,15 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
-from homeassistant.const import CONF_FRIENDLY_NAME, CONF_ICON
+from homeassistant.const import CONF_FRIENDLY_NAME, CONF_ICON, CONF_ID, CONF_SENSORS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
 
 from . import (
     CONF_CALCULATIONS,
     CONF_GROUP,
-    CONF_ID,
     CONF_INVERT_STATE,
     CONF_PARAMETERS,
-    CONF_SENSORS,
     CONF_VISIBILITIES,
     DATA_LUXTRONIK,
     ENTITY_ID_FORMAT,
@@ -40,8 +38,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                         vol.Any(CONF_PARAMETERS, CONF_CALCULATIONS, CONF_VISIBILITIES),
                     ),
                     vol.Required(CONF_ID): cv.string,
-                    vol.Optional(CONF_FRIENDLY_NAME, default=""): cv.string,
-                    vol.Optional(CONF_ICON, default=""): cv.string,
+                    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+                    vol.Optional(CONF_ICON): cv.string,
                     vol.Optional(CONF_INVERT_STATE, default=False): cv.boolean,
                 }
             ],
@@ -60,14 +58,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     entities = []
     for sensor_cfg in sensors:
-        sensor = luxtronik.get_sensor(sensor_cfg["group"], sensor_cfg["id"])
+        sensor = luxtronik.get_sensor(sensor_cfg[CONF_GROUP], sensor_cfg[CONF_ID])
         if sensor:
             entities.append(LuxtronikBinarySensor(luxtronik, sensor, sensor_cfg))
         else:
             _LOGGER.warning(
                 "Invalid Luxtronik ID %s in group %s",
-                sensor_cfg["id"],
-                sensor_cfg["group"],
+                sensor_cfg[CONF_ID],
+                sensor_cfg[CONF_GROUP],
             )
 
     add_entities(entities, True)
@@ -80,12 +78,9 @@ class LuxtronikBinarySensor(BinarySensorDevice):
         """Initialize a new Luxtronik binary sensor."""
         self._luxtronik = luxtronik
         self._sensor = sensor
-        self._name = sensor_cfg["friendly_name"]
-        self._icon = sensor_cfg["icon"]
-        self._invert = sensor_cfg["invert"]
-        self._device_class = None
-        self._category = None
-        self._value = None
+        self._name = sensor_cfg[CONF_FRIENDLY_NAME]
+        self._icon = sensor_cfg[CONF_ICON]
+        self._invert = sensor_cfg[CONF_INVERT_STATE]
 
     @property
     def entity_id(self):
