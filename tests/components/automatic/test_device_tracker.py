@@ -31,8 +31,7 @@ def test_invalid_credentials(
     hass.loop.run_until_complete(async_setup_component(hass, "http", {}))
     mock_json_load.return_value = {"refresh_token": "bad_token"}
 
-    @asyncio.coroutine
-    def get_session(*args, **kwargs):
+    async def get_session(*args, **kwargs):
         """Return the test session."""
         raise aioautomatic.exceptions.BadRequestError("err_invalid_refresh_token")
 
@@ -87,18 +86,15 @@ def test_valid_credentials(
     trip.end_location.accuracy_m = 5.6
     trip.ended_at = datetime(2017, 8, 13, 1, 2, 4)
 
-    @asyncio.coroutine
-    def get_session(*args, **kwargs):
+    async def get_session(*args, **kwargs):
         """Return the test session."""
         return session
 
-    @asyncio.coroutine
-    def get_vehicles(*args, **kwargs):
+    async def get_vehicles(*args, **kwargs):
         """Return list of test vehicles."""
         return [vehicle]
 
-    @asyncio.coroutine
-    def get_trips(*args, **kwargs):
+    async def get_trips(*args, **kwargs):
         """Return list of test trips."""
         return [trip]
 
@@ -108,8 +104,7 @@ def test_valid_credentials(
     session.get_trips.side_effect = get_trips
     session.refresh_token = "mock_refresh_token"
 
-    @asyncio.coroutine
-    def ws_connect():
+    async def ws_connect():
         return asyncio.Future()
 
     mock_ws_connect.side_effect = ws_connect

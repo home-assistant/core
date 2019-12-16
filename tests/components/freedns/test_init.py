@@ -1,5 +1,4 @@
 """Test the FreeDNS component."""
-import asyncio
 
 import pytest
 
@@ -37,8 +36,7 @@ def setup_freedns(hass, aioclient_mock):
     )
 
 
-@asyncio.coroutine
-def test_setup(hass, aioclient_mock):
+async def test_setup(hass, aioclient_mock):
     """Test setup works if update passes."""
     params = {}
     params[ACCESS_TOKEN] = ""
@@ -46,7 +44,7 @@ def test_setup(hass, aioclient_mock):
         UPDATE_URL, params=params, text="ERROR: Address has not changed."
     )
 
-    result = yield from async_setup_component(
+    result = await async_setup_component(
         hass,
         freedns.DOMAIN,
         {
@@ -60,18 +58,17 @@ def test_setup(hass, aioclient_mock):
     assert aioclient_mock.call_count == 1
 
     async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL)
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert aioclient_mock.call_count == 2
 
 
-@asyncio.coroutine
-def test_setup_fails_if_wrong_token(hass, aioclient_mock):
+async def test_setup_fails_if_wrong_token(hass, aioclient_mock):
     """Test setup fails if first update fails through wrong token."""
     params = {}
     params[ACCESS_TOKEN] = ""
     aioclient_mock.get(UPDATE_URL, params=params, text="ERROR: Invalid update URL (2)")
 
-    result = yield from async_setup_component(
+    result = await async_setup_component(
         hass,
         freedns.DOMAIN,
         {

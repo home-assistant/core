@@ -1,5 +1,4 @@
 """Test Z-Wave config panel."""
-import asyncio
 import json
 from unittest.mock import MagicMock, patch
 
@@ -23,8 +22,7 @@ def client(loop, hass, hass_client):
     return loop.run_until_complete(hass_client())
 
 
-@asyncio.coroutine
-def test_get_device_config(client):
+async def test_get_device_config(client):
     """Test getting device config."""
 
     def mock_read(path):
@@ -32,16 +30,15 @@ def test_get_device_config(client):
         return {"hello.beer": {"free": "beer"}, "other.entity": {"do": "something"}}
 
     with patch("homeassistant.components.config._read", mock_read):
-        resp = yield from client.get("/api/config/zwave/device_config/hello.beer")
+        resp = await client.get("/api/config/zwave/device_config/hello.beer")
 
     assert resp.status == 200
-    result = yield from resp.json()
+    result = await resp.json()
 
     assert result == {"free": "beer"}
 
 
-@asyncio.coroutine
-def test_update_device_config(client):
+async def test_update_device_config(client):
     """Test updating device config."""
     orig_data = {
         "hello.beer": {"ignored": True},
@@ -61,13 +58,13 @@ def test_update_device_config(client):
     with patch("homeassistant.components.config._read", mock_read), patch(
         "homeassistant.components.config._write", mock_write
     ):
-        resp = yield from client.post(
+        resp = await client.post(
             "/api/config/zwave/device_config/hello.beer",
             data=json.dumps({"polling_intensity": 2}),
         )
 
     assert resp.status == 200
-    result = yield from resp.json()
+    result = await resp.json()
     assert result == {"result": "ok"}
 
     orig_data["hello.beer"]["polling_intensity"] = 2
@@ -75,10 +72,9 @@ def test_update_device_config(client):
     assert written[0] == orig_data
 
 
-@asyncio.coroutine
-def test_update_device_config_invalid_key(client):
+async def test_update_device_config_invalid_key(client):
     """Test updating device config."""
-    resp = yield from client.post(
+    resp = await client.post(
         "/api/config/zwave/device_config/invalid_entity",
         data=json.dumps({"polling_intensity": 2}),
     )
@@ -86,10 +82,9 @@ def test_update_device_config_invalid_key(client):
     assert resp.status == 400
 
 
-@asyncio.coroutine
-def test_update_device_config_invalid_data(client):
+async def test_update_device_config_invalid_data(client):
     """Test updating device config."""
-    resp = yield from client.post(
+    resp = await client.post(
         "/api/config/zwave/device_config/hello.beer",
         data=json.dumps({"invalid_option": 2}),
     )
@@ -97,18 +92,16 @@ def test_update_device_config_invalid_data(client):
     assert resp.status == 400
 
 
-@asyncio.coroutine
-def test_update_device_config_invalid_json(client):
+async def test_update_device_config_invalid_json(client):
     """Test updating device config."""
-    resp = yield from client.post(
+    resp = await client.post(
         "/api/config/zwave/device_config/hello.beer", data="not json"
     )
 
     assert resp.status == 400
 
 
-@asyncio.coroutine
-def test_get_values(hass, client):
+async def test_get_values(hass, client):
     """Test getting values on node."""
     node = MockNode(node_id=1)
     value = MockValue(
@@ -125,10 +118,10 @@ def test_get_values(hass, client):
     values2 = MockEntityValues(primary=value2)
     hass.data[const.DATA_ENTITY_VALUES] = [values, values2]
 
-    resp = yield from client.get("/api/zwave/values/1")
+    resp = await client.get("/api/zwave/values/1")
 
     assert resp.status == 200
-    result = yield from resp.json()
+    result = await resp.json()
 
     assert result == {
         "123456": {
@@ -140,8 +133,7 @@ def test_get_values(hass, client):
     }
 
 
-@asyncio.coroutine
-def test_get_groups(hass, client):
+async def test_get_groups(hass, client):
     """Test getting groupdata on node."""
     network = hass.data[DATA_NETWORK] = MagicMock()
     node = MockNode(node_id=2)
@@ -152,10 +144,10 @@ def test_get_groups(hass, client):
     node.groups = {1: node.groups}
     network.nodes = {2: node}
 
-    resp = yield from client.get("/api/zwave/groups/2")
+    resp = await client.get("/api/zwave/groups/2")
 
     assert resp.status == 200
-    result = yield from resp.json()
+    result = await resp.json()
 
     assert result == {
         "1": {
@@ -167,38 +159,35 @@ def test_get_groups(hass, client):
     }
 
 
-@asyncio.coroutine
-def test_get_groups_nogroups(hass, client):
+async def test_get_groups_nogroups(hass, client):
     """Test getting groupdata on node with no groups."""
     network = hass.data[DATA_NETWORK] = MagicMock()
     node = MockNode(node_id=2)
 
     network.nodes = {2: node}
 
-    resp = yield from client.get("/api/zwave/groups/2")
+    resp = await client.get("/api/zwave/groups/2")
 
     assert resp.status == 200
-    result = yield from resp.json()
+    result = await resp.json()
 
     assert result == {}
 
 
-@asyncio.coroutine
-def test_get_groups_nonode(hass, client):
+async def test_get_groups_nonode(hass, client):
     """Test getting groupdata on nonexisting node."""
     network = hass.data[DATA_NETWORK] = MagicMock()
     network.nodes = {1: 1, 5: 5}
 
-    resp = yield from client.get("/api/zwave/groups/2")
+    resp = await client.get("/api/zwave/groups/2")
 
     assert resp.status == 404
-    result = yield from resp.json()
+    result = await resp.json()
 
     assert result == {"message": "Node not found"}
 
 
-@asyncio.coroutine
-def test_get_config(hass, client):
+async def test_get_config(hass, client):
     """Test getting config on node."""
     network = hass.data[DATA_NETWORK] = MagicMock()
     node = MockNode(node_id=2)
@@ -214,10 +203,10 @@ def test_get_config(hass, client):
     network.nodes = {2: node}
     node.get_values.return_value = node.values
 
-    resp = yield from client.get("/api/zwave/config/2")
+    resp = await client.get("/api/zwave/config/2")
 
     assert resp.status == 200
-    result = yield from resp.json()
+    result = await resp.json()
 
     assert result == {
         "12": {
@@ -232,8 +221,7 @@ def test_get_config(hass, client):
     }
 
 
-@asyncio.coroutine
-def test_get_config_noconfig_node(hass, client):
+async def test_get_config_noconfig_node(hass, client):
     """Test getting config on node without config."""
     network = hass.data[DATA_NETWORK] = MagicMock()
     node = MockNode(node_id=2)
@@ -241,44 +229,41 @@ def test_get_config_noconfig_node(hass, client):
     network.nodes = {2: node}
     node.get_values.return_value = node.values
 
-    resp = yield from client.get("/api/zwave/config/2")
+    resp = await client.get("/api/zwave/config/2")
 
     assert resp.status == 200
-    result = yield from resp.json()
+    result = await resp.json()
 
     assert result == {}
 
 
-@asyncio.coroutine
-def test_get_config_nonode(hass, client):
+async def test_get_config_nonode(hass, client):
     """Test getting config on nonexisting node."""
     network = hass.data[DATA_NETWORK] = MagicMock()
     network.nodes = {1: 1, 5: 5}
 
-    resp = yield from client.get("/api/zwave/config/2")
+    resp = await client.get("/api/zwave/config/2")
 
     assert resp.status == 404
-    result = yield from resp.json()
+    result = await resp.json()
 
     assert result == {"message": "Node not found"}
 
 
-@asyncio.coroutine
-def test_get_usercodes_nonode(hass, client):
+async def test_get_usercodes_nonode(hass, client):
     """Test getting usercodes on nonexisting node."""
     network = hass.data[DATA_NETWORK] = MagicMock()
     network.nodes = {1: 1, 5: 5}
 
-    resp = yield from client.get("/api/zwave/usercodes/2")
+    resp = await client.get("/api/zwave/usercodes/2")
 
     assert resp.status == 404
-    result = yield from resp.json()
+    result = await resp.json()
 
     assert result == {"message": "Node not found"}
 
 
-@asyncio.coroutine
-def test_get_usercodes(hass, client):
+async def test_get_usercodes(hass, client):
     """Test getting usercodes on node."""
     network = hass.data[DATA_NETWORK] = MagicMock()
     node = MockNode(node_id=18, command_classes=[const.COMMAND_CLASS_USER_CODE])
@@ -290,16 +275,15 @@ def test_get_usercodes(hass, client):
     network.nodes = {18: node}
     node.get_values.return_value = node.values
 
-    resp = yield from client.get("/api/zwave/usercodes/18")
+    resp = await client.get("/api/zwave/usercodes/18")
 
     assert resp.status == 200
-    result = yield from resp.json()
+    result = await resp.json()
 
     assert result == {"0": {"code": "1234", "label": "label", "length": 4}}
 
 
-@asyncio.coroutine
-def test_get_usercode_nousercode_node(hass, client):
+async def test_get_usercode_nousercode_node(hass, client):
     """Test getting usercodes on node without usercodes."""
     network = hass.data[DATA_NETWORK] = MagicMock()
     node = MockNode(node_id=18)
@@ -307,16 +291,15 @@ def test_get_usercode_nousercode_node(hass, client):
     network.nodes = {18: node}
     node.get_values.return_value = node.values
 
-    resp = yield from client.get("/api/zwave/usercodes/18")
+    resp = await client.get("/api/zwave/usercodes/18")
 
     assert resp.status == 200
-    result = yield from resp.json()
+    result = await resp.json()
 
     assert result == {}
 
 
-@asyncio.coroutine
-def test_get_usercodes_no_genreuser(hass, client):
+async def test_get_usercodes_no_genreuser(hass, client):
     """Test getting usercodes on node missing genre user."""
     network = hass.data[DATA_NETWORK] = MagicMock()
     node = MockNode(node_id=18, command_classes=[const.COMMAND_CLASS_USER_CODE])
@@ -328,33 +311,31 @@ def test_get_usercodes_no_genreuser(hass, client):
     network.nodes = {18: node}
     node.get_values.return_value = node.values
 
-    resp = yield from client.get("/api/zwave/usercodes/18")
+    resp = await client.get("/api/zwave/usercodes/18")
 
     assert resp.status == 200
-    result = yield from resp.json()
+    result = await resp.json()
 
     assert result == {}
 
 
-@asyncio.coroutine
-def test_save_config_no_network(hass, client):
+async def test_save_config_no_network(hass, client):
     """Test saving configuration without network data."""
-    resp = yield from client.post("/api/zwave/saveconfig")
+    resp = await client.post("/api/zwave/saveconfig")
 
     assert resp.status == 404
-    result = yield from resp.json()
+    result = await resp.json()
     assert result == {"message": "No Z-Wave network data found"}
 
 
-@asyncio.coroutine
-def test_save_config(hass, client):
+async def test_save_config(hass, client):
     """Test saving configuration."""
     network = hass.data[DATA_NETWORK] = MagicMock()
 
-    resp = yield from client.post("/api/zwave/saveconfig")
+    resp = await client.post("/api/zwave/saveconfig")
 
     assert resp.status == 200
-    result = yield from resp.json()
+    result = await resp.json()
     assert network.write_config.called
     assert result == {"message": "Z-Wave configuration saved to file."}
 

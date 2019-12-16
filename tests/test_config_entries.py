@@ -1,5 +1,4 @@
 """Test the config manager."""
-import asyncio
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
@@ -316,12 +315,10 @@ async def test_remove_entry_handles_callback_error(hass, manager):
     assert [item.entry_id for item in manager.async_entries()] == []
 
 
-@asyncio.coroutine
-def test_remove_entry_raises(hass, manager):
+async def test_remove_entry_raises(hass, manager):
     """Test if a component raises while removing entry."""
 
-    @asyncio.coroutine
-    def mock_unload_entry(hass, entry):
+    async def mock_unload_entry(hass, entry):
         """Mock unload entry function."""
         raise Exception("BROKEN")
 
@@ -339,14 +336,13 @@ def test_remove_entry_raises(hass, manager):
         "test3",
     ]
 
-    result = yield from manager.async_remove("test2")
+    result = await manager.async_remove("test2")
 
     assert result == {"require_restart": True}
     assert [item.entry_id for item in manager.async_entries()] == ["test1", "test3"]
 
 
-@asyncio.coroutine
-def test_remove_entry_if_not_loaded(hass, manager):
+async def test_remove_entry_if_not_loaded(hass, manager):
     """Test that we can remove an entry that is not loaded."""
     mock_unload_entry = MagicMock(return_value=mock_coro(True))
 
@@ -362,7 +358,7 @@ def test_remove_entry_if_not_loaded(hass, manager):
         "test3",
     ]
 
-    result = yield from manager.async_remove("test2")
+    result = await manager.async_remove("test2")
 
     assert result == {"require_restart": False}
     assert [item.entry_id for item in manager.async_entries()] == ["test1", "test3"]
@@ -370,8 +366,7 @@ def test_remove_entry_if_not_loaded(hass, manager):
     assert len(mock_unload_entry.mock_calls) == 0
 
 
-@asyncio.coroutine
-def test_add_entry_calls_setup_entry(hass, manager):
+async def test_add_entry_calls_setup_entry(hass, manager):
     """Test we call setup_config_entry."""
     mock_setup_entry = MagicMock(return_value=mock_coro(True))
 
@@ -382,15 +377,14 @@ def test_add_entry_calls_setup_entry(hass, manager):
 
         VERSION = 1
 
-        @asyncio.coroutine
-        def async_step_user(self, user_input=None):
+        async def async_step_user(self, user_input=None):
             return self.async_create_entry(title="title", data={"token": "supersecret"})
 
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow, "beer": 5}):
-        yield from manager.flow.async_init(
+        await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
         )
-        yield from hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     assert len(mock_setup_entry.mock_calls) == 1
     p_hass, p_entry = mock_setup_entry.mock_calls[0][1]
@@ -399,8 +393,7 @@ def test_add_entry_calls_setup_entry(hass, manager):
     assert p_entry.data == {"token": "supersecret"}
 
 
-@asyncio.coroutine
-def test_entries_gets_entries(manager):
+async def test_entries_gets_entries(manager):
     """Test entries are filtered by domain."""
     MockConfigEntry(domain="test").add_to_manager(manager)
     entry1 = MockConfigEntry(domain="test2")
@@ -411,8 +404,7 @@ def test_entries_gets_entries(manager):
     assert manager.async_entries("test2") == [entry1, entry2]
 
 
-@asyncio.coroutine
-def test_domains_gets_uniques(manager):
+async def test_domains_gets_uniques(manager):
     """Test we only return each domain once."""
     MockConfigEntry(domain="test").add_to_manager(manager)
     MockConfigEntry(domain="test2").add_to_manager(manager)
@@ -447,8 +439,7 @@ async def test_saving_and_loading(hass):
         VERSION = 3
         CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
-        @asyncio.coroutine
-        def async_step_user(self, user_input=None):
+        async def async_step_user(self, user_input=None):
             return self.async_create_entry(
                 title="Test 2 Title", data={"username": "bla"}
             )

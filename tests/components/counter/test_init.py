@@ -1,6 +1,5 @@
 """The tests for the counter component."""
 # pylint: disable=protected-access
-import asyncio
 import logging
 
 from homeassistant.components.counter import (
@@ -143,8 +142,7 @@ async def test_methods_with_config(hass):
     assert 15 == int(state.state)
 
 
-@asyncio.coroutine
-def test_initial_state_overrules_restore_state(hass):
+async def test_initial_state_overrules_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass, (State("counter.test1", "11"), State("counter.test2", "-22"))
@@ -152,7 +150,7 @@ def test_initial_state_overrules_restore_state(hass):
 
     hass.state = CoreState.starting
 
-    yield from async_setup_component(
+    await async_setup_component(
         hass,
         DOMAIN,
         {
@@ -172,8 +170,7 @@ def test_initial_state_overrules_restore_state(hass):
     assert int(state.state) == 10
 
 
-@asyncio.coroutine
-def test_restore_state_overrules_initial_state(hass):
+async def test_restore_state_overrules_initial_state(hass):
     """Ensure states are restored on startup."""
 
     attr = {"initial": 6, "minimum": 1, "maximum": 8, "step": 2}
@@ -189,7 +186,7 @@ def test_restore_state_overrules_initial_state(hass):
 
     hass.state = CoreState.starting
 
-    yield from async_setup_component(
+    await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"test1": {}, "test2": {CONF_INITIAL: 10}, "test3": {}}}
     )
 
@@ -210,12 +207,11 @@ def test_restore_state_overrules_initial_state(hass):
     assert state.attributes.get("step") == 2
 
 
-@asyncio.coroutine
-def test_no_initial_state_and_no_restore_state(hass):
+async def test_no_initial_state_and_no_restore_state(hass):
     """Ensure that entity is create without initial and restore feature."""
     hass.state = CoreState.starting
 
-    yield from async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_STEP: 5}}})
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_STEP: 5}}})
 
     state = hass.states.get("counter.test1")
     assert state

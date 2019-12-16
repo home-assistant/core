@@ -12,12 +12,10 @@ from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant
 
 
-@asyncio.coroutine
-def mock_process_creator(error: bool = False) -> asyncio.coroutine:
+async def mock_process_creator(error: bool = False) -> asyncio.coroutine:
     """Mock a coroutine that creates a process when yielded."""
 
-    @asyncio.coroutine
-    def communicate() -> Tuple[bytes, bytes]:
+    async def communicate() -> Tuple[bytes, bytes]:
         """Mock a coroutine that runs a process when yielded.
 
         Returns a tuple of (stdout, stderr).

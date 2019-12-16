@@ -1,5 +1,4 @@
 """The tests for the MQTT component."""
-import asyncio
 import ssl
 import unittest
 from unittest import mock
@@ -593,8 +592,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         assert self.hass.data["mqtt"]._mqttc.subscribe.mock_calls == expected
 
 
-@asyncio.coroutine
-def test_setup_embedded_starts_with_no_config(hass):
+async def test_setup_embedded_starts_with_no_config(hass):
     """Test setting up embedded server with no config."""
     client_config = ("localhost", 1883, "user", "pass", None, "3.1.1")
 
@@ -602,12 +600,11 @@ def test_setup_embedded_starts_with_no_config(hass):
         "homeassistant.components.mqtt.server.async_start",
         return_value=mock_coro(return_value=(True, client_config)),
     ) as _start:
-        yield from async_mock_mqtt_client(hass, {})
+        await async_mock_mqtt_client(hass, {})
         assert _start.call_count == 1
 
 
-@asyncio.coroutine
-def test_setup_embedded_with_embedded(hass):
+async def test_setup_embedded_with_embedded(hass):
     """Test setting up embedded server with no config."""
     client_config = ("localhost", 1883, "user", "pass", None, "3.1.1")
 
@@ -616,7 +613,7 @@ def test_setup_embedded_with_embedded(hass):
         return_value=mock_coro(return_value=(True, client_config)),
     ) as _start:
         _start.return_value = mock_coro(return_value=(True, client_config))
-        yield from async_mock_mqtt_client(hass, {"embedded": None})
+        await async_mock_mqtt_client(hass, {"embedded": None})
         assert _start.call_count == 1
 
 
@@ -716,10 +713,9 @@ async def test_setup_with_tls_config_of_v1_under_python36_only_uses_v1(hass, moc
     assert mock_MQTT.mock_calls[0][2]["tls_version"] == ssl.PROTOCOL_TLSv1
 
 
-@asyncio.coroutine
-def test_birth_message(hass):
+async def test_birth_message(hass):
     """Test sending birth message."""
-    mqtt_client = yield from async_mock_mqtt_client(
+    mqtt_client = await async_mock_mqtt_client(
         hass,
         {
             mqtt.CONF_BROKER: "mock-broker",
@@ -732,14 +728,13 @@ def test_birth_message(hass):
     calls = []
     mqtt_client.publish.side_effect = lambda *args: calls.append(args)
     hass.data["mqtt"]._mqtt_on_connect(None, None, 0, 0)
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert calls[-1] == ("birth", "birth", 0, False)
 
 
-@asyncio.coroutine
-def test_mqtt_subscribes_topics_on_connect(hass):
+async def test_mqtt_subscribes_topics_on_connect(hass):
     """Test subscription to topic on connect."""
-    mqtt_client = yield from async_mock_mqtt_client(hass)
+    mqtt_client = await async_mock_mqtt_client(hass)
 
     hass.data["mqtt"].subscriptions = [
         mqtt.Subscription("topic/test", None),
@@ -751,7 +746,7 @@ def test_mqtt_subscribes_topics_on_connect(hass):
     hass.add_job = mock.MagicMock()
     hass.data["mqtt"]._mqtt_on_connect(None, None, 0, 0)
 
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert mqtt_client.disconnect.call_count == 0
 

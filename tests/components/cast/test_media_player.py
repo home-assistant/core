@@ -1,6 +1,5 @@
 """The tests for the Cast Media player platform."""
 # pylint: disable=protected-access
-import asyncio
 from typing import Optional
 from unittest.mock import MagicMock, Mock, patch
 from uuid import UUID
@@ -124,23 +123,21 @@ async def async_setup_media_player_cast(hass: HomeAssistantType, info: Chromecas
         return chromecast, entity
 
 
-@asyncio.coroutine
-def test_start_discovery_called_once(hass):
+async def test_start_discovery_called_once(hass):
     """Test pychromecast.start_discovery called exactly once."""
     with patch(
         "homeassistant.components.cast.discovery.pychromecast.start_discovery",
         return_value=(None, None),
     ) as start_discovery:
-        yield from async_setup_cast(hass)
+        await async_setup_cast(hass)
 
         assert start_discovery.call_count == 1
 
-        yield from async_setup_cast(hass)
+        await async_setup_cast(hass)
         assert start_discovery.call_count == 1
 
 
-@asyncio.coroutine
-def test_stop_discovery_called_on_stop(hass):
+async def test_stop_discovery_called_on_stop(hass):
     """Test pychromecast.stop_discovery called on shutdown."""
     browser = MagicMock(zc={})
 
@@ -149,7 +146,7 @@ def test_stop_discovery_called_on_stop(hass):
         return_value=(None, browser),
     ) as start_discovery:
         # start_discovery should be called with empty config
-        yield from async_setup_cast(hass, {})
+        await async_setup_cast(hass, {})
 
         assert start_discovery.call_count == 1
 
@@ -158,7 +155,7 @@ def test_stop_discovery_called_on_stop(hass):
     ) as stop_discovery:
         # stop discovery should be called on shutdown
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-        yield from hass.async_block_till_done()
+        await hass.async_block_till_done()
 
         stop_discovery.assert_called_once_with(browser)
 
@@ -167,7 +164,7 @@ def test_stop_discovery_called_on_stop(hass):
         return_value=(None, browser),
     ) as start_discovery:
         # start_discovery should be called again on re-startup
-        yield from async_setup_cast(hass)
+        await async_setup_cast(hass)
 
         assert start_discovery.call_count == 1
 

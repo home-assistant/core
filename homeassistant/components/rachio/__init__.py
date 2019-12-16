@@ -1,5 +1,4 @@
 """Integration with the Rachio Iro sprinkler system controller."""
-import asyncio
 import logging
 import secrets
 from typing import Optional
@@ -285,7 +284,6 @@ class RachioWebhookView(HomeAssistantView):
     url = WEBHOOK_PATH
     name = url[1:].replace("/", ":")
 
-    @asyncio.coroutine
     async def post(self, request) -> web.Response:
         """Handle webhook calls from the server."""
         hass = request.app["hass"]

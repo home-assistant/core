@@ -1,5 +1,4 @@
 """Unit tests for platform/plant.py."""
-import asyncio
 from datetime import datetime, timedelta
 import unittest
 
@@ -63,8 +62,7 @@ class TestPlant(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @asyncio.coroutine
-    def test_valid_data(self):
+    async def test_valid_data(self):
         """Test processing valid data."""
         sensor = plant.Plant("my plant", GOOD_CONFIG)
         sensor.hass = self.hass
@@ -79,8 +77,7 @@ class TestPlant(unittest.TestCase):
             # the JSON format than in hass
             assert attrib[reading] == value
 
-    @asyncio.coroutine
-    def test_low_battery(self):
+    async def test_low_battery(self):
         """Test processing with low battery data and limit set."""
         sensor = plant.Plant("other plant", GOOD_CONFIG)
         sensor.hass = self.hass

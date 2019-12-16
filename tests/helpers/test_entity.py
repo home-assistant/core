@@ -59,8 +59,7 @@ def test_async_update_support(hass):
     assert len(sync_update) == 1
     assert len(async_update) == 0
 
-    @asyncio.coroutine
-    def async_update_func():
+    async def async_update_func():
         """Async update."""
         async_update.append(1)
 
@@ -123,13 +122,11 @@ class TestHelpersEntity:
         assert state.attributes.get(ATTR_DEVICE_CLASS) == "test_class"
 
 
-@asyncio.coroutine
-def test_warn_slow_update(hass):
+async def test_warn_slow_update(hass):
     """Warn we log when entity update takes a long time."""
     update_call = False
 
-    @asyncio.coroutine
-    def async_update():
+    async def async_update():
         """Mock async update."""
         nonlocal update_call
         update_call = True
@@ -140,7 +137,7 @@ def test_warn_slow_update(hass):
     mock_entity.async_update = async_update
 
     with patch.object(hass.loop, "call_later", MagicMock()) as mock_call:
-        yield from mock_entity.async_update_ha_state(True)
+        await mock_entity.async_update_ha_state(True)
         assert mock_call.called
         assert len(mock_call.mock_calls) == 2
 
@@ -154,13 +151,11 @@ def test_warn_slow_update(hass):
         assert update_call
 
 
-@asyncio.coroutine
-def test_warn_slow_update_with_exception(hass):
+async def test_warn_slow_update_with_exception(hass):
     """Warn we log when entity update takes a long time and trow exception."""
     update_call = False
 
-    @asyncio.coroutine
-    def async_update():
+    async def async_update():
         """Mock async update."""
         nonlocal update_call
         update_call = True
@@ -172,7 +167,7 @@ def test_warn_slow_update_with_exception(hass):
     mock_entity.async_update = async_update
 
     with patch.object(hass.loop, "call_later", MagicMock()) as mock_call:
-        yield from mock_entity.async_update_ha_state(True)
+        await mock_entity.async_update_ha_state(True)
         assert mock_call.called
         assert len(mock_call.mock_calls) == 2
 
@@ -186,13 +181,11 @@ def test_warn_slow_update_with_exception(hass):
         assert update_call
 
 
-@asyncio.coroutine
-def test_warn_slow_device_update_disabled(hass):
+async def test_warn_slow_device_update_disabled(hass):
     """Disable slow update warning with async_device_update."""
     update_call = False
 
-    @asyncio.coroutine
-    def async_update():
+    async def async_update():
         """Mock async update."""
         nonlocal update_call
         update_call = True
@@ -203,19 +196,17 @@ def test_warn_slow_device_update_disabled(hass):
     mock_entity.async_update = async_update
 
     with patch.object(hass.loop, "call_later", MagicMock()) as mock_call:
-        yield from mock_entity.async_device_update(warning=False)
+        await mock_entity.async_device_update(warning=False)
 
         assert not mock_call.called
         assert update_call
 
 
-@asyncio.coroutine
-def test_async_schedule_update_ha_state(hass):
+async def test_async_schedule_update_ha_state(hass):
     """Warn we log when entity update takes a long time and trow exception."""
     update_call = False
 
-    @asyncio.coroutine
-    def async_update():
+    async def async_update():
         """Mock async update."""
         nonlocal update_call
         update_call = True
@@ -226,7 +217,7 @@ def test_async_schedule_update_ha_state(hass):
     mock_entity.async_update = async_update
 
     mock_entity.async_schedule_update_ha_state(True)
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert update_call is True
 
@@ -474,11 +465,10 @@ async def test_async_parallel_updates_with_two(hass):
             self._count = count
             self.parallel_updates = test_semaphore
 
-        @asyncio.coroutine
-        def async_update(self):
+        async def async_update(self):
             """Test update."""
             updates.append(self._count)
-            yield from test_lock.acquire()
+            await test_lock.acquire()
 
     ent_1 = AsyncEntity("sensor.test_1", 1)
     ent_2 = AsyncEntity("sensor.test_2", 2)
@@ -529,15 +519,14 @@ async def test_async_parallel_updates_with_two(hass):
         test_lock.release()
 
 
-@asyncio.coroutine
-def test_async_remove_no_platform(hass):
+async def test_async_remove_no_platform(hass):
     """Test async_remove method when no platform set."""
     ent = entity.Entity()
     ent.hass = hass
     ent.entity_id = "test.test"
-    yield from ent.async_update_ha_state()
+    await ent.async_update_ha_state()
     assert len(hass.states.async_entity_ids()) == 1
-    yield from ent.async_remove()
+    await ent.async_remove()
     assert len(hass.states.async_entity_ids()) == 0
 
 

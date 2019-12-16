@@ -1,6 +1,5 @@
 """The tests for the Input number component."""
 # pylint: disable=protected-access
-import asyncio
 from unittest.mock import patch
 
 import pytest
@@ -171,8 +170,7 @@ async def test_mode(hass):
     assert "slider" == state.attributes["mode"]
 
 
-@asyncio.coroutine
-def test_restore_state(hass):
+async def test_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass, (State("input_number.b1", "70"), State("input_number.b2", "200"))
@@ -180,7 +178,7 @@ def test_restore_state(hass):
 
     hass.state = CoreState.starting
 
-    yield from async_setup_component(
+    await async_setup_component(
         hass,
         DOMAIN,
         {DOMAIN: {"b1": {"min": 0, "max": 100}, "b2": {"min": 10, "max": 100}}},
@@ -195,8 +193,7 @@ def test_restore_state(hass):
     assert float(state.state) == 10
 
 
-@asyncio.coroutine
-def test_initial_state_overrules_restore_state(hass):
+async def test_initial_state_overrules_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass, (State("input_number.b1", "70"), State("input_number.b2", "200"))
@@ -204,7 +201,7 @@ def test_initial_state_overrules_restore_state(hass):
 
     hass.state = CoreState.starting
 
-    yield from async_setup_component(
+    await async_setup_component(
         hass,
         DOMAIN,
         {
@@ -224,14 +221,11 @@ def test_initial_state_overrules_restore_state(hass):
     assert float(state.state) == 60
 
 
-@asyncio.coroutine
-def test_no_initial_state_and_no_restore_state(hass):
+async def test_no_initial_state_and_no_restore_state(hass):
     """Ensure that entity is create without initial and restore feature."""
     hass.state = CoreState.starting
 
-    yield from async_setup_component(
-        hass, DOMAIN, {DOMAIN: {"b1": {"min": 0, "max": 100}}}
-    )
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {"b1": {"min": 0, "max": 100}}})
 
     state = hass.states.get("input_number.b1")
     assert state

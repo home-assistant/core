@@ -139,22 +139,19 @@ async def async_million_state_changed_helper(hass):
 
 
 @benchmark
-@asyncio.coroutine
-def logbook_filtering_state(hass):
+async def logbook_filtering_state(hass):
     """Filter state changes."""
     return _logbook_filtering(hass, 1, 1)
 
 
 @benchmark
-@asyncio.coroutine
-def logbook_filtering_attributes(hass):
+async def logbook_filtering_attributes(hass):
     """Filter attribute changes."""
     return _logbook_filtering(hass, 1, 2)
 
 
 @benchmark
-@asyncio.coroutine
-def _logbook_filtering(hass, last_changed, last_updated):
+async def _logbook_filtering(hass, last_changed, last_updated):
     from homeassistant.components import logbook
 
     entity_id = "test.entity"

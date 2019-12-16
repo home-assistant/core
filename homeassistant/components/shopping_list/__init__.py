@@ -1,5 +1,4 @@
 """Support to manage a shopping list."""
-import asyncio
 import logging
 import uuid
 
@@ -53,20 +52,17 @@ SCHEMA_WEBSOCKET_CLEAR_ITEMS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
 )
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Initialize the shopping list."""
 
-    @asyncio.coroutine
-    def add_item_service(call):
+    async def add_item_service(call):
         """Add an item with `name`."""
         data = hass.data[DOMAIN]
         name = call.data.get(ATTR_NAME)
         if name is not None:
             data.async_add(name)
 
-    @asyncio.coroutine
-    def complete_item_service(call):
+    async def complete_item_service(call):
         """Mark the item provided via `name` as completed."""
         data = hass.data[DOMAIN]
         name = call.data.get(ATTR_NAME)
@@ -80,7 +76,7 @@ def async_setup(hass, config):
             data.async_update(item["id"], {"name": name, "complete": True})
 
     data = hass.data[DOMAIN] = ShoppingData(hass)
-    yield from data.async_load()
+    await data.async_load()
 
     hass.services.async_register(
         DOMAIN, SERVICE_ADD_ITEM, add_item_service, schema=SERVICE_ITEM_SCHEMA
@@ -153,15 +149,14 @@ class ShoppingData:
         self.items = [itm for itm in self.items if not itm["complete"]]
         self.hass.async_add_job(self.save)
 
-    @asyncio.coroutine
-    def async_load(self):
+    async def async_load(self):
         """Load items."""
 
         def load():
             """Load the items synchronously."""
             return load_json(self.hass.config.path(PERSISTENCE), default=[])
 
-        self.items = yield from self.hass.async_add_job(load)
+        self.items = await self.hass.async_add_job(load)
 
     def save(self):
         """Save the items."""
@@ -207,8 +202,7 @@ class CreateShoppingListItemView(http.HomeAssistantView):
     name = "api:shopping_list:item"
 
     @RequestDataValidator(vol.Schema({vol.Required("name"): str}))
-    @asyncio.coroutine
-    def post(self, request, data):
+    async def post(self, request, data):
         """Create a new shopping list item."""
         item = request.app["hass"].data[DOMAIN].async_add(data["name"])
         request.app["hass"].bus.async_fire(EVENT)

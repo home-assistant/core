@@ -1,5 +1,4 @@
 """Test dispatcher helpers."""
-import asyncio
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
@@ -106,8 +105,7 @@ class TestHelpersDispatcher:
         """Test simple coro (async)."""
         calls = []
 
-        @asyncio.coroutine
-        def test_funct(data):
+        async def test_funct(data):
             """Test function."""
             calls.append(data)
 

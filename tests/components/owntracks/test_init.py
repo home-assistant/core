@@ -1,5 +1,4 @@
 """Test the owntracks_http platform."""
-import asyncio
 
 import pytest
 
@@ -55,10 +54,9 @@ def mock_client(hass, aiohttp_client):
     return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
-@asyncio.coroutine
-def test_handle_valid_message(mock_client):
+async def test_handle_valid_message(mock_client):
     """Test that we forward messages correctly to OwnTracks."""
-    resp = yield from mock_client.post(
+    resp = await mock_client.post(
         "/api/webhook/owntracks_test",
         json=LOCATION_MESSAGE,
         headers={"X-Limit-u": "Paulus", "X-Limit-d": "Pixel"},
@@ -66,14 +64,13 @@ def test_handle_valid_message(mock_client):
 
     assert resp.status == 200
 
-    json = yield from resp.json()
+    json = await resp.json()
     assert json == []
 
 
-@asyncio.coroutine
-def test_handle_valid_minimal_message(mock_client):
+async def test_handle_valid_minimal_message(mock_client):
     """Test that we forward messages correctly to OwnTracks."""
-    resp = yield from mock_client.post(
+    resp = await mock_client.post(
         "/api/webhook/owntracks_test",
         json=MINIMAL_LOCATION_MESSAGE,
         headers={"X-Limit-u": "Paulus", "X-Limit-d": "Pixel"},
@@ -81,14 +78,13 @@ def test_handle_valid_minimal_message(mock_client):
 
     assert resp.status == 200
 
-    json = yield from resp.json()
+    json = await resp.json()
     assert json == []
 
 
-@asyncio.coroutine
-def test_handle_value_error(mock_client):
+async def test_handle_value_error(mock_client):
     """Test we don't disclose that this is a valid webhook."""
-    resp = yield from mock_client.post(
+    resp = await mock_client.post(
         "/api/webhook/owntracks_test",
         json="",
         headers={"X-Limit-u": "Paulus", "X-Limit-d": "Pixel"},
@@ -96,14 +92,13 @@ def test_handle_value_error(mock_client):
 
     assert resp.status == 200
 
-    json = yield from resp.text()
+    json = await resp.text()
     assert json == ""
 
 
-@asyncio.coroutine
-def test_returns_error_missing_username(mock_client, caplog):
+async def test_returns_error_missing_username(mock_client, caplog):
     """Test that an error is returned when username is missing."""
-    resp = yield from mock_client.post(
+    resp = await mock_client.post(
         "/api/webhook/owntracks_test",
         json=LOCATION_MESSAGE,
         headers={"X-Limit-d": "Pixel"},
@@ -111,29 +106,27 @@ def test_returns_error_missing_username(mock_client, caplog):
 
     # Needs to be 200 or OwnTracks keeps retrying bad packet.
     assert resp.status == 200
-    json = yield from resp.json()
+    json = await resp.json()
     assert json == []
     assert "No topic or user found" in caplog.text
 
 
-@asyncio.coroutine
-def test_returns_error_incorrect_json(mock_client, caplog):
+async def test_returns_error_incorrect_json(mock_client, caplog):
     """Test that an error is returned when username is missing."""
-    resp = yield from mock_client.post(
+    resp = await mock_client.post(
         "/api/webhook/owntracks_test", data="not json", headers={"X-Limit-d": "Pixel"}
     )
 
     # Needs to be 200 or OwnTracks keeps retrying bad packet.
     assert resp.status == 200
-    json = yield from resp.json()
+    json = await resp.json()
     assert json == []
     assert "invalid JSON" in caplog.text
 
 
-@asyncio.coroutine
-def test_returns_error_missing_device(mock_client):
+async def test_returns_error_missing_device(mock_client):
     """Test that an error is returned when device name is missing."""
-    resp = yield from mock_client.post(
+    resp = await mock_client.post(
         "/api/webhook/owntracks_test",
         json=LOCATION_MESSAGE,
         headers={"X-Limit-u": "Paulus"},
@@ -141,7 +134,7 @@ def test_returns_error_missing_device(mock_client):
 
     assert resp.status == 200
 
-    json = yield from resp.json()
+    json = await resp.json()
     assert json == []
 
 

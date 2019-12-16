@@ -1,5 +1,4 @@
 """The tests for Home Assistant frontend."""
-import asyncio
 import re
 from unittest.mock import patch
 
@@ -71,53 +70,48 @@ def mock_onboarded():
         yield
 
 
-@asyncio.coroutine
-def test_frontend_and_static(mock_http_client, mock_onboarded):
+async def test_frontend_and_static(mock_http_client, mock_onboarded):
     """Test if we can get the frontend."""
-    resp = yield from mock_http_client.get("")
+    resp = await mock_http_client.get("")
     assert resp.status == 200
     assert "cache-control" not in resp.headers
 
-    text = yield from resp.text()
+    text = await resp.text()
 
     # Test we can retrieve frontend.js
     frontendjs = re.search(r"(?P<app>\/frontend_es5\/app.[A-Za-z0-9]{8}.js)", text)
 
     assert frontendjs is not None, text
-    resp = yield from mock_http_client.get(frontendjs.groups(0)[0])
+    resp = await mock_http_client.get(frontendjs.groups(0)[0])
     assert resp.status == 200
     assert "public" in resp.headers.get("cache-control")
 
 
-@asyncio.coroutine
-def test_dont_cache_service_worker(mock_http_client):
+async def test_dont_cache_service_worker(mock_http_client):
     """Test that we don't cache the service worker."""
-    resp = yield from mock_http_client.get("/service_worker.js")
+    resp = await mock_http_client.get("/service_worker.js")
     assert resp.status == 200
     assert "cache-control" not in resp.headers
 
 
-@asyncio.coroutine
-def test_404(mock_http_client):
+async def test_404(mock_http_client):
     """Test for HTTP 404 error."""
-    resp = yield from mock_http_client.get("/not-existing")
+    resp = await mock_http_client.get("/not-existing")
     assert resp.status == 404
 
 
-@asyncio.coroutine
-def test_we_cannot_POST_to_root(mock_http_client):
+async def test_we_cannot_POST_to_root(mock_http_client):
     """Test that POST is not allow to root."""
-    resp = yield from mock_http_client.post("/")
+    resp = await mock_http_client.post("/")
     assert resp.status == 405
 
 
-@asyncio.coroutine
-def test_states_routes(mock_http_client):
+async def test_states_routes(mock_http_client):
     """All served by index."""
-    resp = yield from mock_http_client.get("/states")
+    resp = await mock_http_client.get("/states")
     assert resp.status == 200
 
-    resp = yield from mock_http_client.get("/states/group.existing")
+    resp = await mock_http_client.get("/states/group.existing")
     assert resp.status == 200
 
 
@@ -211,12 +205,11 @@ async def test_missing_themes(hass, hass_ws_client):
     assert msg["result"]["themes"] == {}
 
 
-@asyncio.coroutine
-def test_extra_urls(mock_http_client_with_urls, mock_onboarded):
+async def test_extra_urls(mock_http_client_with_urls, mock_onboarded):
     """Test that extra urls are loaded."""
-    resp = yield from mock_http_client_with_urls.get("/states?latest")
+    resp = await mock_http_client_with_urls.get("/states?latest")
     assert resp.status == 200
-    text = yield from resp.text()
+    text = await resp.text()
     assert text.find('href="https://domain.com/my_extra_url.html"') >= 0
 
 

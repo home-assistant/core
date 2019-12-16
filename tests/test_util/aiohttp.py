@@ -1,5 +1,4 @@
 """Aiohttp test utils."""
-import asyncio
 from contextlib import contextmanager
 import json as _json
 import re
@@ -220,23 +219,19 @@ class AiohttpClientMockResponse:
         """Return content."""
         return mock_stream(self.response)
 
-    @asyncio.coroutine
-    def read(self):
+    async def read(self):
         """Return mock response."""
         return self.response
 
-    @asyncio.coroutine
-    def text(self, encoding="utf-8"):
+    async def text(self, encoding="utf-8"):
         """Return mock response as a string."""
         return self.response.decode(encoding)
 
-    @asyncio.coroutine
-    def json(self, encoding="utf-8"):
+    async def json(self, encoding="utf-8"):
         """Return mock response as a json."""
         return _json.loads(self.response.decode(encoding))
 
-    @asyncio.coroutine
-    def release(self):
+    async def release(self):
         """Mock release."""
         pass
 

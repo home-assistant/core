@@ -254,8 +254,7 @@ def async_mock_intent(hass, intent_typ):
     class MockIntentHandler(intent.IntentHandler):
         intent_type = intent_typ
 
-        @asyncio.coroutine
-        def async_handle(self, intent):
+        async def async_handle(self, intent):
             """Handle the intent."""
             intents.append(intent)
             return intent.create_response()
@@ -741,8 +740,7 @@ def mock_coro(return_value=None, exception=None):
 def mock_coro_func(return_value=None, exception=None):
     """Return a method to create a coro function that returns a value."""
 
-    @asyncio.coroutine
-    def coro(*args, **kwargs):
+    async def coro(*args, **kwargs):
         """Fake coroutine."""
         if exception:
             raise exception

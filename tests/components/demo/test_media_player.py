@@ -1,5 +1,4 @@
 """The tests for the Demo Media player platform."""
-import asyncio
 import unittest
 from unittest.mock import patch
 
@@ -243,17 +242,14 @@ async def test_media_image_proxy(hass, hass_client):
             self.status = 200
             self.headers = {"Content-Type": "sometype"}
 
-        @asyncio.coroutine
-        def read(self):
+        async def read(self):
             return fake_picture_data.encode("ascii")
 
-        @asyncio.coroutine
-        def release(self):
+        async def release(self):
             pass
 
     class MockWebsession:
-        @asyncio.coroutine
-        def get(self, url):
+        async def get(self, url):
             return MockResponse()
 
         def detach(self):

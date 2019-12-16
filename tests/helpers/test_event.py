@@ -1,6 +1,5 @@
 """Test event helpers."""
 # pylint: disable=protected-access
-import asyncio
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
@@ -104,8 +103,7 @@ async def test_track_state_change(hass):
 
     async_track_state_change(hass, "light.Bowl", wildcard_run_callback)
 
-    @asyncio.coroutine
-    def wildercard_run_callback(entity_id, old_state, new_state):
+    async def wildercard_run_callback(entity_id, old_state, new_state):
         wildercard_runs.append((old_state, new_state))
 
     async_track_state_change(hass, MATCH_ALL, wildercard_run_callback)
@@ -189,8 +187,7 @@ async def test_track_template(hass):
 
     async_track_template(hass, template_condition, wildcard_run_callback)
 
-    @asyncio.coroutine
-    def wildercard_run_callback(entity_id, old_state, new_state):
+    async def wildercard_run_callback(entity_id, old_state, new_state):
         wildercard_runs.append((old_state, new_state))
 
     async_track_template(
@@ -263,8 +260,7 @@ async def test_track_same_state_simple_trigger(hass):
         entity_ids="light.Bowl",
     )
 
-    @asyncio.coroutine
-    def coroutine_run_callback():
+    async def coroutine_run_callback():
         coroutine_runs.append(1)
 
     async_track_same_state(

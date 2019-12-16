@@ -1,6 +1,5 @@
 """The tests for the timer component."""
 # pylint: disable=protected-access
-import asyncio
 from datetime import timedelta
 import logging
 from unittest.mock import patch
@@ -89,14 +88,11 @@ async def test_config_options(hass):
     assert "0:00:10" == state_2.attributes.get(ATTR_DURATION)
 
 
-@asyncio.coroutine
-def test_methods_and_events(hass):
+async def test_methods_and_events(hass):
     """Test methods and events."""
     hass.state = CoreState.starting
 
-    yield from async_setup_component(
-        hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}}
-    )
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}})
 
     state = hass.states.get("timer.test1")
     assert state
@@ -129,10 +125,10 @@ def test_methods_and_events(hass):
     expectedEvents = 0
     for step in steps:
         if step["call"] is not None:
-            yield from hass.services.async_call(
+            await hass.services.async_call(
                 DOMAIN, step["call"], {CONF_ENTITY_ID: "timer.test1"}
             )
-            yield from hass.async_block_till_done()
+            await hass.async_block_till_done()
 
         state = hass.states.get("timer.test1")
         assert state
@@ -145,14 +141,11 @@ def test_methods_and_events(hass):
             assert len(results) == expectedEvents
 
 
-@asyncio.coroutine
-def test_wait_till_timer_expires(hass):
+async def test_wait_till_timer_expires(hass):
     """Test for a timer to end."""
     hass.state = CoreState.starting
 
-    yield from async_setup_component(
-        hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}}
-    )
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}})
 
     state = hass.states.get("timer.test1")
     assert state
@@ -169,10 +162,10 @@ def test_wait_till_timer_expires(hass):
     hass.bus.async_listen(EVENT_TIMER_FINISHED, fake_event_listener)
     hass.bus.async_listen(EVENT_TIMER_CANCELLED, fake_event_listener)
 
-    yield from hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}
     )
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     state = hass.states.get("timer.test1")
     assert state
@@ -182,7 +175,7 @@ def test_wait_till_timer_expires(hass):
     assert len(results) == 1
 
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     state = hass.states.get("timer.test1")
     assert state
@@ -192,14 +185,11 @@ def test_wait_till_timer_expires(hass):
     assert len(results) == 2
 
 
-@asyncio.coroutine
-def test_no_initial_state_and_no_restore_state(hass):
+async def test_no_initial_state_and_no_restore_state(hass):
     """Ensure that entity is create without initial and restore feature."""
     hass.state = CoreState.starting
 
-    yield from async_setup_component(
-        hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}}
-    )
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}})
 
     state = hass.states.get("timer.test1")
     assert state

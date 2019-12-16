@@ -131,32 +131,29 @@ class TestHelpersAiohttpClient(unittest.TestCase):
         assert self.hass.data[client.DATA_CONNECTOR_NOTVERIFY].closed
 
 
-@asyncio.coroutine
-def test_async_aiohttp_proxy_stream(aioclient_mock, camera_client):
+async def test_async_aiohttp_proxy_stream(aioclient_mock, camera_client):
     """Test that it fetches the given url."""
     aioclient_mock.get("http://example.com/mjpeg_stream", content=b"Frame1Frame2Frame3")
 
-    resp = yield from camera_client.get("/api/camera_proxy_stream/camera.config_test")
+    resp = await camera_client.get("/api/camera_proxy_stream/camera.config_test")
 
     assert resp.status == 200
     assert aioclient_mock.call_count == 1
-    body = yield from resp.text()
+    body = await resp.text()
     assert body == "Frame1Frame2Frame3"
 
 
-@asyncio.coroutine
-def test_async_aiohttp_proxy_stream_timeout(aioclient_mock, camera_client):
+async def test_async_aiohttp_proxy_stream_timeout(aioclient_mock, camera_client):
     """Test that it fetches the given url."""
     aioclient_mock.get("http://example.com/mjpeg_stream", exc=asyncio.TimeoutError())
 
-    resp = yield from camera_client.get("/api/camera_proxy_stream/camera.config_test")
+    resp = await camera_client.get("/api/camera_proxy_stream/camera.config_test")
     assert resp.status == 504
 
 
-@asyncio.coroutine
-def test_async_aiohttp_proxy_stream_client_err(aioclient_mock, camera_client):
+async def test_async_aiohttp_proxy_stream_client_err(aioclient_mock, camera_client):
     """Test that it fetches the given url."""
     aioclient_mock.get("http://example.com/mjpeg_stream", exc=aiohttp.ClientError())
 
-    resp = yield from camera_client.get("/api/camera_proxy_stream/camera.config_test")
+    resp = await camera_client.get("/api/camera_proxy_stream/camera.config_test")
     assert resp.status == 502

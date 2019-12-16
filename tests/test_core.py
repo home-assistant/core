@@ -182,8 +182,7 @@ class TestHomeAssistant(unittest.TestCase):
         """Add a coro to pending tasks."""
         call_count = []
 
-        @asyncio.coroutine
-        def test_coro():
+        async def test_coro():
             """Test Coro."""
             call_count.append("call")
 
@@ -201,19 +200,17 @@ class TestHomeAssistant(unittest.TestCase):
         """Add a coro to pending tasks."""
         call_count = []
 
-        @asyncio.coroutine
-        def test_coro():
+        async def test_coro():
             """Test Coro."""
             call_count.append("call")
 
         for _ in range(2):
             self.hass.add_job(test_coro())
 
-        @asyncio.coroutine
-        def wait_finish_callback():
+        async def wait_finish_callback():
             """Wait until all stuff is scheduled."""
-            yield from asyncio.sleep(0)
-            yield from asyncio.sleep(0)
+            await asyncio.sleep(0)
+            await asyncio.sleep(0)
 
         asyncio.run_coroutine_threadsafe(
             wait_finish_callback(), self.hass.loop
@@ -231,11 +228,10 @@ class TestHomeAssistant(unittest.TestCase):
             """Test executor."""
             call_count.append("call")
 
-        @asyncio.coroutine
-        def wait_finish_callback():
+        async def wait_finish_callback():
             """Wait until all stuff is scheduled."""
-            yield from asyncio.sleep(0)
-            yield from asyncio.sleep(0)
+            await asyncio.sleep(0)
+            await asyncio.sleep(0)
 
         for _ in range(2):
             self.hass.add_job(test_executor)
@@ -257,11 +253,10 @@ class TestHomeAssistant(unittest.TestCase):
             """Test callback."""
             call_count.append("call")
 
-        @asyncio.coroutine
-        def wait_finish_callback():
+        async def wait_finish_callback():
             """Wait until all stuff is scheduled."""
-            yield from asyncio.sleep(0)
-            yield from asyncio.sleep(0)
+            await asyncio.sleep(0)
+            await asyncio.sleep(0)
 
         for _ in range(2):
             self.hass.add_job(test_callback)
@@ -402,8 +397,7 @@ class TestEventBus(unittest.TestCase):
         """Test listen_once_event method."""
         runs = []
 
-        @asyncio.coroutine
-        def event_handler(event):
+        async def event_handler(event):
             runs.append(event)
 
         self.bus.listen_once("test_event", event_handler)
@@ -460,8 +454,7 @@ class TestEventBus(unittest.TestCase):
         """Test coroutine event listener."""
         coroutine_calls = []
 
-        @asyncio.coroutine
-        def coroutine_listener(event):
+        async def coroutine_listener(event):
             coroutine_calls.append(event)
 
         self.bus.listen("test_coroutine", coroutine_listener)
@@ -1060,14 +1053,13 @@ def test_timer_out_of_sync(mock_monotonic, loop):
     assert abs(target - 14.2) < 0.001
 
 
-@asyncio.coroutine
-def test_hass_start_starts_the_timer(loop):
+async def test_hass_start_starts_the_timer(loop):
     """Test when hass starts, it starts the timer."""
     hass = ha.HomeAssistant(loop=loop)
 
     try:
         with patch("homeassistant.core._async_create_timer") as mock_timer:
-            yield from hass.async_start()
+            await hass.async_start()
 
         assert hass.state == ha.CoreState.running
         assert not hass._track_task
@@ -1075,12 +1067,11 @@ def test_hass_start_starts_the_timer(loop):
         assert mock_timer.mock_calls[0][1][0] is hass
 
     finally:
-        yield from hass.async_stop()
+        await hass.async_stop()
         assert hass.state == ha.CoreState.not_running
 
 
-@asyncio.coroutine
-def test_start_taking_too_long(loop, caplog):
+async def test_start_taking_too_long(loop, caplog):
     """Test when async_start takes too long."""
     hass = ha.HomeAssistant(loop=loop)
     caplog.set_level(logging.WARNING)
@@ -1089,7 +1080,7 @@ def test_start_taking_too_long(loop, caplog):
         with patch(
             "homeassistant.core.timeout", side_effect=asyncio.TimeoutError
         ), patch("homeassistant.core._async_create_timer") as mock_timer:
-            yield from hass.async_start()
+            await hass.async_start()
 
         assert hass.state == ha.CoreState.running
         assert len(mock_timer.mock_calls) == 1
@@ -1097,12 +1088,11 @@ def test_start_taking_too_long(loop, caplog):
         assert "Something is blocking Home Assistant" in caplog.text
 
     finally:
-        yield from hass.async_stop()
+        await hass.async_stop()
         assert hass.state == ha.CoreState.not_running
 
 
-@asyncio.coroutine
-def test_track_task_functions(loop):
+async def test_track_task_functions(loop):
     """Test function to start/stop track task and initial state."""
     hass = ha.HomeAssistant(loop=loop)
     try:
@@ -1114,7 +1104,7 @@ def test_track_task_functions(loop):
         hass.async_track_tasks()
         assert hass._track_task
     finally:
-        yield from hass.async_stop()
+        await hass.async_stop()
 
 
 async def test_service_executed_with_subservices(hass):

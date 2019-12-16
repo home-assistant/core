@@ -1,5 +1,4 @@
 """Support for the Automatic platform."""
-import asyncio
 from datetime import timedelta
 import json
 import logging
@@ -80,8 +79,7 @@ def _write_refresh_token_to_file(hass, filename, refresh_token):
         json.dump({DATA_REFRESH_TOKEN: refresh_token}, data_file)
 
 
-@asyncio.coroutine
-def async_setup_scanner(hass, config, async_see, discovery_info=None):
+async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Validate the configuration and return an Automatic scanner."""
 
     hass.http.register_view(AutomaticAuthCallbackView())
@@ -96,12 +94,11 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
     )
 
     filename = AUTOMATIC_CONFIG_FILE.format(config[CONF_CLIENT_ID])
-    refresh_token = yield from hass.async_add_job(
+    refresh_token = await hass.async_add_job(
         _get_refresh_token_from_file, hass, filename
     )
 
-    @asyncio.coroutine
-    def initialize_data(session):
+    async def initialize_data(session):
         """Initialize the AutomaticData object from the created session."""
         hass.async_add_job(
             _write_refresh_token_to_file, hass, filename, session.refresh_token
@@ -109,7 +106,7 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
         data = AutomaticData(hass, client, session, config.get(CONF_DEVICES), async_see)
 
         # Load the initial vehicle data
-        vehicles = yield from session.get_vehicles()
+        vehicles = await session.get_vehicles()
         for vehicle in vehicles:
             hass.async_create_task(data.load_vehicle(vehicle))
 
@@ -119,8 +116,8 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
 
     if refresh_token is not None:
         try:
-            session = yield from client.create_session_from_refresh_token(refresh_token)
-            yield from initialize_data(session)
+            session = await client.create_session_from_refresh_token(refresh_token)
+            await initialize_data(session)
             return True
         except aioautomatic.exceptions.AutomaticError as err:
             _LOGGER.error(str(err))
@@ -134,12 +131,11 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
         entity_picture="/static/images/logo_automatic.png",
     )
 
-    @asyncio.coroutine
-    def initialize_callback(code, state):
+    async def initialize_callback(code, state):
         """Call after OAuth2 response is returned."""
         try:
-            session = yield from client.create_session_from_oauth_code(code, state)
-            yield from initialize_data(session)
+            session = await client.create_session_from_oauth_code(code, state)
+            await initialize_data(session)
             configurator.async_request_done(request_id)
         except aioautomatic.exceptions.AutomaticError as err:
             _LOGGER.error(str(err))
@@ -212,8 +208,7 @@ class AutomaticData:
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.ws_close())
 
-    @asyncio.coroutine
-    def handle_event(self, name, event):
+    async def handle_event(self, name, event):
         """Coroutine to update state for a real time event."""
 
         self.hass.bus.async_fire(EVENT_AUTOMATIC_UPDATE, event.data)
@@ -223,11 +218,11 @@ class AutomaticData:
             # info for this vehicle.
             _LOGGER.info("New vehicle found")
             try:
-                vehicle = yield from event.get_vehicle()
+                vehicle = await event.get_vehicle()
             except aioautomatic.exceptions.AutomaticError as err:
                 _LOGGER.error(str(err))
                 return
-            yield from self.get_vehicle_info(vehicle)
+            await self.get_vehicle_info(vehicle)
 
         if event.created_at < self.vehicle_seen[event.vehicle.id]:
             # Skip events received out of order
@@ -255,10 +250,9 @@ class AutomaticData:
             kwargs[ATTR_GPS] = (event.location.lat, event.location.lon)
             kwargs[ATTR_GPS_ACCURACY] = event.location.accuracy_m
 
-        yield from self.async_see(**kwargs)
+        await self.async_see(**kwargs)
 
-    @asyncio.coroutine
-    def ws_connect(self, now=None):
+    async def ws_connect(self, now=None):
         """Open the websocket connection."""
 
         self.ws_close_requested = False
@@ -266,7 +260,7 @@ class AutomaticData:
         if self.ws_reconnect_handle is not None:
             _LOGGER.debug("Retrying websocket connection")
         try:
-            ws_loop_future = yield from self.client.ws_connect()
+            ws_loop_future = await self.client.ws_connect()
         except aioautomatic.exceptions.UnauthorizedClientError:
             _LOGGER.error(
                 "Client unauthorized for websocket connection. "
@@ -290,7 +284,7 @@ class AutomaticData:
         _LOGGER.info("Websocket connected")
 
         try:
-            yield from ws_loop_future
+            await ws_loop_future
         except aioautomatic.exceptions.AutomaticError as err:
             _LOGGER.error(str(err))
 
@@ -300,24 +294,21 @@ class AutomaticData:
         if not self.ws_close_requested:
             self.hass.loop.create_task(self.ws_connect())
 
-    @asyncio.coroutine
-    def ws_close(self):
+    async def ws_close(self):
         """Close the websocket connection."""
         self.ws_close_requested = True
         if self.ws_reconnect_handle is not None:
             self.ws_reconnect_handle()
             self.ws_reconnect_handle = None
 
-        yield from self.client.ws_close()
+        await self.client.ws_close()
 
-    @asyncio.coroutine
-    def load_vehicle(self, vehicle):
+    async def load_vehicle(self, vehicle):
         """Load the vehicle's initial state and update hass."""
-        kwargs = yield from self.get_vehicle_info(vehicle)
-        yield from self.async_see(**kwargs)
+        kwargs = await self.get_vehicle_info(vehicle)
+        await self.async_see(**kwargs)
 
-    @asyncio.coroutine
-    def get_vehicle_info(self, vehicle):
+    async def get_vehicle_info(self, vehicle):
         """Fetch the latest vehicle info from automatic."""
 
         name = vehicle.display_name
@@ -347,7 +338,7 @@ class AutomaticData:
         trips = []
         try:
             # Get the most recent trip for this vehicle
-            trips = yield from self.session.get_trips(vehicle=vehicle.id, limit=1)
+            trips = await self.session.get_trips(vehicle=vehicle.id, limit=1)
         except aioautomatic.exceptions.AutomaticError as err:
             _LOGGER.error(str(err))
 

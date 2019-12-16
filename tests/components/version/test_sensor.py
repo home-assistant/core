@@ -1,5 +1,4 @@
 """The test for the version sensor platform."""
-import asyncio
 import unittest
 from unittest.mock import patch
 
@@ -27,8 +26,7 @@ class TestVersionSensor(unittest.TestCase):
 
         assert setup_component(self.hass, "sensor", config)
 
-    @asyncio.coroutine
-    def test_version(self):
+    async def test_version(self):
         """Test the Version sensor."""
         config = {"sensor": {"platform": "version", "name": "test"}}
 
