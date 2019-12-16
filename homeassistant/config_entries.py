@@ -24,6 +24,7 @@ SOURCE_IMPORT = "import"
 SOURCE_SSDP = "ssdp"
 SOURCE_USER = "user"
 SOURCE_ZEROCONF = "zeroconf"
+SOURCE_IGNORE = "ignore"
 
 HANDLERS = Registry()
 
@@ -157,6 +158,9 @@ class ConfigEntry:
         tries: int = 0,
     ) -> None:
         """Set up an entry."""
+        if self.source == SOURCE_IGNORE:
+            return
+
         if integration is None:
             integration = await loader.async_get_integration(hass, self.domain)
 
@@ -792,12 +796,13 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return self.hass.config_entries.async_entries(self.handler)
 
     @callback
-    def _async_current_ids(self) -> Set[Optional[str]]:
+    def _async_current_ids(self, include_ignore: bool = True) -> Set[Optional[str]]:
         """Return current unique IDs."""
         assert self.hass is not None
         return set(
             entry.unique_id
             for entry in self.hass.config_entries.async_entries(self.handler)
+            if include_ignore or entry.source != SOURCE_IGNORE
         )
 
     @callback
@@ -809,6 +814,11 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             for flw in self.hass.config_entries.flow.async_progress()
             if flw["handler"] == self.handler and flw["flow_id"] != self.flow_id
         ]
+
+    async def async_step_ignore(self, user_input: Dict[str, Any]) -> Dict[str, Any]:
+        """Ignore this config flow."""
+        await self.async_set_unique_id(user_input["unique_id"], raise_on_progress=False)
+        return self.async_create_entry(title="Ignored", data={})
 
 
 class OptionsFlowManager:

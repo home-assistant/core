@@ -6,7 +6,7 @@ import aiohue
 import pytest
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.hue import config_flow, const
 
 from tests.common import MockConfigEntry, mock_coro
@@ -95,6 +95,11 @@ async def test_flow_one_bridge_discovered(hass, aioclient_mock):
 
 async def test_flow_two_bridges_discovered(hass, aioclient_mock):
     """Test config flow discovers two bridges."""
+    # Add ignored config entry. Should still show up as option.
+    MockConfigEntry(
+        domain="hue", source=config_entries.SOURCE_IGNORE, unique_id="bla"
+    ).add_to_hass(hass)
+
     aioclient_mock.get(
         const.API_NUPNP,
         json=[
