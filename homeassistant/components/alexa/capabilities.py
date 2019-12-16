@@ -942,6 +942,8 @@ class AlexaModeController(AlexaCapability):
         if isinstance(self._resource, AlexaCapabilityResource):
             return self._resource.serialize_configuration()
 
+        return None
+
     def capability_resources(self):
         """Return capabilityResources object."""
 
@@ -1058,6 +1060,8 @@ class AlexaRangeController(AlexaCapability):
         """Return configuration with presetResources."""
         if isinstance(self._resource, AlexaCapabilityResource):
             return self._resource.serialize_configuration()
+
+        return None
 
     def capability_resources(self):
         """Return capabilityResources object."""
