@@ -134,9 +134,9 @@ class RachioStandbySwitch(RachioSwitch):
 
     def _handle_update(self, *args, **kwargs) -> None:
         """Update the state using webhook data."""
-        if args[0][KEY_SUBTYPE] == SUBTYPE_SLEEP_MODE_ON:
+        if args[0][0][KEY_SUBTYPE] == SUBTYPE_SLEEP_MODE_ON:
             self._state = True
-        elif args[0][KEY_SUBTYPE] == SUBTYPE_SLEEP_MODE_OFF:
+        elif args[0][0][KEY_SUBTYPE] == SUBTYPE_SLEEP_MODE_OFF:
             self._state = False
 
         self.schedule_update_ha_state()
