@@ -163,7 +163,7 @@ aioharmony==0.1.13
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==1.9.2
+aiohue==1.10.1
 
 # homeassistant.components.imap
 aioimaplib==0.7.15

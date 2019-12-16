@@ -2,16 +2,14 @@
 import ipaddress
 import logging
 
+from aiohue.util import normalize_bridge_id
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.const import CONF_FILENAME, CONF_HOST
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
-from .bridge import HueBridge, normalize_bridge_id
-from .config_flow import (  # Loading the config flow file will register the flow
-    configured_hosts,
-)
+from .bridge import HueBridge
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,8 +30,6 @@ BRIDGE_CONFIG_SCHEMA = vol.Schema(
     {
         # Validate as IP address and then convert back to a string.
         vol.Required(CONF_HOST): vol.All(ipaddress.ip_address, cv.string),
-        # This is for legacy reasons and is only used for importing auth.
-        vol.Optional(CONF_FILENAME, default=PHUE_CONFIG_FILE): cv.string,
         vol.Optional(
             CONF_ALLOW_UNREACHABLE, default=DEFAULT_ALLOW_UNREACHABLE
         ): cv.boolean,
@@ -65,7 +61,6 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN] = {}
     hass.data[DATA_CONFIGS] = {}
-    configured = configured_hosts(hass)
 
     # User has configured bridges
     if CONF_BRIDGES not in conf:
@@ -73,29 +68,28 @@ async def async_setup(hass, config):
 
     bridges = conf[CONF_BRIDGES]
 
+    configured_hosts = set(
+        entry.data["host"] for entry in hass.config_entries.async_entries(DOMAIN)
+    )
+
     for bridge_conf in bridges:
         host = bridge_conf[CONF_HOST]
 
         # Store config in hass.data so the config entry can find it
         hass.data[DATA_CONFIGS][host] = bridge_conf
 
-        # If configured, the bridge will be set up during config entry phase
-        if host in configured:
+        if host in configured_hosts:
             continue
 
-        # No existing config entry found, try importing it or trigger link
-        # config flow if no existing auth. Because we're inside the setup of
-        # this component we'll have to use hass.async_add_job to avoid a
-        # deadlock: creating a config entry will set up the component but the
-        # setup would block till the entry is created!
+        # No existing config entry found, trigger link config flow. Because we're
+        # inside the setup of this component we'll have to use hass.async_add_job
+        # to avoid a deadlock: creating a config entry will set up the component
+        # but the setup would block till the entry is created!
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": config_entries.SOURCE_IMPORT},
-                data={
-                    "host": bridge_conf[CONF_HOST],
-                    "path": bridge_conf[CONF_FILENAME],
-                },
+                data={"host": bridge_conf[CONF_HOST]},
             )
         )
 
