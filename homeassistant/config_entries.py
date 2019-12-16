@@ -75,10 +75,6 @@ class OperationNotAllowed(ConfigError):
     """Raised when a config entry operation is not allowed."""
 
 
-class UniqueIdInProgress(data_entry_flow.AbortFlow):
-    """Error to indicate that the unique Id is in progress."""
-
-
 class ConfigEntry:
     """Hold a configuration entry."""
 
@@ -379,6 +375,7 @@ class ConfigEntry:
             "system_options": self.system_options.as_dict(),
             "source": self.source,
             "connection_class": self.connection_class,
+            "unique_id": self.unique_id,
         }
 
 
@@ -482,6 +479,8 @@ class ConfigEntries:
                 options=entry.get("options"),
                 # New in 0.98
                 system_options=entry.get("system_options", {}),
+                # New in 0.104
+                unique_id=entry.get("unique_id"),
             )
             for entry in config["entries"]
         ]
@@ -617,11 +616,20 @@ class ConfigEntries:
 
         # Check if config entry exists with unique ID. Unload it.
         existing_entry = None
-        unique_id = flow.context.get("unique_id")
 
-        if unique_id is not None:
+        if flow.unique_id is not None:
+            # Abort all flows in progress with same unique ID.
+            for progress_flow in self.flow.async_progress():
+                if (
+                    progress_flow["handler"] == flow.handler
+                    and progress_flow["flow_id"] != flow.flow_id
+                    and progress_flow["context"].get("unique_id") == flow.unique_id
+                ):
+                    self.flow.async_abort(progress_flow["flow_id"])
+
+            # Find existing entry.
             for check_entry in self.async_entries(result["handler"]):
-                if check_entry.unique_id == unique_id:
+                if check_entry.unique_id == flow.unique_id:
                     existing_entry = check_entry
                     break
 
@@ -643,15 +651,16 @@ class ConfigEntries:
             system_options={},
             source=flow.context["source"],
             connection_class=flow.CONNECTION_CLASS,
-            unique_id=unique_id,
+            unique_id=flow.unique_id,
         )
         self._entries.append(entry)
-        self._async_schedule_save()
 
         await self.async_setup(entry.entry_id)
 
         if existing_entry is not None:
             await self.async_remove(existing_entry.entry_id)
+
+        self._async_schedule_save()
 
         result["result"] = entry
         return result
@@ -723,8 +732,6 @@ async def _old_conf_migrator(old_config: Dict[str, Any]) -> Dict[str, Any]:
 class ConfigFlow(data_entry_flow.FlowHandler):
     """Base class for config flows with some helpers."""
 
-    unique_id = None
-
     def __init_subclass__(cls, domain: Optional[str] = None, **kwargs: Any) -> None:
         """Initialize a subclass, register if possible."""
         super().__init_subclass__(**kwargs)  # type: ignore
@@ -733,11 +740,29 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
     CONNECTION_CLASS = CONN_CLASS_UNKNOWN
 
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return unique ID if available."""
+        # pylint: disable=no-member
+        if not self.context:
+            return None
+
+        return cast(Optional[str], self.context.get("unique_id"))
+
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> "OptionsFlow":
         """Get the options flow for this handler."""
         raise data_entry_flow.UnknownHandler
+
+    @callback
+    def _abort_if_unique_id_configured(self) -> None:
+        """Abort if the unique ID is already configured."""
+        if self.unique_id is None:
+            return
+
+        if self.unique_id in self._async_current_ids():
+            raise data_entry_flow.AbortFlow("already_configured")
 
     async def async_set_unique_id(
         self, unique_id: str, *, raise_on_progress: bool = True
@@ -749,7 +774,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         if raise_on_progress:
             for progress in self._async_in_progress():
                 if progress["context"].get("unique_id") == unique_id:
-                    raise UniqueIdInProgress("already_in_progress")
+                    raise data_entry_flow.AbortFlow("already_in_progress")
 
         # pylint: disable=no-member
         self.context["unique_id"] = unique_id
@@ -765,6 +790,15 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         """Return current entries."""
         assert self.hass is not None
         return self.hass.config_entries.async_entries(self.handler)
+
+    @callback
+    def _async_current_ids(self) -> Set[Optional[str]]:
+        """Return current unique IDs."""
+        assert self.hass is not None
+        return set(
+            entry.unique_id
+            for entry in self.hass.config_entries.async_entries(self.handler)
+        )
 
     @callback
     def _async_in_progress(self) -> List[Dict]:
