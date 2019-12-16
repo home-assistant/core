@@ -45,7 +45,7 @@ CONST_DEFAULT_HOST = "envoy"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_IP_ADDRESS, default=CONST_DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_USERNAME, default=""): cv.string,
+        vol.Optional(CONF_USERNAME, default="envoy"): cv.string,
         vol.Optional(CONF_PASSWORD, default=""): cv.string,
         vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSORS)): vol.All(
             cv.ensure_list, [vol.In(list(SENSORS))]
@@ -57,7 +57,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Enphase Envoy sensor."""
-
     ip_address = config[CONF_IP_ADDRESS]
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
     name = config[CONF_NAME]
@@ -135,7 +134,6 @@ class Envoy(Entity):
 
     async def async_update(self):
         """Get the energy production data from the Enphase Envoy."""
-
         if self._type != "inverters":
             _state = await getattr(self._envoy_reader, self._type)()
             if isinstance(_state, int):
