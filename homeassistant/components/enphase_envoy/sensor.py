@@ -9,9 +9,8 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
-    CONF_USERNAME,
     CONF_PASSWORD,
-    POWER_WATT,
+    CONF_USERNAME,
     ENERGY_WATT_HOUR,
     POWER_WATT,
 )
