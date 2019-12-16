@@ -1001,3 +1001,110 @@ async def test_reload_entry_entity_registry_works(hass):
     await hass.async_block_till_done()
 
     assert len(mock_unload_entry.mock_calls) == 1
+
+
+async def test_unqiue_id_persisted(hass, manager):
+    """Test that a unique ID is stored in the config entry."""
+    mock_setup_entry = MagicMock(return_value=mock_coro(True))
+
+    mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            await self.async_set_unique_id("mock-unique-id")
+            return self.async_create_entry(title="mock-title", data={})
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert len(mock_setup_entry.mock_calls) == 1
+    p_hass, p_entry = mock_setup_entry.mock_calls[0][1]
+
+    assert p_hass is hass
+    assert p_entry.unique_id == "mock-unique-id"
+
+
+async def test_unique_id_existing_entry(hass, manager):
+    """Test that we remove an entry if there already is an entry with unique ID."""
+    hass.config.components.add("comp")
+    MockConfigEntry(
+        domain="comp",
+        state=config_entries.ENTRY_STATE_LOADED,
+        unique_id="mock-unique-id",
+    ).add_to_hass(hass)
+
+    async_setup_entry = MagicMock(side_effect=lambda _, _2: mock_coro(True))
+    async_unload_entry = MagicMock(side_effect=lambda _, _2: mock_coro(True))
+    async_remove_entry = MagicMock(side_effect=lambda _, _2: mock_coro(True))
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=async_setup_entry,
+            async_unload_entry=async_unload_entry,
+            async_remove_entry=async_remove_entry,
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            existing_entry = await self.async_set_unique_id("mock-unique-id")
+
+            assert existing_entry is not None
+
+            return self.async_create_entry(title="mock-title", data={"via": "flow"})
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        result = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    entries = hass.config_entries.async_entries("comp")
+    assert len(entries) == 1
+    assert entries[0].data == {"via": "flow"}
+
+    assert len(async_setup_entry.mock_calls) == 1
+    assert len(async_unload_entry.mock_calls) == 1
+    assert len(async_remove_entry.mock_calls) == 1
+
+
+async def test_unique_id_in_progress(hass, manager):
+    """Test that we abort if there is already a flow in progress with same unique id."""
+    mock_integration(hass, MockModule("comp"))
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            await self.async_set_unique_id("mock-unique-id")
+            return self.async_show_form(step_id="discovery")
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        # Create one to be in progress
+        result = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+        # Will be canceled
+        result2 = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["reason"] == "already_in_progress"
