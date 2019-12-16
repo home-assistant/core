@@ -247,7 +247,7 @@ class EnOceanWindowHandle(EnOceanSensor):
 
         if action == 0x07:
             self._state = STATE_CLOSED
-        if (action == 0x06) or (action == 0x04):
+        if action in (0x04, 0x06):
             self._state = STATE_OPEN
         if action == 0x05:
             self._state = "tilt"
