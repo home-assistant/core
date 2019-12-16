@@ -48,10 +48,59 @@ DISCOVERY_SCHEMAS = [
         ),
     },
     {
-        const.DISC_COMPONENT: "climate",
+        const.DISC_COMPONENT: "climate",  # thermostat without COMMAND_CLASS_THERMOSTAT_MODE
         const.DISC_GENERIC_DEVICE_CLASS: [
             const.GENERIC_TYPE_THERMOSTAT,
             const.GENERIC_TYPE_SENSOR_MULTILEVEL,
+        ],
+        const.DISC_SPECIFIC_DEVICE_CLASS: [
+            const.SPECIFIC_TYPE_THERMOSTAT_HEATING,
+            const.SPECIFIC_TYPE_SETPOINT_THERMOSTAT,
+        ],
+        const.DISC_VALUES: dict(
+            DEFAULT_VALUES_SCHEMA,
+            **{
+                const.DISC_PRIMARY: {
+                    const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_THERMOSTAT_SETPOINT]
+                },
+                "temperature": {
+                    const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_SENSOR_MULTILEVEL],
+                    const.DISC_INDEX: [const.INDEX_SENSOR_MULTILEVEL_TEMPERATURE],
+                    const.DISC_OPTIONAL: True,
+                },
+                "fan_mode": {
+                    const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_THERMOSTAT_FAN_MODE],
+                    const.DISC_OPTIONAL: True,
+                },
+                "operating_state": {
+                    const.DISC_COMMAND_CLASS: [
+                        const.COMMAND_CLASS_THERMOSTAT_OPERATING_STATE
+                    ],
+                    const.DISC_OPTIONAL: True,
+                },
+                "fan_action": {
+                    const.DISC_COMMAND_CLASS: [
+                        const.COMMAND_CLASS_THERMOSTAT_FAN_ACTION
+                    ],
+                    const.DISC_OPTIONAL: True,
+                },
+                "mode": {
+                    const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_THERMOSTAT_MODE],
+                    const.DISC_OPTIONAL: True,
+                },
+            },
+        ),
+    },
+    {
+        const.DISC_COMPONENT: "climate",  # thermostat with COMMAND_CLASS_THERMOSTAT_MODE
+        const.DISC_GENERIC_DEVICE_CLASS: [
+            const.GENERIC_TYPE_THERMOSTAT,
+            const.GENERIC_TYPE_SENSOR_MULTILEVEL,
+        ],
+        const.DISC_SPECIFIC_DEVICE_CLASS: [
+            const.SPECIFIC_TYPE_THERMOSTAT_GENERAL,
+            const.SPECIFIC_TYPE_THERMOSTAT_GENERAL_V2,
+            const.SPECIFIC_TYPE_SETBACK_THERMOSTAT,
         ],
         const.DISC_VALUES: dict(
             DEFAULT_VALUES_SCHEMA,
