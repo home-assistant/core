@@ -15,7 +15,7 @@ LONGITUDE = "-73.970314"
 
 def build_base_mock_url(api_key, additional_params):
     """Construct a url for HERE."""
-    base_url = "https://weather.api.here.com/weather/1.0/report.json?"
+    base_url = "https://weather.ls.hereapi.com/weather/1.0/report.json?"
     parameters = {
         "apikey": api_key,
         "oneobservation": True,
