@@ -2,7 +2,7 @@
 import asyncio
 import functools
 import logging
-from typing import Any, Callable, Dict, List, Optional, Set, cast
+from typing import Any, Callable, Dict, List, Optional, Set, Union, cast
 import uuid
 import weakref
 
@@ -75,6 +75,10 @@ class OperationNotAllowed(ConfigError):
     """Raised when a config entry operation is not allowed."""
 
 
+class UniqueIdInProgress(data_entry_flow.AbortFlow):
+    """Error to indicate that the unique Id is in progress."""
+
+
 class ConfigEntry:
     """Hold a configuration entry."""
 
@@ -85,6 +89,7 @@ class ConfigEntry:
         "title",
         "data",
         "options",
+        "unique_id",
         "system_options",
         "source",
         "connection_class",
@@ -104,6 +109,7 @@ class ConfigEntry:
         connection_class: str,
         system_options: dict,
         options: Optional[dict] = None,
+        unique_id: Optional[str] = None,
         entry_id: Optional[str] = None,
         state: str = ENTRY_STATE_NOT_LOADED,
     ) -> None:
@@ -137,6 +143,9 @@ class ConfigEntry:
 
         # State of the entry (LOADED, NOT_LOADED)
         self.state = state
+
+        # Unique ID of this entry.
+        self.unique_id = unique_id
 
         # Listeners to call on update
         self.update_listeners: List = []
@@ -533,11 +542,15 @@ class ConfigEntries:
         self,
         entry: ConfigEntry,
         *,
+        unique_id: Union[str, dict, None] = _UNDEF,
         data: dict = _UNDEF,
         options: dict = _UNDEF,
         system_options: dict = _UNDEF,
     ) -> None:
         """Update a config entry."""
+        if unique_id is not _UNDEF:
+            entry.unique_id = cast(Optional[str], unique_id)
+
         if data is not _UNDEF:
             entry.data = data
 
@@ -602,6 +615,25 @@ class ConfigEntries:
         if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
             return result
 
+        # Check if config entry exists with unique ID. Unload it.
+        existing_entry = None
+        unique_id = flow.context.get("unique_id")
+
+        if unique_id is not None:
+            for check_entry in self.async_entries(result["handler"]):
+                if check_entry.unique_id == unique_id:
+                    existing_entry = check_entry
+                    break
+
+        # Unload the entry before setting up the new one.
+        # We will remove it only after the other one is set up,
+        # so that device customizations are not getting lost.
+        if (
+            existing_entry is not None
+            and existing_entry.state not in UNRECOVERABLE_STATES
+        ):
+            await self.async_unload(existing_entry.entry_id)
+
         entry = ConfigEntry(
             version=result["version"],
             domain=result["handler"],
@@ -611,11 +643,15 @@ class ConfigEntries:
             system_options={},
             source=flow.context["source"],
             connection_class=flow.CONNECTION_CLASS,
+            unique_id=unique_id,
         )
         self._entries.append(entry)
         self._async_schedule_save()
 
         await self.async_setup(entry.entry_id)
+
+        if existing_entry is not None:
+            await self.async_remove(existing_entry.entry_id)
 
         result["result"] = entry
         return result
@@ -687,6 +723,8 @@ async def _old_conf_migrator(old_config: Dict[str, Any]) -> Dict[str, Any]:
 class ConfigFlow(data_entry_flow.FlowHandler):
     """Base class for config flows with some helpers."""
 
+    unique_id = None
+
     def __init_subclass__(cls, domain: Optional[str] = None, **kwargs: Any) -> None:
         """Initialize a subclass, register if possible."""
         super().__init_subclass__(**kwargs)  # type: ignore
@@ -700,6 +738,27 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     def async_get_options_flow(config_entry: ConfigEntry) -> "OptionsFlow":
         """Get the options flow for this handler."""
         raise data_entry_flow.UnknownHandler
+
+    async def async_set_unique_id(
+        self, unique_id: str, *, raise_on_progress: bool = True
+    ) -> Optional[ConfigEntry]:
+        """Set a unique ID for the config flow.
+
+        Returns optionally existing config entry with same ID.
+        """
+        if raise_on_progress:
+            for progress in self._async_in_progress():
+                if progress["context"].get("unique_id") == unique_id:
+                    raise UniqueIdInProgress("already_in_progress")
+
+        # pylint: disable=no-member
+        self.context["unique_id"] = unique_id
+
+        for entry in self._async_current_entries():
+            if entry.unique_id == unique_id:
+                return entry
+
+        return None
 
     @callback
     def _async_current_entries(self) -> List[ConfigEntry]:

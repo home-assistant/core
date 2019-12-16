@@ -671,6 +671,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
         options={},
         system_options={},
         connection_class=config_entries.CONN_CLASS_UNKNOWN,
+        unique_id=None,
     ):
         """Initialize a mock config entry."""
         kwargs = {
@@ -682,6 +683,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
             "version": version,
             "title": title,
             "connection_class": connection_class,
+            "unique_id": unique_id,
         }
         if source is not None:
             kwargs["source"] = source

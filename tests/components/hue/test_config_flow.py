@@ -19,6 +19,7 @@ async def test_flow_works(hass, aioclient_mock):
 
     flow = config_flow.HueFlowHandler()
     flow.hass = hass
+    flow.context = {}
     await flow.async_step_init()
 
     with patch("aiohue.Bridge") as mock_bridge:
@@ -349,19 +350,20 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(hass):
     accessible via a single IP. So when we create a new entry, we'll remove
     all existing entries that either have same IP or same bridge_id.
     """
-    MockConfigEntry(
-        domain="hue", data={"host": "0.0.0.0", "bridge_id": "id-1234"}
-    ).add_to_hass(hass)
+    orig_entry = MockConfigEntry(
+        domain="hue",
+        data={"host": "0.0.0.0", "bridge_id": "id-1234"},
+        unique_id="id-1234",
+    )
+    orig_entry.add_to_hass(hass)
 
     MockConfigEntry(
-        domain="hue", data={"host": "1.2.3.4", "bridge_id": "id-1234"}
+        domain="hue",
+        data={"host": "1.2.3.4", "bridge_id": "id-5678"},
+        unique_id="id-5678",
     ).add_to_hass(hass)
 
     assert len(hass.config_entries.async_entries("hue")) == 2
-
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-    flow.context = {}
 
     bridge = Mock()
     bridge.username = "username-abc"
@@ -369,8 +371,12 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(hass):
     bridge.config.name = "Mock Bridge"
     bridge.host = "0.0.0.0"
 
-    with patch.object(config_flow, "get_bridge", return_value=mock_coro(bridge)):
-        result = await flow.async_step_import({"host": "0.0.0.0"})
+    with patch.object(
+        config_flow, "_find_username_from_config", return_value="mock-user"
+    ), patch.object(config_flow, "get_bridge", return_value=mock_coro(bridge)):
+        result = await hass.config_entries.flow.async_init(
+            "hue", data={"host": "2.2.2.2"}, context={"source": "import"}
+        )
 
     assert result["type"] == "create_entry"
     assert result["title"] == "Mock Bridge"
@@ -379,9 +385,11 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(hass):
         "bridge_id": "id-1234",
         "username": "username-abc",
     }
-    # We did not process the result of this entry but already removed the old
-    # ones. So we should have 0 entries.
-    assert len(hass.config_entries.async_entries("hue")) == 0
+    entries = hass.config_entries.async_entries("hue")
+    assert len(entries) == 2
+    new_entry = entries[-1]
+    assert orig_entry.entry_id != new_entry.entry_id
+    assert new_entry.unique_id == "id-1234"
 
 
 async def test_bridge_homekit(hass):
@@ -398,6 +406,7 @@ async def test_bridge_homekit(hass):
                 "host": "0.0.0.0",
                 "serial": "1234",
                 "manufacturerURL": config_flow.HUE_MANUFACTURERURL,
+                "properties": {"id": "aa:bb:cc:dd:ee:ff"},
             }
         )
 
