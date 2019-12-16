@@ -375,6 +375,7 @@ class ConfigEntry:
             "system_options": self.system_options.as_dict(),
             "source": self.source,
             "connection_class": self.connection_class,
+            "unique_id": self.unique_id,
         }
 
 
@@ -478,6 +479,8 @@ class ConfigEntries:
                 options=entry.get("options"),
                 # New in 0.98
                 system_options=entry.get("system_options", {}),
+                # New in 0.104
+                unique_id=entry.get("unique_id"),
             )
             for entry in config["entries"]
         ]

@@ -434,8 +434,8 @@ async def test_saving_and_loading(hass):
         VERSION = 5
         CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-        @asyncio.coroutine
-        def async_step_user(self, user_input=None):
+        async def async_step_user(self, user_input=None):
+            await self.async_set_unique_id("unique")
             return self.async_create_entry(title="Test Title", data={"token": "abcd"})
 
     with patch.dict(config_entries.HANDLERS, {"test": TestFlow}):
@@ -477,6 +477,7 @@ async def test_saving_and_loading(hass):
         assert orig.data == loaded.data
         assert orig.source == loaded.source
         assert orig.connection_class == loaded.connection_class
+        assert orig.unique_id == loaded.unique_id
 
 
 async def test_forward_entry_sets_up_component(hass):
