@@ -58,7 +58,6 @@ SENSOR_TYPES = {
 }
 
 
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
@@ -238,14 +237,12 @@ class EnOceanWindowHandle(EnOceanSensor):
     """
 
     def __init__(self, dev_id, dev_name):
-        """Initialize the EnOcean humidity sensor device."""
+        """Initialize the EnOcean window handle sensor device."""
         super().__init__(dev_id, dev_name, DEVICE_CLASS_WINDOWHANDLE)
-        self._rawdata = "no packet received"
 
     def value_changed(self, packet):
         """Update the internal state of the sensor."""
 
-        self._rawdata = f"{packet}"
         action = (packet.data[1] & 0x70) >> 4
 
         if action == 0x07:
@@ -256,11 +253,3 @@ class EnOceanWindowHandle(EnOceanSensor):
             self._state = "tilt"
 
         self.schedule_update_ha_state()
-
-    @property
-    def state_attributes(self):
-        attr={}
-
-        attr["rawdata"] = self._rawdata
-
-        return attr
