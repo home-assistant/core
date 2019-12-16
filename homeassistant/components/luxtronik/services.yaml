@@ -1,5 +1,9 @@
 write:
   description: Write a parameter on the luxtronik heatpump.
   fields:
-    parameter: {description: ID of the value to write., example: "ID_Ba_Bw_akt"}
-    value: {description: Value to write., example: "Automatic"}
+    parameter: 
+      description: ID of the value to write.
+      example: "ID_Ba_Bw_akt"
+    value: 
+      description: Value to write. 
+      example: "Automatic"
