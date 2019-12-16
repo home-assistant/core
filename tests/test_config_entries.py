@@ -1108,3 +1108,40 @@ async def test_unique_id_in_progress(hass, manager):
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result2["reason"] == "already_in_progress"
+
+
+async def test_finish_flow_aborts_progress(hass, manager):
+    """Test that when finishing a flow, we abort other flows in progress with unique ID."""
+    mock_integration(
+        hass,
+        MockModule("comp", async_setup_entry=MagicMock(return_value=mock_coro(True))),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            await self.async_set_unique_id("mock-unique-id", raise_on_progress=False)
+
+            if user_input is None:
+                return self.async_show_form(step_id="discovery")
+
+            return self.async_create_entry(title="yo", data={})
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        # Create one to be in progress
+        result = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+        # Will finish and cancel other one.
+        result2 = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}, data={}
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    assert len(hass.config_entries.flow.async_progress()) == 0

@@ -1134,6 +1134,9 @@ class ServiceRegistry:
 
         self._services[domain].pop(service)
 
+        if not self._services[domain]:
+            self._services.pop(domain)
+
         self._hass.bus.async_fire(
             EVENT_SERVICE_REMOVED, {ATTR_DOMAIN: domain, ATTR_SERVICE: service}
         )
