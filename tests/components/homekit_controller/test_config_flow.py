@@ -74,6 +74,7 @@ async def test_discovery_works(hass):
     assert flow.context == {
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
+        "unique_id": "00:00:00:00:00:00",
     }
 
     # User initiates pairing - device enters pairing mode and displays code
@@ -122,6 +123,7 @@ async def test_discovery_works_upper_case(hass):
     assert flow.context == {
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
+        "unique_id": "00:00:00:00:00:00",
     }
 
     # User initiates pairing - device enters pairing mode and displays code
@@ -169,6 +171,7 @@ async def test_discovery_works_missing_csharp(hass):
     assert flow.context == {
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
+        "unique_id": "00:00:00:00:00:00",
     }
 
     # User initiates pairing - device enters pairing mode and displays code
@@ -234,6 +237,7 @@ async def test_pair_already_paired_1(hass):
     assert flow.context == {
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
+        "unique_id": "00:00:00:00:00:00",
     }
 
 
@@ -259,6 +263,7 @@ async def test_discovery_ignored_model(hass):
     assert flow.context == {
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
+        "unique_id": "00:00:00:00:00:00",
     }
 
 
@@ -286,6 +291,7 @@ async def test_discovery_invalid_config_entry(hass):
     assert flow.context == {
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
+        "unique_id": "00:00:00:00:00:00",
     }
 
     # Discovery of a HKID that is in a pairable state but for which there is
@@ -318,6 +324,7 @@ async def test_discovery_already_configured(hass):
     assert flow.context == {
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
+        "unique_id": "00:00:00:00:00:00",
     }
 
     assert conn.async_config_num_changed.call_count == 0
@@ -346,6 +353,7 @@ async def test_discovery_already_configured_config_change(hass):
     assert flow.context == {
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
+        "unique_id": "00:00:00:00:00:00",
     }
 
     assert conn.async_refresh_entity_map.call_args == mock.call(2)
@@ -369,6 +377,7 @@ async def test_pair_unable_to_pair(hass):
     assert flow.context == {
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
+        "unique_id": "00:00:00:00:00:00",
     }
 
     # User initiates pairing - device enters pairing mode and displays code
@@ -402,6 +411,7 @@ async def test_pair_abort_errors_on_start(hass, exception, expected):
     assert flow.context == {
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
+        "unique_id": "00:00:00:00:00:00",
     }
 
     # User initiates pairing - device refuses to enter pairing mode
@@ -414,6 +424,7 @@ async def test_pair_abort_errors_on_start(hass, exception, expected):
     assert flow.context == {
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
+        "unique_id": "00:00:00:00:00:00",
     }
 
 
@@ -436,6 +447,7 @@ async def test_pair_form_errors_on_start(hass, exception, expected):
     assert flow.context == {
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
+        "unique_id": "00:00:00:00:00:00",
     }
 
     # User initiates pairing - device refuses to enter pairing mode
@@ -448,6 +460,7 @@ async def test_pair_form_errors_on_start(hass, exception, expected):
     assert flow.context == {
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
+        "unique_id": "00:00:00:00:00:00",
     }
 
 
@@ -470,6 +483,7 @@ async def test_pair_abort_errors_on_finish(hass, exception, expected):
     assert flow.context == {
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
+        "unique_id": "00:00:00:00:00:00",
     }
 
     # User initiates pairing - device enters pairing mode and displays code
@@ -486,6 +500,7 @@ async def test_pair_abort_errors_on_finish(hass, exception, expected):
     assert flow.context == {
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
+        "unique_id": "00:00:00:00:00:00",
     }
 
 
@@ -508,6 +523,7 @@ async def test_pair_form_errors_on_finish(hass, exception, expected):
     assert flow.context == {
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
+        "unique_id": "00:00:00:00:00:00",
     }
 
     # User initiates pairing - device enters pairing mode and displays code
@@ -524,6 +540,7 @@ async def test_pair_form_errors_on_finish(hass, exception, expected):
     assert flow.context == {
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
+        "unique_id": "00:00:00:00:00:00",
     }
 
 
@@ -712,6 +729,7 @@ async def test_parse_new_homekit_json(hass):
     assert flow.context == {
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
+        "unique_id": "00:00:00:00:00:00",
     }
 
 
@@ -763,6 +781,7 @@ async def test_parse_old_homekit_json(hass):
     assert flow.context == {
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
+        "unique_id": "00:00:00:00:00:00",
     }
 
 
@@ -823,4 +842,5 @@ async def test_parse_overlapping_homekit_json(hass):
     assert flow.context == {
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
+        "unique_id": "00:00:00:00:00:00",
     }

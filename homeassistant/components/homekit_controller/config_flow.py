@@ -46,6 +46,11 @@ def load_old_pairings(hass):
     return old_pairings
 
 
+def normalize_hkid(hkid):
+    """Normalize a hkid so that it is safe to compare with other normalized hkids."""
+    return hkid.lower()
+
+
 @callback
 def find_existing_host(hass, serial):
     """Return a set of the configured hosts."""
@@ -77,6 +82,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             key = user_input["device"]
             self.hkid = self.devices[key]["id"]
             self.model = self.devices[key]["md"]
+            await self.async_set_unique_id(normalize_hkid(self.hkid))
             return await self.async_step_pair()
 
         all_hosts = await self.hass.async_add_executor_job(self.controller.discover, 5)
@@ -121,6 +127,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         paired = not status_flags & 0x01
 
         _LOGGER.debug("Discovered device %s (%s - %s)", name, model, hkid)
+
+        await self.async_set_unique_id(normalize_hkid(hkid))
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["hkid"] = hkid
