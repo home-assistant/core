@@ -14,8 +14,6 @@ pr:
 
 resources:
   containers:
-  - container: 36
-    image: homeassistant/ci-azure:3.6
   - container: 37
     image: homeassistant/ci-azure:3.7
   repositories:
@@ -25,7 +23,7 @@ resources:
       endpoint: 'home-assistant'
 variables:
   - name: PythonMain
-    value: '36'
+    value: '37'
   - group: codecov
 
 stages:
@@ -108,8 +106,6 @@ stages:
     strategy:
       maxParallel: 3
       matrix:
-        Python36:
-          python.container: '36'
         Python37:
           python.container: '37'
     container: $[ variables['python.container'] ]

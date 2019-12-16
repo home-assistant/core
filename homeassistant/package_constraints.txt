@@ -7,7 +7,6 @@ async_timeout==3.0.1
 attrs==19.3.0
 bcrypt==3.1.7
 certifi>=2019.11.28
-contextvars==2.4;python_version<"3.7"
 cryptography==2.8
 defusedxml==0.6.0
 distro==1.4.0
@@ -29,7 +28,7 @@ zeroconf==0.24.0
 
 pycryptodome>=3.6.6
 
-# Breaks Python 3.6 and is not needed for our supported Python versions
+# Not needed for our supported Python versions
 enum34==1000000000.0.0
 
 # This is a old unmaintained library and is replaced with pycryptodome
