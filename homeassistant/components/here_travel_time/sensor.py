@@ -32,8 +32,7 @@ CONF_DESTINATION_ENTITY_ID = "destination_entity_id"
 CONF_ORIGIN_LATITUDE = "origin_latitude"
 CONF_ORIGIN_LONGITUDE = "origin_longitude"
 CONF_ORIGIN_ENTITY_ID = "origin_entity_id"
-CONF_APP_ID = "app_id"
-CONF_APP_CODE = "app_code"
+CONF_API_KEY = "api_key"
 CONF_TRAFFIC_MODE = "traffic_mode"
 CONF_ROUTE_MODE = "route_mode"
 
@@ -97,8 +96,7 @@ PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_ORIGIN_LATITUDE, CONF_ORIGIN_ENTITY_ID),
     PLATFORM_SCHEMA.extend(
         {
-            vol.Required(CONF_APP_ID): cv.string,
-            vol.Required(CONF_APP_CODE): cv.string,
+            vol.Required(CONF_API_KEY): cv.string,
             vol.Inclusive(
                 CONF_DESTINATION_LATITUDE, "destination_coordinates"
             ): cv.latitude,
@@ -131,9 +129,8 @@ async def async_setup_platform(
 ) -> None:
     """Set up the HERE travel time platform."""
 
-    app_id = config[CONF_APP_ID]
-    app_code = config[CONF_APP_CODE]
-    here_client = herepy.RoutingApi(app_id, app_code)
+    api_key = config[CONF_API_KEY]
+    here_client = herepy.RoutingApi(api_key)
 
     if not await hass.async_add_executor_job(
         _are_valid_client_credentials, here_client
