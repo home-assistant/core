@@ -614,19 +614,20 @@ class ConfigEntries:
         if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
             return result
 
-        # Abort all flows in progress with same unique ID.
-        for progress_flow in self.flow.async_progress():
-            if (
-                progress_flow["handler"] == flow.handler
-                and progress_flow["flow_id"] != flow.flow_id
-                and progress_flow["context"].get("unique_id") == flow.unique_id
-            ):
-                self.flow.async_abort(progress_flow["flow_id"])
-
         # Check if config entry exists with unique ID. Unload it.
         existing_entry = None
 
         if flow.unique_id is not None:
+            # Abort all flows in progress with same unique ID.
+            for progress_flow in self.flow.async_progress():
+                if (
+                    progress_flow["handler"] == flow.handler
+                    and progress_flow["flow_id"] != flow.flow_id
+                    and progress_flow["context"].get("unique_id") == flow.unique_id
+                ):
+                    self.flow.async_abort(progress_flow["flow_id"])
+
+            # Find existing entry.
             for check_entry in self.async_entries(result["handler"]):
                 if check_entry.unique_id == flow.unique_id:
                     existing_entry = check_entry

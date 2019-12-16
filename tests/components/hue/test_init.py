@@ -150,7 +150,7 @@ async def test_unload_entry(hass):
         return_value=mock_coro(Mock()),
     ):
         mock_bridge.return_value.async_setup.return_value = mock_coro(True)
-        mock_bridge.return_value.api.config = Mock()
+        mock_bridge.return_value.api.config = Mock(bridgeid="aabbccddeeff")
         assert await async_setup_component(hass, hue.DOMAIN, {}) is True
 
     assert len(mock_bridge.return_value.mock_calls) == 1
