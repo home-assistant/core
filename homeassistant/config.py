@@ -821,11 +821,12 @@ def async_notify_setup_error(
 
     errors[component] = errors.get(component) or display_link
 
-    message = "The following components and platforms could not be set up:\n\n"
+    message = "The following integrations and platforms could not be set up:\n\n"
 
     for name, link in errors.items():
         if link:
-            part = HA_COMPONENT_URL.format(name.replace("_", "-"), name)
+            integration = name.split(".")[-1]
+            part = HA_COMPONENT_URL.format(name, integration)
         else:
             part = name
 
