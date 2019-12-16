@@ -12,9 +12,9 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     POWER_WATT,
-    TEMP_CELSIUS,
-    STATE_OPEN,
     STATE_CLOSED,
+    STATE_OPEN,
+    TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
 
