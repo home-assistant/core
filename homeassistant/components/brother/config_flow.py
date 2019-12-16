@@ -1,6 +1,5 @@
 """Adds config flow for Brother Printer."""
 import ipaddress
-import logging
 import re
 
 from brother import Brother, SnmpError, UnsupportedModel
@@ -18,8 +17,6 @@ from .const import (
     PRINTER_TYPES,
     SENSOR_TYPES,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
