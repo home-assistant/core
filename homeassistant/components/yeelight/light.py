@@ -142,6 +142,21 @@ MODEL_TO_DEVICE_TYPE = {
     "ceiling4": BulbType.WhiteTempMood,
 }
 
+EFFECTS_MAP = {
+    EFFECT_DISCO: yee_transitions.disco,
+    EFFECT_TEMP: yee_transitions.temp,
+    EFFECT_STROBE: yee_transitions.strobe,
+    EFFECT_STROBE_COLOR: yee_transitions.strobe_color,
+    EFFECT_ALARM: yee_transitions.alarm,
+    EFFECT_POLICE: yee_transitions.police,
+    EFFECT_POLICE2: yee_transitions.police2,
+    EFFECT_CHRISTMAS: yee_transitions.christmas,
+    EFFECT_RGB: yee_transitions.rgb,
+    EFFECT_RANDOM_LOOP: yee_transitions.randomloop,
+    EFFECT_LSD: yee_transitions.lsd,
+    EFFECT_SLOWDOWN: yee_transitions.slowdown,
+}
+
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Range(min=1, max=100))
 
 SERVICE_SCHEMA_SET_MODE = YEELIGHT_SERVICE_SCHEMA.extend(
@@ -416,6 +431,7 @@ class YeelightGenericLight(Light):
         self._brightness = None
         self._color_temp = None
         self._hs = None
+        self._effect = None
 
         model_specs = self._bulb.get_model_specs()
         self._min_mireds = kelvin_to_mired(model_specs["color_temp"]["max"])
@@ -516,6 +532,11 @@ class YeelightGenericLight(Light):
         """Return the color property."""
         return self._hs
 
+    @property
+    def effect(self):
+        """Return the current effect."""
+        return self._effect
+
     # F821: https://github.com/PyCQA/pyflakes/issues/373
     @property
     def _bulb(self) -> "Bulb":  # noqa: F821
@@ -547,6 +568,16 @@ class YeelightGenericLight(Light):
         return YEELIGHT_MONO_EFFECT_LIST
 
     @property
+    def device_state_attributes(self):
+        """Return the device specific state attributes."""
+
+        attributes = {"flowing": self.device.is_color_flow_enabled}
+        if self.device.is_nightlight_supported:
+            attributes["night_light"] = self.device.is_nightlight_enabled
+
+        return attributes
+
+    @property
     def device(self):
         """Return yeelight device."""
         return self._device
@@ -554,6 +585,8 @@ class YeelightGenericLight(Light):
     def update(self):
         """Update light properties."""
         self._hs = self._get_hs_from_properties()
+        if not self.device.is_color_flow_enabled:
+            self._effect = None
 
     def _get_hs_from_properties(self):
         rgb = self._get_property("rgb")
@@ -658,45 +691,33 @@ class YeelightGenericLight(Light):
     @_cmd
     def set_effect(self, effect) -> None:
         """Activate effect."""
-        if effect:
-            if effect == EFFECT_STOP:
-                self._bulb.stop_flow(light_type=self.light_type)
-                return
+        if not effect:
+            return
 
-            effects_map = {
-                EFFECT_DISCO: yee_transitions.disco,
-                EFFECT_TEMP: yee_transitions.temp,
-                EFFECT_STROBE: yee_transitions.strobe,
-                EFFECT_STROBE_COLOR: yee_transitions.strobe_color,
-                EFFECT_ALARM: yee_transitions.alarm,
-                EFFECT_POLICE: yee_transitions.police,
-                EFFECT_POLICE2: yee_transitions.police2,
-                EFFECT_CHRISTMAS: yee_transitions.christmas,
-                EFFECT_RGB: yee_transitions.rgb,
-                EFFECT_RANDOM_LOOP: yee_transitions.randomloop,
-                EFFECT_LSD: yee_transitions.lsd,
-                EFFECT_SLOWDOWN: yee_transitions.slowdown,
-            }
+        if effect == EFFECT_STOP:
+            self._bulb.stop_flow(light_type=self.light_type)
+            return
 
-            if effect in self.custom_effects_names:
-                flow = Flow(**self.custom_effects[effect])
-            elif effect in effects_map:
-                flow = Flow(count=0, transitions=effects_map[effect]())
-            elif effect == EFFECT_FAST_RANDOM_LOOP:
-                flow = Flow(
-                    count=0, transitions=yee_transitions.randomloop(duration=250)
-                )
-            elif effect == EFFECT_WHATSAPP:
-                flow = Flow(count=2, transitions=yee_transitions.pulse(37, 211, 102))
-            elif effect == EFFECT_FACEBOOK:
-                flow = Flow(count=2, transitions=yee_transitions.pulse(59, 89, 152))
-            elif effect == EFFECT_TWITTER:
-                flow = Flow(count=2, transitions=yee_transitions.pulse(0, 172, 237))
+        if effect in self.custom_effects_names:
+            flow = Flow(**self.custom_effects[effect])
+        elif effect in EFFECTS_MAP:
+            flow = Flow(count=0, transitions=EFFECTS_MAP[effect]())
+        elif effect == EFFECT_FAST_RANDOM_LOOP:
+            flow = Flow(count=0, transitions=yee_transitions.randomloop(duration=250))
+        elif effect == EFFECT_WHATSAPP:
+            flow = Flow(count=2, transitions=yee_transitions.pulse(37, 211, 102))
+        elif effect == EFFECT_FACEBOOK:
+            flow = Flow(count=2, transitions=yee_transitions.pulse(59, 89, 152))
+        elif effect == EFFECT_TWITTER:
+            flow = Flow(count=2, transitions=yee_transitions.pulse(0, 172, 237))
+        else:
+            return
 
-            try:
-                self._bulb.start_flow(flow, light_type=self.light_type)
-            except BulbException as ex:
-                _LOGGER.error("Unable to set effect: %s", ex)
+        try:
+            self._bulb.start_flow(flow, light_type=self.light_type)
+            self._effect = effect
+        except BulbException as ex:
+            _LOGGER.error("Unable to set effect: %s", ex)
 
     def turn_on(self, **kwargs) -> None:
         """Turn the bulb on."""
