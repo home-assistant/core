@@ -1,6 +1,7 @@
 """Support for TPLink HS100/HS110/HS200 smart switch."""
 import logging
 import time
+import asyncio
 
 from pyHS100 import SmartDeviceException, SmartPlug
 
@@ -38,14 +39,14 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-def add_entity(device: SmartPlug, async_add_entities):
+def add_entity(hass: HomeAssistantType, device: SmartPlug, async_add_entities):
     """Check if device is online and add the entity."""
     # Attempt to get the sysinfo. If it fails, it will raise an
     # exception that is caught by async_add_entities_retry which
     # will try again later.
     device.get_sysinfo()
 
-    async_add_entities([SmartPlugSwitch(device)], update_before_add=True)
+    async_add_entities([SmartPlugSwitch(hass, device)], update_before_add=True)
 
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
@@ -60,8 +61,9 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_ent
 class SmartPlugSwitch(SwitchDevice):
     """Representation of a TPLink Smart Plug switch."""
 
-    def __init__(self, smartplug: SmartPlug):
+    def __init__(self, hass: HomeAssistantType, smartplug: SmartPlug):
         """Initialize the switch."""
+        self.hass = hass
         self.smartplug = smartplug
         self._sysinfo = None
         self._state = None
@@ -124,63 +126,69 @@ class SmartPlugSwitch(SwitchDevice):
         children = self.smartplug.sys_info["children"]
         return next(c for c in children if c["id"] == self.smartplug.context)
 
-    def update(self):
+    async def async_attempt_update(self):
+        try:
+            if not self._sysinfo:
+                self._sysinfo = self.smartplug.sys_info
+                self._mac = self.smartplug.mac
+                self._model = self.smartplug.model
+                if self.smartplug.context is None:
+                    self._alias = self.smartplug.alias
+                    self._device_id = self._mac
+                else:
+                    self._alias = self._plug_from_context["alias"]
+                    self._device_id = self.smartplug.context
+
+            if self.smartplug.context is None:
+                self._state = self.smartplug.state == self.smartplug.SWITCH_STATE_ON
+            else:
+                self._state = self._plug_from_context["state"] == 1
+
+            if self.smartplug.has_emeter:
+                emeter_readings = self.smartplug.get_emeter_realtime()
+
+                self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.2f}".format(
+                    emeter_readings["power"]
+                )
+                self._emeter_params[ATTR_TOTAL_ENERGY_KWH] = "{:.3f}".format(
+                    emeter_readings["total"]
+                )
+                self._emeter_params[ATTR_VOLTAGE] = "{:.1f}".format(
+                    emeter_readings["voltage"]
+                )
+                self._emeter_params[ATTR_CURRENT_A] = "{:.2f}".format(
+                    emeter_readings["current"]
+                )
+
+                emeter_statics = self.smartplug.get_emeter_daily()
+                try:
+                    self._emeter_params[ATTR_TODAY_ENERGY_KWH] = "{:.3f}".format(
+                        emeter_statics[int(time.strftime("%e"))]
+                    )
+                except KeyError:
+                    # Device returned no daily history
+                    pass
+        except (SmartDeviceException, OSError) as ex:
+            _LOGGER.warning(
+                "Retrying in %s for %s|%s due to: %s",
+                SLEEP_TIME,
+                self.smartplug.host,
+                self._alias,
+                ex,
+            )
+            self._available = False
+        self._available = True
+
+    async def async_update(self):
         """Update the TP-Link switch's state."""
         for update_attempt in range(MAX_ATTEMPTS):
-            try:
-                if not self._sysinfo:
-                    self._sysinfo = self.smartplug.sys_info
-                    self._mac = self.smartplug.mac
-                    self._model = self.smartplug.model
-                    if self.smartplug.context is None:
-                        self._alias = self.smartplug.alias
-                        self._device_id = self._mac
-                    else:
-                        self._alias = self._plug_from_context["alias"]
-                        self._device_id = self.smartplug.context
-
-                if self.smartplug.context is None:
-                    self._state = self.smartplug.state == self.smartplug.SWITCH_STATE_ON
-                else:
-                    self._state = self._plug_from_context["state"] == 1
-
-                if self.smartplug.has_emeter:
-                    emeter_readings = self.smartplug.get_emeter_realtime()
-
-                    self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.2f}".format(
-                        emeter_readings["power"]
-                    )
-                    self._emeter_params[ATTR_TOTAL_ENERGY_KWH] = "{:.3f}".format(
-                        emeter_readings["total"]
-                    )
-                    self._emeter_params[ATTR_VOLTAGE] = "{:.1f}".format(
-                        emeter_readings["voltage"]
-                    )
-                    self._emeter_params[ATTR_CURRENT_A] = "{:.2f}".format(
-                        emeter_readings["current"]
-                    )
-
-                    emeter_statics = self.smartplug.get_emeter_daily()
-                    try:
-                        self._emeter_params[ATTR_TODAY_ENERGY_KWH] = "{:.3f}".format(
-                            emeter_statics[int(time.strftime("%e"))]
-                        )
-                    except KeyError:
-                        # Device returned no daily history
-                        pass
-
-                self._available = True
-
-            except (SmartDeviceException, OSError) as ex:
-                _LOGGER.warning(
-                    f"Retrying in {SLEEP_TIME} for {self.smartplug.host}|{self._alias} due to: {ex}"
-                )
-                time.sleep(SLEEP_TIME)
-            else:
+            await self.hass.async_create_task(self.async_attempt_update())
+            await asyncio.sleep(SLEEP_TIME)
+            if self._available:
                 break
         else:
             if self._available:
                 _LOGGER.warning(
-                    f"Could not read state for {self.smartplug.host}|{self._alias}"
+                    "Could not read state for %s|%s", self.smartplug.host, self._alias
                 )
             self._available = False

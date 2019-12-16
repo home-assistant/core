@@ -177,7 +177,7 @@ async def async_add_entities_retry(
             try:
                 _LOGGER.debug("Attempting to add object of type %s", type(add_object))
                 result = await hass.async_add_job(
-                    callback, add_object, async_add_entities
+                    callback, hass, add_object, async_add_entities
                 )
             except SmartDeviceException as ex:
                 _LOGGER.debug(str(ex))
