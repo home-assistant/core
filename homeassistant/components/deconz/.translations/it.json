@@ -18,8 +18,8 @@
                     "allow_clip_sensor": "Consenti l'importazione di sensori virtuali",
                     "allow_deconz_groups": "Consenti l'importazione di gruppi deCONZ"
                 },
-                "description": "Vuoi configurare Home Assistant per connettersi al gateway deCONZ fornito dal componente aggiuntivo hass.io {addon} ?",
-                "title": "Gateway Zigbee deCONZ tramite l'add-on Hass.io"
+                "description": "Vuoi configurare Home Assistant per connettersi al gateway deCONZ fornito dal componente aggiuntivo di Hass.io: {addon}?",
+                "title": "Gateway Pigmee deCONZ tramite il componente aggiuntivo di Hass.io"
             },
             "init": {
                 "data": {
