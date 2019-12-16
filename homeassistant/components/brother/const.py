@@ -21,6 +21,7 @@ ATTR_PF_KIT_1_REMAINING_LIFE = "pf_kit_1_remaining_life"
 ATTR_PF_KIT_MP_REMAINING_LIFE = "pf_kit_mp_remaining_life"
 ATTR_STATUS = "status"
 ATTR_UNIT = "unit"
+ATTR_UPTIME = "uptime"
 ATTR_YELLOW_INK_REMAINING = "yellow_ink_remaining"
 ATTR_YELLOW_TONER_REMAINING = "yellow_toner_remaining"
 
@@ -30,8 +31,9 @@ CONF_SERIAL = "serial"
 DEFAULT_NAME = "Brother Printer"
 DOMAIN = "brother"
 
-UNIT_PERCENT = "%"
 UNIT_PAGES = "p"
+UNIT_DAYS = "days"
+UNIT_PERCENT = "%"
 
 PRINTER_TYPES = ["laser", "ink"]
 
@@ -125,5 +127,10 @@ SENSOR_TYPES = {
         ATTR_ICON: "mdi:printer-3d-nozzle",
         ATTR_LABEL: ATTR_YELLOW_INK_REMAINING.replace("_", " ").title(),
         ATTR_UNIT: UNIT_PERCENT,
+    },
+    ATTR_UPTIME: {
+        ATTR_ICON: "mdi:timer",
+        ATTR_LABEL: ATTR_UPTIME.title(),
+        ATTR_UNIT: UNIT_DAYS,
     },
 }
