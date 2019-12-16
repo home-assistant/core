@@ -235,6 +235,11 @@ class Integration:
         return cast(bool, self.manifest.get("config_flow", False))
 
     @property
+    def documentation(self) -> Optional[str]:
+        """Return documentation."""
+        return cast(str, self.manifest.get("documentation"))
+
+    @property
     def is_built_in(self) -> bool:
         """Test if package is a built-in integration."""
         return self.pkg_path.startswith(PACKAGE_BUILTIN)
