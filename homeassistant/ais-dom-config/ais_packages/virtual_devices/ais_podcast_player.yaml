@@ -5,12 +5,3 @@ input_select:
       - "-"
     initial: "-"
     icon: mdi:format-list-bulleted-type
-
-group:
-  podcast_player:
-    control: hidden
-    name: Podcasty
-    entities:
-      - input_select.podcast_type
-      - sensor.podcastnamelist
-      - sensor.podcastlist

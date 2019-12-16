@@ -38,13 +38,3 @@ binary_sensor:
     name: "Dzień pracujący"
     country: PL
 
-group:
-  day_info:
-    control: hidden
-    name: Kalendarium
-    entities:
-      - sensor.nextsunrise
-      - sensor.nextsunset
-      - sensor.dayofyear
-      - sensor.weekofyear
-      - binary_sensor.dzien_pracujacy

@@ -1,37 +1,5 @@
-binary_sensor:
-  - platform: ping
-    host: powiedz.co
-    count: 2
-    scan_interval: 300
-    name: powiedz_co_ping
-sensor:
-  - platform: mqtt
-    state_topic: ais/version/sensor
-    name: version_info
-  - platform: mqtt
-    state_topic: ais/secure_android_id/sensor
-    name: ais_secure_android_id_dom
-
 input_boolean:
   ais_remote_access:
     name: Dostęp z Internetu
-    icon: mdi:remote-desktop
   ais_auto_update:
     name: Autoaktualizacje
-    icon: mdi:update
-
-group:
-  dom_system_version:
-    control: hidden
-    entities:
-      - sensor.version_info
-      - script.ais_update_system
-      - input_boolean.ais_auto_update
-      - camera.remote_access
-      - input_boolean.ais_remote_access
-      - sensor.ais_secure_android_id_dom
-      - script.ais_cloud_sync
-      - script.ais_scan_network_devices
-      - script.ais_restart_system
-      - script.ais_stop_system
-

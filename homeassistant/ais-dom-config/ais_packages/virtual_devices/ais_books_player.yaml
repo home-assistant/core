@@ -14,10 +14,4 @@ input_select:
     options:
      - "-"
     icon: mdi:bookmark-music
-group:
-  audiobooks_player:
-    name: Audio Książki Online
-    entities:
-    - input_select.book_autor
-    - sensor.audiobookslist
-    - sensor.audiobookschapterslist
+

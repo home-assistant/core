@@ -27,14 +27,3 @@ input_select:
       - "R&P"
     initial: "NORMAL"
 
-group:
-  music_player:
-    control: hidden
-    name: Muzyka
-    entities:
-      - input_select.ais_music_service
-      - input_text.ais_music_query
-      - input_text.ais_spotify_query
-      - sensor.youtubelist
-      - sensor.spotifysearchlist
-      - sensor.spotifylist
