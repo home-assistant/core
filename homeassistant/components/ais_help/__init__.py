@@ -20,7 +20,7 @@ async def async_setup(hass, config):
         "lovelace/audio", "Audio", "mdi:library-music"
     )
     """Register the built-in video panel."""
-    hass.components.frontend.async_register_built_in_panel(
-        "aisvideo", "Video", "mdi:youtube"
-    )
+    # hass.components.frontend.async_register_built_in_panel(
+    #     "aisvideo", "Video", "mdi:youtube"
+    # )
     return True

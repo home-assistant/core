@@ -5,13 +5,7 @@
             "title": "Asystent domowy",
             "views": [
                 {
-                    "badges": [
-                        "sensor.time",
-                        "sensor.daytodisplay",
-                        "sensor.dark_sky_hourly_summary",
-                        "sensor.dark_sky_daily_summary",
-                        "sun.sun"
-                    ],
+                    "badges": [],
                     "visible": false,
                     "cards": [
                         {
