@@ -31,7 +31,7 @@ ATTR_CURRENT_POWER_W = "current_power_w"
 ATTR_DAILY_ENERGY_KWH = "daily_energy_kwh"
 ATTR_MONTHLY_ENERGY_KWH = "monthly_energy_kwh"
 
-MAX_ATTEMPTS = 10
+MAX_ATTEMPTS = 20
 SLEEP_TIME = 2
 
 
@@ -178,61 +178,68 @@ class TPLinkSmartBulb(Light):
         """Return True if device is on."""
         return self._state
 
-    def update(self):
+    def attempt_update(self):
+        """Attempt to get details from the TP-Link bulb."""
+        try:
+            if self._supported_features is None:
+                self.get_features()
+
+            self._state = self.smartbulb.state == SmartBulb.BULB_STATE_ON
+
+            if self._supported_features & SUPPORT_BRIGHTNESS:
+                self._brightness = brightness_from_percentage(self.smartbulb.brightness)
+
+            if self._supported_features & SUPPORT_COLOR_TEMP:
+                if (
+                    self.smartbulb.color_temp is not None
+                    and self.smartbulb.color_temp != 0
+                ):
+                    self._color_temp = kelvin_to_mired(self.smartbulb.color_temp)
+
+            if self._supported_features & SUPPORT_COLOR:
+                hue, sat, _ = self.smartbulb.hsv
+                self._hs = (hue, sat)
+
+            if self.smartbulb.has_emeter:
+                self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.1f}".format(
+                    self.smartbulb.current_consumption()
+                )
+                daily_statistics = self.smartbulb.get_emeter_daily()
+                monthly_statistics = self.smartbulb.get_emeter_monthly()
+                try:
+                    self._emeter_params[ATTR_DAILY_ENERGY_KWH] = "{:.3f}".format(
+                        daily_statistics[int(time.strftime("%d"))]
+                    )
+                    self._emeter_params[ATTR_MONTHLY_ENERGY_KWH] = "{:.3f}".format(
+                        monthly_statistics[int(time.strftime("%m"))]
+                    )
+                except KeyError:
+                    # device returned no daily/monthly history
+                    pass
+        except (SmartDeviceException, OSError) as ex:
+            _LOGGER.warning(
+                "Retrying in %s for %s|%s due to: %s",
+                SLEEP_TIME,
+                self.smartbulb.host,
+                self._alias,
+                ex,
+            )
+            self._available = False
+        self._available = True
+
+    async def async_update(self):
         """Update the TP-Link Bulb's state."""
         for update_attempt in range(MAX_ATTEMPTS):
-            try:
-                if self._supported_features is None:
-                    self.get_features()
 
-                self._state = self.smartbulb.state == SmartBulb.BULB_STATE_ON
+            await self.hass.async_add_executor_job(self.attempt_update)
+            await asyncio.sleep(SLEEP_TIME)
 
-                if self._supported_features & SUPPORT_BRIGHTNESS:
-                    self._brightness = brightness_from_percentage(
-                        self.smartbulb.brightness
-                    )
-
-                if self._supported_features & SUPPORT_COLOR_TEMP:
-                    if (
-                        self.smartbulb.color_temp is not None
-                        and self.smartbulb.color_temp != 0
-                    ):
-                        self._color_temp = kelvin_to_mired(self.smartbulb.color_temp)
-
-                if self._supported_features & SUPPORT_COLOR:
-                    hue, sat, _ = self.smartbulb.hsv
-                    self._hs = (hue, sat)
-
-                if self.smartbulb.has_emeter:
-                    self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.1f}".format(
-                        self.smartbulb.current_consumption()
-                    )
-                    daily_statistics = self.smartbulb.get_emeter_daily()
-                    monthly_statistics = self.smartbulb.get_emeter_monthly()
-                    try:
-                        self._emeter_params[ATTR_DAILY_ENERGY_KWH] = "{:.3f}".format(
-                            daily_statistics[int(time.strftime("%d"))]
-                        )
-                        self._emeter_params[ATTR_MONTHLY_ENERGY_KWH] = "{:.3f}".format(
-                            monthly_statistics[int(time.strftime("%m"))]
-                        )
-                    except KeyError:
-                        # device returned no daily/monthly history
-                        pass
-
-                self._available = True
-
-            except (SmartDeviceException, OSError) as ex:
-                _LOGGER.warning(
-                    f"Retrying in {SLEEP_TIME} for {self.smartbulb.host}|{self._alias} due to: {ex}"
-                )
-                time.sleep(SLEEP_TIME)
-            else:
+            if self._available:
                 break
         else:
             if self._available:
                 _LOGGER.warning(
-                    f"Could not read state for {self.smartbulb.host}|{self._alias}"
+                    "Could not read state for %s|%s", self.smartbulb.host, self._alias
                 )
             self._available = False
 

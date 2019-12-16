@@ -39,14 +39,14 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-def add_entity(hass: HomeAssistantType, device: SmartPlug, async_add_entities):
+def add_entity(device: SmartPlug, async_add_entities):
     """Check if device is online and add the entity."""
     # Attempt to get the sysinfo. If it fails, it will raise an
     # exception that is caught by async_add_entities_retry which
     # will try again later.
     device.get_sysinfo()
 
-    async_add_entities([SmartPlugSwitch(hass, device)], update_before_add=True)
+    async_add_entities([SmartPlugSwitch(device)], update_before_add=True)
 
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
@@ -61,9 +61,8 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_ent
 class SmartPlugSwitch(SwitchDevice):
     """Representation of a TPLink Smart Plug switch."""
 
-    def __init__(self, hass: HomeAssistantType, smartplug: SmartPlug):
+    def __init__(self, smartplug: SmartPlug):
         """Initialize the switch."""
-        self.hass = hass
         self.smartplug = smartplug
         self._sysinfo = None
         self._state = None
@@ -126,7 +125,8 @@ class SmartPlugSwitch(SwitchDevice):
         children = self.smartplug.sys_info["children"]
         return next(c for c in children if c["id"] == self.smartplug.context)
 
-    async def async_attempt_update(self):
+    def attempt_update(self):
+        """Attempt to get details from the TP-Link switch."""
         try:
             if not self._sysinfo:
                 self._sysinfo = self.smartplug.sys_info
@@ -182,8 +182,10 @@ class SmartPlugSwitch(SwitchDevice):
     async def async_update(self):
         """Update the TP-Link switch's state."""
         for update_attempt in range(MAX_ATTEMPTS):
-            await self.hass.async_create_task(self.async_attempt_update())
+
+            await self.hass.async_add_executor_job(self.attempt_update)
             await asyncio.sleep(SLEEP_TIME)
+
             if self._available:
                 break
         else:
