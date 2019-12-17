@@ -2,14 +2,14 @@
 DOMAIN = "transmission"
 
 SENSOR_TYPES = {
-    "active_torrents": ["Active Torrents", None],
+    "active_torrents": ["Active Torrents", "Counts"],
     "current_status": ["Status", None],
     "download_speed": ["Down Speed", "MB/s"],
-    "paused_torrents": ["Paused Torrents", None],
-    "total_torrents": ["Total Torrents", None],
+    "paused_torrents": ["Paused Torrents", "Counts"],
+    "total_torrents": ["Total Torrents", "Counts"],
     "upload_speed": ["Up Speed", "MB/s"],
-    "completed_torrents": ["Completed Torrents", None],
-    "started_torrents": ["Started Torrents", None],
+    "completed_torrents": ["Completed Torrents", "Counts"],
+    "started_torrents": ["Started Torrents", "Counts"],
 }
 SWITCH_TYPES = {"on_off": "Switch", "turtle_mode": "Turtle Mode"}
 
