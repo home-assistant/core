@@ -40,7 +40,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         try:
             camera_data = CameraData(hass, hass.data[DOMAIN][entry.entry_id][AUTH])
             for camera in camera_data.get_all_cameras():
-                _LOGGER.debug("Setting up camera %s", camera["id"])
+                _LOGGER.debug("Setting up camera %s %s", camera["id"], camera["name"])
                 entities.append(
                     NetatmoCamera(
                         camera_data, camera["id"], camera["type"], True, DEFAULT_QUALITY
