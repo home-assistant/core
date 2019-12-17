@@ -14,6 +14,7 @@ import jinja2
 from jinja2 import contextfilter, contextfunction
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace  # type: ignore
+import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -27,6 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import State, callback, split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
@@ -44,7 +46,7 @@ _ENVIRONMENT = "template.environment"
 
 _RE_NONE_ENTITIES = re.compile(r"distance\(|closest\(", re.I | re.M)
 _RE_GET_ENTITIES = re.compile(
-    r"(?:(?:states\.|(?P<func>is_state|is_state_attr|state_attr|states|expand)"
+    r"(?:(?:states\.|(?P<func>is_state|is_state_attr|state_attr|states|expand|coordinates)"
     r"\((?:[\ \'\"]?))(?P<entity_id>[\w]+\.[\w]+)|(?P<variable>[\w]+))",
     re.I | re.M,
 )
@@ -653,6 +655,71 @@ def distance(hass, *args):
     )
 
 
+def coordinates(
+    hass, entity_id: str, recursion_history: Optional[list] = None
+) -> Optional[str]:
+    """Get the location from the entity state or attributes."""
+    entity = _resolve_state(hass, entity_id)
+
+    if entity is None:
+        _LOGGER.error("Unable to find entity %s", entity_id)
+        return None
+
+    # Check if the entity has location attributes
+    if loc_helper.has_location(entity):
+        return _get_location_from_attributes(entity)
+
+    # Check if device is in a zone
+    zone_entity = _resolve_state(hass, "zone.{}".format(entity.state))
+    if loc_helper.has_location(zone_entity):
+        _LOGGER.debug(
+            "%s is in %s, getting zone location", entity_id, zone_entity.entity_id
+        )
+        return _get_location_from_attributes(zone_entity)
+
+    # Resolve nested entity
+    if recursion_history is None:
+        recursion_history = []
+    recursion_history.append(entity_id)
+    if entity.state in recursion_history:
+        _LOGGER.error(
+            "Circular Reference detected. The state of %s has already been checked.",
+            entity.state,
+        )
+        return None
+    _LOGGER.debug("Getting nested entity for state: %s", entity.state)
+    nested_entity = _resolve_state(hass, entity.state)
+    if nested_entity is not None:
+        _LOGGER.debug("Resolving nested entity_id: %s", entity.state)
+        return coordinates(hass, entity.state, recursion_history)
+
+    # Check if state is valid coordinate set
+    if _entity_state_is_valid_coordinate_set(entity.state):
+        return entity.state
+
+    _LOGGER.error(
+        "The state of %s is not a valid set of coordinates: %s", entity_id, entity.state
+    )
+    return None
+
+
+def _entity_state_is_valid_coordinate_set(state: str) -> bool:
+    """Check that the given string is a valid set of coordinates."""
+    schema = vol.Schema(cv.gps)
+    try:
+        coords = state.split(",")
+        schema(coords)
+        return True
+    except (vol.MultipleInvalid):
+        return False
+
+
+def _get_location_from_attributes(entity: State) -> str:
+    """Get the lat/long string from an entities attributes."""
+    attr = entity.attributes
+    return "{},{}".format(attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
+
+
 def is_state(hass: HomeAssistantType, entity_id: str, state: State) -> bool:
     """Test if a state is a specific value."""
     state_obj = _get_state(hass, entity_id)
@@ -1026,6 +1093,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["is_state_attr"] = hassfunction(is_state_attr)
         self.globals["state_attr"] = hassfunction(state_attr)
         self.globals["states"] = AllStates(hass)
+        self.globals["coordinates"] = hassfunction(coordinates)
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""

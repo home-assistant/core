@@ -1290,6 +1290,76 @@ async def test_closest_function_home_vs_group_state(hass):
     )
 
 
+def test_coordinates_function_as_attributes(hass):
+    """Test test_coordinates function."""
+    _set_up_units(hass)
+    hass.states.async_set(
+        "test.object", "happy", {"latitude": 32.87336, "longitude": -117.22943}
+    )
+    tpl = template.Template("{{ coordinates(states.test.object) }}", hass)
+    assert tpl.async_render() == "32.87336,-117.22943"
+
+
+def test_coordinates_function_as_state(hass):
+    """Test test_coordinates function."""
+    _set_up_units(hass)
+    hass.states.async_set("test.object", "32.87336,-117.22943")
+    tpl = template.Template("{{ coordinates(states.test.object) }}", hass)
+    assert tpl.async_render() == "32.87336,-117.22943"
+
+
+def test_coordinates_function_device_tracker_in_zone(hass):
+    """Test test_coordinates function."""
+    _set_up_units(hass)
+    hass.states.async_set(
+        "zone.home", "zoning", {"latitude": 32.87336, "longitude": -117.22943},
+    )
+    hass.states.async_set("device_tracker.device", "home")
+    tpl = template.Template("{{ coordinates(states.device_tracker.device) }}", hass)
+    assert tpl.async_render() == "32.87336,-117.22943"
+
+
+def test_coordinates_function_device_tracker_from_input_select(hass):
+    """Test test_coordinates function."""
+    _set_up_units(hass)
+    hass.states.async_set(
+        "input_select.select",
+        "device_tracker.device",
+        {"options": "device_tracker.device"},
+    )
+    hass.states.async_set("device_tracker.device", "32.87336,-117.22943")
+    tpl = template.Template("{{ coordinates(states.input_select.select) }}", hass)
+    assert tpl.async_render() == "32.87336,-117.22943"
+
+
+def test_coordinates_function_returns_none_on_recursion(hass):
+    """Test test_coordinates function."""
+    _set_up_units(hass)
+    hass.states.async_set(
+        "test.first", "test.second",
+    )
+    hass.states.async_set("test.second", "test.first")
+    tpl = template.Template("{{ coordinates(states.test.first) }}", hass)
+    assert tpl.async_render() == "None"
+
+
+def test_coordinates_function_returns_none_if_invalid_coord(hass):
+    """Test test_coordinates function."""
+    _set_up_units(hass)
+    hass.states.async_set(
+        "test.object", "abc",
+    )
+    tpl = template.Template("{{ coordinates(states.test.object) }}", hass)
+    assert tpl.async_render() == "None"
+
+
+def test_coordinates_function_returns_none_if_invalid_input(hass):
+    """Test test_coordinates function."""
+    _set_up_units(hass)
+    tpl = template.Template("{{ coordinates(states.abc) }}", hass)
+    assert tpl.async_render() == "None"
+
+
 async def test_expand(hass):
     """Test expand function."""
     info = render_to_info(hass, "{{ expand('test.object') }}")
