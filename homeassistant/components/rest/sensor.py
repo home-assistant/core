@@ -10,7 +10,6 @@ from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA, PLATFORM_SCHE
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_DEVICE_CLASS,
-    CONF_FILE_PATH,
     CONF_FORCE_UPDATE,
     CONF_HEADERS,
     CONF_METHOD,
@@ -40,6 +39,7 @@ DEFAULT_FORCE_UPDATE = False
 DEFAULT_TIMEOUT = 10
 
 CONF_JSON_ATTRS = "json_attributes"
+CONF_CLIENT_CERTIFICATE = "client_certificate"
 METHODS = ["POST", "GET"]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -62,7 +62,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
         vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_FILE_PATH): cv.isfile,
+        vol.Optional(CONF_CLIENT_CERTIFICATE): cv.isfile,
     }
 )
 
@@ -88,7 +88,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     json_attrs = config.get(CONF_JSON_ATTRS)
     force_update = config.get(CONF_FORCE_UPDATE)
     timeout = config.get(CONF_TIMEOUT)
-    client_certificate_path = config.get(CONF_FILE_PATH)
+    client_certificate_path = config.get(CONF_CLIENT_CERTIFICATE)
 
     if value_template is not None:
         value_template.hass = hass
