@@ -4,7 +4,7 @@
             "turn_off": "Spegnere {entity_name}",
             "turn_on": "Accendere {entity_name}"
         },
-        "condtion_type": {
+        "condition_type": {
             "is_off": "{entity_name} \u00e8 spento",
             "is_on": "{entity_name} \u00e8 acceso"
         },
