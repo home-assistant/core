@@ -87,6 +87,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                     "Authentication for Inverter data failed during setup: %s",
                     ip_address,
                 )
+                continue
 
         else:
             entities.append(
