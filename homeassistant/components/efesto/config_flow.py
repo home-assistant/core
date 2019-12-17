@@ -2,7 +2,7 @@
 from collections import OrderedDict
 import logging
 
-from efestoclient import (
+from efestoclient import (  # pylint: disable=redefined-builtin
     ConnectionError,
     EfestoClient,
     Error as EfestoError,

@@ -1,7 +1,7 @@
 """Support for Efesto heating devices."""
 import logging
 
-from efestoclient import (
+from efestoclient import (  # pylint: disable=redefined-builtin
     ConnectionError,
     EfestoClient,
     Error as EfestoError,

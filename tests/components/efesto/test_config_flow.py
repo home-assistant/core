@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from efestoclient import (  # pylint: disable=redefined-builtin
     ConnectionError,
-    Error,
+    Error as EfestoError,
     InvalidURLError,
     UnauthorizedError,
 )
@@ -29,8 +29,10 @@ async def test_full_form_flow(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch("efestoclient.EfestoClient") as client, patch(
-        "efestoclient.EfestoClient.get_status",
+    with patch(
+        "homeassistant.components.efesto.config_flow.EfestoClient"
+    ) as client, patch(
+        "homeassistant.components.efesto.config_flow.EfestoClient.get_status",
         side_effect=client,
         return_value=mock_coro(True),
     ), patch(
@@ -95,7 +97,8 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "efestoclient.EfestoClient", side_effect=UnauthorizedError("explanation"),
+        "homeassistant.components.efesto.config_flow.EfestoClient",
+        side_effect=UnauthorizedError("explanation"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -119,7 +122,8 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "efestoclient.EfestoClient", side_effect=ConnectionError("explanation"),
+        "homeassistant.components.efesto.config_flow.EfestoClient",
+        side_effect=ConnectionError("explanation"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -143,7 +147,8 @@ async def test_form_invalid_url(hass):
     )
 
     with patch(
-        "efestoclient.EfestoClient", side_effect=InvalidURLError("explanation"),
+        "homeassistant.components.efesto.config_flow.EfestoClient",
+        side_effect=InvalidURLError("explanation"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -167,7 +172,8 @@ async def test_form_unknown_error(hass):
     )
 
     with patch(
-        "efestoclient.EfestoClient", side_effect=Error("explanation"),
+        "homeassistant.components.efesto.config_flow.EfestoClient",
+        side_effect=EfestoError("explanation"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
