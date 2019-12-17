@@ -31,7 +31,7 @@ CONF_START_DATETIME = "start_datetime"
 
 STATE_EXPIRED = "expired"
 
-TOPIC_SCHEDULE_NEXT = "scheduler_schedule_next"
+TOPIC_INSTANCE_DONE = "schedule_instance_done"
 
 
 class ScheduleInstance:
@@ -104,7 +104,7 @@ class ScheduleInstance:
 
         _LOGGER.info("Scheduler reverted scene: %s", self.entity_id)
 
-        async_dispatcher_send(self._hass, TOPIC_SCHEDULE_NEXT)
+        async_dispatcher_send(self._hass, TOPIC_INSTANCE_DONE)
 
     async def async_trigger(self) -> None:
         """Trigger the schedule's scene."""
@@ -133,7 +133,7 @@ class ScheduleInstance:
         _LOGGER.info("Scheduler triggered scene: %s", self.entity_id)
 
         if not self.end_datetime:
-            async_dispatcher_send(self._hass, TOPIC_SCHEDULE_NEXT)
+            async_dispatcher_send(self._hass, TOPIC_INSTANCE_DONE)
 
 
 class Schedule:
@@ -161,7 +161,7 @@ class Schedule:
 
         self._async_unsub_dispatcher_connect: Callable[
             ..., Awaitable
-        ] = async_dispatcher_connect(hass, TOPIC_SCHEDULE_NEXT, self._async_schedule)
+        ] = async_dispatcher_connect(hass, TOPIC_INSTANCE_DONE, self._async_schedule)
 
     def __str__(self) -> str:
         """Define the string representation of this schedule."""
