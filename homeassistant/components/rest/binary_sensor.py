@@ -22,7 +22,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
-    CONF_FILE_PATH,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
@@ -37,6 +36,7 @@ DEFAULT_METHOD = "GET"
 DEFAULT_NAME = "REST Binary Sensor"
 DEFAULT_VERIFY_SSL = True
 DEFAULT_TIMEOUT = 10
+CONF_CLIENT_CERTIFICATE = "client_certificate"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -54,7 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_FILE_PATH): cv.isfile,
+        vol.Optional(CONF_CLIENT_CERTIFICATE): cv.isfile,
     }
 )
 
@@ -72,7 +72,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     headers = config.get(CONF_HEADERS)
     device_class = config.get(CONF_DEVICE_CLASS)
     value_template = config.get(CONF_VALUE_TEMPLATE)
-    client_certificate_path = config.get(CONF_FILE_PATH)
+    client_certificate_path = config.get(CONF_CLIENT_CERTIFICATE)
 
     if value_template is not None:
         value_template.hass = hass
