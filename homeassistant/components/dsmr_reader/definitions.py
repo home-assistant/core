@@ -3,7 +3,7 @@
 
 def dsmr_transform(value):
     """Transform DSMR version value to right format."""
-    if (value.isdigit()):
+    if value.isdigit():
         return float(value) / 10
     return value
 
