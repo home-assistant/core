@@ -357,7 +357,7 @@ class NetatmoThermostat(ClimateDevice):
         except KeyError as err:
             _LOGGER.error(
                 "The thermostat in room %s seems to be out of reach. (%s)",
-                self._room_id,
+                self._room_name,
                 err,
             )
         self._away = self._hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]

@@ -3,13 +3,21 @@ import logging
 
 import pyatmo
 import requests
+import voluptuous as vol
 
 from homeassistant.components.light import Light
+from homeassistant.const import ATTR_ENTITY_ID
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .camera import CameraData
 from .const import AUTH, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
+
+SCHEMA_SERVICE_SETLIGHTAUTO = vol.Schema(
+    {vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids}
+)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -33,6 +41,21 @@ async def async_setup_entry(hass, entry, async_add_entities):
         return entities
 
     async_add_entities(await hass.async_add_executor_job(get_entities), True)
+
+    async def async_service_handler(call):
+        """Handle service call."""
+        _LOGGER.debug(
+            "Service handler invoked with service=%s and data=%s",
+            call.service,
+            call.data,
+        )
+        service = call.service
+        entity_id = call.data["entity_id"][0]
+        async_dispatcher_send(hass, f"{service}_{entity_id}")
+
+    hass.services.async_register(
+        DOMAIN, "set_light_auto", async_service_handler, SCHEMA_SERVICE_SETLIGHTAUTO
+    )
 
 
 class NetatmoLight(Light):

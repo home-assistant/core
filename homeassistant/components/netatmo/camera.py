@@ -104,14 +104,14 @@ class NetatmoCamera(Camera):
                     verify=self._verify_ssl,
                 )
             else:
-                _LOGGER.error("Welcome VPN URL is None")
+                _LOGGER.error("Welcome/Presence VPN URL is None")
                 self._data.update()
                 (self._vpnurl, self._localurl) = self._data.camera_data.camera_urls(
                     cid=self._camera_id
                 )
                 return None
         except requests.exceptions.RequestException as error:
-            _LOGGER.error("Welcome URL changed: %s", error)
+            _LOGGER.info("Welcome/Presence URL changed: %s", error)
             self._data.update()
             (self._vpnurl, self._localurl) = self._data.camera_data.camera_urls(
                 cid=self._camera_id
