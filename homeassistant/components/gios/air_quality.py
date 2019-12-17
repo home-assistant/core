@@ -10,7 +10,7 @@ from homeassistant.components.air_quality import (
 )
 from homeassistant.const import CONF_NAME
 
-from .const import ATTR_STATION, DATA_CLIENT, DOMAIN
+from .const import ATTR_STATION, DATA_CLIENT, DOMAIN, ICONS_MAP
 
 ATTRIBUTION = "Data provided by GIOŚ"
 
@@ -61,16 +61,8 @@ class GiosAirQuality(AirQualityEntity):
     @property
     def icon(self):
         """Return the icon."""
-        if self._aqi == "bardzo dobry":
-            self._icon = "mdi:emoticon-excited"
-        elif self._aqi == "dobry":
-            self._icon = "mdi:emoticon-happy"
-        elif self._aqi == "umiarkowany":
-            self._icon = "mdi:emoticon-neutral"
-        elif self._aqi == "dostateczny":
-            self._icon = "mdi:emoticon-sad"
-        elif self._aqi == "zły":
-            self._icon = "mdi:emoticon-dead"
+        if self._aqi in ICONS_MAP:
+            self._icon = ICONS_MAP[self._aqi]
         else:
             self._icon = "mdi:blur"
         return self._icon
