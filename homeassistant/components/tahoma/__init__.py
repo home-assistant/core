@@ -45,6 +45,7 @@ TAHOMA_TYPES = {
     "io:RollerShutterWithLowSpeedManagementIOComponent": "cover",
     "io:SomfyBasicContactIOSystemSensor": "sensor",
     "io:SomfyContactIOSystemSensor": "sensor",
+    "io:TemperatureIOSystemSensor": "sensor",
     "io:VerticalExteriorAwningIOComponent": "cover",
     "io:VerticalInteriorBlindVeluxIOComponent": "cover",
     "io:WindowOpenerVeluxIOComponent": "cover",
@@ -59,6 +60,7 @@ TAHOMA_TYPES = {
     "rts:ExteriorVenetianBlindRTSComponent": "cover",
     "rts:GarageDoor4TRTSComponent": "switch",
     "rts:RollerShutterRTSComponent": "cover",
+    "rts:OnOffRTSComponent": "switch",
     "rts:VenetianBlindRTSComponent": "cover",
 }
 
