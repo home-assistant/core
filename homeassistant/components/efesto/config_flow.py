@@ -2,7 +2,13 @@
 from collections import OrderedDict
 import logging
 
-import efestoclient
+from efestoclient import (
+    EfestoClient,
+    Error,
+    UnauthorizedError,
+    ConnectionError,
+    InvalidURLError,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -54,15 +60,15 @@ class EfestoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="device_already_configured")
 
             try:
-                client = efestoclient.EfestoClient(url, username, password, device_id)
+                client = EfestoClient(url, username, password, device_id)
                 client.get_status()
-            except efestoclient.UnauthorizedError:
+            except UnauthorizedError:
                 errors["base"] = "unauthorized"
-            except efestoclient.ConnectionError:
+            except ConnectionError:
                 errors["base"] = "connection_error"
-            except efestoclient.InvalidURLError:
+            except InvalidURLError:
                 errors["base"] = "invalid_url"
-            except efestoclient.Error:
+            except Error:
                 errors["base"] = "unknown_error"
 
             if "base" not in errors:

@@ -1,7 +1,13 @@
 """Support for Efesto heating devices."""
 import logging
 
-import efestoclient
+from efestoclient import (
+    EfestoClient,
+    Error,
+    UnauthorizedError,
+    ConnectionError,
+    InvalidURLError,
+)
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -67,18 +73,18 @@ async def async_setup_entry(hass, entry, async_add_entities):
     name = entry.title
 
     try:
-        client = efestoclient.EfestoClient(url, username, password, device)
+        client = EfestoClient(url, username, password, device)
         client.get_status()
-    except efestoclient.UnauthorizedError:
+    except UnauthorizedError:
         _LOGGER.error("Wrong credentials for device %s", device)
         return False
-    except efestoclient.ConnectionError:
+    except ConnectionError:
         _LOGGER.error("Connection to %s not possible", url)
         return False
-    except efestoclient.InvalidURLError:
+    except InvalidURLError:
         _LOGGER.error("Invalid Efesto URL: %s", url)
         return False
-    except efestoclient.Error as err:
+    except Error as err:
         _LOGGER.error("Unknown Efesto error: %s", err)
         return False
 
@@ -211,14 +217,14 @@ class EfestoHeatingDevice(ClimateDevice):
         """Turn device off."""
         try:
             self.client.set_off()
-        except efestoclient.Error as err:
+        except Error as err:
             _LOGGER.error("Failed to turn off device (original message: %s)", err)
 
     def turn_on(self):
         """Turn device on."""
         try:
             self.client.set_on()
-        except efestoclient.Error as err:
+        except Error as err:
             _LOGGER.error("Failed to turn on device (original message: %s)", err)
 
     def set_temperature(self, **kwargs):
@@ -229,7 +235,7 @@ class EfestoHeatingDevice(ClimateDevice):
 
         try:
             self.client.set_temperature(round(temperature))
-        except efestoclient.Error as err:
+        except Error as err:
             _LOGGER.error("Failed to set temperature (original message: %s)", err)
 
     def set_fan_mode(self, fan_mode):
@@ -239,7 +245,7 @@ class EfestoHeatingDevice(ClimateDevice):
 
         try:
             self.client.set_power(fan_mode)
-        except efestoclient.Error as err:
+        except Error as err:
             _LOGGER.error("Failed to set temperature (original message: %s)", err)
 
     def set_hvac_mode(self, hvac_mode):
@@ -253,13 +259,13 @@ class EfestoHeatingDevice(ClimateDevice):
         """Get the latest data."""
         try:
             device = self.client.get_status()
-        except efestoclient.UnauthorizedError:
+        except UnauthorizedError:
             _LOGGER.error("Wrong credentials for device %s", device)
             return False
-        except efestoclient.ConnectionError:
+        except ConnectionError:
             _LOGGER.error("Connection to %s not possible", self.client.url)
             return False
-        except efestoclient.Error as err:
+        except Error as err:
             _LOGGER.error("Error: %s", err)
             return False
 
