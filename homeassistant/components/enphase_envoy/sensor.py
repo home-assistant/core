@@ -2,6 +2,7 @@
 import logging
 
 from envoy_reader.envoy_reader import EnvoyReader
+import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -68,17 +69,25 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     # Iterate through the list of sensors
     for condition in monitored_conditions:
         if condition == "inverters":
-            inverters = await envoy_reader.inverters_production()
-            if isinstance(inverters, dict):
-                for inverter in inverters:
-                    entities.append(
-                        Envoy(
-                            envoy_reader,
-                            condition,
-                            f"{name}{SENSORS[condition][0]} {inverter}",
-                            SENSORS[condition][1],
+            try:
+                inverters = await envoy_reader.inverters_production()
+                if isinstance(inverters, dict):
+                    for inverter in inverters:
+                        entities.append(
+                            Envoy(
+                                envoy_reader,
+                                condition,
+                                f"{name}{SENSORS[condition][0]} {inverter}",
+                                SENSORS[condition][1],
+                                True,
+                            )
                         )
-                    )
+            except requests.exceptions.HTTPError:
+                _LOGGER.warning(
+                    "Authentication for Inverter data failed during setup: %s",
+                    ip_address,
+                )
+
         else:
             entities.append(
                 Envoy(
@@ -86,6 +95,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                     condition,
                     f"{name}{SENSORS[condition][0]}",
                     SENSORS[condition][1],
+                    False,
                 )
             )
     async_add_entities(entities)
@@ -94,12 +104,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class Envoy(Entity):
     """Implementation of the Enphase Envoy sensors."""
 
-    def __init__(self, envoy_reader, sensor_type, name, unit):
+    def __init__(self, envoy_reader, sensor_type, name, unit, inv_auth):
         """Initialize the sensor."""
         self._envoy_reader = envoy_reader
+        self._type = sensor_type
         self._name = name
         self._unit_of_measurement = unit
-        self._type = sensor_type
+        self._inv_auth = inv_auth
         self._state = None
         self._last_reported = None
 
@@ -141,8 +152,15 @@ class Envoy(Entity):
                 _LOGGER.error(_state)
                 self._state = None
 
-        elif self._type == "inverters":
-            inverters = await (self._envoy_reader.inverters_production())
+        elif self._type == "inverters" and self._inv_auth:
+            try:
+                inverters = await (self._envoy_reader.inverters_production())
+            except requests.exceptions.HTTPError:
+                _LOGGER.warning(
+                    "Authentication for Inverter data failed during update: %s",
+                    self._envoy_reader.host,
+                )
+
             if isinstance(inverters, dict):
                 serial_number = self._name.split(" ")[2]
                 self._state = inverters[serial_number][0]
