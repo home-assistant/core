@@ -104,9 +104,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(
                     CONF_PANEL_DISPLAY, default=DEFAULT_PANEL_DISPLAY
                 ): cv.boolean,
-                vol.Optional(
-                    CONF_AUTO_BYPASS, default=DEFAULT_AUTO_BYPASS
-                ): cv.boolean,
+                vol.Optional(CONF_AUTO_BYPASS, default=DEFAULT_AUTO_BYPASS): cv.boolean,
                 vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
             }
         )
