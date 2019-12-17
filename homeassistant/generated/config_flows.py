@@ -96,6 +96,7 @@ FLOWS = [
     "withings",
     "wled",
     "wwlln",
+    "yr",
     "zha",
     "zone",
     "zwave"
