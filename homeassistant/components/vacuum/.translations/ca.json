@@ -4,7 +4,7 @@
             "clean": "Fes que {entity_name} netegi",
             "dock": "Fes que {entity_name} torni a la base"
         },
-        "condtion_type": {
+        "condition_type": {
             "is_cleaning": "{entity_name} est\u00e0 netejant",
             "is_docked": "{entity_name} est\u00e0 acoblada"
         },

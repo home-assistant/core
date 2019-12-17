@@ -4,7 +4,7 @@
             "clean": "Looss {entity_name} botzen",
             "dock": "Sch\u00e9ck {entity_name} z\u00e9reck zur Statioun"
         },
-        "condtion_type": {
+        "condition_type": {
             "is_cleaning": "{entity_name} botzt",
             "is_docked": "{entity_name} ass an der Statioun"
         },
