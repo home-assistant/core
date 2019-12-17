@@ -122,7 +122,7 @@ class GiosAirQuality(AirQualityEntity):
     @property
     def unique_id(self):
         """Return a unique_id for this entity."""
-        return f"{self.gios.station_id}"
+        return self.gios.station_id
 
     @property
     def available(self):
