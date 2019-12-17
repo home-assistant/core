@@ -41,11 +41,13 @@ import homeassistant.util.dt as dt
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DESTINATION_LATITUDE = "destination_latitude"
+CONF_DESTINATION_LATITUDE_TEMPLATE = "destination_latitude_template"
 CONF_DESTINATION_LONGITUDE = "destination_longitude"
-CONF_DESTINATION_ENTITY_ID = "destination_entity_id"
+CONF_DESTINATION_LONGITUDE_TEMPLATE = "destination_longitude_template"
 CONF_ORIGIN_LATITUDE = "origin_latitude"
+CONF_ORIGIN_LATITUDE_TEMPLATE = "origin_latitude_template"
 CONF_ORIGIN_LONGITUDE = "origin_longitude"
-CONF_ORIGIN_ENTITY_ID = "origin_entity_id"
+CONF_ORIGIN_LONGITUDE_TEMPLATE = "origin_longitude_template"
 CONF_API_KEY = "api_key"
 CONF_TRAFFIC_MODE = "traffic_mode"
 CONF_ROUTE_MODE = "route_mode"
@@ -165,6 +167,7 @@ async def async_setup_platform(
         )
         return
 
+    # TODO CHANGE TO TEMPLATE
     if config.get(CONF_ORIGIN_LATITUDE) is not None:
         origin = f"{config[CONF_ORIGIN_LATITUDE]},{config[CONF_ORIGIN_LONGITUDE]}"
         origin_entity_id = None
@@ -374,16 +377,7 @@ class HERETravelTimeEntity(TravelTimeEntity):
 
     async def async_update(self) -> None:
         """Update Sensor Information."""
-        # Convert device_trackers to HERE friendly location
-        if self._origin_entity_id is not None:
-            self._here_data.origin = await self.hass.components.travel_time.get_location_from_entity(
-                self._origin_entity_id
-            )
-
-        if self._destination_entity_id is not None:
-            self._here_data.destination = await self.hass.components.travel_time.get_location_from_entity(
-                self._destination_entity_id
-            )
+        # TODO render template
 
         await self.hass.async_add_executor_job(self._here_data.update)
 
