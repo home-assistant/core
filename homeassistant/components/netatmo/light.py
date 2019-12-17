@@ -133,7 +133,7 @@ class NetatmoLight(Light):
     def update(self):
         """Update the camera data."""
         self._data.update()
-        (self._vpnurl, self._localurl) = self._data.camera_data.cameraUrls(
+        (self._vpnurl, self._localurl) = self._data.camera_data.camera_urls(
             cid=self._camera_id
         )
 
@@ -143,13 +143,14 @@ class NetatmoLight(Light):
             config = f'{{"mode":"{mode}"}}'
             if self._localurl:
                 requests.get(
-                    f"{self._localurl}/command/floodlight_set_config?config="
-                    f"{config}",
+                    f"{self._localurl}/command/floodlight_set_config",
+                    params={"config": config},
                     timeout=10,
                 )
             elif self._vpnurl:
                 requests.get(
-                    f"{self._vpnurl}/command/floodlight_set_config?config=" f"{config}",
+                    f"{self._vpnurl}/command/floodlight_set_config",
+                    params={"config": config},
                     timeout=10,
                     verify=self._verify_ssl,
                 )
