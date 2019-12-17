@@ -39,7 +39,6 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = gios
 
-    config_entry.add_update_listener(update_listener)
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(config_entry, "air_quality")
     )
@@ -51,14 +50,6 @@ async def async_unload_entry(hass, config_entry):
     hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
     await hass.config_entries.async_forward_entry_unload(config_entry, "air_quality")
     return True
-
-
-async def update_listener(hass, entry):
-    """Update listener."""
-    await hass.config_entries.async_forward_entry_unload(entry, "air_quality")
-    hass.async_add_job(
-        hass.config_entries.async_forward_entry_setup(entry, "air_quality")
-    )
 
 
 class GiosData:
