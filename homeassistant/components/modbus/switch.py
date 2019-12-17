@@ -7,6 +7,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
+    CONF_ICON,
     CONF_NAME,
     CONF_SLAVE,
     STATE_ON,
@@ -39,6 +40,7 @@ REGISTERS_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_REGISTER): cv.positive_int,
         vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
+        vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(CONF_REGISTER_TYPE, default=REGISTER_TYPE_HOLDING): vol.In(
             [REGISTER_TYPE_HOLDING, REGISTER_TYPE_INPUT]
         ),
@@ -56,6 +58,7 @@ COILS_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_SLAVE): cv.positive_int,
         vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
+        vol.Optional(CONF_ICON): cv.icon,
     }
 )
 
@@ -79,7 +82,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             hub = hass.data[MODBUS_DOMAIN][hub_name]
             switches.append(
                 ModbusCoilSwitch(
-                    hub, coil.get(CONF_NAME), coil.get(CONF_SLAVE), coil.get(CONF_COIL)
+                    hub,
+                    coil.get(CONF_NAME),
+                    coil.get(CONF_SLAVE),
+                    coil.get(CONF_COIL),
+                    coil.get(CONF_ICON),
                 )
             )
     if CONF_REGISTERS in config:
@@ -100,6 +107,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     register.get(CONF_REGISTER_TYPE),
                     register.get(CONF_STATE_ON),
                     register.get(CONF_STATE_OFF),
+                    register.get(CONF_ICON),
                 )
             )
 
@@ -109,13 +117,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ModbusCoilSwitch(ToggleEntity, RestoreEntity):
     """Representation of a Modbus coil switch."""
 
-    def __init__(self, hub, name, slave, coil):
+    def __init__(self, hub, name, slave, coil, icon):
         """Initialize the coil switch."""
         self._hub = hub
         self._name = name
         self._slave = int(slave) if slave else None
         self._coil = int(coil)
         self._is_on = None
+        self._icon = icon
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -123,6 +132,11 @@ class ModbusCoilSwitch(ToggleEntity, RestoreEntity):
         if not state:
             return
         self._is_on = state.state == STATE_ON
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return self._icon
 
     @property
     def is_on(self):
@@ -173,6 +187,7 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
         register_type,
         state_on,
         state_off,
+        icon,
     ):
         """Initialize the register switch."""
         self._hub = hub
@@ -184,6 +199,7 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
         self._verify_state = verify_state
         self._verify_register = verify_register if verify_register else self._register
         self._register_type = register_type
+        self._icon = icon
 
         if state_on is not None:
             self._state_on = state_on
@@ -196,6 +212,11 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
             self._state_off = self._command_off
 
         self._is_on = None
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return self._icon
 
     def turn_on(self, **kwargs):
         """Set switch on."""
