@@ -66,7 +66,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AlarmDecoderAlarmPanel(AlarmControlPanel):
     """Representation of an AlarmDecoder-based alarm panel."""
 
-    def __init__(self, auto_bypass=False):
+    def __init__(self, auto_bypass):
         """Initialize the alarm panel."""
         self._display = ""
         self._name = "Alarm Panel"
