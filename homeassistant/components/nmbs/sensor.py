@@ -99,7 +99,7 @@ class NMBSLiveBoard(Entity):
     @property
     def name(self):
         """Return the sensor default name."""
-        return f"NMBS Live {self._station}"
+        return "NMBS Live"
 
     @property
     def unique_id(self):
