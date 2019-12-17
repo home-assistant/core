@@ -708,7 +708,6 @@ omit =
     homeassistant/components/totalconnect/*
     homeassistant/components/touchline/climate.py
     homeassistant/components/tplink/device_tracker.py
-    homeassistant/components/tplink/light.py
     homeassistant/components/tplink/switch.py
     homeassistant/components/tplink_lte/*
     homeassistant/components/traccar/device_tracker.py
