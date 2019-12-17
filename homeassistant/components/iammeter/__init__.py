@@ -1,1 +1,1 @@
-"""do nothing."""
+"""platform for iammeter devices."""
