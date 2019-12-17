@@ -1,5 +1,6 @@
 """Define tests for the GIOS config flow."""
 from asynctest import patch
+from gios import ApiError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.gios import config_flow
@@ -107,6 +108,17 @@ async def test_invalid_sensor_data(hass):
         result = await flow.async_step_user(user_input=CONFIG)
 
         assert result["errors"] == {CONF_STATION_ID: "invalid_sensors_data"}
+
+
+async def test_cannot_connect(hass):
+    """Test that errors are shown when cannot connect to GIOS server."""
+    with patch("gios.Gios._async_get", side_effect=ApiError("error")):
+        flow = config_flow.GiosFlowHandler()
+        flow.hass = hass
+
+        result = await flow.async_step_user(user_input=CONFIG)
+
+        assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_create_entry(hass):
