@@ -6,10 +6,16 @@ DATA_CLIENT = "client"
 DEFAULT_NAME = "GIOŚ"
 DOMAIN = "gios"
 
+AQI_GOOD = "dobry"
+AQI_MODERATE = "umiarkowany"
+AQI_POOR = "dostateczny"
+AQI_VERY_GOOD = "bardzo dobry"
+AQI_VERY_POOR = "zły"
+
 ICONS_MAP = {
-    "bardzo dobry": "mdi:emoticon-excited",
-    "dobry": "mdi:emoticon-happy",
-    "umiarkowany": "mdi:emoticon-neutral",
-    "dostateczny": "mdi:emoticon-sad",
-    "zły": "mdi:emoticon-dead",
+    AQI_VERY_GOOD: "mdi:emoticon-excited",
+    AQI_GOOD: "mdi:emoticon-happy",
+    AQI_MODERATE: "mdi:emoticon-neutral",
+    AQI_POOR: "mdi:emoticon-sad",
+    AQI_VERY_POOR: "mdi:emoticon-dead",
 }
