@@ -86,7 +86,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                             condition,
                             f"{name}{SENSORS[condition][0]} {inverter}",
                             SENSORS[condition][1],
-                            True,
                         )
                     )
 
@@ -97,7 +96,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                     condition,
                     f"{name}{SENSORS[condition][0]}",
                     SENSORS[condition][1],
-                    False,
                 )
             )
     async_add_entities(entities)
@@ -106,13 +104,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class Envoy(Entity):
     """Implementation of the Enphase Envoy sensors."""
 
-    def __init__(self, envoy_reader, sensor_type, name, unit, inv_auth):
+    def __init__(self, envoy_reader, sensor_type, name, unit):
         """Initialize the sensor."""
         self._envoy_reader = envoy_reader
         self._type = sensor_type
         self._name = name
         self._unit_of_measurement = unit
-        self._inv_auth = inv_auth
         self._state = None
         self._last_reported = None
 
@@ -154,7 +151,7 @@ class Envoy(Entity):
                 _LOGGER.error(_state)
                 self._state = None
 
-        elif self._type == "inverters" and self._inv_auth:
+        elif self._type == "inverters":
             try:
                 inverters = await (self._envoy_reader.inverters_production())
             except requests.exceptions.HTTPError:
