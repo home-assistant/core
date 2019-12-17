@@ -1,10 +1,9 @@
 """Support for Efesto heating devices."""
 import logging
-import voluptuous as vol
+
 import efestoclient
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -17,7 +16,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_DEVICE,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
@@ -40,16 +38,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_URL): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_DEVICE): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-    }
-)
-
 FAN_MODES = [
     FAN_1,
     FAN_2,
@@ -68,7 +56,6 @@ CURRENT_HVAC_MAP_EFESTO_HEAT = {
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up Efesto climate, nothing to do."""
-    return True
 
 
 async def async_setup_entry(hass, entry, async_add_entities):

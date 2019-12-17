@@ -1,5 +1,6 @@
 """Tests for the Efesto config flow."""
 from unittest.mock import patch
+
 from efestoclient import (  # pylint: disable=redefined-builtin
     ConnectionError,
     Error,
@@ -10,11 +11,11 @@ from efestoclient import (  # pylint: disable=redefined-builtin
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.efesto.const import DOMAIN
 from homeassistant.const import (
-    CONF_URL,
-    CONF_USERNAME,
-    CONF_PASSWORD,
     CONF_DEVICE,
     CONF_NAME,
+    CONF_PASSWORD,
+    CONF_URL,
+    CONF_USERNAME,
 )
 
 from tests.common import mock_coro
