@@ -9,27 +9,27 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.components import sensor
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS,
+    ATTR_ATTRIBUTION,
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    TEMP_FAHRENHEIT,
-    TEMP_CELSIUS,
+    CONF_MONITORED_CONDITIONS,
+    LENGTH_FEET,
     LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
-    LENGTH_FEET,
-    ATTR_ATTRIBUTION,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
 )
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.util import Throttle
 
 _RESOURCE = "http://api.wunderground.com/api/{}/{}/{}/q/"
 _LOGGER = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ class WUSensorConfig:
         device_state_attributes=None,
         device_class=None,
     ):
-        """Constructor.
+        """Initialize sensor configuration.
 
         :param friendly_name: Friendly name
         :param feature: WU feature. See:
@@ -98,7 +98,7 @@ class WUCurrentConditionsSensorConfig(WUSensorConfig):
         unit_of_measurement: Optional[str] = None,
         device_class=None,
     ):
-        """Constructor.
+        """Initialize current conditions sensor configuration.
 
         :param friendly_name: Friendly name of sensor
         :field: Field name in the "current_observation" dictionary.
@@ -127,7 +127,7 @@ class WUDailyTextForecastSensorConfig(WUSensorConfig):
     def __init__(
         self, period: int, field: str, unit_of_measurement: Optional[str] = None
     ):
-        """Constructor.
+        """Initialize daily text forecast sensor configuration.
 
         :param period: forecast period number
         :param field: field name to use as value
@@ -164,7 +164,7 @@ class WUDailySimpleForecastSensorConfig(WUSensorConfig):
         icon=None,
         device_class=None,
     ):
-        """Constructor.
+        """Initialize daily simple forecast sensor configuration.
 
         :param friendly_name: friendly_name of the sensor
         :param period: forecast period number
@@ -207,7 +207,7 @@ class WUHourlyForecastSensorConfig(WUSensorConfig):
     """Helper for defining sensor configurations for hourly text forecasts."""
 
     def __init__(self, period: int, field: int):
-        """Constructor.
+        """Initialize hourly forecast sensor configuration.
 
         :param period: forecast period number
         :param field: field name to use as value
@@ -274,7 +274,7 @@ class WUAlmanacSensorConfig(WUSensorConfig):
         icon: str,
         device_class=None,
     ):
-        """Constructor.
+        """Initialize almanac sensor configuration.
 
         :param friendly_name: Friendly name
         :param field: value name returned in 'almanac' dict as returned by the WU API
@@ -297,7 +297,7 @@ class WUAlertsSensorConfig(WUSensorConfig):
     """Helper for defining field configuration for alerts."""
 
     def __init__(self, friendly_name: Union[str, Callable]):
-        """Constructor.
+        """Initialiize alerts sensor configuration.
 
         :param friendly_name: Friendly name
         """

@@ -1,5 +1,6 @@
 """Tests for StarLine config flow."""
 import requests_mock
+
 from homeassistant.components.starline import config_flow
 
 TEST_APP_ID = "666"

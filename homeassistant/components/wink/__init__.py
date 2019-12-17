@@ -6,8 +6,8 @@ import os
 import time
 
 from aiohttp.web import Response
-import pywink
 from pubnubsubhandler import PubNubSubscriptionHandler
+import pywink
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView

@@ -5,7 +5,6 @@ async_timeout==3.0.1
 attrs==19.3.0
 bcrypt==3.1.7
 certifi>=2019.11.28
-contextvars==2.4;python_version<"3.7"
 importlib-metadata==0.23
 jinja2>=2.10.3
 PyJWT==1.7.1
@@ -115,7 +114,7 @@ adafruit-blinka==1.2.1
 adafruit-circuitpython-mcp230xx==1.1.2
 
 # homeassistant.components.androidtv
-adb-shell==0.0.8
+adb-shell==0.1.0
 
 # homeassistant.components.adguard
 adguardhome==0.3.0
@@ -133,7 +132,7 @@ aio_geojson_geonetnz_volcano==0.5
 aio_geojson_nsw_rfs_incidents==0.1
 
 # homeassistant.components.ambient_station
-aioambient==0.3.2
+aioambient==1.0.2
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.1.22
@@ -164,7 +163,7 @@ aioharmony==0.1.13
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==1.9.2
+aiohue==1.10.1
 
 # homeassistant.components.imap
 aioimaplib==0.7.15
@@ -215,7 +214,7 @@ ambiclimate==0.2.1
 amcrest==1.5.3
 
 # homeassistant.components.androidtv
-androidtv==0.0.34
+androidtv==0.0.36
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -652,7 +651,7 @@ hdate==0.9.3
 heatmiserV3==1.1.18
 
 # homeassistant.components.here_travel_time
-herepy==0.6.3.3
+herepy==2.0.0
 
 # homeassistant.components.hikvisioncam
 hikvision==0.4
@@ -670,10 +669,10 @@ hole==0.5.0
 holidays==0.9.11
 
 # homeassistant.components.frontend
-home-assistant-frontend==20191204.0
+home-assistant-frontend==20191204.1
 
 # homeassistant.components.zwave
-homeassistant-pyozw==0.1.6
+homeassistant-pyozw==0.1.7
 
 # homeassistant.components.homekit_controller
 homekit[IP]==0.15.0
@@ -745,10 +744,10 @@ kaiterra-async-client==0.0.2
 keba-kecontact==0.2.0
 
 # homeassistant.scripts.keyring
-keyring==19.3.0
+keyring==20.0.0
 
 # homeassistant.scripts.keyring
-keyrings.alt==3.2.0
+keyrings.alt==3.4.0
 
 # homeassistant.components.kiwi
 kiwiki-client==0.1.1
@@ -1183,7 +1182,7 @@ pydaikin==1.6.1
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==64
+pydeconz==65
 
 # homeassistant.components.delijn
 pydelijn==0.5.1
@@ -1237,7 +1236,7 @@ pyflexit==0.3
 pyflic-homeassistant==0.4.dev0
 
 # homeassistant.components.flume
-pyflume==0.2.1
+pyflume==0.2.4
 
 # homeassistant.components.flunearyou
 pyflunearyou==1.0.3
@@ -1485,6 +1484,9 @@ pysesame2==1.0.1
 # homeassistant.components.goalfeed
 pysher==1.0.1
 
+# homeassistant.components.signal_messenger
+pysignalclirestapi==0.1.4
+
 # homeassistant.components.sma
 pysma==0.3.4
 
@@ -1579,7 +1581,7 @@ python-juicenet==0.1.6
 # python-lirc==1.2.3
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.4.7
+python-miio==0.4.8
 
 # homeassistant.components.mpd
 python-mpd2==1.0.0
@@ -1673,7 +1675,7 @@ pyuptimerobot==0.0.5
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.3.6
+pyvera==0.3.7
 
 # homeassistant.components.versasense
 pyversasense==0.0.6
@@ -1751,7 +1753,7 @@ rjpl==0.3.5
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-roku==3.1
+roku==4.0.0
 
 # homeassistant.components.roomba
 roombapy==1.4.2
@@ -1796,7 +1798,7 @@ sense_energy==0.7.0
 sharp_aquos_rc==0.3.2
 
 # homeassistant.components.shodan
-shodan==1.20.0
+shodan==1.21.0
 
 # homeassistant.components.simplepush
 simplepush==1.1.4
@@ -1907,7 +1909,7 @@ swisshydrodata==0.0.3
 synology-srm==0.0.7
 
 # homeassistant.components.tahoma
-tahoma-api==0.0.14
+tahoma-api==0.0.16
 
 # homeassistant.components.tank_utility
 tank_utility==1.4.0
@@ -1988,7 +1990,7 @@ uvcclient==0.11.0
 vallox-websocket-api==2.2.0
 
 # homeassistant.components.venstar
-venstarcolortouch==0.9
+venstarcolortouch==0.12
 
 # homeassistant.components.meteo_france
 vigilancemeteo==3.0.0

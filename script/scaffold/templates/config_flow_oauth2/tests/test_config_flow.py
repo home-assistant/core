@@ -1,5 +1,5 @@
 """Test the NEW_NAME config flow."""
-from homeassistant import config_entries, setup, data_entry_flow
+from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.NEW_DOMAIN.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,

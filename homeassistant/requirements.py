@@ -1,20 +1,24 @@
 """Module to handle installing requirements."""
 import asyncio
-from pathlib import Path
 import logging
 import os
-from typing import Any, Dict, List, Optional, Set
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Optional, Set
 
-from homeassistant.exceptions import HomeAssistantError
-import homeassistant.util.package as pkg_util
 from homeassistant.core import HomeAssistant
-from homeassistant.loader import async_get_integration, Integration
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import Integration, async_get_integration
+import homeassistant.util.package as pkg_util
 
 DATA_PIP_LOCK = "pip_lock"
 DATA_PKG_CACHE = "pkg_cache"
 CONSTRAINT_FILE = "package_constraints.txt"
 PROGRESS_FILE = ".pip_progress"
 _LOGGER = logging.getLogger(__name__)
+DISCOVERY_INTEGRATIONS: Dict[str, Iterable[str]] = {
+    "ssdp": ("ssdp",),
+    "zeroconf": ("zeroconf", "homekit"),
+}
 
 
 class RequirementsNotFound(HomeAssistantError):
@@ -30,7 +34,7 @@ class RequirementsNotFound(HomeAssistantError):
 async def async_get_integration_with_requirements(
     hass: HomeAssistant, domain: str, done: Set[str] = None
 ) -> Integration:
-    """Get an integration with installed requirements.
+    """Get an integration with all requirements installed, including the dependencies.
 
     This can raise IntegrationNotFound if manifest or integration
     is invalid, RequirementNotFound if there was some type of
@@ -53,9 +57,17 @@ async def async_get_integration_with_requirements(
 
     deps_to_check = [
         dep
-        for dep in integration.dependencies + (integration.after_dependencies or [])
+        for dep in integration.dependencies + integration.after_dependencies
         if dep not in done
     ]
+
+    for check_domain, to_check in DISCOVERY_INTEGRATIONS.items():
+        if (
+            check_domain not in done
+            and check_domain not in deps_to_check
+            and any(check in integration.manifest for check in to_check)
+        ):
+            deps_to_check.append(check_domain)
 
     if deps_to_check:
         await asyncio.gather(

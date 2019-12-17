@@ -10,7 +10,6 @@ from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from . import DOMAIN
 from .const import DATA_GATEWAYS, DATA_OPENTHERM_GW, SENSOR_INFO
 
-
 _LOGGER = logging.getLogger(__name__)
 
 

@@ -19,8 +19,8 @@ from homeassistant.components.zwave import (
 )
 from homeassistant.components.zwave.binary_sensor import get_device
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
-from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
+from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.setup import setup_component
 
 from tests.common import (
@@ -573,7 +573,11 @@ async def test_value_discovery_existing_entity(hass, mock_openzwave):
 
     assert len(mock_receivers) == 1
 
-    node = MockNode(node_id=11, generic=const.GENERIC_TYPE_THERMOSTAT)
+    node = MockNode(
+        node_id=11,
+        generic=const.GENERIC_TYPE_THERMOSTAT,
+        specific=const.SPECIFIC_TYPE_THERMOSTAT_GENERAL_V2,
+    )
     thermostat_mode = MockValue(
         data="Heat",
         data_items=["Off", "Heat"],
@@ -635,6 +639,42 @@ async def test_value_discovery_existing_entity(hass, mock_openzwave):
             "current_temperature"
         ]
         == 23.5
+    )
+
+
+async def test_value_discovery_legacy_thermostat(hass, mock_openzwave):
+    """Test discovery of a node. Special case for legacy thermostats."""
+    mock_receivers = []
+
+    def mock_connect(receiver, signal, *args, **kwargs):
+        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
+            mock_receivers.append(receiver)
+
+    with patch("pydispatch.dispatcher.connect", new=mock_connect):
+        await async_setup_component(hass, "zwave", {"zwave": {}})
+        await hass.async_block_till_done()
+
+    assert len(mock_receivers) == 1
+
+    node = MockNode(
+        node_id=11,
+        generic=const.GENERIC_TYPE_THERMOSTAT,
+        specific=const.SPECIFIC_TYPE_SETPOINT_THERMOSTAT,
+    )
+    setpoint_heating = MockValue(
+        data=22.0,
+        node=node,
+        command_class=const.COMMAND_CLASS_THERMOSTAT_SETPOINT,
+        index=1,
+        genre=const.GENRE_USER,
+    )
+
+    hass.async_add_job(mock_receivers[0], node, setpoint_heating)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("climate.mock_node_mock_value").attributes["temperature"]
+        == 22.0
     )
 
 

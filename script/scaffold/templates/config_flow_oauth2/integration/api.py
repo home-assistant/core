@@ -4,7 +4,7 @@ from asyncio import run_coroutine_threadsafe
 from aiohttp import ClientSession
 import my_pypi_package
 
-from homeassistant import core, config_entries
+from homeassistant import config_entries, core
 from homeassistant.helpers import config_entry_oauth2_flow
 
 # TODO the following two API examples are based on our suggested best practices

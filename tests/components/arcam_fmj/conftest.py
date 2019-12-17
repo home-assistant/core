@@ -16,6 +16,7 @@ MOCK_TURN_ON = {
     "data": {"entity_id": "switch.test"},
 }
 MOCK_NAME = "dummy"
+MOCK_ENTITY_ID = "media_player.arcam_fmj_1"
 MOCK_CONFIG = DEVICE_SCHEMA({CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT})
 
 
@@ -41,6 +42,10 @@ def state_fixture(client):
     state.client = client
     state.zn = 1
     state.get_power.return_value = True
+    state.get_volume.return_value = 0.0
+    state.get_source_list.return_value = []
+    state.get_incoming_audio_format.return_value = (0, 0)
+    state.get_mute.return_value = None
     return state
 
 
@@ -48,5 +53,7 @@ def state_fixture(client):
 def player_fixture(hass, state):
     """Get standard player."""
     player = ArcamFmj(state, MOCK_NAME, None)
+    player.entity_id = MOCK_ENTITY_ID
+    player.hass = hass
     player.async_schedule_update_ha_state = Mock()
     return player

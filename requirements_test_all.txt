@@ -29,7 +29,7 @@ YesssSMS==0.4.1
 abodepy==0.16.7
 
 # homeassistant.components.androidtv
-adb-shell==0.0.8
+adb-shell==0.1.0
 
 # homeassistant.components.adguard
 adguardhome==0.3.0
@@ -44,7 +44,7 @@ aio_geojson_geonetnz_volcano==0.5
 aio_geojson_nsw_rfs_incidents==0.1
 
 # homeassistant.components.ambient_station
-aioambient==0.3.2
+aioambient==1.0.2
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.1.22
@@ -63,7 +63,7 @@ aioesphomeapi==2.6.1
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==1.9.2
+aiohue==1.10.1
 
 # homeassistant.components.notion
 aionotion==1.1.0
@@ -84,7 +84,7 @@ airly==0.0.2
 ambiclimate==0.2.1
 
 # homeassistant.components.androidtv
-androidtv==0.0.34
+androidtv==0.0.36
 
 # homeassistant.components.apns
 apns2==0.3.0
@@ -225,7 +225,7 @@ hbmqtt==0.9.5
 hdate==0.9.3
 
 # homeassistant.components.here_travel_time
-herepy==0.6.3.3
+herepy==2.0.0
 
 # homeassistant.components.pi_hole
 hole==0.5.0
@@ -234,10 +234,10 @@ hole==0.5.0
 holidays==0.9.11
 
 # homeassistant.components.frontend
-home-assistant-frontend==20191204.0
+home-assistant-frontend==20191204.1
 
 # homeassistant.components.zwave
-homeassistant-pyozw==0.1.6
+homeassistant-pyozw==0.1.7
 
 # homeassistant.components.homekit_controller
 homekit[IP]==0.15.0
@@ -262,10 +262,10 @@ influxdb==5.2.3
 jsonpath==0.82
 
 # homeassistant.scripts.keyring
-keyring==19.3.0
+keyring==20.0.0
 
 # homeassistant.scripts.keyring
-keyrings.alt==3.2.0
+keyrings.alt==3.4.0
 
 # homeassistant.components.dyson
 libpurecool==0.5.0
@@ -409,7 +409,7 @@ pycoolmasternet==0.0.4
 pydaikin==1.6.1
 
 # homeassistant.components.deconz
-pydeconz==64
+pydeconz==65
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -434,6 +434,9 @@ pyheos==0.6.0
 
 # homeassistant.components.homematic
 pyhomematic==0.1.62
+
+# homeassistant.components.icloud
+pyicloud==0.9.1
 
 # homeassistant.components.ipma
 pyipma==1.2.1
@@ -522,7 +525,7 @@ python-forecastio==1.4.0
 python-izone==1.1.1
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.4.7
+python-miio==0.4.8
 
 # homeassistant.components.nest
 python-nest==4.1.0
@@ -538,6 +541,9 @@ pytraccar==0.9.0
 
 # homeassistant.components.tradfri
 pytradfri[async]==6.4.0
+
+# homeassistant.components.vera
+pyvera==0.3.7
 
 # homeassistant.components.vesync
 pyvesync==1.1.0

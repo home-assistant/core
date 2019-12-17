@@ -1,9 +1,8 @@
 """Support for KEBA charging station sensors."""
 import logging
 
-from homeassistant.const import ENERGY_KILO_WATT_HOUR
+from homeassistant.const import DEVICE_CLASS_POWER, ENERGY_KILO_WATT_HOUR
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import DEVICE_CLASS_POWER
 
 from . import DOMAIN
 

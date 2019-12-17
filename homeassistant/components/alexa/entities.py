@@ -9,6 +9,7 @@ from homeassistant.components import (
     cover,
     fan,
     group,
+    image_processing,
     input_boolean,
     light,
     lock,
@@ -40,6 +41,7 @@ from .capabilities import (
     AlexaContactSensor,
     AlexaDoorbellEventSource,
     AlexaEndpointHealth,
+    AlexaEventDetectionSensor,
     AlexaInputController,
     AlexaLockController,
     AlexaModeController,
@@ -522,6 +524,7 @@ class BinarySensorCapabilities(AlexaEntity):
 
     TYPE_CONTACT = "contact"
     TYPE_MOTION = "motion"
+    TYPE_PRESENCE = "presence"
 
     def default_display_categories(self):
         """Return the display categories for this entity."""
@@ -530,6 +533,8 @@ class BinarySensorCapabilities(AlexaEntity):
             return [DisplayCategory.CONTACT_SENSOR]
         if sensor_type is self.TYPE_MOTION:
             return [DisplayCategory.MOTION_SENSOR]
+        if sensor_type is self.TYPE_PRESENCE:
+            return [DisplayCategory.CAMERA]
 
     def interfaces(self):
         """Yield the supported interfaces."""
@@ -538,7 +543,10 @@ class BinarySensorCapabilities(AlexaEntity):
             yield AlexaContactSensor(self.hass, self.entity)
         elif sensor_type is self.TYPE_MOTION:
             yield AlexaMotionSensor(self.hass, self.entity)
+        elif sensor_type is self.TYPE_PRESENCE:
+            yield AlexaEventDetectionSensor(self.hass, self.entity)
 
+        # yield additional interfaces based on specified display category in config.
         entity_conf = self.config.entity_config.get(self.entity.entity_id, {})
         if CONF_DISPLAY_CATEGORIES in entity_conf:
             if entity_conf[CONF_DISPLAY_CATEGORIES] == DisplayCategory.DOORBELL:
@@ -547,6 +555,8 @@ class BinarySensorCapabilities(AlexaEntity):
                 yield AlexaContactSensor(self.hass, self.entity)
             elif entity_conf[CONF_DISPLAY_CATEGORIES] == DisplayCategory.MOTION_SENSOR:
                 yield AlexaMotionSensor(self.hass, self.entity)
+            elif entity_conf[CONF_DISPLAY_CATEGORIES] == DisplayCategory.CAMERA:
+                yield AlexaEventDetectionSensor(self.hass, self.entity)
 
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.hass)
@@ -554,10 +564,19 @@ class BinarySensorCapabilities(AlexaEntity):
     def get_type(self):
         """Return the type of binary sensor."""
         attrs = self.entity.attributes
-        if attrs.get(ATTR_DEVICE_CLASS) in ("door", "garage_door", "opening", "window"):
+        if attrs.get(ATTR_DEVICE_CLASS) in (
+            binary_sensor.DEVICE_CLASS_DOOR,
+            binary_sensor.DEVICE_CLASS_GARAGE_DOOR,
+            binary_sensor.DEVICE_CLASS_OPENING,
+            binary_sensor.DEVICE_CLASS_WINDOW,
+        ):
             return self.TYPE_CONTACT
-        if attrs.get(ATTR_DEVICE_CLASS) == "motion":
+
+        if attrs.get(ATTR_DEVICE_CLASS) == binary_sensor.DEVICE_CLASS_MOTION:
             return self.TYPE_MOTION
+
+        if attrs.get(ATTR_DEVICE_CLASS) == binary_sensor.DEVICE_CLASS_PRESENCE:
+            return self.TYPE_PRESENCE
 
 
 @ENTITY_ADAPTERS.register(alarm_control_panel.DOMAIN)
@@ -574,3 +593,17 @@ class AlarmControlPanelCapabilities(AlexaEntity):
             yield AlexaSecurityPanelController(self.hass, self.entity)
             yield AlexaEndpointHealth(self.hass, self.entity)
             yield Alexa(self.hass)
+
+
+@ENTITY_ADAPTERS.register(image_processing.DOMAIN)
+class ImageProcessingCapabilities(AlexaEntity):
+    """Class to represent image_processing capabilities."""
+
+    def default_display_categories(self):
+        """Return the display categories for this entity."""
+        return [DisplayCategory.CAMERA]
+
+    def interfaces(self):
+        """Yield the supported interfaces."""
+        yield AlexaEventDetectionSensor(self.hass, self.entity)
+        yield AlexaEndpointHealth(self.hass, self.entity)

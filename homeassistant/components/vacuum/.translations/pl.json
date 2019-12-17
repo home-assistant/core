@@ -4,7 +4,7 @@
             "clean": "niech {entity_name} sprz\u0105ta",
             "dock": "niech {entity_name} wr\u00f3ci do bazy"
         },
-        "condtion_type": {
+        "condition_type": {
             "is_cleaning": "{entity_name} sprz\u0105ta",
             "is_docked": "{entity_name} jest w bazie"
         },

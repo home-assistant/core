@@ -12,18 +12,18 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.weather import (
+    ATTR_WEATHER_ATTRIBUTION,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
-    ATTR_WEATHER_WIND_SPEED,
-    ATTR_WEATHER_ATTRIBUTION,
     ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_WIND_BEARING,
+    ATTR_WEATHER_WIND_SPEED,
 )
 from homeassistant.const import (
-    CONF_NAME,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
     __version__,
 )
 import homeassistant.helpers.config_validation as cv
