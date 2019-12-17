@@ -71,23 +71,24 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         if condition == "inverters":
             try:
                 inverters = await envoy_reader.inverters_production()
-                if isinstance(inverters, dict):
-                    for inverter in inverters:
-                        entities.append(
-                            Envoy(
-                                envoy_reader,
-                                condition,
-                                f"{name}{SENSORS[condition][0]} {inverter}",
-                                SENSORS[condition][1],
-                                True,
-                            )
-                        )
             except requests.exceptions.HTTPError:
                 _LOGGER.warning(
                     "Authentication for Inverter data failed during setup: %s",
                     ip_address,
                 )
                 continue
+
+            if isinstance(inverters, dict):
+                for inverter in inverters:
+                    entities.append(
+                        Envoy(
+                            envoy_reader,
+                            condition,
+                            f"{name}{SENSORS[condition][0]} {inverter}",
+                            SENSORS[condition][1],
+                            True,
+                        )
+                    )
 
         else:
             entities.append(
