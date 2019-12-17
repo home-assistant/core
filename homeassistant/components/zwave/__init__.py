@@ -79,12 +79,14 @@ CONF_REFRESH_DELAY = "delay"
 CONF_DEVICE_CONFIG = "device_config"
 CONF_DEVICE_CONFIG_GLOB = "device_config_glob"
 CONF_DEVICE_CONFIG_DOMAIN = "device_config_domain"
+CONF_TILT_OPEN_POSITION = "tilt_open_position"
 
 DEFAULT_CONF_IGNORED = False
 DEFAULT_CONF_INVERT_OPENCLOSE_BUTTONS = False
 DEFAULT_CONF_INVERT_PERCENT = False
 DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
+DEFAULT_CONF_TILT_OPEN_POSITION = 50
 
 SUPPORTED_PLATFORMS = [
     "binary_sensor",
@@ -213,6 +215,9 @@ DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema(
         ): cv.boolean,
         vol.Optional(
             CONF_REFRESH_DELAY, default=DEFAULT_CONF_REFRESH_DELAY
+        ): cv.positive_int,
+        vol.Optional(
+            CONF_TILT_OPEN_POSITION, default=DEFAULT_CONF_TILT_OPEN_POSITION
         ): cv.positive_int,
     }
 )
