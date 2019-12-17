@@ -55,6 +55,9 @@ async def async_setup(hass: HomeAssistant, base_config: dict) -> bool:
     """Set up for Vera controllers."""
     config = base_config.get(DOMAIN)
 
+    if not config:
+        return True
+
     # Normalize the base url.
     config[CONF_CONTROLLER] = config.get(CONF_CONTROLLER).rstrip("/")
     base_url = config.get(CONF_CONTROLLER)
@@ -100,9 +103,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     )
 
     try:
-        all_devices = controller.get_devices()
+        all_devices = await hass.async_add_executor_job(controller.get_devices)
 
-        all_scenes = controller.get_scenes()
+        all_scenes = await hass.async_add_executor_job(controller.get_scenes)
     except RequestException:
         # There was a network related error connecting to the Vera controller.
         _LOGGER.exception("Error communicating with Vera API")
