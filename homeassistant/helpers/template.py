@@ -656,7 +656,7 @@ def distance(hass, *args):
 
 
 def coordinates(
-    hass, entity_id: str, recursion_history: Optional[list] = None
+    hass: HomeAssistantType, entity_id: str, recursion_history: Optional[list] = None
 ) -> Optional[str]:
     """Get the location from the entity state or attributes."""
     entity = _resolve_state(hass, entity_id)
