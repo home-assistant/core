@@ -1,4 +1,4 @@
-"""Get the local IP (eth0 equivalent) of the Home Assistant instance."""
+"""Get the local IP address of the Home Assistant instance."""
 import voluptuous as vol
 
 from homeassistant.const import CONF_NAME
