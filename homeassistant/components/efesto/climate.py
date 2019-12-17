@@ -2,11 +2,11 @@
 import logging
 
 from efestoclient import (
-    EfestoClient,
-    Error,
-    UnauthorizedError,
     ConnectionError,
+    EfestoClient,
+    Error as EfestoError,
     InvalidURLError,
+    UnauthorizedError,
 )
 
 from homeassistant.components.climate import ClimateDevice
@@ -84,7 +84,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     except InvalidURLError:
         _LOGGER.error("Invalid Efesto URL: %s", url)
         return False
-    except Error as err:
+    except EfestoError as err:
         _LOGGER.error("Unknown Efesto error: %s", err)
         return False
 
@@ -217,14 +217,14 @@ class EfestoHeatingDevice(ClimateDevice):
         """Turn device off."""
         try:
             self.client.set_off()
-        except Error as err:
+        except EfestoError as err:
             _LOGGER.error("Failed to turn off device (original message: %s)", err)
 
     def turn_on(self):
         """Turn device on."""
         try:
             self.client.set_on()
-        except Error as err:
+        except EfestoError as err:
             _LOGGER.error("Failed to turn on device (original message: %s)", err)
 
     def set_temperature(self, **kwargs):
@@ -235,7 +235,7 @@ class EfestoHeatingDevice(ClimateDevice):
 
         try:
             self.client.set_temperature(round(temperature))
-        except Error as err:
+        except EfestoError as err:
             _LOGGER.error("Failed to set temperature (original message: %s)", err)
 
     def set_fan_mode(self, fan_mode):
@@ -245,7 +245,7 @@ class EfestoHeatingDevice(ClimateDevice):
 
         try:
             self.client.set_power(fan_mode)
-        except Error as err:
+        except EfestoError as err:
             _LOGGER.error("Failed to set temperature (original message: %s)", err)
 
     def set_hvac_mode(self, hvac_mode):
@@ -265,7 +265,7 @@ class EfestoHeatingDevice(ClimateDevice):
         except ConnectionError:
             _LOGGER.error("Connection to %s not possible", self.client.url)
             return False
-        except Error as err:
+        except EfestoError as err:
             _LOGGER.error("Error: %s", err)
             return False
 

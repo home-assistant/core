@@ -3,11 +3,11 @@ from collections import OrderedDict
 import logging
 
 from efestoclient import (
-    EfestoClient,
-    Error,
-    UnauthorizedError,
     ConnectionError,
+    EfestoClient,
+    Error as EfestoError,
     InvalidURLError,
+    UnauthorizedError,
 )
 import voluptuous as vol
 
@@ -68,7 +68,7 @@ class EfestoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "connection_error"
             except InvalidURLError:
                 errors["base"] = "invalid_url"
-            except Error:
+            except EfestoError:
                 errors["base"] = "unknown_error"
 
             if "base" not in errors:
