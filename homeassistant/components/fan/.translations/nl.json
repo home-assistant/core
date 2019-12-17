@@ -4,7 +4,7 @@
             "turn_off": "Schakel {entity_name} uit",
             "turn_on": "Schakel {entity_name} in"
         },
-        "condtion_type": {
+        "condition_type": {
             "is_off": "{entity_name} is uitgeschakeld",
             "is_on": "{entity_name} is ingeschakeld"
         },
