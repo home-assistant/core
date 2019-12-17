@@ -4,6 +4,7 @@ import asyncio
 from datetime import timedelta
 import logging
 import iammeter
+from iammeter import real_time_api
 from iammeter import power_meter
 from iammeter.power_meter import IamMeterError
 import requests
@@ -22,7 +23,7 @@ DEFAULT_PORT = 80
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_NAME, default="IamMeter"): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
@@ -32,19 +33,13 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Platform setup."""
-    try:
-        base = "http://admin:admin@{}:{}/monitorjson"
-        url = base.format(config[CONF_HOST], config[CONF_PORT])
-        resp = requests.get(url)
-        json_data = resp.json()
-        _LOGGER.error(json_data)
-        if "SN" in json_data:
-            serial = json_data["SN"]
-        if "mac" in json_data:
-            mac = json_data["mac"]
-    except Exception as err:
-        _LOGGER.error(err)
-        raise PlatformNotReady
+    api = await real_time_api(config[CONF_HOST], config[CONF_PORT])
+    endpoint = RealTimeDataEndpoint(hass, api)
+    json_data = api.iammeter
+    if "SN" in json_data:
+        serial = json_data["SN"]
+    if "mac" in json_data:
+        mac = json_data["mac"]
     devices = []
     if "data" in json_data:
         _LOGGER.info("3162")
