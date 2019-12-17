@@ -4,7 +4,7 @@
             "turn_off": "\u95dc\u9589 {entity_name}",
             "turn_on": "\u958b\u555f {entity_name}"
         },
-        "condtion_type": {
+        "condition_type": {
             "is_off": "{entity_name} \u95dc\u9589",
             "is_on": "{entity_name} \u958b\u555f"
         },
