@@ -8,7 +8,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_NAME
-from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_STATION_ID, DEFAULT_NAME, DOMAIN
@@ -19,14 +18,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
     }
 )
-
-
-@callback
-def configured_instances(hass, condition):
-    """Return a set of configured GIOS instances."""
-    return set(
-        entry.data[condition] for entry in hass.config_entries.async_entries(DOMAIN)
-    )
 
 
 class GiosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -44,11 +35,8 @@ class GiosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                if user_input[CONF_NAME] in configured_instances(self.hass, CONF_NAME):
-                    raise NameExists()
-                if user_input[CONF_STATION_ID] in configured_instances(
-                    self.hass, CONF_STATION_ID
-                ):
+                already_configured = self._async_current_ids()
+                if user_input[CONF_STATION_ID] in already_configured:
                     raise StationIdExists()
 
                 websession = async_get_clientsession(self.hass)
@@ -56,13 +44,16 @@ class GiosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 with timeout(30):
                     gios = Gios(user_input[CONF_STATION_ID], websession)
                     await gios.update()
+
                 if not gios.available:
                     raise InvalidSensorsData()
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
+
+                await self.async_set_unique_id(
+                    user_input[CONF_STATION_ID], raise_on_progress=False
                 )
-            except NameExists:
-                errors[CONF_NAME] = "name_exists"
+                return self.async_create_entry(
+                    title=user_input[CONF_STATION_ID], data=user_input,
+                )
             except StationIdExists:
                 errors[CONF_STATION_ID] = "station_id_exists"
             except (ApiError, ClientConnectorError, asyncio.TimeoutError):

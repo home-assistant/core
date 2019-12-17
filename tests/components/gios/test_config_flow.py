@@ -55,26 +55,6 @@ async def test_invalid_station_id(hass):
         assert result["errors"] == {CONF_STATION_ID: "wrong_station_id"}
 
 
-async def test_duplicate_name_error(hass):
-    """Test that errors are shown when duplicate names are added."""
-    with patch("gios.Gios._get_stations", return_value=VALID_STATIONS), patch(
-        "gios.Gios._get_station", return_value=VALID_STATION
-    ), patch("gios.Gios._get_station", return_value=VALID_STATION), patch(
-        "gios.Gios._get_sensor", return_value=VALID_SENSOR
-    ), patch(
-        "gios.Gios._get_indexes", return_value=VALID_INDEXES
-    ):
-        MockConfigEntry(domain=DOMAIN, data=CONFIG).add_to_hass(hass)
-        flow = config_flow.GiosFlowHandler()
-        flow.hass = hass
-
-        result = await flow.async_step_user(
-            user_input={CONF_NAME: "Foo", CONF_STATION_ID: 321}
-        )
-
-        assert result["errors"] == {CONF_NAME: "name_exists"}
-
-
 async def test_duplicate_station_id_error(hass):
     """Test that errors are shown when duplicate stations IDs are added."""
     with patch("gios.Gios._get_stations", return_value=VALID_STATIONS), patch(
@@ -84,13 +64,14 @@ async def test_duplicate_station_id_error(hass):
     ), patch(
         "gios.Gios._get_indexes", return_value=VALID_INDEXES
     ):
-        MockConfigEntry(domain=DOMAIN, data=CONFIG).add_to_hass(hass)
+        MockConfigEntry(
+            domain=DOMAIN, unique_id=CONFIG[CONF_STATION_ID], data=CONFIG
+        ).add_to_hass(hass)
         flow = config_flow.GiosFlowHandler()
         flow.hass = hass
+        flow.context = {}
 
-        result = await flow.async_step_user(
-            user_input={CONF_NAME: "Other", CONF_STATION_ID: 123}
-        )
+        result = await flow.async_step_user(user_input=CONFIG)
 
         assert result["errors"] == {CONF_STATION_ID: "station_id_exists"}
 
@@ -132,9 +113,12 @@ async def test_create_entry(hass):
     ):
         flow = config_flow.GiosFlowHandler()
         flow.hass = hass
+        flow.context = {}
 
         result = await flow.async_step_user(user_input=CONFIG)
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == CONFIG[CONF_NAME]
+        assert result["title"] == CONFIG[CONF_STATION_ID]
         assert result["data"][CONF_STATION_ID] == CONFIG[CONF_STATION_ID]
+
+        assert flow.context["unique_id"] == CONFIG[CONF_STATION_ID]
