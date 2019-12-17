@@ -1,7 +1,7 @@
 {
   "domain": "efesto",
   "name": "Efesto",
-  "documentation": "https://www.home-assistant.io/components/efesto",
+  "documentation": "https://www.home-assistant.io/integrations/efesto",
   "requirements": ["efestoclient==0.0.10"],
   "dependencies": [],
   "codeowners": ["@fredericvl"],
