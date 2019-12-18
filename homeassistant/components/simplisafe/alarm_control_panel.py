@@ -182,8 +182,10 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
             last_event_sensor_type = EntityTypes(last_event["sensorType"]).name
         except ValueError:
             _LOGGER.warning(
-                'Encountered unknown entity type: "%s". Please report it at '
-                "https://github.com/home-assistant/home-assistant/issues."
+                'Encountered unknown entity type: %s ("%s"). Please report it at'
+                "https://github.com/home-assistant/home-assistant/issues.",
+                last_event["sensorType"],
+                last_event["sensorName"],
             )
             last_event_sensor_type = None
 
