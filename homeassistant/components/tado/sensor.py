@@ -21,6 +21,7 @@ CLIMATE_HEAT_SENSOR_TYPES = [
     "tado mode",
     "overlay",
     "early start",
+    "open window",
 ]
 
 CLIMATE_COOL_SENSOR_TYPES = [
@@ -257,5 +258,11 @@ class TadoSensor(Entity):
         elif self.zone_variable == "early start":
             if "preparation" in data and data["preparation"] is not None:
                 self._state = True
+            else:
+                self._state = False
+
+        elif self.zone_variable == "open window":
+            if "openWindowDetected" in data:
+                self._state = data["openWindowDetected"]
             else:
                 self._state = False
