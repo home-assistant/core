@@ -35,7 +35,12 @@ from homeassistant.components.light import (
     Light,
     preprocess_turn_on_alternatives,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_MODE,
+    ENTITY_MATCH_ALL,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
@@ -369,6 +374,9 @@ class LIFXManager:
 
     async def async_service_to_entities(self, service):
         """Return the known entities that a service call mentions."""
+        if service.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_ALL:
+            return self.entities.values()
+
         entity_ids = await async_extract_entity_ids(self.hass, service)
         return [
             entity

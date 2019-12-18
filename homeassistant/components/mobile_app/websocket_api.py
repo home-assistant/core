@@ -115,7 +115,7 @@ async def websocket_delete_registration(
     except HomeAssistantError:
         return error_message(msg["id"], "internal_error", "Error deleting registration")
 
-    if CONF_CLOUDHOOK_URL in registration and "cloud" in hass.config.components:
+    if CONF_CLOUDHOOK_URL in registration:
         await hass.components.cloud.async_delete_cloudhook(webhook_id)
 
     connection.send_message(result_message(msg["id"], "ok"))
