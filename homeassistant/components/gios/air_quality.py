@@ -111,12 +111,6 @@ class GiosAirQuality(AirQualityEntity):
         return ATTRIBUTION
 
     @property
-    def state(self):
-        """Return the air quality index."""
-        if self.gios.available:
-            return self._aqi
-
-    @property
     def unique_id(self):
         """Return a unique_id for this entity."""
         return self.gios.station_id
