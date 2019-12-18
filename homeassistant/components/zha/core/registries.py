@@ -33,15 +33,8 @@ from . import channels  # noqa: F401 pylint: disable=unused-import
 from .const import (
     CONTROLLER,
     SENSOR_ACCELERATION,
-    SENSOR_BATTERY,
-    SENSOR_ELECTRICAL_MEASUREMENT,
-    SENSOR_HUMIDITY,
-    SENSOR_ILLUMINANCE,
-    SENSOR_METERING,
     SENSOR_OCCUPANCY,
     SENSOR_OPENING,
-    SENSOR_PRESSURE,
-    SENSOR_TEMPERATURE,
     ZHA_GW_RADIO,
     ZHA_GW_RADIO_DESCRIPTION,
     ZONE,
@@ -62,7 +55,6 @@ LIGHT_CLUSTERS = SetRegistry()
 OUTPUT_CHANNEL_ONLY_CLUSTERS = SetRegistry()
 RADIO_TYPES = {}
 REMOTE_DEVICE_TYPES = collections.defaultdict(list)
-SENSOR_TYPES = {}
 SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {}
 SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {}
 SWITCH_CLUSTERS = SetRegistry()
@@ -176,19 +168,6 @@ def establish_device_mappings():
 
     SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS.update(
         {zcl.clusters.general.OnOff: BINARY_SENSOR}
-    )
-
-    SENSOR_TYPES.update(
-        {
-            SMARTTHINGS_HUMIDITY_CLUSTER: SENSOR_HUMIDITY,
-            zcl.clusters.general.PowerConfiguration.cluster_id: SENSOR_BATTERY,
-            zcl.clusters.homeautomation.ElectricalMeasurement.cluster_id: SENSOR_ELECTRICAL_MEASUREMENT,
-            zcl.clusters.measurement.IlluminanceMeasurement.cluster_id: SENSOR_ILLUMINANCE,
-            zcl.clusters.measurement.PressureMeasurement.cluster_id: SENSOR_PRESSURE,
-            zcl.clusters.measurement.RelativeHumidity.cluster_id: SENSOR_HUMIDITY,
-            zcl.clusters.measurement.TemperatureMeasurement.cluster_id: SENSOR_TEMPERATURE,
-            zcl.clusters.smartenergy.Metering.cluster_id: SENSOR_METERING,
-        }
     )
 
     zha = zigpy.profiles.zha
