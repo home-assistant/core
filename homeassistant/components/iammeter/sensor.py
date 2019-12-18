@@ -35,37 +35,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Platform setup."""
     api = await real_time_api(config[CONF_HOST], config[CONF_PORT])
     endpoint = RealTimeDataEndpoint(hass, api)
-    json_data = api.iammeter
-    if "SN" in json_data:
-        serial = json_data["SN"]
-    if "mac" in json_data:
-        mac = json_data["mac"]
     devices = []
-    if "data" in json_data:
-        _LOGGER.info("3162")
-        api = iammeter.RealTimeAPI(
-            power_meter.WEM3162(config[CONF_HOST], config[CONF_PORT])
-        )
-        for sensor, (idx, unit) in api.iammeter.sensor_map().items():
-            uid = f"{config[CONF_NAME]}-{idx}"
-            devices.append(IamMeter(uid, "", sensor, unit, config[CONF_NAME]))
-    if "Data" in json_data:
-        _LOGGER.info("3080")
-        api = iammeter.RealTimeAPI(
-            power_meter.WEM3080(config[CONF_HOST], config[CONF_PORT])
-        )
-        for sensor, (idx, unit) in api.iammeter.sensor_map().items():
-            uid = f"{config[CONF_NAME]}-{mac}-{serial}-{idx}"
-            devices.append(IamMeter(uid, serial, sensor, unit, config[CONF_NAME]))
-    if "Datas" in json_data:
-        _LOGGER.info("3080T")
-        api = iammeter.RealTimeAPI(
-            power_meter.WEM3080T(config[CONF_HOST], config[CONF_PORT])
-        )
-        for sensor, (row, idx, unit) in api.iammeter.sensor_map().items():
-            uid = f"{config[CONF_NAME]}-{mac}-{serial}-{row}-{idx}"
-            devices.append(IamMeter(uid, serial, sensor, unit, config[CONF_NAME]))
-
+    for sensor, (row, idx, unit) in api.iammeter.sensor_map().items():
+        uid = f"{config[CONF_NAME]}-{api.iammeter.mac}-{api.iammeter.serial_number}-{row}-{idx}"
+        devices.append(IamMeter(uid, api.iammeter.serial_number, sensor, unit, config[CONF_NAME]))
     endpoint = RealTimeDataEndpoint(hass, api)
     endpoint.ready.set()
     hass.async_add_job(endpoint.async_refresh)
