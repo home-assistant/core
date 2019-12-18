@@ -321,11 +321,7 @@ async def test_discovery_already_configured(hass):
     result = await flow.async_step_zeroconf(discovery_info)
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert flow.context == {
-        "hkid": "00:00:00:00:00:00",
-        "title_placeholders": {"name": "TestDevice"},
-        "unique_id": "00:00:00:00:00:00",
-    }
+    assert flow.context == {}
 
     assert conn.async_config_num_changed.call_count == 0
 
@@ -350,11 +346,7 @@ async def test_discovery_already_configured_config_change(hass):
     result = await flow.async_step_zeroconf(discovery_info)
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert flow.context == {
-        "hkid": "00:00:00:00:00:00",
-        "title_placeholders": {"name": "TestDevice"},
-        "unique_id": "00:00:00:00:00:00",
-    }
+    assert flow.context == {}
 
     assert conn.async_refresh_entity_map.call_args == mock.call(2)
 
