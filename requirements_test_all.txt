@@ -567,7 +567,7 @@ rxv==0.6.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.simplisafe
-simplisafe-python==5.3.5
+simplisafe-python==5.3.6
 
 # homeassistant.components.sleepiq
 sleepyq==0.7
