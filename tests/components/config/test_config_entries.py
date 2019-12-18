@@ -634,3 +634,42 @@ async def test_update_system_options(hass, hass_ws_client):
     assert response["success"]
     assert response["result"]["disable_new_entities"]
     assert entry.system_options.disable_new_entities
+
+
+async def test_ignore_flow(hass, hass_ws_client):
+    """Test we can ignore a flow."""
+    assert await async_setup_component(hass, "config", {})
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_coro_func(True)))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    class TestFlow(core_ce.ConfigFlow):
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            await self.async_set_unique_id("mock-unique-id")
+            return self.async_show_form(step_id="account", data_schema=vol.Schema({}))
+
+    ws_client = await hass_ws_client(hass)
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        result = await hass.config_entries.flow.async_init(
+            "test", context={"source": "user"}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "config_entries/ignore_flow",
+                "flow_id": result["flow_id"],
+            }
+        )
+        response = await ws_client.receive_json()
+
+        assert response["success"]
+
+    assert len(hass.config_entries.flow.async_progress()) == 0
+
+    entry = hass.config_entries.async_entries("test")[0]
+    assert entry.source == "ignore"
+    assert entry.unique_id == "mock-unique-id"
