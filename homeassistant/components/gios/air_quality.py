@@ -50,7 +50,6 @@ class GiosAirQuality(AirQualityEntity):
         self._pm_2_5 = None
         self._pm_10 = None
         self._so2 = None
-        self._icon = None
         self._attrs = {}
 
     @property
@@ -62,10 +61,8 @@ class GiosAirQuality(AirQualityEntity):
     def icon(self):
         """Return the icon."""
         if self._aqi in ICONS_MAP:
-            self._icon = ICONS_MAP[self._aqi]
-        else:
-            self._icon = "mdi:blur"
-        return self._icon
+            return ICONS_MAP[self._aqi]
+        return "mdi:blur"
 
     @property
     def air_quality_index(self):
