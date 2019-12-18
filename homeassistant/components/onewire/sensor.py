@@ -102,6 +102,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             device_names = config["names"]
 
     # We have an owserver on a remote(or local) host/port
+    # pylint: disable=too-many-nested-blocks
     if owhost:
         try:
             owproxy = protocol.proxy(host=owhost, port=owport)
@@ -124,9 +125,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     family
                 ].items():
                     if "moisture" in sensor_key:
-                        id = sensor_key.split("_")[1]
+                        s_id = sensor_key.split("_")[1]
                         is_leaf = int(
-                            bytes.decode(owproxy.read(f"{device}moisture/is_leaf.{id}"))
+                            bytes.decode(
+                                owproxy.read(f"{device}moisture/is_leaf.{s_id}")
+                            )
                         )
                         if is_leaf:
                             sensor_key = f"wetness_{id}"
