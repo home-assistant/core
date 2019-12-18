@@ -295,3 +295,6 @@ class ZHAEntityRegistry:
             matches.append(zha_device.model == rule.model)
 
         return matches
+
+
+ZHA_ENTITIES = ZHAEntityRegistry()
