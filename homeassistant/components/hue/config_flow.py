@@ -75,7 +75,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_bridges")
 
         # Find already configured hosts
-        already_configured = self._async_current_ids()
+        already_configured = self._async_current_ids(False)
         bridges = [bridge for bridge in bridges if bridge.id not in already_configured]
 
         if not bridges:

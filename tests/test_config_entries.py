@@ -1146,3 +1146,43 @@ async def test_finish_flow_aborts_progress(hass, manager):
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
     assert len(hass.config_entries.flow.async_progress()) == 0
+
+
+async def test_unique_id_ignore(hass, manager):
+    """Test that we can ignore flows that are in progress and have a unique ID."""
+    async_setup_entry = MagicMock(return_value=mock_coro(False))
+    mock_integration(hass, MockModule("comp", async_setup_entry=async_setup_entry))
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            await self.async_set_unique_id("mock-unique-id")
+            return self.async_show_form(step_id="discovery")
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        # Create one to be in progress
+        result = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+        result2 = await manager.flow.async_init(
+            "comp",
+            context={"source": config_entries.SOURCE_IGNORE},
+            data={"unique_id": "mock-unique-id"},
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    # assert len(hass.config_entries.flow.async_progress()) == 0
+
+    # We should never set up an ignored entry.
+    assert len(async_setup_entry.mock_calls) == 0
+
+    entry = hass.config_entries.async_entries("comp")[0]
+
+    assert entry.source == "ignore"
+    assert entry.unique_id == "mock-unique-id"
