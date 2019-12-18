@@ -25,7 +25,7 @@ ATTR_TOTAL_ENERGY_KWH = "total_energy_kwh"
 ATTR_CURRENT_A = "current_a"
 
 MAX_ATTEMPTS = 20
-SLEEP_TIME = 2
+SLEEP_TIME = 1
 
 
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
@@ -64,16 +64,22 @@ class SmartPlugSwitch(SwitchDevice):
     def __init__(self, smartplug: SmartPlug):
         """Initialize the switch."""
         self.smartplug = smartplug
-        self._sysinfo = None
+
+        self._sysinfo = self.smartplug.sys_info
+        self._mac = self.smartplug.mac
+        self._model = self.smartplug.model
+        if self.smartplug.context is None:
+            self._alias = self.smartplug.alias
+            self._device_id = self._mac
+        else:
+            self._alias = self._plug_from_context["alias"]
+            self._device_id = self.smartplug.context
+
         self._state = None
         self._available = False
+        self._is_ready = False
         # Set up emeter cache
         self._emeter_params = {}
-
-        self._mac = None
-        self._alias = None
-        self._model = None
-        self._device_id = None
 
     @property
     def unique_id(self):
@@ -176,17 +182,18 @@ class SmartPlugSwitch(SwitchDevice):
                 self._alias,
                 ex,
             )
-            self._available = False
-        self._available = True
+        self._is_ready = True
 
     async def async_update(self):
         """Update the TP-Link switch's state."""
         for update_attempt in range(MAX_ATTEMPTS):
+            self._is_ready = False
 
             await self.hass.async_add_executor_job(self.attempt_update)
             await asyncio.sleep(SLEEP_TIME)
 
-            if self._available:
+            if self._is_ready:
+                self._available = True
                 break
         else:
             if self._available:
