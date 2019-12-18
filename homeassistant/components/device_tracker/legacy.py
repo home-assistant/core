@@ -488,6 +488,8 @@ class Device(RestoreEntity):
             return
         if self.location_name:
             self._state = self.location_name
+        elif self.stale():
+            self.mark_stale()
         elif self.gps is not None and self.source_type == SOURCE_TYPE_GPS:
             zone_state = async_active_zone(
                 self.hass, self.gps[0], self.gps[1], self.gps_accuracy
@@ -498,8 +500,6 @@ class Device(RestoreEntity):
                 self._state = STATE_HOME
             else:
                 self._state = zone_state.name
-        elif self.stale():
-            self.mark_stale()
         else:
             self._state = STATE_HOME
             self.last_update_home = True
