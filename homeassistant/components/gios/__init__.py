@@ -1,6 +1,5 @@
 """The GIOS component."""
 import asyncio
-from datetime import timedelta
 import logging
 
 from aiohttp.client_exceptions import ClientConnectorError
@@ -11,10 +10,7 @@ from homeassistant.core import Config, HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle
 
-from .const import CONF_STATION_ID, DATA_CLIENT, DOMAIN
-
-# Term of service GIOŚ allow downloading data no more than twice an hour.
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
+from .const import CONF_STATION_ID, DATA_CLIENT, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

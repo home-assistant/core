@@ -10,9 +10,10 @@ from homeassistant.components.air_quality import (
 )
 from homeassistant.const import CONF_NAME
 
-from .const import ATTR_STATION, DATA_CLIENT, DOMAIN, ICONS_MAP
+from .const import ATTR_STATION, DATA_CLIENT, DEFAULT_SCAN_INTERVAL, DOMAIN, ICONS_MAP
 
 ATTRIBUTION = "Data provided by GIOŚ"
+SCAN_INTERVAL = DEFAULT_SCAN_INTERVAL
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
