@@ -44,7 +44,7 @@ aio_geojson_geonetnz_volcano==0.5
 aio_geojson_nsw_rfs_incidents==0.1
 
 # homeassistant.components.ambient_station
-aioambient==0.3.2
+aioambient==1.0.2
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.1.22
@@ -558,7 +558,7 @@ rxv==0.6.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.simplisafe
-simplisafe-python==5.3.5
+simplisafe-python==5.3.6
 
 # homeassistant.components.sleepiq
 sleepyq==0.7
