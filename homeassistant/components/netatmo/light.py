@@ -3,21 +3,13 @@ import logging
 
 import pyatmo
 import requests
-import voluptuous as vol
 
 from homeassistant.components.light import Light
-from homeassistant.const import ATTR_ENTITY_ID
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .camera import CameraData
-from .const import AUTH, DOMAIN, MANUFACTURER
+from .const import AUTH, CMD_CAMERA_LIGHT_URL, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
-
-SCHEMA_SERVICE_SETLIGHTAUTO = vol.Schema(
-    {vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids}
-)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -42,21 +34,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async_add_entities(await hass.async_add_executor_job(get_entities), True)
 
-    async def async_service_handler(call):
-        """Handle service call."""
-        _LOGGER.debug(
-            "Service handler invoked with service=%s and data=%s",
-            call.service,
-            call.data,
-        )
-        service = call.service
-        entity_id = call.data["entity_id"][0]
-        async_dispatcher_send(hass, f"{service}_{entity_id}")
-
-    hass.services.async_register(
-        DOMAIN, "set_light_auto", async_service_handler, SCHEMA_SERVICE_SETLIGHTAUTO
-    )
-
 
 class NetatmoLight(Light):
     """Representation of a Netatmo Presence camera light."""
@@ -65,9 +42,9 @@ class NetatmoLight(Light):
         """Initialize a Netatmo Presence camera light."""
         self._camera_id = camera_id
         self._data = camera_data
-        self._camera_type = self._data.camera_data.cameraById(camera_id).get("type")
+        self._camera_type = self._data.camera_data.get_camera(camera_id).get("type")
         self._name = (
-            f"{MANUFACTURER} {self._data.camera_data.cameraById(camera_id).get('name')}"
+            f"{MANUFACTURER} {self._data.camera_data.get_camera(camera_id).get('name')}"
         )
         self._is_on = False
         self._unique_id = f"{self._camera_id}-{self._camera_type}-light"
@@ -117,18 +94,20 @@ class NetatmoLight(Light):
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
         _LOGGER.debug("Set the flood light on for the camera '%s'", self._name)
-        self._set_light_mode("on")
-        self._is_on = True
+        if self._set_light_mode("on"):
+            self._data.camera_data.get_camera(self._camera_id)[
+                "light_mode_status"
+            ] = "on"
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
         _LOGGER.debug("Set the flood light off for the camera '%s'", self._name)
-        self._set_light_mode("off")
-        self._is_on = False
+        if self._set_light_mode("off"):
+            self._data.camera_data.get_camera(self._camera_id)[
+                "light_mode_status"
+            ] = "off"
         self.schedule_update_ha_state()
-
-    # Netatmo Presence specific camera methods.
 
     def update(self):
         """Update the camera data."""
@@ -136,44 +115,27 @@ class NetatmoLight(Light):
         (self._vpnurl, self._localurl) = self._data.camera_data.camera_urls(
             cid=self._camera_id
         )
+        if self._data.camera_data.get_light_state(self._camera_id) == "on":
+            self._is_on = True
+        else:
+            self._is_on = False
 
     def _set_light_mode(self, mode: str):
         """Set light mode ('auto', 'on', 'off')."""
         try:
-            config = f'{{"mode":"{mode}"}}'
-            if self._localurl:
-                requests.get(
-                    f"{self._localurl}/command/floodlight_set_config",
-                    params={"config": config},
-                    timeout=10,
-                )
-            elif self._vpnurl:
-                requests.get(
-                    f"{self._vpnurl}/command/floodlight_set_config",
-                    params={"config": config},
-                    timeout=10,
-                    verify=self._verify_ssl,
-                )
-            else:
-                _LOGGER.error("Presence VPN URL is None")
-                self._data.update()
-                (self._vpnurl, self._localurl) = self._data.camera_data.cameraUrls(
-                    cid=self._camera_id
-                )
-                return None
-        except requests.exceptions.RequestException as error:
-            _LOGGER.error("Presence URL changed: %s", error)
-            self._data.update()
-            (self._vpnurl, self._localurl) = self._data.camera_data.cameraUrls(
-                cid=self._camera_id
+            camera_url = self._localurl if self._localurl else self._vpnurl
+            params = {"config": f'{{"mode":"{mode}"}}'}
+
+            resp = requests.get(
+                url=f"{camera_url}{CMD_CAMERA_LIGHT_URL}",
+                params=params,
+                timeout=10,
+                verify=self._verify_ssl,
             )
-            return None
+            if resp.ok:
+                return True
+            return False
+        except requests.exceptions.RequestException as error:
+            _LOGGER.error("Welcome/Presence URL changed: %s", error)
         else:
             self.async_schedule_update_ha_state(True)
-
-    # def set_light_auto(self):
-    #     """Set flood light in automatic mode."""
-    #     _LOGGER.debug(
-    #         "Set the flood light in automatic mode for the camera '%s'", self._name
-    #     )
-    #     self._set_light_mode("auto")
