@@ -1,6 +1,7 @@
 """Support for TPLink lights."""
 import logging
 import time
+import asyncio
 
 from pyHS100 import SmartBulb, SmartDeviceException
 
@@ -84,6 +85,7 @@ class TPLinkSmartBulb(Light):
         self._sysinfo = None
         self._state = None
         self._available = False
+        self._is_ready = False
         self._color_temp = None
         self._brightness = None
         self._hs = None
@@ -224,17 +226,18 @@ class TPLinkSmartBulb(Light):
                 self._alias,
                 ex,
             )
-            self._available = False
-        self._available = True
+        self._is_ready = True
 
     async def async_update(self):
         """Update the TP-Link Bulb's state."""
         for update_attempt in range(MAX_ATTEMPTS):
+            self._is_ready = False
 
             await self.hass.async_add_executor_job(self.attempt_update)
             await asyncio.sleep(SLEEP_TIME)
 
-            if self._available:
+            if self._is_ready:
+                self._available = True
                 break
         else:
             if self._available:
