@@ -217,7 +217,7 @@ class OneWire(Entity):
         """Read a value from the owserver."""
         if self._owproxy:
             return bytes.decode(self._owproxy.read(self._device_file)).lstrip()
-        return False
+        return None
 
     @property
     def name(self):
