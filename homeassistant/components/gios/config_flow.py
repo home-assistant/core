@@ -69,9 +69,5 @@ class InvalidSensorsData(exceptions.HomeAssistantError):
     """Error to indicate invalid sensors data."""
 
 
-class NameExists(exceptions.HomeAssistantError):
-    """Error to indicate that name is already configured."""
-
-
 class StationIdExists(exceptions.HomeAssistantError):
     """Error to indicate that station with station_id is already configured."""
