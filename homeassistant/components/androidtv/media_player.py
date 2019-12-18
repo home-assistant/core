@@ -291,10 +291,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             ]
 
             for target_device in target_devices:
-                if direction == DIRECTION_PULL:
-                    target_device.adb_pull(local_path, device_path)
-                else:
-                    target_device.adb_push(local_path, device_path)
+                target_device.adb_filesync(direction, local_path, device_path)
 
         hass.services.register(
             ANDROIDTV_DOMAIN,

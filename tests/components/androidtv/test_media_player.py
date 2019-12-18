@@ -699,3 +699,44 @@ async def test_update_lock_not_acquired(hass):
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == STATE_IDLE
+
+
+async def test_adb_filesync(hass):
+    """Test the `androidtv.adb_filesync` service."""
+    patch_key = "server"
+    entity_id = "media_player.android_tv"
+    device_path = "device/path"
+    local_path = "local/path"
+
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
+        patch_key
+    ], patchers.patch_shell("")[patch_key]:
+        assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
+
+    with patch("androidtv.basetv.BaseTV.adb_pull") as patch_pull:
+        await hass.services.async_call(
+            ANDROIDTV_DOMAIN,
+            "adb_filesync",
+            {
+                ATTR_ENTITY_ID: entity_id,
+                "direction": "pull",
+                "device_path": device_path,
+                "local_path": local_path,
+            },
+            blocking=True,
+        )
+        patch_pull.assert_called_with(local_path, device_path)
+
+    with patch("androidtv.basetv.BaseTV.adb_push") as patch_push:
+        await hass.services.async_call(
+            ANDROIDTV_DOMAIN,
+            "adb_filesync",
+            {
+                ATTR_ENTITY_ID: entity_id,
+                "direction": "push",
+                "device_path": device_path,
+                "local_path": local_path,
+            },
+            blocking=True,
+        )
+        patch_push.assert_called_with(local_path, device_path)
