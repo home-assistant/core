@@ -44,6 +44,11 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import STORAGE_DIR
 
+
+class LockNotAcquiredException(Exception):
+    """The ADB lock could not be acquired."""
+
+
 ANDROIDTV_DOMAIN = "androidtv"
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,6 +77,10 @@ SUPPORT_FIRETV = (
     | SUPPORT_STOP
 )
 
+ATTR_DIRECTION = "direction"
+ATTR_DEVICE_PATH = "device_path"
+ATTR_LOCAL_PATH = "local_path"
+
 CONF_ADBKEY = "adbkey"
 CONF_ADB_SERVER_IP = "adb_server_ip"
 CONF_ADB_SERVER_PORT = "adb_server_port"
@@ -91,10 +100,23 @@ DEVICE_ANDROIDTV = "androidtv"
 DEVICE_FIRETV = "firetv"
 DEVICE_CLASSES = [DEFAULT_DEVICE_CLASS, DEVICE_ANDROIDTV, DEVICE_FIRETV]
 
+DIRECTION_PULL = "pull"
+DIRECTION_PUSH = "push"
+
 SERVICE_ADB_COMMAND = "adb_command"
+SERVICE_ADB_FILESYNC = "adb_filesync"
 
 SERVICE_ADB_COMMAND_SCHEMA = vol.Schema(
     {vol.Required(ATTR_ENTITY_ID): cv.entity_ids, vol.Required(ATTR_COMMAND): cv.string}
+)
+
+SERVICE_ADB_FILESYNC_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required(ATTR_DIRECTION): vol.In([DIRECTION_PULL, DIRECTION_PUSH]),
+        vol.Required(ATTR_DEVICE_PATH): cv.string,
+        vol.Required(ATTR_LOCAL_PATH): cv.string,
+    }
 )
 
 
@@ -223,37 +245,63 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.debug("Setup %s at %s %s", device_name, host, adb_log)
         hass.data[ANDROIDTV_DOMAIN][host] = device
 
-    if hass.services.has_service(ANDROIDTV_DOMAIN, SERVICE_ADB_COMMAND):
-        return
+    if not hass.services.has_service(ANDROIDTV_DOMAIN, SERVICE_ADB_COMMAND):
 
-    def service_adb_command(service):
-        """Dispatch service calls to target entities."""
-        cmd = service.data.get(ATTR_COMMAND)
-        entity_id = service.data.get(ATTR_ENTITY_ID)
-        target_devices = [
-            dev
-            for dev in hass.data[ANDROIDTV_DOMAIN].values()
-            if dev.entity_id in entity_id
-        ]
+        def service_adb_command(service):
+            """Dispatch service calls to target entities."""
+            cmd = service.data.get(ATTR_COMMAND)
+            entity_id = service.data.get(ATTR_ENTITY_ID)
+            target_devices = [
+                dev
+                for dev in hass.data[ANDROIDTV_DOMAIN].values()
+                if dev.entity_id in entity_id
+            ]
 
-        for target_device in target_devices:
-            output = target_device.adb_command(cmd)
+            for target_device in target_devices:
+                output = target_device.adb_command(cmd)
 
-            # log the output, if there is any
-            if output:
-                _LOGGER.info(
-                    "Output of command '%s' from '%s': %s",
-                    cmd,
-                    target_device.entity_id,
-                    output,
-                )
+                # log the output, if there is any
+                if output:
+                    _LOGGER.info(
+                        "Output of command '%s' from '%s': %s",
+                        cmd,
+                        target_device.entity_id,
+                        output,
+                    )
 
-    hass.services.register(
-        ANDROIDTV_DOMAIN,
-        SERVICE_ADB_COMMAND,
-        service_adb_command,
-        schema=SERVICE_ADB_COMMAND_SCHEMA,
-    )
+        hass.services.register(
+            ANDROIDTV_DOMAIN,
+            SERVICE_ADB_COMMAND,
+            service_adb_command,
+            schema=SERVICE_ADB_COMMAND_SCHEMA,
+        )
+
+    if not hass.services.has_service(ANDROIDTV_DOMAIN, SERVICE_ADB_FILESYNC):
+
+        def service_adb_filesync(service):
+            """Transfer a file between your HA instance and an Android TV / Fire TV device."""
+            direction = service.data.get(ATTR_DIRECTION)
+            device_path = service.data.get(ATTR_DEVICE_PATH)
+            local_path = service.data.get(ATTR_LOCAL_PATH)
+            entity_id = service.data.get(ATTR_ENTITY_ID)
+            target_devices = [
+                dev
+                for dev in hass.data[ANDROIDTV_DOMAIN].values()
+                if dev.entity_id in entity_id
+            ]
+
+            for target_device in target_devices:
+                if direction == DIRECTION_PULL:
+                    target_device.adb_pull(local_path, device_path)
+                else:
+                    target_device.adb_push(local_path, device_path)
+
+        hass.services.register(
+            ANDROIDTV_DOMAIN,
+            SERVICE_ADB_FILESYNC,
+            service_adb_filesync,
+            schema=SERVICE_ADB_FILESYNC_SCHEMA,
+        )
 
 
 def adb_decorator(override_available=False):
@@ -274,6 +322,9 @@ def adb_decorator(override_available=False):
 
             try:
                 return func(self, *args, **kwargs)
+            except LockNotAcquiredException:
+                # If the ADB lock could not be acquired, skip this command
+                return
             except self.exceptions as err:
                 _LOGGER.error(
                     "Failed to execute an ADB command. ADB connection re-"
@@ -464,6 +515,14 @@ class ADBDevice(MediaPlayerDevice):
 
         self.schedule_update_ha_state()
         return self._adb_response
+
+    @adb_decorator()
+    def adb_filesync(self, direction, local_path, device_path):
+        """Transfer a file between your HA instance and an Android TV / Fire TV device."""
+        if direction == DIRECTION_PULL:
+            self.aftv.adb_pull(local_path, device_path)
+        else:
+            self.aftv.adb_push(local_path, device_path)
 
 
 class AndroidTVDevice(ADBDevice):

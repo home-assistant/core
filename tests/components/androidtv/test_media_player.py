@@ -1,11 +1,14 @@
 """The tests for the androidtv platform."""
 import logging
+from unittest.mock import patch
 
 from homeassistant.components.androidtv.media_player import (
     ANDROIDTV_DOMAIN,
     CONF_ADB_SERVER_IP,
     CONF_ADBKEY,
     CONF_APPS,
+    KEYS,
+    LockNotAcquiredException,
 )
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
@@ -580,3 +583,119 @@ async def test_setup_same_device_twice(hass):
         patch_key
     ], patchers.patch_shell("")[patch_key]:
         assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
+
+
+async def test_adb_command(hass):
+    """Test sending a command via the `androidtv.adb_command` service."""
+    patch_key = "server"
+    entity_id = "media_player.android_tv"
+    command = "test command"
+    response = "test response"
+
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
+        patch_key
+    ], patchers.patch_shell("")[patch_key]:
+        assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
+
+    with patch(
+        "androidtv.basetv.BaseTV.adb_shell", return_value=response
+    ) as patch_shell:
+        await hass.services.async_call(
+            ANDROIDTV_DOMAIN,
+            "adb_command",
+            {ATTR_ENTITY_ID: entity_id, "command": command},
+            blocking=True,
+        )
+
+        patch_shell.assert_called_with(command)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.attributes["adb_response"] == response
+
+
+async def test_adb_command_key(hass):
+    """Test sending a key command via the `androidtv.adb_command` service."""
+    patch_key = "server"
+    entity_id = "media_player.android_tv"
+    command = "HOME"
+    response = None
+
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
+        patch_key
+    ], patchers.patch_shell("")[patch_key]:
+        assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
+
+    with patch(
+        "androidtv.basetv.BaseTV.adb_shell", return_value=response
+    ) as patch_shell:
+        await hass.services.async_call(
+            ANDROIDTV_DOMAIN,
+            "adb_command",
+            {ATTR_ENTITY_ID: entity_id, "command": command},
+            blocking=True,
+        )
+
+        patch_shell.assert_called_with(f"input keyevent {KEYS[command]}")
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.attributes["adb_response"] is None
+
+
+async def test_adb_command_get_properties(hass):
+    """Test sending the "GET_PROPERTIES" command via the `androidtv.adb_command` service."""
+    patch_key = "server"
+    entity_id = "media_player.android_tv"
+    command = "GET_PROPERTIES"
+    response = {"test key": "test value"}
+
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
+        patch_key
+    ], patchers.patch_shell("")[patch_key]:
+        assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
+
+    with patch(
+        "androidtv.androidtv.AndroidTV.get_properties_dict", return_value=response
+    ) as patch_get_props:
+        await hass.services.async_call(
+            ANDROIDTV_DOMAIN,
+            "adb_command",
+            {ATTR_ENTITY_ID: entity_id, "command": command},
+            blocking=True,
+        )
+
+        patch_get_props.assert_called()
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.attributes["adb_response"] == str(response)
+
+
+async def test_update_lock_not_acquired(hass):
+    """Test that the state does not get updated when a `LockNotAcquiredException` is raised."""
+    patch_key = "server"
+    entity_id = "media_player.android_tv"
+
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
+        patch_key
+    ], patchers.patch_shell("")[patch_key]:
+        assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
+
+    with patchers.patch_shell("")[patch_key]:
+        await hass.helpers.entity_component.async_update_entity(entity_id)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_OFF
+
+    with patch(
+        "androidtv.androidtv.AndroidTV.update", side_effect=LockNotAcquiredException
+    ):
+        with patchers.patch_shell("1")[patch_key]:
+            await hass.helpers.entity_component.async_update_entity(entity_id)
+            state = hass.states.get(entity_id)
+            assert state is not None
+            assert state.state == STATE_OFF
+
+    with patchers.patch_shell("1")[patch_key]:
+        await hass.helpers.entity_component.async_update_entity(entity_id)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_IDLE
