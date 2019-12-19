@@ -12,6 +12,7 @@ from adb_shell.exceptions import (
 )
 from androidtv import ha_state_detection_rules_validator, setup
 from androidtv.constants import APPS, KEYS
+from androidtv.exceptions import LockNotAcquiredException
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
@@ -43,10 +44,6 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import STORAGE_DIR
-
-
-class LockNotAcquiredException(Exception):
-    """The ADB lock could not be acquired."""
 
 
 ANDROIDTV_DOMAIN = "androidtv"
