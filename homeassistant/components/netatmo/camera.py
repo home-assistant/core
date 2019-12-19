@@ -5,7 +5,11 @@ import pyatmo
 import requests
 import voluptuous as vol
 
-from homeassistant.components.camera import SUPPORT_STREAM, Camera
+from homeassistant.components.camera import (
+    DOMAIN as CAMERA_DOMAIN,
+    SUPPORT_STREAM,
+    Camera,
+)
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -39,7 +43,7 @@ VALID_QUALITIES = ["high", "medium", "low", "poor"]
 _BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
 
 SCHEMA_SERVICE_SETLIGHTAUTO = vol.Schema(
-    {vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids}
+    {vol.Optional(ATTR_ENTITY_ID): cv.entity_domain(CAMERA_DOMAIN)}
 )
 
 
