@@ -133,7 +133,7 @@ async def async_add_entities_retry(
     async_add_entities: Callable[[List[Any], bool], None],
     objects: List[Any],
     callback: Callable[[Any, Callable], None],
-    interval: timedelta = timedelta(seconds=60),
+    interval: timedelta = timedelta(seconds=2),
 ):
     """
     Add entities now and retry later if issues are encountered.
@@ -176,9 +176,7 @@ async def async_add_entities_retry(
             # Call the individual item callback.
             try:
                 _LOGGER.debug("Attempting to add object of type %s", type(add_object))
-                result = await hass.async_add_job(
-                    callback, add_object, async_add_entities
-                )
+                result = await callback(hass, add_object, async_add_entities)
             except SmartDeviceException as ex:
                 _LOGGER.debug(str(ex))
                 result = False

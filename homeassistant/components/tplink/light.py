@@ -56,13 +56,12 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_ent
     return True
 
 
-def add_entity(device: SmartBulb, async_add_entities):
+async def async_add_entity(hass, device: SmartBulb, async_add_entities):
     """Check if device is online and add the entity."""
     # Attempt to get the sysinfo. If it fails, it will raise an
     # exception that is caught by async_add_entities_retry which
     # will try again later.
-    device.get_sysinfo()
-
+    await hass.async_add_executor_job(device.get_sysinfo)
     async_add_entities([TPLinkSmartBulb(device)], update_before_add=True)
 
 
@@ -82,10 +81,16 @@ class TPLinkSmartBulb(Light):
     def __init__(self, smartbulb: SmartBulb) -> None:
         """Initialize the bulb."""
         self.smartbulb = smartbulb
-        self._sysinfo = None
+        self._sysinfo = self.smartbulb.sys_info
+        self._mac = self.smartbulb.mac
+        self._model = self.smartbulb.model
+
+        self._alias = self.smartbulb.alias
+
         self._state = None
         self._available = False
         self._is_ready = False
+
         self._color_temp = None
         self._brightness = None
         self._hs = None
@@ -93,10 +98,6 @@ class TPLinkSmartBulb(Light):
         self._min_mireds = None
         self._max_mireds = None
         self._emeter_params = {}
-
-        self._mac = None
-        self._alias = None
-        self._model = None
 
     @property
     def unique_id(self):

@@ -39,20 +39,22 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-def add_entity(device: SmartPlug, async_add_entities):
+async def async_add_entity(hass, device: SmartPlug, async_add_entities):
     """Check if device is online and add the entity."""
     # Attempt to get the sysinfo. If it fails, it will raise an
     # exception that is caught by async_add_entities_retry which
     # will try again later.
-    device.get_sysinfo()
-
+    await hass.async_add_executor_job(device.get_sysinfo)
     async_add_entities([SmartPlugSwitch(device)], update_before_add=True)
 
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
     """Set up switches."""
     await async_add_entities_retry(
-        hass, async_add_entities, hass.data[TPLINK_DOMAIN][CONF_SWITCH], add_entity
+        hass,
+        async_add_entities,
+        hass.data[TPLINK_DOMAIN][CONF_SWITCH],
+        async_add_entity,
     )
 
     return True
@@ -78,6 +80,7 @@ class SmartPlugSwitch(SwitchDevice):
         self._state = None
         self._available = False
         self._is_ready = False
+
         # Set up emeter cache
         self._emeter_params = {}
 
@@ -115,10 +118,12 @@ class SmartPlugSwitch(SwitchDevice):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         self.smartplug.turn_on()
+        self.update_state()
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
         self.smartplug.turn_off()
+        self.update_state()
 
     @property
     def device_state_attributes(self):
@@ -131,24 +136,17 @@ class SmartPlugSwitch(SwitchDevice):
         children = self.smartplug.sys_info["children"]
         return next(c for c in children if c["id"] == self.smartplug.context)
 
+    def update_state(self):
+        if self.smartplug.context is None:
+            self._state = self.smartplug.state == self.smartplug.SWITCH_STATE_ON
+        else:
+            self._state = self._plug_from_context["state"] == 1
+
     def attempt_update(self):
         """Attempt to get details from the TP-Link switch."""
         try:
-            if not self._sysinfo:
-                self._sysinfo = self.smartplug.sys_info
-                self._mac = self.smartplug.mac
-                self._model = self.smartplug.model
-                if self.smartplug.context is None:
-                    self._alias = self.smartplug.alias
-                    self._device_id = self._mac
-                else:
-                    self._alias = self._plug_from_context["alias"]
-                    self._device_id = self.smartplug.context
 
-            if self.smartplug.context is None:
-                self._state = self.smartplug.state == self.smartplug.SWITCH_STATE_ON
-            else:
-                self._state = self._plug_from_context["state"] == 1
+            self.update_state()
 
             if self.smartplug.has_emeter:
                 emeter_readings = self.smartplug.get_emeter_realtime()
