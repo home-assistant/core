@@ -13,15 +13,17 @@ from homeassistant.const import CONF_FRIENDLY_NAME, CONF_ICON, CONF_ID, CONF_SEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
 
-from . import (
+from . import DATA_LUXTRONIK, ENTITY_ID_FORMAT
+from .const import (
     CONF_CALCULATIONS,
     CONF_GROUP,
     CONF_INVERT_STATE,
     CONF_PARAMETERS,
     CONF_VISIBILITIES,
-    DATA_LUXTRONIK,
-    ENTITY_ID_FORMAT,
 )
+
+ICON_ON = "mdi:check-circle-outline"
+ICON_OFF = "mdi:circle-outline"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,8 +97,8 @@ class LuxtronikBinarySensor(BinarySensorDevice):
         if self._icon:
             return self._icon
         if not self.is_on:
-            return "mdi:circle-outline"
-        return "mdi:check-circle-outline"
+            return ICON_OFF
+        return ICON_ON
 
     @property
     def name(self):

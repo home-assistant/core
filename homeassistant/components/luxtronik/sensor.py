@@ -24,30 +24,22 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-from . import (
+from . import DATA_LUXTRONIK, ENTITY_ID_FORMAT
+from .const import (
     CONF_BAR,
     CONF_CALCULATIONS,
     CONF_CELSIUS,
-    CONF_COUNT,
     CONF_ENERGY,
-    CONF_ERRORCODE,
     CONF_FLOW,
     CONF_GROUP,
     CONF_HOURS,
-    CONF_IPADDRESS,
     CONF_KELVIN,
-    CONF_LEVEL,
     CONF_PARAMETERS,
     CONF_PERCENT,
-    CONF_PULSES,
-    CONF_RPM,
     CONF_SECONDS,
     CONF_TIMESTAMP,
-    CONF_VERSION,
     CONF_VISIBILITIES,
     CONF_VOLTAGE,
-    DATA_LUXTRONIK,
-    ENTITY_ID_FORMAT,
     FLOW_LITERS_PER_MINUTE,
     PERCENTAGE_PERCENT,
     TEMP_KELVIN,
@@ -55,6 +47,47 @@ from . import (
     TIME_SECONDS,
     VOLTAGE_VOLT,
 )
+
+ICONS = {
+    "celsius": "mdi:thermometer",
+    "seconds": "mdi:timer-sand",
+    "pulses": "mdi:pulse",
+    "ipaddress": "mdi:ip-network-outline",
+    "timestamp": "mdi:calendar-range",
+    "errorcode": "mdi:alert-circle-outline",
+    "kelvin": "mdi:thermometer",
+    "bar": "mdi:arrow-collapse-all",
+    "percent": "mdi:percent",
+    "rpm": "mdi:rotate-right",
+    "energy": "mdi:flash-circle",
+    "voltage": "mdi:flash-outline",
+    "hours": "mdi:clock-outline",
+    "flow": "mdi:chart-bell-curve",
+    "level": "mdi:format-list-numbered",
+    "count": "mdi:counter",
+    "version": "mdi:information-outline",
+}
+
+DEVICE_CLASSES = {
+    CONF_CELSIUS: DEVICE_CLASS_PRESSURE,
+    CONF_KELVIN: DEVICE_CLASS_PRESSURE,
+    CONF_BAR: DEVICE_CLASS_PRESSURE,
+    CONF_SECONDS: DEVICE_CLASS_TIMESTAMP,
+    CONF_HOURS: DEVICE_CLASS_TIMESTAMP,
+    CONF_TIMESTAMP: DEVICE_CLASS_TIMESTAMP,
+}
+
+UNITS = {
+    CONF_CELSIUS: TEMP_CELSIUS,
+    CONF_SECONDS: TIME_SECONDS,
+    CONF_KELVIN: TEMP_KELVIN,
+    CONF_BAR: PRESSURE_BAR,
+    CONF_PERCENT: PERCENTAGE_PERCENT,
+    CONF_ENERGY: ENERGY_KILO_WATT_HOUR,
+    CONF_VOLTAGE: VOLTAGE_VOLT,
+    CONF_HOURS: TIME_HOUR,
+    CONF_FLOW: FLOW_LITERS_PER_MINUTE,
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -131,26 +164,7 @@ class LuxtronikSensor(Entity):
     def icon(self):
         """Icon to use in the frontend, if any."""
         if not self._icon:
-            icons = {
-                CONF_CELSIUS: "mdi:thermometer",
-                CONF_SECONDS: "mdi:timer-sand",
-                CONF_PULSES: "mdi:pulse",
-                CONF_IPADDRESS: "mdi:ip-network-outline",
-                CONF_TIMESTAMP: "mdi:calendar-range",
-                CONF_ERRORCODE: "mdi:alert-circle-outline",
-                CONF_KELVIN: "mdi:thermometer",
-                CONF_BAR: "mdi:arrow-collapse-all",
-                CONF_PERCENT: "mdi:percent",
-                CONF_RPM: "mdi:rotate-right",
-                CONF_ENERGY: "mdi:flash-circle",
-                CONF_VOLTAGE: "mdi:flash-outline",
-                CONF_HOURS: "mdi:clock-outline",
-                CONF_FLOW: "mdi:chart-bell-curve",
-                CONF_LEVEL: "mdi:format-list-numbered",
-                CONF_COUNT: "mdi:counter",
-                CONF_VERSION: "mdi:information-outline",
-            }
-            return icons.get(self._sensor.measurement_type, None)
+            return ICONS.get(self._sensor.measurement_type, None)
         return self._icon
 
     @property
@@ -161,31 +175,12 @@ class LuxtronikSensor(Entity):
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        device_classes = {
-            CONF_CELSIUS: DEVICE_CLASS_PRESSURE,
-            CONF_KELVIN: DEVICE_CLASS_PRESSURE,
-            CONF_BAR: DEVICE_CLASS_PRESSURE,
-            CONF_SECONDS: DEVICE_CLASS_TIMESTAMP,
-            CONF_HOURS: DEVICE_CLASS_TIMESTAMP,
-            CONF_TIMESTAMP: DEVICE_CLASS_TIMESTAMP,
-        }
-        return device_classes.get(self._sensor.measurement_type, DEFAULT_DEVICE_CLASS)
+        return DEVICE_CLASSES.get(self._sensor.measurement_type, DEFAULT_DEVICE_CLASS)
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        units = {
-            CONF_CELSIUS: TEMP_CELSIUS,
-            CONF_SECONDS: TIME_SECONDS,
-            CONF_KELVIN: TEMP_KELVIN,
-            CONF_BAR: PRESSURE_BAR,
-            CONF_PERCENT: PERCENTAGE_PERCENT,
-            CONF_ENERGY: ENERGY_KILO_WATT_HOUR,
-            CONF_VOLTAGE: VOLTAGE_VOLT,
-            CONF_HOURS: TIME_HOUR,
-            CONF_FLOW: FLOW_LITERS_PER_MINUTE,
-        }
-        return units.get(self._sensor.measurement_type, None)
+        return UNITS.get(self._sensor.measurement_type, None)
 
     def update(self):
         """Get the latest status and use it to update our sensor state."""

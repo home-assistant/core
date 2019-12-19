@@ -9,45 +9,20 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
+from .const import (
+    ATTR_PARAMETER,
+    ATTR_VALUE,
+    CONF_CALCULATIONS,
+    CONF_PARAMETERS,
+    CONF_SAFE,
+    CONF_VISIBILITIES,
+)
+
 LuxLogger.setLevel(level="WARNING")
 
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_PARAMETER = "parameter"
-ATTR_VALUE = "value"
-
-CONF_INVERT_STATE = "invert"
-CONF_SAFE = "safe"
-CONF_GROUP = "group"
-CONF_PARAMETERS = "parameters"
-CONF_CALCULATIONS = "calculations"
-CONF_VISIBILITIES = "visibilities"
-
-CONF_CELSIUS = "celsius"
-CONF_SECONDS = "seconds"
-CONF_PULSES = "pulses"
-CONF_IPADDRESS = "ipaddress"
-CONF_TIMESTAMP = "timestamp"
-CONF_ERRORCODE = "errorcode"
-CONF_KELVIN = "kelvin"
-CONF_BAR = "bar"
-CONF_PERCENT = "percent"
-CONF_RPM = "rpm"
-CONF_ENERGY = "energy"
-CONF_VOLTAGE = "voltage"
-CONF_HOURS = "hours"
-CONF_FLOW = "flow"
-CONF_LEVEL = "level"
-CONF_COUNT = "count"
-CONF_VERSION = "version"
-
-TIME_SECONDS = "s"
-TIME_HOUR = "h"
-TEMP_KELVIN = "K"
-PERCENTAGE_PERCENT = "%"
-VOLTAGE_VOLT = "V"
-FLOW_LITERS_PER_MINUTE = "l/min"
 
 DATA_LUXTRONIK = "DATA_LT"
 
