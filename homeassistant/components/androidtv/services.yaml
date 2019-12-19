@@ -20,7 +20,7 @@ adb_filesync:
       example: 'push'
     device_path:
       description: The filepath on the Android TV / Fire TV device.
-      example: '/home/example/path.txt'
+      example: '/storage/emulated/0/Download/example.txt'
     local_path:
       description: The filepath on your Home Assistant instance.
-      example: '/config/example/path.txt'
+      example: '/config/example.txt'
