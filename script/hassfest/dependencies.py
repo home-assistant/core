@@ -187,9 +187,8 @@ def find_non_referenced_integrations(
                 continue
 
             # These have a platform specified in this integration
-            if (
-                not is_platform_other_integration
-                and (integration.path / f"{ref}.py").is_file()
+            if not is_platform_other_integration and (
+                (integration.path / f"{ref}.py").is_file()
                 # Platform dir
                 or (integration.path / ref).is_dir()
             ):
