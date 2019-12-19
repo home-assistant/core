@@ -232,5 +232,9 @@ async def async_unload_entry(hass, entry):
 
 async def async_remove_entry(hass, entry):
     """Cleanup caches before removing config entry."""
+    if "AccessoryPairingID" not in entry.data:
+        # If no pairing idea its probably a "ignore" config entry
+        # So there is nothing to do
+        return
     hkid = entry.data["AccessoryPairingID"]
     hass.data[ENTITY_MAP].async_delete_map(hkid)
