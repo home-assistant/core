@@ -45,9 +45,9 @@ class TahomaSwitch(TahomaDevice, SwitchDevice):
             else:
                 self._state = STATE_OFF
 
-        # A RTS power socket doesn't have a feedback channel, 
+        # A RTS power socket doesn't have a feedback channel,
         # so we must assume the socket is available.
-        if self.tahoma_device.type == 'rts:OnOffRTSComponent':
+        if self.tahoma_device.type == "rts:OnOffRTSComponent":
             self._available = True
         else:
             self._available = bool(
