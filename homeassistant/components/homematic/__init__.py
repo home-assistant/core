@@ -393,7 +393,7 @@ def setup(hass, config):
     for sname, sconfig in conf[CONF_HOSTS].items():
         remotes[sname] = {
             "ip": sconfig.get(CONF_HOST),
-            "port": sconfig.get(CONF_PORT),
+            "port": sconfig[CONF_PORT],
             "username": sconfig.get(CONF_USERNAME),
             "password": sconfig.get(CONF_PASSWORD),
             "connect": False,
