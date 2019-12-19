@@ -411,14 +411,14 @@ async def test_report_fan_direction(hass):
     properties.assert_not_has_property("Alexa.ModeController", "mode")
 
     properties = await reported_properties(hass, "fan.reverse")
-    properties.assert_equal("Alexa.ModeController", "mode", "reverse")
+    properties.assert_equal("Alexa.ModeController", "mode", "direction.reverse")
 
     properties = await reported_properties(hass, "fan.forward")
-    properties.assert_equal("Alexa.ModeController", "mode", "forward")
+    properties.assert_equal("Alexa.ModeController", "mode", "direction.forward")
 
 
-async def test_report_cover_percentage_state(hass):
-    """Test PercentageController reports cover percentage correctly."""
+async def test_report_cover_range_value(hass):
+    """Test RangeController reports cover position correctly."""
     hass.states.async_set(
         "cover.fully_open",
         "open",
@@ -448,13 +448,13 @@ async def test_report_cover_percentage_state(hass):
     )
 
     properties = await reported_properties(hass, "cover.fully_open")
-    properties.assert_equal("Alexa.PercentageController", "percentage", 100)
+    properties.assert_equal("Alexa.RangeController", "rangeValue", 100)
 
     properties = await reported_properties(hass, "cover.half_open")
-    properties.assert_equal("Alexa.PercentageController", "percentage", 50)
+    properties.assert_equal("Alexa.RangeController", "rangeValue", 50)
 
     properties = await reported_properties(hass, "cover.closed")
-    properties.assert_equal("Alexa.PercentageController", "percentage", 0)
+    properties.assert_equal("Alexa.RangeController", "rangeValue", 0)
 
 
 async def test_report_climate_state(hass):
