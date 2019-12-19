@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
     DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     POWER_WATT,
     STATE_CLOSED,
@@ -43,7 +44,7 @@ SENSOR_TYPES = {
         "name": "Power",
         "unit": POWER_WATT,
         "icon": "mdi:power-plug",
-        "class": None,
+        "class": DEVICE_CLASS_POWER,
     },
     SENSOR_TYPE_TEMPERATURE: {
         "name": "Temperature",
