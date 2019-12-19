@@ -1,5 +1,6 @@
 """Validate dependencies."""
 import ast
+from pathlib import Path
 from typing import Dict, Set
 
 from homeassistant.requirements import DISCOVERY_INTEGRATIONS
@@ -13,21 +14,25 @@ class ImportCollector(ast.NodeVisitor):
     def __init__(self, integration: Integration):
         """Initialize the import collector."""
         self.integration = integration
-        self.referenced: Set[str] = set()
+        self.referenced: Dict[Path, Set[str]] = {}
 
-    def maybe_add_reference(self, reference_domain: str):
+        # Current file or dir we're inspecting
+        self._cur_fil_dir = None
+
+    def collect(self) -> None:
+        """Collect imports from a source file."""
+        for fil in self.integration.path.glob("**/*.py"):
+            if not fil.is_file():
+                continue
+
+            self._cur_fil_dir = fil.relative_to(self.integration.path)
+            self.referenced[self._cur_fil_dir] = set()
+            self.visit(ast.parse(fil.read_text()))
+            self._cur_fil_dir = None
+
+    def _add_reference(self, reference_domain: str):
         """Add a reference."""
-        if (
-            # If it's importing something from itself
-            reference_domain == self.integration.path.name
-            # Platform file
-            or (self.integration.path / f"{reference_domain}.py").exists()
-            # Platform dir
-            or (self.integration.path / reference_domain).exists()
-        ):
-            return
-
-        self.referenced.add(reference_domain)
+        self.referenced[self._cur_fil_dir].add(reference_domain)
 
     def visit_ImportFrom(self, node):
         """Visit ImportFrom node."""
@@ -37,19 +42,19 @@ class ImportCollector(ast.NodeVisitor):
         if node.module.startswith("homeassistant.components."):
             # from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
             # from homeassistant.components.logbook import bla
-            self.maybe_add_reference(node.module.split(".")[2])
+            self._add_reference(node.module.split(".")[2])
 
         elif node.module == "homeassistant.components":
             # from homeassistant.components import sun
             for name_node in node.names:
-                self.maybe_add_reference(name_node.name)
+                self._add_reference(name_node.name)
 
     def visit_Import(self, node):
         """Visit Import node."""
         # import homeassistant.components.hue as hue
         for name_node in node.names:
             if name_node.name.startswith("homeassistant.components."):
-                self.maybe_add_reference(name_node.name.split(".")[2])
+                self._add_reference(name_node.name.split(".")[2])
 
     def visit_Attribute(self, node):
         """Visit Attribute node."""
@@ -77,7 +82,7 @@ class ImportCollector(ast.NodeVisitor):
                 )
             )
         ):
-            self.maybe_add_reference(node.attr)
+            self._add_reference(node.attr)
         else:
             # Have it visit other kids
             self.generic_visit(node)
@@ -133,45 +138,93 @@ IGNORE_VIOLATIONS = [
 ]
 
 
-def validate_dependencies(integration: Integration):
-    """Validate all dependencies."""
-    # Find usage of hass.components
-    collector = ImportCollector(integration)
-
-    for fil in integration.path.glob("**/*.py"):
-        if not fil.is_file():
-            continue
-
-        collector.visit(ast.parse(fil.read_text()))
-
-    referenced = (
-        collector.referenced
-        - ALLOWED_USED_COMPONENTS
-        - set(integration.manifest["dependencies"])
-        - set(integration.manifest.get("after_dependencies", []))
+def calc_allowed_references(integration: Integration) -> Set[str]:
+    """Return a set of allowed references."""
+    allowed_references = (
+        ALLOWED_USED_COMPONENTS
+        | set(integration.manifest["dependencies"])
+        | set(integration.manifest.get("after_dependencies", []))
     )
 
     # Discovery requirements are ok if referenced in manifest
     for check_domain, to_check in DISCOVERY_INTEGRATIONS.items():
-        if check_domain in referenced and any(
-            check in integration.manifest for check in to_check
-        ):
-            referenced.remove(check_domain)
+        if any(check in integration.manifest for check in to_check):
+            allowed_references.add(check_domain)
 
-    if referenced:
-        for domain in sorted(referenced):
-            if (
-                integration.domain in IGNORE_VIOLATIONS
-                or (integration.domain, domain) in IGNORE_VIOLATIONS
+    return allowed_references
+
+
+def find_non_referenced_integrations(
+    integrations: Dict[str, Integration],
+    integration: Integration,
+    references: Dict[Path, Set[str]],
+):
+    """Find intergrations that are not allowed to be referenced."""
+    allowed_references = calc_allowed_references(integration)
+    referenced = set()
+    for path, refs in references.items():
+        if len(path.parts) == 1:
+            # climate.py is stored as climate
+            cur_fil_dir = path.stem
+        else:
+            # climate/__init__.py is stored as climate
+            cur_fil_dir = path.parts[0]
+
+        is_platform_other_integration = cur_fil_dir in integrations
+
+        for ref in refs:
+            # We are always allowed to import from ourselves
+            if ref == integration.domain:
+                continue
+
+            # These references are approved based on the manifest
+            if ref in allowed_references:
+                continue
+
+            # Some violations are whitelisted
+            if (integration.domain, ref) in IGNORE_VIOLATIONS:
+                continue
+
+            # If it's a platform for another integration, the other integration is ok
+            if is_platform_other_integration and cur_fil_dir == ref:
+                continue
+
+            # These have a platform specified in this integration
+            if not is_platform_other_integration and (
+                (integration.path / f"{ref}.py").is_file()
+                # Platform dir
+                or (integration.path / ref).is_dir()
             ):
                 continue
 
-            integration.add_error(
-                "dependencies",
-                "Using component {} but it's not in 'dependencies' or 'after_dependencies'".format(
-                    domain
-                ),
-            )
+            referenced.add(ref)
+
+    return referenced
+
+
+def validate_dependencies(
+    integrations: Dict[str, Integration], integration: Integration
+):
+    """Validate all dependencies."""
+    # Some integrations are allowed to have violations.
+    if integration.domain in IGNORE_VIOLATIONS:
+        return
+
+    # Find usage of hass.components
+    collector = ImportCollector(integration)
+    collector.collect()
+
+    for domain in sorted(
+        find_non_referenced_integrations(
+            integrations, integration, collector.referenced
+        )
+    ):
+        integration.add_error(
+            "dependencies",
+            "Using component {} but it's not in 'dependencies' or 'after_dependencies'".format(
+                domain
+            ),
+        )
 
 
 def validate(integrations: Dict[str, Integration], config):
@@ -181,7 +234,7 @@ def validate(integrations: Dict[str, Integration], config):
         if not integration.manifest:
             continue
 
-        validate_dependencies(integration)
+        validate_dependencies(integrations, integration)
 
         # check that all referenced dependencies exist
         for dep in integration.manifest["dependencies"]:
