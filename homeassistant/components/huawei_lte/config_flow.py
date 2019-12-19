@@ -3,6 +3,7 @@
 from collections import OrderedDict
 import logging
 from typing import Optional
+from urllib.parse import urlparse
 
 from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
 from huawei_lte_api.Client import Client
@@ -19,7 +20,7 @@ from url_normalize import url_normalize
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.ssdp import ATTR_HOST, ATTR_NAME, ATTR_PRESENTATIONURL
+from homeassistant.components import ssdp
 from homeassistant.const import CONF_PASSWORD, CONF_RECIPIENT, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
 
@@ -208,13 +209,14 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle SSDP initiated config flow."""
         # Attempt to distinguish from other non-LTE Huawei router devices, at least
         # some ones we are interested in have "Mobile Wi-Fi" friendlyName.
-        if "mobile" not in discovery_info.get(ATTR_NAME, "").lower():
+        if "mobile" not in discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, "").lower():
             return self.async_abort(reason="not_huawei_lte")
 
         # https://github.com/PyCQA/pylint/issues/3167
         url = self.context[CONF_URL] = url_normalize(  # pylint: disable=no-member
             discovery_info.get(
-                ATTR_PRESENTATIONURL, f"http://{discovery_info[ATTR_HOST]}/"
+                ssdp.ATTR_UPNP_PRESENTATION_URL,
+                f"http://{urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname}/",
             )
         )
 

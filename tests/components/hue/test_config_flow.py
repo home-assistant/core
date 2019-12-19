@@ -7,6 +7,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import ssdp
 from homeassistant.components.hue import config_flow, const
 
 from tests.common import MockConfigEntry, mock_coro
@@ -208,9 +209,9 @@ async def test_bridge_ssdp(hass):
 
     result = await flow.async_step_ssdp(
         {
-            "host": "0.0.0.0",
-            "serial": "1234",
-            "manufacturerURL": config_flow.HUE_MANUFACTURERURL,
+            ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_SERIAL: "1234",
         }
     )
 
@@ -224,7 +225,7 @@ async def test_bridge_ssdp_discover_other_bridge(hass):
     flow.hass = hass
 
     result = await flow.async_step_ssdp(
-        {"manufacturerURL": "http://www.notphilips.com"}
+        {ssdp.ATTR_UPNP_MANUFACTURER_URL: "http://www.notphilips.com"}
     )
 
     assert result["type"] == "abort"
@@ -238,10 +239,10 @@ async def test_bridge_ssdp_emulated_hue(hass):
 
     result = await flow.async_step_ssdp(
         {
-            "name": "HASS Bridge",
-            "host": "0.0.0.0",
-            "serial": "1234",
-            "manufacturerURL": config_flow.HUE_MANUFACTURERURL,
+            ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
+            ssdp.ATTR_UPNP_FRIENDLY_NAME: "HASS Bridge",
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_SERIAL: "1234",
         }
     )
 
@@ -257,10 +258,10 @@ async def test_bridge_ssdp_espalexa(hass):
 
     result = await flow.async_step_ssdp(
         {
-            "name": "Espalexa (0.0.0.0)",
-            "host": "0.0.0.0",
-            "serial": "1234",
-            "manufacturerURL": config_flow.HUE_MANUFACTURERURL,
+            ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
+            ssdp.ATTR_UPNP_FRIENDLY_NAME: "Espalexa (0.0.0.0)",
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_SERIAL: "1234",
         }
     )
 
@@ -281,9 +282,9 @@ async def test_bridge_ssdp_already_configured(hass):
     with pytest.raises(data_entry_flow.AbortFlow):
         await flow.async_step_ssdp(
             {
-                "host": "0.0.0.0",
-                "serial": "1234",
-                "manufacturerURL": config_flow.HUE_MANUFACTURERURL,
+                ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
+                ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
+                ssdp.ATTR_UPNP_SERIAL: "1234",
             }
         )
 

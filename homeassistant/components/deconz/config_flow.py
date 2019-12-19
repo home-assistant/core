@@ -1,5 +1,6 @@
 """Config flow to configure deCONZ component."""
 import asyncio
+from urllib.parse import urlparse
 
 import async_timeout
 from pydeconz.errors import RequestError, ResponseError
@@ -7,7 +8,7 @@ from pydeconz.utils import async_discovery, async_get_api_key, async_get_gateway
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.ssdp import ATTR_MANUFACTURERURL, ATTR_SERIAL
+from homeassistant.components import ssdp
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
@@ -26,7 +27,6 @@ from .const import (
 
 DECONZ_MANUFACTURERURL = "http://www.dresden-elektronik.de"
 CONF_SERIAL = "serial"
-ATTR_UUID = "udn"
 
 
 @callback
@@ -170,18 +170,20 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered deCONZ bridge."""
-        if discovery_info[ATTR_MANUFACTURERURL] != DECONZ_MANUFACTURERURL:
+        if discovery_info[ssdp.ATTR_UPNP_MANUFACTURER_URL] != DECONZ_MANUFACTURERURL:
             return self.async_abort(reason="not_deconz_bridge")
 
-        uuid = discovery_info[ATTR_UUID].replace("uuid:", "")
+        uuid = discovery_info[ssdp.ATTR_UPNP_UDN].replace("uuid:", "")
 
         _LOGGER.debug("deCONZ gateway discovered (%s)", uuid)
 
+        parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
+
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if uuid == entry.data.get(CONF_UUID):
-                return await self._update_entry(entry, discovery_info[CONF_HOST])
+                return await self._update_entry(entry, parsed_url.hostname)
 
-        bridgeid = discovery_info[ATTR_SERIAL]
+        bridgeid = discovery_info[ssdp.ATTR_UPNP_SERIAL]
         if any(
             bridgeid == flow["context"][CONF_BRIDGEID]
             for flow in self._async_in_progress()
@@ -190,11 +192,11 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context[CONF_BRIDGEID] = bridgeid
-        self.context["title_placeholders"] = {"host": discovery_info[CONF_HOST]}
+        self.context["title_placeholders"] = {"host": parsed_url.hostname}
 
         self.deconz_config = {
-            CONF_HOST: discovery_info[CONF_HOST],
-            CONF_PORT: discovery_info[CONF_PORT],
+            CONF_HOST: parsed_url.hostname,
+            CONF_PORT: parsed_url.port,
         }
 
         return await self.async_step_link()
