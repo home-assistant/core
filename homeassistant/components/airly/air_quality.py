@@ -5,7 +5,7 @@ from homeassistant.components.air_quality import (
     ATTR_PM_10,
     AirQualityEntity,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 
 from .const import (
     ATTR_API_ADVICE,
@@ -35,10 +35,13 @@ LABEL_PM_10_PERCENT = f"{ATTR_PM_10}_percent_of_limit"
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Airly air_quality entity based on a config entry."""
     name = config_entry.data[CONF_NAME]
+    latitude = config_entry.data[CONF_LATITUDE]
+    longitude = config_entry.data[CONF_LONGITUDE]
+    unique_id = f"{latitude}-{longitude}"
 
     data = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
 
-    async_add_entities([AirlyAirQuality(data, name)], True)
+    async_add_entities([AirlyAirQuality(data, name, unique_id)], True)
 
 
 def round_state(func):
@@ -56,11 +59,12 @@ def round_state(func):
 class AirlyAirQuality(AirQualityEntity):
     """Define an Airly air quality."""
 
-    def __init__(self, airly, name):
+    def __init__(self, airly, name, unique_id):
         """Initialize."""
         self.airly = airly
         self.data = airly.data
         self._name = name
+        self._unique_id = unique_id
         self._pm_2_5 = None
         self._pm_10 = None
         self._aqi = None
@@ -108,12 +112,12 @@ class AirlyAirQuality(AirQualityEntity):
     @property
     def unique_id(self):
         """Return a unique_id for this entity."""
-        return f"{self.airly.latitude}-{self.airly.longitude}"
+        return self._unique_id
 
     @property
     def available(self):
         """Return True if entity is available."""
-        return bool(self.airly.data)
+        return bool(self.data)
 
     @property
     def device_state_attributes(self):
@@ -132,7 +136,6 @@ class AirlyAirQuality(AirQualityEntity):
 
         if self.airly.data:
             self.data = self.airly.data
-
-        self._pm_10 = self.data[ATTR_API_PM10]
-        self._pm_2_5 = self.data[ATTR_API_PM25]
-        self._aqi = self.data[ATTR_API_CAQI]
+            self._pm_10 = self.data[ATTR_API_PM10]
+            self._pm_2_5 = self.data[ATTR_API_PM25]
+            self._aqi = self.data[ATTR_API_CAQI]
