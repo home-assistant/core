@@ -9,7 +9,8 @@ from script.hassfest.dependencies import ImportCollector
 def mock_collector():
     """Fixture with import collector that adds all referenced nodes."""
     collector = ImportCollector(None)
-    collector.maybe_add_reference = collector.referenced.add
+    collector.unfiltered_referenced = set()
+    collector._add_reference = collector.unfiltered_referenced.add
     return collector
 
 
@@ -22,7 +23,7 @@ from homeassistant.components import child_import
 """
         )
     )
-    assert mock_collector.referenced == {"child_import"}
+    assert mock_collector.unfiltered_referenced == {"child_import"}
 
 
 def test_subimport(mock_collector):
@@ -34,7 +35,7 @@ from homeassistant.components.subimport.smart_home import EVENT_ALEXA_SMART_HOME
 """
         )
     )
-    assert mock_collector.referenced == {"subimport"}
+    assert mock_collector.unfiltered_referenced == {"subimport"}
 
 
 def test_child_import_field(mock_collector):
@@ -46,7 +47,7 @@ from homeassistant.components.child_import_field import bla
 """
         )
     )
-    assert mock_collector.referenced == {"child_import_field"}
+    assert mock_collector.unfiltered_referenced == {"child_import_field"}
 
 
 def test_renamed_absolute(mock_collector):
@@ -58,7 +59,7 @@ import homeassistant.components.renamed_absolute as hue
 """
         )
     )
-    assert mock_collector.referenced == {"renamed_absolute"}
+    assert mock_collector.unfiltered_referenced == {"renamed_absolute"}
 
 
 def test_hass_components_var(mock_collector):
@@ -71,7 +72,7 @@ def bla(hass):
 """
         )
     )
-    assert mock_collector.referenced == {"hass_components_var"}
+    assert mock_collector.unfiltered_referenced == {"hass_components_var"}
 
 
 def test_hass_components_class(mock_collector):
@@ -85,7 +86,7 @@ class Hello:
 """
         )
     )
-    assert mock_collector.referenced == {"hass_components_class"}
+    assert mock_collector.unfiltered_referenced == {"hass_components_class"}
 
 
 def test_all_imports(mock_collector):
@@ -110,7 +111,7 @@ class Hello:
 """
         )
     )
-    assert mock_collector.referenced == {
+    assert mock_collector.unfiltered_referenced == {
         "child_import",
         "subimport",
         "child_import_field",
