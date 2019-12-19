@@ -1,8 +1,8 @@
 {
-  "domain": "localip",
+  "domain": "local_ip",
   "name": "Local IP Address",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/localip",
+  "documentation": "https://www.home-assistant.io/components/local_ip",
   "dependencies": [],
   "codeowners": ["@issacg"],
   "requirements": []

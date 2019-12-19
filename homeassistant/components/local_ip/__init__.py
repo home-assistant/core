@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
-DOMAIN = "localip"
+DOMAIN = "local_ip"
 PLATFORM = "sensor"
 
 CONFIG_SCHEMA = vol.Schema(
@@ -17,7 +17,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up localip from configuration.yaml."""
+    """Set up local_ip from configuration.yaml."""
     hass.data[DOMAIN] = {}
 
     conf = config.get(DOMAIN)
@@ -29,7 +29,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up localip from a config entry."""
+    """Set up local_ip from a config entry."""
     hass.data[DOMAIN] = {CONF_NAME: entry.data["name"]}
 
     hass.async_create_task(

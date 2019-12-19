@@ -1,4 +1,4 @@
-"""Sensor platform for localip."""
+"""Sensor platform for local_ip."""
 from homeassistant.const import CONF_NAME, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity

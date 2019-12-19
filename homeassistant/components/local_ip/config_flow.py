@@ -1,4 +1,4 @@
-"""Config flow for localip."""
+"""Config flow for local_ip."""
 import logging
 
 import voluptuous as vol
@@ -11,7 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class SimpleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for localip."""
+    """Handle a config flow for local_ip."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL

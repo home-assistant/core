@@ -1,7 +1,7 @@
-"""Tests for the localip component."""
+"""Tests for the local_ip component."""
 import pytest
 
-from homeassistant.components.localip import DOMAIN
+from homeassistant.components.local_ip import DOMAIN
 from homeassistant.setup import async_setup_component
 from homeassistant.util import get_local_ip
 
