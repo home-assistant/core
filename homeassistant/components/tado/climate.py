@@ -95,6 +95,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 def create_climate_device(tado, name, zone_id):
     """Create a Tado climate device."""
     capabilities = tado.get_capabilities(zone_id)
+    _LOGGER.debug("Capabilities for zone %s: %s", zone_id, capabilities)
 
     zone_type = capabilities["type"]
 

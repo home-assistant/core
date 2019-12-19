@@ -130,6 +130,15 @@ class TadoConnector:
         mode=None,
     ):
         """Set a zone overlay."""
+        _LOGGER.debug(
+            "Set overlay for zone %s: mode=%s, temp=%s, duration=%s, type=%s, mode=%s",
+            zone_id,
+            overlay_mode,
+            temperature,
+            duration,
+            device_type,
+            mode,
+        )
         self.tado.setZoneOverlay(
             zone_id, overlay_mode, temperature, duration, device_type, "ON", mode
         )
