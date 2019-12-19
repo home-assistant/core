@@ -71,14 +71,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tado climate platform."""
     tado = hass.data[DOMAIN]
 
-    try:
-        zones = tado.get_zones()
-    except RuntimeError:
-        _LOGGER.error("Unable to get zone info")
-        return
-
     climate_devices = []
-    for zone in zones:
+    for zone in tado.zones:
         device = create_climate_device(
             tado, zone["name"], zone["id"], discovery_info[CONF_FALLBACK]
         )
@@ -184,11 +178,11 @@ class TadoClimate(ClimateDevice):
         """Register for sensor updates."""
         async_dispatcher_connect(
             self.hass,
-            SIGNAL_TADO_UPDATE_RECEIVED.format(self.zone_id),
+            SIGNAL_TADO_UPDATE_RECEIVED.format("zone", self.zone_id),
             self._handle_update,
         )
-        self._tado.add_sensor("zone", self.zone_id)
-        await self.hass.async_add_executor_job(self._tado.update)
+        # Process first update
+        await self.hass.async_add_executor_job(self._handle_update)
 
     @property
     def supported_features(self):
@@ -356,8 +350,13 @@ class TadoClimate(ClimateDevice):
         """Return the maximum temperature."""
         return self._max_temp
 
-    def _handle_update(self, data):
+    def _handle_update(self):
         """Handle update callbacks."""
+        try:
+            data = self._tado.data["zone"][self.zone_id]
+        except KeyError:
+            return
+
         if "sensorDataPoints" in data:
             sensor_data = data["sensorDataPoints"]
 

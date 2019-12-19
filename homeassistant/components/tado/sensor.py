@@ -40,15 +40,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
     tado = hass.data[DOMAIN]
 
-    try:
-        zones = tado.get_zones()
-    except RuntimeError:
-        _LOGGER.error("Unable to get zone info")
-        return
-
     # Create zone sensors
     sensor_items = []
-    for zone in zones:
+    for zone in tado.zones:
         sensor_items.extend(
             [
                 create_zone_sensor(tado, zone["name"], zone["id"], variable)
@@ -57,13 +51,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         )
 
     # Create device sensors
-    home = tado.get_me()["homes"][0]
-    sensor_items.extend(
-        [
-            create_device_sensor(tado, home["name"], home["id"], variable,)
-            for variable in DEVICE_SENSORS
-        ]
-    )
+    for home in tado.devices:
+        sensor_items.extend(
+            [
+                create_device_sensor(tado, home["name"], home["id"], variable)
+                for variable in DEVICE_SENSORS
+            ]
+        )
 
     add_entities(sensor_items, True)
 
@@ -81,14 +75,14 @@ def create_device_sensor(tado, name, device_id, variable):
 class TadoSensor(Entity):
     """Representation of a tado Sensor."""
 
-    def __init__(self, tado, zone_name, zone_type, zone_id, zone_variable):
+    def __init__(self, tado, zone_name, sensor_type, zone_id, zone_variable):
         """Initialize of the Tado Sensor."""
         self._tado = tado
 
         self.zone_name = zone_name
         self.zone_id = zone_id
         self.zone_variable = zone_variable
-        self.zone_type = zone_type
+        self.sensor_type = sensor_type
 
         self._unique_id = f"{zone_variable} {zone_id}"
 
@@ -99,11 +93,11 @@ class TadoSensor(Entity):
         """Register for sensor updates."""
         async_dispatcher_connect(
             self.hass,
-            SIGNAL_TADO_UPDATE_RECEIVED.format(self.zone_id),
+            SIGNAL_TADO_UPDATE_RECEIVED.format(self.sensor_type, self.zone_id),
             self._handle_update,
         )
-        self._tado.add_sensor(self.zone_type, self.zone_id)
-        await self.hass.async_add_executor_job(self._tado.update)
+        # Process first update
+        await self.hass.async_add_executor_job(self._handle_update)
 
     @property
     def unique_id(self):
@@ -150,8 +144,13 @@ class TadoSensor(Entity):
         """Do not poll."""
         return False
 
-    def _handle_update(self, data):
+    def _handle_update(self):
         """Handle update callbacks."""
+        try:
+            data = self._tado.data[self.sensor_type][self.zone_id]
+        except KeyError:
+            return
+
         unit = TEMP_CELSIUS
 
         if self.zone_variable == "temperature":
