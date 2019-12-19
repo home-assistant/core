@@ -162,7 +162,6 @@ def find_non_referenced_integrations(
     """Find intergrations that are not allowed to be referenced."""
     allowed_references = calc_allowed_references(integration)
     referenced = set()
-
     for path, refs in references.items():
         if len(path.parts) == 1:
             # climate.py is stored as climate
@@ -178,8 +177,12 @@ def find_non_referenced_integrations(
             if ref == integration.domain:
                 continue
 
-            # These references are approved
+            # These references are approved based on the manifest
             if ref in allowed_references:
+                continue
+
+            # Some violations are whitelisted
+            if (integration.domain, ref) in IGNORE_VIOLATIONS:
                 continue
 
             # If it's a platform for another integration, the other integration is ok
@@ -203,21 +206,19 @@ def validate_dependencies(
     integrations: Dict[str, Integration], integration: Integration
 ):
     """Validate all dependencies."""
+    # Some integrations are allowed to have violations.
+    if integration.domain in IGNORE_VIOLATIONS:
+        return
+
     # Find usage of hass.components
     collector = ImportCollector(integration)
     collector.collect()
 
-    referenced = find_non_referenced_integrations(
-        integrations, integration, collector.referenced
-    )
-
-    for domain in sorted(referenced):
-        if (
-            integration.domain in IGNORE_VIOLATIONS
-            or (integration.domain, domain) in IGNORE_VIOLATIONS
-        ):
-            continue
-
+    for domain in sorted(
+        find_non_referenced_integrations(
+            integrations, integration, collector.referenced
+        )
+    ):
         integration.add_error(
             "dependencies",
             "Using component {} but it's not in 'dependencies' or 'after_dependencies'".format(
