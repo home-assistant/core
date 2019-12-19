@@ -7,6 +7,7 @@ from homeassistant.components.http.view import HomeAssistantView
 from .auth import Auth
 from .config import AbstractConfig
 from .const import (
+    CONF_CAMERA_STREAM_URL,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_ENDPOINT,
@@ -58,6 +59,14 @@ class AlexaConfig(AbstractConfig):
     def locale(self):
         """Return config locale."""
         return self._config.get(CONF_LOCALE)
+
+    @property
+    def camera_stream_url(self):
+        """Return local camera stream url."""
+        camera_stream_url = self.hass.config.api.base_url
+        if self._config.get(CONF_CAMERA_STREAM_URL) is not None:
+            camera_stream_url = self._config.get(CONF_CAMERA_STREAM_URL)
+        return camera_stream_url
 
     def should_expose(self, entity_id):
         """If an entity should be exposed."""

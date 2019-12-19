@@ -36,6 +36,11 @@ class AbstractConfig(ABC):
         """Return config locale."""
 
     @property
+    def camera_stream_url(self):
+        """Return local camera stream url."""
+        return None
+
+    @property
     def entity_config(self):
         """Return entity config."""
         return {}

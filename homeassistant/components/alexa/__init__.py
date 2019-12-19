@@ -10,6 +10,7 @@ from homeassistant.helpers import config_validation as cv, entityfilter
 from . import flash_briefings, intent, smart_home_http
 from .const import (
     CONF_AUDIO,
+    CONF_CAMERA_STREAM_URL,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_DESCRIPTION,
@@ -49,6 +50,7 @@ SMART_HOME_SCHEMA = vol.Schema(
         vol.Optional(CONF_LOCALE, default=DEFAULT_LOCALE): vol.In(
             CONF_SUPPORTED_LOCALES
         ),
+        vol.Optional(CONF_CAMERA_STREAM_URL): cv.url,
         vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
         vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ALEXA_ENTITY_SCHEMA},
     }

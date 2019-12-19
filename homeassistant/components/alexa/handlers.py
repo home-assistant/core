@@ -4,6 +4,7 @@ import math
 
 from homeassistant import core as ha
 from homeassistant.components import (
+    camera,
     cover,
     fan,
     group,
@@ -1523,3 +1524,30 @@ async def async_api_resume(hass, config, directive, context):
     )
 
     return directive.response()
+
+
+@HANDLERS.register(("Alexa.CameraStreamController", "InitializeCameraStreams"))
+async def async_api_initialize_camera_stream(hass, config, directive, context):
+    """Process a InitializeCameraStreams request."""
+    entity = directive.entity
+    camera_component = hass.data.get(camera.DOMAIN)
+    camera_entity = camera_component.get_entity(entity.entity_id)
+    stream_source = await camera.async_request_stream(
+        hass, camera_entity.entity_id, fmt="hls"
+    )
+    payload = {
+        "cameraStreams": [
+            {
+                "uri": f"{config.camera_stream_url}{stream_source}",
+                "protocol": "RTSP",
+                "resolution": {"width": 1280, "height": 720},
+                "authorizationType": "NONE",
+                "videoCodec": "H264",
+                "audioCodec": "AAC",
+            }
+        ],
+        "imageUri": f"{config.camera_stream_url}{camera_entity.entity_picture}",
+    }
+    return directive.response(
+        name="Response", namespace="Alexa.CameraStreamController", payload=payload
+    )

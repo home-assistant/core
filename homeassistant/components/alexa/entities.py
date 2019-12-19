@@ -6,6 +6,7 @@ from homeassistant.components import (
     alert,
     automation,
     binary_sensor,
+    camera,
     cover,
     fan,
     group,
@@ -38,6 +39,7 @@ from homeassistant.util.decorator import Registry
 from .capabilities import (
     Alexa,
     AlexaBrightnessController,
+    AlexaCameraStreamController,
     AlexaChannelController,
     AlexaColorController,
     AlexaColorTemperatureController,
@@ -761,5 +763,24 @@ class VacuumCapabilities(AlexaEntity):
                 self.entity, allow_remote_resume=support_resume
             )
 
+        yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.hass)
+
+
+@ENTITY_ADAPTERS.register(camera.DOMAIN)
+class CameraCapabilities(AlexaEntity):
+    """Class to represent Camera capabilities."""
+
+    def default_display_categories(self):
+        """Return the display categories for this entity."""
+        return [DisplayCategory.CAMERA]
+
+    def interfaces(self):
+        """Yield the supported interfaces."""
+        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if supported & camera.SUPPORT_ON_OFF:
+            yield AlexaPowerController(self.entity)
+        if supported & camera.SUPPORT_STREAM:
+            yield AlexaCameraStreamController(self.entity)
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.hass)

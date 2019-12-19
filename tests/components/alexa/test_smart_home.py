@@ -1,7 +1,10 @@
 """Test for smart home alexa support."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.alexa import messages, smart_home
+import homeassistant.components.camera as camera
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -22,6 +25,7 @@ import homeassistant.components.vacuum as vacuum
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import Context, callback
 from homeassistant.helpers import entityfilter
+from homeassistant.setup import async_setup_component
 
 from . import (
     DEFAULT_CONFIG,
@@ -35,7 +39,7 @@ from . import (
     reported_properties,
 )
 
-from tests.common import async_mock_service
+from tests.common import async_mock_service, mock_coro
 
 
 @pytest.fixture
@@ -46,6 +50,22 @@ def events(hass):
         smart_home.EVENT_ALEXA_SMART_HOME, callback(lambda e: events.append(e))
     )
     yield events
+
+
+@pytest.fixture
+def mock_camera(hass):
+    """Initialize a demo camera platform."""
+    assert hass.loop.run_until_complete(
+        async_setup_component(hass, "camera", {camera.DOMAIN: {"platform": "demo"}})
+    )
+
+
+@pytest.fixture
+def mock_stream(hass):
+    """Initialize a demo camera platform with streaming."""
+    assert hass.loop.run_until_complete(
+        async_setup_component(hass, "stream", {"stream": {}})
+    )
 
 
 def test_create_api_message_defaults(hass):
@@ -3445,11 +3465,11 @@ async def test_vacuum_discovery(hass):
     properties.assert_equal("Alexa.PowerController", "powerState", "OFF")
 
     await assert_request_calls_service(
-        "Alexa.PowerController", "TurnOn", "vacuum#test_1", "vacuum.turn_on", hass,
+        "Alexa.PowerController", "TurnOn", "vacuum#test_1", "vacuum.turn_on", hass
     )
 
     await assert_request_calls_service(
-        "Alexa.PowerController", "TurnOff", "vacuum#test_1", "vacuum.turn_off", hass,
+        "Alexa.PowerController", "TurnOff", "vacuum#test_1", "vacuum.turn_off", hass
     )
 
 
@@ -3663,18 +3683,18 @@ async def test_vacuum_discovery_no_turn_on(hass):
     appliance = await discovery_test(device, hass)
 
     assert_endpoint_capabilities(
-        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa",
+        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"
     )
 
     properties = await reported_properties(hass, "vacuum#test_5")
     properties.assert_equal("Alexa.PowerController", "powerState", "ON")
 
     await assert_request_calls_service(
-        "Alexa.PowerController", "TurnOn", "vacuum#test_5", "vacuum.start", hass,
+        "Alexa.PowerController", "TurnOn", "vacuum#test_5", "vacuum.start", hass
     )
 
     await assert_request_calls_service(
-        "Alexa.PowerController", "TurnOff", "vacuum#test_5", "vacuum.turn_off", hass,
+        "Alexa.PowerController", "TurnOff", "vacuum#test_5", "vacuum.turn_off", hass
     )
 
 
@@ -3693,11 +3713,11 @@ async def test_vacuum_discovery_no_turn_off(hass):
     appliance = await discovery_test(device, hass)
 
     assert_endpoint_capabilities(
-        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa",
+        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"
     )
 
     await assert_request_calls_service(
-        "Alexa.PowerController", "TurnOn", "vacuum#test_6", "vacuum.turn_on", hass,
+        "Alexa.PowerController", "TurnOn", "vacuum#test_6", "vacuum.turn_on", hass
     )
 
     await assert_request_calls_service(
@@ -3722,11 +3742,11 @@ async def test_vacuum_discovery_no_turn_on_or_off(hass):
     appliance = await discovery_test(device, hass)
 
     assert_endpoint_capabilities(
-        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa",
+        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"
     )
 
     await assert_request_calls_service(
-        "Alexa.PowerController", "TurnOn", "vacuum#test_7", "vacuum.start", hass,
+        "Alexa.PowerController", "TurnOn", "vacuum#test_7", "vacuum.start", hass
     )
 
     await assert_request_calls_service(
@@ -3736,3 +3756,84 @@ async def test_vacuum_discovery_no_turn_on_or_off(hass):
         "vacuum.return_to_base",
         hass,
     )
+
+
+async def test_camera_discovery(hass):
+    """Test camera discovery."""
+    device = (
+        "camera.test",
+        "idle",
+        {"friendly_name": "Test camera", "supported_features": 3},
+    )
+    appliance = await discovery_test(device, hass)
+
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.PowerController",
+        "Alexa.CameraStreamController",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
+
+    camera_stream_capability = get_capability(
+        capabilities, "Alexa.CameraStreamController"
+    )
+    configuration = camera_stream_capability["cameraStreamConfigurations"][0]
+    assert "RTSP" in configuration["protocols"]
+    assert {"width": 1920, "height": 1080} in configuration["resolutions"]
+    assert {"width": 1280, "height": 720} in configuration["resolutions"]
+    assert {"width": 640, "height": 480} in configuration["resolutions"]
+    assert "NONE" in configuration["authorizationTypes"]
+    assert "H264" in configuration["videoCodecs"]
+    assert "AAC" in configuration["audioCodecs"]
+
+
+async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
+    """Test camera/stream command."""
+    request = get_new_request(
+        "Alexa.CameraStreamController", "InitializeCameraStreams", "camera#demo_camera"
+    )
+
+    # add payload
+    request["directive"]["payload"]["cameraStreams"] = [
+        {
+            "protocol": "RTSP",
+            "resolution": {"width": 1920, "height": 1080},
+            "authorizationType": "NONE",
+            "videoCodec": "H264",
+            "audioCodec": "AAC",
+        },
+        {
+            "protocol": "RTSP",
+            "resolution": {"width": 1280, "height": 720},
+            "authorizationType": "NONE",
+            "videoCodec": "MJPEG",
+            "audioCodec": "AAC",
+        },
+    ]
+
+    await async_setup_component(hass, "camera", {})
+
+    with patch(
+        "homeassistant.components.demo.camera.DemoCamera.stream_source",
+        return_value=mock_coro("rtsp://example.local"),
+    ):
+        msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request)
+        await hass.async_block_till_done()
+
+        assert "event" in msg
+        msg = msg["event"]
+        assert msg["header"]["namespace"] == "Alexa.CameraStreamController"
+        assert msg["header"]["name"] == "Response"
+        camera_streams = msg["payload"]["cameraStreams"]
+        assert "https://mycamerastream.test/api/hls/" in camera_streams[0]["uri"]
+        assert camera_streams[0]["protocol"] == "RTSP"
+        assert camera_streams[0]["resolution"]["width"] == 1280
+        assert camera_streams[0]["resolution"]["height"] == 720
+        assert camera_streams[0]["authorizationType"] == "NONE"
+        assert camera_streams[0]["videoCodec"] == "H264"
+        assert camera_streams[0]["audioCodec"] == "AAC"
+        assert (
+            "https://mycamerastream.test/api/camera_proxy/camera.demo_camera?token="
+            in msg["payload"]["imageUri"]
+        )
