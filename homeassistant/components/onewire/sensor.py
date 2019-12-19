@@ -102,7 +102,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             device_names = config["names"]
 
     # We have an owserver on a remote(or local) host/port
-    # pylint: disable=too-many-nested-blocks
     if owhost:
         try:
             owproxy = protocol.proxy(host=owhost, port=owport)
@@ -120,34 +119,30 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 dev_type = "HobbyBoard"
                 family = bytes.decode(owproxy.read(f"{device}type"))
 
-            if family in hb_info_from_type(dev_type):
-                for sensor_key, sensor_value in hb_info_from_type(dev_type)[
-                    family
-                ].items():
-                    if "moisture" in sensor_key:
-                        s_id = sensor_key.split("_")[1]
-                        is_leaf = int(
-                            bytes.decode(
-                                owproxy.read(f"{device}moisture/is_leaf.{s_id}")
-                            )
-                        )
-                        if is_leaf:
-                            sensor_key = f"wetness_{id}"
-                    sensor_id = os.path.split(os.path.split(device)[0])[1]
-                    device_file = os.path.join(os.path.split(device)[0], sensor_value)
-                    devs.append(
-                        OneWireProxy(
-                            device_names.get(sensor_id, sensor_id),
-                            device_file,
-                            sensor_key,
-                            owproxy=owproxy,
-                        )
-                    )
-            else:
+            if family not in hb_info_from_type(dev_type):
                 _LOGGER.warning(
                     "Ignoring unknown family (%s) of sensor found for device: %s",
                     family,
                     device,
+                )
+                continue
+            for sensor_key, sensor_value in hb_info_from_type(dev_type)[family].items():
+                if "moisture" in sensor_key:
+                    s_id = sensor_key.split("_")[1]
+                    is_leaf = int(
+                        bytes.decode(owproxy.read(f"{device}moisture/is_leaf.{s_id}"))
+                    )
+                    if is_leaf:
+                        sensor_key = f"wetness_{id}"
+                sensor_id = os.path.split(os.path.split(device)[0])[1]
+                device_file = os.path.join(os.path.split(device)[0], sensor_value)
+                devs.append(
+                    OneWireProxy(
+                        device_names.get(sensor_id, sensor_id),
+                        device_file,
+                        sensor_key,
+                        owproxy=owproxy,
+                    )
                 )
 
     # We have a raw GPIO ow sensor on a Pi
