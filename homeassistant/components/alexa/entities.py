@@ -83,6 +83,9 @@ class DisplayCategory:
     # Indicates media devices with video or photo capabilities.
     CAMERA = "CAMERA"
 
+    # Indicates a non-mobile computer, such as a desktop computer.
+    COMPUTER = "COMPUTER"
+
     # Indicates an endpoint that detects and reports contact.
     CONTACT_SENSOR = "CONTACT_SENSOR"
 
@@ -92,8 +95,23 @@ class DisplayCategory:
     # Indicates a doorbell.
     DOORBELL = "DOORBELL"
 
+    # Indicates a window covering on the outside of a structure.
+    EXTERIOR_BLIND = "EXTERIOR_BLIND"
+
     # Indicates a fan.
     FAN = "FAN"
+
+    # Indicates a game console, such as Microsoft Xbox or Nintendo Switch
+    GAME_CONSOLE = "GAME_CONSOLE"
+
+    # Indicates a garage door. Garage doors must implement the ModeController interface to open and close the door.
+    GARAGE_DOOR = "GARAGE_DOOR"
+
+    # Indicates a window covering on the inside of a structure.
+    INTERIOR_BLIND = "INTERIOR_BLIND"
+
+    # Indicates a laptop or other mobile computer.
+    LAPTOP = "LAPTOP"
 
     # Indicates light sources or fixtures.
     LIGHT = "LIGHT"
@@ -101,17 +119,35 @@ class DisplayCategory:
     # Indicates a microwave oven.
     MICROWAVE = "MICROWAVE"
 
+    # Indicates a mobile phone.
+    MOBILE_PHONE = "MOBILE_PHONE"
+
     # Indicates an endpoint that detects and reports motion.
     MOTION_SENSOR = "MOTION_SENSOR"
 
+    # Indicates a network-connected music system.
+    MUSIC_SYSTEM = "MUSIC_SYSTEM"
+
     # An endpoint that cannot be described in on of the other categories.
     OTHER = "OTHER"
+
+    # Indicates a network router.
+    NETWORK_HARDWARE = "NETWORK_HARDWARE"
+
+    # Indicates an oven cooking appliance.
+    OVEN = "OVEN"
+
+    # Indicates a non-mobile phone, such as landline or an IP phone.
+    PHONE = "PHONE"
 
     # Describes a combination of devices set to a specific state, when the
     # order of the state change is not important. For example a bedtime scene
     # might include turning off lights and lowering the thermostat, but the
     # order is unimportant.    Applies to Scenes
     SCENE_TRIGGER = "SCENE_TRIGGER"
+
+    # Indicates a projector screen.
+    SCREEN = "SCREEN"
 
     # Indicates a security panel.
     SECURITY_PANEL = "SECURITY_PANEL"
@@ -126,9 +162,15 @@ class DisplayCategory:
     # Indicates the endpoint is a speaker or speaker system.
     SPEAKER = "SPEAKER"
 
+    # Indicates a streaming device such as Apple TV, Chromecast, or Roku.
+    STREAMING_DEVICE = "STREAMING_DEVICE"
+
     # Indicates in-wall switches wired to the electrical system.  Can control a
     # variety of devices.
     SWITCH = "SWITCH"
+
+    # Indicates a tablet computer.
+    TABLET = "TABLET"
 
     # Indicates endpoints that report the temperature only.
     TEMPERATURE_SENSOR = "TEMPERATURE_SENSOR"
@@ -139,6 +181,9 @@ class DisplayCategory:
 
     # Indicates the endpoint is a television.
     TV = "TV"
+
+    # Indicates a network-connected wearable device, such as an Apple Watch, Fitbit, or Samsung Gear.
+    WEARABLE = "WEARABLE"
 
 
 class AlexaEntity:
@@ -318,19 +363,39 @@ class CoverCapabilities(AlexaEntity):
     def default_display_categories(self):
         """Return the display categories for this entity."""
         device_class = self.entity.attributes.get(ATTR_DEVICE_CLASS)
-        if device_class in (cover.DEVICE_CLASS_GARAGE, cover.DEVICE_CLASS_DOOR):
+        if device_class == cover.DEVICE_CLASS_GARAGE:
+            return [DisplayCategory.GARAGE_DOOR]
+        if device_class == cover.DEVICE_CLASS_DOOR:
             return [DisplayCategory.DOOR]
+        if device_class in (
+            cover.DEVICE_CLASS_BLIND,
+            cover.DEVICE_CLASS_SHADE,
+            cover.DEVICE_CLASS_CURTAIN,
+        ):
+            return [DisplayCategory.INTERIOR_BLIND]
+        if device_class in (
+            cover.DEVICE_CLASS_WINDOW,
+            cover.DEVICE_CLASS_AWNING,
+            cover.DEVICE_CLASS_SHUTTER,
+        ):
+            return [DisplayCategory.EXTERIOR_BLIND]
+
         return [DisplayCategory.OTHER]
 
     def interfaces(self):
         """Yield the supported interfaces."""
-        yield AlexaPowerController(self.entity)
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & cover.SUPPORT_SET_POSITION:
-            yield AlexaPercentageController(self.entity)
-        if supported & (cover.SUPPORT_CLOSE | cover.SUPPORT_OPEN):
+            yield AlexaRangeController(
+                self.entity, instance=f"{cover.DOMAIN}.{cover.ATTR_POSITION}"
+            )
+        elif supported & (cover.SUPPORT_CLOSE | cover.SUPPORT_OPEN):
             yield AlexaModeController(
                 self.entity, instance=f"{cover.DOMAIN}.{cover.ATTR_POSITION}"
+            )
+        if supported & cover.SUPPORT_SET_TILT_POSITION:
+            yield AlexaRangeController(
+                self.entity, instance=f"{cover.DOMAIN}.{cover.ATTR_TILT_POSITION}"
             )
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.hass)
@@ -355,6 +420,7 @@ class LightCapabilities(AlexaEntity):
             yield AlexaColorController(self.entity)
         if supported & light.SUPPORT_COLOR_TEMP:
             yield AlexaColorTemperatureController(self.entity)
+
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.hass)
 
@@ -370,6 +436,7 @@ class FanCapabilities(AlexaEntity):
     def interfaces(self):
         """Yield the supported interfaces."""
         yield AlexaPowerController(self.entity)
+
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & fan.SUPPORT_SET_SPEED:
             yield AlexaPercentageController(self.entity)
@@ -377,7 +444,6 @@ class FanCapabilities(AlexaEntity):
             yield AlexaRangeController(
                 self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_SPEED}"
             )
-
         if supported & fan.SUPPORT_OSCILLATE:
             yield AlexaToggleController(
                 self.entity, instance=f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}"
