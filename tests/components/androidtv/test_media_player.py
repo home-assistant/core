@@ -2,13 +2,14 @@
 import logging
 from unittest.mock import patch
 
+from androidtv.exceptions import LockNotAcquiredException
+
 from homeassistant.components.androidtv.media_player import (
     ANDROIDTV_DOMAIN,
     CONF_ADB_SERVER_IP,
     CONF_ADBKEY,
     CONF_APPS,
     KEYS,
-    LockNotAcquiredException,
 )
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
