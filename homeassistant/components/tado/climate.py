@@ -24,21 +24,16 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DOMAIN, SIGNAL_TADO_UPDATE_RECEIVED, TYPE_AIR_CONDITIONING
+from . import CONF_FALLBACK, DOMAIN, SIGNAL_TADO_UPDATE_RECEIVED
+from .const import (
+    CONST_MODE_OFF,
+    CONST_MODE_SMART_SCHEDULE,
+    CONST_OVERLAY_MANUAL,
+    CONST_OVERLAY_TADO_MODE,
+    TYPE_AIR_CONDITIONING,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-CONST_MODE_SMART_SCHEDULE = "SMART_SCHEDULE"  # Default Tado mode
-CONST_MODE_OFF = "OFF"  # Switch off heating in a zone
-
-# When we change the temperature setting, we need an overlay mode
-CONST_OVERLAY_TADO_MODE = "TADO_MODE"  # wait until tado changes the mode automatic
-CONST_OVERLAY_MANUAL = "MANUAL"  # the user has change the temperature or mode manually
-CONST_OVERLAY_TIMER = "TIMER"  # the temperature will be reset after a timespan
-
-CONST_MODE_FAN_LOW = "LOW"
-CONST_MODE_FAN_MIDDLE = "MIDDLE"
-CONST_MODE_FAN_HIGH = "HIGH"
 
 FAN_MAP_TADO = {"HIGH": FAN_HIGH, "MIDDLE": FAN_MIDDLE, "LOW": FAN_LOW}
 
@@ -84,7 +79,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     climate_devices = []
     for zone in zones:
-        device = create_climate_device(tado, zone["name"], zone["id"])
+        device = create_climate_device(
+            tado, zone["name"], zone["id"], discovery_info[CONF_FALLBACK]
+        )
         if device:
             climate_devices.append(device)
 
@@ -92,7 +89,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities(climate_devices, True)
 
 
-def create_climate_device(tado, name, zone_id):
+def create_climate_device(tado, name: str, zone_id: int, fallback: bool):
     """Create a Tado climate device."""
     capabilities = tado.get_capabilities(zone_id)
     _LOGGER.debug("Capabilities for zone %s: %s", zone_id, capabilities)
@@ -120,7 +117,15 @@ def create_climate_device(tado, name, zone_id):
     step = temperatures["celsius"].get("step", PRECISION_TENTHS)
 
     device = TadoClimate(
-        tado, name, zone_id, zone_type, min_temp, max_temp, step, ac_support_heat,
+        tado,
+        name,
+        zone_id,
+        zone_type,
+        min_temp,
+        max_temp,
+        step,
+        ac_support_heat,
+        fallback,
     )
     return device
 
@@ -138,6 +143,7 @@ class TadoClimate(ClimateDevice):
         max_temp,
         step,
         ac_support_heat,
+        fallback,
     ):
         """Initialize of Tado climate device."""
         self._tado = tado
@@ -160,6 +166,15 @@ class TadoClimate(ClimateDevice):
         self._max_temp = max_temp
         self._step = step
         self._target_temp = None
+
+        if fallback:
+            _LOGGER.debug("Default overlay is configured in TADO MODE")
+            # Fallback to Smart Schedule at next Schedule switch
+            self._default_overlay = CONST_OVERLAY_TADO_MODE
+        else:
+            _LOGGER.debug("Default overlay is configured in MANUAL MODE")
+            # Don't fallback to Smart Schedule, but keep in manual mode
+            self._default_overlay = CONST_OVERLAY_MANUAL
 
         self._current_fan = CONST_MODE_OFF
         self._current_operation = CONST_MODE_SMART_SCHEDULE
@@ -297,7 +312,7 @@ class TadoClimate(ClimateDevice):
         if temperature is None:
             return
 
-        self._current_operation = CONST_OVERLAY_TADO_MODE
+        self._current_operation = self._default_overlay
         self._overlay_mode = None
         self._target_temp = temperature
         self._control_heating()
@@ -311,11 +326,11 @@ class TadoClimate(ClimateDevice):
         elif hvac_mode == HVAC_MODE_AUTO:
             mode = CONST_MODE_SMART_SCHEDULE
         elif hvac_mode == HVAC_MODE_HEAT:
-            mode = CONST_OVERLAY_TADO_MODE
+            mode = self._default_overlay
         elif hvac_mode == HVAC_MODE_COOL:
-            mode = CONST_OVERLAY_TADO_MODE
+            mode = self._default_overlay
         elif hvac_mode == HVAC_MODE_HEAT_COOL:
-            mode = CONST_OVERLAY_TADO_MODE
+            mode = self._default_overlay
 
         self._current_operation = mode
         self._overlay_mode = None

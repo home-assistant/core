@@ -6,6 +6,7 @@ import urllib
 from PyTado.interface import Tado
 import voluptuous as vol
 
+from homeassistant.components.tado.const import CONF_FALLBACK
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -20,10 +21,6 @@ SIGNAL_TADO_UPDATE_RECEIVED = "tado_update_received_{}"
 
 TADO_COMPONENTS = ["sensor", "climate"]
 
-TYPE_AIR_CONDITIONING = "AIR_CONDITIONING"
-TYPE_HEATING = "HEATING"
-TYPE_HOT_WATER = "HOT_WATER"
-
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 SCAN_INTERVAL = timedelta(seconds=15)
 
@@ -33,6 +30,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_FALLBACK, default=True): cv.boolean,
             }
         )
     },
@@ -55,7 +53,13 @@ def setup(hass, config):
     hass.data[DOMAIN] = TadoConnector(tado, hass)
 
     for component in TADO_COMPONENTS:
-        load_platform(hass, component, DOMAIN, {}, config)
+        load_platform(
+            hass,
+            component,
+            DOMAIN,
+            {CONF_FALLBACK: config[DOMAIN][CONF_FALLBACK]},
+            config,
+        )
 
     # Poll for updates in the background
     hass.helpers.event.track_time_interval(

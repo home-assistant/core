@@ -5,13 +5,8 @@ from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from . import (
-    DOMAIN,
-    SIGNAL_TADO_UPDATE_RECEIVED,
-    TYPE_AIR_CONDITIONING,
-    TYPE_HEATING,
-    TYPE_HOT_WATER,
-)
+from . import DOMAIN, SIGNAL_TADO_UPDATE_RECEIVED
+from .const import TYPE_AIR_CONDITIONING, TYPE_HEATING, TYPE_HOT_WATER
 
 _LOGGER = logging.getLogger(__name__)
 
