@@ -177,11 +177,23 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
             self._state = None
 
         last_event = self._simplisafe.last_event_data[self._system.system_id]
+
+        try:
+            last_event_sensor_type = EntityTypes(last_event["sensorType"]).name
+        except ValueError:
+            _LOGGER.warning(
+                'Encountered unknown entity type: %s ("%s"). Please report it at'
+                "https://github.com/home-assistant/home-assistant/issues.",
+                last_event["sensorType"],
+                last_event["sensorName"],
+            )
+            last_event_sensor_type = None
+
         self._attrs.update(
             {
                 ATTR_LAST_EVENT_INFO: last_event["info"],
                 ATTR_LAST_EVENT_SENSOR_NAME: last_event["sensorName"],
-                ATTR_LAST_EVENT_SENSOR_TYPE: EntityTypes(last_event["sensorType"]).name,
+                ATTR_LAST_EVENT_SENSOR_TYPE: last_event_sensor_type,
                 ATTR_LAST_EVENT_TIMESTAMP: utc_from_timestamp(
                     last_event["eventTimestamp"]
                 ),
