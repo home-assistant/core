@@ -54,7 +54,7 @@ SENSOR_TYPES = {
     },
     SENSOR_TYPE_WINDOWHANDLE: {
         "name": "WindowHandle",
-        "unit": "-",
+        "unit": None,
         "icon": "mdi:window",
         "class": None,
     },
