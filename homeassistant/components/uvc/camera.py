@@ -210,3 +210,13 @@ class UnifiVideoCamera(Camera):
     def disable_motion_detection(self):
         """Disable motion detection in camera."""
         self.set_motion_detection(False)
+
+    def stream_source(self):
+        """Return the source of the stream."""
+        caminfo = self._nvr.get_camera(self._uuid)
+        channels = caminfo["channels"]
+        for channel in channels:
+            if channel["isRtspEnabled"]:
+                return channel["rtspUris"][0]
+
+        return None
