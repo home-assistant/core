@@ -108,9 +108,7 @@ class Sensor(ZhaEntity):
     _device_class = None
     _divisor = 1
     _domain = DOMAIN
-    _force_update = False
     _multiplier = 1
-    _should_poll = False
     _unit = None
 
     def __init__(self, unique_id, zha_device, channels, **kwargs):
@@ -210,8 +208,12 @@ class ElectricalMeasurement(Sensor):
 
     _device_class = DEVICE_CLASS_POWER
     _divisor = 10
-    _should_poll = True
     _unit = POWER_WATT
+
+    @property
+    def should_poll(self) -> bool:
+        """Return True if HA needs to poll for state changes."""
+        return True
 
 
 @ZHA_ENTITIES.strict_match(MatchRule(generic_ids={CHANNEL_ST_HUMIDITY_CLUSTER}))
