@@ -1,5 +1,5 @@
 """Support for Climate devices of (EMEA/EU-based) Honeywell TCC systems."""
-from datetime import datetime as dt, timedelta
+from datetime import datetime as dt
 import logging
 from typing import List, Optional
 
@@ -74,15 +74,6 @@ HA_PRESET_TO_EVO = {v: k for k, v in EVO_PRESET_TO_HA.items()}
 
 STATE_ATTRS_TCS = ["systemId", "activeFaults", "systemModeStatus"]
 STATE_ATTRS_ZONES = ["zoneId", "activeFaults", "setpointStatus", "temperatureStatus"]
-
-
-def _clean_dt(dtm) -> Optional[dt]:
-    if dtm is not None:
-        format_str = "%Y-%m-%d %H:%M:00"  # round down to the nearest minute
-        dtm = dt.strptime(dt.strftime(dtm, format_str), format_str)
-        if dtm < dt.now():
-            dtm += timedelta(days=1)
-    return dtm
 
 
 async def async_setup_platform(
