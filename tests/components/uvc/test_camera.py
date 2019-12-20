@@ -12,7 +12,7 @@ from homeassistant.components.uvc import camera as uvc
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import setup_component
 
-from tests.common import get_test_home_assistant
+from tests.common import async_mock_service, get_test_home_assistant
 
 
 class TestUVCSetup(unittest.TestCase):
@@ -221,7 +221,9 @@ class TestUVC(unittest.TestCase):
         assert "Ubiquiti" == self.uvc.brand
         assert "UVC Fake" == self.uvc.model
         assert SUPPORT_STREAM == self.uvc.supported_features
-        assert "rtsp://host-a:7447/uuid_rtspchannel_0" == self.uvc.stream_source()
+
+    async def test_stream(self):
+        assert "rtsp://host-a:7447/uuid_rtspchannel_0" == await self.uvc.stream_source()
 
     @mock.patch("uvcclient.store.get_info_store")
     @mock.patch("uvcclient.camera.UVCCameraClientV320")

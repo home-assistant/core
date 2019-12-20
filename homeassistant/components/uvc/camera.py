@@ -211,7 +211,7 @@ class UnifiVideoCamera(Camera):
         """Disable motion detection in camera."""
         self.set_motion_detection(False)
 
-    def stream_source(self):
+    async def stream_source(self):
         """Return the source of the stream."""
         caminfo = self._nvr.get_camera(self._uuid)
         channels = caminfo["channels"]
