@@ -108,7 +108,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             ),
         )
 
-    async def async_step_rediscover(self, user_input):
+    async def async_step_unignore(self, user_input):
         """Rediscover a previously ignored discover."""
         unique_id = user_input["unique_id"]
         await self.async_set_unique_id(unique_id)

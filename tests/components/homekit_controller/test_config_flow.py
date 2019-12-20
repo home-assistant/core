@@ -838,7 +838,7 @@ async def test_parse_overlapping_homekit_json(hass):
     }
 
 
-async def test_rediscover_works(hass):
+async def test_unignore_works(hass):
     """Test rediscovery triggered disovers work."""
     discovery_info = {
         "name": "TestDevice",
@@ -872,7 +872,7 @@ async def test_rediscover_works(hass):
     flow.controller.pairings = {"00:00:00:00:00:00": pairing}
     flow.controller.discover.return_value = [discovery_info]
 
-    result = await flow.async_step_rediscover({"unique_id": "00:00:00:00:00:00"})
+    result = await flow.async_step_unignore({"unique_id": "00:00:00:00:00:00"})
     assert result["type"] == "form"
     assert result["step_id"] == "pair"
     assert flow.context == {
@@ -894,7 +894,7 @@ async def test_rediscover_works(hass):
     assert result["data"] == pairing.pairing_data
 
 
-async def test_rediscover_ignores_missing_devices(hass):
+async def test_unignore_ignores_missing_devices(hass):
     """Test rediscovery triggered disovers handle devices that have gone away."""
     discovery_info = {
         "name": "TestDevice",
@@ -913,7 +913,7 @@ async def test_rediscover_ignores_missing_devices(hass):
     flow = _setup_flow_handler(hass)
     flow.controller.discover.return_value = [discovery_info]
 
-    result = await flow.async_step_rediscover({"unique_id": "00:00:00:00:00:01"})
+    result = await flow.async_step_unignore({"unique_id": "00:00:00:00:00:01"})
     assert result["type"] == "abort"
     assert flow.context == {
         "unique_id": "00:00:00:00:00:01",
