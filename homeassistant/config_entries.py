@@ -25,6 +25,7 @@ SOURCE_SSDP = "ssdp"
 SOURCE_USER = "user"
 SOURCE_ZEROCONF = "zeroconf"
 SOURCE_IGNORE = "ignore"
+SOURCE_REDISCOVER = "rediscover"
 
 HANDLERS = Registry()
 
@@ -461,6 +462,15 @@ class ConfigEntries:
         dev_reg.async_clear_config_entry(entry_id)
         ent_reg.async_clear_config_entry(entry_id)
 
+        if entry.source == SOURCE_IGNORE:
+            self.hass.async_create_task(
+                self.hass.config_entries.flow.async_init(
+                    entry.domain,
+                    context={"source": SOURCE_REDISCOVER},
+                    data={"unique_id": entry.unique_id},
+                )
+            )
+
         return {"require_restart": not unload_success}
 
     async def async_initialize(self) -> None:
@@ -826,6 +836,10 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         """Ignore this config flow."""
         await self.async_set_unique_id(user_input["unique_id"], raise_on_progress=False)
         return self.async_create_entry(title="Ignored", data={})
+
+    async def async_step_rediscover(self, user_input: Dict[str, Any]) -> Dict[str, Any]:
+        """Rediscover a config entry by it's unique_id."""
+        pass
 
 
 class OptionsFlowManager:
