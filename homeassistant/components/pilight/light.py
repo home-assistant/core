@@ -44,6 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities(devices)
 
+
 class PilightLight(PilightBaseDevice, Light):
     """Representation of a Pilight switch."""
 
