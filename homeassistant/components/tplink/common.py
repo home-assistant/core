@@ -133,7 +133,7 @@ async def async_add_entities_retry(
     async_add_entities: Callable[[List[Any], bool], None],
     objects: List[Any],
     callback: Callable[[Any, Callable], None],
-    interval: timedelta = timedelta(seconds=2),
+    interval: timedelta = timedelta(seconds=60),
 ):
     """
     Add entities now and retry later if issues are encountered.

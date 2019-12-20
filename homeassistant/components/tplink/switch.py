@@ -25,7 +25,7 @@ ATTR_TOTAL_ENERGY_KWH = "total_energy_kwh"
 ATTR_CURRENT_A = "current_a"
 
 MAX_ATTEMPTS = 20
-SLEEP_TIME = 1
+SLEEP_TIME = 2
 
 
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
@@ -66,23 +66,18 @@ class SmartPlugSwitch(SwitchDevice):
     def __init__(self, smartplug: SmartPlug):
         """Initialize the switch."""
         self.smartplug = smartplug
-
-        self._sysinfo = self.smartplug.sys_info
-        self._mac = self.smartplug.mac
-        self._model = self.smartplug.model
-        if self.smartplug.context is None:
-            self._alias = self.smartplug.alias
-            self._device_id = self._mac
-        else:
-            self._alias = self._plug_from_context["alias"]
-            self._device_id = self.smartplug.context
-
+        self._sysinfo = None
         self._state = None
         self._available = False
-        self._is_ready = False
-
         # Set up emeter cache
         self._emeter_params = {}
+
+        self._mac = None
+        self._alias = None
+        self._model = None
+        self._device_id = None
+
+        self._is_ready = False
 
     @property
     def unique_id(self):
@@ -118,13 +113,11 @@ class SmartPlugSwitch(SwitchDevice):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         self.smartplug.turn_on()
-        self._state = self.smartplug.SWITCH_STATE_ON
         self.update_state()
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
         self.smartplug.turn_off()
-        self._state = self.smartplug.SWITCH_STATE_OFF
         self.update_state()
 
     @property
@@ -147,6 +140,16 @@ class SmartPlugSwitch(SwitchDevice):
     def attempt_update(self):
         """Attempt to get details from the TP-Link switch."""
         try:
+            if not self._sysinfo:
+                self._sysinfo = self.smartplug.sys_info
+                self._mac = self.smartplug.mac
+                self._model = self.smartplug.model
+                if self.smartplug.context is None:
+                    self._alias = self.smartplug.alias
+                    self._device_id = self._mac
+                else:
+                    self._alias = self._plug_from_context["alias"]
+                    self._device_id = self.smartplug.context
 
             self.update_state()
 

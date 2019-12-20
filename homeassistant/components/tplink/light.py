@@ -81,16 +81,9 @@ class TPLinkSmartBulb(Light):
     def __init__(self, smartbulb: SmartBulb) -> None:
         """Initialize the bulb."""
         self.smartbulb = smartbulb
-        self._sysinfo = self.smartbulb.sys_info
-        self._mac = self.smartbulb.mac
-        self._model = self.smartbulb.model
-
-        self._alias = self.smartbulb.alias
-
+        self._sysinfo = None
         self._state = None
         self._available = False
-        self._is_ready = False
-
         self._color_temp = None
         self._brightness = None
         self._hs = None
@@ -98,6 +91,10 @@ class TPLinkSmartBulb(Light):
         self._min_mireds = None
         self._max_mireds = None
         self._emeter_params = {}
+
+        self._mac = None
+        self._alias = None
+        self._model = None
 
     @property
     def unique_id(self):
