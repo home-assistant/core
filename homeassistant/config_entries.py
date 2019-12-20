@@ -839,7 +839,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
     async def async_step_rediscover(self, user_input: Dict[str, Any]) -> Dict[str, Any]:
         """Rediscover a config entry by it's unique_id."""
-        pass
+        return self.async_abort(reason="not_implemented")
 
 
 class OptionsFlowManager:
