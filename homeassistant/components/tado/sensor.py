@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.const import TEMP_CELSIUS
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
@@ -91,13 +92,18 @@ class TadoSensor(Entity):
 
     async def async_added_to_hass(self):
         """Register for sensor updates."""
+
+        @callback
+        def async_update_callback():
+            """Schedule an entity update."""
+            self.async_schedule_update_ha_state(True)
+
+        _LOGGER.debug("Registering for dispatcher updates for zone %d", self.zone_id)
         async_dispatcher_connect(
             self.hass,
             SIGNAL_TADO_UPDATE_RECEIVED.format(self.sensor_type, self.zone_id),
-            self.update,
+            async_update_callback,
         )
-        # Process first update
-        await self.hass.async_add_executor_job(self.update)
 
     @property
     def unique_id(self):
@@ -235,5 +241,3 @@ class TadoSensor(Entity):
                 self._state = True
             else:
                 self._state = False
-
-        self.schedule_update_ha_state()

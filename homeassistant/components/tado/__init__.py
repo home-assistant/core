@@ -92,10 +92,11 @@ class TadoConnector:
         """Connect to Tado and fetch the zones."""
         try:
             self.tado = Tado(self._username, self._password)
-            self.tado.setDebugging(True)
         except (RuntimeError, urllib.error.HTTPError) as exc:
             _LOGGER.error("Unable to connect: %s", exc)
             return False
+
+        self.tado.setDebugging(True)
 
         # Load zones and devices
         self.zones = self.tado.getZones()
@@ -122,16 +123,18 @@ class TadoConnector:
             else:
                 _LOGGER.debug("Unknown sensor: %s", sensor_type)
                 return
-
-            self.data[sensor_type][sensor] = data
-            _LOGGER.debug("Dispatching update to %s %s: %s", sensor_type, sensor, data)
-            dispatcher_send(
-                self.hass, SIGNAL_TADO_UPDATE_RECEIVED.format(sensor_type, sensor)
-            )
         except RuntimeError:
             _LOGGER.error(
                 "Unable to connect to Tado while updating %s %s", sensor_type, sensor,
             )
+            return
+
+        self.data[sensor_type][sensor] = data
+
+        _LOGGER.debug("Dispatching update to %s %s: %s", sensor_type, sensor, data)
+        dispatcher_send(
+            self.hass, SIGNAL_TADO_UPDATE_RECEIVED.format(sensor_type, sensor)
+        )
 
     def get_capabilities(self, zone_id):
         """Return the capabilities of the devices."""

@@ -22,6 +22,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import CONF_FALLBACK, DOMAIN, SIGNAL_TADO_UPDATE_RECEIVED
@@ -73,18 +74,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     entities = []
     for zone in tado.zones:
-        device = create_climate_device(
+        entity = create_climate_entity(
             tado, zone["name"], zone["id"], discovery_info[CONF_FALLBACK]
         )
-        if device:
-            entities.append(device)
+        if entity:
+            entities.append(entity)
 
     if entities:
-        add_entities(entities)
+        add_entities(entities, True)
 
 
-def create_climate_device(tado, name: str, zone_id: int, fallback: bool):
-    """Create a Tado climate device."""
+def create_climate_entity(tado, name: str, zone_id: int, fallback: bool):
+    """Create a Tado climate entity."""
     capabilities = tado.get_capabilities(zone_id)
     _LOGGER.debug("Capabilities for zone %s: %s", zone_id, capabilities)
 
@@ -104,7 +105,7 @@ def create_climate_device(tado, name: str, zone_id: int, fallback: bool):
         temperatures = capabilities["temperatures"]
     else:
         _LOGGER.debug("Not adding zone %s since it has no temperature", name)
-        return
+        return None
 
     min_temp = float(temperatures["celsius"]["min"])
     max_temp = float(temperatures["celsius"]["max"])
@@ -125,7 +126,7 @@ def create_climate_device(tado, name: str, zone_id: int, fallback: bool):
 
 
 class TadoClimate(ClimateDevice):
-    """Representation of a Tado climate device."""
+    """Representation of a Tado climate entity."""
 
     def __init__(
         self,
@@ -139,7 +140,7 @@ class TadoClimate(ClimateDevice):
         ac_support_heat,
         fallback,
     ):
-        """Initialize of Tado climate device."""
+        """Initialize of Tado climate entity."""
         self._tado = tado
 
         self.zone_name = zone_name
@@ -176,14 +177,18 @@ class TadoClimate(ClimateDevice):
 
     async def async_added_to_hass(self):
         """Register for sensor updates."""
+
+        @callback
+        def async_update_callback():
+            """Schedule an entity update."""
+            self.async_schedule_update_ha_state(True)
+
         _LOGGER.debug("Registering for dispatcher updates for zone %d", self.zone_id)
         async_dispatcher_connect(
             self.hass,
             SIGNAL_TADO_UPDATE_RECEIVED.format("zone", self.zone_id),
-            self.update,
+            async_update_callback,
         )
-        # Process first update
-        await self.hass.async_add_executor_job(self.update)
 
     @property
     def supported_features(self):
@@ -192,7 +197,7 @@ class TadoClimate(ClimateDevice):
 
     @property
     def name(self):
-        """Return the name of the device."""
+        """Return the name of the entity."""
         return self.zone_name
 
     @property
@@ -445,8 +450,6 @@ class TadoClimate(ClimateDevice):
 
         self._cooling = cooling
         self._current_fan = fan_speed
-
-        self.schedule_update_ha_state()
 
     def _control_heating(self):
         """Send new target temperature to Tado."""
