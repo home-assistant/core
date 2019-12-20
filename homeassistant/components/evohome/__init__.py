@@ -30,15 +30,7 @@ from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
 
-from .const import (
-    DOMAIN,
-    EVO_FOLLOW,
-    EVO_SYSTEM_MODES,
-    GWS,
-    STORAGE_KEY,
-    STORAGE_VERSION,
-    TCS,
-)
+from .const import DOMAIN, EVO_FOLLOW, GWS, STORAGE_KEY, STORAGE_VERSION, TCS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,12 +61,11 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 ATTR_SYSTEM_MODE = "mode"
-ATTR_DURATION_DAYS = "days"
-ATTR_DURATION_HOURS = "hours"
+ATTR_DURATION_DAYS = "period"
+ATTR_DURATION_HOURS = "duration"
 
 ATTR_ZONE_TEMP = "setpoint"
-ATTR_UNTIL_MINUTES = "duration"
-ATTR_UNTIL_TIME = "until"
+ATTR_DURATION_UNTIL = "duration"
 
 SVC_REFRESH_SYSTEM = "force_refresh"
 SVC_SET_SYSTEM_MODE = "set_system_mode"
@@ -82,32 +73,20 @@ SVC_RESET_SYSTEM = "reset_system"
 SVC_SET_ZONE_OVERRIDE = "set_zone_override"
 SVC_RESET_ZONE_OVERRIDE = "clear_zone_override"
 
-HH_MM_REGEXP = r"^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"  # 24h format, leading 0s
-
-SET_SYSTEM_MODE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_SYSTEM_MODE): vol.In(EVO_SYSTEM_MODES),
-        vol.Exclusive(ATTR_DURATION_DAYS, "duration"): vol.All(
-            cv.positive_int, vol.Range(min=1, max=99)
-        ),
-        vol.Exclusive(ATTR_DURATION_HOURS, "duration"): vol.All(
-            cv.positive_int, vol.Range(min=1, max=24)
-        ),
-    }
-)
+RESET_ZONE_OVERRIDE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_id})
 SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_ZONE_TEMP): vol.Coerce(float),
-        vol.Exclusive(ATTR_UNTIL_MINUTES, "until"): vol.All(
-            cv.positive_int, vol.Range(min=0, max=24 * 60)
+        vol.Required(ATTR_ZONE_TEMP): vol.All(
+            vol.Coerce(float), vol.Range(min=4.0, max=35.0),
         ),
-        vol.Exclusive(ATTR_UNTIL_TIME, "until"): vol.All(
-            cv.string, vol.Match(HH_MM_REGEXP)
+        vol.Optional(ATTR_DURATION_UNTIL): vol.All(
+            cv.time_period,
+            vol.Range(min=timedelta(minutes=0), max=timedelta(minutes=24 * 60)),
         ),
     }
 )
-RESET_ZONE_OVERRIDE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_id})
+# system mode schemas are built dynamically, below
 
 
 def _local_dt_to_aware(dt_naive: dt) -> dt:
@@ -278,7 +257,10 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
 
 def setup_service_functions(hass: HomeAssistantType, broker):
-    """Set up the service functions."""
+    """Set up the service functions.
+
+    Not all evohome-compatible systems support all system modes.
+    """
 
     async def force_refresh(call):
         """Obtain the latest state data via the vendor's RESTful API."""
@@ -291,7 +273,6 @@ def setup_service_functions(hass: HomeAssistantType, broker):
             "service": call.service,
             "data": call.data,
         }
-
         hass.helpers.dispatcher.async_dispatcher_send(DOMAIN, payload)
 
     async def set_zone_override(call):
@@ -316,15 +297,6 @@ def setup_service_functions(hass: HomeAssistantType, broker):
         hass.helpers.dispatcher.async_dispatcher_send(DOMAIN, payload)
 
     hass.services.async_register(
-        DOMAIN, SVC_REFRESH_SYSTEM, force_refresh, schema=vol.Schema({})
-    )
-    hass.services.async_register(
-        DOMAIN, SVC_SET_SYSTEM_MODE, set_system_mode, schema=SET_SYSTEM_MODE_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SVC_RESET_SYSTEM, set_system_mode, schema=vol.Schema({})
-    )
-    hass.services.async_register(
         DOMAIN,
         SVC_SET_ZONE_OVERRIDE,
         set_zone_override,
@@ -336,6 +308,57 @@ def setup_service_functions(hass: HomeAssistantType, broker):
         set_zone_override,
         schema=RESET_ZONE_OVERRIDE_SCHEMA,
     )
+
+    modes = broker.config["allowedSystemModes"]
+
+    if [m["systemMode"] for m in modes if m["systemMode"] == "AutoWithReset"]:
+        hass.services.async_register(
+            DOMAIN, SVC_RESET_SYSTEM, set_system_mode, schema=vol.Schema({})
+        )
+
+    system_mode_schemas = []
+    modes = [m for m in modes if m["systemMode"] != "AutoWithReset"]
+
+    perm_modes = [m["systemMode"] for m in modes if not m["canBeTemporary"]]
+    if perm_modes:  # any of: "Auto", "HeatingOff", permanent only
+        schema = vol.Schema({vol.Required(ATTR_SYSTEM_MODE): vol.In(perm_modes)})
+        system_mode_schemas.append(schema)
+
+    modes = [m for m in modes if m["canBeTemporary"]]
+
+    temp_modes = [m["systemMode"] for m in modes if m["timingMode"] == "Duration"]
+    if temp_modes:  # any of: "AutoWithEco", permanent or for 0-24 hours
+        schema = vol.Schema(
+            {
+                vol.Required(ATTR_SYSTEM_MODE): vol.In(temp_modes),
+                vol.Optional(ATTR_DURATION_HOURS): vol.All(
+                    cv.time_period,  # lambda td: (td.total_seconds() // 3600)
+                    vol.Range(min=timedelta(hours=0), max=timedelta(hours=24)),
+                ),
+            }
+        )
+        system_mode_schemas.append(schema)
+
+    temp_modes = [m["systemMode"] for m in modes if m["timingMode"] == "Period"]
+    if temp_modes:  # any of: "Away", "Custom", "DayOff", permanent or for 1-99 days
+        schema = vol.Schema(
+            {
+                vol.Required(ATTR_SYSTEM_MODE): vol.In(temp_modes),
+                vol.Optional(ATTR_DURATION_DAYS): vol.All(
+                    cv.time_period,
+                    vol.Range(min=timedelta(days=1), max=timedelta(days=99)),
+                ),
+            }
+        )
+        system_mode_schemas.append(schema)
+
+    if system_mode_schemas:
+        hass.services.async_register(
+            DOMAIN,
+            SVC_SET_SYSTEM_MODE,
+            set_system_mode,
+            schema=vol.Any(*system_mode_schemas),
+        )
 
 
 class EvoBroker:
@@ -483,13 +506,13 @@ class EvoDevice(Entity):
         if payload is None:
             self.async_schedule_update_ha_state(force_refresh=True)
         elif payload["unique_id"] == self._unique_id:
-            if payload["service"] in [SVC_SET_SYSTEM_MODE, SVC_RESET_SYSTEM]:
+            if payload["service"] in [SVC_SET_ZONE_OVERRIDE, SVC_RESET_ZONE_OVERRIDE]:
                 self.hass.async_create_task(
-                    self.async_tcs_svc_request(payload["service"], payload["data"])
+                    self.async_zone_svc_request(payload["service"], payload["data"])
                 )
             else:
                 self.hass.async_create_task(
-                    self.async_zone_svc_request(payload["service"], payload["data"])
+                    self.async_tcs_svc_request(payload["service"], payload["data"])
                 )
 
     async def async_tcs_svc_request(self, service, data) -> None:

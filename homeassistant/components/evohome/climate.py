@@ -25,9 +25,8 @@ from homeassistant.util.dt import parse_datetime
 from . import (
     ATTR_DURATION_DAYS,
     ATTR_DURATION_HOURS,
+    ATTR_DURATION_UNTIL,
     ATTR_SYSTEM_MODE,
-    ATTR_UNTIL_MINUTES,
-    ATTR_UNTIL_TIME,
     ATTR_ZONE_TEMP,
     CONF_LOCATION_IDX,
     SVC_RESET_ZONE_OVERRIDE,
@@ -77,7 +76,7 @@ STATE_ATTRS_TCS = ["systemId", "activeFaults", "systemModeStatus"]
 STATE_ATTRS_ZONES = ["zoneId", "activeFaults", "setpointStatus", "temperatureStatus"]
 
 
-def _clean_dt(dtm) -> Optional[str]:
+def _clean_dt(dtm) -> Optional[dt]:
     if dtm is not None:
         format_str = "%Y-%m-%d %H:%M:00"  # round down to the nearest minute
         dtm = dt.strptime(dt.strftime(dtm, format_str), format_str)
@@ -144,7 +143,7 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
 
         self._preset_modes = None
 
-    async def async_tcs_svc_request(self, service, data) -> None:
+    async def async_tcs_svc_request(self, service: str, data) -> None:
         """Process a service request (system mode) for a controller."""
         if service == SVC_SET_SYSTEM_MODE:
             mode = data[ATTR_SYSTEM_MODE]
@@ -161,19 +160,19 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
             if attrs.get("timingResolution") != "1.00:00:00":
                 raise TypeError(f"'{mode}' mode does not support days, only hours")
             until = dt.combine(dt.now().date(), dt.min.time())
-            until += timedelta(days=data[ATTR_DURATION_DAYS])
+            until += data[ATTR_DURATION_DAYS]
 
         elif ATTR_DURATION_HOURS in data:
             if attrs.get("timingResolution") != "01:00:00":
                 raise TypeError(f"'{mode}' mode does not support hours, only days")
-            until = dt.now() + timedelta(hours=data[ATTR_DURATION_HOURS])
+            until = dt.now() + data[ATTR_DURATION_HOURS]
 
         else:
             until = None
 
-        await self._set_tcs_mode(mode, until=_clean_dt(until))
+        await self._set_tcs_mode(mode, until=until)
 
-    async def _set_tcs_mode(self, mode: str, until=None) -> None:
+    async def _set_tcs_mode(self, mode: str, until: Optional[dt] = None) -> None:
         """Set a Controller to any of its native EVO_* operating modes."""
         await self._evo_broker.call_client_api(self._evo_tcs.set_status(op_mode))
 
@@ -218,18 +217,19 @@ class EvoZone(EvoChild, EvoClimateDevice):
         temp = round(data[ATTR_ZONE_TEMP] * self.precision) / self.precision
         temp = max(min(temp, self.max_temp), self.min_temp)
 
-        if ATTR_UNTIL_MINUTES in data:
-            duration = data[ATTR_UNTIL_MINUTES]
-            until = None if duration == 0 else dt.now() + timedelta(minutes=duration)
-
-        elif ATTR_UNTIL_TIME in data:
-            until = dt.strftime(dt.now(), "%Y-%m-%d ") + data[ATTR_UNTIL_TIME]
-            until = dt.strptime(until, "%Y-%m-%d %H:%M")
-
+        if ATTR_DURATION_UNTIL in data:
+            duration = data[ATTR_DURATION_UNTIL]
+            if duration == 0:
+                await self._update_schedule()
+                until = parse_datetime(str(self.setpoints.get("next_sp_from")))
+            else:
+                until = dt.now() + data[ATTR_DURATION_UNTIL]
         else:
-            until = None
+            until = None  # indefinitely
 
-        await self.async_set_temperature(temperature=temp, until=_clean_dt(until))
+        await self._evo_broker.call_client_api(
+            self._evo_device.set_temperature(temperature=temp, until=until)
+        )
 
     @property
     def hvac_mode(self) -> str:
