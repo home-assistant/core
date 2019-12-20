@@ -10,7 +10,7 @@ import logging
 from numbers import Number
 import os
 import re
-from socket import _GLOBAL_DEFAULT_TIMEOUT
+from socket import _GLOBAL_DEFAULT_TIMEOUT  # type: ignore # private, not in typeshed
 from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
 from urllib.parse import urlparse
 from uuid import UUID
