@@ -322,32 +322,53 @@ async def test_hassio_update_instance(hass):
     """Test we can update an existing config entry."""
     entry = MockConfigEntry(
         domain=config_flow.DOMAIN,
-        data={config_flow.CONF_BRIDGEID: "id", config_flow.CONF_HOST: "1.2.3.4"},
+        data={
+            config_flow.CONF_BRIDGEID: "id",
+            config_flow.CONF_HOST: "1.2.3.4",
+            config_flow.CONF_PORT: 40850,
+            config_flow.CONF_API_KEY: "secret",
+        },
     )
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        data={config_flow.CONF_HOST: "mock-deconz", config_flow.CONF_SERIAL: "id"},
+        data={
+            config_flow.CONF_HOST: "mock-deconz",
+            config_flow.CONF_PORT: 8080,
+            config_flow.CONF_API_KEY: "updated",
+            config_flow.CONF_SERIAL: "id",
+        },
         context={"source": "hassio"},
     )
 
     assert result["type"] == "abort"
     assert result["reason"] == "updated_instance"
     assert entry.data[config_flow.CONF_HOST] == "mock-deconz"
+    assert entry.data[config_flow.CONF_PORT] == 8080
+    assert entry.data[config_flow.CONF_API_KEY] == "updated"
 
 
 async def test_hassio_dont_update_instance(hass):
     """Test we can update an existing config entry."""
     entry = MockConfigEntry(
         domain=config_flow.DOMAIN,
-        data={config_flow.CONF_BRIDGEID: "id", config_flow.CONF_HOST: "1.2.3.4"},
+        data={
+            config_flow.CONF_BRIDGEID: "id",
+            config_flow.CONF_HOST: "1.2.3.4",
+            config_flow.CONF_PORT: 8080,
+            config_flow.CONF_API_KEY: "secret",
+        },
     )
     entry.add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        data={config_flow.CONF_HOST: "1.2.3.4", config_flow.CONF_SERIAL: "id"},
+        data={
+            config_flow.CONF_HOST: "1.2.3.4",
+            config_flow.CONF_PORT: 8080,
+            config_flow.CONF_API_KEY: "secret",
+            config_flow.CONF_SERIAL: "id",
+        },
         context={"source": "hassio"},
     )
 
