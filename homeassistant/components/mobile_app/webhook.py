@@ -190,10 +190,7 @@ async def handle_webhook(
 
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
-            identifiers={
-                (ATTR_DEVICE_ID, registration[ATTR_DEVICE_ID]),
-                (CONF_WEBHOOK_ID, registration[CONF_WEBHOOK_ID]),
-            },
+            identifiers={(DOMAIN, registration[ATTR_DEVICE_ID])},
             manufacturer=new_registration[ATTR_MANUFACTURER],
             model=new_registration[ATTR_MODEL],
             name=new_registration[ATTR_DEVICE_NAME],
@@ -309,10 +306,9 @@ async def handle_webhook(
         if CONF_CLOUDHOOK_URL in registration:
             resp[CONF_CLOUDHOOK_URL] = registration[CONF_CLOUDHOOK_URL]
 
-        if "cloud" in hass.config.components:
-            try:
-                resp[CONF_REMOTE_UI_URL] = hass.components.cloud.async_remote_ui_url()
-            except hass.components.cloud.CloudNotAvailable:
-                pass
+        try:
+            resp[CONF_REMOTE_UI_URL] = hass.components.cloud.async_remote_ui_url()
+        except hass.components.cloud.CloudNotAvailable:
+            pass
 
         return webhook_response(resp, registration=registration, headers=headers)

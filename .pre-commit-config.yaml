@@ -31,3 +31,12 @@ repos:
           - --format=custom
           - --configfile=tests/bandit.yaml
         files: ^(homeassistant|script|tests)/.+\.py$
+-   repo: https://github.com/PyCQA/bandit
+    rev: 1.6.2
+    hooks:
+      - id: bandit
+        args:
+          - --quiet
+          - --format=custom
+          - --configfile=tests/bandit.yaml
+        files: ^(homeassistant|script|tests)/.+\.py$

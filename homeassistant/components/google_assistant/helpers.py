@@ -197,7 +197,7 @@ class AbstractConfig:
             return
 
         webhook.async_register(
-            self.hass, DOMAIN, "Local Support", webhook_id, self._handle_local_webhook
+            self.hass, DOMAIN, "Local Support", webhook_id, self._handle_local_webhook,
         )
 
         self._local_sdk_active = True

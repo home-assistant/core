@@ -86,11 +86,11 @@ async def async_setup(hass, config):
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_NEXT, {}, lambda entity, call: entity.async_offset_index(1)
+        SERVICE_SELECT_NEXT, {}, lambda entity, call: entity.async_offset_index(1),
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_PREVIOUS, {}, lambda entity, call: entity.async_offset_index(-1)
+        SERVICE_SELECT_PREVIOUS, {}, lambda entity, call: entity.async_offset_index(-1),
     )
 
     component.async_register_entity_service(

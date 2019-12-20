@@ -133,7 +133,7 @@ aio_geojson_geonetnz_volcano==0.5
 aio_geojson_nsw_rfs_incidents==0.1
 
 # homeassistant.components.ambient_station
-aioambient==0.3.2
+aioambient==1.0.2
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.1.22
@@ -1231,7 +1231,7 @@ pyflexit==0.3
 pyflic-homeassistant==0.4.dev0
 
 # homeassistant.components.flume
-pyflume==0.2.1
+pyflume==0.2.4
 
 # homeassistant.components.flunearyou
 pyflunearyou==1.0.3
@@ -1793,7 +1793,7 @@ shodan==1.20.0
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==5.3.5
+simplisafe-python==5.3.6
 
 # homeassistant.components.sisyphus
 sisyphus-control==2.2.1

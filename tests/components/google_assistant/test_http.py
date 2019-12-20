@@ -147,7 +147,7 @@ async def test_call_homegraph_api_retry(hass, aioclient_mock, hass_storage):
 async def test_call_homegraph_api_key(hass, aioclient_mock, hass_storage):
     """Test the function to call the homegraph api."""
     config = GoogleConfig(
-        hass, GOOGLE_ASSISTANT_SCHEMA({"project_id": "1234", "api_key": "dummy_key"})
+        hass, GOOGLE_ASSISTANT_SCHEMA({"project_id": "1234", "api_key": "dummy_key"}),
     )
     await config.async_initialize()
 
@@ -165,7 +165,7 @@ async def test_call_homegraph_api_key(hass, aioclient_mock, hass_storage):
 async def test_call_homegraph_api_key_fail(hass, aioclient_mock, hass_storage):
     """Test the function to call the homegraph api."""
     config = GoogleConfig(
-        hass, GOOGLE_ASSISTANT_SCHEMA({"project_id": "1234", "api_key": "dummy_key"})
+        hass, GOOGLE_ASSISTANT_SCHEMA({"project_id": "1234", "api_key": "dummy_key"}),
     )
     await config.async_initialize()
 

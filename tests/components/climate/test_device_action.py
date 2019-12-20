@@ -75,7 +75,7 @@ async def test_get_action_hvac_only(hass, device_reg, entity_reg):
             "type": "set_hvac_mode",
             "device_id": device_entry.id,
             "entity_id": "climate.test_5678",
-        }
+        },
     ]
     actions = await async_get_device_automations(hass, "action", device_entry.id)
     assert_lists_same(actions, expected_actions)

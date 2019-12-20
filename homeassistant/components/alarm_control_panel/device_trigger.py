@@ -29,7 +29,13 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
 
-TRIGGER_TYPES = {"triggered", "disarmed", "armed_home", "armed_away", "armed_night"}
+TRIGGER_TYPES = {
+    "triggered",
+    "disarmed",
+    "armed_home",
+    "armed_away",
+    "armed_night",
+}
 
 TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {

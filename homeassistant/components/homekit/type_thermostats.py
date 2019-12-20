@@ -63,7 +63,9 @@ from .util import temperature_to_homekit, temperature_to_states
 
 _LOGGER = logging.getLogger(__name__)
 
-HC_HOMEKIT_VALID_MODES_WATER_HEATER = {"Heat": 1}
+HC_HOMEKIT_VALID_MODES_WATER_HEATER = {
+    "Heat": 1,
+}
 UNIT_HASS_TO_HOMEKIT = {TEMP_CELSIUS: 0, TEMP_FAHRENHEIT: 1}
 UNIT_HOMEKIT_TO_HASS = {c: s for s, c in UNIT_HASS_TO_HOMEKIT.items()}
 HC_HASS_TO_HOMEKIT = {
