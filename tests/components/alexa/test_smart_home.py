@@ -2524,7 +2524,7 @@ async def test_image_processing(hass):
     assert appliance["friendlyName"] == "Test face"
 
     assert_endpoint_capabilities(
-        appliance, "Alexa.EventDetectionSensor", "Alexa.EndpointHealth"
+        appliance, "Alexa.EventDetectionSensor", "Alexa.EndpointHealth", "Alexa"
     )
 
 
