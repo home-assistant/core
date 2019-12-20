@@ -161,12 +161,22 @@ class TadoConnector:
             device_type,
             mode,
         )
-        self.tado.setZoneOverlay(
-            zone_id, overlay_mode, temperature, duration, device_type, "ON", mode
-        )
+        try:
+            self.tado.setZoneOverlay(
+                zone_id, overlay_mode, temperature, duration, device_type, "ON", mode
+            )
+        except urllib.error.HTTPError as exc:
+            _LOGGER.error("Could not set zone overlay: %s", exc.read())
+
         self.update_sensor("zone", zone_id)
 
     def set_zone_off(self, zone_id, overlay_mode, device_type="HEATING"):
         """Set a zone to off."""
-        self.tado.setZoneOverlay(zone_id, overlay_mode, None, None, device_type, "OFF")
+        try:
+            self.tado.setZoneOverlay(
+                zone_id, overlay_mode, None, None, device_type, "OFF"
+            )
+        except urllib.error.HTTPError as exc:
+            _LOGGER.error("Could not set zone overlay: %s", exc.read())
+
         self.update_sensor("zone", zone_id)
