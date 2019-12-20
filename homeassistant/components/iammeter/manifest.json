@@ -1,0 +1,8 @@
+{
+    "domain": "iammeter",
+    "name": "IamMeter",
+    "documentation": "https://www.home-assistant.io/integrations/iammeter",
+    "requirements": ["iammeter==0.1.2"],
+    "dependencies": [],
+    "codeowners": ["@lewei50"]
+}
