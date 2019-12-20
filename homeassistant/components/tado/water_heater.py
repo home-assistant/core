@@ -6,11 +6,6 @@ https://home-assistant.io/components/water_heater/tado/
 """
 import logging
 
-from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-)
 from homeassistant.components.water_heater import (
     SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE,
@@ -21,21 +16,27 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DOMAIN, SIGNAL_TADO_UPDATE_RECEIVED
-from .const import CONF_FALLBACK, TYPE_HOT_WATER
+from .const import (
+    CONF_FALLBACK,
+    CONST_MODE_OFF,
+    CONST_MODE_SMART_SCHEDULE,
+    CONST_OVERLAY_MANUAL,
+    CONST_OVERLAY_TADO_MODE,
+    TYPE_HOT_WATER,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONST_MODE_SMART_SCHEDULE = "SMART_SCHEDULE"
-CONST_MODE_OFF = "OFF"
-CONST_OVERLAY_TADO_MODE = "TADO_MODE"
-CONST_OVERLAY_MANUAL = "MANUAL"
+MODE_AUTO = "auto"
+MODE_HEAT = "heat"
+MODE_OFF = "off"
 
 WATER_HEATER_MAP_TADO = {
-    "MANUAL": HVAC_MODE_HEAT,
-    "TIMER": HVAC_MODE_HEAT,
-    "TADO_MODE": HVAC_MODE_HEAT,
-    "SMART_SCHEDULE": HVAC_MODE_AUTO,
-    "OFF": HVAC_MODE_OFF,
+    "MANUAL": MODE_HEAT,
+    "TIMER": MODE_HEAT,
+    "TADO_MODE": MODE_HEAT,
+    "SMART_SCHEDULE": MODE_AUTO,
+    "OFF": MODE_OFF,
 }
 
 SUPPORT_FLAGS_HEATER = SUPPORT_OPERATION_MODE
@@ -163,7 +164,7 @@ class TadoWaterHeater(WaterHeaterDevice):
     @property
     def operation_list(self):
         """Return the list of available operation modes (readable)."""
-        return [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
+        return [MODE_AUTO, MODE_HEAT, MODE_OFF]
 
     @property
     def temperature_unit(self):
@@ -184,11 +185,11 @@ class TadoWaterHeater(WaterHeaterDevice):
         """Set new operation mode."""
         mode = None
 
-        if operation_mode == HVAC_MODE_OFF:
+        if operation_mode == MODE_OFF:
             mode = CONST_MODE_OFF
-        elif operation_mode == HVAC_MODE_AUTO:
+        elif operation_mode == MODE_AUTO:
             mode = CONST_MODE_SMART_SCHEDULE
-        elif operation_mode == HVAC_MODE_HEAT:
+        elif operation_mode == MODE_HEAT:
             mode = self._default_overlay
 
         self._current_operation = mode
