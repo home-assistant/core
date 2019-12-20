@@ -6,7 +6,7 @@
 asynctest==0.13.0
 codecov==2.0.15
 mock-open==1.3.1
-mypy==0.750
+mypy==0.761
 pre-commit==1.20.0
 pylint==2.4.4
 astroid==2.3.3
