@@ -246,6 +246,10 @@ class ConfigEntry:
 
         Returns if unload is possible and was successful.
         """
+        if self.source == SOURCE_IGNORE:
+            self.state = ENTRY_STATE_NOT_LOADED
+            return True
+
         if integration is None:
             integration = await loader.async_get_integration(hass, self.domain)
 
@@ -292,6 +296,9 @@ class ConfigEntry:
 
     async def async_remove(self, hass: HomeAssistant) -> None:
         """Invoke remove callback on component."""
+        if self.source == SOURCE_IGNORE:
+            return
+
         integration = await loader.async_get_integration(hass, self.domain)
         component = integration.get_component()
         if not hasattr(component, "async_remove_entry"):
