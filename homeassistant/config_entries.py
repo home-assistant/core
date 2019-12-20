@@ -24,7 +24,15 @@ SOURCE_IMPORT = "import"
 SOURCE_SSDP = "ssdp"
 SOURCE_USER = "user"
 SOURCE_ZEROCONF = "zeroconf"
+
+# If a user wants to hide a discovery from the UI they can "Ignore" it. The config_entries/ignore_flow
+# websocket command creates a config entry with this source and while it exists normal discoveries
+# with the same unique id are ignored.
 SOURCE_IGNORE = "ignore"
+
+# This is used when a user uses the "Stop Ignoring" button in the UI (the
+# config_entries/ignore_flow websocket command). It's triggered after the "ignore" config entry has
+# been removed and unloaded.
 SOURCE_UNIGNORE = "unignore"
 
 HANDLERS = Registry()
@@ -462,6 +470,10 @@ class ConfigEntries:
         dev_reg.async_clear_config_entry(entry_id)
         ent_reg.async_clear_config_entry(entry_id)
 
+        # After we have fully removed an "ignore" config entry we can try and rediscover it so that a
+        # user is able to immediately start configuring it. We do this by starting a new flow with
+        # the 'unignore' step. If the integration doesn't implement async_step_unignore then
+        # this will be a no-op.
         if entry.source == SOURCE_IGNORE:
             self.hass.async_create_task(
                 self.hass.config_entries.flow.async_init(
