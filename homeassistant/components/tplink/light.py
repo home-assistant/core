@@ -236,11 +236,11 @@ class TPLinkSmartBulb(Light):
             self._is_ready = False
 
             await self.hass.async_add_executor_job(self.attempt_update)
-            await asyncio.sleep(SLEEP_TIME)
 
             if self._is_ready:
                 self._available = True
                 break
+            await asyncio.sleep(SLEEP_TIME)
         else:
             if self._available:
                 _LOGGER.warning(
