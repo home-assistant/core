@@ -194,7 +194,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_RESOURCES, default=[]): vol.All(
             cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        )
+        ),
     }
 )
 
@@ -229,7 +229,7 @@ class ComfoConnectSensor(Entity):
     async def async_added_to_hass(self):
         """Register for sensor updates."""
         _LOGGER.debug(
-            "Registering for sensor %s (%d)", self._sensor_type, self._sensor_id
+            "Registering for sensor %s (%d)", self._sensor_type, self._sensor_id,
         )
         async_dispatcher_connect(
             self.hass,

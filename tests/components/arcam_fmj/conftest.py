@@ -11,7 +11,10 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 
 MOCK_HOST = "127.0.0.1"
 MOCK_PORT = 1234
-MOCK_TURN_ON = {"service": "switch.turn_on", "data": {"entity_id": "switch.test"}}
+MOCK_TURN_ON = {
+    "service": "switch.turn_on",
+    "data": {"entity_id": "switch.test"},
+}
 MOCK_NAME = "dummy"
 MOCK_CONFIG = DEVICE_SCHEMA({CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT})
 

@@ -77,7 +77,7 @@ async def test_thermostat(hass, hk_driver, cls, events):
                 HVAC_MODE_COOL,
                 HVAC_MODE_OFF,
                 HVAC_MODE_AUTO,
-            ]
+            ],
         },
     )
     await hass.async_block_till_done()

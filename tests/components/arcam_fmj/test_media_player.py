@@ -18,7 +18,10 @@ from homeassistant.core import HomeAssistant
 
 from .conftest import MOCK_HOST, MOCK_NAME, MOCK_PORT
 
-MOCK_TURN_ON = {"service": "switch.turn_on", "data": {"entity_id": "switch.test"}}
+MOCK_TURN_ON = {
+    "service": "switch.turn_on",
+    "data": {"entity_id": "switch.test"},
+}
 
 
 async def test_properties(player, state):

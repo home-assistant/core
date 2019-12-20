@@ -43,15 +43,12 @@ def validate_dependencies(integration: Integration):
 
     if referenced:
         for domain in sorted(referenced):
-            print(
-                "Warning: {} references integration {} but it's not a "
-                "dependency".format(integration.domain, domain)
+            integration.add_error(
+                "dependencies",
+                "Using component {} but it's not in 'dependencies' or 'after_dependencies'".format(
+                    domain
+                ),
             )
-            # Not enforced yet.
-            # integration.add_error(
-            #     'dependencies',
-            #     "Using component {} but it's not a dependency".format(domain)
-            # )
 
 
 def validate(integrations: Dict[str, Integration], config):

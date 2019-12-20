@@ -125,7 +125,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         async_service_aux_heat,
     )
     component.async_register_entity_service(
-        SERVICE_SET_TEMPERATURE, SET_TEMPERATURE_SCHEMA, async_service_temperature_set
+        SERVICE_SET_TEMPERATURE, SET_TEMPERATURE_SCHEMA, async_service_temperature_set,
     )
     component.async_register_entity_service(
         SERVICE_SET_HUMIDITY,

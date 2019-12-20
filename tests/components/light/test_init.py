@@ -21,7 +21,11 @@ from homeassistant.const import (
 )
 from homeassistant.components import light
 
-from tests.common import mock_service, get_test_home_assistant, mock_storage
+from tests.common import (
+    mock_service,
+    get_test_home_assistant,
+    mock_storage,
+)
 from tests.components.light import common
 
 

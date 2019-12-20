@@ -4,11 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/owntracks",
   "requirements": [],
-  "dependencies": [
-    "webhook"
-  ],
-  "after_dependencies": [
-    "mqtt"
-  ],
+  "dependencies": ["webhook"],
+  "after_dependencies": ["mqtt", "cloud"],
   "codeowners": []
 }

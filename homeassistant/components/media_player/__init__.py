@@ -198,7 +198,7 @@ async def async_setup(hass, config):
         SERVICE_TURN_OFF, {}, "async_turn_off", [SUPPORT_TURN_OFF]
     )
     component.async_register_entity_service(
-        SERVICE_TOGGLE, {}, "async_toggle", [SUPPORT_TURN_OFF | SUPPORT_TURN_ON]
+        SERVICE_TOGGLE, {}, "async_toggle", [SUPPORT_TURN_OFF | SUPPORT_TURN_ON],
     )
     component.async_register_entity_service(
         SERVICE_VOLUME_UP,
@@ -228,7 +228,7 @@ async def async_setup(hass, config):
         SERVICE_MEDIA_STOP, {}, "async_media_stop", [SUPPORT_STOP]
     )
     component.async_register_entity_service(
-        SERVICE_MEDIA_NEXT_TRACK, {}, "async_media_next_track", [SUPPORT_NEXT_TRACK]
+        SERVICE_MEDIA_NEXT_TRACK, {}, "async_media_next_track", [SUPPORT_NEXT_TRACK],
     )
     component.async_register_entity_service(
         SERVICE_MEDIA_PREVIOUS_TRACK,
@@ -237,7 +237,7 @@ async def async_setup(hass, config):
         [SUPPORT_PREVIOUS_TRACK],
     )
     component.async_register_entity_service(
-        SERVICE_CLEAR_PLAYLIST, {}, "async_clear_playlist", [SUPPORT_CLEAR_PLAYLIST]
+        SERVICE_CLEAR_PLAYLIST, {}, "async_clear_playlist", [SUPPORT_CLEAR_PLAYLIST],
     )
     component.async_register_entity_service(
         SERVICE_VOLUME_SET,

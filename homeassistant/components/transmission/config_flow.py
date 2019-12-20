@@ -67,7 +67,7 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=DATA_SCHEMA, errors=errors,
         )
 
     async def async_step_import(self, import_config):
