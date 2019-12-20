@@ -319,6 +319,9 @@ def adb_decorator(override_available=False):
                 return func(self, *args, **kwargs)
             except LockNotAcquiredException:
                 # If the ADB lock could not be acquired, skip this command
+                _LOGGER.info(
+                    "ADB command not executed because the connection is currently in use"
+                )
                 return
             except self.exceptions as err:
                 _LOGGER.error(
