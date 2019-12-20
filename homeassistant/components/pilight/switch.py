@@ -15,6 +15,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_SWITCHES): vol.Schema({cv.string: SWITCHES_SCHEMA})}
 )
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Pilight platform."""
     switches = config.get(CONF_SWITCHES)
@@ -31,12 +32,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities(devices)
 
-
-
 class PilightSwitch(PilightBaseDevice, SwitchDevice):
     """Representation of a Pilight switch."""
 
     def __init__(self, hass, name, properties):
         """Initialize a switch."""
         super().__init__(hass, name, properties)
-

@@ -58,6 +58,7 @@ SWITCHES_SCHEMA = vol.Schema(
     }
 )
 
+
 class PilightBaseDevice(RestoreEntity):
     """Base class for pilight switches and lights."""
 
@@ -68,7 +69,7 @@ class PilightBaseDevice(RestoreEntity):
         self._state = False
         self._code_on = properties.get(CONF_ON_CODE)
         self._code_off = properties.get(CONF_OFF_CODE)
-        
+
         code_on_receive = properties.get(CONF_ON_CODE_RECEIVE)
         code_off_receive = properties.get(CONF_OFF_CODE_RECEIVE)
 
@@ -134,7 +135,7 @@ class PilightBaseDevice(RestoreEntity):
                     off_code.run(switch=self, turn_on=False)
                     break
 
-    def set_state(self, turn_on, send_code=True, dimlevel = None):
+    def set_state(self, turn_on, send_code=True, dimlevel=None):
         """Set the state of the switch.
 
         This sets the state of the switch. If send_code is set to True, then
@@ -146,7 +147,7 @@ class PilightBaseDevice(RestoreEntity):
                 code = self._code_on
                 if dimlevel is not None:
                     code.update({'dimlevel': dimlevel})
-                
+
                 self._hass.services.call(
                     pilight.DOMAIN, pilight.SERVICE_NAME, code, blocking=True
                 )

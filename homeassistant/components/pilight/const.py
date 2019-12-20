@@ -1,5 +1,4 @@
 """Consts used by pilight."""
-from homeassistant.components.light import SUPPORT_BRIGHTNESS
 
 CONF_OFF_CODE = "off_code"
 CONF_OFF_CODE_RECEIVE = "off_code_receive"
