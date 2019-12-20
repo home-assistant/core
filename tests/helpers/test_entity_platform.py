@@ -793,3 +793,21 @@ async def test_entity_disabled_by_integration(hass):
     assert entry_default.disabled_by is None
     entry_disabled = registry.async_get_or_create(DOMAIN, DOMAIN, "disabled")
     assert entry_disabled.disabled_by == "integration"
+
+
+async def test_entity_info_added_to_entity_registry(hass):
+    """Test entity info is written to entity registry."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+
+    entity_default = MockEntity(
+        unique_id="default", capability_attributes={"max": 100}, supported_features=5
+    )
+
+    await component.async_add_entities([entity_default])
+
+    registry = await hass.helpers.entity_registry.async_get_registry()
+
+    entry_default = registry.async_get_or_create(DOMAIN, DOMAIN, "default")
+    print(entry_default)
+    assert entry_default.capabilities == {"max": 100}
+    assert entry_default.supported_features == 5

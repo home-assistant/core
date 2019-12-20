@@ -57,6 +57,52 @@ def test_get_or_create_suggested_object_id(registry):
     assert entry.entity_id == "light.beer"
 
 
+def test_get_or_create_updates_data(registry):
+    """Test that we update data in get_or_create."""
+    orig_config_entry = MockConfigEntry(domain="light")
+
+    orig_entry = registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=orig_config_entry,
+        device_id="mock-dev-id",
+        capabilities={"max": 100},
+        supported_features=5,
+        device_class="mock-device-class",
+        disabled_by=entity_registry.DISABLED_HASS,
+    )
+
+    assert orig_entry.config_entry_id == orig_config_entry.entry_id
+    assert orig_entry.device_id == "mock-dev-id"
+    assert orig_entry.capabilities == {"max": 100}
+    assert orig_entry.supported_features == 5
+    assert orig_entry.device_class == "mock-device-class"
+    assert orig_entry.disabled_by == entity_registry.DISABLED_HASS
+
+    new_config_entry = MockConfigEntry(domain="light")
+
+    new_entry = registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=new_config_entry,
+        device_id="new-mock-dev-id",
+        capabilities={"new-max": 100},
+        supported_features=10,
+        device_class="new-mock-device-class",
+        disabled_by=entity_registry.DISABLED_USER,
+    )
+
+    assert new_entry.config_entry_id == new_config_entry.entry_id
+    assert new_entry.device_id == "new-mock-dev-id"
+    assert new_entry.capabilities == {"new-max": 100}
+    assert new_entry.supported_features == 10
+    assert new_entry.device_class == "new-mock-device-class"
+    # Should not be updated
+    assert new_entry.disabled_by == entity_registry.DISABLED_HASS
+
+
 def test_get_or_create_suggested_object_id_conflict_register(registry):
     """Test that we don't generate an entity id that is already registered."""
     entry = registry.async_get_or_create(
@@ -91,7 +137,15 @@ async def test_loading_saving_data(hass, registry):
 
     orig_entry1 = registry.async_get_or_create("light", "hue", "1234")
     orig_entry2 = registry.async_get_or_create(
-        "light", "hue", "5678", config_entry=mock_config
+        "light",
+        "hue",
+        "5678",
+        device_id="mock-dev-id",
+        config_entry=mock_config,
+        capabilities={"max": 100},
+        supported_features=5,
+        device_class="mock-device-class",
+        disabled_by=entity_registry.DISABLED_HASS,
     )
 
     assert len(registry.entities) == 2
@@ -104,12 +158,16 @@ async def test_loading_saving_data(hass, registry):
     # Ensure same order
     assert list(registry.entities) == list(registry2.entities)
     new_entry1 = registry.async_get_or_create("light", "hue", "1234")
-    new_entry2 = registry.async_get_or_create(
-        "light", "hue", "5678", config_entry=mock_config
-    )
+    new_entry2 = registry.async_get_or_create("light", "hue", "5678")
 
     assert orig_entry1 == new_entry1
     assert orig_entry2 == new_entry2
+
+    assert new_entry2.device_id == "mock-dev-id"
+    assert new_entry2.disabled_by == entity_registry.DISABLED_HASS
+    assert new_entry2.capabilities == {"max": 100}
+    assert new_entry2.supported_features == 5
+    assert new_entry2.device_class == "mock-device-class"
 
 
 def test_generate_entity_considers_registered_entities(registry):

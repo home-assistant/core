@@ -66,6 +66,9 @@ class RegistryEntry:
             )
         ),
     )
+    capabilities: Dict[str, Any] = attr.ib(factory=dict)
+    supported_features: int = attr.ib(default=0)
+    device_class: Optional[str] = attr.ib(default=None)
     domain = attr.ib(type=str, init=False, repr=False)
 
     @domain.default
@@ -142,11 +145,17 @@ class EntityRegistry:
         platform: str,
         unique_id: str,
         *,
+        # To influence entity ID generation
         suggested_object_id: Optional[str] = None,
+        known_object_ids: Optional[Iterable[str]] = None,
+        # To disable an entity if it gets created
+        disabled_by: Optional[str] = None,
+        # Data that we want entry to have
         config_entry: Optional["ConfigEntry"] = None,
         device_id: Optional[str] = None,
-        known_object_ids: Optional[Iterable[str]] = None,
-        disabled_by: Optional[str] = None,
+        capabilities: Optional[Dict[str, Any]] = None,
+        supported_features: Optional[int] = None,
+        device_class: Optional[str] = None,
     ) -> RegistryEntry:
         """Get entity. Create if it doesn't exist."""
         config_entry_id = None
@@ -160,6 +169,9 @@ class EntityRegistry:
                 entity_id,
                 config_entry_id=config_entry_id or _UNDEF,
                 device_id=device_id or _UNDEF,
+                capabilities=capabilities or _UNDEF,
+                supported_features=supported_features or _UNDEF,
+                device_class=device_class or _UNDEF,
                 # When we changed our slugify algorithm, we invalidated some
                 # stored entity IDs with either a __ or ending in _.
                 # Fix introduced in 0.86 (Jan 23, 2019). Next line can be
@@ -187,6 +199,9 @@ class EntityRegistry:
             unique_id=unique_id,
             platform=platform,
             disabled_by=disabled_by,
+            capabilities=capabilities or {},
+            supported_features=supported_features or 0,
+            device_class=device_class,
         )
         self.entities[entity_id] = entity
         _LOGGER.info("Registered new %s.%s entity: %s", domain, platform, entity_id)
@@ -253,6 +268,9 @@ class EntityRegistry:
         device_id=_UNDEF,
         new_unique_id=_UNDEF,
         disabled_by=_UNDEF,
+        capabilities=_UNDEF,
+        supported_features=_UNDEF,
+        device_class=_UNDEF,
     ):
         """Private facing update properties method."""
         old = self.entities[entity_id]
@@ -264,6 +282,9 @@ class EntityRegistry:
             ("config_entry_id", config_entry_id),
             ("device_id", device_id),
             ("disabled_by", disabled_by),
+            ("capabilities", capabilities),
+            ("supported_features", supported_features),
+            ("device_class", device_class),
         ):
             if value is not _UNDEF and value != getattr(old, attr_name):
                 changes[attr_name] = value
@@ -336,6 +357,9 @@ class EntityRegistry:
                     platform=entity["platform"],
                     name=entity.get("name"),
                     disabled_by=entity.get("disabled_by"),
+                    capabilities=entity.get("capabilities") or {},
+                    supported_features=entity.get("supported_features", 0),
+                    device_class=entity.get("device_class"),
                 )
 
         self.entities = entities
@@ -359,6 +383,9 @@ class EntityRegistry:
                 "platform": entry.platform,
                 "name": entry.name,
                 "disabled_by": entry.disabled_by,
+                "capabilities": entry.capabilities,
+                "supported_features": entry.supported_features,
+                "device_class": entry.device_class,
             }
             for entry in self.entities.values()
         ]

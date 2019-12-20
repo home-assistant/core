@@ -917,6 +917,16 @@ class MockEntity(entity.Entity):
         return self._handle("device_info")
 
     @property
+    def capability_attributes(self):
+        """Info about capabilities."""
+        return self._handle("capability_attributes")
+
+    @property
+    def supported_features(self):
+        """Info about supported features."""
+        return self._handle("supported_features")
+
+    @property
     def entity_registry_enabled_default(self):
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._handle("entity_registry_enabled_default")
