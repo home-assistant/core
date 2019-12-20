@@ -20,7 +20,7 @@ DOMAIN = "tado"
 
 SIGNAL_TADO_UPDATE_RECEIVED = "tado_update_received_{}_{}"
 
-TADO_COMPONENTS = ["sensor", "climate"]
+TADO_COMPONENTS = ["sensor", "climate", "water_heater"]
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 SCAN_INTERVAL = timedelta(seconds=15)

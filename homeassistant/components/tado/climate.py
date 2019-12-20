@@ -32,6 +32,7 @@ from .const import (
     CONST_OVERLAY_MANUAL,
     CONST_OVERLAY_TADO_MODE,
     TYPE_AIR_CONDITIONING,
+    TYPE_HEATING,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,11 +75,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     entities = []
     for zone in tado.zones:
-        entity = create_climate_entity(
-            tado, zone["name"], zone["id"], discovery_info[CONF_FALLBACK]
-        )
-        if entity:
-            entities.append(entity)
+        if zone["type"] in [TYPE_HEATING, TYPE_AIR_CONDITIONING]:
+            entity = create_climate_entity(
+                tado, zone["name"], zone["id"], discovery_info[CONF_FALLBACK]
+            )
+            if entity:
+                entities.append(entity)
 
     if entities:
         add_entities(entities, True)
