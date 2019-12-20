@@ -197,7 +197,10 @@ async def test_fan_speed(hass, hk_driver, cls, events):
     )
     await hass.async_block_till_done()
     acc = cls.fan(hass, hk_driver, "Fan", entity_id, 2, None)
-    assert acc.char_speed.value == 0
+
+    # Initial value can be anything but 0. If it is 0, it might cause HomeKit to set the
+    # speed to 100 when turning on a fan on a freshly booted up server.
+    assert acc.char_speed.value != 0
 
     await hass.async_add_job(acc.run)
     assert (
