@@ -2,7 +2,7 @@
 from asyncio import Event
 from collections import OrderedDict
 import logging
-from typing import List, Optional, cast
+from typing import Any, Dict, List, Optional, cast
 import uuid
 
 import attr
@@ -48,7 +48,7 @@ class DeviceEntry:
     is_new = attr.ib(type=bool, default=False)
 
 
-def format_mac(mac):
+def format_mac(mac: str) -> str:
     """Format the mac address string for entry into dev reg."""
     to_test = mac
 
@@ -260,7 +260,7 @@ class DeviceRegistry:
 
         return new
 
-    def async_remove_device(self, device_id):
+    def async_remove_device(self, device_id: str) -> None:
         """Remove a device from the device registry."""
         del self.devices[device_id]
         self.hass.bus.async_fire(
@@ -298,12 +298,12 @@ class DeviceRegistry:
         self.devices = devices
 
     @callback
-    def async_schedule_save(self):
+    def async_schedule_save(self) -> None:
         """Schedule saving the device registry."""
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback
-    def _data_to_save(self):
+    def _data_to_save(self) -> Dict[str, List[Dict[str, Any]]]:
         """Return data of device registry to store in a file."""
         data = {}
 
@@ -327,7 +327,7 @@ class DeviceRegistry:
         return data
 
     @callback
-    def async_clear_config_entry(self, config_entry_id):
+    def async_clear_config_entry(self, config_entry_id: str) -> None:
         """Clear config entry from registry entries."""
         remove = []
         for dev_id, device in self.devices.items():

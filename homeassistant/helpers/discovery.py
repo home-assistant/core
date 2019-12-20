@@ -5,6 +5,8 @@ There are two different types of discoveries that can be fired/listened for.
  - listen_platform/discover_platform is for platforms. These are used by
    components to allow discovery of their platforms.
 """
+from typing import Callable, Collection, Union
+
 from homeassistant import core, setup
 from homeassistant.const import ATTR_DISCOVERED, ATTR_SERVICE, EVENT_PLATFORM_DISCOVERED
 from homeassistant.exceptions import HomeAssistantError
@@ -18,7 +20,9 @@ ATTR_PLATFORM = "platform"
 
 
 @bind_hass
-def listen(hass, service, callback):
+def listen(
+    hass: core.HomeAssistant, service: Union[str, Collection[str]], callback: Callable
+) -> None:
     """Set up listener for discovery of specific service.
 
     Service can be a string or a list/tuple.
@@ -28,7 +32,9 @@ def listen(hass, service, callback):
 
 @core.callback
 @bind_hass
-def async_listen(hass, service, callback):
+def async_listen(
+    hass: core.HomeAssistant, service: Union[str, Collection[str]], callback: Callable
+) -> None:
     """Set up listener for discovery of specific service.
 
     Service can be a string or a list/tuple.
@@ -39,7 +45,7 @@ def async_listen(hass, service, callback):
         service = tuple(service)
 
     @core.callback
-    def discovery_event_listener(event):
+    def discovery_event_listener(event: core.Event) -> None:
         """Listen for discovery events."""
         if ATTR_SERVICE in event.data and event.data[ATTR_SERVICE] in service:
             hass.async_add_job(
@@ -73,7 +79,9 @@ async def async_discover(hass, service, discovered, component, hass_config):
 
 
 @bind_hass
-def listen_platform(hass, component, callback):
+def listen_platform(
+    hass: core.HomeAssistant, component: str, callback: Callable
+) -> None:
     """Register a platform loader listener."""
     run_callback_threadsafe(
         hass.loop, async_listen_platform, hass, component, callback
@@ -81,7 +89,9 @@ def listen_platform(hass, component, callback):
 
 
 @bind_hass
-def async_listen_platform(hass, component, callback):
+def async_listen_platform(
+    hass: core.HomeAssistant, component: str, callback: Callable
+) -> None:
     """Register a platform loader listener.
 
     This method must be run in the event loop.
@@ -89,7 +99,7 @@ def async_listen_platform(hass, component, callback):
     service = EVENT_LOAD_PLATFORM.format(component)
 
     @core.callback
-    def discovery_platform_listener(event):
+    def discovery_platform_listener(event: core.Event) -> None:
         """Listen for platform discovery events."""
         if event.data.get(ATTR_SERVICE) != service:
             return
