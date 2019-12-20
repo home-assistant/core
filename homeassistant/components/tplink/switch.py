@@ -118,11 +118,13 @@ class SmartPlugSwitch(SwitchDevice):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         self.smartplug.turn_on()
+        self._state = self.smartplug.SWITCH_STATE_ON
         self.update_state()
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
         self.smartplug.turn_off()
+        self._state = self.smartplug.SWITCH_STATE_OFF
         self.update_state()
 
     @property
@@ -172,6 +174,7 @@ class SmartPlugSwitch(SwitchDevice):
                 except KeyError:
                     # Device returned no daily history
                     pass
+            self._is_ready = True
         except (SmartDeviceException, OSError) as ex:
             _LOGGER.warning(
                 "Retrying in %s for %s|%s due to: %s",
@@ -180,7 +183,7 @@ class SmartPlugSwitch(SwitchDevice):
                 self._alias,
                 ex,
             )
-        self._is_ready = True
+        return
 
     async def async_update(self):
         """Update the TP-Link switch's state."""

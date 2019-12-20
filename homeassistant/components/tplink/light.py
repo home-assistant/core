@@ -219,6 +219,7 @@ class TPLinkSmartBulb(Light):
                 except KeyError:
                     # device returned no daily/monthly history
                     pass
+            self._is_ready = True
         except (SmartDeviceException, OSError) as ex:
             _LOGGER.warning(
                 "Retrying in %s for %s|%s due to: %s",
@@ -227,7 +228,7 @@ class TPLinkSmartBulb(Light):
                 self._alias,
                 ex,
             )
-        self._is_ready = True
+        return
 
     async def async_update(self):
         """Update the TP-Link Bulb's state."""
