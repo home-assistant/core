@@ -71,16 +71,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tado climate platform."""
     tado = hass.data[DOMAIN]
 
-    climate_devices = []
+    entities = []
     for zone in tado.zones:
         device = create_climate_device(
             tado, zone["name"], zone["id"], discovery_info[CONF_FALLBACK]
         )
         if device:
-            climate_devices.append(device)
+            entities.append(device)
 
-    if climate_devices:
-        add_entities(climate_devices, True)
+    if entities:
+        add_entities(entities)
 
 
 def create_climate_device(tado, name: str, zone_id: int, fallback: bool):
@@ -110,7 +110,7 @@ def create_climate_device(tado, name: str, zone_id: int, fallback: bool):
     max_temp = float(temperatures["celsius"]["max"])
     step = temperatures["celsius"].get("step", PRECISION_TENTHS)
 
-    device = TadoClimate(
+    entity = TadoClimate(
         tado,
         name,
         zone_id,
@@ -121,7 +121,7 @@ def create_climate_device(tado, name: str, zone_id: int, fallback: bool):
         ac_support_heat,
         fallback,
     )
-    return device
+    return entity
 
 
 class TadoClimate(ClimateDevice):
@@ -162,11 +162,11 @@ class TadoClimate(ClimateDevice):
         self._target_temp = None
 
         if fallback:
-            _LOGGER.debug("Default overlay is configured in TADO MODE")
+            _LOGGER.debug("Default overlay is set to TADO MODE")
             # Fallback to Smart Schedule at next Schedule switch
             self._default_overlay = CONST_OVERLAY_TADO_MODE
         else:
-            _LOGGER.debug("Default overlay is configured in MANUAL MODE")
+            _LOGGER.debug("Default overlay is set to MANUAL MODE")
             # Don't fallback to Smart Schedule, but keep in manual mode
             self._default_overlay = CONST_OVERLAY_MANUAL
 
@@ -176,13 +176,14 @@ class TadoClimate(ClimateDevice):
 
     async def async_added_to_hass(self):
         """Register for sensor updates."""
+        _LOGGER.debug("Registering for dispatcher updates for zone %d", self.zone_id)
         async_dispatcher_connect(
             self.hass,
             SIGNAL_TADO_UPDATE_RECEIVED.format("zone", self.zone_id),
-            self._handle_update,
+            self.update,
         )
         # Process first update
-        await self.hass.async_add_executor_job(self._handle_update)
+        await self.hass.async_add_executor_job(self.update)
 
     @property
     def supported_features(self):
@@ -350,11 +351,13 @@ class TadoClimate(ClimateDevice):
         """Return the maximum temperature."""
         return self._max_temp
 
-    def _handle_update(self):
+    def update(self):
         """Handle update callbacks."""
+        _LOGGER.debug("Updating climate platform for zone %d", self.zone_id)
         try:
             data = self._tado.data["zone"][self.zone_id]
         except KeyError:
+            _LOGGER.debug("No data")
             return
 
         if "sensorDataPoints" in data:
@@ -448,7 +451,7 @@ class TadoClimate(ClimateDevice):
     def _control_heating(self):
         """Send new target temperature to Tado."""
         if self._current_operation == CONST_MODE_SMART_SCHEDULE:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Switching to SMART_SCHEDULE for zone %s (%d)",
                 self.zone_name,
                 self.zone_id,
@@ -458,14 +461,14 @@ class TadoClimate(ClimateDevice):
             return
 
         if self._current_operation == CONST_MODE_OFF:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Switching to OFF for zone %s (%d)", self.zone_name, self.zone_id
             )
             self._tado.set_zone_off(self.zone_id, CONST_OVERLAY_MANUAL, self.zone_type)
             self._overlay_mode = self._current_operation
             return
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "Switching to %s for zone %s (%d) with temperature %s °C",
             self._current_operation,
             self.zone_name,

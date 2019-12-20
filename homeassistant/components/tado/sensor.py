@@ -41,9 +41,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     tado = hass.data[DOMAIN]
 
     # Create zone sensors
-    sensor_items = []
+    entities = []
     for zone in tado.zones:
-        sensor_items.extend(
+        entities.extend(
             [
                 create_zone_sensor(tado, zone["name"], zone["id"], variable)
                 for variable in ZONE_SENSORS.get(zone["type"])
@@ -52,14 +52,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Create device sensors
     for home in tado.devices:
-        sensor_items.extend(
+        entities.extend(
             [
                 create_device_sensor(tado, home["name"], home["id"], variable)
                 for variable in DEVICE_SENSORS
             ]
         )
 
-    add_entities(sensor_items, True)
+    add_entities(entities)
 
 
 def create_zone_sensor(tado, name, zone_id, variable):
@@ -94,10 +94,10 @@ class TadoSensor(Entity):
         async_dispatcher_connect(
             self.hass,
             SIGNAL_TADO_UPDATE_RECEIVED.format(self.sensor_type, self.zone_id),
-            self._handle_update,
+            self.update,
         )
         # Process first update
-        await self.hass.async_add_executor_job(self._handle_update)
+        await self.hass.async_add_executor_job(self.update)
 
     @property
     def unique_id(self):
@@ -144,7 +144,7 @@ class TadoSensor(Entity):
         """Do not poll."""
         return False
 
-    def _handle_update(self):
+    def update(self):
         """Handle update callbacks."""
         try:
             data = self._tado.data[self.sensor_type][self.zone_id]

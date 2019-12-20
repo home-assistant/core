@@ -45,6 +45,9 @@ def setup(hass, config):
     password = config[DOMAIN][CONF_PASSWORD]
 
     tadoconnector = TadoConnector(hass, username, password)
+    if not tadoconnector.setup():
+        return False
+
     hass.data[DOMAIN] = tadoconnector
 
     # Do first update
@@ -74,37 +77,39 @@ class TadoConnector:
     def __init__(self, hass, username, password):
         """Initialize Tado Connector."""
         self.hass = hass
+        self._username = username
+        self._password = password
 
-        try:
-            self.tado = Tado(username, password)
-            self.tado.setDebugging(True)
-        except (RuntimeError, urllib.error.HTTPError) as e:
-            _LOGGER.error("Unable to connect to Tado with username and password")
-            raise e
-
-        # Load zones and devices
-        self.zones = self.tado.getZones()
-        self.devices = self.tado.getMe()["homes"]
-
-        self.sensors = []
-        for zone in self.zones:
-            _LOGGER.debug("Registering zone %s (%s)", zone["name"], zone["id"])
-            self.sensors.append(("zone", zone["id"]))
-
-        for device in self.devices:
-            _LOGGER.debug("Registering device %s (%s)", device["name"], device["id"])
-            self.sensors.append(("device", device["id"]))
-
+        self.tado = None
+        self.zones = None
+        self.devices = None
         self.data = {
             "zone": {},
             "device": {},
         }
 
+    def setup(self):
+        """Connect to Tado and fetch the zones."""
+        try:
+            self.tado = Tado(self._username, self._password)
+            self.tado.setDebugging(True)
+        except (RuntimeError, urllib.error.HTTPError) as exc:
+            _LOGGER.error("Unable to connect: %s", exc)
+            return False
+
+        # Load zones and devices
+        self.zones = self.tado.getZones()
+        self.devices = self.tado.getMe()["homes"]
+
+        return True
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the registered zones."""
-        for sensor_type, sensor in self.sensors:
-            self.update_sensor(sensor_type, sensor)
+        for zone in self.zones:
+            self.update_sensor("zone", zone["id"])
+        for device in self.devices:
+            self.update_sensor("device", device["id"])
 
     def update_sensor(self, sensor_type, sensor):
         """Update the internal data from Tado."""
