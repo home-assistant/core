@@ -82,8 +82,11 @@ class Light(HomeAccessory):
         )
 
         if CHAR_BRIGHTNESS in self.chars:
+            # Initial value is set to 100 because 0 is a special value (off). 100 is
+            # an arbitrary non-zero value. It is updated immediately by update_state
+            # to set to the correct initial value.
             self.char_brightness = serv_light.configure_char(
-                CHAR_BRIGHTNESS, value=0, setter_callback=self.set_brightness
+                CHAR_BRIGHTNESS, value=100, setter_callback=self.set_brightness
             )
         if CHAR_COLOR_TEMPERATURE in self.chars:
             min_mireds = self.hass.states.get(self.entity_id).attributes.get(
@@ -183,7 +186,21 @@ class Light(HomeAccessory):
             if not self._flag[CHAR_BRIGHTNESS] and isinstance(brightness, int):
                 brightness = round(brightness / 255 * 100, 0)
                 if self.char_brightness.value != brightness:
-                    self.char_brightness.set_value(brightness)
+                    # The homeassistant component might report its brightness as 0 but is
+                    # not off. But 0 is a special value in homekit. When you turn on a
+                    # homekit accessory it will try to restore the last brightness state
+                    # which will be the last value saved by char_brightness.set_value.
+                    # But if it is set to 0, HomeKit will update the brightness to 100 as
+                    # it thinks 0 is off.
+                    #
+                    # Therefore, if the the brighness is 0 and the device is still on,
+                    # the brightness is mapped to 1 otherwise the update is ignored in
+                    # order to avoid this incorrect behavior.
+                    if brightness == 0:
+                        if state == STATE_ON:
+                            self.char_brightness.set_value(1)
+                    else:
+                        self.char_brightness.set_value(brightness)
             self._flag[CHAR_BRIGHTNESS] = False
 
         # Handle color temperature
