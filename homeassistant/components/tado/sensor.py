@@ -60,7 +60,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             ]
         )
 
-    add_entities(entities)
+    add_entities(entities, True)
 
 
 def create_zone_sensor(tado, name, zone_id, variable):
@@ -98,7 +98,6 @@ class TadoSensor(Entity):
             """Schedule an entity update."""
             self.async_schedule_update_ha_state(True)
 
-        _LOGGER.debug("Registering for dispatcher updates for zone %d", self.zone_id)
         async_dispatcher_connect(
             self.hass,
             SIGNAL_TADO_UPDATE_RECEIVED.format(self.sensor_type, self.zone_id),

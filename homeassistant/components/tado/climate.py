@@ -183,7 +183,6 @@ class TadoClimate(ClimateDevice):
             """Schedule an entity update."""
             self.async_schedule_update_ha_state(True)
 
-        _LOGGER.debug("Registering for dispatcher updates for zone %d", self.zone_id)
         async_dispatcher_connect(
             self.hass,
             SIGNAL_TADO_UPDATE_RECEIVED.format("zone", self.zone_id),
