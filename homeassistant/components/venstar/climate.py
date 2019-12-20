@@ -34,7 +34,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_TIMEOUT,
     CONF_USERNAME,
-    PRECISION_WHOLE,
+    PRECISION_HALVES,
     STATE_ON,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -134,9 +134,9 @@ class VenstarThermostat(ClimateDevice):
         """Return the precision of the system.
 
         Venstar temperature values are passed back and forth in the
-        API as whole degrees C or F.
+        API in C or F, with half-degree accuracy.
         """
-        return PRECISION_WHOLE
+        return PRECISION_HALVES
 
     @property
     def temperature_unit(self):

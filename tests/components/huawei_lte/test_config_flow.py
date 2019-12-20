@@ -7,22 +7,9 @@ from requests.exceptions import ConnectionError
 from requests_mock import ANY
 
 from homeassistant import data_entry_flow
+from homeassistant.components import ssdp
 from homeassistant.components.huawei_lte.config_flow import ConfigFlowHandler
 from homeassistant.components.huawei_lte.const import DOMAIN
-from homeassistant.components.ssdp import (
-    ATTR_HOST,
-    ATTR_MANUFACTURER,
-    ATTR_MANUFACTURERURL,
-    ATTR_MODEL_NAME,
-    ATTR_MODEL_NUMBER,
-    ATTR_NAME,
-    ATTR_PORT,
-    ATTR_PRESENTATIONURL,
-    ATTR_SERIAL,
-    ATTR_ST,
-    ATTR_UDN,
-    ATTR_UPNP_DEVICE_TYPE,
-)
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 
 from tests.common import MockConfigEntry
@@ -156,18 +143,17 @@ async def test_ssdp(flow):
     url = "http://192.168.100.1/"
     result = await flow.async_step_ssdp(
         discovery_info={
-            ATTR_ST: "upnp:rootdevice",
-            ATTR_PORT: 60957,
-            ATTR_HOST: "192.168.100.1",
-            ATTR_MANUFACTURER: "Huawei",
-            ATTR_MANUFACTURERURL: "http://www.huawei.com/",
-            ATTR_MODEL_NAME: "Huawei router",
-            ATTR_MODEL_NUMBER: "12345678",
-            ATTR_NAME: "Mobile Wi-Fi",
-            ATTR_PRESENTATIONURL: url,
-            ATTR_SERIAL: "00000000",
-            ATTR_UDN: "uuid:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
-            ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            ssdp.ATTR_SSDP_LOCATION: "http://192.168.100.1:60957/rootDesc.xml",
+            ssdp.ATTR_SSDP_ST: "upnp:rootdevice",
+            ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            ssdp.ATTR_UPNP_FRIENDLY_NAME: "Mobile Wi-Fi",
+            ssdp.ATTR_UPNP_MANUFACTURER: "Huawei",
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: "http://www.huawei.com/",
+            ssdp.ATTR_UPNP_MODEL_NAME: "Huawei router",
+            ssdp.ATTR_UPNP_MODEL_NUMBER: "12345678",
+            ssdp.ATTR_UPNP_PRESENTATION_URL: url,
+            ssdp.ATTR_UPNP_SERIAL: "00000000",
+            ssdp.ATTR_UPNP_UDN: "uuid:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
         }
     )
 

@@ -1,6 +1,7 @@
 """Config flow to configure Philips Hue."""
 import asyncio
 from typing import Dict, Optional
+from urllib.parse import urlparse
 
 import aiohue
 from aiohue.discovery import discover_nupnp, normalize_bridge_id
@@ -8,7 +9,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.components.ssdp import ATTR_MANUFACTURERURL, ATTR_NAME
+from homeassistant.components import ssdp
 from homeassistant.helpers import aiohttp_client
 
 from .bridge import authenticate_bridge
@@ -147,22 +148,25 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host is already configured and delegate to the import step if not.
         """
         # Filter out non-Hue bridges #1
-        if discovery_info[ATTR_MANUFACTURERURL] != HUE_MANUFACTURERURL:
+        if discovery_info[ssdp.ATTR_UPNP_MANUFACTURER_URL] != HUE_MANUFACTURERURL:
             return self.async_abort(reason="not_hue_bridge")
 
         # Filter out non-Hue bridges #2
         if any(
-            name in discovery_info.get(ATTR_NAME, "")
+            name in discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, "")
             for name in HUE_IGNORED_BRIDGE_NAMES
         ):
             return self.async_abort(reason="not_hue_bridge")
 
-        if "host" not in discovery_info or "serial" not in discovery_info:
+        if (
+            ssdp.ATTR_SSDP_LOCATION not in discovery_info
+            or ssdp.ATTR_UPNP_SERIAL not in discovery_info
+        ):
             return self.async_abort(reason="not_hue_bridge")
 
-        bridge = self._async_get_bridge(
-            discovery_info["host"], discovery_info["serial"]
-        )
+        host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
+
+        bridge = self._async_get_bridge(host, discovery_info[ssdp.ATTR_UPNP_SERIAL])
 
         await self.async_set_unique_id(bridge.id)
         self._abort_if_unique_id_configured()
