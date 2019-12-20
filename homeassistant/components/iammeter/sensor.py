@@ -3,11 +3,8 @@ import asyncio
 
 from datetime import timedelta
 import logging
-import iammeter
 from iammeter import real_time_api
-from iammeter import power_meter
 from iammeter.power_meter import IamMeterError
-import requests
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_PORT, CONF_NAME, CONF_HOST
@@ -38,7 +35,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     devices = []
     for sensor, (row, idx, unit) in api.iammeter.sensor_map().items():
         uid = f"{config[CONF_NAME]}-{api.iammeter.mac}-{api.iammeter.serial_number}-{row}-{idx}"
-        devices.append(IamMeter(uid, api.iammeter.serial_number, sensor, unit, config[CONF_NAME]))
+        devices.append(
+            IamMeter(uid, api.iammeter.serial_number, sensor, unit, config[CONF_NAME])
+        )
     endpoint = RealTimeDataEndpoint(hass, api)
     endpoint.ready.set()
     hass.async_add_job(endpoint.async_refresh)
