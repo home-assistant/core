@@ -159,7 +159,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             title="deCONZ-" + self.deconz_config[CONF_BRIDGEID], data=self.deconz_config
         )
 
-    async def _update_entry(self, entry, host, port, api_key=None):
+    def _update_entry(self, entry, host, port, api_key=None):
         """Update existing entry."""
         if entry.data[CONF_HOST] == host:
             return self.async_abort(reason="already_configured")
@@ -186,9 +186,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if uuid == entry.data.get(CONF_UUID):
-                return await self._update_entry(
-                    entry, parsed_url.hostname, parsed_url.port
-                )
+                return self._update_entry(entry, parsed_url.hostname, parsed_url.port)
 
         bridgeid = discovery_info[ssdp.ATTR_UPNP_SERIAL]
         if any(
@@ -218,7 +216,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if bridgeid in gateway_entries:
             entry = gateway_entries[bridgeid]
-            return await self._update_entry(
+            return self._update_entry(
                 entry,
                 user_input[CONF_HOST],
                 user_input[CONF_PORT],
