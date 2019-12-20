@@ -18,8 +18,8 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .core.const import (
-    CHANNEL_ON_OFF,
     CHANNEL_OCCUPANCY,
+    CHANNEL_ON_OFF,
     CHANNEL_ZONE,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
