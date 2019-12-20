@@ -1,0 +1,11 @@
+{
+  "domain": "ais_usb",
+  "name": "AIS USB",
+  "config_flow": false,
+  "documentation": "https://www.ai-speaker.com",
+  "requirements": [
+    "pyinotify==0.9.6"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}

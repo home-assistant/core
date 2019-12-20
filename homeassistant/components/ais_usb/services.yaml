@@ -1,0 +1,3 @@
+# Describes the format for available AIS USB services
+lsusb:
+  description: Sprawdzanie dostępnych urządzeń w systemie
