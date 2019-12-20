@@ -188,7 +188,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if uuid == entry.data.get(CONF_UUID):
                 return self._update_entry(
-                    entry, discovery_info[CONF_HOST], discovery_info[CONF_PORT]
+                    entry, discovery_info[CONF_HOST], entry.data.get[CONF_PORT]
                 )
 
         bridgeid = discovery_info[ATTR_SERIAL]
