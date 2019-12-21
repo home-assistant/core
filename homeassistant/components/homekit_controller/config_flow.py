@@ -108,6 +108,38 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             ),
         )
 
+    async def async_step_unignore(self, user_input):
+        """Rediscover a previously ignored discover."""
+        unique_id = user_input["unique_id"]
+        await self.async_set_unique_id(unique_id)
+
+        records = await self.hass.async_add_executor_job(self.controller.discover, 5)
+        for record in records:
+            if normalize_hkid(record["id"]) != unique_id:
+                continue
+            return await self.async_step_zeroconf(
+                {
+                    "host": record["address"],
+                    "port": record["port"],
+                    "hostname": record["name"],
+                    "type": "_hap._tcp.local.",
+                    "name": record["name"],
+                    "properties": {
+                        "md": record["md"],
+                        "pv": record["pv"],
+                        "id": unique_id,
+                        "c#": record["c#"],
+                        "s#": record["s#"],
+                        "ff": record["ff"],
+                        "ci": record["ci"],
+                        "sf": record["sf"],
+                        "sh": "",
+                    },
+                }
+            )
+
+        return self.async_abort(reason="no_devices")
+
     async def async_step_zeroconf(self, discovery_info):
         """Handle a discovered HomeKit accessory.
 
