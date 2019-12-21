@@ -1,5 +1,5 @@
 """Test the NEW_NAME config flow."""
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, setup
 from homeassistant.components.NEW_DOMAIN.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
@@ -17,11 +17,7 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
         hass,
         "NEW_DOMAIN",
         {
-            "NEW_DOMAIN": {
-                "type": "oauth2",
-                "client_id": CLIENT_ID,
-                "client_secret": CLIENT_SECRET,
-            },
+            "NEW_DOMAIN": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
             "http": {"base_url": "https://example.com"},
         },
     )
@@ -31,7 +27,6 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
     )
     state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
@@ -56,5 +51,3 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.data["type"] == "oauth2"
