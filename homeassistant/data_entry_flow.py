@@ -1,6 +1,6 @@
 """Classes to help gather user submissions."""
 import logging
-from typing import Any, Callable, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional, cast
 import uuid
 
 import voluptuous as vol
@@ -46,13 +46,10 @@ class AbortFlow(FlowError):
         self.description_placeholders = description_placeholders
 
 
-class BaseFlowManager:
+class FlowManager:
     """Manage all the flows that are in progress."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-    ) -> None:
+    def __init__(self, hass: HomeAssistant,) -> None:
         """Initialize the flow manager."""
         self.hass = hass
         self._progress: Dict[str, Any] = {}
@@ -190,36 +187,6 @@ class BaseFlowManager:
         self._progress.pop(flow.flow_id)
 
         return result
-
-
-class FlowManager(BaseFlowManager):
-    """Manage all the flows that are in progress."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        async_create_flow: Callable,
-        async_finish_flow: Callable,
-    ) -> None:
-        """Initialize the flow manager."""
-        super().__init__(hass)
-        self._async_create_flow = async_create_flow
-        self._async_finish_flow = async_finish_flow
-
-    async def async_create_flow(
-        self, handler_key: str, *, context: Dict[str, Any], data: Dict[str, Any]
-    ) -> "FlowHandler":
-        """Create a flow for specified handler.
-
-        Handler key is the domain of the component that we want to set up.
-        """
-        return await self._async_create_flow(handler_key, context=context, data=data)
-
-    async def async_finish_flow(
-        self, flow: "FlowHandler", result: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """Finish a config flow and add an entry."""
-        return await self._async_finish_flow(flow, result)
 
 
 class FlowHandler:

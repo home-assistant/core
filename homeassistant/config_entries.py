@@ -399,7 +399,7 @@ class ConfigEntry:
         }
 
 
-class ConfigEntriesFlowManager(data_entry_flow.BaseFlowManager):
+class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
     """Manage all the config entry flows that are in progress."""
 
     def __init__(self, hass: HomeAssistant, config_entries: "ConfigEntries"):
@@ -489,7 +489,9 @@ class ConfigEntriesFlowManager(data_entry_flow.BaseFlowManager):
             raise data_entry_flow.UnknownHandler
 
         # Make sure requirements and dependencies of component are resolved
-        await async_process_deps_reqs(self.hass, self.config_entries._hass_config, integration)
+        await async_process_deps_reqs(
+            self.hass, self.config_entries._hass_config, integration
+        )
 
         try:
             integration.get_platform("config_flow")
@@ -861,24 +863,17 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return self.async_abort(reason="not_implemented")
 
 
-class OptionsFlowManager:
+class OptionsFlowManager(data_entry_flow.FlowManager):
     """Flow to set options for a configuration entry."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize the options manager."""
-        self.hass = hass
-        self.flow = data_entry_flow.FlowManager(
-            hass, self._async_create_flow, self._async_finish_flow
-        )
-
-    async def _async_create_flow(
-        self, entry_id: str, *, context: Dict[str, Any], data: Dict[str, Any]
+    async def async_create_flow(
+        self, handler_key: str, *, context: Dict[str, Any], data: Dict[str, Any]
     ) -> Optional["OptionsFlow"]:
         """Create an options flow for a config entry.
 
         Entry_id and flow.handler is the same thing to map entry with flow.
         """
-        entry = self.hass.config_entries.async_get_entry(entry_id)
+        entry = self.hass.config_entries.async_get_entry(handler_key)
         if entry is None:
             return None
 
@@ -888,7 +883,7 @@ class OptionsFlowManager:
         flow = cast(OptionsFlow, HANDLERS[entry.domain].async_get_options_flow(entry))
         return flow
 
-    async def _async_finish_flow(
+    async def async_finish_flow(
         self, flow: "OptionsFlow", result: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
         """Finish an options flow and update options for configuration entry.
